@@ -545,20 +545,22 @@ void OpenGLParticlePrimitive::renderPointSprites(ViewportSceneRenderer* renderer
 		renderer->glfuncs()->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 	}
 
-	GLint pickingBaseID;
+	GLint pickingBaseID = 0;
 	if(renderer->isPicking()) {
 		pickingBaseID = renderer->registerSubObjectIDs(particleCount());
 		renderer->activateVertexIDs(shader, _chunkSize);
 	}
 
-	for(size_t chunkIndex = 0; chunkIndex < _positionsBuffers.size(); chunkIndex++, pickingBaseID += _chunkSize) {
+	for(size_t chunkIndex = 0; chunkIndex < _positionsBuffers.size(); chunkIndex++) {
 		int chunkSize = _positionsBuffers[chunkIndex].elementCount();
 		_positionsBuffers[chunkIndex].bindPositions(renderer, shader);
 		_radiiBuffers[chunkIndex].bind(renderer, shader, "particle_radius", GL_FLOAT, 0, 1);
 		if(!renderer->isPicking())
 			_colorsBuffers[chunkIndex].bindColors(renderer, shader, 4);
-		else
+		else {
 			shader->setUniformValue("pickingBaseID", pickingBaseID);
+			pickingBaseID += _chunkSize;
+		}
 
 		// Are we rendering translucent particles? If yes, render them in back to front order to avoid visual artifacts at overlapping particles.
 		if(!renderer->isPicking() && translucentParticles() && !_particleCoordinates.empty()) {
@@ -679,12 +681,12 @@ void OpenGLParticlePrimitive::renderBoxes(ViewportSceneRenderer* renderer)
 		renderer->glfuncs()->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 	}
 
-	GLint pickingBaseID;
+	GLint pickingBaseID = 0;
 	if(renderer->isPicking()) {
 		pickingBaseID = renderer->registerSubObjectIDs(particleCount());
 	}
 
-	for(size_t chunkIndex = 0; chunkIndex < _positionsBuffers.size(); chunkIndex++, pickingBaseID += _chunkSize) {
+	for(size_t chunkIndex = 0; chunkIndex < _positionsBuffers.size(); chunkIndex++) {
 		int chunkSize = _positionsBuffers[chunkIndex].elementCount();
 
 		_positionsBuffers[chunkIndex].bindPositions(renderer, shader);
@@ -698,6 +700,7 @@ void OpenGLParticlePrimitive::renderBoxes(ViewportSceneRenderer* renderer)
 		}
 		else {
 			shader->setUniformValue("pickingBaseID", pickingBaseID);
+			pickingBaseID += _chunkSize;
 			renderer->activateVertexIDs(shader, _positionsBuffers[chunkIndex].elementCount() * verticesPerElement);
 		}
 
@@ -808,13 +811,13 @@ void OpenGLParticlePrimitive::renderImposters(ViewportSceneRenderer* renderer)
 		renderer->glfuncs()->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 	}
 
-	GLint pickingBaseID;
+	GLint pickingBaseID = 0;
 	if(renderer->isPicking()) {
 		pickingBaseID = renderer->registerSubObjectIDs(particleCount());
 		renderer->activateVertexIDs(shader, _chunkSize);
 	}
 
-	for(size_t chunkIndex = 0; chunkIndex < _positionsBuffers.size(); chunkIndex++, pickingBaseID += _chunkSize) {
+	for(size_t chunkIndex = 0; chunkIndex < _positionsBuffers.size(); chunkIndex++) {
 		int chunkSize = _positionsBuffers[chunkIndex].elementCount();
 
 		_positionsBuffers[chunkIndex].bindPositions(renderer, shader);
@@ -824,6 +827,7 @@ void OpenGLParticlePrimitive::renderImposters(ViewportSceneRenderer* renderer)
 		}
 		else {
 			shader->setUniformValue("pickingBaseID", pickingBaseID);
+			pickingBaseID += _chunkSize;
 		}
 
 		renderer->activateVertexIDs(shader, _positionsBuffers[chunkIndex].elementCount() * verticesPerElement);

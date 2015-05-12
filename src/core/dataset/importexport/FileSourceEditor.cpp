@@ -91,8 +91,10 @@ void FileSourceEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 	QFont smallFont = _fileSeriesLabel->font();
 #ifdef Q_OS_MAC
 	smallFont.setPointSize(std::max(6, smallFont.pointSize() - 3));
-#else
+#elif defined(Q_OS_LINUX)
 	smallFont.setPointSize(std::max(6, smallFont.pointSize() - 2));
+#else
+	smallFont.setPointSize(std::max(6, smallFont.pointSize() - 1));
 #endif
 	_fileSeriesLabel->setFont(smallFont);
 	gridlayout->addWidget(_fileSeriesLabel, 1, 1);

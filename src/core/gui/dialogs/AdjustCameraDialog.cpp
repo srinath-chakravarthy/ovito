@@ -152,8 +152,8 @@ AdjustCameraDialog::AdjustCameraDialog(Viewport* viewport, QWidget* parent) :
 	_camFOVAngleSpinner = new SpinnerWidget();
 	_camFOVAngleSpinner->setUnit(_viewport->dataset()->unitsManager().angleUnit());
 	_camFOVAngleSpinner->setMinValue(1e-4f);
-	_camFOVAngleSpinner->setMaxValue(FLOATTYPE_PI - 1e-2);
-	_camFOVAngleSpinner->setFloatValue(35.0*FLOATTYPE_PI/180.0);
+	_camFOVAngleSpinner->setMaxValue(FLOATTYPE_PI - 1e-2f);
+	_camFOVAngleSpinner->setFloatValue(35.0f*FLOATTYPE_PI/180.0f);
 	_camFOVAngleSpinner->setEnabled(false);
 	connect(_camPerspective, &QRadioButton::toggled, _camFOVAngleSpinner, &SpinnerWidget::setEnabled);
 

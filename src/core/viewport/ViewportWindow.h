@@ -103,6 +103,9 @@ protected:
 	/// Is called whenever the widget needs to be painted.
 	virtual void paintGL() override;
 
+	/// Is called whenever the GL context needs to be initialized.
+	virtual void initializeGL() override;
+	
 	/// Is called when the mouse cursor leaves the widget.
 	virtual void leaveEvent(QEvent* event) override;
 #endif

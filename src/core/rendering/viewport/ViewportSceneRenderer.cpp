@@ -73,6 +73,12 @@ QSurfaceFormat ViewportSceneRenderer::getDefaultSurfaceFormat()
 		format.setProfile(QSurfaceFormat::CompatibilityProfile);
 		format.setOption(QSurfaceFormat::DeprecatedFunctions);
 	}
+#ifdef Q_OS_WIN
+	// Always request deprecated functions to be included in the context profile on Windows
+	// to work around a compatibility issue between Qt 5.4.1 and the Intel OpenGL driver.
+	// Otherwise the driver will complain about missing #version directives in the shader programs provided by Qt.
+	format.setOption(QSurfaceFormat::DeprecatedFunctions);
+#endif
 	format.setStencilBufferSize(1);
 	return format;
 }

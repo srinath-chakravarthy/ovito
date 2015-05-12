@@ -138,7 +138,7 @@ void main()
 	// The eye coordinate Z value must be transformed to normalized device 
 	// coordinates before being assigned as the final fragment depth.
 	vec4 projected_intersection = projection_matrix * vec4(view_intersection_pnt, 1.0);
-	gl_FragDepth = (projected_intersection.z / projected_intersection.w + 1.0) * 0.5;
+	gl_FragDepth = ((gl_DepthRange.diff * (projected_intersection.z / projected_intersection.w)) + gl_DepthRange.near + gl_DepthRange.far) * 0.5;
 
 	FragColor = particle_color_fs;
 }

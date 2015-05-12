@@ -30,17 +30,19 @@
       <varlistentry>
         <term>Shading mode</term>
         <listitem>
-          <para>Selects between a three-dimensional (<emphasis>normal shading</emphasis>) and a two-dimensional
+          <para>Switches between a three-dimensional (<emphasis>normal shading</emphasis>) and a two-dimensional
           representation (<emphasis>flat shading</emphasis>) of arrows.</para>
         </listitem>
       </varlistentry>
 
+<!--
       <varlistentry>
         <term>Rendering quality</term>
         <listitem>
           <para>Selects the OpenGL rendering method used to display the arrows.</para>
         </listitem>
       </varlistentry>
+-->
 
       <varlistentry>
         <term>Scaling factor</term>

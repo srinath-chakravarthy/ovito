@@ -72,10 +72,12 @@ void main()
 			discard;
 			return;
 		}
-		view_intersection_pnt -= t * ray_dir;		
-		float tfar = dot(cylinder_view_axis, ray_dir);
-		if(tfar < 0.0) {
-			view_intersection_pnt += tfar * ray_dir;
+		else {
+			view_intersection_pnt -= t * ray_dir;		
+			float tfar = dot(cylinder_view_axis, ray_dir);
+			if(tfar < 0.0) {
+				view_intersection_pnt += tfar * ray_dir;
+			}
 		}
 	}
 	else {
@@ -89,34 +91,36 @@ void main()
 			discard;
 			return;
 		}
+		else { 
 			
-		// Calculate closest intersection position.
-		float t = dot(cross(cylinder_view_axis, RC), n) / ln;
-		float s = abs(sqrt(cylinder_radius_sq_fs - d) / dot(cross(n, cylinder_view_axis),ray_dir) * cylinder_length);
-		float tnear = t - s;
-	
-		// Calculate intersection point in view coordinate system.
-		view_intersection_pnt += tnear * ray_dir;
-	
-		// Find intersection position along cylinder axis.
-		float anear = dot(view_intersection_pnt - cylinder_view_base, cylinder_view_axis) / (cylinder_length*cylinder_length);
-		if(anear >= 0 && anear <= 1.0) {
-		}
-		else {
-			// Calculate second intersection point.
-			float tfar = t + s;
-			vec3 far_view_intersection_pnt = ray_origin + tfar * ray_dir;
-			float afar = dot(far_view_intersection_pnt - cylinder_view_base, cylinder_view_axis) / (cylinder_length*cylinder_length);
-			
-			if(anear < 0 && afar >= 0) {
-				view_intersection_pnt += (anear / (anear - afar) * 2.0 * s) * ray_dir;
-			}
-			else if(anear > 1.0 && afar < 1.0) {
-				view_intersection_pnt += ((anear - 1.0) / (anear - afar) * 2.0 * s) * ray_dir;
+			// Calculate closest intersection position.
+			float t = dot(cross(cylinder_view_axis, RC), n) / ln;
+			float s = abs(sqrt(cylinder_radius_sq_fs - d) / dot(cross(n, cylinder_view_axis),ray_dir) * cylinder_length);
+			float tnear = t - s;
+		
+			// Calculate intersection point in view coordinate system.
+			view_intersection_pnt += tnear * ray_dir;
+		
+			// Find intersection position along cylinder axis.
+			float anear = dot(view_intersection_pnt - cylinder_view_base, cylinder_view_axis) / (cylinder_length*cylinder_length);
+			if(anear >= 0 && anear <= 1.0) {
 			}
 			else {
-				discard;
-				return;
+				// Calculate second intersection point.
+				float tfar = t + s;
+				vec3 far_view_intersection_pnt = ray_origin + tfar * ray_dir;
+				float afar = dot(far_view_intersection_pnt - cylinder_view_base, cylinder_view_axis) / (cylinder_length*cylinder_length);
+				
+				if(anear < 0 && afar >= 0) {
+					view_intersection_pnt += (anear / (anear - afar) * 2.0 * s) * ray_dir;
+				}
+				else if(anear > 1.0 && afar < 1.0) {
+					view_intersection_pnt += ((anear - 1.0) / (anear - afar) * 2.0 * s) * ray_dir;
+				}
+				else {
+					discard;
+					return;
+				}
 			}
 		}
 	}
@@ -126,7 +130,7 @@ void main()
 	// The eye coordinate Z value must be transformed to normalized device 
 	// coordinates before being assigned as the final fragment depth.
 	vec4 projected_intersection = projection_matrix * vec4(view_intersection_pnt, 1.0);
-	gl_FragDepth = (projected_intersection.z / projected_intersection.w + 1.0) * 0.5;
+	gl_FragDepth = ((gl_DepthRange.diff * (projected_intersection.z / projected_intersection.w)) + gl_DepthRange.near + gl_DepthRange.far) * 0.5;
 
 	FragColor = cylinder_color_fs;
 }

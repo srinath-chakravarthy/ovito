@@ -265,6 +265,13 @@ void ViewportWindow::resizeEvent(QResizeEvent*)
 }
 
 #else
+	
+/******************************************************************************
+* Is called whenever the GL context needs to be initialized.
+******************************************************************************/
+void ViewportWindow::initializeGL()
+{
+}
 
 /******************************************************************************
 * Is called whenever the widget needs to be painted.

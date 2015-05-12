@@ -475,6 +475,7 @@ void OpenGLArrowPrimitive::createArrowElement(int index, const Point3& pos, cons
 
 		OVITO_ASSERT(_mappedVerticesWithElementInfo);
 		VertexWithElementInfo* vertices = _mappedVerticesWithElementInfo + (index * _verticesPerElement);
+		OVITO_ASSERT(_verticesPerElement == 7);
 
 		if(length > arrowHeadLength) {
 			vertices[0].pos = Point_3<float>(length, 0, 0);
@@ -549,7 +550,7 @@ void OpenGLArrowPrimitive::render(SceneRenderer* renderer)
 		return;
 
 	vpRenderer->rebindVAO();
-
+	
 	if(shadingMode() == NormalShading) {
 		if(renderingQuality() == HighQuality && shape() == CylinderShape)
 			renderWithElementInfo(vpRenderer);
@@ -578,18 +579,20 @@ void OpenGLArrowPrimitive::renderWithNormals(ViewportSceneRenderer* renderer)
 	if(!renderer->isPicking())
 		shader->setUniformValue("normal_matrix", (QMatrix3x3)(renderer->modelViewTM().linear().inverse().transposed()));
 
-	GLint pickingBaseID;
+	GLint pickingBaseID = 0;
 	if(renderer->isPicking()) {
 		pickingBaseID = renderer->registerSubObjectIDs(elementCount());
 		renderer->activateVertexIDs(shader, _chunkSize * _verticesPerElement, true);
 	}
 
-	for(int chunkIndex = 0; chunkIndex < _verticesWithNormals.size(); chunkIndex++, pickingBaseID += _chunkSize) {
+	for(int chunkIndex = 0; chunkIndex < _verticesWithNormals.size(); chunkIndex++) {
 		int chunkStart = chunkIndex * _chunkSize;
 		int chunkSize = std::min(_elementCount - chunkStart, _chunkSize);
 
-		if(renderer->isPicking())
+		if(renderer->isPicking()) {
 			shader->setUniformValue("pickingBaseID", pickingBaseID);
+			pickingBaseID += _chunkSize;
+		}
 
 		_verticesWithNormals[chunkIndex].bindPositions(renderer, shader, offsetof(VertexWithNormal, pos));
 		if(!renderer->isPicking()) {
@@ -653,19 +656,21 @@ void OpenGLArrowPrimitive::renderWithElementInfo(ViewportSceneRenderer* renderer
 	shader->setUniformValue("viewport_origin", (float)viewportCoords[0], (float)viewportCoords[1]);
 	shader->setUniformValue("inverse_viewport_size", 2.0f / (float)viewportCoords[2], 2.0f / (float)viewportCoords[3]);
 
-	GLint pickingBaseID;
+	GLint pickingBaseID = 0;
 	if(renderer->isPicking()) {
 		pickingBaseID = renderer->registerSubObjectIDs(elementCount());
 		renderer->activateVertexIDs(shader, _chunkSize * _verticesPerElement, true);
 		OVITO_CHECK_OPENGL(shader->setUniformValue("verticesPerElement", (GLint)_verticesPerElement));
 	}
 
-	for(int chunkIndex = 0; chunkIndex < _verticesWithElementInfo.size(); chunkIndex++, pickingBaseID += _chunkSize) {
+	for(int chunkIndex = 0; chunkIndex < _verticesWithElementInfo.size(); chunkIndex++) {
 		int chunkStart = chunkIndex * _chunkSize;
 		int chunkSize = std::min(_elementCount - chunkStart, _chunkSize);
 
-		if(renderer->isPicking())
+		if(renderer->isPicking()) {
 			shader->setUniformValue("pickingBaseID", pickingBaseID);
+			pickingBaseID += _chunkSize;
+		}
 
 		_verticesWithElementInfo[chunkIndex].bindPositions(renderer, shader, offsetof(VertexWithElementInfo, pos));
 		_verticesWithElementInfo[chunkIndex].bind(renderer, shader, "cylinder_base", GL_FLOAT, offsetof(VertexWithElementInfo, base), 3, sizeof(VertexWithElementInfo));
@@ -674,7 +679,7 @@ void OpenGLArrowPrimitive::renderWithElementInfo(ViewportSceneRenderer* renderer
 		if(!renderer->isPicking())
 			_verticesWithElementInfo[chunkIndex].bindColors(renderer, shader, 4, offsetof(VertexWithElementInfo, color));
 
-		if(_usingGeometryShader && (shadingMode() == FlatShading || renderingQuality() == HighQuality)) {
+		if(_usingGeometryShader && (shadingMode() == FlatShading || renderingQuality() == HighQuality) && shape() == CylinderShape) {
 			OVITO_CHECK_OPENGL(glDrawArrays(GL_POINTS, 0, chunkSize));
 		}
 		else {

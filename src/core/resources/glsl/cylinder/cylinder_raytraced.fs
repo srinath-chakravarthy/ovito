@@ -78,14 +78,15 @@ void main()
 		float v = dot(RC, RC);
 		if(v-t*t > cylinder_radius_sq_fs) {
 			discard;
-			return;
 		}
-		view_intersection_pnt -= t * ray_dir;		
-		surface_normal = -cylinder_view_axis;
-		float tfar = dot(cylinder_view_axis, ray_dir);
-		if(tfar < 0.0) {
-			view_intersection_pnt += tfar * ray_dir;
-			surface_normal = cylinder_view_axis;
+		else {
+			view_intersection_pnt -= t * ray_dir;		
+			surface_normal = -cylinder_view_axis;
+			float tfar = dot(cylinder_view_axis, ray_dir);
+			if(tfar < 0.0) {
+				view_intersection_pnt += tfar * ray_dir;
+				surface_normal = cylinder_view_axis;
+			}
 		}
 	}
 	else {
@@ -97,42 +98,42 @@ void main()
 		// Test if ray missed the cylinder.
 		if(d > cylinder_radius_sq_fs) {
 			discard;
-			return;
-		}
-			
-		// Calculate closest intersection position.
-		float t = dot(cross(cylinder_view_axis, RC), n) / ln;
-		float s = abs(sqrt(cylinder_radius_sq_fs - d) / dot(cross(n, cylinder_view_axis),ray_dir) * cylinder_length);
-		float tnear = t - s;
-	
-		// Calculate intersection point in view coordinate system.
-		view_intersection_pnt += tnear * ray_dir;
-	
-		// Find intersection position along cylinder axis.
-		float anear = dot(view_intersection_pnt - cylinder_view_base, cylinder_view_axis) / (cylinder_length*cylinder_length);
-		if(anear >= 0 && anear <= 1.0) {
-		
-			// Calculate surface normal in view coordinate system.
-			surface_normal = (view_intersection_pnt - (cylinder_view_base + anear * cylinder_view_axis));
 		}
 		else {
-			// Calculate second intersection point.
-			float tfar = t + s;
-			vec3 far_view_intersection_pnt = ray_origin + tfar * ray_dir;
-			float afar = dot(far_view_intersection_pnt - cylinder_view_base, cylinder_view_axis) / (cylinder_length*cylinder_length);
-			
-			// Compute intersection with cylinder caps.
-			if(anear < 0 && afar > 0) {
-				view_intersection_pnt += (anear / (anear - afar) * 2.0 * s + 1e-3) * ray_dir;
-				surface_normal = -cylinder_view_axis;
-			}
-			else if(anear > 1.0 && afar < 1.0) {
-				view_intersection_pnt += ((anear - 1.0) / (anear - afar) * 2.0 * s + 1e-3) * ray_dir;
-				surface_normal = cylinder_view_axis;
+
+			// Calculate closest intersection position.
+			float t = dot(cross(cylinder_view_axis, RC), n) / ln;
+			float s = abs(sqrt(cylinder_radius_sq_fs - d) / dot(cross(n, cylinder_view_axis),ray_dir) * cylinder_length);
+			float tnear = t - s;
+		
+			// Calculate intersection point in view coordinate system.
+			view_intersection_pnt += tnear * ray_dir;
+		
+			// Find intersection position along cylinder axis.
+			float anear = dot(view_intersection_pnt - cylinder_view_base, cylinder_view_axis) / (cylinder_length*cylinder_length);
+			if(anear >= 0 && anear <= 1.0) {
+
+				// Calculate surface normal in view coordinate system.
+				surface_normal = (view_intersection_pnt - (cylinder_view_base + anear * cylinder_view_axis));
 			}
 			else {
-				discard;
-				return;
+				// Calculate second intersection point.
+				float tfar = t + s;
+				vec3 far_view_intersection_pnt = ray_origin + tfar * ray_dir;
+				float afar = dot(far_view_intersection_pnt - cylinder_view_base, cylinder_view_axis) / (cylinder_length*cylinder_length);
+				
+				// Compute intersection with cylinder caps.
+				if(anear < 0 && afar > 0) {
+					view_intersection_pnt += (anear / (anear - afar) * 2.0 * s + 1e-3) * ray_dir;
+					surface_normal = -cylinder_view_axis;
+				}
+				else if(anear > 1.0 && afar < 1.0) {
+					view_intersection_pnt += ((anear - 1.0) / (anear - afar) * 2.0 * s + 1e-3) * ray_dir;
+					surface_normal = cylinder_view_axis;
+				}
+				else {
+					discard;
+				}
 			}
 		}
 	}
@@ -142,8 +143,8 @@ void main()
 	// The eye coordinate Z value must be transformed to normalized device 
 	// coordinates before being assigned as the final fragment depth.
 	vec4 projected_intersection = projection_matrix * vec4(view_intersection_pnt, 1.0);
-	gl_FragDepth = (projected_intersection.z / projected_intersection.w + 1.0) * 0.5;
-
+	gl_FragDepth = ((gl_DepthRange.diff * (projected_intersection.z / projected_intersection.w)) + gl_DepthRange.near + gl_DepthRange.far) * 0.5;
+	
 	surface_normal = normalize(surface_normal);
 	float diffuse = abs(surface_normal.z) * diffuse_strength;
 	float specular = pow(max(0.0, dot(reflect(specular_lightdir, surface_normal), ray_dir)), shininess) * 0.25;
