@@ -61,7 +61,7 @@ public:
 		}
 		layout->addWidget(spinner);
 		connect(spinner, &SpinnerWidget::spinnerValueChanged, [this,container]() {
-			Q_EMIT commitData(container);
+			Q_EMIT const_cast<NumericalItemDelegate*>(this)->commitData(container);
 		});
 		return container;
 	}
