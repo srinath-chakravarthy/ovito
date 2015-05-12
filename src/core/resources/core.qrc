@@ -53,6 +53,8 @@
 	<file>actions/animation/stop_animation.png</file>
 	<file>actions/animation/animation_mode.png</file>
 	<file>actions/animation/named_frames.png</file>
+	<file>actions/animation/add_animation_key.png</file>
+	<file>actions/animation/delete_animation_key.png</file>
 	
 	<file>cursor/viewport/cursor_orbit.png</file>
 	<file>cursor/viewport/cursor_pan.png</file>

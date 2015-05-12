@@ -163,11 +163,10 @@ void SimulationCellEditor::createUI(const RolloutInsertionParameters& rolloutPar
 			sublayout->addLayout(layout2);
 			for(int i = 0; i < 3; i++) {
 				Vector3ParameterUI* vPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SimulationCellObject::_cellVector1), i);
-				layout2->addWidget(vPUI->textBox(), 0, i*3);
-				layout2->addWidget(vPUI->spinner(), 0, i*3+1);
-				layout2->setColumnStretch(i*3, 1);
+				layout2->addLayout(vPUI->createFieldLayout(), 0, i*2);
+				layout2->setColumnStretch(i*2, 1);
 				if(i != 2)
-					layout2->setColumnMinimumWidth(i*3+2, 6);
+					layout2->setColumnMinimumWidth(i*2+1, 6);
 			}
 		}
 
@@ -180,11 +179,10 @@ void SimulationCellEditor::createUI(const RolloutInsertionParameters& rolloutPar
 			sublayout->addLayout(layout2);
 			for(int i = 0; i < 3; i++) {
 				Vector3ParameterUI* vPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SimulationCellObject::_cellVector2), i);
-				layout2->addWidget(vPUI->textBox(), 0, i*3);
-				layout2->addWidget(vPUI->spinner(), 0, i*3+1);
-				layout2->setColumnStretch(i*3, 1);
+				layout2->addLayout(vPUI->createFieldLayout(), 0, i*2);
+				layout2->setColumnStretch(i*2, 1);
 				if(i != 2)
-					layout2->setColumnMinimumWidth(i*3+2, 6);
+					layout2->setColumnMinimumWidth(i*2+1, 6);
 			}
 		}
 
@@ -197,11 +195,10 @@ void SimulationCellEditor::createUI(const RolloutInsertionParameters& rolloutPar
 			sublayout->addLayout(layout2);
 			for(int i = 0; i < 3; i++) {
 				Vector3ParameterUI* vPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SimulationCellObject::_cellVector3), i);
-				layout2->addWidget(vPUI->textBox(), 0, i*3);
-				layout2->addWidget(vPUI->spinner(), 0, i*3+1);
-				layout2->setColumnStretch(i*3, 1);
+				layout2->addLayout(vPUI->createFieldLayout(), 0, i*2);
+				layout2->setColumnStretch(i*2, 1);
 				if(i != 2)
-					layout2->setColumnMinimumWidth(i*3+2, 6);
+					layout2->setColumnMinimumWidth(i*2+1, 6);
 			}
 		}
 
@@ -214,11 +211,10 @@ void SimulationCellEditor::createUI(const RolloutInsertionParameters& rolloutPar
 			sublayout->addLayout(layout2);
 			for(int i = 0; i < 3; i++) {
 				Vector3ParameterUI* vPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SimulationCellObject::_cellOrigin), i);
-				layout2->addWidget(vPUI->textBox(), 0, i*3);
-				layout2->addWidget(vPUI->spinner(), 0, i*3+1);
-				layout2->setColumnStretch(i*3, 1);
+				layout2->addLayout(vPUI->createFieldLayout(), 0, i*2);
+				layout2->setColumnStretch(i*2, 1);
 				if(i != 2)
-					layout2->setColumnMinimumWidth(i*3+2, 6);
+					layout2->setColumnMinimumWidth(i*2+1, 6);
 			}
 		}
 	}

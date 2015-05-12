@@ -45,16 +45,19 @@ public:
 	/// Destructor.
 	virtual ~NumericalParameterUI();
 
-	/// This returns a label for the text box managed by this ParameterUI.
+	/// Returns a label for the control widget managed by this ParameterUI.
 	QLabel* label() const { return _label; }
 
-	/// This returns the spinner managed by this ParameterUI.
+	/// Returns the spinner widget managed by this ParameterUI.
 	SpinnerWidget* spinner() const { return _spinner; }
 
-	/// This returns the text box managed by this ParameterUI.
+	/// Returns the text box managed by this ParameterUI.
 	QLineEdit* textBox() const { return _textBox; }
 
-	/// Creates a QLayout that contains the text box and the spinner widget.
+	/// Returns the button, which invokes the animation key editor for this animatable parameter.
+	QAbstractButton* animateButton() const { return _animateButton; }
+
+	/// Creates a QLayout that contains the text box, the spinner widget, the animate button (if parameter is animatable).
 	QLayout* createFieldLayout() const;
 
 	/// Returns the type of unit conversion service, which is used to format the parameter value as a text string.
@@ -82,9 +85,10 @@ public:
 	
 public:
 	
-	Q_PROPERTY(SpinnerWidget spinner READ spinner)		
-	Q_PROPERTY(QLineEdit textBox READ textBox)		
-	Q_PROPERTY(QLabel label READ label)
+	Q_PROPERTY(SpinnerWidget spinner READ spinner);
+	Q_PROPERTY(QLineEdit textBox READ textBox);
+	Q_PROPERTY(QLabel label READ label);
+	Q_PROPERTY(QAbstractButton animateButton READ animateButton);
 	
 public Q_SLOTS:
 	
@@ -116,6 +120,9 @@ protected:
 
 	/// The label of the UI component.
 	QPointer<QLabel> _label;
+
+	/// The button for editing animatable parameters.
+	QPointer<QAbstractButton> _animateButton;
 
 	/// The type of unit conversion service, which is used to format the parameter value as a text string.
 	const QMetaObject* _parameterUnitType;

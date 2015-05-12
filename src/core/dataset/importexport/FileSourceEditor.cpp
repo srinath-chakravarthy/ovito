@@ -128,13 +128,11 @@ void FileSourceEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 	IntegerParameterUI* playbackSpeedNumeratorUI = new IntegerParameterUI(this, PROPERTY_FIELD(FileSource::_playbackSpeedNumerator));
 	playbackSpeedNumeratorUI->setMinValue(1);
 	subsublayout->addWidget(new QLabel(tr("Playback rate:")));
-	subsublayout->addWidget(playbackSpeedNumeratorUI->textBox());
-	subsublayout->addWidget(playbackSpeedNumeratorUI->spinner());
+	subsublayout->addLayout(playbackSpeedNumeratorUI->createFieldLayout());
 	subsublayout->addWidget(new QLabel(tr("/")));
 	IntegerParameterUI* playbackSpeedDenominatorUI = new IntegerParameterUI(this, PROPERTY_FIELD(FileSource::_playbackSpeedDenominator));
 	playbackSpeedDenominatorUI->setMinValue(1);
-	subsublayout->addWidget(playbackSpeedDenominatorUI->textBox());
-	subsublayout->addWidget(playbackSpeedDenominatorUI->spinner());
+	subsublayout->addLayout(playbackSpeedDenominatorUI->createFieldLayout());
 	layout->addLayout(subsublayout);
 
 	subsublayout = new QHBoxLayout();

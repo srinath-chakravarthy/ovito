@@ -23,7 +23,9 @@
 #include <core/gui/properties/ParameterUI.h>
 #include <core/gui/properties/PropertiesEditor.h>
 #include <core/animation/controller/Controller.h>
+#include <core/animation/controller/KeyframeController.h>
 #include <core/animation/AnimationSettings.h>
+#include <core/gui/dialogs/AnimationKeyEditorDialog.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
 
@@ -158,6 +160,22 @@ void PropertyParameterUI::memorizeDefaultParameterValue()
 		}
 	}
 }
+
+/******************************************************************************
+* Opens the animation key editor if the parameter managed by this UI class
+* is animatable.
+******************************************************************************/
+void PropertyParameterUI::openAnimationKeyEditor()
+{
+	OVITO_ASSERT(editor() != nullptr);
+
+	KeyframeController* ctrl = dynamic_object_cast<KeyframeController>(parameterObject());
+	if(!ctrl) return;
+
+	AnimationKeyEditorDialog dlg(ctrl, propertyField(), editor()->container());
+	dlg.exec();
+}
+
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

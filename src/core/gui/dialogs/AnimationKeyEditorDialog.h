@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // 
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2015) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,57 +19,42 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_ANIM_SETTINGS_DIALOG_H
-#define __OVITO_ANIM_SETTINGS_DIALOG_H
+#ifndef __OVITO_ANIMATION_KEY_EDITOR_DIALOG_H
+#define __OVITO_ANIMATION_KEY_EDITOR_DIALOG_H
 
-#include <core/animation/AnimationSettings.h>
+#include <core/Core.h>
 #include <core/dataset/UndoStack.h>
-#include <core/gui/widgets/general/SpinnerWidget.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
- * This dialog box lets the user manage the animation settings.
+ * This dialog box allows to edit the animation keys of an animatable parameter.
  */
-class OVITO_CORE_EXPORT AnimationSettingsDialog : public QDialog, private UndoableTransaction
+class AnimationKeyEditorDialog : public QDialog, private UndoableTransaction
 {
 	Q_OBJECT
 	
 public:
 
 	/// Constructor.
-	AnimationSettingsDialog(AnimationSettings* animSettings, QWidget* parentWindow = nullptr);
+	AnimationKeyEditorDialog(KeyframeController* ctrl, const PropertyFieldDescriptor* propertyField, QWidget* parentWindow = nullptr);
 	
 private Q_SLOTS:	
 
 	/// Event handler for the Ok button.
 	void onOk();
 
-	/// Is called when the user has selected a new value for the frames per seconds.
-	void onFramesPerSecondChanged(int index);
-	
-	/// Is called when the user has selected a new value for the playback speed.
-	void onPlaybackSpeedChanged(int index);
-	
-	/// Is called when the user changes the start/end values of the animation interval.
-	void onAnimationIntervalChanged();
-
 private:
-	
-	/// Updates the values shown in the dialog.
-	void updateValues();
 
-	/// The animation settings being edited.
-	OORef<AnimationSettings> _animSettings;
+	QTableView* _tableWidget;
+	QAbstractTableModel* _model;
+	QAction* _addKeyAction;
+	QAction* _deleteKeyAction;
 
-	QComboBox* fpsBox;
-	SpinnerWidget* animStartSpinner;
-	SpinnerWidget* animEndSpinner;	
-	QComboBox* playbackSpeedBox;
 };
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_ANIM_SETTINGS_DIALOG_H
+#endif // __OVITO_ANIMATION_KEY_EDITOR_DIALOG_H

@@ -43,6 +43,9 @@ public:
 	/// Returns the animation time at which the key is set.
 	TimePoint time() const { return _time; }
 
+	/// Returns the value of this animation key as a QVariant.
+	virtual QVariant qvariant_value() const = 0;
+
 private:
 
 	/// Changes the key's time position.
@@ -81,6 +84,9 @@ public:
 
 	/// Returns the value of this animation key.
 	const value_type& value() const { return _value; }
+
+	/// Returns the value of this animation key as a QVariant.
+	virtual QVariant qvariant_value() const override { return QVariant::fromValue(value()); }
 
 protected:
 

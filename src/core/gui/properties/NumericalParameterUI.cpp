@@ -68,6 +68,17 @@ void NumericalParameterUI::initUIControls(const QString& labelText)
 	connect(spinner(), &SpinnerWidget::spinnerDragStop, this, &NumericalParameterUI::onSpinnerDragStop);
 	connect(spinner(), &SpinnerWidget::spinnerDragAbort, this, &NumericalParameterUI::onSpinnerDragAbort);
 	spinner()->setTextBox(_textBox);
+
+	// Create animate button if parameter is animation (i.e. it's a reference to a Controller object).
+	if(isReferenceFieldUI() && propertyField()->targetClass()->isDerivedFrom(Controller::OOType)) {
+		_animateButton = new QToolButton();
+		_animateButton->setText(tr("A"));
+		static_cast<QToolButton*>(_animateButton.data())->setAutoRaise(true);
+		static_cast<QToolButton*>(_animateButton.data())->setToolButtonStyle(Qt::ToolButtonTextOnly);
+		_animateButton->setToolTip(tr("Animate parameter..."));
+		_animateButton->setEnabled(false);
+		connect(_animateButton, &QAbstractButton::clicked, this, &NumericalParameterUI::openAnimationKeyEditor);
+	}
 }
 
 /******************************************************************************
@@ -75,10 +86,11 @@ void NumericalParameterUI::initUIControls(const QString& labelText)
 ******************************************************************************/
 NumericalParameterUI::~NumericalParameterUI()
 {
-	// Release GUI controls. 
+	// Release widgets managed by this class.
 	delete label();
 	delete spinner();
 	delete textBox(); 
+	delete animateButton();
 }
 
 /******************************************************************************
@@ -107,6 +119,9 @@ void NumericalParameterUI::resetUI()
 	}
 
 	PropertyParameterUI::resetUI();
+
+	if(animateButton())
+		animateButton()->setEnabled(editObject() && parameterObject() && isEnabled());
 }
 
 /******************************************************************************
@@ -124,6 +139,8 @@ void NumericalParameterUI::setEnabled(bool enabled)
 			spinner()->setEnabled(editObject() && isEnabled());
 		}
 	}
+	if(animateButton())
+		animateButton()->setEnabled(editObject() && parameterObject() && isEnabled());
 }
 
 /******************************************************************************
@@ -177,6 +194,8 @@ QLayout* NumericalParameterUI::createFieldLayout() const
 	layout->setSpacing(0);
 	layout->addWidget(textBox());
 	layout->addWidget(spinner());
+	if(animateButton())
+		layout->addWidget(animateButton());
 	return layout;
 }
 

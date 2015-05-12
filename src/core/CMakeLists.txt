@@ -86,6 +86,7 @@ SET(SourceFiles
 	gui/mainwin/cmdpanel/UtilityCommandPage.cpp
 	gui/mainwin/cmdpanel/OverlayCommandPage.cpp
 	gui/dialogs/AdjustCameraDialog.cpp
+	gui/dialogs/AnimationKeyEditorDialog.cpp
 	gui/dialogs/AnimationSettingsDialog.cpp
 	gui/dialogs/ApplicationSettingsDialog.cpp
 	gui/dialogs/GeneralSettingsPage.cpp

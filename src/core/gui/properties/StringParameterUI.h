@@ -70,7 +70,7 @@ public:
 	
 public:
 	
-	Q_PROPERTY(QLineEdit textBox READ textBox)		
+	Q_PROPERTY(QLineEdit textBox READ textBox);
 	
 public Q_SLOTS:
 	

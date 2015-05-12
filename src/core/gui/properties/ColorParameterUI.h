@@ -67,8 +67,8 @@ public:
 	
 public:
 	
-	Q_PROPERTY(QLabel* label READ label)		
-	Q_PROPERTY(QWidget* colorPicker READ colorPicker)		
+	Q_PROPERTY(QLabel* label READ label);
+	Q_PROPERTY(QWidget* colorPicker READ colorPicker);
 	
 public Q_SLOTS:
 	

@@ -29,7 +29,7 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /******************************************************************************
-* The constructor of the viewport settings dialog.
+* The constructor of the camera dialog.
 ******************************************************************************/
 AdjustCameraDialog::AdjustCameraDialog(Viewport* viewport, QWidget* parent) :
 	QDialog(parent), _viewport(viewport)

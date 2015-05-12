@@ -214,6 +214,9 @@ protected Q_SLOTS:
 	/// as the default initialization value next time when a new object of the same class is created.
 	void memorizeDefaultParameterValue();
 
+	/// Opens the animation key editor if the parameter managed by this UI class is animatable.
+	void openAnimationKeyEditor();
+
 protected:
 
 	/// This method is called when a reference target changes.
