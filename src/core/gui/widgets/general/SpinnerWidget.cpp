@@ -48,12 +48,20 @@ void SpinnerWidget::paintEvent(QPaintEvent* event)
     sboption.state |= _upperBtnPressed ? QStyle::State_Sunken : QStyle::State_Raised;
     sboption.rect.setHeight(sboption.rect.height() / 2);
     p.drawPrimitive(QStyle::PE_PanelButtonTool, sboption);
+    if(sboption.rect.width() > sboption.rect.height() * 3 / 2) {
+    	int d = (sboption.rect.width() - (sboption.rect.height() * 3 / 2)) / 2;
+    	sboption.rect.adjust(d, 0, -d, 0);
+    }
     p.drawPrimitive(QStyle::PE_IndicatorSpinUp, sboption);
 
     sboption.initFrom(this);
     sboption.state |= _lowerBtnPressed ? QStyle::State_Sunken : QStyle::State_Raised;
     sboption.rect.setTop(sboption.rect.top() + sboption.rect.height() / 2);
     p.drawPrimitive(QStyle::PE_PanelButtonTool, sboption);
+    if(sboption.rect.width() > sboption.rect.height() * 3 / 2) {
+    	int d = (sboption.rect.width() - (sboption.rect.height() * 3 / 2)) / 2;
+    	sboption.rect.adjust(d, 0, -d, 0);
+    }
     p.drawPrimitive(QStyle::PE_IndicatorSpinDown, sboption);
 }
 

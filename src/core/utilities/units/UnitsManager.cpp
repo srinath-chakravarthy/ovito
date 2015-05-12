@@ -60,6 +60,22 @@ ParameterUnit* UnitsManager::getUnit(const QMetaObject* parameterUnitClass)
 }
 
 /******************************************************************************
+* Converts the given string to a value.
+******************************************************************************/
+FloatType PercentParameterUnit::parseString(const QString& valueString)
+{
+	return FloatParameterUnit::parseString(QString(valueString).remove(QChar('%')));
+}
+
+/******************************************************************************
+* Converts a numeric value to a string.
+******************************************************************************/
+QString PercentParameterUnit::formatValue(FloatType value)
+{
+	return FloatParameterUnit::formatValue(value) + QStringLiteral("%");
+}
+
+/******************************************************************************
 * Constructor.
 ******************************************************************************/
 TimeParameterUnit::TimeParameterUnit(QObject* parent, DataSet* dataset) : IntegerParameterUnit(parent, dataset)

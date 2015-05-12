@@ -123,7 +123,7 @@ void TriMeshDisplayEditor::createUI(const RolloutInsertionParameters& rolloutPar
 	layout->addWidget(colorUI->colorPicker(), 0, 1);
 
 	FloatParameterUI* transparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(TriMeshDisplay::_transparency));
-	layout->addWidget(new QLabel(tr("Transparency (%):")), 1, 0);
+	layout->addWidget(new QLabel(tr("Transparency:")), 1, 0);
 	layout->addLayout(transparencyUI->createFieldLayout(), 1, 1);
 	transparencyUI->setMinValue(0);
 	transparencyUI->setMaxValue(1);

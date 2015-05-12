@@ -248,12 +248,13 @@ void AnimationTrackBar::addController(RefTarget* target, RefTarget* owner, const
 {
 	if(KeyframeController* ctrl = dynamic_object_cast<KeyframeController>(target)) {
 		int ctrlIndex = _controllers.targets().indexOf(ctrl);
+		QString pname = owner->objectTitle() + QStringLiteral(" - ") + field->displayName();
 		if(ctrlIndex == -1) {
 			_controllers.push_back(ctrl);
-			_parameterNames.push_back(owner->objectTitle() + QStringLiteral(" - ") + field->displayName());
+			_parameterNames.push_back(pname);
 		}
-		else {
-			_parameterNames[ctrlIndex] += QStringLiteral(",") + owner->objectTitle() + QStringLiteral(" - ") + field->displayName();
+		else if(_parameterNames[ctrlIndex].contains(pname) == false) {
+			_parameterNames[ctrlIndex] += QStringLiteral(",") + pname;
 		}
 	}
 }
@@ -380,7 +381,7 @@ void AnimationTrackBar::mouseMoveEvent(QMouseEvent* event)
 		}
 		else {
 			setCursor(_selectionCursor);
-			QString tooltipText = tr("<p style='white-space:pre'>Time %1:").arg(_animSettings->timeToString(keys.front()->time()));
+			QString tooltipText = tr("<p style='white-space:pre'>Time position %1:").arg(_animSettings->timeToString(keys.front()->time()));
 			for(AnimationKey* key : keys) {
 				tooltipText += QStringLiteral("<br>  %1: %2")
 						.arg(_parameterNames[controllerIndexFromKey(key)])
@@ -432,7 +433,7 @@ void AnimationTrackBar::mouseReleaseEvent(QMouseEvent* event)
 ******************************************************************************/
 QString AnimationTrackBar::keyValueString(AnimationKey* key) const
 {
-	QVariant value = key->property("value");
+	QVariant value = key->valueQVariant();
 	if(value.userType() == qMetaTypeId<FloatType>())
 		return QString::number(value.value<FloatType>());
 	else if(value.userType() == qMetaTypeId<int>())

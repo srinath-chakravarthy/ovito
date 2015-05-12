@@ -44,7 +44,10 @@ public:
 	TimePoint time() const { return _time; }
 
 	/// Returns the value of this animation key as a QVariant.
-	virtual QVariant qvariant_value() const = 0;
+	virtual QVariant valueQVariant() const = 0;
+
+	/// Sets the value of the key.
+	virtual bool setValueQVariant(const QVariant& v) = 0;
 
 private:
 
@@ -85,13 +88,24 @@ public:
 	/// Returns the value of this animation key.
 	const value_type& value() const { return _value; }
 
+	/// Changes the key's value.
+	bool setValue(const value_type& newValue) {
+		_value = newValue;
+		return true;
+	}
+
 	/// Returns the value of this animation key as a QVariant.
-	virtual QVariant qvariant_value() const override { return QVariant::fromValue(value()); }
+	virtual QVariant valueQVariant() const override {
+		return QVariant::fromValue(value());
+	}
+
+	/// Sets the value of the key.
+	virtual bool setValueQVariant(const QVariant& v) override {
+		if(!v.canConvert<value_type>()) return false;
+		return setValue(v.value<value_type>());
+	}
 
 protected:
-
-	/// Changes the key's value.
-	void setValue(const value_type& newValue) { _value = newValue; }
 
 	/// The key's value.
 	PropertyField<value_type> _value;

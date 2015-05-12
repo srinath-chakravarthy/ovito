@@ -292,6 +292,12 @@ public:
 	/// This default implementation converts from the [0,100] percent range to the [0,1] range.
 	/// \sa nativeToUser()
 	virtual FloatType userToNative(FloatType userValue) override { return userValue / FloatType(100); }
+
+	/// \brief Converts the given string to a value.
+	virtual FloatType parseString(const QString& valueString) override;
+
+	/// \brief Converts a numeric value to a string.
+	virtual QString formatValue(FloatType value) override;
 };
 
 /**

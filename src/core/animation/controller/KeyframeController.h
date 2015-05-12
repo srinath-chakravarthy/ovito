@@ -60,6 +60,10 @@ public:
 	/// Deletes the given set of keys from the controller.
 	void deleteKeys(const QVector<AnimationKey*> keysToDelete);
 
+	/// Creates am animation key at the given time.
+	/// Returns the index of the key, which may be an existing key.
+	virtual int createKey(TimePoint time) = 0;
+
 protected:
 
 	/// Inserts a new animation key into this controller's list of keys.
@@ -106,6 +110,29 @@ public:
 
 	/// Returns the list of keys of this animation controller.
 	const QVector<KeyType*>& typedKeys() const { return reinterpret_cast<const QVector<KeyType*>&>(keys()); }
+
+	/// Creates am animation key at the given time.
+	/// Returns the index of the key, which may be an existing key.
+	virtual int createKey(TimePoint time) override {
+		OVITO_ASSERT(areKeysSorted());
+		// Look for existing key.
+		int index;
+		for(index = 0; index < this->keys().size(); index++) {
+			if(this->keys()[index]->time() == time) {
+				return index;
+			}
+			else if(this->keys()[index]->time() > time) {
+				break;
+			}
+		}
+		// Insert a new key.
+		TimeInterval iv;
+		value_type currentValue;
+		getInterpolatedValue(time, currentValue, iv);
+		insertKey(OORef<KeyType>(new KeyType(dataset(), time, currentValue)), index);
+		OVITO_ASSERT(areKeysSorted());
+		return index;
+	}
 
 protected:
 
@@ -165,7 +192,7 @@ protected:
 				break;
 			}
 		}
-		insertKey(new KeyType(dataset(), time, newValue), index);
+		insertKey(OORef<KeyType>(new KeyType(dataset(), time, newValue)), index);
 	}
 
 	/// Sets the controller's value at the specified time.
@@ -173,11 +200,11 @@ protected:
 		if(keys().empty()) {
 			// Create an additional key at time 0 if the controller doesn't have any keys yet.
 			if(time != 0 && dataset()->animationSettings()->isAnimating() && newValue != nullvalue_type()) {
-				insertKey(new KeyType(dataset()), 0);
-				insertKey(new KeyType(dataset(), time, newValue), time > 0 ? 1 : 0);
+				insertKey(OORef<KeyType>(new KeyType(dataset())), 0);
+				insertKey(OORef<KeyType>(new KeyType(dataset(), time, newValue)), time > 0 ? 1 : 0);
 			}
 			else {
-				insertKey(new KeyType(dataset(), 0, newValue), 0);
+				insertKey(OORef<KeyType>(new KeyType(dataset(), 0, newValue)), 0);
 			}
 		}
 		else if(!dataset()->animationSettings()->isAnimating()) {
@@ -213,11 +240,11 @@ protected:
 		if(keys().empty()) {
 			// Create an additional key at time 0 if the controller doesn't have any keys yet.
 			if(time != 0 && dataset()->animationSettings()->isAnimating()) {
-				insertKey(new KeyType(dataset()), 0);
-				insertKey(new KeyType(dataset(), time, deltaValue), time > 0 ? 1 : 0);
+				insertKey(OORef<KeyType>(new KeyType(dataset())), 0);
+				insertKey(OORef<KeyType>(new KeyType(dataset(), time, deltaValue)), time > 0 ? 1 : 0);
 			}
 			else {
-				insertKey(new KeyType(dataset(), 0, deltaValue), 0);
+				insertKey(OORef<KeyType>(new KeyType(dataset(), 0, deltaValue)), 0);
 			}
 		}
 		else if(!dataset()->animationSettings()->isAnimating()) {

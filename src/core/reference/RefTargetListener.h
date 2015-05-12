@@ -143,8 +143,11 @@ public:
 	/// \brief Clears the list of targets.
 	void clear() { _targets.clear();  }
 
-	/// \brief Adds an new object to the list of targets this listener should listen to.
+	/// \brief Adds a new object to the list of targets this listener should listen to.
 	void push_back(RefTarget* target) { OVITO_CHECK_OBJECT_POINTER(target); _targets.push_back(target); }
+
+	/// \brief Inserts a new object into the list of targets this listener should listen to.
+	void insert(int index, RefTarget* target) { OVITO_CHECK_OBJECT_POINTER(target); _targets.insert(index, target); }
 
 	/// \brief Removes an object from the list of targets this listener should listen to.
 	void remove(RefTarget* target) {
@@ -210,9 +213,11 @@ public:
 	/// \sa targets()
 	void setTargets(const QVector<T*>& newTargets) { VectorRefTargetListenerBase::setTargets(reinterpret_cast<const QVector<RefTarget*>&>(newTargets)); }
 
-	/// \brief Adds an new object to the list of targets this listener should listen to.
+	/// \brief Adds a new object to the list of targets this listener should listen to.
 	void push_back(T* target) { VectorRefTargetListenerBase::push_back(target); }
 
+	/// \brief Inserts a new object into the list of targets this listener should listen to.
+	void insert(int index, T* target) { VectorRefTargetListenerBase::insert(index, target); }
 };
 
 OVITO_END_INLINE_NAMESPACE

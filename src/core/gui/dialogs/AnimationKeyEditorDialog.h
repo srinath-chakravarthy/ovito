@@ -24,6 +24,8 @@
 
 #include <core/Core.h>
 #include <core/dataset/UndoStack.h>
+#include <core/reference/RefTargetListener.h>
+#include <core/gui/properties/ParameterUI.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -37,12 +39,21 @@ class AnimationKeyEditorDialog : public QDialog, private UndoableTransaction
 public:
 
 	/// Constructor.
-	AnimationKeyEditorDialog(KeyframeController* ctrl, const PropertyFieldDescriptor* propertyField, QWidget* parentWindow = nullptr);
+	AnimationKeyEditorDialog(KeyframeController* ctrl, const PropertyFieldDescriptor* propertyField, PropertyParameterUI* paramUI, QWidget* parentWindow = nullptr);
 	
+	/// Returns the animation controller being edited.
+	KeyframeController* ctrl() const { return _ctrl.target(); }
+
 private Q_SLOTS:	
 
 	/// Event handler for the Ok button.
 	void onOk();
+
+	/// Handles the 'Add key' button.
+	void onAddKey();
+
+	/// Handles the 'Delete key' button.
+	void onDeleteKey();
 
 private:
 
@@ -50,7 +61,7 @@ private:
 	QAbstractTableModel* _model;
 	QAction* _addKeyAction;
 	QAction* _deleteKeyAction;
-
+	RefTargetListener<KeyframeController> _ctrl;
 };
 
 OVITO_END_INLINE_NAMESPACE
