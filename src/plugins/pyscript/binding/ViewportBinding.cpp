@@ -25,6 +25,7 @@
 #include <core/viewport/overlay/ViewportOverlay.h>
 #include <core/viewport/overlay/CoordinateTripodOverlay.h>
 #include <core/scene/SceneNode.h>
+#include <plugins/pyscript/extensions/PythonViewportOverlay.h>
 #include "PythonBinding.h"
 
 namespace PyScript {
@@ -102,7 +103,9 @@ BOOST_PYTHON_MODULE(PyScriptViewport)
 					"The camera direction is not changed.")
 			.def("zoomToSelectionExtents", &Viewport::zoomToSelectionExtents)
 			.def("zoomToBox", &Viewport::zoomToBox)
-			.add_property("overlays", make_function(&Viewport::overlays, return_internal_reference<>()))
+			.add_property("_overlays", make_function(&Viewport::overlays, return_internal_reference<>()))
+			.def("insertOverlay", &Viewport::insertOverlay)
+			.def("removeOverlay", &Viewport::removeOverlay)
 		;
 
 		enum_<Viewport::ViewType>("Type")
@@ -159,6 +162,13 @@ BOOST_PYTHON_MODULE(PyScriptViewport)
 	ovito_abstract_class<ViewportOverlay, RefTarget>();
 
 	ovito_class<CoordinateTripodOverlay, ViewportOverlay>();
+
+	ovito_class<PythonViewportOverlay, ViewportOverlay>()
+		.add_property("script", make_function(&PythonViewportOverlay::script, return_value_policy<copy_const_reference>()), &PythonViewportOverlay::setScript,
+				"The user-defined Python script, which paints over the rendered viewport contents.")
+		.add_property("output", make_function(&PythonViewportOverlay::scriptOutput, return_value_policy<copy_const_reference>()),
+				"The output text generated when compiling/running the Python script. May contain an error message when the execution of the script fails.")
+	;
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScriptViewport);

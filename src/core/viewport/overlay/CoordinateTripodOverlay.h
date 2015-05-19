@@ -41,6 +41,48 @@ public:
 	/// \brief This method asks the overlay to paint its contents over the given viewport.
 	virtual void render(Viewport* viewport, QPainter& painter, const ViewProjectionParameters& projParams, RenderSettings* renderSettings) override;
 
+	/// Returns the corner of the viewport where the tripod is shown.
+	int alignment() const { return _alignment; }
+
+	/// Sets the corner of the viewport where the tripod is shown.
+	void setAlignment(int align) { _alignment = align; }
+
+	/// Returns the size of the tripod.
+	FloatType tripodSize() const { return _tripodSize; }
+
+	/// Sets the size of the tripod.
+	void setTripodSize(FloatType size) { _tripodSize = size; }
+
+	/// Returns the line width.
+	FloatType lineWidth() const { return _lineWidth; }
+
+	/// Sets the line width.
+	void setLineWidth(FloatType lw) { _lineWidth = lw; }
+
+	/// Returns the horizontal offset of the tripod's position.
+	FloatType offsetX() const { return _offsetX; }
+
+	/// Sets the horizontal offset of the tripod's position.
+	void setOffsetX(FloatType offset) { _offsetX = offset; }
+
+	/// Returns the vertical offset of the tripod's position.
+	FloatType offsetY() const { return _offsetY; }
+
+	/// Sets the vertical offset of the tripod's position.
+	void setOffsetY(FloatType offset) { _offsetY = offset; }
+
+	/// Returns the text label font.
+	const QFont& font() const { return _font; }
+
+	/// Sets the text label font.
+	void setFont(const QFont& font) { _font = font; }
+
+	/// Returns the text label font size.
+	FloatType fontSize() const { return _fontSize; }
+
+	/// Sets the text label font size.
+	void setFontSize(FloatType fontSize) { _fontSize = fontSize; }
+
 private:
 
 	/// The corner of the viewport where the tripod is shown in.
