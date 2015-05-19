@@ -36,6 +36,7 @@
 #include <core/rendering/RenderSettings.h>
 #include <core/rendering/FrameBuffer.h>
 #include <core/gui/widgets/rendering/FrameBufferWindow.h>
+#include <core/gui/mainwin/MainWindow.h>
 #include "PythonBinding.h"
 
 namespace PyScript {
@@ -73,6 +74,10 @@ BOOST_PYTHON_MODULE(PyScriptApp)
 {
 	docstring_options docoptions(true, false);
 
+	class_<MainWindow, bases<>, MainWindow, boost::noncopyable>("MainWindow", no_init)
+		.add_property("frame_buffer_window", make_function(&MainWindow::frameBufferWindow, return_internal_reference<>()))
+	;
+
 	class_<OvitoObject, OORef<OvitoObject>, boost::noncopyable>("OvitoObject", no_init)
 		.def("__str__", &OvitoObject__str__)
 		.def("__repr__", &OvitoObject__repr__)
@@ -107,9 +112,10 @@ BOOST_PYTHON_MODULE(PyScriptApp)
 				"A :py:class:`~ovito.vis.ViewportConfiguration` object managing the viewports in OVITO's main window.")
 		.add_property("render_settings", make_function(&DataSet::renderSettings, return_value_policy<ovito_object_reference>()),
 				"The global :py:class:`~ovito.vis.RenderSettings` object, which stores the current settings for rendering pictures and movies. "
-				"These are the settings the user edits on the :guilabel:`Render` tab of OVITO's main window.")
+				"These are the settings the user can edit in the graphical version of OVITO.")
 		.add_property("selection", make_function(&DataSet::selection, return_value_policy<ovito_object_reference>()))
 		.add_property("container", make_function(&DataSet::container, return_value_policy<ovito_object_reference>()))
+		.add_property("window", make_function(&DataSet::mainWindow, return_value_policy<reference_existing_object>()))
 		.def("clearScene", &DataSet::clearScene)
 		.def("rescaleTime", &DataSet::rescaleTime)
 		.def("waitUntilSceneIsReady", &DataSet::waitUntilSceneIsReady, DataSet_waitUntilSceneIsReady_overloads())
@@ -124,6 +130,7 @@ BOOST_PYTHON_MODULE(PyScriptApp)
 		.def("fileSave", &DataSetContainer::fileSave)
 		.def("fileSaveAs", &DataSetContainer::fileSaveAs)
 		.def("askForSaveChanges", &DataSetContainer::askForSaveChanges)
+		.add_property("window", make_function(&DataSetContainer::mainWindow, return_value_policy<reference_existing_object>()))
 	;
 }
 

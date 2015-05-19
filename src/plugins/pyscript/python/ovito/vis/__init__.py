@@ -23,9 +23,14 @@ This module contains classes related to data visualization and rendering.
 
 """
 
+import sip
+import PyQt5.QtGui
+
 # Load the native modules.
 from PyScriptRendering import *
 from PyScriptViewport import *
+
+import ovito
 
 def _get_RenderSettings_custom_range(self):
     """ 
@@ -69,19 +74,39 @@ def _set_RenderSettings_filename(self, filename):
         self.saveToFile = False
 RenderSettings.filename = property(_get_RenderSettings_filename, _set_RenderSettings_filename)
 
+# Implement FrameBuffer.image property (requires conversion to SIP).
+def _get_FrameBuffer_image(self):
+    return PyQt5.QtGui.QImage(sip.wrapinstance(self._image, PyQt5.QtGui.QImage))
+FrameBuffer.image = property(_get_FrameBuffer_image)
+
 def _Viewport_render(self, settings = None):
     """ Renders an image or movie of the viewport's view.
     
-        :param settings: A render settings object, which specifies the resolution and filename of the output image. 
-                         If ``None``, the global render settings are used (see :py:attr:`DataSet.render_settings <ovito.DataSet.render_settings>` attribute).
+        :param settings: A render settings object, which specifies the resolution, background color, output filename etc. of the image to be rendered. 
+                         If ``None``, the global settings are used (given by the :py:attr:`DataSet.render_settings <ovito.DataSet.render_settings>` attribute).
         :type settings: :py:class:`RenderSettings`
-        :returns: ``True`` on success; ``False`` if operation has been canceled by the user.
+        :returns: A `QImage <http://pyqt.sourceforge.net/Docs/PyQt5/api/qimage.html>`_ object on success, which contains the rendered picture; 
+                  ``None`` if the rendering operation has been canceled by the user.
+        
+        The rendered image of movie will automatically be saved to disk when the :py:attr:`RenderSettings.filename` attribute has been set to a non-empty string.
+        Alternatively, the returned `QImage <http://pyqt.sourceforge.net/Docs/PyQt5/api/qimage.html>`_ object can be saved explicitly from the script. 
+        You may even paint additional graphics on top of the image before saving it. For example:
+        
+        .. literalinclude:: ../example_snippets/render_to_image.py
     """
     if settings == None:
         settings = self.dataset.render_settings
     elif isinstance(settings, dict):
         settings = RenderSettings(settings)
-    return self.dataset.renderScene(settings, self)
+    if ovito.gui_mode:
+        if not self.dataset.renderScene(settings, self):
+            return None
+        return self.dataset.window.frame_buffer_window.frame_buffer.image
+    else:
+        fb = FrameBuffer(settings.size[0], settings.size[1])
+        if not self.dataset.renderScene(settings, self, fb):
+            return None
+        return fb.image
 Viewport.render = _Viewport_render
 
 

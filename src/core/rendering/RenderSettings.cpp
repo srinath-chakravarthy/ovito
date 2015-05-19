@@ -64,7 +64,7 @@ SET_PROPERTY_FIELD_LABEL(RenderSettings, _fileNumberBase, "File number base");
 ******************************************************************************/
 RenderSettings::RenderSettings(DataSet* dataset) : RefTarget(dataset),
 	_outputImageWidth(640), _outputImageHeight(480), _generateAlphaChannel(false),
-	_saveToFile(Application::instance().consoleMode()), _skipExistingImages(false), _renderingRangeType(CURRENT_FRAME),
+	_saveToFile(false), _skipExistingImages(false), _renderingRangeType(CURRENT_FRAME),
 	_customRangeStart(0), _customRangeEnd(100), _everyNthFrame(1), _fileNumberBase(0)
 {
 	INIT_PROPERTY_FIELD(RenderSettings::_renderer);

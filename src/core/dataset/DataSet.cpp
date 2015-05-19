@@ -249,7 +249,7 @@ void DataSet::notifySceneReadyListeners()
 * This is the high-level rendering function, which invokes the renderer to generate one or more
 * output images of the scene. All rendering parameters are specified in the RenderSettings object.
 ******************************************************************************/
-bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, QSharedPointer<FrameBuffer> frameBuffer, FrameBufferWindow* frameBufferWindow)
+bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, std::shared_ptr<FrameBuffer> frameBuffer, FrameBufferWindow* frameBufferWindow)
 {
 	OVITO_CHECK_OBJECT_POINTER(settings);
 	OVITO_CHECK_OBJECT_POINTER(viewport);
@@ -261,9 +261,8 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, QSharedP
 			frameBufferWindow = mainWindow()->frameBufferWindow();
 			frameBuffer = frameBufferWindow->frameBuffer();
 		}
-		if(!frameBuffer) {
-			frameBuffer.reset(new FrameBuffer(settings->outputImageWidth(), settings->outputImageHeight()));
-		}
+		if(!frameBuffer)
+			frameBuffer = std::make_shared<FrameBuffer>(settings->outputImageWidth(), settings->outputImageHeight());
 	}
 
 	// Get the selected scene renderer.
@@ -334,7 +333,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, QSharedP
 				int frameNumber = animationSettings()->timeToFrame(renderTime);
 				if(frameBufferWindow)
 					frameBufferWindow->setWindowTitle(tr("Frame %1").arg(frameNumber));
-				if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer.data(), videoEncoder, progressDialog.get()))
+				if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer.get(), videoEncoder, progressDialog.get()))
 					wasCanceled = true;
 			}
 			else if(settings->renderingRangeType() == RenderSettings::ANIMATION_INTERVAL || settings->renderingRangeType() == RenderSettings::CUSTOM_INTERVAL) {
@@ -365,7 +364,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, QSharedP
 					int frameNumber = firstFrameNumber + frameIndex * settings->everyNthFrame() + settings->fileNumberBase();
 					if(frameBufferWindow)
 						frameBufferWindow->setWindowTitle(tr("Frame %1").arg(animationSettings()->timeToFrame(renderTime)));
-					if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer.data(), videoEncoder, progressDialog.get())) {
+					if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer.get(), videoEncoder, progressDialog.get())) {
 						wasCanceled = true;
 						break;
 					}

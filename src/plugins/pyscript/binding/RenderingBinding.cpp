@@ -26,6 +26,8 @@
 #include <core/rendering/noninteractive/NonInteractiveSceneRenderer.h>
 #include <core/rendering/ParticlePrimitive.h>
 #include <core/rendering/ArrowPrimitive.h>
+#include <core/rendering/FrameBuffer.h>
+#include <core/gui/widgets/rendering/FrameBufferWindow.h>
 #include <core/scene/objects/DisplayObject.h>
 #include <core/scene/objects/geometry/TriMeshDisplay.h>
 #include "PythonBinding.h"
@@ -38,6 +40,19 @@ using namespace Ovito;
 BOOST_PYTHON_MODULE(PyScriptRendering)
 {
 	docstring_options docoptions(true, false);
+
+	class_<FrameBuffer, bases<>, std::shared_ptr<FrameBuffer>, boost::noncopyable>("FrameBuffer", init<>())
+		.def(init<int, int>())
+		.add_property("width", &FrameBuffer::width)
+		.add_property("height", &FrameBuffer::height)
+		.add_property("_image", static_cast<std::uintptr_t (*)(const FrameBuffer&)>([](const FrameBuffer& fb) {
+			return reinterpret_cast<std::uintptr_t>(&fb.image());
+		}))
+	;
+
+	class_<FrameBufferWindow, bases<>, FrameBufferWindow, boost::noncopyable>("FrameBufferWindow", no_init)
+		.add_property("frame_buffer", make_function(&FrameBufferWindow::frameBuffer, return_value_policy<copy_const_reference>()))
+	;
 
 	{
 		scope s = ovito_class<RenderSettings, RefTarget>(

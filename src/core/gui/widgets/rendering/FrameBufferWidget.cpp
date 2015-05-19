@@ -27,7 +27,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /******************************************************************************
 * Sets the FrameBuffer that is currently shown in the widget.
 ******************************************************************************/
-void FrameBufferWidget::setFrameBuffer(const QSharedPointer<FrameBuffer>& newFrameBuffer)
+void FrameBufferWidget::setFrameBuffer(const std::shared_ptr<FrameBuffer>& newFrameBuffer)
 {
 	if(newFrameBuffer == frameBuffer()) {
 		onFrameBufferContentReset();
@@ -35,16 +35,16 @@ void FrameBufferWidget::setFrameBuffer(const QSharedPointer<FrameBuffer>& newFra
 	}
 
 	if(frameBuffer()) {
-		disconnect(_frameBuffer.data(), &FrameBuffer::contentChanged, this, &FrameBufferWidget::onFrameBufferContentChanged);
-		disconnect(_frameBuffer.data(), &FrameBuffer::contentReset, this, &FrameBufferWidget::onFrameBufferContentReset);
+		disconnect(_frameBuffer.get(), &FrameBuffer::contentChanged, this, &FrameBufferWidget::onFrameBufferContentChanged);
+		disconnect(_frameBuffer.get(), &FrameBuffer::contentReset, this, &FrameBufferWidget::onFrameBufferContentReset);
 	}
 	
 	_frameBuffer = newFrameBuffer;
 
 	onFrameBufferContentReset();
 
-	connect(_frameBuffer.data(), &FrameBuffer::contentChanged, this, &FrameBufferWidget::onFrameBufferContentChanged);
-	connect(_frameBuffer.data(), &FrameBuffer::contentReset, this, &FrameBufferWidget::onFrameBufferContentReset);
+	connect(_frameBuffer.get(), &FrameBuffer::contentChanged, this, &FrameBufferWidget::onFrameBufferContentChanged);
+	connect(_frameBuffer.get(), &FrameBuffer::contentReset, this, &FrameBufferWidget::onFrameBufferContentReset);
 }
 
 /******************************************************************************
