@@ -127,7 +127,7 @@ void PythonViewportOverlay::render(Viewport* viewport, QPainter& painter, const 
 	try {
 		// Pass viewport, QPainter, and other information to Python script.
 		// The QPainter pointer will have to be converted to the representation used by PyQt.
-		_scriptEngine.mainNamespace()["__painter_pointer"] = reinterpret_cast<unsigned long>(&painter);
+		_scriptEngine.mainNamespace()["__painter_pointer"] = reinterpret_cast<std::uintptr_t>(&painter);
 		_scriptEngine.mainNamespace()["__viewport"] = boost::python::ptr(viewport);
 		_scriptEngine.mainNamespace()["__projParams"] = projParams;
 		_scriptEngine.mainNamespace()["__renderSettings"] = boost::python::ptr(renderSettings);
