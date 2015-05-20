@@ -249,7 +249,7 @@ void DataSet::notifySceneReadyListeners()
 * This is the high-level rendering function, which invokes the renderer to generate one or more
 * output images of the scene. All rendering parameters are specified in the RenderSettings object.
 ******************************************************************************/
-bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, std::shared_ptr<FrameBuffer> frameBuffer, FrameBufferWindow* frameBufferWindow)
+bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, boost::shared_ptr<FrameBuffer> frameBuffer, FrameBufferWindow* frameBufferWindow)
 {
 	OVITO_CHECK_OBJECT_POINTER(settings);
 	OVITO_CHECK_OBJECT_POINTER(viewport);
@@ -262,7 +262,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, std::sha
 			frameBuffer = frameBufferWindow->frameBuffer();
 		}
 		if(!frameBuffer)
-			frameBuffer = std::make_shared<FrameBuffer>(settings->outputImageWidth(), settings->outputImageHeight());
+			frameBuffer = boost::make_shared<FrameBuffer>(settings->outputImageWidth(), settings->outputImageHeight());
 	}
 
 	// Get the selected scene renderer.

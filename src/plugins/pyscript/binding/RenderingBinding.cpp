@@ -41,7 +41,7 @@ BOOST_PYTHON_MODULE(PyScriptRendering)
 {
 	docstring_options docoptions(true, false);
 
-	class_<FrameBuffer, bases<>, std::shared_ptr<FrameBuffer>, boost::noncopyable>("FrameBuffer", init<>())
+	class_<FrameBuffer, bases<>, boost::shared_ptr<FrameBuffer>, boost::noncopyable>("FrameBuffer", init<>())
 		.def(init<int, int>())
 		.add_property("width", &FrameBuffer::width)
 		.add_property("height", &FrameBuffer::height)

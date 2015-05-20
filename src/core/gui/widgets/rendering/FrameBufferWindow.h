@@ -39,10 +39,10 @@ public:
 	FrameBufferWindow(QWidget* parent = nullptr);
 
 	/// Return the FrameBuffer that is currently shown in the widget (can be NULL).
-	const std::shared_ptr<FrameBuffer>& frameBuffer() const { return _frameBufferWidget->frameBuffer(); }
+	const boost::shared_ptr<FrameBuffer>& frameBuffer() const { return _frameBufferWidget->frameBuffer(); }
 
 	/// Sets the FrameBuffer that is currently shown in the widget.
-	void setFrameBuffer(const std::shared_ptr<FrameBuffer>& frameBuffer) { _frameBufferWidget->setFrameBuffer(frameBuffer); }
+	void setFrameBuffer(const boost::shared_ptr<FrameBuffer>& frameBuffer) { _frameBufferWidget->setFrameBuffer(frameBuffer); }
 
 public Q_SLOTS:
 

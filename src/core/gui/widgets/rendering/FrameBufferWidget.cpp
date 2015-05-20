@@ -27,7 +27,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /******************************************************************************
 * Sets the FrameBuffer that is currently shown in the widget.
 ******************************************************************************/
-void FrameBufferWidget::setFrameBuffer(const std::shared_ptr<FrameBuffer>& newFrameBuffer)
+void FrameBufferWidget::setFrameBuffer(const boost::shared_ptr<FrameBuffer>& newFrameBuffer)
 {
 	if(newFrameBuffer == frameBuffer()) {
 		onFrameBufferContentReset();

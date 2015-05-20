@@ -122,7 +122,7 @@ public:
 	///        The method will update the title and the size of the window while rendering the image.
 	/// \return true on success; false if operation has been canceled by the user.
 	/// \throw Exception on error.
-	bool renderScene(RenderSettings* settings, Viewport* viewport, std::shared_ptr<FrameBuffer> frameBuffer = std::shared_ptr<FrameBuffer>(), FrameBufferWindow* frameBufferWindow = nullptr);
+	bool renderScene(RenderSettings* settings, Viewport* viewport, boost::shared_ptr<FrameBuffer> frameBuffer = boost::shared_ptr<FrameBuffer>(), FrameBufferWindow* frameBufferWindow = nullptr);
 
 	/// \brief Checks all scene nodes if their geometry pipeline is fully evaluated at the given animation time.
 	bool isSceneReady(TimePoint time) const;
