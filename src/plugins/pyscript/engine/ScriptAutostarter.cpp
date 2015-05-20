@@ -30,6 +30,16 @@ namespace PyScript {
 IMPLEMENT_OVITO_OBJECT(PyScript, ScriptAutostarter, AutoStartObject);
 
 /******************************************************************************
+* Destructor, which is called at program exit.
+******************************************************************************/
+ScriptAutostarter::~ScriptAutostarter()
+{
+	// Shut down Python interpreter.
+	// This will invoke the Python functions registered with the 'atexit' module.
+	Py_Finalize();
+}
+
+/******************************************************************************
 * Registers plugin-specific command line options.
 ******************************************************************************/
 void ScriptAutostarter::registerCommandLineOptions(QCommandLineParser& cmdLineParser)

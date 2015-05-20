@@ -40,6 +40,9 @@ public:
 	/// \brief Default constructor.
 	Q_INVOKABLE ScriptAutostarter() {}
 
+	/// \brief Destructor, which is called at program exit.
+	virtual ~ScriptAutostarter();
+
 	/// \brief Registers plugin-specific command line options.
 	virtual void registerCommandLineOptions(QCommandLineParser& cmdLineParser) override;
 

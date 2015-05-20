@@ -77,6 +77,7 @@ void ScriptEngine::initializeInterpreter()
 {
 	if(_isInterpreterInitialized)
 		return;	// Interpreter is already initialized.
+
 	try {
 
 		// Call Py_SetProgramName() because the Python interpreter uses the path of the main executable to determine the
@@ -154,8 +155,12 @@ void ScriptEngine::initializeInterpreter()
 		// Install output redirection (don't do this in console mode as it interferes with the interactive interpreter).
 		if(Application::instance().guiMode()) {
 			// Register the output redirector class.
-			class_<InterpreterStdOutputRedirector, std::auto_ptr<InterpreterStdOutputRedirector>, boost::noncopyable>("__StdOutStreamRedirectorHelper", no_init).def("write", &InterpreterStdOutputRedirector::write);
-			class_<InterpreterStdErrorRedirector, std::auto_ptr<InterpreterStdErrorRedirector>, boost::noncopyable>("__StdErrStreamRedirectorHelper", no_init).def("write", &InterpreterStdErrorRedirector::write);
+			class_<InterpreterStdOutputRedirector, std::auto_ptr<InterpreterStdOutputRedirector>, boost::noncopyable>("__StdOutStreamRedirectorHelper", no_init)
+					.def("write", &InterpreterStdOutputRedirector::write)
+					.def("flush", &InterpreterStdOutputRedirector::flush);
+			class_<InterpreterStdErrorRedirector, std::auto_ptr<InterpreterStdErrorRedirector>, boost::noncopyable>("__StdErrStreamRedirectorHelper", no_init)
+					.def("write", &InterpreterStdErrorRedirector::write)
+					.def("flush", &InterpreterStdErrorRedirector::flush);
 			// Replace stdout and stderr streams.
 			sys_module.attr("stdout") = ptr(new InterpreterStdOutputRedirector());
 			sys_module.attr("stderr") = ptr(new InterpreterStdErrorRedirector());

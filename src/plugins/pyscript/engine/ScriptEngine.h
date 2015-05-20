@@ -89,6 +89,9 @@ private:
 			if(_activeEngine) _activeEngine->scriptOutput(str);
 			else std::cout << str.toStdString();
 		}
+		void flush() {
+			if(!_activeEngine) std::cout << std::flush;
+		}
 	};
 
 	/// This helper class redirects Python script write calls to the sys.stderr stream to this script engine.
@@ -96,6 +99,9 @@ private:
 		void write(const QString& str) {
 			if(_activeEngine) _activeEngine->scriptError(str);
 			else std::cerr << str.toStdString();
+		}
+		void flush() {
+			if(!_activeEngine) std::cerr << std::flush;
 		}
 	};
 
