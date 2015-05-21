@@ -20,7 +20,7 @@ objects into the collection.
 An :py:class:`~ovito.ObjectNode` keeps two :py:class:`DataCollections <ovito.data.DataCollection>`: one caching
 the input data of the modification pipeline and one storing the output of the pipeline::
 
-    >>> node.source.data
+    >>> node.source
     DataCollection(['Simulation cell', 'Position'])
     
     >>> node.compute()
@@ -78,7 +78,7 @@ of :py:class:`~ovito.data.ParticleProperty` and supplements the per-particle typ
 particle types, each having a name, a display color, and a display radius::
 
     >>> node = import_file('example.poscar')
-    >>> ptp = node.source.data.particle_type   # Access the 'Particle Type' property
+    >>> ptp = node.source.particle_type   # Access the 'Particle Type' property
     >>> print(ptp)
     <ParticleTypeProperty at 0x7fe0a2c355d0>
     

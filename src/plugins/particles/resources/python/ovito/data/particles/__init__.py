@@ -34,30 +34,55 @@ Particles.ParticleProperty._data_key = property(_ParticleProperty_data_key)
 # Returns a NumPy array wrapper for a particle property.
 def _ParticleProperty_array(self):
     """ 
-    This attribute returns a NumPy array providing direct access to the per-particle data.
+    This attribute returns a NumPy array providing read access to the per-particle data.
         
     The returned array is one-dimensional for scalar particle properties (:py:attr:`.components` == 1),
     or two-dimensional for vector properties (:py:attr:`.components` > 1). The outer length of the array is 
     equal to the number of particles in both cases.
         
     Note that the returned NumPy array is read-only and provides a view of the internal data. 
-    No copy of the data is made.
-        
-..  note::
-         
-        Write access to particle properties from a script is not available yet in the current version of the scripting interface. 
-        This is feature is planned for one of the next program releases.
-        
+    No copy of the data, which may be shared by multiple objects, is made. If you want to modify the 
+    data stored in this particle property, use :py:attr:`.mutable_array` instead.
     """
     return numpy.asarray(self)
 Particles.ParticleProperty.array = property(_ParticleProperty_array)
+
+# Returns a NumPy array wrapper for a particle property.
+def _ParticleProperty_mutable_array(self):
+    """ 
+    This attribute returns a NumPy array providing read/write access to the internal per-particle data.
+        
+    The returned array is one-dimensional for scalar particle properties (:py:attr:`.components` == 1),
+    or two-dimensional for vector properties (:py:attr:`.components` > 1). The outer length of the array is 
+    equal to the number of particles in both cases.
+        
+    .. note::
+           
+       After you are done modifying the data in the returned NumPy array, you must call
+       :py:meth:`.changed`! Calling this method is necessary to inform the data pipeline system
+       that the input particle data has changed and the modification pipeline needs to be re-evaluated.
+       The reason is that OVITO cannot automatically detect modifications made by the script to 
+       the returned NumPy array. Therefore, an explicit call to :py:meth:`.changed` is necessary. 
+       
+    **Example**
+    
+    .. literalinclude:: ../example_snippets/mutable_array.py
+    
+    """
+    class DummyClass:
+        pass
+    o = DummyClass()
+    o.__array_interface__ = self.__mutable_array_interface__
+    return numpy.asarray(o)
+Particles.ParticleProperty.mutable_array = property(_ParticleProperty_mutable_array)
 
 # Returns a NumPy array wrapper for bonds list.
 def _Bonds_array(self):
     """ This attribute returns a NumPy array providing direct access to the bond list.
         
-        The returned array is two-dimensional and contains pairs of particle indices connect by bonds.
-        The array's shape is *N x 2*, where *N* is the number of bonds.
+        The returned array is two-dimensional and contains pairs of particle indices connect by a bond.
+        The array's shape is *N x 2*, where *N* is the number of half bonds. Each pair-wise bond occurs twice
+        in the array, once for the connection A->B and second time for the connection B->A.
         
         Note that the returned NumPy array is read-only and provides a view of the internal data. 
         No copy of the data is made.  
@@ -67,7 +92,7 @@ Particles.Bonds.array = property(_Bonds_array)
 
 # Implement 'pbc' property of SimulationCell class.
 def _get_SimulationCell_pbc(self):
-    """ A tuple of length 3 with the periodic boundary flags (bool). """
+    """ A tuple containing three boolean values, which specify periodic boundary flags of the simulation cell in each of the spatial directions. """
     return (self.pbc_x, self.pbc_y, self.pbc_z)
 def _set_SimulationCell_pbc(self, flags):
     assert(len(flags) == 3) # Expected tuple with three Boolean flags.

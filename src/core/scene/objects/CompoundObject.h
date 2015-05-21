@@ -24,6 +24,7 @@
 
 #include <core/Core.h>
 #include <core/scene/objects/DataObject.h>
+#include <core/scene/pipeline/PipelineFlowState.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
@@ -45,11 +46,13 @@ public:
 
 	/// \brief Inserts a new object into the list of data objects held by this container object.
 	void addDataObject(DataObject* obj) {
-		if(!_dataObjects.contains(obj)) {
-			obj->setSaveWithScene(saveWithScene());
+		if(!_dataObjects.contains(obj))
 			_dataObjects.push_back(obj);
-		}
 	}
+
+	/// Replaces all data objects stored in this compound object with the data objects
+	/// stored in the pipeline flow state.
+	void setDataObjects(const PipelineFlowState& state);
 
 	/// \brief Looks for an object of the given type in the list of data objects and returns it.
 	template<class T>
@@ -67,16 +70,6 @@ public:
 		for(int index = _dataObjects.size() - 1; index >= 0; index--)
 			if(!activeObjects.contains(_dataObjects[index]))
 				_dataObjects.remove(index);
-	}
-
-	/// \brief Controls whether the imported data is saved along with the scene.
-	/// \param on \c true if data should be stored in the state file; \c false if the data resides only in the external file.
-	/// \undoable
-	virtual void setSaveWithScene(bool on) override {
-		DataObject::setSaveWithScene(on);
-		// Propagate flag to sub-objects.
-		for(DataObject* obj : dataObjects())
-			obj->setSaveWithScene(on);
 	}
 
 	/// Returns the attributes set or loaded by the file importer which are fed into the modification pipeline

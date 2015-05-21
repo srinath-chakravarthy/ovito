@@ -59,14 +59,45 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 		;
 	}
 
-	class_<PipelineFlowState>("DataCollection",
+	class_<PipelineFlowState>("PipelineFlowState", init<>())
+		.def(init<DataObject*, TimeInterval>())
+		.def(init<const PipelineStatus&, const QVector<DataObject*>&, const TimeInterval&>())
+		.def("clear", &PipelineFlowState::clear)
+		.def("addObject", &PipelineFlowState::addObject)
+		.def("replaceObject", &PipelineFlowState::replaceObject)
+		.def("removeObject", &PipelineFlowState::removeObject)
+		.def("cloneObjectsIfNeeded", &PipelineFlowState::cloneObjectsIfNeeded)
+		.add_property("isEmpty", &PipelineFlowState::isEmpty)
+		.add_property("status", make_function(&PipelineFlowState::status, return_internal_reference<>()), &PipelineFlowState::setStatus)
+		.add_property("objects", make_function(&PipelineFlowState::objects, return_internal_reference<>()))
+	;
+
+	ovito_abstract_class<DataObject, RefTarget>(
+			"Abstract base class for all data objects."
+			"\n\n"
+			"Some data objects are associated with a :py:class:`~ovito.vis.Display` object, which is responsible for "
+			"displaying the data in the viewports and in rendered images. "
+			"The :py:attr:`.display` attribute provides access to the attached display object and "
+			"allows controlling the visual appearance of the data.")
+		.def("objectValidity", &DataObject::objectValidity)
+		.def("evaluate", &DataObject::evaluate)
+		.def("addDisplayObject", &DataObject::addDisplayObject)
+		.def("setDisplayObject", &DataObject::setDisplayObject)
+		.add_property("status", &DataObject::status)
+		.add_property("displayObjects", make_function(&DataObject::displayObjects, return_internal_reference<>()))
+		.add_property("saveWithScene", &DataObject::saveWithScene, &DataObject::setSaveWithScene)
+		.def("waitUntilReady", &DataObject::waitUntilReady, DataObject_waitUntilReady_overloads())
+	;
+	register_ptr_to_python<VersionedOORef<DataObject>>();
+
+	ovito_class<CompoundObject, DataObject>(
 			"A dictionary-like container storing a set of :py:class:`DataObjects <DataObject>` that enter or leave a modification pipeline."
 			"\n\n"
-			"The *input* data collection of a modification pipeline can be accessed through the :py:attr:`~ovito.io.FileSource.data` attribute of "
-			"the node's :py:class:`~ovito.io.FileSource`. It represents the original data that was read from the external file::"
+			"The *input* data collection of a modification pipeline can be accessed through the :py:attr:`~ovito.ObjectNode.source` attribute of "
+			"the :py:class:`~ovito.ObjectNode`. It represents the original data that was read from the external file::"
 			"\n\n"
 			"   >>> node = import_file(...)\n"
-			"   >>> print(node.source.data)\n"
+			"   >>> print(node.source)\n"
 			"   DataCollection(['Simulation cell', 'Position'])\n"
 			"\n\n"
 			"To access the *output* data collection of a modification pipeline, which is part of an :py:class:`~ovito.ObjectNode`, "
@@ -106,40 +137,12 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 			"   [[ 3.35918999  0.          0.          0.        ]\n"
 			"    [ 0.          3.35918999  0.          0.        ]\n"
 			"    [ 0.          0.          3.35918999  0.        ]]\n"
-			"\n\n"
-			, init<>())
-		.def(init<DataObject*, TimeInterval>())
-		.def(init<const PipelineStatus&, const QVector<DataObject*>&, const TimeInterval&>())
-		.def("clear", &PipelineFlowState::clear)
-		.def("addObject", &PipelineFlowState::addObject)
-		.def("replaceObject", &PipelineFlowState::replaceObject)
-		.def("removeObject", &PipelineFlowState::removeObject)
-		.add_property("isEmpty", &PipelineFlowState::isEmpty)
-		.add_property("status", make_function(&PipelineFlowState::status, return_internal_reference<>()), &PipelineFlowState::setStatus)
-		.add_property("objects", make_function(&PipelineFlowState::objects, return_internal_reference<>()))
-	;
-
-	ovito_abstract_class<DataObject, RefTarget>(
-			"Abstract base class for all data objects."
-			"\n\n"
-			"Some data objects are associated with a :py:class:`~ovito.vis.Display` object, which is responsible for "
-			"displaying the data in the viewports and in rendered images. "
-			"The :py:attr:`.display` attribute provides access to the attached display object and "
-			"allows controlling the visual appearance of the data.")
-		.def("objectValidity", &DataObject::objectValidity)
-		.def("evaluate", &DataObject::evaluate)
-		.def("addDisplayObject", &DataObject::addDisplayObject)
-		.def("setDisplayObject", &DataObject::setDisplayObject)
-		.add_property("status", &DataObject::status)
-		.add_property("displayObjects", make_function(&DataObject::displayObjects, return_internal_reference<>()))
-		.add_property("saveWithScene", &DataObject::saveWithScene, &DataObject::setSaveWithScene)
-		.def("waitUntilReady", &DataObject::waitUntilReady, DataObject_waitUntilReady_overloads())
-	;
-	register_ptr_to_python<VersionedOORef<DataObject>>();
-
-	ovito_class<CompoundObject, DataObject>()
-		.add_property("dataObjects", make_function(&CompoundObject::dataObjects, return_internal_reference<>()))
+			"\n\n",
+			// Python class name:
+			"DataCollection")
+		.add_property("objects", make_function(&CompoundObject::dataObjects, return_internal_reference<>()))
 		.def("addDataObject", &CompoundObject::addDataObject)
+		.def("setDataObjects", &CompoundObject::setDataObjects)
 	;
 
 	ovito_abstract_class<Modifier, RefTarget>(
@@ -198,9 +201,9 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 			"Finally, the output data of the pipeline can be accessed through the the node's :py:attr:`ObjectNode.output` attribute. "
 			)
 		.add_property("data_provider", make_function(&ObjectNode::dataProvider, return_value_policy<ovito_object_reference>()), &ObjectNode::setDataProvider)
-		.add_property("source", make_function(&ObjectNode::sourceObject, return_value_policy<ovito_object_reference>()),
-				"An object providing the data that enters the modification pipeline of this node. "
-				"This typically is a :py:class:`~ovito.io.FileSource` instance for nodes that have been created by the :py:func:`~ovito.io.import_file` function.")
+		.add_property("source", make_function(&ObjectNode::sourceObject, return_value_policy<ovito_object_reference>()), &ObjectNode::setSourceObject,
+				"The object that provides or generates the data that enters the modification pipeline of this node. "
+				"This typically is a :py:class:`~ovito.io.FileSource` instance for nodes returned by :py:func:`~ovito.io.import_file`.")
 		.add_property("displayObjects", make_function(&ObjectNode::displayObjects, return_internal_reference<>()))
 		.def("evalPipeline", make_function(&ObjectNode::evalPipeline, return_value_policy<copy_const_reference>()))
 		.def("applyModifier", &ObjectNode::applyModifier)

@@ -40,7 +40,8 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 using namespace boost::python;
 using namespace PyScript;
 
-dict ParticlePropertyObject__array_interface__(const ParticlePropertyObject& p)
+template<bool ReadOnly>
+dict ParticlePropertyObject__array_interface__(ParticlePropertyObject& p)
 {
 	dict ai;
 	if(p.componentCount() == 1) {
@@ -68,7 +69,12 @@ dict ParticlePropertyObject__array_interface__(const ParticlePropertyObject& p)
 #endif
 	}
 	else throw Exception("Cannot access particle property of this data type from Python.");
-	ai["data"] = boost::python::make_tuple((std::intptr_t)p.constData(), true);
+	if(ReadOnly) {
+		ai["data"] = boost::python::make_tuple(reinterpret_cast<std::intptr_t>(p.constData()), true);
+	}
+	else {
+		ai["data"] = boost::python::make_tuple(reinterpret_cast<std::intptr_t>(p.data()), false);
+	}
 	ai["version"] = 3;
 	return ai;
 }
@@ -78,15 +84,15 @@ dict BondsObject__array_interface__(const BondsObject& p)
 	dict ai;
 	ai["shape"] = boost::python::make_tuple(p.storage()->size(), 2);
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-	ai["typestr"] = str("<i") + str(sizeof(int));
+	ai["typestr"] = str("<u") + str(sizeof(unsigned int));
 #else
-	ai["typestr"] = str(">i") + str(sizeof(int));
+	ai["typestr"] = str(">u") + str(sizeof(unsigned int));
 #endif
 	const unsigned int* data = nullptr;
 	if(!p.storage()->empty())
 		data = &p.storage()->front().index1;
-	ai["data"] = boost::python::make_tuple((std::intptr_t)data, true);
-	ai["strides"] = boost::python::make_tuple(sizeof(Bond), sizeof(int));
+	ai["data"] = boost::python::make_tuple(reinterpret_cast<std::intptr_t>(data), true);
+	ai["strides"] = boost::python::make_tuple(sizeof(Bond), sizeof(unsigned int));
 	ai["version"] = 3;
 	return ai;
 }
@@ -168,7 +174,7 @@ BOOST_PYTHON_MODULE(Particles)
 
 	{
 		scope s = ovito_class<ParticlePropertyObject, DataObject>(
-				":Base: :py:class:`ovito.data.DataObject`\n\n"
+				":Base class: :py:class:`ovito.data.DataObject`\n\n"
 				"A data object that stores the values of a single particle property.",
 				// Python class name:
 				"ParticleProperty")
@@ -179,7 +185,13 @@ BOOST_PYTHON_MODULE(Particles)
 			.staticmethod("createUserProperty")
 			.staticmethod("createStandardProperty")
 			.staticmethod("findInState")
-			.def("changed", &ParticlePropertyObject::changed)
+			.def("changed", &ParticlePropertyObject::changed,
+					"Informs the particle property object that its internal data has changed. "
+					"This function must be called after each direct modification of the per-particle data "
+					"through the :py:attr:`.mutable_array` attribute.\n\n"
+					"Calling this method on an input particle property is necessary to invalidate data caches down the modification "
+					"pipeline. Forgetting to call this method may result in an incomplete re-evaluation of the modification pipeline. "
+					"See :py:attr:`.mutable_array` for more information.")
 			.def("nameWithComponent", &ParticlePropertyObject::nameWithComponent)
 			.add_property("name", make_function(&ParticlePropertyObject::name, return_value_policy<copy_const_reference>()), &ParticlePropertyObject::setName,
 					"The human-readable name of the particle property.")
@@ -238,7 +250,8 @@ BOOST_PYTHON_MODULE(Particles)
 			.add_property("stride", &ParticlePropertyObject::stride)
 			.add_property("components", &ParticlePropertyObject::componentCount,
 					"The number of vector components (if this is a vector particle property); otherwise 1 (= scalar property).")
-			.add_property("__array_interface__", &ParticlePropertyObject__array_interface__)
+			.add_property("__array_interface__", &ParticlePropertyObject__array_interface__<true>)
+			.add_property("__mutable_array_interface__", &ParticlePropertyObject__array_interface__<false>)
 		;
 
 		enum_<ParticleProperty::Type>("Type")
@@ -282,7 +295,7 @@ BOOST_PYTHON_MODULE(Particles)
 	}
 
 	ovito_class<ParticleTypeProperty, ParticlePropertyObject>(
-			":Base: :py:class:`ovito.data.ParticleProperty`\n\n"
+			":Base class: :py:class:`ovito.data.ParticleProperty`\n\n"
 			"A special :py:class:`ParticleProperty` that stores a list of :py:class:`ParticleType` instances in addition "
 			"to the per-particle values. "
 			"\n\n"
@@ -309,7 +322,7 @@ BOOST_PYTHON_MODULE(Particles)
 	;
 
 	ovito_class<SimulationCellObject, DataObject>(
-			":Base: :py:class:`ovito.data.DataObject`\n\n"
+			":Base class: :py:class:`ovito.data.DataObject`\n\n"
 			"Stores the geometry and the boundary conditions of the simulation cell."
 			"\n\n"
 			"Instances of this class are associated with a :py:class:`~ovito.vis.SimulationCellDisplay` "
@@ -330,8 +343,20 @@ BOOST_PYTHON_MODULE(Particles)
 	;
 
 	ovito_class<BondsObject, DataObject>(
-			":Base: :py:class:`ovito.data.DataObject`\n\n"
-			"This data object stores bonds between particles. One way of creating bonds is to use the :py:class:`~.ovito.modifiers.CreateBondsModifier`.",
+			":Base class: :py:class:`ovito.data.DataObject`\n\n"
+			"This data object stores a list of explicit bonds between pairs of particles. "
+			"Typically bonds are loaded from a simulation file or are created using the :py:class:`~.ovito.modifiers.CreateBondsModifier` in the modification pipeline."
+			"\n\n"
+			"Example:\n"
+			"\n"
+			".. literalinclude:: ../example_snippets/bonds_data_object.py\n"
+			"   :lines: 1-13\n"
+			"\n"
+			"Each :py:class:`!Bonds` object is associated with a :py:class:`~ovito.vis.BondsDisplay` instance, "
+			"which controls the visual appearance of the bonds and which can be accessed through the :py:attr:`DataObject.display` attribute:\n"
+			"\n"
+			".. literalinclude:: ../example_snippets/bonds_data_object.py\n"
+			"   :lines: 15-\n",
 			// Python class name:
 			"Bonds")
 		.add_property("__array_interface__", &BondsObject__array_interface__)
@@ -355,7 +380,7 @@ BOOST_PYTHON_MODULE(Particles)
 	python_to_container_conversion<QVector<ParticleType*>>();
 
 	ovito_class<ParticleDisplay, DisplayObject>(
-			":Base: :py:class:`ovito.vis.Display`\n\n"
+			":Base class: :py:class:`ovito.vis.Display`\n\n"
 			"Controls the visual appearance of particles.")
 		.add_property("radius", &ParticleDisplay::defaultParticleRadius, &ParticleDisplay::setDefaultParticleRadius,
 				"The default display radius of particles. "
@@ -382,7 +407,7 @@ BOOST_PYTHON_MODULE(Particles)
 	;
 
 	ovito_class<VectorDisplay, DisplayObject>(
-			":Base: :py:class:`ovito.vis.Display`\n\n"
+			":Base class: :py:class:`ovito.vis.Display`\n\n"
 			"Controls the visual appearance of vectors (arrows).")
 		.add_property("shading", &VectorDisplay::shadingMode, &VectorDisplay::setShadingMode,
 				"The shading style used for the arrows.\n"
@@ -415,7 +440,7 @@ BOOST_PYTHON_MODULE(Particles)
 	;
 
 	ovito_class<SimulationCellDisplay, DisplayObject>(
-			":Base: :py:class:`ovito.vis.Display`\n\n"
+			":Base class: :py:class:`ovito.vis.Display`\n\n"
 			"Controls the visual appearance of :py:class:`~ovito.data.SimulationCellObject` data objects.")
 		.add_property("line_width", &SimulationCellDisplay::simulationCellLineWidth, &SimulationCellDisplay::setSimulationCellLineWidth,
 				"The width of the simulation cell line (in natural length units)."
@@ -433,7 +458,7 @@ BOOST_PYTHON_MODULE(Particles)
 	;
 
 	ovito_class<SurfaceMeshDisplay, DisplayObject>(
-			":Base: :py:class:`ovito.vis.Display`\n\n"
+			":Base class: :py:class:`ovito.vis.Display`\n\n"
 			"Controls the visual appearance of a surface mesh computed by the :py:class:`~ovito.modifiers.ConstructSurfaceModifier`.")
 		.add_property("surface_color", make_function(&SurfaceMeshDisplay::surfaceColor, return_value_policy<copy_const_reference>()), &SurfaceMeshDisplay::setSurfaceColor,
 				"The display color of the surface mesh."
@@ -462,7 +487,7 @@ BOOST_PYTHON_MODULE(Particles)
 	;
 
 	ovito_class<BondsDisplay, DisplayObject>(
-			":Base: :py:class:`ovito.vis.Display`\n\n"
+			":Base class: :py:class:`ovito.vis.Display`\n\n"
 			"Controls the visual appearance of particle bonds. An instance of this class is attached to every :py:class:`~ovito.data.Bonds` data object.")
 		.add_property("width", &BondsDisplay::bondWidth, &BondsDisplay::setBondWidth,
 				"The display width of bonds (in natural length units)."
@@ -487,7 +512,7 @@ BOOST_PYTHON_MODULE(Particles)
 	;
 
 	ovito_class<SurfaceMesh, DataObject>(
-			":Base: :py:class:`ovito.data.DataObject`\n\n"
+			":Base class: :py:class:`ovito.data.DataObject`\n\n"
 			"This data object stores the surface mesh computed by a :py:class:`~ovito.modifiers.ConstructSurfaceModifier`. "
 			"\n\n"
 			"Currently, no direct script access to the vertices and faces of the mesh is possible. But you can export the mesh to a VTK text file, "

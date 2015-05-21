@@ -82,6 +82,19 @@ void CompoundObject::referenceRemoved(const PropertyFieldDescriptor& field, RefT
 	DataObject::referenceRemoved(field, newTarget, listIndex);
 }
 
+/******************************************************************************
+* Replaces all data objects stored in this compound object with the data objects
+* stored in the pipeline flow state.
+******************************************************************************/
+void CompoundObject::setDataObjects(const PipelineFlowState& state)
+{
+	_dataObjects.clear();
+	for(DataObject* obj : state.objects())
+		addDataObject(obj);
+	setAttributes(state.attributes());
+}
+
+
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

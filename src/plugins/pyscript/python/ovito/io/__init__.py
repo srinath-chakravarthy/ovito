@@ -88,7 +88,7 @@ def import_file(location, **params):
     return node    
 
 def _FileSource_load(self, location, **params):
-    """ Loads a new external file into this source object.
+    """ Loads a new external file into this data source object.
     
         The function auto-detects the format of the file.
         
@@ -127,22 +127,9 @@ def _FileSource_load(self, location, **params):
     
 FileSource.load = _FileSource_load
 
+# For backward compatibility with OVITO 2.4.4:
 def _FileSource_data(self):
-    """ A :py:class:`~ovito.data.DataCollection` containing the input data that was read from the external file. """
-
-    # Block execution until data has been fully loaded. 
-    if not self.waitUntilReady(self.dataset.anim.time, "Script is waiting for I/O operation to finish."):
-        raise RuntimeError("Operation has been canceled by the user.")
-    
-    # Get data objects.
-    data = self.evaluate(self.dataset.anim.time)
-    
-    # Raise Python error if loading failed.
-    if data.status.type == PyScriptScene.PipelineStatus.Type.Error:
-        raise RuntimeError(data.status.text)
-    
-    return data
-    
+    return self    
 FileSource.data = property(_FileSource_data)
 
 # Implement the 'sourceUrl' property of FileSource, which returns or sets the currently loaded file path.

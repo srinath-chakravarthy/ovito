@@ -86,6 +86,21 @@ void PipelineFlowState::updateRevisionNumbers()
 		o.updateRevisionNumber();
 }
 
+/******************************************************************************
+* Replaces objects with copies if there are multiple references.
+* After calling this method, none of the objects in the flow state is referenced by anybody else.
+* Thus, it becomes safe to modify the data objects.
+******************************************************************************/
+void PipelineFlowState::cloneObjectsIfNeeded(bool deepCopy)
+{
+	CloneHelper cloneHelper;
+	for(auto& ref : _objects) {
+		if(ref->objectReferenceCount() > 1) {
+			ref = cloneHelper.cloneObject(ref.get(), deepCopy);
+		}
+	}
+}
+
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

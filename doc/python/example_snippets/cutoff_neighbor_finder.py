@@ -3,12 +3,12 @@ from ovito.data import CutoffNeighborFinder
 
 # Load input simulation file.
 node = import_file("simulation.dump")
-particle_data = node.source.data
-num_particles = particle_data.position.size
+data = node.source
+num_particles = data.position.size
 
 # Initialize neighbor finder object:
 cutoff = 3.5
-finder = CutoffNeighborFinder(cutoff, particle_data)
+finder = CutoffNeighborFinder(cutoff, data)
 
 # Iterate over all input particles:
 for index in range(num_particles):

@@ -141,7 +141,7 @@ BOOST_PYTHON_MODULE(PyScriptViewport)
 			"It contains all viewports in OVITO's main window::"
 			"\n\n"
 			"    for viewport in dataset.viewports:\n"
-			"        print viewport.title\n"
+			"        print(viewport.title)\n"
 			"\n"
 			"By default OVITO creates four predefined :py:class:`Viewport` instances. Note that in the current program version it is not possible to add or remove "
 			"viewports from the main window. "

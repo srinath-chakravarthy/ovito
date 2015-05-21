@@ -17,7 +17,7 @@ and line width, which control the visual appearance.
 The display object is attached to the data object and can be accessed through the :py:attr:`~ovito.data.DataObject.display`
 attribute of the :py:class:`~ovito.data.DataObject` base class::
 
-    >>> cell = node.source.data.cell           
+    >>> cell = node.source.cell           
     >>> cell                                     # This is the data object
     <SimulationCell at 0x7f9a414c8060>
     
@@ -35,7 +35,7 @@ The visual display of particles is controlled by a :py:class:`~ovito.vis.Particl
 is attached to the position :py:class:`~ovito.data.ParticleProperty`. For example, to display 
 cubic particles, we would write::
 
-    >>> pos = node.source.data.position      # ParticleProperty storing the positions
+    >>> pos = node.source.position      # ParticleProperty storing the positions
     >>> pos.display.shape = ParticleDisplay.Shape.Square
 
 .. note::
@@ -43,7 +43,7 @@ cubic particles, we would write::
     Note that display objects flow down the modification pipeline together with the data objects they are
     attached to. Normally they are not modified by modifiers in the pipeline, only the data objects are.
     That means it doesn't matter whether you change display parameters in the input of the modification pipeline
-    or in the output. In the examples above we have accessed the input data collection (``node.source.data``),
+    or in the output. In the examples above we have accessed the input data collection (``node.source``),
     but changing the display parameters in the output data collection (``node.output``) would have worked
     equally well.
     
@@ -102,9 +102,9 @@ the :py:attr:`dataset.viewports <ovito.DataSet.viewports>` list.
 Rendering
 -----------------------------------
 
-Rendering parameters such as image resolution, output filename, background color, etc. are managed by a 
+Parameters that control the rendering process, e.g. the desired image resolution, output filename, background color, are managed by a 
 :py:class:`~ovito.vis.RenderSettings` objects. You can create a new instance of this class and specify 
-the necessary parameters::
+the parameters::
 
     from ovito.vis import *
     settings = RenderSettings(
@@ -126,3 +126,6 @@ After all render settings have been specified, we can let OVITO render the image
 :py:meth:`Viewport.render() <ovito.vis.Viewport.render>`::
 
     vp.render(settings)
+
+Note that :py:meth:`~ovito.vis.Viewport.render` returns a `QImage <http://pyqt.sourceforge.net/Docs/PyQt5/api/qimage.html>`_,
+giving you the possibility to manipulate the rendered picture before saving it to disk.

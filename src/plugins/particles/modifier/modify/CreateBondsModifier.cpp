@@ -126,7 +126,7 @@ OORef<RefTarget> CreateBondsModifier::clone(bool deepCopy, CloneHelper& cloneHel
 bool CreateBondsModifier::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
 	// Do not propagate messages from the attached display object.
-	if(source == _bondsDisplay)
+	if(source == bondsDisplay())
 		return false;
 
 	return AsynchronousParticleModifier::referenceEvent(source, event);

@@ -140,12 +140,12 @@ public:
 
 	/// \brief Returns whether the internal data is saved along with the scene.
 	/// \return \c true if the data is stored in the state file; \c false if the data can be restored from an external file or recomputed.
-	bool saveWithScene() const { return _saveWithScene; }
+	bool saveWithScene() const;
 
 	/// \brief Sets whether the per-particle data is saved along with the scene.
 	/// \param on \c true if the data should be stored in the state file; \c false if the per-particle data can be restored from an external file.
 	/// \undoable
-	virtual void setSaveWithScene(bool on) { _saveWithScene = on; }
+	void setSaveWithScene(bool on) { _saveWithScene = on; }
 
 	/// \brief Returns a list of object nodes that have this object as a data source.
 	QSet<ObjectNode*> dependentNodes() const;
@@ -186,8 +186,8 @@ private:
 	unsigned int _revisionNumber;
 
 	/// Controls whether the internal data is saved along with the scene.
-	/// If false, only metadata will be saved in a state file while the contents get restored
-	/// from an external data source or get recomputed.
+	/// If false, only metadata will be saved in a state file, while the actual contents will be
+	/// recomputed or restored from an external data source.
 	PropertyField<bool> _saveWithScene;
 
 	/// The attached display objects that are responsible for rendering this object's data.

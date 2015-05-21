@@ -37,7 +37,7 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 	docstring_options docoptions(true, false);
 
 	ovito_class<ConstructSurfaceModifier, AsynchronousParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Constructs the geometric surface of a solid made of point-like particles. The modifier generates "
 			"a :py:class:`~ovito.data.SurfaceMesh`, which is a closed manifold consisting of triangles. It also computes the total "
 			"surface area and the volume of the region enclosed by the surface mesh."
@@ -82,7 +82,6 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 				"\n\n"
 				"Note that this value is only available after the modifier has computed its results. "
 				"Thus, you have to call :py:meth:`ovito.ObjectNode.compute` first to ensure that this information is up to date. ")
-		.add_property("surfaceMesh", make_function(&ConstructSurfaceModifier::surfaceMesh, return_value_policy<ovito_object_reference>()))
 		.add_property("mesh_display", make_function(&ConstructSurfaceModifier::surfaceMeshDisplay, return_value_policy<ovito_object_reference>()),
 				"The :py:class:`~ovito.vis.SurfaceMeshDisplay` controlling the visual representation of the computed surface.\n")
 	;

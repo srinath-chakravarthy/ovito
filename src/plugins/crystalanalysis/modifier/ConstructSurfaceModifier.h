@@ -39,9 +39,6 @@ public:
 	/// Constructor.
 	Q_INVOKABLE ConstructSurfaceModifier(DataSet* dataset);
 
-	/// \brief Returns the data object that stores the generated surface mesh.
-	SurfaceMesh* surfaceMesh() const { return _surfaceMeshObj; }
-
 	/// \brief Returns the display object that is responsible for rendering the surface mesh.
 	SurfaceMeshDisplay* surfaceMeshDisplay() const { return _surfaceMeshDisplay; }
 
@@ -71,6 +68,9 @@ public:
 
 	/// Returns the surface area computed during the last evaluation of the modifier.
 	FloatType surfaceArea() const { return _surfaceArea; }
+
+	/// Resets the modifier's result cache.
+	virtual void invalidateCachedResults() override;
 
 protected:
 
@@ -146,11 +146,14 @@ private:
 	/// Controls whether only selected particles should be taken into account.
 	PropertyField<bool> _onlySelectedParticles;
 
-	/// This stores the cached surface mesh produced by the modifier.
-	ReferenceField<SurfaceMesh> _surfaceMeshObj;
-
 	/// The display object for rendering the surface mesh.
 	ReferenceField<SurfaceMeshDisplay> _surfaceMeshDisplay;
+
+	/// This stores the cached surface mesh produced by the modifier.
+	QExplicitlySharedDataPointer<HalfEdgeMesh> _surfaceMesh;
+
+	/// Indicates that the entire simulation cell is part of the solid region.
+	bool _isCompletelySolid;
 
 	/// The solid volume computed during the last evaluation of the modifier.
 	FloatType _solidVolume;
@@ -170,7 +173,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_radius);
 	DECLARE_PROPERTY_FIELD(_smoothingLevel);
 	DECLARE_PROPERTY_FIELD(_onlySelectedParticles);
-	DECLARE_REFERENCE_FIELD(_surfaceMeshObj);
 	DECLARE_REFERENCE_FIELD(_surfaceMeshDisplay);
 };
 

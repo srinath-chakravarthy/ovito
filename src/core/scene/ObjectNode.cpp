@@ -225,7 +225,6 @@ QString ObjectNode::objectTitle()
 	return SceneNode::objectTitle();
 }
 
-
 /******************************************************************************
 * Applies a modifier by appending it to the end of the node's modification
 * pipeline.
@@ -259,6 +258,28 @@ DataObject* ObjectNode::sourceObject() const
 			break;
 	}
 	return obj;
+}
+
+/******************************************************************************
+* Sets the data source of this node's pipeline, i.e., the object that provides the
+* input data entering the pipeline.
+******************************************************************************/
+void ObjectNode::setSourceObject(DataObject* sourceObject)
+{
+	PipelineObject* pipeline = dynamic_object_cast<PipelineObject>(dataProvider());
+	if(!pipeline) {
+		setDataProvider(sourceObject);
+	}
+	else {
+		for(;;) {
+			if(PipelineObject* pipeline2 = dynamic_object_cast<PipelineObject>(pipeline->sourceObject()))
+				pipeline = pipeline2;
+			else
+				break;
+		}
+		pipeline->setSourceObject(sourceObject);
+	}
+	OVITO_ASSERT(this->sourceObject() == sourceObject);
 }
 
 /******************************************************************************

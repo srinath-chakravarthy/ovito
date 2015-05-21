@@ -204,11 +204,9 @@ Similarly, the data of individual particle properties may be accessed as NumPy a
      [ 44.17670059  61.49860001  37.5401001 ]]
      
 Sometimes we might be interested in the data that *enters* the modification pipeline. 
-This input data, which was read from the external file, 
-is cached by the :py:class:`~ovito.io.FileSource` and can be accessed through the 
-:py:attr:`~ovito.io.FileSource.data` attribute::
+This input data, which was read from the external file, is cached by the :py:class:`~ovito.io.FileSource`::
 
-    >>> node.source.data
+    >>> node.source
     DataCollection(['Simulation cell', 'Particle Identifier', 'Position'])
 
 -------------------------------------------------
@@ -222,7 +220,7 @@ can we set the parameters that control their visual appearance?
 Every data object that has a visual representation in OVITO is associated with a specialized :py:class:`~ovito.vis.Display`
 object. The display object is stored in the data object's :py:attr:`~.ovito.data.DataObject.display` attribute. For example::
 
-    >>> cell = node.source.data.cell           
+    >>> cell = node.source.cell
     >>> cell                               # This is the data object
     <SimulationCell at 0x7f9a414c8060>
     
@@ -241,7 +239,7 @@ Particles are rendered by a :py:class:`~ovito.vis.ParticleDisplay`. It is attach
 :py:class:`~ovito.data.ParticleProperty` containing the particle position data. Thus, to change the visual
 appearance of particles, we have to access the particle positions object in the data collection::
 
-    >>> p = node.source.data.position           
+    >>> p = node.source.position           
     >>> p                        # This is the data object holding the input particle positions
     <ParticleProperty at 0x7ff5fc868b30>
       

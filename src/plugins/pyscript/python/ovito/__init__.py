@@ -23,8 +23,7 @@ from PyScriptScene import PipelineStatus
 import pkgutil
 import importlib
 for _, _name, _ in pkgutil.walk_packages(__path__, __name__ + '.'):
-	#print "Loading module", _name
-	importlib.import_module(_name)
+    importlib.import_module(_name)
 
 def _get_DataSet_selected_node(self):
     """ The :py:class:`~ovito.ObjectNode` that is currently selected in OVITO's graphical user interface, 
@@ -166,11 +165,16 @@ def _ObjectNode_compute(self):
     """
     if not self.wait():
         raise RuntimeError("Operation has been canceled by the user.")
-    self.__output = self.evalPipeline(self.dataset.anim.time)    
-    assert(self.__output.status.type != PipelineStatus.Type.Error)
-    assert(self.__output.status.type != PipelineStatus.Type.Pending)
+    state = self.evalPipeline(self.dataset.anim.time)
+    assert(state.status.type != PipelineStatus.Type.Error)
+    assert(state.status.type != PipelineStatus.Type.Pending)
+    
+    self.__output = ovito.data.DataCollection()        
+    state.cloneObjectsIfNeeded(True)
+    self.__output.setDataObjects(state)
         
-    return self.__output    
+    return self.__output
+   
 ObjectNode.compute = _ObjectNode_compute
 
 def _ObjectNode_output(self):
@@ -185,14 +189,14 @@ def _ObjectNode_output(self):
 ObjectNode.output = property(_ObjectNode_output)
 
 def _ObjectNode_remove_from_scene(self):
-	""" Removes the node from the scene by deleting it from the :py:attr:`ovito.DataSet.scene_nodes` list.
-	    The visual representation of the node will disappear from the viewports after calling this method.
-	"""
-	del self.dataset.scene_nodes[self]
-	
-	# Unselect node
-	if self == self.dataset.selected_node:
-		self.dataset.selected_node = None
+    """ Removes the node from the scene by deleting it from the :py:attr:`ovito.DataSet.scene_nodes` list.
+        The visual representation of the node will disappear from the viewports after calling this method.
+    """
+    del self.dataset.scene_nodes[self]
+    
+    # Unselect node
+    if self == self.dataset.selected_node:
+        self.dataset.selected_node = None
 ObjectNode.remove_from_scene = _ObjectNode_remove_from_scene
 
 # Give SceneRoot class a list-like interface.
@@ -207,12 +211,12 @@ def _SceneRoot__setitem__(self, index, newNode):
     self.insertChild(index, newNode)
 SceneRoot.__setitem__ = _SceneRoot__setitem__
 def _SceneRoot__delitem__(self, index):
-	if isinstance(index, ObjectNode):
-		self.removeChild(index)
-		return
-	if index < 0 or index >= len(self):
-		raise IndexError("List index is out of range.")
-	self.removeChild(self.children[index])
+    if isinstance(index, ObjectNode):
+        self.removeChild(index)
+        return
+    if index < 0 or index >= len(self):
+        raise IndexError("List index is out of range.")
+    self.removeChild(self.children[index])
 SceneRoot.__delitem__ = _SceneRoot__delitem__
 def _SceneRoot_append(self, node):
     if node.parentNode == self:
@@ -227,4 +231,3 @@ def _SceneRoot_insert(self, index, node):
         raise RuntimeError("Cannot insert the same node more than once into the scene.")
     self.insertChild(index, node)
 SceneRoot.insert = _SceneRoot_insert
-

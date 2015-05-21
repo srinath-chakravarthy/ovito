@@ -37,7 +37,7 @@ class OVITO_PARTICLES_EXPORT SurfaceMesh : public DataObjectWithSharedStorage<Ha
 public:
 
 	/// \brief Constructor that creates an empty SurfaceMesh object.
-	Q_INVOKABLE SurfaceMesh(DataSet* dataset);
+	Q_INVOKABLE SurfaceMesh(DataSet* dataset, HalfEdgeMesh* mesh = nullptr);
 
 	/// Returns the title of this object.
 	virtual QString objectTitle() override { return tr("Surface mesh"); }

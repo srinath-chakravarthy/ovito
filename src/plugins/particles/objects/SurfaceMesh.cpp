@@ -22,7 +22,6 @@
 #include <plugins/particles/Particles.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include "SurfaceMesh.h"
-#include "SurfaceMeshDisplay.h"
 
 namespace Ovito { namespace Particles {
 
@@ -32,12 +31,10 @@ DEFINE_PROPERTY_FIELD(SurfaceMesh, _isCompletelySolid, "IsCompletelySolid");
 /******************************************************************************
 * Constructs an empty surface mesh object.
 ******************************************************************************/
-SurfaceMesh::SurfaceMesh(DataSet* dataset) : DataObjectWithSharedStorage(dataset, new HalfEdgeMesh()),
+SurfaceMesh::SurfaceMesh(DataSet* dataset, HalfEdgeMesh* mesh) : DataObjectWithSharedStorage(dataset, mesh ? mesh : new HalfEdgeMesh()),
 		_isCompletelySolid(false)
 {
 	INIT_PROPERTY_FIELD(SurfaceMesh::_isCompletelySolid);
-
-	addDisplayObject(new SurfaceMeshDisplay(dataset));
 }
 
 /******************************************************************************

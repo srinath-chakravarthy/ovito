@@ -96,6 +96,11 @@ public:
 		return nullptr;
 	}
 
+	/// \brief Replaces objects with copies if there are multiple references.
+	/// After calling this method, none of the objects in the flow state is referenced by anybody else.
+	/// Thus, it becomes safe to modify the data objects.
+	void cloneObjectsIfNeeded(bool deepCopy);
+
 	/// \brief Tries to convert one of the to data objects stored in this flow state to the given object type.
 	OORef<DataObject> convertObject(const OvitoObjectType& objectClass, TimePoint time) const;
 

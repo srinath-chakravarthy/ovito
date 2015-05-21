@@ -51,7 +51,7 @@ a set of simulation files in a directory, for example, you should use the follow
        # ... access computation results
 
 Note that the :py:meth:`~ovito.io.FileSource.load` method is also used to
-load reference configurations for modifiers that require initial coordinates of particles, e.g.::
+load reference configurations for modifiers that require reference particle coordinates, e.g.::
 
    >>> modifier = CalculateDisplacementsModifier()
    >>> modifier.reference.load("reference.dump")

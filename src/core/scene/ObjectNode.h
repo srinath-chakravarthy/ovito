@@ -49,8 +49,12 @@ public:
 	void setDataProvider(DataObject* dataProvider) { _dataProvider = dataProvider; }
 
 	/// \brief Returns the data source of this node's pipeline, i.e., the object that provides the
-	///        input data that enters the pipeline.
+	///        input data entering the pipeline.
 	DataObject* sourceObject() const;
+
+	/// \brief Sets the data source of this node's pipeline, i.e., the object that provides the
+	///        input data entering the pipeline.
+	void setSourceObject(DataObject* sourceObject);
 
 	/// \brief Evaluates the data flow pipeline of this object node at the given animation time.
 	/// \param time The animation time at which the pipeline of the node should be evaluated.

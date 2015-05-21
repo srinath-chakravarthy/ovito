@@ -27,7 +27,7 @@ import numpy
 node = import_file("../data/CuZr_metallic_glass.dump.gz")
 
 # Set atomic radii (required for polydisperse Voronoi tessellation).
-atypes = node.source.data.particle_type.type_list
+atypes = node.source.particle_type.type_list
 atypes[0].radius = 1.35        # Cu atomic radius (atom type 1 in input file)
 atypes[1].radius = 1.55        # Zr atomic radius (atom type 2 in input file)
 

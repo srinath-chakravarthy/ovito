@@ -3,7 +3,7 @@ This module contains data container classes that are used by OVITO's modificatio
 
 **Data collection:**
 
-  * The :py:class:`DataCollection` class is container for multiple data objects and holds the results of a modification pipeline.
+  * The :py:class:`DataCollection` class is a container for multiple data objects and holds the results of a modification pipeline.
 
 **Data objects:**
 
@@ -21,7 +21,7 @@ This module contains data container classes that are used by OVITO's modificatio
 
 """
 
-import collections
+import collections.abc
 
 # Load the native module.
 from PyScriptScene import DataCollection
@@ -57,7 +57,7 @@ def _DataCollection__str__(self):
     return "DataCollection(" + str(list(self.keys())) + ")"
 DataCollection.__str__ = _DataCollection__str__
 # Mix in base class collections.Mapping:
-DataCollection.__bases__ = DataCollection.__bases__ + (collections.Mapping, )
+DataCollection.__bases__ = DataCollection.__bases__ + (collections.abc.Mapping, )
 
 # Implement 'display' attribute of DataObject class.
 def _DataObject_display(self):

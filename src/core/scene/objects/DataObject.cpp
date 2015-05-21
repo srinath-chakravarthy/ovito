@@ -29,7 +29,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, DataObject, RefTarget);
 DEFINE_PROPERTY_FIELD(DataObject, _saveWithScene, "SaveWithScene");
-DEFINE_VECTOR_REFERENCE_FIELD(DataObject, _displayObjects, "DisplayObjects", DisplayObject);
+DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(DataObject, _displayObjects, "DisplayObjects", DisplayObject, PROPERTY_FIELD_NEVER_CLONE_TARGET);
 SET_PROPERTY_FIELD_LABEL(DataObject, _saveWithScene, "Save data with scene");
 SET_PROPERTY_FIELD_LABEL(DataObject, _displayObjects, "Display objects");
 
@@ -98,6 +98,22 @@ void DataObject::loadFromStream(ObjectLoadStream& stream)
 		}
 	}
 	stream.closeChunk();
+}
+
+/******************************************************************************
+* Returns whether the internal data is saved along with the scene.
+******************************************************************************/
+bool DataObject::saveWithScene() const
+{
+	// Check if 'save with scene' is disabled for the the parent object.
+	for(RefMaker* dependent : this->dependents()) {
+		if(DataObject* parent = dynamic_object_cast<DataObject>(dependent)) {
+			if(!parent->saveWithScene())
+				return false;
+		}
+	}
+
+	return _saveWithScene;
 }
 
 /******************************************************************************

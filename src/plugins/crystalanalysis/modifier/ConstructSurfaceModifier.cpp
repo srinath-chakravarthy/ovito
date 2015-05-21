@@ -36,12 +36,10 @@ IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, ConstructSurfaceModifierEditor, Particle
 SET_OVITO_OBJECT_EDITOR(ConstructSurfaceModifier, ConstructSurfaceModifierEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(ConstructSurfaceModifier, _smoothingLevel, "SmoothingLevel", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(ConstructSurfaceModifier, _radius, "Radius", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_REFERENCE_FIELD(ConstructSurfaceModifier, _surfaceMeshObj, "SurfaceMesh", SurfaceMesh, PROPERTY_FIELD_ALWAYS_DEEP_COPY);
 DEFINE_FLAGS_REFERENCE_FIELD(ConstructSurfaceModifier, _surfaceMeshDisplay, "SurfaceMeshDisplay", SurfaceMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(ConstructSurfaceModifier, _onlySelectedParticles, "OnlySelectedParticles");
 SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, _smoothingLevel, "Smoothing level");
 SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, _radius, "Probe sphere radius");
-SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, _surfaceMeshObj, "Surface mesh");
 SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, _surfaceMeshDisplay, "Surface mesh display");
 SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, _onlySelectedParticles, "Use only selected particles");
 SET_PROPERTY_FIELD_UNITS(ConstructSurfaceModifier, _radius, WorldParameterUnit);
@@ -55,14 +53,11 @@ ConstructSurfaceModifier::ConstructSurfaceModifier(DataSet* dataset) : Asynchron
 {
 	INIT_PROPERTY_FIELD(ConstructSurfaceModifier::_smoothingLevel);
 	INIT_PROPERTY_FIELD(ConstructSurfaceModifier::_radius);
-	INIT_PROPERTY_FIELD(ConstructSurfaceModifier::_surfaceMeshObj);
 	INIT_PROPERTY_FIELD(ConstructSurfaceModifier::_surfaceMeshDisplay);
 	INIT_PROPERTY_FIELD(ConstructSurfaceModifier::_onlySelectedParticles);
 
-	// Create the output object.
-	_surfaceMeshObj = new SurfaceMesh(dataset);
-	_surfaceMeshObj->setSaveWithScene(false);
-	_surfaceMeshDisplay = static_object_cast<SurfaceMeshDisplay>(_surfaceMeshObj->displayObjects().front());
+	// Create the display object.
+	_surfaceMeshDisplay = new SurfaceMeshDisplay(dataset);
 }
 
 /******************************************************************************
@@ -84,11 +79,20 @@ void ConstructSurfaceModifier::propertyChanged(const PropertyFieldDescriptor& fi
 ******************************************************************************/
 bool ConstructSurfaceModifier::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
-	// Do not propagate messages from the attached output and display objects.
-	if(source == surfaceMesh() || source == surfaceMeshDisplay())
+	// Do not propagate messages from the attached display object.
+	if(source == surfaceMeshDisplay())
 		return false;
 
 	return AsynchronousParticleModifier::referenceEvent(source, event);
+}
+
+/******************************************************************************
+* Resets the modifier's result cache.
+******************************************************************************/
+void ConstructSurfaceModifier::invalidateCachedResults()
+{
+	AsynchronousParticleModifier::invalidateCachedResults();
+	_surfaceMesh.reset();
 }
 
 /******************************************************************************
@@ -115,10 +119,8 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> ConstructSurfaceMod
 void ConstructSurfaceModifier::transferComputationResults(ComputeEngine* engine)
 {
 	ConstructSurfaceEngine* eng = static_cast<ConstructSurfaceEngine*>(engine);
-	if(surfaceMesh()) {
-		surfaceMesh()->setStorage(eng->mesh());
-		surfaceMesh()->setCompletelySolid(eng->isCompletelySolid());
-	}
+	_surfaceMesh = eng->mesh();
+	_isCompletelySolid = eng->isCompletelySolid();
 	_solidVolume = eng->solidVolume();
 	_totalVolume = eng->totalVolume();
 	_surfaceArea = eng->surfaceArea();
@@ -130,10 +132,17 @@ void ConstructSurfaceModifier::transferComputationResults(ComputeEngine* engine)
 ******************************************************************************/
 PipelineStatus ConstructSurfaceModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
 {
-	// Insert output object into pipeline.
-	if(surfaceMesh()) {
-		output().addObject(surfaceMesh());
-	}
+	if(!_surfaceMesh)
+		throw Exception(tr("No computation results available."));
+
+	// Create the output data object.
+	OORef<SurfaceMesh> meshObj(new SurfaceMesh(dataset(), _surfaceMesh.data()));
+	meshObj->setCompletelySolid(_isCompletelySolid);
+	meshObj->addDisplayObject(_surfaceMeshDisplay);
+
+	// Insert output object into the pipeline.
+	output().addObject(meshObj);
+
 	return PipelineStatus(PipelineStatus::Success, tr("Surface area: %1\nSolid volume: %2\nTotal volume: %3\nSolid volume fraction: %4\nSurface area per solid volume: %5\nSurface area per total volume: %6")
 			.arg(surfaceArea()).arg(solidVolume()).arg(totalVolume())
 			.arg(solidVolume() / totalVolume()).arg(surfaceArea() / solidVolume()).arg(surfaceArea() / totalVolume()));

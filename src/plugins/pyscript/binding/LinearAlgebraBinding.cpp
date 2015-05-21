@@ -120,7 +120,7 @@ dict Matrix__array_interface__(T& m)
 #else
 	ai["typestr"] = str(">f") + str(sizeof(typename T::element_type));
 #endif
-	ai["data"] = boost::python::make_tuple((std::intptr_t)m.data(), false);
+	ai["data"] = boost::python::make_tuple(reinterpret_cast<std::intptr_t>(m.data()), false);
 	ai["version"] = 3;
 	return ai;
 }

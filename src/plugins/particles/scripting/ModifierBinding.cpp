@@ -72,7 +72,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	;
 
 	ovito_class<AssignColorModifier, ParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Assigns a uniform color to all selected particles. "
 			"If no particle selection is defined (i.e. the ``\"Selection\"`` particle property does not exist), "
 			"the modifier assigns the color to all particles. ")
@@ -86,7 +86,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 
 	{
 		scope s = ovito_class<ColorCodingModifier, ParticleModifier>(
-				":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+				":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 				"Colors particles based on the values of an arbitrary particle property."
 				"\n\n"
 				"Usage example::"
@@ -149,7 +149,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	}
 
 	ovito_class<AmbientOcclusionModifier, AsynchronousParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Performs a quick lighting calculation to shade particles according to the degree of occlusion by other particles. ")
 		.add_property("intensity", &AmbientOcclusionModifier::intensity, &AmbientOcclusionModifier::setIntensity,
 				"A number controlling the strength of the applied shading effect. "
@@ -170,14 +170,14 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	;
 
 	ovito_class<DeleteParticlesModifier, ParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"This modifier deletes the selected particles. It has no parameters.",
 			// Python class name:
 			"DeleteSelectedParticlesModifier")
 	;
 
 	ovito_class<ShowPeriodicImagesModifier, ParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"This modifier replicates all particles to display periodic images of the system.")
 		.add_property("replicate_x", &ShowPeriodicImagesModifier::showImageX, &ShowPeriodicImagesModifier::setShowImageX,
 				"Enables replication of particles along *x*."
@@ -217,13 +217,13 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	;
 
 	ovito_class<WrapPeriodicImagesModifier, ParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"This modifier maps particles located outside the simulation cell back into the box by \"wrapping\" their coordinates "
 			"around at the periodic boundaries of the simulation cell. This modifier has no parameters.")
 	;
 
 	ovito_class<ComputePropertyModifier, ParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Evaluates a user-defined math expression to compute the values of a particle property."
 			"\n\n"
 			"Example::"
@@ -258,13 +258,13 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	;
 
 	ovito_class<ClearSelectionModifier, ParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"This modifier clears the particle selection by deleting the ``\"Selection\"`` particle property. "
 			"It has no parameters.")
 	;
 
 	ovito_class<InvertSelectionModifier, ParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"This modifier inverts the particle selection. It has no parameters.")
 	;
 
@@ -276,7 +276,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	;
 
 	ovito_class<SelectExpressionModifier, ParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"This modifier selects particles based on a user-defined Boolean expression."
 			"\n\n"
 			"Example::"
@@ -291,7 +291,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	;
 
 	ovito_class<SelectParticleTypeModifier, ParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Selects all particles of a certain type (or types)."
 			"\n\n"
 			"Example::"
@@ -316,7 +316,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	;
 
 	ovito_class<SliceModifier, ParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Deletes or selects particles based on a plane in three-dimensional space.")
 		.add_property("distance", &SliceModifier::distance, &SliceModifier::setDistance,
 				"The distance of the slicing plane from the origin (along its normal vector)."
@@ -349,7 +349,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	;
 
 	ovito_class<AffineTransformationModifier, ParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Applies an affine transformation to particles and/or the simulation cell."
 			"\n\n"
 			"Example::"
@@ -436,7 +436,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 
 	{
 		scope s = ovito_class<BondAngleAnalysisModifier, StructureIdentificationModifier>(
-				":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+				":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 				"Performs the bond-angle analysis described by Ackland & Jones to classify the local "
 				"structure of each particle. "
 				"\n\n"
@@ -493,7 +493,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 
 	{
 		scope s = ovito_class<CommonNeighborAnalysisModifier, StructureIdentificationModifier>(
-				":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+				":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 				"Performs the common neighbor analysis (CNA) to classify the local "
 				"structure of each particle. "
 				"\n\n"
@@ -559,7 +559,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 
 	{
 		scope s = ovito_class<IdentifyDiamondModifier, StructureIdentificationModifier>(
-				":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+				":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 				"This analysis modifier finds atoms that are arranged in a cubic or hexagonal diamond lattice."
 				"\n\n"
 				"The modifier stores its results as integer values in the ``\"Structure Type\"`` particle property. "
@@ -606,7 +606,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 
 	{
 		scope s = ovito_class<CreateBondsModifier, AsynchronousParticleModifier>(
-				":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+				":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 				"Creates bonds between nearby particles. The modifier outputs its computation results as a :py:class:`~ovito.data.Bonds` data object.")
 			.add_property("mode", &CreateBondsModifier::cutoffMode, &CreateBondsModifier::setCutoffMode)
 			.add_property("cutoff", &CreateBondsModifier::uniformCutoff, &CreateBondsModifier::setUniformCutoff,
@@ -624,7 +624,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	}
 
 	ovito_class<CentroSymmetryModifier, AsynchronousParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Computes the centro-symmetry parameter (CSP) of each particle."
 			"\n\n"
 			"The modifier outputs the computed values in the ``\"Centrosymmetry\"`` particle property.")
@@ -635,7 +635,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	;
 
 	ovito_class<ClusterAnalysisModifier, AsynchronousParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Groups particles into clusters."
 			"\n\n"
 			"The modifier stores the assigned cluster IDs in the ``\"Cluster\"`` particle property.")
@@ -650,7 +650,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	;
 
 	ovito_class<CoordinationNumberModifier, AsynchronousParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Computes coordination numbers of particles and the radial distribution function (RDF) of the system."
 			"\n\n"
 			"The modifier stores the computed coordination numbers in the ``\"Coordination\"`` particle property.")
@@ -663,7 +663,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	;
 
 	ovito_class<CalculateDisplacementsModifier, ParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Computes the displacement vectors of particles based on a separate reference configuration. "
 			"The modifier requires you to load a reference configuration from an external file::"
 			"\n\n"
@@ -716,7 +716,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	;
 
 	ovito_class<HistogramModifier, ParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Generates a histogram from the values of a particle property. "
 			"\n\n"
 			"The value range of the histogram is determined automatically from the minimum and maximum values of the selected property "
@@ -763,7 +763,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	;
 
 	ovito_class<AtomicStrainModifier, AsynchronousParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Computes the atomic strain tensors of particles based on a separate reference configuration. "
 			"The modifier requires you to load a reference configuration from an external file::"
 			"\n\n"
@@ -833,7 +833,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	;
 
 	ovito_class<WignerSeitzAnalysisModifier, AsynchronousParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Performs the Wigner-Seitz cell analysis to identify point defects in crystals. "
 			"The modifier requires you to load a reference configuration from an external file::"
 			"\n\n"
@@ -882,7 +882,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	;
 
 	ovito_class<VoronoiAnalysisModifier, AsynchronousParticleModifier>(
-			":Base: :py:class:`ovito.modifiers.Modifier`\n\n"
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Computes the atomic volumes and coordination numbers using a Voronoi tessellation of the particle system."
 			"\n\n"
 			"The modifier stores the computed per-particle volume in the ``\"Atomic Volume\"`` particle property and the number of neighbors "
