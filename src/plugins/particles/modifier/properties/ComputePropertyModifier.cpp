@@ -96,7 +96,7 @@ PipelineStatus ComputePropertyModifier::modifyParticles(TimePoint time, TimeInte
 		prop = outputStandardProperty(outputProperty().type(), onlySelectedParticles());
 	}
 	else if(!outputProperty().name().isEmpty() && propertyComponentCount() > 0)
-		prop = outputCustomProperty(outputProperty().name(), qMetaTypeId<FloatType>(), sizeof(FloatType), propertyComponentCount(), sizeof(FloatType) * propertyComponentCount(), onlySelectedParticles());
+		prop = outputCustomProperty(outputProperty().name(), qMetaTypeId<FloatType>(), propertyComponentCount(), sizeof(FloatType) * propertyComponentCount(), onlySelectedParticles());
 	else
 		throw Exception(tr("Output property has not been specified."));
 	OVITO_CHECK_OBJECT_POINTER(prop);

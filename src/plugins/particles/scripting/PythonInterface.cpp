@@ -173,7 +173,7 @@ BOOST_PYTHON_MODULE(Particles)
 	converter::registry::push_back(convertible_ParticlePropertyReference, construct_ParticlePropertyReference, boost::python::type_id<ParticlePropertyReference>());
 
 	{
-		scope s = ovito_class<ParticlePropertyObject, DataObject>(
+		scope s = ovito_abstract_class<ParticlePropertyObject, DataObject>(
 				":Base class: :py:class:`ovito.data.DataObject`\n\n"
 				"A data object that stores the values of a single particle property.",
 				// Python class name:
@@ -204,46 +204,46 @@ BOOST_PYTHON_MODULE(Particles)
 					"The type of the particle property (user-defined or one of the standard types).\n"
 					"One of the following constants:"
 					"\n\n"
-					"======================================================= ===================================================\n"
-					"Type constant                                           Property name\n"
-					"======================================================= ===================================================\n"
-					"``ParticleProperty.Type.User``                          (a user-defined property with a non-standard name)\n"
-					"``ParticleProperty.Type.ParticleType``                  :guilabel:`Particle Type`\n"
-					"``ParticleProperty.Type.Position``                      :guilabel:`Position`\n"
-					"``ParticleProperty.Type.Selection``                     :guilabel:`Selection`\n"
-					"``ParticleProperty.Type.Color``                         :guilabel:`Color`\n"
-					"``ParticleProperty.Type.Displacement``                  :guilabel:`Displacement`\n"
-					"``ParticleProperty.Type.DisplacementMagnitude``         :guilabel:`Displacement Magnitude`\n"
-					"``ParticleProperty.Type.PotentialEnergy``               :guilabel:`Potential Energy`\n"
-					"``ParticleProperty.Type.KineticEnergy``                 :guilabel:`Kinetic Energy`\n"
-					"``ParticleProperty.Type.TotalEnergy``                   :guilabel:`Total Energy`\n"
-					"``ParticleProperty.Type.Velocity``                      :guilabel:`Velocity`\n"
-					"``ParticleProperty.Type.Radius``                        :guilabel:`Radius`\n"
-					"``ParticleProperty.Type.Cluster``                       :guilabel:`Cluster`\n"
-					"``ParticleProperty.Type.Coordination``                  :guilabel:`Coordination`\n"
-					"``ParticleProperty.Type.StructureType``                 :guilabel:`Structure Type`\n"
-					"``ParticleProperty.Type.Identifier``                    :guilabel:`Particle Identifier`\n"
-					"``ParticleProperty.Type.StressTensor``                  :guilabel:`Stress Tensor`\n"
-					"``ParticleProperty.Type.StrainTensor``                  :guilabel:`Strain Tensor`\n"
-					"``ParticleProperty.Type.DeformationGradient``           :guilabel:`Deformation Gradient`\n"
-					"``ParticleProperty.Type.Orientation``                   :guilabel:`Orientation`\n"
-					"``ParticleProperty.Type.Force``                         :guilabel:`Force`\n"
-					"``ParticleProperty.Type.Mass``                          :guilabel:`Mass`\n"
-					"``ParticleProperty.Type.Charge``                        :guilabel:`Charge`\n"
-					"``ParticleProperty.Type.PeriodicImage``                 :guilabel:`Periodic Image`\n"
-					"``ParticleProperty.Type.Transparency``                  :guilabel:`Transparency`\n"
-					"``ParticleProperty.Type.DipoleOrientation``             :guilabel:`Dipole Orientation`\n"
-					"``ParticleProperty.Type.DipoleMagnitude``               :guilabel:`Dipole Magnitude`\n"
-					"``ParticleProperty.Type.AngularVelocity``               :guilabel:`Angular Velocity`\n"
-					"``ParticleProperty.Type.AngularMomentum``               :guilabel:`Angular Momentum`\n"
-					"``ParticleProperty.Type.Torque``                        :guilabel:`Torque`\n"
-					"``ParticleProperty.Type.Spin``                          :guilabel:`Spin`\n"
-					"``ParticleProperty.Type.CentroSymmetry``                :guilabel:`Centrosymmetry`\n"
-					"``ParticleProperty.Type.VelocityMagnitude``             :guilabel:`Velocity Magnitude`\n"
-					"``ParticleProperty.Type.NonaffineSquaredDisplacement``  :guilabel:`Nonaffine Squared Displacement`\n"
-					"``ParticleProperty.Type.Molecule``                      :guilabel:`Molecule Identifier`\n"
-					"``ParticleProperty.Type.AsphericalShape``               :guilabel:`Aspherical Shape`\n"
-					"======================================================= ===================================================\n"
+					"======================================================= =================================================== ==========\n"
+					"Type constant                                           Property name                                       Data type \n"
+					"======================================================= =================================================== ==========\n"
+					"``ParticleProperty.Type.User``                          (a user-defined property with a non-standard name)  int/float \n"
+					"``ParticleProperty.Type.ParticleType``                  :guilabel:`Particle Type`                           int       \n"
+					"``ParticleProperty.Type.Position``                      :guilabel:`Position`                                float     \n"
+					"``ParticleProperty.Type.Selection``                     :guilabel:`Selection`                               int       \n"
+					"``ParticleProperty.Type.Color``                         :guilabel:`Color`                                   float     \n"
+					"``ParticleProperty.Type.Displacement``                  :guilabel:`Displacement`                            float     \n"
+					"``ParticleProperty.Type.DisplacementMagnitude``         :guilabel:`Displacement Magnitude`                  float     \n"
+					"``ParticleProperty.Type.PotentialEnergy``               :guilabel:`Potential Energy`                        float     \n"
+					"``ParticleProperty.Type.KineticEnergy``                 :guilabel:`Kinetic Energy`                          float     \n"
+					"``ParticleProperty.Type.TotalEnergy``                   :guilabel:`Total Energy`                            float     \n"
+					"``ParticleProperty.Type.Velocity``                      :guilabel:`Velocity`                                float     \n"
+					"``ParticleProperty.Type.Radius``                        :guilabel:`Radius`                                  float     \n"
+					"``ParticleProperty.Type.Cluster``                       :guilabel:`Cluster`                                 int       \n"
+					"``ParticleProperty.Type.Coordination``                  :guilabel:`Coordination`                            int       \n"
+					"``ParticleProperty.Type.StructureType``                 :guilabel:`Structure Type`                          int       \n"
+					"``ParticleProperty.Type.Identifier``                    :guilabel:`Particle Identifier`                     int       \n"
+					"``ParticleProperty.Type.StressTensor``                  :guilabel:`Stress Tensor`                           float     \n"
+					"``ParticleProperty.Type.StrainTensor``                  :guilabel:`Strain Tensor`                           float     \n"
+					"``ParticleProperty.Type.DeformationGradient``           :guilabel:`Deformation Gradient`                    float     \n"
+					"``ParticleProperty.Type.Orientation``                   :guilabel:`Orientation`                             float     \n"
+					"``ParticleProperty.Type.Force``                         :guilabel:`Force`                                   float     \n"
+					"``ParticleProperty.Type.Mass``                          :guilabel:`Mass`                                    float     \n"
+					"``ParticleProperty.Type.Charge``                        :guilabel:`Charge`                                  float     \n"
+					"``ParticleProperty.Type.PeriodicImage``                 :guilabel:`Periodic Image`                          int       \n"
+					"``ParticleProperty.Type.Transparency``                  :guilabel:`Transparency`                            float     \n"
+					"``ParticleProperty.Type.DipoleOrientation``             :guilabel:`Dipole Orientation`                      float     \n"
+					"``ParticleProperty.Type.DipoleMagnitude``               :guilabel:`Dipole Magnitude`                        float     \n"
+					"``ParticleProperty.Type.AngularVelocity``               :guilabel:`Angular Velocity`                        float     \n"
+					"``ParticleProperty.Type.AngularMomentum``               :guilabel:`Angular Momentum`                        float     \n"
+					"``ParticleProperty.Type.Torque``                        :guilabel:`Torque`                                  float     \n"
+					"``ParticleProperty.Type.Spin``                          :guilabel:`Spin`                                    float     \n"
+					"``ParticleProperty.Type.CentroSymmetry``                :guilabel:`Centrosymmetry`                          float     \n"
+					"``ParticleProperty.Type.VelocityMagnitude``             :guilabel:`Velocity Magnitude`                      float     \n"
+					"``ParticleProperty.Type.NonaffineSquaredDisplacement``  :guilabel:`Nonaffine Squared Displacement`          float     \n"
+					"``ParticleProperty.Type.Molecule``                      :guilabel:`Molecule Identifier`                     int       \n"
+					"``ParticleProperty.Type.AsphericalShape``               :guilabel:`Aspherical Shape`                        float     \n"
+					"======================================================= =================================================== ==========\n"
 					)
 			.add_property("dataType", &ParticlePropertyObject::dataType)
 			.add_property("dataTypeSize", &ParticlePropertyObject::dataTypeSize)
@@ -294,7 +294,7 @@ BOOST_PYTHON_MODULE(Particles)
 		;
 	}
 
-	ovito_class<ParticleTypeProperty, ParticlePropertyObject>(
+	ovito_abstract_class<ParticleTypeProperty, ParticlePropertyObject>(
 			":Base class: :py:class:`ovito.data.ParticleProperty`\n\n"
 			"A special :py:class:`ParticleProperty` that stores a list of :py:class:`ParticleType` instances in addition "
 			"to the per-particle values. "
@@ -302,13 +302,13 @@ BOOST_PYTHON_MODULE(Particles)
 			"The particle properties ``Particle Type`` and ``Structure Type`` are represented by instances of this class. In addition to the regular per-particle "
 			"data (consisting of an integer per particle, indicating its type ID), this class holds the list of defined particle types. These are "
 			":py:class:`ParticleType` instances, which store the ID, name, color, and radius of each particle type.")
+		.def("addParticleType", &ParticleTypeProperty::addParticleType)
 		.def("insertParticleType", &ParticleTypeProperty::insertParticleType)
 		.def("particleType", make_function((ParticleType* (ParticleTypeProperty::*)(int) const)&ParticleTypeProperty::particleType, return_value_policy<ovito_object_reference>()))
 		.def("particleType", make_function((ParticleType* (ParticleTypeProperty::*)(const QString&) const)&ParticleTypeProperty::particleType, return_value_policy<ovito_object_reference>()))
 		.def("removeParticleType", &ParticleTypeProperty::removeParticleType)
 		.def("clearParticleTypes", &ParticleTypeProperty::clearParticleTypes)
-		.add_property("type_list", make_function(&ParticleTypeProperty::particleTypes, return_internal_reference<>()),
-				"A list of :py:class:`ParticleType` instances.")
+		.add_property("particleTypes", make_function(&ParticleTypeProperty::particleTypes, return_internal_reference<>()))
 		.def("getDefaultParticleColorFromId", &ParticleTypeProperty::getDefaultParticleColorFromId)
 		.def("getDefaultParticleColor", &ParticleTypeProperty::getDefaultParticleColor)
 		.def("setDefaultParticleColor", &ParticleTypeProperty::setDefaultParticleColor)
@@ -344,7 +344,7 @@ BOOST_PYTHON_MODULE(Particles)
 
 	ovito_class<BondsObject, DataObject>(
 			":Base class: :py:class:`ovito.data.DataObject`\n\n"
-			"This data object stores a list of explicit bonds between pairs of particles. "
+			"This data object stores a list of bonds between pairs of particles. "
 			"Typically bonds are loaded from a simulation file or are created using the :py:class:`~.ovito.modifiers.CreateBondsModifier` in the modification pipeline."
 			"\n\n"
 			"Example:\n"
@@ -360,6 +360,9 @@ BOOST_PYTHON_MODULE(Particles)
 			// Python class name:
 			"Bonds")
 		.add_property("__array_interface__", &BondsObject__array_interface__)
+		.def("clear", &BondsObject::clear,
+				"Removes all stored bonds.")
+		.def("addBond", &BondsObject::addBond)
 	;
 
 	ovito_class<ParticleType, RefTarget>(

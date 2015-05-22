@@ -64,8 +64,17 @@ public:
 
 	//////////////////////////////////// Specific methods //////////////////////////////////
 
+	/// Appends a particle type to the list of types.
+	void addParticleType(ParticleType* ptype) {
+		OVITO_ASSERT(particleTypes().contains(ptype) == false);
+		_particleTypes.push_back(ptype);
+	}
+
 	/// Inserts a particle type into the list of types.
-	void insertParticleType(ParticleType* ptype);
+	void insertParticleType(int index, ParticleType* ptype) {
+		OVITO_ASSERT(particleTypes().contains(ptype) == false);
+		_particleTypes.insert(index, ptype);
+	}
 
 	/// Returns the list of particle types.
 	const QVector<ParticleType*>& particleTypes() const { return _particleTypes; }

@@ -50,6 +50,13 @@ public:
 			_dataObjects.push_back(obj);
 	}
 
+	/// \brief Removes a data object from the compound.
+	void removeDataObject(DataObject* obj) {
+		int index = _dataObjects.indexOf(obj);
+		if(index >= 0)
+			_dataObjects.remove(index);
+	}
+
 	/// Replaces all data objects stored in this compound object with the data objects
 	/// stored in the pipeline flow state.
 	void setDataObjects(const PipelineFlowState& state);
@@ -108,6 +115,8 @@ private:
 	QVariantMap _attributes;
 
 private:
+
+	Q_CLASSINFO("DisplayName", "Compound data object");
 
 	Q_OBJECT
 	OVITO_OBJECT

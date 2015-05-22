@@ -126,12 +126,7 @@ InputColumnReader::InputColumnReader(const InputColumnMapping& mapping, Particle
 		TargetPropertyRecord rec;
 
 		if(dataType != QMetaType::Void) {
-			size_t dataTypeSize;
-			if(dataType == qMetaTypeId<int>())
-				dataTypeSize = sizeof(int);
-			else if(dataType == qMetaTypeId<FloatType>())
-				dataTypeSize = sizeof(FloatType);
-			else
+			if(dataType != qMetaTypeId<int>() && dataType != qMetaTypeId<FloatType>())
 				throw Exception(tr("Invalid custom particle property (data type %1) for input file column %2").arg(dataType).arg(i+1));
 
 			if(pref.type() != ParticleProperty::UserProperty) {
@@ -167,7 +162,7 @@ InputColumnReader::InputColumnReader(const InputColumnMapping& mapping, Particle
 				}
 				if(!property) {
 					// Create a new user-defined property for the column.
-					property = new ParticleProperty(particleCount, dataType, dataTypeSize, vectorComponent + 1, dataTypeSize * (vectorComponent + 1), pref.name(), true);
+					property = new ParticleProperty(particleCount, dataType, vectorComponent + 1, 0, pref.name(), true);
 					destination.addParticleProperty(property);
 					if(oldProperty) {
 						// We need to replace all old properties (with lower vector component count) with this one.

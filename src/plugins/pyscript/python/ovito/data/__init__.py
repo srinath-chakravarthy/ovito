@@ -56,7 +56,7 @@ DataCollection.__getattr__ = _DataCollection__getattr__
 def _DataCollection__str__(self):
     return "DataCollection(" + str(list(self.keys())) + ")"
 DataCollection.__str__ = _DataCollection__str__
-# Mix in base class collections.Mapping:
+# Mix in base class collections.abc.Mapping:
 DataCollection.__bases__ = DataCollection.__bases__ + (collections.abc.Mapping, )
 
 # Implement 'display' attribute of DataObject class.

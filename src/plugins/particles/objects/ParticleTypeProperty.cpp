@@ -93,17 +93,6 @@ ParticleTypeProperty::ParticleTypeProperty(DataSet* dataset, ParticleProperty* s
 }
 
 /******************************************************************************
-* Inserts a particle type.
-******************************************************************************/
-void ParticleTypeProperty::insertParticleType(ParticleType* ptype)
-{
-	OVITO_ASSERT_MSG(dataType() == qMetaTypeId<int>(), "ParticleTypeProperty::insertParticleType()", "The particle property should be have the data type integer.");
-
-	// Insert into array.
-	_particleTypes.push_back(ptype);
-}
-
-/******************************************************************************
 * Returns the default color for a particle type ID.
 ******************************************************************************/
 Color ParticleTypeProperty::getDefaultParticleColorFromId(ParticleProperty::Type typeClass, int particleTypeId)

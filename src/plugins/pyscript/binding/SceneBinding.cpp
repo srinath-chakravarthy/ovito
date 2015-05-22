@@ -141,7 +141,17 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 			// Python class name:
 			"DataCollection")
 		.add_property("objects", make_function(&CompoundObject::dataObjects, return_internal_reference<>()))
-		.def("addDataObject", &CompoundObject::addDataObject)
+		.def("add", &CompoundObject::addDataObject,
+				"Inserts a :py:class:`~ovito.data.DataObject` into the :py:class:`!DataCollection`. "
+				"\n\n"
+				"The method will do nothing if the data object is already part of the collection. "
+				"A data object can be part of several data collections. ",
+				args("self", "obj"))
+		.def("remove", &CompoundObject::removeDataObject,
+				"Removes a :py:class:`~ovito.data.DataObject` from the :py:class:`!DataCollection`. "
+				"\n\n"
+				"The method will do nothing if the data object is not part of the collection. ",
+				args("self", "obj"))
 		.def("setDataObjects", &CompoundObject::setDataObjects)
 	;
 

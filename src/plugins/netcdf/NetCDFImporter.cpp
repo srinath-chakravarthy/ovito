@@ -454,12 +454,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 			QString propertyName = column.property.name();
 
 			if (dataType != QMetaType::Void) {
-				size_t dataTypeSize;
-				if (dataType == qMetaTypeId<int>())
-					dataTypeSize = sizeof(int);
-				else if (dataType == qMetaTypeId<FloatType>())
-					dataTypeSize = sizeof(FloatType);
-				else
+				if (dataType != qMetaTypeId<int>() && dataType != qMetaTypeId<FloatType>())
 					throw Exception(tr("Invalid custom particle property (data type %1) for input file column %2 of NetCDF file.").arg(dataType).arg(columnName));
 
 				// Retrieve NetCDF meta-information.
@@ -510,7 +505,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 							}
 							if(!property) {
 								// Create a new user-defined property for the column.
-								property = new ParticleProperty(particleCount, dataType, dataTypeSize, componentCount, dataTypeSize * componentCount, propertyName, true);
+								property = new ParticleProperty(particleCount, dataType, componentCount, 0, propertyName, true);
 								addParticleProperty(property);
 							}
 						}

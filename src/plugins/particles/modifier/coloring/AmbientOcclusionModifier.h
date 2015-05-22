@@ -48,7 +48,7 @@ public:
 			_samplingCount(samplingCount),
 			_positions(positions),
 			_boundingBox(boundingBox),
-			_brightness(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), sizeof(FloatType), 1, sizeof(FloatType), tr("Brightness"), true)),
+			_brightness(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, tr("Brightness"), true)),
 			_particleRadii(particleRadii) {
 			_offscreenSurface.setFormat(ViewportSceneRenderer::getDefaultSurfaceFormat());
 			_offscreenSurface.create();

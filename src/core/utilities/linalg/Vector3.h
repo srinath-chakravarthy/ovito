@@ -288,35 +288,35 @@ public:
 /// \relates Vector_3
 template<typename T>
 Q_DECL_CONSTEXPR Vector_3<T> operator+(const Vector_3<T>& a, const Vector_3<T>& b) {
-	return Vector_3<T>{ a.x() + b.x(), a.y() + b.y(), a.z() + b.z() };
+	return Vector_3<T>( a.x() + b.x(), a.y() + b.y(), a.z() + b.z() );
 }
 
 /// \brief Computes the difference of two vectors.
 /// \relates Vector_3
 template<typename T>
 Q_DECL_CONSTEXPR Vector_3<T> operator-(const Vector_3<T>& a, const Vector_3<T>& b) {
-	return Vector_3<T>{ a.x() - b.x(), a.y() - b.y(), a.z() - b.z() };
+	return Vector_3<T>( a.x() - b.x(), a.y() - b.y(), a.z() - b.z() );
 }
 
 /// \brief Computes the product of a vector and a scalar value.
 /// \relates Vector_3
 template<typename T>
 Q_DECL_CONSTEXPR Vector_3<T> operator*(const Vector_3<T>& a, T s) {
-	return Vector_3<T>{ a.x() * s, a.y() * s, a.z() * s };
+	return Vector_3<T>( a.x() * s, a.y() * s, a.z() * s );
 }
 
 /// \brief Computes the product of a scalar value and a vector.
 /// \relates Vector_3
 template<typename T>
 Q_DECL_CONSTEXPR Vector_3<T> operator*(T s, const Vector_3<T>& a) {
-	return Vector_3<T>{ a.x() * s, a.y() * s, a.z() * s };
+	return Vector_3<T>( a.x() * s, a.y() * s, a.z() * s );
 }
 
 /// \brief Computes the division of a vector by a scalar value.
 /// \relates Vector_3
 template<typename T, typename S>
 Q_DECL_CONSTEXPR Vector_3<T> operator/(const Vector_3<T>& a, S s) {
-	return Vector_3<T>{ a.x() / s, a.y() / s, a.z() / s };
+	return Vector_3<T>( a.x() / s, a.y() / s, a.z() / s );
 }
 
 /// \brief Writes a vector to a text output stream.

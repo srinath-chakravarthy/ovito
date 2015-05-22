@@ -106,14 +106,11 @@ public:
 	/// \param particleCount The number of particles.
 	/// \param dataType Specifies the data type (integer, floating-point, ...) of the per-particle elements.
 	///                 The data type is specified as identifier according to the Qt metatype system.
-	/// \param dataTypeSize The size of the data type given by \a dataType in bytes.
-	///                     This is necessary because the Qt type system has no function to query
-	///                     the size of a data type at runtime.
 	/// \param componentCount The number of components per particle of type \a dataType.
-	/// \param stride The number of bytes per particle.
+	/// \param stride The number of bytes per particle (pass 0 to use the smallest possible stride).
 	/// \param name The name assigned to the property.
 	/// \param initializeMemory Controls whether the newly allocated memory is initialized with zeros.
-	ParticleProperty(size_t particleCount, int dataType, size_t dataTypeSize, size_t componentCount, size_t stride, const QString& name, bool initializeMemory);
+	ParticleProperty(size_t particleCount, int dataType, size_t componentCount, size_t stride, const QString& name, bool initializeMemory);
 
 	/// \brief Copy constructor.
 	ParticleProperty(const ParticleProperty& other);

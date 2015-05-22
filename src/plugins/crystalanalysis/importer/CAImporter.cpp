@@ -460,7 +460,7 @@ void CAImporter::CrystalAnalysisFrameLoader::handOver(CompoundObject* container)
 			if(structureTypeProperty && structureTypeProperty->type() == ParticleProperty::StructureTypeProperty) {
 				structureTypeProperty->clearParticleTypes();
 				for(StructurePattern* pattern : patternCatalog->patterns()) {
-					structureTypeProperty->insertParticleType(pattern);
+					structureTypeProperty->addParticleType(pattern);
 				}
 			}
 		}

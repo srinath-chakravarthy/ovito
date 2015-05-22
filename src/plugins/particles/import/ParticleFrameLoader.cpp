@@ -122,17 +122,19 @@ void ParticleFrameLoader::handOver(CompoundObject* container)
 	if(!cell) {
 		cell = new SimulationCellObject(container->dataset(), simulationCell());
 
-		// Create a display object for the simulation cell.
-		OORef<SimulationCellDisplay> cellDisplay = new SimulationCellDisplay(container->dataset());
-		cellDisplay->loadUserDefaults();
-		cell->addDisplayObject(cellDisplay);
+		// Set up display object for the simulation cell.
+		if(!cell->displayObjects().empty()) {
+			if(SimulationCellDisplay* cellDisplay = dynamic_object_cast<SimulationCellDisplay>(cell->displayObjects().front())) {
+				cellDisplay->loadUserDefaults();
 
-		// Choose an appropriate line width for the cell size.
-		FloatType cellDiameter = (
-				simulationCell().matrix().column(0) +
-				simulationCell().matrix().column(1) +
-				simulationCell().matrix().column(2)).length();
-		cellDisplay->setSimulationCellLineWidth(cellDiameter * 1.4e-3f);
+				// Choose an appropriate line width for the cell size.
+				FloatType cellDiameter = (
+						simulationCell().matrix().column(0) +
+						simulationCell().matrix().column(1) +
+						simulationCell().matrix().column(2)).length();
+				cellDisplay->setSimulationCellLineWidth(cellDiameter * 1.4e-3f);
+			}
+		}
 
 		container->addDataObject(cell);
 	}
@@ -176,10 +178,12 @@ void ParticleFrameLoader::handOver(CompoundObject* container)
 		if(!bondsObj) {
 			bondsObj = new BondsObject(container->dataset(), bondsPtr.data());
 
-			// Create a display object for the bonds.
-			OORef<BondsDisplay> bondsDisplay = new BondsDisplay(container->dataset());
-			bondsDisplay->loadUserDefaults();
-			bondsObj->addDisplayObject(bondsDisplay);
+			// Set up display object for the bonds.
+			if(!bondsObj->displayObjects().empty()) {
+				if(BondsDisplay* bondsDisplay = dynamic_object_cast<BondsDisplay>(bondsObj->displayObjects().front())) {
+					bondsDisplay->loadUserDefaults();
+				}
+			}
 
 			container->addDataObject(bondsObj);
 		}
@@ -227,7 +231,7 @@ void ParticleFrameLoader::insertParticleTypes(ParticlePropertyObject* propertyOb
 			if(item.radius == 0)
 				ptype->setRadius(ParticleTypeProperty::getDefaultParticleRadius(ParticleProperty::ParticleTypeProperty, name, ptype->id()));
 
-			typeProperty->insertParticleType(ptype);
+			typeProperty->addParticleType(ptype);
 		}
 		activeTypes.insert(ptype);
 

@@ -132,14 +132,12 @@ void ParticleDisplay::particleColors(std::vector<Color>& output, ParticlePropert
 	OVITO_ASSERT(selectionProperty == nullptr || selectionProperty->type() == ParticleProperty::SelectionProperty);
 
 	Color defaultColor = defaultParticleColor();
-	if(colorProperty) {
+	if(colorProperty && colorProperty->size() == output.size()) {
 		// Take particle colors directly from the color property.
-		OVITO_ASSERT(colorProperty->size() == output.size());
 		std::copy(colorProperty->constDataColor(), colorProperty->constDataColor() + output.size(), output.begin());
 	}
-	else if(typeProperty) {
+	else if(typeProperty && typeProperty->size() == output.size()) {
 		// Assign colors based on particle types.
-		OVITO_ASSERT(typeProperty->size() == output.size());
 		// Generate a lookup map for particle type colors.
 		const std::map<int,Color> colorMap = typeProperty->colorMap();
 		std::array<Color,16> colorArray;
@@ -177,8 +175,7 @@ void ParticleDisplay::particleColors(std::vector<Color>& output, ParticlePropert
 	}
 
 	// Highlight selected particles.
-	if(selectionProperty) {
-		OVITO_ASSERT(selectionProperty->size() == output.size());
+	if(selectionProperty && selectionProperty->size() == output.size()) {
 		const Color selColor = selectionParticleColor();
 		const int* t = selectionProperty->constDataInt();
 		for(auto c = output.begin(); c != output.end(); ++c, ++t) {
@@ -196,14 +193,12 @@ void ParticleDisplay::particleRadii(std::vector<FloatType>& output, ParticleProp
 	OVITO_ASSERT(radiusProperty == nullptr || radiusProperty->type() == ParticleProperty::RadiusProperty);
 	OVITO_ASSERT(typeProperty == nullptr || typeProperty->type() == ParticleProperty::ParticleTypeProperty);
 
-	if(radiusProperty) {
+	if(radiusProperty && radiusProperty->size() == output.size()) {
 		// Take particle radii directly from the radius property.
-		OVITO_ASSERT(radiusProperty->size() == output.size());
 		std::copy(radiusProperty->constDataFloat(), radiusProperty->constDataFloat() + output.size(), output.begin());
 	}
-	else if(typeProperty) {
+	else if(typeProperty && typeProperty->size() == output.size()) {
 		// Assign radii based on particle types.
-		OVITO_ASSERT(typeProperty->size() == output.size());
 		// Build a lookup map for particle type radii.
 		const std::map<int,FloatType> radiusMap = typeProperty->radiusMap();
 		// Skip the following loop if all per-type radii are zero. In this case, simply use the default radius for all particles.
@@ -236,14 +231,12 @@ FloatType ParticleDisplay::particleRadius(size_t particleIndex, ParticleProperty
 	OVITO_ASSERT(radiusProperty == nullptr || radiusProperty->type() == ParticleProperty::RadiusProperty);
 	OVITO_ASSERT(typeProperty == nullptr || typeProperty->type() == ParticleProperty::ParticleTypeProperty);
 
-	if(radiusProperty) {
+	if(radiusProperty && radiusProperty->size() > particleIndex) {
 		// Take particle radius directly from the radius property.
-		OVITO_ASSERT(particleIndex < radiusProperty->size());
 		return radiusProperty->getFloat(particleIndex);
 	}
-	else if(typeProperty) {
+	else if(typeProperty && typeProperty->size() > particleIndex) {
 		// Assign radius based on particle types.
-		OVITO_ASSERT(particleIndex < typeProperty->size());
 		ParticleType* ptype = typeProperty->particleType(typeProperty->getInt(particleIndex));
 		if(ptype && ptype->radius() > 0)
 			return ptype->radius();
@@ -263,29 +256,25 @@ ColorA ParticleDisplay::particleColor(size_t particleIndex, ParticlePropertyObje
 	OVITO_ASSERT(transparencyProperty == nullptr || transparencyProperty->type() == ParticleProperty::TransparencyProperty);
 
 	// Check if particle is selected.
-	if(selectionProperty) {
-		OVITO_ASSERT(particleIndex < selectionProperty->size());
+	if(selectionProperty && selectionProperty->size() > particleIndex) {
 		if(selectionProperty->getInt(particleIndex))
 			return selectionParticleColor();
 	}
 
 	ColorA c = defaultParticleColor();
-	if(colorProperty) {
+	if(colorProperty && colorProperty->size() > particleIndex) {
 		// Take particle color directly from the color property.
-		OVITO_ASSERT(particleIndex < colorProperty->size());
 		c = colorProperty->getColor(particleIndex);
 	}
-	else if(typeProperty) {
+	else if(typeProperty && typeProperty->size() > particleIndex) {
 		// Return color based on particle types.
-		OVITO_ASSERT(particleIndex < typeProperty->size());
 		ParticleType* ptype = typeProperty->particleType(typeProperty->getInt(particleIndex));
 		if(ptype)
 			c = ptype->color();
 	}
 
 	// Apply alpha component.
-	if(transparencyProperty) {
-		OVITO_ASSERT(particleIndex < transparencyProperty->size());
+	if(transparencyProperty && transparencyProperty->size() > particleIndex) {
 		c.a() = FloatType(1) - transparencyProperty->getFloat(particleIndex);
 	}
 
@@ -323,7 +312,6 @@ ParticlePrimitive::ParticleShape ParticleDisplay::effectiveParticleShape(Particl
 		effectiveParticleShape = ParticlePrimitive::EllipsoidShape;
 	return effectiveParticleShape;
 }
-
 
 /******************************************************************************
 * Lets the display object render the data object.
@@ -411,14 +399,12 @@ void ParticleDisplay::render(TimePoint time, DataObject* dataObject, const Pipel
 
 	// Update radius buffer.
 	if(updateRadii && particleCount) {
-		if(radiusProperty) {
+		if(radiusProperty && radiusProperty->size() == particleCount) {
 			// Take particle radii directly from the radius property.
-			OVITO_ASSERT(radiusProperty->size() == particleCount);
 			_particleBuffer->setParticleRadii(radiusProperty->constDataFloat());
 		}
-		else if(typeProperty) {
+		else if(typeProperty && typeProperty->size() == particleCount) {
 			// Assign radii based on particle types.
-			OVITO_ASSERT(typeProperty->size() == particleCount);
 			// Build a lookup map for particle type raii.
 			const std::map<int,FloatType> radiusMap = typeProperty->radiusMap();
 			// Skip the following loop if all per-type radii are zero. In this case, simply use the default radius for all particles.
@@ -448,15 +434,14 @@ void ParticleDisplay::render(TimePoint time, DataObject* dataObject, const Pipel
 
 	// Update color buffer.
 	if(updateColors && particleCount) {
-		if(colorProperty && !selectionProperty && !transparencyProperty) {
+		if(colorProperty && !selectionProperty && !transparencyProperty && colorProperty->size() == particleCount) {
 			// Direct particle colors.
-			OVITO_ASSERT(colorProperty->size() == particleCount);
 			_particleBuffer->setParticleColors(colorProperty->constDataColor());
 		}
 		else {
 			std::vector<Color> colors(particleCount);
 			particleColors(colors, colorProperty, typeProperty, selectionProperty);
-			if(!transparencyProperty) {
+			if(!transparencyProperty || transparencyProperty->size() != particleCount) {
 				_particleBuffer->setParticleColors(colors.data());
 			}
 			else {
@@ -477,12 +462,10 @@ void ParticleDisplay::render(TimePoint time, DataObject* dataObject, const Pipel
 
 	// Update shapes and orientation buffer.
 	if(updateShapes && particleCount) {
-		if(shapeProperty) {
-			OVITO_ASSERT(shapeProperty->size() == particleCount);
+		if(shapeProperty && shapeProperty->size() == particleCount) {
 			_particleBuffer->setParticleShapes(shapeProperty->constDataVector3());
 		}
-		if(orientationProperty) {
-			OVITO_ASSERT(orientationProperty->size() == particleCount);
+		if(orientationProperty && orientationProperty->size() == particleCount) {
 			_particleBuffer->setParticleOrientations(orientationProperty->constDataQuaternion());
 		}
 	}

@@ -125,48 +125,71 @@ dict Matrix__array_interface__(T& m)
 	return ai;
 }
 
+
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(Vector_normalizeSafely_overloads, normalizeSafely, 0, 1);
+
+/// Visitor to register Vector_3 classes.
+template<typename value_type>
+class vector3_suite : public def_visitor<vector3_suite<value_type>>
+{
+public:
+    template<class Class>
+    void visit(Class& cl) const {
+        cl
+        	.def(init<value_type,value_type,value_type>())
+			.def(init<value_type>())
+			.def("__init__", make_constructor(static_cast<Vector_3<value_type>* (*)()>([]() { return new Vector_3<value_type>(typename Vector_3<value_type>::Zero()); })))
+			.add_property("x", static_cast<value_type (Vector_3<value_type>::*)() const>(&Vector_3<value_type>::x), static_cast<void (*)(Vector_3<value_type>&,value_type)>([](Vector_3<value_type>& v, value_type x) { v.x() = x; }))
+			.add_property("y", static_cast<value_type (Vector_3<value_type>::*)() const>(&Vector_3<value_type>::y), static_cast<void (*)(Vector_3<value_type>&,value_type)>([](Vector_3<value_type>& v, value_type y) { v.y() = y; }))
+			.add_property("z", static_cast<value_type (Vector_3<value_type>::*)() const>(&Vector_3<value_type>::z), static_cast<void (*)(Vector_3<value_type>&,value_type)>([](Vector_3<value_type>& v, value_type z) { v.z() = z; }))
+			.def(self + other<Vector_3<value_type>>())
+			.def(self += other<Vector_3<value_type>>())
+			.def(self - other<Vector_3<value_type>>())
+			.def(self -= other<Vector_3<value_type>>())
+			.def(self * value_type())
+			.def(value_type() * self)
+			.def(self *= value_type())
+			.def(self / value_type())
+			.def(self /= value_type())
+			.def(-self)
+			.def(typename Point_3<value_type>::Origin() + self)
+			.def(self == other<Vector_3<value_type>>())
+			.def(self != other<Vector_3<value_type>>())
+			.add_property("length", &Vector_3<value_type>::length)
+			.add_property("squaredLength", &Vector_3<value_type>::squaredLength)
+			.def("cross", &Vector_3<value_type>::cross)
+			.def("dot", &Vector_3<value_type>::dot)
+			.add_property("maxComponent", &Vector_3<value_type>::maxComponent)
+			.add_property("minComponent", &Vector_3<value_type>::minComponent)
+			.def(array_indexing_suite<Vector_3<value_type>>())
+			.def("__str__", &Vector_3<value_type>::toString)
+        ;
+
+    	// Install automatic Python tuple to Vector3 conversion.
+    	python_to_vector_conversion<Vector_3<value_type>>();
+    }
+};
 
 BOOST_PYTHON_MODULE(PyScriptLinearAlgebra)
 {
 	docstring_options docoptions(true, false);
 
-	class_<Vector3>("Vector3", init<FloatType, FloatType, FloatType>())
-		.def(init<FloatType>())
-        .def("__init__", make_constructor(static_cast<Vector3* (*)()>([]() { return new Vector3(Vector3::Zero()); })))
-        .add_property("x", static_cast<FloatType (Vector3::*)() const>(&Vector3::x), static_cast<void (*)(Vector3&,FloatType)>([](Vector3& v, FloatType x) { v.x() = x; }))
-        .add_property("y", static_cast<FloatType (Vector3::*)() const>(&Vector3::y), static_cast<void (*)(Vector3&,FloatType)>([](Vector3& v, FloatType y) { v.y() = y; }))
-        .add_property("z", static_cast<FloatType (Vector3::*)() const>(&Vector3::z), static_cast<void (*)(Vector3&,FloatType)>([](Vector3& v, FloatType z) { v.z() = z; }))
-		.def(self + other<Vector3>())
-		.def(self += other<Vector3>())
-		.def(self - other<Vector3>())
-		.def(self -= other<Vector3>())
-		.def(self * FloatType())
-		.def(FloatType() * self)
-		.def(self *= FloatType())
-		.def(self / FloatType())
-		.def(self /= FloatType())
-		.def(-self)
-		.def(Point3::Origin() + self)
-		.def(self == other<Vector3>())
-		.def(self != other<Vector3>())
-		.add_property("length", &Vector3::length)
-		.add_property("squaredLength", &Vector3::squaredLength)
+	class_<Vector3>("Vector3", no_init)
+		.def(vector3_suite<FloatType>())
 		.def("normalize", &Vector3::normalize)
-		.def("normalized", &Vector3::normalized)
 		.def("normalizeSafely", &Vector3::normalizeSafely, Vector_normalizeSafely_overloads())
 		.def("resize", &Vector3::resize)
+		.def("normalized", &Vector3::normalized)
 		.def("resized", &Vector3::resized)
-		.def("cross", &Vector3::cross)
-		.def("dot", &Vector3::dot)
-		.add_property("maxComponent", &Vector3::maxComponent)
-		.add_property("minComponent", &Vector3::minComponent)
-		.def(array_indexing_suite<Vector3>())
-		.def("__str__", &Vector3::toString)
 	;
 
-	// Install automatic Python tuple to Vector3 conversion.
-	python_to_vector_conversion<Vector3>();
+	class_<Vector3I>("Vector3I", no_init)
+		.def(vector3_suite<int>())
+	;
+
+	class_<Vector_3<int8_t>>("Vector3C", no_init)
+		.def(vector3_suite<int8_t>())
+	;
 
 	class_<Vector2>("Vector2", init<FloatType, FloatType>())
 		.def(init<FloatType>())

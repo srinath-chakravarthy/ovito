@@ -111,7 +111,7 @@ private:
 			_positions(positions), _simCell(simCell),
 			_refPositions(refPositions), _simCellRef(simCellRef),
 			_eliminateCellDeformation(eliminateCellDeformation),
-			_occupancyNumbers(new ParticleProperty(refPositions->size(), qMetaTypeId<int>(), sizeof(int), 1, sizeof(int), tr("Occupancy"), true)) {}
+			_occupancyNumbers(new ParticleProperty(refPositions->size(), qMetaTypeId<int>(), 1, 0, tr("Occupancy"), true)) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;

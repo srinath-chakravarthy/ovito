@@ -26,6 +26,7 @@
 #include <core/viewport/ViewportConfiguration.h>
 
 #include "SimulationCellObject.h"
+#include "SimulationCellDisplay.h"
 
 namespace Ovito { namespace Particles {
 
@@ -57,7 +58,7 @@ SET_PROPERTY_FIELD_UNITS(SimulationCellObject, _cellOrigin, WorldParameterUnit);
 /******************************************************************************
 * Creates the storage for the internal parameters.
 ******************************************************************************/
-void SimulationCellObject::init()
+void SimulationCellObject::init(DataSet* dataset)
 {
 	INIT_PROPERTY_FIELD(SimulationCellObject::_cellVector1);
 	INIT_PROPERTY_FIELD(SimulationCellObject::_cellVector2);
@@ -66,6 +67,9 @@ void SimulationCellObject::init()
 	INIT_PROPERTY_FIELD(SimulationCellObject::_pbcX);
 	INIT_PROPERTY_FIELD(SimulationCellObject::_pbcY);
 	INIT_PROPERTY_FIELD(SimulationCellObject::_pbcZ);
+
+	// Attach a display object.
+	addDisplayObject(new SimulationCellDisplay(dataset));
 }
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)

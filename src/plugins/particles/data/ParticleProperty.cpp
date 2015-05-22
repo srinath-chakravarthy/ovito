@@ -37,12 +37,13 @@ ParticleProperty::ParticleProperty()
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-ParticleProperty::ParticleProperty(size_t particleCount, int dataType, size_t dataTypeSize, size_t componentCount, size_t stride, const QString& name, bool initializeMemory)
-	: _numParticles(0), _dataType(dataType), _dataTypeSize(dataTypeSize),
+ParticleProperty::ParticleProperty(size_t particleCount, int dataType, size_t componentCount, size_t stride, const QString& name, bool initializeMemory)
+	: _numParticles(0), _dataType(dataType), _dataTypeSize(QMetaType::sizeOf(dataType)),
 	  _stride(stride), _componentCount(componentCount), _type(UserProperty), _name(name)
 {
 	OVITO_ASSERT(_dataTypeSize > 0);
 	OVITO_ASSERT(_componentCount > 0);
+	if(_stride == 0) _stride = _dataTypeSize * _componentCount;
 	OVITO_ASSERT(_stride >= _dataTypeSize * _componentCount);
 	OVITO_ASSERT((_stride % _dataTypeSize) == 0);
 	if(componentCount > 1) {
@@ -67,9 +68,8 @@ ParticleProperty::ParticleProperty(size_t particleCount, Type type, size_t compo
 	case IdentifierProperty:
 	case MoleculeProperty:
 		_dataType = qMetaTypeId<int>();
-		_dataTypeSize = sizeof(int);
 		_componentCount = 1;
-		_stride = _dataTypeSize;
+		_stride = sizeof(int);
 		break;
 	case PositionProperty:
 	case DisplacementProperty:
@@ -81,16 +81,14 @@ ParticleProperty::ParticleProperty(size_t particleCount, Type type, size_t compo
 	case TorqueProperty:
 	case AsphericalShapeProperty:
 		_dataType = qMetaTypeId<FloatType>();
-		_dataTypeSize = sizeof(FloatType);
 		_componentCount = 3;
 		_stride = sizeof(Vector3);
 		OVITO_ASSERT(_stride == sizeof(Point3));
 		break;
 	case ColorProperty:
 		_dataType = qMetaTypeId<FloatType>();
-		_dataTypeSize = sizeof(FloatType);
 		_componentCount = 3;
-		_stride = _componentCount * _dataTypeSize;
+		_stride = _componentCount * sizeof(FloatType);
 		OVITO_ASSERT(_stride == sizeof(Color));
 		break;
 	case PotentialEnergyProperty:
@@ -107,41 +105,38 @@ ParticleProperty::ParticleProperty(size_t particleCount, Type type, size_t compo
 	case VelocityMagnitudeProperty:
     case NonaffineSquaredDisplacementProperty:
 		_dataType = qMetaTypeId<FloatType>();
-		_dataTypeSize = sizeof(FloatType);
 		_componentCount = 1;
-		_stride = _dataTypeSize;
+		_stride = sizeof(FloatType);
 		break;
 	case StressTensorProperty:
 	case StrainTensorProperty:
 		_dataType = qMetaTypeId<FloatType>();
-		_dataTypeSize = sizeof(FloatType);
 		_componentCount = 6;
-		_stride = _componentCount * _dataTypeSize;
+		_stride = _componentCount * sizeof(FloatType);
 		OVITO_ASSERT(_stride == sizeof(SymmetricTensor2));
 		break;
 	case DeformationGradientProperty:
 		_dataType = qMetaTypeId<FloatType>();
-		_dataTypeSize = sizeof(FloatType);
 		_componentCount = 9;
-		_stride = _componentCount * _dataTypeSize;
+		_stride = _componentCount * sizeof(FloatType);
 		break;
 	case OrientationProperty:
 		_dataType = qMetaTypeId<FloatType>();
-		_dataTypeSize = sizeof(FloatType);
 		_componentCount = 4;
-		_stride = _componentCount * _dataTypeSize;
+		_stride = _componentCount * sizeof(FloatType);
 		OVITO_ASSERT(_stride == sizeof(Quaternion));
 		break;
 	case PeriodicImageProperty:
 		_dataType = qMetaTypeId<int>();
-		_dataTypeSize = sizeof(int);
 		_componentCount = 3;
-		_stride = _componentCount * _dataTypeSize;
+		_stride = _componentCount * sizeof(FloatType);
 		break;
 	default:
 		OVITO_ASSERT_MSG(false, "ParticleProperty constructor", "Invalid standard property type");
 		throw Exception(ParticlePropertyObject::tr("This is not a valid standard property type: %1").arg(type));
 	}
+	_dataTypeSize = QMetaType::sizeOf(_dataType);
+	OVITO_ASSERT(_dataTypeSize > 0);
 	OVITO_ASSERT_MSG(componentCount == 0 || componentCount == _componentCount, "ParticleProperty::ParticleProperty(type)", "Cannot specify component count for a standard property with a fixed component count.");
 	OVITO_ASSERT(_stride >= _dataTypeSize * _componentCount);
 	OVITO_ASSERT((_stride % _dataTypeSize) == 0);

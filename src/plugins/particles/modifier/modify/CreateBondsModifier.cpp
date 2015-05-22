@@ -258,7 +258,7 @@ PipelineStatus CreateBondsModifier::applyComputationResults(TimePoint time, Time
 
 	// Create the output data object.
 	OORef<BondsObject> bondsObj(new BondsObject(dataset(), _bonds.data()));
-	bondsObj->addDisplayObject(_bondsDisplay);
+	bondsObj->setDisplayObject(_bondsDisplay);
 
 	// Insert output object into the pipeline.
 	output().addObject(bondsObj);

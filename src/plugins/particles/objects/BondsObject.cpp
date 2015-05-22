@@ -21,6 +21,7 @@
 
 #include <plugins/particles/Particles.h>
 #include "BondsObject.h"
+#include "BondsDisplay.h"
 
 namespace Ovito { namespace Particles {
 
@@ -31,6 +32,8 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, BondsObject, DataObject);
 ******************************************************************************/
 BondsObject::BondsObject(DataSet* dataset, BondsStorage* storage) : DataObjectWithSharedStorage(dataset, storage ? storage : new BondsStorage())
 {
+	// Attach a display object.
+	addDisplayObject(new BondsDisplay(dataset));
 }
 
 /******************************************************************************

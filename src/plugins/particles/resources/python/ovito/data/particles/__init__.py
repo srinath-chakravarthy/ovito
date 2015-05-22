@@ -1,8 +1,11 @@
 import re
 import numpy
 import math
+import collections.abc
+import PyQt5.QtCore
 
 # Load dependencies
+import ovito
 import ovito.data
 
 # Load the native code module
@@ -80,15 +83,30 @@ Particles.ParticleProperty.mutable_array = property(_ParticleProperty_mutable_ar
 def _Bonds_array(self):
     """ This attribute returns a NumPy array providing direct access to the bond list.
         
-        The returned array is two-dimensional and contains pairs of particle indices connect by a bond.
+        The returned array is two-dimensional and contains pairs of particle indices connected by a bond.
         The array's shape is *N x 2*, where *N* is the number of half bonds. Each pair-wise bond occurs twice
         in the array, once for the connection A->B and second time for the connection B->A.
+        Particle indices start at 0.
         
         Note that the returned NumPy array is read-only and provides a view of the internal data. 
-        No copy of the data is made.  
+        No copy of the data is made.
     """
     return numpy.asarray(self)
 Particles.Bonds.array = property(_Bonds_array)
+
+def _Bonds_add(self, p1, p2):
+    """ Creates a new (half) bond from particle *p1* to particle *p2*. Particle indices start at 0.
+    
+        To also create a half bond from *p2* to *p1*, use :py:meth:`.add_full`.
+    """
+    self.addBond(p1, p2, (0,0,0))
+Particles.Bonds.add = _Bonds_add
+
+def _Bonds_add_full(self, p1, p2):
+    """ Creates two new half bonds between the particles *p1* and *p2*. Particle indices start at 0. """
+    self.addBond(p1, p2, (0,0,0))
+    self.addBond(p2, p1, (0,0,0))
+Particles.Bonds.add_full = _Bonds_add_full
 
 # Implement 'pbc' property of SimulationCell class.
 def _get_SimulationCell_pbc(self):
@@ -154,3 +172,68 @@ class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
             query.next()
             
 ovito.data.CutoffNeighborFinder = CutoffNeighborFinder
+
+def _ParticleProperty_create(prop_type, num_particles):
+    """
+        Static factory function that creates a new :py:class:`!ParticleProperty` instance for a standard particle property.
+        To create a new user-defined property, use :py:meth:`.create_user` instead.
+        
+        :param ParticleProperty.Type prop_type: The standard particle property to create. See the :py:attr:`.type` attribute for a list of possible values.
+        :param int num_particles: The number of particles. This determines the size of the allocated data array.
+        :returns: A newly created instance of the :py:class:`!ParticleProperty` class or one of its sub-classes. 
+        
+    """
+    assert(isinstance(prop_type, ovito.data.ParticleProperty.Type))
+    assert(prop_type != ovito.data.ParticleProperty.Type.User)
+    assert(num_particles >= 0)
+    
+    return ovito.data.ParticleProperty.createStandardProperty(ovito.dataset, num_particles, prop_type, 0, True)
+ovito.data.ParticleProperty.create = staticmethod(_ParticleProperty_create)
+
+def _ParticleProperty_create_user(name, data_type, num_particles, num_components = 1):
+    """
+        Static factory function that creates a new :py:class:`!ParticleProperty` instance for a user-defined particle property.
+        To create one of the standard properties, use :py:meth:`.create` instead.
+
+        :param str name: The name of the user-defined particle property to create.
+        :param str data_type: Must be either ``"int"`` or ``"float"``.                
+        :param int num_particles: The number of particles. This determines the size of the allocated data array.
+        :param int num_components: The number of components when creating a vector property.
+        :returns: A newly created instance of the :py:class:`!ParticleProperty` class. 
+        
+    """
+    assert(num_particles >= 0)
+    assert(num_components >= 1)
+    if data_type == "int":
+        data_type = PyQt5.QtCore.QMetaType.type("int")
+    elif data_type == "float":
+        data_type = PyQt5.QtCore.QMetaType.type("FloatType")
+    else:
+        raise RuntimeError("Invalid data type. Only 'int' or 'float' are allowed.")
+        
+    return ovito.data.ParticleProperty.createUserProperty(ovito.dataset, num_particles, data_type, num_components, 0, name, True)
+ovito.data.ParticleProperty.create_user = staticmethod(_ParticleProperty_create_user)
+
+# Implement the 'type_list' property of the ParticleTypeProperty class, which provides access to particle types. 
+def _get_ParticleTypeProperty_type_list(self):
+    """A mutable list of :py:class:`ParticleType` instances."""    
+    class ParticleTypeList(collections.abc.MutableSequence):
+        def __init__(self, owner):
+            self.__owner = owner;
+        def __len__(self):
+            return len(self.__owner.particleTypes)
+        def __getitem__(self, index):
+            if index < 0: index += len(self)
+            return self.__owner.particleTypes[index]
+        def __delitem__(self, index):
+            if index < 0: index += len(self)
+            self.__owner.removeParticleType(index)
+        def __setitem__(self, index, obj):
+            if index < 0: index += len(self)
+            self.__owner.removeParticleType(index)
+            self.__owner.insertParticleType(index, obj)
+        def insert(self, index, obj):
+            if index < 0: index += len(self)
+            self.__owner.insertParticleType(index, obj)
+    return ParticleTypeList(self)
+ovito.data.ParticleTypeProperty.type_list = property(_get_ParticleTypeProperty_type_list)
