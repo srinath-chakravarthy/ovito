@@ -95,15 +95,22 @@ def _Bonds_array(self):
 Particles.Bonds.array = property(_Bonds_array)
 
 def _Bonds_add(self, p1, p2):
-    """ Creates a new (half) bond from particle *p1* to particle *p2*. Particle indices start at 0.
+    """ Creates a new half-bond from particle *p1* to particle *p2*. 
     
-        To also create a half bond from *p2* to *p1*, use :py:meth:`.add_full`.
+        To also create a half-bond from *p2* to *p1*, use :py:meth:`.add_full` instead.
+
+        :param int p1: Zero-based index of the particle at which the bonds originates.
+        :param int p2: Zero-based index of the particle the bonds leads to.
     """
     self.addBond(p1, p2, (0,0,0))
 Particles.Bonds.add = _Bonds_add
 
 def _Bonds_add_full(self, p1, p2):
-    """ Creates two new half bonds between the particles *p1* and *p2*. Particle indices start at 0. """
+    """ Creates two half-bonds between the particles *p1* and *p2*.
+    
+        :param int p1: Zero-based index of the first particle.
+        :param int p2: Zero-based index of the second particle.
+    """
     self.addBond(p1, p2, (0,0,0))
     self.addBond(p2, p1, (0,0,0))
 Particles.Bonds.add_full = _Bonds_add_full
@@ -129,8 +136,8 @@ class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
     The constructor takes a positive cutoff radius and a :py:class:`DataCollection <ovito.data.DataCollection>` 
     containing the input particle positions and the cell geometry (including periodic boundary flags).
     
-    Once the utility class has been constructed, you can call :py:meth:`.find` to iterate over the neighbors of a selected particle,    
-    for example:
+    Once the :py:class:`!CutoffNeighborFinder` has been constructed, you can call its :py:meth:`.find` method to 
+    iterate over the neighbors of a specific particle, for example:
     
     .. literalinclude:: ../example_snippets/cutoff_neighbor_finder.py
     """
