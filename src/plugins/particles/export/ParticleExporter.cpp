@@ -130,8 +130,18 @@ PipelineFlowState ParticleExporter::getParticles(const QVector<SceneNode*>& node
 
 		// Check if the node's pipeline evaluates to something that contains particles.
 		const PipelineFlowState& state = node->evalPipeline(time);
-		if(ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty))
+		if(ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty)) {
+
+			// Verify data, make sure array length is consistent for all particle properties.
+			for(DataObject* obj : state.objects()) {
+				if(ParticlePropertyObject* p = dynamic_object_cast<ParticlePropertyObject>(obj)) {
+					if(p->size() != posProperty->size())
+						throw Exception(tr("Data produced by modification pipeline is invalid. Array size is not the same for all particle properties."));
+				}
+			}
+
 			return state;
+		}
 	}
 
 	// Nothing to export.

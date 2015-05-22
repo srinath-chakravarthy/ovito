@@ -55,6 +55,14 @@ PipelineStatus ParticleModifier::modifyObject(TimePoint time, ModifierApplicatio
 			throw Exception(tr("This modifier cannot be evaluated because the input does not contain any particles."));
 		_outputParticleCount = _inputParticleCount = posProperty->size();
 
+		// Verify input, make sure array length of particle properties is consistent.
+		for(DataObject* obj : state.objects()) {
+			if(ParticlePropertyObject* p = dynamic_object_cast<ParticlePropertyObject>(obj)) {
+				if(p->size() != _inputParticleCount)
+					throw Exception(tr("Detected invalid modifier input. Data array size is not the same for all particle properties."));
+			}
+		}
+
 		// Let the derived class do the actual work.
 		TimeInterval validityInterval = state.stateValidity();
 		status = modifyParticles(time, validityInterval);
