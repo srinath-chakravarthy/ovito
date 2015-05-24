@@ -29,8 +29,8 @@ We can execute the script from a Linux terminal as follows:
 
 .. code-block:: shell-session
 
-	me@linux:~/ovito-2.4.0-x86_64/bin$ ./ovitos hello.py
-	Hello, this is OVITO 2.4.0
+	me@linux:~/ovito-2.5.0-x86_64/bin$ ./ovitos hello.py
+	Hello, this is OVITO 2.5.0
 	
 By default, the :program:`ovitos` script launcher invokes OVITO in console mode, which is a non-graphical mode
 where the main window isn't shown. This allows running OVITO scripts on remote machines or

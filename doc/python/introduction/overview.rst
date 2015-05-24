@@ -163,25 +163,25 @@ Note again how we could have used the more compact notation instead to initializ
 Accessing computation results
 ------------------------------------
 
-OVITO's scripting interface allows us to directly access the output data that leaves the
-modification pipeline. But first we have to let OVITO compute the results of the modification pipeline for us::
+OVITO's scripting interface allows us to directly access the output data leaving the
+modification pipeline. But first we have to ask OVITO to compute the results of the modification pipeline::
 
     >>> node.compute()
     
 The node's :py:meth:`~ovito.ObjectNode.compute` method ensures that all modifiers in the pipeline
 have been successfully evaluated. Note that the :py:meth:`~ovito.vis.Viewport.render` and 
-:py:func:`~ovito.io.export_file` functions discussed above implicitly call :py:meth:`~ovito.ObjectNode.compute`
-for us. But now, since we are not using any of these high-level functions, we have to explicitly request 
+:py:func:`~ovito.io.export_file` functions introduced above implicitly call :py:meth:`~ovito.ObjectNode.compute`
+for us. But now, to gain direct access to the results, we have to explicitly request 
 an evaluation of the modification pipeline.
 
-The node stores the results of the last pipeline evaluation in its :py:attr:`~ovito.ObjectNode.output` field::
+The node caches the results of the last pipeline evaluation in its :py:attr:`~ovito.ObjectNode.output` field::
 
     >>> node.output
     DataCollection(['Simulation cell', 'Particle Identifier', 'Position', 
                     'Potential Energy', 'Color', 'Structure Type'])
     
-The :py:class:`~ovito.data.DataCollection` contains the *data objects* that were output
-by the modification pipeline. For example, to access the simulation cell we would write::
+The :py:class:`~ovito.data.DataCollection` contains the *data objects* that were produced
+by the modification pipeline. For example, to access the :py:class:`simulation cell <ovito.data.SimulationCell>` we would write::
 
     >>> node.output.cell.matrix
     [[ 148.147995      0.            0.          -74.0739975 ]
@@ -190,8 +190,8 @@ by the modification pipeline. For example, to access the simulation cell we woul
      
     >>> node.output.cell.pbc
     (True, True, True)
-     
-Similarly, the data of individual particle properties may be accessed as NumPy arrays:
+
+Similarly, the data of individual :py:class:`particle properties <ovito.data.ParticleProperty>` may be accessed as NumPy arrays:
 
     >>> import numpy
     >>> node.output.position.array
@@ -202,9 +202,10 @@ Similarly, the data of individual particle properties may be accessed as NumPy a
      [ 42.71210098  59.44919968  38.6432991 ]
      [ 42.9917984   63.53770065  36.33330154]
      [ 44.17670059  61.49860001  37.5401001 ]]
-     
+
 Sometimes we might be interested in the data that *enters* the modification pipeline. 
-This input data, which was read from the external file, is cached by the :py:class:`~ovito.io.FileSource`::
+The input data, which was read from the external file, is cached by the :py:class:`~ovito.io.FileSource`,
+which also is a :py:class:`~ovito.data.DataCollection`::
 
     >>> node.source
     DataCollection(['Simulation cell', 'Particle Identifier', 'Position'])
@@ -213,11 +214,10 @@ This input data, which was read from the external file, is cached by the :py:cla
 Controlling the visual appearance of objects
 -------------------------------------------------
 
-So far we have only considered data objects such as particle properties or the simulation cell,
-which are processed in OVITO's modification pipeline system. How are these data objects displayed, and how
-can we set the parameters that control their visual appearance?
+So far we have only looked at objects that represent data, e.g. particle properties or the simulation cell. 
+How are these data objects displayed, and how can we set the parameters that control their visual appearance?
 
-Every data object that has a visual representation in OVITO is associated with a specialized :py:class:`~ovito.vis.Display`
+Every data object that can be visualized in OVITO is associated with a specialized :py:class:`~ovito.vis.Display`
 object. The display object is stored in the data object's :py:attr:`~.ovito.data.DataObject.display` attribute. For example::
 
     >>> cell = node.source.cell
@@ -227,17 +227,17 @@ object. The display object is stored in the data object's :py:attr:`~.ovito.data
     >>> cell.display                       # This is its attached display object
     <SimulationCellDisplay at 0x7fc3650a1c20>
 
-In this example we have accessed the :py:class:`~ovito.data.SimulationCell` data object from the 
+Note that we have accessed the :py:class:`~ovito.data.SimulationCell` data object from the 
 file source's data collection. Its :py:attr:`~.ovito.data.DataObject.display` attribute contains
-a :py:class:`~ovito.vis.SimulationCellDisplay` instance, which is responsible for producing
-the visual representation of the simulation cell. Its parameters allow us to control
-the appearance of the cell. We can even turn off the display of the simulation cell completely::
+a :py:class:`~ovito.vis.SimulationCellDisplay` instance, which is responsible for rendering
+the simulation cell. Its parameters allow us to control
+the visual appearance of the cell. We can even turn off the display of the simulation cell completely::
 
     >>> cell.display.enabled = False 
 
-Particles are rendered by a :py:class:`~ovito.vis.ParticleDisplay`. It is attached to the 
-:py:class:`~ovito.data.ParticleProperty` containing the particle position data. Thus, to change the visual
-appearance of particles, we have to access the particle positions object in the data collection::
+Particles are rendered by a :py:class:`~ovito.vis.ParticleDisplay` object. It is attached to the 
+:py:class:`~ovito.data.ParticleProperty` object, which stores the particle position data. Thus, to change the visual
+appearance of particles, we have to access the particle positions object in the :py:class:`~ovito.data.DataCollection`::
 
     >>> p = node.source.position           
     >>> p                        # This is the data object holding the input particle positions

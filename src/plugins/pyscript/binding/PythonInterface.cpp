@@ -35,7 +35,7 @@ BOOST_PYTHON_MODULE(PyScript)
 	// Make Ovito program version number available to script.
 	scope().attr("version") = make_tuple(OVITO_VERSION_MAJOR, OVITO_VERSION_MINOR, OVITO_VERSION_REVISION);
 
-	// Make environment information available
+	// Make environment information available to the script.
 	scope().attr("gui_mode") = Application::instance().guiMode();
 	scope().attr("headless_mode") = Application::instance().headlessMode();
 }

@@ -4,13 +4,13 @@ from ovito.data import *
 # The number of particles we are going to create.
 num_particles = 3
 
-# Create particles position property.
+# Create the particles position property.
 pos_prop = ParticleProperty.create(ParticleProperty.Type.Position, num_particles)
 pos_prop.mutable_array[0] = (1.0, 1.5, 0.3)
 pos_prop.mutable_array[1] = (7.0, 4.2, 6.0)
 pos_prop.mutable_array[2] = (5.0, 9.2, 8.0)
 
-# Create particle type property with two types.
+# Create the particle type property and insert two atom types.
 type_prop = ParticleProperty.create(ParticleProperty.Type.ParticleType, num_particles)
 type_prop.type_list.append(ParticleType(id = 1, name = 'Cu', color = (0.0,1.0,0.0)))
 type_prop.type_list.append(ParticleType(id = 2, name = 'Ni', color = (0.0,0.5,1.0)))

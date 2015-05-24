@@ -3,7 +3,8 @@ This module contains data container classes that are used by OVITO's modificatio
 
 **Data collection:**
 
-  * The :py:class:`DataCollection` class is a container for multiple data objects and holds the results of a modification pipeline.
+  * The :py:class:`DataCollection` class is a container for data objects. It can hold the 
+    input and the results of a modification pipeline.
 
 **Data objects:**
 

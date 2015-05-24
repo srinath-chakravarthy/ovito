@@ -91,21 +91,27 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 	register_ptr_to_python<VersionedOORef<DataObject>>();
 
 	ovito_class<CompoundObject, DataObject>(
-			"A dictionary-like container storing a set of :py:class:`DataObjects <DataObject>`. "
+			"A data collection is a dictionary-like container that can store an arbitrary number of data objects. "
+			"OVITO knows various types of data objects, e.g."
 			"\n\n"
-			"Data collections store the data that enters or leaves a modification pipeline. "
-			"The *input* data collection of a node's modification pipeline can be accessed through the :py:attr:`~ovito.ObjectNode.source` attribute::"
+			"   * :py:class:`~ovito.data.ParticleProperty` and :py:class:`~ovito.data.ParticleTypeProperty`\n"
+			"   * :py:class:`~ovito.data.SimulationCell`\n"
+			"   * :py:class:`~ovito.data.Bonds`\n"
+			"   * :py:class:`~ovito.data.SurfaceMesh`\n"
+			"\n\n"
+			"Data collections hold the data that enters or leaves an :py:class:`~ovito.ObjectNode`'s modification pipeline. "
+			"The *input* data collection of the pipeline can be accessed through the node's :py:attr:`~ovito.ObjectNode.source` attribute::"
 			"\n\n"
 			"   >>> node = import_file(...)\n"
 			"   >>> print(node.source)\n"
 			"   DataCollection(['Simulation cell', 'Position'])\n"
 			"\n\n"
-			"In this example the *input* data collection contains the original data that was read from the external file, consisting "
-			"of the particle positions and a simulation cell."
+			"In this example the input data collection contains the original data that was read from the external file, consisting "
+			"of the particle position property and a simulation cell."
 			"\n\n"
-			"The input data gets modified or extended by modifiers in the node's modification pipeline. To access the results "
+			"The input data typically gets modified or extended by modifiers in the node's modification pipeline. To access the results "
 			"of the modification pipeline, we need to call :py:meth:`ObjectNode.compute() <ovito.ObjectNode.compute>`, "
-			"which returns the *output* data collection::"
+			"which returns the *output* data collection after evaluating the modifiers::"
 			"\n\n"
 			"   >>> node.modifiers.append(CommonNeighborAnalysisModifier(adaptive_mode=True))\n"
 			"   >>> print(node.compute())\n"
@@ -119,7 +125,7 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 			"\n\n"
 			"In our example, the :py:class:`~ovito.modifiers.CommonNeighborAnalysisModifier` in the modification pipeline "
 			"has added additional particle properties to the :py:class:`!DataCollection`. "
-			"Particle properties, which are instances of the :py:class:`ParticleProperty` class, are so-called data objects. "
+			"Particle properties, which are instances of the :py:class:`ParticleProperty` class, are so-called :py:class:`~ovito.data.DataObject`s. "
 			"Likewise, the simulation cell (:py:class:`SimulationCell`) and bonds (:py:class:`Bonds`) are data objects, which "
 			"can all be part of a data collection. "
 			"\n\n"
@@ -215,19 +221,22 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 	ovito_class<ObjectNode, SceneNode>(
 			"Manages a data source, a modification pipeline, and the output of the pipeline."
 			"\n\n"
-			"An :py:class:`!ObjectNode` is created when a new object is inserted into the scene. "
-			"The node maintains a modification pipeline, which allows to apply modifiers to the input data. "
-			"The output of the modification pipeline are displayed by the :py:class:`!ObjectNode` in the three-dimensional scene."
+			"An :py:class:`!ObjectNode` is created when a new object is inserted into the scene, for example, "
+			"as a result of calling py:func:`~ovito.io.import_file`."
+			"The node maintains a modification pipeline, which allows applying modifiers to the input data. "
+			"The output of the modification pipeline is displayed by the :py:class:`!ObjectNode` in the three-dimensional scene "
+			"shown by the viewport."
 			"\n\n"
-			"The data that enters the modification pipeline is provided by the node's :py:attr:`ObjectNode.source` object. "
+			"The data entering the modification pipeline is provided by the node's :py:attr:`ObjectNode.source` object,"
+			"which can be a :py:class:`~ovito.io.FileSource` or a :py:class:`~ovito.data.DataCollection`, for example. "
 			"The node's modification pipeline can be accessed through the :py:attr:`ObjectNode.modifiers` attribute. "
-			"The modification pipeline can be computed by calling the :py:meth:`ObjectNode.compute` method. "
-			"Finally, the output data of the pipeline can be accessed through the the node's :py:attr:`ObjectNode.output` attribute. "
+			"An evaluation of the modification pipeline can be requested by calling the :py:meth:`ObjectNode.compute` method. "
+			"Finally, the cached output of the pipeline can be accessed through the the node's :py:attr:`ObjectNode.output` attribute. "
 			)
 		.add_property("data_provider", make_function(&ObjectNode::dataProvider, return_value_policy<ovito_object_reference>()), &ObjectNode::setDataProvider)
 		.add_property("source", make_function(&ObjectNode::sourceObject, return_value_policy<ovito_object_reference>()), &ObjectNode::setSourceObject,
-				"The object that provides or generates the data that enters the modification pipeline of this node. "
-				"This typically is a :py:class:`~ovito.io.FileSource` instance for nodes returned by :py:func:`~ovito.io.import_file`.")
+				"The object that provides or generates the data that enters the node's modification pipeline. "
+				"This typically is a :py:class:`~ovito.io.FileSource` instance if the node was created by a call to :py:func:`~ovito.io.import_file`.")
 		.add_property("displayObjects", make_function(&ObjectNode::displayObjects, return_internal_reference<>()))
 		.def("evalPipeline", make_function(&ObjectNode::evalPipeline, return_value_policy<copy_const_reference>()))
 		.def("applyModifier", &ObjectNode::applyModifier)

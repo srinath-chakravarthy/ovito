@@ -2,7 +2,7 @@
 Examples
 ==================================
 
-This page will provide a collection of example scripts. So far there is only one example.
+This page provides a collection of example scripts.
 
 ----------------------------------
 Computing Voronoi indices
@@ -42,3 +42,17 @@ Program output:
   (0, 0, 0, 1, 10, 4)     2068    (1.9 %)
   (0, 0, 0, 2, 8, 6)      2063    (1.9 %)
   (0, 0, 0, 2, 8, 5)      1662    (1.5 %)
+  
+----------------------------------
+Creating particles on the fly
+----------------------------------
+
+The following script demonstrates how to create particles, a simulation cell, and bonds on the fly
+without loading an external simulation file. This approach can be used to implement custom data importers
+or dynamically generate atomic structures, which can then be further processed or exported with OVITO.
+
+The script creates different data objects and adds them to a new :py:class:`~ovito.data.DataCollection` instance.
+Finally, an :py:class:`~ovito.ObjectNode` is created and the :py:class:`~ovito.data.DataCollection` is set as
+its data source.
+
+.. literalinclude:: ../../../tests/scripts/test_suite/create_new_particle_property.py

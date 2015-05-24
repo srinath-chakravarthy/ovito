@@ -50,7 +50,8 @@ def _get_ObjectNode_modifiers(self):
        This list contains the modifiers that are applied to the input data provided by the node's :py:attr:`.source` object. You
        can add and remove modifiers from this list as needed. The first modifier in the list is
        always evaluated first, and its output is passed on to the second modifier and so on. 
-       The results of the last modifier are displayed in the viewports. 
+       The results of the last modifier are displayed in the viewports and can be access through the 
+       :py:attr:`.output` field. 
        
        Example::
        
@@ -155,7 +156,7 @@ def _ObjectNode_compute(self):
         
         Even if you are not interested in the final data that leaves the modification pipeline, you should call this method in case you are going to 
         directly access information provided by individual modifiers in the pipeline. This method will ensure that all modifiers 
-        have been computed and their internal fields are up to date.
+        have been computed and their output fields are up to date.
 
         This function raises a ``RuntimeError`` when the modification pipeline could not be successfully evaluated for some reason.
         This may happen due to invalid modifier parameters for example.
@@ -178,9 +179,9 @@ def _ObjectNode_compute(self):
 ObjectNode.compute = _ObjectNode_compute
 
 def _ObjectNode_output(self):
-    """ Provides access to the last results of the node's modification pipeline.
+    """ Provides access to the last results computed by the node's data modification pipeline.
         
-        After calling the :py:meth:`.compute` method, this attribute holds a :py:class:`DataCollection`
+        After calling the :py:meth:`.compute` method, this attribute holds a :py:class:`~ovito.data.DataCollection`
         with the output of the node's modification pipeline.
     """    
     if not hasattr(self, "__output"):
