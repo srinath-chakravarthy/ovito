@@ -30,7 +30,7 @@
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 /**
- * \brief Encapsulates a super pattern from the CA lib.
+ * \brief A structural pattern (e.g. a lattice type, planar defect type, etc.)
  */
 class OVITO_CRYSTALANALYSIS_EXPORT StructurePattern : public ParticleType
 {

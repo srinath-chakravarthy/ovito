@@ -42,6 +42,8 @@ SET(SourceFiles
 	modifier/SmoothSurfaceModifier.cpp
 	modifier/SmoothDislocationsModifier.cpp
 	modifier/ConstructSurfaceModifier.cpp
+	modifier/dislocations/DislocationAnalysisModifier.cpp
+	modifier/dislocations/DislocationAnalysisEngine.cpp
 	util/DelaunayTessellation.cpp
 )
 

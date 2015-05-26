@@ -236,10 +236,10 @@ int CommonNeighborAnalysisModifier::calcMaxChainLength(CNAPairBond* neighborBond
 ******************************************************************************/
 CommonNeighborAnalysisModifier::StructureType CommonNeighborAnalysisModifier::determineStructureAdaptive(NearestNeighborFinder& neighFinder, size_t particleIndex)
 {
-	// Create neighbor list finder.
+	// Construct local neighbor list builder.
 	NearestNeighborFinder::Query<MAX_NEIGHBORS> neighQuery(neighFinder);
 
-	// Find N nearest neighbor of current atom.
+	// Find N nearest neighbors of current atom.
 	neighQuery.findNeighbors(neighFinder.particlePos(particleIndex));
 	int numNeighbors = neighQuery.results().size();
 
@@ -256,7 +256,7 @@ CommonNeighborAnalysisModifier::StructureType CommonNeighborAnalysisModifier::de
 	FloatType localScaling = 0;
 	for(int n = 0; n < nn; n++)
 		localScaling += sqrt(neighQuery.results()[n].distanceSq);
-	FloatType localCutoff = localScaling / nn * (1.0 + sqrt(2.0)) / 2;
+	FloatType localCutoff = localScaling / nn * (1.0f + sqrt(2.0f)) * 0.5f;
 	FloatType localCutoffSquared =  localCutoff * localCutoff;
 
 	// Compute common neighbor bit-flag array.
@@ -312,10 +312,10 @@ CommonNeighborAnalysisModifier::StructureType CommonNeighborAnalysisModifier::de
 	// Compute scaling factor.
 	FloatType localScaling = 0;
 	for(int n = 0; n < 8; n++)
-		localScaling += sqrt(neighQuery.results()[n].distanceSq / (3.0/4.0));
+		localScaling += sqrt(neighQuery.results()[n].distanceSq / (3.0f/4.0f));
 	for(int n = 8; n < 14; n++)
 		localScaling += sqrt(neighQuery.results()[n].distanceSq);
-	FloatType localCutoff = localScaling / nn * 1.207;
+	FloatType localCutoff = localScaling / nn * 1.207f;
 	FloatType localCutoffSquared =  localCutoff * localCutoff;
 
 	// Compute common neighbor bit-flag array.

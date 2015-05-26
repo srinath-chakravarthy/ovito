@@ -75,9 +75,9 @@ public:
 
 public:
 
-	Q_PROPERTY(QString name READ name WRITE setName)
-	Q_PROPERTY(Color color READ color WRITE setColor)
-	Q_PROPERTY(bool isVisible READ isVisible WRITE setVisible)
+	Q_PROPERTY(QString name READ name WRITE setName);
+	Q_PROPERTY(Color color READ color WRITE setColor);
+	Q_PROPERTY(bool isVisible READ isVisible WRITE setVisible);
 
 protected:
 
