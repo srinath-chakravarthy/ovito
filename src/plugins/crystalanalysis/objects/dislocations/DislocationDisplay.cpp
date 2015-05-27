@@ -27,7 +27,7 @@
 #include "DislocationDisplay.h"
 #include "DislocationNetwork.h"
 
-namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis { namespace Objects {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, DislocationDisplay, DisplayObject);
 IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, DislocationDisplayEditor, PropertiesEditor);
@@ -313,6 +313,7 @@ void DislocationDisplayEditor::createUI(const RolloutInsertionParameters& rollou
 	lineWidthUI->setMinValue(0);
 }
 
+}	// End of namespace
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

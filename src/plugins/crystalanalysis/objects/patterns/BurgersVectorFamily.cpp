@@ -24,7 +24,7 @@
 #include <core/gui/properties/StringParameterUI.h>
 #include "BurgersVectorFamily.h"
 
-namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis { namespace Objects {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, BurgersVectorFamily, RefTarget);
 IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, BurgersVectorFamilyEditor, PropertiesEditor);
@@ -74,6 +74,7 @@ void BurgersVectorFamilyEditor::createUI(const RolloutInsertionParameters& rollo
 	layout1->addWidget(colorPUI->colorPicker(), 1, 1);
 }
 
+}	// End of namespace
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

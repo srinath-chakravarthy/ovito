@@ -204,11 +204,12 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 	setProgressText(tr("Constructing surface mesh (cell classification step)"));
 
 	// Classify cells into solid and open tetrahedra.
-	int nghost = 0, ntotal = 0;
+	int ntotal = 0;
 	int solidCellCount = 0;
 	_isCompletelySolid = true;
-	for(DelaunayTessellation::CellIterator cell = tessellation.begin_cells(); cell != tessellation.end_cells(); ++cell) {
-		// This determines whether a Delaunay tetrahedron is part of the solid region.
+	for(DelaunayTessellation::CellIterator cell = tessellation.begin_cells(); cell != tessellation.end_cells(); ++cell, ++ntotal) {
+
+		// Alpha shape criterion: This determines whether the Delaunay tetrahedron is part of the solid region.
 		bool isSolid = tessellation.isValidCell(cell) &&
 				tessellation.dt().geom_traits().compare_squared_radius_3_object()(
 						cell->vertex(0)->point(),
@@ -226,10 +227,11 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 			cell->info().index = -1;
 		}
 
-		incrementProgressValue(0);
+		if((ntotal % 1024) == 0)
+			setProgressValue(ntotal);
+		if(isCanceled())
+			return;
 	}
-	if(isCanceled())
-		return;
 
 	// Stores pointers to the mesh facets generated for a solid, local
 	// tetrahedron of the Delaunay tessellation.
@@ -242,6 +244,7 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 	std::vector<std::map<std::array<int,4>, Tetrahedron>::const_iterator> tetrahedraList;
 	tetrahedraList.reserve(solidCellCount);
 
+	setProgressValue(0);
 	setProgressRange(solidCellCount);
 	setProgressText(tr("Constructing surface mesh (facet construction step)"));
 
@@ -254,11 +257,9 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 			continue;
 		OVITO_ASSERT(cell->info().flag);
 
-		if((cell->info().index % 1000) == 0) {
+		if((cell->info().index % 1024) == 0)
 			setProgressValue(cell->info().index);
-			if(isCanceled())
-				return;
-		}
+		if(isCanceled()) return;
 
 		Tetrahedron tet;
 		tet.cell = cell;
@@ -305,19 +306,16 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 		std::sort(vertexIndices.begin(), vertexIndices.end());
 		tetrahedraList.push_back(tetrahedra.insert(std::make_pair(vertexIndices, tet)).first);
 	}
-	if(isCanceled())
-		return;
 
 	// Links half-edges to opposite half-edges.
 	setProgressText(tr("Constructing surface mesh (facet linking step)"));
 	for(auto tetIter = tetrahedra.cbegin(); tetIter != tetrahedra.cend(); ++tetIter) {
 
 		const Tetrahedron& tet = tetIter->second;
-		if((tet.cell->info().index % 1000) == 0) {
+		if((tet.cell->info().index % 1024) == 0)
 			setProgressValue(tet.cell->info().index);
-			if(isCanceled())
-				return;
-		}
+		if(isCanceled())
+			return;
 
 		for(int f = 0; f < 4; f++) {
 			HalfEdgeMesh::Face* facet = tet.meshFacets[f];

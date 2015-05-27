@@ -21,7 +21,7 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/objects/SurfaceMesh.h>
-#include <plugins/crystalanalysis/data/dislocations/DislocationNetwork.h>
+#include <plugins/crystalanalysis/objects/dislocations/DislocationNetwork.h>
 #include <core/gui/properties/Vector3ParameterUI.h>
 #include "ShiftModifier.h"
 
@@ -48,7 +48,7 @@ ShiftModifier::ShiftModifier(DataSet* dataset) : Modifier(dataset)
 bool ShiftModifier::isApplicableTo(const PipelineFlowState& input)
 {
 	return (input.findObject<SurfaceMesh>() != nullptr)
-			|| (input.findObject<DislocationNetwork>() != nullptr);
+			|| (input.findObject<Objects::DislocationNetwork>() != nullptr);
 }
 
 /******************************************************************************
@@ -90,9 +90,9 @@ PipelineStatus ShiftModifier::modifyObject(TimePoint time, ModifierApplication* 
 		}
 
 		// Apply translation to dislocation lines.
-		else if(DislocationNetwork* inputDislocations = dynamic_object_cast<DislocationNetwork>(state.objects()[index])) {
-			OORef<DislocationNetwork> outputDislocations = cloneHelper.cloneObject(inputDislocations, false);
-			for(DislocationSegment* segment : outputDislocations->segments()) {
+		else if(Objects::DislocationNetwork* inputDislocations = dynamic_object_cast<Objects::DislocationNetwork>(state.objects()[index])) {
+			OORef<Objects::DislocationNetwork> outputDislocations = cloneHelper.cloneObject(inputDislocations, false);
+			for(Objects::DislocationSegment* segment : outputDislocations->segments()) {
 				QVector<Point3> line = segment->line();
 				for(Point3& p : line)
 					p += t;

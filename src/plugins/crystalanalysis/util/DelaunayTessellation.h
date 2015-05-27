@@ -92,7 +92,7 @@ public:
 	/// Data structure attached to each tessellation cell.
 	struct CellInfo {
 		bool isGhost;	// Indicates whether this is a ghost tetrahedron.
-		bool flag;		// An additional flag that can be used by other code.
+		bool flag;		// An additional flag that can be used by client code.
 		int index;		// An index assigned to the cell.
 	};
 
@@ -177,6 +177,9 @@ public:
 
 	/// Returns a reference to the internal CGAL Delaunay triangulation object.
 	DT& dt() { return _dt; }
+
+	/// Writes the tessellation to a VTK file for visualization.
+	void dumpToVTKFile(const QString& filename) const;
 
 private:
 

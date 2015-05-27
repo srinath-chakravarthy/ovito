@@ -23,7 +23,7 @@
 #include <core/gui/properties/RefTargetListParameterUI.h>
 #include "PatternCatalog.h"
 
-namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis { namespace Objects {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, PatternCatalog, DataObject);
 IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, PatternCatalogEditor, PropertiesEditor);
@@ -128,6 +128,7 @@ void PatternCatalogEditor::onDoubleClickPattern(const QModelIndex& index)
 	});
 }
 
+}	// End of namespace
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

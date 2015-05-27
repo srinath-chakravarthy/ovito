@@ -22,7 +22,7 @@
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include "Cluster.h"
 
-namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis { namespace Objects {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, Cluster, RefTarget);
 DEFINE_REFERENCE_FIELD(Cluster, _pattern, "Structure", StructurePattern);
@@ -44,4 +44,4 @@ Cluster::Cluster(DataSet* dataset) : RefTarget(dataset), _id(-1), _atomCount(0),
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace
-
+}	// End of namespace

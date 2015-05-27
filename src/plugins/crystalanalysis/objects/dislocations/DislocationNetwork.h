@@ -27,7 +27,7 @@
 #include <core/gui/properties/PropertiesEditor.h>
 #include "DislocationSegment.h"
 
-namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis { namespace Objects {
 
 /**
  * \brief Stores a collection of dislocation segments.
@@ -90,6 +90,7 @@ private:
 	OVITO_OBJECT
 };
 
+}	// End of namespace
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

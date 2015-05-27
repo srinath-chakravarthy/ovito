@@ -34,7 +34,7 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, DislocationAnalysisModifier, AsynchronousParticleModifier);
 IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, DislocationAnalysisModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(DislocationAnalysisModifier, DislocationAnalysisModifierEditor);
-DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _dislocationDisplay, "DislocationDisplay", DislocationDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _dislocationDisplay, "DislocationDisplay", Objects::DislocationDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _defectMeshDisplay, "DefectMeshDisplay", SurfaceMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 
 /******************************************************************************
@@ -46,7 +46,7 @@ DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : Asy
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_defectMeshDisplay);
 
 	// Create the display objects.
-	_dislocationDisplay = new DislocationDisplay(dataset);
+	_dislocationDisplay = new Objects::DislocationDisplay(dataset);
 	_defectMeshDisplay = new SurfaceMeshDisplay(dataset);
 }
 

@@ -23,7 +23,7 @@
 #include <core/gui/properties/RefTargetListParameterUI.h>
 #include "ClusterGraph.h"
 
-namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis { namespace Objects {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, ClusterGraph, DataObject);
 IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, ClusterGraphEditor, PropertiesEditor);
@@ -99,6 +99,7 @@ void ClusterGraphEditor::createUI(const RolloutInsertionParameters& rolloutParam
 	clusterListUI->tableWidget()->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 }
 
+}	// End of namespace
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

@@ -27,7 +27,7 @@
 #include <core/utilities/mesh/HalfEdgeMesh.h>
 #include <core/gui/properties/PropertiesEditor.h>
 #include <plugins/particles/import/ParticleFrameLoader.h>
-#include <plugins/crystalanalysis/data/patterns/StructurePattern.h>
+#include <plugins/crystalanalysis/objects/patterns/StructurePattern.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -95,7 +95,7 @@ protected:
 
 		struct PatternInfo {
 			int id;
-			StructurePattern::StructureType type;
+			Objects::StructurePattern::StructureType type;
 			QString shortName;
 			QString longName;
 			Color color;

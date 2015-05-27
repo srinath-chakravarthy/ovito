@@ -22,7 +22,7 @@
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include "DislocationSegment.h"
 
-namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis { namespace Objects {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, DislocationSegment, RefTarget);
 DEFINE_REFERENCE_FIELD(DislocationSegment, _cluster, "Cluster", Cluster);
@@ -168,6 +168,7 @@ QString DislocationSegment::formatBurgersVector(const Vector3& b)
 			.arg(QLocale::c().toString(b.z(), 'f'), 7);
 }
 
+}	// End of namespace
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

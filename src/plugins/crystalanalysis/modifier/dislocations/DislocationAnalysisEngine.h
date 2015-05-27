@@ -24,7 +24,10 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/modifier/AsynchronousParticleModifier.h>
-#include <plugins/particles/modifier/analysis/cna/CommonNeighborAnalysisModifier.h>
+#include <plugins/crystalanalysis/util/DelaunayTessellation.h>
+#include "StructureAnalysis.h"
+#include "ElasticMapping.h"
+#include "InterfaceMesh.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -33,47 +36,6 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
  */
 class DislocationAnalysisEngine : public AsynchronousParticleModifier::ComputeEngine
 {
-public:
-
-	/// The coordination structure types.
-	enum CoordinationStructureType {
-		COORD_OTHER = 0,		//< Unidentified structure
-		COORD_FCC,				//< Face-centered cubic
-		COORD_HCP,				//< Hexagonal close-packed
-		COORD_BCC,				//< Body-centered cubic
-
-		NUM_COORD_TYPES 		//< This just counts the number of defined coordination types.
-	};
-
-	/// The lattice structure types.
-	enum LatticeStructureType {
-		LATTICE_OTHER = 0,			//< Unidentified structure
-		LATTICE_FCC,				//< Face-centered cubic
-		LATTICE_HCP,				//< Hexagonal close-packed
-		LATTICE_BCC,				//< Body-centered cubic
-
-		NUM_LATTICE_TYPES 			//< This just counts the number of defined coordination types.
-	};
-
-	/// The maximum number of neighbor atoms taken into account for the common neighbor analysis.
-#ifndef Q_CC_MSVC
-	static constexpr int MAX_NEIGHBORS = 14;
-#else
-	enum { MAX_NEIGHBORS = 14 };
-#endif
-
-	struct CoordinationStructure {
-		int numNeighbors;
-		std::vector<Vector3> latticeVectors;
-		CommonNeighborAnalysisModifier::NeighborBondArray neighborArray;
-		int cnaSignatures[MAX_NEIGHBORS];
-		int commonNeighbors[MAX_NEIGHBORS][3];
-	};
-
-	struct LatticeStructure {
-		std::vector<Vector3> latticeVectors;
-	};
-
 public:
 
 	/// Constructor.
@@ -85,38 +47,18 @@ public:
 	/// Returns the generated defect mesh.
 	HalfEdgeMesh* defectMesh() { return _defectMesh.data(); }
 
-	/// Returns the input particle positions.
-	ParticleProperty* positions() const { return _positions.data(); }
-
-	/// Returns the input simulation cell.
-	const SimulationCell& cell() const { return _simCell; }
-
 	/// Indicates whether the entire simulation cell is part of the 'bad' crystal region.
 	bool isDefectRegionEverywhere() const { return _isDefectRegionEverywhere; }
 
-protected:
-
-	/// Determines the coordination structure of a particle.
-	void determineLocalStructure(NearestNeighborFinder& neighList, size_t particleIndex);
-
-	/// Combines adjacent atoms to clusters.
-	void buildClusters();
-
-	/// Prepares the list of coordination structures.
-	static void initializeCoordinationStructures();
-
 private:
 
-	QExplicitlySharedDataPointer<ParticleProperty> _positions;
 	QExplicitlySharedDataPointer<HalfEdgeMesh> _defectMesh;
-	QExplicitlySharedDataPointer<ParticleProperty> _structureTypes;
-	QExplicitlySharedDataPointer<ParticleProperty> _neighborLists;
-	QExplicitlySharedDataPointer<ParticleProperty> _atomClusters;
-	QExplicitlySharedDataPointer<ParticleProperty> _atomLatticeVectors;
-	SimulationCell _simCell;
+	StructureAnalysis _structureAnalysis;
+	DelaunayTessellation _tessellation;
+	ElasticMapping _elasticMapping;
+	InterfaceMesh _interfaceMesh;
+
 	bool _isDefectRegionEverywhere;
-	static CoordinationStructure _coordinationStructures[NUM_COORD_TYPES];
-	static LatticeStructure _latticeStructures[NUM_LATTICE_TYPES];
 };
 
 }	// End of namespace

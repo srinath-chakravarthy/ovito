@@ -26,7 +26,7 @@
 #include "DislocationDisplay.h"
 #include "DislocationInspector.h"
 
-namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis { namespace Objects {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, DislocationNetwork, DataObject);
 IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, DislocationNetworkEditor, PropertiesEditor);
@@ -87,6 +87,7 @@ void DislocationNetworkEditor::onOpenInspector()
 	inspectorWindow->show();
 }
 
+}	// End of namespace
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

@@ -66,6 +66,11 @@ public:
 		/// Two-dimensional bit array that stores the bonds between neighbors.
 		unsigned int neighborArray[MAX_NEIGHBORS];
 
+		/// Resets all bits.
+		NeighborBondArray() {
+			memset(neighborArray, 0, sizeof(neighborArray));
+		}
+
 		/// Returns whether two nearest neighbors have a bond between them.
 		inline bool neighborBond(int neighborIndex1, int neighborIndex2) const {
 			OVITO_ASSERT(neighborIndex1 < MAX_NEIGHBORS);

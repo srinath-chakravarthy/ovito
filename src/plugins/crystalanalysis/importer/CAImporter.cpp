@@ -24,10 +24,10 @@
 #include <core/dataset/importexport/FileSource.h>
 #include <core/scene/ObjectNode.h>
 #include <core/gui/properties/BooleanParameterUI.h>
-#include <plugins/crystalanalysis/data/dislocations/DislocationNetwork.h>
-#include <plugins/crystalanalysis/data/dislocations/DislocationSegment.h>
-#include <plugins/crystalanalysis/data/clusters/ClusterGraph.h>
-#include <plugins/crystalanalysis/data/patterns/PatternCatalog.h>
+#include <plugins/crystalanalysis/objects/dislocations/DislocationNetwork.h>
+#include <plugins/crystalanalysis/objects/dislocations/DislocationSegment.h>
+#include <plugins/crystalanalysis/objects/clusters/ClusterGraph.h>
+#include <plugins/crystalanalysis/objects/patterns/PatternCatalog.h>
 #include <plugins/crystalanalysis/modifier/SmoothSurfaceModifier.h>
 #include <plugins/crystalanalysis/modifier/SmoothDislocationsModifier.h>
 #include <plugins/particles/import/lammps/LAMMPSTextDumpImporter.h>
@@ -116,9 +116,9 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 		pattern.longName = stream.lineString().mid(9).trimmed();
 		stream.readLine();
 		QString patternTypeString = stream.lineString().mid(5).trimmed();
-		if(patternTypeString == QStringLiteral("LATTICE")) pattern.type = StructurePattern::Lattice;
-		else if(patternTypeString == QStringLiteral("INTERFACE")) pattern.type = StructurePattern::Interface;
-		else if(patternTypeString == QStringLiteral("POINTDEFECT")) pattern.type = StructurePattern::PointDefect;
+		if(patternTypeString == QStringLiteral("LATTICE")) pattern.type = Objects::StructurePattern::Lattice;
+		else if(patternTypeString == QStringLiteral("INTERFACE")) pattern.type = Objects::StructurePattern::Interface;
+		else if(patternTypeString == QStringLiteral("POINTDEFECT")) pattern.type = Objects::StructurePattern::PointDefect;
 		else throw Exception(tr("Failed to parse file. Invalid pattern type in line %1: %2").arg(stream.lineNumber()).arg(patternTypeString));
 		if(sscanf(stream.readLine(), "COLOR " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING, &pattern.color.r(), &pattern.color.g(), &pattern.color.b()) != 3)
 			throw Exception(tr("Failed to parse file. Invalid pattern color in line %1.").arg(stream.lineNumber()));
@@ -368,19 +368,19 @@ void CAImporter::CrystalAnalysisFrameLoader::handOver(CompoundObject* container)
 	defectSurfaceObj->setStorage(_defectSurface.data());
 
 	// Insert pattern catalog.
-	OORef<PatternCatalog> patternCatalog = oldObjects.findObject<PatternCatalog>();
+	OORef<Objects::PatternCatalog> patternCatalog = oldObjects.findObject<Objects::PatternCatalog>();
 	if(!patternCatalog) {
-		patternCatalog = new PatternCatalog(container->dataset());
+		patternCatalog = new Objects::PatternCatalog(container->dataset());
 	}
 
 	// Update pattern catalog.
 	for(int i = 0; i < _patterns.size(); i++) {
-		OORef<StructurePattern> pattern;
+		OORef<Objects::StructurePattern> pattern;
 		if(patternCatalog->patterns().size() > i+1) {
 			pattern = patternCatalog->patterns()[i+1];
 		}
 		else {
-			pattern.reset(new StructurePattern(patternCatalog->dataset()));
+			pattern.reset(new Objects::StructurePattern(patternCatalog->dataset()));
 			patternCatalog->addPattern(pattern);
 		}
 		if(pattern->shortName() != _patterns[i].shortName)
@@ -392,12 +392,12 @@ void CAImporter::CrystalAnalysisFrameLoader::handOver(CompoundObject* container)
 
 		// Update Burgers vector families.
 		for(int j = 0; j < _patterns[i].burgersVectorFamilies.size(); j++) {
-			OORef<BurgersVectorFamily> family;
+			OORef<Objects::BurgersVectorFamily> family;
 			if(pattern->burgersVectorFamilies().size() > j+1) {
 				family = pattern->burgersVectorFamilies()[j+1];
 			}
 			else {
-				family.reset(new BurgersVectorFamily(pattern->dataset()));
+				family.reset(new Objects::BurgersVectorFamily(pattern->dataset()));
 				pattern->addBurgersVectorFamily(family);
 			}
 			if(family->name() != _patterns[i].burgersVectorFamilies[j].name)
@@ -414,13 +414,13 @@ void CAImporter::CrystalAnalysisFrameLoader::handOver(CompoundObject* container)
 		patternCatalog->removePattern(i);
 
 	// Insert cluster graph.
-	OORef<ClusterGraph> clusterGraph = oldObjects.findObject<ClusterGraph>();
+	OORef<Objects::ClusterGraph> clusterGraph = oldObjects.findObject<Objects::ClusterGraph>();
 	if(!clusterGraph) {
-		clusterGraph = new ClusterGraph(container->dataset());
+		clusterGraph = new Objects::ClusterGraph(container->dataset());
 	}
 	clusterGraph->clear();
 	for(const ClusterInfo& icluster : _clusters) {
-		OORef<Cluster> cluster(new Cluster(clusterGraph->dataset()));
+		OORef<Objects::Cluster> cluster(new Objects::Cluster(clusterGraph->dataset()));
 		cluster->setPattern(patternCatalog->patterns()[icluster.patternIndex+1]);
 		cluster->setId(icluster.id);
 		cluster->setAtomCount(icluster.atomCount);
@@ -430,20 +430,20 @@ void CAImporter::CrystalAnalysisFrameLoader::handOver(CompoundObject* container)
 
 	// Convert cluster transitions.
 	for(const ClusterTransitionInfo& t : _clusterTransitions) {
-		Cluster* cluster1 = clusterGraph->clusters()[t.cluster1];
-		Cluster* cluster2 = clusterGraph->clusters()[t.cluster2];
+		Objects::Cluster* cluster1 = clusterGraph->clusters()[t.cluster1];
+		Objects::Cluster* cluster2 = clusterGraph->clusters()[t.cluster2];
 		cluster1->addTransition(cluster2, t.tm);
 		cluster2->addTransition(cluster1, t.tm.inverse());
 	}
 
 	// Insert dislocations.
-	OORef<DislocationNetwork> dislocationNetwork = oldObjects.findObject<DislocationNetwork>();
+	OORef<Objects::DislocationNetwork> dislocationNetwork = oldObjects.findObject<Objects::DislocationNetwork>();
 	if(!dislocationNetwork) {
-		dislocationNetwork = new DislocationNetwork(container->dataset());
+		dislocationNetwork = new Objects::DislocationNetwork(container->dataset());
 	}
 	dislocationNetwork->clear();
 	for(const DislocationSegmentInfo& s : _dislocations) {
-		OORef<DislocationSegment> segment(new DislocationSegment(dislocationNetwork->dataset()));
+		OORef<Objects::DislocationSegment> segment(new Objects::DislocationSegment(dislocationNetwork->dataset()));
 		segment->setLine(s.line, s.coreSize);
 		segment->setIsClosedLoop(s.isClosedLoop);
 		segment->setBurgersVector(s.burgersVector, clusterGraph->clusters()[s.clusterIndex]);
@@ -459,7 +459,7 @@ void CAImporter::CrystalAnalysisFrameLoader::handOver(CompoundObject* container)
 			ParticleTypeProperty* structureTypeProperty = dynamic_object_cast<ParticleTypeProperty>(dataObj);
 			if(structureTypeProperty && structureTypeProperty->type() == ParticleProperty::StructureTypeProperty) {
 				structureTypeProperty->clearParticleTypes();
-				for(StructurePattern* pattern : patternCatalog->patterns()) {
+				for(Objects::StructurePattern* pattern : patternCatalog->patterns()) {
 					structureTypeProperty->addParticleType(pattern);
 				}
 			}

@@ -30,9 +30,9 @@
 #include <core/rendering/SceneRenderer.h>
 #include <core/gui/properties/PropertiesEditor.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
-#include <plugins/crystalanalysis/data/dislocations/DislocationNetwork.h>
+#include <plugins/crystalanalysis/objects/dislocations/DislocationNetwork.h>
 
-namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis { namespace Objects {
 
 class DislocationDisplay;	// defined below
 
@@ -113,8 +113,8 @@ public:
 
 public:
 
-	Q_PROPERTY(FloatType lineWidth READ lineWidth WRITE setLineWidth)
-	Q_PROPERTY(Ovito::ArrowPrimitive::ShadingMode shadingMode READ shadingMode WRITE setShadingMode)
+	Q_PROPERTY(FloatType lineWidth READ lineWidth WRITE setLineWidth);
+	Q_PROPERTY(Ovito::ArrowPrimitive::ShadingMode shadingMode READ shadingMode WRITE setShadingMode);
 
 protected:
 
@@ -186,6 +186,7 @@ protected:
 	OVITO_OBJECT
 };
 
+}	// End of namespace
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

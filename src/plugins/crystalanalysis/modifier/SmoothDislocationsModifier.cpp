@@ -20,7 +20,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <plugins/crystalanalysis/data/dislocations/DislocationNetwork.h>
+#include <plugins/crystalanalysis/objects/dislocations/DislocationNetwork.h>
 #include <core/gui/properties/IntegerParameterUI.h>
 #include <core/gui/properties/FloatParameterUI.h>
 #include <core/gui/properties/BooleanGroupBoxParameterUI.h>
@@ -59,7 +59,7 @@ SmoothDislocationsModifier::SmoothDislocationsModifier(DataSet* dataset) : Modif
 ******************************************************************************/
 bool SmoothDislocationsModifier::isApplicableTo(const PipelineFlowState& input)
 {
-	return (input.findObject<DislocationNetwork>() != nullptr);
+	return (input.findObject<Objects::DislocationNetwork>() != nullptr);
 }
 
 /******************************************************************************
@@ -67,14 +67,14 @@ bool SmoothDislocationsModifier::isApplicableTo(const PipelineFlowState& input)
 ******************************************************************************/
 PipelineStatus SmoothDislocationsModifier::modifyObject(TimePoint time, ModifierApplication* modApp, PipelineFlowState& state)
 {
-	DislocationNetwork* inputDislocations = state.findObject<DislocationNetwork>();
+	Objects::DislocationNetwork* inputDislocations = state.findObject<Objects::DislocationNetwork>();
 	if(!inputDislocations)
 		return PipelineStatus::Success;	// Nothing to smooth in the modifier's input.
 
 	CloneHelper cloneHelper;
-	OORef<DislocationNetwork> outputDislocations = cloneHelper.cloneObject(inputDislocations, false);
+	OORef<Objects::DislocationNetwork> outputDislocations = cloneHelper.cloneObject(inputDislocations, false);
 
-	for(DislocationSegment* segment : outputDislocations->segments()) {
+	for(Objects::DislocationSegment* segment : outputDislocations->segments()) {
 		QVector<Point3> line;
 		QVector<int> coreSize;
 		coarsenDislocationLine(_coarseningEnabled.value() ? _linePointInterval.value() : 0, segment->line(), segment->coreSize(), line, coreSize, segment->isClosedLoop() && !segment->isInfiniteLine());

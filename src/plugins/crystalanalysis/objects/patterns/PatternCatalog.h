@@ -27,7 +27,7 @@
 #include <core/scene/objects/DataObject.h>
 #include "StructurePattern.h"
 
-namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis { namespace Objects {
 
 /**
  * \brief Encapsulates a pattern catalog from the CA lib.
@@ -90,6 +90,7 @@ private:
 	OVITO_OBJECT
 };
 
+}	// End of namespace
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

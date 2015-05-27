@@ -29,21 +29,26 @@ INCLUDE(${CGAL_USE_FILE})
 
 SET(SourceFiles
 	importer/CAImporter.cpp
-	data/patterns/BurgersVectorFamily.cpp
-	data/patterns/StructurePattern.cpp
-	data/patterns/PatternCatalog.cpp
-	data/clusters/Cluster.cpp
-	data/clusters/ClusterGraph.cpp
-	data/dislocations/DislocationSegment.cpp
-	data/dislocations/DislocationNetwork.cpp
-	data/dislocations/DislocationDisplay.cpp
-	data/dislocations/DislocationInspector.cpp
+	objects/patterns/BurgersVectorFamily.cpp
+	objects/patterns/StructurePattern.cpp
+	objects/patterns/PatternCatalog.cpp
+	objects/clusters/Cluster.cpp
+	objects/clusters/ClusterGraph.cpp
+	objects/dislocations/DislocationSegment.cpp
+	objects/dislocations/DislocationNetwork.cpp
+	objects/dislocations/DislocationDisplay.cpp
+	objects/dislocations/DislocationInspector.cpp
 	modifier/ShiftModifier.cpp
 	modifier/SmoothSurfaceModifier.cpp
 	modifier/SmoothDislocationsModifier.cpp
 	modifier/ConstructSurfaceModifier.cpp
 	modifier/dislocations/DislocationAnalysisModifier.cpp
 	modifier/dislocations/DislocationAnalysisEngine.cpp
+	modifier/dislocations/StructureAnalysis.cpp
+	modifier/dislocations/ClusterGraph.cpp
+	modifier/dislocations/CrystalPathFinder.cpp
+	modifier/dislocations/ElasticMapping.cpp
+	modifier/dislocations/InterfaceMesh.cpp
 	util/DelaunayTessellation.cpp
 )
 

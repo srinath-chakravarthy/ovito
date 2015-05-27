@@ -27,7 +27,7 @@
 #include "../patterns/BurgersVectorFamily.h"
 #include "../clusters/Cluster.h"
 
-namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis { namespace Objects {
 
 /**
  * \brief Stores a dislocation segment.
@@ -140,6 +140,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_isVisible);
 };
 
+}	// End of namespace
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

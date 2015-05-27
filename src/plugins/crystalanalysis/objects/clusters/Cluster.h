@@ -19,14 +19,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_CLUSTER_H
-#define __OVITO_CA_CLUSTER_H
+#ifndef __OVITO_CA_CLUSTER_OBJECT_H
+#define __OVITO_CA_CLUSTER_OBJECT_H
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/reference/RefTarget.h>
 #include "../patterns/StructurePattern.h"
 
-namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis { namespace Objects {
 
 class Cluster;
 
@@ -134,5 +134,6 @@ private:
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace
+}	// End of namespace
 
-#endif // __OVITO_CA_CLUSTER_H
+#endif // __OVITO_CA_CLUSTER_OBJECT_H

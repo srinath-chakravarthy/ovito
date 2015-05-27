@@ -25,7 +25,7 @@
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/modifier/AsynchronousParticleModifier.h>
 #include <plugins/particles/objects/SurfaceMeshDisplay.h>
-#include <plugins/crystalanalysis/data/dislocations/DislocationDisplay.h>
+#include <plugins/crystalanalysis/objects/dislocations/DislocationDisplay.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -43,7 +43,7 @@ public:
 	SurfaceMeshDisplay* defectMeshDisplay() const { return _defectMeshDisplay; }
 
 	/// \brief Returns the display object that is responsible for rendering the dislocations.
-	DislocationDisplay* dislocationDisplay() const { return _dislocationDisplay; }
+	Objects::DislocationDisplay* dislocationDisplay() const { return _dislocationDisplay; }
 
 	/// Resets the modifier's result cache.
 	virtual void invalidateCachedResults() override;
@@ -71,7 +71,7 @@ private:
 	ReferenceField<SurfaceMeshDisplay> _defectMeshDisplay;
 
 	/// The display object for rendering the dislocations.
-	ReferenceField<DislocationDisplay> _dislocationDisplay;
+	ReferenceField<Objects::DislocationDisplay> _dislocationDisplay;
 
 	/// This stores the cached defect mesh produced by the modifier.
 	QExplicitlySharedDataPointer<HalfEdgeMesh> _defectMesh;
