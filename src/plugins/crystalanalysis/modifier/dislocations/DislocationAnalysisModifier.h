@@ -76,6 +76,12 @@ private:
 	/// This stores the cached defect mesh produced by the modifier.
 	QExplicitlySharedDataPointer<HalfEdgeMesh> _defectMesh;
 
+	/// This stores the cached particle structure types computed by the modifier.
+	QExplicitlySharedDataPointer<ParticleProperty> _structureTypes;
+
+	/// This stores the cached particle cluster assignments computed by the modifier.
+	QExplicitlySharedDataPointer<ParticleProperty> _atomClusters;
+
 	/// Indicates that the entire simulation cell is part of the 'bad' crystal region.
 	bool _isDefectRegionEverywhere;
 

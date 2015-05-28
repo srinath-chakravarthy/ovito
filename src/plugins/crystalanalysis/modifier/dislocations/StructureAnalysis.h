@@ -103,6 +103,12 @@ public:
 	/// Returns the input simulation cell.
 	const SimulationCell& cell() const { return _simCell; }
 
+	/// Returns the array of atom structure types.
+	ParticleProperty* structureTypes() const { return _structureTypes.data(); }
+
+	/// Returns the array of atom cluster IDs.
+	ParticleProperty* atomClusters() const { return _atomClusters.data(); }
+
 	/// Returns the maximum distance of any neighbor from a crystalline atom.
 	FloatType maximumNeighborDistance() const { return _maximumNeighborDistance; }
 
@@ -119,8 +125,7 @@ public:
 
 	/// Returns the number of neighbors of the given atom.
 	int numNeighbors(int atomIndex) const {
-		int structureType = _structureTypes->getInt(atomIndex);
-		return _coordinationStructures[structureType].numNeighbors;
+		return _neighborCounts->getInt(atomIndex);
 	}
 
 	/// Returns an atom from an atom's neighbor list.
@@ -163,6 +168,7 @@ private:
 	QExplicitlySharedDataPointer<ParticleProperty> _positions;
 	QExplicitlySharedDataPointer<ParticleProperty> _structureTypes;
 	QExplicitlySharedDataPointer<ParticleProperty> _neighborLists;
+	QExplicitlySharedDataPointer<ParticleProperty> _neighborCounts;
 	QExplicitlySharedDataPointer<ParticleProperty> _atomClusters;
 	QExplicitlySharedDataPointer<ParticleProperty> _atomSymmetryPermutations;
 	std::atomic<FloatType> _maximumNeighborDistance;

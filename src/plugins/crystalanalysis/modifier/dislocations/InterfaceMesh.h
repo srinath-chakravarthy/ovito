@@ -54,10 +54,7 @@ public:
 	bool classifyTetrahedra(FutureInterfaceBase& progress);
 
 	/// Creates the mesh facets separating good and bad tetrahedra.
-	bool createSeparatingFacets(FutureInterfaceBase& progress);
-
-	/// Links half-edges to opposite half-edges.
-	bool linkHalfEdges(FutureInterfaceBase& progress);
+	bool createMesh(FutureInterfaceBase& progress);
 
 private:
 

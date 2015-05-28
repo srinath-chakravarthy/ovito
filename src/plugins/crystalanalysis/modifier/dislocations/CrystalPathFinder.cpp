@@ -74,6 +74,7 @@ boost::optional<ClusterVector> CrystalPathFinder::findPath(int atomIndex1, int a
 
 		Cluster* currentCluster = structureAnalysis().atomCluster(currentAtom);
 		int numNeighbors = structureAnalysis().numNeighbors(currentAtom);
+
 		for(int neighborIndex = 0; neighborIndex < numNeighbors; neighborIndex++) {
 
 			// Resolve pattern node neighbor to actual neighbor atom.

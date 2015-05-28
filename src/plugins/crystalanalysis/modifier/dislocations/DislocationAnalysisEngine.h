@@ -50,6 +50,12 @@ public:
 	/// Indicates whether the entire simulation cell is part of the 'bad' crystal region.
 	bool isDefectRegionEverywhere() const { return _isDefectRegionEverywhere; }
 
+	/// Returns the array of atom structure types.
+	ParticleProperty* structureTypes() const { return _structureAnalysis.structureTypes(); }
+
+	/// Returns the array of atom cluster IDs.
+	ParticleProperty* atomClusters() const { return _structureAnalysis.atomClusters(); }
+
 private:
 
 	QExplicitlySharedDataPointer<HalfEdgeMesh> _defectMesh;

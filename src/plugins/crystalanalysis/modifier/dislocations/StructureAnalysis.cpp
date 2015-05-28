@@ -60,6 +60,7 @@ StructureAnalysis::StructureAnalysis(ParticleProperty* positions, const Simulati
 	_positions(positions), _simCell(simCell),
 	_structureTypes(new ParticleProperty(positions->size(), ParticleProperty::StructureTypeProperty, 0, true)),
 	_neighborLists(new ParticleProperty(positions->size(), qMetaTypeId<int>(), MAX_NEIGHBORS, 0, QStringLiteral("Neighbors"), false)),
+	_neighborCounts(new ParticleProperty(positions->size(), ParticleProperty::CoordinationProperty, 0, true)),
 	_atomClusters(new ParticleProperty(positions->size(), ParticleProperty::ClusterProperty, 0, true)),
 	_atomSymmetryPermutations(new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, QStringLiteral("SymmetryPermutations"), false))
 {
@@ -366,10 +367,12 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 		if(ni1 == nn) {
 			// Assign coordination structure type to atom.
 			_structureTypes->setInt(particleIndex, coordinationType);
+
 			// Save the atom's neighbor list.
 			int* neighborList = _neighborLists->dataInt() + _neighborLists->componentCount() * particleIndex;
 			for(int i = 0; i < nn; i++)
 				*neighborList++ = neighQuery.results()[neighborIndices[i]].index;
+			_neighborCounts->setInt(particleIndex, nn);
 
 			// Determine maximum neighbor distance.
 			// This is a thread-safe implementation.
@@ -517,7 +520,8 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 		OVITO_ASSERT(cluster1);
 
 		// Update progress indicator.
-		progress.setProgressValue(atomIndex);
+		if((atomIndex % 100) == 0)
+			progress.setProgressValue(atomIndex);
 		if(progress.isCanceled()) return false;
 
 		// Look up symmetry permutation of current atom.
@@ -534,8 +538,20 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 
 			// Skip neighbor atoms belonging to the same cluster or to no cluster at all.
 			int neighborClusterId = _atomClusters->getInt(neighbor);
-			if(neighborClusterId == 0 || neighborClusterId == clusterId)
+			if(neighborClusterId == 0 || neighborClusterId == clusterId) {
+
+				// Add this atom to the neighbor's list of neighbors.
+				if(neighborClusterId == 0) {
+					int* otherNeighborList = _neighborLists->dataInt() + neighbor * _neighborLists->componentCount();
+					int otherNeighborListCount = _neighborCounts->getInt(neighbor);
+					if(otherNeighborListCount < _neighborLists->componentCount()) {
+						otherNeighborList[otherNeighborListCount++] = atomIndex;
+						_neighborCounts->setInt(neighbor, otherNeighborListCount);
+					}
+				}
+
 				continue;
+			}
 			Cluster* cluster2 = _clusterGraph.findCluster(neighborClusterId);
 			OVITO_ASSERT(cluster2);
 

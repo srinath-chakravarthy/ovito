@@ -77,6 +77,8 @@ void DislocationAnalysisModifier::invalidateCachedResults()
 {
 	AsynchronousParticleModifier::invalidateCachedResults();
 	_defectMesh.reset();
+	_structureTypes.reset();
+	_atomClusters.reset();
 }
 
 /******************************************************************************
@@ -101,6 +103,8 @@ void DislocationAnalysisModifier::transferComputationResults(ComputeEngine* engi
 	DislocationAnalysisEngine* eng = static_cast<DislocationAnalysisEngine*>(engine);
 	_defectMesh = eng->defectMesh();
 	_isDefectRegionEverywhere = eng->isDefectRegionEverywhere();
+	_structureTypes = eng->structureTypes();
+	_atomClusters = eng->atomClusters();
 }
 
 /******************************************************************************
@@ -119,6 +123,11 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 
 	// Insert output object into the pipeline.
 	output().addObject(meshObj);
+
+	if(_structureTypes)
+		outputStandardProperty(_structureTypes.data());
+	if(_atomClusters)
+		outputStandardProperty(_atomClusters.data());
 
 	return PipelineStatus(PipelineStatus::Success);
 }

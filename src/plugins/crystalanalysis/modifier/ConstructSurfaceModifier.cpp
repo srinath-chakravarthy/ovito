@@ -309,14 +309,18 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 
 	// Links half-edges to opposite half-edges.
 	setProgressText(tr("Constructing surface mesh (facet linking step)"));
-	for(auto tetIter = tetrahedra.cbegin(); tetIter != tetrahedra.cend(); ++tetIter) {
+	setProgressValue(0);
+	setProgressRange(tetrahedra.size());
+	int counter = 0;
 
-		const Tetrahedron& tet = tetIter->second;
-		if((tet.cell->info().index % 1024) == 0)
-			setProgressValue(tet.cell->info().index);
+	for(auto tetIter = tetrahedra.cbegin(); tetIter != tetrahedra.cend(); ++tetIter, ++counter) {
+
+		if((counter % 1024) == 0)
+			setProgressValue(counter);
 		if(isCanceled())
 			return;
 
+		const Tetrahedron& tet = tetIter->second;
 		for(int f = 0; f < 4; f++) {
 			HalfEdgeMesh::Face* facet = tet.meshFacets[f];
 			if(facet == nullptr) continue;

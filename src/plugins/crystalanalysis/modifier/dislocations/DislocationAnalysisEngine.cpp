@@ -88,6 +88,12 @@ void DislocationAnalysisEngine::perform()
 	if(!_interfaceMesh.classifyTetrahedra(*this))
 		return;
 
+	// Create the mesh facets.
+	if(!_interfaceMesh.createMesh(*this))
+		return;
+
+	*_defectMesh = _interfaceMesh;
+
 #if 0
 	_tessellation.dumpToVTKFile("tessellation.vtk");
 

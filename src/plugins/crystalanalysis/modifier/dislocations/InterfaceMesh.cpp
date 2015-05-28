@@ -21,6 +21,7 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include "InterfaceMesh.h"
+#include "DislocationAnalysisModifier.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -54,7 +55,7 @@ bool InterfaceMesh::classifyTetrahedra(FutureInterfaceBase& progress)
 /******************************************************************************
 * Creates the mesh facets separating good and bad tetrahedra.
 ******************************************************************************/
-bool InterfaceMesh::createSeparatingFacets(FutureInterfaceBase& progress)
+bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 {
 	progress.setProgressValue(0);
 	progress.setProgressRange(_numGoodTetrahedra);
@@ -62,7 +63,7 @@ bool InterfaceMesh::createSeparatingFacets(FutureInterfaceBase& progress)
 	// Stores pointers to the mesh facets generated for a good
 	// tetrahedron of the Delaunay tessellation.
 	struct Tetrahedron {
-		/// Pointers to the mesh facets associated with the four faces of the tetrahedron.
+		// Pointers to the mesh facets associated with the four faces of the tetrahedron.
 		std::array<Face*, 4> meshFacets;
 		DelaunayTessellation::CellHandle cell;
 	};
@@ -120,14 +121,100 @@ bool InterfaceMesh::createSeparatingFacets(FutureInterfaceBase& progress)
 		tetrahedraList.push_back(tetrahedra.insert(std::make_pair(vertexIndices, tet)).first);
 	}
 
-	return true;
-}
+	// Link half-edges with opposite half-edges.
+	progress.setProgressValue(0);
+	progress.setProgressRange(tetrahedra.size());
+	int counter = 0;
 
-/******************************************************************************
-* Links half-edges to opposite half-edges together.
-******************************************************************************/
-bool InterfaceMesh::linkHalfEdges(FutureInterfaceBase& progress)
-{
+	for(auto tetIter = tetrahedra.cbegin(); tetIter != tetrahedra.cend(); ++tetIter, ++counter) {
+
+		if((counter % 1024) == 0)
+			progress.setProgressValue(counter);
+		if(progress.isCanceled())
+			return false;
+
+		const Tetrahedron& tet = tetIter->second;
+
+		for(int f = 0; f < 4; f++) {
+			Face* facet = tet.meshFacets[f];
+			if(facet == nullptr) continue;
+
+			Edge* edge = facet->edges();
+			for(int e = 0; e < 3; e++, edge = edge->nextFaceEdge()) {
+				OVITO_CHECK_POINTER(edge);
+				if(edge->oppositeEdge() != nullptr) continue;
+				int vertexIndex1 = DelaunayTessellation::cellFacetVertexIndex(f, 2-e);
+				int vertexIndex2 = DelaunayTessellation::cellFacetVertexIndex(f, (4-e)%3);
+				DelaunayTessellation::FacetCirculator circulator_start = tessellation().incident_facets(tet.cell, vertexIndex1, vertexIndex2, tet.cell, f);
+				DelaunayTessellation::FacetCirculator circulator = circulator_start;
+				OVITO_ASSERT(circulator->first == tet.cell);
+				OVITO_ASSERT(circulator->second == f);
+				--circulator;
+				OVITO_ASSERT(circulator != circulator_start);
+				do {
+					// Look for the first open cell while going around the edge.
+					if(circulator->first->info().flag == false)
+						break;
+					--circulator;
+				}
+				while(circulator != circulator_start);
+				OVITO_ASSERT(circulator != circulator_start);
+
+				// Get the adjacent cell, which must be solid.
+				std::pair<DelaunayTessellation::CellHandle,int> mirrorFacet = tessellation().mirrorFacet(circulator);
+				OVITO_ASSERT(mirrorFacet.first->info().flag == true);
+				Face* oppositeFace = nullptr;
+				// If the cell is a ghost cell, find the corresponding real cell.
+				if(mirrorFacet.first->info().isGhost) {
+					OVITO_ASSERT(mirrorFacet.first->info().index == -1);
+					std::array<int,4> cellVerts;
+					for(size_t i = 0; i < 4; i++) {
+						cellVerts[i] = mirrorFacet.first->vertex(i)->point().index();
+						OVITO_ASSERT(cellVerts[i] != -1);
+					}
+					std::array<int,3> faceVerts;
+					for(size_t i = 0; i < 3; i++) {
+						faceVerts[i] = cellVerts[DelaunayTessellation::cellFacetVertexIndex(mirrorFacet.second, i)];
+						OVITO_ASSERT(faceVerts[i] != -1);
+					}
+					std::sort(cellVerts.begin(), cellVerts.end());
+					const Tetrahedron& realTet = tetrahedra[cellVerts];
+					for(int fi = 0; fi < 4; fi++) {
+						if(realTet.meshFacets[fi] == nullptr) continue;
+						std::array<int,3> faceVerts2;
+						for(size_t i = 0; i < 3; i++) {
+							faceVerts2[i] = realTet.cell->vertex(DelaunayTessellation::cellFacetVertexIndex(fi, i))->point().index();
+							OVITO_ASSERT(faceVerts2[i] != -1);
+						}
+						if(std::is_permutation(faceVerts.begin(), faceVerts.end(), faceVerts2.begin())) {
+							oppositeFace = realTet.meshFacets[fi];
+							break;
+						}
+					}
+				}
+				else {
+					const Tetrahedron& mirrorTet = tetrahedraList[mirrorFacet.first->info().index]->second;
+					oppositeFace = mirrorTet.meshFacets[mirrorFacet.second];
+				}
+				if(oppositeFace == nullptr)
+					throw Exception(DislocationAnalysisModifier::tr("Cannot construct interface mesh for this input dataset. Opposite cell face not found."));
+				OVITO_ASSERT(oppositeFace != facet);
+				Edge* oppositeEdge = oppositeFace->edges();
+				do {
+					OVITO_CHECK_POINTER(oppositeEdge);
+					if(oppositeEdge->vertex1() == edge->vertex2()) {
+						edge->linkToOppositeEdge(oppositeEdge);
+						break;
+					}
+					oppositeEdge = oppositeEdge->nextFaceEdge();
+				}
+				while(oppositeEdge != oppositeFace->edges());
+				if(edge->oppositeEdge() == nullptr)
+					throw Exception(DislocationAnalysisModifier::tr("Cannot construct interface mesh for this input dataset. Opposite half-edge not found."));
+			}
+		}
+	}
+
 	return true;
 }
 
