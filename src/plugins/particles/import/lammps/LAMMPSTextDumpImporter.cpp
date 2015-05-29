@@ -127,11 +127,10 @@ void LAMMPSTextDumpImporter::scanFileForTimesteps(FutureInterfaceBase& futureInt
 			else if(stream.lineStartsWith("ITEM: ATOMS")) {
 				for(size_t i = 0; i < numParticles; i++) {
 					stream.readLine();
-					if((i % 4096) == 0) {
+					if((i % 4096) == 0)
 						futureInterface.setProgressValue(stream.underlyingByteOffset() / 1000);
-						if(futureInterface.isCanceled())
-							return;
-					}
+					if(futureInterface.isCanceled())
+						return;
 				}
 				break;
 			}
@@ -274,7 +273,7 @@ void LAMMPSTextDumpImporter::LAMMPSTextDumpImportTask::parseFile(CompressedTextR
 				int lineNumber = stream.lineNumber() + 1;
 				try {
 					for(size_t i = 0; i < numParticles; i++, lineNumber++) {
-						if(!reportProgress(i)) return;
+						if(!setProgressValueIntermittent(i)) return;
 						if(!s)
 							columnParser.readParticle(i, stream.readLine());
 						else

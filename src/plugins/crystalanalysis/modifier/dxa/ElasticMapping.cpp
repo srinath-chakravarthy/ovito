@@ -33,17 +33,17 @@ static const int edgeVertices[6][2] = {{0,1},{0,2},{0,3},{1,2},{1,3},{2,3}};
 ******************************************************************************/
 bool ElasticMapping::generateTessellationEdges(FutureInterfaceBase& progress)
 {
-	progress.setProgressValue(0);
-	progress.setProgressRange(0);
+	progress.setProgressRange(tessellation().number_of_primary_tetrahedra());
 
 	// Generate list of tessellation edges.
 	for(DelaunayTessellation::CellIterator cell = tessellation().begin_cells(); cell != tessellation().end_cells(); ++cell) {
 
-		if(progress.isCanceled())
-			return false;
-
 		// Skip invalid cells (those not connecting four physical atoms) and ghost cells.
 		if(cell->info().isGhost) continue;
+
+		// Update progress indicator.
+		if(!progress.setProgressValueIntermittent(cell->info().index))
+			return false;
 
 		// Create edge data structure for each of the six edges of the cell.
 		for(int edgeIndex = 0; edgeIndex < 6; edgeIndex++) {
@@ -81,7 +81,7 @@ bool ElasticMapping::generateTessellationEdges(FutureInterfaceBase& progress)
 ******************************************************************************/
 bool ElasticMapping::assignVerticesToClusters(FutureInterfaceBase& progress)
 {
-	progress.setProgressValue(0);
+	// Unknown runtime length.
 	progress.setProgressRange(0);
 
 	// Assign a cluster to each vertex of the tessellation, which will be used to express
@@ -103,12 +103,11 @@ bool ElasticMapping::assignVerticesToClusters(FutureInterfaceBase& progress)
 		notDone = false;
 		for(TessellationEdge* firstEdge : _vertexEdges) {
 			if(!firstEdge) continue;
-			int atom1 = firstEdge->vertex1;
-			if(_vertexClusters[atom1] == nullptr) {
+			if(clusterOfVertex(firstEdge->vertex1)->id == 0) {
 				for(TessellationEdge* e = firstEdge; e != nullptr; e = e->next) {
-					int atom2 = e->vertex2;
-					if(_vertexClusters[atom2] != nullptr) {
-						_vertexClusters[atom1] = _vertexClusters[atom2];
+					OVITO_ASSERT(e->vertex1 == firstEdge->vertex1);
+					if(clusterOfVertex(e->vertex2)->id != 0) {
+						_vertexClusters[e->vertex1] = _vertexClusters[e->vertex2];
 						notDone = true;
 						break;
 					}
@@ -126,14 +125,14 @@ bool ElasticMapping::assignVerticesToClusters(FutureInterfaceBase& progress)
 ******************************************************************************/
 bool ElasticMapping::assignIdealVectorsToEdges(int crystalPathSteps, FutureInterfaceBase& progress)
 {
-	progress.setProgressValue(0);
-	progress.setProgressRange(0);
-
 	CrystalPathFinder pathFinder(_structureAnalysis, crystalPathSteps);
 
 	// Try to assign a reference vector to the tessellation edges.
+	progress.setProgressRange(_vertexEdges.size());
+	int progressCounter = 0;
 	for(TessellationEdge* firstEdge : _vertexEdges) {
-		if(progress.isCanceled())
+
+		if(!progress.setProgressValueIntermittent(progressCounter++))
 			return false;
 
 		for(TessellationEdge* edge = firstEdge; edge != nullptr; edge = edge->next) {
@@ -142,7 +141,8 @@ bool ElasticMapping::assignIdealVectorsToEdges(int crystalPathSteps, FutureInter
 
 			Cluster* cluster1 = clusterOfVertex(edge->vertex1);
 			Cluster* cluster2 = clusterOfVertex(edge->vertex2);
-			if(!cluster1 || !cluster2) continue;
+			OVITO_ASSERT(cluster1 && cluster2);
+			if(cluster1->id == 0 || cluster2->id == 0) continue;
 
 			// Determine the ideal vector connecting the two atoms.
 			boost::optional<ClusterVector> idealVector = pathFinder.findPath(edge->vertex1, edge->vertex2);
@@ -155,7 +155,8 @@ bool ElasticMapping::assignIdealVectorsToEdges(int crystalPathSteps, FutureInter
 				localVec = idealVector->localVec();
 			else {
 				ClusterTransition* transition = clusterGraph().determineClusterTransition(idealVector->cluster(), cluster1);
-				if(!transition) continue;
+				if(!transition)
+					continue;
 				localVec = transition->transform(idealVector->localVec());
 			}
 

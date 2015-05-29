@@ -169,15 +169,6 @@ protected:
 	/// Parses the given input file and stores the data in this container object.
 	virtual void parseFile(CompressedTextReader& stream) = 0;
 
-	// Updates the progress indicator.
-	bool reportProgress(int particleIndex) {
-		if((particleIndex % 4096) == 0) {
-			if(isCanceled()) return false;
-			setProgressValue(particleIndex);
-		}
-		return true;
-	}
-
 	/// Inserts the stores particle types into the given destination object.
 	void insertParticleTypes(ParticlePropertyObject* propertyObj);
 

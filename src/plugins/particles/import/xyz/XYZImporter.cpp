@@ -201,11 +201,10 @@ void XYZImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVe
 		// Skip atom lines.
 		for(int i = 0; i < numParticles; i++) {
 			stream.readLine();
-			if((i % 4096) == 0) {
+			if((i % 4096) == 0)
 				futureInterface.setProgressValue(stream.underlyingByteOffset() / 1000);
-				if(futureInterface.isCanceled())
-					return;
-			}
+			if(futureInterface.isCanceled())
+				return;
 		}
 	}
 }
@@ -466,7 +465,7 @@ void XYZImporter::XYZImportTask::parseFile(CompressedTextReader& stream)
 	InputColumnReader columnParser(_columnMapping, *this, numParticles);
 	try {
 		for(int i = 0; i < numParticles; i++) {
-			if(!reportProgress(i)) return;
+			if(!setProgressValueIntermittent(i)) return;
 			stream.readLine();
 			columnParser.readParticle(i, stream.line());
 		}

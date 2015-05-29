@@ -211,11 +211,8 @@ void CreateBondsModifier::BondsEngine::perform()
 				_bonds->push_back({ neighborQuery.unwrappedPbcShift(), (unsigned int)particleIndex, (unsigned int)neighborQuery.current() });
 			}
 			// Update progress indicator.
-			if((particleIndex % 4096) == 0) {
-				setProgressValue(particleIndex);
-				if(isCanceled())
-					return;
-			}
+			if(!setProgressValueIntermittent(particleIndex))
+				return;
 		}
 	}
 	else {
@@ -229,11 +226,8 @@ void CreateBondsModifier::BondsEngine::perform()
 				}
 			}
 			// Update progress indicator.
-			if((particleIndex % 4096) == 0) {
-				setProgressValue(particleIndex);
-				if(isCanceled())
-					return;
-			}
+			if(!setProgressValueIntermittent(particleIndex))
+				return;
 		}
 	}
 	setProgressValue(particleCount);

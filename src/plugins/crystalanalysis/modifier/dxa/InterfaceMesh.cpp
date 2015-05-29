@@ -33,7 +33,14 @@ bool InterfaceMesh::classifyTetrahedra(FutureInterfaceBase& progress)
 	_numGoodTetrahedra = 0;
 	_isCompletelyGood = true;
 
+	progress.setProgressRange(tessellation().number_of_tetrahedra());
+	int progressCounter = 0;
 	for(DelaunayTessellation::CellIterator cell = tessellation().begin_cells(); cell != tessellation().end_cells(); ++cell) {
+
+		// Update progress indicator.
+		if(!progress.setProgressValueIntermittent(progressCounter++))
+			return false;
+
 		// Determine whether the tetrahedron belongs to the good or the bad crystal region.
 		bool isGood = elasticMapping().isElasticMappingCompatible(cell);
 
@@ -45,9 +52,6 @@ bool InterfaceMesh::classifyTetrahedra(FutureInterfaceBase& progress)
 			if(!cell->info().isGhost) _isCompletelyGood = false;
 			cell->info().index = -1;
 		}
-
-		if(progress.isCanceled())
-			return false;
 	}
 	return true;
 }
@@ -57,7 +61,7 @@ bool InterfaceMesh::classifyTetrahedra(FutureInterfaceBase& progress)
 ******************************************************************************/
 bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 {
-	progress.setProgressValue(0);
+	progress.beginProgressSubSteps(2);
 	progress.setProgressRange(_numGoodTetrahedra);
 
 	// Stores pointers to the mesh facets generated for a good
@@ -81,9 +85,9 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 			continue;
 		OVITO_ASSERT(cell->info().flag);
 
-		if((cell->info().index % 1024) == 0)
-			progress.setProgressValue(cell->info().index);
-		if(progress.isCanceled()) return false;
+		// Update progress indicator.
+		if(!progress.setProgressValueIntermittent(cell->info().index))
+			return false;
 
 		Tetrahedron tet;
 		tet.cell = cell;
@@ -99,10 +103,12 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 			// Test if the adjacent tetrahedron belongs to the bad region.
 			DelaunayTessellation::CellHandle adjacentCell = tessellation().mirrorCell(cell, f);
 			if(adjacentCell->info().flag)
-				continue;	// It's also a good tet.
+				continue;	// It's also a good tet. That means we don't create an interface facet here.
 
 			// Create the three vertices of the face or use existing output vertices.
 			std::array<Vertex*, 3> facetVertices;
+			Point3 vertexPositions[3];
+			int vertexIndices[3];
 			for(int v = 0; v < 3; v++) {
 				DelaunayTessellation::VertexHandle vertex = cell->vertex(DelaunayTessellation::cellFacetVertexIndex(f, v));
 				int vertexIndex = vertex->point().index();
@@ -111,10 +117,27 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 					vertexMap[vertexIndex] = facetVertices[2 - v] = createVertex(structureAnalysis().positions()->getPoint3(vertexIndex));
 				else
 					facetVertices[2-v] = vertexMap[vertexIndex];
+				vertexPositions[2-v] = (Point3)vertex->point();
+				vertexIndices[2-v] = vertexIndex;
 			}
 
 			// Create a new triangle facet.
-			tet.meshFacets[f] = createFace(facetVertices.begin(), facetVertices.end());
+			Face* face = tet.meshFacets[f] = createFace(facetVertices.begin(), facetVertices.end());
+
+			// Transfer cluster vectors from tessellation edges to mesh edges.
+			Edge* edge = face->edges();
+			for(int i = 0; i < 3; i++, edge = edge->nextFaceEdge()) {
+				OVITO_ASSERT(edge->vertex1() == facetVertices[i]);
+				OVITO_ASSERT(edge->vertex2() == facetVertices[(i+1)%3]);
+				edge->physicalVector = vertexPositions[(i+1)%3] - vertexPositions[i];
+				OVITO_ASSERT(!structureAnalysis().cell().isWrappedVector(edge->physicalVector));
+
+				ElasticMapping::TessellationEdge* tessEdge = elasticMapping().findEdge(vertexIndices[i], vertexIndices[(i+1)%3]);
+				OVITO_ASSERT(tessEdge != nullptr);
+
+				edge->clusterVector = tessEdge->clusterVector;
+				edge->clusterTransition = tessEdge->clusterTransition;
+			}
 		}
 
 		std::sort(vertexIndices.begin(), vertexIndices.end());
@@ -122,15 +145,14 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 	}
 
 	// Link half-edges with opposite half-edges.
-	progress.setProgressValue(0);
+	progress.nextProgressSubStep();
 	progress.setProgressRange(tetrahedra.size());
-	int counter = 0;
+	int progressCounter = 0;
 
-	for(auto tetIter = tetrahedra.cbegin(); tetIter != tetrahedra.cend(); ++tetIter, ++counter) {
+	for(auto tetIter = tetrahedra.cbegin(); tetIter != tetrahedra.cend(); ++tetIter) {
 
-		if((counter % 1024) == 0)
-			progress.setProgressValue(counter);
-		if(progress.isCanceled())
+		// Update progress indicator.
+		if(!progress.setProgressValueIntermittent(progressCounter))
 			return false;
 
 		const Tetrahedron& tet = tetIter->second;
@@ -204,6 +226,10 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 					OVITO_CHECK_POINTER(oppositeEdge);
 					if(oppositeEdge->vertex1() == edge->vertex2()) {
 						edge->linkToOppositeEdge(oppositeEdge);
+						OVITO_ASSERT(edge->physicalVector.equals(-oppositeEdge->physicalVector));
+						OVITO_ASSERT(edge->clusterTransition == oppositeEdge->clusterTransition->reverse);
+						OVITO_ASSERT(edge->clusterTransition->reverse == oppositeEdge->clusterTransition);
+						OVITO_ASSERT(edge->clusterVector.equals(-oppositeEdge->clusterTransition->transform(oppositeEdge->clusterVector)));
 						break;
 					}
 					oppositeEdge = oppositeEdge->nextFaceEdge();
@@ -215,6 +241,44 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 		}
 	}
 
+	// Make sure each vertex is only part of a single manifold.
+	duplicateSharedVertices();
+
+	qDebug() << "Number of interface mesh faces:" << faceCount();
+
+	// Validate constructed mesh.
+#ifdef OVITO_DEBUG
+	for(Vertex* vertex : vertices()) {
+		int edgeCount = 0;
+		for(Edge* edge = vertex->edges(); edge != nullptr; edge = edge->nextVertexEdge()) {
+			OVITO_ASSERT(edge->oppositeEdge()->oppositeEdge() == edge);
+			OVITO_ASSERT(edge->physicalVector.equals(-edge->oppositeEdge()->physicalVector));
+			OVITO_ASSERT(edge->clusterTransition == edge->oppositeEdge()->clusterTransition->reverse);
+			OVITO_ASSERT(edge->clusterTransition->reverse == edge->oppositeEdge()->clusterTransition);
+			OVITO_ASSERT(edge->clusterVector.equals(-edge->oppositeEdge()->clusterTransition->transform(edge->oppositeEdge()->clusterVector)));
+			OVITO_ASSERT(edge->nextFaceEdge()->prevFaceEdge() == edge);
+			OVITO_ASSERT(edge->prevFaceEdge()->nextFaceEdge() == edge);
+			OVITO_ASSERT(edge->nextFaceEdge()->nextFaceEdge() == edge->prevFaceEdge());
+			OVITO_ASSERT(edge->prevFaceEdge()->prevFaceEdge() == edge->nextFaceEdge());
+			edgeCount++;
+		}
+		OVITO_ASSERT(edgeCount == vertex->numEdges());
+		OVITO_ASSERT(edgeCount >= 3);
+
+		Edge* edge = vertex->edges();
+		do {
+			OVITO_ASSERT(edgeCount > 0);
+			Edge* nextEdge = edge->oppositeEdge()->nextFaceEdge();
+			OVITO_ASSERT(nextEdge->prevFaceEdge()->oppositeEdge() == edge);
+			edge = nextEdge;
+			edgeCount--;
+		}
+		while(edge != vertex->edges());
+		OVITO_ASSERT(edgeCount == 0);
+	}
+#endif
+
+	progress.endProgressSubSteps();
 	return true;
 }
 

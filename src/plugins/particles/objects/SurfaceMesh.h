@@ -26,18 +26,19 @@
 #include <core/scene/objects/DataObjectWithSharedStorage.h>
 #include <core/utilities/mesh/HalfEdgeMesh.h>
 #include <plugins/particles/data/SimulationCell.h>
+#include <core/utilities/concurrent/FutureInterface.h>
 
 namespace Ovito { namespace Particles {
 
 /**
  * \brief A closed triangle mesh representing a surface.
  */
-class OVITO_PARTICLES_EXPORT SurfaceMesh : public DataObjectWithSharedStorage<HalfEdgeMesh>
+class OVITO_PARTICLES_EXPORT SurfaceMesh : public DataObjectWithSharedStorage<HalfEdgeMesh<>>
 {
 public:
 
 	/// \brief Constructor that creates an empty SurfaceMesh object.
-	Q_INVOKABLE SurfaceMesh(DataSet* dataset, HalfEdgeMesh* mesh = nullptr);
+	Q_INVOKABLE SurfaceMesh(DataSet* dataset, HalfEdgeMesh<>* mesh = nullptr);
 
 	/// Returns the title of this object.
 	virtual QString objectTitle() override { return tr("Surface mesh"); }
@@ -55,18 +56,18 @@ public:
 	void setCompletelySolid(bool flag) { _isCompletelySolid = flag; }
 
 	/// Fairs the triangle mesh stored in this object.
-	void smoothMesh(const SimulationCell& cell, int numIterations, FloatType k_PB = 0.1f, FloatType lambda = 0.5f) {
-		smoothMesh(*modifiableStorage(), cell, numIterations, k_PB, lambda);
+	void smoothMesh(const SimulationCell& cell, int numIterations, FutureInterfaceBase* progress = nullptr, FloatType k_PB = 0.1f, FloatType lambda = 0.5f) {
+		smoothMesh(*modifiableStorage(), cell, numIterations, progress, k_PB, lambda);
 		changed();
 	}
 
 	/// Fairs a triangle mesh.
-	static void smoothMesh(HalfEdgeMesh& mesh, const SimulationCell& cell, int numIterations, FloatType k_PB = 0.1f, FloatType lambda = 0.5f);
+	static void smoothMesh(HalfEdgeMesh<>& mesh, const SimulationCell& cell, int numIterations, FutureInterfaceBase* progress = nullptr, FloatType k_PB = 0.1f, FloatType lambda = 0.5f);
 
 protected:
 
 	/// Performs one iteration of the smoothing algorithm.
-	static void smoothMeshIteration(HalfEdgeMesh& mesh, FloatType prefactor, const SimulationCell& cell);
+	static void smoothMeshIteration(HalfEdgeMesh<>& mesh, FloatType prefactor, const SimulationCell& cell);
 
 private:
 

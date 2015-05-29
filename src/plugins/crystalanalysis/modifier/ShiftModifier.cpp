@@ -83,7 +83,7 @@ PipelineStatus ShiftModifier::modifyObject(TimePoint time, ModifierApplication* 
 		// Apply translation to vertices of surface mesh.
 		if(SurfaceMesh* inputSurface = dynamic_object_cast<SurfaceMesh>(state.objects()[index])) {
 			OORef<SurfaceMesh> outputSurface = cloneHelper.cloneObject(inputSurface, false);
-			for(HalfEdgeMesh::Vertex* vertex : outputSurface->modifiableStorage()->vertices())
+			for(HalfEdgeMesh<>::Vertex* vertex : outputSurface->modifiableStorage()->vertices())
 				vertex->pos() += t;
 			outputSurface->changed();
 			state.replaceObject(inputSurface, outputSurface);

@@ -36,9 +36,10 @@ DislocationAnalysisEngine::DislocationAnalysisEngine(const TimeInterval& validit
 	AsynchronousParticleModifier::ComputeEngine(validityInterval),
 	_structureAnalysis(positions, simCell),
 	_isDefectRegionEverywhere(false),
-	_defectMesh(new HalfEdgeMesh()),
+	_defectMesh(new HalfEdgeMesh<>()),
 	_elasticMapping(_structureAnalysis, _tessellation),
-	_interfaceMesh(_elasticMapping)
+	_interfaceMesh(_elasticMapping),
+	_dislocationTracer(_interfaceMesh, _structureAnalysis.clusterGraph())
 {
 }
 
@@ -47,52 +48,59 @@ DislocationAnalysisEngine::DislocationAnalysisEngine(const TimeInterval& validit
 ******************************************************************************/
 void DislocationAnalysisEngine::perform()
 {
-	setProgressText(DislocationAnalysisModifier::tr("Dislocation analysis: Structure identification step"));
+	setProgressText(DislocationAnalysisModifier::tr("Dislocation analysis (DXA)"));
 
+	beginProgressSubSteps({ 35, 6, 1, 220, 60, 1, 53, 104, 90, 146 });
 	if(!_structureAnalysis.identifyStructures(*this))
 		return;
 
-	setProgressText(DislocationAnalysisModifier::tr("Dislocation analysis: Clustering step"));
-
+	nextProgressSubStep();
 	if(!_structureAnalysis.buildClusters(*this))
 		return;
 
-	setProgressText(DislocationAnalysisModifier::tr("Dislocation analysis: Cluster transition step"));
-
+	nextProgressSubStep();
 	if(!_structureAnalysis.connectClusters(*this))
 		return;
 
-	setProgressText(DislocationAnalysisModifier::tr("Dislocation analysis: Delaunay tessellation step"));
+	nextProgressSubStep();
 	FloatType ghostLayerSize = 3.0f * _structureAnalysis.maximumNeighborDistance();
 	qDebug() << "Delaunay ghost layer size:" << ghostLayerSize;
 	if(!_tessellation.generateTessellation(_structureAnalysis.cell(), _structureAnalysis.positions()->constDataPoint3(), _structureAnalysis.atomCount(), ghostLayerSize, this))
 		return;
 
-	setProgressText(DislocationAnalysisModifier::tr("Dislocation analysis: Elastic mapping step"));
-
 	// Build list of edges in the tessellation.
+	nextProgressSubStep();
 	if(!_elasticMapping.generateTessellationEdges(*this))
 		return;
 
 	// Assign each vertex to a cluster.
+	nextProgressSubStep();
 	if(!_elasticMapping.assignVerticesToClusters(*this))
 		return;
 
 	// Determine the ideal vector corresponding to each edge of the tessellation.
+	nextProgressSubStep();
 	if(!_elasticMapping.assignIdealVectorsToEdges(2, *this))
 		return;
 
-	setProgressText(DislocationAnalysisModifier::tr("Dislocation analysis: Interface mesh step"));
-
 	// Assign tetrahedra to good or bad crystal region.
+	nextProgressSubStep();
 	if(!_interfaceMesh.classifyTetrahedra(*this))
 		return;
 
 	// Create the mesh facets.
+	nextProgressSubStep();
 	if(!_interfaceMesh.createMesh(*this))
 		return;
 
-	*_defectMesh = _interfaceMesh;
+	_defectMesh->copyFrom(_interfaceMesh);
+
+	// Trace dislocation lines.
+	nextProgressSubStep();
+	if(!_dislocationTracer.traceDislocationSegments(*this))
+		return;
+
+	endProgressSubSteps();
 
 #if 0
 	_tessellation.dumpToVTKFile("tessellation.vtk");

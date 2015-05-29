@@ -193,21 +193,27 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 	if(inputCount <= 3)
 		return;
 
+	// Algorithm is divided into several sub-steps.
+	// Assign weights to sub-steps according to estimated runtime.
+	beginProgressSubSteps({ 20, 1, 6, 1, 1 });
+
 	// Generate Delaunay tessellation.
-	setProgressText(tr("Constructing surface mesh (Delaunay tessellation step)"));
 	DelaunayTessellation tessellation;
 	if(!tessellation.generateTessellation(_simCell, inputPositions, inputCount, ghostLayerSize, this))
 		return;
 
+	nextProgressSubStep();
 	setProgressRange(tessellation.number_of_tetrahedra());
-	setProgressValue(0);
-	setProgressText(tr("Constructing surface mesh (cell classification step)"));
 
 	// Classify cells into solid and open tetrahedra.
 	int ntotal = 0;
 	int solidCellCount = 0;
 	_isCompletelySolid = true;
 	for(DelaunayTessellation::CellIterator cell = tessellation.begin_cells(); cell != tessellation.end_cells(); ++cell, ++ntotal) {
+
+		// Update progress indicator.
+		if(!setProgressValueIntermittent(ntotal))
+			return;
 
 		// Alpha shape criterion: This determines whether the Delaunay tetrahedron is part of the solid region.
 		bool isSolid = tessellation.isValidCell(cell) &&
@@ -226,30 +232,24 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 			if(!cell->info().isGhost) _isCompletelySolid = false;
 			cell->info().index = -1;
 		}
-
-		if((ntotal % 1024) == 0)
-			setProgressValue(ntotal);
-		if(isCanceled())
-			return;
 	}
 
 	// Stores pointers to the mesh facets generated for a solid, local
 	// tetrahedron of the Delaunay tessellation.
 	struct Tetrahedron {
 		/// Pointers to the mesh facets associated with the four faces of the tetrahedron.
-		std::array<HalfEdgeMesh::Face*, 4> meshFacets;
+		std::array<HalfEdgeMesh<>::Face*, 4> meshFacets;
 		DelaunayTessellation::CellHandle cell;
 	};
 	std::map<std::array<int,4>, Tetrahedron> tetrahedra;
 	std::vector<std::map<std::array<int,4>, Tetrahedron>::const_iterator> tetrahedraList;
 	tetrahedraList.reserve(solidCellCount);
 
-	setProgressValue(0);
+	nextProgressSubStep();
 	setProgressRange(solidCellCount);
-	setProgressText(tr("Constructing surface mesh (facet construction step)"));
 
 	// Create the triangular mesh facets separating solid and open tetrahedra.
-	std::vector<HalfEdgeMesh::Vertex*> vertexMap(inputCount, nullptr);
+	std::vector<HalfEdgeMesh<>::Vertex*> vertexMap(inputCount, nullptr);
 	for(DelaunayTessellation::CellIterator cell = tessellation.begin_cells(); cell != tessellation.end_cells(); ++cell) {
 
 		// Start with the solid and local tetrahedra.
@@ -257,9 +257,9 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 			continue;
 		OVITO_ASSERT(cell->info().flag);
 
-		if((cell->info().index % 1024) == 0)
-			setProgressValue(cell->info().index);
-		if(isCanceled()) return;
+		// Update progress indicator.
+		if(!setProgressValueIntermittent(cell->info().index))
+			return;
 
 		Tetrahedron tet;
 		tet.cell = cell;
@@ -288,7 +288,7 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 				continue;
 
 			// Create the three vertices of the face or use existing output vertices.
-			std::array<HalfEdgeMesh::Vertex*,3> facetVertices;
+			std::array<HalfEdgeMesh<>::Vertex*,3> facetVertices;
 			for(int v = 0; v < 3; v++) {
 				DelaunayTessellation::VertexHandle vertex = cell->vertex(DelaunayTessellation::cellFacetVertexIndex(f, v));
 				int vertexIndex = vertex->point().index();
@@ -308,24 +308,22 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 	}
 
 	// Links half-edges to opposite half-edges.
-	setProgressText(tr("Constructing surface mesh (facet linking step)"));
-	setProgressValue(0);
+	nextProgressSubStep();
 	setProgressRange(tetrahedra.size());
 	int counter = 0;
 
 	for(auto tetIter = tetrahedra.cbegin(); tetIter != tetrahedra.cend(); ++tetIter, ++counter) {
 
-		if((counter % 1024) == 0)
-			setProgressValue(counter);
-		if(isCanceled())
+		// Update progress indicator.
+		if(!setProgressValueIntermittent(counter))
 			return;
 
 		const Tetrahedron& tet = tetIter->second;
 		for(int f = 0; f < 4; f++) {
-			HalfEdgeMesh::Face* facet = tet.meshFacets[f];
+			HalfEdgeMesh<>::Face* facet = tet.meshFacets[f];
 			if(facet == nullptr) continue;
 
-			HalfEdgeMesh::Edge* edge = facet->edges();
+			HalfEdgeMesh<>::Edge* edge = facet->edges();
 			for(int e = 0; e < 3; e++, edge = edge->nextFaceEdge()) {
 				OVITO_CHECK_POINTER(edge);
 				if(edge->oppositeEdge() != nullptr) continue;
@@ -349,7 +347,7 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 				// Get the adjacent cell, which must be solid.
 				std::pair<DelaunayTessellation::CellHandle,int> mirrorFacet = tessellation.mirrorFacet(circulator);
 				OVITO_ASSERT(mirrorFacet.first->info().flag == true);
-				HalfEdgeMesh::Face* oppositeFace = nullptr;
+				HalfEdgeMesh<>::Face* oppositeFace = nullptr;
 				// If the cell is a ghost cell, find the corresponding real cell.
 				if(mirrorFacet.first->info().isGhost) {
 					OVITO_ASSERT(mirrorFacet.first->info().index == -1);
@@ -385,7 +383,7 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 				if(oppositeFace == nullptr)
 					throw Exception(tr("Cannot construct surface mesh for this input dataset. Opposite cell face not found."));
 				OVITO_ASSERT(oppositeFace != facet);
-				HalfEdgeMesh::Edge* oppositeEdge = oppositeFace->edges();
+				HalfEdgeMesh<>::Edge* oppositeEdge = oppositeFace->edges();
 				do {
 					OVITO_CHECK_POINTER(oppositeEdge);
 					if(oppositeEdge->vertex1() == edge->vertex2()) {
@@ -401,17 +399,19 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 		}
 	}
 
-	setProgressText(tr("Constructing surface mesh (smoothing step)"));
-	setProgressRange(0);
-	SurfaceMesh::smoothMesh(*_mesh, _simCell, _smoothingLevel);
+	nextProgressSubStep();
+	SurfaceMesh::smoothMesh(*_mesh, _simCell, _smoothingLevel, this);
 
 	// Compute surface area.
-	for(const HalfEdgeMesh::Face* facet : _mesh->faces()) {
+	for(const HalfEdgeMesh<>::Face* facet : _mesh->faces()) {
+		if(isCanceled()) return;
 		Vector3 e1 = _simCell.wrapVector(facet->edges()->vertex1()->pos() - facet->edges()->vertex2()->pos());
 		Vector3 e2 = _simCell.wrapVector(facet->edges()->prevFaceEdge()->vertex1()->pos() - facet->edges()->vertex2()->pos());
 		_surfaceArea += e1.cross(e2).length();
 	}
 	_surfaceArea *= 0.5f;
+
+	endProgressSubSteps();
 }
 
 /******************************************************************************

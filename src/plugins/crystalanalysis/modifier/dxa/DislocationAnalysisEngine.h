@@ -28,6 +28,7 @@
 #include "StructureAnalysis.h"
 #include "ElasticMapping.h"
 #include "InterfaceMesh.h"
+#include "DislocationTracer.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -45,7 +46,7 @@ public:
 	virtual void perform() override;
 
 	/// Returns the generated defect mesh.
-	HalfEdgeMesh* defectMesh() { return _defectMesh.data(); }
+	HalfEdgeMesh<>* defectMesh() { return _defectMesh.data(); }
 
 	/// Indicates whether the entire simulation cell is part of the 'bad' crystal region.
 	bool isDefectRegionEverywhere() const { return _isDefectRegionEverywhere; }
@@ -56,13 +57,17 @@ public:
 	/// Returns the array of atom cluster IDs.
 	ParticleProperty* atomClusters() const { return _structureAnalysis.atomClusters(); }
 
+	/// Gives access to the elastic mapping computation engine.
+	ElasticMapping& elasticMapping() { return _elasticMapping; }
+
 private:
 
-	QExplicitlySharedDataPointer<HalfEdgeMesh> _defectMesh;
+	QExplicitlySharedDataPointer<HalfEdgeMesh<>> _defectMesh;
 	StructureAnalysis _structureAnalysis;
 	DelaunayTessellation _tessellation;
 	ElasticMapping _elasticMapping;
 	InterfaceMesh _interfaceMesh;
+	DislocationTracer _dislocationTracer;
 
 	bool _isDefectRegionEverywhere;
 };

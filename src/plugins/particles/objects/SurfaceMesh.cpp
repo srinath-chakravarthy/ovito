@@ -31,7 +31,7 @@ DEFINE_PROPERTY_FIELD(SurfaceMesh, _isCompletelySolid, "IsCompletelySolid");
 /******************************************************************************
 * Constructs an empty surface mesh object.
 ******************************************************************************/
-SurfaceMesh::SurfaceMesh(DataSet* dataset, HalfEdgeMesh* mesh) : DataObjectWithSharedStorage(dataset, mesh ? mesh : new HalfEdgeMesh()),
+SurfaceMesh::SurfaceMesh(DataSet* dataset, HalfEdgeMesh<>* mesh) : DataObjectWithSharedStorage(dataset, mesh ? mesh : new HalfEdgeMesh<>()),
 		_isCompletelySolid(false)
 {
 	INIT_PROPERTY_FIELD(SurfaceMesh::_isCompletelySolid);
@@ -40,7 +40,7 @@ SurfaceMesh::SurfaceMesh(DataSet* dataset, HalfEdgeMesh* mesh) : DataObjectWithS
 /******************************************************************************
 * Fairs a closed triangle mesh.
 ******************************************************************************/
-void SurfaceMesh::smoothMesh(HalfEdgeMesh& mesh, const SimulationCell& cell, int numIterations, FloatType k_PB, FloatType lambda)
+void SurfaceMesh::smoothMesh(HalfEdgeMesh<>& mesh, const SimulationCell& cell, int numIterations, FutureInterfaceBase* progress, FloatType k_PB, FloatType lambda)
 {
 	// This is the implementation of the mesh smoothing algorithm:
 	//
@@ -49,27 +49,30 @@ void SurfaceMesh::smoothMesh(HalfEdgeMesh& mesh, const SimulationCell& cell, int
 	// In SIGGRAPH 95 Conference Proceedings, pages 351-358 (1995)
 
 	FloatType mu = 1.0f / (k_PB - 1.0f/lambda);
+	if(progress) progress->setProgressRange(numIterations);
 
 	for(int iteration = 0; iteration < numIterations; iteration++) {
 		smoothMeshIteration(mesh, lambda, cell);
 		smoothMeshIteration(mesh, mu, cell);
+		if(progress && !progress->setProgressValue(iteration+1))
+			return;
 	}
 }
 
 /******************************************************************************
 * Performs one iteration of the smoothing algorithm.
 ******************************************************************************/
-void SurfaceMesh::smoothMeshIteration(HalfEdgeMesh& mesh, FloatType prefactor, const SimulationCell& cell)
+void SurfaceMesh::smoothMeshIteration(HalfEdgeMesh<>& mesh, FloatType prefactor, const SimulationCell& cell)
 {
-	const AffineTransformation absoluteToReduced = cell.matrix().inverse();
+	const AffineTransformation absoluteToReduced = cell.inverseMatrix();
 	const AffineTransformation reducedToAbsolute = cell.matrix();
 
 	// Compute displacement for each vertex.
 	std::vector<Vector3> displacements(mesh.vertexCount());
 	parallelFor(mesh.vertexCount(), [&mesh, &displacements, prefactor, cell, absoluteToReduced](int index) {
-		HalfEdgeMesh::Vertex* vertex = mesh.vertex(index);
+		HalfEdgeMesh<>::Vertex* vertex = mesh.vertex(index);
 		Vector3 d = Vector3::Zero();
-		for(HalfEdgeMesh::Edge* edge = vertex->edges(); edge != nullptr; edge = edge->nextVertexEdge()) {
+		for(HalfEdgeMesh<>::Edge* edge = vertex->edges(); edge != nullptr; edge = edge->nextVertexEdge()) {
 			d += cell.wrapVector(edge->vertex2()->pos() - vertex->pos());
 		}
 		if(vertex->edges() != nullptr)
@@ -79,7 +82,7 @@ void SurfaceMesh::smoothMeshIteration(HalfEdgeMesh& mesh, FloatType prefactor, c
 
 	// Apply computed displacements.
 	auto d = displacements.cbegin();
-	for(HalfEdgeMesh::Vertex* vertex : mesh.vertices())
+	for(HalfEdgeMesh<>::Vertex* vertex : mesh.vertices())
 		vertex->pos() += *d++;
 }
 

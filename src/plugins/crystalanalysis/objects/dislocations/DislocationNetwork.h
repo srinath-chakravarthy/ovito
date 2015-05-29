@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_DISLOCATION_NETWORK_H
-#define __OVITO_CA_DISLOCATION_NETWORK_H
+#ifndef __OVITO_CA_DISLOCATION_NETWORK_OBJECT_H
+#define __OVITO_CA_DISLOCATION_NETWORK_OBJECT_H
 
 #include <core/Core.h>
 #include <core/scene/objects/DataObject.h>
@@ -95,4 +95,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CA_DISLOCATION_NETWORK_H
+#endif // __OVITO_CA_DISLOCATION_NETWORK_OBJECT_H

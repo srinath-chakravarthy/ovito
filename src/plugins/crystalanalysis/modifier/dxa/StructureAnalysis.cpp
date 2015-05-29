@@ -395,15 +395,16 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 ******************************************************************************/
 bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 {
-	progress.setProgressValue(0);
 	progress.setProgressRange(positions()->size());
+	int progressCounter = 0;
 
 	// Continue finding atoms, which haven't been visited yet, and which are not part of a cluster.
 	for(size_t seedAtomIndex = 0; seedAtomIndex < positions()->size(); seedAtomIndex++) {
 		if(_atomClusters->getInt(seedAtomIndex) != 0) continue;
 		int coordStructureType = _structureTypes->getInt(seedAtomIndex);
+
 		if(coordStructureType == COORD_OTHER) {
-			progress.incrementProgressValue();
+			progressCounter++;
 			continue;
 		}
 
@@ -424,8 +425,8 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 			atomsToVisit.pop_front();
 
 			// Update progress indicator.
-			progress.incrementProgressValue();
-			if(progress.isCanceled()) return false;
+			if(!progress.setProgressValueIntermittent(++progressCounter))
+				return false;
 
 			// Look up symmetry permutation of current atom.
 			int symmetryPermutationIndex = _atomSymmetryPermutations->getInt(currentAtomIndex);
@@ -510,7 +511,6 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 ******************************************************************************/
 bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 {
-	progress.setProgressValue(0);
 	progress.setProgressRange(positions()->size());
 
 	for(size_t atomIndex = 0; atomIndex < positions()->size(); atomIndex++) {
@@ -520,9 +520,8 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 		OVITO_ASSERT(cluster1);
 
 		// Update progress indicator.
-		if((atomIndex % 100) == 0)
-			progress.setProgressValue(atomIndex);
-		if(progress.isCanceled()) return false;
+		if(!progress.setProgressValueIntermittent(atomIndex))
+			return false;
 
 		// Look up symmetry permutation of current atom.
 		int structureType = _structureTypes->getInt(atomIndex);

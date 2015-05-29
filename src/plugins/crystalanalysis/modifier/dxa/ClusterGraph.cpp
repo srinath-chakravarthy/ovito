@@ -87,14 +87,14 @@ Cluster* ClusterGraph::findCluster(int id) const
 ClusterTransition* ClusterGraph::createClusterTransition(Cluster* clusterA, Cluster* clusterB, const Matrix3& tm, int distance)
 {
 	// Handle trivial case (the self-transition).
-	if(clusterA == clusterB && tm.equals(Matrix3::Identity())) {
+	if(clusterA == clusterB && tm.equals(Matrix3::Identity(), CA_TRANSITION_MATRIX_EPSILON)) {
 		return createSelfTransition(clusterA);
 	}
 	OVITO_ASSERT(distance >= 1);
 
 	// Look for existing transition connecting the same pair of clusters and having the same transition matrix.
 	for(ClusterTransition* t = clusterA->transitions; t != nullptr; t = t->next) {
-		if(t->cluster2 == clusterB && t->tm.equals(tm))
+		if(t->cluster2 == clusterB && t->tm.equals(tm, CA_TRANSITION_MATRIX_EPSILON))
 			return t;
 	}
 

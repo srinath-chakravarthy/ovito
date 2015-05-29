@@ -165,8 +165,8 @@ void TaskManager::updateIndicator()
 	}
 	else {
 		FutureWatcher* watcher = _taskStack.top();
-		_progressBar->setRange(0, watcher->progressMaximum());
-		_progressBar->setValue(watcher->progressValue());
+		_progressBar->setRange(0, watcher->totalProgressMaximum());
+		_progressBar->setValue(watcher->totalProgressValue());
 		_progressTextDisplay->setText(watcher->progressText());
 		_progressWidget->show();
 	}

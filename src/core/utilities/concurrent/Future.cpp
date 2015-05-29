@@ -34,47 +34,38 @@ enum {
 
 FutureInterfaceBase::~FutureInterfaceBase()
 {
-	//qDebug() << "FutureInterfaceBase::~FutureInterfaceBase() this=" << this;
 }
 
 void FutureInterfaceBase::cancel()
 {
-	//qDebug() << "BEG FutureInterfaceBase::cancel() this=" << this << "thread=" << QThread::currentThread() << "text=" << progressText();
 	QMutexLocker locker(&_mutex);
 
 	if(_subTask) {
-		//qDebug() << "Canceling subtask " << _subTask;
 		_subTask->cancel();
 	}
 
 	if(isCanceled()) {
-//		qDebug() << "ALREADY CANCELED FutureInterfaceBase::cancel() this=" << this << "thread=" << QThread::currentThread() << "text=" << progressText();
 		return;
 	}
 
 	_state = State(_state | Canceled);
 	_waitCondition.wakeAll();
 	sendCallOut(FutureWatcher::CallOutEvent::Canceled);
-	//qDebug() << "END FutureInterfaceBase::cancel() this=" << this << "thread=" << QThread::currentThread() << "text=" << progressText();
 }
 
 bool FutureInterfaceBase::reportStarted()
 {
-	//qDebug() << "BEG FutureInterfaceBase::reportStarted() this=" << this << "thread=" << QThread::currentThread() << "text=" << progressText()  << "isAlreadyStarted=" << isStarted();
-	//qDebug() << "THREAD COUNT=" << QThreadPool::globalInstance()->activeThreadCount();
     QMutexLocker locker(&_mutex);
     if(isStarted())
         return false;	// It's already started. Don't run it again.
     OVITO_ASSERT(!isFinished() || isRunning());
     _state = State(Started | Running);
     sendCallOut(FutureWatcher::CallOutEvent::Started);
-	//qDebug() << "END FutureInterfaceBase::reportStarted() this=" << this << "thread=" << QThread::currentThread() << "text=" << progressText();
 	return true;
 }
 
 void FutureInterfaceBase::reportFinished()
 {
-	//qDebug() << "BEG FutureInterfaceBase::reportFinished() this=" << this << "thread=" << QThread::currentThread() << "text=" << progressText();
 	QMutexLocker locker(&_mutex);
     OVITO_ASSERT(isStarted());
     if(!isFinished()) {
@@ -82,12 +73,10 @@ void FutureInterfaceBase::reportFinished()
         _waitCondition.wakeAll();
         sendCallOut(FutureWatcher::CallOutEvent::Finished);
     }
-	//qDebug() << "END FutureInterfaceBase::reportFinished() this=" << this << "thread=" << QThread::currentThread();
 }
 
 void FutureInterfaceBase::reportException()
 {
-	//qDebug() << "EXCEPTION FutureInterfaceBase::reportException() this=" << this << "thread=" << QThread::currentThread() << "text=" << progressText();
 	QMutexLocker locker(&_mutex);
 	if(isCanceled() || isFinished())
 		return;
@@ -115,7 +104,6 @@ void FutureInterfaceBase::reportResultReady()
 
 void FutureInterfaceBase::waitForResult()
 {
-	//qDebug() << "WAIT FOR RESULT FutureInterfaceBase::waitForResult() this=" << this << "thread=" << QThread::currentThread() << "text=" << progressText();
 	throwPossibleException();
 
 	QMutexLocker lock(&_mutex);
@@ -140,8 +128,6 @@ void FutureInterfaceBase::waitForResult()
 
 void FutureInterfaceBase::waitForFinished()
 {
-	//qDebug() << "BEG FutureInterfaceBase::waitForFinished() this=" << this << "thread=" << QThread::currentThread() << "text=" << progressText();
-
 	QMutexLocker lock(&_mutex);
     const bool alreadyFinished = !isRunning() && isStarted();
     lock.unlock();
@@ -154,8 +140,6 @@ void FutureInterfaceBase::waitForFinished()
     }
 
     throwPossibleException();
-
-	//qDebug() << "END FutureInterfaceBase::waitForFinished() this=" << this << "thread=" << QThread::currentThread() << "text=" << progressText();
 }
 
 void FutureInterfaceBase::registerWatcher(FutureWatcher* watcher)
@@ -185,7 +169,6 @@ void FutureInterfaceBase::unregisterWatcher(FutureWatcher* watcher)
 
 bool FutureInterfaceBase::waitForSubTask(const std::shared_ptr<FutureInterfaceBase>& subTask)
 {
-	//qDebug() << "BEG FutureInterfaceBase::waitForSubTask() this=" << this << "thread=" << QThread::currentThread() << "text=" << progressText() << "subtask=" << subTask;
 	QMutexLocker locker(&_mutex);
 	if(this->isCanceled()) {
 		subTask->cancel();
@@ -226,10 +209,8 @@ bool FutureInterfaceBase::waitForSubTask(const std::shared_ptr<FutureInterfaceBa
 	locker.unlock();
 	if(subTask->isCanceled()) {
 		this->cancel();
-		//qDebug() << "END FutureInterfaceBase::waitForSubTask() this=" << this << "thread=" << QThread::currentThread() << "text=" << progressText() << "subtask=" << subTask;
 		return false;
 	}
-	//qDebug() << "END FutureInterfaceBase::waitForSubTask() this=" << this << "thread=" << QThread::currentThread() << "text=" << progressText() << "subtask=" << subTask;
 	return true;
 }
 
@@ -237,63 +218,119 @@ void FutureInterfaceBase::setProgressRange(int maximum)
 {
     QMutexLocker locker(&_mutex);
     _progressMaximum = maximum;
+    computeTotalProgress();
     sendCallOut(FutureWatcher::CallOutEvent::ProgressRange, maximum);
 }
 
-void FutureInterfaceBase::setProgressValue(int value)
+bool FutureInterfaceBase::setProgressValue(int value)
 {
     QMutexLocker locker(&_mutex);
+	_intermittentUpdateCounter = 0;
 
-    if(value == _progressValue)
-    	return;
-
-    if(isCanceled() || isFinished())
-        return;
+    if(value == _progressValue || isCanceled() || isFinished())
+        return !isCanceled();
 
     _progressValue = value;
-    if(_progressTime.isValid() && _progressValue != _progressMaximum) {
-    	if(_progressTime.elapsed() < (1000 / MaxProgressEmitsPerSecond)) {
-            return;
-    	}
+    computeTotalProgress();
+
+    if(!_progressTime.isValid() || _progressValue == _progressMaximum || _progressTime.elapsed() >= (1000 / MaxProgressEmitsPerSecond)) {
+		_progressTime.start();
+		sendCallOut(FutureWatcher::CallOutEvent::ProgressValue, progressValue());
     }
 
-    _progressTime.start();
-    sendCallOut(FutureWatcher::CallOutEvent::ProgressValue, _progressValue);
+    return !isCanceled();
 }
 
-void FutureInterfaceBase::incrementProgressValue(int increment)
+bool FutureInterfaceBase::setProgressValueIntermittent(int progressValue, int updateEvery)
+{
+	if(_intermittentUpdateCounter == 0 || _intermittentUpdateCounter > updateEvery) {
+		setProgressValue(progressValue);
+	}
+	_intermittentUpdateCounter++;
+	return !isCanceled();
+}
+
+bool FutureInterfaceBase::incrementProgressValue(int increment)
 {
     QMutexLocker locker(&_mutex);
 
     if(isCanceled() || isFinished())
-        return;
+        return !isCanceled();
 
     _progressValue += increment;
-    if(_progressTime.isValid() && _progressValue != _progressMaximum)
-    	if(_progressTime.elapsed() < (1000 / MaxProgressEmitsPerSecond))
-            return;
+    computeTotalProgress();
 
-    _progressTime.start();
-    sendCallOut(FutureWatcher::CallOutEvent::ProgressValue, _progressValue);
+    if(!_progressTime.isValid() || _progressValue == _progressMaximum || _progressTime.elapsed() >= (1000 / MaxProgressEmitsPerSecond)) {
+		_progressTime.start();
+		sendCallOut(FutureWatcher::CallOutEvent::ProgressValue, progressValue());
+    }
+
+    return !isCanceled();
 }
 
+void FutureInterfaceBase::computeTotalProgress()
+{
+	if(subStepsStack.empty()) {
+		_totalProgressMaximum = _progressMaximum;
+		_totalProgressValue = _progressValue;
+	}
+	else {
+		double percentage;
+		if(_progressMaximum > 0)
+			percentage = (double)_progressValue / _progressMaximum;
+		else
+			percentage = 0.0;
+		for(auto level = subStepsStack.crbegin(); level != subStepsStack.crend(); ++level) {
+			OVITO_ASSERT(level->first >= 0 && level->first < level->second.size());
+			int weightSum1 = std::accumulate(level->second.cbegin(), level->second.cbegin() + level->first, 0);
+			int weightSum2 = std::accumulate(level->second.cbegin() + level->first, level->second.cend(), 0);
+			percentage = ((double)weightSum1 + percentage * level->second[level->first]) / (weightSum1 + weightSum2);
+		}
+		_totalProgressMaximum = 1000;
+		_totalProgressValue = int(percentage * 1000.0);
+	}
+}
+
+void FutureInterfaceBase::beginProgressSubSteps(std::vector<int> weights)
+{
+    QMutexLocker locker(&_mutex);
+    OVITO_ASSERT(std::accumulate(weights.cbegin(), weights.cend(), 0) > 0);
+    subStepsStack.push_back(std::make_pair(0, std::move(weights)));
+    _progressMaximum = 0;
+    _progressValue = 0;
+    computeTotalProgress();
+}
+
+void FutureInterfaceBase::nextProgressSubStep()
+{
+	QMutexLocker locker(&_mutex);
+	OVITO_ASSERT(!subStepsStack.empty());
+	OVITO_ASSERT(subStepsStack.back().first < subStepsStack.back().second.size() - 1);
+	subStepsStack.back().first++;
+    _progressMaximum = 0;
+    _progressValue = 0;
+    computeTotalProgress();
+}
+
+void FutureInterfaceBase::endProgressSubSteps()
+{
+	QMutexLocker locker(&_mutex);
+	OVITO_ASSERT(!subStepsStack.empty());
+	subStepsStack.pop_back();
+    _progressMaximum = 0;
+    _progressValue = 0;
+    computeTotalProgress();
+}
 
 void FutureInterfaceBase::setProgressText(const QString& progressText)
 {
     QMutexLocker locker(&_mutex);
-    //qDebug() << "FutureInterfaceBase::setProgressText() this=" << this << "thread=" << QThread::currentThread() << "text=" << progressText;
 
     if(isCanceled() || isFinished())
         return;
 
     _progressText = progressText;
     sendCallOut(FutureWatcher::CallOutEvent::ProgressText, progressText);
-}
-
-bool FutureInterfaceBase::isProgressUpdateNeeded()
-{
-    QMutexLocker locker(&_mutex);
-    return !_progressTime.isValid() || (_progressTime.elapsed() > (1000 / MaxProgressEmitsPerSecond));
 }
 
 void FutureWatcher::setFutureInterface(const std::shared_ptr<FutureInterfaceBase>& futureInterface, bool pendingAssignment)
@@ -369,6 +406,16 @@ int FutureWatcher::progressMaximum() const
 int FutureWatcher::progressValue() const
 {
 	return _futureInterface->progressValue();
+}
+
+int FutureWatcher::totalProgressMaximum() const
+{
+	return _futureInterface->totalProgressMaximum();
+}
+
+int FutureWatcher::totalProgressValue() const
+{
+	return _futureInterface->totalProgressValue();
 }
 
 QString FutureWatcher::progressText() const

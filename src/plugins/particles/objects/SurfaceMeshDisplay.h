@@ -90,10 +90,10 @@ public:
 	void setCapTransparency(FloatType transparency) { if(_capTransparency) _capTransparency->setCurrentFloatValue(transparency); }
 
 	/// Generates the final triangle mesh, which will be rendered.
-	static bool buildSurfaceMesh(const HalfEdgeMesh& input, const SimulationCell& cell, TriMesh& output, FutureInterfaceBase* progress = nullptr);
+	static bool buildSurfaceMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, TriMesh& output, FutureInterfaceBase* progress = nullptr);
 
 	/// Generates the triangle mesh for the PBC cap.
-	static void buildCapMesh(const HalfEdgeMesh& input, const SimulationCell& cell, bool isCompletelySolid, TriMesh& output, FutureInterfaceBase* progress = nullptr);
+	static void buildCapMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool isCompletelySolid, TriMesh& output, FutureInterfaceBase* progress = nullptr);
 
 protected:
 
@@ -109,7 +109,7 @@ protected:
 	public:
 
 		/// Constructor.
-		PrepareSurfaceEngine(HalfEdgeMesh* mesh, const SimulationCell& simCell, bool isCompletelySolid) :
+		PrepareSurfaceEngine(HalfEdgeMesh<>* mesh, const SimulationCell& simCell, bool isCompletelySolid) :
 			_inputMesh(mesh), _simCell(simCell), _isCompletelySolid(isCompletelySolid) {}
 
 		/// Computes the results and stores them in this object for later retrieval.
@@ -120,7 +120,7 @@ protected:
 
 	private:
 
-		QExplicitlySharedDataPointer<HalfEdgeMesh> _inputMesh;
+		QExplicitlySharedDataPointer<HalfEdgeMesh<>> _inputMesh;
 		SimulationCell _simCell;
 		bool _isCompletelySolid;
 		TriMesh _surfaceMesh;
@@ -133,7 +133,7 @@ protected:
 	static bool splitFace(TriMesh& output, TriMeshFace& face, int oldVertexCount, std::vector<Point3>& newVertices, std::map<std::pair<int,int>,std::pair<int,int>>& newVertexLookupMap, const SimulationCell& cell, size_t dim);
 
 	/// Traces the closed contour of the surface-boundary intersection.
-	static std::vector<Point2> traceContour(HalfEdgeMesh::Edge* firstEdge, const std::vector<Point3>& reducedPos, const SimulationCell& cell, size_t dim);
+	static std::vector<Point2> traceContour(HalfEdgeMesh<>::Edge* firstEdge, const std::vector<Point3>& reducedPos, const SimulationCell& cell, size_t dim);
 
 	/// Clips a 2d contour at a periodic boundary.
 	static void clipContour(std::vector<Point2>& input, std::array<bool,2> periodic, std::vector<std::vector<Point2>>& openContours, std::vector<std::vector<Point2>>& closedContours);
@@ -145,7 +145,7 @@ protected:
 	static bool isCornerInside2DRegion(const std::vector<std::vector<Point2>>& contours);
 
 	/// Determines if the 3D box corner (0,0,0) is inside the region described by the half-edge polyhedron.
-	static bool isCornerInside3DRegion(const HalfEdgeMesh& mesh, const std::vector<Point3>& reducedPos, const std::array<bool,3> pbcFlags, bool isCompletelySolid);
+	static bool isCornerInside3DRegion(const HalfEdgeMesh<>& mesh, const std::vector<Point3>& reducedPos, const std::array<bool,3> pbcFlags, bool isCompletelySolid);
 
 	/// Controls the display color of the surface mesh.
 	PropertyField<Color, QColor> _surfaceColor;

@@ -42,13 +42,15 @@ SET(SourceFiles
 	modifier/SmoothSurfaceModifier.cpp
 	modifier/SmoothDislocationsModifier.cpp
 	modifier/ConstructSurfaceModifier.cpp
-	modifier/dislocations/DislocationAnalysisModifier.cpp
-	modifier/dislocations/DislocationAnalysisEngine.cpp
-	modifier/dislocations/StructureAnalysis.cpp
-	modifier/dislocations/ClusterGraph.cpp
-	modifier/dislocations/CrystalPathFinder.cpp
-	modifier/dislocations/ElasticMapping.cpp
-	modifier/dislocations/InterfaceMesh.cpp
+	modifier/dxa/DislocationAnalysisModifier.cpp
+	modifier/dxa/DislocationAnalysisEngine.cpp
+	modifier/dxa/StructureAnalysis.cpp
+	modifier/dxa/ClusterGraph.cpp
+	modifier/dxa/CrystalPathFinder.cpp
+	modifier/dxa/ElasticMapping.cpp
+	modifier/dxa/InterfaceMesh.cpp
+	modifier/dxa/DislocationNetwork.cpp
+	modifier/dxa/DislocationTracer.cpp
 	util/DelaunayTessellation.cpp
 )
 

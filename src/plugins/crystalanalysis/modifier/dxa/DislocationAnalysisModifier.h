@@ -74,7 +74,7 @@ private:
 	ReferenceField<Objects::DislocationDisplay> _dislocationDisplay;
 
 	/// This stores the cached defect mesh produced by the modifier.
-	QExplicitlySharedDataPointer<HalfEdgeMesh> _defectMesh;
+	QExplicitlySharedDataPointer<HalfEdgeMesh<>> _defectMesh;
 
 	/// This stores the cached particle structure types computed by the modifier.
 	QExplicitlySharedDataPointer<ParticleProperty> _structureTypes;
@@ -88,7 +88,7 @@ private:
 	Q_OBJECT
 	OVITO_OBJECT
 
-	Q_CLASSINFO("DisplayName", "Dislocation analysis");
+	Q_CLASSINFO("DisplayName", "Dislocation analysis (DXA)");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
 
 	DECLARE_REFERENCE_FIELD(_dislocationDisplay);

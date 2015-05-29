@@ -29,6 +29,10 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 struct Cluster;
 struct ClusterTransition;
 
+/// Two transitions matrices are considered equal if their elements don't differ by more than this value.
+#define CA_TRANSITION_MATRIX_EPSILON				Ovito::FloatType(1e-4)
+
+
 /**
  * A cluster transition T_12 is a transformation matrix that connects the
  * reference frames of two clusters 1 and 2.
@@ -83,7 +87,7 @@ struct ClusterTransition
 	/// The transformation matrix of an identity transition is always the identity matrix.
 	bool isSelfTransition() const {
 		OVITO_ASSERT((reverse != this) || (cluster1 == cluster2));
-		OVITO_ASSERT((reverse != this) || tm.equals(Matrix3::Identity()));
+		OVITO_ASSERT((reverse != this) || tm.equals(Matrix3::Identity(), CA_TRANSITION_MATRIX_EPSILON));
 		OVITO_ASSERT((reverse != this) || (distance == 0));
 		return reverse == this;
 	}

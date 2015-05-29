@@ -29,10 +29,50 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
+struct BurgersCircuit;				// defined in BurgersCircuit.h
+struct BurgersCircuitSearchStruct;	// defined in DislocationTracer.cpp
+
+struct InterfaceMeshVertex
+{
+	/// This pointer is used during Burgers circuit search on the mesh.
+	/// This field is used by the DislocationTracer class.
+	BurgersCircuitSearchStruct* burgersSearchStruct = nullptr;
+
+	/// A bit flag used by various algorithms.
+	bool visited = false;
+};
+
+struct InterfaceMeshFace
+{
+	/// The Burgers circuit which has swept this facet.
+	/// This field is used by the DislocationTracer class.
+	BurgersCircuit* circuit = nullptr;
+};
+
+struct InterfaceMeshEdge
+{
+	/// The (unwrapped) vector connecting the two vertices.
+	Vector3 physicalVector;
+
+	/// The ideal vector in the reference configuration assigned to this edge.
+	Vector3 clusterVector;
+
+	/// The cluster transition when going from the cluster of node 1 to the cluster of node 2.
+	ClusterTransition* clusterTransition;
+
+	/// The Burgers circuit going through this edge.
+	/// This field is used by the DislocationTracer class.
+	BurgersCircuit* circuit = nullptr;
+
+	/// If this edge is part of a Burgers circuit, then this points to the next edge in the circuit.
+	/// This field is used by the DislocationTracer class.
+	HalfEdgeMesh<InterfaceMeshEdge, InterfaceMeshFace, InterfaceMeshVertex>::Edge* nextCircuitEdge = nullptr;
+};
+
 /**
  * The interface mesh that separates the 'bad' crystal regions from the 'good' crystal regions.
  */
-class InterfaceMesh : public HalfEdgeMesh
+class InterfaceMesh : public HalfEdgeMesh<InterfaceMeshEdge, InterfaceMeshFace, InterfaceMeshVertex>
 {
 public:
 

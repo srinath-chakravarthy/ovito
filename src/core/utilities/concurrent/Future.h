@@ -42,6 +42,8 @@ public:
 
     int progressValue() const { return getinterface()->progressValue(); }
     int progressMaximum() const { return getinterface()->progressMaximum(); }
+    int totalProgressValue() const { return getinterface()->totalProgressValue(); }
+    int totalProgressMaximum() const { return getinterface()->totalProgressMaximum(); }
     QString progressText() const { return getinterface()->progressText(); }
 
 protected:

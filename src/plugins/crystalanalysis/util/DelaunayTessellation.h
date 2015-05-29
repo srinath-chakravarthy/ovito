@@ -156,6 +156,9 @@ public:
 	/// Returns the total number of tetrahedra in the tessellation.
 	DT::size_type number_of_tetrahedra() const { return _dt.number_of_cells(); }
 
+	/// Returns the number of finite cells in the primary image of the simulation cell.
+	DT::size_type number_of_primary_tetrahedra() const { return _dt.number_of_cells(); }
+
 	CellIterator begin_cells() const { return _dt.cells_begin(); }
 	CellIterator end_cells() const { return _dt.cells_end(); }
 	VertexIterator begin_vertices() const { return _dt.vertices_begin(); }
@@ -188,6 +191,9 @@ private:
 
 	/// The internal CGAL triangulator object.
 	DT _dt;
+
+	/// The number of finite cells in the primary image of the simulation cell.
+	DT::size_type _numPrimaryTetrahedra = 0;
 };
 
 }	// End of namespace

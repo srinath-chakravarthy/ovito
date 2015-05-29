@@ -216,11 +216,8 @@ void WignerSeitzAnalysisModifier::WignerSeitzAnalysisEngine::perform()
 		output->dataInt()[closestIndex]++;
 
 		particleIndex++;
-		if((particleIndex % 1024) == 0) {
-			if(isCanceled())
-				return;
-			setProgressValue(particleIndex);
-		}
+		if(!setProgressValueIntermittent(particleIndex))
+			return;
 	}
 
 	// Count defects.

@@ -224,8 +224,8 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 			voro::voronoicell v;
 			if(cl.start()) {
 				do {
-					incrementProgressValue();
-					if(isCanceled()) return;
+					if(!incrementProgressValue())
+						return;
 					if(!voroContainer.compute_cell(v,cl))
 						continue;
 					processCell(v, cl.pid());
@@ -258,8 +258,8 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 			voro::voronoicell v;
 			if(cl.start()) {
 				do {
-					incrementProgressValue();
-					if(isCanceled()) return;
+					if(!incrementProgressValue())
+						return;
 					if(!voroContainer.compute_cell(v,cl))
 						continue;
 					processCell(v, cl.pid());

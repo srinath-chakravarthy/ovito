@@ -295,12 +295,12 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 		int v[3];
 		if(sscanf(stream.readLine(), "%i %i %i", &v[0], &v[1], &v[2]) != 3)
 			throw Exception(tr("Failed to parse file. Invalid triangle adjacency info in line %1.").arg(stream.lineNumber()));
-		HalfEdgeMesh::Edge* edge = _defectSurface->face(index)->edges();
+		HalfEdgeMesh<>::Edge* edge = _defectSurface->face(index)->edges();
 		for(int i = 0; i < 3; i++, edge = edge->nextFaceEdge()) {
 			OVITO_CHECK_POINTER(edge);
 			if(edge->oppositeEdge() != nullptr) continue;
-			HalfEdgeMesh::Face* oppositeFace = _defectSurface->face(v[i]);
-			HalfEdgeMesh::Edge* oppositeEdge = oppositeFace->edges();
+			HalfEdgeMesh<>::Face* oppositeFace = _defectSurface->face(v[i]);
+			HalfEdgeMesh<>::Edge* oppositeEdge = oppositeFace->edges();
 			do {
 				OVITO_CHECK_POINTER(oppositeEdge);
 				if(oppositeEdge->vertex1() == edge->vertex2() && oppositeEdge->vertex2() == edge->vertex1()) {

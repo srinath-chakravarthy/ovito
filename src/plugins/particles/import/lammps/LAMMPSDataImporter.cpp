@@ -300,7 +300,7 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 
 				if(_atomStyle == AtomStyle_Atomic || _atomStyle == AtomStyle_Hybrid) {
 					for(int i = 0; i < natoms; i++, ++pos, ++atomType, ++atomId) {
-						if(!reportProgress(i)) return;
+						if(!setProgressValueIntermittent(i)) return;
 						if(i != 0) stream.readLine();
 						bool invalidLine;
 						if(!pbcImage)
@@ -320,7 +320,7 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 					addParticleProperty(chargeProperty);
 					FloatType* charge = chargeProperty->dataFloat();
 					for(int i = 0; i < natoms; i++, ++pos, ++atomType, ++atomId, ++charge) {
-						if(!reportProgress(i)) return;
+						if(!setProgressValueIntermittent(i)) return;
 						if(i != 0) stream.readLine();
 						bool invalidLine;
 						if(!pbcImage)
@@ -340,7 +340,7 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 					addParticleProperty(moleculeProperty);
 					int* molecule = moleculeProperty->dataInt();
 					for(int i = 0; i < natoms; i++, ++pos, ++atomType, ++atomId, ++molecule) {
-						if(!reportProgress(i)) return;
+						if(!setProgressValueIntermittent(i)) return;
 						if(i != 0) stream.readLine();
 						bool invalidLine;
 						if(!pbcImage)
@@ -363,7 +363,7 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 					addParticleProperty(moleculeProperty);
 					int* molecule = moleculeProperty->dataInt();
 					for(int i = 0; i < natoms; i++, ++pos, ++atomType, ++atomId, ++charge, ++molecule) {
-						if(!reportProgress(i)) return;
+						if(!setProgressValueIntermittent(i)) return;
 						if(i != 0) stream.readLine();
 						bool invalidLine;
 						if(!pbcImage)
@@ -399,7 +399,7 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 			addParticleProperty(velocityProperty);
 
 			for(int i = 0; i < natoms; i++) {
-				if(!reportProgress(i)) return;
+				if(!setProgressValueIntermittent(i)) return;
 				stream.readLine();
 
 				Vector3 v;
@@ -470,7 +470,7 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 			bonds()->reserve(nbonds);
 			setProgressRange(nbonds);
 			for(int i = 0; i < nbonds; i++) {
-				if(!reportProgress(i)) return;
+				if(!setProgressValueIntermittent(i)) return;
 				stream.readLine();
 
 				int bondId, bondType, atomId1, atomId2;

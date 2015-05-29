@@ -113,9 +113,9 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 	CGAL::spatial_sort(cgalPoints.begin(), cgalPoints.end(), _dt.geom_traits());
 
 	if(progress) {
-		if(progress->isCanceled()) return false;
 		progress->setProgressRange(cgalPoints.size());
-		progress->setProgressValue(0);
+		if(!progress->setProgressValue(0))
+			return false;
 	}
 
 	DT::Vertex_handle hint;
@@ -123,16 +123,22 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 		hint = _dt.insert(*p, hint);
 
 		if(progress) {
-			if(progress->isCanceled()) return false;
-			if(((p - cgalPoints.begin()) % 4096) == 0)
-				progress->incrementProgressValue(4096);
+			if(!progress->setProgressValueIntermittent(p - cgalPoints.begin()))
+				return false;
 		}
 	}
-	progress->setProgressValue(cgalPoints.size());
 
 	// Classify tessellation cells as ghost or local cells.
+	_numPrimaryTetrahedra = 0;
 	for(CellIterator cell = begin_cells(); cell != end_cells(); ++cell) {
-		cell->info().isGhost = isGhostCell(cell);
+		if(isGhostCell(cell)) {
+			cell->info().isGhost = true;
+			cell->info().index = -1;
+		}
+		else {
+			cell->info().isGhost = false;
+			cell->info().index = _numPrimaryTetrahedra++;
+		}
 	}
 
 	return true;

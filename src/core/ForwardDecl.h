@@ -49,6 +49,8 @@ namespace Ovito {
 		OVITO_END_INLINE_NAMESPACE
 		OVITO_BEGIN_INLINE_NAMESPACE(Mesh)
 			class TriMesh;
+			struct EmptyHalfEdgeMeshStruct;
+			template<class EdgeBase = EmptyHalfEdgeMeshStruct, class FaceBase = EmptyHalfEdgeMeshStruct, class VertexBase = EmptyHalfEdgeMeshStruct>
 			class HalfEdgeMesh;
 		OVITO_END_INLINE_NAMESPACE
 		OVITO_BEGIN_INLINE_NAMESPACE(Math)
