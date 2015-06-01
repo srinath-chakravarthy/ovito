@@ -1,7 +1,10 @@
 import re
 import numpy
 import math
-import collections.abc
+try:
+    import collections.abc as collections
+except ImportError:
+    import collections
 import PyQt5.QtCore
 
 # Load dependencies
@@ -224,7 +227,7 @@ ovito.data.ParticleProperty.create_user = staticmethod(_ParticleProperty_create_
 # Implement the 'type_list' property of the ParticleTypeProperty class, which provides access to particle types. 
 def _get_ParticleTypeProperty_type_list(self):
     """A mutable list of :py:class:`ParticleType` instances."""    
-    class ParticleTypeList(collections.abc.MutableSequence):
+    class ParticleTypeList(collections.MutableSequence):
         def __init__(self, owner):
             self.__owner = owner;
         def __len__(self):
