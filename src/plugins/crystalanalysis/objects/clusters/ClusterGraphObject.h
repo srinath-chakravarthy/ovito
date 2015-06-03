@@ -19,59 +19,43 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_SHIFT_MODIFIER_H
-#define __OVITO_CA_SHIFT_MODIFIER_H
+#ifndef __OVITO_CA_CLUSTER_GRAPH_OBJECT_H
+#define __OVITO_CA_CLUSTER_GRAPH_OBJECT_H
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <core/scene/pipeline/Modifier.h>
-#include <core/scene/objects/DataObject.h>
-#include <core/animation/controller/Controller.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <plugins/crystalanalysis/data/ClusterGraph.h>
+#include <core/scene/objects/DataObjectWithSharedStorage.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-/*
- * Displaces the dislocations and defect surface by a translation vector.
+/**
+ * \brief A graph of atomic clusters.
  */
-class OVITO_CRYSTALANALYSIS_EXPORT ShiftModifier : public Modifier
+class OVITO_CRYSTALANALYSIS_EXPORT ClusterGraphObject : public DataObjectWithSharedStorage<ClusterGraph>
 {
 public:
 
-	/// Constructor.
-	Q_INVOKABLE ShiftModifier(DataSet* dataset);
+	/// \brief Constructor.
+	Q_INVOKABLE ClusterGraphObject(DataSet* dataset, ClusterGraph* graph = nullptr);
 
-	/// Asks the modifier whether it can be applied to the given input data.
-	virtual bool isApplicableTo(const PipelineFlowState& input) override;
-
-	/// Asks the modifier for its validity interval at the given time.
-	virtual TimeInterval modifierValidity(TimePoint time) override;
-
-	/// This modifies the input object.
-	virtual PipelineStatus modifyObject(TimePoint time, ModifierApplication* modApp, PipelineFlowState& state) override;
+	/// Returns the title of this object.
+	virtual QString objectTitle() override { return tr("Clusters"); }
 
 private:
 
-	/// This property fields stores the translation vector.
-	ReferenceField<Controller> _translation;
-
 	Q_OBJECT
 	OVITO_OBJECT
-
-	Q_CLASSINFO("DisplayName", "Shift");
-	Q_CLASSINFO("ModifierCategory", "Crystal analysis");
-
-	DECLARE_REFERENCE_FIELD(_translation);
 };
 
 /**
- * Properties editor for the ShiftModifier class.
+ * \brief A properties editor for the ClusterGraphObject class.
  */
-class OVITO_CRYSTALANALYSIS_EXPORT ShiftModifierEditor : public PropertiesEditor
+class OVITO_CRYSTALANALYSIS_EXPORT ClusterGraphObjectEditor : public PropertiesEditor
 {
 public:
 
 	/// Default constructor.
-	Q_INVOKABLE ShiftModifierEditor() {}
+	Q_INVOKABLE ClusterGraphObjectEditor() {}
 
 protected:
 
@@ -88,4 +72,5 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CA_SHIFT_MODIFIER_H
+#endif // __OVITO_CA_CLUSTER_GRAPH_OBJECT_H
+

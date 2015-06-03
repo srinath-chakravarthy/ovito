@@ -45,11 +45,17 @@ public:
 	/// Computes the modifier's results and stores them in this object for later retrieval.
 	virtual void perform() override;
 
-	/// Returns the generated defect mesh.
+	/// Returns the simulation cell.
+	const SimulationCell& simulationCell() const { return _structureAnalysis.cell(); }
+
+	/// Returns the computed defect mesh.
 	HalfEdgeMesh<>* defectMesh() { return _defectMesh.data(); }
 
-	/// Indicates whether the entire simulation cell is part of the 'bad' crystal region.
-	bool isDefectRegionEverywhere() const { return _isDefectRegionEverywhere; }
+	/// Returns the computed interface mesh.
+	const InterfaceMesh& interfaceMesh() const { return _interfaceMesh; }
+
+	/// Indicates whether the entire simulation cell is part of the 'good' crystal region.
+	bool isGoodEverywhere() const { return _interfaceMesh.isCompletelyGood(); }
 
 	/// Returns the array of atom structure types.
 	ParticleProperty* structureTypes() const { return _structureAnalysis.structureTypes(); }
@@ -60,6 +66,12 @@ public:
 	/// Gives access to the elastic mapping computation engine.
 	ElasticMapping& elasticMapping() { return _elasticMapping; }
 
+	/// Returns the created cluster graph.
+	ClusterGraph* clusterGraph() { return &_structureAnalysis.clusterGraph(); }
+
+	/// Returns the extracted dislocation network.
+	DislocationNetwork* dislocationNetwork() { return &_dislocationTracer.network(); }
+
 private:
 
 	QExplicitlySharedDataPointer<HalfEdgeMesh<>> _defectMesh;
@@ -68,8 +80,6 @@ private:
 	ElasticMapping _elasticMapping;
 	InterfaceMesh _interfaceMesh;
 	DislocationTracer _dislocationTracer;
-
-	bool _isDefectRegionEverywhere;
 };
 
 }	// End of namespace

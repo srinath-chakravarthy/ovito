@@ -21,28 +21,26 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/gui/properties/RefTargetListParameterUI.h>
-#include "ClusterGraph.h"
+#include "ClusterGraphObject.h"
 
-namespace Ovito { namespace Plugins { namespace CrystalAnalysis { namespace Objects {
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, ClusterGraph, DataObject);
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, ClusterGraphEditor, PropertiesEditor);
-SET_OVITO_OBJECT_EDITOR(ClusterGraph, ClusterGraphEditor);
-DEFINE_VECTOR_REFERENCE_FIELD(ClusterGraph, _clusters, "Clusters", Cluster);
-SET_PROPERTY_FIELD_LABEL(ClusterGraph, _clusters, "Clusters");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, ClusterGraphObject, DataObject);
+IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, ClusterGraphObjectEditor, PropertiesEditor);
+SET_OVITO_OBJECT_EDITOR(ClusterGraphObject, ClusterGraphObjectEditor);
 
 /******************************************************************************
 * Constructs a cluster graph object.
 ******************************************************************************/
-ClusterGraph::ClusterGraph(DataSet* dataset) : DataObject(dataset)
+ClusterGraphObject::ClusterGraphObject(DataSet* dataset, ClusterGraph* graph)
+	: DataObjectWithSharedStorage(dataset, graph ? graph : new ClusterGraph())
 {
-	INIT_PROPERTY_FIELD(ClusterGraph::_clusters);
 }
 
 /******************************************************************************
 * Sets up the UI widgets of the editor.
 ******************************************************************************/
-void ClusterGraphEditor::createUI(const RolloutInsertionParameters& rolloutParams)
+void ClusterGraphObjectEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 {
 	// Create a rollout.
 	QWidget* rollout = createRollout(tr("Clusters"), rolloutParams);
@@ -51,6 +49,7 @@ void ClusterGraphEditor::createUI(const RolloutInsertionParameters& rolloutParam
 	QVBoxLayout* layout1 = new QVBoxLayout(rollout);
 	layout1->setContentsMargins(4,4,4,4);
 
+#if 0
 	// Derive a custom class from the list parameter UI to
 	// give the items a color.
 	class CustomRefTargetListParameterUI : public RefTargetListParameterUI {
@@ -79,11 +78,11 @@ void ClusterGraphEditor::createUI(const RolloutInsertionParameters& rolloutParam
 		virtual QVariant getHorizontalHeaderData(int index, int role) override {
 			if(role != Qt::DisplayRole) return QVariant();
 			if(index == 0)
-				return QVariant(ClusterGraphEditor::tr("Id"));
+				return QVariant(ClusterGraphObjectEditor::tr("Id"));
 			else if(index == 1)
-				return QVariant(ClusterGraphEditor::tr("Structure"));
+				return QVariant(ClusterGraphObjectEditor::tr("Structure"));
 			else
-				return QVariant(ClusterGraphEditor::tr("#Atoms"));
+				return QVariant(ClusterGraphObjectEditor::tr("#Atoms"));
 		}
 
 		/// Do not open sub-editor for selected item.
@@ -91,15 +90,15 @@ void ClusterGraphEditor::createUI(const RolloutInsertionParameters& rolloutParam
 	};
 
 	layout1->addWidget(new QLabel(tr("Clusters:")));
-	RefTargetListParameterUI* clusterListUI = new CustomRefTargetListParameterUI(this, PROPERTY_FIELD(ClusterGraph::_clusters));
+	RefTargetListParameterUI* clusterListUI = new CustomRefTargetListParameterUI(this, PROPERTY_FIELD(ClusterGraphObject::_clusters));
 	layout1->addWidget(clusterListUI->tableWidget(300));
 	clusterListUI->tableWidget()->setAutoScroll(false);
 	clusterListUI->tableWidget()->setShowGrid(true);
 	clusterListUI->tableWidget()->horizontalHeader()->setVisible(true);
 	clusterListUI->tableWidget()->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+#endif
 }
 
-}	// End of namespace
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

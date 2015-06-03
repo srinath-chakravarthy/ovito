@@ -50,9 +50,6 @@ public:
 	/// \brief Computes the bounding box of the object.
 	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
 
-	/// \brief Returns the title of this object.
-	virtual QString objectTitle() override { return tr("Surface mesh"); }
-
 	/// Returns the color of the defect surface.
 	const Color& surfaceColor() const { return _surfaceColor; }
 
@@ -199,6 +196,8 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
+
+	Q_CLASSINFO("DisplayName", "Surface mesh");
 
 	DECLARE_PROPERTY_FIELD(_surfaceColor);
 	DECLARE_PROPERTY_FIELD(_capColor);

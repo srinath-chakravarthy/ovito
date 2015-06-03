@@ -72,6 +72,19 @@ void StructureIdentificationModifier::loadFromStream(ObjectLoadStream& stream)
 }
 
 /******************************************************************************
+* Is called when a RefTarget referenced by this object has generated an event.
+******************************************************************************/
+bool StructureIdentificationModifier::referenceEvent(RefTarget* source, ReferenceEvent* event)
+{
+	if(_structureTypes.contains(source)) {
+		if(event->type() == ReferenceEvent::TargetChanged || event->type() == ReferenceEvent::PendingStateChanged) {
+			invalidateCachedResults();
+		}
+	}
+	return AsynchronousParticleModifier::referenceEvent(source, event);
+}
+
+/******************************************************************************
 * Unpacks the results of the computation engine and stores them in the modifier.
 ******************************************************************************/
 void StructureIdentificationModifier::transferComputationResults(ComputeEngine* engine)

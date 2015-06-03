@@ -26,8 +26,8 @@
 #include <plugins/crystalanalysis/util/DelaunayTessellation.h>
 #include <core/utilities/MemoryPool.h>
 #include <core/utilities/concurrent/FutureInterface.h>
-#include "Cluster.h"
-#include "ClusterGraph.h"
+#include <plugins/crystalanalysis/data/Cluster.h>
+#include <plugins/crystalanalysis/data/ClusterGraph.h>
 #include "StructureAnalysis.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {

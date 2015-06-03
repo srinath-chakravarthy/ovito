@@ -25,9 +25,8 @@
 #include <core/gui/properties/FloatParameterUI.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include "DislocationDisplay.h"
-#include "DislocationNetwork.h"
 
-namespace Ovito { namespace Plugins { namespace CrystalAnalysis { namespace Objects {
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, DislocationDisplay, DisplayObject);
 IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, DislocationDisplayEditor, PropertiesEditor);
@@ -102,15 +101,13 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 	// Update buffer contents.
 	if(updateContents) {
 		SimulationCell cellData = cellObject->data();
-		if(OORef<DislocationNetwork> dislocationObj = dataObject->convertTo<DislocationNetwork>(time)) {
+		if(OORef<DislocationNetworkObject> dislocationObj = dataObject->convertTo<DislocationNetworkObject>(time)) {
 			int lineSegmentCount = 0, cornerCount = 0;
 			for(DislocationSegment* segment : dislocationObj->segments()) {
-				if(segment->isVisible() && segment->burgersVectorFamily()->isVisible()) {
-					clipDislocationLine(segment->line(), cellData, [&lineSegmentCount, &cornerCount](const Point3&, const Point3&, bool isInitialSegment) {
-						lineSegmentCount++;
-						if(!isInitialSegment) cornerCount++;
-					});
-				}
+				clipDislocationLine(segment->line, cellData, [&lineSegmentCount, &cornerCount](const Point3&, const Point3&, bool isInitialSegment) {
+					lineSegmentCount++;
+					if(!isInitialSegment) cornerCount++;
+				});
 			}
 			_segmentBuffer->startSetElements(lineSegmentCount);
 			std::vector<int> subobjToSegmentMap(lineSegmentCount + cornerCount);
@@ -122,18 +119,17 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 			cornerPoints.reserve(cornerCount);
 			cornerColors.reserve(cornerCount);
 			for(DislocationSegment* segment : dislocationObj->segments()) {
-				if(segment->isVisible() && segment->burgersVectorFamily()->isVisible()) {
-					Color lineColor = segment->burgersVectorFamily()->color();
-					clipDislocationLine(segment->line(), cellData, [this, &lineSegmentIndex, &cornerPoints, &cornerColors, lineColor, lineRadius, &subobjToSegmentMap, &dislocationIndex, lineSegmentCount](const Point3& v1, const Point3& v2, bool isInitialSegment) {
-						subobjToSegmentMap[lineSegmentIndex] = dislocationIndex;
-						_segmentBuffer->setElement(lineSegmentIndex++, v1, v2 - v1, ColorA(lineColor), lineRadius);
-						if(!isInitialSegment) {
-							subobjToSegmentMap[cornerPoints.size() + lineSegmentCount] = dislocationIndex;
-							cornerPoints.push_back(v1);
-							cornerColors.push_back(lineColor);
-						}
-					});
-				}
+				//Color lineColor = segment->burgersVectorFamily()->color();
+				Color lineColor(0,1,0);
+				clipDislocationLine(segment->line, cellData, [this, &lineSegmentIndex, &cornerPoints, &cornerColors, lineColor, lineRadius, &subobjToSegmentMap, &dislocationIndex, lineSegmentCount](const Point3& v1, const Point3& v2, bool isInitialSegment) {
+					subobjToSegmentMap[lineSegmentIndex] = dislocationIndex;
+					_segmentBuffer->setElement(lineSegmentIndex++, v1, v2 - v1, ColorA(lineColor), lineRadius);
+					if(!isInitialSegment) {
+						subobjToSegmentMap[cornerPoints.size() + lineSegmentCount] = dislocationIndex;
+						cornerPoints.push_back(v1);
+						cornerColors.push_back(lineColor);
+					}
+				});
 				dislocationIndex++;
 			}
 			_segmentBuffer->endSetElements();
@@ -174,7 +170,7 @@ void DislocationDisplay::renderOverlayMarker(TimePoint time, DataObject* dataObj
 	SimulationCell cellData = cellObject->data();
 
 	// Get the dislocations.
-	OORef<DislocationNetwork> dislocationObj = dataObject->convertTo<DislocationNetwork>(time);
+	OORef<DislocationNetworkObject> dislocationObj = dataObject->convertTo<DislocationNetworkObject>(time);
 	if(!dislocationObj)
 		return;
 
@@ -186,7 +182,7 @@ void DislocationDisplay::renderOverlayMarker(TimePoint time, DataObject* dataObj
 	// Generate the polyline segments to render.
 	QVector<std::pair<Point3,Point3>> lineSegments;
 	QVector<Point3> cornerVertices;
-	clipDislocationLine(segment->line(), cellData, [&lineSegments, &cornerVertices](const Point3& v1, const Point3& v2, bool isInitialSegment) {
+	clipDislocationLine(segment->line, cellData, [&lineSegments, &cornerVertices](const Point3& v1, const Point3& v2, bool isInitialSegment) {
 		lineSegments.push_back({v1,v2});
 		if(!isInitialSegment)
 			cornerVertices.push_back(v1);
@@ -215,8 +211,8 @@ void DislocationDisplay::renderOverlayMarker(TimePoint time, DataObject* dataObj
 	cornerBuffer->setParticleRadius(lineRadius);
 	cornerBuffer->render(renderer);
 
-	if(!segment->line().empty()) {
-		Point3 wrappedHeadPos = cellData.wrapPoint(segment->line().front());
+	if(!segment->line.empty()) {
+		Point3 wrappedHeadPos = cellData.wrapPoint(segment->line.front());
 		std::shared_ptr<ParticlePrimitive> headBuffer = renderer->createParticlePrimitive(ParticlePrimitive::FlatShading, ParticlePrimitive::HighQuality);
 		headBuffer->setSize(1);
 		headBuffer->setParticlePositions(&wrappedHeadPos);
@@ -231,7 +227,7 @@ void DislocationDisplay::renderOverlayMarker(TimePoint time, DataObject* dataObj
 /******************************************************************************
 * Clips a dislocation line at the periodic box boundaries.
 ******************************************************************************/
-void DislocationDisplay::clipDislocationLine(const QVector<Point3>& line, const SimulationCell& simulationCell, const std::function<void(const Point3&, const Point3&, bool)>& segmentCallback)
+void DislocationDisplay::clipDislocationLine(const std::deque<Point3>& line, const SimulationCell& simulationCell, const std::function<void(const Point3&, const Point3&, bool)>& segmentCallback)
 {
 	auto v1 = line.cbegin();
 	Point3 rp1 = simulationCell.absoluteToReduced(*v1);
@@ -313,7 +309,6 @@ void DislocationDisplayEditor::createUI(const RolloutInsertionParameters& rollou
 	lineWidthUI->setMinValue(0);
 }
 
-}	// End of namespace
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

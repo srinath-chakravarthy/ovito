@@ -23,8 +23,8 @@
 #define __OVITO_CA_BURGERS_CIRCUIT_H
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
+#include <plugins/crystalanalysis/data/ClusterVector.h>
 #include "InterfaceMesh.h"
-#include "ClusterVector.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 

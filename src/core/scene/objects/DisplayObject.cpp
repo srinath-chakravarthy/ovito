@@ -27,6 +27,8 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, DisplayObject, RefTarget);
 DEFINE_PROPERTY_FIELD(DisplayObject, _isEnabled, "IsEnabled");
 SET_PROPERTY_FIELD_LABEL(DisplayObject, _isEnabled, "Enabled");
+DEFINE_PROPERTY_FIELD(DisplayObject, _title, "Name");
+SET_PROPERTY_FIELD_LABEL(DisplayObject, _title, "Name");
 
 /******************************************************************************
 * Constructor.
@@ -34,6 +36,7 @@ SET_PROPERTY_FIELD_LABEL(DisplayObject, _isEnabled, "Enabled");
 DisplayObject::DisplayObject(DataSet* dataset) : RefTarget(dataset), _isEnabled(true)
 {
 	INIT_PROPERTY_FIELD(DisplayObject::_isEnabled);
+	INIT_PROPERTY_FIELD(DisplayObject::_title);
 }
 
 OVITO_END_INLINE_NAMESPACE

@@ -25,6 +25,45 @@
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 /******************************************************************************
+* Copy constructor.
+******************************************************************************/
+DislocationNetwork::DislocationNetwork(const DislocationNetwork& other)
+{
+	_clusterGraph = other._clusterGraph;
+	for(int segmentIndex = 0; segmentIndex < other.segments().size(); segmentIndex++) {
+		DislocationSegment* oldSegment = other.segments()[segmentIndex];
+		OVITO_ASSERT(oldSegment->replacedWith == nullptr);
+		OVITO_ASSERT(oldSegment->id == segmentIndex);
+		DislocationSegment* newSegment = createSegment(oldSegment->burgersVector);
+		newSegment->line = oldSegment->line;
+		newSegment->coreSize = oldSegment->coreSize;
+		OVITO_ASSERT(newSegment->id == oldSegment->id);
+	}
+
+	for(int segmentIndex = 0; segmentIndex < other.segments().size(); segmentIndex++) {
+		DislocationSegment* oldSegment = other.segments()[segmentIndex];
+		DislocationSegment* newSegment = segments()[segmentIndex];
+		for(int nodeIndex = 0; nodeIndex < 2; nodeIndex++) {
+			DislocationNode* oldNode = oldSegment->nodes[nodeIndex];
+			if(oldNode->isDangling()) continue;
+			DislocationNode* oldSecondNode = oldNode->junctionRing;
+			DislocationNode* newNode = newSegment->nodes[nodeIndex];
+			newNode->junctionRing = segments()[oldNode->junctionRing->segment->id]->nodes[oldSecondNode->isForwardNode() ? 0 : 1];
+		}
+	}
+
+#ifdef OVITO_DEBUG
+	for(int segmentIndex = 0; segmentIndex < other.segments().size(); segmentIndex++) {
+		DislocationSegment* oldSegment = other.segments()[segmentIndex];
+		DislocationSegment* newSegment = segments()[segmentIndex];
+		for(int nodeIndex = 0; nodeIndex < 2; nodeIndex++) {
+			OVITO_ASSERT(oldSegment->nodes[nodeIndex]->countJunctionArms() == newSegment->nodes[nodeIndex]->countJunctionArms());
+		}
+	}
+#endif
+}
+
+/******************************************************************************
 * Allocates a new dislocation segment terminated by two nodes.
 ******************************************************************************/
 DislocationSegment* DislocationNetwork::createSegment(const ClusterVector& burgersVector)

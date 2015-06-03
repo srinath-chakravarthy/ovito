@@ -35,7 +35,7 @@ IMPLEMENT_OVITO_OBJECT(Particles, ParticlePropertyParameterUI, PropertyParameter
 ParticlePropertyParameterUI::ParticlePropertyParameterUI(QObject* parentEditor, const char* propertyName, bool showComponents, bool inputProperty) :
 	PropertyParameterUI(parentEditor, propertyName), _comboBox(new ParticlePropertyComboBox()), _showComponents(showComponents), _inputProperty(inputProperty)
 {
-	connect(comboBox(), (void (QComboBox::*)(int))&QComboBox::activated, this, &ParticlePropertyParameterUI::updatePropertyValue);
+	connect(comboBox(), (void (QComboBox::*)(const QString&))&QComboBox::activated, this, &ParticlePropertyParameterUI::updatePropertyValue);
 
 	if(!inputProperty)
 		comboBox()->setEditable(true);
@@ -47,7 +47,7 @@ ParticlePropertyParameterUI::ParticlePropertyParameterUI(QObject* parentEditor, 
 ParticlePropertyParameterUI::ParticlePropertyParameterUI(QObject* parentEditor, const PropertyFieldDescriptor& propField, bool showComponents, bool inputProperty) :
 	PropertyParameterUI(parentEditor, propField), _comboBox(new ParticlePropertyComboBox()), _showComponents(showComponents), _inputProperty(inputProperty)
 {
-	connect(comboBox(), (void (QComboBox::*)(int))&QComboBox::activated, this, &ParticlePropertyParameterUI::updatePropertyValue);
+	connect(comboBox(), (void (QComboBox::*)(const QString&))&QComboBox::activated, this, &ParticlePropertyParameterUI::updatePropertyValue);
 
 	if(!inputProperty)
 		comboBox()->setEditable(true);
@@ -167,17 +167,30 @@ void ParticlePropertyParameterUI::setEnabled(bool enabled)
 ******************************************************************************/
 void ParticlePropertyParameterUI::updatePropertyValue()
 {
-	if(comboBox() && editObject() && comboBox()->currentIndex() >= 0) {
+	if(comboBox() && editObject() && comboBox()->currentText().isEmpty() == false) {
 		undoableTransaction(tr("Change parameter"), [this]() {
 			ParticlePropertyReference pref = _comboBox->currentProperty();
 			if(isQtPropertyUI()) {
+
+				// Check if new value differs from old value.
+				QVariant oldval = editObject()->property(propertyName());
+				if(pref == oldval.value<ParticlePropertyReference>())
+					return;
+
 				if(!editObject()->setProperty(propertyName(), QVariant::fromValue(pref))) {
 					OVITO_ASSERT_MSG(false, "ParticlePropertyParameterUI::updatePropertyValue()", QString("The value of property %1 of object class %2 could not be set.").arg(QString(propertyName()), editObject()->metaObject()->className()).toLocal8Bit().constData());
 				}
 			}
 			else if(isPropertyFieldUI()) {
+
+				// Check if new value differs from old value.
+				QVariant oldval = editObject()->getPropertyFieldValue(*propertyField());
+				if(pref == oldval.value<ParticlePropertyReference>())
+					return;
+
 				editObject()->setPropertyFieldValue(*propertyField(), QVariant::fromValue(pref));
 			}
+			else return;
 
 			Q_EMIT valueEntered();
 		});

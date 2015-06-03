@@ -26,6 +26,10 @@
 #include <plugins/particles/modifier/AsynchronousParticleModifier.h>
 #include <plugins/particles/objects/SurfaceMeshDisplay.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationDisplay.h>
+#include <plugins/crystalanalysis/data/DislocationNetwork.h>
+#include <plugins/crystalanalysis/data/ClusterGraph.h>
+#include <plugins/crystalanalysis/modifier/SmoothDislocationsModifier.h>
+#include <plugins/crystalanalysis/modifier/SmoothSurfaceModifier.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -42,8 +46,17 @@ public:
 	/// \brief Returns the display object that is responsible for rendering the defect mesh.
 	SurfaceMeshDisplay* defectMeshDisplay() const { return _defectMeshDisplay; }
 
+	/// \brief Returns the display object that is responsible for rendering the interface mesh.
+	SurfaceMeshDisplay* interfaceMeshDisplay() const { return _interfaceMeshDisplay; }
+
 	/// \brief Returns the display object that is responsible for rendering the dislocations.
-	Objects::DislocationDisplay* dislocationDisplay() const { return _dislocationDisplay; }
+	DislocationDisplay* dislocationDisplay() const { return _dislocationDisplay; }
+
+	/// \brief Returns the internal modifier that smoothes the extracted dislocation lines.
+	SmoothDislocationsModifier* smoothDislocationsModifier() const { return _smoothDislocationsModifier; }
+
+	/// \brief Returns the internal modifier that smoothes the defect surface mesh.
+	SmoothSurfaceModifier* smoothSurfaceModifier() const { return _smoothSurfaceModifier; }
 
 	/// Resets the modifier's result cache.
 	virtual void invalidateCachedResults() override;
@@ -70,20 +83,41 @@ private:
 	/// The display object for rendering the defect mesh.
 	ReferenceField<SurfaceMeshDisplay> _defectMeshDisplay;
 
+	/// The display object for rendering the interface mesh.
+	ReferenceField<SurfaceMeshDisplay> _interfaceMeshDisplay;
+
 	/// The display object for rendering the dislocations.
-	ReferenceField<Objects::DislocationDisplay> _dislocationDisplay;
+	ReferenceField<DislocationDisplay> _dislocationDisplay;
+
+	/// The internal modifier that smoothes the extracted dislocation lines.
+	ReferenceField<SmoothDislocationsModifier> _smoothDislocationsModifier;
+
+	/// The internal modifier that smoothes the defect surface mesh.
+	ReferenceField<SmoothSurfaceModifier> _smoothSurfaceModifier;
 
 	/// This stores the cached defect mesh produced by the modifier.
 	QExplicitlySharedDataPointer<HalfEdgeMesh<>> _defectMesh;
 
-	/// This stores the cached particle structure types computed by the modifier.
-	QExplicitlySharedDataPointer<ParticleProperty> _structureTypes;
+	/// This stores the cached defect interface produced by the modifier.
+	QExplicitlySharedDataPointer<HalfEdgeMesh<>> _interfaceMesh;
 
-	/// This stores the cached particle cluster assignments computed by the modifier.
+	/// This stores the cached local structure types computed by the modifier.
+	QExplicitlySharedDataPointer<ParticleProperty> _atomStructures;
+
+	/// This stores the cached atom-to-cluster assignments computed by the modifier.
 	QExplicitlySharedDataPointer<ParticleProperty> _atomClusters;
 
-	/// Indicates that the entire simulation cell is part of the 'bad' crystal region.
-	bool _isDefectRegionEverywhere;
+	/// This stores the cached cluster graph computed by the modifier.
+	QExplicitlySharedDataPointer<ClusterGraph> _clusterGraph;
+
+	/// This stores the cached dislocations computed by the modifier.
+	QExplicitlySharedDataPointer<DislocationNetwork> _dislocationNetwork;
+
+	/// The cached simulation cell from the last analysis run.
+	SimulationCell _simCell;
+
+	/// Indicates that the entire simulation cell is part of the 'good' crystal region.
+	bool _isGoodEverywhere;
 
 	Q_OBJECT
 	OVITO_OBJECT
@@ -93,6 +127,9 @@ private:
 
 	DECLARE_REFERENCE_FIELD(_dislocationDisplay);
 	DECLARE_REFERENCE_FIELD(_defectMeshDisplay);
+	DECLARE_REFERENCE_FIELD(_interfaceMeshDisplay);
+	DECLARE_REFERENCE_FIELD(_smoothDislocationsModifier);
+	DECLARE_REFERENCE_FIELD(_smoothSurfaceModifier);
 };
 
 /**

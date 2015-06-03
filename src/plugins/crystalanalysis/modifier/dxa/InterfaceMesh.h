@@ -96,6 +96,9 @@ public:
 	/// Creates the mesh facets separating good and bad tetrahedra.
 	bool createMesh(FutureInterfaceBase& progress);
 
+	/// Returns whether all tessellation cells belong to the good region.
+	bool isCompletelyGood() const { return _isCompletelyGood; }
+
 private:
 
 	/// The underlying mapping from the physical configuration of the system

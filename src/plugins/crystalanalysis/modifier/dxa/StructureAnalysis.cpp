@@ -62,7 +62,8 @@ StructureAnalysis::StructureAnalysis(ParticleProperty* positions, const Simulati
 	_neighborLists(new ParticleProperty(positions->size(), qMetaTypeId<int>(), MAX_NEIGHBORS, 0, QStringLiteral("Neighbors"), false)),
 	_neighborCounts(new ParticleProperty(positions->size(), ParticleProperty::CoordinationProperty, 0, true)),
 	_atomClusters(new ParticleProperty(positions->size(), ParticleProperty::ClusterProperty, 0, true)),
-	_atomSymmetryPermutations(new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, QStringLiteral("SymmetryPermutations"), false))
+	_atomSymmetryPermutations(new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, QStringLiteral("SymmetryPermutations"), false)),
+	_clusterGraph(new ClusterGraph())
 {
 	static bool initialized = false;
 	if(!initialized) {
@@ -410,7 +411,7 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 
 		// Start a new cluster.
 		int latticeStructureType = coordStructureType;
-		Cluster* cluster = _clusterGraph.createCluster(latticeStructureType);
+		Cluster* cluster = clusterGraph().createCluster(latticeStructureType);
 		OVITO_ASSERT(cluster->id > 0);
 		cluster->atomCount = 1;
 		_atomClusters->setInt(seedAtomIndex, cluster->id);
@@ -501,7 +502,7 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 		while(!atomsToVisit.empty());
 	}
 
-	qDebug() << "Number of clusters:" << (_clusterGraph.clusters().size() - 1);
+	qDebug() << "Number of clusters:" << (clusterGraph().clusters().size() - 1);
 
 	return true;
 }
@@ -516,7 +517,7 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 	for(size_t atomIndex = 0; atomIndex < positions()->size(); atomIndex++) {
 		int clusterId = _atomClusters->getInt(atomIndex);
 		if(clusterId == 0) continue;
-		Cluster* cluster1 = _clusterGraph.findCluster(clusterId);
+		Cluster* cluster1 = clusterGraph().findCluster(clusterId);
 		OVITO_ASSERT(cluster1);
 
 		// Update progress indicator.
@@ -551,7 +552,7 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 
 				continue;
 			}
-			Cluster* cluster2 = _clusterGraph.findCluster(neighborClusterId);
+			Cluster* cluster2 = clusterGraph().findCluster(neighborClusterId);
 			OVITO_ASSERT(cluster2);
 
 			// Skip if there is already a transition between the two clusters.
@@ -600,12 +601,12 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 
 			if(transition.isOrthogonalMatrix()) {
 				// Create a new transition between clusters.
-				_clusterGraph.createClusterTransition(cluster1, cluster2, transition);
+				clusterGraph().createClusterTransition(cluster1, cluster2, transition);
 			}
 		}
 	}
 
-	qDebug() << "Number of cluster transitions:" << _clusterGraph.clusterTransitions().size();
+	qDebug() << "Number of cluster transitions:" << clusterGraph().clusterTransitions().size();
 
 	return true;
 }

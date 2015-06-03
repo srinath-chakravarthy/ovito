@@ -194,7 +194,7 @@ OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 void SimulationCellDisplayEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 {
 	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Simulation cell"), rolloutParams);
+	QWidget* rollout = createRollout(QString(), rolloutParams);
 
     // Create the rollout contents.
 	QGridLayout* layout = new QGridLayout(rollout);

@@ -24,8 +24,8 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/modifier/analysis/cna/CommonNeighborAnalysisModifier.h>
+#include <plugins/crystalanalysis/data/ClusterGraph.h>
 #include <core/utilities/concurrent/FutureInterface.h>
-#include "ClusterGraph.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -113,10 +113,10 @@ public:
 	FloatType maximumNeighborDistance() const { return _maximumNeighborDistance; }
 
 	/// Returns the cluster graph.
-	const ClusterGraph& clusterGraph() const { return _clusterGraph; }
+	const ClusterGraph& clusterGraph() const { return *_clusterGraph; }
 
 	/// Returns the cluster graph.
-	ClusterGraph& clusterGraph() { return _clusterGraph; }
+	ClusterGraph& clusterGraph() { return *_clusterGraph; }
 
 	/// Returns the cluster an atom belongs to.
 	Cluster* atomCluster(int atomIndex) const {
@@ -171,8 +171,8 @@ private:
 	QExplicitlySharedDataPointer<ParticleProperty> _neighborCounts;
 	QExplicitlySharedDataPointer<ParticleProperty> _atomClusters;
 	QExplicitlySharedDataPointer<ParticleProperty> _atomSymmetryPermutations;
+	QExplicitlySharedDataPointer<ClusterGraph> _clusterGraph;
 	std::atomic<FloatType> _maximumNeighborDistance;
-	ClusterGraph _clusterGraph;
 	SimulationCell _simCell;
 
 	static CoordinationStructure _coordinationStructures[NUM_COORD_TYPES];

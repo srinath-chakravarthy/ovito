@@ -95,6 +95,8 @@ bool DislocationTracer::traceDislocationSegments(FutureInterfaceBase& progress)
 			progress.nextProgressSubStep();
 	}
 
+	finishDislocationSegments();
+
 	qDebug() << "Number of dislocation segments:" << network().segments().size();
 	qDebug() << "Number of dislocation junctions:" << numJunctions;
 

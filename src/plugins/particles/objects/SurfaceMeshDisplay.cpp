@@ -876,7 +876,7 @@ OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 void SurfaceMeshDisplayEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 {
 	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Surface display"), rolloutParams, "display_objects.surface_mesh.html");
+	QWidget* rollout = createRollout(QString(), rolloutParams, "display_objects.surface_mesh.html");
 
     // Create the rollout contents.
 	QVBoxLayout* layout = new QVBoxLayout(rollout);

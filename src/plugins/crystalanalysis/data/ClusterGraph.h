@@ -31,12 +31,15 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 /**
  * This class stores the graph of clusters.
  */
-class ClusterGraph
+class ClusterGraph : public QSharedData
 {
 public:
 
-	/// Constructor. Creates an empty cluster graph.
+	/// Default constructor. Creates an empty cluster graph.
 	ClusterGraph();
+
+	/// Copy constructor. Creates copy of an existing cluster graph.
+	ClusterGraph(const ClusterGraph& other);
 
 	/// Returns the list of nodes in the graph.
 	const std::vector<Cluster*>& clusters() const { return _clusters; }

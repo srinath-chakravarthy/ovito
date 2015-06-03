@@ -26,6 +26,8 @@
 #include <core/gui/properties/BooleanParameterUI.h>
 #include <core/gui/properties/SubObjectParameterUI.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
+#include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
+#include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
 #include "DislocationAnalysisModifier.h"
 #include "DislocationAnalysisEngine.h"
 
@@ -34,8 +36,11 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, DislocationAnalysisModifier, AsynchronousParticleModifier);
 IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, DislocationAnalysisModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(DislocationAnalysisModifier, DislocationAnalysisModifierEditor);
-DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _dislocationDisplay, "DislocationDisplay", Objects::DislocationDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _dislocationDisplay, "DislocationDisplay", DislocationDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _defectMeshDisplay, "DefectMeshDisplay", SurfaceMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _interfaceMeshDisplay, "InterfaceMeshDisplay", SurfaceMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _smoothDislocationsModifier, "SmoothDislocationsModifier", SmoothDislocationsModifier, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _smoothSurfaceModifier, "SmoothSurfaceModifier", SmoothSurfaceModifier, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -44,10 +49,28 @@ DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : Asy
 {
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_dislocationDisplay);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_defectMeshDisplay);
+	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_interfaceMeshDisplay);
+	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_smoothDislocationsModifier);
+	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_smoothSurfaceModifier);
 
 	// Create the display objects.
-	_dislocationDisplay = new Objects::DislocationDisplay(dataset);
+	_dislocationDisplay = new DislocationDisplay(dataset);
+
 	_defectMeshDisplay = new SurfaceMeshDisplay(dataset);
+	_defectMeshDisplay->setShowCap(false);
+	_defectMeshDisplay->setSmoothShading(true);
+	_defectMeshDisplay->setCapTransparency(0.6);
+	_defectMeshDisplay->setObjectTitle(tr("Defect mesh"));
+
+	_interfaceMeshDisplay = new SurfaceMeshDisplay(dataset);
+	_interfaceMeshDisplay->setShowCap(false);
+	_interfaceMeshDisplay->setSmoothShading(false);
+	_interfaceMeshDisplay->setCapTransparency(0.6);
+	_interfaceMeshDisplay->setObjectTitle(tr("Interface mesh"));
+
+	// Create the internal modifiers.
+	_smoothDislocationsModifier = new SmoothDislocationsModifier(dataset);
+	_smoothSurfaceModifier = new SmoothSurfaceModifier(dataset);
 }
 
 /******************************************************************************
@@ -63,8 +86,8 @@ void DislocationAnalysisModifier::propertyChanged(const PropertyFieldDescriptor&
 ******************************************************************************/
 bool DislocationAnalysisModifier::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
-	// Do not propagate messages from the attached display object.
-	if(source == defectMeshDisplay() || source == dislocationDisplay())
+	// Do not propagate messages from the attached display objects.
+	if(source == defectMeshDisplay() || source == interfaceMeshDisplay() || source == dislocationDisplay())
 		return false;
 
 	return AsynchronousParticleModifier::referenceEvent(source, event);
@@ -77,8 +100,10 @@ void DislocationAnalysisModifier::invalidateCachedResults()
 {
 	AsynchronousParticleModifier::invalidateCachedResults();
 	_defectMesh.reset();
-	_structureTypes.reset();
+	_atomStructures.reset();
 	_atomClusters.reset();
+	_clusterGraph.reset();
+	_dislocationNetwork.reset();
 }
 
 /******************************************************************************
@@ -102,9 +127,14 @@ void DislocationAnalysisModifier::transferComputationResults(ComputeEngine* engi
 {
 	DislocationAnalysisEngine* eng = static_cast<DislocationAnalysisEngine*>(engine);
 	_defectMesh = eng->defectMesh();
-	_isDefectRegionEverywhere = eng->isDefectRegionEverywhere();
-	_structureTypes = eng->structureTypes();
+	_isGoodEverywhere = eng->isGoodEverywhere();
+	_atomStructures = eng->structureTypes();
 	_atomClusters = eng->atomClusters();
+	_clusterGraph = eng->clusterGraph();
+	_dislocationNetwork = eng->dislocationNetwork();
+	_interfaceMesh = new HalfEdgeMesh<>();
+	_interfaceMesh->copyFrom(eng->interfaceMesh());
+	_simCell = eng->simulationCell();
 }
 
 /******************************************************************************
@@ -116,16 +146,34 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 	if(!_defectMesh)
 		throw Exception(tr("No computation results available."));
 
-	// Create the output data object.
-	OORef<SurfaceMesh> meshObj(new SurfaceMesh(dataset(), _defectMesh.data()));
-	meshObj->setCompletelySolid(_isDefectRegionEverywhere);
-	meshObj->setDisplayObject(_defectMeshDisplay);
+	// Output defect mesh.
+	OORef<SurfaceMesh> defectMeshObj(new SurfaceMesh(dataset(), _defectMesh.data()));
+	defectMeshObj->setCompletelySolid(_isGoodEverywhere);
+	if(smoothSurfaceModifier() && smoothSurfaceModifier()->isEnabled() && smoothSurfaceModifier()->smoothingLevel() > 0)
+		defectMeshObj->smoothMesh(_simCell, smoothSurfaceModifier()->smoothingLevel());
+	defectMeshObj->setDisplayObject(_defectMeshDisplay);
+	output().addObject(defectMeshObj);
 
-	// Insert output object into the pipeline.
-	output().addObject(meshObj);
+	// Output interface mesh.
+	OORef<SurfaceMesh> interfaceMeshObj(new SurfaceMesh(dataset(), _interfaceMesh.data()));
+	interfaceMeshObj->setCompletelySolid(_isGoodEverywhere);
+	interfaceMeshObj->setDisplayObject(_interfaceMeshDisplay);
+	output().addObject(interfaceMeshObj);
 
-	if(_structureTypes)
-		outputStandardProperty(_structureTypes.data());
+	// Output cluster graph.
+	OORef<ClusterGraphObject> clusterGraphObj(new ClusterGraphObject(dataset(), _clusterGraph.data()));
+	output().addObject(clusterGraphObj);
+
+	// Output dislocations.
+	OORef<DislocationNetworkObject> dislocationsObj(new DislocationNetworkObject(dataset(), _dislocationNetwork.data()));
+	dislocationsObj->setDisplayObject(_dislocationDisplay);
+	if(smoothDislocationsModifier() && smoothDislocationsModifier()->isEnabled())
+		smoothDislocationsModifier()->smoothDislocationLines(dislocationsObj);
+	output().addObject(dislocationsObj);
+
+	// Output particle properties.
+	if(_atomStructures)
+		outputStandardProperty(_atomStructures.data());
 	if(_atomClusters)
 		outputStandardProperty(_atomClusters.data());
 
@@ -153,8 +201,14 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	// Open a sub-editor for the mesh display object.
 	new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_defectMeshDisplay), rolloutParams.after(rollout));
 
+	// Open a sub-editor for the internal surface smoothing modifier.
+	new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_smoothSurfaceModifier), rolloutParams.after(rollout).setTitle(tr("Post-processing")));
+
 	// Open a sub-editor for the dislocation display object.
 	new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_dislocationDisplay), rolloutParams.after(rollout));
+
+	// Open a sub-editor for the internal line smoothing modifier.
+	new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_smoothDislocationsModifier), rolloutParams.after(rollout).setTitle(tr("Post-processing")));
 }
 
 }	// End of namespace

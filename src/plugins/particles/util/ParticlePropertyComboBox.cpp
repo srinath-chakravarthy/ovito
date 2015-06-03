@@ -29,18 +29,13 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util)
 ******************************************************************************/
 ParticlePropertyReference ParticlePropertyComboBox::currentProperty() const
 {
-	int index = currentIndex();
 	if(!isEditable()) {
+		int index = currentIndex();
 		if(index < 0)
 			return ParticlePropertyReference();
 		return itemData(index).value<ParticlePropertyReference>();
 	}
 	else {
-		if(index >= 0) {
-			QVariant data = itemData(index);
-			if(data.canConvert<ParticlePropertyReference>())
-				return data.value<ParticlePropertyReference>();
-		}
 		QString name = currentText().simplified();
 		if(!name.isEmpty()) {
 			QMap<QString, ParticleProperty::Type> stdplist = ParticleProperty::standardPropertyList();
@@ -52,6 +47,44 @@ ParticlePropertyReference ParticlePropertyComboBox::currentProperty() const
 		return ParticlePropertyReference();
 	}
 }
+
+/******************************************************************************
+* Sets the selection of the combo box to the given particle property.
+******************************************************************************/
+void ParticlePropertyComboBox::setCurrentProperty(const ParticlePropertyReference& property)
+{
+	for(int index = 0; index < count(); index++) {
+		if(property == itemData(index).value<ParticlePropertyReference>()) {
+			setCurrentIndex(index);
+			return;
+		}
+	}
+	if(isEditable() && !property.isNull()) {
+		setCurrentText(property.name());
+	}
+	else {
+		setCurrentIndex(-1);
+	}
+}
+
+/******************************************************************************
+* Is called when the widget loses the input focus.
+******************************************************************************/
+void ParticlePropertyComboBox::focusOutEvent(QFocusEvent* event)
+{
+	if(isEditable()) {
+		int index = findText(currentText());
+		if(index == -1 && currentText().isEmpty() == false) {
+			addItem(currentText());
+			index = count() - 1;
+		}
+		setCurrentIndex(index);
+		Q_EMIT activated(index);
+		Q_EMIT activated(currentText());
+	}
+	QComboBox::focusOutEvent(event);
+}
+
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

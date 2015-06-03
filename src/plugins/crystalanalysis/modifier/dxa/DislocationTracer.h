@@ -24,7 +24,7 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/utilities/MemoryPool.h>
-#include "DislocationNetwork.h"
+#include <plugins/crystalanalysis/data/DislocationNetwork.h>
 #include "InterfaceMesh.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
@@ -49,10 +49,10 @@ class DislocationTracer
 public:
 
 	/// Constructor.
-	DislocationTracer(InterfaceMesh& mesh, ClusterGraph& clusterGraph) :
+	DislocationTracer(InterfaceMesh& mesh, ClusterGraph* clusterGraph) :
 		_mesh(mesh),
 		_clusterGraph(clusterGraph),
-		_network(mesh.structureAnalysis().cell(), clusterGraph),
+		_network(new DislocationNetwork(clusterGraph)),
 		_unusedCircuit(nullptr),
 		_rng(1) {
 		setMaximumBurgersCircuitSize(CA_DEFAULT_MAX_BURGERS_CIRCUIT_SIZE);
@@ -63,13 +63,13 @@ public:
 	const InterfaceMesh& mesh() const { return _mesh; }
 
 	/// Returns a reference to the cluster graph.
-	ClusterGraph& clusterGraph() { return _clusterGraph; }
+	ClusterGraph& clusterGraph() { return *_clusterGraph; }
 
 	/// Returns the extracted network of dislocation segments.
-	DislocationNetwork& network() { return _network; }
+	DislocationNetwork& network() { return *_network; }
 
 	/// Returns a const-reference to the extracted network of dislocation segments.
-	const DislocationNetwork& network() const { return _network; }
+	const DislocationNetwork& network() const { return *_network; }
 
 	/// Returns the simulation cell.
 	const SimulationCell& cell() const { return mesh().structureAnalysis().cell(); }
@@ -132,10 +132,10 @@ private:
 	InterfaceMesh& _mesh;
 
 	/// The extracted network of dislocation segments.
-	DislocationNetwork _network;
+	QExplicitlySharedDataPointer<DislocationNetwork> _network;
 
 	/// The cluster graph.
-	ClusterGraph& _clusterGraph;
+	QExplicitlySharedDataPointer<ClusterGraph> _clusterGraph;
 
 	/// The maximum length (number of edges) for Burgers circuits during the first tracing phase.
 	int _maxBurgersCircuitSize;

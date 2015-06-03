@@ -34,6 +34,16 @@ ClusterGraph::ClusterGraph() : _maximumClusterDistance(2)
 }
 
 /******************************************************************************
+* Copy constructor. Creates copy of an existing cluster graph.
+******************************************************************************/
+ClusterGraph::ClusterGraph(const ClusterGraph& other)
+{
+	OVITO_ASSERT(false);	// Not implemented yet.
+
+	_maximumClusterDistance = other._maximumClusterDistance;
+}
+
+/******************************************************************************
 * Inserts a new cluster into the graph.
 ******************************************************************************/
 Cluster* ClusterGraph::createCluster(int structureType, int id)

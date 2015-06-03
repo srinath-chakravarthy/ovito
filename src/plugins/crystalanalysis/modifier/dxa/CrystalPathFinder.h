@@ -24,8 +24,8 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/utilities/MemoryPool.h>
+#include <plugins/crystalanalysis/data/ClusterVector.h>
 #include "StructureAnalysis.h"
-#include "ClusterVector.h"
 
 #include <boost/optional.hpp>
 

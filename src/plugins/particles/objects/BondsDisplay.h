@@ -50,9 +50,6 @@ public:
 	/// \brief Computes the display bounding box of the data object.
 	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
 
-	/// \brief Returns the title of this object.
-	virtual QString objectTitle() override { return tr("Bonds"); }
-
 	/// \brief Returns the display width of bonds.
 	FloatType bondWidth() const { return _bondWidth; }
 
@@ -137,6 +134,8 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
+
+	Q_CLASSINFO("DisplayName", "Bonds");
 
 	DECLARE_PROPERTY_FIELD(_bondWidth);
 	DECLARE_PROPERTY_FIELD(_bondColor);

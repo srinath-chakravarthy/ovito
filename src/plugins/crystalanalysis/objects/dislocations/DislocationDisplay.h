@@ -30,9 +30,9 @@
 #include <core/rendering/SceneRenderer.h>
 #include <core/gui/properties/PropertiesEditor.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
-#include <plugins/crystalanalysis/objects/dislocations/DislocationNetwork.h>
+#include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
 
-namespace Ovito { namespace Plugins { namespace CrystalAnalysis { namespace Objects {
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 class DislocationDisplay;	// defined below
 
@@ -44,11 +44,11 @@ class OVITO_CRYSTALANALYSIS_EXPORT DislocationPickInfo : public ObjectPickInfo
 public:
 
 	/// Constructor.
-	DislocationPickInfo(DislocationDisplay* displayObj, DislocationNetwork* dislocationObj, std::vector<int>&& subobjToSegmentMap) :
+	DislocationPickInfo(DislocationDisplay* displayObj, DislocationNetworkObject* dislocationObj, std::vector<int>&& subobjToSegmentMap) :
 		_displayObject(displayObj), _dislocationObj(dislocationObj), _subobjToSegmentMap(std::move(subobjToSegmentMap)) {}
 
 	/// The data object containing the dislocations.
-	DislocationNetwork* dislocationObj() const { return _dislocationObj; }
+	DislocationNetworkObject* dislocationObj() const { return _dislocationObj; }
 
 	/// Returns the display object that rendered the dislocations.
 	DislocationDisplay* displayObject() const { return _displayObject; }
@@ -65,7 +65,7 @@ public:
 private:
 
 	/// The data object containing the dislocations.
-	OORef<DislocationNetwork> _dislocationObj;
+	OORef<DislocationNetworkObject> _dislocationObj;
 
 	/// The display object that rendered the dislocations.
 	OORef<DislocationDisplay> _displayObject;
@@ -93,9 +93,6 @@ public:
 	/// \brief Computes the bounding box of the object.
 	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
 
-	/// \brief Returns the title of this object.
-	virtual QString objectTitle() override { return tr("Dislocations"); }
-
 	/// \brief Returns the line width used for dislocation rendering.
 	FloatType lineWidth() const { return _lineWidth; }
 
@@ -119,7 +116,7 @@ public:
 protected:
 
 	/// Clips a dislocation line at the periodic box boundaries.
-	void clipDislocationLine(const QVector<Point3>& line, const SimulationCell& simulationCell, const std::function<void(const Point3&, const Point3&, bool)>& segmentCallback);
+	void clipDislocationLine(const std::deque<Point3>& line, const SimulationCell& simulationCell, const std::function<void(const Point3&, const Point3&, bool)>& segmentCallback);
 
 protected:
 
@@ -162,6 +159,8 @@ private:
 	Q_OBJECT
 	OVITO_OBJECT
 
+	Q_CLASSINFO("DisplayName", "Dislocations");
+
 	DECLARE_PROPERTY_FIELD(_lineWidth);
 	DECLARE_PROPERTY_FIELD(_shadingMode);
 };
@@ -186,7 +185,6 @@ protected:
 	OVITO_OBJECT
 };
 
-}	// End of namespace
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

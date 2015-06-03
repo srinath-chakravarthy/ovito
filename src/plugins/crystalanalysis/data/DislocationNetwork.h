@@ -24,13 +24,13 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/data/SimulationCell.h>
-#include "InterfaceMesh.h"
-#include "BurgersCircuit.h"
+#include <plugins/crystalanalysis/modifier/dxa/InterfaceMesh.h>
+#include <plugins/crystalanalysis/modifier/dxa/BurgersCircuit.h>
 #include "ClusterVector.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-struct DislocationSegment;
+struct DislocationSegment;	// Defined below
 
 /**
  * Every dislocation segment is delimited by two dislocation nodes.
@@ -252,20 +252,18 @@ inline const Point3& DislocationNode::position() const
 /**
  * This class holds the entire network of dislocation segments.
  */
-class DislocationNetwork
+class DislocationNetwork : public QSharedData
 {
 public:
 
-	/// Constructor.
-	DislocationNetwork(const SimulationCell& cell, const ClusterGraph& clusterGraph) :
-		_simulationCell(cell),
-		_clusterGraph(clusterGraph) {}
+	/// Constructor that creates an empty dislocation network.
+	DislocationNetwork(ClusterGraph* clusterGraph) : _clusterGraph(clusterGraph) {}
+
+	/// Copy constructor.
+	DislocationNetwork(const DislocationNetwork& other);
 
 	/// Returns a const-reference to the cluster graph.
-	const ClusterGraph& clusterGraph() const { return _clusterGraph; }
-
-	/// Returns a const-reference to the simulation cell.
-	const SimulationCell& simulationCell() const { return _simulationCell; }
+	const ClusterGraph& clusterGraph() const { return *_clusterGraph; }
 
 	/// Returns the list of dislocation segments.
 	const std::vector<DislocationSegment*>& segments() const { return _segments; }
@@ -278,11 +276,8 @@ public:
 
 private:
 
-	/// The simulation cell.
-	SimulationCell _simulationCell;
-
 	/// The associated cluster graph.
-	const ClusterGraph& _clusterGraph;
+	QExplicitlySharedDataPointer<ClusterGraph> _clusterGraph;
 
 	// Used to allocate memory for DislocationNode instances.
 	MemoryPool<DislocationNode> _nodePool;

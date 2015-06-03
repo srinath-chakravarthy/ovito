@@ -490,6 +490,19 @@ void AtomicStrainModifier::propertyChanged(const PropertyFieldDescriptor& field)
 		invalidateCachedResults();
 }
 
+/******************************************************************************
+* Is called when a RefTarget referenced by this object has generated an event.
+******************************************************************************/
+bool AtomicStrainModifier::referenceEvent(RefTarget* source, ReferenceEvent* event)
+{
+	if(source == referenceConfiguration()) {
+		if(event->type() == ReferenceEvent::TargetChanged || event->type() == ReferenceEvent::PendingStateChanged) {
+			invalidateCachedResults();
+		}
+	}
+	return AsynchronousParticleModifier::referenceEvent(source, event);
+}
+
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /******************************************************************************

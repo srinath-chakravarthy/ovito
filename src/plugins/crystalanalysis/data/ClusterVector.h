@@ -86,7 +86,7 @@ public:
 
 private:
 
-	/// The XYZ components of the vector.
+	/// The XYZ components of the vector in the local lattice coordinate system.
 	Vector3 _vec;
 
 	/// The cluster which serves as the frame of reference for this vector.

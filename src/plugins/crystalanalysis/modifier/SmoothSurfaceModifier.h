@@ -30,7 +30,7 @@
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 /*
- * Smoothes and fairs the defect surface mesh..
+ * Smoothes and fairs the defect surface mesh.
  */
 class OVITO_CRYSTALANALYSIS_EXPORT SmoothSurfaceModifier : public Modifier
 {

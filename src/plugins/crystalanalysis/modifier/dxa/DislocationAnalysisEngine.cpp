@@ -35,11 +35,10 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 DislocationAnalysisEngine::DislocationAnalysisEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell) :
 	AsynchronousParticleModifier::ComputeEngine(validityInterval),
 	_structureAnalysis(positions, simCell),
-	_isDefectRegionEverywhere(false),
 	_defectMesh(new HalfEdgeMesh<>()),
 	_elasticMapping(_structureAnalysis, _tessellation),
 	_interfaceMesh(_elasticMapping),
-	_dislocationTracer(_interfaceMesh, _structureAnalysis.clusterGraph())
+	_dislocationTracer(_interfaceMesh, &_structureAnalysis.clusterGraph())
 {
 }
 

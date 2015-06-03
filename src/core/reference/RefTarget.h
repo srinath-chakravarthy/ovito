@@ -257,9 +257,8 @@ public:
 	/// \brief Returns the title of this object.
 	/// \return A string that is used as label or title for this object in the user interface.
 	///
-	/// The default implementation returns OvitoObjectType::objectTitle() for
-	/// using the class of this object instance. Sub-classes can override this method to
-	/// return a title that depends on the internal state of the object for instance.
+	/// The default implementation returns OvitoObjectType::objectTitle().
+	/// Sub-classes can override this method to return a title that depends on the internal state of the object.
 	virtual QString objectTitle();
 
 	/// \brief Returns the number of sub-objects that should be displayed in the modifier stack.

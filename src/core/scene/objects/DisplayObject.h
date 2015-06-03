@@ -96,15 +96,29 @@ public:
 	/// \brief Returns a structure that describes the current status of the display object.
 	virtual PipelineStatus status() const { return PipelineStatus(); }
 
+	/// \brief Returns the title of this object.
+	virtual QString objectTitle() override {
+		if(_title.value().isEmpty()) return RefTarget::objectTitle();
+		else return _title;
+	}
+
+	/// \brief Changes the title of this object.
+	/// \undoable
+	void setObjectTitle(const QString& title) { _title = title; }
+
 private:
 
 	/// Flag that indicates whether the modifier is enabled.
 	PropertyField<bool, bool, ReferenceEvent::TargetEnabledOrDisabled> _isEnabled;
 
+	/// The title of this display object.
+	PropertyField<QString, QString, ReferenceEvent::TitleChanged> _title;
+
 	Q_OBJECT
 	OVITO_OBJECT
 
 	DECLARE_PROPERTY_FIELD(_isEnabled);
+	DECLARE_PROPERTY_FIELD(_title);
 };
 
 /**

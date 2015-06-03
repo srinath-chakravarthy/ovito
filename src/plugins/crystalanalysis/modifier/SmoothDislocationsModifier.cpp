@@ -20,7 +20,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <plugins/crystalanalysis/objects/dislocations/DislocationNetwork.h>
+#include <plugins/crystalanalysis/data/DislocationNetwork.h>
 #include <core/gui/properties/IntegerParameterUI.h>
 #include <core/gui/properties/FloatParameterUI.h>
 #include <core/gui/properties/BooleanGroupBoxParameterUI.h>
@@ -59,7 +59,7 @@ SmoothDislocationsModifier::SmoothDislocationsModifier(DataSet* dataset) : Modif
 ******************************************************************************/
 bool SmoothDislocationsModifier::isApplicableTo(const PipelineFlowState& input)
 {
-	return (input.findObject<Objects::DislocationNetwork>() != nullptr);
+	return (input.findObject<DislocationNetworkObject>() != nullptr);
 }
 
 /******************************************************************************
@@ -67,30 +67,41 @@ bool SmoothDislocationsModifier::isApplicableTo(const PipelineFlowState& input)
 ******************************************************************************/
 PipelineStatus SmoothDislocationsModifier::modifyObject(TimePoint time, ModifierApplication* modApp, PipelineFlowState& state)
 {
-	Objects::DislocationNetwork* inputDislocations = state.findObject<Objects::DislocationNetwork>();
+	DislocationNetworkObject* inputDislocations = state.findObject<DislocationNetworkObject>();
 	if(!inputDislocations)
 		return PipelineStatus::Success;	// Nothing to smooth in the modifier's input.
 
-	CloneHelper cloneHelper;
-	OORef<Objects::DislocationNetwork> outputDislocations = cloneHelper.cloneObject(inputDislocations, false);
-
-	for(Objects::DislocationSegment* segment : outputDislocations->segments()) {
-		QVector<Point3> line;
-		QVector<int> coreSize;
-		coarsenDislocationLine(_coarseningEnabled.value() ? _linePointInterval.value() : 0, segment->line(), segment->coreSize(), line, coreSize, segment->isClosedLoop() && !segment->isInfiniteLine());
-		smoothDislocationLine(_smoothingEnabled.value() ? _smoothingLevel.value() : 0, line, segment->isClosedLoop());
-		segment->setLine(line, coreSize);
+	if(_coarseningEnabled || _smoothingEnabled) {
+		CloneHelper cloneHelper;
+		OORef<DislocationNetworkObject> outputDislocations = cloneHelper.cloneObject(inputDislocations, false);
+		smoothDislocationLines(outputDislocations);
+		state.replaceObject(inputDislocations, outputDislocations);
 	}
-
-	outputDislocations->notifyDependents(ReferenceEvent::TargetChanged);
-	state.replaceObject(inputDislocations, outputDislocations);
 	return PipelineStatus::Success;
+}
+
+/******************************************************************************
+* This applies the modifier an an object.
+******************************************************************************/
+void SmoothDislocationsModifier::smoothDislocationLines(DislocationNetworkObject* dislocationsObj)
+{
+	if(_coarseningEnabled || _smoothingEnabled) {
+		for(DislocationSegment* segment : dislocationsObj->modifiableSegments()) {
+			std::deque<Point3> line;
+			std::deque<int> coreSize;
+			coarsenDislocationLine(_coarseningEnabled.value() ? _linePointInterval.value() : 0, segment->line, segment->coreSize, line, coreSize, segment->isClosedLoop() && !segment->isInfiniteLine());
+			smoothDislocationLine(_smoothingEnabled.value() ? _smoothingLevel.value() : 0, line, segment->isClosedLoop());
+			segment->line = line;
+			segment->coreSize = coreSize;
+		}
+		dislocationsObj->changed();
+	}
 }
 
 /******************************************************************************
 * Removes some of the sampling points from a dislocation line.
 ******************************************************************************/
-void SmoothDislocationsModifier::coarsenDislocationLine(FloatType linePointInterval, const QVector<Point3>& input, const QVector<int>& coreSize, QVector<Point3>& output, QVector<int>& outputCoreSize, bool isLoop)
+void SmoothDislocationsModifier::coarsenDislocationLine(FloatType linePointInterval, const std::deque<Point3>& input, const std::deque<int>& coreSize, std::deque<Point3>& output, std::deque<int>& outputCoreSize, bool isLoop)
 {
 	OVITO_ASSERT(input.size() >= 2);
 	OVITO_ASSERT(input.size() == coreSize.size());
@@ -105,8 +116,8 @@ void SmoothDislocationsModifier::coarsenDislocationLine(FloatType linePointInter
 	output.push_back(input.front());
 	outputCoreSize.push_back(coreSize.front());
 
-	QVector<Point3>::const_iterator inputPtr = input.constBegin();
-	QVector<int>::const_iterator inputCoreSizePtr = coreSize.constBegin();
+	auto inputPtr = input.cbegin();
+	auto inputCoreSizePtr = coreSize.cbegin();
 
 	int sum;
 	int count;
@@ -131,11 +142,11 @@ void SmoothDislocationsModifier::coarsenDislocationLine(FloatType linePointInter
 			count++;
 			++inputPtr;
 		}
-		while(count*count < (int)(linePointInterval * sum) && count < input.size()/4 && inputPtr < input.constEnd()-1);
+		while(count*count < (int)(linePointInterval * sum) && count < input.size()/4 && inputPtr < input.cend()-1);
 		output.push_back(Point3::Origin() + com / count);
 		outputCoreSize.push_back(sum / count);
 	}
-	while(inputPtr < input.constEnd() - 1);
+	while(inputPtr < input.cend() - 1);
 
 	// Always keep the end points.
 	output.push_back(input.back());
@@ -148,7 +159,7 @@ void SmoothDislocationsModifier::coarsenDislocationLine(FloatType linePointInter
 /******************************************************************************
 * Smoothes the sampling points of a dislocation line.
 ******************************************************************************/
-void SmoothDislocationsModifier::smoothDislocationLine(int smoothingLevel, QVector<Point3>& line, bool isLoop)
+void SmoothDislocationsModifier::smoothDislocationLine(int smoothingLevel, std::deque<Point3>& line, bool isLoop)
 {
 	if(smoothingLevel <= 0)
 		return;	// Nothing to do.
@@ -178,13 +189,13 @@ void SmoothDislocationsModifier::smoothDislocationLine(int smoothingLevel, QVect
 			else
 				(*l++) = ((*(line.end()-2) - *(line.end()-3)) + (*(line.begin()+1) - line.front())) * FloatType(0.5);
 
-			QVector<Point3>::const_iterator p1 = line.begin();
-			QVector<Point3>::const_iterator p2 = line.begin() + 1;
+			auto p1 = line.cbegin();
+			auto p2 = line.cbegin() + 1;
 			for(;;) {
-				QVector<Point3>::const_iterator p0 = p1;
+				auto p0 = p1;
 				++p1;
 				++p2;
-				if(p2 == line.end())
+				if(p2 == line.cend())
 					break;
 				*l++ = ((*p0 - *p1) + (*p2 - *p1)) * FloatType(0.5);
 			}
@@ -212,7 +223,7 @@ void SmoothDislocationsModifierEditor::createUI(const RolloutInsertionParameters
 	layout->setContentsMargins(4,4,4,4);
 
 	BooleanGroupBoxParameterUI* smoothingEnabledUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(SmoothDislocationsModifier::_smoothingEnabled));
-	smoothingEnabledUI->groupBox()->setTitle(tr("Smoothing"));
+	smoothingEnabledUI->groupBox()->setTitle(tr("Line smoothing"));
     QGridLayout* sublayout = new QGridLayout(smoothingEnabledUI->childContainer());
 	sublayout->setContentsMargins(4,4,4,4);
 	sublayout->setColumnStretch(1, 1);
@@ -224,7 +235,7 @@ void SmoothDislocationsModifierEditor::createUI(const RolloutInsertionParameters
 	smoothingLevelUI->setMinValue(0);
 
 	BooleanGroupBoxParameterUI* coarseningEnabledUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(SmoothDislocationsModifier::_coarseningEnabled));
-	coarseningEnabledUI->groupBox()->setTitle(tr("Coarsening"));
+	coarseningEnabledUI->groupBox()->setTitle(tr("Line coarsening"));
     sublayout = new QGridLayout(coarseningEnabledUI->childContainer());
 	sublayout->setContentsMargins(4,4,4,4);
 	sublayout->setColumnStretch(1, 1);
