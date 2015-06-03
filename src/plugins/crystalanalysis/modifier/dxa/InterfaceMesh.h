@@ -31,6 +31,7 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 struct BurgersCircuit;				// defined in BurgersCircuit.h
 struct BurgersCircuitSearchStruct;	// defined in DislocationTracer.cpp
+class DislocationTracer;			// defined in DislocationTracer.h
 
 struct InterfaceMeshVertex
 {
@@ -99,6 +100,12 @@ public:
 	/// Returns whether all tessellation cells belong to the good region.
 	bool isCompletelyGood() const { return _isCompletelyGood; }
 
+	/// Returns whether all tessellation cells belong to the bad region.
+	bool isCompletelyBad() const { return _isCompletelyBad; }
+
+	/// Generates the nodes and facets of the defect mesh based on the interface mesh.
+	bool generateDefectMesh(const DislocationTracer& tracer, HalfEdgeMesh<>& defectMesh, FutureInterfaceBase& progress);
+
 private:
 
 	/// The underlying mapping from the physical configuration of the system
@@ -111,6 +118,8 @@ private:
 	/// Indicates that all tessellation cells belong to the good region.
 	bool _isCompletelyGood;
 
+	/// Indicates that all tessellation cells belong to the bad region.
+	bool _isCompletelyBad;
 };
 
 }	// End of namespace

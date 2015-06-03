@@ -31,6 +31,7 @@
 #include <core/gui/properties/PropertiesEditor.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
+#include <plugins/crystalanalysis/objects/patterns/PatternCatalog.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -131,7 +132,8 @@ protected:
 	SceneObjectCacheHelper<
 		WeakVersionedOORef<DataObject>,		// Source object + revision number
 		SimulationCell,						// Simulation cell geometry
-		FloatType								// Line width
+		WeakVersionedOORef<PatternCatalog>,	// The pattern catalog
+		FloatType							// Line width
 		> _geometryCacheHelper;
 
 	/// The cached bounding box.

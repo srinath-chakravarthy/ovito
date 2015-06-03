@@ -119,6 +119,9 @@ private:
 	/// Indicates that the entire simulation cell is part of the 'good' crystal region.
 	bool _isGoodEverywhere;
 
+	/// Indicates that the entire simulation cell is part of the 'bad' crystal region.
+	bool _isBadEverywhere;
+
 	Q_OBJECT
 	OVITO_OBJECT
 

@@ -278,32 +278,43 @@ public:
 	template<typename VertexPointerIterator>
 	Face* createFace(VertexPointerIterator begin, VertexPointerIterator end) {
 		OVITO_ASSERT(std::distance(begin, end) >= 2);
-		Face* face = _facePool.construct(faceCount());
-		_faces.push_back(face);
+		Face* face = createFace();
 
-		Vertex* v2 = *begin;
-		auto v1 = end;
-		Edge* edge;
-		for(;;) {
-			if(v1 == begin) break;
-			--v1;
-			edge = _edgePool.construct(v2, face);
-			(*v1)->addEdge(edge);
-			edge->_nextFaceEdge = face->_edges;
-			if(face->_edges)
-				face->_edges->_prevFaceEdge = edge;
-			face->_edges = edge;
-			v2 = *v1;
-		}
-		// Link last edge to first edge of face and vice versa.
-		edge->_prevFaceEdge = (*(end - 1))->_edges;
-		OVITO_ASSERT(edge->_prevFaceEdge->_nextFaceEdge == nullptr);
-		edge->_prevFaceEdge->_nextFaceEdge = edge;
+		VertexPointerIterator v1, v2;
+		for(v2 = begin, v1 = v2++; v2 != end; v1 = v2++)
+			createEdge(*v1, *v2, face);
+		createEdge(*v1, *begin, face);
 		return face;
 	}
 
+	/// Creates a new face without edges. This is for internal use only.
+	Face* createFace() {
+		Face* face = _facePool.construct(faceCount());
+		_faces.push_back(face);
+		return face;
+	}
+
+	/// Create a new half-edge. This is for internal use only.
+	Edge* createEdge(Vertex* vertex1, Vertex* vertex2, Face* face) {
+		Edge* edge = _edgePool.construct(vertex2, face);
+		vertex1->addEdge(edge);
+		if(face->_edges) {
+			edge->_nextFaceEdge = face->_edges;
+			edge->_prevFaceEdge = face->_edges->_prevFaceEdge;
+			face->_edges->_prevFaceEdge->_nextFaceEdge = edge;
+			face->_edges->_prevFaceEdge = edge;
+		}
+		else {
+			edge->_nextFaceEdge = edge;
+			edge->_prevFaceEdge = edge;
+			face->_edges = edge;
+		}
+		return edge;
+	}
+
 	/// Tries to wire each half-edge of the mesh with its opposite (reverse) half-edge.
-	void connectOppositeHalfedges() {
+	bool connectOppositeHalfedges() {
+		bool isClosed = true;
 		for(Vertex* v1 : vertices()) {
 			for(Edge* edge = v1->edges(); edge != nullptr; edge = edge->nextVertexEdge()) {
 				if(edge->oppositeEdge() != nullptr) {
@@ -321,8 +332,12 @@ public:
 						break;
 					}
 				}
+
+				if(edge->oppositeEdge() == nullptr)
+					isClosed = false;
 			}
 		}
+		return isClosed;
 	}
 
 	/// Copy operator.
@@ -344,30 +359,18 @@ public:
 		// Copy faces and half-edges.
 		reserveFaces(other.faceCount());
 		for(OtherFace* face_o : other.faces()) {
-			Face* face_c = _facePool.construct(faceCount());
+			Face* face_c = createFace();
 			OVITO_ASSERT(face_c->index() == face_o->index());
-			_faces.push_back(face_c);
 
 			if(!face_o->edges()) continue;
-			OtherEdge* edge_o = face_o->edges()->prevFaceEdge();
-			Edge* lastEdge = nullptr;
+			OtherEdge* edge_o = face_o->edges();
 			do {
 				Vertex* v1 = vertex(edge_o->vertex1()->index());
 				Vertex* v2 = vertex(edge_o->vertex2()->index());
-				Edge* edge_c = _edgePool.construct(v2, face_c);
-				v1->addEdge(edge_c);
-				if(!lastEdge) lastEdge = edge_c;
-				edge_c->_nextFaceEdge = face_c->_edges;
-				if(face_c->_edges)
-					face_c->_edges->_prevFaceEdge = edge_c;
-				face_c->_edges = edge_c;
-				edge_o = edge_o->prevFaceEdge();
+				Edge* edge_c = createEdge(v1, v2, face_c);
+				edge_o = edge_o->nextFaceEdge();
 			}
-			while(edge_o != face_o->edges()->prevFaceEdge());
-
-			// Link last edge to first edge of face and vice versa.
-			lastEdge->_nextFaceEdge = face_c->edges();
-			face_c->edges()->_prevFaceEdge = lastEdge;
+			while(edge_o != face_o->edges());
 		}
 
 		// Link opposite half-edges.
@@ -542,6 +545,22 @@ public:
 	void clearFaceFlag(unsigned int flag) const {
 		for(Face* face : faces())
 			face->clearFlag(flag);
+	}
+
+	/// Determines if this mesh is a closed manifold, i.e., every half edge has an opposite half edge.
+	bool isClosed() const {
+		for(Vertex* vertex : vertices()) {
+			for(Edge* edge = vertex->edges(); edge != nullptr; edge = edge->nextVertexEdge()) {
+				OVITO_ASSERT(edge->face() != nullptr);
+				if(edge->oppositeEdge() == nullptr)
+					return false;
+				OVITO_ASSERT(edge->oppositeEdge()->oppositeEdge() == edge);
+				OVITO_ASSERT(edge->oppositeEdge()->face() != edge->face());
+				OVITO_ASSERT(edge->nextFaceEdge()->face() == edge->face());
+				OVITO_ASSERT(edge->prevFaceEdge()->face() == edge->face());
+			}
+		}
+		return true;
 	}
 
 private:

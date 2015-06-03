@@ -87,10 +87,12 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 		recreateBuffers |= !_cornerBuffer->setShadingMode(cornerShadingMode);
 	}
 
+	// Get pattern catalog.
+	PatternCatalog* patternCatalog = flowState.findObject<PatternCatalog>();
+
 	// Do we have to update contents of the geometry buffers?
 	bool updateContents = _geometryCacheHelper.updateState(
-			dataObject,
-			cellObject->data(), lineWidth()) || recreateBuffers;
+			dataObject, cellObject->data(), patternCatalog, lineWidth()) || recreateBuffers;
 
 	// Re-create the geometry buffers if necessary.
 	if(recreateBuffers) {
@@ -119,8 +121,19 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 			cornerPoints.reserve(cornerCount);
 			cornerColors.reserve(cornerCount);
 			for(DislocationSegment* segment : dislocationObj->segments()) {
-				//Color lineColor = segment->burgersVectorFamily()->color();
-				Color lineColor(0,1,0);
+				BurgersVectorFamily* family = nullptr;
+				if(patternCatalog) {
+					Cluster* cluster = segment->burgersVector.cluster();
+					StructurePattern* pattern = patternCatalog->structureById(cluster->structure);
+					family = pattern->defaultBurgersVectorFamily();
+					for(BurgersVectorFamily* f : pattern->burgersVectorFamilies()) {
+						if(f->isMember(segment->burgersVector.localVec())) {
+							family = f;
+							break;
+						}
+					}
+				}
+				Color lineColor = family ? family->color() : Color(0.8,0.8,0.8);
 				clipDislocationLine(segment->line, cellData, [this, &lineSegmentIndex, &cornerPoints, &cornerColors, lineColor, lineRadius, &subobjToSegmentMap, &dislocationIndex, lineSegmentCount](const Point3& v1, const Point3& v2, bool isInitialSegment) {
 					subobjToSegmentMap[lineSegmentIndex] = dislocationIndex;
 					_segmentBuffer->setElement(lineSegmentIndex++, v1, v2 - v1, ColorA(lineColor), lineRadius);

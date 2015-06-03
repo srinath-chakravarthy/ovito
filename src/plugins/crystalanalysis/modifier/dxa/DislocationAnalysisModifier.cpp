@@ -57,15 +57,15 @@ DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : Asy
 	_dislocationDisplay = new DislocationDisplay(dataset);
 
 	_defectMeshDisplay = new SurfaceMeshDisplay(dataset);
-	_defectMeshDisplay->setShowCap(false);
+	_defectMeshDisplay->setShowCap(true);
 	_defectMeshDisplay->setSmoothShading(true);
-	_defectMeshDisplay->setCapTransparency(0.6);
+	_defectMeshDisplay->setCapTransparency(0.5);
 	_defectMeshDisplay->setObjectTitle(tr("Defect mesh"));
 
 	_interfaceMeshDisplay = new SurfaceMeshDisplay(dataset);
 	_interfaceMeshDisplay->setShowCap(false);
 	_interfaceMeshDisplay->setSmoothShading(false);
-	_interfaceMeshDisplay->setCapTransparency(0.6);
+	_interfaceMeshDisplay->setCapTransparency(0.5);
 	_interfaceMeshDisplay->setObjectTitle(tr("Interface mesh"));
 
 	// Create the internal modifiers.
@@ -128,6 +128,7 @@ void DislocationAnalysisModifier::transferComputationResults(ComputeEngine* engi
 	DislocationAnalysisEngine* eng = static_cast<DislocationAnalysisEngine*>(engine);
 	_defectMesh = eng->defectMesh();
 	_isGoodEverywhere = eng->isGoodEverywhere();
+	_isBadEverywhere = eng->isBadEverywhere();
 	_atomStructures = eng->structureTypes();
 	_atomClusters = eng->atomClusters();
 	_clusterGraph = eng->clusterGraph();

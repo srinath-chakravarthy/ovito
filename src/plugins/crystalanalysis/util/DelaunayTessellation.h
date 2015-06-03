@@ -169,6 +169,10 @@ public:
 		return CGAL::Triangulation_utils_3::vertex_triple_index(cellFacetIndex, facetVertexIndex);
 	}
 
+	FacetCirculator incident_facets(CellHandle cell, int i, int j) const {
+		return _dt.tds().incident_facets(cell, i, j);
+	}
+
 	FacetCirculator incident_facets(CellHandle cell, int i, int j, CellHandle start, int f) const {
 		return _dt.tds().incident_facets(cell, i, j, start, f);
 	}

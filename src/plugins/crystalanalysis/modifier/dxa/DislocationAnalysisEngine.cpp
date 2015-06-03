@@ -49,7 +49,7 @@ void DislocationAnalysisEngine::perform()
 {
 	setProgressText(DislocationAnalysisModifier::tr("Dislocation analysis (DXA)"));
 
-	beginProgressSubSteps({ 35, 6, 1, 220, 60, 1, 53, 104, 90, 146 });
+	beginProgressSubSteps({ 35, 6, 1, 220, 60, 1, 53, 104, 90, 146, 20 });
 	if(!_structureAnalysis.identifyStructures(*this))
 		return;
 
@@ -92,11 +92,14 @@ void DislocationAnalysisEngine::perform()
 	if(!_interfaceMesh.createMesh(*this))
 		return;
 
-	_defectMesh->copyFrom(_interfaceMesh);
-
 	// Trace dislocation lines.
 	nextProgressSubStep();
 	if(!_dislocationTracer.traceDislocationSegments(*this))
+		return;
+
+	// Generate the defect mesh.
+	nextProgressSubStep();
+	if(!_interfaceMesh.generateDefectMesh(_dislocationTracer, *_defectMesh, *this))
 		return;
 
 	endProgressSubSteps();

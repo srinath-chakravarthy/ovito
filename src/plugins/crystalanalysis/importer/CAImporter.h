@@ -28,6 +28,8 @@
 #include <core/gui/properties/PropertiesEditor.h>
 #include <plugins/particles/import/ParticleFrameLoader.h>
 #include <plugins/crystalanalysis/objects/patterns/StructurePattern.h>
+#include <plugins/crystalanalysis/data/ClusterGraph.h>
+#include <plugins/crystalanalysis/data/DislocationNetwork.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -95,34 +97,11 @@ protected:
 
 		struct PatternInfo {
 			int id;
-			Objects::StructurePattern::StructureType type;
+			StructurePattern::StructureType type;
 			QString shortName;
 			QString longName;
 			Color color;
 			QVector<BurgersVectorFamilyInfo> burgersVectorFamilies;
-		};
-
-		struct ClusterInfo {
-			int id;
-			int proc;
-			int patternIndex;
-			int atomCount;
-			Point3 centerOfMass;
-			Matrix3 orientation;
-		};
-
-		struct ClusterTransitionInfo {
-			int cluster1, cluster2;
-			Matrix3 tm;
-		};
-
-		struct DislocationSegmentInfo {
-			int id;
-			Vector3 burgersVector;
-			int clusterIndex;
-			QVector<Point3> line;
-			QVector<int> coreSize;
-			bool isClosedLoop;
 		};
 
 		/// The triangle mesh of the defect surface.
@@ -132,13 +111,10 @@ protected:
 		QVector<PatternInfo> _patterns;
 
 		/// The cluster list.
-		QVector<ClusterInfo> _clusters;
-
-		/// The cluster transition list.
-		QVector<ClusterTransitionInfo> _clusterTransitions;
+		QExplicitlySharedDataPointer<ClusterGraph> _clusterGraph;
 
 		/// The dislocation segments.
-		QVector<DislocationSegmentInfo> _dislocations;
+		QExplicitlySharedDataPointer<DislocationNetwork> _dislocations;
 
 		/// Controls whether particles should be loaded too.
 		bool _loadParticles;

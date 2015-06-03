@@ -57,6 +57,9 @@ public:
 	/// Indicates whether the entire simulation cell is part of the 'good' crystal region.
 	bool isGoodEverywhere() const { return _interfaceMesh.isCompletelyGood(); }
 
+	/// Indicates whether the entire simulation cell is part of the 'bad' crystal region.
+	bool isBadEverywhere() const { return _interfaceMesh.isCompletelyBad(); }
+
 	/// Returns the array of atom structure types.
 	ParticleProperty* structureTypes() const { return _structureAnalysis.structureTypes(); }
 

@@ -157,7 +157,7 @@ struct Cluster
 
 	/// The center of mass of the cluster. This is computed from the atoms
 	/// that are part of the cluster.
-	Vector3 centerOfMass;
+	Point3 centerOfMass;
 
 	/// Constructor.
 	Cluster(int _id, int _structure) : id(_id), structure(_structure), atomCount(0), transitions(nullptr) {}

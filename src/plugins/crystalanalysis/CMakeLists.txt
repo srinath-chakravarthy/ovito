@@ -28,7 +28,7 @@ ENDIF()
 INCLUDE(${CGAL_USE_FILE})
 
 SET(SourceFiles
-#	importer/CAImporter.cpp
+	importer/CAImporter.cpp
 	objects/patterns/BurgersVectorFamily.cpp
 	objects/patterns/StructurePattern.cpp
 	objects/patterns/PatternCatalog.cpp

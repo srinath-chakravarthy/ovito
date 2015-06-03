@@ -24,7 +24,7 @@
 #include <core/gui/properties/StringParameterUI.h>
 #include "StructurePattern.h"
 
-namespace Ovito { namespace Plugins { namespace CrystalAnalysis { namespace Objects {
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, StructurePattern, ParticleType);
 IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, StructurePatternEditor, PropertiesEditor);
@@ -157,7 +157,6 @@ void StructurePatternEditor::onDoubleClickBurgersFamily(const QModelIndex& index
 	});
 }
 
-}	// End of namespace
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

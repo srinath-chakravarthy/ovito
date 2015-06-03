@@ -27,7 +27,7 @@
 #include <plugins/particles/objects/ParticleType.h>
 #include "BurgersVectorFamily.h"
 
-namespace Ovito { namespace Plugins { namespace CrystalAnalysis { namespace Objects {
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 /**
  * \brief A structural pattern (e.g. a lattice type, planar defect type, etc.)
@@ -130,9 +130,8 @@ private:
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace
-}	// End of namespace
 
-Q_DECLARE_METATYPE(Ovito::Plugins::CrystalAnalysis::Objects::StructurePattern::StructureType);
-Q_DECLARE_TYPEINFO(Ovito::Plugins::CrystalAnalysis::Objects::StructurePattern::StructureType, Q_PRIMITIVE_TYPE);
+Q_DECLARE_METATYPE(Ovito::Plugins::CrystalAnalysis::StructurePattern::StructureType);
+Q_DECLARE_TYPEINFO(Ovito::Plugins::CrystalAnalysis::StructurePattern::StructureType, Q_PRIMITIVE_TYPE);
 
 #endif // __OVITO_CA_STRUCTURE_PATTERN_H

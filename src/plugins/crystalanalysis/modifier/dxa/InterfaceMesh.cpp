@@ -21,6 +21,7 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include "InterfaceMesh.h"
+#include "DislocationTracer.h"
 #include "DislocationAnalysisModifier.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
@@ -32,6 +33,7 @@ bool InterfaceMesh::classifyTetrahedra(FutureInterfaceBase& progress)
 {
 	_numGoodTetrahedra = 0;
 	_isCompletelyGood = true;
+	_isCompletelyBad = true;
 
 	progress.setProgressRange(tessellation().number_of_tetrahedra());
 	int progressCounter = 0;
@@ -47,6 +49,7 @@ bool InterfaceMesh::classifyTetrahedra(FutureInterfaceBase& progress)
 		cell->info().flag = isGood;
 		if(isGood && !cell->info().isGhost) {
 			cell->info().index = _numGoodTetrahedra++;
+			_isCompletelyBad = false;
 		}
 		else {
 			if(!cell->info().isGhost) _isCompletelyGood = false;
@@ -114,11 +117,11 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 				int vertexIndex = vertex->point().index();
 				OVITO_ASSERT(vertexIndex >= 0 && vertexIndex < vertexMap.size());
 				if(vertexMap[vertexIndex] == nullptr)
-					vertexMap[vertexIndex] = facetVertices[2 - v] = createVertex(structureAnalysis().positions()->getPoint3(vertexIndex));
+					vertexMap[vertexIndex] = facetVertices[v] = createVertex(structureAnalysis().positions()->getPoint3(vertexIndex));
 				else
-					facetVertices[2-v] = vertexMap[vertexIndex];
-				vertexPositions[2-v] = (Point3)vertex->point();
-				vertexIndices[2-v] = vertexIndex;
+					facetVertices[v] = vertexMap[vertexIndex];
+				vertexPositions[v] = (Point3)vertex->point();
+				vertexIndices[v] = vertexIndex;
 			}
 
 			// Create a new triangle facet.
@@ -165,9 +168,9 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 			for(int e = 0; e < 3; e++, edge = edge->nextFaceEdge()) {
 				OVITO_CHECK_POINTER(edge);
 				if(edge->oppositeEdge() != nullptr) continue;
-				int vertexIndex1 = DelaunayTessellation::cellFacetVertexIndex(f, 2-e);
-				int vertexIndex2 = DelaunayTessellation::cellFacetVertexIndex(f, (4-e)%3);
-				DelaunayTessellation::FacetCirculator circulator_start = tessellation().incident_facets(tet.cell, vertexIndex1, vertexIndex2, tet.cell, f);
+				int vertexIndex1 = DelaunayTessellation::cellFacetVertexIndex(f, e);
+				int vertexIndex2 = DelaunayTessellation::cellFacetVertexIndex(f, (e+1)%3);
+				DelaunayTessellation::FacetCirculator circulator_start = tessellation().incident_facets(tet.cell, vertexIndex2, vertexIndex1, tet.cell, f);
 				DelaunayTessellation::FacetCirculator circulator = circulator_start;
 				OVITO_ASSERT(circulator->first == tet.cell);
 				OVITO_ASSERT(circulator->second == f);
@@ -281,6 +284,108 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 	progress.endProgressSubSteps();
 	return true;
 }
+
+/******************************************************************************
+* Generates the nodes and facets of the defect mesh based on the interface mesh.
+******************************************************************************/
+bool InterfaceMesh::generateDefectMesh(const DislocationTracer& tracer, HalfEdgeMesh<>& defectMesh, FutureInterfaceBase& progress)
+{
+	// Copy vertices.
+	defectMesh.reserveVertices(vertexCount());
+	for(Vertex* v : vertices()) {
+		int index = defectMesh.createVertex(v->pos())->index();
+		OVITO_ASSERT(index == v->index());
+	}
+
+	// Copy faces and half-edges.
+	std::vector<HalfEdgeMesh<>::Face*> faceMap(faces().size());
+	auto faceMapIter = faceMap.begin();
+	for(Face* face_o : faces()) {
+
+		// Skip parts of the interface mesh that have been swept by a Burgers circuit and are
+		// now part of a dislocation line.
+		if(face_o->circuit != nullptr) {
+			if(face_o->testFlag(1) || face_o->circuit->isDangling == false) {
+				OVITO_ASSERT(*faceMapIter == nullptr);
+				++faceMapIter;
+				continue;
+			}
+		}
+
+		HalfEdgeMesh<>::Face* face_c = defectMesh.createFace();
+		*faceMapIter++ = face_c;
+
+		if(!face_o->edges()) continue;
+		Edge* edge_o = face_o->edges();
+		do {
+			HalfEdgeMesh<>::Vertex* v1 = defectMesh.vertex(edge_o->vertex1()->index());
+			HalfEdgeMesh<>::Vertex* v2 = defectMesh.vertex(edge_o->vertex2()->index());
+			defectMesh.createEdge(v1, v2, face_c);
+			edge_o = edge_o->nextFaceEdge();
+		}
+		while(edge_o != face_o->edges());
+	}
+
+	// Link opposite half-edges.
+	auto face_c = faceMap.cbegin();
+	for(auto face_o = faces().cbegin(); face_o != faces().cend(); ++face_o, ++face_c) {
+		if(!*face_c) continue;
+		Edge* edge_o = (*face_o)->edges();
+		HalfEdgeMesh<>::Edge* edge_c = (*face_c)->edges();
+		if(!edge_o) continue;
+		do {
+			if(edge_o->oppositeEdge() != nullptr && edge_c->oppositeEdge() == nullptr) {
+				HalfEdgeMesh<>::Face* oppositeFace = faceMap[edge_o->oppositeEdge()->face()->index()];
+				if(oppositeFace != nullptr) {
+					HalfEdgeMesh<>::Edge* oppositeEdge = oppositeFace->edges();
+					do {
+						OVITO_CHECK_POINTER(oppositeEdge);
+						if(oppositeEdge->vertex1() == edge_c->vertex2() && oppositeEdge->vertex2() == edge_c->vertex1()) {
+							edge_c->linkToOppositeEdge(oppositeEdge);
+							break;
+						}
+						oppositeEdge = oppositeEdge->nextFaceEdge();
+					}
+					while(oppositeEdge != oppositeFace->edges());
+					OVITO_ASSERT(edge_c->oppositeEdge());
+				}
+			}
+			edge_o = edge_o->nextFaceEdge();
+			edge_c = edge_c->nextFaceEdge();
+		}
+		while(edge_o != (*face_o)->edges());
+	}
+
+	// Generate cap vertices and facets to close holes left by dangling Burgers circuits.
+	for(DislocationNode* dislocationNode : tracer.danglingNodes()) {
+		BurgersCircuit* circuit = dislocationNode->circuit;
+		OVITO_ASSERT(dislocationNode->isDangling());
+		OVITO_ASSERT(circuit != nullptr);
+		OVITO_ASSERT(circuit->segmentMeshCap.size() >= 2);
+		OVITO_ASSERT(circuit->segmentMeshCap[0]->vertex2() == circuit->segmentMeshCap[1]->vertex1());
+		OVITO_ASSERT(circuit->segmentMeshCap.back()->vertex2() == circuit->segmentMeshCap.front()->vertex1());
+
+		HalfEdgeMesh<>::Vertex* capVertex = defectMesh.createVertex(dislocationNode->position());
+
+		for(Edge* meshEdge : circuit->segmentMeshCap) {
+			OVITO_ASSERT(faceMap[meshEdge->oppositeEdge()->face()->index()] == nullptr);
+			HalfEdgeMesh<>::Vertex* v1 = defectMesh.vertices()[meshEdge->vertex2()->index()];
+			HalfEdgeMesh<>::Vertex* v2 = defectMesh.vertices()[meshEdge->vertex1()->index()];
+			HalfEdgeMesh<>::Face* face = defectMesh.createFace();
+			defectMesh.createEdge(v1, v2, face);
+			defectMesh.createEdge(v2, capVertex, face);
+			defectMesh.createEdge(capVertex, v1, face);
+		}
+	}
+
+	// Link dangling half edges to their opposite edges.
+	if(!defectMesh.connectOppositeHalfedges()) {
+		OVITO_ASSERT(false);	// Mesh is not closed.
+	}
+
+	return true;
+}
+
 
 }	// End of namespace
 }	// End of namespace
