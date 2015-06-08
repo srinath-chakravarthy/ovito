@@ -25,20 +25,25 @@
 #include "DislocationAnalysisEngine.h"
 #include "DislocationAnalysisModifier.h"
 
+#if 0
 #include <fstream>
+#endif
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-DislocationAnalysisEngine::DislocationAnalysisEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell) :
+DislocationAnalysisEngine::DislocationAnalysisEngine(const TimeInterval& validityInterval,
+		ParticleProperty* positions, const SimulationCell& simCell,
+		int inputCrystalStructure, int maxTrialCircuitSize, int maxCircuitElongation) :
 	AsynchronousParticleModifier::ComputeEngine(validityInterval),
-	_structureAnalysis(positions, simCell),
+	_structureAnalysis(positions, simCell, (StructureAnalysis::LatticeStructureType)inputCrystalStructure),
 	_defectMesh(new HalfEdgeMesh<>()),
 	_elasticMapping(_structureAnalysis, _tessellation),
 	_interfaceMesh(_elasticMapping),
-	_dislocationTracer(_interfaceMesh, &_structureAnalysis.clusterGraph())
+	_dislocationTracer(_interfaceMesh, &_structureAnalysis.clusterGraph(), maxTrialCircuitSize, maxCircuitElongation),
+	_inputCrystalStructure(inputCrystalStructure)
 {
 }
 

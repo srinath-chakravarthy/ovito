@@ -58,6 +58,24 @@ public:
 	/// \brief Returns the internal modifier that smoothes the defect surface mesh.
 	SmoothSurfaceModifier* smoothSurfaceModifier() const { return _smoothSurfaceModifier; }
 
+	/// Returns the maximum length of trial circuits.
+	int maxTrialCircuitSize() const { return _maxTrialCircuitSize; }
+
+	/// Sets the maximum length of trial circuits.
+	void setMaxTrialCircuitSize(int maxLength) { _maxTrialCircuitSize = maxLength; }
+
+	/// Returns the maximum elongation of Burgers circuits while they are being advanced.
+	int maxCircuitElongation() const { return _maxCircuitElongation; }
+
+	/// Sets maximum elongation of Burgers circuits while they are being advanced.
+	void setMaxCircuitElongation(int maxElongation) { _maxCircuitElongation = maxElongation; }
+
+	/// Returns the type of crystal to be analyzed.
+	int crystalStructure() const { return _crystalStructure; }
+
+	/// Sets the type of crystal to be analyzed.
+	void setCrystalStructure(int structureType) { _crystalStructure = structureType; }
+
 	/// Resets the modifier's result cache.
 	virtual void invalidateCachedResults() override;
 
@@ -79,6 +97,15 @@ protected:
 	virtual PipelineStatus applyComputationResults(TimePoint time, TimeInterval& validityInterval) override;
 
 private:
+
+	/// The type of crystal to be analyzed.
+	PropertyField<int> _crystalStructure;
+
+	/// The maximum length of trial circuits.
+	PropertyField<int> _maxTrialCircuitSize;
+
+	/// The maximum elongation of Burgers circuits while they are being advanced.
+	PropertyField<int> _maxCircuitElongation;
 
 	/// The display object for rendering the defect mesh.
 	ReferenceField<SurfaceMeshDisplay> _defectMeshDisplay;
@@ -128,6 +155,9 @@ private:
 	Q_CLASSINFO("DisplayName", "Dislocation analysis (DXA)");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
 
+	DECLARE_PROPERTY_FIELD(_crystalStructure);
+	DECLARE_PROPERTY_FIELD(_maxTrialCircuitSize);
+	DECLARE_PROPERTY_FIELD(_maxCircuitElongation);
 	DECLARE_REFERENCE_FIELD(_dislocationDisplay);
 	DECLARE_REFERENCE_FIELD(_defectMeshDisplay);
 	DECLARE_REFERENCE_FIELD(_interfaceMeshDisplay);

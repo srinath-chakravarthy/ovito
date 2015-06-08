@@ -56,8 +56,9 @@ void bitmapSort(iterator begin, iterator end, int max)
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-StructureAnalysis::StructureAnalysis(ParticleProperty* positions, const SimulationCell& simCell) :
+StructureAnalysis::StructureAnalysis(ParticleProperty* positions, const SimulationCell& simCell, LatticeStructureType inputCrystalType) :
 	_positions(positions), _simCell(simCell),
+	_inputCrystalType(inputCrystalType),
 	_structureTypes(new ParticleProperty(positions->size(), ParticleProperty::StructureTypeProperty, 0, true)),
 	_neighborLists(new ParticleProperty(positions->size(), qMetaTypeId<int>(), MAX_NEIGHBORS, 0, QStringLiteral("Neighbors"), false)),
 	_neighborCounts(new ParticleProperty(positions->size(), ParticleProperty::CoordinationProperty, 0, true)),
@@ -141,7 +142,33 @@ void StructureAnalysis::initializeCoordinationStructures()
 	_latticeStructures[LATTICE_HCP].latticeVectors.assign(std::begin(hcpVec), std::end(hcpVec));
 	_latticeStructures[LATTICE_HCP].coordStructure = &_coordinationStructures[COORD_HCP];
 
-	_coordinationStructures[COORD_BCC].numNeighbors = 0;
+	Vector3 bccVec[14] = {
+			Vector3( 0.5,  0.5,  0.5),
+			Vector3(-0.5,  0.5,  0.5),
+			Vector3( 0.5,  0.5, -0.5),
+			Vector3(-0.5, -0.5,  0.5),
+			Vector3( 0.5, -0.5,  0.5),
+			Vector3(-0.5,  0.5, -0.5),
+			Vector3(-0.5, -0.5, -0.5),
+			Vector3( 0.5, -0.5, -0.5),
+			Vector3( 1.0,  0.0,  0.0),
+			Vector3(-1.0,  0.0,  0.0),
+			Vector3( 0.0,  1.0,  0.0),
+			Vector3( 0.0, -1.0,  0.0),
+			Vector3( 0.0,  0.0,  1.0),
+			Vector3( 0.0,  0.0, -1.0)
+	};
+	_coordinationStructures[COORD_BCC].numNeighbors = 14;
+	for(int ni1 = 0; ni1 < 14; ni1++) {
+		_coordinationStructures[COORD_BCC].neighborArray.setNeighborBond(ni1, ni1, false);
+		for(int ni2 = ni1 + 1; ni2 < 14; ni2++) {
+			bool bonded = (bccVec[ni1] - bccVec[ni2]).squaredLength() < (1.0+sqrt(2.0))*0.5;
+			_coordinationStructures[COORD_BCC].neighborArray.setNeighborBond(ni1, ni2, bonded);
+		}
+		_coordinationStructures[COORD_BCC].cnaSignatures[ni1] = (ni1 < 8) ? 0 : 1;
+	}
+	_coordinationStructures[COORD_BCC].latticeVectors.assign(std::begin(bccVec), std::end(bccVec));
+	_latticeStructures[LATTICE_BCC].latticeVectors.assign(std::begin(bccVec), std::end(bccVec));
 	_latticeStructures[LATTICE_BCC].coordStructure = &_coordinationStructures[COORD_BCC];
 
 	for(auto coordStruct = std::begin(_coordinationStructures); coordStruct != std::end(_coordinationStructures); ++coordStruct) {
@@ -272,7 +299,13 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 	int numNeighbors = neighQuery.results().size();
 
 	// Number of neighbors to analyze.
-	int nn = 12; // For FCC and HCP atoms
+	int nn;
+	if(_inputCrystalType == LATTICE_FCC || _inputCrystalType == LATTICE_HCP)
+		nn = 12;
+	else if(_inputCrystalType == LATTICE_BCC)
+		nn = 14;
+	else
+		return;
 
 	// Early rejection of under-coordinated atoms:
 	if(numNeighbors < nn)
@@ -280,10 +313,19 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 
 	// Compute local scale factor.
 	FloatType localScaling = 0;
-	for(int n = 0; n < nn; n++)
-		localScaling += sqrt(neighQuery.results()[n].distanceSq);
-	localScaling /= nn;
-	FloatType localCutoff = localScaling * (1.0f + sqrt(2.0f)) * 0.5f;
+	FloatType localCutoff = 0;
+	if(_inputCrystalType == LATTICE_FCC || _inputCrystalType == LATTICE_HCP) {
+		for(int n = 0; n < 12; n++)
+			localScaling += sqrt(neighQuery.results()[n].distanceSq);
+		localScaling /= 12;
+		localCutoff = localScaling * (1.0f + sqrt(2.0f)) * 0.5f;
+	}
+	else if(_inputCrystalType == LATTICE_BCC) {
+		for(int n = 0; n < 8; n++)
+			localScaling += sqrt(neighQuery.results()[n].distanceSq);
+		localScaling /= 8;
+		localCutoff = localScaling / (sqrt(3.0)/2.0) * 0.5 * (1.0 + sqrt(2.0));
+	}
 	FloatType localCutoffSquared =  localCutoff * localCutoff;
 
 	// Make sure the (N+1)-th atom is beyond the cutoff radius (if it exists).
@@ -298,43 +340,79 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 			neighborArray.setNeighborBond(ni1, ni2, (neighQuery.results()[ni1].delta - neighQuery.results()[ni2].delta).squaredLength() <= localCutoffSquared);
 	}
 
-	int n421 = 0;
-	int n422 = 0;
-	int cnaSignatures[MAX_NEIGHBORS];
-	for(int ni = 0; ni < nn; ni++) {
-
-		// Determine number of neighbors the two atoms have in common.
-		unsigned int commonNeighbors;
-		int numCommonNeighbors = CommonNeighborAnalysisModifier::findCommonNeighbors(neighborArray, ni, commonNeighbors, nn);
-		if(numCommonNeighbors != 4)
-			break;
-
-		// Determine the number of bonds among the common neighbors.
-		CommonNeighborAnalysisModifier::CNAPairBond neighborBonds[MAX_NEIGHBORS*MAX_NEIGHBORS];
-		int numNeighborBonds = CommonNeighborAnalysisModifier::findNeighborBonds(neighborArray, commonNeighbors, nn, neighborBonds);
-		if(numNeighborBonds != 2)
-			break;
-
-		// Determine the number of bonds in the longest continuous chain.
-		int maxChainLength = CommonNeighborAnalysisModifier::calcMaxChainLength(neighborBonds, numNeighborBonds);
-		if(maxChainLength == 1) {
-			n421++;
-			cnaSignatures[ni] = 0;
-		}
-		else if(maxChainLength == 2) {
-			n422++;
-			cnaSignatures[ni] = 1;
-		}
-		else break;
-	}
 	CoordinationStructureType coordinationType;
-	if(n421 == 12) {
-		coordinationType = COORD_FCC;
+	int cnaSignatures[MAX_NEIGHBORS];
+	if(_inputCrystalType == LATTICE_FCC || _inputCrystalType == LATTICE_HCP) {
+		int n421 = 0;
+		int n422 = 0;
+		for(int ni = 0; ni < nn; ni++) {
+
+			// Determine number of neighbors the two atoms have in common.
+			unsigned int commonNeighbors;
+			int numCommonNeighbors = CommonNeighborAnalysisModifier::findCommonNeighbors(neighborArray, ni, commonNeighbors, nn);
+			if(numCommonNeighbors != 4)
+				break;
+
+			// Determine the number of bonds among the common neighbors.
+			CommonNeighborAnalysisModifier::CNAPairBond neighborBonds[MAX_NEIGHBORS*MAX_NEIGHBORS];
+			int numNeighborBonds = CommonNeighborAnalysisModifier::findNeighborBonds(neighborArray, commonNeighbors, nn, neighborBonds);
+			if(numNeighborBonds != 2)
+				break;
+
+			// Determine the number of bonds in the longest continuous chain.
+			int maxChainLength = CommonNeighborAnalysisModifier::calcMaxChainLength(neighborBonds, numNeighborBonds);
+			if(maxChainLength == 1) {
+				n421++;
+				cnaSignatures[ni] = 0;
+			}
+			else if(maxChainLength == 2) {
+				n422++;
+				cnaSignatures[ni] = 1;
+			}
+			else break;
+		}
+		if(n421 == 12) {
+			coordinationType = COORD_FCC;
+		}
+		else if(n421 == 6 && n422 == 6) {
+			coordinationType = COORD_HCP;
+		}
+		else return;
 	}
-	else if(n421 == 6 && n422 == 6) {
-		coordinationType = COORD_HCP;
+	else if(_inputCrystalType == LATTICE_BCC) {
+		int n444 = 0;
+		int n666 = 0;
+		for(int ni = 0; ni < nn; ni++) {
+
+			// Determine number of neighbors the two atoms have in common.
+			unsigned int commonNeighbors;
+			int numCommonNeighbors = CommonNeighborAnalysisModifier::findCommonNeighbors(neighborArray, ni, commonNeighbors, 14);
+			if(numCommonNeighbors != 4 && numCommonNeighbors != 6)
+				break;
+
+			// Determine the number of bonds among the common neighbors.
+			CommonNeighborAnalysisModifier::CNAPairBond neighborBonds[MAX_NEIGHBORS*MAX_NEIGHBORS];
+			int numNeighborBonds = CommonNeighborAnalysisModifier::findNeighborBonds(neighborArray, commonNeighbors, 14, neighborBonds);
+			if(numNeighborBonds != 4 && numNeighborBonds != 6)
+				break;
+
+			// Determine the number of bonds in the longest continuous chain.
+			int maxChainLength = CommonNeighborAnalysisModifier::calcMaxChainLength(neighborBonds, numNeighborBonds);
+			if(numCommonNeighbors == 4 && numNeighborBonds == 4 && maxChainLength == 4) {
+				n444++;
+				cnaSignatures[ni] = 1;
+			}
+			else if(numCommonNeighbors == 6 && numNeighborBonds == 6 && maxChainLength == 6) {
+				n666++;
+				cnaSignatures[ni] = 0;
+			}
+			else break;
+		}
+		if(n666 == 8 && n444 == 6)
+			coordinationType = COORD_BCC;
+		else
+			return;
 	}
-	else return;
 
 	// Initialize permutation.
 	int neighborIndices[MAX_NEIGHBORS];
@@ -512,6 +590,9 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 ******************************************************************************/
 bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 {
+	if(_inputCrystalType != LATTICE_FCC && _inputCrystalType != LATTICE_HCP)
+		return true;
+
 	progress.setProgressRange(positions()->size());
 
 	for(size_t atomIndex = 0; atomIndex < positions()->size(); atomIndex++) {
@@ -577,7 +658,6 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 				}
 				int j = std::find(otherNeighborList, otherNeighborList + coordStructure.numNeighbors, ai) - otherNeighborList;
 				if(j >= coordStructure.numNeighbors) {
-					OVITO_ASSERT(false);
 					tm1.column(i).setZero();
 					tm2.column(i).setZero();
 					continue;

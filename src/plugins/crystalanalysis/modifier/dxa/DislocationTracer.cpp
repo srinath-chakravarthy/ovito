@@ -55,8 +55,8 @@ void DislocationTracer::discardCircuit(BurgersCircuit* circuit)
 ******************************************************************************/
 bool DislocationTracer::traceDislocationSegments(FutureInterfaceBase& progress)
 {
-	OVITO_ASSERT(_maxBurgersCircuitSize >= 3);
-	OVITO_ASSERT(_maxBurgersCircuitSize <= _maxExtendedBurgersCircuitSize);
+	if(_maxBurgersCircuitSize < 3 || _maxBurgersCircuitSize > _maxExtendedBurgersCircuitSize)
+		throw Exception("Invalid maximum circuit size parameter(s).");
 
 	// Set up progress indicator.
 	// The estimated runtime of each sub-step scales quadratically with the Burgers circuit search depth.
@@ -83,7 +83,7 @@ bool DislocationTracer::traceDislocationSegments(FutureInterfaceBase& progress)
 
 		// Find dislocation segments by generating trial Burgers circuits on the interface mesh
 		// and then moving them in both directions along the dislocation segment.
-		if(circuitLength <=_maxBurgersCircuitSize && (circuitLength % 2) != 0) {
+		if(circuitLength <= _maxBurgersCircuitSize && (circuitLength % 2) != 0) {
 			if(!findPrimarySegments(circuitLength, progress))
 				return false;
 		}
@@ -1053,6 +1053,7 @@ size_t DislocationTracer::joinSegments(int maxCircuitLength)
 			do {
 				// Mark this node as no longer dangling.
 				armNode->circuit->isDangling = false;
+				OVITO_ASSERT(armNode != armNode->junctionRing);
 
 				// Extend arm to junction's exact center point.
 				std::deque<Point3>& line = armNode->segment->line;
@@ -1074,6 +1075,7 @@ size_t DislocationTracer::joinSegments(int maxCircuitLength)
 			// For a two-armed junction, just merge the two segments into one.
 			DislocationNode* node1 = node;
 			DislocationNode* node2 = node->junctionRing;
+			OVITO_ASSERT(node1 != node2);
 			OVITO_ASSERT(node2->junctionRing == node1);
 			OVITO_ASSERT(node1->junctionRing == node2);
 

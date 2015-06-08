@@ -121,7 +121,6 @@ struct DislocationNode
 
 	/// Return whether the end of a segment, represented by this node, does not merge into a junction.
 	bool isDangling() const {
-		OVITO_ASSERT(circuit == nullptr || (junctionRing == this) == circuit->isDangling);
 		return (junctionRing == this);
 	}
 };

@@ -22,8 +22,7 @@
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/objects/SurfaceMesh.h>
 #include <core/gui/properties/IntegerParameterUI.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/BooleanParameterUI.h>
+#include <core/gui/properties/IntegerRadioButtonParameterUI.h>
 #include <core/gui/properties/SubObjectParameterUI.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
@@ -36,17 +35,27 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, DislocationAnalysisModifier, AsynchronousParticleModifier);
 IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, DislocationAnalysisModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(DislocationAnalysisModifier, DislocationAnalysisModifierEditor);
+DEFINE_FLAGS_PROPERTY_FIELD(DislocationAnalysisModifier, _crystalStructure, "CrystalStructure", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(DislocationAnalysisModifier, _maxTrialCircuitSize, "MaxTrialCircuitSize", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(DislocationAnalysisModifier, _maxCircuitElongation, "MaxCircuitElongation", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _dislocationDisplay, "DislocationDisplay", DislocationDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _defectMeshDisplay, "DefectMeshDisplay", SurfaceMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _interfaceMeshDisplay, "InterfaceMeshDisplay", SurfaceMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _smoothDislocationsModifier, "SmoothDislocationsModifier", SmoothDislocationsModifier, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _smoothSurfaceModifier, "SmoothSurfaceModifier", SmoothSurfaceModifier, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _crystalStructure, "Crystal structure");
+SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _maxTrialCircuitSize, "Max. trial circuit length");
+SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _maxCircuitElongation, "Max. circuit elongation");
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
-DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset)
+DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
+		_crystalStructure(StructureAnalysis::LATTICE_FCC), _maxTrialCircuitSize(9), _maxCircuitElongation(6)
 {
+	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_crystalStructure);
+	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_maxTrialCircuitSize);
+	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_maxCircuitElongation);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_dislocationDisplay);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_defectMeshDisplay);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_interfaceMeshDisplay);
@@ -79,6 +88,12 @@ DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : Asy
 void DislocationAnalysisModifier::propertyChanged(const PropertyFieldDescriptor& field)
 {
 	AsynchronousParticleModifier::propertyChanged(field);
+
+	// Recompute results when the parameters have changed.
+	if(field == PROPERTY_FIELD(DislocationAnalysisModifier::_crystalStructure)
+			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_maxTrialCircuitSize)
+			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_maxCircuitElongation))
+		invalidateCachedResults();
 }
 
 /******************************************************************************
@@ -117,7 +132,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> DislocationAnalysis
 
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<DislocationAnalysisEngine>(validityInterval, posProperty->storage(),
-			simCell->data());
+			simCell->data(), crystalStructure(), maxTrialCircuitSize(), maxCircuitElongation());
 }
 
 /******************************************************************************
@@ -189,15 +204,42 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	// Create the rollout.
 	QWidget* rollout = createRollout(tr("Dislocation analysis"), rolloutParams);
 
-    QGridLayout* layout = new QGridLayout(rollout);
+    QVBoxLayout* layout = new QVBoxLayout(rollout);
 	layout->setContentsMargins(4,4,4,4);
 	layout->setSpacing(6);
-	layout->setColumnStretch(1, 1);
+
+	QGroupBox* structureBox = new QGroupBox(tr("Input crystal structure"));
+	layout->addWidget(structureBox);
+	QGridLayout* sublayout = new QGridLayout(structureBox);
+	sublayout->setContentsMargins(4,4,4,4);
+	sublayout->setSpacing(6);
+	sublayout->setColumnStretch(0, 1);
+
+	IntegerRadioButtonParameterUI* crystalStructureUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_crystalStructure));
+	sublayout->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_FCC, tr("FCC")), 0, 0);
+	sublayout->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_HCP, tr("HCP")), 1, 0);
+	sublayout->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_BCC, tr("BCC")), 2, 0);
+
+	QGroupBox* dxaParamsBox = new QGroupBox(tr("DXA parameters"));
+	layout->addWidget(dxaParamsBox);
+	sublayout = new QGridLayout(dxaParamsBox);
+	sublayout->setContentsMargins(4,4,4,4);
+	sublayout->setSpacing(6);
+	sublayout->setColumnStretch(1, 1);
+
+	IntegerParameterUI* maxTrialCircuitSizeUI = new IntegerParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_maxTrialCircuitSize));
+	sublayout->addWidget(maxTrialCircuitSizeUI->label(), 0, 0);
+	sublayout->addLayout(maxTrialCircuitSizeUI->createFieldLayout(), 0, 1);
+	maxTrialCircuitSizeUI->setMinValue(3);
+
+	IntegerParameterUI* maxCircuitElongationUI = new IntegerParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_maxCircuitElongation));
+	sublayout->addWidget(maxCircuitElongationUI->label(), 1, 0);
+	sublayout->addLayout(maxCircuitElongationUI->createFieldLayout(), 1, 1);
+	maxCircuitElongationUI->setMinValue(0);
 
 	// Status label.
-	layout->setRowMinimumHeight(3, 10);
-	layout->addWidget(statusLabel(), 4, 0, 1, 2);
-	statusLabel()->setMinimumHeight(100);
+	layout->addWidget(statusLabel());
+	statusLabel()->setMinimumHeight(80);
 
 	// Open a sub-editor for the mesh display object.
 	new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_defectMeshDisplay), rolloutParams.after(rollout));

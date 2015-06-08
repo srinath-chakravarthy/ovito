@@ -83,7 +83,7 @@ public:
 public:
 
 	/// Constructor.
-	StructureAnalysis(ParticleProperty* positions, const SimulationCell& simCell);
+	StructureAnalysis(ParticleProperty* positions, const SimulationCell& simCell, LatticeStructureType inputCrystalType);
 
 	/// Identifies the atomic structures.
 	bool identifyStructures(FutureInterfaceBase& progress);
@@ -165,6 +165,7 @@ private:
 
 private:
 
+	LatticeStructureType _inputCrystalType;
 	QExplicitlySharedDataPointer<ParticleProperty> _positions;
 	QExplicitlySharedDataPointer<ParticleProperty> _structureTypes;
 	QExplicitlySharedDataPointer<ParticleProperty> _neighborLists;

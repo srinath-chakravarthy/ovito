@@ -51,7 +51,7 @@ Performance improvements:
 
 Scripting features:
 
-- Scripting interface for viewport overlays.
+- Scripting interface for viewport overlays (requested by lidong.cauc@gmail.com and johannes.moeller@fau.de).
 - Write access to particle properties from Python (requested by konstantin.avchachov@helsinki.fi)
 - Python-based modifiers
 - Distribute Scipy with Ovito?

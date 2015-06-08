@@ -56,6 +56,10 @@ bool InterfaceMesh::classifyTetrahedra(FutureInterfaceBase& progress)
 			cell->info().index = -1;
 		}
 	}
+
+	qDebug() << "Number of good tetrahedra:" << _numGoodTetrahedra;
+	qDebug() << "Number of bad tetrahedra:" << (tessellation().number_of_primary_tetrahedra() - _numGoodTetrahedra);
+
 	return true;
 }
 

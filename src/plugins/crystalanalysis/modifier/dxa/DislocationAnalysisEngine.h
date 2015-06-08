@@ -40,7 +40,9 @@ class DislocationAnalysisEngine : public AsynchronousParticleModifier::ComputeEn
 public:
 
 	/// Constructor.
-	DislocationAnalysisEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell);
+	DislocationAnalysisEngine(const TimeInterval& validityInterval,
+			ParticleProperty* positions, const SimulationCell& simCell,
+			int inputCrystalStructure, int maxTrialCircuitSize, int maxCircuitElongation);
 
 	/// Computes the modifier's results and stores them in this object for later retrieval.
 	virtual void perform() override;
@@ -77,6 +79,7 @@ public:
 
 private:
 
+	int _inputCrystalStructure;
 	QExplicitlySharedDataPointer<HalfEdgeMesh<>> _defectMesh;
 	StructureAnalysis _structureAnalysis;
 	DelaunayTessellation _tessellation;

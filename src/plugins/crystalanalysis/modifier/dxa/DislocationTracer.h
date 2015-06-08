@@ -29,12 +29,6 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-/// The maximum number of edges in a Burgers circuit used during search of primary dislocation segments.
-#define CA_DEFAULT_MAX_BURGERS_CIRCUIT_SIZE				9
-
-/// The maximum number of edges in a Burgers circuit when the primary dislocation segments are being extended towards the nodes.
-#define CA_DEFAULT_MAX_EXTENDED_BURGERS_CIRCUIT_SIZE	13
-
 /// Two lattice space vectors are considered equal if they don't differ by more than this value.
 #define CA_LATTICE_VECTOR_EPSILON					Ovito::FloatType(1e-3)
 
@@ -49,15 +43,15 @@ class DislocationTracer
 public:
 
 	/// Constructor.
-	DislocationTracer(InterfaceMesh& mesh, ClusterGraph* clusterGraph) :
+	DislocationTracer(InterfaceMesh& mesh, ClusterGraph* clusterGraph, int maxTrialCircuitSize, int maxCircuitElongation) :
 		_mesh(mesh),
 		_clusterGraph(clusterGraph),
 		_network(new DislocationNetwork(clusterGraph)),
 		_unusedCircuit(nullptr),
-		_rng(1) {
-		setMaximumBurgersCircuitSize(CA_DEFAULT_MAX_BURGERS_CIRCUIT_SIZE);
-		setMaximumExtendedBurgersCircuitSize(CA_DEFAULT_MAX_EXTENDED_BURGERS_CIRCUIT_SIZE);
-	}
+		_rng(1),
+		_maxBurgersCircuitSize(maxTrialCircuitSize),
+		_maxExtendedBurgersCircuitSize(maxTrialCircuitSize + maxCircuitElongation)
+	{}
 
 	/// Returns the interface mesh that separates the crystal defects from the perfect regions.
 	const InterfaceMesh& mesh() const { return _mesh; }
@@ -73,16 +67,6 @@ public:
 
 	/// Returns the simulation cell.
 	const SimulationCell& cell() const { return mesh().structureAnalysis().cell(); }
-
-	/// Sets the maximum number of edges for Burgers circuits.
-	void setMaximumBurgersCircuitSize(int maxSize) {
-		_maxBurgersCircuitSize = maxSize;
-	}
-
-	/// Sets the maximum number of edges for Burgers circuits.
-	void setMaximumExtendedBurgersCircuitSize(int maxSize) {
-		_maxExtendedBurgersCircuitSize = maxSize;
-	}
 
 	/// Performs a dislocation search on the interface mesh by generating
 	/// trial Burgers circuits. Identified dislocation segments are converted to
