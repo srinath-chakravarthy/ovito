@@ -46,7 +46,7 @@ DEFINE_FLAGS_REFERENCE_FIELD(VoronoiAnalysisModifier, _bondsDisplay, "BondsDispl
 SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _onlySelected, "Use only selected particles");
 SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _useRadii, "Use particle radii");
 SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _computeIndices, "Compute Voronoi indices");
-SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _computeBonds, "Generate nearest neighbor bonds");
+SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _computeBonds, "Generate neighbor bonds");
 SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _edgeCount, "Maximum edge count");
 SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _edgeThreshold, "Edge length threshold");
 SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _faceThreshold, "Face area threshold");
@@ -142,7 +142,7 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 	// Add additional factor of 4 because Voronoi cell vertex coordinates are all scaled by factor of 2.
 	FloatType sqEdgeThreshold = _edgeThreshold * _edgeThreshold * 4;
 
-	auto processCell = [this, sqEdgeThreshold](voro::voronoicell_neighbor& v, size_t index) {
+	auto processCell = [this, sqEdgeThreshold](voro::voronoicell_neighbor& v, size_t index, QMutex* mutex) {
 		// Compute cell volume.
 		double vol = v.volume();
 		_atomicVolumes->setFloat(index, (FloatType)vol);
@@ -199,7 +199,8 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 								if(_simCell.pbcFlags()[dim])
 									pbcShift[dim] = (int8_t)floor(_simCell.inverseMatrix().prodrow(delta, dim) + FloatType(0.5));
 							}
-							_bonds->push_back({ pbcShift, (unsigned int)index, (unsigned int)neighbor_id });
+							QMutexLocker locker(mutex);
+							_bonds->push_back(Bond{ pbcShift, (unsigned int)index, (unsigned int)neighbor_id });
 						}
 						faceOrder--;
 						if(_voronoiIndices && faceOrder < (int)_voronoiIndices->componentCount())
@@ -262,7 +263,7 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 						return;
 					if(!voroContainer.compute_cell(v,cl))
 						continue;
-					processCell(v, cl.pid());
+					processCell(v, cl.pid(), nullptr);
 					count--;
 				}
 				while(cl.inc());
@@ -296,7 +297,7 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 						return;
 					if(!voroContainer.compute_cell(v,cl))
 						continue;
-					processCell(v, cl.pid());
+					processCell(v, cl.pid(), nullptr);
 					count--;
 				}
 				while(cl.inc());
@@ -330,10 +331,12 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 		Point3 corner1 = Point3::Origin() + _simCell.matrix().column(3);
 		Point3 corner2 = corner1 + _simCell.matrix().column(0) + _simCell.matrix().column(1) + _simCell.matrix().column(2);
 
+		QMutex mutex;
+
 		// Perform analysis, particle-wise parallel.
 		parallelFor(_positions->size(), *this,
 				[&nearestNeighborFinder, this, sqEdgeThreshold, boxDiameter,
-				 planeNormals, corner1, corner2, &processCell](size_t index) {
+				 planeNormals, corner1, corner2, &processCell, &mutex](size_t index) {
 
 			// Skip unselected particles (if requested).
 			if(_selection && _selection->getInt(index) == 0)
@@ -382,7 +385,7 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 			// Visit all neighbors of the current particles.
 			nearestNeighborFinder.visitNeighbors(nearestNeighborFinder.particlePos(index), visitFunc);
 
-			processCell(v,index);
+			processCell(v, index, &mutex);
 		});
 	}
 }
