@@ -885,7 +885,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Computes the atomic volumes and coordination numbers using a Voronoi tessellation of the particle system."
 			"\n\n"
-			"The modifier stores the computed per-particle volume in the ``\"Atomic Volume\"`` particle property and the number of neighbors "
+			"The modifier stores the computed per-particle volumes in the ``\"Atomic Volume\"`` particle property and the number of neighbors "
 			"of each particle in the ``\"Coordination\"`` property.")
 		.add_property("only_selected", &VoronoiAnalysisModifier::onlySelected, &VoronoiAnalysisModifier::setOnlySelected,
 				"Lets the modifier perform the analysis only for selected particles. Particles that are not selected will be treated as if they did not exist."
@@ -911,6 +911,13 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"named ``Voronoi Index``. The *i*-th component of this property will contain the number of faces of the "
 				"Voronoi cell that have *i* edges. Thus, the first two components of the per-particle vector will always be zero, because the minimum "
 				"number of edges a polygon can have is three. "
+				"\n\n"
+				":Default: ``False``\n")
+		.add_property("generate_bonds", &VoronoiAnalysisModifier::computeBonds, &VoronoiAnalysisModifier::setComputeBonds,
+				"Controls whether the modifier outputs the nearest neighbor bonds. The modifier will generate a bond "
+				"for every pair of adjacent atoms that share a face of the Voronoi tessellation. "
+				"No bond will be created if the face's area is below the :py:attr:`.face_threshold` or if "
+				"the face has less than three edges that are longer than the :py:attr:`.edge_threshold`."
 				"\n\n"
 				":Default: ``False``\n")
 		.add_property("edge_count", &VoronoiAnalysisModifier::edgeCount, &VoronoiAnalysisModifier::setEdgeCount,
