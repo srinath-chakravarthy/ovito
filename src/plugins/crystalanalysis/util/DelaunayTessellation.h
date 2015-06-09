@@ -185,6 +185,9 @@ public:
 	/// Returns a reference to the internal CGAL Delaunay triangulation object.
 	DT& dt() { return _dt; }
 
+	/// Returns a reference to the internal CGAL Delaunay triangulation object.
+	const DT& dt() const { return _dt; }
+
 	/// Writes the tessellation to a VTK file for visualization.
 	void dumpToVTKFile(const QString& filename) const;
 

@@ -159,6 +159,7 @@ struct DislocationSegment
 	/// and connecting the two dislocation nodes.
 	DislocationSegment(const ClusterVector& b, DislocationNode* forwardNode, DislocationNode* backwardNode) :
 		burgersVector(b), replacedWith(nullptr) {
+		OVITO_ASSERT(b.localVec() != Vector3::Zero());
 		nodes[0] = forwardNode;
 		nodes[1] = backwardNode;
 		forwardNode->segment = this;

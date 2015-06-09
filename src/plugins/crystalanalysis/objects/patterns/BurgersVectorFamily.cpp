@@ -41,12 +41,18 @@ SET_PROPERTY_FIELD_LABEL(BurgersVectorFamily, _burgersVector, "Burgers vector");
 /******************************************************************************
 * Constructs a new BurgersVectorFamily.
 ******************************************************************************/
-BurgersVectorFamily::BurgersVectorFamily(DataSet* dataset) : RefTarget(dataset), _isVisible(true)
+BurgersVectorFamily::BurgersVectorFamily(DataSet* dataset, const QString& name, const Vector3& burgersVector, const Color& color)
+	: RefTarget(dataset), _isVisible(true), _name(name), _color(color)
 {
 	INIT_PROPERTY_FIELD(BurgersVectorFamily::_name);
 	INIT_PROPERTY_FIELD(BurgersVectorFamily::_color);
 	INIT_PROPERTY_FIELD(BurgersVectorFamily::_isVisible);
 	INIT_PROPERTY_FIELD(BurgersVectorFamily::_burgersVector);
+
+	// Bring Burgers vector into canonical form.
+	Vector3 sc(std::fabs(burgersVector.x()), std::fabs(burgersVector.y()), std::fabs(burgersVector.z()));
+	std::sort(sc.data(), sc.data() + 3);
+	_burgersVector = sc;
 }
 
 /******************************************************************************

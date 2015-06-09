@@ -76,7 +76,7 @@ public:
 	/// After dislocation segments have been extracted, this method trims
 	/// dangling lines and finds the optimal cluster to express each segment's
 	/// Burgers vector.
-	void finishDislocationSegments();
+	void finishDislocationSegments(int crystalStructure);
 
 	/// Returns the list of nodes that are not part of a junction.
 	const std::vector<DislocationNode*>& danglingNodes() const { return _danglingNodes; }
@@ -87,7 +87,7 @@ private:
 	void discardCircuit(BurgersCircuit* circuit);
 	bool findPrimarySegments(int maxBurgersCircuitSize, FutureInterfaceBase& progress);
 	bool createBurgersCircuit(InterfaceMesh::Edge* edge, int maxBurgersCircuitSize);
-	void createAndTraceSegment(BurgersCircuit* forwardCircuit, int maxCircuitLength);
+	void createAndTraceSegment(const ClusterVector& burgersVector, BurgersCircuit* forwardCircuit, int maxCircuitLength);
 	bool intersectsOtherCircuits(BurgersCircuit* circuit);
 	BurgersCircuit* buildReverseCircuit(BurgersCircuit* forwardCircuit);
 	void traceSegment(DislocationSegment& segment, DislocationNode& node, int maxCircuitLength, bool isPrimarySegment);

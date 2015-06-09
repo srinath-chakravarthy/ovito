@@ -38,21 +38,25 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 class DislocationDisplay;	// defined below
 
 /**
- * An information record used for dislocation picking in the viewports.
+ * \brief This information record is attached to the dislocation segments by the DislocationDisplay when rendering
+ * them in the viewports. It facilitates the picking of dislocations with the mouse.
  */
 class OVITO_CRYSTALANALYSIS_EXPORT DislocationPickInfo : public ObjectPickInfo
 {
 public:
 
 	/// Constructor.
-	DislocationPickInfo(DislocationDisplay* displayObj, DislocationNetworkObject* dislocationObj, std::vector<int>&& subobjToSegmentMap) :
-		_displayObject(displayObj), _dislocationObj(dislocationObj), _subobjToSegmentMap(std::move(subobjToSegmentMap)) {}
+	DislocationPickInfo(DislocationDisplay* displayObj, DislocationNetworkObject* dislocationObj, PatternCatalog* patternCatalog, std::vector<int>&& subobjToSegmentMap) :
+		_displayObject(displayObj), _dislocationObj(dislocationObj), _patternCatalog(patternCatalog), _subobjToSegmentMap(std::move(subobjToSegmentMap)) {}
 
 	/// The data object containing the dislocations.
 	DislocationNetworkObject* dislocationObj() const { return _dislocationObj; }
 
 	/// Returns the display object that rendered the dislocations.
 	DislocationDisplay* displayObject() const { return _displayObject; }
+
+	/// Returns the associated pattern catalog.
+	PatternCatalog* patternCatalog() const { return _patternCatalog; }
 
 	/// \brief Given an sub-object ID returned by the Viewport::pick() method, looks up the
 	/// corresponding dislocation segment.
@@ -63,6 +67,9 @@ public:
 			return -1;
 	}
 
+	/// Returns a human-readable string describing the picked object, which will be displayed in the status bar by OVITO.
+	virtual QString infoString(ObjectNode* objectNode, quint32 subobjectId) override;
+
 private:
 
 	/// The data object containing the dislocations.
@@ -70,6 +77,9 @@ private:
 
 	/// The display object that rendered the dislocations.
 	OORef<DislocationDisplay> _displayObject;
+
+	/// The data object containing the lattice structure.
+	OORef<PatternCatalog> _patternCatalog;
 
 	/// This array is used to map sub-object picking IDs back to dislocation segments.
 	std::vector<int> _subobjToSegmentMap;
@@ -108,6 +118,9 @@ public:
 
 	/// \brief Renders an overlay marker for a single dislocation segment.
 	void renderOverlayMarker(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState, int segmentIndex, SceneRenderer* renderer, ObjectNode* contextNode);
+
+	/// \brief Generates a pretty string representation of a Burgers vector.
+	static QString formatBurgersVector(const Vector3& b);
 
 public:
 
@@ -166,7 +179,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_lineWidth);
 	DECLARE_PROPERTY_FIELD(_shadingMode);
 };
-
 
 /**
  * \brief A properties editor for the DislocationDisplay class.

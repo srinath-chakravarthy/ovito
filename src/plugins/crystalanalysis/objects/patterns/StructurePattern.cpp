@@ -135,6 +135,10 @@ void StructurePatternEditor::createUI(const RolloutInsertionParameters& rolloutP
 	layout1->addWidget(familiesListUI->tableWidget(200));
 	familiesListUI->tableWidget()->setAutoScroll(false);
 	connect(familiesListUI->tableWidget(), &QTableWidget::doubleClicked, this, &StructurePatternEditor::onDoubleClickBurgersFamily);
+
+	QLabel* label = new QLabel(tr("<p style=\"font-size: small;\">Double-click to change colors.</p>"));
+	label->setWordWrap(true);
+	layout1->addWidget(label);
 }
 
 /******************************************************************************

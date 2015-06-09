@@ -56,10 +56,10 @@ void bitmapSort(iterator begin, iterator end, int max)
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-StructureAnalysis::StructureAnalysis(ParticleProperty* positions, const SimulationCell& simCell, LatticeStructureType inputCrystalType) :
+StructureAnalysis::StructureAnalysis(ParticleProperty* positions, const SimulationCell& simCell, LatticeStructureType inputCrystalType, ParticleProperty* outputStructures) :
 	_positions(positions), _simCell(simCell),
 	_inputCrystalType(inputCrystalType),
-	_structureTypes(new ParticleProperty(positions->size(), ParticleProperty::StructureTypeProperty, 0, true)),
+	_structureTypes(outputStructures),
 	_neighborLists(new ParticleProperty(positions->size(), qMetaTypeId<int>(), MAX_NEIGHBORS, 0, QStringLiteral("Neighbors"), false)),
 	_neighborCounts(new ParticleProperty(positions->size(), ParticleProperty::CoordinationProperty, 0, true)),
 	_atomClusters(new ParticleProperty(positions->size(), ParticleProperty::ClusterProperty, 0, true)),
@@ -71,6 +71,9 @@ StructureAnalysis::StructureAnalysis(ParticleProperty* positions, const Simulati
 		initializeCoordinationStructures();
 		initialized = true;
 	}
+
+	// Reset atomic structure types.
+	std::fill(_structureTypes->dataInt(), _structureTypes->dataInt() + _structureTypes->size(), LATTICE_OTHER);
 }
 
 /******************************************************************************
@@ -497,6 +500,10 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 		const CoordinationStructure& coordStructure = _coordinationStructures[coordStructureType];
 		const LatticeStructure& latticeStructure = _latticeStructures[latticeStructureType];
 
+		// For calculating the cluster orientation.
+		Matrix_3<double> orientationV = Matrix_3<double>::Zero();
+		Matrix_3<double> orientationW = Matrix_3<double>::Zero();
+
 		// Add neighboring atoms to the cluster.
 		std::deque<int> atomsToVisit(1, seedAtomIndex);
 		do {
@@ -521,6 +528,16 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 				if(*neighborAtomIndex == currentAtomIndex)
 					throw Exception(DislocationAnalysisModifier::tr("Cannot perform dislocation analysis. Simulation cell is too small. Please extend it first using the 'Show periodic images' modifier."));
 
+				// Add vector pair to matrices for computing the cluster orientation.
+				const Vector3& latticeVector = latticeStructure.latticeVectors[permutation[neighborIndex]];
+				const Vector3& spatialVector = cell().wrapVector(positions()->getPoint3(*neighborAtomIndex) - positions()->getPoint3(currentAtomIndex));
+				for(size_t i = 0; i < 3; i++) {
+					for(size_t j = 0; j < 3; j++) {
+						orientationV(i,j) += (double)(latticeVector[j] * latticeVector[i]);
+						orientationW(i,j) += (double)(latticeVector[j] * spatialVector[i]);
+					}
+				}
+
 				// Skip neighbors which are already part of the cluster, or which have a different coordination structure type.
 				if(_atomClusters->getInt(*neighborAtomIndex) != 0) continue;
 				if(_structureTypes->getInt(*neighborAtomIndex) != coordStructureType) continue;
@@ -531,6 +548,7 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 				// Select three non-coplanar atoms, which are all neighbors of the current neighbor.
 				// One of them is the current central atom, two are common neighbors.
 				Matrix3 tm1, tm2;
+				bool properOverlap = true;
 				for(int i = 0; i < 3; i++) {
 					int atomIndex;
 					if(i != 2) {
@@ -543,13 +561,13 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 					}
 					int j = std::find(otherNeighborList, otherNeighborList + coordStructure.numNeighbors, atomIndex) - otherNeighborList;
 					if(j >= coordStructure.numNeighbors) {
-						OVITO_ASSERT(false);
-						tm1.column(i).setZero();
-						tm2.column(i).setZero();
-						continue;
+						properOverlap = false;
+						break;
 					}
 					tm2.column(i) = latticeStructure.latticeVectors[j];
 				}
+				if(!properOverlap)
+					continue;
 
 				// Determine the misorientation matrix.
 				OVITO_ASSERT(std::abs(tm1.determinant()) > FLOATTYPE_EPSILON);
@@ -578,6 +596,9 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 			}
 		}
 		while(!atomsToVisit.empty());
+
+		// Compute matrix, which transforms vectors from lattice space to simulation coordinates.
+		cluster->orientation = Matrix3(orientationW * orientationV.inverse());
 	}
 
 	qDebug() << "Number of clusters:" << (clusterGraph().clusters().size() - 1);
@@ -590,9 +611,6 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 ******************************************************************************/
 bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 {
-	if(_inputCrystalType != LATTICE_FCC && _inputCrystalType != LATTICE_HCP)
-		return true;
-
 	progress.setProgressRange(positions()->size());
 
 	for(size_t atomIndex = 0; atomIndex < positions()->size(); atomIndex++) {
@@ -646,6 +664,7 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 			// Select three non-coplanar atoms, which are all neighbors of the current neighbor.
 			// One of them is the current central atom, two are common neighbors.
 			Matrix3 tm1, tm2;
+			bool properOverlap = true;
 			for(int i = 0; i < 3; i++) {
 				int ai;
 				if(i != 2) {
@@ -658,9 +677,8 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 				}
 				int j = std::find(otherNeighborList, otherNeighborList + coordStructure.numNeighbors, ai) - otherNeighborList;
 				if(j >= coordStructure.numNeighbors) {
-					tm1.column(i).setZero();
-					tm2.column(i).setZero();
-					continue;
+					properOverlap = false;
+					break;
 				}
 
 				// Look up symmetry permutation of neighbor atom.
@@ -671,6 +689,8 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 
 				tm2.column(i) = neighborLatticeStructure.latticeVectors[neighborPermutation[j]];
 			}
+			if(!properOverlap)
+				continue;
 
 			// Determine the misorientation matrix.
 			OVITO_ASSERT(std::abs(tm1.determinant()) > FLOATTYPE_EPSILON);

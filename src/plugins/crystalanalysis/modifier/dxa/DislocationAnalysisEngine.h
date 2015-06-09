@@ -23,7 +23,7 @@
 #define __OVITO_DISLOCATION_ANALYSIS_ENGINE_H
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <plugins/particles/modifier/AsynchronousParticleModifier.h>
+#include <plugins/particles/modifier/analysis/StructureIdentificationModifier.h>
 #include <plugins/crystalanalysis/util/DelaunayTessellation.h>
 #include "StructureAnalysis.h"
 #include "ElasticMapping.h"
@@ -35,7 +35,7 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 /*
  * Computation engine of the DislocationAnalysisModifier, which performs the actual dislocation analysis.
  */
-class DislocationAnalysisEngine : public AsynchronousParticleModifier::ComputeEngine
+class DislocationAnalysisEngine : public StructureIdentificationModifier::StructureIdentificationEngine
 {
 public:
 
@@ -46,9 +46,6 @@ public:
 
 	/// Computes the modifier's results and stores them in this object for later retrieval.
 	virtual void perform() override;
-
-	/// Returns the simulation cell.
-	const SimulationCell& simulationCell() const { return _structureAnalysis.cell(); }
 
 	/// Returns the computed defect mesh.
 	HalfEdgeMesh<>* defectMesh() { return _defectMesh.data(); }
@@ -61,9 +58,6 @@ public:
 
 	/// Indicates whether the entire simulation cell is part of the 'bad' crystal region.
 	bool isBadEverywhere() const { return _interfaceMesh.isCompletelyBad(); }
-
-	/// Returns the array of atom structure types.
-	ParticleProperty* structureTypes() const { return _structureAnalysis.structureTypes(); }
 
 	/// Returns the array of atom cluster IDs.
 	ParticleProperty* atomClusters() const { return _structureAnalysis.atomClusters(); }

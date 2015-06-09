@@ -23,9 +23,10 @@
 #define __OVITO_DISLOCATION_ANALYSIS_MODIFIER_H
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <plugins/particles/modifier/AsynchronousParticleModifier.h>
+#include <plugins/particles/modifier/analysis/StructureIdentificationModifier.h>
 #include <plugins/particles/objects/SurfaceMeshDisplay.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationDisplay.h>
+#include <plugins/crystalanalysis/objects/patterns/PatternCatalog.h>
 #include <plugins/crystalanalysis/data/DislocationNetwork.h>
 #include <plugins/crystalanalysis/data/ClusterGraph.h>
 #include <plugins/crystalanalysis/modifier/SmoothDislocationsModifier.h>
@@ -36,7 +37,7 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 /*
  * Extracts dislocation lines from a crystal.
  */
-class OVITO_CRYSTALANALYSIS_EXPORT DislocationAnalysisModifier : public AsynchronousParticleModifier
+class OVITO_CRYSTALANALYSIS_EXPORT DislocationAnalysisModifier : public StructureIdentificationModifier
 {
 public:
 
@@ -58,6 +59,9 @@ public:
 	/// \brief Returns the internal modifier that smoothes the defect surface mesh.
 	SmoothSurfaceModifier* smoothSurfaceModifier() const { return _smoothSurfaceModifier; }
 
+	/// Return the catalog of structure patterns.
+	PatternCatalog* patternCatalog() const { return _patternCatalog; }
+
 	/// Returns the maximum length of trial circuits.
 	int maxTrialCircuitSize() const { return _maxTrialCircuitSize; }
 
@@ -65,16 +69,22 @@ public:
 	void setMaxTrialCircuitSize(int maxLength) { _maxTrialCircuitSize = maxLength; }
 
 	/// Returns the maximum elongation of Burgers circuits while they are being advanced.
-	int maxCircuitElongation() const { return _maxCircuitElongation; }
+	int circuitStretchability() const { return _circuitStretchability; }
 
 	/// Sets maximum elongation of Burgers circuits while they are being advanced.
-	void setMaxCircuitElongation(int maxElongation) { _maxCircuitElongation = maxElongation; }
+	void setCircuitStretchability(int stretchability) { _circuitStretchability = stretchability; }
 
 	/// Returns the type of crystal to be analyzed.
 	int crystalStructure() const { return _crystalStructure; }
 
 	/// Sets the type of crystal to be analyzed.
 	void setCrystalStructure(int structureType) { _crystalStructure = structureType; }
+
+	/// Returns whether the interface mesh is output.
+	bool outputInterfaceMesh() const { return _outputInterfaceMesh; }
+
+	/// Controls whether the interface mesh is output.
+	void setOutputInterfaceMesh(bool enable) { _outputInterfaceMesh = enable; }
 
 	/// Resets the modifier's result cache.
 	virtual void invalidateCachedResults() override;
@@ -105,7 +115,13 @@ private:
 	PropertyField<int> _maxTrialCircuitSize;
 
 	/// The maximum elongation of Burgers circuits while they are being advanced.
-	PropertyField<int> _maxCircuitElongation;
+	PropertyField<int> _circuitStretchability;
+
+	/// Controls the output of the interface mesh
+	PropertyField<bool> _outputInterfaceMesh;
+
+	/// The catalog of structure patterns.
+	ReferenceField<PatternCatalog> _patternCatalog;
 
 	/// The display object for rendering the defect mesh.
 	ReferenceField<SurfaceMeshDisplay> _defectMeshDisplay;
@@ -128,9 +144,6 @@ private:
 	/// This stores the cached defect interface produced by the modifier.
 	QExplicitlySharedDataPointer<HalfEdgeMesh<>> _interfaceMesh;
 
-	/// This stores the cached local structure types computed by the modifier.
-	QExplicitlySharedDataPointer<ParticleProperty> _atomStructures;
-
 	/// This stores the cached atom-to-cluster assignments computed by the modifier.
 	QExplicitlySharedDataPointer<ParticleProperty> _atomClusters;
 
@@ -149,6 +162,9 @@ private:
 	/// Indicates that the entire simulation cell is part of the 'bad' crystal region.
 	bool _isBadEverywhere;
 
+	/// List of edges, which don't have a lattice vector.
+	QExplicitlySharedDataPointer<BondsStorage> _unassignedEdges;
+
 	Q_OBJECT
 	OVITO_OBJECT
 
@@ -157,7 +173,9 @@ private:
 
 	DECLARE_PROPERTY_FIELD(_crystalStructure);
 	DECLARE_PROPERTY_FIELD(_maxTrialCircuitSize);
-	DECLARE_PROPERTY_FIELD(_maxCircuitElongation);
+	DECLARE_PROPERTY_FIELD(_circuitStretchability);
+	DECLARE_PROPERTY_FIELD(_outputInterfaceMesh);
+	DECLARE_REFERENCE_FIELD(_patternCatalog);
 	DECLARE_REFERENCE_FIELD(_dislocationDisplay);
 	DECLARE_REFERENCE_FIELD(_defectMeshDisplay);
 	DECLARE_REFERENCE_FIELD(_interfaceMeshDisplay);
@@ -181,6 +199,9 @@ protected:
 	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
 
 private:
+
+	/// The editor for the selected input structure type.
+	OORef<PropertiesEditor> _structureTypeSubEditor;
 
 	Q_OBJECT
 	OVITO_OBJECT

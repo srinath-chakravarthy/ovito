@@ -124,6 +124,7 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 				BurgersVectorFamily* family = nullptr;
 				if(patternCatalog) {
 					Cluster* cluster = segment->burgersVector.cluster();
+					OVITO_ASSERT(cluster != nullptr);
 					StructurePattern* pattern = patternCatalog->structureById(cluster->structure);
 					family = pattern->defaultBurgersVectorFamily();
 					for(BurgersVectorFamily* f : pattern->burgersVectorFamilies()) {
@@ -150,7 +151,7 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 			_cornerBuffer->setParticlePositions(cornerPoints.empty() ? nullptr : cornerPoints.data());
 			_cornerBuffer->setParticleColors(cornerColors.empty() ? nullptr : cornerColors.data());
 			_cornerBuffer->setParticleRadius(lineRadius);
-			_pickInfo = new DislocationPickInfo(this, dislocationObj, std::move(subobjToSegmentMap));
+			_pickInfo = new DislocationPickInfo(this, dislocationObj, patternCatalog, std::move(subobjToSegmentMap));
 		}
 		else {
 			_cornerBuffer = nullptr;
@@ -292,6 +293,82 @@ void DislocationDisplay::clipDislocationLine(const std::deque<Point3>& line, con
 		isInitialSegment = false;
 		rp1 = rp2;
 	}
+}
+
+/******************************************************************************
+* Checks if the given floating point number is integer.
+******************************************************************************/
+static bool isInteger(FloatType v, int& intPart)
+{
+	static const FloatType epsilon = 1e-2f;
+	FloatType ip;
+	FloatType frac = std::modf(v, &ip);
+	if(frac >= -epsilon && frac <= epsilon) intPart = (int)ip;
+	else if(frac >= FloatType(1)-epsilon) intPart = (int)ip + 1;
+	else if(frac <= FloatType(-1)+epsilon) intPart = (int)ip - 1;
+	else return false;
+	return true;
+}
+
+/******************************************************************************
+* Generates a pretty string representation of the Burgers vector.
+******************************************************************************/
+QString DislocationDisplay::formatBurgersVector(const Vector3& b)
+{
+	FloatType smallestCompnt = FLOATTYPE_MAX;
+	for(int i = 0; i < 3; i++) {
+		FloatType c = std::abs(b[i]);
+		if(c < smallestCompnt && c > 1e-3)
+			smallestCompnt = c;
+	}
+	if(smallestCompnt != FLOATTYPE_MAX) {
+		FloatType m = FloatType(1) / smallestCompnt;
+		for(int f = 1; f <= 11; f++) {
+			int multiplier;
+			if(!isInteger(m*f, multiplier)) continue;
+			if(multiplier < 80) {
+				Vector3 bm = b * (FloatType)multiplier;
+				Vector3I bmi;
+				if(isInteger(bm.x(),bmi.x()) && isInteger(bm.y(),bmi.y()) && isInteger(bm.z(),bmi.z())) {
+					return QString("1/%1[%2 %3 %4]")
+							.arg(multiplier)
+							.arg(bmi.x()).arg(bmi.y()).arg(bmi.z());
+				}
+			}
+		}
+	}
+
+	return QString("%1 %2 %3")
+			.arg(QLocale::c().toString(b.x(), 'f'), 7)
+			.arg(QLocale::c().toString(b.y(), 'f'), 7)
+			.arg(QLocale::c().toString(b.z(), 'f'), 7);
+}
+
+/******************************************************************************
+* Returns a human-readable string describing the picked object,
+* which will be displayed in the status bar by OVITO.
+******************************************************************************/
+QString DislocationPickInfo::infoString(ObjectNode* objectNode, quint32 subobjectId)
+{
+	QString str;
+
+	int segmentIndex = segmentIndexFromSubObjectID(subobjectId);
+	if(segmentIndex >= 0 && segmentIndex < dislocationObj()->segments().size()) {
+		DislocationSegment* segment = dislocationObj()->segments()[segmentIndex];
+		str = tr("Dislocation | True Burgers vector: %1").arg(DislocationDisplay::formatBurgersVector(segment->burgersVector.localVec()));
+		Vector3 transformedVector = segment->burgersVector.toSpatialVector();
+		str += tr(" | Spatial Burgers vector: [%1 %2 %3]")
+				.arg(QLocale::c().toString(transformedVector.x(), 'f', 4), 7)
+				.arg(QLocale::c().toString(transformedVector.y(), 'f', 4), 7)
+				.arg(QLocale::c().toString(transformedVector.z(), 'f', 4), 7);
+		str += tr(" | Cluster Id: %1").arg(segment->burgersVector.cluster()->id);
+		if(patternCatalog() != nullptr) {
+			int structureTypeId = segment->burgersVector.cluster()->structure;
+			if(StructurePattern* s = patternCatalog()->structureById(structureTypeId))
+				str += tr(" | Lattice structure: %1").arg(s->name());
+		}
+	}
+	return str;
 }
 
 /******************************************************************************

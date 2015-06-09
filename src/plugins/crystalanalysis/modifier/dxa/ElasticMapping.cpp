@@ -171,8 +171,63 @@ bool ElasticMapping::assignIdealVectorsToEdges(int crystalPathSteps, FutureInter
 		}
 	}
 
+	if(!reconstructIdealEdgeVectors(progress))
+		return false;
+
+#if 0
+	_unassignedEdges = new BondsStorage();
+	for(TessellationEdge* firstEdge : _vertexEdges) {
+		for(TessellationEdge* edge = firstEdge; edge != nullptr; edge = edge->next) {
+			if(edge->hasClusterVector()) continue;
+			_unassignedEdges->push_back({ Vector_3<int8_t>::Zero(), (unsigned int)edge->vertex1, (unsigned int)edge->vertex2 });
+		}
+	}
+#endif
+
 	return true;
 }
+
+/******************************************************************************
+* Tries to determine the ideal vectors of tessellation edges, which haven't
+* been assigned one during the first phase.
+******************************************************************************/
+bool ElasticMapping::reconstructIdealEdgeVectors(FutureInterfaceBase& progress)
+{
+	auto vertexEdgeList = _vertexEdges.cbegin();
+	for(size_t vertexIndex = 0; vertexIndex < _vertexEdges.size(); vertexIndex++, ++vertexEdgeList) {
+		if(progress.isCanceled())
+			return false;
+		Cluster* cluster1 = clusterOfVertex(vertexIndex);
+		if(cluster1->id == 0) continue;
+		for(TessellationEdge* edge = *vertexEdgeList; edge != nullptr; edge = edge->next) {
+			if(edge->hasClusterVector()) continue;
+
+			Cluster* cluster2 = clusterOfVertex(edge->vertex2);
+			if(cluster2->id == 0) continue;
+
+			for(TessellationEdge* e1 = *vertexEdgeList; e1 != nullptr && !edge->hasClusterVector(); e1 = e1->next) {
+				if(e1->hasClusterVector() == false) continue;
+				OVITO_ASSERT(e1 != edge);
+				for(TessellationEdge* e2 = _vertexEdges[e1->vertex2]; e2 != nullptr; e2 = e2->next) {
+					if(e2->hasClusterVector() == false) continue;
+					if(e2->vertex2 == edge->vertex2) {
+						OVITO_ASSERT(e1->clusterTransition->cluster2 == e2->clusterTransition->cluster1);
+						ClusterTransition* transition = clusterGraph().concatenateClusterTransitions(e1->clusterTransition, e2->clusterTransition);
+						OVITO_ASSERT(transition != nullptr);
+						Vector3 clusterVector = e1->clusterVector + e1->clusterTransition->reverseTransform(e2->clusterVector);
+						edge->assignClusterVector(clusterVector, transition);
+						OVITO_ASSERT(edge->clusterTransition->cluster1 == clusterOfVertex(e1->vertex1));
+						OVITO_ASSERT(edge->clusterTransition->cluster2 == clusterOfVertex(e2->vertex2));
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
 
 /******************************************************************************
 * Determines whether the elastic mapping from the physical configuration

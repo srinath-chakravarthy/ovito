@@ -145,8 +145,8 @@ private:
 };
 
 /**
- * \brief This information record is attached to the particles by the BondsDisplay when rendering
- * them in the viewports. It facilitates the picking of particles with the mouse.
+ * \brief This information record is attached to the bonds by the BondsDisplay when rendering
+ * them in the viewports. It facilitates the picking of bonds with the mouse.
  */
 class OVITO_PARTICLES_EXPORT BondPickInfo : public ObjectPickInfo
 {

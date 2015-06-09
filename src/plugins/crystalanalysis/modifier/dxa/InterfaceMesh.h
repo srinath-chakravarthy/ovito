@@ -92,7 +92,7 @@ public:
 	const StructureAnalysis& structureAnalysis() const { return elasticMapping().structureAnalysis(); }
 
 	/// Classifies each tetrahedron of the tessellation as being either good or bad.
-	bool classifyTetrahedra(FutureInterfaceBase& progress);
+	bool classifyTetrahedra(FloatType maximumNeighborDistance, FutureInterfaceBase& progress);
 
 	/// Creates the mesh facets separating good and bad tetrahedra.
 	bool createMesh(FutureInterfaceBase& progress);

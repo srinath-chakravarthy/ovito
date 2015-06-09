@@ -728,6 +728,7 @@ bool SurfaceMeshDisplay::isCornerInside3DRegion(const HalfEdgeMesh<>& mesh, cons
 	HalfEdgeMesh<>::Vertex* closestVertex = nullptr;
 	Vector3 closestNormal, closestVector;
 	for(HalfEdgeMesh<>::Vertex* v : mesh.vertices()) {
+		if(v->edges() == nullptr) continue;
 		Vector3 r = reducedPos[v->index()] - Point3::Origin();
 		for(size_t k = 0; k < 3; k++) {
 			if(pbcFlags[k]) {
@@ -835,6 +836,7 @@ bool SurfaceMeshDisplay::isCornerInside3DRegion(const HalfEdgeMesh<>& mesh, cons
 	// If a vertex is closest, we still have to compute the local pseudo-normal at the vertex.
 	if(closestVertex != nullptr) {
 		HalfEdgeMesh<>::Edge* edge = closestVertex->edges();
+		OVITO_ASSERT(edge != nullptr);
 		closestNormal.setZero();
 		Vector3 edge1v = reducedPos[edge->vertex2()->index()] - reducedPos[closestVertex->index()];
 		for(size_t k = 0; k < 3; k++) {

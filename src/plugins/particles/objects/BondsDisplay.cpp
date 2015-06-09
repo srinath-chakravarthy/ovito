@@ -231,7 +231,6 @@ QString BondPickInfo::infoString(ObjectNode* objectNode, quint32 subobjectId)
 	return str;
 }
 
-
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /******************************************************************************

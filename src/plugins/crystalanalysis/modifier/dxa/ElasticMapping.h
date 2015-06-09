@@ -28,6 +28,7 @@
 #include <core/utilities/concurrent/FutureInterface.h>
 #include <plugins/crystalanalysis/data/Cluster.h>
 #include <plugins/crystalanalysis/data/ClusterGraph.h>
+#include <plugins/particles/data/BondsStorage.h>
 #include "StructureAnalysis.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
@@ -111,6 +112,10 @@ public:
 	/// Determines the ideal vector corresponding to each edge of the tessellation.
 	bool assignIdealVectorsToEdges(int crystalPathSteps, FutureInterfaceBase& progress);
 
+	/// Tries to determine the ideal vectors of tessellation edges, which haven't
+	// been assigned one during the first phase.
+	bool reconstructIdealEdgeVectors(FutureInterfaceBase& progress);
+
 	/// Looks up the tessellation edge connecting two tessellation vertices.
 	/// Returns NULL if the vertices are not connected by an edge.
 	TessellationEdge* findEdge(int vertexIndex1, int vertexIndex2) const {
@@ -126,6 +131,9 @@ public:
 	/// within the given tessellation cell. Returns false if the mapping is incompatible
 	/// or cannot be determined.
 	bool isElasticMappingCompatible(DelaunayTessellation::CellHandle cell) const;
+
+	/// Returns the list of edges, which don't have a lattice vector.
+	BondsStorage* unassignedEdges() const { return _unassignedEdges.data(); }
 
 private:
 
@@ -160,6 +168,9 @@ private:
 
 	/// Stores the cluster assigned to each vertex atom of the tessellation.
 	std::vector<Cluster*> _vertexClusters;
+
+	/// List of edges, which don't have a lattice vector.
+	QExplicitlySharedDataPointer<BondsStorage> _unassignedEdges;
 };
 
 }	// End of namespace

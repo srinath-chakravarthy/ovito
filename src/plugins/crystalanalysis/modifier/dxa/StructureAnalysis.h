@@ -42,6 +42,8 @@ public:
 		COORD_FCC,				//< Face-centered cubic
 		COORD_HCP,				//< Hexagonal close-packed
 		COORD_BCC,				//< Body-centered cubic
+		COORD_CUBIC_DIAMOND,	//< Diamond cubic
+		COORD_HEX_DIAMOND,		//< Diamond hexagonal
 
 		NUM_COORD_TYPES 		//< This just counts the number of defined coordination types.
 	};
@@ -52,6 +54,8 @@ public:
 		LATTICE_FCC,				//< Face-centered cubic
 		LATTICE_HCP,				//< Hexagonal close-packed
 		LATTICE_BCC,				//< Body-centered cubic
+		LATTICE_CUBIC_DIAMOND,		//< Diamond cubic
+		LATTICE_HEX_DIAMOND,		//< Diamond hexagonal
 
 		NUM_LATTICE_TYPES 			//< This just counts the number of defined coordination types.
 	};
@@ -83,7 +87,7 @@ public:
 public:
 
 	/// Constructor.
-	StructureAnalysis(ParticleProperty* positions, const SimulationCell& simCell, LatticeStructureType inputCrystalType);
+	StructureAnalysis(ParticleProperty* positions, const SimulationCell& simCell, LatticeStructureType inputCrystalType, ParticleProperty* outputStructures);
 
 	/// Identifies the atomic structures.
 	bool identifyStructures(FutureInterfaceBase& progress);

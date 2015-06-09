@@ -37,8 +37,8 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 DislocationAnalysisEngine::DislocationAnalysisEngine(const TimeInterval& validityInterval,
 		ParticleProperty* positions, const SimulationCell& simCell,
 		int inputCrystalStructure, int maxTrialCircuitSize, int maxCircuitElongation) :
-	AsynchronousParticleModifier::ComputeEngine(validityInterval),
-	_structureAnalysis(positions, simCell, (StructureAnalysis::LatticeStructureType)inputCrystalStructure),
+	StructureIdentificationModifier::StructureIdentificationEngine(validityInterval, positions, simCell),
+	_structureAnalysis(positions, simCell, (StructureAnalysis::LatticeStructureType)inputCrystalStructure, structures()),
 	_defectMesh(new HalfEdgeMesh<>()),
 	_elasticMapping(_structureAnalysis, _tessellation),
 	_interfaceMesh(_elasticMapping),
@@ -84,12 +84,12 @@ void DislocationAnalysisEngine::perform()
 
 	// Determine the ideal vector corresponding to each edge of the tessellation.
 	nextProgressSubStep();
-	if(!_elasticMapping.assignIdealVectorsToEdges(2, *this))
+	if(!_elasticMapping.assignIdealVectorsToEdges(3, *this))
 		return;
 
 	// Assign tetrahedra to good or bad crystal region.
 	nextProgressSubStep();
-	if(!_interfaceMesh.classifyTetrahedra(*this))
+	if(!_interfaceMesh.classifyTetrahedra(_structureAnalysis.maximumNeighborDistance(), *this))
 		return;
 
 	// Create the mesh facets.
@@ -101,6 +101,7 @@ void DislocationAnalysisEngine::perform()
 	nextProgressSubStep();
 	if(!_dislocationTracer.traceDislocationSegments(*this))
 		return;
+	_dislocationTracer.finishDislocationSegments(_inputCrystalStructure);
 
 	// Generate the defect mesh.
 	nextProgressSubStep();

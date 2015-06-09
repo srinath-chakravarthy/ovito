@@ -46,7 +46,7 @@ void StructureIdentificationModifier::createStructureType(int id, ParticleTypePr
 	stype->setId(id);
 	stype->setName(ParticleTypeProperty::getPredefinedStructureTypeName(predefType));
 	stype->setColor(ParticleTypeProperty::getDefaultParticleColor(ParticleProperty::StructureTypeProperty, stype->name(), id));
-	_structureTypes.push_back(stype);
+	addStructureType(stype);
 }
 
 /******************************************************************************
@@ -69,19 +69,6 @@ void StructureIdentificationModifier::loadFromStream(ObjectLoadStream& stream)
 	stream.expectChunkRange(0, 2);
 	// For future use.
 	stream.closeChunk();
-}
-
-/******************************************************************************
-* Is called when a RefTarget referenced by this object has generated an event.
-******************************************************************************/
-bool StructureIdentificationModifier::referenceEvent(RefTarget* source, ReferenceEvent* event)
-{
-	if(_structureTypes.contains(source)) {
-		if(event->type() == ReferenceEvent::TargetChanged || event->type() == ReferenceEvent::PendingStateChanged) {
-			invalidateCachedResults();
-		}
-	}
-	return AsynchronousParticleModifier::referenceEvent(source, event);
 }
 
 /******************************************************************************

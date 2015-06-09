@@ -95,8 +95,6 @@ bool DislocationTracer::traceDislocationSegments(FutureInterfaceBase& progress)
 			progress.nextProgressSubStep();
 	}
 
-	finishDislocationSegments();
-
 	qDebug() << "Number of dislocation segments:" << network().segments().size();
 	qDebug() << "Number of dislocation junctions:" << numJunctions;
 
@@ -108,7 +106,7 @@ bool DislocationTracer::traceDislocationSegments(FutureInterfaceBase& progress)
 * After dislocation segments have been extracted, this method trims
 * dangling lines.
 ******************************************************************************/
-void DislocationTracer::finishDislocationSegments()
+void DislocationTracer::finishDislocationSegments(int crystalStructure)
 {
 	// Remove extra line points from segments that do not end in a junction.
 	// Also assign consecutive IDs to final segments.
@@ -123,6 +121,48 @@ void DislocationTracer::finishDislocationSegments()
 		line.erase(line.end() - segment->forwardNode().circuit->numPreliminaryPoints, line.end());
 		coreSize.erase(coreSize.begin(), coreSize.begin() + segment->backwardNode().circuit->numPreliminaryPoints);
 		coreSize.erase(coreSize.end() - segment->forwardNode().circuit->numPreliminaryPoints, coreSize.end());
+	}
+
+	// Express Burgers vectors of dislocations in a proper lattice frame whenever possible.
+	for(DislocationSegment* segment : network().segments()) {
+		Cluster* originalCluster = segment->burgersVector.cluster();
+		if(originalCluster->structure != crystalStructure) {
+			for(ClusterTransition* t = originalCluster->transitions; t != nullptr && t->distance <= 1; t = t->next) {
+				if(t->cluster2->structure == crystalStructure) {
+					segment->burgersVector = ClusterVector(t->transform(segment->burgersVector.localVec()), t->cluster2);
+					break;
+				}
+			}
+		}
+	}
+
+	// Align dislocations.
+	for(DislocationSegment* segment : network().segments()) {
+		std::deque<Point3>& line = segment->line;
+		OVITO_ASSERT(line.size() >= 2);
+
+		Vector3 dir = line.back() - line.front();
+		if(dir.isZero(CA_ATOM_VECTOR_EPSILON))
+			continue;
+
+		if(std::abs(dir.x()) > std::abs(dir.y())) {
+			if(std::abs(dir.x()) > std::abs(dir.z())) {
+				if(dir.x() >= 0.0) continue;
+			}
+			else {
+				if(dir.z() >= 0.0) continue;
+			}
+		}
+		else {
+			if(std::abs(dir.y()) > std::abs(dir.z())) {
+				if(dir.y() >= 0.0) continue;
+			}
+			else {
+				if(dir.z() >= 0.0) continue;
+			}
+		}
+
+		segment->flipOrientation();
 	}
 }
 
@@ -391,7 +431,7 @@ bool DislocationTracer::createBurgersCircuit(InterfaceMesh::Edge* edge, int maxB
 
 	OVITO_ASSERT(!forwardCircuit->calculateBurgersVector().localVec().isZero(CA_LATTICE_VECTOR_EPSILON));
 	OVITO_ASSERT(!b.isZero(CA_LATTICE_VECTOR_EPSILON));
-	createAndTraceSegment(forwardCircuit, maxBurgersCircuitSize);
+	createAndTraceSegment(ClusterVector(b, forwardCircuit->firstEdge->clusterTransition->cluster1), forwardCircuit, maxBurgersCircuitSize);
 
 	return true;
 }
@@ -400,13 +440,13 @@ bool DislocationTracer::createBurgersCircuit(InterfaceMesh::Edge* edge, int maxB
 * Creates a reverse Burgers circuit, allocates a new DislocationSegment,
 * and traces it in both directions.
 ******************************************************************************/
-void DislocationTracer::createAndTraceSegment(BurgersCircuit* forwardCircuit, int maxCircuitLength)
+void DislocationTracer::createAndTraceSegment(const ClusterVector& burgersVector, BurgersCircuit* forwardCircuit, int maxCircuitLength)
 {
 	// Generate the reverse circuit.
 	BurgersCircuit* backwardCircuit = buildReverseCircuit(forwardCircuit);
 
 	// Create new dislocation segment.
-	DislocationSegment* segment = network().createSegment(Vector3::Zero());
+	DislocationSegment* segment = network().createSegment(burgersVector);
 	segment->forwardNode().circuit = forwardCircuit;
 	segment->backwardNode().circuit = backwardCircuit;
 	forwardCircuit->dislocationNode = &segment->forwardNode();
@@ -1176,6 +1216,7 @@ void DislocationTracer::createSecondarySegment(InterfaceMesh::Edge* firstEdge, B
 	int edgeCount = 1;
 	Vector3 burgersVector = Vector3::Zero();
 	Vector3 edgeSum = Vector3::Zero();
+	Cluster* baseCluster = nullptr;
 	Matrix3 frankRotation = Matrix3::Identity();
 	int numCircuits = 1;
 	InterfaceMesh::Edge* circuitStart = firstEdge->oppositeEdge();
@@ -1203,6 +1244,7 @@ void DislocationTracer::createSecondarySegment(InterfaceMesh::Edge* firstEdge, B
 		circuitEnd->nextCircuitEdge = edge;
 		edgeSum += edge->physicalVector;
 		burgersVector += frankRotation * edge->clusterVector;
+		if(!baseCluster) baseCluster = edge->clusterTransition->cluster1;
 		if(!edge->clusterTransition->isSelfTransition())
 			frankRotation = frankRotation * edge->clusterTransition->reverse->tm;
 		if(edge == circuitStart)
@@ -1249,7 +1291,7 @@ void DislocationTracer::createSecondarySegment(InterfaceMesh::Edge* firstEdge, B
 	OVITO_ASSERT(forwardCircuit->countEdges() == forwardCircuit->edgeCount);
 
 	// Do all the rest.
-	createAndTraceSegment(forwardCircuit, maxCircuitLength);
+	createAndTraceSegment(ClusterVector(burgersVector, baseCluster), forwardCircuit, maxCircuitLength);
 }
 
 }	// End of namespace

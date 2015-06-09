@@ -29,11 +29,14 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 /******************************************************************************
 * Classifies each tetrahedron of the tessellation as being either good or bad.
 ******************************************************************************/
-bool InterfaceMesh::classifyTetrahedra(FutureInterfaceBase& progress)
+bool InterfaceMesh::classifyTetrahedra(FloatType maximumNeighborDistance, FutureInterfaceBase& progress)
 {
 	_numGoodTetrahedra = 0;
 	_isCompletelyGood = true;
 	_isCompletelyBad = true;
+
+	// Threshold for filtering out elements at the surface.
+	double alpha = 5.0 * maximumNeighborDistance;
 
 	progress.setProgressRange(tessellation().number_of_tetrahedra());
 	int progressCounter = 0;
@@ -45,6 +48,16 @@ bool InterfaceMesh::classifyTetrahedra(FutureInterfaceBase& progress)
 
 		// Determine whether the tetrahedron belongs to the good or the bad crystal region.
 		bool isGood = elasticMapping().isElasticMappingCompatible(cell);
+
+		// Alpha shape criterion.
+		if(isGood && tessellation().dt().geom_traits().compare_squared_radius_3_object()(
+						cell->vertex(0)->point(),
+						cell->vertex(1)->point(),
+						cell->vertex(2)->point(),
+						cell->vertex(3)->point(),
+						alpha) == CGAL::POSITIVE) {
+			isGood = false;
+		}
 
 		cell->info().flag = isGood;
 		if(isGood && !cell->info().isGhost) {
@@ -233,10 +246,10 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 					OVITO_CHECK_POINTER(oppositeEdge);
 					if(oppositeEdge->vertex1() == edge->vertex2()) {
 						edge->linkToOppositeEdge(oppositeEdge);
-						OVITO_ASSERT(edge->physicalVector.equals(-oppositeEdge->physicalVector));
+						OVITO_ASSERT(edge->physicalVector.equals(-oppositeEdge->physicalVector, CA_ATOM_VECTOR_EPSILON));
 						OVITO_ASSERT(edge->clusterTransition == oppositeEdge->clusterTransition->reverse);
 						OVITO_ASSERT(edge->clusterTransition->reverse == oppositeEdge->clusterTransition);
-						OVITO_ASSERT(edge->clusterVector.equals(-oppositeEdge->clusterTransition->transform(oppositeEdge->clusterVector)));
+						OVITO_ASSERT(edge->clusterVector.equals(-oppositeEdge->clusterTransition->transform(oppositeEdge->clusterVector), CA_LATTICE_VECTOR_EPSILON));
 						break;
 					}
 					oppositeEdge = oppositeEdge->nextFaceEdge();
@@ -259,10 +272,10 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 		int edgeCount = 0;
 		for(Edge* edge = vertex->edges(); edge != nullptr; edge = edge->nextVertexEdge()) {
 			OVITO_ASSERT(edge->oppositeEdge()->oppositeEdge() == edge);
-			OVITO_ASSERT(edge->physicalVector.equals(-edge->oppositeEdge()->physicalVector));
+			OVITO_ASSERT(edge->physicalVector.equals(-edge->oppositeEdge()->physicalVector, CA_ATOM_VECTOR_EPSILON));
 			OVITO_ASSERT(edge->clusterTransition == edge->oppositeEdge()->clusterTransition->reverse);
 			OVITO_ASSERT(edge->clusterTransition->reverse == edge->oppositeEdge()->clusterTransition);
-			OVITO_ASSERT(edge->clusterVector.equals(-edge->oppositeEdge()->clusterTransition->transform(edge->oppositeEdge()->clusterVector)));
+			OVITO_ASSERT(edge->clusterVector.equals(-edge->oppositeEdge()->clusterTransition->transform(edge->oppositeEdge()->clusterVector), CA_LATTICE_VECTOR_EPSILON));
 			OVITO_ASSERT(edge->nextFaceEdge()->prevFaceEdge() == edge);
 			OVITO_ASSERT(edge->prevFaceEdge()->nextFaceEdge() == edge);
 			OVITO_ASSERT(edge->nextFaceEdge()->nextFaceEdge() == edge->prevFaceEdge());
