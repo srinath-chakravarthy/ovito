@@ -50,6 +50,9 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 		coords[2] = (double)wp.z() + displacement(rng);
 
 		cgalPoints.push_back(Point3WithIndex(coords[0], coords[1], coords[2], i, false));
+
+		if(progress && progress->isCanceled())
+			return false;
 	}
 
 	int vertexCount = numPoints;
@@ -80,12 +83,12 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 			for(int iz = -stencilCount[2]; iz <= +stencilCount[2]; iz++) {
 				if(ix == 0 && iy == 0 && iz == 0) continue;
 
-				if(progress && progress->isCanceled())
-					return false;
-
 				Vector3 shift = simCell.reducedToAbsolute(Vector3(ix,iy,iz));
 				Vector_3<double> shiftd = (Vector_3<double>)shift;
 				for(int vertexIndex = 0; vertexIndex < vertexCount; vertexIndex++) {
+					if(progress && progress->isCanceled())
+						return false;
+
 					Point3 pimage = (Point3)cgalPoints[vertexIndex] + shift;
 					bool isClipped = false;
 					for(size_t dim = 0; dim < 3; dim++) {
@@ -110,32 +113,39 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 	CGAL::spatial_sort(cgalPoints.begin(), cgalPoints.end(), _dt.geom_traits());
 
 	if(progress) {
-		if(progress->isCanceled()) return false;
 		progress->setProgressRange(cgalPoints.size());
-		progress->setProgressValue(0);
+		if(!progress->setProgressValue(0))
+			return false;
 	}
 
 	DT::Vertex_handle hint;
 	for(auto p = cgalPoints.begin(); p != cgalPoints.end(); ++p) {
 		hint = _dt.insert(*p, hint);
 
-		if(progress && ((p - cgalPoints.begin()) % 4096) == 0) {
-			if(progress->isCanceled()) return false;
-			progress->incrementProgressValue(4096);
+		if(progress) {
+			if(!progress->setProgressValueIntermittent(p - cgalPoints.begin()))
+				return false;
 		}
 	}
-	progress->setProgressValue(cgalPoints.size());
 
 	// Classify tessellation cells as ghost or local cells.
+	_numPrimaryTetrahedra = 0;
 	for(CellIterator cell = begin_cells(); cell != end_cells(); ++cell) {
-		cell->info().isGhost = isGhostCell(cell);
+		if(isGhostCell(cell)) {
+			cell->info().isGhost = true;
+			cell->info().index = -1;
+		}
+		else {
+			cell->info().isGhost = false;
+			cell->info().index = _numPrimaryTetrahedra++;
+		}
 	}
 
 	return true;
 }
 
 /******************************************************************************
-* /// Determines whether the given tetrahedral cell is a ghost cell (or an invalid cell).
+* Determines whether the given tetrahedral cell is a ghost cell (or an invalid cell).
 ******************************************************************************/
 bool DelaunayTessellation::isGhostCell(CellHandle cell) const
 {
@@ -161,6 +171,49 @@ bool DelaunayTessellation::isGhostCell(CellHandle cell) const
 
 	OVITO_ASSERT(isValidCell(cell));
 	return isGhost;
+}
+
+/******************************************************************************
+* Writes the tessellation to a VTK file for visualization.
+******************************************************************************/
+void DelaunayTessellation::dumpToVTKFile(const QString& filename) const
+{
+	QFile file(filename);
+	file.open(QIODevice::WriteOnly);
+	QTextStream stream(&file);
+
+	// Write VTK output file.
+	stream << "# vtk DataFile Version 3.0" << endl;
+	stream << "# Dislocation output" << endl;
+	stream << "ASCII" << endl;
+	stream << "DATASET UNSTRUCTURED_GRID" << endl;
+	stream << "POINTS " << (_dt.number_of_vertices()) << " double" << endl;
+	std::map<VertexHandle,int> outputVertices;
+	for(auto v = _dt.finite_vertices_begin(); v != _dt.finite_vertices_end(); ++v) {
+		outputVertices.insert(std::make_pair((VertexHandle)v, (int)outputVertices.size()));
+		stream << v->point().x() << " " << v->point().y() << " " << v->point().z() << "\n";
+	}
+	OVITO_ASSERT(outputVertices.size() == _dt.number_of_vertices());
+
+	int numCells = _dt.number_of_finite_cells();
+	stream << endl << "CELLS " << numCells << " " << (numCells * 5) << endl;
+	for(auto cell = _dt.finite_cells_begin(); cell != _dt.finite_cells_end(); ++cell) {
+		stream << "4";
+		for(int i = 0; i < 4; i++) {
+			stream << " " << outputVertices[cell->vertex(i)];
+		}
+		stream << "\n";
+	}
+	stream << endl << "CELL_TYPES " << numCells << "\n";
+	for(size_t i = 0; i < numCells; i++)
+		stream << "10" << "\n";
+
+	stream << endl << "CELL_DATA " << numCells << "\n";
+	stream << endl << "SCALARS flag int" << "\n";
+	stream << "LOOKUP_TABLE default" << "\n";
+	for(auto cell = _dt.finite_cells_begin(); cell != _dt.finite_cells_end(); ++cell) {
+		stream << cell->info().flag << "\n";
+	}
 }
 
 }	// End of namespace

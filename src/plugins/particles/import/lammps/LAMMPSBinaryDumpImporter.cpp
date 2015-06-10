@@ -372,7 +372,7 @@ void LAMMPSBinaryDumpImporter::LAMMPSBinaryDumpImportTask::parseFile(CompressedT
 			for(int nChunkAtoms = n / header.size_one; nChunkAtoms--; ++i, iter += header.size_one) {
 
 				// Update progress indicator.
-				if(!reportProgress(i)) return;
+				if(!setProgressValueIntermittent(i)) return;
 
 				try {
 					columnParser.readParticle(i, iter, header.size_one);

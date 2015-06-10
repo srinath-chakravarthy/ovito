@@ -54,11 +54,11 @@ bool parallelFor(
 
 				// Update progress indicator.
 				if((i % progressChunkSize) == 0) {
-					if(i != 0)
-						futureInterface.incrementProgressValue();
-					if(futureInterface.isCanceled())
-						return;
+					OVITO_ASSERT(i != 0);
+					futureInterface.incrementProgressValue();
 				}
+				if(futureInterface.isCanceled())
+					return;
 			}
 		}));
 		startIndex = endIndex;

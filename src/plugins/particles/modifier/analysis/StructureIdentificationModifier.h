@@ -84,6 +84,9 @@ protected:
 	/// Loads the class' contents from the given stream.
 	virtual void loadFromStream(ObjectLoadStream& stream) override;
 
+	/// Inserts a structure type into the list.
+	void addStructureType(ParticleType* type) { _structureTypes.push_back(type); }
+
 	/// Create an instance of the ParticleType class to represent a structure type.
 	void createStructureType(int id, ParticleTypeProperty::PredefinedStructureType predefType);
 

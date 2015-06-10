@@ -209,7 +209,7 @@ void SurfaceMeshDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 /******************************************************************************
 * Generates the final triangle mesh, which will be rendered.
 ******************************************************************************/
-bool SurfaceMeshDisplay::buildSurfaceMesh(const HalfEdgeMesh& input, const SimulationCell& cell, TriMesh& output, FutureInterfaceBase* progress)
+bool SurfaceMeshDisplay::buildSurfaceMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, TriMesh& output, FutureInterfaceBase* progress)
 {
 	// Convert half-edge mesh to triangle mesh.
 	input.convertToTriMesh(output);
@@ -352,7 +352,7 @@ bool SurfaceMeshDisplay::splitFace(TriMesh& output, TriMeshFace& face, int oldVe
 /******************************************************************************
 * Generates the triangle mesh for the PBC caps.
 ******************************************************************************/
-void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh& input, const SimulationCell& cell, bool isCompletelySolid, TriMesh& output, FutureInterfaceBase* progress)
+void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool isCompletelySolid, TriMesh& output, FutureInterfaceBase* progress)
 {
 	// Convert vertex positions to reduced coordinates.
 	std::vector<Point3> reducedPos(input.vertexCount());
@@ -385,8 +385,8 @@ void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh& input, const Simulatio
 		std::vector<std::vector<Point2>> closedContours;
 
 		// Find a first edge that crosses the boundary.
-		for(HalfEdgeMesh::Vertex* vert : input.vertices()) {
-			for(HalfEdgeMesh::Edge* edge = vert->edges(); edge != nullptr; edge = edge->nextVertexEdge()) {
+		for(HalfEdgeMesh<>::Vertex* vert : input.vertices()) {
+			for(HalfEdgeMesh<>::Edge* edge = vert->edges(); edge != nullptr; edge = edge->nextVertexEdge()) {
 				// Skip faces that have already been visited.
 				if(edge->face()->testFlag(1)) continue;
 
@@ -498,12 +498,12 @@ void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh& input, const Simulatio
 /******************************************************************************
 * Traces the closed contour of the surface-boundary intersection.
 ******************************************************************************/
-std::vector<Point2> SurfaceMeshDisplay::traceContour(HalfEdgeMesh::Edge* firstEdge, const std::vector<Point3>& reducedPos, const SimulationCell& cell, size_t dim)
+std::vector<Point2> SurfaceMeshDisplay::traceContour(HalfEdgeMesh<>::Edge* firstEdge, const std::vector<Point3>& reducedPos, const SimulationCell& cell, size_t dim)
 {
 	size_t dim1 = (dim + 1) % 3;
 	size_t dim2 = (dim + 2) % 3;
 	std::vector<Point2> contour;
-	HalfEdgeMesh::Edge* edge = firstEdge;
+	HalfEdgeMesh<>::Edge* edge = firstEdge;
 	do {
 		OVITO_ASSERT(!edge->face()->testFlag(1));
 
@@ -718,16 +718,17 @@ bool SurfaceMeshDisplay::isCornerInside2DRegion(const std::vector<std::vector<Po
 * Signed Distance Computation Using the Angle Weighted Pseudonormal
 * IEEE Transactions on Visualization and Computer Graphics 11 (2005), Page 243
 ******************************************************************************/
-bool SurfaceMeshDisplay::isCornerInside3DRegion(const HalfEdgeMesh& mesh, const std::vector<Point3>& reducedPos, const std::array<bool,3> pbcFlags, bool isCompletelySolid)
+bool SurfaceMeshDisplay::isCornerInside3DRegion(const HalfEdgeMesh<>& mesh, const std::vector<Point3>& reducedPos, const std::array<bool,3> pbcFlags, bool isCompletelySolid)
 {
 	if(mesh.vertices().empty())
 		return isCompletelySolid;
 
 	// Determine which vertex is closest to the test point.
 	FloatType closestDistanceSq = FLOATTYPE_MAX;
-	HalfEdgeMesh::Vertex* closestVertex = nullptr;
+	HalfEdgeMesh<>::Vertex* closestVertex = nullptr;
 	Vector3 closestNormal, closestVector;
-	for(HalfEdgeMesh::Vertex* v : mesh.vertices()) {
+	for(HalfEdgeMesh<>::Vertex* v : mesh.vertices()) {
+		if(v->edges() == nullptr) continue;
 		Vector3 r = reducedPos[v->index()] - Point3::Origin();
 		for(size_t k = 0; k < 3; k++) {
 			if(pbcFlags[k]) {
@@ -744,8 +745,8 @@ bool SurfaceMeshDisplay::isCornerInside3DRegion(const HalfEdgeMesh& mesh, const 
 	}
 
 	// Check if any edge is closer to the test point than the closest vertex.
-	for(HalfEdgeMesh::Vertex* v : mesh.vertices()) {
-		for(HalfEdgeMesh::Edge* edge = v->edges(); edge != nullptr; edge = edge->nextVertexEdge()) {
+	for(HalfEdgeMesh<>::Vertex* v : mesh.vertices()) {
+		for(HalfEdgeMesh<>::Edge* edge = v->edges(); edge != nullptr; edge = edge->nextVertexEdge()) {
 			const Point3& p1 = reducedPos[edge->vertex1()->index()];
 			const Point3& p2 = reducedPos[edge->vertex2()->index()];
 			Vector3 edgeDir = p2 - p1;
@@ -785,10 +786,10 @@ bool SurfaceMeshDisplay::isCornerInside3DRegion(const HalfEdgeMesh& mesh, const 
 	}
 
 	// Check if any facet is closer to the test point than the closest vertex and the closest edge.
-	HalfEdgeMesh::Face* closestFace = nullptr;
-	for(HalfEdgeMesh::Face* face : mesh.faces()) {
-		HalfEdgeMesh::Edge* edge1 = face->edges();
-		HalfEdgeMesh::Edge* edge2 = edge1->nextFaceEdge();
+	HalfEdgeMesh<>::Face* closestFace = nullptr;
+	for(HalfEdgeMesh<>::Face* face : mesh.faces()) {
+		HalfEdgeMesh<>::Edge* edge1 = face->edges();
+		HalfEdgeMesh<>::Edge* edge2 = edge1->nextFaceEdge();
 		const Point3& p1 = reducedPos[edge1->vertex1()->index()];
 		const Point3& p2 = reducedPos[edge1->vertex2()->index()];
 		const Point3& p3 = reducedPos[edge2->vertex2()->index()];
@@ -834,7 +835,8 @@ bool SurfaceMeshDisplay::isCornerInside3DRegion(const HalfEdgeMesh& mesh, const 
 
 	// If a vertex is closest, we still have to compute the local pseudo-normal at the vertex.
 	if(closestVertex != nullptr) {
-		HalfEdgeMesh::Edge* edge = closestVertex->edges();
+		HalfEdgeMesh<>::Edge* edge = closestVertex->edges();
+		OVITO_ASSERT(edge != nullptr);
 		closestNormal.setZero();
 		Vector3 edge1v = reducedPos[edge->vertex2()->index()] - reducedPos[closestVertex->index()];
 		for(size_t k = 0; k < 3; k++) {
@@ -845,7 +847,7 @@ bool SurfaceMeshDisplay::isCornerInside3DRegion(const HalfEdgeMesh& mesh, const 
 		}
 		edge1v.normalizeSafely();
 		do {
-			HalfEdgeMesh::Edge* nextEdge = edge->oppositeEdge()->nextFaceEdge();
+			HalfEdgeMesh<>::Edge* nextEdge = edge->oppositeEdge()->nextFaceEdge();
 			OVITO_ASSERT(nextEdge->vertex1() == closestVertex);
 			Vector3 edge2v = reducedPos[nextEdge->vertex2()->index()] - reducedPos[closestVertex->index()];
 			for(size_t k = 0; k < 3; k++) {
@@ -876,7 +878,7 @@ OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 void SurfaceMeshDisplayEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 {
 	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Surface display"), rolloutParams, "display_objects.surface_mesh.html");
+	QWidget* rollout = createRollout(QString(), rolloutParams, "display_objects.surface_mesh.html");
 
     // Create the rollout contents.
 	QVBoxLayout* layout = new QVBoxLayout(rollout);

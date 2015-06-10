@@ -67,6 +67,10 @@ public:
 	///         no item is currently selected.
 	ParticlePropertyReference currentProperty() const;
 
+	/// \brief Sets the selection of the combo box to the given particle property.
+	/// \param property The particle property to be selected.
+	void setCurrentProperty(const ParticlePropertyReference& property);
+
 	/// \brief Returns the list index of the given property, or -1 if not found.
 	int propertyIndex(const ParticlePropertyReference& property) const {
 		for(int index = 0; index < count(); index++) {
@@ -81,19 +85,11 @@ public:
 		return itemData(index).value<ParticlePropertyReference>();
 	}
 
-	/// \brief Sets the selection of the combo box to the given particle property.
-	/// \param property The particle property to be selected.
-	void setCurrentProperty(const ParticlePropertyReference& property) {
-		for(int index = 0; index < count(); index++) {
-			if(property == itemData(index).value<ParticlePropertyReference>()) {
-				setCurrentIndex(index);
-				return;
-			}
-		}
-		setCurrentIndex(-1);
-		if(isEditable() && !property.isNull())
-			setCurrentText(property.name());
-	}
+protected:
+
+	/// Is called when the widget loses the input focus.
+	virtual void focusOutEvent(QFocusEvent* event) override;
+
 };
 
 OVITO_END_INLINE_NAMESPACE

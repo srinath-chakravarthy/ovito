@@ -47,9 +47,6 @@ public:
 	/// \brief Lets the display object render the data object.
 	virtual void render(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState, SceneRenderer* renderer, ObjectNode* contextNode) override;
 
-	/// \brief Returns the title of this object.
-	virtual QString objectTitle() override { return tr("Simulation cell"); }
-
 	/// \brief Returns the line width used to render the simulation cell box.
 	/// \return The line with in world units or zero if the simulation box is not rendered.
 	FloatType simulationCellLineWidth() const { return _simulationCellLineWidth; }
@@ -132,6 +129,8 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
+
+	Q_CLASSINFO("DisplayName", "Simulation cell");
 
 	DECLARE_PROPERTY_FIELD(_renderSimulationCell);
 	DECLARE_PROPERTY_FIELD(_simulationCellLineWidth);

@@ -305,6 +305,28 @@ public:
 
 	////////////////////////////////// Comparison ///////////////////////////////////
 
+	/// \brief Tests if two matrices are equal within a given tolerance.
+	/// \param m The matrix to compare to.
+	/// \param tolerance A non-negative threshold for the equality test. The two matrices are considered equal if
+	///        the element-wise differences are all less than this tolerance value.
+	/// \return \c true if this matrix is equal to \a m within the given tolerance; \c false otherwise.
+	inline bool equals(const Matrix_4& m, T tolerance = T(FLOATTYPE_EPSILON)) const {
+		for(size_type i = 0; i < col_count(); i++)
+			if(!column(i).equals(m.column(i), tolerance)) return false;
+		return true;
+	}
+
+	/// \brief Test if the matrix is zero within a given tolerance.
+	/// \param tolerance A non-negative threshold.
+	/// \return \c true if the absolute value of each matrix element is all smaller than \a tolerance.
+	inline bool isZero(T tolerance = T(FLOATTYPE_EPSILON)) const {
+		for(size_type i = 0; i < col_count(); i++)
+			if(!column(i).isZero(tolerance)) return false;
+		return true;
+	}
+
+	////////////////////////////////// Computations ///////////////////////////////////
+
 	/// \brief Computes the determinant of the matrix.
 	Q_DECL_CONSTEXPR inline T determinant() const {
 		return ((*this)[0][3] * (*this)[1][2] * (*this)[2][1] * (*this)[3][0]-(*this)[0][2] * (*this)[1][3] * (*this)[2][1] * (*this)[3][0]-(*this)[0][3] * (*this)[1][1] * (*this)[2][2] * (*this)[3][0]+(*this)[0][1] * (*this)[1][3] * (*this)[2][2] * (*this)[3][0]+

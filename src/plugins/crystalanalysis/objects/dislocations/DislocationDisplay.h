@@ -30,28 +30,33 @@
 #include <core/rendering/SceneRenderer.h>
 #include <core/gui/properties/PropertiesEditor.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
-#include <plugins/crystalanalysis/data/dislocations/DislocationNetwork.h>
+#include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
+#include <plugins/crystalanalysis/objects/patterns/PatternCatalog.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 class DislocationDisplay;	// defined below
 
 /**
- * An information record used for dislocation picking in the viewports.
+ * \brief This information record is attached to the dislocation segments by the DislocationDisplay when rendering
+ * them in the viewports. It facilitates the picking of dislocations with the mouse.
  */
 class OVITO_CRYSTALANALYSIS_EXPORT DislocationPickInfo : public ObjectPickInfo
 {
 public:
 
 	/// Constructor.
-	DislocationPickInfo(DislocationDisplay* displayObj, DislocationNetwork* dislocationObj, std::vector<int>&& subobjToSegmentMap) :
-		_displayObject(displayObj), _dislocationObj(dislocationObj), _subobjToSegmentMap(std::move(subobjToSegmentMap)) {}
+	DislocationPickInfo(DislocationDisplay* displayObj, DislocationNetworkObject* dislocationObj, PatternCatalog* patternCatalog, std::vector<int>&& subobjToSegmentMap) :
+		_displayObject(displayObj), _dislocationObj(dislocationObj), _patternCatalog(patternCatalog), _subobjToSegmentMap(std::move(subobjToSegmentMap)) {}
 
 	/// The data object containing the dislocations.
-	DislocationNetwork* dislocationObj() const { return _dislocationObj; }
+	DislocationNetworkObject* dislocationObj() const { return _dislocationObj; }
 
 	/// Returns the display object that rendered the dislocations.
 	DislocationDisplay* displayObject() const { return _displayObject; }
+
+	/// Returns the associated pattern catalog.
+	PatternCatalog* patternCatalog() const { return _patternCatalog; }
 
 	/// \brief Given an sub-object ID returned by the Viewport::pick() method, looks up the
 	/// corresponding dislocation segment.
@@ -62,13 +67,19 @@ public:
 			return -1;
 	}
 
+	/// Returns a human-readable string describing the picked object, which will be displayed in the status bar by OVITO.
+	virtual QString infoString(ObjectNode* objectNode, quint32 subobjectId) override;
+
 private:
 
 	/// The data object containing the dislocations.
-	OORef<DislocationNetwork> _dislocationObj;
+	OORef<DislocationNetworkObject> _dislocationObj;
 
 	/// The display object that rendered the dislocations.
 	OORef<DislocationDisplay> _displayObject;
+
+	/// The data object containing the lattice structure.
+	OORef<PatternCatalog> _patternCatalog;
 
 	/// This array is used to map sub-object picking IDs back to dislocation segments.
 	std::vector<int> _subobjToSegmentMap;
@@ -93,9 +104,6 @@ public:
 	/// \brief Computes the bounding box of the object.
 	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
 
-	/// \brief Returns the title of this object.
-	virtual QString objectTitle() override { return tr("Dislocations"); }
-
 	/// \brief Returns the line width used for dislocation rendering.
 	FloatType lineWidth() const { return _lineWidth; }
 
@@ -111,15 +119,18 @@ public:
 	/// \brief Renders an overlay marker for a single dislocation segment.
 	void renderOverlayMarker(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState, int segmentIndex, SceneRenderer* renderer, ObjectNode* contextNode);
 
+	/// \brief Generates a pretty string representation of a Burgers vector.
+	static QString formatBurgersVector(const Vector3& b);
+
 public:
 
-	Q_PROPERTY(FloatType lineWidth READ lineWidth WRITE setLineWidth)
-	Q_PROPERTY(Ovito::ArrowPrimitive::ShadingMode shadingMode READ shadingMode WRITE setShadingMode)
+	Q_PROPERTY(FloatType lineWidth READ lineWidth WRITE setLineWidth);
+	Q_PROPERTY(Ovito::ArrowPrimitive::ShadingMode shadingMode READ shadingMode WRITE setShadingMode);
 
 protected:
 
 	/// Clips a dislocation line at the periodic box boundaries.
-	void clipDislocationLine(const QVector<Point3>& line, const SimulationCell& simulationCell, const std::function<void(const Point3&, const Point3&, bool)>& segmentCallback);
+	void clipDislocationLine(const std::deque<Point3>& line, const SimulationCell& simulationCell, const std::function<void(const Point3&, const Point3&, bool)>& segmentCallback);
 
 protected:
 
@@ -134,7 +145,8 @@ protected:
 	SceneObjectCacheHelper<
 		WeakVersionedOORef<DataObject>,		// Source object + revision number
 		SimulationCell,						// Simulation cell geometry
-		FloatType								// Line width
+		WeakVersionedOORef<PatternCatalog>,	// The pattern catalog
+		FloatType							// Line width
 		> _geometryCacheHelper;
 
 	/// The cached bounding box.
@@ -162,10 +174,11 @@ private:
 	Q_OBJECT
 	OVITO_OBJECT
 
+	Q_CLASSINFO("DisplayName", "Dislocations");
+
 	DECLARE_PROPERTY_FIELD(_lineWidth);
 	DECLARE_PROPERTY_FIELD(_shadingMode);
 };
-
 
 /**
  * \brief A properties editor for the DislocationDisplay class.

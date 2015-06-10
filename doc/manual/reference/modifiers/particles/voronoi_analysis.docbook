@@ -89,6 +89,23 @@
       </varlistentry>
       
       <varlistentry>
+        <term>Generate neighbor bonds</term>
+        <listitem>
+          <para>
+             If this option is enabled, the modifier outputs the bonds between pairs of
+             neighboring particles. A bond is generated for every Voronoi face whose
+             area is larger than the specified face area threshold, and which has at least three edges
+             longer than the specified edge length threshold.
+          </para>
+          <para>
+             Note that bonds in periodic simulation cells are computed using the minimum image convention,
+             which requires that the cell is at least twice as large in each periodic direction as the 
+             longest nearest neighbor bond. In cases where the cell is too small, the computed bonds might be incorrect.
+          </para>
+        </listitem>
+      </varlistentry>
+            
+      <varlistentry>
         <term>Use particle radii</term>
         <listitem>
           <para>

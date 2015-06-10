@@ -25,7 +25,6 @@
 #include <core/gui/properties/FloatParameterUI.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include "DislocationDisplay.h"
-#include "DislocationNetwork.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -88,10 +87,12 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 		recreateBuffers |= !_cornerBuffer->setShadingMode(cornerShadingMode);
 	}
 
+	// Get pattern catalog.
+	PatternCatalog* patternCatalog = flowState.findObject<PatternCatalog>();
+
 	// Do we have to update contents of the geometry buffers?
 	bool updateContents = _geometryCacheHelper.updateState(
-			dataObject,
-			cellObject->data(), lineWidth()) || recreateBuffers;
+			dataObject, cellObject->data(), patternCatalog, lineWidth()) || recreateBuffers;
 
 	// Re-create the geometry buffers if necessary.
 	if(recreateBuffers) {
@@ -102,15 +103,13 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 	// Update buffer contents.
 	if(updateContents) {
 		SimulationCell cellData = cellObject->data();
-		if(OORef<DislocationNetwork> dislocationObj = dataObject->convertTo<DislocationNetwork>(time)) {
+		if(OORef<DislocationNetworkObject> dislocationObj = dataObject->convertTo<DislocationNetworkObject>(time)) {
 			int lineSegmentCount = 0, cornerCount = 0;
 			for(DislocationSegment* segment : dislocationObj->segments()) {
-				if(segment->isVisible() && segment->burgersVectorFamily()->isVisible()) {
-					clipDislocationLine(segment->line(), cellData, [&lineSegmentCount, &cornerCount](const Point3&, const Point3&, bool isInitialSegment) {
-						lineSegmentCount++;
-						if(!isInitialSegment) cornerCount++;
-					});
-				}
+				clipDislocationLine(segment->line, cellData, [&lineSegmentCount, &cornerCount](const Point3&, const Point3&, bool isInitialSegment) {
+					lineSegmentCount++;
+					if(!isInitialSegment) cornerCount++;
+				});
 			}
 			_segmentBuffer->startSetElements(lineSegmentCount);
 			std::vector<int> subobjToSegmentMap(lineSegmentCount + cornerCount);
@@ -122,26 +121,39 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 			cornerPoints.reserve(cornerCount);
 			cornerColors.reserve(cornerCount);
 			for(DislocationSegment* segment : dislocationObj->segments()) {
-				if(segment->isVisible() && segment->burgersVectorFamily()->isVisible()) {
-					Color lineColor = segment->burgersVectorFamily()->color();
-					clipDislocationLine(segment->line(), cellData, [this, &lineSegmentIndex, &cornerPoints, &cornerColors, lineColor, lineRadius, &subobjToSegmentMap, &dislocationIndex, lineSegmentCount](const Point3& v1, const Point3& v2, bool isInitialSegment) {
-						subobjToSegmentMap[lineSegmentIndex] = dislocationIndex;
-						_segmentBuffer->setElement(lineSegmentIndex++, v1, v2 - v1, ColorA(lineColor), lineRadius);
-						if(!isInitialSegment) {
-							subobjToSegmentMap[cornerPoints.size() + lineSegmentCount] = dislocationIndex;
-							cornerPoints.push_back(v1);
-							cornerColors.push_back(lineColor);
+				BurgersVectorFamily* family = nullptr;
+				if(patternCatalog) {
+					Cluster* cluster = segment->burgersVector.cluster();
+					OVITO_ASSERT(cluster != nullptr);
+					StructurePattern* pattern = patternCatalog->structureById(cluster->structure);
+					family = pattern->defaultBurgersVectorFamily();
+					for(BurgersVectorFamily* f : pattern->burgersVectorFamilies()) {
+						if(f->isMember(segment->burgersVector.localVec())) {
+							family = f;
+							break;
 						}
-					});
+					}
 				}
+				Color lineColor = family ? family->color() : Color(0.8,0.8,0.8);
+				clipDislocationLine(segment->line, cellData, [this, &lineSegmentIndex, &cornerPoints, &cornerColors, lineColor, lineRadius, &subobjToSegmentMap, &dislocationIndex, lineSegmentCount](const Point3& v1, const Point3& v2, bool isInitialSegment) {
+					subobjToSegmentMap[lineSegmentIndex] = dislocationIndex;
+					_segmentBuffer->setElement(lineSegmentIndex++, v1, v2 - v1, ColorA(lineColor), lineRadius);
+					if(!isInitialSegment) {
+						subobjToSegmentMap[cornerPoints.size() + lineSegmentCount] = dislocationIndex;
+						cornerPoints.push_back(v1);
+						cornerColors.push_back(lineColor);
+					}
+				});
 				dislocationIndex++;
 			}
+			OVITO_ASSERT(lineSegmentIndex == lineSegmentCount);
+			OVITO_ASSERT(cornerPoints.size() == cornerCount);
 			_segmentBuffer->endSetElements();
 			_cornerBuffer->setSize(cornerPoints.size());
 			_cornerBuffer->setParticlePositions(cornerPoints.empty() ? nullptr : cornerPoints.data());
 			_cornerBuffer->setParticleColors(cornerColors.empty() ? nullptr : cornerColors.data());
 			_cornerBuffer->setParticleRadius(lineRadius);
-			_pickInfo = new DislocationPickInfo(this, dislocationObj, std::move(subobjToSegmentMap));
+			_pickInfo = new DislocationPickInfo(this, dislocationObj, patternCatalog, std::move(subobjToSegmentMap));
 		}
 		else {
 			_cornerBuffer = nullptr;
@@ -174,7 +186,7 @@ void DislocationDisplay::renderOverlayMarker(TimePoint time, DataObject* dataObj
 	SimulationCell cellData = cellObject->data();
 
 	// Get the dislocations.
-	OORef<DislocationNetwork> dislocationObj = dataObject->convertTo<DislocationNetwork>(time);
+	OORef<DislocationNetworkObject> dislocationObj = dataObject->convertTo<DislocationNetworkObject>(time);
 	if(!dislocationObj)
 		return;
 
@@ -186,7 +198,7 @@ void DislocationDisplay::renderOverlayMarker(TimePoint time, DataObject* dataObj
 	// Generate the polyline segments to render.
 	QVector<std::pair<Point3,Point3>> lineSegments;
 	QVector<Point3> cornerVertices;
-	clipDislocationLine(segment->line(), cellData, [&lineSegments, &cornerVertices](const Point3& v1, const Point3& v2, bool isInitialSegment) {
+	clipDislocationLine(segment->line, cellData, [&lineSegments, &cornerVertices](const Point3& v1, const Point3& v2, bool isInitialSegment) {
 		lineSegments.push_back({v1,v2});
 		if(!isInitialSegment)
 			cornerVertices.push_back(v1);
@@ -215,8 +227,8 @@ void DislocationDisplay::renderOverlayMarker(TimePoint time, DataObject* dataObj
 	cornerBuffer->setParticleRadius(lineRadius);
 	cornerBuffer->render(renderer);
 
-	if(!segment->line().empty()) {
-		Point3 wrappedHeadPos = cellData.wrapPoint(segment->line().front());
+	if(!segment->line.empty()) {
+		Point3 wrappedHeadPos = cellData.wrapPoint(segment->line.front());
 		std::shared_ptr<ParticlePrimitive> headBuffer = renderer->createParticlePrimitive(ParticlePrimitive::FlatShading, ParticlePrimitive::HighQuality);
 		headBuffer->setSize(1);
 		headBuffer->setParticlePositions(&wrappedHeadPos);
@@ -231,7 +243,7 @@ void DislocationDisplay::renderOverlayMarker(TimePoint time, DataObject* dataObj
 /******************************************************************************
 * Clips a dislocation line at the periodic box boundaries.
 ******************************************************************************/
-void DislocationDisplay::clipDislocationLine(const QVector<Point3>& line, const SimulationCell& simulationCell, const std::function<void(const Point3&, const Point3&, bool)>& segmentCallback)
+void DislocationDisplay::clipDislocationLine(const std::deque<Point3>& line, const SimulationCell& simulationCell, const std::function<void(const Point3&, const Point3&, bool)>& segmentCallback)
 {
 	auto v1 = line.cbegin();
 	Point3 rp1 = simulationCell.absoluteToReduced(*v1);
@@ -283,6 +295,83 @@ void DislocationDisplay::clipDislocationLine(const QVector<Point3>& line, const 
 		isInitialSegment = false;
 		rp1 = rp2;
 	}
+}
+
+/******************************************************************************
+* Checks if the given floating point number is integer.
+******************************************************************************/
+static bool isInteger(FloatType v, int& intPart)
+{
+	static const FloatType epsilon = 1e-2f;
+	FloatType ip;
+	FloatType frac = std::modf(v, &ip);
+	if(frac >= -epsilon && frac <= epsilon) intPart = (int)ip;
+	else if(frac >= FloatType(1)-epsilon) intPart = (int)ip + 1;
+	else if(frac <= FloatType(-1)+epsilon) intPart = (int)ip - 1;
+	else return false;
+	return true;
+}
+
+/******************************************************************************
+* Generates a pretty string representation of the Burgers vector.
+******************************************************************************/
+QString DislocationDisplay::formatBurgersVector(const Vector3& b)
+{
+	FloatType smallestCompnt = FLOATTYPE_MAX;
+	for(int i = 0; i < 3; i++) {
+		FloatType c = std::abs(b[i]);
+		if(c < smallestCompnt && c > 1e-3)
+			smallestCompnt = c;
+	}
+	if(smallestCompnt != FLOATTYPE_MAX) {
+		FloatType m = FloatType(1) / smallestCompnt;
+		for(int f = 1; f <= 11; f++) {
+			int multiplier;
+			if(!isInteger(m*f, multiplier)) continue;
+			if(multiplier < 80) {
+				Vector3 bm = b * (FloatType)multiplier;
+				Vector3I bmi;
+				if(isInteger(bm.x(),bmi.x()) && isInteger(bm.y(),bmi.y()) && isInteger(bm.z(),bmi.z())) {
+					return QString("1/%1[%2 %3 %4]")
+							.arg(multiplier)
+							.arg(bmi.x()).arg(bmi.y()).arg(bmi.z());
+				}
+			}
+		}
+	}
+
+	return QString("%1 %2 %3")
+			.arg(QLocale::c().toString(b.x(), 'f'), 7)
+			.arg(QLocale::c().toString(b.y(), 'f'), 7)
+			.arg(QLocale::c().toString(b.z(), 'f'), 7);
+}
+
+/******************************************************************************
+* Returns a human-readable string describing the picked object,
+* which will be displayed in the status bar by OVITO.
+******************************************************************************/
+QString DislocationPickInfo::infoString(ObjectNode* objectNode, quint32 subobjectId)
+{
+	QString str;
+
+	int segmentIndex = segmentIndexFromSubObjectID(subobjectId);
+	if(segmentIndex >= 0 && segmentIndex < dislocationObj()->segments().size()) {
+		DislocationSegment* segment = dislocationObj()->segments()[segmentIndex];
+		str = tr("Dislocation | True Burgers vector: %1").arg(DislocationDisplay::formatBurgersVector(segment->burgersVector.localVec()));
+		Vector3 transformedVector = segment->burgersVector.toSpatialVector();
+		str += tr(" | Spatial Burgers vector: [%1 %2 %3]")
+				.arg(QLocale::c().toString(transformedVector.x(), 'f', 4), 7)
+				.arg(QLocale::c().toString(transformedVector.y(), 'f', 4), 7)
+				.arg(QLocale::c().toString(transformedVector.z(), 'f', 4), 7);
+		str += tr(" | Cluster Id: %1").arg(segment->burgersVector.cluster()->id);
+		str += tr(" | Segment Id: %1").arg(segment->id);
+		if(patternCatalog() != nullptr) {
+			int structureTypeId = segment->burgersVector.cluster()->structure;
+			if(StructurePattern* s = patternCatalog()->structureById(structureTypeId))
+				str += tr(" | Lattice structure: %1").arg(s->name());
+		}
+	}
+	return str;
 }
 
 /******************************************************************************

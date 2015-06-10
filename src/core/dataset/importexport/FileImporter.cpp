@@ -80,8 +80,8 @@ OORef<FileImporter> FileImporter::autodetectFileFormat(DataSet* dataset, const Q
 				return importer;
 			}
 		}
-		catch(const Exception& ex) {
-			ex.showError();
+		catch(const Exception&) {
+			// Ignore errors that occur during file format detection.
 		}
 	}
 	return nullptr;

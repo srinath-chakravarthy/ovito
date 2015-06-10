@@ -66,7 +66,7 @@ public:
 		/// Two-dimensional bit array that stores the bonds between neighbors.
 		unsigned int neighborArray[MAX_NEIGHBORS];
 
-		/// Default constructor.
+		/// Resets all bits.
 		NeighborBondArray() {
 			memset(neighborArray, 0, sizeof(neighborArray));
 		}

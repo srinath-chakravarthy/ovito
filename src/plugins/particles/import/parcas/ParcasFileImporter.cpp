@@ -296,7 +296,7 @@ void ParcasFileImporter::ParcasFileImportTask::parseFile(CompressedTextReader& t
 		}
 
 		// Update progress indicator.
-		if(!reportProgress(i)) return;
+		if(!setProgressValueIntermittent(i)) return;
 	}
 
 	setTimestep(frame_num);

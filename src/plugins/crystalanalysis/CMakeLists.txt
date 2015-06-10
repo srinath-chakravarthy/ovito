@@ -24,24 +24,30 @@ FIND_PACKAGE(CGAL REQUIRED)
 IF(NOT CGAL_FOUND)
 	MESSAGE(FATAL_ERROR "Could not locate CGAL library, which is required by CrystalAnalysis plugin.")
 ENDIF()
-# Link CGAL library.
+# Link to CGAL library.
 INCLUDE(${CGAL_USE_FILE})
 
 SET(SourceFiles
 	importer/CAImporter.cpp
-	data/patterns/BurgersVectorFamily.cpp
-	data/patterns/StructurePattern.cpp
-	data/patterns/PatternCatalog.cpp
-	data/clusters/Cluster.cpp
-	data/clusters/ClusterGraph.cpp
-	data/dislocations/DislocationSegment.cpp
-	data/dislocations/DislocationNetwork.cpp
-	data/dislocations/DislocationDisplay.cpp
-	data/dislocations/DislocationInspector.cpp
-	modifier/ShiftModifier.cpp
+	objects/patterns/BurgersVectorFamily.cpp
+	objects/patterns/StructurePattern.cpp
+	objects/patterns/PatternCatalog.cpp
+	objects/clusters/ClusterGraphObject.cpp
+	objects/dislocations/DislocationNetworkObject.cpp
+	objects/dislocations/DislocationDisplay.cpp
+#	objects/dislocations/DislocationInspector.cpp
+	data/ClusterGraph.cpp
+	data/DislocationNetwork.cpp
 	modifier/SmoothSurfaceModifier.cpp
 	modifier/SmoothDislocationsModifier.cpp
 	modifier/ConstructSurfaceModifier.cpp
+	modifier/dxa/DislocationAnalysisModifier.cpp
+	modifier/dxa/DislocationAnalysisEngine.cpp
+	modifier/dxa/StructureAnalysis.cpp
+	modifier/dxa/CrystalPathFinder.cpp
+	modifier/dxa/ElasticMapping.cpp
+	modifier/dxa/InterfaceMesh.cpp
+	modifier/dxa/DislocationTracer.cpp
 	util/DelaunayTessellation.cpp
 )
 

@@ -134,6 +134,10 @@ bool CutoffNeighborFinder::prepare(FloatType cutoffRadius, ParticleProperty* pos
 	particles.resize(positions->size());
 	const Point3* p = positions->constDataPoint3();
 	for(size_t pindex = 0; pindex < particles.size(); pindex++, ++p) {
+
+		if(progress && progress->isCanceled())
+			return false;
+
 		NeighborListParticle& a = particles[pindex];
 		a.pos = *p;
 		a.pbcShift.setZero();

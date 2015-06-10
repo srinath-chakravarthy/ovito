@@ -109,8 +109,9 @@ void AmbientOcclusionModifier::AmbientOcclusionEngine::perform()
 		std::shared_ptr<ParticlePrimitive> particleBuffer;
 
 		setProgressRange(_samplingCount);
-		for(int sample = 0; sample < _samplingCount && !isCanceled(); sample++) {
-			setProgressValue(sample);
+		for(int sample = 0; sample < _samplingCount; sample++) {
+			if(!setProgressValue(sample))
+				break;
 
 			// Generate lighting direction on unit sphere.
 			FloatType y = (FloatType)sample * 2 / _samplingCount - FloatType(1) + FloatType(1) / _samplingCount;

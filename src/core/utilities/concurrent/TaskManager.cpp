@@ -33,7 +33,7 @@ TaskManager::TaskManager(MainWindow* mainWindow) : QObject(mainWindow), _mainWin
 		_progressBar(nullptr), _cancelTaskButton(nullptr), _progressWidget(nullptr),
 		_progressTextDisplay(nullptr)
 {
-	qRegisterMetaType<std::shared_ptr<FutureInterfaceBase>>("FutureInterfacePointer");
+	qRegisterMetaType<std::shared_ptr<FutureInterfaceBase>>("std::shared_ptr<FutureInterfaceBase>");
 
 	_indicatorVisible = false;
 
@@ -165,8 +165,8 @@ void TaskManager::updateIndicator()
 	}
 	else {
 		FutureWatcher* watcher = _taskStack.top();
-		_progressBar->setRange(0, watcher->progressMaximum());
-		_progressBar->setValue(watcher->progressValue());
+		_progressBar->setRange(0, watcher->totalProgressMaximum());
+		_progressBar->setValue(watcher->totalProgressValue());
 		_progressTextDisplay->setText(watcher->progressText());
 		_progressWidget->show();
 	}

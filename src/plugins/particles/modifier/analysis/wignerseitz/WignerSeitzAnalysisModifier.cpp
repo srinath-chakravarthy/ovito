@@ -216,11 +216,8 @@ void WignerSeitzAnalysisModifier::WignerSeitzAnalysisEngine::perform()
 		output->dataInt()[closestIndex]++;
 
 		particleIndex++;
-		if((particleIndex % 1024) == 0) {
-			if(isCanceled())
-				return;
-			setProgressValue(particleIndex);
-		}
+		if(!setProgressValueIntermittent(particleIndex))
+			return;
 	}
 
 	// Count defects.
@@ -288,6 +285,19 @@ void WignerSeitzAnalysisModifier::propertyChanged(const PropertyFieldDescriptor&
 			|| field == PROPERTY_FIELD(WignerSeitzAnalysisModifier::_referenceFrameNumber)
 			|| field == PROPERTY_FIELD(WignerSeitzAnalysisModifier::_referenceFrameOffset))
 		invalidateCachedResults();
+}
+
+/******************************************************************************
+* Is called when a RefTarget referenced by this object has generated an event.
+******************************************************************************/
+bool WignerSeitzAnalysisModifier::referenceEvent(RefTarget* source, ReferenceEvent* event)
+{
+	if(source == referenceConfiguration()) {
+		if(event->type() == ReferenceEvent::TargetChanged || event->type() == ReferenceEvent::PendingStateChanged) {
+			invalidateCachedResults();
+		}
+	}
+	return AsynchronousParticleModifier::referenceEvent(source, event);
 }
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)

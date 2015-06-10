@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2015) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,60 +19,50 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_DISLOCATION_NETWORK_H
-#define __OVITO_CA_DISLOCATION_NETWORK_H
+#ifndef __OVITO_CA_DISLOCATION_NETWORK_OBJECT_H
+#define __OVITO_CA_DISLOCATION_NETWORK_OBJECT_H
 
-#include <core/Core.h>
-#include <core/scene/objects/DataObject.h>
+#include <plugins/crystalanalysis/CrystalAnalysis.h>
+#include <plugins/crystalanalysis/data/DislocationNetwork.h>
+#include <core/scene/objects/DataObjectWithSharedStorage.h>
 #include <core/gui/properties/PropertiesEditor.h>
-#include "DislocationSegment.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 /**
  * \brief Stores a collection of dislocation segments.
  */
-class OVITO_CRYSTALANALYSIS_EXPORT DislocationNetwork : public DataObject
+class OVITO_CRYSTALANALYSIS_EXPORT DislocationNetworkObject : public DataObjectWithSharedStorage<DislocationNetwork>
 {
 public:
 
-	/// \brief Constructor that creates an empty object.
-	Q_INVOKABLE DislocationNetwork(DataSet* dataset);
+	/// \brief Constructor.
+	Q_INVOKABLE DislocationNetworkObject(DataSet* dataset, DislocationNetwork* network = nullptr);
 
 	/// Returns the title of this object.
 	virtual QString objectTitle() override { return tr("Dislocations"); }
 
 	/// Returns the list of dislocation segments.
-	const QVector<DislocationSegment*>& segments() const { return _segments; }
+	const std::vector<DislocationSegment*>& segments() const { return storage()->segments(); }
 
-	/// Discards all existing dislocation segments.
-	void clear() { _segments.clear(); }
-
-	/// Adds a dislocation segment to this container.
-	void addSegment(DislocationSegment* segment) { _segments.push_back(segment); }
-
-protected:
-
-	/// Stores the list of dislocation segments.
-	VectorReferenceField<DislocationSegment> _segments;
+	/// Returns the list of dislocation segments.
+	const std::vector<DislocationSegment*>& modifiableSegments() { return modifiableStorage()->segments(); }
 
 private:
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_VECTOR_REFERENCE_FIELD(_segments);
 };
 
 /******************************************************************************
-* A properties editor for the DislocationNetwork class.
+* A properties editor for the DislocationNetworkObject class.
 ******************************************************************************/
-class OVITO_CRYSTALANALYSIS_EXPORT DislocationNetworkEditor : public PropertiesEditor
+class OVITO_CRYSTALANALYSIS_EXPORT DislocationNetworkObjectEditor : public PropertiesEditor
 {
 public:
 
 	/// Default constructor.
-	Q_INVOKABLE DislocationNetworkEditor() {}
+	Q_INVOKABLE DislocationNetworkObjectEditor() {}
 
 protected:
 
@@ -94,4 +84,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CA_DISLOCATION_NETWORK_H
+#endif // __OVITO_CA_DISLOCATION_NETWORK_OBJECT_H

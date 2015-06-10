@@ -30,7 +30,7 @@
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 /**
- * \brief Encapsulates a pattern catalog from the CA lib.
+ * \brief A catalog of structure patterns.
  */
 class OVITO_CRYSTALANALYSIS_EXPORT PatternCatalog : public DataObject
 {
@@ -50,6 +50,14 @@ public:
 
 	/// Returns the title of this object.
 	virtual QString objectTitle() override { return tr("Pattern catalog"); }
+
+	/// Returns the structure pattern with the given ID, or NULL if no such structure exists.
+	StructurePattern* structureById(int id) const {
+		for(StructurePattern* stype : patterns())
+			if(stype->id() == id)
+				return stype;
+		return nullptr;
+	}
 
 private:
 

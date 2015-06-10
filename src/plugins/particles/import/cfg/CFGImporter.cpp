@@ -209,7 +209,7 @@ void CFGImporter::CFGImportTask::parseFile(CompressedTextReader& stream)
 	for(int particleIndex = 0; particleIndex < header.numParticles; ) {
 
 		// Update progress indicator.
-		if(!reportProgress(particleIndex)) return;
+		if(!setProgressValueIntermittent(particleIndex)) return;
 
 		if(!isFirstLine)
 			stream.readLine();

@@ -49,9 +49,6 @@ public:
 	/// \brief Computes the bounding box of the object.
 	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
 
-	/// \brief Returns the title of this object.
-	virtual QString objectTitle() override { return tr("Particles"); }
-
 	/// \brief Returns the default display radius of particles.
 	FloatType defaultParticleRadius() const { return _defaultParticleRadius; }
 
@@ -174,6 +171,8 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
+
+	Q_CLASSINFO("DisplayName", "Particles");
 
 	DECLARE_PROPERTY_FIELD(_defaultParticleRadius);
 	DECLARE_PROPERTY_FIELD(_shadingMode);

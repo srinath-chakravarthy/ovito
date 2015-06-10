@@ -100,6 +100,9 @@ bool NearestNeighborFinder::prepare(ParticleProperty* posProperty, const Simulat
 	const Point3* p = posProperty->constDataPoint3();
 	atoms.resize(posProperty->size());
 	for(NeighborListAtom& a : atoms) {
+		if(progress && progress->isCanceled())
+			return false;
+
 		a.pos = *p;
 		// Wrap atomic positions back into simulation box.
 		Point3 rp = simCell.absoluteToReduced(a.pos);

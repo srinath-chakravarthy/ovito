@@ -109,11 +109,11 @@ void CoordinationNumberModifier::CoordinationAnalysisEngine::perform()
 
 				// Update progress indicator.
 				if((i % 1000) == 0) {
-					if(i != 0)
-						incrementProgressValue();
-					if(isCanceled())
-						return;
+					OVITO_ASSERT(i != 0);
+					incrementProgressValue();
 				}
+				if(isCanceled())
+					return;
 			}
 			std::lock_guard<std::mutex> lock(mutex);
 			auto iter_out = _rdfHistogram.begin();

@@ -62,8 +62,10 @@ void SftpJob::start()
 			_queuedJobs.enqueue(this);
 			return;
 		}
-		else _numActiveJobs++;
-		_isActive = true;
+		else {
+			_numActiveJobs++;
+			_isActive = true;
+		}
 	}
 
 	// This background task started to run.
@@ -128,7 +130,10 @@ void SftpJob::shutdown(bool success)
 	_futureInterface->reportFinished();
 
 	// Update the counter of active jobs.
-	_numActiveJobs--;
+	if(_isActive) {
+		_numActiveJobs--;
+		_isActive = false;
+	}
 
 	// Schedule this object for deletion.
 	deleteLater();

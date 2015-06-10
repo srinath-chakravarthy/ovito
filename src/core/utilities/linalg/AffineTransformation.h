@@ -282,6 +282,26 @@ public:
 		return !(*this == b);
 	}
 
+	/// \brief Tests if two matrices are equal within a given tolerance.
+	/// \param m The matrix to compare to.
+	/// \param tolerance A non-negative threshold for the equality test. The two matrices are considered equal if
+	///        the element-wise differences are all less than this tolerance value.
+	/// \return \c true if this matrix is equal to \a m within the given tolerance; \c false otherwise.
+	inline bool equals(const AffineTransformationT& m, T tolerance = T(FLOATTYPE_EPSILON)) const {
+		for(size_type i = 0; i < col_count(); i++)
+			if(!column(i).equals(m.column(i), tolerance)) return false;
+		return true;
+	}
+
+	/// \brief Test if the matrix is zero within a given tolerance.
+	/// \param tolerance A non-negative threshold.
+	/// \return \c true if the absolute value of each matrix element is all smaller than \a tolerance.
+	inline bool isZero(T tolerance = T(FLOATTYPE_EPSILON)) const {
+		for(size_type i = 0; i < col_count(); i++)
+			if(!column(i).isZero(tolerance)) return false;
+		return true;
+	}
+
 	////////////////////////////////// Computations ///////////////////////////////////
 
 	/// \brief Computes the determinant of the matrix.
@@ -506,13 +526,11 @@ public:
 	
 	///////////////////////////////// Information ////////////////////////////////
 
-	/// \brief Tests whether the matrix is a pure rotation matrix.
-	/// \return \c true if the matrix is a pure rotation matrix; \c false otherwise.
+	/// \brief Tests whether the matrix is a pure rotation-reflection matrix (i.e. orthogonal matrix).
+	/// \return \c true if the matrix is orthogonal; \c false otherwise.
 	///
-	/// The matrix A is a pure rotation matrix if:
-	///   1. det(A) = 1  and
-	///   2. A * A^T = I
-	Q_DECL_CONSTEXPR bool isRotationMatrix(T epsilon = T(FLOATTYPE_EPSILON)) const {
+	/// The matrix A is a pure rotation/reflection matrix if A * A^T = I and the translation is zero.
+	Q_DECL_CONSTEXPR bool isOrthogonalMatrix(T epsilon = T(FLOATTYPE_EPSILON)) const {
 		return
 			translation().isZero(epsilon) &&
 			(std::abs((*this)[0][0]*(*this)[1][0] + (*this)[0][1]*(*this)[1][1] + (*this)[0][2]*(*this)[1][2]) <= epsilon) &&
@@ -520,8 +538,17 @@ public:
 			(std::abs((*this)[1][0]*(*this)[2][0] + (*this)[1][1]*(*this)[2][1] + (*this)[1][2]*(*this)[2][2]) <= epsilon) &&
 			(std::abs((*this)[0][0]*(*this)[0][0] + (*this)[0][1]*(*this)[0][1] + (*this)[0][2]*(*this)[0][2] - T(1)) <= epsilon) &&
 			(std::abs((*this)[1][0]*(*this)[1][0] + (*this)[1][1]*(*this)[1][1] + (*this)[1][2]*(*this)[1][2] - T(1)) <= epsilon) &&
-			(std::abs((*this)[2][0]*(*this)[2][0] + (*this)[2][1]*(*this)[2][1] + (*this)[2][2]*(*this)[2][2] - T(1)) <= epsilon) &&
-			(std::abs(determinant() - T(1)) <= epsilon);
+			(std::abs((*this)[2][0]*(*this)[2][0] + (*this)[2][1]*(*this)[2][1] + (*this)[2][2]*(*this)[2][2] - T(1)) <= epsilon);
+	}
+
+	/// \brief Tests whether the matrix is a pure rotation matrix.
+	/// \return \c true if the matrix is a pure rotation matrix; \c false otherwise.
+	///
+	/// The matrix A is a pure rotation matrix if:
+	///   1. det(A) = 1  and
+	///   2. A * A^T = I
+	Q_DECL_CONSTEXPR bool isRotationMatrix(T epsilon = T(FLOATTYPE_EPSILON)) const {
+		return isOrthogonalMatrix(epsilon) && (std::abs(determinant() - T(1)) <= epsilon);
 	}
 
 	/// \brief Converts the matrix to a Qt 4x4 matrix.

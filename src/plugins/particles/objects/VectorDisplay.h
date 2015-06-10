@@ -47,9 +47,6 @@ public:
 	/// \brief Computes the bounding box of the object.
 	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
 
-	/// \brief Returns the title of this object.
-	virtual QString objectTitle() override { return tr("Vectors"); }
-
 	/// \brief Returns the selected shading mode for arrows.
 	ArrowPrimitive::ShadingMode shadingMode() const { return _shadingMode; }
 
@@ -156,6 +153,8 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
+
+	Q_CLASSINFO("DisplayName", "Vectors");
 
 	DECLARE_PROPERTY_FIELD(_reverseArrowDirection);
 	DECLARE_PROPERTY_FIELD(_flipVectors);

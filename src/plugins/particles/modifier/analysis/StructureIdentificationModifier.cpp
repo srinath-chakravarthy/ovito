@@ -46,7 +46,7 @@ void StructureIdentificationModifier::createStructureType(int id, ParticleTypePr
 	stype->setId(id);
 	stype->setName(ParticleTypeProperty::getPredefinedStructureTypeName(predefType));
 	stype->setColor(ParticleTypeProperty::getDefaultParticleColor(ParticleProperty::StructureTypeProperty, stype->name(), id));
-	_structureTypes.push_back(stype);
+	addStructureType(stype);
 }
 
 /******************************************************************************
@@ -139,7 +139,7 @@ PipelineStatus StructureIdentificationModifier::applyComputationResults(TimePoin
 * Constructor.
 ******************************************************************************/
 StructureListParameterUI::StructureListParameterUI(PropertiesEditor* parentEditor)
-	: RefTargetListParameterUI(parentEditor, PROPERTY_FIELD(StructureIdentificationModifier::_structureTypes), RolloutInsertionParameters(), nullptr)
+	: RefTargetListParameterUI(parentEditor, PROPERTY_FIELD(StructureIdentificationModifier::_structureTypes))
 {
 	connect(tableWidget(220), &QTableWidget::doubleClicked, this, &StructureListParameterUI::onDoubleClickStructureType);
 	tableWidget()->setAutoScroll(false);

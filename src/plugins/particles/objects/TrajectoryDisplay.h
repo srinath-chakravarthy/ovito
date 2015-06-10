@@ -47,9 +47,6 @@ public:
 	/// \brief Computes the display bounding box of the data object.
 	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
 
-	/// \brief Returns the title of this object.
-	virtual QString objectTitle() override { return tr("Trajectory lines"); }
-
 	/// \brief Returns the display width of trajectory lines.
 	FloatType lineWidth() const { return _lineWidth; }
 
@@ -121,6 +118,8 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
+
+	Q_CLASSINFO("DisplayName", "Trajectory lines");
 
 	DECLARE_PROPERTY_FIELD(_lineWidth);
 	DECLARE_PROPERTY_FIELD(_lineColor);

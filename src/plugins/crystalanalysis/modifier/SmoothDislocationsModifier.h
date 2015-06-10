@@ -25,6 +25,7 @@
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/scene/pipeline/Modifier.h>
 #include <core/gui/properties/PropertiesEditor.h>
+#include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -43,6 +44,9 @@ public:
 
 	/// This modifies the input object.
 	virtual PipelineStatus modifyObject(TimePoint time, ModifierApplication* modApp, PipelineFlowState& state) override;
+
+	/// Smoothes the given dislocation lines.
+	void smoothDislocationLines(DislocationNetworkObject* dislocationsObj);
 
 	/// Returns whether smoothing is enabled.
 	bool smoothingEnabled() const { return _smoothingEnabled; }
@@ -71,10 +75,10 @@ public:
 protected:
 
 	/// Removes some of the sampling points from a dislocation line.
-	void coarsenDislocationLine(FloatType linePointInterval, const QVector<Point3>& input, const QVector<int>& coreSize, QVector<Point3>& output, QVector<int>& outputCoreSize, bool isLoop);
+	void coarsenDislocationLine(FloatType linePointInterval, const std::deque<Point3>& input, const std::deque<int>& coreSize, std::deque<Point3>& output, std::deque<int>& outputCoreSize, bool isLoop);
 
 	/// Smoothes the sampling points of a dislocation line.
-	void smoothDislocationLine(int smoothingLevel, QVector<Point3>& line, bool isLoop);
+	void smoothDislocationLine(int smoothingLevel, std::deque<Point3>& line, bool isLoop);
 
 private:
 

@@ -27,7 +27,9 @@
 #include <core/utilities/mesh/HalfEdgeMesh.h>
 #include <core/gui/properties/PropertiesEditor.h>
 #include <plugins/particles/import/ParticleFrameLoader.h>
-#include <plugins/crystalanalysis/data/patterns/StructurePattern.h>
+#include <plugins/crystalanalysis/objects/patterns/StructurePattern.h>
+#include <plugins/crystalanalysis/data/ClusterGraph.h>
+#include <plugins/crystalanalysis/data/DislocationNetwork.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -75,7 +77,7 @@ protected:
 
 		/// Constructor.
 		CrystalAnalysisFrameLoader(DataSetContainer* container, const FileSourceImporter::Frame& frame, bool loadParticles)
-			: ParticleFrameLoader(container, frame, true), _loadParticles(loadParticles), _defectSurface(new HalfEdgeMesh()) {}
+			: ParticleFrameLoader(container, frame, true), _loadParticles(loadParticles), _defectSurface(new HalfEdgeMesh<>()) {}
 
 		/// Inserts the data loaded by perform() into the provided container object. This function is
 		/// called by the system from the main thread after the asynchronous loading task has finished.
@@ -102,43 +104,17 @@ protected:
 			QVector<BurgersVectorFamilyInfo> burgersVectorFamilies;
 		};
 
-		struct ClusterInfo {
-			int id;
-			int proc;
-			int patternIndex;
-			int atomCount;
-			Point3 centerOfMass;
-			Matrix3 orientation;
-		};
-
-		struct ClusterTransitionInfo {
-			int cluster1, cluster2;
-			Matrix3 tm;
-		};
-
-		struct DislocationSegmentInfo {
-			int id;
-			Vector3 burgersVector;
-			int clusterIndex;
-			QVector<Point3> line;
-			QVector<int> coreSize;
-			bool isClosedLoop;
-		};
-
 		/// The triangle mesh of the defect surface.
-		QExplicitlySharedDataPointer<HalfEdgeMesh> _defectSurface;
+		QExplicitlySharedDataPointer<HalfEdgeMesh<>> _defectSurface;
 
 		/// The structure pattern catalog.
 		QVector<PatternInfo> _patterns;
 
 		/// The cluster list.
-		QVector<ClusterInfo> _clusters;
-
-		/// The cluster transition list.
-		QVector<ClusterTransitionInfo> _clusterTransitions;
+		QExplicitlySharedDataPointer<ClusterGraph> _clusterGraph;
 
 		/// The dislocation segments.
-		QVector<DislocationSegmentInfo> _dislocations;
+		QExplicitlySharedDataPointer<DislocationNetwork> _dislocations;
 
 		/// Controls whether particles should be loaded too.
 		bool _loadParticles;

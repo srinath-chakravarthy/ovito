@@ -50,9 +50,6 @@ public:
 	/// \brief Computes the display bounding box of the data object.
 	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
 
-	/// \brief Returns the title of this object.
-	virtual QString objectTitle() override { return tr("Bonds"); }
-
 	/// \brief Returns the display width of bonds.
 	FloatType bondWidth() const { return _bondWidth; }
 
@@ -138,6 +135,8 @@ private:
 	Q_OBJECT
 	OVITO_OBJECT
 
+	Q_CLASSINFO("DisplayName", "Bonds");
+
 	DECLARE_PROPERTY_FIELD(_bondWidth);
 	DECLARE_PROPERTY_FIELD(_bondColor);
 	DECLARE_PROPERTY_FIELD(_useParticleColors);
@@ -146,8 +145,8 @@ private:
 };
 
 /**
- * \brief This information record is attached to the particles by the BondsDisplay when rendering
- * them in the viewports. It facilitates the picking of particles with the mouse.
+ * \brief This information record is attached to the bonds by the BondsDisplay when rendering
+ * them in the viewports. It facilitates the picking of bonds with the mouse.
  */
 class OVITO_PARTICLES_EXPORT BondPickInfo : public ObjectPickInfo
 {

@@ -53,6 +53,8 @@ public:
 	bool isFinished() const;
 	int progressMaximum() const;
 	int progressValue() const;
+	int totalProgressMaximum() const;
+	int totalProgressValue() const;
 	QString progressText() const;
 
 	void waitForFinished() const;

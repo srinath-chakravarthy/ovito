@@ -168,7 +168,7 @@ void RefTargetListParameterUI::openSubEditor()
 					_subEditor = nullptr;
 			}
 		}
-		if(!subEditor()) {
+		if(!subEditor() && editor()) {
 			if(selection) {
 				_subEditor = selection->createPropertiesEditor();
 				if(_subEditor)

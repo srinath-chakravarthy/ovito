@@ -45,15 +45,21 @@ public:
 	virtual ~FutureInterfaceBase();
 
 	bool isCanceled() const { return (_state & Canceled); }
-
     int progressMaximum() const { return _progressMaximum; }
-    void setProgressRange(int maximum);
-    bool isProgressUpdateNeeded();
-    void setProgressValue(int progressValue);
-    void incrementProgressValue(int increment = 1);
+    int totalProgressMaximum() const { return _totalProgressMaximum; }
     int progressValue() const { return _progressValue; }
-    void setProgressText(const QString& progressText);
+    int totalProgressValue() const { return _totalProgressValue; }
     QString progressText() const { return _progressText; }
+
+    void setProgressRange(int maximum);
+    bool setProgressValue(int progressValue);
+    bool setProgressValueIntermittent(int progressValue, int updateEvery = 2000);
+    bool incrementProgressValue(int increment = 1);
+    void setProgressText(const QString& progressText);
+    void beginProgressSubSteps(std::vector<int> weights);
+    void beginProgressSubSteps(int numSteps) { beginProgressSubSteps(std::vector<int>(numSteps, 1)); }
+    void nextProgressSubStep();
+    void endProgressSubSteps();
 
 	template<typename RS>
 	bool waitForSubTask(Future<RS>& subFuture) {
@@ -74,8 +80,12 @@ public:
 
 protected:
 
-	FutureInterfaceBase(State initialState = NoState) : _subTask(nullptr), _state(initialState), _progressValue(0), _progressMaximum(0) {
+	FutureInterfaceBase(State initialState = NoState) :
+		_subTask(nullptr), _state(initialState), _progressValue(0), _progressMaximum(0),
+		_totalProgressValue(0), _totalProgressMaximum(0), _intermittentUpdateCounter(0) {
+#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
 		_progressTime.invalidate();
+#endif
 	}
 
 	bool isRunning() const { return (_state & Running); }
@@ -114,6 +124,8 @@ protected:
     void registerWatcher(FutureWatcher* watcher);
     void unregisterWatcher(FutureWatcher* watcher);
 
+    void computeTotalProgress();
+
 	virtual void tryToRunImmediately() {}
 
 	FutureInterfaceBase* _subTask;
@@ -122,10 +134,14 @@ protected:
 	State _state;
 	QWaitCondition _waitCondition;
 	std::exception_ptr _exceptionStore;
+	int _totalProgressValue;
+	int _totalProgressMaximum;
     int _progressValue;
     int _progressMaximum;
+    int _intermittentUpdateCounter;
     QString _progressText;
     QElapsedTimer _progressTime;
+    std::vector<std::pair<int, std::vector<int>>> subStepsStack;
 
 	friend class FutureWatcher;
 	friend class TaskManager;

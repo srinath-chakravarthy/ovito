@@ -168,9 +168,9 @@ class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
                       3. The three-dimensional vector connecting the central particle with the current neighbor (taking into account periodic images).
                       4. The periodic shift vector, which specifies how often the vector has crossed each periodic boundary of the simulation cell.
         
-        Note that all periodic images of particles are visited. Thus, the same particle index (1st item above) may appear multiple times in the neighbor
-        list of one central particle. In fact, the central particle may be among its own neighbors in a sufficiently small periodic simulation cell.
-        However, the computed vector (3rd item above) will be unique for each visited image of a neighbor particle.
+        Note that all periodic images of particles within the cutoff radius are visited. Thus, the same particle index (1st item above) may appear multiple times in the neighbor
+        list of a central particle. In fact, the central particle may be among its own neighbors in a sufficiently small periodic simulation cell.
+        However, the computed vector (3rd item above) will be unique for each visited image of a neighboring particle.
         """
         if index < 0 or index >= self.particle_count:
             raise IndexError("Particle index is out of range.")

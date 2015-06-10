@@ -30,7 +30,7 @@
 #include "DislocationSegment.h"
 #include "DislocationDisplay.h"
 
-namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis { namespace Objects {
 
 /******************************************************************************
 * A special properties editor for the Dislocations class.
@@ -194,7 +194,8 @@ private:
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace
+}	// End of namespace
 
-Q_DECLARE_METATYPE(Ovito::Plugins::CrystalAnalysis::SegmentCluster);
+Q_DECLARE_METATYPE(Ovito::Plugins::CrystalAnalysis::Objects::SegmentCluster);
 
 #endif // __OVITO_CA_DISLOCATIONS_EDITOR_H

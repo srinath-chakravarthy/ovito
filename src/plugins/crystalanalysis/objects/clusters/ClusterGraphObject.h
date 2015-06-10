@@ -19,29 +19,58 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifndef __OVITO_CA_CLUSTER_GRAPH_OBJECT_H
+#define __OVITO_CA_CLUSTER_GRAPH_OBJECT_H
+
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include "Cluster.h"
+#include <plugins/crystalanalysis/data/ClusterGraph.h>
+#include <core/scene/objects/DataObjectWithSharedStorage.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, Cluster, RefTarget);
-DEFINE_REFERENCE_FIELD(Cluster, _pattern, "Structure", StructurePattern);
-DEFINE_PROPERTY_FIELD(Cluster, _id, "ID");
-DEFINE_PROPERTY_FIELD(Cluster, _atomCount, "AtomCount");
-DEFINE_PROPERTY_FIELD(Cluster, _orientation, "Orientation");
-
-/******************************************************************************
-* Constructs a new Cluster.
-******************************************************************************/
-Cluster::Cluster(DataSet* dataset) : RefTarget(dataset), _id(-1), _atomCount(0), _orientation(Matrix3::Zero())
+/**
+ * \brief A graph of atomic clusters.
+ */
+class OVITO_CRYSTALANALYSIS_EXPORT ClusterGraphObject : public DataObjectWithSharedStorage<ClusterGraph>
 {
-	INIT_PROPERTY_FIELD(Cluster::_pattern);
-	INIT_PROPERTY_FIELD(Cluster::_id);
-	INIT_PROPERTY_FIELD(Cluster::_atomCount);
-	INIT_PROPERTY_FIELD(Cluster::_orientation);
-}
+public:
+
+	/// \brief Constructor.
+	Q_INVOKABLE ClusterGraphObject(DataSet* dataset, ClusterGraph* graph = nullptr);
+
+	/// Returns the title of this object.
+	virtual QString objectTitle() override { return tr("Clusters"); }
+
+private:
+
+	Q_OBJECT
+	OVITO_OBJECT
+};
+
+/**
+ * \brief A properties editor for the ClusterGraphObject class.
+ */
+class OVITO_CRYSTALANALYSIS_EXPORT ClusterGraphObjectEditor : public PropertiesEditor
+{
+public:
+
+	/// Default constructor.
+	Q_INVOKABLE ClusterGraphObjectEditor() {}
+
+protected:
+
+	/// Creates the user interface controls for the editor.
+	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
+
+private:
+
+	Q_OBJECT
+	OVITO_OBJECT
+};
 
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace
+
+#endif // __OVITO_CA_CLUSTER_GRAPH_OBJECT_H
 
