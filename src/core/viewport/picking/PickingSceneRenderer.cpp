@@ -181,6 +181,7 @@ quint32 PickingSceneRenderer::beginPickObject(ObjectNode* objNode, ObjectPickInf
 
 	_currentObject.objectNode = objNode;
 	_currentObject.pickInfo = pickInfo;
+	_objects.push_back(_currentObject);
 	return _currentObject.baseObjectID;
 }
 
@@ -192,7 +193,6 @@ quint32 PickingSceneRenderer::registerSubObjectIDs(quint32 subObjectCount)
 	OVITO_ASSERT_MSG(_currentObject.objectNode, "PickingSceneRenderer::registerSubObjectIDs()", "You forgot to register the current object via beginPickObject().");
 
 	quint32 baseObjectID = _currentObject.baseObjectID;
-	_objects.push_back(_currentObject);
 	_currentObject.baseObjectID += subObjectCount;
 	return baseObjectID;
 }

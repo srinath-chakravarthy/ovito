@@ -139,7 +139,7 @@ PipelineStatus StructureIdentificationModifier::applyComputationResults(TimePoin
 * Constructor.
 ******************************************************************************/
 StructureListParameterUI::StructureListParameterUI(PropertiesEditor* parentEditor)
-	: RefTargetListParameterUI(parentEditor, PROPERTY_FIELD(StructureIdentificationModifier::_structureTypes), RolloutInsertionParameters(), nullptr)
+	: RefTargetListParameterUI(parentEditor, PROPERTY_FIELD(StructureIdentificationModifier::_structureTypes))
 {
 	connect(tableWidget(220), &QTableWidget::doubleClicked, this, &StructureListParameterUI::onDoubleClickStructureType);
 	tableWidget()->setAutoScroll(false);

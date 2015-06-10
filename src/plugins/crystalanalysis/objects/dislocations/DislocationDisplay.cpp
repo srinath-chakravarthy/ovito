@@ -146,6 +146,8 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 				});
 				dislocationIndex++;
 			}
+			OVITO_ASSERT(lineSegmentIndex == lineSegmentCount);
+			OVITO_ASSERT(cornerPoints.size() == cornerCount);
 			_segmentBuffer->endSetElements();
 			_cornerBuffer->setSize(cornerPoints.size());
 			_cornerBuffer->setParticlePositions(cornerPoints.empty() ? nullptr : cornerPoints.data());
@@ -362,6 +364,7 @@ QString DislocationPickInfo::infoString(ObjectNode* objectNode, quint32 subobjec
 				.arg(QLocale::c().toString(transformedVector.y(), 'f', 4), 7)
 				.arg(QLocale::c().toString(transformedVector.z(), 'f', 4), 7);
 		str += tr(" | Cluster Id: %1").arg(segment->burgersVector.cluster()->id);
+		str += tr(" | Segment Id: %1").arg(segment->id);
 		if(patternCatalog() != nullptr) {
 			int structureTypeId = segment->burgersVector.cluster()->structure;
 			if(StructurePattern* s = patternCatalog()->structureById(structureTypeId))

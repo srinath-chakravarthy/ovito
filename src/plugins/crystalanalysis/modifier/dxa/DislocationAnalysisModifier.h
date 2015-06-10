@@ -75,16 +75,22 @@ public:
 	void setCircuitStretchability(int stretchability) { _circuitStretchability = stretchability; }
 
 	/// Returns the type of crystal to be analyzed.
-	int crystalStructure() const { return _crystalStructure; }
+	int inputCrystalStructure() const { return _inputCrystalStructure; }
 
 	/// Sets the type of crystal to be analyzed.
-	void setCrystalStructure(int structureType) { _crystalStructure = structureType; }
+	void setInputCrystalStructure(int structureType) { _inputCrystalStructure = structureType; }
 
 	/// Returns whether the interface mesh is output.
 	bool outputInterfaceMesh() const { return _outputInterfaceMesh; }
 
 	/// Controls whether the interface mesh is output.
 	void setOutputInterfaceMesh(bool enable) { _outputInterfaceMesh = enable; }
+
+	/// Returns the number of segments found per dislocation type.
+	const std::map<BurgersVectorFamily*,int>& segmentCounts() const { return _segmentCounts; }
+
+	/// Returns the total length of segments found per dislocation type.
+	const std::map<BurgersVectorFamily*,FloatType>& dislocationLengths() const { return _dislocationLengths; }
 
 	/// Resets the modifier's result cache.
 	virtual void invalidateCachedResults() override;
@@ -109,7 +115,7 @@ protected:
 private:
 
 	/// The type of crystal to be analyzed.
-	PropertyField<int> _crystalStructure;
+	PropertyField<int> _inputCrystalStructure;
 
 	/// The maximum length of trial circuits.
 	PropertyField<int> _maxTrialCircuitSize;
@@ -165,13 +171,19 @@ private:
 	/// List of edges, which don't have a lattice vector.
 	QExplicitlySharedDataPointer<BondsStorage> _unassignedEdges;
 
+	/// The number of segments found per dislocation type.
+	std::map<BurgersVectorFamily*,int> _segmentCounts;
+
+	/// The total length of segments found per dislocation type.
+	std::map<BurgersVectorFamily*,FloatType> _dislocationLengths;
+
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Dislocation analysis (DXA)");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
 
-	DECLARE_PROPERTY_FIELD(_crystalStructure);
+	DECLARE_PROPERTY_FIELD(_inputCrystalStructure);
 	DECLARE_PROPERTY_FIELD(_maxTrialCircuitSize);
 	DECLARE_PROPERTY_FIELD(_circuitStretchability);
 	DECLARE_PROPERTY_FIELD(_outputInterfaceMesh);
@@ -181,6 +193,72 @@ private:
 	DECLARE_REFERENCE_FIELD(_interfaceMeshDisplay);
 	DECLARE_REFERENCE_FIELD(_smoothDislocationsModifier);
 	DECLARE_REFERENCE_FIELD(_smoothSurfaceModifier);
+};
+
+
+/**
+ * List box that displays the dislocation types.
+ */
+class DislocationTypeListParameterUI : public RefTargetListParameterUI
+{
+public:
+
+	/// Constructor.
+	DislocationTypeListParameterUI(QObject* parent = nullptr);
+
+	/// This method is called when a new editable object has been activated.
+	virtual void resetUI() override {
+		RefTargetListParameterUI::resetUI();
+		// Clear initial selection by default.
+		tableWidget()->selectionModel()->clear();
+	}
+
+	/// Sets the modifier whose results should be displayed.
+	void setModifier(DislocationAnalysisModifier* modifier);
+
+protected:
+
+	/// Returns a data item from the list data model.
+	virtual QVariant getItemData(RefTarget* target, const QModelIndex& index, int role) override;
+
+	/// Returns the number of columns for the table view.
+	virtual int tableColumnCount() override { return 4; }
+
+	/// Returns the header data under the given role for the given RefTarget.
+	virtual QVariant getHorizontalHeaderData(int index, int role) override {
+		if(role == Qt::DisplayRole) {
+			if(index == 0)
+				return qVariantFromValue(tr("Color"));
+			else if(index == 1)
+				return qVariantFromValue(tr("Dislocation type"));
+			else if(index == 2)
+				return qVariantFromValue(tr("Segs"));
+			else
+				return qVariantFromValue(tr("Length"));
+		}
+		else return RefTargetListParameterUI::getHorizontalHeaderData(index, role);
+	}
+
+	/// Do not open sub-editor for selected structure type.
+	virtual void openSubEditor() override {}
+
+	/// This method is called when a reference target changes.
+	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
+
+protected Q_SLOTS:
+
+	/// Is called when the user has double-clicked on one of the dislocation types in the list widget.
+	void onDoubleClickDislocationType(const QModelIndex& index);
+
+private:
+
+	/// The modifier whose results are being displayed.
+	ReferenceField<DislocationAnalysisModifier> _modifier;
+
+	Q_OBJECT
+	OVITO_OBJECT
+
+	DECLARE_REFERENCE_FIELD(_modifier);
 };
 
 /**
@@ -200,8 +278,7 @@ protected:
 
 private:
 
-	/// The editor for the selected input structure type.
-	OORef<PropertiesEditor> _structureTypeSubEditor;
+	std::unique_ptr<DislocationTypeListParameterUI> _burgersFamilyListUI;
 
 	Q_OBJECT
 	OVITO_OBJECT

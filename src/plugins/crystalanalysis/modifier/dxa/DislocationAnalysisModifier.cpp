@@ -38,9 +38,9 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, DislocationAnalysisModifier, StructureIdentificationModifier);
 IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, DislocationAnalysisModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(DislocationAnalysisModifier, DislocationAnalysisModifierEditor);
-DEFINE_FLAGS_PROPERTY_FIELD(DislocationAnalysisModifier, _crystalStructure, "CrystalStructure", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(DislocationAnalysisModifier, _maxTrialCircuitSize, "MaxTrialCircuitSize", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(DislocationAnalysisModifier, _circuitStretchability, "CircuitStretchability", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(DislocationAnalysisModifier, _inputCrystalStructure, "CrystalStructure", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _maxTrialCircuitSize, "MaxTrialCircuitSize");
+DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _circuitStretchability, "CircuitStretchability");
 DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _outputInterfaceMesh, "OutputInterfaceMesh");
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _patternCatalog, "PatternCatalog", PatternCatalog, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _dislocationDisplay, "DislocationDisplay", DislocationDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
@@ -48,7 +48,7 @@ DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _defectMeshDisplay, "D
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _interfaceMeshDisplay, "InterfaceMeshDisplay", SurfaceMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _smoothDislocationsModifier, "SmoothDislocationsModifier", SmoothDislocationsModifier, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _smoothSurfaceModifier, "SmoothSurfaceModifier", SmoothSurfaceModifier, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _crystalStructure, "Crystal structure");
+SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _inputCrystalStructure, "Input crystal structure");
 SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _maxTrialCircuitSize, "Trial circuit length");
 SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _circuitStretchability, "Circuit stretchability");
 SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _outputInterfaceMesh, "Output interface mesh");
@@ -57,9 +57,9 @@ SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _outputInterfaceMesh, "Out
 * Constructs the modifier object.
 ******************************************************************************/
 DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : StructureIdentificationModifier(dataset),
-		_crystalStructure(StructureAnalysis::LATTICE_FCC), _maxTrialCircuitSize(9), _circuitStretchability(6), _outputInterfaceMesh(false)
+		_inputCrystalStructure(StructureAnalysis::LATTICE_FCC), _maxTrialCircuitSize(9), _circuitStretchability(6), _outputInterfaceMesh(false)
 {
-	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_crystalStructure);
+	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_inputCrystalStructure);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_maxTrialCircuitSize);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_circuitStretchability);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_outputInterfaceMesh);
@@ -114,10 +114,10 @@ DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : Str
 	// Create Burgers vector families.
 	StructurePattern* fccPattern = _patternCatalog->structureById(StructureAnalysis::LATTICE_FCC);
 	fccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/2<110> (Perfect)"), Vector3(1.0f/2.0f, 1.0f/2.0f, 0.0f), Color(1,0,0)));
-	fccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/6<112> (Shockley partial)"), Vector3(1.0f/6.0f, 1.0f/6.0f, 2.0f/6.0f), Color(0,1,0)));
+	fccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/6<112> (Shockley)"), Vector3(1.0f/6.0f, 1.0f/6.0f, 2.0f/6.0f), Color(0,1,0)));
 	fccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/6<110> (Stair-rod)"), Vector3(1.0f/6.0f, 1.0f/6.0f, 0.0f/6.0f), Color(0,0,1)));
-	fccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/3<001> (Hirth partial)"), Vector3(1.0f/3.0f, 0.0f, 0.0f), Color(1,1,0)));
-	fccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/3<111> (Frank partial)"), Vector3(1.0f/3.0f, 1.0f/3.0f, 1.0f/3.0f), Color(1,0,1)));
+	fccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/3<001> (Hirth)"), Vector3(1.0f/3.0f, 0.0f, 0.0f), Color(1,1,0)));
+	fccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/3<111> (Frank)"), Vector3(1.0f/3.0f, 1.0f/3.0f, 1.0f/3.0f), Color(1,0,1)));
 	StructurePattern* bccPattern = _patternCatalog->structureById(StructureAnalysis::LATTICE_BCC);
 	bccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/2<111>"), Vector3(1.0f/2.0f, 1.0f/2.0f, 1.0f/2.0f), Color(0,1,0)));
 	bccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("<100>"), Vector3(1.0f, 0.0f, 0.0f), Color(1, 0.3f, 0.8f)));
@@ -132,7 +132,7 @@ void DislocationAnalysisModifier::propertyChanged(const PropertyFieldDescriptor&
 	StructureIdentificationModifier::propertyChanged(field);
 
 	// Recompute results when the parameters have changed.
-	if(field == PROPERTY_FIELD(DislocationAnalysisModifier::_crystalStructure)
+	if(field == PROPERTY_FIELD(DislocationAnalysisModifier::_inputCrystalStructure)
 			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_maxTrialCircuitSize)
 			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_circuitStretchability)
 			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_outputInterfaceMesh))
@@ -163,6 +163,8 @@ void DislocationAnalysisModifier::invalidateCachedResults()
 	_clusterGraph.reset();
 	_dislocationNetwork.reset();
 	_unassignedEdges.reset();
+	_segmentCounts.clear();
+	_dislocationLengths.clear();
 }
 
 /******************************************************************************
@@ -176,7 +178,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> DislocationAnalysis
 
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<DislocationAnalysisEngine>(validityInterval, posProperty->storage(),
-			simCell->data(), crystalStructure(), maxTrialCircuitSize(), circuitStretchability());
+			simCell->data(), inputCrystalStructure(), maxTrialCircuitSize(), circuitStretchability());
 }
 
 /******************************************************************************
@@ -200,6 +202,8 @@ void DislocationAnalysisModifier::transferComputationResults(ComputeEngine* engi
 	else _interfaceMesh.reset();
 	_simCell = eng->cell();
 	_unassignedEdges = eng->elasticMapping().unassignedEdges();
+	_segmentCounts.clear();
+	_dislocationLengths.clear();
 }
 
 /******************************************************************************
@@ -240,6 +244,31 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 		smoothDislocationsModifier()->smoothDislocationLines(dislocationsObj);
 	output().addObject(dislocationsObj);
 
+	// Classify, count and measure length of dislocation segments.
+	_segmentCounts.clear();
+	_dislocationLengths.clear();
+	FloatType totalLineLength = 0;
+	int totalSegmentCount = 0;
+	for(DislocationSegment* segment : dislocationsObj->storage()->segments()) {
+		FloatType len = segment->calculateLength();
+		totalLineLength += len;
+		totalSegmentCount++;
+
+		Cluster* cluster = segment->burgersVector.cluster();
+		OVITO_ASSERT(cluster != nullptr);
+		StructurePattern* pattern = _patternCatalog->structureById(cluster->structure);
+		if(pattern == nullptr) continue;
+		BurgersVectorFamily* family = pattern->defaultBurgersVectorFamily();
+		for(BurgersVectorFamily* f : pattern->burgersVectorFamilies()) {
+			if(f->isMember(segment->burgersVector.localVec())) {
+				family = f;
+				break;
+			}
+		}
+		_segmentCounts[family]++;
+		_dislocationLengths[family] += len;
+	}
+
 	// Output pattern catalog.
 	if(_patternCatalog)
 		output().addObject(_patternCatalog);
@@ -253,7 +282,10 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 		output().addObject(bondsObj);
 	}
 
-	return PipelineStatus(PipelineStatus::Success);
+	if(totalSegmentCount == 0)
+		return PipelineStatus(PipelineStatus::Success, tr("No dislocations found"));
+	else
+		return PipelineStatus(PipelineStatus::Success, tr("Found %1 dislocation segments\nTotal line length: %2").arg(totalSegmentCount).arg(totalLineLength));
 }
 
 /******************************************************************************
@@ -274,7 +306,7 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	sublayout1->setContentsMargins(4,4,4,4);
 	sublayout1->setSpacing(2);
 
-	IntegerRadioButtonParameterUI* crystalStructureUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_crystalStructure));
+	IntegerRadioButtonParameterUI* crystalStructureUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_inputCrystalStructure));
 
 	QHBoxLayout* sublayout2 = new QHBoxLayout();
 	sublayout2->setContentsMargins(0,0,0,0);
@@ -342,24 +374,101 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	// Open a sub-editor for the internal line smoothing modifier.
 	new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_smoothDislocationsModifier), rolloutParams.after(rollout).setTitle(tr("Post-processing")));
 
-	// Load the selected input crystal structure into a sub-editor.
-	RolloutInsertionParameters structureEditorRolloutParams = rolloutParams.after(rollout);
-	connect(this, &PropertiesEditor::contentsChanged, [this, structureEditorRolloutParams](RefTarget* editObject) {
-		StructurePattern* structurePattern = nullptr;
-		if(DislocationAnalysisModifier* modifier = static_object_cast<DislocationAnalysisModifier>(editObject)) {
-			structurePattern = modifier->patternCatalog()->structureById(modifier->crystalStructure());
-		}
-		try {
-			if(!_structureTypeSubEditor && structurePattern) {
-				_structureTypeSubEditor = structurePattern->createPropertiesEditor();
-				_structureTypeSubEditor->initialize(container(), mainWindow(), structureEditorRolloutParams);
+	// Burgers vector list.
+	_burgersFamilyListUI.reset(new DislocationTypeListParameterUI());
+	layout->addSpacing(10);
+	layout->addWidget(new QLabel(tr("Dislocation analysis:")));
+	layout->addWidget(_burgersFamilyListUI->tableWidget());
+	connect(this, &PropertiesEditor::contentsChanged, [this](RefTarget* editObject) {
+		_burgersFamilyListUI->setModifier(static_object_cast<DislocationAnalysisModifier>(editObject));
+	});
+}
+
+IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, DislocationTypeListParameterUI, RefTargetListParameterUI);
+DEFINE_FLAGS_REFERENCE_FIELD(DislocationTypeListParameterUI, _modifier, "Modifier", DislocationAnalysisModifier, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_WEAK_REF | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
+
+/******************************************************************************
+* Constructor.
+******************************************************************************/
+DislocationTypeListParameterUI::DislocationTypeListParameterUI(QObject* parent)
+	: RefTargetListParameterUI(parent, PROPERTY_FIELD(StructurePattern::_burgersVectorFamilies))
+{
+	INIT_PROPERTY_FIELD(DislocationTypeListParameterUI::_modifier);
+
+	connect(tableWidget(160), &QTableWidget::doubleClicked, this, &DislocationTypeListParameterUI::onDoubleClickDislocationType);
+	tableWidget()->setAutoScroll(false);
+}
+
+/******************************************************************************
+* Sets the modifier whose results should be displayed.
+******************************************************************************/
+void DislocationTypeListParameterUI::setModifier(DislocationAnalysisModifier* modifier)
+{
+	if(modifier)
+		setEditObject(modifier->patternCatalog()->structureById(modifier->inputCrystalStructure()));
+	else
+		setEditObject(nullptr);
+	_modifier = modifier;
+}
+
+/******************************************************************************
+* Returns a data item from the list data model.
+******************************************************************************/
+QVariant DislocationTypeListParameterUI::getItemData(RefTarget* target, const QModelIndex& index, int role)
+{
+	BurgersVectorFamily* family = dynamic_object_cast<BurgersVectorFamily>(target);
+	if(family && _modifier) {
+		if(role == Qt::DisplayRole) {
+			if(index.column() == 1) {
+				return family->name();
 			}
-			if(_structureTypeSubEditor)
-				_structureTypeSubEditor->setEditObject(structurePattern);
+			else if(index.column() == 2) {
+				auto entry = _modifier->segmentCounts().find(family);
+				if(entry != _modifier->segmentCounts().end())
+					return entry->second;
+			}
+			else if(index.column() == 3) {
+				auto entry = _modifier->dislocationLengths().find(family);
+				if(entry != _modifier->dislocationLengths().end())
+					return QString::number(entry->second);
+			}
 		}
-		catch(const Exception& ex) {
-			ex.showError();
+		else if(role == Qt::DecorationRole) {
+			if(index.column() == 0)
+				return (QColor)family->color();
 		}
+	}
+	return QVariant();
+}
+
+/******************************************************************************
+* This method is called when a reference target changes.
+******************************************************************************/
+bool DislocationTypeListParameterUI::referenceEvent(RefTarget* source, ReferenceEvent* event)
+{
+	if(source == _modifier && event->type() == ReferenceEvent::ObjectStatusChanged) {
+		// Update the result columns.
+		_model->updateColumns(2, 3);
+	}
+	return RefTargetListParameterUI::referenceEvent(source, event);
+}
+
+/******************************************************************************
+* Is called when the user has double-clicked on one of the dislocation
+* types in the list widget.
+******************************************************************************/
+void DislocationTypeListParameterUI::onDoubleClickDislocationType(const QModelIndex& index)
+{
+	// Let the user select a color for the structure type.
+	BurgersVectorFamily* family = static_object_cast<BurgersVectorFamily>(selectedObject());
+	if(!family) return;
+
+	QColor oldColor = (QColor)family->color();
+	QColor newColor = QColorDialog::getColor(oldColor, _viewWidget);
+	if(!newColor.isValid() || newColor == oldColor) return;
+
+	undoableTransaction(tr("Change dislocation type color"), [family, newColor]() {
+		family->setColor(Color(newColor));
 	});
 }
 
