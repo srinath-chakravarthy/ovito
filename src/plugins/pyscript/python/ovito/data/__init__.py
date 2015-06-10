@@ -80,9 +80,15 @@ DataObject.display = property(_DataObject_display)
 
 def _DataCollection_to_ase_atoms(self):
     """
-    Convert from ovito.data.DataCollection to ase.atoms.Atoms
+    Constructs an `ASE Atoms object <https://wiki.fysik.dtu.dk/ase/ase/atoms.html>`_ from the particles
+    stored in this :py:class:`!DataCollection`.
 
-    Raises an ImportError if ASE is not available
+    .. note::
+    
+       Calling this method raises an ImportError if ASE (`Atomistic Simulation Environment <https://wiki.fysik.dtu.dk/ase/>`_) is not available. Note that the built-in
+       Python interpreter shipping with OVITO does *not* contain the ASE module. 
+       It is therefore recommended to build OVITO from source (as explained in the user manual), 
+       which will allow you to use all modules installed in the system's Python interpreter.
     """
 
     from ase.atoms import Atoms
@@ -121,7 +127,13 @@ DataCollection.to_ase_atoms = _DataCollection_to_ase_atoms
 
 def _DataCollection_create_from_ase_atoms(cls, atoms):
     """
-    Convert from ase.atoms.Atoms to ovito.data.DataCollection
+    Converts an `ASE Atoms object <https://wiki.fysik.dtu.dk/ase/ase/atoms.html>`_ to a :py:class:`!DataCollection`.
+
+    .. note::
+    
+       The built-in Python interpreter shipping with OVITO does *not* contain the ASE module (`Atomistic Simulation Environment <https://wiki.fysik.dtu.dk/ase/>`_). 
+       It is therefore recommended to build OVITO from source (as explained in the user manual), 
+       which will allow you to use all modules installed in the system's Python interpreter.
     """
     data = cls()
 

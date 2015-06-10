@@ -2,8 +2,10 @@ import re
 import numpy
 import math
 try:
+    # Python 3.x
     import collections.abc as collections
 except ImportError:
+    # Python 2.x
     import collections
 import PyQt5.QtCore
 

@@ -23,6 +23,7 @@
 #include <plugins/crystalanalysis/modifier/ConstructSurfaceModifier.h>
 #include <plugins/crystalanalysis/modifier/SmoothDislocationsModifier.h>
 #include <plugins/crystalanalysis/modifier/SmoothSurfaceModifier.h>
+#include <plugins/crystalanalysis/modifier/dxa/DislocationAnalysisModifier.h>
 #include <plugins/crystalanalysis/importer/CAImporter.h>
 #include <plugins/pyscript/binding/PythonBinding.h>
 
@@ -85,7 +86,9 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 				"The :py:class:`~ovito.vis.SurfaceMeshDisplay` controlling the visual representation of the computed surface.\n")
 	;
 
-#if 0
+	ovito_class<DislocationAnalysisModifier, StructureIdentificationModifier>()
+	;
+
 	ovito_class<SmoothDislocationsModifier, Modifier>()
 		.add_property("smoothingEnabled", &SmoothDislocationsModifier::smoothingEnabled, &SmoothDislocationsModifier::setSmoothingEnabled)
 		.add_property("smoothingLevel", &SmoothDislocationsModifier::smoothingLevel, &SmoothDislocationsModifier::setSmoothingLevel)
@@ -100,7 +103,6 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 	ovito_class<CAImporter, FileSourceImporter>()
 		.add_property("loadParticles", &CAImporter::loadParticles, &CAImporter::setLoadParticles)
 	;
-#endif
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(CrystalAnalysis);

@@ -35,7 +35,6 @@ SET(SourceFiles
 	objects/clusters/ClusterGraphObject.cpp
 	objects/dislocations/DislocationNetworkObject.cpp
 	objects/dislocations/DislocationDisplay.cpp
-#	objects/dislocations/DislocationInspector.cpp
 	data/ClusterGraph.cpp
 	data/DislocationNetwork.cpp
 	modifier/SmoothSurfaceModifier.cpp
