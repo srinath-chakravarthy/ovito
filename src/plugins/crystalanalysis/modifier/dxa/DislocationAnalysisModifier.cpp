@@ -219,7 +219,7 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 
 	// Output defect mesh.
 	OORef<SurfaceMesh> defectMeshObj(new SurfaceMesh(dataset(), _defectMesh.data()));
-	defectMeshObj->setCompletelySolid(_isGoodEverywhere);
+	defectMeshObj->setCompletelySolid(_isBadEverywhere);
 	if(smoothSurfaceModifier() && smoothSurfaceModifier()->isEnabled() && smoothSurfaceModifier()->smoothingLevel() > 0)
 		defectMeshObj->smoothMesh(_simCell, smoothSurfaceModifier()->smoothingLevel());
 	defectMeshObj->setDisplayObject(_defectMeshDisplay);
@@ -228,7 +228,7 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 	// Output interface mesh.
 	if(_interfaceMesh) {
 		OORef<SurfaceMesh> interfaceMeshObj(new SurfaceMesh(dataset(), _interfaceMesh.data()));
-		interfaceMeshObj->setCompletelySolid(_isGoodEverywhere);
+		interfaceMeshObj->setCompletelySolid(_isBadEverywhere);
 		interfaceMeshObj->setDisplayObject(_interfaceMeshDisplay);
 		output().addObject(interfaceMeshObj);
 	}

@@ -31,6 +31,7 @@
 #include <plugins/particles/export/xyz/XYZExporter.h>
 #include <plugins/particles/export/lammps/LAMMPSDumpExporter.h>
 #include <plugins/particles/export/lammps/LAMMPSDataExporter.h>
+#include <plugins/particles/export/fhi_aims/FHIAimsExporter.h>
 
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -80,6 +81,9 @@ BOOST_PYTHON_MODULE(ParticlesExporter)
 	enum_<XYZExporter::XYZSubFormat>("XYZSubFormat")
 		.value("Parcas", XYZExporter::ParcasFormat)
 		.value("Extended", XYZExporter::ExtendedFormat)
+	;
+
+	ovito_class<FHIAimsExporter, ParticleExporter>()
 	;
 }
 

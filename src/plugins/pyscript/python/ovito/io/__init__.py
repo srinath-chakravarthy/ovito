@@ -149,6 +149,7 @@ def export_file(node, file, format, **params):
         :param str file: The name of the output file.
         :param str format: The type of file to write:
         
+                            * ``"fhi-aims"`` -- FHI-aims format
                             * ``"lammps_dump"`` -- LAMMPS text-based dump format
                             * ``"lammps_data"`` -- LAMMPS data format
                             * ``"imd"`` -- IMD format

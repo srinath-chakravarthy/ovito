@@ -12,3 +12,4 @@ ovito.io.export_file._formatTable["lammps_data"] = LAMMPSDataExporter
 ovito.io.export_file._formatTable["imd"] = IMDExporter
 ovito.io.export_file._formatTable["vasp"] = POSCARExporter
 ovito.io.export_file._formatTable["xyz"] = XYZExporter
+ovito.io.export_file._formatTable["fhi-aims"] = FHIAimsExporter

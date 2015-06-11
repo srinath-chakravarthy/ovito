@@ -60,12 +60,18 @@ bool InterfaceMesh::classifyTetrahedra(FloatType maximumNeighborDistance, Future
 		}
 
 		cell->info().flag = isGood;
-		if(isGood && !cell->info().isGhost) {
-			cell->info().index = _numGoodTetrahedra++;
+
+		if(isGood) {
+			if(!cell->info().isGhost)
+				cell->info().index = _numGoodTetrahedra++;
+			else
+				cell->info().index = -1;
 			_isCompletelyBad = false;
 		}
 		else {
-			if(!cell->info().isGhost) _isCompletelyGood = false;
+			if(!cell->info().isGhost) {
+				_isCompletelyGood = false;
+			}
 			cell->info().index = -1;
 		}
 	}

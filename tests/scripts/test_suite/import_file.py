@@ -15,12 +15,14 @@ assert(len(ovito.dataset.scene_nodes) == 3)
 
 node4 = import_file(test_data_dir + "CFG/shear.void.120.cfg")
 node5 = import_file(test_data_dir + "IMD/nw2.imd.gz")
+node6 = import_file(test_data_dir + "FHI-aims/3_geometry.in.next_step")
 
 node1.remove_from_scene()
 node2.remove_from_scene()
 node3.remove_from_scene()
 node4.remove_from_scene()
 node5.remove_from_scene()
+node6.remove_from_scene()
 
 node = import_file(test_data_dir + "LAMMPS/multi_sequence_1.dump")
 assert(ovito.dataset.anim.last_frame == 2)

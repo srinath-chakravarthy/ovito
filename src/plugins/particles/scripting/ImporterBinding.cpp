@@ -36,6 +36,7 @@
 #include <plugins/particles/import/lammps/LAMMPSTextDumpImporter.h>
 #include <plugins/particles/import/lammps/LAMMPSBinaryDumpImporter.h>
 #include <plugins/particles/import/lammps/LAMMPSDataImporter.h>
+#include <plugins/particles/import/fhi_aims/FHIAimsImporter.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -119,6 +120,9 @@ BOOST_PYTHON_MODULE(ParticlesImporter)
 	;
 
 	ovito_class<POSCARImporter, ParticleImporter>()
+	;
+
+	ovito_class<FHIAimsImporter, ParticleImporter>()
 	;
 }
 

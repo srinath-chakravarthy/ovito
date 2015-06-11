@@ -157,7 +157,7 @@ public:
 	DT::size_type number_of_tetrahedra() const { return _dt.number_of_cells(); }
 
 	/// Returns the number of finite cells in the primary image of the simulation cell.
-	DT::size_type number_of_primary_tetrahedra() const { return _dt.number_of_cells(); }
+	DT::size_type number_of_primary_tetrahedra() const { return _numPrimaryTetrahedra; }
 
 	CellIterator begin_cells() const { return _dt.cells_begin(); }
 	CellIterator end_cells() const { return _dt.cells_end(); }
