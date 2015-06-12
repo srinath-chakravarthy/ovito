@@ -39,7 +39,7 @@ StructureAnalysis::LatticeStructure StructureAnalysis::_latticeStructures[NUM_LA
 template<typename iterator>
 void bitmapSort(iterator begin, iterator end, int max)
 {
-	OVITO_ASSERT(max < 32);
+	OVITO_ASSERT(max <= 32);
 	OVITO_ASSERT(end >= begin);
 	int bitarray = 0;
 	for(iterator pin = begin; pin != end; ++pin) {
@@ -84,6 +84,7 @@ void StructureAnalysis::initializeCoordinationStructures()
 	_coordinationStructures[COORD_OTHER].numNeighbors = 0;
 	_latticeStructures[LATTICE_OTHER].coordStructure = &_coordinationStructures[COORD_OTHER];
 
+	// FCC
 	Vector3 fccVec[12] = {
 			Vector3( 0.5,  0.5,  0.0),
 			Vector3( 0.0,  0.5,  0.5),
@@ -111,6 +112,7 @@ void StructureAnalysis::initializeCoordinationStructures()
 	_latticeStructures[LATTICE_FCC].latticeVectors.assign(std::begin(fccVec), std::end(fccVec));
 	_latticeStructures[LATTICE_FCC].coordStructure = &_coordinationStructures[COORD_FCC];
 
+	// HCP
 	Vector3 hcpVec[18] = {
 			Vector3(sqrt(2.0)/4.0, -sqrt(6.0)/4.0, 0.0),
 			Vector3(-sqrt(2.0)/2.0, 0.0, 0.0),
@@ -145,6 +147,7 @@ void StructureAnalysis::initializeCoordinationStructures()
 	_latticeStructures[LATTICE_HCP].latticeVectors.assign(std::begin(hcpVec), std::end(hcpVec));
 	_latticeStructures[LATTICE_HCP].coordStructure = &_coordinationStructures[COORD_HCP];
 
+	// BCC
 	Vector3 bccVec[14] = {
 			Vector3( 0.5,  0.5,  0.5),
 			Vector3(-0.5,  0.5,  0.5),
@@ -174,6 +177,100 @@ void StructureAnalysis::initializeCoordinationStructures()
 	_latticeStructures[LATTICE_BCC].latticeVectors.assign(std::begin(bccVec), std::end(bccVec));
 	_latticeStructures[LATTICE_BCC].coordStructure = &_coordinationStructures[COORD_BCC];
 
+	// Cubic diamond
+	Vector3 diamondCubicVec[16] = {
+			Vector3(0.25, 0.25, 0.25),
+			Vector3(0.25, -0.25, -0.25),
+			Vector3(-0.25, -0.25, 0.25),
+			Vector3(-0.25, 0.25, -0.25),
+
+			Vector3(0, -0.5, 0.5),
+			Vector3(0.5, 0.5, 0),
+			Vector3(-0.5, 0, 0.5),
+			Vector3(-0.5, 0.5, 0),
+			Vector3(0, 0.5, 0.5),
+			Vector3(0.5, -0.5, 0),
+			Vector3(0.5, 0, 0.5),
+			Vector3(0.5, 0, -0.5),
+			Vector3(-0.5, -0.5, 0),
+			Vector3(0, -0.5, -0.5),
+			Vector3(0, 0.5, -0.5),
+			Vector3(-0.5, 0, -0.5)
+	};
+	_coordinationStructures[COORD_CUBIC_DIAMOND].numNeighbors = 16;
+	for(int ni1 = 0; ni1 < 16; ni1++) {
+		_coordinationStructures[COORD_CUBIC_DIAMOND].neighborArray.setNeighborBond(ni1, ni1, false);
+		FloatType cutoff = (ni1 < 4) ? (sqrt(3.0)*0.25+sqrt(0.5))/2 : (1.0+sqrt(0.5))/2;
+		for(int ni2 = ni1 + 1; ni2 < 4; ni2++) {
+			_coordinationStructures[COORD_CUBIC_DIAMOND].neighborArray.setNeighborBond(ni1, ni2, false);
+		}
+		for(int ni2 = std::max(ni1 + 1, 4); ni2 < 16; ni2++) {
+			bool bonded = (diamondCubicVec[ni1] - diamondCubicVec[ni2]).squaredLength() < cutoff;
+			_coordinationStructures[COORD_CUBIC_DIAMOND].neighborArray.setNeighborBond(ni1, ni2, bonded);
+		}
+		_coordinationStructures[COORD_CUBIC_DIAMOND].cnaSignatures[ni1] = (ni1 < 4) ? 0 : 1;
+	}
+	_coordinationStructures[COORD_CUBIC_DIAMOND].latticeVectors.assign(std::begin(diamondCubicVec), std::end(diamondCubicVec));
+	_latticeStructures[LATTICE_CUBIC_DIAMOND].latticeVectors.assign(std::begin(diamondCubicVec), std::end(diamondCubicVec));
+	_latticeStructures[LATTICE_CUBIC_DIAMOND].coordStructure = &_coordinationStructures[COORD_CUBIC_DIAMOND];
+
+	// Hexagonal diamond
+	Vector3 diamondHexVec[] = {
+			Vector3(-0.5, sqrt(3.0)/6, -sqrt(6.0)/12),
+			Vector3(0, -sqrt(3.0)/3, -sqrt(6.0)/12),
+			Vector3(0.5, sqrt(3.0)/6, -sqrt(6.0)/12),
+			Vector3(0, 0, sqrt(6.0)/4),
+
+			Vector3(sqrt(2.0)/4.0, -sqrt(6.0)/4.0, 0.0),
+			Vector3(-sqrt(2.0)/2.0, 0.0, 0.0),
+			Vector3(-sqrt(2.0)/4.0, sqrt(6.0)/12.0, -sqrt(3.0)/3.0),
+			Vector3(sqrt(2.0)/4.0, sqrt(6.0)/12.0, -sqrt(3.0)/3.0),
+			Vector3(0.0, -sqrt(6.0)/6.0, -sqrt(3.0)/3.0),
+			Vector3(-sqrt(2.0)/4.0, sqrt(6.0)/4.0, 0.0),
+			Vector3(sqrt(2.0)/4.0, sqrt(6.0)/4.0, 0.0),
+			Vector3(sqrt(2.0)/2.0, 0.0, 0.0),
+			Vector3(-sqrt(2.0)/4.0, -sqrt(6.0)/4.0, 0.0),
+			Vector3(0.0, -sqrt(6.0)/6.0, sqrt(3.0)/3.0),
+			Vector3(sqrt(2.0)/4.0, sqrt(6.0)/12.0, sqrt(3.0)/3.0),
+			Vector3(-sqrt(2.0)/4.0, sqrt(6.0)/12.0, sqrt(3.0)/3.0),
+
+			Vector3(-0.5, sqrt(3.0)/6, sqrt(6.0)/12),
+			Vector3(0, -sqrt(3.0)/3, sqrt(6.0)/12),
+			Vector3(0.5, sqrt(3.0)/6, sqrt(6.0)/12),
+			Vector3(0, 0, -sqrt(6.0)/4),
+
+			Vector3(-0.5, -sqrt(3.0)/6, -sqrt(6.0)/12),
+			Vector3(0, sqrt(3.0)/3, -sqrt(6.0)/12),
+			Vector3(0.5, -sqrt(3.0)/6, -sqrt(6.0)/12),
+
+			Vector3(-0.5, -sqrt(3.0)/6, sqrt(6.0)/12),
+			Vector3(0, sqrt(3.0)/3, sqrt(6.0)/12),
+			Vector3(0.5, -sqrt(3.0)/6, sqrt(6.0)/12),
+
+			Vector3(0.0, sqrt(6.0)/6.0, sqrt(3.0)/3.0),
+			Vector3(-sqrt(2.0)/4.0, -sqrt(6.0)/12.0, -sqrt(3.0)/3.0),
+			Vector3(sqrt(2.0)/4.0, -sqrt(6.0)/12.0, sqrt(3.0)/3.0),
+			Vector3(0.0, sqrt(6.0)/6.0, -sqrt(3.0)/3.0),
+			Vector3(sqrt(2.0)/4.0, -sqrt(6.0)/12.0, -sqrt(3.0)/3.0),
+			Vector3(-sqrt(2.0)/4.0, -sqrt(6.0)/12.0, sqrt(3.0)/3.0)
+	};
+	_coordinationStructures[COORD_HEX_DIAMOND].numNeighbors = 16;
+	for(int ni1 = 0; ni1 < 16; ni1++) {
+		_coordinationStructures[COORD_HEX_DIAMOND].neighborArray.setNeighborBond(ni1, ni1, false);
+		FloatType cutoff = (ni1 < 4) ? (sqrt(3.0)*0.25+sqrt(0.5))/2 : (1.0+sqrt(0.5))/2;
+		for(int ni2 = ni1 + 1; ni2 < 4; ni2++) {
+			_coordinationStructures[COORD_HEX_DIAMOND].neighborArray.setNeighborBond(ni1, ni2, false);
+		}
+		for(int ni2 = std::max(ni1 + 1, 4); ni2 < 16; ni2++) {
+			bool bonded = (diamondHexVec[ni1] - diamondHexVec[ni2]).squaredLength() < cutoff;
+			_coordinationStructures[COORD_HEX_DIAMOND].neighborArray.setNeighborBond(ni1, ni2, bonded);
+		}
+		_coordinationStructures[COORD_HEX_DIAMOND].cnaSignatures[ni1] = (ni1 < 4) ? 0 : ((diamondHexVec[ni1].z() == 0) ? 2 : 1);
+	}
+	_coordinationStructures[COORD_HEX_DIAMOND].latticeVectors.assign(std::begin(diamondHexVec), std::begin(diamondHexVec) + 16);
+	_latticeStructures[LATTICE_HEX_DIAMOND].latticeVectors.assign(std::begin(diamondHexVec), std::end(diamondHexVec));
+	_latticeStructures[LATTICE_HEX_DIAMOND].coordStructure = &_coordinationStructures[COORD_HEX_DIAMOND];
+
 	for(auto coordStruct = std::begin(_coordinationStructures); coordStruct != std::end(_coordinationStructures); ++coordStruct) {
 		// Find two non-coplanar common neighbors for every neighbor bond.
 		for(int neighIndex = 0; neighIndex < coordStruct->numNeighbors; neighIndex++) {
@@ -195,9 +292,12 @@ void StructureAnalysis::initializeCoordinationStructures()
 				}
 			}
 			OVITO_ASSERT(found);
+			if(&*coordStruct == &_coordinationStructures[COORD_HEX_DIAMOND])
+				qDebug() << neighIndex << " : " <<coordStruct->commonNeighbors[neighIndex][0] << coordStruct->commonNeighbors[neighIndex][1];
 		}
 	}
 
+	// Generate symmetry information
 	for(auto latticeStruct = std::begin(_latticeStructures); latticeStruct != std::end(_latticeStructures); ++latticeStruct) {
 		if(latticeStruct->latticeVectors.empty()) continue;
 
@@ -259,6 +359,8 @@ void StructureAnalysis::initializeCoordinationStructures()
 				for(const auto& entry : latticeStruct->permutations) {
 					OVITO_ASSERT(!entry.first.equals(t));
 				}
+				if(&*latticeStruct == &_latticeStructures[LATTICE_HEX_DIAMOND] || &*latticeStruct == &_latticeStructures[LATTICE_HCP])
+					qDebug() << t;
 				latticeStruct->permutations.push_back(std::make_pair(t, p));
 			}
 			else {
@@ -267,6 +369,7 @@ void StructureAnalysis::initializeCoordinationStructures()
 			bitmapSort(permutation.begin() + sortFrom + 1, permutation.end(), permutation.size());
 		}
 		while(std::next_permutation(permutation.begin(), permutation.end()));
+		qDebug() << "Lattice" << (latticeStruct - std::begin(_latticeStructures)) << latticeStruct->permutations.size();
 	}
 }
 
@@ -282,6 +385,10 @@ bool StructureAnalysis::identifyStructures(FutureInterfaceBase& progress)
 
 	// Identify local structure around each particle.
 	_maximumNeighborDistance = 0;
+
+	//determineLocalStructure(neighFinder, 0);
+	//return true;
+
 	return parallelFor(positions()->size(), progress, [this, &neighFinder](size_t index) {
 		determineLocalStructure(neighFinder, index);
 	});
@@ -307,6 +414,8 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 		nn = 12;
 	else if(_inputCrystalType == LATTICE_BCC)
 		nn = 14;
+	else if(_inputCrystalType == LATTICE_CUBIC_DIAMOND || _inputCrystalType == LATTICE_HEX_DIAMOND)
+		nn = 16;
 	else
 		return;
 
@@ -329,18 +438,38 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 		localScaling /= 8;
 		localCutoff = localScaling / (sqrt(3.0)/2.0) * 0.5 * (1.0 + sqrt(2.0));
 	}
+	else if(_inputCrystalType == LATTICE_CUBIC_DIAMOND || _inputCrystalType == LATTICE_HEX_DIAMOND) {
+		for(int n = 4; n < 16; n++)
+			localScaling += sqrt(neighQuery.results()[n].distanceSq);
+		localScaling /= 12;
+		localCutoff = localScaling * (1.0f + sqrt(2.0f)) * 0.5f;
+	}
 	FloatType localCutoffSquared =  localCutoff * localCutoff;
 
-	// Make sure the (N+1)-th atom is beyond the cutoff radius (if it exists).
-	if(numNeighbors > nn && neighQuery.results()[nn].distanceSq <= localCutoffSquared)
-		return;
-
-	// Compute common neighbor bit-flag array.
 	CommonNeighborAnalysisModifier::NeighborBondArray neighborArray;
-	for(int ni1 = 0; ni1 < nn; ni1++) {
-		neighborArray.setNeighborBond(ni1, ni1, false);
-		for(int ni2 = ni1+1; ni2 < nn; ni2++)
-			neighborArray.setNeighborBond(ni1, ni2, (neighQuery.results()[ni1].delta - neighQuery.results()[ni2].delta).squaredLength() <= localCutoffSquared);
+
+	if(_inputCrystalType != LATTICE_CUBIC_DIAMOND && _inputCrystalType != LATTICE_HEX_DIAMOND) {
+		// Make sure the (N+1)-th atom is beyond the cutoff radius (if it exists).
+		if(numNeighbors > nn && neighQuery.results()[nn].distanceSq <= localCutoffSquared)
+			return;
+
+		// Compute common neighbor bit-flag array.
+		for(int ni1 = 0; ni1 < nn; ni1++) {
+			neighborArray.setNeighborBond(ni1, ni1, false);
+			for(int ni2 = ni1+1; ni2 < nn; ni2++)
+				neighborArray.setNeighborBond(ni1, ni2, (neighQuery.results()[ni1].delta - neighQuery.results()[ni2].delta).squaredLength() <= localCutoffSquared);
+		}
+	}
+	else {
+		// Compute common neighbor bit-flag array.
+		for(int ni1 = 0; ni1 < nn; ni1++) {
+			neighborArray.setNeighborBond(ni1, ni1, false);
+			for(int ni2 = ni1+1; ni2 < 4; ni2++)
+				neighborArray.setNeighborBond(ni1, ni2, false);
+			FloatType cutoffSquared = (ni1 >= 4) ? localCutoffSquared : (localScaling * localScaling * (2.0 * (sqrt(3.0)*0.25+sqrt(0.5))*0.5 * (sqrt(3.0)*0.25+sqrt(0.5))*0.5));
+			for(int ni2 = std::max(ni1+1,4); ni2 < nn; ni2++)
+				neighborArray.setNeighborBond(ni1, ni2, (neighQuery.results()[ni1].delta - neighQuery.results()[ni2].delta).squaredLength() <= cutoffSquared);
+		}
 	}
 
 	CoordinationStructureType coordinationType;
@@ -416,6 +545,49 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 		else
 			return;
 	}
+	else if(_inputCrystalType == LATTICE_CUBIC_DIAMOND || _inputCrystalType == LATTICE_HEX_DIAMOND) {
+		for(int ni = 0; ni < 4; ni++) {
+			cnaSignatures[ni] = 0;
+			unsigned int commonNeighbors;
+			if(CommonNeighborAnalysisModifier::findCommonNeighbors(neighborArray, ni, commonNeighbors, nn) != 3)
+				return;
+		}
+		int n543 = 0;
+		int n544 = 0;
+		for(int ni = 4; ni < nn; ni++) {
+			// Determine number of neighbors the two atoms have in common.
+			unsigned int commonNeighbors;
+			unsigned int commonNeighborsRef;
+			int numCommonNeighbors = CommonNeighborAnalysisModifier::findCommonNeighbors(neighborArray, ni, commonNeighbors, nn);
+			if(numCommonNeighbors != 5)
+				break;
+
+			// Determine the number of bonds among the common neighbors.
+			CommonNeighborAnalysisModifier::CNAPairBond neighborBonds[MAX_NEIGHBORS*MAX_NEIGHBORS];
+			int numNeighborBonds = CommonNeighborAnalysisModifier::findNeighborBonds(neighborArray, commonNeighbors, nn, neighborBonds);
+			if(numNeighborBonds != 4)
+				break;
+
+			// Determine the number of bonds in the longest continuous chain.
+			int maxChainLength = CommonNeighborAnalysisModifier::calcMaxChainLength(neighborBonds, numNeighborBonds);
+			if(maxChainLength == 3) {
+				n543++;
+				cnaSignatures[ni] = 1;
+			}
+			else if(maxChainLength == 4) {
+				n544++;
+				cnaSignatures[ni] = 2;
+			}
+			else break;
+		}
+		if(n543 == 12) {
+			coordinationType = COORD_CUBIC_DIAMOND;
+		}
+		else if(n543 == 6 && n544 == 6) {
+			coordinationType = COORD_HEX_DIAMOND;
+		}
+		else return;
+	}
 
 	// Initialize permutation.
 	int neighborIndices[MAX_NEIGHBORS];
@@ -436,12 +608,14 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 			if(atomNeighborIndex1 != previousIndices[ni1]) check = true;
 			previousIndices[ni1] = atomNeighborIndex1;
 			if(check) {
-				if(cnaSignatures[atomNeighborIndex1] != coordStructure.cnaSignatures[ni1])
+				if(cnaSignatures[atomNeighborIndex1] != coordStructure.cnaSignatures[ni1]) {
 					break;
+				}
 				for(ni2 = 0; ni2 < ni1; ni2++) {
 					int atomNeighborIndex2 = neighborIndices[ni2];
-					if(neighborArray.neighborBond(atomNeighborIndex1, atomNeighborIndex2) != coordStructure.neighborArray.neighborBond(ni1, ni2))
+					if(neighborArray.neighborBond(atomNeighborIndex1, atomNeighborIndex2) != coordStructure.neighborArray.neighborBond(ni1, ni2)) {
 						break;
+					}
 				}
 				if(ni2 != ni1) break;
 			}
@@ -554,6 +728,7 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 					if(i != 2) {
 						atomIndex = neighborList[coordStructure.commonNeighbors[neighborIndex][i]];
 						tm1.column(i) = latticeStructure.latticeVectors[permutation[coordStructure.commonNeighbors[neighborIndex][i]]] - latticeStructure.latticeVectors[permutation[neighborIndex]];
+						qDebug() << "Common neighbor:" << atomIndex;
 					}
 					else {
 						atomIndex = currentAtomIndex;
@@ -566,8 +741,9 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 					}
 					tm2.column(i) = latticeStructure.latticeVectors[j];
 				}
-				if(!properOverlap)
+				if(!properOverlap) {
 					continue;
+				}
 
 				// Determine the misorientation matrix.
 				OVITO_ASSERT(std::abs(tm1.determinant()) > FLOATTYPE_EPSILON);
@@ -593,6 +769,13 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 						break;
 					}
 				}
+				qDebug() << transition;
+				for(int i = 0; i < 3; i++)
+					qDebug() << tm1.column(i) << " -> " << tm2.column(i) << "Lens:" << tm1.column(i).length() << tm2.column(i).length();
+				qDebug() << "clusterid=" << cluster->id << "neighborIndex=" << neighborIndex;
+				qDebug() << "Current atom:" << currentAtomIndex;
+				qDebug() << "Neighbor atom:" << *neighborAtomIndex;
+				OVITO_ASSERT(cluster->atomCount > 1);
 			}
 		}
 		while(!atomsToVisit.empty());

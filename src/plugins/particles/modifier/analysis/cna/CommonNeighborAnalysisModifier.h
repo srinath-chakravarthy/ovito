@@ -64,7 +64,7 @@ public:
 	struct NeighborBondArray
 	{
 		/// Two-dimensional bit array that stores the bonds between neighbors.
-		unsigned int neighborArray[MAX_NEIGHBORS];
+		unsigned int neighborArray[32];
 
 		/// Resets all bits.
 		NeighborBondArray() {
@@ -73,15 +73,15 @@ public:
 
 		/// Returns whether two nearest neighbors have a bond between them.
 		inline bool neighborBond(int neighborIndex1, int neighborIndex2) const {
-			OVITO_ASSERT(neighborIndex1 < MAX_NEIGHBORS);
-			OVITO_ASSERT(neighborIndex2 < MAX_NEIGHBORS);
+			OVITO_ASSERT(neighborIndex1 < 32);
+			OVITO_ASSERT(neighborIndex2 < 32);
 			return (neighborArray[neighborIndex1] & (1<<neighborIndex2));
 		}
 
 		/// Sets whether two nearest neighbors have a bond between them.
 		inline void setNeighborBond(int neighborIndex1, int neighborIndex2, bool bonded) {
-			OVITO_ASSERT(neighborIndex1 < MAX_NEIGHBORS);
-			OVITO_ASSERT(neighborIndex2 < MAX_NEIGHBORS);
+			OVITO_ASSERT(neighborIndex1 < 32);
+			OVITO_ASSERT(neighborIndex2 < 32);
 			if(bonded) {
 				neighborArray[neighborIndex1] |= (1<<neighborIndex2);
 				neighborArray[neighborIndex2] |= (1<<neighborIndex1);

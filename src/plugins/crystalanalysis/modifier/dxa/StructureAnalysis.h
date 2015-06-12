@@ -62,9 +62,9 @@ public:
 
 	/// The maximum number of neighbor atoms taken into account for the common neighbor analysis.
 #ifndef Q_CC_MSVC
-	static constexpr int MAX_NEIGHBORS = 14;
+	static constexpr int MAX_NEIGHBORS = 16;
 #else
-	enum { MAX_NEIGHBORS = 14 };
+	enum { MAX_NEIGHBORS = 16 };
 #endif
 
 	struct CoordinationStructure {

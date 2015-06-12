@@ -312,18 +312,16 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	sublayout2->setContentsMargins(0,0,0,0);
 	sublayout2->setSpacing(4);
 	sublayout2->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_FCC, tr("FCC")));
-	//sublayout2->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_HCP, tr("HCP")));
+	sublayout2->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_HCP, tr("HCP")));
 	sublayout2->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_BCC, tr("BCC")));
 	sublayout1->addLayout(sublayout2);
 
-#if 0
 	sublayout2 = new QHBoxLayout();
 	sublayout2->setContentsMargins(0,0,0,0);
 	sublayout2->setSpacing(4);
 	sublayout2->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_CUBIC_DIAMOND, tr("Dia (cubic)")));
-	sublayout2->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_HEX_DIAMOND, tr("Dia (hex)")));
+	//sublayout2->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_HEX_DIAMOND, tr("Dia (hex)")));
 	sublayout1->addLayout(sublayout2);
-#endif
 
 	QGroupBox* dxaParamsBox = new QGroupBox(tr("DXA parameters"));
 	layout->addWidget(dxaParamsBox);

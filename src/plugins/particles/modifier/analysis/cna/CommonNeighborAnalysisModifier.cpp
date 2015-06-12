@@ -158,7 +158,7 @@ int CommonNeighborAnalysisModifier::findNeighborBonds(const NeighborBondArray& n
 {
 	int numBonds = 0;
 
-	unsigned int nib[MAX_NEIGHBORS];
+	unsigned int nib[32];
 	int nibn = 0;
 	unsigned int ni1b = 1;
 	for(int ni1 = 0; ni1 < numNeighbors; ni1++, ni1b <<= 1) {
@@ -166,11 +166,9 @@ int CommonNeighborAnalysisModifier::findNeighborBonds(const NeighborBondArray& n
 			unsigned int b = commonNeighbors & neighborArray.neighborArray[ni1];
 			for(int n = 0; n < nibn; n++) {
 				if(b & nib[n]) {
-					OVITO_ASSERT(numBonds < MAX_NEIGHBORS*MAX_NEIGHBORS);
 					neighborBonds[numBonds++] = ni1b | nib[n];
 				}
 			}
-
 			nib[nibn++] = ni1b;
 		}
 	}
