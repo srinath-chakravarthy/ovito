@@ -720,9 +720,6 @@ bool SurfaceMeshDisplay::isCornerInside2DRegion(const std::vector<std::vector<Po
 ******************************************************************************/
 bool SurfaceMeshDisplay::isCornerInside3DRegion(const HalfEdgeMesh<>& mesh, const std::vector<Point3>& reducedPos, const std::array<bool,3> pbcFlags, bool isCompletelySolid)
 {
-	if(mesh.vertices().empty())
-		return isCompletelySolid;
-
 	// Determine which vertex is closest to the test point.
 	FloatType closestDistanceSq = FLOATTYPE_MAX;
 	HalfEdgeMesh<>::Vertex* closestVertex = nullptr;
@@ -743,6 +740,9 @@ bool SurfaceMeshDisplay::isCornerInside3DRegion(const HalfEdgeMesh<>& mesh, cons
 			closestVector = r;
 		}
 	}
+
+	if(!closestVertex)
+		return isCompletelySolid;
 
 	// Check if any edge is closer to the test point than the closest vertex.
 	for(HalfEdgeMesh<>::Vertex* v : mesh.vertices()) {

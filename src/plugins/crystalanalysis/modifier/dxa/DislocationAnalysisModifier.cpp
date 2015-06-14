@@ -113,7 +113,7 @@ DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : Str
 
 	// Create Burgers vector families.
 	StructurePattern* fccPattern = _patternCatalog->structureById(StructureAnalysis::LATTICE_FCC);
-	fccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/2<110> (Perfect)"), Vector3(1.0f/2.0f, 1.0f/2.0f, 0.0f), Color(1,0,0)));
+	fccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/2<110> (Perfect)"), Vector3(1.0f/2.0f, 1.0f/2.0f, 0.0f), Color(0,1,1)));
 	fccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/6<112> (Shockley)"), Vector3(1.0f/6.0f, 1.0f/6.0f, 2.0f/6.0f), Color(0,1,0)));
 	fccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/6<110> (Stair-rod)"), Vector3(1.0f/6.0f, 1.0f/6.0f, 0.0f/6.0f), Color(0,0,1)));
 	fccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/3<001> (Hirth)"), Vector3(1.0f/3.0f, 0.0f, 0.0f), Color(1,1,0)));
@@ -122,6 +122,9 @@ DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : Str
 	bccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/2<111>"), Vector3(1.0f/2.0f, 1.0f/2.0f, 1.0f/2.0f), Color(0,1,0)));
 	bccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("<100>"), Vector3(1.0f, 0.0f, 0.0f), Color(1, 0.3f, 0.8f)));
 	bccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("<110>"), Vector3(1.0f, 1.0f, 0.0f), Color(0.2f, 0.5f, 1.0f)));
+	StructurePattern* cubicDiaPattern = _patternCatalog->structureById(StructureAnalysis::LATTICE_CUBIC_DIAMOND);
+	cubicDiaPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/2<110>"), Vector3(1.0f/2.0f, 1.0f/2.0f, 0.0f), Color(0,1,1)));
+	cubicDiaPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/6<112>"), Vector3(1.0f/6.0f, 1.0f/6.0f, 2.0f/6.0f), Color(0,1,0)));
 }
 
 /******************************************************************************
@@ -302,26 +305,17 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 
 	QGroupBox* structureBox = new QGroupBox(tr("Input crystal type"));
 	layout->addWidget(structureBox);
-	QVBoxLayout* sublayout1 = new QVBoxLayout(structureBox);
+	QGridLayout* sublayout1 = new QGridLayout(structureBox);
 	sublayout1->setContentsMargins(4,4,4,4);
-	sublayout1->setSpacing(2);
+	sublayout1->setSpacing(4);
 
 	IntegerRadioButtonParameterUI* crystalStructureUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_inputCrystalStructure));
 
-	QHBoxLayout* sublayout2 = new QHBoxLayout();
-	sublayout2->setContentsMargins(0,0,0,0);
-	sublayout2->setSpacing(4);
-	sublayout2->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_FCC, tr("FCC")));
-	sublayout2->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_HCP, tr("HCP")));
-	sublayout2->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_BCC, tr("BCC")));
-	sublayout1->addLayout(sublayout2);
-
-	sublayout2 = new QHBoxLayout();
-	sublayout2->setContentsMargins(0,0,0,0);
-	sublayout2->setSpacing(4);
-	sublayout2->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_CUBIC_DIAMOND, tr("Dia (cubic)")));
-	//sublayout2->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_HEX_DIAMOND, tr("Dia (hex)")));
-	sublayout1->addLayout(sublayout2);
+	sublayout1->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_FCC, tr("FCC")), 0, 0);
+	sublayout1->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_HCP, tr("HCP")), 0, 1);
+	sublayout1->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_BCC, tr("BCC")), 0, 2);
+	sublayout1->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_CUBIC_DIAMOND, tr("Diamond cubic / Zinc blende")), 1, 0, 1, 3);
+	sublayout1->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_HEX_DIAMOND, tr("Diamond hexagonal / Wurtzite")), 2, 0, 1, 3);
 
 	QGroupBox* dxaParamsBox = new QGroupBox(tr("DXA parameters"));
 	layout->addWidget(dxaParamsBox);

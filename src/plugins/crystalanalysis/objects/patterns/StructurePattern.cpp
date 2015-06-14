@@ -47,7 +47,7 @@ StructurePattern::StructurePattern(DataSet* dataset) : ParticleType(dataset), _s
 
 	// Create "unknown" Burgers vector family.
 	BurgersVectorFamily* family = new BurgersVectorFamily(dataset);
-	family->setColor(Color(0.7f, 0.7f, 0.7f));
+	family->setColor(Color(0.9f, 0.2f, 0.2f));
 	family->setName(tr("Other"));
 	family->setBurgersVector(Vector3::Zero());
 	addBurgersVectorFamily(family);
