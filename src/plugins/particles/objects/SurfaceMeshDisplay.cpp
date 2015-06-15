@@ -426,6 +426,7 @@ void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const Simulat
 						else if(currentContour->back().y() == 1) exitSide = currentContour->back().x() + 1.0f;
 						else if(currentContour->back().x() == 1) exitSide = 3.0f - currentContour->back().y();
 						else if(currentContour->back().y() == 0) exitSide = 4.0f - currentContour->back().x();
+						if(exitSide >= 4.0f) exitSide = 0.0f;
 
 						// Find the next contour.
 						FloatType entrySide;
@@ -436,6 +437,7 @@ void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const Simulat
 							else if(c->front().y() == 1) pos = c->front().x() + 1.0f;
 							else if(c->front().x() == 1) pos = 3.0f - c->front().y();
 							else if(c->front().y() == 0) pos = 4.0f - c->front().x();
+							if(pos >= 4.0f) pos = 0.0f;
 							FloatType dist = exitSide - pos;
 							if(dist < 0.0f) dist += 4.0f;
 							if(dist < closestDist) {
@@ -444,9 +446,10 @@ void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const Simulat
 								entrySide = pos;
 							}
 						}
-
 						int exitCorner = (int)floor(exitSide);
 						int entryCorner = (int)floor(entrySide);
+						OVITO_ASSERT(exitCorner >= 0 && exitCorner < 4);
+						OVITO_ASSERT(entryCorner >= 0 && entryCorner < 4);
 						if(exitCorner != entryCorner || exitSide < entrySide) {
 							for(int corner = exitCorner; ;) {
 								switch(corner) {

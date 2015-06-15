@@ -78,7 +78,7 @@ bool DislocationTracer::traceDislocationSegments(FutureInterfaceBase& progress)
 			OVITO_ASSERT(node->circuit->countEdges() == node->circuit->edgeCount);
 
 			// Trace segment a bit further.
-			traceSegment(*node->segment, *node, circuitLength, false);
+			traceSegment(*node->segment, *node, circuitLength, circuitLength <= _maxBurgersCircuitSize);
 		}
 
 		// Find dislocation segments by generating trial Burgers circuits on the interface mesh
@@ -90,6 +90,18 @@ bool DislocationTracer::traceDislocationSegments(FutureInterfaceBase& progress)
 
 		// Join segments forming dislocation junctions.
 		numJunctions += joinSegments(circuitLength);
+
+		// Store circuits of dangling ends.
+		if(circuitLength >= _maxBurgersCircuitSize) {
+			for(DislocationNode* node : danglingNodes()) {
+				OVITO_ASSERT(node->circuit->isDangling);
+				OVITO_ASSERT(node->isDangling());
+				if(node->circuit->segmentMeshCap.empty()) {
+					node->circuit->storeCircuit();
+					node->circuit->numPreliminaryPoints = 0;
+				}
+			}
+		}
 
 		if(circuitLength < _maxExtendedBurgersCircuitSize)
 			progress.nextProgressSubStep();
@@ -465,12 +477,6 @@ void DislocationTracer::createAndTraceSegment(const ClusterVector& burgersVector
 
 	// Trace the segment in the backward direction.
 	traceSegment(*segment, segment->backwardNode(), maxCircuitLength, true);
-
-	// Store circuit state.
-	forwardCircuit->storeCircuit();
-	backwardCircuit->storeCircuit();
-	forwardCircuit->numPreliminaryPoints = 0;
-	backwardCircuit->numPreliminaryPoints = 0;
 }
 
 /******************************************************************************

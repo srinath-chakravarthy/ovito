@@ -103,6 +103,80 @@ void DislocationAnalysisEngine::perform()
 		return;
 	_dislocationTracer.finishDislocationSegments(_inputCrystalStructure);
 
+	auto isWrappedFacet = [this](const InterfaceMesh::Face* f) -> bool {
+		InterfaceMesh::Edge* e = f->edges();
+		do {
+			Vector3 v = e->vertex1()->pos() - e->vertex2()->pos();
+			if(_structureAnalysis.cell().isWrappedVector(v))
+				return true;
+			e = e->nextFaceEdge();
+		}
+		while(e != f->edges());
+		return false;
+	};
+
+	// Count facets which are not crossing the periodic boundaries.
+	size_t numFacets = 0;
+	for(const InterfaceMesh::Face* f : _interfaceMesh.faces()) {
+		if(isWrappedFacet(f) == false)
+			numFacets++;
+	}
+
+#if 0
+	std::ofstream stream("mesh.vtk");
+	stream << "# vtk DataFile Version 3.0\n";
+	stream << "# Interface mesh\n";
+	stream << "ASCII\n";
+	stream << "DATASET UNSTRUCTURED_GRID\n";
+	stream << "POINTS " << _interfaceMesh.vertices().size() << " float\n";
+	for(const InterfaceMesh::Vertex* n : _interfaceMesh.vertices()) {
+		const Point3& pos = n->pos();
+		stream << pos.x() << " " << pos.y() << " " << pos.z() << "\n";
+	}
+	stream << "\nCELLS " << numFacets << " " << (numFacets*4) << "\n";
+	for(const InterfaceMesh::Face* f : _interfaceMesh.faces()) {
+		if(isWrappedFacet(f) == false) {
+			stream << f->edgeCount();
+			InterfaceMesh::Edge* e = f->edges();
+			do {
+				stream << " " << e->vertex1()->index();
+				e = e->nextFaceEdge();
+			}
+			while(e != f->edges());
+			stream << "\n";
+		}
+	}
+
+	stream << "\nCELL_TYPES " << numFacets << "\n";
+	for(size_t i = 0; i < numFacets; i++)
+		stream << "5\n";	// Triangle
+
+	stream << "\nCELL_DATA " << numFacets << "\n";
+
+	stream << "\nSCALARS dislocation_segment int 1\n";
+	stream << "\nLOOKUP_TABLE default\n";
+	for(const InterfaceMesh::Face* f : _interfaceMesh.faces()) {
+		if(isWrappedFacet(f) == false) {
+			if(f->circuit != NULL && (f->circuit->isDangling == false || f->testFlag(1))) {
+				DislocationSegment* segment = f->circuit->dislocationNode->segment;
+				while(segment->replacedWith != NULL) segment = segment->replacedWith;
+				stream << segment->id << "\n";
+			}
+			else
+				stream << "-1\n";
+		}
+	}
+
+	stream << "\nSCALARS is_primary_segment int 1\n";
+	stream << "\nLOOKUP_TABLE default\n";
+	for(const InterfaceMesh::Face* f : _interfaceMesh.faces()) {
+		if(isWrappedFacet(f) == false)
+			stream << f->testFlag(1) << "\n";
+	}
+
+	stream.close();
+#endif
+
 	// Generate the defect mesh.
 	nextProgressSubStep();
 	if(!_interfaceMesh.generateDefectMesh(_dislocationTracer, *_defectMesh, *this))

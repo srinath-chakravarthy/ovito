@@ -619,24 +619,25 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 	// Find first matching neighbor permutation.
 	const CoordinationStructure& coordStructure = _coordinationStructures[coordinationType];
 	for(;;) {
-		bool check = false;
-		int ni1, ni2;
-		for(ni1 = 0; ni1 < nn; ni1++) {
+		int ni1 = 0;
+		while(neighborMapping[ni1] == previousMapping[ni1]) {
+			ni1++;
+			OVITO_ASSERT(ni1 < nn);
+		}
+		for(; ni1 < nn; ni1++) {
 			int atomNeighborIndex1 = neighborMapping[ni1];
-			if(atomNeighborIndex1 != previousMapping[ni1]) check = true;
 			previousMapping[ni1] = atomNeighborIndex1;
-			if(check) {
-				if(cnaSignatures[atomNeighborIndex1] != coordStructure.cnaSignatures[ni1]) {
+			if(cnaSignatures[atomNeighborIndex1] != coordStructure.cnaSignatures[ni1]) {
+				break;
+			}
+			int ni2;
+			for(ni2 = 0; ni2 < ni1; ni2++) {
+				int atomNeighborIndex2 = neighborMapping[ni2];
+				if(neighborArray.neighborBond(atomNeighborIndex1, atomNeighborIndex2) != coordStructure.neighborArray.neighborBond(ni1, ni2)) {
 					break;
 				}
-				for(ni2 = 0; ni2 < ni1; ni2++) {
-					int atomNeighborIndex2 = neighborMapping[ni2];
-					if(neighborArray.neighborBond(atomNeighborIndex1, atomNeighborIndex2) != coordStructure.neighborArray.neighborBond(ni1, ni2)) {
-						break;
-					}
-				}
-				if(ni2 != ni1) break;
 			}
+			if(ni2 != ni1) break;
 		}
 		if(ni1 == nn) {
 			// Assign coordination structure type to atom.

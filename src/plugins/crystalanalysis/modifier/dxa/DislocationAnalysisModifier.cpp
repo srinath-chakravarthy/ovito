@@ -23,7 +23,7 @@
 #include <plugins/particles/objects/SurfaceMesh.h>
 #include <core/gui/properties/BooleanParameterUI.h>
 #include <core/gui/properties/IntegerParameterUI.h>
-#include <core/gui/properties/IntegerRadioButtonParameterUI.h>
+#include <core/gui/properties/VariantComboBoxParameterUI.h>
 #include <core/gui/properties/SubObjectParameterUI.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/particles/objects/BondsObject.h>
@@ -305,17 +305,16 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 
 	QGroupBox* structureBox = new QGroupBox(tr("Input crystal type"));
 	layout->addWidget(structureBox);
-	QGridLayout* sublayout1 = new QGridLayout(structureBox);
+	QVBoxLayout* sublayout1 = new QVBoxLayout(structureBox);
 	sublayout1->setContentsMargins(4,4,4,4);
-	sublayout1->setSpacing(4);
+	VariantComboBoxParameterUI* crystalStructureUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_inputCrystalStructure));
 
-	IntegerRadioButtonParameterUI* crystalStructureUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_inputCrystalStructure));
-
-	sublayout1->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_FCC, tr("FCC")), 0, 0);
-	sublayout1->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_HCP, tr("HCP")), 0, 1);
-	sublayout1->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_BCC, tr("BCC")), 0, 2);
-	sublayout1->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_CUBIC_DIAMOND, tr("Diamond cubic / Zinc blende")), 1, 0, 1, 3);
-	sublayout1->addWidget(crystalStructureUI->addRadioButton(StructureAnalysis::LATTICE_HEX_DIAMOND, tr("Diamond hexagonal / Wurtzite")), 2, 0, 1, 3);
+	crystalStructureUI->comboBox()->addItem(tr("Face-centered cubic (FCC)"), QVariant::fromValue((int)StructureAnalysis::LATTICE_FCC));
+	crystalStructureUI->comboBox()->addItem(tr("Hexagonal close-packed (HCP)"), QVariant::fromValue((int)StructureAnalysis::LATTICE_HCP));
+	crystalStructureUI->comboBox()->addItem(tr("Body-centered cubic (BCC)"), QVariant::fromValue((int)StructureAnalysis::LATTICE_BCC));
+	crystalStructureUI->comboBox()->addItem(tr("Diamond cubic / Zinc blende"), QVariant::fromValue((int)StructureAnalysis::LATTICE_CUBIC_DIAMOND));
+	crystalStructureUI->comboBox()->addItem(tr("Diamond hexagonal / Wurtzite"), QVariant::fromValue((int)StructureAnalysis::LATTICE_HEX_DIAMOND));
+	sublayout1->addWidget(crystalStructureUI->comboBox());
 
 	QGroupBox* dxaParamsBox = new QGroupBox(tr("DXA parameters"));
 	layout->addWidget(dxaParamsBox);
@@ -355,13 +354,13 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	layout->addWidget(structureTypesPUI->tableWidget());
 
 	// Open a sub-editor for the mesh display object.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_defectMeshDisplay), rolloutParams.after(rollout));
+	//new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_defectMeshDisplay), rolloutParams.after(rollout));
 
 	// Open a sub-editor for the internal surface smoothing modifier.
 	new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_smoothSurfaceModifier), rolloutParams.after(rollout).setTitle(tr("Post-processing")));
 
 	// Open a sub-editor for the dislocation display object.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_dislocationDisplay), rolloutParams.after(rollout));
+	//new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_dislocationDisplay), rolloutParams.after(rollout));
 
 	// Open a sub-editor for the internal line smoothing modifier.
 	new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_smoothDislocationsModifier), rolloutParams.after(rollout).setTitle(tr("Post-processing")));

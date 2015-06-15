@@ -130,6 +130,7 @@ struct BurgersCircuit
 
 	/// Saves the current state of the circuit.
 	void storeCircuit() {
+		OVITO_ASSERT(segmentMeshCap.empty());
 		segmentMeshCap.reserve(edgeCount);
 		InterfaceMesh::Edge* edge = firstEdge;
 		do {
@@ -137,6 +138,7 @@ struct BurgersCircuit
 			edge = edge->nextCircuitEdge;
 		}
 		while(edge != firstEdge);
+		OVITO_ASSERT(segmentMeshCap.size() >= 2);
 	}
 };
 
