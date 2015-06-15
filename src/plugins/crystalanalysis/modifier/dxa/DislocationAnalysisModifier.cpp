@@ -297,7 +297,7 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 {
 	// Create the rollout.
-	QWidget* rollout = createRollout(tr("Dislocation analysis"), rolloutParams);
+	QWidget* rollout = createRollout(tr("Dislocation analysis"), rolloutParams, "particles.modifiers.dislocation_analysis.html");
 
     QVBoxLayout* layout = new QVBoxLayout(rollout);
 	layout->setContentsMargins(4,4,4,4);

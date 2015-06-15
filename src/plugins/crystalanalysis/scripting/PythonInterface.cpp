@@ -86,7 +86,10 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 				"The :py:class:`~ovito.vis.SurfaceMeshDisplay` controlling the visual representation of the computed surface.\n")
 	;
 
-	ovito_class<DislocationAnalysisModifier, StructureIdentificationModifier>()
+	ovito_class<DislocationAnalysisModifier, StructureIdentificationModifier>(
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
+			"Sorry, the Python interface for this modifier is not implemented yet. It will follow in a future version of OVITO."
+			)
 	;
 
 	ovito_class<SmoothDislocationsModifier, Modifier>()

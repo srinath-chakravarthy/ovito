@@ -32,6 +32,7 @@ Class name                                     User interface name
 :py:class:`CreateBondsModifier`                :guilabel:`Create bonds`
 :py:class:`ComputePropertyModifier`            :guilabel:`Compute property`
 :py:class:`DeleteSelectedParticlesModifier`    :guilabel:`Delete selected particles`
+:py:class:`DislocationAnalysisModifier`        :guilabel:`Dislocation analysis (DXA)`
 :py:class:`FreezePropertyModifier`             :guilabel:`Freeze property`
 :py:class:`HistogramModifier`                  :guilabel:`Histogram`
 :py:class:`IdentifyDiamondModifier`            :guilabel:`Identify diamond structure`

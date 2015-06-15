@@ -9,3 +9,4 @@ import CrystalAnalysis
 ovito.modifiers.ConstructSurfaceModifier = CrystalAnalysis.ConstructSurfaceModifier
 ovito.modifiers.SmoothDislocationsModifier = CrystalAnalysis.SmoothDislocationsModifier
 ovito.modifiers.SmoothSurfaceModifier = CrystalAnalysis.SmoothSurfaceModifier
+ovito.modifiers.DislocationAnalysisModifier = CrystalAnalysis.DislocationAnalysisModifier

@@ -49,6 +49,10 @@
               <entry>Constructs a polyhedral mesh representing the surface of an atomistic solid.</entry>
             </row>          
             <row>
+              <entry><link linkend="particles.modifiers.dislocation_analysis">Dislocation analysis (DXA)</link></entry>
+              <entry>Detects dislocation lines in a crystal.</entry>
+            </row>          
+            <row>
               <entry><link linkend="particles.modifiers.displacement_vectors">Displacement vectors</link></entry>
               <entry>Calculates the displacements of particles based on an initial and a deformed configuration.</entry>
             </row>
@@ -203,6 +207,8 @@
   <xi:include href="particles/create_bonds.docbook"/>
 
   <xi:include href="particles/delete_selected_particles.docbook"/>
+
+  <xi:include href="particles/dislocation_analysis.docbook"/>
 
   <xi:include href="particles/displacement_vectors.docbook"/>
 
