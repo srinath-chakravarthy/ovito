@@ -73,6 +73,13 @@
           <para>Note that is mode is only available if particles carry type information.</para>
         </listitem>
       </varlistentry>
+      <varlistentry>
+        <term>No bonds between different molecules</term>
+        <listitem>
+          <para>If this option is active, no bonds will be created between atoms that belong to different molecules.
+          The molecule an atom belongs to is determined by value of the <literal>Molecule Identifier</literal> property.</para>
+        </listitem>
+      </varlistentry>
     </variablelist>
      	  
   </simplesect>

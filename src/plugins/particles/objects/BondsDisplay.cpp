@@ -183,7 +183,7 @@ void BondsDisplay::render(TimePoint time, DataObject* dataObject, const Pipeline
 		return;
 
 	if(renderer->isPicking()) {
-		OORef<BondPickInfo> pickInfo(new BondPickInfo(flowState));
+		OORef<BondPickInfo> pickInfo(new BondPickInfo(bondsObj, flowState));
 		renderer->beginPickObject(contextNode, pickInfo);
 	}
 
@@ -201,10 +201,9 @@ void BondsDisplay::render(TimePoint time, DataObject* dataObject, const Pipeline
 QString BondPickInfo::infoString(ObjectNode* objectNode, quint32 subobjectId)
 {
 	QString str;
-	BondsObject* bondsObj = pipelineState().findObject<BondsObject>();
-	if(bondsObj && bondsObj->storage()->size() > subobjectId) {
+	if(_bondsObj && _bondsObj->storage()->size() > subobjectId) {
 		str = tr("Bond");
-		const Bond& bond = (*bondsObj->storage())[subobjectId];
+		const Bond& bond = (*_bondsObj->storage())[subobjectId];
 
 		// Bond length
 		ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(pipelineState(), ParticleProperty::PositionProperty);

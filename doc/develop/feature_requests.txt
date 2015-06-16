@@ -40,6 +40,8 @@ New analysis features:
 - Create Bonds modifier: Add 'lower bound' parameter such that, when using the modifier several times, bonds with different lengths can be assigned different colors.
 - Plotting the value of a certain property of a certain particle versus simulation time. To make this work, all simulation frames need to be kept in memory (requested by Taojun & Mathieu Marciante).
 - Dislocation analysis: Proper representation of Burgers vectors in hexagonal crystals.
+- Compute polar decomposition of deformation gradient, F=RU (requested by arun.prakash@fau.de).
+- Add modifier for computing the elastic deformation gradient.
 
 New I/O functions:
 

@@ -613,6 +613,10 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					"The cutoff distance for the creation of bonds between particles."
 					"\n\n"
 					":Default: 3.2\n")
+			.add_property("intra_molecule_only", &CreateBondsModifier::onlyIntraMoleculeBonds, &CreateBondsModifier::setOnlyIntraMoleculeBonds,
+					"If this option is set to true, the modifier will create bonds only between atoms that belong to the same molecule."
+					"\n\n"
+					":Default: ``False``\n")
 			.add_property("bonds_display", make_function(&CreateBondsModifier::bondsDisplay, return_value_policy<ovito_object_reference>()),
 					"A :py:class:`~ovito.vis.BondsDisplay` instance controlling the visual appearance of the bonds created by this modifier.")
 		;

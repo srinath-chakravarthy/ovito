@@ -13,6 +13,9 @@ print("Parameter defaults:")
 print("  cutoff: {}".format(modifier.cutoff))
 modifier.cutoff = 3.1
 
+print("  intra_molecule_only: {}".format(modifier.intra_molecule_only))
+modifier.intra_molecule_only = True
+
 node.compute()
 
 print("Output:")

@@ -53,10 +53,11 @@ private:
 
 		/// Constructor.
 		BondsEngine(const TimeInterval& validityInterval, ParticleProperty* positions, ParticleProperty* particleTypes, const SimulationCell& simCell, CutoffMode cutoffMode,
-				FloatType uniformCutoff, std::vector<std::vector<FloatType>>&& pairCutoffs) :
+				FloatType uniformCutoff, std::vector<std::vector<FloatType>>&& pairCutoffs, ParticleProperty* moleculeIDs) :
 					ComputeEngine(validityInterval),
 					_positions(positions), _particleTypes(particleTypes), _simCell(simCell), _cutoffMode(cutoffMode),
-					_uniformCutoff(uniformCutoff), _pairCutoffs(std::move(pairCutoffs)), _bonds(new BondsStorage()) {}
+					_uniformCutoff(uniformCutoff), _pairCutoffs(std::move(pairCutoffs)), _bonds(new BondsStorage()),
+					_moleculeIDs(moleculeIDs) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;
@@ -74,6 +75,7 @@ private:
 		std::vector<std::vector<FloatType>> _pairCutoffs;
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
 		QExplicitlySharedDataPointer<ParticleProperty> _particleTypes;
+		QExplicitlySharedDataPointer<ParticleProperty> _moleculeIDs;
 		QExplicitlySharedDataPointer<BondsStorage> _bonds;
 		SimulationCell _simCell;
 	};
@@ -105,6 +107,12 @@ public:
 
 	/// \brief Returns the display object that is responsible for rendering the bonds.
 	BondsDisplay* bondsDisplay() const { return _bondsDisplay; }
+
+	/// Returns whether bonds will only be created between atoms from the same molecule.
+	bool onlyIntraMoleculeBonds() const { return _onlyIntraMoleculeBonds; }
+
+	/// Sets whether bonds will only be created between atoms from the same molecule.
+	void setOnlyIntraMoleculeBonds(bool enable) { _onlyIntraMoleculeBonds = enable; }
 
 protected:
 
@@ -146,6 +154,9 @@ private:
 	/// The cutoff radii for pairs of particle types.
 	PairCutoffsList _pairCutoffs;
 
+	/// If true, bonds will only be created between atoms from the same molecule.
+	PropertyField<bool> _onlyIntraMoleculeBonds;
+
 	/// The display object for rendering the bonds.
 	ReferenceField<BondsDisplay> _bondsDisplay;
 
@@ -162,6 +173,7 @@ private:
 
 	DECLARE_PROPERTY_FIELD(_cutoffMode);
 	DECLARE_PROPERTY_FIELD(_uniformCutoff);
+	DECLARE_PROPERTY_FIELD(_onlyIntraMoleculeBonds);
 	DECLARE_REFERENCE_FIELD(_bondsDisplay);
 };
 

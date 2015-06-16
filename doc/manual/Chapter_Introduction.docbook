@@ -115,6 +115,10 @@
           <listitem>
             <para><link linkend="particles.modifiers.coordination_analysis">Coordination number analysis and radial distribution function</link></para>
           </listitem>
+          
+          <listitem>
+            <para><link linkend="particles.modifiers.dislocation_analysis">Automated dislocation line identification</link></para>
+          </listitem>
 
           <listitem>
             <para><link linkend="particles.modifiers.displacement_vectors">Displacement vector calculation</link></para>

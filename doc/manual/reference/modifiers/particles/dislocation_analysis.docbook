@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section version="5.0"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd"
+         xml:id="particles.modifiers.dislocation_analysis"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:ns="http://docbook.org/ns/docbook">
+  <title>Dislocation analysis (DXA)</title>
+
+  <para>
+  
+    <informalfigure>
+      <informaltable frame="none">
+        <tgroup cols="2">
+          <tbody>
+            <row valign="bottom">
+              <entry>Input:</entry>
+              <entry>Output:</entry>
+            </row>
+            <row valign="top">
+              <entry>
+		        <mediaobject><imageobject>
+		        <imagedata fileref="images/modifiers/dislocation_analysis_example_input.png" format="PNG" />
+		        </imageobject></mediaobject>
+              </entry>
+              <entry>
+		        <mediaobject><imageobject>
+		        <imagedata fileref="images/modifiers/dislocation_analysis_example_output.png" format="PNG" />
+		        </imageobject></mediaobject>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+    </informalfigure>
+      
+    <informalfigure><screenshot><mediaobject><imageobject>
+       <imagedata fileref="images/modifiers/dislocation_analysis_panel.png" format="PNG" />
+    </imageobject></mediaobject></screenshot></informalfigure>
+    
+    This analysis modifier identifies all dislocations in a crystal, determines their Burgers vectors, 
+    and outputs a line representation of the dislocation defects. The modifier implements the so-called
+    Dislocation Extraction Algorithm (DXA), a unique computational method developed by the author of OVITO.
+    The original DXA method has been described in the paper
+    <blockquote><para>
+<literallayout><link xlink:href="http://iopscience.iop.org/0965-0393/18/8/085001/">A. Stukowski and K. Albe.
+Modelling Simul. Mater. Sci. Eng. 18, 085001 (2010)</link></literallayout>
+    </para></blockquote>
+    The current implementation in OVITO follows a newer, more general approach, which has been described in 
+    a follow-up paper:
+    <blockquote><para>
+<literallayout><link xlink:href="http://iopscience.iop.org/0965-0393/20/8/085007/">A. Stukowski, V.V. Bulatov and A. Arsenlis.
+Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
+    </para></blockquote>
+    Please cite the latter reference if you publish results obtained with the dislocation analysis modifier.
+  </para>
+
+  <para>
+    The DXA transforms the original atomistic representation of a dislocated crystal into a line representation 
+    of the dislocation network. It is able to compute the true Burgers vector of dislocation segments 
+    and identify dislocation junctions. The algorithm can deal with partial dislocations and to some extent also
+    with secondary grain boundary dislocations (e.g. twinning dislocations).
+  </para>
+  
+  <note><title>Important notice</title>
+  <para>
+    Even though the implementation of the DXA in OVITO is highly optimized, the algorithm is computationally
+    expensive and requires considerable amounts of working memory. The minimum requirement is 1 kilobyte per input atom!
+    Thus, to analyze a dataset containing 1 million atoms, at least 1 GB of free memory must be available. 
+    Otherwise your operating system will start swapping data to disk and your computer may become unresponsive.
+    Depending on the number of crystal defects even more memory may be needed. For the analysis of very large MD datasets that would exceed the available 
+    memory an MPI-based parallel implementation of the DXA is available which runs on distributed computing clusters. 
+    Please contact the author for more information on this standalone anlysis code.
+  </para>
+  </note>
+  
+   <simplesect>
+    <title>Parameters</title>
+
+    <variablelist>
+      <varlistentry>
+        <term>Input crystal type</term>
+        <listitem>
+          <para>Selects the lattice type of the input crystal. Currently, simple crystal stuctures such as
+          FCC, HCP, BCC, and diamond are supported. The DXA ignores the chemical type of atoms. Thus,
+          zinc blende and wurtzite structures can simply be treated as cubic and hexagonal diamond, respectively.
+          The same applies to other compound structures such as B2, which is equivalent to BCC.
+          </para>
+          <para>
+          The selected input crystal type determines how OVITO identifies the local coordination structure around
+          each atom and how it computes the local crystal orientation. The selected crystal type also determines 
+          how the computed Burgers vectors are represented and how dislocations are grouped into Burgers vector families.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Trial circuit length</term>
+        <listitem>
+          <para>This sets the maximum length of trial Burgers circuits, which are constructed
+          by the DXA to discover dislocations in the crystal. The maximum circuit length is specified
+          in terms of the number of atom-to-atom steps. Dislocations whose core is too wide to be enclosed
+          by a circuit of the given maximum length will not be found by the algorithm. 
+          </para>
+          <para>
+          The default value for this parameter is 9, which is sufficient to discover all typical lattice dislocations
+          in the types of crystals supported by the modifier. 
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Circuit stretchability</term>
+        <listitem>
+          <para>Once the DXA has discovered a dislocation segment and constructed a Burgers circuit around its dislocation core, the algorithm
+          advances the circuit along the dislocation to generate a line presentation of the segment.
+          The thickness of the core may vary along the dislocation (e.g. it becomes wider close to a dislocation junction).
+          This is why the circuit has a certain amount of elasticity, which is set by the stretchability parameter.
+          A value of 6 (the default), for example, allows the circuit to expand to a length that is 
+          six steps longer than the limit set by the <emphasis>trial circuit length</emphasis> parameter above.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Output interface mesh</term>
+        <listitem>
+          <para>Tells the analysis modifier to display the so-called interface mesh, a closed manifold which separates 
+          the good crystal region from the bad crystal region. This is a geometric structure
+          computed internally by the algorithm, which is normally not of interest. In other words this option is only for debugging purposes
+          and allows to follow the intermediate stages of the algorithm.
+          </para>
+        </listitem>
+      </varlistentry>
+	</variablelist>
+    </simplesect>
+     
+</section>

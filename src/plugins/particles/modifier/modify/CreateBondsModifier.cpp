@@ -22,6 +22,7 @@
 #include <plugins/particles/Particles.h>
 #include <core/gui/properties/SubObjectParameterUI.h>
 #include <core/gui/properties/IntegerRadioButtonParameterUI.h>
+#include <core/gui/properties/BooleanParameterUI.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include <plugins/particles/util/CutoffNeighborFinder.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
@@ -34,9 +35,11 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, CreateBondsModifier, Asynchronous
 SET_OVITO_OBJECT_EDITOR(CreateBondsModifier, CreateBondsModifierEditor);
 DEFINE_PROPERTY_FIELD(CreateBondsModifier, _cutoffMode, "CutoffMode");
 DEFINE_FLAGS_PROPERTY_FIELD(CreateBondsModifier, _uniformCutoff, "UniformCutoff", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CreateBondsModifier, _onlyIntraMoleculeBonds, "OnlyIntraMoleculeBonds", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(CreateBondsModifier, _bondsDisplay, "BondsDisplay", BondsDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(CreateBondsModifier, _cutoffMode, "Cutoff mode");
 SET_PROPERTY_FIELD_LABEL(CreateBondsModifier, _uniformCutoff, "Cutoff radius");
+SET_PROPERTY_FIELD_LABEL(CreateBondsModifier, _onlyIntraMoleculeBonds, "No bonds between different molecules");
 SET_PROPERTY_FIELD_LABEL(CreateBondsModifier, _bondsDisplay, "Bonds display");
 SET_PROPERTY_FIELD_UNITS(CreateBondsModifier, _uniformCutoff, WorldParameterUnit);
 
@@ -48,10 +51,11 @@ OVITO_END_INLINE_NAMESPACE
 * Constructs the modifier object.
 ******************************************************************************/
 CreateBondsModifier::CreateBondsModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
-	_cutoffMode(UniformCutoff), _uniformCutoff(3.2)
+	_cutoffMode(UniformCutoff), _uniformCutoff(3.2), _onlyIntraMoleculeBonds(false)
 {
 	INIT_PROPERTY_FIELD(CreateBondsModifier::_cutoffMode);
 	INIT_PROPERTY_FIELD(CreateBondsModifier::_uniformCutoff);
+	INIT_PROPERTY_FIELD(CreateBondsModifier::_onlyIntraMoleculeBonds);
 	INIT_PROPERTY_FIELD(CreateBondsModifier::_bondsDisplay);
 
 	// Create the display object for bonds rendering and assign it to the data object.
@@ -66,7 +70,8 @@ void CreateBondsModifier::propertyChanged(const PropertyFieldDescriptor& field)
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Recompute results when the parameters have been changed.
-	if(field == PROPERTY_FIELD(CreateBondsModifier::_uniformCutoff) || field == PROPERTY_FIELD(CreateBondsModifier::_cutoffMode))
+	if(field == PROPERTY_FIELD(CreateBondsModifier::_uniformCutoff) || field == PROPERTY_FIELD(CreateBondsModifier::_cutoffMode)
+			 || field == PROPERTY_FIELD(CreateBondsModifier::_onlyIntraMoleculeBonds))
 		invalidateCachedResults();
 }
 
@@ -175,10 +180,13 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CreateBondsModifier
 		}
 	}
 
+	// Get molecule IDs.
+	ParticlePropertyObject* moleculeProperty = onlyIntraMoleculeBonds() ? inputStandardProperty(ParticleProperty::MoleculeProperty) : nullptr;
+
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<BondsEngine>(validityInterval, posProperty->storage(),
 			typeProperty ? typeProperty->storage() : nullptr, simCell->data(), cutoffMode(),
-			uniformCutoff(), std::move(pairCutoffTable));
+			uniformCutoff(), std::move(pairCutoffTable), moleculeProperty ? moleculeProperty->storage() : nullptr);
 }
 
 /******************************************************************************
@@ -208,6 +216,8 @@ void CreateBondsModifier::BondsEngine::perform()
 	if(!_particleTypes) {
 		for(size_t particleIndex = 0; particleIndex < particleCount; particleIndex++) {
 			for(CutoffNeighborFinder::Query neighborQuery(neighborFinder, particleIndex); !neighborQuery.atEnd(); neighborQuery.next()) {
+				if(_moleculeIDs && _moleculeIDs->getInt(particleIndex) != _moleculeIDs->getInt(neighborQuery.current()))
+					continue;
 				_bonds->push_back({ neighborQuery.unwrappedPbcShift(), (unsigned int)particleIndex, (unsigned int)neighborQuery.current() });
 			}
 			// Update progress indicator.
@@ -218,6 +228,8 @@ void CreateBondsModifier::BondsEngine::perform()
 	else {
 		for(size_t particleIndex = 0; particleIndex < particleCount; particleIndex++) {
 			for(CutoffNeighborFinder::Query neighborQuery(neighborFinder, particleIndex); !neighborQuery.atEnd(); neighborQuery.next()) {
+				if(_moleculeIDs && _moleculeIDs->getInt(particleIndex) != _moleculeIDs->getInt(neighborQuery.current()))
+					continue;
 				int type1 = _particleTypes->getInt(particleIndex);
 				int type2 = _particleTypes->getInt(neighborQuery.current());
 				if(type1 >= 0 && type1 < (int)_pairCutoffs.size() && type2 >= 0 && type2 < (int)_pairCutoffs[type1].size()) {
@@ -309,6 +321,9 @@ void CreateBondsModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	_pairCutoffTable->setModel(_pairCutoffTableModel);
 	connect(pairCutoffModeBtn,&QRadioButton::toggled, _pairCutoffTable, &QTableView::setEnabled);
 	layout1->addWidget(_pairCutoffTable);
+
+	BooleanParameterUI* onlyIntraMoleculeBondsUI = new BooleanParameterUI(this, PROPERTY_FIELD(CreateBondsModifier::_onlyIntraMoleculeBonds));
+	layout1->addWidget(onlyIntraMoleculeBondsUI->checkBox());
 
 	// Status label.
 	layout1->addSpacing(10);

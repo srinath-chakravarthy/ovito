@@ -153,7 +153,7 @@ class OVITO_PARTICLES_EXPORT BondPickInfo : public ObjectPickInfo
 public:
 
 	/// Constructor.
-	BondPickInfo(const PipelineFlowState& pipelineState) : _pipelineState(pipelineState) {}
+	BondPickInfo(BondsObject* bondsObj, const PipelineFlowState& pipelineState) : _bondsObj(bondsObj), _pipelineState(pipelineState) {}
 
 	/// The pipeline flow state containing the bonds.
 	const PipelineFlowState& pipelineState() const { return _pipelineState; }
@@ -165,6 +165,9 @@ private:
 
 	/// The pipeline flow state containing the bonds.
 	PipelineFlowState _pipelineState;
+
+	/// The bonds data object.
+	OORef<BondsObject> _bondsObj;
 
 	Q_OBJECT
 	OVITO_OBJECT
