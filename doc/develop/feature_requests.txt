@@ -13,6 +13,7 @@ Work-flow improvements:
 
 New visualization features:
 
+- Dislocation analysis: Display of Burgers vectors and line orientations.
 - More particle representations (e.g. open circles/rectangles).
 - Test OpenGL rendering support for more than 12 million particles.
 
@@ -38,6 +39,7 @@ New analysis features:
 - Calculation of local atomic number density functions (proposed by Sha Zhendong)
 - Create Bonds modifier: Add 'lower bound' parameter such that, when using the modifier several times, bonds with different lengths can be assigned different colors.
 - Plotting the value of a certain property of a certain particle versus simulation time. To make this work, all simulation frames need to be kept in memory (requested by Taojun & Mathieu Marciante).
+- Dislocation analysis: Proper representation of Burgers vectors in hexagonal crystals.
 
 New I/O functions:
 
@@ -52,7 +54,6 @@ Performance improvements:
 Scripting features:
 
 - Scripting interface for viewport overlays (requested by lidong.cauc@gmail.com and johannes.moeller@fau.de).
-- Write access to particle properties from Python (requested by konstantin.avchachov@helsinki.fi)
 - Python-based modifiers
 - Distribute Scipy with Ovito?
 

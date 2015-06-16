@@ -52,20 +52,7 @@ bool IMDExporter::showSettingsDialog(const PipelineFlowState& state, QWidget* pa
 		settings.endGroup();
 	}
 
-	// Remove particle properties from state that are always exported.
-	PipelineFlowState filteredState = state;
-	if(ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty))
-		filteredState.removeObject(posProperty);
-	if(ParticleTypeProperty* typeProperty = dynamic_object_cast<ParticleTypeProperty>(ParticlePropertyObject::findInState(state, ParticleProperty::ParticleTypeProperty)))
-		filteredState.removeObject(typeProperty);
-	if(ParticlePropertyObject* identifierProperty = ParticlePropertyObject::findInState(state, ParticleProperty::IdentifierProperty))
-		filteredState.removeObject(identifierProperty);
-	if(ParticlePropertyObject* velocityProperty = ParticlePropertyObject::findInState(state, ParticleProperty::VelocityProperty))
-		filteredState.removeObject(velocityProperty);
-	if(ParticlePropertyObject* massProperty = ParticlePropertyObject::findInState(state, ParticleProperty::MassProperty))
-		filteredState.removeObject(massProperty);
-
-	ParticleExporterSettingsDialog dialog(parent, this, filteredState, &_columnMapping);
+	ParticleExporterSettingsDialog dialog(parent, this, state, &_columnMapping);
 	if(dialog.exec() == QDialog::Accepted) {
 
 		// Remember the output column mapping for the next time.
@@ -88,11 +75,10 @@ bool IMDExporter::exportParticles(const PipelineFlowState& state, int frameNumbe
 	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
 	if(!posProperty)
 		throw Exception(tr("No particle positions available. Cannot write IMD file."));
-	ParticleTypeProperty* typeProperty = dynamic_object_cast<ParticleTypeProperty>(ParticlePropertyObject::findInState(state, ParticleProperty::ParticleTypeProperty));
-	if(typeProperty && typeProperty->particleTypes().empty()) typeProperty = nullptr;
-	ParticlePropertyObject* identifierProperty = ParticlePropertyObject::findInState(state, ParticleProperty::IdentifierProperty);
-	ParticlePropertyObject* velocityProperty = ParticlePropertyObject::findInState(state, ParticleProperty::VelocityProperty);
-	ParticlePropertyObject* massProperty = ParticlePropertyObject::findInState(state, ParticleProperty::MassProperty);
+	ParticleTypeProperty* typeProperty = nullptr;
+	ParticlePropertyObject* identifierProperty = nullptr;
+	ParticlePropertyObject* velocityProperty = nullptr;
+	ParticlePropertyObject* massProperty = nullptr;
 
 	// Get simulation cell info.
 	SimulationCellObject* simulationCell = state.findObject<SimulationCellObject>();
@@ -103,6 +89,36 @@ bool IMDExporter::exportParticles(const PipelineFlowState& state, int frameNumbe
 	size_t atomsCount = posProperty->size();
 
 	OutputColumnMapping colMapping;
+	OutputColumnMapping filteredMapping;
+	posProperty = nullptr;
+	for(const ParticlePropertyReference& pref : columnMapping()) {
+		if(pref.type() == ParticleProperty::PositionProperty) {
+			posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
+			if(!posProperty) throw Exception(tr("Cannot export particle positions, because they are not present in the dataset to be exported."));
+		}
+		else if(pref.type() == ParticleProperty::ParticleTypeProperty) {
+			typeProperty = dynamic_object_cast<ParticleTypeProperty>(ParticlePropertyObject::findInState(state, ParticleProperty::ParticleTypeProperty));
+			if(!typeProperty) throw Exception(tr("Cannot export particle types, because they are not present in the dataset to be exported."));
+		}
+		else if(pref.type() == ParticleProperty::ParticleTypeProperty) {
+			identifierProperty = ParticlePropertyObject::findInState(state, ParticleProperty::IdentifierProperty);
+			if(!identifierProperty) throw Exception(tr("Cannot export particle identifiers, because they are not present in the dataset to be exported."));
+		}
+		else if(pref.type() == ParticleProperty::IdentifierProperty) {
+			identifierProperty = ParticlePropertyObject::findInState(state, ParticleProperty::IdentifierProperty);
+			if(!identifierProperty) throw Exception(tr("Cannot export particle identifiers, because they are not present in the dataset to be exported."));
+		}
+		else if(pref.type() == ParticleProperty::VelocityProperty) {
+			velocityProperty = ParticlePropertyObject::findInState(state, ParticleProperty::VelocityProperty);
+			if(!velocityProperty) throw Exception(tr("Cannot export particle velocities, because they are not present in the dataset to be exported."));
+		}
+		else if(pref.type() == ParticleProperty::MassProperty) {
+			massProperty = ParticlePropertyObject::findInState(state, ParticleProperty::MassProperty);
+			if(!massProperty) throw Exception(tr("Cannot export particle masses, because they are not present in the dataset to be exported."));
+		}
+		else filteredMapping.push_back(pref);
+	}
+
 	QVector<QString> columnNames;
 	textStream() << "#F A ";
 	if(identifierProperty) {
@@ -144,14 +160,14 @@ bool IMDExporter::exportParticles(const PipelineFlowState& state, int frameNumbe
 	}
 	else textStream() << "0 ";
 
-	for(int i = 0; i < (int)columnMapping().size(); i++) {
-		const ParticlePropertyReference& pref = columnMapping()[i];
+	for(int i = 0; i < (int)filteredMapping.size(); i++) {
+		const ParticlePropertyReference& pref = filteredMapping[i];
 		QString columnName = pref.nameWithComponent();
 		columnName.remove(QRegExp("[^A-Za-z\\d_.]"));
 		columnNames.push_back(columnName);
 		colMapping.push_back(pref);
 	}
-	textStream() << columnMapping().size() << "\n";
+	textStream() << filteredMapping.size() << "\n";
 
 	textStream() << "#C";
 	Q_FOREACH(const QString& cname, columnNames)
