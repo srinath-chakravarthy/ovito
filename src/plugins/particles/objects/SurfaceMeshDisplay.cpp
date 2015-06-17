@@ -219,8 +219,10 @@ bool SurfaceMeshDisplay::buildSurfaceMesh(const HalfEdgeMesh<>& input, const Sim
 		return false;
 
 	// Convert vertex positions to reduced coordinates.
-	for(Point3& p : output.vertices())
+	for(Point3& p : output.vertices()) {
 		p = cell.absoluteToReduced(p);
+		OVITO_ASSERT(std::isfinite(p.x()) && std::isfinite(p.y()) && std::isfinite(p.z()));
+	}
 
 	// Wrap mesh at periodic boundaries.
 	for(size_t dim = 0; dim < 3; dim++) {
@@ -231,10 +233,9 @@ bool SurfaceMeshDisplay::buildSurfaceMesh(const HalfEdgeMesh<>& input, const Sim
 
 		// Make sure all vertices are located inside the periodic box.
 		for(Point3& p : output.vertices()) {
-			FloatType& c = p[dim];
-			while(c < FloatType(0)) c += FloatType(1);
-			while(c > FloatType(1)) c -= FloatType(1);
-			OVITO_ASSERT(c >= FloatType(0) && c <= FloatType(1));
+			OVITO_ASSERT(std::isfinite(p[dim]));
+			p[dim] -= floor(p[dim]);
+			OVITO_ASSERT(p[dim] >= FloatType(0) && p[dim] <= FloatType(1));
 		}
 
 		// Clip faces.
@@ -318,13 +319,15 @@ bool SurfaceMeshDisplay::splitFace(TriMesh& output, TriMeshFace& face, int oldVe
 			Vector3 delta = output.vertex(vi2) - output.vertex(vi1);
 			delta[dim] -= 1.0f;
 			for(size_t d = dim + 1; d < 3; d++) {
-				if(cell.pbcFlags()[d]) {
-					FloatType& c = delta[d];
-					while(c < FloatType(0.5)) c += FloatType(1);
-					while(c > FloatType(0.5)) c -= FloatType(1);
-				}
+				if(cell.pbcFlags()[d])
+					delta[d] -= floor(delta[d] + FloatType(0.5));
 			}
-			FloatType t = output.vertex(vi1)[dim] / (-delta[dim]);
+			FloatType t;
+			if(delta[dim] != 0)
+				t = output.vertex(vi1)[dim] / (-delta[dim]);
+			else
+				t = 0.5f;
+			OVITO_ASSERT(std::isfinite(t));
 			Point3 p = delta * t + output.vertex(vi1);
 			newVertexIndices[i][oi1] = oldVertexCount + (int)newVertices.size();
 			newVertexIndices[i][oi2] = oldVertexCount + (int)newVertices.size() + 1;
@@ -598,7 +601,7 @@ void SurfaceMeshDisplay::clipContour(std::vector<Point2>& input, std::array<bool
 				if(delta[dim] >= 0.5f) {
 					delta[dim] -= 1.0f;
 					if(std::abs(delta[dim]) > FLOATTYPE_EPSILON)
-						t[dim] = (*v1)[dim] / -delta[dim];
+						t[dim] = std::min((*v1)[dim] / -delta[dim], FloatType(1));
 					else
 						t[dim] = 0.5f;
 					crossDir[dim] = -1;
@@ -606,7 +609,7 @@ void SurfaceMeshDisplay::clipContour(std::vector<Point2>& input, std::array<bool
 				else if(delta[dim] <= -0.5f) {
 					delta[dim] += 1.0f;
 					if(std::abs(delta[dim]) > FLOATTYPE_EPSILON)
-						t[dim] = (1.0f - (*v1)[dim]) / delta[dim];
+						t[dim] = std::max((1.0f - (*v1)[dim]) / delta[dim], FloatType(0));
 					else
 						t[dim] = 0.5f;
 					crossDir[dim] = +1;
