@@ -83,6 +83,78 @@ public:
 	/// Sets the text label font size.
 	void setFontSize(FloatType fontSize) { _fontSize = fontSize; }
 
+	/// Returns whether the first axis is displayed.
+	bool axis1Enabled() const { return _axis1Enabled; }
+
+	/// Sets whether display is enabled for the first axis.
+	void setAxis1Enabled(bool enabled) { _axis1Enabled = enabled; }
+
+	/// Returns whether the second axis is displayed.
+	bool axis2Enabled() const { return _axis2Enabled; }
+
+	/// Sets whether display is enabled for the second axis.
+	void setAxis2Enabled(bool enabled) { _axis2Enabled = enabled; }
+
+	/// Returns whether the third axis is displayed.
+	bool axis3Enabled() const { return _axis3Enabled; }
+
+	/// Sets whether display is enabled for the third  axis.
+	void setAxis3Enabled(bool enabled) { _axis3Enabled = enabled; }
+
+	/// Returns whether the fourth axis is displayed.
+	bool axis4Enabled() const { return _axis4Enabled; }
+
+	/// Sets whether display is enabled for the fourth axis.
+	void setAxis4Enabled(bool enabled) { _axis4Enabled = enabled; }
+
+	/// Returns the text label of the first axis.
+	const QString& axis1Label() const { return _axis1Label; }
+
+	/// Sets the text label of the first axis.
+	void setAxis1Label(const QString& label) { _axis1Label = label; }
+
+	/// Returns the text label of the second axis.
+	const QString& axis2Label() const { return _axis2Label; }
+
+	/// Sets the text label of the second axis.
+	void setAxis2Label(const QString& label) { _axis2Label = label; }
+
+	/// Returns the text label of the third axis.
+	const QString& axis3Label() const { return _axis3Label; }
+
+	/// Sets the text label of the third axis.
+	void setAxis3Label(const QString& label) { _axis3Label = label; }
+
+	/// Returns the text label of the fourth axis.
+	const QString& axis4Label() const { return _axis4Label; }
+
+	/// Sets the text label of the fourth axis.
+	void setAxis4Label(const QString& label) { _axis4Label = label; }
+
+	/// Returns the direction of the first axis.
+	const Vector3& axis1Dir() const { return _axis1Dir; }
+
+	/// Sets the direction of the first axis.
+	void setAxis1Dir(const Vector3& dir) { _axis1Dir = dir; }
+
+	/// Returns the direction of the second axis.
+	const Vector3& axis2Dir() const { return _axis2Dir; }
+
+	/// Sets the direction of the second axis.
+	void setAxis2Dir(const Vector3& dir) { _axis2Dir = dir; }
+
+	/// Returns the direction of the third axis.
+	const Vector3& axis3Dir() const { return _axis3Dir; }
+
+	/// Sets the direction of the third axis.
+	void setAxis3Dir(const Vector3& dir) { _axis3Dir = dir; }
+
+	/// Returns the direction of the fourth axis.
+	const Vector3& axis4Dir() const { return _axis4Dir; }
+
+	/// Sets the direction of the fourth axis.
+	void setAxis4Dir(const Vector3& dir) { _axis4Dir = dir; }
+
 private:
 
 	/// The corner of the viewport where the tripod is shown in.

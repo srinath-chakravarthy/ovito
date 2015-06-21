@@ -161,11 +161,56 @@ BOOST_PYTHON_MODULE(PyScriptViewport)
 
 	ovito_abstract_class<ViewportOverlay, RefTarget>();
 
-	ovito_class<CoordinateTripodOverlay, ViewportOverlay>();
+	ovito_class<CoordinateTripodOverlay, ViewportOverlay>(
+			"Displays a coordinate tripod in the rendered image of a viewport. "
+			"You can attach it to a viewport by adding an instance of this class to the viewport's "
+			":py:attr:`~ovito.vis.viewport.overlays` collection:"
+			"\n\n"
+			".. literalinclude:: ../example_snippets/coordinate_tripod_overlay.py"
+			"\n\n"
+			".. note::\n\n"
+			"  Some properties of this class interface have not been exposed and are not accessible from Python yet. "
+			"  Please let the developer know if you would like them to be added.\n")
+		.add_property("alignment", &CoordinateTripodOverlay::alignment, &CoordinateTripodOverlay::setAlignment,
+				"Selects the corner of the viewport where the tripod is displayed. This must be a valid ``Qt::Alignment`` value.")
+		.add_property("size", &CoordinateTripodOverlay::tripodSize, &CoordinateTripodOverlay::setTripodSize,
+				"The scaling factor that controls the size of the tripod. The size is specified as a fraction of the output image height."
+				"\n\n"
+				":Default: 0.075\n")
+		.add_property("line_width", &CoordinateTripodOverlay::lineWidth, &CoordinateTripodOverlay::setLineWidth,
+				"Controls the width of axis arrows. The line width is specified relative to the tripod size."
+				"\n\n"
+				":Default: 0.06\n")
+		.add_property("offset_x", &CoordinateTripodOverlay::offsetX, &CoordinateTripodOverlay::setOffsetX,
+				"This parameter allows to displace the tripod horizontally. The offset is specified as a fraction of the output image width."
+				"\n\n"
+				":Default: 0.0\n")
+		.add_property("offset_y", &CoordinateTripodOverlay::offsetY, &CoordinateTripodOverlay::setOffsetY,
+				"This parameter allows to displace the tripod vertically. The offset is specified as a fraction of the output image height."
+				"\n\n"
+				":Default: 0.0\n")
+		.add_property("font_size", &CoordinateTripodOverlay::fontSize, &CoordinateTripodOverlay::setFontSize,
+				"The font size for rendering the text labels of the tripod. The font size is specified in terms of the tripod size."
+				"\n\n"
+				":Default: 0.4\n")
+	;
 
-	ovito_class<PythonViewportOverlay, ViewportOverlay>()
+	ovito_class<PythonViewportOverlay, ViewportOverlay>(
+			"This overlay type can be attached to a viewport to run a Python script every time an "
+			"image of the viewport is rendered. The Python script can execute arbitrary drawing commands to "
+			"paint on top of the rendered image."
+			"\n\n"
+			"An alternative to the :py:class:`!PythonViewportOverlay` class is to directly manipulate the "
+			"output image returned by the :py:meth:`Viewport.render` method."
+			"\n\n"
+			"You can attach a Python overlay to a viewport by adding an instance of this class to the viewport's "
+			":py:attr:`~ovito.vis.viewport.overlays` collection:"
+			"\n\n"
+			".. literalinclude:: ../example_snippets/python_viewport_overlay.py")
 		.add_property("script", make_function(&PythonViewportOverlay::script, return_value_policy<copy_const_reference>()), &PythonViewportOverlay::setScript,
-				"The user-defined Python script, which paints over the rendered viewport contents.")
+				"The user-defined Python script, which paints over the rendered viewport contents. "
+				"Note that the script must be specified as a string. It is executed by a separate "
+				"interpreter instance, i.e., it has no access to variables defined in the current scope. ")
 		.add_property("output", make_function(&PythonViewportOverlay::scriptOutput, return_value_policy<copy_const_reference>()),
 				"The output text generated when compiling/running the Python script. May contain an error message when the execution of the script fails.")
 	;

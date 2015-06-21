@@ -21,6 +21,11 @@ This module contains classes related to data visualization and rendering.
   * :py:class:`SurfaceMeshDisplay`
   * :py:class:`VectorDisplay`
 
+**Viewport overlays:**
+
+  * :py:class:`CoordinateTripodOverlay`
+  * :py:class:`PythonViewportOverlay`
+
 """
 
 import sip
@@ -112,6 +117,10 @@ Viewport.render = _Viewport_render
 
 # Implement the 'overlays' property of the Viewport class. 
 def _get_Viewport_overlays(self):
+    """ A list-like sequence of viewport overlay objects that are attached to this viewport.
+        See the :py:class:`CoordinateTripodOverlay` and :py:class:`PythonViewportOverlay` classes
+        for more information.
+    """
     
     def ViewportOverlayList__delitem__(self, index):
         if index < 0: index += len(self)
