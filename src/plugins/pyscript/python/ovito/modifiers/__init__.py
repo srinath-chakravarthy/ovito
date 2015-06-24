@@ -33,6 +33,7 @@ Class name                                     User interface name
 :py:class:`ComputePropertyModifier`            :guilabel:`Compute property`
 :py:class:`DeleteSelectedParticlesModifier`    :guilabel:`Delete selected particles`
 :py:class:`DislocationAnalysisModifier`        :guilabel:`Dislocation analysis (DXA)`
+:py:class:`ExpandSelectionModifier`            :guilabel:`Expand selection`
 :py:class:`FreezePropertyModifier`             :guilabel:`Freeze property`
 :py:class:`HistogramModifier`                  :guilabel:`Histogram`
 :py:class:`IdentifyDiamondModifier`            :guilabel:`Identify diamond structure`
@@ -48,7 +49,7 @@ Class name                                     User interface name
 :py:class:`WrapPeriodicImagesModifier`         :guilabel:`Wrap at periodic boundaries`
 ============================================== =========================================
 
-*Note that some modifiers haven't been documented yet.*
+*Note that some analysis modifiers are not accssible from Python. In most cases this is because they do things that can be directly achieved using the Numpy python module.*
 
 """
 

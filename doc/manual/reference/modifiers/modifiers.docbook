@@ -156,6 +156,10 @@
               <entry>Resets the selection state of all particles.</entry>
             </row>
             <row>
+              <entry><link linkend="particles.modifiers.expand_selection">Expand selection</link></entry>
+              <entry>Selects particles that are neighbors of already selected particles.</entry>
+            </row>
+            <row>
               <entry><link linkend="particles.modifiers.manual_selection">Manual selection</link></entry>
               <entry>Allows to select particles with the mouse.</entry>
             </row>
@@ -211,6 +215,8 @@
   <xi:include href="particles/dislocation_analysis.docbook"/>
 
   <xi:include href="particles/displacement_vectors.docbook"/>
+
+  <xi:include href="particles/expand_selection.docbook"/>
 
   <xi:include href="particles/expression_select.docbook"/>
 

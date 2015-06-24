@@ -41,6 +41,7 @@
 #include <plugins/particles/modifier/selection/ClearSelectionModifier.h>
 #include <plugins/particles/modifier/selection/InvertSelectionModifier.h>
 #include <plugins/particles/modifier/selection/ManualSelectionModifier.h>
+#include <plugins/particles/modifier/selection/ExpandSelectionModifier.h>
 #include <plugins/particles/modifier/selection/SelectExpressionModifier.h>
 #include <plugins/particles/modifier/selection/SelectParticleTypeModifier.h>
 #include <plugins/particles/modifier/analysis/StructureIdentificationModifier.h>
@@ -275,13 +276,50 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 		.def("toggleParticleSelection", &ManualSelectionModifier::toggleParticleSelection)
 	;
 
+	{
+		scope s = ovito_class<ExpandSelectionModifier, ParticleModifier>(
+				":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
+				"Expands the current particle selection by selecting particles that are neighbors of already selected particles.")
+			.add_property("mode", &ExpandSelectionModifier::mode, &ExpandSelectionModifier::setMode,
+					"Selects the mode of operation, i.e., how the modifier extends the selection around already selected particles. "
+					"Valid values are:"
+					"\n\n"
+					"  * ``ExpandSelectionModifier.ExpansionMode.Cutoff``\n"
+					"  * ``ExpandSelectionModifier.ExpansionMode.Nearest``\n"
+					"  * ``ExpandSelectionModifier.ExpansionMode.Bonded``\n"
+					"\n\n"
+					":Default: ``ExpandSelectionModifier.ExpansionMode.Cutoff``\n")
+			.add_property("cutoff", &ExpandSelectionModifier::cutoffRange, &ExpandSelectionModifier::setCutoffRange,
+					"The maximum distance up to which particles are selected around already selected particles. "
+					"This parameter is only used if :py:attr:`.mode` is set to ``ExpansionMode.Cutoff``."
+					"\n\n"
+					":Default: 3.2\n")
+			.add_property("num_neighbors", &ExpandSelectionModifier::numNearestNeighbors, &ExpandSelectionModifier::setNumNearestNeighbors,
+					"The number of nearest neighbors to select around each already selected particle. "
+					"This parameter is only used if :py:attr:`.mode` is set to ``ExpansionMode.Nearest``."
+					"\n\n"
+					":Default: 1\n")
+			.add_property("iterations", &ExpandSelectionModifier::numberOfIterations, &ExpandSelectionModifier::setNumberOfIterations,
+					"Controls how many iterations of the modifier are executed. This can be used to select "
+					"neighbors of neighbors up to a certain recursive depth."
+					"\n\n"
+					":Default: 1\n")
+		;
+
+		enum_<ExpandSelectionModifier::ExpansionMode>("ExpansionMode")
+			.value("Cutoff", ExpandSelectionModifier::CutoffRange)
+			.value("Nearest", ExpandSelectionModifier::NearestNeighbors)
+			.value("Bonded", ExpandSelectionModifier::BondedNeighbors)
+		;
+	}
+
 	ovito_class<SelectExpressionModifier, ParticleModifier>(
 			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"This modifier selects particles based on a user-defined Boolean expression."
 			"\n\n"
 			"Example::"
 			"\n\n"
-			"    from ovito.modifiers import *\n"
+			"    from ovito.modifiers import SelectExpressionModifier\n"
 			"    \n"
 			"    mod = SelectExpressionModifier(expression = 'PotentialEnergy > 3.6')\n"
 			"    node.modifiers.append(mod)\n"

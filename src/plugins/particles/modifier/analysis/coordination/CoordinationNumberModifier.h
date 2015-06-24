@@ -128,7 +128,7 @@ private:
 	Q_CLASSINFO("DisplayName", "Coordination analysis");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
 
-	DECLARE_PROPERTY_FIELD(_cutoff)
+	DECLARE_PROPERTY_FIELD(_cutoff);
 };
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)

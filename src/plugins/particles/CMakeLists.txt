@@ -64,6 +64,7 @@ SET(SourceFiles
 	modifier/analysis/cluster/ClusterAnalysisModifier.cpp
 	modifier/analysis/scatterplot/ScatterPlotModifier.cpp
 	modifier/analysis/wignerseitz/WignerSeitzAnalysisModifier.cpp
+	modifier/selection/ExpandSelectionModifier.cpp
 	modifier/selection/InvertSelectionModifier.cpp
 	modifier/selection/SelectParticleTypeModifier.cpp
 	modifier/selection/SelectExpressionModifier.cpp

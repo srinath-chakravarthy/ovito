@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section version="5.0"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd"
+         xml:id="particles.modifiers.expand_selection"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:ns="http://docbook.org/ns/docbook">
+  <title>Expand selection</title>
+
+  <para>
+ 
+    <informalfigure><screenshot><mediaobject><imageobject>
+       <imagedata fileref="images/modifiers/expand_selection_panel.png" format="PNG" />
+    </imageobject></mediaobject></screenshot></informalfigure>
+
+    Expands the current particle selection by selecting particles that are neighbors 
+    of already selected particles. The expansion can be based on three different neighboring criteria:
+    <orderedlist>
+    <listitem><para>A cutoff radius can be specified to select particles that are within
+    a specific maximum range of already selected particles.</para></listitem>
+    <listitem><para>The modifier can select particles that are among the N nearest neighbors
+    of an already selected particle. The number N is adjustable.</para></listitem>
+    <listitem><para>If the system contains particle bonds, the modifier can expand the selection
+    to particles that are bonded to at least one particle that is already selected.</para></listitem>
+    </orderedlist>
+    
+  </para>
+
+  <simplesect>
+    <title>Parameters</title>
+
+    <variablelist>
+      <varlistentry>
+        <term>Cutoff distance</term>
+        <listitem>
+          <para>A particle will be selected if it is within this range of an already selected particle.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>N</term>
+        <listitem>
+          <para>The number of nearest neighbors to select around each already selected particle.
+          OVITO sorts the list of neighbors of a selected particle by distance and selects the first N entries 
+          from the list.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Number of iterations</term>
+        <listitem>
+          <para>This parameter allows the modifier to be applied multiple times to the current selection.
+          For example, setting this parameter to 2 will expand the selection to the second shell of neighbors.</para>
+        </listitem>
+      </varlistentry>
+
+    </variablelist>
+  </simplesect>
+</section>
