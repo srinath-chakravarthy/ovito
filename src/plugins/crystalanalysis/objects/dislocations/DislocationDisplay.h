@@ -116,6 +116,30 @@ public:
 	/// \brief Sets the shading mode for dislocation lines.
 	void setShadingMode(ArrowPrimitive::ShadingMode mode) { _shadingMode = mode; }
 
+	/// Returns the rendering width for Burgers vectors.
+	FloatType burgersVectorWidth() const { return _burgersVectorWidth; }
+
+	/// Sets the rendering width for Burgers vectors.
+	void setBurgersVectorWidth(FloatType width) { _burgersVectorWidth = width; }
+
+	/// Returns the scaling factor Burgers vectors.
+	FloatType burgersVectorScaling() const { return _burgersVectorScaling; }
+
+	/// Sets the scaling factor Burgers vectors.
+	void setBurgersVectorScaling(FloatType factor) { _burgersVectorScaling = factor; }
+
+	/// Returns the display color for Burgers vectors.
+	const Color& burgersVectorColor() const { return _burgersVectorColor; }
+
+	/// Sets the display color for Burgers vectors.
+	void setBurgersVectorColor(const Color& color) { _burgersVectorColor = color; }
+
+	/// Returns whether the display of Burgers vectors is enabled.
+	bool showBurgersVectors() const { return _showBurgersVectors; }
+
+	/// Controls the display of Burgers vectors.
+	void setShowBurgersVectors(bool enabled) { _showBurgersVectors = enabled; }
+
 	/// \brief Renders an overlay marker for a single dislocation segment.
 	void renderOverlayMarker(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState, int segmentIndex, SceneRenderer* renderer, ObjectNode* contextNode);
 
@@ -140,13 +164,20 @@ protected:
 	/// The geometry buffer used to render the segment corners.
 	std::shared_ptr<ParticlePrimitive> _cornerBuffer;
 
+	/// The buffered geometry used to render the Burgers vectors.
+	std::shared_ptr<ArrowPrimitive> _arrowBuffer;
+
 	/// This helper structure is used to detect any changes in the input data
 	/// that require updating the geometry buffers.
 	SceneObjectCacheHelper<
 		WeakVersionedOORef<DataObject>,		// Source object + revision number
 		SimulationCell,						// Simulation cell geometry
 		WeakVersionedOORef<PatternCatalog>,	// The pattern catalog
-		FloatType							// Line width
+		FloatType,							// Line width
+		bool,								// Burgers vector display
+		FloatType,							// Burgers vectors scaling
+		FloatType,							// Burgers vector width
+		Color								// Burgers vector color
 		> _geometryCacheHelper;
 
 	/// The cached bounding box.
@@ -157,14 +188,29 @@ protected:
 	SceneObjectCacheHelper<
 		WeakVersionedOORef<DataObject>,		// Source object + revision number
 		SimulationCell,						// Simulation cell geometry
-		FloatType								// Line width
+		FloatType,							// Line width
+		bool,								// Burgers vector display
+		FloatType,							// Burgers vectors scaling
+		FloatType							// Burgers vector width
 		> _boundingBoxCacheHelper;
 
-	/// Controls the rendering width for dislocation lines.
+	/// The rendering width for dislocation lines.
 	PropertyField<FloatType> _lineWidth;
 
-	/// Controls the shading mode for dislocation lines.
+	/// The shading mode for dislocation lines.
 	PropertyField<ArrowPrimitive::ShadingMode, int> _shadingMode;
+
+	/// The rendering width for Burgers vectors.
+	PropertyField<FloatType> _burgersVectorWidth;
+
+	/// The scaling factor Burgers vectors.
+	PropertyField<FloatType> _burgersVectorScaling;
+
+	/// Display color for Burgers vectors.
+	PropertyField<Color, QColor> _burgersVectorColor;
+
+	/// Controls the display of Burgers vectors.
+	PropertyField<bool> _showBurgersVectors;
 
 	/// The data record used for picking dislocations in the viewports.
 	OORef<DislocationPickInfo> _pickInfo;
@@ -178,6 +224,10 @@ private:
 
 	DECLARE_PROPERTY_FIELD(_lineWidth);
 	DECLARE_PROPERTY_FIELD(_shadingMode);
+	DECLARE_PROPERTY_FIELD(_burgersVectorWidth);
+	DECLARE_PROPERTY_FIELD(_burgersVectorScaling);
+	DECLARE_PROPERTY_FIELD(_burgersVectorColor);
+	DECLARE_PROPERTY_FIELD(_showBurgersVectors);
 };
 
 /**

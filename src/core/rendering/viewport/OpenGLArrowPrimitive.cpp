@@ -602,12 +602,12 @@ void OpenGLArrowPrimitive::renderWithNormals(ViewportSceneRenderer* renderer)
 
 		int stripPrimitivesPerElement = _stripPrimitiveVertexCounts.size() / _chunkSize;
 		int stripVerticesPerElement = std::accumulate(_stripPrimitiveVertexCounts.begin(), _stripPrimitiveVertexCounts.begin() + stripPrimitivesPerElement, 0);
-		OVITO_CHECK_OPENGL(shader->setUniformValue("verticesPerElement", (GLint)stripVerticesPerElement));
+		OVITO_CHECK_OPENGL(shader->setUniformValue("verticesPerElement", (GLint)_verticesPerElement));
 		OVITO_CHECK_OPENGL(renderer->glMultiDrawArrays(GL_TRIANGLE_STRIP, _stripPrimitiveVertexStarts.data(), _stripPrimitiveVertexCounts.data(), stripPrimitivesPerElement * chunkSize));
 
 		int fanPrimitivesPerElement = _fanPrimitiveVertexCounts.size() / _chunkSize;
 		int fanVerticesPerElement = std::accumulate(_fanPrimitiveVertexCounts.begin(), _fanPrimitiveVertexCounts.begin() + fanPrimitivesPerElement, 0);
-		OVITO_CHECK_OPENGL(shader->setUniformValue("verticesPerElement", (GLint)fanVerticesPerElement));
+		OVITO_CHECK_OPENGL(shader->setUniformValue("verticesPerElement", (GLint)_verticesPerElement));
 		OVITO_CHECK_OPENGL(renderer->glMultiDrawArrays(GL_TRIANGLE_FAN, _fanPrimitiveVertexStarts.data(), _fanPrimitiveVertexCounts.data(), fanPrimitivesPerElement * chunkSize));
 
 		_verticesWithNormals[chunkIndex].detachPositions(renderer, shader);

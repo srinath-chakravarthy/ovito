@@ -212,6 +212,9 @@ struct DislocationSegment
 		std::swap(nodes[0], nodes[1]);
 		std::reverse(line.begin(), line.end());
 	}
+
+	/// Computes the location of a point along the segment line.
+	Point3 getPointOnLine(FloatType t) const;
 };
 
 /// Returns true if this node is the forward node of its segment, that is,

@@ -89,6 +89,34 @@ void DislocationNetwork::discardSegment(DislocationSegment* segment)
 	_segments.erase(i);
 }
 
+/******************************************************************************
+* Computes the location of a point along the segment line.
+******************************************************************************/
+Point3 DislocationSegment::getPointOnLine(FloatType t) const
+{
+	if(line.empty())
+		return Point3::Origin();
+
+	t *= calculateLength();
+
+	FloatType sum = 0;
+	auto i1 = line.begin();
+	for(;;) {
+		auto i2 = i1 + 1;
+		if(i2 == line.end()) break;
+		Vector3 delta = *i2 - *i1;
+		FloatType len = delta.length();
+		if(sum + len >= t && len != 0) {
+			return *i1 + (((t - sum) / len) * delta);
+		}
+		sum += len;
+		i1 = i2;
+	}
+
+	return line.back();
+}
+
+
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace
