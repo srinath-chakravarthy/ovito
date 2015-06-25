@@ -28,6 +28,9 @@ Unresolved OpenGL problems:
     OpenGL vendor string: Intel Open Source Technology Center
     OpenGL renderer string: Mesa DRI Intel(R) Ivybridge Server 
     OpenGL version string: 2.1 Mesa 10.1.2
+- Crash when moving the viewport camera:
+    Windows, AMD Radeon HD8490, Core profile 3.2 (ljloverq@163.com)
+    Windows, NVidia NVS 310, Core profile 3.2 (zhonghuai.wu@student.unsw.edu.au)
 
 Unresolved bugs:
 
@@ -43,6 +46,7 @@ New analysis features:
 - Compute polar decomposition of deformation gradient, F=RU (requested by arun.prakash@fau.de).
 - Add modifier for computing the elastic deformation gradient.
 - Add a 'Expand selection modifier', which selects neighbors of already selected particles (requested by m.horton11@imperial.ac.uk).
+- Make bond-wise CNA fingerprints computed by analysis modifier accessible to users (requested by Hannes Jonsson).
 
 New I/O functions:
 

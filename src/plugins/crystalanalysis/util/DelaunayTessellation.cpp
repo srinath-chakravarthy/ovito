@@ -22,6 +22,13 @@
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include "DelaunayTessellation.h"
 
+#include <boost/random/mersenne_twister.hpp>
+#if BOOST_VERSION > 146000
+#include <boost/random/uniform_real_distribution.hpp>
+#else
+#include <boost/random/uniform_real.hpp>
+#endif
+
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 /******************************************************************************
@@ -33,9 +40,21 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 	std::vector<DT::Point> cgalPoints;
 
 	// Set up random number generator to generate random perturbations.
-	std::mt19937 rng;
+#if 0
+	std::minstd_rand rng;
 	rng.seed(1);
 	std::uniform_real_distribution<double> displacement(-1e-8, +1e-8);
+#else
+	#if BOOST_VERSION > 146000
+		boost::random::mt19937 rng;
+		rng.seed(1);
+		boost::random::uniform_real_distribution displacement(-1e-8, +1e-8);
+	#else
+		boost::mt19937 rng;
+		rng.seed(1);
+		boost::uniform_real<> displacement(-1e-8, +1e-8);
+	#endif
+#endif
 
 	// Insert the original points first.
 	cgalPoints.reserve(numPoints);
@@ -110,7 +129,10 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 	if(progress && progress->isCanceled())
 		return false;
 
-	CGAL::spatial_sort(cgalPoints.begin(), cgalPoints.end(), _dt.geom_traits());
+	// Disabled the following line, because spatial_sort() seems to produce different results
+	// on different platforms.
+
+	//CGAL::spatial_sort(cgalPoints.begin(), cgalPoints.end(), _dt.geom_traits());
 
 	if(progress) {
 		progress->setProgressRange(cgalPoints.size());

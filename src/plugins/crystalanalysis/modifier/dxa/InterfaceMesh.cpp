@@ -76,6 +76,7 @@ bool InterfaceMesh::classifyTetrahedra(FloatType maximumNeighborDistance, Future
 		}
 	}
 
+
 	qDebug() << "Number of good tetrahedra:" << _numGoodTetrahedra;
 	qDebug() << "Number of bad tetrahedra:" << (tessellation().number_of_primary_tetrahedra() - _numGoodTetrahedra);
 

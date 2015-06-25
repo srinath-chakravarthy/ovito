@@ -39,7 +39,7 @@ DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, _shadingMode, "ShadingMode", PRO
 DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, _burgersVectorWidth, "BurgersVectorWidth", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, _burgersVectorScaling, "BurgersVectorScaling", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, _burgersVectorColor, "BurgersVectorColor", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, _showBurgersVectors, "ShowBurgersVectors", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(DislocationDisplay, _showBurgersVectors, "ShowBurgersVectors");
 SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _lineWidth, "Dislocation line width");
 SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _shadingMode, "Shading mode");
 SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _burgersVectorWidth, "Burgers vector width");

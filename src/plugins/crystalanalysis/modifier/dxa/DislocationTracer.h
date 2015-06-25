@@ -27,6 +27,13 @@
 #include <plugins/crystalanalysis/data/DislocationNetwork.h>
 #include "InterfaceMesh.h"
 
+#include <boost/random/mersenne_twister.hpp>
+#if BOOST_VERSION > 146000
+#include <boost/random/uniform_int_distribution.hpp>
+#else
+#include <boost/random/uniform_int.hpp>
+#endif
+
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 /// Two lattice space vectors are considered equal if they don't differ by more than this value.
@@ -137,8 +144,13 @@ private:
 	/// It can be re-used on the next allocation request.
 	BurgersCircuit* _unusedCircuit;
 
+#if BOOST_VERSION > 146000
 	/// Used to generate random numbers;
-	std::default_random_engine _rng;
+	boost::random::mt19937 _rng;
+#else
+	/// Used to generate random numbers;
+	boost::mt19937 _rng;
+#endif
 };
 
 }	// End of namespace
