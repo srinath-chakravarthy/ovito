@@ -110,6 +110,7 @@ void OpenGLTextPrimitive::renderWindow(SceneRenderer* renderer, const Point2& po
 		QRect rect;
 		qreal devicePixelRatio = 1.0;
 		{
+			qDebug() << "Surface class=" << vpRenderer->glcontext()->surface()->surfaceClass() << QSurface::Window;
 			if(vpRenderer->glcontext()->surface()->surfaceClass() == QSurface::Window) {
 				QWindow* window = static_cast<QWindow*>(vpRenderer->glcontext()->surface());
 				devicePixelRatio = window->devicePixelRatio();

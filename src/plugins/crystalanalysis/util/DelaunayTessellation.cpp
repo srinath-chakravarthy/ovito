@@ -39,20 +39,22 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 	if(progress) progress->setProgressRange(0);
 	std::vector<DT::Point> cgalPoints;
 
+	const double epsilon = 1e-7;
+
 	// Set up random number generator to generate random perturbations.
 #if 0
 	std::minstd_rand rng;
 	rng.seed(1);
-	std::uniform_real_distribution<double> displacement(-1e-8, +1e-8);
+	std::uniform_real_distribution<double> displacement(-epsilon, epsilon);
 #else
 	#if BOOST_VERSION > 146000
 		boost::random::mt19937 rng;
 		rng.seed(1);
-		boost::random::uniform_real_distribution displacement(-1e-8, +1e-8);
+		boost::random::uniform_real_distribution displacement(-epsilon, epsilon);
 	#else
 		boost::mt19937 rng;
 		rng.seed(1);
-		boost::uniform_real<> displacement(-1e-8, +1e-8);
+		boost::uniform_real<> displacement(-epsilon, epsilon);
 	#endif
 #endif
 

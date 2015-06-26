@@ -76,7 +76,6 @@ bool InterfaceMesh::classifyTetrahedra(FloatType maximumNeighborDistance, Future
 		}
 	}
 
-
 	qDebug() << "Number of good tetrahedra:" << _numGoodTetrahedra;
 	qDebug() << "Number of bad tetrahedra:" << (tessellation().number_of_primary_tetrahedra() - _numGoodTetrahedra);
 
@@ -176,6 +175,25 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 	progress.setProgressRange(tetrahedra.size());
 	int progressCounter = 0;
 
+	// This helper function finds the real cell corresponding to a (good) ghost cell.
+	auto findRealTet = [&tetrahedra](DelaunayTessellation::CellHandle cell) -> const Tetrahedron& {
+		OVITO_ASSERT(cell->info().isGhost);
+		OVITO_ASSERT(cell->info().flag);
+		std::array<int,4> cellVerts;
+		for(size_t i = 0; i < 4; i++) {
+			cellVerts[i] = cell->vertex(i)->point().index();
+			OVITO_ASSERT(cellVerts[i] != -1);
+		}
+		std::sort(cellVerts.begin(), cellVerts.end());
+		auto iter = tetrahedra.find(cellVerts);
+		OVITO_ASSERT(iter != tetrahedra.end());
+		if(iter == tetrahedra.end())
+			throw Exception(DislocationAnalysisModifier::tr("DXA failed: Cannot construct interface mesh for this input dataset; real cell not found. This should not happen. Please report this issue to the developer."));
+		OVITO_ASSERT(iter->second.cell->info().isGhost == false);
+		OVITO_ASSERT(iter->second.cell->info().flag);
+		return iter->second;
+	};
+
 	for(auto tetIter = tetrahedra.cbegin(); tetIter != tetrahedra.cend(); ++tetIter) {
 
 		// Update progress indicator.
@@ -201,33 +219,27 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 				--circulator;
 				OVITO_ASSERT(circulator != circulator_start);
 				do {
-					// Look for the first open cell while going around the edge.
+					// Look for the first bad cell while going around the edge.
 					if(circulator->first->info().flag == false)
 						break;
+
 					--circulator;
 				}
 				while(circulator != circulator_start);
 				OVITO_ASSERT(circulator != circulator_start);
 
-				// Get the adjacent cell, which must be solid.
+				// Get the adjacent cell, which must be good.
 				std::pair<DelaunayTessellation::CellHandle,int> mirrorFacet = tessellation().mirrorFacet(circulator);
 				OVITO_ASSERT(mirrorFacet.first->info().flag == true);
 				Face* oppositeFace = nullptr;
 				// If the cell is a ghost cell, find the corresponding real cell.
 				if(mirrorFacet.first->info().isGhost) {
-					OVITO_ASSERT(mirrorFacet.first->info().index == -1);
-					std::array<int,4> cellVerts;
-					for(size_t i = 0; i < 4; i++) {
-						cellVerts[i] = mirrorFacet.first->vertex(i)->point().index();
-						OVITO_ASSERT(cellVerts[i] != -1);
-					}
+					const Tetrahedron& realTet = findRealTet(mirrorFacet.first);
 					std::array<int,3> faceVerts;
 					for(size_t i = 0; i < 3; i++) {
-						faceVerts[i] = cellVerts[DelaunayTessellation::cellFacetVertexIndex(mirrorFacet.second, i)];
+						faceVerts[i] = mirrorFacet.first->vertex(DelaunayTessellation::cellFacetVertexIndex(mirrorFacet.second, i))->point().index();
 						OVITO_ASSERT(faceVerts[i] != -1);
 					}
-					std::sort(cellVerts.begin(), cellVerts.end());
-					const Tetrahedron& realTet = tetrahedra[cellVerts];
 					for(int fi = 0; fi < 4; fi++) {
 						if(realTet.meshFacets[fi] == nullptr) continue;
 						std::array<int,3> faceVerts2;
@@ -245,8 +257,9 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 					const Tetrahedron& mirrorTet = tetrahedraList[mirrorFacet.first->info().index]->second;
 					oppositeFace = mirrorTet.meshFacets[mirrorFacet.second];
 				}
-				if(oppositeFace == nullptr)
-					throw Exception(DislocationAnalysisModifier::tr("Cannot construct interface mesh for this input dataset. Opposite cell face not found."));
+				if(oppositeFace == nullptr) {
+					throw Exception(DislocationAnalysisModifier::tr("DXA failed: Cannot construct interface mesh for this input dataset; opposite cell face not found. This should not happen. Please report this issue to the developer."));
+				}
 				OVITO_ASSERT(oppositeFace != facet);
 				Edge* oppositeEdge = oppositeFace->edges();
 				do {
@@ -263,7 +276,7 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 				}
 				while(oppositeEdge != oppositeFace->edges());
 				if(edge->oppositeEdge() == nullptr)
-					throw Exception(DislocationAnalysisModifier::tr("Cannot construct interface mesh for this input dataset. Opposite half-edge not found."));
+					throw Exception(DislocationAnalysisModifier::tr("DXA failed: Cannot construct interface mesh for this input dataset. Opposite half-edge not found. This should not happen. Please report this issue to the developer."));
 			}
 		}
 	}

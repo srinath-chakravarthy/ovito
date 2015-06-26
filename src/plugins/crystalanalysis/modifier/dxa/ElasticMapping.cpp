@@ -22,6 +22,7 @@
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include "ElasticMapping.h"
 #include "CrystalPathFinder.h"
+#include "DislocationTracer.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -249,8 +250,9 @@ bool ElasticMapping::isElasticMappingCompatible(DelaunayTessellation::CellHandle
 		int vertex2 = cell->vertex(edgeVertices[edgeIndex][1])->point().index();
 		OVITO_ASSERT(vertex1 != -1 && vertex2 != -1);
 		edges[edgeIndex] = findEdge(vertex1, vertex2);
-		if(edges[edgeIndex] == nullptr || edges[edgeIndex]->hasClusterVector() == false)
+		if(edges[edgeIndex] == nullptr || edges[edgeIndex]->hasClusterVector() == false) {
 			return false;
+		}
 	}
 
 	static const int circuits[4][3] = { {0,4,2}, {1,5,2}, {0,3,1}, {3,5,4} };
@@ -260,8 +262,9 @@ bool ElasticMapping::isElasticMappingCompatible(DelaunayTessellation::CellHandle
 		Vector3 burgersVector = edges[circuits[face][0]]->clusterVector;
 		burgersVector += edges[circuits[face][0]]->clusterTransition->reverseTransform(edges[circuits[face][1]]->clusterVector);
 		burgersVector -= edges[circuits[face][2]]->clusterVector;
-		if(!burgersVector.isZero())
+		if(!burgersVector.isZero(CA_LATTICE_VECTOR_EPSILON)) {
 			return false;
+		}
 	}
 
 	// Perform disclination test on each of the four faces.
