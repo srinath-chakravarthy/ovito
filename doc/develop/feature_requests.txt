@@ -31,6 +31,8 @@ Unresolved OpenGL problems:
 - Crash when moving the viewport camera:
     Windows, AMD Radeon HD8490, Core profile 3.2 (ljloverq@163.com)
     Windows, NVidia NVS 310, Core profile 3.2 (zhonghuai.wu@student.unsw.edu.au)
+    
+- Fix text size on Macs with high-dpi display (m.horton11@imperial.ac.uk)
 
 Unresolved bugs:
 

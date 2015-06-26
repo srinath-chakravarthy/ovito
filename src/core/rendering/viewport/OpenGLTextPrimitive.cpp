@@ -108,13 +108,8 @@ void OpenGLTextPrimitive::renderWindow(SceneRenderer* renderer, const Point2& po
 
 		// Measure text size.
 		QRect rect;
-		qreal devicePixelRatio = 1.0;
+		qreal devicePixelRatio = vpRenderer->devicePixelRatio();
 		{
-			qDebug() << "Surface class=" << vpRenderer->glcontext()->surface()->surfaceClass() << QSurface::Window;
-			if(vpRenderer->glcontext()->surface()->surfaceClass() == QSurface::Window) {
-				QWindow* window = static_cast<QWindow*>(vpRenderer->glcontext()->surface());
-				devicePixelRatio = window->devicePixelRatio();
-			}
 			_textureImage.setDevicePixelRatio(devicePixelRatio);
 			QPainter painter(&_textureImage);
 			painter.setFont(font());

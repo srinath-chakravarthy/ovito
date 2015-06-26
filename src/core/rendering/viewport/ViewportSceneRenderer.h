@@ -189,6 +189,9 @@ public:
 		if(_vertexArrayObject) _vertexArrayObject->bind();
 	}
 
+	/// Returns the device pixel ratio of the output device we are rendering to.
+	qreal devicePixelRatio() const;
+
 protected:
 
 	/// \brief Loads and compiles a GLSL shader and adds it to the given program object.

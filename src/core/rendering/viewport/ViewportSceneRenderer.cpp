@@ -630,10 +630,7 @@ void ViewportSceneRenderer::deactivateVertexIDs(QOpenGLShaderProgram* shader, bo
 ******************************************************************************/
 FloatType ViewportSceneRenderer::defaultLinePickingWidth()
 {
-	FloatType devicePixelRatio = 1;
-	if(glcontext() && glcontext()->screen())
-		devicePixelRatio = glcontext()->screen()->devicePixelRatio();
-	return 12.0f * devicePixelRatio;
+	return 12.0f * devicePixelRatio();
 }
 
 /******************************************************************************
@@ -747,6 +744,23 @@ void ViewportSceneRenderer::renderGrid()
 	_constructionGridGeometry->setVertexColors(vertexColors.get());
 	_constructionGridGeometry->render(this);
 }
+
+/******************************************************************************
+* Returns the device pixel ratio of the output device we are rendering to.
+******************************************************************************/
+qreal ViewportSceneRenderer::devicePixelRatio() const
+{
+	if(glcontext() && glcontext()->screen()) {
+		return glcontext()->screen()->devicePixelRatio();
+	}
+	else {
+		if(isInteractive() && viewport())
+			return viewport()->widget()->devicePixelRatio();
+		else
+			return 1;
+	}
+}
+
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
