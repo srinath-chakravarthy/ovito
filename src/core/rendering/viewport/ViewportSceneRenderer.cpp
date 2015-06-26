@@ -523,8 +523,6 @@ void ViewportSceneRenderer::loadShader(QOpenGLShaderProgram* program, QOpenGLSha
 ******************************************************************************/
 void ViewportSceneRenderer::render2DPolyline(const Point2* points, int count, const ColorA& color, bool closed)
 {
-	OVITO_STATIC_ASSERT(sizeof(points[0]) == 2*sizeof(GLfloat));
-
 	// Load OpenGL shader.
 	QOpenGLShaderProgram* shader = loadShaderProgram("line", ":/core/glsl/lines/line.vs", ":/core/glsl/lines/line.fs");
 	if(!shader->bind())
@@ -539,34 +537,28 @@ void ViewportSceneRenderer::render2DPolyline(const Point2* points, int count, co
 	tm.ortho(vc[0], vc[0] + vc[2], vc[1] + vc[3], vc[1], -1, 1);
 	OVITO_CHECK_OPENGL(shader->setUniformValue("modelview_projection_matrix", tm));
 
-	QOpenGLBuffer vertexBuffer;
+	OpenGLBuffer<Point2> vertexBuffer;
+	OpenGLBuffer<ColorA> colorBuffer;
 	if(glformat().majorVersion() >= 3) {
-		if(!vertexBuffer.create())
-			throw Exception(tr("Failed to create OpenGL vertex buffer."));
-		if(!vertexBuffer.bind())
-				throw Exception(tr("Failed to bind OpenGL vertex buffer."));
-		vertexBuffer.allocate(points, 2 * sizeof(GLfloat) * count);
-		OVITO_CHECK_OPENGL(shader->enableAttributeArray("position"));
-		OVITO_CHECK_OPENGL(shader->setAttributeBuffer("position", GL_FLOAT, 0, 2));
-		vertexBuffer.release();
+		vertexBuffer.create(QOpenGLBuffer::StaticDraw, count);
+		vertexBuffer.fill(points);
+		vertexBuffer.bind(this, shader, "position", GL_FLOAT, 0, 2);
+		colorBuffer.create(QOpenGLBuffer::StaticDraw, count);
+		colorBuffer.fillConstant(color);
+		OVITO_CHECK_OPENGL(colorBuffer.bindColors(this, shader, 4));
 	}
 	else {
+		OVITO_STATIC_ASSERT(sizeof(points[0]) == 2*sizeof(GLfloat));
 		OVITO_CHECK_OPENGL(glEnableClientState(GL_VERTEX_ARRAY));
 		OVITO_CHECK_OPENGL(glVertexPointer(2, GL_FLOAT, 0, points));
-	}
-
-	if(glformat().majorVersion() >= 3) {
-		OVITO_CHECK_OPENGL(shader->disableAttributeArray("color"));
-		OVITO_CHECK_OPENGL(shader->setAttributeValue("color", color.r(), color.g(), color.b(), color.a()));
-	}
-	else {
 		OVITO_CHECK_OPENGL(glColor4(color));
 	}
 
 	OVITO_CHECK_OPENGL(glDrawArrays(closed ? GL_LINE_LOOP : GL_LINE_STRIP, 0, count));
 
 	if(glformat().majorVersion() >= 3) {
-		shader->disableAttributeArray("position");
+		vertexBuffer.detach(this, shader, "position");
+		colorBuffer.detachColors(this, shader);
 	}
 	else {
 		OVITO_CHECK_OPENGL(glDisableClientState(GL_VERTEX_ARRAY));
