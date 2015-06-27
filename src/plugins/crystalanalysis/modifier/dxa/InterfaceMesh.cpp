@@ -23,6 +23,7 @@
 #include "InterfaceMesh.h"
 #include "DislocationTracer.h"
 #include "DislocationAnalysisModifier.h"
+#include "DislocationAnalysisEngine.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -156,10 +157,13 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 				OVITO_ASSERT(edge->vertex1() == facetVertices[i]);
 				OVITO_ASSERT(edge->vertex2() == facetVertices[(i+1)%3]);
 				edge->physicalVector = vertexPositions[(i+1)%3] - vertexPositions[i];
-				OVITO_ASSERT(!structureAnalysis().cell().isWrappedVector(edge->physicalVector));
 
 				ElasticMapping::TessellationEdge* tessEdge = elasticMapping().findEdge(vertexIndices[i], vertexIndices[(i+1)%3]);
 				OVITO_ASSERT(tessEdge != nullptr);
+				OVITO_ASSERT(tessEdge->hasClusterVector());
+
+				if(structureAnalysis().cell().isWrappedVector(edge->physicalVector))
+					DislocationAnalysisEngine::generateCellTooSmallError();
 
 				edge->clusterVector = tessEdge->clusterVector;
 				edge->clusterTransition = tessEdge->clusterTransition;

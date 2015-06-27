@@ -25,6 +25,7 @@
 #include <core/utilities/concurrent/ParallelFor.h>
 #include "StructureAnalysis.h"
 #include "DislocationAnalysisModifier.h"
+#include "DislocationAnalysisEngine.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -719,7 +720,7 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 				// An atom should not be a neighbor of itself.
 				// We use the minimum image convention for simulation cells with periodic boundary conditions.
 				if(*neighborAtomIndex == currentAtomIndex)
-					throw Exception(DislocationAnalysisModifier::tr("Cannot perform dislocation analysis. Simulation cell is too small. Please extend it first using the 'Show periodic images' modifier."));
+					DislocationAnalysisEngine::generateCellTooSmallError();
 
 				// Add vector pair to matrices for computing the cluster orientation.
 				const Vector3& latticeVector = latticeStructure.latticeVectors[permutation[neighborIndex]];

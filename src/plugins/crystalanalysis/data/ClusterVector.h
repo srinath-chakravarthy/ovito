@@ -28,6 +28,12 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
+/// Two lattice space vectors are considered equal if they don't differ by more than this value.
+#define CA_LATTICE_VECTOR_EPSILON					Ovito::FloatType(1e-3)
+
+/// Two world-space vectors are considered equal if they don't differ by more than this value.
+#define CA_ATOM_VECTOR_EPSILON						Ovito::FloatType(1e-4)
+
 /**
  * A Cartesian vector in the stress-free reference configuration of a cluster.
  *

@@ -30,8 +30,6 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-struct DislocationSegment;	// Defined below
-
 /**
  * Every dislocation segment is delimited by two dislocation nodes.
  */

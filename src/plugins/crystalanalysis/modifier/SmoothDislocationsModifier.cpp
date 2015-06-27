@@ -89,10 +89,10 @@ void SmoothDislocationsModifier::smoothDislocationLines(DislocationNetworkObject
 		for(DislocationSegment* segment : dislocationsObj->modifiableSegments()) {
 			std::deque<Point3> line;
 			std::deque<int> coreSize;
-			coarsenDislocationLine(_coarseningEnabled.value() ? _linePointInterval.value() : 0, segment->line, segment->coreSize, line, coreSize, segment->isClosedLoop() && !segment->isInfiniteLine());
+			coarsenDislocationLine(_coarseningEnabled.value() ? _linePointInterval.value() : 0, segment->line, segment->coreSize, line, coreSize, segment->isClosedLoop(), segment->isInfiniteLine());
 			smoothDislocationLine(_smoothingEnabled.value() ? _smoothingLevel.value() : 0, line, segment->isClosedLoop());
-			segment->line = line;
-			segment->coreSize = coreSize;
+			segment->line = std::move(line);
+			segment->coreSize = std::move(coreSize);
 		}
 		dislocationsObj->changed();
 	}
@@ -101,7 +101,7 @@ void SmoothDislocationsModifier::smoothDislocationLines(DislocationNetworkObject
 /******************************************************************************
 * Removes some of the sampling points from a dislocation line.
 ******************************************************************************/
-void SmoothDislocationsModifier::coarsenDislocationLine(FloatType linePointInterval, const std::deque<Point3>& input, const std::deque<int>& coreSize, std::deque<Point3>& output, std::deque<int>& outputCoreSize, bool isLoop)
+void SmoothDislocationsModifier::coarsenDislocationLine(FloatType linePointInterval, const std::deque<Point3>& input, const std::deque<int>& coreSize, std::deque<Point3>& output, std::deque<int>& outputCoreSize, bool isClosedLoop, bool isInfiniteLine)
 {
 	OVITO_ASSERT(input.size() >= 2);
 	OVITO_ASSERT(input.size() == coreSize.size());
@@ -112,27 +112,74 @@ void SmoothDislocationsModifier::coarsenDislocationLine(FloatType linePointInter
 		return;
 	}
 
-	// Always keep the end points.
-	output.push_back(input.front());
-	outputCoreSize.push_back(coreSize.front());
+	// Special handling for infinite lines.
+	if(isInfiniteLine && input.size() >= 3) {
+		int coreSizeSum = std::accumulate(coreSize.cbegin(), coreSize.cend() - 1, 0);
+		int count = input.size() - 1;
+		if(coreSizeSum * linePointInterval > count * count) {
+			// Make it a straight line.
+			Vector3 com = Vector3::Zero();
+			for(auto p = input.cbegin(); p != input.cend() - 1; ++p)
+				com += *p - input.front();
+			output.push_back(input.front() + com / count);
+			outputCoreSize.push_back(coreSizeSum / count);
+			output.push_back(input.back() + com / count);
+			outputCoreSize.push_back(coreSizeSum / count);
+			return;
+		}
+	}
+
+	// Special handling for very short segments.
+	if(input.size() < 4) {
+		output = input;
+		outputCoreSize = coreSize;
+		return;
+	}
+
+	// Always keep the end points of linear segments to not break junctions.
+	if(!isClosedLoop) {
+		output.push_back(input.front());
+		outputCoreSize.push_back(coreSize.front());
+	}
 
 	auto inputPtr = input.cbegin();
 	auto inputCoreSizePtr = coreSize.cbegin();
 
-	int sum;
-	int count;
+	int sum = 0;
+	int count = 0;
 
-	sum = count = 0;
+	// Average over a half interval, starting from the beginning of the segment.
+	Vector3 com = Vector3::Zero();
 	do {
 		sum += *inputCoreSizePtr;
+		com += *inputPtr - input.front();
 		count++;
 		++inputPtr;
 		++inputCoreSizePtr;
 	}
 	while(2*count*count < (int)(linePointInterval * sum) && count < input.size()/4);
 
-	do {
-		sum = count = 0;
+	// Average over a half interval, starting from the end of the segment.
+	auto inputPtrEnd = input.cend() - 1;
+	auto inputCoreSizePtrEnd = coreSize.cend() - 1;
+	while(count*count < (int)(linePointInterval * sum) && count < input.size()/2) {
+		sum += *inputCoreSizePtrEnd;
+		com += *inputPtrEnd - input.back();
+		count++;
+		--inputPtrEnd;
+		--inputCoreSizePtrEnd;
+	}
+	OVITO_ASSERT(inputPtr < inputPtrEnd);
+
+	if(isClosedLoop) {
+		output.push_back(input.front() + com / count);
+		outputCoreSize.push_back(sum / count);
+	}
+
+	while(inputPtr < inputPtrEnd)
+	{
+		int sum = 0;
+		int count = 0;
 		Vector3 com = Vector3::Zero();
 		do {
 			sum += *inputCoreSizePtr++;
@@ -142,18 +189,23 @@ void SmoothDislocationsModifier::coarsenDislocationLine(FloatType linePointInter
 			count++;
 			++inputPtr;
 		}
-		while(count*count < (int)(linePointInterval * sum) && count < input.size()/4 && inputPtr < input.cend()-1);
+		while(count*count < (int)(linePointInterval * sum) && count < input.size()/2 && inputPtr != inputPtrEnd);
 		output.push_back(Point3::Origin() + com / count);
 		outputCoreSize.push_back(sum / count);
 	}
-	while(inputPtr < input.cend() - 1);
 
-	// Always keep the end points.
-	output.push_back(input.back());
-	outputCoreSize.push_back(coreSize.back());
+	if(!isClosedLoop) {
+		// Always keep the end points of linear segments to not break junctions.
+		output.push_back(input.back());
+		outputCoreSize.push_back(coreSize.back());
+	}
+	else {
+		output.push_back(input.back() + com / count);
+		outputCoreSize.push_back(sum / count);
+	}
 
 	OVITO_ASSERT(output.size() >= 2);
-	OVITO_ASSERT(!isLoop || output.size() >= 3);
+	OVITO_ASSERT(!isClosedLoop || isInfiniteLine || output.size() >= 3);
 }
 
 /******************************************************************************

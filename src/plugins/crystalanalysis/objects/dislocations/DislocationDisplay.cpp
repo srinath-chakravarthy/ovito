@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2015) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -166,7 +166,7 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 					StructurePattern* pattern = patternCatalog->structureById(cluster->structure);
 					family = pattern->defaultBurgersVectorFamily();
 					for(BurgersVectorFamily* f : pattern->burgersVectorFamilies()) {
-						if(f->isMember(segment->burgersVector.localVec())) {
+						if(f->isMember(segment->burgersVector.localVec(), pattern)) {
 							family = f;
 							break;
 						}
@@ -381,28 +381,74 @@ static bool isInteger(FloatType v, int& intPart)
 /******************************************************************************
 * Generates a pretty string representation of the Burgers vector.
 ******************************************************************************/
-QString DislocationDisplay::formatBurgersVector(const Vector3& b)
+QString DislocationDisplay::formatBurgersVector(const Vector3& b, StructurePattern* structure)
 {
-	FloatType smallestCompnt = FLOATTYPE_MAX;
-	for(int i = 0; i < 3; i++) {
-		FloatType c = std::abs(b[i]);
-		if(c < smallestCompnt && c > 1e-3)
-			smallestCompnt = c;
-	}
-	if(smallestCompnt != FLOATTYPE_MAX) {
-		FloatType m = FloatType(1) / smallestCompnt;
-		for(int f = 1; f <= 11; f++) {
-			int multiplier;
-			if(!isInteger(m*f, multiplier)) continue;
-			if(multiplier < 80) {
-				Vector3 bm = b * (FloatType)multiplier;
-				Vector3I bmi;
-				if(isInteger(bm.x(),bmi.x()) && isInteger(bm.y(),bmi.y()) && isInteger(bm.z(),bmi.z())) {
-					return QString("1/%1[%2 %3 %4]")
-							.arg(multiplier)
-							.arg(bmi.x()).arg(bmi.y()).arg(bmi.z());
+	if(structure) {
+		if(structure->symmetryType() == StructurePattern::CubicSymmetry) {
+			FloatType smallestCompnt = FLOATTYPE_MAX;
+			for(int i = 0; i < 3; i++) {
+				FloatType c = std::abs(b[i]);
+				if(c < smallestCompnt && c > FloatType(1e-3))
+					smallestCompnt = c;
+			}
+			if(smallestCompnt != FLOATTYPE_MAX) {
+				FloatType m = FloatType(1) / smallestCompnt;
+				for(int f = 1; f <= 11; f++) {
+					int multiplier;
+					if(!isInteger(m*f, multiplier)) continue;
+					if(multiplier < 80) {
+						Vector3 bm = b * (FloatType)multiplier;
+						Vector3I bmi;
+						if(isInteger(bm.x(),bmi.x()) && isInteger(bm.y(),bmi.y()) && isInteger(bm.z(),bmi.z())) {
+							if(multiplier != 1)
+								return QString("1/%1[%2 %3 %4]")
+										.arg(multiplier)
+										.arg(bmi.x()).arg(bmi.y()).arg(bmi.z());
+							else
+								return QString("[%1 %2 %3]")
+										.arg(bmi.x()).arg(bmi.y()).arg(bmi.z());
+						}
+					}
 				}
 			}
+		}
+		else if(structure->symmetryType() == StructurePattern::HexagonalSymmetry) {
+			// Determine vector components U, V, and W, with b = U*a1 + V*a2 + W*c.
+			FloatType U = sqrt(2.0f)*b.x() - sqrt(2.0f/3.0f)*b.y();
+			FloatType V = sqrt(2.0f)*b.x() + sqrt(2.0f/3.0f)*b.y();
+			FloatType W = sqrt(3.0f/4.0f)*b.z();
+			Vector4 uvwt((2*U-V)/3, (2*V-U)/3, -(U+V)/3, W);
+			FloatType smallestCompnt = FLOATTYPE_MAX;
+			for(int i = 0; i < 4; i++) {
+				FloatType c = std::abs(uvwt[i]);
+				if(c < smallestCompnt && c > FloatType(1e-3))
+					smallestCompnt = c;
+			}
+			if(smallestCompnt != FLOATTYPE_MAX) {
+				FloatType m = FloatType(1) / smallestCompnt;
+				for(int f = 1; f <= 11; f++) {
+					int multiplier;
+					if(!isInteger(m*f, multiplier)) continue;
+					if(multiplier < 80) {
+						Vector4 bm = uvwt * (FloatType)multiplier;
+						int bmi[4];
+						if(isInteger(bm.x(),bmi[0]) && isInteger(bm.y(),bmi[1]) && isInteger(bm.z(),bmi[2]) && isInteger(bm.w(),bmi[3])) {
+							if(multiplier != 1)
+								return QString("1/%1[%2 %3 %4 %5]")
+										.arg(multiplier)
+										.arg(bmi[0]).arg(bmi[1]).arg(bmi[2]).arg(bmi[3]);
+							else
+								return QString("[%1 %2 %3 %4]")
+										.arg(bmi[0]).arg(bmi[1]).arg(bmi[2]).arg(bmi[3]);
+						}
+					}
+				}
+			}
+			return QString("[%1 %2 %3 %4]")
+					.arg(QLocale::c().toString(uvwt.x(), 'f'), 7)
+					.arg(QLocale::c().toString(uvwt.y(), 'f'), 7)
+					.arg(QLocale::c().toString(uvwt.z(), 'f'), 7)
+					.arg(QLocale::c().toString(uvwt.w(), 'f'), 7);
 		}
 	}
 
@@ -423,7 +469,12 @@ QString DislocationPickInfo::infoString(ObjectNode* objectNode, quint32 subobjec
 	int segmentIndex = segmentIndexFromSubObjectID(subobjectId);
 	if(segmentIndex >= 0 && segmentIndex < dislocationObj()->segments().size()) {
 		DislocationSegment* segment = dislocationObj()->segments()[segmentIndex];
-		str = tr("Dislocation | True Burgers vector: %1").arg(DislocationDisplay::formatBurgersVector(segment->burgersVector.localVec()));
+		StructurePattern* structure = nullptr;
+		if(patternCatalog() != nullptr) {
+			structure = patternCatalog()->structureById(segment->burgersVector.cluster()->structure);
+		}
+		QString formattedBurgersVector = DislocationDisplay::formatBurgersVector(segment->burgersVector.localVec(), structure);
+		str = tr("Dislocation | True Burgers vector: %1").arg(formattedBurgersVector);
 		Vector3 transformedVector = segment->burgersVector.toSpatialVector();
 		str += tr(" | Spatial Burgers vector: [%1 %2 %3]")
 				.arg(QLocale::c().toString(transformedVector.x(), 'f', 4), 7)
@@ -431,10 +482,8 @@ QString DislocationPickInfo::infoString(ObjectNode* objectNode, quint32 subobjec
 				.arg(QLocale::c().toString(transformedVector.z(), 'f', 4), 7);
 		str += tr(" | Cluster Id: %1").arg(segment->burgersVector.cluster()->id);
 		str += tr(" | Segment Id: %1").arg(segment->id);
-		if(patternCatalog() != nullptr) {
-			int structureTypeId = segment->burgersVector.cluster()->structure;
-			if(StructurePattern* s = patternCatalog()->structureById(structureTypeId))
-				str += tr(" | Lattice structure: %1").arg(s->name());
+		if(structure) {
+			str += tr(" | Lattice structure: %1").arg(structure->name());
 		}
 	}
 	return str;

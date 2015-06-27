@@ -31,18 +31,22 @@ IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, StructurePatternEditor, PropertiesEditor
 SET_OVITO_OBJECT_EDITOR(StructurePattern, StructurePatternEditor);
 DEFINE_PROPERTY_FIELD(StructurePattern, _shortName, "ShortName");
 DEFINE_PROPERTY_FIELD(StructurePattern, _structureType, "StructureType");
+DEFINE_PROPERTY_FIELD(StructurePattern, _symmetryType, "SymmetryType");
 DEFINE_VECTOR_REFERENCE_FIELD(StructurePattern, _burgersVectorFamilies, "BurgersVectorFamilies", BurgersVectorFamily);
 SET_PROPERTY_FIELD_LABEL(StructurePattern, _shortName, "Short name");
 SET_PROPERTY_FIELD_LABEL(StructurePattern, _structureType, "Structure type");
+SET_PROPERTY_FIELD_LABEL(StructurePattern, _symmetryType, "Symmetry type");
 SET_PROPERTY_FIELD_LABEL(StructurePattern, _burgersVectorFamilies, "Burgers vector families");
 
 /******************************************************************************
 * Constructs the StructurePattern object.
 ******************************************************************************/
-StructurePattern::StructurePattern(DataSet* dataset) : ParticleType(dataset), _structureType(Lattice)
+StructurePattern::StructurePattern(DataSet* dataset) : ParticleType(dataset),
+		_structureType(OtherStructure), _symmetryType(OtherSymmetry)
 {
 	INIT_PROPERTY_FIELD(StructurePattern::_shortName);
 	INIT_PROPERTY_FIELD(StructurePattern::_structureType);
+	INIT_PROPERTY_FIELD(StructurePattern::_symmetryType);
 	INIT_PROPERTY_FIELD(StructurePattern::_burgersVectorFamilies);
 
 	// Create "unknown" Burgers vector family.
@@ -77,16 +81,12 @@ void StructurePatternEditor::createUI(const RolloutInsertionParameters& rolloutP
 		virtual QVariant getItemData(RefTarget* target, const QModelIndex& index, int role) override {
 			if(target) {
 				if(role == Qt::DisplayRole) {
-					if(index.column() == 2)
+					if(index.column() == 1)
 						return target->objectTitle();
 				}
 				else if(role == Qt::DecorationRole) {
-					if(index.column() == 1)
-						return (QColor)static_object_cast<BurgersVectorFamily>(target)->color();
-				}
-				else if(role == Qt::CheckStateRole) {
 					if(index.column() == 0)
-						return QVariant(static_object_cast<BurgersVectorFamily>(target)->isVisible() ? Qt::Checked : Qt::Unchecked);
+						return (QColor)static_object_cast<BurgersVectorFamily>(target)->color();
 				}
 			}
 			return QVariant();
@@ -100,30 +100,9 @@ void StructurePatternEditor::createUI(const RolloutInsertionParameters& rolloutP
 		/// by sub-classes.
 		virtual QVariant getHorizontalHeaderData(int index, int role) override {
 			if(index == 0)
-				return tr("Show");
-			else if(index == 1)
 				return tr("Color");
 			else
 				return tr("Name");
-		}
-
-		/// Returns the model/view item flags for the given entry.
-		virtual Qt::ItemFlags getItemFlags(RefTarget* target, const QModelIndex& index) override {
-			if(index.column() == 0)
-				return RefTargetListParameterUI::getItemFlags(target, index) | Qt::ItemIsUserCheckable;
-			else
-				return RefTargetListParameterUI::getItemFlags(target, index);
-		}
-
-		/// Sets the role data for the item at index to value.
-		virtual bool setItemData(RefTarget* target, const QModelIndex& index, const QVariant& value, int role) override {
-			if(index.isValid() && index.column() == 0 && role == Qt::CheckStateRole) {
-				UndoableTransaction::handleExceptions(dataset()->undoStack(), tr("Show/hide Burgers vector family"), [target, &value]() {
-					static_object_cast<BurgersVectorFamily>(target)->setVisible(value.value<int>() == Qt::Checked);
-				});
-				return true;
-			}
-			else return RefTargetListParameterUI::setItemData(target, index, value, role);
 		}
 
 		/// Do not open sub-editor for selected item.

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2015) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -50,25 +50,14 @@ public:
 	/// Sets the color that is used to display dislocation of this family.
 	void setColor(const Color& color) { _color = color; }
 
-	/// Returns the Burgers vector of this family.
+	/// Returns the prototype Burgers vector of this family.
 	const Vector3& burgersVector() const { return _burgersVector; }
 
-	/// Sets the Burgers vector of this family.
+	/// Sets the prototype Burgers vector of this family.
 	void setBurgersVector(const Vector3& v) { _burgersVector = v; }
 
-	/// Returns whether dislocation segments that belong to this family are shown.
-	bool isVisible() const { return _isVisible; }
-
-	/// Sets whether dislocation segments that belong to this family are shown.
-	void setVisible(bool visible) { _isVisible = visible; }
-
 	/// Checks if the given Burgers vector is a member of this family.
-	bool isMember(const Vector3& v) const {
-		// Take absolute value of components and sort them.
-		Vector3 sc(std::fabs(v.x()), std::fabs(v.y()), std::fabs(v.z()));
-		std::sort(sc.data(), sc.data() + 3);
-		return burgersVector().equals(sc);
-	}
+	bool isMember(const Vector3& v, StructurePattern* latticeStructure) const;
 
 	/// Returns the title of this object.
 	virtual QString objectTitle() override { return name(); }
@@ -77,7 +66,6 @@ public:
 
 	Q_PROPERTY(QString name READ name WRITE setName);
 	Q_PROPERTY(Color color READ color WRITE setColor);
-	Q_PROPERTY(bool isVisible READ isVisible WRITE setVisible);
 
 protected:
 
@@ -87,10 +75,7 @@ protected:
 	/// This visualization color of this family.
 	PropertyField<Color> _color;
 
-	/// Controls whether dislocation segments that belong to this family are shown.
-	PropertyField<bool> _isVisible;
-
-	/// This Burgers vector of this family.
+	/// This prototype Burgers vector of this family.
 	PropertyField<Vector3> _burgersVector;
 
 private:
@@ -100,7 +85,6 @@ private:
 
 	DECLARE_PROPERTY_FIELD(_name);
 	DECLARE_PROPERTY_FIELD(_color);
-	DECLARE_PROPERTY_FIELD(_isVisible);
 	DECLARE_PROPERTY_FIELD(_burgersVector);
 };
 

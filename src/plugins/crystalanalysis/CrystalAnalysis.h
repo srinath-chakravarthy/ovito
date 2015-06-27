@@ -34,6 +34,17 @@ namespace Ovito {
 	namespace Plugins {
 		namespace CrystalAnalysis {
 			using namespace Ovito::Particles;
+
+			class StructurePattern;
+			class BurgersVectorFamily;
+			class PatternCatalog;
+			class DislocationDisplay;
+			class DislocationNetworkObject;
+			class ClusterGraphObject;
+			class ClusterGraph;
+			class DislocationNetwork;
+			class DislocationNode;
+			class DislocationSegment;
 		}
 	}
 }

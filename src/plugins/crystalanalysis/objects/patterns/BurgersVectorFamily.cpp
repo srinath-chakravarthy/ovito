@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2015) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -22,7 +22,9 @@
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/gui/properties/ColorParameterUI.h>
 #include <core/gui/properties/StringParameterUI.h>
+#include <plugins/crystalanalysis/data/ClusterVector.h>
 #include "BurgersVectorFamily.h"
+#include "StructurePattern.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -31,28 +33,57 @@ IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, BurgersVectorFamilyEditor, PropertiesEdi
 SET_OVITO_OBJECT_EDITOR(BurgersVectorFamily, BurgersVectorFamilyEditor);
 DEFINE_PROPERTY_FIELD(BurgersVectorFamily, _name, "Name");
 DEFINE_PROPERTY_FIELD(BurgersVectorFamily, _color, "Color");
-DEFINE_PROPERTY_FIELD(BurgersVectorFamily, _isVisible, "Visible");
 DEFINE_PROPERTY_FIELD(BurgersVectorFamily, _burgersVector, "BurgersVector");
 SET_PROPERTY_FIELD_LABEL(BurgersVectorFamily, _name, "Name");
 SET_PROPERTY_FIELD_LABEL(BurgersVectorFamily, _color, "Color");
-SET_PROPERTY_FIELD_LABEL(BurgersVectorFamily, _isVisible, "Visible");
 SET_PROPERTY_FIELD_LABEL(BurgersVectorFamily, _burgersVector, "Burgers vector");
 
 /******************************************************************************
 * Constructs a new BurgersVectorFamily.
 ******************************************************************************/
 BurgersVectorFamily::BurgersVectorFamily(DataSet* dataset, const QString& name, const Vector3& burgersVector, const Color& color)
-	: RefTarget(dataset), _isVisible(true), _name(name), _color(color)
+	: RefTarget(dataset), _name(name), _burgersVector(burgersVector), _color(color)
 {
 	INIT_PROPERTY_FIELD(BurgersVectorFamily::_name);
 	INIT_PROPERTY_FIELD(BurgersVectorFamily::_color);
-	INIT_PROPERTY_FIELD(BurgersVectorFamily::_isVisible);
 	INIT_PROPERTY_FIELD(BurgersVectorFamily::_burgersVector);
+}
 
-	// Bring Burgers vector into canonical form.
-	Vector3 sc(std::fabs(burgersVector.x()), std::fabs(burgersVector.y()), std::fabs(burgersVector.z()));
-	std::sort(sc.data(), sc.data() + 3);
-	_burgersVector = sc;
+/******************************************************************************
+* Checks if the given Burgers vector is a member of this family.
+******************************************************************************/
+bool BurgersVectorFamily::isMember(const Vector3& v, StructurePattern* latticeStructure) const
+{
+	if(burgersVector() == Vector3::Zero())
+		return false;
+
+	if(latticeStructure->symmetryType() == StructurePattern::CubicSymmetry) {
+
+		// Bring prototype vector into canonical form.
+		Vector3 sc1(std::fabs(burgersVector().x()), std::fabs(burgersVector().y()), std::fabs(burgersVector().z()));
+		std::sort(sc1.data(), sc1.data() + 3);
+
+		// Bring candidate vector into canonical form.
+		Vector3 sc2(std::fabs(v.x()), std::fabs(v.y()), std::fabs(v.z()));
+		std::sort(sc2.data(), sc2.data() + 3);
+
+		return sc2.equals(sc1, CA_LATTICE_VECTOR_EPSILON);
+	}
+	else if(latticeStructure->symmetryType() == StructurePattern::HexagonalSymmetry) {
+
+		// Bring prototype vector into canonical form.
+		Vector3 sc1a(std::fabs(burgersVector().x()), std::fabs(burgersVector().y()), std::fabs(burgersVector().z()));
+		Vector3 sc1b(
+				std::fabs(0.5f*burgersVector().x()+sqrt(3.0f)/2*burgersVector().y()),
+				std::fabs(0.5f*burgersVector().y()-sqrt(3.0f)/2*burgersVector().x()),
+				std::fabs(burgersVector().z()));
+
+		// Bring candidate vector into canonical form.
+		Vector3 sc2(std::fabs(v.x()), std::fabs(v.y()), std::fabs(v.z()));
+
+		return sc2.equals(sc1a, CA_LATTICE_VECTOR_EPSILON) || sc2.equals(sc1b, CA_LATTICE_VECTOR_EPSILON);
+	}
+	return false;
 }
 
 /******************************************************************************

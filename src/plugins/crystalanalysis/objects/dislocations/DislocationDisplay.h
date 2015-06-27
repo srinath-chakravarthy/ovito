@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2015) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -144,7 +144,7 @@ public:
 	void renderOverlayMarker(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState, int segmentIndex, SceneRenderer* renderer, ObjectNode* contextNode);
 
 	/// \brief Generates a pretty string representation of a Burgers vector.
-	static QString formatBurgersVector(const Vector3& b);
+	static QString formatBurgersVector(const Vector3& b, StructurePattern* structure);
 
 public:
 

@@ -36,13 +36,22 @@ class OVITO_CRYSTALANALYSIS_EXPORT StructurePattern : public ParticleType
 {
 public:
 
-	/// The types of structure described by a pattern:
+	/// The types of structures described by a pattern:
 	enum StructureType {
+		OtherStructure,	// Non of the type below.
 		Lattice,		// Three-dimensional crystal lattice.
 		Interface,		// Two-dimensional coherent crystal interface, grain boundary, or stacking fault.
 		PointDefect		// Zero-dimensional crystal defect.
 	};
 	Q_ENUMS(StructureType);
+
+	/// The symmetry of the lattice described by the pattern:
+	enum SymmetryType {
+		OtherSymmetry,		// Unknown symmetry type.
+		CubicSymmetry,		// Used for cubic crystals like FCC, BCC, diamond.
+		HexagonalSymmetry,	// Used for hexagonal crystals like HCP, hexagonal diamond.
+	};
+	Q_ENUMS(SymmetryType);
 
 public:
 
@@ -77,8 +86,14 @@ public:
 	/// Returns the type of structure described by this pattern.
 	StructureType structureType() const { return _structureType; }
 
-	/// Changes the type of structure described by this pattern.
+	/// Sets the type of structure described by this pattern.
 	void setStructureType(StructureType type) { _structureType = type; }
+
+	/// Returns the symmetry type of lattice structure described by this pattern.
+	SymmetryType symmetryType() const { return _symmetryType; }
+
+	/// Sets the symmetry type of lattice structure described by this pattern.
+	void setSymmetryType(SymmetryType type) { _symmetryType = type; }
 
 private:
 
@@ -88,6 +103,9 @@ private:
 	/// The type of structure described by this pattern.
 	PropertyField<StructureType, int> _structureType;
 
+	/// The type of crystal symmetry of the lattice.
+	PropertyField<SymmetryType, int> _symmetryType;
+
 	/// List of Burgers vector families.
 	VectorReferenceField<BurgersVectorFamily> _burgersVectorFamilies;
 
@@ -96,6 +114,7 @@ private:
 
 	DECLARE_PROPERTY_FIELD(_shortName);
 	DECLARE_PROPERTY_FIELD(_structureType);
+	DECLARE_PROPERTY_FIELD(_symmetryType);
 	DECLARE_VECTOR_REFERENCE_FIELD(_burgersVectorFamilies);
 };
 
@@ -133,5 +152,7 @@ private:
 
 Q_DECLARE_METATYPE(Ovito::Plugins::CrystalAnalysis::StructurePattern::StructureType);
 Q_DECLARE_TYPEINFO(Ovito::Plugins::CrystalAnalysis::StructurePattern::StructureType, Q_PRIMITIVE_TYPE);
+Q_DECLARE_METATYPE(Ovito::Plugins::CrystalAnalysis::StructurePattern::SymmetryType);
+Q_DECLARE_TYPEINFO(Ovito::Plugins::CrystalAnalysis::StructurePattern::SymmetryType, Q_PRIMITIVE_TYPE);
 
 #endif // __OVITO_CA_STRUCTURE_PATTERN_H

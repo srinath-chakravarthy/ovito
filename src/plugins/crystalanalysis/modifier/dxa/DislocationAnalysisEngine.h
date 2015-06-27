@@ -71,6 +71,9 @@ public:
 	/// Returns the extracted dislocation network.
 	DislocationNetwork* dislocationNetwork() { return &_dislocationTracer.network(); }
 
+	/// Throws an exception which tells the user that the periodic simulation cell is too small.
+	static void generateCellTooSmallError();
+
 private:
 
 	int _inputCrystalStructure;

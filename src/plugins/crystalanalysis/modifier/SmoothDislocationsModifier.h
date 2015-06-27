@@ -75,7 +75,7 @@ public:
 protected:
 
 	/// Removes some of the sampling points from a dislocation line.
-	void coarsenDislocationLine(FloatType linePointInterval, const std::deque<Point3>& input, const std::deque<int>& coreSize, std::deque<Point3>& output, std::deque<int>& outputCoreSize, bool isLoop);
+	void coarsenDislocationLine(FloatType linePointInterval, const std::deque<Point3>& input, const std::deque<int>& coreSize, std::deque<Point3>& output, std::deque<int>& outputCoreSize, bool isClosedLoop, bool isInfiniteLine);
 
 	/// Smoothes the sampling points of a dislocation line.
 	void smoothDislocationLine(int smoothingLevel, std::deque<Point3>& line, bool isLoop);

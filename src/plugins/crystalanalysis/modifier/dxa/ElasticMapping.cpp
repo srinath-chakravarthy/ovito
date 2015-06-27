@@ -23,6 +23,7 @@
 #include "ElasticMapping.h"
 #include "CrystalPathFinder.h"
 #include "DislocationTracer.h"
+#include "DislocationAnalysisEngine.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
