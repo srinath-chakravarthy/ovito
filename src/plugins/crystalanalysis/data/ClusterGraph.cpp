@@ -144,6 +144,9 @@ ClusterTransition* ClusterGraph::createClusterTransition(Cluster* clusterA, Clus
 * ******************************************************************************/
 ClusterTransition* ClusterGraph::createSelfTransition(Cluster* cluster)
 {
+	OVITO_ASSERT(cluster != nullptr);
+	OVITO_ASSERT(cluster->id != 0);
+
 	// Check for existing self-transition.
 	if(cluster->transitions != nullptr && cluster->transitions->isSelfTransition()) {
 		return cluster->transitions;

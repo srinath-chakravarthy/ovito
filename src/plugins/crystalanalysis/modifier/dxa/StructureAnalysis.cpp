@@ -84,6 +84,8 @@ void StructureAnalysis::initializeCoordinationStructures()
 {
 	_coordinationStructures[COORD_OTHER].numNeighbors = 0;
 	_latticeStructures[LATTICE_OTHER].coordStructure = &_coordinationStructures[COORD_OTHER];
+	_latticeStructures[LATTICE_OTHER].primitiveCell.setZero();
+	_latticeStructures[LATTICE_OTHER].primitiveCellInverse.setZero();
 
 	// FCC
 	Vector3 fccVec[12] = {
@@ -112,6 +114,9 @@ void StructureAnalysis::initializeCoordinationStructures()
 	_coordinationStructures[COORD_FCC].latticeVectors.assign(std::begin(fccVec), std::end(fccVec));
 	_latticeStructures[LATTICE_FCC].latticeVectors.assign(std::begin(fccVec), std::end(fccVec));
 	_latticeStructures[LATTICE_FCC].coordStructure = &_coordinationStructures[COORD_FCC];
+	_latticeStructures[LATTICE_FCC].primitiveCell.column(0) = Vector3(0.5,0.5,0.0);
+	_latticeStructures[LATTICE_FCC].primitiveCell.column(1) = Vector3(0.0,0.5,0.5);
+	_latticeStructures[LATTICE_FCC].primitiveCell.column(2) = Vector3(0.5,0.0,0.5);
 
 	// HCP
 	Vector3 hcpVec[18] = {
@@ -147,6 +152,9 @@ void StructureAnalysis::initializeCoordinationStructures()
 	_coordinationStructures[COORD_HCP].latticeVectors.assign(std::begin(hcpVec), std::begin(hcpVec) + 12);
 	_latticeStructures[LATTICE_HCP].latticeVectors.assign(std::begin(hcpVec), std::end(hcpVec));
 	_latticeStructures[LATTICE_HCP].coordStructure = &_coordinationStructures[COORD_HCP];
+	_latticeStructures[LATTICE_HCP].primitiveCell.column(0) = Vector3(sqrt(0.5)/2, -sqrt(6.0)/4, 0.0);
+	_latticeStructures[LATTICE_HCP].primitiveCell.column(1) = Vector3(sqrt(0.5)/2, sqrt(6.0)/4, 0.0);
+	_latticeStructures[LATTICE_HCP].primitiveCell.column(2) = Vector3(0.0, 0.0, sqrt(8.0/6.0));
 
 	// BCC
 	Vector3 bccVec[14] = {
@@ -177,6 +185,9 @@ void StructureAnalysis::initializeCoordinationStructures()
 	_coordinationStructures[COORD_BCC].latticeVectors.assign(std::begin(bccVec), std::end(bccVec));
 	_latticeStructures[LATTICE_BCC].latticeVectors.assign(std::begin(bccVec), std::end(bccVec));
 	_latticeStructures[LATTICE_BCC].coordStructure = &_coordinationStructures[COORD_BCC];
+	_latticeStructures[LATTICE_BCC].primitiveCell.column(0) = Vector3(0.1,0.0,0.0);
+	_latticeStructures[LATTICE_BCC].primitiveCell.column(1) = Vector3(0.0,1.0,0.0);
+	_latticeStructures[LATTICE_BCC].primitiveCell.column(2) = Vector3(0.5,0.5,0.5);
 
 	// Cubic diamond
 	Vector3 diamondCubicVec[] = {
@@ -219,6 +230,9 @@ void StructureAnalysis::initializeCoordinationStructures()
 	_coordinationStructures[COORD_CUBIC_DIAMOND].latticeVectors.assign(std::begin(diamondCubicVec), std::begin(diamondCubicVec) + 16);
 	_latticeStructures[LATTICE_CUBIC_DIAMOND].latticeVectors.assign(std::begin(diamondCubicVec), std::end(diamondCubicVec));
 	_latticeStructures[LATTICE_CUBIC_DIAMOND].coordStructure = &_coordinationStructures[COORD_CUBIC_DIAMOND];
+	_latticeStructures[LATTICE_CUBIC_DIAMOND].primitiveCell.column(0) = Vector3(0.5,0.5,0.0);
+	_latticeStructures[LATTICE_CUBIC_DIAMOND].primitiveCell.column(1) = Vector3(0.0,0.5,0.5);
+	_latticeStructures[LATTICE_CUBIC_DIAMOND].primitiveCell.column(2) = Vector3(0.5,0.0,0.5);
 
 	// Hexagonal diamond
 	Vector3 diamondHexVec[] = {
@@ -276,6 +290,9 @@ void StructureAnalysis::initializeCoordinationStructures()
 	_coordinationStructures[COORD_HEX_DIAMOND].latticeVectors.assign(std::begin(diamondHexVec), std::begin(diamondHexVec) + 16);
 	_latticeStructures[LATTICE_HEX_DIAMOND].latticeVectors.assign(std::begin(diamondHexVec), std::end(diamondHexVec));
 	_latticeStructures[LATTICE_HEX_DIAMOND].coordStructure = &_coordinationStructures[COORD_HEX_DIAMOND];
+	_latticeStructures[LATTICE_HEX_DIAMOND].primitiveCell.column(0) = Vector3(sqrt(0.5)/2, -sqrt(6.0)/4, 0.0);
+	_latticeStructures[LATTICE_HEX_DIAMOND].primitiveCell.column(1) = Vector3(sqrt(0.5)/2, sqrt(6.0)/4, 0.0);
+	_latticeStructures[LATTICE_HEX_DIAMOND].primitiveCell.column(2) = Vector3(0.0, 0.0, sqrt(8.0/6.0));
 
 	for(auto coordStruct = std::begin(_coordinationStructures); coordStruct != std::end(_coordinationStructures); ++coordStruct) {
 		// Find two non-coplanar common neighbors for every neighbor bond.
@@ -304,6 +321,8 @@ void StructureAnalysis::initializeCoordinationStructures()
 	// Generate symmetry information
 	for(auto latticeStruct = std::begin(_latticeStructures); latticeStruct != std::end(_latticeStructures); ++latticeStruct) {
 		if(latticeStruct->latticeVectors.empty()) continue;
+
+		latticeStruct->primitiveCellInverse = latticeStruct->primitiveCell.inverse();
 
 		const CoordinationStructure& coordStruct = *latticeStruct->coordStructure;
 		OVITO_ASSERT(latticeStruct->latticeVectors.size() >= coordStruct.latticeVectors.size());

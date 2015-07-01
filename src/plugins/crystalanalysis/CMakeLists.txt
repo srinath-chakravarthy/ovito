@@ -37,6 +37,7 @@ SET(SourceFiles
 	objects/dislocations/DislocationDisplay.cpp
 	data/ClusterGraph.cpp
 	data/DislocationNetwork.cpp
+	data/PlanarDefects.cpp
 	modifier/SmoothSurfaceModifier.cpp
 	modifier/SmoothDislocationsModifier.cpp
 	modifier/ConstructSurfaceModifier.cpp
@@ -47,6 +48,7 @@ SET(SourceFiles
 	modifier/dxa/ElasticMapping.cpp
 	modifier/dxa/InterfaceMesh.cpp
 	modifier/dxa/DislocationTracer.cpp
+	modifier/dxa/PlanarDefectIdentification.cpp
 	util/DelaunayTessellation.cpp
 )
 

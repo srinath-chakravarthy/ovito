@@ -78,6 +78,8 @@ public:
 	struct LatticeStructure {
 		const CoordinationStructure* coordStructure;
 		std::vector<Vector3> latticeVectors;
+		Matrix3 primitiveCell;
+		Matrix3 primitiveCellInverse;
 
 		/// List of symmetry permutations of the lattice structure.
 		/// Each entry contains the rotation/reflection matrix and the corresponding permutation of the neighbor bonds.
@@ -157,6 +159,11 @@ public:
 		OVITO_ASSERT(symmetryPermutationIndex >= 0 && symmetryPermutationIndex < latticeStructure.permutations.size());
 		const std::array<int, MAX_NEIGHBORS>& permutation = latticeStructure.permutations[symmetryPermutationIndex].second;
 		return latticeStructure.latticeVectors[permutation[neighborIndex]];
+	}
+
+	/// Returns the given lattice structure.
+	static const LatticeStructure& latticeStructure(int structureIndex) {
+		return _latticeStructures[structureIndex];
 	}
 
 private:

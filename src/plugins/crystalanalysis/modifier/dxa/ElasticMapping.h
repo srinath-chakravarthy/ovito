@@ -135,16 +135,19 @@ public:
 	/// Returns the list of edges, which don't have a lattice vector.
 	BondsStorage* unassignedEdges() const { return _unassignedEdges.data(); }
 
-private:
-
-	/// Returns the number of tessellation edges.
-	int edgeCount() const { return _edgeCount; }
+	/// Returns the first edge incident on the given vertex of the tessellation.
+	TessellationEdge* vertexEdges(size_t atomIndex) const { return _vertexEdges[atomIndex]; }
 
 	/// Returns the cluster to which a vertex of the tessellation has been assigned (may be NULL).
 	Cluster* clusterOfVertex(int vertexIndex) const {
 		OVITO_ASSERT(vertexIndex < (int)_vertexClusters.size());
 		return _vertexClusters[vertexIndex];
 	}
+
+private:
+
+	/// Returns the number of tessellation edges.
+	int edgeCount() const { return _edgeCount; }
 
 private:
 

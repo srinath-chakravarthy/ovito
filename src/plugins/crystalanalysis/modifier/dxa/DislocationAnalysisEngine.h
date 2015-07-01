@@ -29,6 +29,7 @@
 #include "ElasticMapping.h"
 #include "InterfaceMesh.h"
 #include "DislocationTracer.h"
+#include "PlanarDefectIdentification.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -71,6 +72,9 @@ public:
 	/// Returns the extracted dislocation network.
 	DislocationNetwork* dislocationNetwork() { return &_dislocationTracer.network(); }
 
+	/// Returns the planar defect identification engine.
+	PlanarDefectIdentification& planarDefectIdentification() { return _planarDefectIdentification; }
+
 	/// Throws an exception which tells the user that the periodic simulation cell is too small.
 	static void generateCellTooSmallError();
 
@@ -83,6 +87,7 @@ private:
 	ElasticMapping _elasticMapping;
 	InterfaceMesh _interfaceMesh;
 	DislocationTracer _dislocationTracer;
+	PlanarDefectIdentification _planarDefectIdentification;
 };
 
 }	// End of namespace

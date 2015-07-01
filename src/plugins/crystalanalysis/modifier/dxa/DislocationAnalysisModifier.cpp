@@ -25,6 +25,8 @@
 #include <core/gui/properties/IntegerParameterUI.h>
 #include <core/gui/properties/VariantComboBoxParameterUI.h>
 #include <core/gui/properties/SubObjectParameterUI.h>
+#include <core/scene/objects/geometry/TriMeshObject.h>
+#include <core/scene/objects/geometry/TriMeshDisplay.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/particles/objects/BondsObject.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
@@ -190,6 +192,7 @@ void DislocationAnalysisModifier::invalidateCachedResults()
 	_unassignedEdges.reset();
 	_segmentCounts.clear();
 	_dislocationLengths.clear();
+	_planarDefects.reset();
 }
 
 /******************************************************************************
@@ -229,6 +232,7 @@ void DislocationAnalysisModifier::transferComputationResults(ComputeEngine* engi
 	_unassignedEdges = eng->elasticMapping().unassignedEdges();
 	_segmentCounts.clear();
 	_dislocationLengths.clear();
+	_planarDefects = eng->planarDefectIdentification().planarDefects();
 }
 
 /******************************************************************************
@@ -301,6 +305,14 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 	// Output particle properties.
 	if(_atomClusters)
 		outputStandardProperty(_atomClusters.data());
+
+	// Output planar defects.
+	if(_planarDefects) {
+		OORef<TriMeshObject> triMeshObj(new TriMeshObject(dataset()));
+		triMeshObj->mesh() = _planarDefects->mesh();
+		triMeshObj->setDisplayObject(new TriMeshDisplay(dataset()));
+		output().addObject(triMeshObj);
+	}
 
 	if(_unassignedEdges) {
 		OORef<BondsObject> bondsObj(new BondsObject(dataset(), _unassignedEdges.data()));

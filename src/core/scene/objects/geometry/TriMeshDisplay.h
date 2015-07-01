@@ -48,9 +48,6 @@ public:
 	/// \brief Computes the bounding box of the object.
 	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
 
-	/// \brief Returns the title of this object.
-	virtual QString objectTitle() override { return tr("Mesh"); }
-
 	/// Returns the display color of the mesh.
 	const Color& color() const { return _color; }
 
@@ -94,6 +91,8 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
+
+	Q_CLASSINFO("DisplayName", "Triangle mesh");
 
 	DECLARE_PROPERTY_FIELD(_color);
 	DECLARE_REFERENCE_FIELD(_transparency);

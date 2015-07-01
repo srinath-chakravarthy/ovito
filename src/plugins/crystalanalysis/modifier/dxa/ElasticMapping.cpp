@@ -275,7 +275,7 @@ bool ElasticMapping::isElasticMappingCompatible(DelaunayTessellation::CellHandle
 		ClusterTransition* t3 = edges[circuits[face][2]]->clusterTransition;
 		if(!t1->isSelfTransition() || !t2->isSelfTransition() || !t3->isSelfTransition()) {
 			Matrix3 frankRotation = t3->reverse->tm * t2->tm * t1->tm;
-			if(!frankRotation.equals(Matrix3::Identity()))
+			if(!frankRotation.equals(Matrix3::Identity(), CA_TRANSITION_MATRIX_EPSILON))
 				return false;
 		}
 	}

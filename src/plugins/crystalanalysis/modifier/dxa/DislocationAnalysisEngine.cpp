@@ -25,7 +25,7 @@
 #include "DislocationAnalysisEngine.h"
 #include "DislocationAnalysisModifier.h"
 
-#if 0
+#if 1
 #include <fstream>
 #endif
 
@@ -43,7 +43,8 @@ DislocationAnalysisEngine::DislocationAnalysisEngine(const TimeInterval& validit
 	_elasticMapping(_structureAnalysis, _tessellation),
 	_interfaceMesh(_elasticMapping),
 	_dislocationTracer(_interfaceMesh, &_structureAnalysis.clusterGraph(), maxTrialCircuitSize, maxCircuitElongation),
-	_inputCrystalStructure(inputCrystalStructure)
+	_inputCrystalStructure(inputCrystalStructure),
+	_planarDefectIdentification(_elasticMapping)
 {
 }
 
@@ -73,6 +74,33 @@ void DislocationAnalysisEngine::perform()
 	nextProgressSubStep();
 	if(!_structureAnalysis.connectClusters(*this))
 		return;
+
+#if 0
+	Point3 corners[8];
+	corners[0] = _structureAnalysis.cell().reducedToAbsolute(Point3(0,0,0));
+	corners[1] = _structureAnalysis.cell().reducedToAbsolute(Point3(1,0,0));
+	corners[2] = _structureAnalysis.cell().reducedToAbsolute(Point3(1,1,0));
+	corners[3] = _structureAnalysis.cell().reducedToAbsolute(Point3(0,1,0));
+	corners[4] = _structureAnalysis.cell().reducedToAbsolute(Point3(0,0,1));
+	corners[5] = _structureAnalysis.cell().reducedToAbsolute(Point3(1,0,1));
+	corners[6] = _structureAnalysis.cell().reducedToAbsolute(Point3(1,1,1));
+	corners[7] = _structureAnalysis.cell().reducedToAbsolute(Point3(0,1,1));
+
+	std::ofstream stream("cell.vtk");
+	stream << "# vtk DataFile Version 3.0" << std::endl;
+	stream << "# Simulation cell" << std::endl;
+	stream << "ASCII" << std::endl;
+	stream << "DATASET UNSTRUCTURED_GRID" << std::endl;
+	stream << "POINTS 8 double" << std::endl;
+	for(int i = 0; i < 8; i++)
+		stream << corners[i].x() << " " << corners[i].y() << " " << corners[i].z() << std::endl;
+
+	stream << std::endl << "CELLS 1 9" << std::endl;
+	stream << "8 0 1 2 3 4 5 6 7" << std::endl;
+
+	stream << std::endl << "CELL_TYPES 1" << std::endl;
+	stream << "12" << std::endl;  // Hexahedron
+#endif
 
 	nextProgressSubStep();
 	FloatType ghostLayerSize = 3.0f * _structureAnalysis.maximumNeighborDistance();
@@ -111,6 +139,8 @@ void DislocationAnalysisEngine::perform()
 		return;
 	_dislocationTracer.finishDislocationSegments(_inputCrystalStructure);
 
+#if 0
+
 	auto isWrappedFacet = [this](const InterfaceMesh::Face* f) -> bool {
 		InterfaceMesh::Edge* e = f->edges();
 		do {
@@ -130,7 +160,6 @@ void DislocationAnalysisEngine::perform()
 			numFacets++;
 	}
 
-#if 0
 	std::ofstream stream("mesh.vtk");
 	stream << "# vtk DataFile Version 3.0\n";
 	stream << "# Interface mesh\n";
@@ -185,6 +214,10 @@ void DislocationAnalysisEngine::perform()
 	stream.close();
 #endif
 
+	// Extract planar defects.
+	if(!_planarDefectIdentification.extractPlanarDefects(_inputCrystalStructure, *this))
+		return;
+
 	// Generate the defect mesh.
 	nextProgressSubStep();
 	if(!_interfaceMesh.generateDefectMesh(_dislocationTracer, *_defectMesh, *this))
@@ -194,31 +227,6 @@ void DislocationAnalysisEngine::perform()
 
 #if 0
 	_tessellation.dumpToVTKFile("tessellation.vtk");
-
-	Point3 corners[8];
-	corners[0] = _structureAnalysis.cell().reducedToAbsolute(Point3(0,0,0));
-	corners[1] = _structureAnalysis.cell().reducedToAbsolute(Point3(1,0,0));
-	corners[2] = _structureAnalysis.cell().reducedToAbsolute(Point3(1,1,0));
-	corners[3] = _structureAnalysis.cell().reducedToAbsolute(Point3(0,1,0));
-	corners[4] = _structureAnalysis.cell().reducedToAbsolute(Point3(0,0,1));
-	corners[5] = _structureAnalysis.cell().reducedToAbsolute(Point3(1,0,1));
-	corners[6] = _structureAnalysis.cell().reducedToAbsolute(Point3(1,1,1));
-	corners[7] = _structureAnalysis.cell().reducedToAbsolute(Point3(0,1,1));
-
-	std::ofstream stream("cell.vtk");
-	stream << "# vtk DataFile Version 3.0" << std::endl;
-	stream << "# Simulation cell" << std::endl;
-	stream << "ASCII" << std::endl;
-	stream << "DATASET UNSTRUCTURED_GRID" << std::endl;
-	stream << "POINTS 8 double" << std::endl;
-	for(int i = 0; i < 8; i++)
-		stream << corners[i].x() << " " << corners[i].y() << " " << corners[i].z() << std::endl;
-
-	stream << std::endl << "CELLS 1 9" << std::endl;
-	stream << "8 0 1 2 3 4 5 6 7" << std::endl;
-
-	stream << std::endl << "CELL_TYPES 1" << std::endl;
-	stream << "12" << std::endl;  // Hexahedron
 #endif
 }
 

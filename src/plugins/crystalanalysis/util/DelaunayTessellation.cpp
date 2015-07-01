@@ -39,24 +39,22 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 	if(progress) progress->setProgressRange(0);
 	std::vector<DT::Point> cgalPoints;
 
-	const double epsilon = 1e-7;
+	const double epsilon = 1e-5;
 
 	// Set up random number generator to generate random perturbations.
 #if 0
 	std::minstd_rand rng;
-	rng.seed(1);
 	std::uniform_real_distribution<double> displacement(-epsilon, epsilon);
 #else
 	#if BOOST_VERSION > 146000
 		boost::random::mt19937 rng;
-		rng.seed(1);
 		boost::random::uniform_real_distribution displacement(-epsilon, epsilon);
 	#else
 		boost::mt19937 rng;
-		rng.seed(1);
 		boost::uniform_real<> displacement(-epsilon, epsilon);
 	#endif
 #endif
+	rng.seed(4);
 
 	// Insert the original points first.
 	cgalPoints.reserve(numPoints);
@@ -237,6 +235,12 @@ void DelaunayTessellation::dumpToVTKFile(const QString& filename) const
 	stream << "LOOKUP_TABLE default" << "\n";
 	for(auto cell = _dt.finite_cells_begin(); cell != _dt.finite_cells_end(); ++cell) {
 		stream << cell->info().flag << "\n";
+	}
+
+	stream << endl << "SCALARS index int" << "\n";
+	stream << "LOOKUP_TABLE default" << "\n";
+	for(auto cell = _dt.finite_cells_begin(); cell != _dt.finite_cells_end(); ++cell) {
+		stream << cell->info().index << "\n";
 	}
 }
 

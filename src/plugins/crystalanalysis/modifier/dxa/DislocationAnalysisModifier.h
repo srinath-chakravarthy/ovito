@@ -29,6 +29,7 @@
 #include <plugins/crystalanalysis/objects/patterns/PatternCatalog.h>
 #include <plugins/crystalanalysis/data/DislocationNetwork.h>
 #include <plugins/crystalanalysis/data/ClusterGraph.h>
+#include <plugins/crystalanalysis/data/PlanarDefects.h>
 #include <plugins/crystalanalysis/modifier/SmoothDislocationsModifier.h>
 #include <plugins/crystalanalysis/modifier/SmoothSurfaceModifier.h>
 
@@ -158,6 +159,9 @@ private:
 
 	/// This stores the cached dislocations computed by the modifier.
 	QExplicitlySharedDataPointer<DislocationNetwork> _dislocationNetwork;
+
+	/// This stores the cached planar defects extracted by the modifier.
+	QExplicitlySharedDataPointer<PlanarDefects> _planarDefects;
 
 	/// The cached simulation cell from the last analysis run.
 	SimulationCell _simCell;

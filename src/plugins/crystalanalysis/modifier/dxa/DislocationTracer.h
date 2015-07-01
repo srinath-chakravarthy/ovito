@@ -111,6 +111,7 @@ private:
 		d.z() = cell().pbcFlags()[2] ? floor(d.z() + FloatType(0.5)) : FloatType(0);
 		return cell().reducedToAbsolute(d);
 	}
+
 private:
 
 	/// The interface mesh that separates the crystal defects from the perfect regions.

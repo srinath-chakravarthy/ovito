@@ -262,7 +262,7 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 					oppositeFace = mirrorTet.meshFacets[mirrorFacet.second];
 				}
 				if(oppositeFace == nullptr) {
-					throw Exception(DislocationAnalysisModifier::tr("DXA failed: Cannot construct interface mesh for this input dataset; opposite cell face not found. This should not happen. Please report this issue to the developer."));
+					throw Exception(DislocationAnalysisModifier::tr("DXA failed: Cannot construct interface mesh for this input dataset; adjacent cell face not found. This should not happen. Please report this issue to the developer."));
 				}
 				OVITO_ASSERT(oppositeFace != facet);
 				Edge* oppositeEdge = oppositeFace->edges();

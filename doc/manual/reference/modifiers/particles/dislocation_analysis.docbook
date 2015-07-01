@@ -76,7 +76,7 @@ Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
     Please contact the author for more information on this standalone anlysis code.
   </para>
   </note>
-  
+
    <simplesect>
     <title>Parameters</title>
 
@@ -134,5 +134,110 @@ Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
       </varlistentry>
 	</variablelist>
     </simplesect>
-     
+
+    <simplesect>
+    <title>Outputs</title>
+    <para>
+       After analyzing the atomistic input crystal, the modifier produces serveral pieces of output: 
+       <variablelist>
+          <varlistentry>
+          <term>Dislocation lines</term>
+          <listitem>
+          <para>The dislocation segments identified by the DXA are output as continuous lines. Each dislocation segment 
+                has a starting point and an endpoint. The two define the orientation of the dislocation line (the <emphasis>line sense</emphasis>).
+                Each end may be part of a <emphasis>junction</emphasis>, where it is connected to 
+                other dislocation segments, or it may be a <emphasis>dangling</emphasis> end. Dislocations that merge into a crystal's surface
+                or into other extended defects have dangling ends. If a dislocation is a loop, its starting point forms a 2-junction with its endpoint. 
+                Dislocation loops need not be loop-shaped; they can also be infinite lines, going through a periodic boundary of the simulation cell.
+          </para>
+          <para>
+                In addition to this geometric information, each dislocation segment has two additional properties: The ID of the crystallite cluster
+                it is embedded in (see below) and its Burgers vector. The Burgers vector computed for a segment is its <emphasis>true</emphasis> Burgers vector, i.e.
+                a vector in the ideal reference crystal frame.
+          </para>
+          </listitem>
+          </varlistentry>
+          
+          <varlistentry>
+          <term>Defect mesh</term>
+          <listitem>
+          <para>As part of the dislocation identification process, the DXA divides the input crystal into 
+                a so-called <emphasis>good</emphasis> and a <emphasis>bad</emphasis> region. Within the good crystal region the algorithm was able to 
+                map atoms to a perfect reference state. This part of space includes atoms that are in a perfect crystalline
+                environment (which may be subject to slight elastic distortions), stacking faults, and coherent grain boundaries. The bad crystal region,
+                in contrast, comprises those parts where the atomic arrangement does not resemble a perfect crystal (or any of the planar defects mentioned above).
+                The cores of dislocations belong to the bad crystal region as well as other, unidentified defects, the outer surfaces, and 
+                voids within the crystal.
+          </para>
+          <para>
+                The DXA constructs the dividing surface which separates the good from the bad crystal region. This <emphasis>interface mesh</emphasis> is a two-dimensional manifold 
+                that encloses the dislocation cores and all other defects in the crystal (except stacking faults and certain grain boundaries, which have been classified as 
+                being part of the good region). This intermediate geometric data structure allows the DXA to effectively find dislocation lines by applying the Burgers circuit
+                construction. Those parts of the interface mesh which are associated with dislocations will subsequently be removed. The remaining parts, which enclose non-dislocation
+                defects, form the so-called <emphasis>defect mesh</emphasis>. It is a triangulated mesh, which is output by the DXA analysis modifier, and which represents 
+                the bad crystal regions that have not been classified as dislocations.
+          </para>
+          </listitem>
+          </varlistentry>
+
+          <varlistentry>
+          <term>Atomic structure types</term>
+          <listitem>
+          <para>As part of the DXA a structure identification is performed, in which the local environment of each atom is analyzed to identify
+                atoms that form a perfect crystal lattice. This information is output by the modifier as a new particle property
+                named <literal>Structure type</literal>. The atomic structure identification is based on the common neighbor analysis method,
+                and the results are very similar to what you would get by applying the <link linkend="particles.modifiers.common_neighbor_analysis">Common Neighbor Analysis</link> 
+                or the <link linkend="particles.modifiers.identify_diamond_structure">Identify Diamond Structure</link> modifier.
+          </para>
+          <para>
+                Note that the list of structure types the algorithm looks for depends on the selected input crystal type. For example, if the selected input crystal type
+                is "FCC", then the DXA will only look for atoms in FCC and HCP arrangements. The latter form stacking faults and coherent twin boundaries and
+                are therefore important for the identification of partial dislocations in the FCC lattice.                
+          </para>
+          </listitem>
+          </varlistentry>
+
+          <varlistentry>
+          <term>Atomic clusters</term>
+          <listitem>
+          <para>After the atomic structure identification step is completed, the DXA combines atoms into clusters. A cluster is a contiguous crystallite consisting of atoms 
+                of the same structural type (e.g. "FCC"). Atoms that are part of an FCC stacking fault, for instance, are grouped into an HCP cluster. 
+                Another example: An FCC bicrystal with a coherent twin boundary gets divided into three clusters: Two FCC clusters for the grains and one HCP cluster that comprises the 
+                atoms of the boundary core. 
+          </para>
+          <para>
+                Each cluster created by the algorithm has a unique ID (a positive integer), and the modifier outputs the assignments of atoms to clusters as 
+                a new particle property named <literal>Cluster</literal>, containing the ID of the cluster the atom belongs to.
+                Atoms with an undentified coordination structure are not part of any cluster, which is indicated by the special value 0.
+          </para>
+          </listitem>
+          </varlistentry>
+
+          <varlistentry>
+          <term>Cluster graph</term>
+          <listitem>
+          <para>The atomic clusters form an abstract adjacency graph, which is built up by the algorithm. 
+                For example, a bicrystal with two grains separated by a grain boundary can be described 
+                in terms of a graph with three nodes (the three atomic clusters) and two edges connecting both grains with the grain boundary cluster.
+                Each cluster establishes a local lattice coordinate system, and the true Burgers vector computed by the DXA for a dislocation
+                embedded in a crystal cluster is expressed in this coordinate frame.
+                A graph edge connecting two adjacent cluster carries information about their crystallographic orientation relationship. 
+                This orientation relationship, which is described in terms of a transformation matrix, can be used to rotate 
+                vectors from the lattice coordinate frame of one grain to other grain. Ultimately, this abstract description of a polycrystalline
+                microstructure enables the identification of dislocations (which can involve Burgers circuits that cross grain boundaries and stacking faults).
+          </para>
+          <para>
+                Even though the cluster graph is generated by the DXA modifier as an intermediate data structure, OVITO currently provides no means for the user to work
+                with or visualize this output data. Future versions of the program may come with a user interface that allows to inspect the generated cluster graph.
+          </para>
+          </listitem>
+          </varlistentry>
+          
+       </variablelist>
+    </para>
+    <para>
+        You can place the mouse cursor over a dislocation segment to let OVITO display its properties in the status bar at the bottom of the main window.
+    </para>
+  </simplesect> 
+       
 </section>
