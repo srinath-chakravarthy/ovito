@@ -39,7 +39,7 @@ bool PlanarDefectIdentification::extractPlanarDefects(int crystalStructure, Futu
 			Cluster* cluster = elasticMapping().clusterOfVertex(atomIndex);
 			OVITO_ASSERT(cluster != nullptr);
 
-			if(cluster->structure == crystalStructure)
+			if(cluster->structure == crystalStructure || cluster->id == 0)
 				continue;
 
 			ElasticMapping::TessellationEdge* bestEdge = _incidentEdges[atomIndex];
@@ -76,21 +76,29 @@ bool PlanarDefectIdentification::extractPlanarDefects(int crystalStructure, Futu
 					continue;
 				}
 				if(bestSourceCluster != nullptr) {
-					if(sourceCluster->id > bestSourceCluster->id) {
+					if(depth > bestDepth)
 						continue;
-					}
-					else if(sourceCluster == bestSourceCluster) {
-						/*
-						if(bestVector.z() > vector.z() + CA_LATTICE_VECTOR_EPSILON) continue;
-						else if(bestVector.z() > vector.z() - CA_LATTICE_VECTOR_EPSILON) {
-							if(bestVector.x() > vector.x() + CA_LATTICE_VECTOR_EPSILON) continue;
-							else if(bestVector.x() > vector.x() - CA_LATTICE_VECTOR_EPSILON) {
-								if(bestVector.y() > vector.y()) continue;
-							}
-						}
-						*/
-						if(depth >= bestDepth)
+					else if(depth == bestDepth) {
+						if(structureAnalysis().atomCluster(edge->vertex2)->structure != crystalStructure)
 							continue;
+						else {
+
+							// Check if it is a complete lattice vector.
+							Cluster* cluster = edge->clusterTransition->cluster2;
+							Vector3 d = edge->clusterTransition->transform(edge->clusterVector);
+							Vector3 rd = StructureAnalysis::latticeStructure(cluster->structure).primitiveCellInverse * d;
+							bool isStackingFault = false;
+							for(int dim = 0; dim < 3; dim++) {
+								if(std::abs(rd[dim] - floor(rd[dim]+0.5f)) > CA_LATTICE_VECTOR_EPSILON) {
+									isStackingFault = true;
+									break;
+								}
+							}
+							if(isStackingFault)
+								continue;
+							if(edge->vertex2 > bestEdge->vertex1)
+								continue;
+						}
 					}
 				}
 				bestSourceCluster = sourceCluster;
@@ -101,7 +109,7 @@ bool PlanarDefectIdentification::extractPlanarDefects(int crystalStructure, Futu
 				_incidentEdges[atomIndex] = bestEdge;
 				OVITO_ASSERT(bestEdge->vertex2 == atomIndex);
 
-#if 1
+#if 0
 				Vector3 bestVector2 = Vector3::Zero();
 				t = clusterGraph().createSelfTransition(cluster);
 				for(ElasticMapping::TessellationEdge* edge = bestEdge; edge != nullptr; edge = _incidentEdges[edge->vertex1]) {
@@ -117,7 +125,7 @@ bool PlanarDefectIdentification::extractPlanarDefects(int crystalStructure, Futu
 	while(!done);
 
 
-#if 0
+#if 1
 	QFile file("mapping.dump");
 	file.open(QIODevice::WriteOnly);
 	QTextStream stream(&file);
@@ -163,6 +171,45 @@ bool PlanarDefectIdentification::extractPlanarDefects(int crystalStructure, Futu
 
 	std::map<DelaunayTessellation::VertexHandle,int> meshVertexMap;
 
+	auto determineAnchorVertex = [this, crystalStructure](DelaunayTessellation::CellHandle cell) {
+		int indices[4];
+		for(int v = 0; v < 4; v++) {
+			indices[v] = cell->vertex(v)->point().index();
+		}
+
+		int faultAnchor = -1;
+		for(int v = 0; v < 4; v++) {
+			if(elasticMapping().clusterOfVertex(indices[v])->structure != crystalStructure && indices[v] > faultAnchor) faultAnchor = indices[v];
+		}
+
+		if(faultAnchor != -1) {
+			FloatType largestZ = 0;
+			int anchor = faultAnchor;
+			for(int v = 0; v < 4; v++) {
+				if(indices[v] == faultAnchor) continue;
+				ElasticMapping::TessellationEdge* edge = elasticMapping().findEdge(faultAnchor, indices[v]);
+				OVITO_ASSERT(edge != nullptr && edge->hasClusterVector());
+				if(edge->clusterVector.z() > largestZ + CA_LATTICE_VECTOR_EPSILON) {
+					anchor = indices[v];
+					largestZ = edge->clusterVector.z();
+				}
+				else if(edge->clusterVector.z() > largestZ - CA_LATTICE_VECTOR_EPSILON && indices[v] > faultAnchor) {
+					anchor = indices[v];
+					largestZ = edge->clusterVector.z();
+				}
+			}
+			return anchor;
+		}
+		else {
+			int anchor = -1;
+			for(int v = 0; v < 4; v++) {
+				int idx = cell->vertex(v)->point().index();
+				if(idx > anchor) anchor = idx;
+			}
+			return anchor;
+		}
+	};
+
 	// Iterate over the good tetrahedra of the tessellation.
 	for(DelaunayTessellation::CellIterator cell1 = tessellation().begin_cells(); cell1 != tessellation().end_cells(); ++cell1) {
 
@@ -197,26 +244,8 @@ bool PlanarDefectIdentification::extractPlanarDefects(int crystalStructure, Futu
 #endif
 
 			// Determine the anchor vertex for each of the two cells.
-			int anchor1 = -1;
-			int anchor2 = -1;
-			for(int v = 0; v < 4; v++) {
-				int idx1 = cell1->vertex(v)->point().index();
-				if(elasticMapping().clusterOfVertex(idx1)->structure == crystalStructure && idx1 > anchor1) anchor1 = idx1;
-				int idx2 = cell2->vertex(v)->point().index();
-				if(elasticMapping().clusterOfVertex(idx2)->structure == crystalStructure && idx2 > anchor2) anchor2 = idx2;
-			}
-			if(anchor1 == -1) {
-				for(int v = 0; v < 4; v++) {
-					int idx1 = cell1->vertex(v)->point().index();
-					if(elasticMapping().clusterOfVertex(idx1)->structure != crystalStructure && idx1 > anchor1) anchor1 = idx1;
-				}
-			}
-			if(anchor2 == -1) {
-				for(int v = 0; v < 4; v++) {
-					int idx2 = cell2->vertex(v)->point().index();
-					if(elasticMapping().clusterOfVertex(idx2)->structure != crystalStructure && idx2 > anchor2) anchor2 = idx2;
-				}
-			}
+			int anchor1 = determineAnchorVertex(cell1);
+			int anchor2 = determineAnchorVertex(cell2);
 
 			// Determine the lattice coordinates of the first cell's anchor vertex.
 			Vector3 coord1 = Vector3::Zero();

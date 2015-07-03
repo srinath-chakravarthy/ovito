@@ -214,9 +214,11 @@ void DislocationAnalysisEngine::perform()
 	stream.close();
 #endif
 
+#if 0
 	// Extract planar defects.
 	if(!_planarDefectIdentification.extractPlanarDefects(_inputCrystalStructure, *this))
 		return;
+#endif
 
 	// Generate the defect mesh.
 	nextProgressSubStep();

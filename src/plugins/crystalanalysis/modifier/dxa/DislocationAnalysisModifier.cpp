@@ -232,7 +232,10 @@ void DislocationAnalysisModifier::transferComputationResults(ComputeEngine* engi
 	_unassignedEdges = eng->elasticMapping().unassignedEdges();
 	_segmentCounts.clear();
 	_dislocationLengths.clear();
+
+#if 0
 	_planarDefects = eng->planarDefectIdentification().planarDefects();
+#endif
 }
 
 /******************************************************************************
