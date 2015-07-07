@@ -26,7 +26,6 @@ uniform float modelview_uniform_scale;
 #if __VERSION__ >= 130
 
 	in vec3 position;
-	in vec3 normal;
 	in vec4 color;
 
 #else
@@ -59,7 +58,7 @@ void main()
 	cylinder_radius_gs = cylinder_radius * modelview_uniform_scale;
 
 	// Transform cylinder to eye coordinates.
-	gl_Position = modelview_matrix * vec4(position, 1);
+	gl_Position = modelview_matrix * vec4(position, 1.0);
 	cylinder_view_base_gs = gl_Position.xyz;
-	cylinder_view_axis_gs = modelview_matrix * vec4(cylinder_axis, 0);
+	cylinder_view_axis_gs = modelview_matrix * vec4(cylinder_axis, 0.0);
 }

@@ -125,7 +125,7 @@ bool ElasticMapping::assignVerticesToClusters(FutureInterfaceBase& progress)
 /******************************************************************************
 * Determines the ideal vector corresponding to each edge of the tessellation.
 ******************************************************************************/
-bool ElasticMapping::assignIdealVectorsToEdges(int crystalPathSteps, FutureInterfaceBase& progress)
+bool ElasticMapping::assignIdealVectorsToEdges(bool reconstructEdgeVectors, int crystalPathSteps, FutureInterfaceBase& progress)
 {
 	CrystalPathFinder pathFinder(_structureAnalysis, crystalPathSteps);
 
@@ -173,8 +173,10 @@ bool ElasticMapping::assignIdealVectorsToEdges(int crystalPathSteps, FutureInter
 		}
 	}
 
-	if(!reconstructIdealEdgeVectors(progress))
-		return false;
+	if(reconstructEdgeVectors) {
+		if(!reconstructIdealEdgeVectors(progress))
+			return false;
+	}
 
 #if 0
 	_unassignedEdges = new BondsStorage();
@@ -195,19 +197,38 @@ bool ElasticMapping::assignIdealVectorsToEdges(int crystalPathSteps, FutureInter
 ******************************************************************************/
 bool ElasticMapping::reconstructIdealEdgeVectors(FutureInterfaceBase& progress)
 {
-	auto vertexEdgeList = _vertexEdges.cbegin();
-	for(size_t vertexIndex = 0; vertexIndex < _vertexEdges.size(); vertexIndex++, ++vertexEdgeList) {
-		if(progress.isCanceled())
-			return false;
-		Cluster* cluster1 = clusterOfVertex(vertexIndex);
-		if(cluster1->id == 0) continue;
-		for(TessellationEdge* edge = *vertexEdgeList; edge != nullptr; edge = edge->next) {
+	auto reconstructRecursive = [this](std::deque<TessellationEdge*>& toBeVisited) {
+		while(!toBeVisited.empty()) {
+			TessellationEdge* currentEdge = toBeVisited.front();
+			toBeVisited.pop_front();
+			for(TessellationEdge* e1 = _vertexEdges[currentEdge->vertex1]; e1 != nullptr; e1 = e1->next) {
+				if(e1->hasClusterVector()) continue;
+				for(TessellationEdge* e2 = _vertexEdges[currentEdge->vertex2]; e2 != nullptr; e2 = e2->next) {
+					if(e2->hasClusterVector() == false) continue;
+					if(e2->vertex2 == e1->vertex2) {
+						ClusterTransition* transition = clusterGraph().concatenateClusterTransitions(currentEdge->clusterTransition, e2->clusterTransition);
+						OVITO_ASSERT(transition != nullptr);
+						Vector3 clusterVector = currentEdge->clusterVector + currentEdge->clusterTransition->reverseTransform(e2->clusterVector);
+						e1->assignClusterVector(clusterVector, transition);
+						OVITO_ASSERT(e1->clusterTransition->cluster1 == clusterOfVertex(e1->vertex1));
+						OVITO_ASSERT(e1->clusterTransition->cluster2 == clusterOfVertex(e2->vertex2));
+						toBeVisited.push_back(e1);
+						toBeVisited.push_back(e1->reverse);
+						break;
+					}
+				}
+			}
+		}
+	};
+
+	std::deque<TessellationEdge*> toBeVisited;
+	for(size_t vertexIndex = 0; vertexIndex < _vertexEdges.size(); vertexIndex++) {
+		if(progress.isCanceled()) return false;
+		if(clusterOfVertex(vertexIndex)->id == 0) continue;
+		for(TessellationEdge* edge = _vertexEdges[vertexIndex]; edge != nullptr; edge = edge->next) {
 			if(edge->hasClusterVector()) continue;
-
-			Cluster* cluster2 = clusterOfVertex(edge->vertex2);
-			if(cluster2->id == 0) continue;
-
-			for(TessellationEdge* e1 = *vertexEdgeList; e1 != nullptr && !edge->hasClusterVector(); e1 = e1->next) {
+			if(clusterOfVertex(edge->vertex2)->id == 0) continue;
+			for(TessellationEdge* e1 = _vertexEdges[vertexIndex]; e1 != nullptr && !edge->hasClusterVector(); e1 = e1->next) {
 				if(e1->hasClusterVector() == false) continue;
 				OVITO_ASSERT(e1 != edge);
 				for(TessellationEdge* e2 = _vertexEdges[e1->vertex2]; e2 != nullptr; e2 = e2->next) {
@@ -220,10 +241,46 @@ bool ElasticMapping::reconstructIdealEdgeVectors(FutureInterfaceBase& progress)
 						edge->assignClusterVector(clusterVector, transition);
 						OVITO_ASSERT(edge->clusterTransition->cluster1 == clusterOfVertex(e1->vertex1));
 						OVITO_ASSERT(edge->clusterTransition->cluster2 == clusterOfVertex(e2->vertex2));
+						toBeVisited.push_back(edge);
+						toBeVisited.push_back(edge->reverse);
 						break;
 					}
 				}
 			}
+		}
+	}
+	reconstructRecursive(toBeVisited);
+
+	for(DelaunayTessellation::CellIterator cell = tessellation().begin_cells(); cell != tessellation().end_cells(); ++cell) {
+		// Skip invalid cells (those not connecting four physical atoms) and ghost cells.
+		if(cell->info().isGhost) continue;
+		if(progress.isCanceled()) return false;
+
+		int nWithVector = 0;
+		int nWithoutVector = 0;
+		TessellationEdge* unassignedEdge = nullptr;
+		for(int edgeIndex = 0; edgeIndex < 6; edgeIndex++) {
+			int vertex1 = cell->vertex(edgeVertices[edgeIndex][0])->point().index();
+			int vertex2 = cell->vertex(edgeVertices[edgeIndex][1])->point().index();
+			TessellationEdge* edge = findEdge(vertex1, vertex2);
+			if(!edge) break;
+			if(edge->hasClusterVector()) nWithVector++;
+			else {
+				nWithoutVector++;
+				unassignedEdge = edge;
+			}
+		}
+
+		if(nWithVector == 3 && nWithoutVector == 3) {
+			Cluster* cluster1 = clusterOfVertex(unassignedEdge->vertex1);
+			Cluster* cluster2 = clusterOfVertex(unassignedEdge->vertex2);
+			if(cluster1->id == 0 || cluster2->id == 0) continue;
+			ClusterTransition* transition = clusterGraph().determineClusterTransition(cluster1, cluster2);
+			if(!transition) continue;
+			unassignedEdge->assignClusterVector(Vector3::Zero(), transition);
+			toBeVisited.push_back(unassignedEdge);
+			toBeVisited.push_back(unassignedEdge->reverse);
+			reconstructRecursive(toBeVisited);
 		}
 	}
 

@@ -87,6 +87,12 @@ public:
 	/// Controls whether the interface mesh is output.
 	void setOutputInterfaceMesh(bool enable) { _outputInterfaceMesh = enable; }
 
+	/// Returns whether the reconstruction of missing tessellation edge lattice vectors is enabled.
+	bool reconstructEdgeVectors() const { return _reconstructEdgeVectors; }
+
+	/// Sets whether the reconstruction of missing tessellation edge lattice vectors is enabled.
+	void setReconstructEdgeVectors(bool enable) { _reconstructEdgeVectors = enable; }
+
 	/// Returns the number of segments found per dislocation type.
 	const std::map<BurgersVectorFamily*,int>& segmentCounts() const { return _segmentCounts; }
 
@@ -124,8 +130,11 @@ private:
 	/// The maximum elongation of Burgers circuits while they are being advanced.
 	PropertyField<int> _circuitStretchability;
 
-	/// Controls the output of the interface mesh
+	/// Controls the output of the interface mesh.
 	PropertyField<bool> _outputInterfaceMesh;
+
+	/// Enables the reconstruction of missing tessellation edge lattice vectors.
+	PropertyField<bool> _reconstructEdgeVectors;
 
 	/// The catalog of structure patterns.
 	ReferenceField<PatternCatalog> _patternCatalog;
@@ -191,6 +200,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_maxTrialCircuitSize);
 	DECLARE_PROPERTY_FIELD(_circuitStretchability);
 	DECLARE_PROPERTY_FIELD(_outputInterfaceMesh);
+	DECLARE_PROPERTY_FIELD(_reconstructEdgeVectors);
 	DECLARE_REFERENCE_FIELD(_patternCatalog);
 	DECLARE_REFERENCE_FIELD(_dislocationDisplay);
 	DECLARE_REFERENCE_FIELD(_defectMeshDisplay);

@@ -36,7 +36,8 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 ******************************************************************************/
 DislocationAnalysisEngine::DislocationAnalysisEngine(const TimeInterval& validityInterval,
 		ParticleProperty* positions, const SimulationCell& simCell,
-		int inputCrystalStructure, int maxTrialCircuitSize, int maxCircuitElongation) :
+		int inputCrystalStructure, int maxTrialCircuitSize, int maxCircuitElongation,
+		bool reconstructEdgeVectors) :
 	StructureIdentificationModifier::StructureIdentificationEngine(validityInterval, positions, simCell),
 	_structureAnalysis(positions, simCell, (StructureAnalysis::LatticeStructureType)inputCrystalStructure, structures()),
 	_defectMesh(new HalfEdgeMesh<>()),
@@ -44,7 +45,8 @@ DislocationAnalysisEngine::DislocationAnalysisEngine(const TimeInterval& validit
 	_interfaceMesh(_elasticMapping),
 	_dislocationTracer(_interfaceMesh, &_structureAnalysis.clusterGraph(), maxTrialCircuitSize, maxCircuitElongation),
 	_inputCrystalStructure(inputCrystalStructure),
-	_planarDefectIdentification(_elasticMapping)
+	_planarDefectIdentification(_elasticMapping),
+	_reconstructEdgeVectors(reconstructEdgeVectors)
 {
 }
 
@@ -120,7 +122,7 @@ void DislocationAnalysisEngine::perform()
 
 	// Determine the ideal vector corresponding to each edge of the tessellation.
 	nextProgressSubStep();
-	if(!_elasticMapping.assignIdealVectorsToEdges(3, *this))
+	if(!_elasticMapping.assignIdealVectorsToEdges(_reconstructEdgeVectors, 4, *this))
 		return;
 
 	// Assign tetrahedra to good or bad crystal region.

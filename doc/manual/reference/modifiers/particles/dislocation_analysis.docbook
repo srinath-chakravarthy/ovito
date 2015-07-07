@@ -59,21 +59,21 @@ Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
   </para>
 
   <para>
-    The DXA transforms the original atomistic representation of a dislocated crystal into a line representation 
+    The DXA transforms the original atomistic representation of a dislocated crystal into a line-based representation 
     of the dislocation network. It is able to compute the true Burgers vector of dislocation segments 
-    and identify dislocation junctions. The algorithm can deal with partial dislocations and to some extent also
-    with secondary grain boundary dislocations (e.g. twinning dislocations).
+    and identify dislocation junctions. The algorithm can find partial dislocations and also
+    certain secondary grain boundary dislocations (e.g. twinning dislocations).
   </para>
   
   <note><title>Important notice</title>
   <para>
     Even though the implementation of the DXA in OVITO is highly optimized, the algorithm is computationally
-    expensive and requires considerable amounts of working memory. The minimum requirement is 1 kilobyte per input atom!
+    expensive and requires considerable working memory. The minimum requirement is 1 kilobyte per input atom!
     Thus, to analyze a dataset containing 1 million atoms, at least 1 GB of free memory must be available. 
-    Otherwise your operating system will start swapping data to disk and your computer may become unresponsive.
-    Depending on the number of crystal defects even more memory may be needed. For the analysis of very large MD datasets that would exceed the available 
+    Otherwise your operating system may start swapping data to disk and your computer becomes unresponsive.
+    Depending on the number of crystal defects, even more memory may be needed. For analyzing very large MD datasets that would exceed the available 
     memory an MPI-based parallel implementation of the DXA is available which runs on distributed computing clusters. 
-    Please contact the author for more information on this standalone anlysis code.
+    Please contact the author for more information on this standalone analysis code.
   </para>
   </note>
 
@@ -84,15 +84,22 @@ Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
       <varlistentry>
         <term>Input crystal type</term>
         <listitem>
-          <para>Selects the lattice type of the input crystal. Currently, simple crystal stuctures such as
-          FCC, HCP, BCC, and diamond are supported. The DXA ignores the chemical type of atoms. Thus,
-          zinc blende and wurtzite structures can simply be treated as cubic and hexagonal diamond, respectively.
-          The same applies to other compound structures such as B2, which is equivalent to BCC.
+          <para>This parameter specifies the lattice type of the input crystal. Currently, simple crystal stuctures such as
+          FCC, HCP, BCC, and diamond are supported. The DXA ignores the chemical atom types. Thus,
+          a zinc blende structure can simply be treated as cubic diamond and wurtzite as hexagonal diamond.
           </para>
           <para>
-          The selected input crystal type determines how OVITO identifies the local coordination structure around
-          each atom and how it computes the local crystal orientation. The selected crystal type also determines 
-          how the computed Burgers vectors are represented and how dislocations are grouped into Burgers vector families.
+          The selected input crystal type tells OVITO how to identify the local coordination structure of
+          each atom and how to compute the local crystal orientation. The selected crystal type also determines 
+          how the computed Burgers vectors are represented (three-component notation for crystals with cubic symmetry,
+          four-component notation for hexagonal symmetry).
+          </para>
+          <para>
+          Furthermore, for each available crystal type, OVITO defines a set of dislocation classes into which the
+          extracted dislocation lines are grouped. Dislocations with a Burgers vector that does not belong to any of the 
+          predefined families are assigned to the category "Other". Currently, the list of dislocation classes is hardcoded
+          and cannot be changed by the user. Please contact the developer if you think that a new dislocation class should be 
+          added to a crystal type.
           </para>
         </listitem>
       </varlistentry>
@@ -129,6 +136,34 @@ Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
           the good crystal region from the bad crystal region. This is a geometric structure
           computed internally by the algorithm, which is normally not of interest. In other words this option is only for debugging purposes
           and allows to follow the intermediate stages of the algorithm.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Line smoothing level</term>
+        <listitem>
+          <para>The raw dislocation lines generated by the DXA are typically noisy (due to the atomistic nature of the dislocation cores)
+          and need to be post-processed to produce smooth dislocation curves. This parameter controls the number of
+          iterations of the smoothing algorithm to perform.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Line point separation</term>
+        <listitem>
+          <para>The raw dislocation lines generated by the DXA consist of a very dense sequence of points.
+          To produce smooth lines, the number of points is reduced in a post-processing step. This parameter controls
+          the desired distance between successive points along a dislocation line. The distance is only an approximate number
+          and is measured in multiples of the interatomic spacing in the underlying crystal.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Surface smoothing level</term>
+        <listitem>
+          <para>The raw defect mesh generated by the DXA contains atomically sharp steps and needs to be 
+          post-processed to produce a smooth surface. This parameter controls the number of
+          iterations of the smoothing algorithm to perform.
           </para>
         </listitem>
       </varlistentry>

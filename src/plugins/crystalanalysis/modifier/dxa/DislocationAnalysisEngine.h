@@ -43,7 +43,8 @@ public:
 	/// Constructor.
 	DislocationAnalysisEngine(const TimeInterval& validityInterval,
 			ParticleProperty* positions, const SimulationCell& simCell,
-			int inputCrystalStructure, int maxTrialCircuitSize, int maxCircuitElongation);
+			int inputCrystalStructure, int maxTrialCircuitSize, int maxCircuitElongation,
+			bool reconstructEdgeVectors);
 
 	/// Computes the modifier's results and stores them in this object for later retrieval.
 	virtual void perform() override;
@@ -81,6 +82,7 @@ public:
 private:
 
 	int _inputCrystalStructure;
+	bool _reconstructEdgeVectors;
 	QExplicitlySharedDataPointer<HalfEdgeMesh<>> _defectMesh;
 	StructureAnalysis _structureAnalysis;
 	DelaunayTessellation _tessellation;

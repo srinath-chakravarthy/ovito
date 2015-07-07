@@ -110,7 +110,7 @@ public:
 	bool assignVerticesToClusters(FutureInterfaceBase& progress);
 
 	/// Determines the ideal vector corresponding to each edge of the tessellation.
-	bool assignIdealVectorsToEdges(int crystalPathSteps, FutureInterfaceBase& progress);
+	bool assignIdealVectorsToEdges(bool reconstructEdgeVectors, int crystalPathSteps, FutureInterfaceBase& progress);
 
 	/// Tries to determine the ideal vectors of tessellation edges, which haven't
 	// been assigned one during the first phase.

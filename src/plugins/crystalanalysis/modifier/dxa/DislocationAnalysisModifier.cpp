@@ -44,6 +44,7 @@ DEFINE_FLAGS_PROPERTY_FIELD(DislocationAnalysisModifier, _inputCrystalStructure,
 DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _maxTrialCircuitSize, "MaxTrialCircuitSize");
 DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _circuitStretchability, "CircuitStretchability");
 DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _outputInterfaceMesh, "OutputInterfaceMesh");
+DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _reconstructEdgeVectors, "ReconstructEdgeVectors");
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _patternCatalog, "PatternCatalog", PatternCatalog, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _dislocationDisplay, "DislocationDisplay", DislocationDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _defectMeshDisplay, "DefectMeshDisplay", SurfaceMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
@@ -54,17 +55,20 @@ SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _inputCrystalStructure, "I
 SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _maxTrialCircuitSize, "Trial circuit length");
 SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _circuitStretchability, "Circuit stretchability");
 SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _outputInterfaceMesh, "Output interface mesh");
+SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _reconstructEdgeVectors, "Reconstruct edge vectors");
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
 DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : StructureIdentificationModifier(dataset),
-		_inputCrystalStructure(StructureAnalysis::LATTICE_FCC), _maxTrialCircuitSize(9), _circuitStretchability(6), _outputInterfaceMesh(false)
+		_inputCrystalStructure(StructureAnalysis::LATTICE_FCC), _maxTrialCircuitSize(14), _circuitStretchability(9), _outputInterfaceMesh(false),
+		_reconstructEdgeVectors(false)
 {
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_inputCrystalStructure);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_maxTrialCircuitSize);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_circuitStretchability);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_outputInterfaceMesh);
+	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_reconstructEdgeVectors);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_patternCatalog);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_dislocationDisplay);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_defectMeshDisplay);
@@ -162,7 +166,8 @@ void DislocationAnalysisModifier::propertyChanged(const PropertyFieldDescriptor&
 	if(field == PROPERTY_FIELD(DislocationAnalysisModifier::_inputCrystalStructure)
 			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_maxTrialCircuitSize)
 			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_circuitStretchability)
-			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_outputInterfaceMesh))
+			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_outputInterfaceMesh)
+			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_reconstructEdgeVectors))
 		invalidateCachedResults();
 }
 
@@ -206,7 +211,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> DislocationAnalysis
 
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<DislocationAnalysisEngine>(validityInterval, posProperty->storage(),
-			simCell->data(), inputCrystalStructure(), maxTrialCircuitSize(), circuitStretchability());
+			simCell->data(), inputCrystalStructure(), maxTrialCircuitSize(), circuitStretchability(), reconstructEdgeVectors());
 }
 
 /******************************************************************************
@@ -315,6 +320,11 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 		triMeshObj->mesh() = _planarDefects->mesh();
 		triMeshObj->setDisplayObject(new TriMeshDisplay(dataset()));
 		output().addObject(triMeshObj);
+
+		OORef<TriMeshObject> triMeshObj2(new TriMeshObject(dataset()));
+		triMeshObj2->mesh() = _planarDefects->grainBoundaryMesh();
+		triMeshObj2->setDisplayObject(new TriMeshDisplay(dataset()));
+		output().addObject(triMeshObj2);
 	}
 
 	if(_unassignedEdges) {
@@ -379,6 +389,9 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 
 	BooleanParameterUI* outputInterfaceMeshUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_outputInterfaceMesh));
 	sublayout->addWidget(outputInterfaceMeshUI->checkBox(), 0, 0);
+
+	BooleanParameterUI* reconstructEdgeVectorsUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_reconstructEdgeVectors));
+	sublayout->addWidget(reconstructEdgeVectorsUI->checkBox(), 1, 0);
 
 	// Status label.
 	layout->addWidget(statusLabel());

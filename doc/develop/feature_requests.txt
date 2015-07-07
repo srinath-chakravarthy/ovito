@@ -31,11 +31,11 @@ Unresolved OpenGL problems:
 - Crash when moving the viewport camera:
     Windows, AMD Radeon HD8490, Core profile 3.2 (ljloverq@163.com)
     Windows, ATI Mobility Radeon HD 5650, 3.2.9756 Core Profile Forward-Compatible Context (biyikli.emre@gmail.com)
+    Workaround is to disable the use of geometry shaders.
 - Simulation cell doesn't show up in rendered images:
     Windows, Intel HD graphics, OpenGL 2.1 (Karsten's laptop)
 - Crash when rotating a viewport camera after using the DXA modifier: 
     Windows, NVidia NVS 310, Core profile 3.2 (zhonghuai.wu@student.unsw.edu.au)
-
 
 Unresolved bugs:
 

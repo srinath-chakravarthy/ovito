@@ -40,11 +40,16 @@ public:
 	/// Returns the internal mesh containing the triangles.
 	TriMesh& mesh() { return _mesh; }
 
+	/// Returns the internal mesh containing the triangles.
+	TriMesh& grainBoundaryMesh() { return _grainBoundaryMesh; }
+
 private:
 
 	/// The mesh containing the triangles.
 	TriMesh _mesh;
 
+	/// The mesh containing the triangles.
+	TriMesh _grainBoundaryMesh;
 };
 
 }	// End of namespace

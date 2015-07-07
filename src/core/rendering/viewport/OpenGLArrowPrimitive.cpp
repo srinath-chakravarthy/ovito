@@ -697,9 +697,6 @@ void OpenGLArrowPrimitive::renderWithElementInfo(ViewportSceneRenderer* renderer
 		if(!renderer->isPicking())
 			_verticesWithElementInfo[chunkIndex].detachColors(renderer, shader);
 	}
-	shader->enableAttributeArray("cylinder_base");
-	shader->enableAttributeArray("cylinder_axis");
-	shader->enableAttributeArray("cylinder_radius");
 
 	if(renderer->isPicking())
 		renderer->deactivateVertexIDs(shader, true);
