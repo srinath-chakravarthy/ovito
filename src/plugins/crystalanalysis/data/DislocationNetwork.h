@@ -182,7 +182,7 @@ struct DislocationSegment
 	/// Returns true if this segment is an infinite dislocation line passing through a periodic boundary.
 	/// A segment is considered infinite if it is a closed loop but its start and end points do not coincide.
 	bool isInfiniteLine() const {
-		return isClosedLoop() && line.back().equals(line.front()) == false;
+		return isClosedLoop() && line.back().equals(line.front(), CA_ATOM_VECTOR_EPSILON) == false;
 	}
 
 	/// Calculates the line length of the segment.

@@ -136,11 +136,18 @@ void SmoothDislocationsModifier::coarsenDislocationLine(FloatType linePointInter
 		return;
 	}
 
-	// Always keep the end points of linear segments to not break junctions.
+	// Always keep the end points of linear segments fixed to not break junctions.
 	if(!isClosedLoop) {
 		output.push_back(input.front());
 		outputCoreSize.push_back(coreSize.front());
 	}
+
+	// Resulting line must contain at least two points (the end points).
+	int minNumPoints = 2;
+
+	// If the dislocation forms a loop, keep at least four points, because two points do not make a proper loop.
+	if(input.front().equals(input.back(), CA_ATOM_VECTOR_EPSILON))
+		minNumPoints = 4;
 
 	auto inputPtr = input.cbegin();
 	auto inputCoreSizePtr = coreSize.cbegin();
@@ -157,12 +164,12 @@ void SmoothDislocationsModifier::coarsenDislocationLine(FloatType linePointInter
 		++inputPtr;
 		++inputCoreSizePtr;
 	}
-	while(2*count*count < (int)(linePointInterval * sum) && count < input.size()/4);
+	while(2*count*count < (int)(linePointInterval * sum) && count < input.size()/minNumPoints/2-1);
 
 	// Average over a half interval, starting from the end of the segment.
 	auto inputPtrEnd = input.cend() - 1;
 	auto inputCoreSizePtrEnd = coreSize.cend() - 1;
-	while(count*count < (int)(linePointInterval * sum) && count < input.size()/2) {
+	while(count*count < (int)(linePointInterval * sum) && count < input.size()/minNumPoints) {
 		sum += *inputCoreSizePtrEnd;
 		com += *inputPtrEnd - input.back();
 		count++;
@@ -189,7 +196,7 @@ void SmoothDislocationsModifier::coarsenDislocationLine(FloatType linePointInter
 			count++;
 			++inputPtr;
 		}
-		while(count*count < (int)(linePointInterval * sum) && count < input.size()/2 && inputPtr != inputPtrEnd);
+		while(count*count < (int)(linePointInterval * sum) && count < input.size()/minNumPoints-1 && inputPtr != inputPtrEnd);
 		output.push_back(Point3::Origin() + com / count);
 		outputCoreSize.push_back(sum / count);
 	}
@@ -204,7 +211,7 @@ void SmoothDislocationsModifier::coarsenDislocationLine(FloatType linePointInter
 		outputCoreSize.push_back(sum / count);
 	}
 
-	OVITO_ASSERT(output.size() >= 2);
+	OVITO_ASSERT(output.size() >= minNumPoints);
 	OVITO_ASSERT(!isClosedLoop || isInfiniteLine || output.size() >= 3);
 }
 
@@ -218,6 +225,9 @@ void SmoothDislocationsModifier::smoothDislocationLine(int smoothingLevel, std::
 
 	if(line.size() <= 2)
 		return;	// Nothing to do.
+
+	if(line.size() <= 4 && line.front().equals(line.back(), CA_ATOM_VECTOR_EPSILON))
+		return;	// Do not smooth loops consisting of very few segments.
 
 	// This is the 2d implementation of the mesh smoothing algorithm:
 	//

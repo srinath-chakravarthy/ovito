@@ -48,6 +48,7 @@ void PropertyFieldDescriptor::memorizeDefaultValue(RefMaker* object) const
 	settings.beginGroup(definingClass()->plugin()->pluginId());
 	settings.beginGroup(definingClass()->name());
 	settings.setValue(identifier(), object->getPropertyFieldValue(*this));
+	//qDebug() << "Memorizing default value for parameter" << identifier() << "of class" << definingClass()->name() << ":" << object->getPropertyFieldValue(*this);
 }
 
 /******************************************************************************
@@ -61,6 +62,7 @@ bool PropertyFieldDescriptor::loadDefaultValue(RefMaker* object) const
 	settings.beginGroup(definingClass()->name());
 	QVariant v = settings.value(identifier());
 	if(!v.isNull()) {
+		//qDebug() << "Loading default value for parameter" << identifier() << "of class" << definingClass()->name() << ":" << v;
 		object->setPropertyFieldValue(*this, v);
 		return true;
 	}

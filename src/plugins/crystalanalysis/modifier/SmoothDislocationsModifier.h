@@ -85,7 +85,7 @@ private:
 	/// Stores whether smoothing is enabled.
 	PropertyField<bool> _smoothingEnabled;
 
-	/// Controls the amount of smoothing.
+	/// Controls the degree of smoothing.
 	PropertyField<int> _smoothingLevel;
 
 	/// Stores whether coarsening is enabled.

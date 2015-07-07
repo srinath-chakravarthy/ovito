@@ -65,6 +65,7 @@ void IntegerParameterUI::updatePropertyValue()
 		else if(isPropertyFieldUI()) {
 			editObject()->setPropertyFieldValue(*propertyField(), spinner()->intValue());						
 		}
+		Q_EMIT valueEntered();
 	}
 }
 

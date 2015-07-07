@@ -387,11 +387,11 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	sublayout->setSpacing(4);
 	sublayout->setColumnStretch(0, 1);
 
-	BooleanParameterUI* outputInterfaceMeshUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_outputInterfaceMesh));
-	sublayout->addWidget(outputInterfaceMeshUI->checkBox(), 0, 0);
-
 	BooleanParameterUI* reconstructEdgeVectorsUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_reconstructEdgeVectors));
-	sublayout->addWidget(reconstructEdgeVectorsUI->checkBox(), 1, 0);
+	sublayout->addWidget(reconstructEdgeVectorsUI->checkBox(), 0, 0);
+
+	BooleanParameterUI* outputInterfaceMeshUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_outputInterfaceMesh));
+	sublayout->addWidget(outputInterfaceMeshUI->checkBox(), 1, 0);
 
 	// Status label.
 	layout->addWidget(statusLabel());
@@ -400,7 +400,7 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	// Structure list.
 	StructureListParameterUI* structureTypesPUI = new StructureListParameterUI(this);
 	layout->addSpacing(10);
-	layout->addWidget(new QLabel(tr("Atomic structure analysis:")));
+	layout->addWidget(new QLabel(tr("Structure analysis results:")));
 	layout->addWidget(structureTypesPUI->tableWidget());
 
 	// Open a sub-editor for the mesh display object.
@@ -418,7 +418,7 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	// Burgers vector list.
 	_burgersFamilyListUI.reset(new DislocationTypeListParameterUI());
 	layout->addSpacing(10);
-	layout->addWidget(new QLabel(tr("Dislocation analysis:")));
+	layout->addWidget(new QLabel(tr("Dislocation analysis results:")));
 	layout->addWidget(_burgersFamilyListUI->tableWidget());
 	connect(this, &PropertiesEditor::contentsChanged, [this](RefTarget* editObject) {
 		_burgersFamilyListUI->setModifier(static_object_cast<DislocationAnalysisModifier>(editObject));

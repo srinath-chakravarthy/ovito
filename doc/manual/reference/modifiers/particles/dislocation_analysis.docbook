@@ -43,7 +43,7 @@
     
     This analysis modifier identifies all dislocations in a crystal, determines their Burgers vectors, 
     and outputs a line representation of the dislocation defects. The modifier implements the so-called
-    Dislocation Extraction Algorithm (DXA), a unique computational method developed by the author of OVITO.
+    <emphasis>Dislocation Extraction Algorithm</emphasis> (DXA), a unique computational method developed by the author of OVITO.
     The original DXA method has been described in the paper
     <blockquote><para>
 <literallayout><link xlink:href="http://iopscience.iop.org/0965-0393/18/8/085001/">A. Stukowski and K. Albe.
@@ -60,20 +60,18 @@ Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
 
   <para>
     The DXA transforms the original atomistic representation of a dislocated crystal into a line-based representation 
-    of the dislocation network. It is able to compute the true Burgers vector of dislocation segments 
-    and identify dislocation junctions. The algorithm can find partial dislocations and also
+    of the dislocation network. It is capable of determining the true Burgers vector of dislocation segments 
+    and identifying dislocation junctions. The algorithm can recognize partial dislocations and also
     certain secondary grain boundary dislocations (e.g. twinning dislocations).
   </para>
   
-  <note><title>Important notice</title>
+  <note><title>Warning notice</title>
   <para>
     Even though the implementation of the DXA in OVITO is highly optimized, the algorithm is computationally
     expensive and requires considerable working memory. The minimum requirement is 1 kilobyte per input atom!
     Thus, to analyze a dataset containing 1 million atoms, at least 1 GB of free memory must be available. 
-    Otherwise your operating system may start swapping data to disk and your computer becomes unresponsive.
-    Depending on the number of crystal defects, even more memory may be needed. For analyzing very large MD datasets that would exceed the available 
-    memory an MPI-based parallel implementation of the DXA is available which runs on distributed computing clusters. 
-    Please contact the author for more information on this standalone analysis code.
+    Otherwise your operating system may start swapping data to disk and become unresponsive.
+    And depending on the number of crystal defects, even more memory may be needed.
   </para>
   </note>
 
@@ -126,6 +124,25 @@ Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
           This is why the circuit has a certain amount of elasticity, which is set by the stretchability parameter.
           A value of 6 (the default), for example, allows the circuit to expand to a length that is 
           six steps longer than the limit set by the <emphasis>trial circuit length</emphasis> parameter above.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Reconstruct edge vectors</term>
+        <listitem>
+          <para>This option enables an additional algorithm step which enhances the identification of dislocations in some situations.
+          The DXA then tries to reconstruct the mapping of the physical crystal to an ideal crystal from available information on the surrounding atoms.
+          The goal of this step is to further extend the <emphasis>good</emphasis> crystal region and reduce
+          the <emphasis>bad</emphasis> region around defect cores as far as possible. As a result, dislocations can now be found that have very wide cores or which are
+          located in highly distorted crystal regions. For example, it may become possible in certain cases to extract the complete (primary) dislocation 
+          content of a grain boundary with this option, even if the dislocation cores overlap.
+          </para>
+          <para>
+          However, the reconstruction step may have side effects: The automated algorithm may report spurious dislocations in highly distorted regions of a 
+          crystal (i.e. containing a very dense accumulation of defects), which a human would not consider proper dislocations. For example very short segments, 
+          sometimes even shorter than their core diameter. Furthermore, as another side effect, the location and shape of regular dislocations reported by the algorithm may be
+          less accurate if this option is enabled. The reason is that the Burgers circuit constructed by the algorithm will no longer enclose the 
+          original, extended core of a dislocation, but an artificially shrinked version. However, the computed Burgers vector will not be affected by this.
           </para>
         </listitem>
       </varlistentry>
@@ -262,8 +279,8 @@ Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
                 microstructure enables the identification of dislocations (which can involve Burgers circuits that cross grain boundaries and stacking faults).
           </para>
           <para>
-                Even though the cluster graph is generated by the DXA modifier as an intermediate data structure, OVITO currently provides no means for the user to work
-                with or visualize this output data. Future versions of the program may come with a user interface that allows to inspect the generated cluster graph.
+                Even though the cluster graph is generated by the DXA modifier as an intermediate data structure, OVITO currently provides no means for the user to access
+                or visualize this output data. Future versions of the program may come with a user interface that allows to inspect the generated cluster graph.
           </para>
           </listitem>
           </varlistentry>
@@ -271,7 +288,7 @@ Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
        </variablelist>
     </para>
     <para>
-        You can place the mouse cursor over a dislocation segment to let OVITO display its properties in the status bar at the bottom of the main window.
+        You can position the mouse cursor over a dislocation segment to let OVITO display its properties in the status bar at the bottom of the main window.
     </para>
   </simplesect> 
        

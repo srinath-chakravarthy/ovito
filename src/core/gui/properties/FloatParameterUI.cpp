@@ -77,10 +77,8 @@ void FloatParameterUI::updateUI()
 	if(editObject() && spinner() && !spinner()->isDragging()) {
 		try {
 			if(isReferenceFieldUI()) {
-				Controller* ctrl = dynamic_object_cast<Controller>(parameterObject());
-				if(ctrl != NULL && spinner() && !spinner()->isDragging()) {
+				if(Controller* ctrl = dynamic_object_cast<Controller>(parameterObject()))
 					spinner()->setFloatValue(ctrl->currentFloatValue());
-				}
 			}
 			else {
 				QVariant val(0.0);
