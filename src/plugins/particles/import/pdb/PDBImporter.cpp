@@ -37,17 +37,17 @@ bool PDBImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceLocation
 	// Open input file.
 	CompressedTextReader stream(input, sourceLocation.path());
 
-	// Read the first line.
-	stream.readLine(100);
-	if(!stream.lineStartsWith("HEADER ") || qstrlen(stream.line()) > 82)
-		return false;
-
-	// Read a second line.
-	stream.readLine();
-	if(qstrlen(stream.line()) < 7 || qstrlen(stream.line()) > 82 || stream.line()[7] != ' ')
-		return false;
-
-	return true;
+	// Read the first N lines.
+	for(int i = 0; i < 20 && !stream.eof(); i++) {
+		stream.readLine(86);
+		if(qstrlen(stream.line()) > 82)
+			return false;
+		if(qstrlen(stream.line()) >= 7 && stream.line()[6] != ' ')
+			return false;
+		if(stream.lineStartsWith("HEADER ") || stream.lineStartsWith("ATOM   "))
+			return true;
+	}
+	return false;
 }
 
 /******************************************************************************
@@ -57,13 +57,9 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 {
 	setProgressText(tr("Reading PDB file %1").arg(frame().sourceFile.toString(QUrl::RemovePassword | QUrl::PreferLocalFile | QUrl::PrettyDecoded)));
 
-	// Read header line.
-	stream.readLine();
-	if(!stream.lineStartsWith("HEADER ") || qstrlen(stream.line()) > 82)
-		throw Exception(tr("Not a Protein Data Bank (PDB) file."));
-
 	// Parse metadata records.
 	int numAtoms = 0;
+	bool hasSimulationCell = false;
 	while(!stream.eof()) {
 		stream.readLine();
 		int lineLength = qstrlen(stream.line());
@@ -102,6 +98,7 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 				cell(2,2) = v / (a*b*sin(gamma));
 			}
 			simulationCell().setMatrix(cell);
+			hasSimulationCell = true;
 		}
 		// Count atoms.
 		else if(stream.lineStartsWith("ATOM  ") || stream.lineStartsWith("HETATM")) {
@@ -151,6 +148,19 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 			++p;
 			++a;
 		}
+	}
+
+	// If file does not contains simulation cell info,
+	// compute bounding box of atoms and use it as an adhoc simulation cell.
+	if(!hasSimulationCell && numAtoms > 0) {
+		Box3 boundingBox;
+		boundingBox.addPoints(posProperty->constDataPoint3(), posProperty->size());
+		simulationCell().setPbcFlags(false, false, false);
+		simulationCell().setMatrix(AffineTransformation(
+				Vector3(boundingBox.sizeX(), 0, 0),
+				Vector3(0, boundingBox.sizeY(), 0),
+				Vector3(0, 0, boundingBox.sizeZ()),
+				boundingBox.minc - Point3::Origin()));
 	}
 
 	setStatus(tr("Number of particles: %1").arg(numAtoms));
