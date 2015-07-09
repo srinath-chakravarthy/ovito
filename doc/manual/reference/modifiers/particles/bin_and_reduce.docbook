@@ -16,7 +16,7 @@
        <imagedata fileref="images/modifiers/bin_and_reduce_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
   
-  This modifier applies an <emphasis>reduction</emphasis> operation to a certain property
+  This modifier applies a <emphasis>reduction</emphasis> operation to a certain property
   of all particles within a spatial bin.
   </para>
   

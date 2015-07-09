@@ -65,7 +65,9 @@ OVITO_END_INLINE_NAMESPACE
 BinAndReduceModifier::BinAndReduceModifier(DataSet* dataset) : 
     ParticleModifier(dataset), _reductionOperation(RED_MEAN), _firstDerivative(false),
     _binDirection(CELL_VECTOR_3), _numberOfBinsX(200), _numberOfBinsY(200),
-    _fixPropertyAxisRange(false), _propertyAxisRangeStart(0), _propertyAxisRangeEnd(0)
+    _fixPropertyAxisRange(false), _propertyAxisRangeStart(0), _propertyAxisRangeEnd(0),
+	_xAxisRangeStart(0), _xAxisRangeEnd(0),
+	_yAxisRangeStart(0), _yAxisRangeEnd(0)
 {
 	INIT_PROPERTY_FIELD(BinAndReduceModifier::_reductionOperation);
 	INIT_PROPERTY_FIELD(BinAndReduceModifier::_firstDerivative);
@@ -170,8 +172,13 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
     FloatType cellVolume = cell.volume();
     _xAxisRangeStart = (expectSimulationCell()->origin() - Point3::Origin()).dot(normalX.normalized());
     _xAxisRangeEnd = _xAxisRangeStart + cellVolume / normalX.length();
-    _yAxisRangeStart = (expectSimulationCell()->origin() - Point3::Origin()).dot(normalY.normalized());
-    _yAxisRangeEnd = _yAxisRangeStart + cellVolume / normalY.length();
+    if(!is1D()) {
+		_yAxisRangeStart = (expectSimulationCell()->origin() - Point3::Origin()).dot(normalY.normalized());
+		_yAxisRangeEnd = _yAxisRangeStart + cellVolume / normalY.length();
+    }
+    else {
+		_yAxisRangeStart = _yAxisRangeEnd = 0;
+    }
 
 	// Get the current positions.
 	ParticlePropertyObject* posProperty = expectStandardProperty(ParticleProperty::PositionProperty);
@@ -274,7 +281,7 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
     if (_firstDerivative) {
         FloatType binSpacingX = (_xAxisRangeEnd - _xAxisRangeStart) / binDataSizeX;
         if(binDataSizeX > 1 && _xAxisRangeEnd > _xAxisRangeStart) {
-			std::vector<double> derivativeData(binDataSize);
+        	QVector<double> derivativeData(binDataSize);
 			for (int j = 0; j < binDataSizeY; j++) {
 				for (int i = 0; i < binDataSizeX; i++) {
 					int ndx = 2;
@@ -293,7 +300,7 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
 					derivativeData[j*binDataSizeX + i] = (_binData[j*binDataSizeX + i_plus_1] - _binData[j*binDataSizeX + i_minus_1]) / (ndx*binSpacingX);
 				}
 			}
-			_binData = derivativeData;
+			_binData = std::move(derivativeData);
         }
         else std::fill(_binData.begin(), _binData.end(), 0.0);
     }

@@ -90,7 +90,7 @@ public:
 	void setNumberOfBinsY(int n) { _numberOfBinsY = n; }
 
 	/// Returns the stored average data.
-	const std::vector<double>& binData() const { return _binData; }
+	const QVector<double>& binData() const { return _binData; }
 
 	/// Returns the start value of the plotting x-axis.
 	FloatType xAxisRangeStart() const { return _xAxisRangeStart; }
@@ -190,7 +190,7 @@ private:
 
 	/// Stores the averaged data.
 	/// Use double precision numbers to avoid precision loss when adding up a large number of values.
-	std::vector<double> _binData;
+	QVector<double> _binData;
 
 	Q_OBJECT
 	OVITO_OBJECT
