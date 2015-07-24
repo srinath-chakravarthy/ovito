@@ -79,7 +79,7 @@ SliceModifier::SliceModifier(DataSet* dataset) : ParticleModifier(dataset),
 	_normalCtrl = ControllerManager::instance().createVector3Controller(dataset);
 	_distanceCtrl = ControllerManager::instance().createFloatController(dataset);
 	_widthCtrl = ControllerManager::instance().createFloatController(dataset);
-	setNormal(Vector3(1,0,0));
+	if(_normalCtrl) _normalCtrl->setVector3Value(0, Vector3(1,0,0));
 }
 
 /******************************************************************************
@@ -351,8 +351,8 @@ void SliceModifier::initializeModifier(PipelineObject* pipeline, ModifierApplica
 	if(cell) {
 		Point3 centerPoint = cell->cellMatrix() * Point3(0.5, 0.5, 0.5);
 		FloatType centerDistance = normal().dot(centerPoint - Point3::Origin());
-		if(fabs(centerDistance) > FLOATTYPE_EPSILON)
-			setDistance(centerDistance);
+		if(fabs(centerDistance) > FLOATTYPE_EPSILON && distanceController())
+			distanceController()->setFloatValue(0, centerDistance);
 	}
 }
 
