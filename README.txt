@@ -16,6 +16,35 @@ If you want to build OVITO from source, see http://www.ovito.org/manual/developm
 Change Log 
 ****************************************************************************************
 
+Release 2.5.0 (25-Jul-15):
+
+ - Added Python interface for Bin and Reduce modifier.
+ - Fixed viewport font issue on Macs with high-dpi display.
+ - Added the Expand Selection modifier.
+ - Added a 'No bonds between different molecules' option to the Create Bonds modifier.
+ - Changed the behavior of the IMD file exporter: All particle properties to be exported, including the standard ones defined by the IMD format, must now be explicitly selected by the user.
+ - Integrated DXA (Dislocation Extraction Algorithm) into OVITO. 
+ - Voronoi analysis modifier can now output bonds between neighboring atoms which share a Voronoi face.
+ - Python scripting interface now allows conversion to/from ASE Atoms objects.
+ - Python scripting interface now supports write access to particle properties and procedural generation of input particle datasets for OVITO's modification pipeline.
+ - Bug fix: Large number of simultaneous SFTP download requests led to error message 'SFTP error: Server could not start session'.
+ - Bug fix: Using the Python viewport overlay led to program crash on Windows 8 x64.
+ - Scripting function Viewport.render() now returns the rendered image, which can be manipulated before saving it to disk.
+ - Certain modifier and display parameters can now be animated using animation keys.
+ - Fixed OpenGL rendering of bonds/arrows on certain Windows/NVidia systems.
+ - Added import/export support for FHI-aims file format.
+ - Colors and radii used for particle types (as well as structure types) can now be predefined by the user.
+ - Migrated to version 5.4 of the Qt library. This may affect OpenGL rendering and the viewport display. Please report any issues that you experience.
+ - Bin & Reduce modifier now takes into account the simulation box origin, uses double precision numbers to perform calculations, and 1D-plot now spans the entire interval.
+ - Bug fix: NetCDF file importer doesn't close file handle, leading to error after loading several thousand frames.
+ - Bug fix: LAMMPS data file parser stumbles over 'AngleTorsion Coeffs' file section.
+ - Visualization of particle trajectory lines.
+ - Frequently used modifiers or combinations of modifiers can be saved (including modifier settings) for quick access. 
+ - Rendering of ellipsoidal and box particles with orientation.
+ - Positioning the mouse over a bond shows its properties in the status bar.
+ - Fixed initialization of the Select Particle Type modifier.
+ - Fixed error when loading a compressed simulation file >2GB.
+
 Release 2.4.4 (29-Mar-15):
 
  - Fixed error when rendering and encoding high-resolution videos.
