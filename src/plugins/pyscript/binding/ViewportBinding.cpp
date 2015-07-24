@@ -163,8 +163,8 @@ BOOST_PYTHON_MODULE(PyScriptViewport)
 
 	ovito_class<CoordinateTripodOverlay, ViewportOverlay>(
 			"Displays a coordinate tripod in the rendered image of a viewport. "
-			"You can attach it to a viewport by adding an instance of this class to the viewport's "
-			":py:attr:`~ovito.vis.viewport.overlays` collection:"
+			"You can attach an instance of this class to a viewport by adding it to the viewport's "
+			":py:attr:`~ovito.vis.Viewport.overlays` collection:"
 			"\n\n"
 			".. literalinclude:: ../example_snippets/coordinate_tripod_overlay.py"
 			"\n\n"
@@ -200,11 +200,11 @@ BOOST_PYTHON_MODULE(PyScriptViewport)
 			"image of the viewport is rendered. The Python script can execute arbitrary drawing commands to "
 			"paint on top of the rendered image."
 			"\n\n"
-			"An alternative to the :py:class:`!PythonViewportOverlay` class is to directly manipulate the "
+			"Note that an alternative to using the :py:class:`!PythonViewportOverlay` class is to directly manipulate the "
 			"output image returned by the :py:meth:`Viewport.render` method."
 			"\n\n"
 			"You can attach a Python overlay to a viewport by adding an instance of this class to the viewport's "
-			":py:attr:`~ovito.vis.viewport.overlays` collection:"
+			":py:attr:`~ovito.vis.Viewport.overlays` collection:"
 			"\n\n"
 			".. literalinclude:: ../example_snippets/python_viewport_overlay.py")
 		.add_property("script", make_function(&PythonViewportOverlay::script, return_value_policy<copy_const_reference>()), &PythonViewportOverlay::setScript,

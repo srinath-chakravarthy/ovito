@@ -101,7 +101,13 @@ AnimationSettingsDialog::AnimationSettingsDialog(AnimationSettings* animSettings
 	playbackSpeedBox->addItem(tr("x 20"), 20);
 	contentLayout->addWidget(playbackSpeedBox, 3, 1, 1, 2);
 	connect(playbackSpeedBox, (void (QComboBox::*)(int))&QComboBox::activated, this, &AnimationSettingsDialog::onPlaybackSpeedChanged);
-	
+
+	loopPlaybackBox = new QCheckBox(tr("Loop playback"));
+	contentLayout->addWidget(loopPlaybackBox, 4, 0, 1, 3);
+	connect(loopPlaybackBox, &QCheckBox::clicked, [this](bool checked) {
+		_animSettings->setLoopPlayback(checked);
+	});
+
 	QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Help, Qt::Horizontal, this);
 	connect(buttonBox, &QDialogButtonBox::accepted, this, &AnimationSettingsDialog::onOk);
 	connect(buttonBox, &QDialogButtonBox::rejected, this, &AnimationSettingsDialog::reject);
@@ -134,6 +140,7 @@ void AnimationSettingsDialog::updateValues()
 	playbackSpeedBox->setCurrentIndex(playbackSpeedBox->findData(_animSettings->playbackSpeed()));
 	animStartSpinner->setIntValue(_animSettings->animationInterval().start());
 	animEndSpinner->setIntValue(_animSettings->animationInterval().end());
+	loopPlaybackBox->setChecked(_animSettings->loopPlayback());
 }
 
 /******************************************************************************

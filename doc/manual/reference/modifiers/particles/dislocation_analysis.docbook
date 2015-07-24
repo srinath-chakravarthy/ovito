@@ -55,13 +55,13 @@ Modelling Simul. Mater. Sci. Eng. 18, 085001 (2010)</link></literallayout>
 <literallayout><link xlink:href="http://iopscience.iop.org/0965-0393/20/8/085007/">A. Stukowski, V.V. Bulatov and A. Arsenlis.
 Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
     </para></blockquote>
-    Please cite the latter reference if you publish results obtained with the dislocation analysis modifier.
+    Please cite the latter reference when you publish results obtained with the dislocation analysis modifier.
   </para>
 
   <para>
     The DXA transforms the original atomistic representation of a dislocated crystal into a line-based representation 
-    of the dislocation network. It is capable of determining the true Burgers vector of dislocation segments 
-    and identifying dislocation junctions. The algorithm can recognize partial dislocations and also
+    of the dislocation network. It determines the true Burgers vector of each dislocation segment 
+    and identifies dislocation junctions. The algorithm can recognize partial dislocations and also
     certain secondary grain boundary dislocations (e.g. twinning dislocations).
   </para>
   
@@ -110,7 +110,7 @@ Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
           by a circuit of the given maximum length will not be found by the algorithm. 
           </para>
           <para>
-          The default value for this parameter is 9, which is sufficient to discover all typical lattice dislocations
+          The default value for this parameter is 14, which is sufficient to discover all typical lattice dislocations
           in the types of crystals supported by the modifier. 
           </para>
         </listitem>
@@ -122,8 +122,8 @@ Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
           advances the circuit along the dislocation to generate a line presentation of the segment.
           The thickness of the core may vary along the dislocation (e.g. it becomes wider close to a dislocation junction).
           This is why the circuit has a certain amount of elasticity, which is set by the stretchability parameter.
-          A value of 6 (the default), for example, allows the circuit to expand to a length that is 
-          six steps longer than the limit set by the <emphasis>trial circuit length</emphasis> parameter above.
+          A value of 9 (the default), for example, allows the circuit to expand to a length that is 
+          nine steps longer than the limit set by the <emphasis>trial circuit length</emphasis> parameter above.
           </para>
         </listitem>
       </varlistentry>
@@ -143,6 +143,10 @@ Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
           sometimes even shorter than their core diameter. Furthermore, as another side effect, the location and shape of regular dislocations reported by the algorithm may be
           less accurate if this option is enabled. The reason is that the Burgers circuit constructed by the algorithm will no longer enclose the 
           original, extended core of a dislocation, but an artificially shrinked version. However, the computed Burgers vector will not be affected by this.
+          </para>
+          <para>
+          Please use this option only if you have experience in manually identifying 
+          dislocations in atomistic simulations so you can verify the output of the algorithm if necessary.
           </para>
         </listitem>
       </varlistentry>

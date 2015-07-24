@@ -231,6 +231,7 @@ private:
 	QMetaObject::Connection _autoKeyModeChangedConnection;
 	QMetaObject::Connection _autoKeyModeToggledConnection;
 	QMetaObject::Connection _animationIntervalChangedConnection;
+	QMetaObject::Connection _animationPlaybackChangedConnection;
 
 	/// The current dataset being edited in the main window.
 	OORef<DataSet> _dataset;

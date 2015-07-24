@@ -51,11 +51,20 @@
         <term>Playback speed in viewports</term>
         <listitem><para>
            Controls the playback speed of the animation in OVITO's interactive viewports. 
-           This factor is multiplied with the frames rate
+           This factor is multiplied with the frame rate
            parameter above. Note that the effective playback speed may be much lower if 
-           loading, computing, and displaying each frame take a long time.
+           loading, computing, and displaying the next frame takes a long time.
 		</para></listitem>
       </varlistentry>
+
+       <varlistentry>
+        <term>Loop playback</term>
+        <listitem><para>
+           Controls the whether OVITO plays back the animation in the viewport in a loop.
+           Otherwise, playback stops when the end of the animation is reached.
+		</para></listitem>
+      </varlistentry>
+
     </variablelist>
   </simplesect>
 </section>

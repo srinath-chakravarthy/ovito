@@ -166,17 +166,23 @@ void ActionManager::onAnimationSettingsReplaced(AnimationSettings* newAnimationS
 	disconnect(_autoKeyModeChangedConnection);
 	disconnect(_autoKeyModeToggledConnection);
 	disconnect(_animationIntervalChangedConnection);
+	disconnect(_animationPlaybackChangedConnection);
 	QAction* autoKeyModeAction = getAction(ACTION_AUTO_KEY_MODE_TOGGLE);
+	QAction* animationPlaybackAction = getAction(ACTION_TOGGLE_ANIMATION_PLAYBACK);
 	if(newAnimationSettings) {
 		autoKeyModeAction->setEnabled(true);
 		autoKeyModeAction->setChecked(newAnimationSettings->autoKeyMode());
+		animationPlaybackAction->setEnabled(true);
+		animationPlaybackAction->setChecked(newAnimationSettings->isPlaybackActive());
 		_autoKeyModeChangedConnection = connect(newAnimationSettings, &AnimationSettings::autoKeyModeChanged, autoKeyModeAction, &QAction::setChecked);
 		_autoKeyModeToggledConnection = connect(autoKeyModeAction, &QAction::toggled, newAnimationSettings, &AnimationSettings::setAutoKeyMode);
 		_animationIntervalChangedConnection = connect(newAnimationSettings, &AnimationSettings::intervalChanged, this, &ActionManager::onAnimationIntervalChanged);
+		_animationPlaybackChangedConnection = connect(newAnimationSettings, &AnimationSettings::playbackChanged, animationPlaybackAction, &QAction::setChecked);
 		onAnimationIntervalChanged(newAnimationSettings->animationInterval());
 	}
 	else {
 		autoKeyModeAction->setEnabled(false);
+		animationPlaybackAction->setEnabled(false);
 		onAnimationIntervalChanged(TimeInterval(0));
 	}
 }

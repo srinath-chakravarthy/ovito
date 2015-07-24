@@ -232,6 +232,12 @@ public:
 	///        is still being prepared for displaying the new frame.
 	bool isTimeChanging() const { return _timeIsChanging != 0; }
 
+	/// Returns whether the animation is played back in a loop in the interactive viewports.
+    bool loopPlayback() const { return _loopPlayback; }
+
+	/// Returns whether the animation is currently being played back in the viewports.
+	bool isPlaybackActive() const { return _isPlaybackActive; }
+
 public Q_SLOTS:
 
 	/// \brief Enables or disables animation mode (i.e. automatic creation of animation keys).
@@ -259,6 +265,9 @@ public Q_SLOTS:
 	/// \brief Stops playback of the animation in the viewports.
 	void stopAnimationPlayback();
 
+	/// Sets whether the animation is played back in a loop in the interactive viewports.
+    void setLoopPlayback(bool loop) { _loopPlayback = loop; }
+
 Q_SIGNALS:
 
 	/// This signal is emitted when the current animation time has changed.
@@ -278,6 +287,9 @@ Q_SIGNALS:
 
 	/// This signal is emitted when the Auto Key mode has been activated or deactivated.
 	void autoKeyModeChanged(bool active);
+
+	/// This signal is emitted when the animation playback is started or stopped.
+	void playbackChanged(bool active);
 
 private Q_SLOTS:
 
@@ -300,6 +312,9 @@ protected:
 
 	/// \brief Creates a copy of this object.
 	virtual OORef<RefTarget> clone(bool deepCopy, CloneHelper& cloneHelper) override;
+
+	/// Starts a timer to show the next animation frame.
+	void scheduleNextAnimationFrame();
 
 private:
 
@@ -334,6 +349,9 @@ private:
 	/// Indicates that the animation is currently being played back in the viewports.
 	bool _isPlaybackActive;
 
+	/// Controls whether the animation is played back in a loop in the interactive viewports.
+    PropertyField<bool> _loopPlayback;
+
 private:
 
 	Q_OBJECT
@@ -343,6 +361,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_animationInterval);
 	DECLARE_PROPERTY_FIELD(_ticksPerFrame);
 	DECLARE_PROPERTY_FIELD(_playbackSpeed);
+	DECLARE_PROPERTY_FIELD(_loopPlayback);
 };
 
 /**

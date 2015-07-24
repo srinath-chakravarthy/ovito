@@ -29,6 +29,7 @@ DEFINE_PROPERTY_FIELD(AnimationSettings, _time, "Time");
 DEFINE_PROPERTY_FIELD(AnimationSettings, _animationInterval, "AnimationInterval");
 DEFINE_PROPERTY_FIELD(AnimationSettings, _ticksPerFrame, "TicksPerFrame");
 DEFINE_PROPERTY_FIELD(AnimationSettings, _playbackSpeed, "PlaybackSpeed");
+DEFINE_PROPERTY_FIELD(AnimationSettings, _loopPlayback, "LoopPlayback");
 
 /******************************************************************************
 * Constructor.
@@ -36,12 +37,13 @@ DEFINE_PROPERTY_FIELD(AnimationSettings, _playbackSpeed, "PlaybackSpeed");
 AnimationSettings::AnimationSettings(DataSet* dataset) : RefTarget(dataset),
 		_ticksPerFrame(TICKS_PER_SECOND/10), _playbackSpeed(1),
 		_animationInterval(0, 0), _time(0), _animSuspendCount(0),  _autoKeyMode(false), _timeIsChanging(0),
-		_isPlaybackActive(false)
+		_isPlaybackActive(false), _loopPlayback(true)
 {
 	INIT_PROPERTY_FIELD(AnimationSettings::_time);
 	INIT_PROPERTY_FIELD(AnimationSettings::_animationInterval);
 	INIT_PROPERTY_FIELD(AnimationSettings::_ticksPerFrame);
 	INIT_PROPERTY_FIELD(AnimationSettings::_playbackSpeed);
+	INIT_PROPERTY_FIELD(AnimationSettings::_loopPlayback);
 
 	// Call our own listener when the current animation time changes.
 	connect(this, &AnimationSettings::timeChanged, this, &AnimationSettings::onTimeChanged);
@@ -190,12 +192,32 @@ void AnimationSettings::jumpToNextFrame()
 void AnimationSettings::startAnimationPlayback()
 {
 	if(!_isPlaybackActive) {
-		int timerSpeed = 1000;
-		if(playbackSpeed() > 1) timerSpeed /= playbackSpeed();
-		else if(playbackSpeed() < -1) timerSpeed *= -playbackSpeed();
 		_isPlaybackActive = true;
-		QTimer::singleShot(timerSpeed / framesPerSecond(), this, SLOT(onPlaybackTimer()));
+		Q_EMIT playbackChanged(_isPlaybackActive);
+
+		if(time() < animationInterval().end()) {
+			scheduleNextAnimationFrame();
+		}
+		else {
+			setTime(animationInterval().start());
+			dataset()->runWhenSceneIsReady([this]() {
+				if(_isPlaybackActive) {
+					scheduleNextAnimationFrame();
+				}
+			});
+		}
 	}
+}
+
+/******************************************************************************
+* Starts a timer to show the next animation frame.
+******************************************************************************/
+void AnimationSettings::scheduleNextAnimationFrame()
+{
+	int timerSpeed = 1000;
+	if(playbackSpeed() > 1) timerSpeed /= playbackSpeed();
+	else if(playbackSpeed() < -1) timerSpeed *= -playbackSpeed();
+	QTimer::singleShot(timerSpeed / framesPerSecond(), this, SLOT(onPlaybackTimer()));
 }
 
 /******************************************************************************
@@ -203,7 +225,10 @@ void AnimationSettings::startAnimationPlayback()
 ******************************************************************************/
 void AnimationSettings::stopAnimationPlayback()
 {
-	_isPlaybackActive = false;
+	if(_isPlaybackActive) {
+		_isPlaybackActive = false;
+		Q_EMIT playbackChanged(_isPlaybackActive);
+	}
 }
 
 /******************************************************************************
@@ -220,19 +245,27 @@ void AnimationSettings::onPlaybackTimer()
 	TimePoint newTime = frameToTime(newFrame);
 
 	// Loop back to first frame if end has been reached.
-	if(newTime > animationInterval().end())
-		newTime = animationInterval().start();
+	if(newTime > animationInterval().end()) {
+		if(loopPlayback()) {
+			newTime = animationInterval().start();
+		}
+		else {
+			newTime = animationInterval().end();
+			stopAnimationPlayback();
+		}
+	}
 
 	// Set new time.
 	setTime(newTime);
 
 	// Wait until the scene is ready. Then jump to the next frame.
-	dataset()->runWhenSceneIsReady([this]() {
-		if(_isPlaybackActive) {
-			_isPlaybackActive = false;
-			startAnimationPlayback();
-		}
-	});
+	if(_isPlaybackActive) {
+		dataset()->runWhenSceneIsReady([this]() {
+			if(_isPlaybackActive) {
+				scheduleNextAnimationFrame();
+			}
+		});
+	}
 }
 
 OVITO_END_INLINE_NAMESPACE

@@ -66,6 +66,7 @@ private:
 	SpinnerWidget* animStartSpinner;
 	SpinnerWidget* animEndSpinner;	
 	QComboBox* playbackSpeedBox;
+	QCheckBox* loopPlaybackBox;
 };
 
 OVITO_END_INLINE_NAMESPACE
