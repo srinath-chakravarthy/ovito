@@ -12,10 +12,9 @@ Work-flow improvements:
 
 New visualization features:
 
-- Visualization of spherocylinderical particles (requested by V.V.Mahajan@tue.nl)
-- Dislocation analysis: Display line orientations.
 - Visualize polyhedra (like Vesta).
 - More particle representations (e.g. open circles/rectangles).
+- Visualization of spherocylinderical particles (requested by V.V.Mahajan@tue.nl)
 - Test OpenGL rendering support for more than 12 million particles.
 
 Unresolved OpenGL problems:

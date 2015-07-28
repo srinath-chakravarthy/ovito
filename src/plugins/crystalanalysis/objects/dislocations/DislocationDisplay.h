@@ -140,6 +140,12 @@ public:
 	/// Controls the display of Burgers vectors.
 	void setShowBurgersVectors(bool enabled) { _showBurgersVectors = enabled; }
 
+	/// Returns whether line directions are shown.
+	bool showLineDirections() const { return _showLineDirections; }
+
+	/// Sets whether line directions are shown.
+	void setShowLineDirections(bool enabled) { _showLineDirections = enabled; }
+
 	/// \brief Renders an overlay marker for a single dislocation segment.
 	void renderOverlayMarker(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState, int segmentIndex, SceneRenderer* renderer, ObjectNode* contextNode);
 
@@ -165,7 +171,7 @@ protected:
 	std::shared_ptr<ParticlePrimitive> _cornerBuffer;
 
 	/// The buffered geometry used to render the Burgers vectors.
-	std::shared_ptr<ArrowPrimitive> _arrowBuffer;
+	std::shared_ptr<ArrowPrimitive> _burgersArrowBuffer;
 
 	/// This helper structure is used to detect any changes in the input data
 	/// that require updating the geometry buffers.
@@ -212,6 +218,9 @@ protected:
 	/// Controls the display of Burgers vectors.
 	PropertyField<bool> _showBurgersVectors;
 
+	/// Controls the display of the line directions.
+	PropertyField<bool> _showLineDirections;
+
 	/// The data record used for picking dislocations in the viewports.
 	OORef<DislocationPickInfo> _pickInfo;
 
@@ -228,6 +237,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_burgersVectorScaling);
 	DECLARE_PROPERTY_FIELD(_burgersVectorColor);
 	DECLARE_PROPERTY_FIELD(_showBurgersVectors);
+	DECLARE_PROPERTY_FIELD(_showLineDirections);
 };
 
 /**

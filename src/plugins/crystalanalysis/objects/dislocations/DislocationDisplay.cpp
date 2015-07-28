@@ -25,6 +25,7 @@
 #include <core/gui/properties/FloatParameterUI.h>
 #include <core/gui/properties/ColorParameterUI.h>
 #include <core/gui/properties/BooleanGroupBoxParameterUI.h>
+#include <core/gui/properties/BooleanParameterUI.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include "DislocationDisplay.h"
 
@@ -40,12 +41,14 @@ DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, _burgersVectorWidth, "BurgersVec
 DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, _burgersVectorScaling, "BurgersVectorScaling", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, _burgersVectorColor, "BurgersVectorColor", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(DislocationDisplay, _showBurgersVectors, "ShowBurgersVectors");
+DEFINE_PROPERTY_FIELD(DislocationDisplay, _showLineDirections, "ShowLineDirections");
 SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _lineWidth, "Dislocation line width");
 SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _shadingMode, "Shading mode");
 SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _burgersVectorWidth, "Burgers vector width");
 SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _burgersVectorScaling, "Burgers vector scaling");
 SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _burgersVectorColor, "Burgers vector color");
 SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _showBurgersVectors, "Show Burgers vectors");
+SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _showLineDirections, "Indicate line directions");
 SET_PROPERTY_FIELD_UNITS(DislocationDisplay, _lineWidth, WorldParameterUnit);
 SET_PROPERTY_FIELD_UNITS(DislocationDisplay, _burgersVectorWidth, WorldParameterUnit);
 
@@ -56,7 +59,7 @@ DislocationDisplay::DislocationDisplay(DataSet* dataset) : DisplayObject(dataset
 	_lineWidth(1.0f), _shadingMode(ArrowPrimitive::NormalShading),
 	_burgersVectorWidth(0.6f), _burgersVectorScaling(3.0f),
 	_burgersVectorColor(0.7, 0.7, 0.7),
-	_showBurgersVectors(false)
+	_showBurgersVectors(false), _showLineDirections(false)
 {
 	INIT_PROPERTY_FIELD(DislocationDisplay::_lineWidth);
 	INIT_PROPERTY_FIELD(DislocationDisplay::_shadingMode);
@@ -64,6 +67,7 @@ DislocationDisplay::DislocationDisplay(DataSet* dataset) : DisplayObject(dataset
 	INIT_PROPERTY_FIELD(DislocationDisplay::_burgersVectorScaling);
 	INIT_PROPERTY_FIELD(DislocationDisplay::_burgersVectorColor);
 	INIT_PROPERTY_FIELD(DislocationDisplay::_showBurgersVectors);
+	INIT_PROPERTY_FIELD(DislocationDisplay::_showLineDirections);
 }
 
 /******************************************************************************
@@ -111,7 +115,9 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 	// Do we have to re-create the geometry buffers from scratch?
 	bool recreateBuffers = !_segmentBuffer || !_segmentBuffer->isValid(renderer)
 						|| !_cornerBuffer || !_cornerBuffer->isValid(renderer)
-						|| !_arrowBuffer || !_arrowBuffer->isValid(renderer);
+						|| !_burgersArrowBuffer || !_burgersArrowBuffer->isValid(renderer);
+
+	ArrowPrimitive::Shape segmentShape = (showLineDirections() ? ArrowPrimitive::ArrowShape : ArrowPrimitive::CylinderShape);
 
 	// Set up shading mode.
 	ParticlePrimitive::ShadingMode cornerShadingMode = (shadingMode() == ArrowPrimitive::NormalShading)
@@ -119,7 +125,9 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 	if(!recreateBuffers) {
 		recreateBuffers |= !_segmentBuffer->setShadingMode(shadingMode());
 		recreateBuffers |= !_cornerBuffer->setShadingMode(cornerShadingMode);
-		recreateBuffers |= !_arrowBuffer->setShadingMode(shadingMode());
+		recreateBuffers |= !_burgersArrowBuffer->setShadingMode(shadingMode());
+		if(_segmentBuffer->shape() != segmentShape)
+			recreateBuffers = true;
 	}
 
 	// Get pattern catalog.
@@ -133,9 +141,9 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 
 	// Re-create the geometry buffers if necessary.
 	if(recreateBuffers) {
-		_segmentBuffer = renderer->createArrowPrimitive(ArrowPrimitive::CylinderShape, shadingMode(), ArrowPrimitive::HighQuality);
+		_segmentBuffer = renderer->createArrowPrimitive(segmentShape, shadingMode(), ArrowPrimitive::HighQuality);
 		_cornerBuffer = renderer->createParticlePrimitive(cornerShadingMode, ParticlePrimitive::HighQuality);
-		_arrowBuffer = renderer->createArrowPrimitive(ArrowPrimitive::ArrowShape, shadingMode(), ArrowPrimitive::HighQuality);
+		_burgersArrowBuffer = renderer->createArrowPrimitive(ArrowPrimitive::ArrowShape, shadingMode(), ArrowPrimitive::HighQuality);
 	}
 
 	// Update buffer contents.
@@ -193,7 +201,7 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 			_cornerBuffer->setParticleRadius(lineRadius);
 
 			if(showBurgersVectors()) {
-				_arrowBuffer->startSetElements(dislocationObj->segments().size());
+				_burgersArrowBuffer->startSetElements(dislocationObj->segments().size());
 				subobjToSegmentMap.reserve(subobjToSegmentMap.size() + dislocationObj->segments().size());
 				int arrowIndex = 0;
 				ColorA arrowColor = burgersVectorColor();
@@ -202,13 +210,13 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 					subobjToSegmentMap.push_back(arrowIndex);
 					Point3 center = cellData.wrapPoint(segment->getPointOnLine(0.5f));
 					Vector3 dir = burgersVectorScaling() * segment->burgersVector.toSpatialVector();
-					_arrowBuffer->setElement(arrowIndex++, center, dir, arrowColor, arrowRadius);
+					_burgersArrowBuffer->setElement(arrowIndex++, center, dir, arrowColor, arrowRadius);
 				}
 			}
 			else {
-				_arrowBuffer->startSetElements(0);
+				_burgersArrowBuffer->startSetElements(0);
 			}
-			_arrowBuffer->endSetElements();
+			_burgersArrowBuffer->endSetElements();
 
 			_pickInfo = new DislocationPickInfo(this, dislocationObj, patternCatalog, std::move(subobjToSegmentMap));
 
@@ -216,7 +224,7 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 		else {
 			_cornerBuffer = nullptr;
 			_segmentBuffer = nullptr;
-			_arrowBuffer = nullptr;
+			_burgersArrowBuffer = nullptr;
 			_pickInfo = nullptr;
 		}
 	}
@@ -228,8 +236,8 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 		_cornerBuffer->render(renderer);
 
 		// Render Burgers vectors.
-		if(_arrowBuffer && showBurgersVectors()) {
-			_arrowBuffer->render(renderer);
+		if(_burgersArrowBuffer && showBurgersVectors()) {
+			_burgersArrowBuffer->render(renderer);
 		}
 
 		renderer->endPickObject();
@@ -547,6 +555,9 @@ void DislocationDisplayEditor::createUI(const RolloutInsertionParameters& rollou
 	sublayout->addWidget(new QLabel(tr("Color:")), 2, 0);
 	sublayout->addWidget(burgersVectorColorUI->colorPicker(), 2, 1);
 
+	// Show line directions.
+	BooleanParameterUI* showLineDirectionsUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_showLineDirections));
+	layout->addWidget(showLineDirectionsUI->checkBox());
 }
 
 }	// End of namespace
