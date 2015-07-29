@@ -23,45 +23,27 @@
 #include <core/utilities/io/FileManager.h>
 #include <core/utilities/concurrent/Future.h>
 #include <core/dataset/importexport/FileSource.h>
-#include "FHIAimsImporter.h"
+#include "FHIAimsLogFileImporter.h"
 
 #include <boost/algorithm/string.hpp>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, FHIAimsImporter, ParticleImporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, FHIAimsLogFileImporter, ParticleImporter);
 
 /******************************************************************************
 * Checks if the given file has format that can be read by this importer.
 ******************************************************************************/
-bool FHIAimsImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceLocation)
+bool FHIAimsLogFileImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceLocation)
 {
 	// Open input file.
 	CompressedTextReader stream(input, sourceLocation.path());
 
-	// Look for 'atom' or 'atom_frac' keywords.
-	// They must appear within the first 100 lines of the file.
-	for(int i = 0; i < 100 && !stream.eof(); i++) {
-		const char* line = stream.readLineTrimLeft(1024);
-
-		if(boost::algorithm::starts_with(line, "atom")) {
-			if(boost::algorithm::starts_with(line, "atom_frac"))
-				line += 9;
-			else
-				line += 4;
-
-			// Trim anything from '#' onward.
-			std::string line2 = line;
-			size_t commentStart = line2.find_first_of('#');
-			if(commentStart != std::string::npos) line2.resize(commentStart);
-
-			// Make sure keyword is followed by three numbers and an atom type name, and nothing else.
-			FloatType x,y,z;
-			char atomTypeName[16];
-			char tail[2];
-			if(sscanf(line2.c_str(), FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " %15s %1s", &x, &y, &z, atomTypeName, tail) != 4)
-				return false;
-
+	// Look for 'Invoking FHI-aims' message.
+	// It must appear within the first 20 lines of the file.
+	for(int i = 0; i < 20 && !stream.eof(); i++) {
+		const char* line = stream.readLineTrimLeft(128);
+		if(boost::algorithm::starts_with(line, "Invoking FHI-aims")) {
 			return true;
 		}
 	}
@@ -69,11 +51,47 @@ bool FHIAimsImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceLoca
 }
 
 /******************************************************************************
+* Scans the given input file to find all contained simulation frames.
+******************************************************************************/
+void FHIAimsLogFileImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
+{
+	futureInterface.setProgressText(tr("Scanning FHI-aims log file %1").arg(stream.filename()));
+	futureInterface.setProgressRange(stream.underlyingSize() / 1000);
+
+	// Regular expression for whitespace characters.
+	QRegularExpression ws_re(QStringLiteral("\\s+"));
+
+	QFileInfo fileInfo(stream.device().fileName());
+	QString filename = fileInfo.fileName();
+	QDateTime lastModified = fileInfo.lastModified();
+	int frameNumber = 0;
+
+	while(!stream.eof()) {
+		const char* line = stream.readLineTrimLeft();
+		if(boost::algorithm::starts_with(line, "Updated atomic structure:")) {
+			stream.readLine();
+			Frame frame;
+			frame.sourceFile = sourceUrl;
+			frame.byteOffset = stream.byteOffset();
+			frame.lineNumber = stream.lineNumber();
+			frame.lastModificationTime = lastModified;
+			frame.label = QString("%1 (Frame %2)").arg(filename).arg(frameNumber++);
+			frames.push_back(frame);
+		}
+
+		futureInterface.setProgressValueIntermittent(stream.underlyingByteOffset() / 1000);
+		if(futureInterface.isCanceled())
+			return;
+	}
+}
+
+/******************************************************************************
 * Parses the given input file and stores the data in the given container object.
 ******************************************************************************/
-void FHIAimsImporter::FHIAimsImportTask::parseFile(CompressedTextReader& stream)
+void FHIAimsLogFileImporter::FHIAimsImportTask::parseFile(CompressedTextReader& stream)
 {
-	setProgressText(tr("Reading FHI-aims geometry file %1").arg(frame().sourceFile.toString(QUrl::RemovePassword | QUrl::PreferLocalFile | QUrl::PrettyDecoded)));
+	setProgressText(tr("Reading FHI-aims log file %1").arg(frame().sourceFile.toString(QUrl::RemovePassword | QUrl::PreferLocalFile | QUrl::PrettyDecoded)));
+	qint64 fileOffset = stream.byteOffset();
 
 	// First pass: determine the cell geometry and number of atoms.
 	AffineTransformation cell = AffineTransformation::Identity();
@@ -81,7 +99,6 @@ void FHIAimsImporter::FHIAimsImportTask::parseFile(CompressedTextReader& stream)
 	int totalAtomCount = 0;
 	while(!stream.eof()) {
 		const char* line = stream.readLineTrimLeft();
-
 		if(boost::algorithm::starts_with(line, "lattice_vector")) {
 			if(lattVecCount >= 3)
 				throw Exception(tr("FHI-aims file contains more than three lattice vectors (line %1): %2").arg(stream.lineNumber()).arg(stream.lineString()));
@@ -92,9 +109,12 @@ void FHIAimsImporter::FHIAimsImportTask::parseFile(CompressedTextReader& stream)
 		else if(boost::algorithm::starts_with(line, "atom")) {
 			totalAtomCount++;
 		}
+		else if(line[0] > ' ') {
+			break;
+		}
 	}
 	if(totalAtomCount == 0)
-		throw Exception(tr("Invalid FHI-aims file: No atoms found."));
+		throw Exception(tr("Invalid FHI-aims log file: No atoms found."));
 
 	// Create the particle properties.
 	ParticleProperty* posProperty = new ParticleProperty(totalAtomCount, ParticleProperty::PositionProperty, 0, false);
@@ -102,14 +122,13 @@ void FHIAimsImporter::FHIAimsImportTask::parseFile(CompressedTextReader& stream)
 	ParticleProperty* typeProperty = new ParticleProperty(totalAtomCount, ParticleProperty::ParticleTypeProperty, 0, false);
 	addParticleProperty(typeProperty);
 
-	// Return to file beginning.
-	stream.seek(0);
+	// Return to beginning of frame.
+	stream.seek(fileOffset);
 
 	// Second pass: read atom coordinates and types.
 	for(int i = 0; i < totalAtomCount; i++) {
 		while(true) {
 			const char* line = stream.readLineTrimLeft();
-
 			if(boost::algorithm::starts_with(line, "atom")) {
 				bool isFractional = boost::algorithm::starts_with(line, "atom_frac");
 				Point3& pos = posProperty->dataPoint3()[i];

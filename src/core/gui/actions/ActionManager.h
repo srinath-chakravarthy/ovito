@@ -128,6 +128,9 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)
 /// This actions activates the scene node rotation mode.
 #define ACTION_XFORM_ROTATE_MODE			"XFormRotateMode"
 
+/// This actions lets the user select a script file to run.
+#define ACTION_SCRIPTING_RUN_FILE			"ScriptingRunFile"
+
 /**
  * \brief Manages all available user interface actions.
  */

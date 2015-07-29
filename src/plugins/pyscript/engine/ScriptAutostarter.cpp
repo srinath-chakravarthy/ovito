@@ -21,6 +21,9 @@
 
 #include <plugins/pyscript/PyScript.h>
 #include <core/gui/app/Application.h>
+#include <core/gui/actions/ActionManager.h>
+#include <core/gui/dialogs/HistoryFileDialog.h>
+#include <core/gui/mainwin/MainWindow.h>
 #include <core/dataset/DataSetContainer.h>
 #include "ScriptAutostarter.h"
 #include "ScriptEngine.h"
@@ -35,7 +38,7 @@ IMPLEMENT_OVITO_OBJECT(PyScript, ScriptAutostarter, AutoStartObject);
 ScriptAutostarter::~ScriptAutostarter()
 {
 	// Shut down Python interpreter.
-	// This will invoke the Python functions registered with the 'atexit' module.
+	// This will run the Python functions registered with the 'atexit' module.
 	Py_Finalize();
 }
 
@@ -52,6 +55,35 @@ void ScriptAutostarter::registerCommandLineOptions(QCommandLineParser& cmdLinePa
 
 	// Register the --exec command line option.
 	cmdLineParser.addOption(QCommandLineOption("exec", tr("Executes a single Python statement."), tr("CMD")));
+}
+
+/******************************************************************************
+* Is called when a new main window is created.
+******************************************************************************/
+void ScriptAutostarter::registerActions(ActionManager& actionManager)
+{
+	// Register an action, which allows the user to run a Python script file.
+	QAction* runScriptFileAction = actionManager.createCommandAction(ACTION_SCRIPTING_RUN_FILE, tr("Run Script File..."));
+	connect(runScriptFileAction, &QAction::triggered, [&actionManager]() {
+		// Let the user select a script file on disk.
+		HistoryFileDialog dlg("ScriptFile", actionManager.mainWindow(), tr("Run Script File"), QString(), tr("Script files (*.py)"));
+		if(dlg.exec() != QDialog::Accepted)
+			return;
+		QString scriptFile = dlg.selectedFiles().front();
+		DataSet* dataset = actionManager.mainWindow()->datasetContainer().currentSet();
+
+		// Execute the script file.
+		// Keep undo records so that script actions can be undone.
+		dataset->undoStack().beginCompoundOperation(tr("Script actions"));
+		try {
+			ScriptEngine engine(dataset);
+			engine.executeFile(scriptFile);
+		}
+		catch(const Exception& ex) {
+			ex.showError();
+		}
+		dataset->undoStack().endCompoundOperation();
+	});
 }
 
 /******************************************************************************

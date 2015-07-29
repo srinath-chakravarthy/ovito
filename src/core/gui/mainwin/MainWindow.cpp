@@ -31,6 +31,7 @@
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/viewport/input/ViewportInputManager.h>
 #include <core/rendering/viewport/ViewportSceneRenderer.h>
+#include <core/plugins/autostart/AutoStartObject.h>
 #include "MainWindow.h"
 #include "ViewportsPanel.h"
 #include "cmdpanel/CommandPanel.h"
@@ -57,6 +58,10 @@ MainWindow::MainWindow() : _datasetContainer(this)
 
 	// Create actions.
 	_actionManager = new ActionManager(this);
+
+	// Let auto-start objects register their actions.
+	for(const auto& obj : Application::instance().autostartObjects())
+		obj->registerActions(*_actionManager);
 
 	// Create the main menu
 	createMainMenu();
@@ -252,6 +257,14 @@ void MainWindow::createMainMenu()
 	editMenu->addAction(actionManager()->getAction(ACTION_EDIT_REDO));
 	editMenu->addSeparator();
 	editMenu->addAction(actionManager()->getAction(ACTION_EDIT_DELETE));
+
+	// Build the scripting menu.
+	QAction* runScriptFileAction = actionManager()->getAction(ACTION_SCRIPTING_RUN_FILE);
+	if(runScriptFileAction) {
+		QMenu* scriptingMenu = menuBar->addMenu(tr("&Scripting"));
+		scriptingMenu->setObjectName(QStringLiteral("ScriptingMenu"));
+		scriptingMenu->addAction(runScriptFileAction);
+	}
 
 	// Build the options menu.
 	QMenu* optionsMenu = menuBar->addMenu(tr("&Options"));

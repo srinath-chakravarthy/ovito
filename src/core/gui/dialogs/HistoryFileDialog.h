@@ -36,7 +36,7 @@ class OVITO_CORE_EXPORT HistoryFileDialog : public QFileDialog
 public:
 
 	/// \brief Constructs the dialog window.
-	HistoryFileDialog(const QString& dialogClass, QWidget* parent = NULL, const QString& caption = QString(), const QString& directory = QString(), const QString& filter = QString());
+	HistoryFileDialog(const QString& dialogClass, QWidget* parent = nullptr, const QString& caption = QString(), const QString& directory = QString(), const QString& filter = QString());
 	
 private Q_SLOTS:
 

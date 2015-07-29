@@ -46,6 +46,9 @@ public:
 	/// \brief Registers plugin-specific command line options.
 	virtual void registerCommandLineOptions(QCommandLineParser& cmdLineParser) override;
 
+	/// \brief Is called when a new main window is created.
+	virtual void registerActions(ActionManager& actionManager) override;
+
 	/// \brief Is called after the application has been completely initialized.
 	virtual void applicationStarted() override;
 

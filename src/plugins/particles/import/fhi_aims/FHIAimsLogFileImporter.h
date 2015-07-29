@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_FHI_AIMS_IMPORTER_H
-#define __OVITO_FHI_AIMS_IMPORTER_H
+#ifndef __OVITO_FHI_AIMS_LOG_FILE_IMPORTER_H
+#define __OVITO_FHI_AIMS_LOG_FILE_IMPORTER_H
 
 #include <plugins/particles/Particles.h>
 #include "../ParticleImporter.h"
@@ -28,14 +28,16 @@
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
 /**
- * \brief File parser for 'geometry.in' files of the FHI-aims code.
+ * \brief File parser for log files of the FHI-aims code.
  */
-class OVITO_PARTICLES_EXPORT FHIAimsImporter : public ParticleImporter
+class OVITO_PARTICLES_EXPORT FHIAimsLogFileImporter : public ParticleImporter
 {
 public:
 
 	/// \brief Constructs a new instance of this class.
-	Q_INVOKABLE FHIAimsImporter(DataSet* dataset) : ParticleImporter(dataset) {}
+	Q_INVOKABLE FHIAimsLogFileImporter(DataSet* dataset) : ParticleImporter(dataset) {
+		setMultiTimestepFile(true);
+	}
 
 	/// \brief Returns the file filter that specifies the files that can be imported by this service.
 	/// \return A wild-card pattern that specifies the file types that can be handled by this import class.
@@ -43,7 +45,7 @@ public:
 
 	/// \brief Returns the filter description that is displayed in the drop-down box of the file dialog.
 	/// \return A string that describes the file format.
-	virtual QString fileFilterDescription() override { return tr("FHI-aims Geometry Files"); }
+	virtual QString fileFilterDescription() override { return tr("FHI-aims Log Files"); }
 
 	/// \brief Checks if the given file has format that can be read by this importer.
 	virtual bool checkFileFormat(QFileDevice& input, const QUrl& sourceLocation) override;
@@ -55,6 +57,11 @@ public:
 	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame) override {
 		return std::make_shared<FHIAimsImportTask>(dataset()->container(), frame, isNewlySelectedFile());
 	}
+
+protected:
+
+	/// \brief Scans the given input file to find all contained simulation frames.
+	virtual void scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream) override;
 
 private:
 
@@ -83,4 +90,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_FHI_AIMS_IMPORTER_H
+#endif // __OVITO_FHI_AIMS_LOG_FILE_IMPORTER_H

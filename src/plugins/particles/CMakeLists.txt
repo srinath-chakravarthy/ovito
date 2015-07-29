@@ -86,6 +86,7 @@ SET(SourceFiles
 	import/cfg/CFGImporter.cpp
 	import/pdb/PDBImporter.cpp
 	import/fhi_aims/FHIAimsImporter.cpp
+	import/fhi_aims/FHIAimsLogFileImporter.cpp
 	export/ParticleExporter.cpp
 	export/ParticleExporterSettingsDialog.cpp
 	export/OutputColumnMapping.cpp

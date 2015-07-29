@@ -108,6 +108,9 @@ public:
 		_runOnceList.insert(target, std::forward<F>(func));
 	}
 
+	/// Returns the list of auto-start objects created at application startup.
+	const std::vector<OORef<AutoStartObject>>& autostartObjects() const { return _autostartObjects; }
+
 private:
 
 	/// Initializes the graphical user interface of the application.

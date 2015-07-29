@@ -260,7 +260,7 @@ bool Application::initialize(int& argc, char** argv)
 			return true;
 		}
 
-		// Load state file specified at the command line.
+		// Load state file specified on the command line.
 		if(cmdLineParser().positionalArguments().empty() == false) {
 			QString startupFilename = cmdLineParser().positionalArguments().front();
 			if(startupFilename.endsWith(".ovito", Qt::CaseInsensitive))
@@ -271,7 +271,7 @@ bool Application::initialize(int& argc, char** argv)
 		if(datasetContainer()->currentSet() == nullptr)
 			datasetContainer()->fileNew();
 
-		// Import data file specified at the command line.
+		// Import data file specified on  the command line.
 		if(cmdLineParser().positionalArguments().empty() == false) {
 			QString importFilename = cmdLineParser().positionalArguments().front();
 			if(!importFilename.endsWith(".ovito", Qt::CaseInsensitive)) {
