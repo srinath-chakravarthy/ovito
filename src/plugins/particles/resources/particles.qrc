@@ -4,6 +4,12 @@
 <qresource prefix="/particles">
 	
 	<file>icons/export_color_scale.png</file>
+	<file>icons/particle_shape_sphere.png</file>
+	<file>icons/particle_shape_cube.png</file>
+	<file>icons/particle_shape_circle.png</file>
+	<file>icons/particle_shape_square.png</file>
+	<file>icons/particle_shape_cylinder.png</file>
+	<file>icons/particle_shape_spherocylinder.png</file>
 	
 </qresource> 
 

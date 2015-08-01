@@ -26,6 +26,7 @@
 #include <core/scene/objects/DisplayObject.h>
 #include <core/scene/objects/WeakVersionedObjectReference.h>
 #include <core/rendering/ParticlePrimitive.h>
+#include <core/rendering/ArrowPrimitive.h>
 #include <core/rendering/SceneRenderer.h>
 #include <core/gui/properties/PropertiesEditor.h>
 #include "ParticlePropertyObject.h"
@@ -34,10 +35,23 @@
 namespace Ovito { namespace Particles {
 
 /**
- * \brief A scene display object for particles.
+ * \brief A display object for particles.
  */
 class OVITO_PARTICLES_EXPORT ParticleDisplay : public DisplayObject
 {
+public:
+
+	/// The shapes supported by the particle display object.
+	enum ParticleShape {
+		Sphere,
+		Box,
+		Circle,
+		Square,
+		Cylinder,
+		Spherocylinder
+	};
+	Q_ENUMS(ParticleShape);
+
 public:
 
 	/// \brief Constructor.
@@ -49,23 +63,17 @@ public:
 	/// \brief Computes the bounding box of the object.
 	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
 
-	/// \brief Returns the default display radius of particles.
-	FloatType defaultParticleRadius() const { return _defaultParticleRadius; }
-
 	/// \brief Returns the default display color for particles.
 	Color defaultParticleColor() const { return Color(1,1,1); }
 
 	/// \brief Returns the display color used for selected particles.
 	Color selectionParticleColor() const { return Color(1,0,0); }
 
-	/// \brief Sets the default display radius of atomic particles.
+	/// \brief Returns the default display radius of particles.
+	FloatType defaultParticleRadius() const { return _defaultParticleRadius; }
+
+	/// \brief Sets the default display radius of particles.
 	void setDefaultParticleRadius(FloatType newRadius) { _defaultParticleRadius = newRadius; }
-
-	/// \brief Returns the selected shading mode for particles.
-	ParticlePrimitive::ShadingMode shadingMode() const { return _shadingMode; }
-
-	/// \brief Sets the shading mode for particles.
-	void setShadingMode(ParticlePrimitive::ShadingMode mode) { _shadingMode = mode; }
 
 	/// \brief Returns the selected rendering quality mode for particles.
 	ParticlePrimitive::RenderingQuality renderingQuality() const { return _renderingQuality; }
@@ -77,13 +85,13 @@ public:
 	void setRenderingQuality(ParticlePrimitive::RenderingQuality quality) { _renderingQuality = quality; }
 
 	/// \brief Returns the display shape of particles.
-	ParticlePrimitive::ParticleShape particleShape() const { return _particleShape; }
+	ParticleShape particleShape() const { return _particleShape; }
 
 	/// \brief Returns the actual particle shape used to render the particles.
 	ParticlePrimitive::ParticleShape effectiveParticleShape(ParticlePropertyObject* shapeProperty) const;
 
 	/// \brief Sets the display shape of particles.
-	void setParticleShape(ParticlePrimitive::ParticleShape shape) { _particleShape = shape; }
+	void setParticleShape(ParticleShape shape) { _particleShape = shape; }
 
 	/// \brief Determines the display particle colors.
 	void particleColors(std::vector<Color>& output, ParticlePropertyObject* colorProperty, ParticleTypeProperty* typeProperty, ParticlePropertyObject* selectionProperty = nullptr);
@@ -100,28 +108,45 @@ public:
 	/// \brief Computes the bounding box of the particles.
 	Box3 particleBoundingBox(ParticlePropertyObject* positionProperty, ParticleTypeProperty* typeProperty, ParticlePropertyObject* radiusProperty, ParticlePropertyObject* shapeProperty, bool includeParticleRadius = true);
 
+	/// \brief Render a marker around a particle to highlight it in the viewports.
+	void highlightParticle(int particleIndex, const PipelineFlowState& flowState, ViewportSceneRenderer* renderer);
+
+	/// \brief Compute the (local) bounding box of the marker around a particle used to highlight it in the viewports.
+	Box3 highlightParticleBoundingBox(int particleIndex, const PipelineFlowState& flowState, const AffineTransformation& tm, Viewport* viewport);
+
 public:
 
-    Q_PROPERTY(Ovito::ParticlePrimitive::ShadingMode shadingMode READ shadingMode WRITE setShadingMode);
     Q_PROPERTY(Ovito::ParticlePrimitive::RenderingQuality renderingQuality READ renderingQuality WRITE setRenderingQuality);
-    Q_PROPERTY(Ovito::ParticlePrimitive::ParticleShape particleShape READ particleShape WRITE setParticleShape);
+    Q_PROPERTY(Ovito::Particles::ParticleDisplay::ParticleShape particleShape READ particleShape WRITE setParticleShape);
 
 protected:
+
+    /// Loads the data of this class from an input stream.
+	virtual void loadFromStream(ObjectLoadStream& stream) override;
+
+private:
 
 	/// Controls the default display radius of atomic particles.
 	PropertyField<FloatType> _defaultParticleRadius;
 
 	/// Controls the shading mode for particles.
+	/// DEPRECATED: This field is for backward-compatibility with OVITO 2.5.0
 	PropertyField<ParticlePrimitive::ShadingMode, int> _shadingMode;
 
 	/// Controls the rendering quality mode for particles.
 	PropertyField<ParticlePrimitive::RenderingQuality, int> _renderingQuality;
 
 	/// Controls the display shape of particles.
-	PropertyField<ParticlePrimitive::ParticleShape, int> _particleShape;
+	PropertyField<ParticleShape, int> _particleShape;
 
 	/// The buffered particle geometry used to render the particles.
 	std::shared_ptr<ParticlePrimitive> _particleBuffer;
+
+	/// The buffered particle geometry used to render particles with cylindrical shape.
+	std::shared_ptr<ArrowPrimitive> _cylinderBuffer;
+
+	/// The buffered particle geometry used to render spherocylinder particles.
+	std::shared_ptr<ParticlePrimitive> _spherocylinderBuffer;
 
 	/// This helper structure is used to detect any changes in the particle positions
 	/// that require updating the particle position buffer.
@@ -153,6 +178,18 @@ protected:
 		WeakVersionedOORef<ParticlePropertyObject>,		// Transparency property + revision number
 		WeakVersionedOORef<ParticlePropertyObject>		// Position property + revision number
 		> _colorsCacheHelper;
+
+	/// This helper structure is used to detect any changes in the particle properties
+	/// that require updating the cylinder geometry buffer.
+	SceneObjectCacheHelper<
+		WeakVersionedOORef<ParticlePropertyObject>,		// Position property + revision number
+		WeakVersionedOORef<ParticlePropertyObject>,		// Type property + revision number
+		WeakVersionedOORef<ParticlePropertyObject>,		// Selection property + revision number
+		WeakVersionedOORef<ParticlePropertyObject>,		// Color property + revision number
+		WeakVersionedOORef<ParticlePropertyObject>,		// Shape property + revision number
+		WeakVersionedOORef<ParticlePropertyObject>,		// Orientation property + revision number
+		FloatType										// Default particle radius
+		> _cylinderCacheHelper;
 
 	/// The bounding box that includes all particles.
 	Box3 _cachedBoundingBox;
@@ -189,7 +226,8 @@ class OVITO_PARTICLES_EXPORT ParticlePickInfo : public ObjectPickInfo
 public:
 
 	/// Constructor.
-	ParticlePickInfo(const PipelineFlowState& pipelineState) : _pipelineState(pipelineState) {}
+	ParticlePickInfo(ParticleDisplay* displayObj, const PipelineFlowState& pipelineState, int particleCount) :
+		_displayObject(displayObj), _pipelineState(pipelineState), _particleCount(particleCount) {}
 
 	/// The pipeline flow state containing the particle properties.
 	const PipelineFlowState& pipelineState() const { return _pipelineState; }
@@ -197,10 +235,20 @@ public:
 	/// Returns a human-readable string describing the picked object, which will be displayed in the status bar by OVITO.
 	virtual QString infoString(ObjectNode* objectNode, quint32 subobjectId) override;
 
+	/// Given an sub-object ID returned by the Viewport::pick() method, looks up the
+	/// corresponding particle index.
+	int particleIndexFromSubObjectID(quint32 subobjID) const;
+
 private:
 
 	/// The pipeline flow state containing the particle properties.
 	PipelineFlowState _pipelineState;
+
+	/// The display object that rendered the particles.
+	OORef<ParticleDisplay> _displayObject;
+
+	/// The number of rendered particles;
+	int _particleCount;
 
 	Q_OBJECT
 	OVITO_OBJECT
@@ -231,5 +279,8 @@ OVITO_END_INLINE_NAMESPACE
 
 }	// End of namespace
 }	// End of namespace
+
+Q_DECLARE_METATYPE(Ovito::Particles::ParticleDisplay::ParticleShape);
+Q_DECLARE_TYPEINFO(Ovito::Particles::ParticleDisplay::ParticleShape, Q_PRIMITIVE_TYPE);
 
 #endif // __OVITO_PARTICLE_DISPLAY_H

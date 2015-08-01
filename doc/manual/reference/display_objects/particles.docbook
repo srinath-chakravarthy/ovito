@@ -26,27 +26,40 @@
 
     <variablelist>
       <varlistentry>
-        <term>Shading</term>
-        <listitem>
-          <para>Switches between a three-dimensional particle representation (<emphasis>normal shading</emphasis>) and a two-dimensional
-          representation (<emphasis>flat shading</emphasis>).</para>
-        </listitem>
-      </varlistentry>
-      <varlistentry>
         <term>Shape</term>
         <listitem>
-          <para>The visual shape of particles.
-          OVITO currently supports spherical and ellipsoidal particles (<emphasis>round</emphasis>) and 
-          cubic and box-shaped particles (<emphasis>square</emphasis>). 
-          When flat shading is selected, they will be rendered as discs and squares, respectively.</para>
+          <para>Selects the visual shape of particles.
+          Note that spherical particles can be turned into <link linkend="howto.aspherical_particles">ellipsoidal particles</link>
+          by setting the <literal>Aspherical Shape</literal> particle property. Similarly,
+          the size of box-shaped particles can be controlled with the same property.
+          </para>
+          <para>
+          The size of cylindrical and spherocylindrical particles is also controlled by the 
+          <literal>Aspherical Shape</literal> property. Here, the component <literal>Aspherical Shape.X</literal>
+          determines the radius of the cylinder, and <literal>Aspherical Shape.Z</literal> determines its
+          length. The vector component <literal>Aspherical Shape.Y</literal> is ignored.
+          </para>
+          <para>
+          The orientation of ellipsoidal, box, and cylindrical particles can be controlled 
+          using the <literal>Orientation</literal> particle property. With this property,
+          a quaternion can be specified for each particle which determines its orientation in space.
+          If the <literal>Orientation</literal> property is not defined, all particles
+          will be aligned with the global simulation coordinate axes.
+          </para>
         </listitem>
       </varlistentry>
       <varlistentry>
         <term>Default particle radius</term>
         <listitem>
-          <para>Sets the display size of particles that have an otherwise unspecified size. 
-          This size is only used for particles that don't have a <literal>Radius</literal> property, 
-          and which are not of a particle type that has a certain size.</para>
+          <para>Specifies the display size of particles that have an otherwise unspecified size. 
+          This size value is only used for particles for which <emphasis>none</emphasis> of the following applies:
+          <itemizedlist>
+            <listitem><para>The <literal>Radius</literal> property has been set.</para></listitem>
+            <listitem><para>A non-zero type-specific radius has been set for the particle's type.</para></listitem>
+          </itemizedlist>
+          In other words, this parameter provides a fallback value if no display size has been set on a 
+          per-particle basis or on a per-type basis.
+          </para>
         </listitem>
       </varlistentry>
       <varlistentry>

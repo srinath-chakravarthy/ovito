@@ -44,11 +44,12 @@ bool ParticlePickingHelper::pickParticle(Viewport* vp, const QPoint& clickPoint,
 		ParticlePickInfo* pickInfo = dynamic_object_cast<ParticlePickInfo>(vpPickResult.pickInfo);
 		if(pickInfo) {
 			ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(pickInfo->pipelineState(), ParticleProperty::PositionProperty);
-			if(posProperty && vpPickResult.subobjectId < posProperty->size()) {
+			int particleIndex = pickInfo->particleIndexFromSubObjectID(vpPickResult.subobjectId);
+			if(posProperty && particleIndex >= 0) {
 				// Save reference to the selected particle.
 				TimeInterval iv;
 				result.objNode = vpPickResult.objectNode;
-				result.particleIndex = vpPickResult.subobjectId;
+				result.particleIndex = particleIndex;
 				result.localPos = posProperty->getPoint3(result.particleIndex);
 				result.worldPos = result.objNode->getWorldTransform(vp->dataset()->animationSettings()->time(), iv) * result.localPos;
 
@@ -92,22 +93,7 @@ Box3 ParticlePickingHelper::selectionMarkerBoundingBox(Viewport* vp, const PickR
 	}
 
 	// Fetch properties of selected particle needed to compute the bounding box.
-	ParticlePropertyObject* posProperty = nullptr;
-	ParticlePropertyObject* radiusProperty = nullptr;
-	ParticlePropertyObject* shapeProperty = nullptr;
-	ParticleTypeProperty* typeProperty = nullptr;
-	for(DataObject* dataObj : flowState.objects()) {
-		ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(dataObj);
-		if(!property) continue;
-		if(property->type() == ParticleProperty::PositionProperty && property->size() >= particleIndex)
-			posProperty = property;
-		else if(property->type() == ParticleProperty::RadiusProperty && property->size() >= particleIndex)
-			radiusProperty = property;
-		else if(property->type() == ParticleProperty::AsphericalShapeProperty && property->size() >= particleIndex)
-			shapeProperty = property;
-		else if(property->type() == ParticleProperty::ParticleTypeProperty && property->size() >= particleIndex)
-			typeProperty = dynamic_object_cast<ParticleTypeProperty>(property);
-	}
+	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(flowState, ParticleProperty::PositionProperty);
 	if(!posProperty)
 		return Box3();
 
@@ -120,24 +106,10 @@ Box3 ParticlePickingHelper::selectionMarkerBoundingBox(Viewport* vp, const PickR
 	if(!particleDisplay)
 		return Box3();
 
-	// Determine position of selected particle.
-	Point3 pos = posProperty->getPoint3(particleIndex);
-
-	// Determine radius of selected particle.
-	FloatType radius = particleDisplay->particleRadius(particleIndex, radiusProperty, typeProperty);
-	if(shapeProperty) {
-		radius = std::max(radius, shapeProperty->getVector3(particleIndex).x());
-		radius = std::max(radius, shapeProperty->getVector3(particleIndex).y());
-		radius = std::max(radius, shapeProperty->getVector3(particleIndex).z());
-	}
-
-	if(radius <= 0)
-		return Box3();
-
 	TimeInterval iv;
 	const AffineTransformation& nodeTM = pickRecord.objNode->getWorldTransform(vp->dataset()->animationSettings()->time(), iv);
 
-	return nodeTM * Box3(pos, radius + vp->nonScalingSize(nodeTM * pos) * 1e-1f);
+	return nodeTM * particleDisplay->highlightParticleBoundingBox(particleIndex, flowState, nodeTM, vp);
 }
 
 /******************************************************************************
@@ -167,34 +139,7 @@ void ParticlePickingHelper::renderSelectionMarker(Viewport* vp, ViewportSceneRen
 	}
 
 	// Fetch properties of selected particle needed to render the overlay.
-	ParticlePropertyObject* posProperty = nullptr;
-	ParticlePropertyObject* radiusProperty = nullptr;
-	ParticlePropertyObject* colorProperty = nullptr;
-	ParticlePropertyObject* selectionProperty = nullptr;
-	ParticlePropertyObject* transparencyProperty = nullptr;
-	ParticlePropertyObject* shapeProperty = nullptr;
-	ParticlePropertyObject* orientationProperty = nullptr;
-	ParticleTypeProperty* typeProperty = nullptr;
-	for(DataObject* dataObj : flowState.objects()) {
-		ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(dataObj);
-		if(!property) continue;
-		if(property->type() == ParticleProperty::PositionProperty && property->size() >= particleIndex)
-			posProperty = property;
-		else if(property->type() == ParticleProperty::RadiusProperty && property->size() >= particleIndex)
-			radiusProperty = property;
-		else if(property->type() == ParticleProperty::ParticleTypeProperty && property->size() >= particleIndex)
-			typeProperty = dynamic_object_cast<ParticleTypeProperty>(property);
-		else if(property->type() == ParticleProperty::ColorProperty && property->size() >= particleIndex)
-			colorProperty = property;
-		else if(property->type() == ParticleProperty::SelectionProperty && property->size() >= particleIndex)
-			selectionProperty = property;
-		else if(property->type() == ParticleProperty::TransparencyProperty && property->size() >= particleIndex)
-			transparencyProperty = property;
-		else if(property->type() == ParticleProperty::AsphericalShapeProperty && property->size() >= particleIndex)
-			shapeProperty = property;
-		else if(property->type() == ParticleProperty::OrientationProperty && property->size() >= particleIndex)
-			orientationProperty = property;
-	}
+	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(flowState, ParticleProperty::PositionProperty);
 	if(!posProperty)
 		return;
 
@@ -207,91 +152,13 @@ void ParticlePickingHelper::renderSelectionMarker(Viewport* vp, ViewportSceneRen
 	if(!particleDisplay)
 		return;
 
-	// Determine position of selected particle.
-	Point3 pos = posProperty->getPoint3(particleIndex);
-
-	// Determine radius of selected particle.
-	FloatType radius = particleDisplay->particleRadius(particleIndex, radiusProperty, typeProperty);
-
-	// Determine the display color of selected particle.
-	ColorA color = particleDisplay->particleColor(particleIndex, colorProperty, typeProperty, selectionProperty, transparencyProperty);
-	ColorA highlightColor = particleDisplay->selectionParticleColor();
-
-	// Determine rendering quality used to render the particles.
-	ParticlePrimitive::RenderingQuality renderQuality = particleDisplay->effectiveRenderingQuality(renderer, posProperty);
-
-	// Determine effective particle shape.
-	ParticlePrimitive::ParticleShape particleShape = particleDisplay->effectiveParticleShape(shapeProperty);
-	if(particleShape != ParticlePrimitive::BoxShape && particleShape != ParticlePrimitive::EllipsoidShape) {
-		shapeProperty = nullptr;
-		orientationProperty = nullptr;
-	}
-
+	// Set up transformation.
 	TimeInterval iv;
 	const AffineTransformation& nodeTM = pickRecord.objNode->getWorldTransform(vp->dataset()->animationSettings()->time(), iv);
-
-	if(!_particleBuffer || !_particleBuffer->isValid(renderer)
-			|| !_particleBuffer->setShadingMode(particleDisplay->shadingMode())
-			|| !_particleBuffer->setRenderingQuality(renderQuality)
-			|| !_particleBuffer->setParticleShape(particleShape)) {
-		_particleBuffer = renderer->createParticlePrimitive(
-				particleDisplay->shadingMode(),
-				renderQuality,
-				particleShape,
-				false);
-		_particleBuffer->setSize(1);
-	}
-	_particleBuffer->setParticleColor(color * 0.5f + highlightColor * 0.5f);
-	_particleBuffer->setParticlePositions(&pos);
-	_particleBuffer->setParticleRadius(radius);
-	if(shapeProperty)
-		_particleBuffer->setParticleShapes(shapeProperty->constDataVector3() + particleIndex);
-	if(orientationProperty)
-		_particleBuffer->setParticleOrientations(orientationProperty->constDataQuaternion() + particleIndex);
-
-	// Prepare marker geometry buffer.
-	if(!_highlightBuffer || !_highlightBuffer->isValid(renderer)
-			|| !_highlightBuffer->setShadingMode(particleDisplay->shadingMode())
-			|| !_highlightBuffer->setRenderingQuality(renderQuality)
-			|| !_highlightBuffer->setParticleShape(particleShape)) {
-		_highlightBuffer = renderer->createParticlePrimitive(
-				particleDisplay->shadingMode(),
-				renderQuality,
-				particleShape,
-				false);
-		_highlightBuffer->setSize(1);
-		_highlightBuffer->setParticleColor(highlightColor);
-	}
-	_highlightBuffer->setParticlePositions(&pos);
-	_highlightBuffer->setParticleRadius(radius + vp->nonScalingSize(nodeTM * pos) * 1e-1f);
-	if(shapeProperty) {
-		Vector3 shape = shapeProperty->getVector3(particleIndex);
-		shape += Vector3(vp->nonScalingSize(nodeTM * pos) * 1e-1f);
-		_highlightBuffer->setParticleShapes(&shape);
-	}
-	if(orientationProperty)
-		_highlightBuffer->setParticleOrientations(orientationProperty->constDataQuaternion() + particleIndex);
-
 	renderer->setWorldTransform(nodeTM);
-	GLint oldDepthFunc;
-	glGetIntegerv(GL_DEPTH_FUNC, &oldDepthFunc);
-	glEnable(GL_DEPTH_TEST);
-	glClearStencil(0);
-	glClear(GL_STENCIL_BUFFER_BIT);
-	glEnable(GL_STENCIL_TEST);
-	glStencilFunc(GL_ALWAYS, 0x1, 0x1);
-	glStencilMask(0x1);
-	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-	glDepthFunc(GL_LEQUAL);
-	_particleBuffer->render(renderer);
-	glDisable(GL_DEPTH_TEST);
-	glStencilFunc(GL_NOTEQUAL, 0x1, 0x1);
-	glStencilMask(0x1);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-	_highlightBuffer->render(renderer);
-	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_STENCIL_TEST);
-	glDepthFunc(oldDepthFunc);
+
+	// Render highlight marker.
+	particleDisplay->highlightParticle(particleIndex, flowState, renderer);
 }
 
 OVITO_END_INLINE_NAMESPACE

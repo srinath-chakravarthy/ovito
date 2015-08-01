@@ -387,32 +387,40 @@ BOOST_PYTHON_MODULE(Particles)
 	;
 	python_to_container_conversion<QVector<ParticleType*>>();
 
-	ovito_class<ParticleDisplay, DisplayObject>(
-			":Base class: :py:class:`ovito.vis.Display`\n\n"
-			"Controls the visual appearance of particles.")
-		.add_property("radius", &ParticleDisplay::defaultParticleRadius, &ParticleDisplay::setDefaultParticleRadius,
-				"The default display radius of particles. "
-				"This setting only takes effect if no per-particle or per-type radii are defined."
-				"\n\n"
-				":Default: 1.2\n")
-		.add_property("default_color", &ParticleDisplay::defaultParticleColor)
-		.add_property("selection_color", &ParticleDisplay::selectionParticleColor)
-		.add_property("shading", &ParticleDisplay::shadingMode, &ParticleDisplay::setShadingMode,
-				"The shading mode used to render particles.\n"
-				"Possible values:"
-				"\n\n"
-				"   * ``ParticleDisplay.Shading.Normal`` (default) \n"
-				"   * ``ParticleDisplay.Shading.Flat``\n"
-				"\n")
-		.add_property("rendering_quality", &ParticleDisplay::renderingQuality, &ParticleDisplay::setRenderingQuality)
-		.add_property("shape", &ParticleDisplay::particleShape, &ParticleDisplay::setParticleShape,
-				"The display shape of particles.\n"
-				"Possible values:"
-				"\n\n"
-				"   * ``ParticleDisplay.Shape.Round`` (default) \n"
-				"   * ``ParticleDisplay.Shape.Square``\n"
-				"\n")
-	;
+	{
+		scope s = ovito_class<ParticleDisplay, DisplayObject>(
+				":Base class: :py:class:`ovito.vis.Display`\n\n"
+				"Controls the visual appearance of particles.")
+			.add_property("radius", &ParticleDisplay::defaultParticleRadius, &ParticleDisplay::setDefaultParticleRadius,
+					"The default display radius of particles. "
+					"This setting only takes effect if no per-particle or per-type radii are defined."
+					"\n\n"
+					":Default: 1.2\n")
+			.add_property("default_color", &ParticleDisplay::defaultParticleColor)
+			.add_property("selection_color", &ParticleDisplay::selectionParticleColor)
+			.add_property("rendering_quality", &ParticleDisplay::renderingQuality, &ParticleDisplay::setRenderingQuality)
+			.add_property("shape", &ParticleDisplay::particleShape, &ParticleDisplay::setParticleShape,
+					"The shape of particles.\n"
+					"Possible values:"
+					"\n\n"
+					"   * ``ParticleDisplay.Shape.Sphere`` (default) \n"
+					"   * ``ParticleDisplay.Shape.Box``\n"
+					"   * ``ParticleDisplay.Shape.Circle``\n"
+					"   * ``ParticleDisplay.Shape.Square``\n"
+					"   * ``ParticleDisplay.Shape.Cylinder``\n"
+					"   * ``ParticleDisplay.Shape.Spherocylinder``\n"
+					"\n")
+			;
+
+		enum_<ParticleDisplay::ParticleShape>("Shape")
+			.value("Sphere", ParticleDisplay::Sphere)
+			.value("Box", ParticleDisplay::Box)
+			.value("Circle", ParticleDisplay::Circle)
+			.value("Square", ParticleDisplay::Square)
+			.value("Cylinder", ParticleDisplay::Cylinder)
+			.value("Spherocylinder", ParticleDisplay::Spherocylinder)
+		;
+	}
 
 	ovito_class<VectorDisplay, DisplayObject>(
 			":Base class: :py:class:`ovito.vis.Display`\n\n"

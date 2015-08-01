@@ -22,6 +22,7 @@
 #include <plugins/particles/Particles.h>
 #include <core/utilities/units/UnitsManager.h>
 #include <core/rendering/SceneRenderer.h>
+#include <core/rendering/viewport/ViewportSceneRenderer.h>
 #include <core/gui/properties/FloatParameterUI.h>
 #include <core/gui/properties/VariantComboBoxParameterUI.h>
 
@@ -54,7 +55,7 @@ ParticleDisplay::ParticleDisplay(DataSet* dataset) : DisplayObject(dataset),
 	_defaultParticleRadius(1.2),
 	_shadingMode(ParticlePrimitive::NormalShading),
 	_renderingQuality(ParticlePrimitive::AutoQuality),
-	_particleShape(ParticlePrimitive::SphericalShape)
+	_particleShape(Sphere)
 {
 	INIT_PROPERTY_FIELD(ParticleDisplay::_defaultParticleRadius);
 	INIT_PROPERTY_FIELD(ParticleDisplay::_shadingMode);
@@ -94,7 +95,7 @@ Box3 ParticleDisplay::particleBoundingBox(ParticlePropertyObject* positionProper
 	OVITO_ASSERT(typeProperty == nullptr || typeProperty->type() == ParticleProperty::ParticleTypeProperty);
 	OVITO_ASSERT(radiusProperty == nullptr || radiusProperty->type() == ParticleProperty::RadiusProperty);
 	OVITO_ASSERT(shapeProperty == nullptr || shapeProperty->type() == ParticleProperty::AsphericalShapeProperty);
-	if(shadingMode() != ParticlePrimitive::NormalShading)
+	if(particleShape() != Sphere && particleShape() != Box && particleShape() != Cylinder && particleShape() != Spherocylinder)
 		shapeProperty = nullptr;
 
 	Box3 bbox;
@@ -113,6 +114,8 @@ Box3 ParticleDisplay::particleBoundingBox(ParticlePropertyObject* positionProper
 	if(shapeProperty) {
 		for(const Vector3& s : shapeProperty->constVector3Range())
 			maxAtomRadius = std::max(maxAtomRadius, std::max(s.x(), std::max(s.y(), s.z())));
+		if(particleShape() == Spherocylinder)
+			maxAtomRadius *= 2;
 	}
 	if(radiusProperty && radiusProperty->size() > 0) {
 		maxAtomRadius = *std::max_element(radiusProperty->constDataFloat(), radiusProperty->constDataFloat() + radiusProperty->size());
@@ -305,12 +308,24 @@ ParticlePrimitive::RenderingQuality ParticleDisplay::effectiveRenderingQuality(S
 ******************************************************************************/
 ParticlePrimitive::ParticleShape ParticleDisplay::effectiveParticleShape(ParticlePropertyObject* shapeProperty) const
 {
-	ParticlePrimitive::ParticleShape effectiveParticleShape = particleShape();
-	if(effectiveParticleShape == ParticlePrimitive::SquareShape && shapeProperty != nullptr)
-		effectiveParticleShape = ParticlePrimitive::BoxShape;
-	else if(effectiveParticleShape == ParticlePrimitive::SphericalShape && shapeProperty != nullptr)
-		effectiveParticleShape = ParticlePrimitive::EllipsoidShape;
-	return effectiveParticleShape;
+	if(particleShape() == Sphere) {
+		if(shapeProperty != nullptr) return ParticlePrimitive::EllipsoidShape;
+		else return ParticlePrimitive::SphericalShape;
+	}
+	else if(particleShape() == Box) {
+		if(shapeProperty != nullptr) return ParticlePrimitive::BoxShape;
+		else return ParticlePrimitive::SquareShape;
+	}
+	else if(particleShape() == Circle) {
+		return ParticlePrimitive::SphericalShape;
+	}
+	else if(particleShape() == Square) {
+		return ParticlePrimitive::SquareShape;
+	}
+	else {
+		OVITO_ASSERT(false);
+		return ParticlePrimitive::SphericalShape;
+	}
 }
 
 /******************************************************************************
@@ -327,7 +342,7 @@ void ParticleDisplay::render(TimePoint time, DataObject* dataObject, const Pipel
 	ParticlePropertyObject* transparencyProperty = ParticlePropertyObject::findInState(flowState, ParticleProperty::TransparencyProperty);
 	ParticlePropertyObject* shapeProperty = ParticlePropertyObject::findInState(flowState, ParticleProperty::AsphericalShapeProperty);
 	ParticlePropertyObject* orientationProperty = ParticlePropertyObject::findInState(flowState, ParticleProperty::OrientationProperty);
-	if(shadingMode() != ParticlePrimitive::NormalShading) {
+	if(particleShape() != Sphere && particleShape() != Box && particleShape() != Cylinder && particleShape() != Spherocylinder) {
 		shapeProperty = nullptr;
 		orientationProperty = nullptr;
 	}
@@ -335,150 +350,491 @@ void ParticleDisplay::render(TimePoint time, DataObject* dataObject, const Pipel
 	// Get number of particles.
 	int particleCount = positionProperty ? (int)positionProperty->size() : 0;
 
-	// Do we have to re-create the geometry buffer from scratch?
-	bool recreateBuffer = !_particleBuffer || !_particleBuffer->isValid(renderer);
+	if(particleShape() != Cylinder && particleShape() != Spherocylinder) {
 
-	// If rendering quality is set to automatic, pick quality level based on number of particles.
-	ParticlePrimitive::RenderingQuality renderQuality = effectiveRenderingQuality(renderer, positionProperty);
+		// Not rendering any cylinder primitives.
+		_cylinderBuffer.reset();
+		_spherocylinderBuffer.reset();
 
-	// Determine effective particle shape.
-	ParticlePrimitive::ParticleShape particleShape = effectiveParticleShape(shapeProperty);
-	if(particleShape != ParticlePrimitive::BoxShape && particleShape != ParticlePrimitive::EllipsoidShape) {
-		shapeProperty = nullptr;
-		orientationProperty = nullptr;
-	}
+		// Do we have to re-create the geometry buffer from scratch?
+		bool recreateBuffer = !_particleBuffer || !_particleBuffer->isValid(renderer);
 
-	// Set shading mode and rendering quality.
-	if(!recreateBuffer) {
-		recreateBuffer |= !(_particleBuffer->setShadingMode(shadingMode()));
-		recreateBuffer |= !(_particleBuffer->setRenderingQuality(renderQuality));
-		recreateBuffer |= !(_particleBuffer->setParticleShape(particleShape));
-		recreateBuffer |= ((transparencyProperty != nullptr) != _particleBuffer->translucentParticles());
-	}
+		// If rendering quality is set to automatic, pick quality level based on number of particles.
+		ParticlePrimitive::RenderingQuality renderQuality = effectiveRenderingQuality(renderer, positionProperty);
 
-	// Do we have to resize the render buffer?
-	bool resizeBuffer = recreateBuffer || (_particleBuffer->particleCount() != particleCount);
+		// Determine primitive particle shape and shading mode.
+		ParticlePrimitive::ParticleShape primitiveParticleShape = effectiveParticleShape(shapeProperty);
+		ParticlePrimitive::ShadingMode primitiveShadingMode = ParticlePrimitive::NormalShading;
+		if(particleShape() == Circle || particleShape() == Square)
+			primitiveShadingMode = ParticlePrimitive::FlatShading;
 
-	// Do we have to update the particle positions in the render buffer?
-	bool updatePositions = _positionsCacheHelper.updateState(positionProperty)
-			|| resizeBuffer;
-
-	// Do we have to update the particle radii in the geometry buffer?
-	bool updateRadii = _radiiCacheHelper.updateState(
-			radiusProperty,
-			typeProperty,
-			defaultParticleRadius())
-			|| resizeBuffer;
-
-	// Do we have to update the particle colors in the geometry buffer?
-	bool updateColors = _colorsCacheHelper.updateState(
-			colorProperty,
-			typeProperty,
-			selectionProperty,
-			transparencyProperty,
-			positionProperty)
-			|| resizeBuffer;
-
-	// Do we have to update the particle shapes in the geometry buffer?
-	bool updateShapes = _shapesCacheHelper.updateState(
-			shapeProperty, orientationProperty) || resizeBuffer;
-
-	// Re-create the geometry buffer if necessary.
-	if(recreateBuffer)
-		_particleBuffer = renderer->createParticlePrimitive(shadingMode(), renderQuality, particleShape, transparencyProperty != nullptr);
-
-	// Re-size the geometry buffer if necessary.
-	if(resizeBuffer)
-		_particleBuffer->setSize(particleCount);
-
-	// Update position buffer.
-	if(updatePositions && positionProperty) {
-		OVITO_ASSERT(positionProperty->size() == particleCount);
-		_particleBuffer->setParticlePositions(positionProperty->constDataPoint3());
-	}
-
-	// Update radius buffer.
-	if(updateRadii && particleCount) {
-		if(radiusProperty && radiusProperty->size() == particleCount) {
-			// Take particle radii directly from the radius property.
-			_particleBuffer->setParticleRadii(radiusProperty->constDataFloat());
+		// Set primitive shading mode, shape, and rendering quality.
+		if(!recreateBuffer) {
+			recreateBuffer |= !(_particleBuffer->setShadingMode(primitiveShadingMode));
+			recreateBuffer |= !(_particleBuffer->setRenderingQuality(renderQuality));
+			recreateBuffer |= !(_particleBuffer->setParticleShape(primitiveParticleShape));
+			recreateBuffer |= ((transparencyProperty != nullptr) != _particleBuffer->translucentParticles());
 		}
-		else if(typeProperty && typeProperty->size() == particleCount) {
-			// Assign radii based on particle types.
-			// Build a lookup map for particle type raii.
-			const std::map<int,FloatType> radiusMap = typeProperty->radiusMap();
-			// Skip the following loop if all per-type radii are zero. In this case, simply use the default radius for all particles.
-			if(std::any_of(radiusMap.cbegin(), radiusMap.cend(), [](const std::pair<int,FloatType>& it) { return it.second != 0; })) {
-				// Allocate memory buffer.
-				std::vector<FloatType> particleRadii(particleCount, defaultParticleRadius());
-				// Fill radius array.
-				const int* t = typeProperty->constDataInt();
-				for(auto c = particleRadii.begin(); c != particleRadii.end(); ++c, ++t) {
-					auto it = radiusMap.find(*t);
-					// Set particle radius only if the type's radius is non-zero.
-					if(it != radiusMap.end() && it->second != 0)
-						*c = it->second;
+
+		// Do we have to resize the render buffer?
+		bool resizeBuffer = recreateBuffer || (_particleBuffer->particleCount() != particleCount);
+
+		// Do we have to update the particle positions in the render buffer?
+		bool updatePositions = _positionsCacheHelper.updateState(positionProperty)
+				|| resizeBuffer;
+
+		// Do we have to update the particle radii in the geometry buffer?
+		bool updateRadii = _radiiCacheHelper.updateState(
+				radiusProperty,
+				typeProperty,
+				defaultParticleRadius())
+				|| resizeBuffer;
+
+		// Do we have to update the particle colors in the geometry buffer?
+		bool updateColors = _colorsCacheHelper.updateState(
+				colorProperty,
+				typeProperty,
+				selectionProperty,
+				transparencyProperty,
+				positionProperty)
+				|| resizeBuffer;
+
+		// Do we have to update the particle shapes in the geometry buffer?
+		bool updateShapes = _shapesCacheHelper.updateState(
+				shapeProperty, orientationProperty) || resizeBuffer;
+
+		// Re-create the geometry buffer if necessary.
+		if(recreateBuffer)
+			_particleBuffer = renderer->createParticlePrimitive(primitiveShadingMode, renderQuality, primitiveParticleShape, transparencyProperty != nullptr);
+
+		// Re-size the geometry buffer if necessary.
+		if(resizeBuffer)
+			_particleBuffer->setSize(particleCount);
+
+		// Update position buffer.
+		if(updatePositions && positionProperty) {
+			OVITO_ASSERT(positionProperty->size() == particleCount);
+			_particleBuffer->setParticlePositions(positionProperty->constDataPoint3());
+		}
+
+		// Update radius buffer.
+		if(updateRadii && particleCount) {
+			if(radiusProperty && radiusProperty->size() == particleCount) {
+				// Take particle radii directly from the radius property.
+				_particleBuffer->setParticleRadii(radiusProperty->constDataFloat());
+			}
+			else if(typeProperty && typeProperty->size() == particleCount) {
+				// Assign radii based on particle types.
+				// Build a lookup map for particle type radii.
+				const std::map<int,FloatType> radiusMap = typeProperty->radiusMap();
+				// Skip the following loop if all per-type radii are zero. In this case, simply use the default radius for all particles.
+				if(std::any_of(radiusMap.cbegin(), radiusMap.cend(), [](const std::pair<int,FloatType>& it) { return it.second != 0; })) {
+					// Allocate memory buffer.
+					std::vector<FloatType> particleRadii(particleCount, defaultParticleRadius());
+					// Fill radius array.
+					const int* t = typeProperty->constDataInt();
+					for(auto c = particleRadii.begin(); c != particleRadii.end(); ++c, ++t) {
+						auto it = radiusMap.find(*t);
+						// Set particle radius only if the type's radius is non-zero.
+						if(it != radiusMap.end() && it->second != 0)
+							*c = it->second;
+					}
+					_particleBuffer->setParticleRadii(particleRadii.data());
 				}
-				_particleBuffer->setParticleRadii(particleRadii.data());
+				else {
+					// Assign a constant radius to all particles.
+					_particleBuffer->setParticleRadius(defaultParticleRadius());
+				}
 			}
 			else {
 				// Assign a constant radius to all particles.
 				_particleBuffer->setParticleRadius(defaultParticleRadius());
 			}
 		}
-		else {
-			// Assign a constant radius to all particles.
-			_particleBuffer->setParticleRadius(defaultParticleRadius());
-		}
-	}
 
-	// Update color buffer.
-	if(updateColors && particleCount) {
-		if(colorProperty && !selectionProperty && !transparencyProperty && colorProperty->size() == particleCount) {
-			// Direct particle colors.
-			_particleBuffer->setParticleColors(colorProperty->constDataColor());
-		}
-		else {
-			std::vector<Color> colors(particleCount);
-			particleColors(colors, colorProperty, typeProperty, selectionProperty);
-			if(!transparencyProperty || transparencyProperty->size() != particleCount) {
-				_particleBuffer->setParticleColors(colors.data());
+		// Update color buffer.
+		if(updateColors && particleCount) {
+			if(colorProperty && !selectionProperty && !transparencyProperty && colorProperty->size() == particleCount) {
+				// Direct particle colors.
+				_particleBuffer->setParticleColors(colorProperty->constDataColor());
 			}
 			else {
-				// Add alpha channel based on transparency particle property.
-				std::vector<ColorA> colorsWithAlpha(particleCount);
-				const FloatType* t = transparencyProperty->constDataFloat();
-				auto c_in = colors.cbegin();
-				for(auto c_out = colorsWithAlpha.begin(); c_out != colorsWithAlpha.end(); ++c_out, ++c_in, ++t) {
-					c_out->r() = c_in->r();
-					c_out->g() = c_in->g();
-					c_out->b() = c_in->b();
-					c_out->a() = FloatType(1) - (*t);
+				std::vector<Color> colors(particleCount);
+				particleColors(colors, colorProperty, typeProperty, selectionProperty);
+				if(!transparencyProperty || transparencyProperty->size() != particleCount) {
+					_particleBuffer->setParticleColors(colors.data());
 				}
-				_particleBuffer->setParticleColors(colorsWithAlpha.data());
+				else {
+					// Add alpha channel based on transparency particle property.
+					std::vector<ColorA> colorsWithAlpha(particleCount);
+					const FloatType* t = transparencyProperty->constDataFloat();
+					auto c_in = colors.cbegin();
+					for(auto c_out = colorsWithAlpha.begin(); c_out != colorsWithAlpha.end(); ++c_out, ++c_in, ++t) {
+						c_out->r() = c_in->r();
+						c_out->g() = c_in->g();
+						c_out->b() = c_in->b();
+						c_out->a() = FloatType(1) - (*t);
+					}
+					_particleBuffer->setParticleColors(colorsWithAlpha.data());
+				}
 			}
 		}
-	}
 
-	// Update shapes and orientation buffer.
-	if(updateShapes && particleCount) {
-		if(shapeProperty && shapeProperty->size() == particleCount) {
-			_particleBuffer->setParticleShapes(shapeProperty->constDataVector3());
+		// Update shapes and orientation buffer.
+		if(updateShapes && particleCount) {
+			if(shapeProperty && shapeProperty->size() == particleCount) {
+				_particleBuffer->setParticleShapes(shapeProperty->constDataVector3());
+			}
+			if(orientationProperty && orientationProperty->size() == particleCount) {
+				_particleBuffer->setParticleOrientations(orientationProperty->constDataQuaternion());
+			}
 		}
-		if(orientationProperty && orientationProperty->size() == particleCount) {
-			_particleBuffer->setParticleOrientations(orientationProperty->constDataQuaternion());
+
+		if(renderer->isPicking()) {
+			OORef<ParticlePickInfo> pickInfo(new ParticlePickInfo(this, flowState, particleCount));
+			renderer->beginPickObject(contextNode, pickInfo);
+		}
+
+		_particleBuffer->render(renderer);
+
+		if(renderer->isPicking()) {
+			renderer->endPickObject();
+		}
+	}
+	else {
+		// Rendering cylindrical and spherocylindrical particles.
+
+		// Not rendering point-like particles.
+		_particleBuffer.reset();
+
+		// Do we have to re-create the cylinder geometry buffer?
+		bool recreateCylinderBuffer = !_cylinderBuffer || !_cylinderBuffer->isValid(renderer);
+		if(!recreateCylinderBuffer) {
+			recreateCylinderBuffer |= !(_cylinderBuffer->setShadingMode(ArrowPrimitive::NormalShading));
+			recreateCylinderBuffer |= !(_cylinderBuffer->setRenderingQuality(ArrowPrimitive::HighQuality));
+			recreateCylinderBuffer |= (_cylinderBuffer->shape() != ArrowPrimitive::CylinderShape);
+			recreateCylinderBuffer |= (_cylinderBuffer->elementCount() != particleCount);
+		}
+		if(recreateCylinderBuffer) {
+			_cylinderBuffer = renderer->createArrowPrimitive(ArrowPrimitive::CylinderShape, ArrowPrimitive::NormalShading, ArrowPrimitive::HighQuality);
+		}
+
+		if(particleShape() == Spherocylinder) {
+			// Do we have to re-create the particle geometry buffer?
+			bool recreateParticleBuffer = !_spherocylinderBuffer ||
+											!_spherocylinderBuffer->isValid(renderer) ||
+											(_spherocylinderBuffer->particleCount() != particleCount * 2);
+			if(recreateParticleBuffer) {
+				_spherocylinderBuffer = renderer->createParticlePrimitive(ParticlePrimitive::NormalShading, ParticlePrimitive::HighQuality, ParticlePrimitive::SphericalShape, false);
+				_spherocylinderBuffer->setSize(particleCount * 2);
+				recreateCylinderBuffer = true;
+			}
+		}
+		else {
+			_spherocylinderBuffer.reset();
+		}
+
+		if(_cylinderCacheHelper.updateState(positionProperty, typeProperty, selectionProperty,
+				colorProperty, shapeProperty, orientationProperty,
+				defaultParticleRadius()) || recreateCylinderBuffer) {
+
+			// Determine cylinder colors.
+			std::vector<Color> colors(particleCount);
+			particleColors(colors, colorProperty, typeProperty, selectionProperty);
+
+			std::vector<Point3> sphereCapPositions;
+			std::vector<FloatType> sphereRadii;
+			std::vector<Color> sphereColors;
+			if(_spherocylinderBuffer) {
+				sphereCapPositions.resize(particleCount * 2);
+				sphereRadii.resize(particleCount * 2);
+				sphereColors.resize(particleCount * 2);
+			}
+
+			// Fill cylinder buffer.
+			_cylinderBuffer->startSetElements(particleCount);
+			for(int index = 0; index < particleCount; index++) {
+				const Point3& center = positionProperty->getPoint3(index);
+				FloatType radius, length;
+				if(shapeProperty) {
+					radius = std::abs(shapeProperty->getVector3(index).x());
+					length = shapeProperty->getVector3(index).z();
+				}
+				else {
+					radius = defaultParticleRadius();
+					length = radius * 2;
+				}
+				Vector3 dir = Vector3(0, 0, length);
+				if(orientationProperty) {
+					const Quaternion& q = orientationProperty->getQuaternion(index);
+					if(std::abs(q.dot(q) - FloatType(1)) <= FLOATTYPE_EPSILON)
+						dir = q * dir;
+				}
+				Point3 p = center - (dir * FloatType(0.5));
+				if(_spherocylinderBuffer) {
+					sphereCapPositions[index*2] = p;
+					sphereCapPositions[index*2+1] = p + dir;
+					sphereRadii[index*2] = sphereRadii[index*2+1] = radius;
+					sphereColors[index*2] = sphereColors[index*2+1] = colors[index];
+				}
+				_cylinderBuffer->setElement(index, p, dir, (ColorA)colors[index], radius);
+			}
+			_cylinderBuffer->endSetElements();
+
+			// Fill geometry buffer for spherical caps of spherocylinders.
+			if(_spherocylinderBuffer) {
+				_spherocylinderBuffer->setSize(particleCount * 2);
+				_spherocylinderBuffer->setParticlePositions(sphereCapPositions.data());
+				_spherocylinderBuffer->setParticleRadii(sphereRadii.data());
+				_spherocylinderBuffer->setParticleColors(sphereColors.data());
+			}
+		}
+
+		if(renderer->isPicking()) {
+			OORef<ParticlePickInfo> pickInfo(new ParticlePickInfo(this, flowState, particleCount));
+			renderer->beginPickObject(contextNode, pickInfo);
+		}
+		_cylinderBuffer->render(renderer);
+		if(_spherocylinderBuffer)
+			_spherocylinderBuffer->render(renderer);
+		if(renderer->isPicking()) {
+			renderer->endPickObject();
+		}
+	}
+}
+
+/******************************************************************************
+* Render a marker around a particle to highlight it in the viewports.
+******************************************************************************/
+void ParticleDisplay::highlightParticle(int particleIndex, const PipelineFlowState& flowState, ViewportSceneRenderer* renderer)
+{
+	// Fetch properties of selected particle which are needed to render the overlay.
+	ParticlePropertyObject* posProperty = nullptr;
+	ParticlePropertyObject* radiusProperty = nullptr;
+	ParticlePropertyObject* colorProperty = nullptr;
+	ParticlePropertyObject* selectionProperty = nullptr;
+	ParticlePropertyObject* transparencyProperty = nullptr;
+	ParticlePropertyObject* shapeProperty = nullptr;
+	ParticlePropertyObject* orientationProperty = nullptr;
+	ParticleTypeProperty* typeProperty = nullptr;
+	for(DataObject* dataObj : flowState.objects()) {
+		ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(dataObj);
+		if(!property) continue;
+		if(property->type() == ParticleProperty::PositionProperty && property->size() >= particleIndex)
+			posProperty = property;
+		else if(property->type() == ParticleProperty::RadiusProperty && property->size() >= particleIndex)
+			radiusProperty = property;
+		else if(property->type() == ParticleProperty::ParticleTypeProperty && property->size() >= particleIndex)
+			typeProperty = dynamic_object_cast<ParticleTypeProperty>(property);
+		else if(property->type() == ParticleProperty::ColorProperty && property->size() >= particleIndex)
+			colorProperty = property;
+		else if(property->type() == ParticleProperty::SelectionProperty && property->size() >= particleIndex)
+			selectionProperty = property;
+		else if(property->type() == ParticleProperty::TransparencyProperty && property->size() >= particleIndex)
+			transparencyProperty = property;
+		else if(property->type() == ParticleProperty::AsphericalShapeProperty && property->size() >= particleIndex)
+			shapeProperty = property;
+		else if(property->type() == ParticleProperty::OrientationProperty && property->size() >= particleIndex)
+			orientationProperty = property;
+	}
+	if(!posProperty || particleIndex >= posProperty->size())
+		return;
+
+	// Determine position of selected particle.
+	Point3 pos = posProperty->getPoint3(particleIndex);
+
+	// Determine radius of selected particle.
+	FloatType radius = particleRadius(particleIndex, radiusProperty, typeProperty);
+
+	// Determine the display color of selected particle.
+	ColorA color = particleColor(particleIndex, colorProperty, typeProperty, selectionProperty, transparencyProperty);
+	ColorA highlightColor = selectionParticleColor();
+	color = color * 0.5f + highlightColor * 0.5f;
+
+	// Determine rendering quality used to render the particles.
+	ParticlePrimitive::RenderingQuality renderQuality = effectiveRenderingQuality(renderer, posProperty);
+
+	std::shared_ptr<ParticlePrimitive> particleBuffer;
+	std::shared_ptr<ParticlePrimitive> highlightParticleBuffer;
+	std::shared_ptr<ArrowPrimitive> cylinderBuffer;
+	std::shared_ptr<ArrowPrimitive> highlightCylinderBuffer;
+	if(particleShape() != Cylinder && particleShape() != Spherocylinder) {
+		// Determine effective particle shape and shading mode.
+		ParticlePrimitive::ParticleShape primitiveParticleShape = effectiveParticleShape(shapeProperty);
+		ParticlePrimitive::ShadingMode primitiveShadingMode = ParticlePrimitive::NormalShading;
+		if(particleShape() == ParticleDisplay::Circle || particleShape() == ParticleDisplay::Square)
+			primitiveShadingMode = ParticlePrimitive::FlatShading;
+
+		particleBuffer = renderer->createParticlePrimitive(primitiveShadingMode, renderQuality, primitiveParticleShape, false);
+		particleBuffer->setSize(1);
+		particleBuffer->setParticleColor(color);
+		particleBuffer->setParticlePositions(&pos);
+		particleBuffer->setParticleRadius(radius);
+		if(shapeProperty)
+			particleBuffer->setParticleShapes(shapeProperty->constDataVector3() + particleIndex);
+		if(orientationProperty)
+			particleBuffer->setParticleOrientations(orientationProperty->constDataQuaternion() + particleIndex);
+
+		// Prepare marker geometry buffer.
+		highlightParticleBuffer = renderer->createParticlePrimitive(primitiveShadingMode, renderQuality, primitiveParticleShape, false);
+		highlightParticleBuffer->setSize(1);
+		highlightParticleBuffer->setParticleColor(highlightColor);
+		highlightParticleBuffer->setParticlePositions(&pos);
+		highlightParticleBuffer->setParticleRadius(radius + renderer->viewport()->nonScalingSize(renderer->worldTransform() * pos) * 1e-1f);
+		if(shapeProperty) {
+			Vector3 shape = shapeProperty->getVector3(particleIndex);
+			shape += Vector3(renderer->viewport()->nonScalingSize(renderer->worldTransform() * pos) * 1e-1f);
+			highlightParticleBuffer->setParticleShapes(&shape);
+		}
+		if(orientationProperty)
+			highlightParticleBuffer->setParticleOrientations(orientationProperty->constDataQuaternion() + particleIndex);
+	}
+	else {
+		FloatType radius, length;
+		if(shapeProperty) {
+			radius = std::abs(shapeProperty->getVector3(particleIndex).x());
+			length = shapeProperty->getVector3(particleIndex).z();
+		}
+		else {
+			radius = defaultParticleRadius();
+			length = radius * 2;
+		}
+		Vector3 dir = Vector3(0, 0, length);
+		if(orientationProperty) {
+			const Quaternion& q = orientationProperty->getQuaternion(particleIndex);
+			if(std::abs(q.dot(q) - FloatType(1)) <= FLOATTYPE_EPSILON)
+				dir = q * dir;
+		}
+		Point3 p = pos - (dir * FloatType(0.5));
+		cylinderBuffer = renderer->createArrowPrimitive(ArrowPrimitive::CylinderShape, ArrowPrimitive::NormalShading, ArrowPrimitive::HighQuality);
+		highlightCylinderBuffer = renderer->createArrowPrimitive(ArrowPrimitive::CylinderShape, ArrowPrimitive::NormalShading, ArrowPrimitive::HighQuality);
+		cylinderBuffer->startSetElements(1);
+		cylinderBuffer->setElement(0, p, dir, (ColorA)color, radius);
+		cylinderBuffer->endSetElements();
+		FloatType padding = renderer->viewport()->nonScalingSize(renderer->worldTransform() * pos) * 1e-1f;
+		highlightCylinderBuffer->startSetElements(1);
+		highlightCylinderBuffer->setElement(0, p, dir, highlightColor, radius + padding);
+		highlightCylinderBuffer->endSetElements();
+		if(particleShape() == Spherocylinder) {
+			particleBuffer = renderer->createParticlePrimitive(ParticlePrimitive::NormalShading, ParticlePrimitive::HighQuality, ParticlePrimitive::SphericalShape, false);
+			particleBuffer->setSize(2);
+			highlightParticleBuffer = renderer->createParticlePrimitive(ParticlePrimitive::NormalShading, ParticlePrimitive::HighQuality, ParticlePrimitive::SphericalShape, false);
+			highlightParticleBuffer->setSize(2);
+			Point3 sphereCapPositions[2] = {p, p + dir};
+			FloatType sphereRadii[2] = {radius, radius};
+			FloatType sphereHighlightRadii[2] = {radius + padding, radius + padding};
+			Color sphereColors[2] = {(Color)color, (Color)color};
+			particleBuffer->setParticlePositions(sphereCapPositions);
+			particleBuffer->setParticleRadii(sphereRadii);
+			particleBuffer->setParticleColors(sphereColors);
+			highlightParticleBuffer->setParticlePositions(sphereCapPositions);
+			highlightParticleBuffer->setParticleRadii(sphereHighlightRadii);
+			highlightParticleBuffer->setParticleColor(highlightColor);
 		}
 	}
 
-	if(renderer->isPicking()) {
-		OORef<ParticlePickInfo> pickInfo(new ParticlePickInfo(flowState));
-		renderer->beginPickObject(contextNode, pickInfo);
+	GLint oldDepthFunc;
+	glGetIntegerv(GL_DEPTH_FUNC, &oldDepthFunc);
+	glEnable(GL_DEPTH_TEST);
+	glClearStencil(0);
+	glClear(GL_STENCIL_BUFFER_BIT);
+	glEnable(GL_STENCIL_TEST);
+	glStencilFunc(GL_ALWAYS, 0x1, 0x1);
+	glStencilMask(0x1);
+	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+	glDepthFunc(GL_LEQUAL);
+	if(particleBuffer)
+		particleBuffer->render(renderer);
+	if(cylinderBuffer)
+		cylinderBuffer->render(renderer);
+	glDisable(GL_DEPTH_TEST);
+	glStencilFunc(GL_NOTEQUAL, 0x1, 0x1);
+	glStencilMask(0x1);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+	if(highlightParticleBuffer)
+		highlightParticleBuffer->render(renderer);
+	if(highlightCylinderBuffer)
+		highlightCylinderBuffer->render(renderer);
+	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_STENCIL_TEST);
+	glDepthFunc(oldDepthFunc);
+}
+
+/******************************************************************************
+* Compute the (local) bounding box of the marker around a particle used to highlight it in the viewports.
+******************************************************************************/
+Box3 ParticleDisplay::highlightParticleBoundingBox(int particleIndex, const PipelineFlowState& flowState, const AffineTransformation& tm, Viewport* viewport)
+{
+	// Fetch properties of selected particle needed to compute the bounding box.
+	ParticlePropertyObject* posProperty = nullptr;
+	ParticlePropertyObject* radiusProperty = nullptr;
+	ParticlePropertyObject* shapeProperty = nullptr;
+	ParticleTypeProperty* typeProperty = nullptr;
+	for(DataObject* dataObj : flowState.objects()) {
+		ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(dataObj);
+		if(!property) continue;
+		if(property->type() == ParticleProperty::PositionProperty && property->size() >= particleIndex)
+			posProperty = property;
+		else if(property->type() == ParticleProperty::RadiusProperty && property->size() >= particleIndex)
+			radiusProperty = property;
+		else if(property->type() == ParticleProperty::AsphericalShapeProperty && property->size() >= particleIndex)
+			shapeProperty = property;
+		else if(property->type() == ParticleProperty::ParticleTypeProperty && property->size() >= particleIndex)
+			typeProperty = dynamic_object_cast<ParticleTypeProperty>(property);
+	}
+	if(!posProperty)
+		return Box3();
+
+	// Determine position of selected particle.
+	Point3 pos = posProperty->getPoint3(particleIndex);
+
+	// Determine radius of selected particle.
+	FloatType radius = particleRadius(particleIndex, radiusProperty, typeProperty);
+	if(shapeProperty) {
+		radius = std::max(radius, shapeProperty->getVector3(particleIndex).x());
+		radius = std::max(radius, shapeProperty->getVector3(particleIndex).y());
+		radius = std::max(radius, shapeProperty->getVector3(particleIndex).z());
+		radius *= 2;
 	}
 
-	_particleBuffer->render(renderer);
+	if(radius <= 0)
+		return Box3();
 
-	if(renderer->isPicking()) {
-		renderer->endPickObject();
+	return Box3(pos, radius + viewport->nonScalingSize(tm * pos) * 1e-1f);
+}
+
+/******************************************************************************
+* Loads the data of this class from an input stream.
+******************************************************************************/
+void ParticleDisplay::loadFromStream(ObjectLoadStream& stream)
+{
+	DisplayObject::loadFromStream(stream);
+
+	// This is for backward-compatibility with files written by OVITO 2.5.0.
+	if(_shadingMode == ParticlePrimitive::FlatShading) {
+		_shadingMode = ParticlePrimitive::NormalShading;
+		if(particleShape() == Sphere)
+			setParticleShape(Circle);
+		else if(particleShape() == Box)
+			setParticleShape(Square);
+	}
+}
+
+/******************************************************************************
+* Given an sub-object ID returned by the Viewport::pick() method, looks up the
+* corresponding particle index.
+******************************************************************************/
+int ParticlePickInfo::particleIndexFromSubObjectID(quint32 subobjID) const
+{
+	if(_displayObject->particleShape() != ParticleDisplay::Cylinder
+			&& _displayObject->particleShape() != ParticleDisplay::Spherocylinder) {
+		return subobjID;
+	}
+	else {
+		if(subobjID < _particleCount)
+			return subobjID;
+		else
+			return (subobjID - _particleCount) / 2;
 	}
 }
 
@@ -489,9 +845,11 @@ void ParticleDisplay::render(TimePoint time, DataObject* dataObject, const Pipel
 QString ParticlePickInfo::infoString(ObjectNode* objectNode, quint32 subobjectId)
 {
 	QString str;
+	int particleIndex = particleIndexFromSubObjectID(subobjectId);
+	if(particleIndex < 0) return str;
 	for(DataObject* dataObj : pipelineState().objects()) {
 		ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(dataObj);
-		if(!property || property->size() <= subobjectId) continue;
+		if(!property || property->size() <= particleIndex) continue;
 		if(property->type() == ParticleProperty::SelectionProperty) continue;
 		if(property->type() == ParticleProperty::ColorProperty) continue;
 		if(property->dataType() != qMetaTypeId<int>() && property->dataType() != qMetaTypeId<FloatType>()) continue;
@@ -502,15 +860,15 @@ QString ParticlePickInfo::infoString(ObjectNode* objectNode, quint32 subobjectId
 			if(component != 0) str += QStringLiteral(", ");
 			QString valueString;
 			if(property->dataType() == qMetaTypeId<int>()) {
-				str += QString::number(property->getIntComponent(subobjectId, component));
+				str += QString::number(property->getIntComponent(particleIndex, component));
 				ParticleTypeProperty* typeProperty = dynamic_object_cast<ParticleTypeProperty>(property);
 				if(typeProperty && typeProperty->particleTypes().empty() == false) {
-					if(ParticleType* ptype = typeProperty->particleType(property->getIntComponent(subobjectId, component)))
+					if(ParticleType* ptype = typeProperty->particleType(property->getIntComponent(particleIndex, component)))
 						str += QString(" (%1)").arg(ptype->name());
 				}
 			}
 			else if(property->dataType() == qMetaTypeId<FloatType>())
-				str += QString::number(property->getFloatComponent(subobjectId, component));
+				str += QString::number(property->getFloatComponent(particleIndex, component));
 		}
 	}
 	return str;
@@ -532,24 +890,21 @@ void ParticleDisplayEditor::createUI(const RolloutInsertionParameters& rolloutPa
 	layout->setSpacing(4);
 	layout->setColumnStretch(1, 1);
 
-	// Shading.
-	VariantComboBoxParameterUI* shadingModeUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(ParticleDisplay::_shadingMode));
-	shadingModeUI->comboBox()->addItem(tr("Normal"), qVariantFromValue(ParticlePrimitive::NormalShading));
-	shadingModeUI->comboBox()->addItem(tr("Flat"), qVariantFromValue(ParticlePrimitive::FlatShading));
-	layout->addWidget(new QLabel(tr("Shading:")), 0, 0);
-	layout->addWidget(shadingModeUI->comboBox(), 0, 1);
-
 	// Shape.
 	VariantComboBoxParameterUI* particleShapeUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(ParticleDisplay::_particleShape));
-	particleShapeUI->comboBox()->addItem(tr("Round"), qVariantFromValue(ParticlePrimitive::SphericalShape));
-	particleShapeUI->comboBox()->addItem(tr("Square"), qVariantFromValue(ParticlePrimitive::SquareShape));
-	layout->addWidget(new QLabel(tr("Shape:")), 2, 0);
-	layout->addWidget(particleShapeUI->comboBox(), 2, 1);
+	particleShapeUI->comboBox()->addItem(QIcon(":/particles/icons/particle_shape_sphere.png"), tr("Sphere/Ellipsoid"), QVariant::fromValue(ParticleDisplay::Sphere));
+	particleShapeUI->comboBox()->addItem(QIcon(":/particles/icons/particle_shape_circle.png"), tr("Circle"), QVariant::fromValue(ParticleDisplay::Circle));
+	particleShapeUI->comboBox()->addItem(QIcon(":/particles/icons/particle_shape_cube.png"), tr("Cube/Box"), QVariant::fromValue(ParticleDisplay::Box));
+	particleShapeUI->comboBox()->addItem(QIcon(":/particles/icons/particle_shape_square.png"), tr("Square"), QVariant::fromValue(ParticleDisplay::Square));
+	particleShapeUI->comboBox()->addItem(QIcon(":/particles/icons/particle_shape_cylinder.png"), tr("Cylinder"), QVariant::fromValue(ParticleDisplay::Cylinder));
+	particleShapeUI->comboBox()->addItem(QIcon(":/particles/icons/particle_shape_spherocylinder.png"), tr("Spherocylinder"), QVariant::fromValue(ParticleDisplay::Spherocylinder));
+	layout->addWidget(new QLabel(tr("Shape:")), 1, 0);
+	layout->addWidget(particleShapeUI->comboBox(), 1, 1);
 
 	// Default radius.
 	FloatParameterUI* radiusUI = new FloatParameterUI(this, PROPERTY_FIELD(ParticleDisplay::_defaultParticleRadius));
-	layout->addWidget(radiusUI->label(), 3, 0);
-	layout->addLayout(radiusUI->createFieldLayout(), 3, 1);
+	layout->addWidget(radiusUI->label(), 2, 0);
+	layout->addLayout(radiusUI->createFieldLayout(), 2, 1);
 	radiusUI->setMinValue(0);
 
 	// Create a second rollout.
@@ -563,10 +918,10 @@ void ParticleDisplayEditor::createUI(const RolloutInsertionParameters& rolloutPa
 
 	// Rendering quality.
 	VariantComboBoxParameterUI* renderingQualityUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(ParticleDisplay::_renderingQuality));
-	renderingQualityUI->comboBox()->addItem(tr("Low"), qVariantFromValue(ParticlePrimitive::LowQuality));
-	renderingQualityUI->comboBox()->addItem(tr("Medium"), qVariantFromValue(ParticlePrimitive::MediumQuality));
-	renderingQualityUI->comboBox()->addItem(tr("High"), qVariantFromValue(ParticlePrimitive::HighQuality));
-	renderingQualityUI->comboBox()->addItem(tr("Automatic"), qVariantFromValue(ParticlePrimitive::AutoQuality));
+	renderingQualityUI->comboBox()->addItem(tr("Low"), QVariant::fromValue(ParticlePrimitive::LowQuality));
+	renderingQualityUI->comboBox()->addItem(tr("Medium"), QVariant::fromValue(ParticlePrimitive::MediumQuality));
+	renderingQualityUI->comboBox()->addItem(tr("High"), QVariant::fromValue(ParticlePrimitive::HighQuality));
+	renderingQualityUI->comboBox()->addItem(tr("Automatic"), QVariant::fromValue(ParticlePrimitive::AutoQuality));
 	layout->addWidget(new QLabel(tr("Rendering quality:")), 1, 0);
 	layout->addWidget(renderingQualityUI->comboBox(), 1, 1);
 }

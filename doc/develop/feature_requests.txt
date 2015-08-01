@@ -13,8 +13,8 @@ Work-flow improvements:
 New visualization features:
 
 - Visualize polyhedra (like Vesta).
+- Implement bond property system (bond types, colors, etc.)
 - More particle representations (e.g. open circles/rectangles).
-- Visualization of spherocylinderical particles (requested by V.V.Mahajan@tue.nl)
 - Test OpenGL rendering support for more than 12 million particles.
 
 Unresolved OpenGL problems:
