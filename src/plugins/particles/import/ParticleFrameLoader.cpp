@@ -27,10 +27,14 @@
 #include <plugins/particles/objects/BondsObject.h>
 #include <plugins/particles/objects/BondsDisplay.h>
 #include <plugins/particles/data/ParticleProperty.h>
+#include <plugins/particles/data/BondProperty.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
 #include <plugins/particles/objects/ParticleDisplay.h>
 #include <plugins/particles/objects/ParticleType.h>
+#include <plugins/particles/objects/BondPropertyObject.h>
+#include <plugins/particles/objects/BondTypeProperty.h>
+#include <plugins/particles/objects/BondType.h>
 #include "ParticleFrameLoader.h"
 #include "ParticleImporter.h"
 
@@ -147,7 +151,7 @@ void ParticleFrameLoader::handOver(CompoundObject* container)
 	activeObjects.insert(cell);
 
 	// Transfer particle properties.
-	for(auto& property : _properties) {
+	for(auto& property : _particleProperties) {
 		OORef<ParticlePropertyObject> propertyObj;
 		for(const auto& dataObj : container->dataObjects()) {
 			ParticlePropertyObject* po = dynamic_object_cast<ParticlePropertyObject>(dataObj);
@@ -191,6 +195,31 @@ void ParticleFrameLoader::handOver(CompoundObject* container)
 			bondsObj->setStorage(bondsPtr.data());
 		}
 		activeObjects.insert(bondsObj);
+
+		// Transfer bond properties.
+		for(auto& property : _bondProperties) {
+			OORef<BondPropertyObject> propertyObj;
+			for(const auto& dataObj : container->dataObjects()) {
+				BondPropertyObject* po = dynamic_object_cast<BondPropertyObject>(dataObj);
+				if(po != nullptr && po->type() == property->type() && po->name() == property->name()) {
+					propertyObj = po;
+					break;
+				}
+			}
+
+			if(propertyObj) {
+				propertyObj->setStorage(QSharedDataPointer<BondProperty>(property.release()));
+			}
+			else {
+				propertyObj = BondPropertyObject::createFromStorage(container->dataset(), QSharedDataPointer<BondProperty>(property.release()));
+				container->addDataObject(propertyObj);
+			}
+
+			if(propertyObj->type() == BondProperty::BondTypeProperty) {
+				insertBondTypes(propertyObj);
+			}
+			activeObjects.insert(propertyObj);
+		}
 	}
 
 	// Pass timestep number to modification pipeline system.
@@ -249,6 +278,56 @@ void ParticleFrameLoader::insertParticleTypes(ParticlePropertyObject* propertyOb
 	for(int index = typeProperty->particleTypes().size() - 1; index >= 0; index--) {
 		if(!activeTypes.contains(typeProperty->particleTypes()[index]))
 			typeProperty->removeParticleType(index);
+	}
+}
+
+/******************************************************************************
+* Inserts the stores bond types into the given destination object.
+******************************************************************************/
+void ParticleFrameLoader::insertBondTypes(BondPropertyObject* propertyObj)
+{
+	BondTypeProperty* typeProperty = dynamic_object_cast<BondTypeProperty>(propertyObj);
+	if(!typeProperty)
+		return;
+
+	QSet<BondType*> activeTypes;
+	for(const auto& item : _bondTypes) {
+		OORef<BondType> type = typeProperty->bondType(item.id);
+		QString name = item.name;
+		if(name.isEmpty())
+			name = ParticleImporter::tr("Type %1").arg(item.id);
+
+		if(type == nullptr) {
+			type = new BondType(typeProperty->dataset());
+			type->setId(item.id);
+
+			// Assign initial standard color to new bond type.
+			if(item.color != Color(0,0,0))
+				type->setColor(item.color);
+			else
+				type->setColor(BondTypeProperty::getDefaultBondColor(BondProperty::BondTypeProperty, name, type->id()));
+
+			if(item.radius == 0)
+				type->setRadius(BondTypeProperty::getDefaultBondRadius(BondProperty::BondTypeProperty, name, type->id()));
+
+			typeProperty->addBondType(type);
+		}
+		activeTypes.insert(type);
+
+		if(type->name().isEmpty())
+			type->setName(name);
+
+		if(item.color != Color(0,0,0))
+			type->setColor(item.color);
+
+		if(item.radius != 0)
+			type->setRadius(item.radius);
+	}
+
+	// Remove unused bond types.
+	for(int index = typeProperty->bondTypes().size() - 1; index >= 0; index--) {
+		if(!activeTypes.contains(typeProperty->bondTypes()[index]))
+			typeProperty->removeBondType(index);
 	}
 }
 

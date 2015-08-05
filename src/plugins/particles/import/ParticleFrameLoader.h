@@ -27,7 +27,9 @@
 #include <core/utilities/io/CompressedTextReader.h>
 #include <plugins/particles/data/ParticleProperty.h>
 #include <plugins/particles/data/BondsStorage.h>
+#include <plugins/particles/data/BondProperty.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
+#include <plugins/particles/objects/BondPropertyObject.h>
 #include <plugins/particles/data/SimulationCell.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import)
@@ -40,6 +42,14 @@ class OVITO_PARTICLES_EXPORT ParticleFrameLoader : public FileSourceImporter::Fr
 public:
 
 	struct ParticleTypeDefinition {
+		int id;
+		QString name;
+		std::string name8bit;
+		Color color;
+		FloatType radius;
+	};
+
+	struct BondTypeDefinition {
 		int id;
 		QString name;
 		std::string name8bit;
@@ -69,21 +79,25 @@ public:
 	SimulationCell& simulationCell() { return _simulationCell; }
 
 	/// Returns the list of particle properties.
-	const std::vector<std::unique_ptr<ParticleProperty>>& particleProperties() const { return _properties; }
+	const std::vector<std::unique_ptr<ParticleProperty>>& particleProperties() const { return _particleProperties; }
 
 	/// Returns a standard particle property if defined.
 	ParticleProperty* particleProperty(ParticleProperty::Type which) const {
-		for(const auto& prop : _properties)
+		for(const auto& prop : _particleProperties)
 			if(prop->type() == which)
 				return prop.get();
 		return nullptr;
 	}
 
 	/// Adds a new particle property.
-	void addParticleProperty(ParticleProperty* property) { _properties.push_back(std::unique_ptr<ParticleProperty>(property)); }
+	void addParticleProperty(ParticleProperty* property) {
+		_particleProperties.push_back(std::unique_ptr<ParticleProperty>(property));
+	}
 
 	/// Removes a particle property from the list.
-	void removeParticleProperty(int index) { _properties.erase(_properties.begin() + index); }
+	void removeParticleProperty(int index) {
+		_particleProperties.erase(_particleProperties.begin() + index);
+	}
 
 	/// Defines a new particle type with the given id.
 	void addParticleTypeId(int id) {
@@ -149,6 +163,83 @@ public:
 	/// Sorts particle types with ascending identifier.
 	void sortParticleTypesById();
 
+	/// Returns the list of bond properties.
+	const std::vector<std::unique_ptr<BondProperty>>& bondProperties() const { return _bondProperties; }
+
+	/// Returns a standard bond property if defined.
+	BondProperty* bondProperty(BondProperty::Type which) const {
+		for(const auto& prop : _bondProperties)
+			if(prop->type() == which)
+				return prop.get();
+		return nullptr;
+	}
+
+	/// Adds a new bond property.
+	void addBondProperty(BondProperty* property) {
+		_bondProperties.push_back(std::unique_ptr<BondProperty>(property));
+	}
+
+	/// Removes a bond property from the list.
+	void removeBondProperty(int index) {
+		_bondProperties.erase(_bondProperties.begin() + index);
+	}
+
+	/// Defines a new bond type with the given id.
+	void addBondTypeId(int id) {
+		for(const auto& type : _bondTypes) {
+			if(type.id == id)
+				return;
+		}
+		_bondTypes.push_back({ id, QString(), std::string(), Color(0,0,0), 0 });
+	}
+
+	/// Defines a new bond type with the given id.
+	void addBondTypeId(int id, const QString& name, const Color& color = Color(0,0,0), FloatType radius = 0) {
+		for(const auto& type : _bondTypes) {
+			if(type.id == id)
+				return;
+		}
+		_bondTypes.push_back({ id, name, name.toLocal8Bit().constData(), color, radius });
+	}
+
+	/// Changes the name of an existing bond type.
+	void setBondTypeName(int id, const QString& name) {
+		for(auto& type : _bondTypes) {
+			if(type.id == id) {
+				type.name = name;
+				type.name8bit = name.toLocal8Bit().constData();
+				break;
+			}
+		}
+	}
+
+	/// Defines a new bond type with the given id.
+	inline int addBondTypeName(const char* name, const char* name_end = nullptr) {
+		size_t nameLen = (name_end ? (name_end - name) : qstrlen(name));
+		for(const auto& type : _bondTypes) {
+			if(type.name8bit.compare(0, type.name8bit.size(), name, nameLen) == 0)
+				return type.id;
+		}
+		int id = _bondTypes.size() + 1;
+		_bondTypes.push_back({ id, QString::fromLocal8Bit(name, nameLen), std::string(name, nameLen), Color(0,0,0), 0.0f });
+		return id;
+	}
+
+	/// Defines a new bond type with the given id, color, and radius.
+	int addBondTypeName(const char* name, const char* name_end, const Color& color, FloatType radius = 0) {
+		size_t nameLen = (name_end ? (name_end - name) : qstrlen(name));
+		for(const auto& type : _bondTypes) {
+			if(type.name8bit.compare(0, type.name8bit.size(), name, nameLen) == 0)
+				return type.id;
+		}
+		int id = _bondTypes.size() + 1;
+		_bondTypes.push_back({ id, QString::fromLocal8Bit(name, nameLen), std::string(name, nameLen), color, radius });
+		return id;
+	}
+
+	/// Returns the list of bond types.
+	const std::vector<BondTypeDefinition>& bondTypes() const { return _bondTypes; }
+
 	/// Returns the simulation timestep number, or -1 if undefined.
 	int timestep() const { return _timestep; }
 
@@ -172,19 +263,28 @@ protected:
 	/// Inserts the stores particle types into the given destination object.
 	void insertParticleTypes(ParticlePropertyObject* propertyObj);
 
+	/// Inserts the stores bond types into the given destination object.
+	void insertBondTypes(BondPropertyObject* propertyObj);
+
 private:
 
 	/// The simulation cell.
 	SimulationCell _simulationCell;
 
 	/// Particle properties.
-	std::vector<std::unique_ptr<ParticleProperty>> _properties;
+	std::vector<std::unique_ptr<ParticleProperty>> _particleProperties;
 
 	/// The list of particle types.
 	std::vector<ParticleTypeDefinition> _particleTypes;
 
 	/// The list of bonds between particles (if present).
 	std::unique_ptr<BondsStorage> _bonds;
+
+	/// Bond properties.
+	std::vector<std::unique_ptr<BondProperty>> _bondProperties;
+
+	/// The list of bond types.
+	std::vector<BondTypeDefinition> _bondTypes;
 
 	/// The simulation timestep number.
 	int _timestep;

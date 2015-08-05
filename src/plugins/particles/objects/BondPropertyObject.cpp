@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2015) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -20,64 +20,50 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include "ParticlePropertyObject.h"
-#include "ParticleTypeProperty.h"
-#include "ParticleDisplay.h"
-#include "VectorDisplay.h"
+#include "BondPropertyObject.h"
+#include "BondTypeProperty.h"
 
 namespace Ovito { namespace Particles {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ParticlePropertyObject, DataObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, BondPropertyObject, DataObject);
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-ParticlePropertyObject::ParticlePropertyObject(DataSet* dataset, ParticleProperty* storage)
-	: DataObjectWithSharedStorage(dataset, storage ? storage : new ParticleProperty())
+BondPropertyObject::BondPropertyObject(DataSet* dataset, BondProperty* storage)
+	: DataObjectWithSharedStorage(dataset, storage ? storage : new BondProperty())
 {
 }
 
 /******************************************************************************
 * Factory function that creates a user-defined property object.
 ******************************************************************************/
-OORef<ParticlePropertyObject> ParticlePropertyObject::createUserProperty(DataSet* dataset, size_t particleCount, int dataType, size_t componentCount, size_t stride, const QString& name, bool initializeMemory)
+OORef<BondPropertyObject> BondPropertyObject::createUserProperty(DataSet* dataset, size_t bondCount, int dataType, size_t componentCount, size_t stride, const QString& name, bool initializeMemory)
 {
-	return createFromStorage(dataset, new ParticleProperty(particleCount, dataType, componentCount, stride, name, initializeMemory));
+	return createFromStorage(dataset, new BondProperty(bondCount, dataType, componentCount, stride, name, initializeMemory));
 }
 
 /******************************************************************************
 * Factory function that creates a standard property object.
 ******************************************************************************/
-OORef<ParticlePropertyObject> ParticlePropertyObject::createStandardProperty(DataSet* dataset, size_t particleCount, ParticleProperty::Type which, size_t componentCount, bool initializeMemory)
+OORef<BondPropertyObject> BondPropertyObject::createStandardProperty(DataSet* dataset, size_t bondCount, BondProperty::Type which, size_t componentCount, bool initializeMemory)
 {
-	return createFromStorage(dataset, new ParticleProperty(particleCount, which, componentCount, initializeMemory));
+	return createFromStorage(dataset, new BondProperty(bondCount, which, componentCount, initializeMemory));
 }
 
 /******************************************************************************
 * Factory function that creates a property object based on an existing storage.
 ******************************************************************************/
-OORef<ParticlePropertyObject> ParticlePropertyObject::createFromStorage(DataSet* dataset, ParticleProperty* storage)
+OORef<BondPropertyObject> BondPropertyObject::createFromStorage(DataSet* dataset, BondProperty* storage)
 {
-	OORef<ParticlePropertyObject> propertyObj;
+	OORef<BondPropertyObject> propertyObj;
 
 	switch(storage->type()) {
-	case ParticleProperty::ParticleTypeProperty:
-	case ParticleProperty::StructureTypeProperty:
-		propertyObj = new ParticleTypeProperty(dataset, storage);
+	case BondProperty::BondTypeProperty:
+		propertyObj = new BondTypeProperty(dataset, storage);
 		break;
 	default:
-		propertyObj = new ParticlePropertyObject(dataset, storage);
-	}
-
-	if(storage->type() == ParticleProperty::PositionProperty) {
-		OORef<ParticleDisplay> displayObj = new ParticleDisplay(dataset);
-		displayObj->loadUserDefaults();
-		propertyObj->addDisplayObject(displayObj);
-	}
-	else if(storage->type() == ParticleProperty::DisplacementProperty) {
-		OORef<VectorDisplay> displayObj = new VectorDisplay(dataset);
-		displayObj->loadUserDefaults();
-		propertyObj->addDisplayObject(displayObj);
+		propertyObj = new BondPropertyObject(dataset, storage);
 	}
 
 	return propertyObj;
@@ -86,7 +72,7 @@ OORef<ParticlePropertyObject> ParticlePropertyObject::createFromStorage(DataSet*
 /******************************************************************************
 * Resizes the property storage.
 ******************************************************************************/
-void ParticlePropertyObject::resize(size_t newSize, bool preserveData)
+void BondPropertyObject::resize(size_t newSize, bool preserveData)
 {
 	if(preserveData) {
 		// If existing data should be preserved, resize existing storage.
@@ -95,18 +81,18 @@ void ParticlePropertyObject::resize(size_t newSize, bool preserveData)
 	}
 	else {
 		// If data should not be preserved, allocate new storage to replace old one.
-		// This avoids calling the ParticleProperty copy constructor unnecessarily.
-		if(type() != ParticleProperty::UserProperty)
-			setStorage(new ParticleProperty(newSize, type(), componentCount(), false));
+		// This avoids calling the BondProperty copy constructor unnecessarily.
+		if(type() != BondProperty::UserProperty)
+			setStorage(new BondProperty(newSize, type(), componentCount(), false));
 		else
-			setStorage(new ParticleProperty(newSize, dataType(), componentCount(), stride(), name(), false));
+			setStorage(new BondProperty(newSize, dataType(), componentCount(), stride(), name(), false));
 	}
 }
 
 /******************************************************************************
 * Sets the property's name.
 ******************************************************************************/
-void ParticlePropertyObject::setName(const QString& newName)
+void BondPropertyObject::setName(const QString& newName)
 {
 	if(newName == name())
 		return;
@@ -123,7 +109,7 @@ void ParticlePropertyObject::setName(const QString& newName)
 /******************************************************************************
 * Saves the class' contents to the given stream.
 ******************************************************************************/
-void ParticlePropertyObject::saveToStream(ObjectSaveStream& stream)
+void BondPropertyObject::saveToStream(ObjectSaveStream& stream)
 {
 	DataObject::saveToStream(stream);
 
@@ -135,7 +121,7 @@ void ParticlePropertyObject::saveToStream(ObjectSaveStream& stream)
 /******************************************************************************
 * Loads the class' contents from the given stream.
 ******************************************************************************/
-void ParticlePropertyObject::loadFromStream(ObjectLoadStream& stream)
+void BondPropertyObject::loadFromStream(ObjectLoadStream& stream)
 {
 	DataObject::loadFromStream(stream);
 
@@ -145,46 +131,46 @@ void ParticlePropertyObject::loadFromStream(ObjectLoadStream& stream)
 }
 
 /******************************************************************************
-* This helper method returns a standard particle property (if present) from the
+* This helper method returns a standard bond property (if present) from the
 * given pipeline state.
 ******************************************************************************/
-ParticlePropertyObject* ParticlePropertyObject::findInState(const PipelineFlowState& state, ParticleProperty::Type type)
+BondPropertyObject* BondPropertyObject::findInState(const PipelineFlowState& state, BondProperty::Type type)
 {
 	for(DataObject* o : state.objects()) {
-		ParticlePropertyObject* particleProperty = dynamic_object_cast<ParticlePropertyObject>(o);
-		if(particleProperty && particleProperty->type() == type)
-			return particleProperty;
+		BondPropertyObject* prop = dynamic_object_cast<BondPropertyObject>(o);
+		if(prop && prop->type() == type)
+			return prop;
 	}
 	return nullptr;
 }
 
 /******************************************************************************
-* This helper method returns a specific user-defined particle property (if present) from the
+* This helper method returns a specific user-defined bond property (if present) from the
 * given pipeline state.
 ******************************************************************************/
-ParticlePropertyObject* ParticlePropertyObject::findInState(const PipelineFlowState& state, const QString& name)
+BondPropertyObject* BondPropertyObject::findInState(const PipelineFlowState& state, const QString& name)
 {
 	for(DataObject* o : state.objects()) {
-		ParticlePropertyObject* particleProperty = dynamic_object_cast<ParticlePropertyObject>(o);
-		if(particleProperty && particleProperty->type() == ParticleProperty::UserProperty && particleProperty->name() == name)
-			return particleProperty;
+		BondPropertyObject* prop = dynamic_object_cast<BondPropertyObject>(o);
+		if(prop && prop->type() == BondProperty::UserProperty && prop->name() == name)
+			return prop;
 	}
 	return nullptr;
 }
 
 /******************************************************************************
-* This helper method finds the particle property referenced by this ParticlePropertyReference
+* This helper method finds the bond property referenced by this BondPropertyReference
 * in the given pipeline state.
 ******************************************************************************/
-ParticlePropertyObject* ParticlePropertyReference::findInState(const PipelineFlowState& state) const
+BondPropertyObject* BondPropertyReference::findInState(const PipelineFlowState& state) const
 {
 	if(isNull())
 		return nullptr;
 	for(DataObject* o : state.objects()) {
-		ParticlePropertyObject* prop = dynamic_object_cast<ParticlePropertyObject>(o);
+		BondPropertyObject* prop = dynamic_object_cast<BondPropertyObject>(o);
 		if(prop) {
-			if((this->type() == ParticleProperty::UserProperty && prop->name() == this->name()) ||
-					(this->type() != ParticleProperty::UserProperty && prop->type() == this->type())) {
+			if((this->type() == BondProperty::UserProperty && prop->name() == this->name()) ||
+					(this->type() != BondProperty::UserProperty && prop->type() == this->type())) {
 				return prop;
 			}
 		}

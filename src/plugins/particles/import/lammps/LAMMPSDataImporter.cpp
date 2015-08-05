@@ -256,6 +256,10 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 	for(int i = 1; i <= natomtypes; i++)
 		addParticleTypeId(i);
 
+	// Create bond types.
+	for(int i = 1; i <= nbondtypes; i++)
+		addBondTypeId(i);
+
 	// Skip to following line after first non-blank line.
 	while(!stream.eof() && string(stream.line()).find_first_not_of(" \t\n\r") == string::npos) {
 		stream.readLine();
@@ -468,19 +472,30 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 			// Create bonds storage.
 			setBonds(new BondsStorage());
 			bonds()->reserve(nbonds);
+
+			// Create bond type property.
+			BondProperty* typeProperty = new BondProperty(nbonds * 2, BondProperty::BondTypeProperty, 0, true);
+			addBondProperty(typeProperty);
+			int* bondType = typeProperty->dataInt();
+
 			setProgressRange(nbonds);
 			for(int i = 0; i < nbonds; i++) {
 				if(!setProgressValueIntermittent(i)) return;
 				stream.readLine();
 
-				int bondId, bondType, atomId1, atomId2;
-    			if(sscanf(stream.line(), "%u %u %u %u", &bondId, &bondType, &atomId1, &atomId2) != 4)
+				int bondId, atomId1, atomId2;
+    			if(sscanf(stream.line(), "%u %u %u %u", &bondId, bondType, &atomId1, &atomId2) != 4)
 					throw Exception(tr("Invalid bond specification (line %1): %2").arg(stream.lineNumber()).arg(stream.lineString()));
 
    				unsigned int atomIndex1 = std::find(identifierProperty->constDataInt(), identifierProperty->constDataInt() + identifierProperty->size(), atomId1) - identifierProperty->constDataInt();
    				unsigned int atomIndex2 = std::find(identifierProperty->constDataInt(), identifierProperty->constDataInt() + identifierProperty->size(), atomId2) - identifierProperty->constDataInt();
 				if(atomIndex1 >= identifierProperty->size() || atomIndex2 >= identifierProperty->size())
 					throw Exception(tr("Nonexistent atom ID encountered in line %1 of data file.").arg(stream.lineNumber()));
+
+				if(*bondType < 1 || *bondType > nbondtypes)
+					throw Exception(tr("Bond type out of range in Bonds section of LAMMPS data file at line %1.").arg(stream.lineNumber()));
+    			bondType[1] = bondType[0];
+    			bondType += 2;
 
 				// Use minimum image convention to determine PBC shift vector of the bond.
 				Vector3 delta = simulationCell().absoluteToReduced(posProperty->getPoint3(atomIndex2) - posProperty->getPoint3(atomIndex1));
@@ -490,6 +505,7 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 						shift[dim] -= (int8_t)floor(delta[dim] + FloatType(0.5));
 				}
 
+				// Create two half-bonds.
 				bonds()->push_back({  shift, atomIndex1, atomIndex2 });
 				bonds()->push_back({ -shift, atomIndex2, atomIndex1 });
 			}
@@ -509,7 +525,10 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 	if(!foundAtomsSection)
 		throw Exception("LAMMPS data file does not contain atomic coordinates.");
 
-	setStatus(tr("Number of particles: %1").arg(natoms));
+	QString statusString = tr("Number of particles: %1").arg(natoms);
+	if(nbondtypes > 0 || nbonds > 0)
+		statusString += tr("\nNumber of bonds: %1").arg(nbonds);
+	setStatus(statusString);
 }
 
 /******************************************************************************

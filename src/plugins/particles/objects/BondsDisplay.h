@@ -30,6 +30,8 @@
 #include <core/gui/properties/PropertiesEditor.h>
 #include "BondsObject.h"
 #include "ParticlePropertyObject.h"
+#include "BondPropertyObject.h"
+#include "BondTypeProperty.h"
 #include "SimulationCellObject.h"
 
 namespace Ovito { namespace Particles {
@@ -74,11 +76,19 @@ public:
 	/// Sets the display color for bonds.
 	void setBondColor(const Color& color) { _bondColor = color; }
 
+	/// Returns the display color used for selected bonds.
+	Color selectionBondColor() const { return Color(1,0,0); }
+
 	/// Returns whether bonds colors are derived from particle colors.
 	bool useParticleColors() const { return _useParticleColors; }
 
 	/// Controls whether bonds colors are derived from particle colors.
 	void setUseParticleColors(bool enable) { _useParticleColors = enable; }
+
+	/// Determines the display colors of bonds.
+	void bondColors(std::vector<Color>& output, size_t particleCount, BondsObject* bondsObject,
+			BondPropertyObject* bondColorProperty, BondTypeProperty* bondTypeProperty, BondPropertyObject* bondSelectionProperty,
+			ParticleDisplay* particleDisplay, ParticlePropertyObject* particleColorProperty, ParticleTypeProperty* particleTypeProperty);
 
 public:
 
@@ -112,7 +122,10 @@ protected:
 		WeakVersionedOORef<ParticlePropertyObject>,		// Particle position property + revision number
 		WeakVersionedOORef<ParticlePropertyObject>,		// Particle color property + revision number
 		WeakVersionedOORef<ParticlePropertyObject>,		// Particle type property + revision number
-		WeakVersionedOORef<SimulationCellObject>,				// Simulation cell + revision number
+		WeakVersionedOORef<BondPropertyObject>,			// Bond color property + revision number
+		WeakVersionedOORef<BondPropertyObject>,			// Bond type property + revision number
+		WeakVersionedOORef<BondPropertyObject>,			// Bond selection property + revision number
+		WeakVersionedOORef<SimulationCellObject>,		// Simulation cell + revision number
 		FloatType,										// Bond width
 		Color,											// Bond color
 		bool											// Use particle colors

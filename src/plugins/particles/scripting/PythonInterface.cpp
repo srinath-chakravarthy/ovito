@@ -31,6 +31,8 @@
 #include <plugins/particles/objects/SurfaceMeshDisplay.h>
 #include <plugins/particles/objects/BondsObject.h>
 #include <plugins/particles/objects/BondsDisplay.h>
+#include <plugins/particles/objects/BondPropertyObject.h>
+#include <plugins/particles/objects/BondTypeProperty.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/particles/util/CutoffNeighborFinder.h>
 #include <core/utilities/io/CompressedTextWriter.h>
@@ -40,8 +42,8 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 using namespace boost::python;
 using namespace PyScript;
 
-template<bool ReadOnly>
-dict ParticlePropertyObject__array_interface__(ParticlePropertyObject& p)
+template<class PropertyClass, bool ReadOnly>
+dict PropertyObject__array_interface__(PropertyClass& p)
 {
 	dict ai;
 	if(p.componentCount() == 1) {
@@ -53,7 +55,7 @@ dict ParticlePropertyObject__array_interface__(ParticlePropertyObject& p)
 		ai["shape"] = boost::python::make_tuple(p.size(), p.componentCount());
 		ai["strides"] = boost::python::make_tuple(p.stride(), p.dataTypeSize());
 	}
-	else throw Exception("Cannot access empty particle property from Python.");
+	else throw Exception("Cannot access empty property from Python.");
 	if(p.dataType() == qMetaTypeId<int>()) {
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
 		ai["typestr"] = str("<i") + str(sizeof(int));
@@ -68,7 +70,7 @@ dict ParticlePropertyObject__array_interface__(ParticlePropertyObject& p)
 		ai["typestr"] = str(">f") + str(sizeof(FloatType));
 #endif
 	}
-	else throw Exception("Cannot access particle property of this data type from Python.");
+	else throw Exception("Cannot access property of this data type from Python.");
 	if(ReadOnly) {
 		ai["data"] = boost::python::make_tuple(reinterpret_cast<std::intptr_t>(p.constData()), true);
 	}
@@ -250,8 +252,8 @@ BOOST_PYTHON_MODULE(Particles)
 			.add_property("stride", &ParticlePropertyObject::stride)
 			.add_property("components", &ParticlePropertyObject::componentCount,
 					"The number of vector components (if this is a vector particle property); otherwise 1 (= scalar property).")
-			.add_property("__array_interface__", &ParticlePropertyObject__array_interface__<true>)
-			.add_property("__mutable_array_interface__", &ParticlePropertyObject__array_interface__<false>)
+			.add_property("__array_interface__", &PropertyObject__array_interface__<ParticlePropertyObject,true>)
+			.add_property("__mutable_array_interface__", &PropertyObject__array_interface__<ParticlePropertyObject,false>)
 		;
 
 		enum_<ParticleProperty::Type>("Type")

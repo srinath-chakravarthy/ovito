@@ -13,7 +13,6 @@ Work-flow improvements:
 New visualization features:
 
 - Visualize polyhedra (like Vesta).
-- Implement bond property system (bond types, colors, etc.)
 - More particle representations (e.g. open circles/rectangles).
 - Test OpenGL rendering support for more than 12 million particles.
 
@@ -38,6 +37,8 @@ Unresolved OpenGL problems:
     Windows, NVidia NVS 310, Core profile 3.2 (zhonghuai.wu@student.unsw.edu.au)
 - Crash on program startup:
     Windows 8.1, Intel HD Graphics 4600 (driver v10.18.10.3277), Lenovo Y510p (gaoispingisme@gmail.com)
+- Frequent crashing
+    MacBook Air with the operating system OS X 10.9.5 Maverick (yidong.xia@inl.gov)
 
 Unresolved bugs:
 
@@ -71,6 +72,7 @@ Scripting features:
 - Python-based modifiers.
 - Run Python scripts from the GUI (requested by dmitrii.shovkun@unitn.it)
 - Distribute Scipy with Ovito?
+- Scripting interface for bond properties.
 
 Documentation:
 

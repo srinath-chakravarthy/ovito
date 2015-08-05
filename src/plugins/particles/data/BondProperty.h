@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_PROPERTY_H
-#define __OVITO_PARTICLE_PROPERTY_H
+#ifndef __OVITO_BOND_PROPERTY_H
+#define __OVITO_BOND_PROPERTY_H
 
 #include <plugins/particles/Particles.h>
 #include "PropertyBase.h"
@@ -28,62 +28,30 @@
 namespace Ovito { namespace Particles {
 
 /**
- * \brief Memory storage for a per-particle property.
+ * \brief Memory storage for a per-bond property.
  */
-class OVITO_PARTICLES_EXPORT ParticleProperty : public PropertyBase
+class OVITO_PARTICLES_EXPORT BondProperty : public PropertyBase
 {
 public:
 
 	/// \brief The standard types of properties.
 	enum Type {
 		UserProperty = 0,	//< This is reserved for user-defined properties.
-		ParticleTypeProperty,
-		PositionProperty,
+		BondTypeProperty,
 		SelectionProperty,
-		ColorProperty,
-		DisplacementProperty,
-		DisplacementMagnitudeProperty,
-		PotentialEnergyProperty,
-		KineticEnergyProperty,
-		TotalEnergyProperty,
-		VelocityProperty,
-		RadiusProperty,
-		ClusterProperty,
-		CoordinationProperty,
-		StructureTypeProperty,
-		IdentifierProperty,
-		StressTensorProperty,
-		StrainTensorProperty,
-		DeformationGradientProperty,
-		OrientationProperty,
-		ForceProperty,
-		MassProperty,
-		ChargeProperty,
-		PeriodicImageProperty,
-		TransparencyProperty,
-		DipoleOrientationProperty,
-		DipoleMagnitudeProperty,
-		AngularVelocityProperty,
-		AngularMomentumProperty,
-		TorqueProperty,
-		SpinProperty,
-		CentroSymmetryProperty,
-		VelocityMagnitudeProperty,
-        NonaffineSquaredDisplacementProperty,
-		MoleculeProperty,
-		AsphericalShapeProperty
+		ColorProperty
 	};
 	Q_ENUMS(Type);
 
 public:
 
 	/// \brief Default constructor that creates an empty, uninitialized storage.
-	ParticleProperty() : PropertyBase(), _type(UserProperty) {}
+	BondProperty() : PropertyBase(), _type(UserProperty) {}
 
 	/// \brief Constructor that creates a standard property storage.
-	/// \param particleCount The number of particles.
+	/// \param bondsCount The number of bonds.
 	/// \param type Specifies which standard property should be created.
-	///             This must not be ParticleProperty::Type::UserProperty.
+	///             This must not be BondProperty::Type::UserProperty.
 	/// \param componentCount The component count if this type of property
 	///                       has a variable component count; otherwise 0 to use the
 	///                       default number of components.
@@ -91,20 +59,20 @@ public:
 	///
 	/// Data type, component count and property name are automatically set by this
 	/// constructor.
-	ParticleProperty(size_t particleCount, Type type, size_t componentCount, bool initializeMemory);
+	BondProperty(size_t bondsCount, Type type, size_t componentCount, bool initializeMemory);
 
 	/// \brief Constructor that creates a user-defined property storage.
-	/// \param particleCount The number of particles.
-	/// \param dataType Specifies the data type (integer, floating-point, ...) of the per-particle elements.
+	/// \param bondsCount The number of bonds.
+	/// \param dataType Specifies the data type (integer, floating-point, ...) of the per-bonds elements.
 	///                 The data type is specified as identifier according to the Qt metatype system.
-	/// \param componentCount The number of components per particle of type \a dataType.
-	/// \param stride The number of bytes per particle (pass 0 to use the smallest possible stride).
+	/// \param componentCount The number of components per bond of type \a dataType.
+	/// \param stride The number of bytes per bond (pass 0 to use the smallest possible stride).
 	/// \param name The name assigned to the property.
 	/// \param initializeMemory Controls whether the newly allocated memory is initialized with zeros.
-	ParticleProperty(size_t particleCount, int dataType, size_t componentCount, size_t stride, const QString& name, bool initializeMemory);
+	BondProperty(size_t bondsCount, int dataType, size_t componentCount, size_t stride, const QString& name, bool initializeMemory);
 
 	/// \brief Copy constructor.
-	ParticleProperty(const ParticleProperty& other);
+	BondProperty(const BondProperty& other);
 
 	/// \brief Returns the type of this property.
 	Type type() const { return _type; }
@@ -143,7 +111,7 @@ public:
 	/// Returns the data type used by the given standard property type.
 	static int standardPropertyDataType(Type which);
 
-	/// \brief Returns the number of vector components per particle used by the given standard property.
+	/// \brief Returns the number of vector components per bonds used by the given standard property.
 	/// \param which The standard property type for which the number of components should be returned.
 	/// \return The number of fixed components or 0 if this kind of property has a variable number of components.
 	static size_t standardPropertyComponentCount(Type which);
@@ -165,7 +133,7 @@ protected:
 }	// End of namespace
 }	// End of namespace
 
-Q_DECLARE_METATYPE(Ovito::Particles::ParticleProperty::Type);
-Q_DECLARE_TYPEINFO(Ovito::Particles::ParticleProperty::Type, Q_PRIMITIVE_TYPE);
+Q_DECLARE_METATYPE(Ovito::Particles::BondProperty::Type);
+Q_DECLARE_TYPEINFO(Ovito::Particles::BondProperty::Type, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_PARTICLE_PROPERTY_H
+#endif // __OVITO_BOND_PROPERTY_H

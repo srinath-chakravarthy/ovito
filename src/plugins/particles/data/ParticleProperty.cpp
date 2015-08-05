@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2015) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -26,38 +26,18 @@
 namespace Ovito { namespace Particles {
 
 /******************************************************************************
-* Default constructor.
-******************************************************************************/
-ParticleProperty::ParticleProperty()
-	: _stride(0), _dataTypeSize(0), _type(UserProperty),
-	_numParticles(0), _dataType(QMetaType::Void), _componentCount(0)
-{
-}
-
-/******************************************************************************
-* Constructor.
+* Constructor for user-defined properties.
 ******************************************************************************/
 ParticleProperty::ParticleProperty(size_t particleCount, int dataType, size_t componentCount, size_t stride, const QString& name, bool initializeMemory)
-	: _numParticles(0), _dataType(dataType), _dataTypeSize(QMetaType::sizeOf(dataType)),
-	  _stride(stride), _componentCount(componentCount), _type(UserProperty), _name(name)
+	: PropertyBase(particleCount, dataType, componentCount, stride, name, initializeMemory), _type(UserProperty)
 {
-	OVITO_ASSERT(_dataTypeSize > 0);
-	OVITO_ASSERT(_componentCount > 0);
-	if(_stride == 0) _stride = _dataTypeSize * _componentCount;
-	OVITO_ASSERT(_stride >= _dataTypeSize * _componentCount);
-	OVITO_ASSERT((_stride % _dataTypeSize) == 0);
-	if(componentCount > 1) {
-		for(size_t i = 1; i <= componentCount; i++)
-			_componentNames << QString::number(i);
-	}
-	resize(particleCount, initializeMemory);
 }
 
 /******************************************************************************
-* Constructor for a standard property.
+* Constructor for standard properties.
 ******************************************************************************/
 ParticleProperty::ParticleProperty(size_t particleCount, Type type, size_t componentCount, bool initializeMemory)
-	: _numParticles(0), _type(type)
+	: PropertyBase(), _type(type)
 {
 	switch(type) {
 	case ParticleTypeProperty:
@@ -150,13 +130,8 @@ ParticleProperty::ParticleProperty(size_t particleCount, Type type, size_t compo
 * Copy constructor.
 ******************************************************************************/
 ParticleProperty::ParticleProperty(const ParticleProperty& other)
-	: _type(other._type), _name(other._name), _dataType(other._dataType),
-	  _dataTypeSize(other._dataTypeSize), _numParticles(other._numParticles),
-	  _stride(other._stride), _componentCount(other._componentCount),
-	  _componentNames(other._componentNames),
-	  _data(new uint8_t[_numParticles * _stride])
+	: PropertyBase(other), _type(other._type)
 {
-	memcpy(_data.get(), other._data.get(), _numParticles * _stride);
 }
 
 /******************************************************************************
@@ -164,22 +139,7 @@ ParticleProperty::ParticleProperty(const ParticleProperty& other)
 ******************************************************************************/
 void ParticleProperty::saveToStream(SaveStream& stream, bool onlyMetadata) const
 {
-	stream.beginChunk(0x01);
-	stream << _name;
-	stream << _type;
-	stream << QByteArray(QMetaType::typeName(_dataType));
-	stream.writeSizeT(_dataTypeSize);
-	stream.writeSizeT(_stride);
-	stream.writeSizeT(_componentCount);
-	stream << _componentNames;
-	if(onlyMetadata) {
-		stream.writeSizeT(0);
-	}
-	else {
-		stream.writeSizeT(_numParticles);
-		stream.write(_data.get(), _stride * _numParticles);
-	}
-	stream.endChunk();
+	PropertyBase::saveToStream(stream, onlyMetadata, type());
 }
 
 /******************************************************************************
@@ -187,127 +147,7 @@ void ParticleProperty::saveToStream(SaveStream& stream, bool onlyMetadata) const
 ******************************************************************************/
 void ParticleProperty::loadFromStream(LoadStream& stream)
 {
-	stream.expectChunk(0x01);
-	stream >> _name;
-	stream >> _type;
-	QByteArray dataTypeName;
-	stream >> dataTypeName;
-	_dataType = QMetaType::type(dataTypeName.constData());
-	OVITO_ASSERT_MSG(_dataType != 0, "ParticleProperty LoadStream operator", QString("The meta data type '%1' seems to be no longer defined.").arg(QString(dataTypeName)).toLocal8Bit().constData());
-	OVITO_ASSERT(dataTypeName == QMetaType::typeName(_dataType));
-	stream.readSizeT(_dataTypeSize);
-	stream.readSizeT(_stride);
-	stream.readSizeT(_componentCount);
-	stream >> _componentNames;
-	stream.readSizeT(_numParticles);
-	_data.reset(new uint8_t[_numParticles * _stride]);
-	stream.read(_data.get(), _stride * _numParticles);
-	stream.closeChunk();
-
-	// Do floating-point precision conversion from single to double precision.
-	if(_dataType == qMetaTypeId<float>() && qMetaTypeId<FloatType>() == qMetaTypeId<double>()) {
-		OVITO_ASSERT(sizeof(FloatType) == sizeof(double));
-		OVITO_ASSERT(_dataTypeSize == sizeof(float));
-		_stride *= sizeof(double) / sizeof(float);
-		_dataTypeSize = sizeof(double);
-		_dataType = qMetaTypeId<FloatType>();
-		std::unique_ptr<uint8_t[]> newBuffer(new uint8_t[_stride * _numParticles]);
-		double* dst = reinterpret_cast<double*>(newBuffer.get());
-		const float* src = reinterpret_cast<const float*>(_data.get());
-		for(size_t c = _numParticles * _componentCount; c--; )
-			*dst++ = (double)*src++;
-		_data.swap(newBuffer);
-	}
-
-	// Do floating-point precision conversion from double to single precision.
-	if(_dataType == qMetaTypeId<double>() && qMetaTypeId<FloatType>() == qMetaTypeId<float>()) {
-		OVITO_ASSERT(sizeof(FloatType) == sizeof(float));
-		OVITO_ASSERT(_dataTypeSize == sizeof(double));
-		_stride /= sizeof(double) / sizeof(float);
-		_dataTypeSize = sizeof(float);
-		_dataType = qMetaTypeId<FloatType>();
-		std::unique_ptr<uint8_t[]> newBuffer(new uint8_t[_stride * _numParticles]);
-		float* dst = reinterpret_cast<float*>(newBuffer.get());
-		const double* src = reinterpret_cast<const double*>(_data.get());
-		for(size_t c = _numParticles * _componentCount; c--; )
-			*dst++ = (float)*src++;
-		_data.swap(newBuffer);
-	}
-}
-
-/******************************************************************************
-* Resizes the array to the given size.
-******************************************************************************/
-void ParticleProperty::resize(size_t newSize, bool preserveData)
-{
-	OVITO_ASSERT(newSize >= 0 && newSize < 0xFFFFFFFF);
-	std::unique_ptr<uint8_t[]> newBuffer(new uint8_t[newSize * _stride]);
-	if(preserveData)
-		memcpy(newBuffer.get(), _data.get(), _stride * std::min(_numParticles, newSize));
-	_data.swap(newBuffer);
-
-	// Initialize new elements to zero.
-	if(newSize > _numParticles && preserveData) {
-		memset(_data.get() + _numParticles * _stride, 0, (newSize - _numParticles) * _stride);
-	}
-	_numParticles = newSize;
-}
-
-/******************************************************************************
-* Copies the contents from the given source into this property storage.
-* Particles for which the bit in the given mask is set are skipped.
-******************************************************************************/
-void ParticleProperty::filterCopy(const ParticleProperty& source, const boost::dynamic_bitset<>& mask)
-{
-	OVITO_ASSERT(source.size() == mask.size());
-	OVITO_ASSERT(stride() == source.stride());
-	OVITO_ASSERT(source.size() == mask.count() + this->size());
-	size_t oldParticleCount = source.size();
-
-	// Optimize filter operation for the most common property types.
-	if(stride() == sizeof(FloatType)) {
-		// Single float
-		const FloatType* src = reinterpret_cast<const FloatType*>(source.constData());
-		FloatType* dst = reinterpret_cast<FloatType*>(data());
-		for(size_t i = 0; i < oldParticleCount; ++i, ++src) {
-			if(!mask.test(i)) *dst++ = *src;
-		}
-	}
-	else if(stride() == sizeof(int)) {
-		// Single integer
-		const int* src = reinterpret_cast<const int*>(source.constData());
-		int* dst = reinterpret_cast<int*>(data());
-		for(size_t i = 0; i < oldParticleCount; ++i, ++src) {
-			if(!mask.test(i)) *dst++ = *src;
-		}
-	}
-	else if(stride() == sizeof(Point3)) {
-		// Triple float (may actually be four floats when SSE instructions are enabled).
-		const Point3* src = reinterpret_cast<const Point3*>(source.constData());
-		Point3* dst = reinterpret_cast<Point3*>(data());
-		for(size_t i = 0; i < oldParticleCount; ++i, ++src) {
-			if(!mask.test(i)) *dst++ = *src;
-		}
-	}
-	else if(stride() == sizeof(Color)) {
-		// Triple float
-		const Color* src = reinterpret_cast<const Color*>(source.constData());
-		Color* dst = reinterpret_cast<Color*>(data());
-		for(size_t i = 0; i < oldParticleCount; ++i, ++src) {
-			if(!mask.test(i)) *dst++ = *src;
-		}
-	}
-	else {
-		// General case:
-		const uint8_t* src = source._data.get();
-		uint8_t* dst = _data.get();
-		for(size_t i = 0; i < oldParticleCount; i++, src += stride()) {
-			if(!mask.test(i)) {
-				memcpy(dst, src, stride());
-				dst += stride();
-			}
-		}
-	}
+	_type = (Type)PropertyBase::loadFromStream(stream);
 }
 
 /******************************************************************************

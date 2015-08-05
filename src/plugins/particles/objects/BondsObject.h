@@ -57,6 +57,10 @@ public:
 	/// Dangling bonds are removed too.
 	void particlesDeleted(const boost::dynamic_bitset<>& deletedParticlesMask);
 
+	/// \brief Returns whether this object, when returned as an editable sub-object by another object,
+	///        should be displayed in the modification stack.
+	virtual bool isSubObjectEditable() const override { return false; }
+
 protected:
 
 	/// Saves the class' contents to the given stream.

@@ -31,6 +31,7 @@
 #include "ParticleDisplay.h"
 #include "SimulationCellObject.h"
 #include "ParticleTypeProperty.h"
+#include "BondTypeProperty.h"
 
 namespace Ovito { namespace Particles {
 
@@ -119,18 +120,24 @@ void BondsDisplay::render(TimePoint time, DataObject* dataObject, const Pipeline
 	BondsObject* bondsObj = dynamic_object_cast<BondsObject>(dataObject);
 	ParticlePropertyObject* positionProperty = ParticlePropertyObject::findInState(flowState, ParticleProperty::PositionProperty);
 	SimulationCellObject* simulationCell = flowState.findObject<SimulationCellObject>();
-	ParticlePropertyObject* colorProperty = ParticlePropertyObject::findInState(flowState, ParticleProperty::ColorProperty);
-	ParticleTypeProperty* typeProperty = dynamic_object_cast<ParticleTypeProperty>(ParticlePropertyObject::findInState(flowState, ParticleProperty::ParticleTypeProperty));
+	ParticlePropertyObject* particleColorProperty = ParticlePropertyObject::findInState(flowState, ParticleProperty::ColorProperty);
+	ParticleTypeProperty* particleTypeProperty = dynamic_object_cast<ParticleTypeProperty>(ParticlePropertyObject::findInState(flowState, ParticleProperty::ParticleTypeProperty));
+	BondTypeProperty* bondTypeProperty = dynamic_object_cast<BondTypeProperty>(BondPropertyObject::findInState(flowState, BondProperty::BondTypeProperty));
+	BondPropertyObject* bondColorProperty = BondPropertyObject::findInState(flowState, BondProperty::ColorProperty);
+	BondPropertyObject* bondSelectionProperty = BondPropertyObject::findInState(flowState, BondProperty::SelectionProperty);
 	if(!useParticleColors()) {
-		colorProperty = nullptr;
-		typeProperty = nullptr;
+		particleColorProperty = nullptr;
+		particleTypeProperty = nullptr;
 	}
 
 	if(_geometryCacheHelper.updateState(
 			bondsObj,
 			positionProperty,
-			colorProperty,
-			typeProperty,
+			particleColorProperty,
+			particleTypeProperty,
+			bondColorProperty,
+			bondTypeProperty,
+			bondSelectionProperty,
 			simulationCell,
 			bondWidth(), bondColor(), useParticleColors())
 			|| !_buffer	|| !_buffer->isValid(renderer)
@@ -144,18 +151,20 @@ void BondsDisplay::render(TimePoint time, DataObject* dataObject, const Pipeline
 			_buffer = renderer->createArrowPrimitive(ArrowPrimitive::CylinderShape, shadingMode(), renderingQuality());
 			_buffer->startSetElements((int)bondsObj->storage()->size());
 
-			// Obtain particle colors since they determine the bond colors.
-			std::vector<Color> particleColors(positionProperty->size());
+			// Obtain particle display object.
 			ParticleDisplay* particleDisplay = nullptr;
 			if(useParticleColors()) {
-				for(DisplayObject* displayObj : positionProperty->displayObjects())
-					if((particleDisplay = dynamic_object_cast<ParticleDisplay>(displayObj)) != nullptr)
-						break;
+				for(DisplayObject* displayObj : positionProperty->displayObjects()) {
+					particleDisplay = dynamic_object_cast<ParticleDisplay>(displayObj);
+					if(particleDisplay) break;
+				}
 			}
-			if(particleDisplay)
-				particleDisplay->particleColors(particleColors, colorProperty, typeProperty, nullptr);
-			else
-				std::fill(particleColors.begin(), particleColors.end(), bondColor());
+
+			// Determine bond colors.
+			std::vector<Color> colors(bondsObj->storage()->size());
+			bondColors(colors, positionProperty->size(), bondsObj,
+					bondColorProperty, bondTypeProperty, bondSelectionProperty,
+					particleDisplay, particleColorProperty, particleTypeProperty);
 
 			// Cache some variables.
 			unsigned int particleCount = (unsigned int)positionProperty->size();
@@ -163,14 +172,15 @@ void BondsDisplay::render(TimePoint time, DataObject* dataObject, const Pipeline
 			const AffineTransformation cell = simulationCell ? simulationCell->cellMatrix() : AffineTransformation::Zero();
 
 			int elementIndex = 0;
+			auto color = colors.cbegin();
 			for(const Bond& bond : *bondsObj->storage()) {
 				if(bond.index1 < particleCount && bond.index2 < particleCount) {
 					Vector3 vec = positions[bond.index2] - positions[bond.index1];
 					for(size_t k = 0; k < 3; k++)
 						if(bond.pbcShift[k] != 0) vec += cell.column(k) * (FloatType)bond.pbcShift[k];
-					_buffer->setElement(elementIndex, positions[bond.index1], vec * FloatType(0.5), (ColorA)particleColors[bond.index1], bondRadius);
+					_buffer->setElement(elementIndex, positions[bond.index1], vec * FloatType(0.5), (ColorA)*color++, bondRadius);
 				}
-				else _buffer->setElement(elementIndex, Point3::Origin(), Vector3::Zero(), ColorA(1,1,1), 0);
+				else _buffer->setElement(elementIndex, Point3::Origin(), Vector3::Zero(), (ColorA)*color++, 0);
 				elementIndex++;
 			}
 
@@ -195,15 +205,95 @@ void BondsDisplay::render(TimePoint time, DataObject* dataObject, const Pipeline
 }
 
 /******************************************************************************
+* Determines the display colors of bonds.
+******************************************************************************/
+void BondsDisplay::bondColors(std::vector<Color>& output, size_t particleCount, BondsObject* bondsObject,
+		BondPropertyObject* bondColorProperty, BondTypeProperty* bondTypeProperty, BondPropertyObject* bondSelectionProperty,
+		ParticleDisplay* particleDisplay, ParticlePropertyObject* particleColorProperty, ParticleTypeProperty* particleTypeProperty)
+{
+	OVITO_ASSERT(bondColorProperty == nullptr || bondColorProperty->type() == BondProperty::ColorProperty);
+	OVITO_ASSERT(bondTypeProperty == nullptr || bondTypeProperty->type() == BondProperty::BondTypeProperty);
+	OVITO_ASSERT(bondSelectionProperty == nullptr || bondSelectionProperty->type() == BondProperty::SelectionProperty);
+
+	if(useParticleColors() && particleDisplay != nullptr && output.size() == bondsObject->storage()->size()) {
+		// Derive bond colors from particle colors.
+		std::vector<Color> particleColors(particleCount);
+		particleDisplay->particleColors(particleColors, particleColorProperty, particleTypeProperty, nullptr);
+		auto bc = output.begin();
+		for(const Bond& bond : *bondsObject->storage()) {
+			if(bond.index1 < particleCount && bond.index2 < particleCount)
+				*bc++ = particleColors[bond.index1];
+			else
+				*bc++ = bondColor();
+		}
+	}
+	else {
+		Color defaultColor = bondColor();
+		if(bondColorProperty && bondColorProperty->size() == output.size()) {
+			// Take bond colors directly from the color property.
+			std::copy(bondColorProperty->constDataColor(), bondColorProperty->constDataColor() + output.size(), output.begin());
+		}
+		else if(bondTypeProperty && bondTypeProperty->size() == output.size()) {
+			// Assign colors based on bond types.
+			// Generate a lookup map for bond type colors.
+			const std::map<int,Color> colorMap = bondTypeProperty->colorMap();
+			std::array<Color,16> colorArray;
+			// Check if all type IDs are within a small, non-negative range.
+			// If yes, we can use an array lookup strategy. Otherwise we have to use a dictionary lookup strategy, which is slower.
+			if(std::all_of(colorMap.begin(), colorMap.end(),
+					[&colorArray](const std::map<int,Color>::value_type& i) { return i.first >= 0 && i.first < (int)colorArray.size(); })) {
+				colorArray.fill(defaultColor);
+				for(const auto& entry : colorMap)
+					colorArray[entry.first] = entry.second;
+				// Fill color array.
+				const int* t = bondTypeProperty->constDataInt();
+				for(auto c = output.begin(); c != output.end(); ++c, ++t) {
+					if(*t >= 0 && *t < (int)colorArray.size())
+						*c = colorArray[*t];
+					else
+						*c = defaultColor;
+				}
+			}
+			else {
+				// Fill color array.
+				const int* t = bondTypeProperty->constDataInt();
+				for(auto c = output.begin(); c != output.end(); ++c, ++t) {
+					auto it = colorMap.find(*t);
+					if(it != colorMap.end())
+						*c = it->second;
+					else
+						*c = defaultColor;
+				}
+			}
+		}
+		else {
+			// Assign a uniform color to all bonds.
+			std::fill(output.begin(), output.end(), defaultColor);
+		}
+	}
+
+	// Highlight selected bonds.
+	if(bondSelectionProperty && bondSelectionProperty->size() == output.size()) {
+		const Color selColor = selectionBondColor();
+		const int* t = bondSelectionProperty->constDataInt();
+		for(auto c = output.begin(); c != output.end(); ++c, ++t) {
+			if(*t)
+				*c = selColor;
+		}
+	}
+}
+
+/******************************************************************************
 * Returns a human-readable string describing the picked object,
 * which will be displayed in the status bar by OVITO.
 ******************************************************************************/
 QString BondPickInfo::infoString(ObjectNode* objectNode, quint32 subobjectId)
 {
 	QString str;
-	if(_bondsObj && _bondsObj->storage()->size() > subobjectId) {
+	int bondIndex = subobjectId;
+	if(_bondsObj && _bondsObj->storage()->size() > bondIndex) {
 		str = tr("Bond");
-		const Bond& bond = (*_bondsObj->storage())[subobjectId];
+		const Bond& bond = (*_bondsObj->storage())[bondIndex];
 
 		// Bond length
 		ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(pipelineState(), ParticleProperty::PositionProperty);
@@ -217,13 +307,39 @@ QString BondPickInfo::infoString(ObjectNode* objectNode, quint32 subobjectId)
 			str += QString(" | Length: %1 | Delta: (%2 %3 %4)").arg(delta.length()).arg(delta.x()).arg(delta.y()).arg(delta.z());
 		}
 
+		// Bond properties
+		for(DataObject* dataObj : pipelineState().objects()) {
+			BondPropertyObject* property = dynamic_object_cast<BondPropertyObject>(dataObj);
+			if(!property || property->size() <= bondIndex) continue;
+			if(property->type() == BondProperty::SelectionProperty) continue;
+			if(property->type() == BondProperty::ColorProperty) continue;
+			if(property->dataType() != qMetaTypeId<int>() && property->dataType() != qMetaTypeId<FloatType>()) continue;
+			if(!str.isEmpty()) str += QStringLiteral(" | ");
+			str += property->name();
+			str += QStringLiteral(" ");
+			for(size_t component = 0; component < property->componentCount(); component++) {
+				if(component != 0) str += QStringLiteral(", ");
+				QString valueString;
+				if(property->dataType() == qMetaTypeId<int>()) {
+					str += QString::number(property->getIntComponent(bondIndex, component));
+					BondTypeProperty* typeProperty = dynamic_object_cast<BondTypeProperty>(property);
+					if(typeProperty && typeProperty->bondTypes().empty() == false) {
+						if(BondType* btype = typeProperty->bondType(property->getIntComponent(bondIndex, component)))
+							str += QString(" (%1)").arg(btype->name());
+					}
+				}
+				else if(property->dataType() == qMetaTypeId<FloatType>())
+					str += QString::number(property->getFloatComponent(bondIndex, component));
+			}
+		}
+
 		// Pair type info.
 		ParticleTypeProperty* typeProperty = dynamic_object_cast<ParticleTypeProperty>(ParticlePropertyObject::findInState(pipelineState(), ParticleProperty::ParticleTypeProperty));
 		if(typeProperty && typeProperty->size() > bond.index1 && typeProperty->size() > bond.index2) {
 			ParticleType* type1 = typeProperty->particleType(typeProperty->getInt(bond.index1));
 			ParticleType* type2 = typeProperty->particleType(typeProperty->getInt(bond.index2));
 			if(type1 && type2) {
-				str += QString(" | %1 - %2").arg(type1->name(), type2->name());
+				str += QString(" | Particles: %1 - %2").arg(type1->name(), type2->name());
 			}
 		}
 	}

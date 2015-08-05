@@ -26,6 +26,9 @@ SET(SourceFiles
 	objects/ParticleDisplay.cpp
 	objects/ParticleType.cpp
 	objects/ParticleTypeProperty.cpp
+	objects/BondType.cpp
+	objects/BondPropertyObject.cpp
+	objects/BondTypeProperty.cpp
 	objects/VectorDisplay.cpp
 	objects/BondsObject.cpp
 	objects/BondsDisplay.cpp
@@ -35,6 +38,8 @@ SET(SourceFiles
 	objects/TrajectoryDisplay.cpp
 	objects/TrajectoryGeneratorObject.cpp
 	data/ParticleProperty.cpp
+	data/BondProperty.cpp
+	data/PropertyBase.cpp
 	data/BondsStorage.cpp
 	modifier/ParticleModifier.cpp
 	modifier/AsynchronousParticleModifier.cpp

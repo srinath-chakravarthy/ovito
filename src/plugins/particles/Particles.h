@@ -70,7 +70,20 @@
 namespace Ovito {
 	namespace Particles {
 		class ParticlePropertyObject;
+		class ParticleTypeProperty;
 		class ParticleProperty;
+		class ParticleType;
+		class BondPropertyObject;
+		class BondTypeProperty;
+		class BondProperty;
+		class BondType;
+		class ParticleDisplay;
+		class BondsDisplay;
+		class VectorDisplay;
+		class SurfaceMesh;
+		class SurfaceMeshDisplay;
+		class SimulationCellObject;
+		class SimulationCellDisplay;
 
 		OVITO_BEGIN_INLINE_NAMESPACE(Modifiers)
 		OVITO_END_INLINE_NAMESPACE

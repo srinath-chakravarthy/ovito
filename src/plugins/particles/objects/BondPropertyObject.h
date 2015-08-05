@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2015) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,63 +19,57 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_PROPERTY_OBJECT_H
-#define __OVITO_PARTICLE_PROPERTY_OBJECT_H
+#ifndef __OVITO_BOND_PROPERTY_OBJECT_H
+#define __OVITO_BOND_PROPERTY_OBJECT_H
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DataObjectWithSharedStorage.h>
 #include <core/scene/pipeline/PipelineFlowState.h>
-#include <plugins/particles/data/ParticleProperty.h>
+#include <plugins/particles/data/BondProperty.h>
 
 namespace Ovito { namespace Particles {
 
 /**
- * \brief Stores a particle property.
+ * \brief Stores a bond property.
  *
- * The ParticlePropertyObject class stores the data of one particle property (which may consist
- * of multiple values per particle if it is a vector property).
+ * The BondPropertyObject class stores the data of one bond property (which may consist
+ * of multiple values per bond if it is a vector property).
  *
- * An entire particle dataset usually consists of multiple ParticlePropertyObject instances, each storing a
- * different property such as position, type, identifier etc. A particle dataset is normally kept
- * in a PipelineFlowState structure, which consists of a collection of data objects (with some of them
- * being ParticlePropertyObject instances and perhaps a instance of the SimulationCellObject class).
- *
- * The ParticlePropertyObject class keeps the actual per-particle data in an internal storage object
- * (see ParticleProperty class). The reason is that ParticlePropertyObject instances can only be created and
- * accessed from the main thread while ParticleProperty storage objects can be used by background threads
+ * The BondPropertyObject class keeps the actual per-bond data in an internal storage object
+ * (see BondProperty class). The reason is that BondPropertyObject instances can only be created and
+ * accessed from the main thread while BondProperty storage objects can be used by background threads
  * too (e.g. when loading data from a file).
- *
  */
-class OVITO_PARTICLES_EXPORT ParticlePropertyObject : public DataObjectWithSharedStorage<ParticleProperty>
+class OVITO_PARTICLES_EXPORT BondPropertyObject : public DataObjectWithSharedStorage<BondProperty>
 {
 public:
 
-	/// \brief Creates a particle property object.
-	Q_INVOKABLE ParticlePropertyObject(DataSet* dataset, ParticleProperty* storage = nullptr);
+	/// \brief Creates a bond property object.
+	Q_INVOKABLE BondPropertyObject(DataSet* dataset, BondProperty* storage = nullptr);
 
 	/// \brief Factory function that creates a user-defined property object.
-	/// \param particleCount The number of particles.
-	/// \param dataType Specifies the data type (integer, floating-point, ...) of the per-particle elements
+	/// \param bondCount The number of bonds.
+	/// \param dataType Specifies the data type (integer, floating-point, ...) of the per-bond elements
 	///                 in the new property storage. The data type is specified as identifier according to the
 	///                 Qt metatype system.
-	/// \param componentCount The number of components per particle of type \a dataType.
-	/// \param stride The number of bytes per particle (pass 0 to use the smallest possible stride).
+	/// \param componentCount The number of components per bond of type \a dataType.
+	/// \param stride The number of bytes per bond (pass 0 to use the smallest possible stride).
 	/// \param name The name assigned to the property.
 	/// \param initializeMemory Controls whether the newly allocated memory is initialized with zeros.
-	static OORef<ParticlePropertyObject> createUserProperty(DataSet* dataset, size_t particleCount, int dataType, size_t componentCount, size_t stride, const QString& name, bool initializeMemory);
+	static OORef<BondPropertyObject> createUserProperty(DataSet* dataset, size_t bondCount, int dataType, size_t componentCount, size_t stride, const QString& name, bool initializeMemory);
 
 	/// \brief Factory function that creates a standard property object.
-	/// \param particleCount The number of particles.
+	/// \param bondCount The number of particles.
 	/// \param which Specifies which standard property should be created.
-	///              This must not be ParticlePropertyIdentifier::UserProperty.
+	///              This must not be BondPropertyIdentifier::UserProperty.
 	/// \param componentCount The component count if this type of property
 	///                       has a variable component count; otherwise 0 to use the
 	///                       default number of components.
 	/// \param initializeMemory Controls whether the newly allocated memory is initialized with zeros.
-	static OORef<ParticlePropertyObject> createStandardProperty(DataSet* dataset, size_t particleCount, ParticleProperty::Type which, size_t componentCount, bool initializeMemory);
+	static OORef<BondPropertyObject> createStandardProperty(DataSet* dataset, size_t bondCount, BondProperty::Type which, size_t componentCount, bool initializeMemory);
 
 	/// \brief Factory function that creates a property object based on an existing storage.
-	static OORef<ParticlePropertyObject> createFromStorage(DataSet* dataset, ParticleProperty* storage);
+	static OORef<BondPropertyObject> createFromStorage(DataSet* dataset, BondProperty* storage);
 
 	/// \brief Gets the property's name.
 	/// \return The name of property, which is shown to the user.
@@ -86,24 +80,22 @@ public:
 	/// \undoable
 	void setName(const QString& name);
 
-	/// \brief Returns the number of particles for which this object stores the properties.
-	/// \return The total number of data elements in this channel divided by the
-	///         number of elements per particle.
+	/// \brief Returns the number of bond for which this object stores the properties.
 	size_t size() const { return storage()->size(); }
 
 	/// \brief Resizes the property storage.
-	/// \param newSize The new number of particles.
-	/// \param preserveData Controls whether the existing per-particle data is preserved.
+	/// \param newSize The new number of bonds.
+	/// \param preserveData Controls whether the existing per-bond data is preserved.
 	///                     This also determines whether newly allocated memory is initialized to zero.
 	void resize(size_t newSize, bool preserveData);
 
 	/// \brief Returns the type of this property.
-	ParticleProperty::Type type() const { return storage()->type(); }
+	BondProperty::Type type() const { return storage()->type(); }
 
 	/// \brief Changes the type of this property.
 	/// \note The type may only be changed if the new property has the same
 	///       data type and component count as the old one.
-	void setType(ParticleProperty::Type newType) {
+	void setType(BondProperty::Type newType) {
 		if(newType == type()) return;
 		modifiableStorage()->setType(newType);
 		changed();
@@ -119,21 +111,17 @@ public:
 	///         specified by type().
 	size_t dataTypeSize() const { return storage()->dataTypeSize(); }
 
-	/// \brief Returns the number of bytes used per particle.
+	/// \brief Returns the number of bytes used per bond.
 	size_t stride() const { return storage()->stride(); }
 
-	/// \brief Returns the number of array elements per particle.
-	/// \return The number of data values stored per particle in this storage object.
+	/// \brief Returns the number of array elements per bond.
+	/// \return The number of data values stored per bond in this storage object.
 	size_t componentCount() const { return storage()->componentCount(); }
 
-	/// \brief Returns the human-readable names for the components stored per atom.
-	/// \return The names of the vector components if this channel contains more than one value per atom.
-	///         If this is only a single valued channel then an empty list is returned by this method because
-	///         then no naming is necessary.
+	/// \brief Returns the human-readable names for the components stored per bond.
 	const QStringList& componentNames() const { return storage()->componentNames(); }
 
-	/// \brief Returns the display name of the property including the name of the given
-	///        vector component.
+	/// \brief Returns the display name of the property including the name of the given vector component.
 	QString nameWithComponent(int vectorComponent) const {
 		if(componentCount() <= 1 || vectorComponent < 0)
 			return name();
@@ -145,7 +133,7 @@ public:
 
 	/// Copies the contents from the given source into this storage.
 	/// Particles for which the bit in the given mask is set are skipped.
-	void filterCopy(ParticlePropertyObject* source, const boost::dynamic_bitset<>& mask) {
+	void filterCopy(BondPropertyObject* source, const boost::dynamic_bitset<>& mask) {
 		modifiableStorage()->filterCopy(*source->storage(), mask);
 		changed();
 	}
@@ -441,23 +429,23 @@ public:
 	/// \brief Returns whether this object, when returned as an editable sub-object by another object,
 	///        should be displayed in the modification stack.
 	///
-	/// This implementation returns false because standard particle properties cannot be edited and
+	/// This implementation returns false because standard bond properties cannot be edited and
 	/// are hidden in the modifier stack.
 	virtual bool isSubObjectEditable() const override { return false; }
 
 	/// \brief Returns the title of this object.
 	virtual QString objectTitle() override {
-		if(type() == ParticleProperty::UserProperty)
+		if(type() == BondProperty::UserProperty)
 			return name();
 		else
-			return ParticleProperty::standardPropertyTitle(type());
+			return BondProperty::standardPropertyTitle(type());
 	}
 
-	/// This helper method returns a standard particle property (if present) from the given pipeline state.
-	static ParticlePropertyObject* findInState(const PipelineFlowState& state, ParticleProperty::Type type);
+	/// This helper method returns a standard bond property (if present) from the given pipeline state.
+	static BondPropertyObject* findInState(const PipelineFlowState& state, BondProperty::Type type);
 
-	/// This helper method returns a specific user-defined particle property (if present) from the given pipeline state.
-	static ParticlePropertyObject* findInState(const PipelineFlowState& state, const QString& name);
+	/// This helper method returns a specific user-defined bond property (if present) from the given pipeline state.
+	static BondPropertyObject* findInState(const PipelineFlowState& state, const QString& name);
 
 protected:
 
@@ -474,44 +462,44 @@ private:
 };
 
 /**
- * \brief A reference to a particle property.
+ * \brief A reference to a bond property.
  *
- * This class is a reference to a particle property. For instance, it is used by modifiers
+ * This class is a reference to a bond property. For instance, it is used by modifiers
  * to store the input property selected by the user, which they will act upon. When the modifier
- * is evaluated, the particle property reference is resolved by looking up the corresponding ParticlePropertyObject
- * from the current input dataset, which contains the actual per-particle data.
+ * is evaluated, the property reference is resolved by looking up the corresponding BondPropertyObject
+ * from the current input dataset, which contains the actual per-bond data.
  *
- * A ParticlePropertyReference consists of the ParticleProperty::Type identifier, the name of the property
+ * A BondPropertyReference consists of the BondProperty::Type identifier, the name of the property
  * (only used for user-defined properties), and an optional vector component (can be -1 to indicate that the entire
  * vector property is referenced).
  *
- * \sa ParticleProperty, ParticlePropertyObject
+ * \sa BondProperty, BondPropertyObject
  */
-class ParticlePropertyReference
+class BondPropertyReference
 {
 public:
 
 	/// \brief Default constructor. Creates an empty reference.
-	ParticlePropertyReference() : _type(ParticleProperty::UserProperty), _vectorComponent(-1) {}
+	BondPropertyReference() : _type(BondProperty::UserProperty), _vectorComponent(-1) {}
 	/// \brief Constructs a reference to a standard property.
-	ParticlePropertyReference(ParticleProperty::Type type, int vectorComponent = -1) : _type(type), _name(ParticleProperty::standardPropertyName(type)), _vectorComponent(vectorComponent) {}
+	BondPropertyReference(BondProperty::Type type, int vectorComponent = -1) : _type(type), _name(BondProperty::standardPropertyName(type)), _vectorComponent(vectorComponent) {}
 	/// \brief Constructs a reference to a property.
-	ParticlePropertyReference(ParticleProperty::Type type, const QString& name, int vectorComponent = -1) : _type(type), _name(name), _vectorComponent(vectorComponent) {}
+	BondPropertyReference(BondProperty::Type type, const QString& name, int vectorComponent = -1) : _type(type), _name(name), _vectorComponent(vectorComponent) {}
 	/// \brief Constructs a reference to a user-defined property.
-	ParticlePropertyReference(const QString& name, int vectorComponent = -1) : _type(ParticleProperty::UserProperty), _name(name), _vectorComponent(vectorComponent) {}
-	/// \brief Constructs a reference based on an existing ParticleProperty.
-	ParticlePropertyReference(ParticleProperty* property, int vectorComponent = -1) : _type(property->type()), _name(property->name()), _vectorComponent(vectorComponent) {}
-	/// \brief Constructs a reference based on an existing ParticlePropertyObject.
-	ParticlePropertyReference(ParticlePropertyObject* property, int vectorComponent = -1) : _type(property->type()), _name(property->name()), _vectorComponent(vectorComponent) {}
+	BondPropertyReference(const QString& name, int vectorComponent = -1) : _type(BondProperty::UserProperty), _name(name), _vectorComponent(vectorComponent) {}
+	/// \brief Constructs a reference based on an existing BondProperty.
+	BondPropertyReference(BondProperty* property, int vectorComponent = -1) : _type(property->type()), _name(property->name()), _vectorComponent(vectorComponent) {}
+	/// \brief Constructs a reference based on an existing BondPropertyObject.
+	BondPropertyReference(BondPropertyObject* property, int vectorComponent = -1) : _type(property->type()), _name(property->name()), _vectorComponent(vectorComponent) {}
 
 	/// \brief Returns the type of property being referenced.
-	ParticleProperty::Type type() const { return _type; }
+	BondProperty::Type type() const { return _type; }
 
 	/// \brief Sets the type of property being referenced.
-	void setType(ParticleProperty::Type type) {
+	void setType(BondProperty::Type type) {
 		_type = type;
-		if(type != ParticleProperty::UserProperty)
-			_name = ParticleProperty::standardPropertyName(type);
+		if(type != BondProperty::UserProperty)
+			_name = BondProperty::standardPropertyName(type);
 	}
 
 	/// \brief Gets the human-readable name of the referenced property.
@@ -525,32 +513,32 @@ public:
 	void setVectorComponent(int index) { _vectorComponent = index; }
 
 	/// \brief Compares two references for equality.
-	bool operator==(const ParticlePropertyReference& other) const {
+	bool operator==(const BondPropertyReference& other) const {
 		if(type() != other.type()) return false;
 		if(vectorComponent() != other.vectorComponent()) return false;
-		if(type() != ParticleProperty::UserProperty) return true;
+		if(type() != BondProperty::UserProperty) return true;
 		return name() == other.name();
 	}
 
 	/// \brief Compares two references for inequality.
-	bool operator!=(const ParticlePropertyReference& other) const { return !(*this == other); }
+	bool operator!=(const BondPropertyReference& other) const { return !(*this == other); }
 
-	/// \brief Returns true if this reference does not point to any particle property.
-	/// \return true if this is a default constructed ParticlePropertyReference.
-	bool isNull() const { return type() == ParticleProperty::UserProperty && name().isEmpty(); }
+	/// \brief Returns true if this reference does not point to any bond property.
+	/// \return true if this is a default constructed BondPropertyReference.
+	bool isNull() const { return type() == BondProperty::UserProperty && name().isEmpty(); }
 
-	/// \brief This method retrieves the actual particle property from a pipeline state.
-	/// \return The actual particle property after resolving this reference; or NULL if the property does not exist.
-	ParticlePropertyObject* findInState(const PipelineFlowState& state) const;
+	/// \brief This method retrieves the actual bond property from a pipeline state.
+	/// \return The actual bond property after resolving this reference; or NULL if the property does not exist.
+	BondPropertyObject* findInState(const PipelineFlowState& state) const;
 
 	/// \brief Returns the display name of the referenced property including the optional vector component.
 	QString nameWithComponent() const {
-		if(type() != ParticleProperty::UserProperty) {
-			if(vectorComponent() < 0 || ParticleProperty::standardPropertyComponentCount(type()) <= 1) {
+		if(type() != BondProperty::UserProperty) {
+			if(vectorComponent() < 0 || BondProperty::standardPropertyComponentCount(type()) <= 1) {
 				return name();
 			}
 			else {
-				QStringList names = ParticleProperty::standardPropertyComponentNames(type());
+				QStringList names = BondProperty::standardPropertyComponentNames(type());
 				if(vectorComponent() < names.size())
 					return QString("%1.%2").arg(name()).arg(names[vectorComponent()]);
 			}
@@ -564,7 +552,7 @@ public:
 private:
 
 	/// The type of the property.
-	ParticleProperty::Type _type;
+	BondProperty::Type _type;
 
 	/// The human-readable name of the property.
 	QString _name;
@@ -573,9 +561,9 @@ private:
 	int _vectorComponent;
 };
 
-/// Writes a ParticlePropertyReference to an output stream.
-/// \relates ParticlePropertyReference
-inline SaveStream& operator<<(SaveStream& stream, const ParticlePropertyReference& r)
+/// Writes a BondPropertyReference to an output stream.
+/// \relates BondPropertyReference
+inline SaveStream& operator<<(SaveStream& stream, const BondPropertyReference& r)
 {
 	stream << r.type();
 	stream << r.name();
@@ -583,26 +571,26 @@ inline SaveStream& operator<<(SaveStream& stream, const ParticlePropertyReferenc
 	return stream;
 }
 
-/// Reads a ParticlePropertyReference from an input stream.
-/// \relates ParticlePropertyReference
-inline LoadStream& operator>>(LoadStream& stream, ParticlePropertyReference& r)
+/// Reads a BondPropertyReference from an input stream.
+/// \relates BondPropertyReference
+inline LoadStream& operator>>(LoadStream& stream, BondPropertyReference& r)
 {
-	ParticleProperty::Type type;
+	BondProperty::Type type;
 	QString name;
 	stream >> type;
 	stream >> name;
 	int vecComponent;
 	stream >> vecComponent;
-	if(type != ParticleProperty::UserProperty)
-		r = ParticlePropertyReference(type, vecComponent);
+	if(type != BondProperty::UserProperty)
+		r = BondPropertyReference(type, vecComponent);
 	else
-		r = ParticlePropertyReference(name, vecComponent);
+		r = BondPropertyReference(name, vecComponent);
 	return stream;
 }
 
 }	// End of namespace
 }	// End of namespace
 
-Q_DECLARE_METATYPE(Ovito::Particles::ParticlePropertyReference);
+Q_DECLARE_METATYPE(Ovito::Particles::BondPropertyReference);
 
-#endif // __OVITO_PARTICLE_PROPERTY_OBJECT_H
+#endif // __OVITO_BOND_PROPERTY_OBJECT_H

@@ -126,7 +126,7 @@ Box3 ParticleDisplay::particleBoundingBox(ParticlePropertyObject* positionProper
 }
 
 /******************************************************************************
-* Determines the the display particle colors.
+* Determines the display particle colors.
 ******************************************************************************/
 void ParticleDisplay::particleColors(std::vector<Color>& output, ParticlePropertyObject* colorProperty, ParticleTypeProperty* typeProperty, ParticlePropertyObject* selectionProperty)
 {
@@ -173,7 +173,7 @@ void ParticleDisplay::particleColors(std::vector<Color>& output, ParticlePropert
 		}
 	}
 	else {
-		// Assign a constant color to all particles.
+		// Assign a uniform color to all particles.
 		std::fill(output.begin(), output.end(), defaultColor);
 	}
 
@@ -189,7 +189,7 @@ void ParticleDisplay::particleColors(std::vector<Color>& output, ParticlePropert
 }
 
 /******************************************************************************
-* Determines the the display particle radii.
+* Determines the display particle radii.
 ******************************************************************************/
 void ParticleDisplay::particleRadii(std::vector<FloatType>& output, ParticlePropertyObject* radiusProperty, ParticleTypeProperty* typeProperty)
 {
@@ -216,12 +216,12 @@ void ParticleDisplay::particleRadii(std::vector<FloatType>& output, ParticleProp
 			}
 		}
 		else {
-			// Assign a constant radius to all particles.
+			// Assign a uniform radius to all particles.
 			std::fill(output.begin(), output.end(), defaultParticleRadius());
 		}
 	}
 	else {
-		// Assign a constant radius to all particles.
+		// Assign a uniform radius to all particles.
 		std::fill(output.begin(), output.end(), defaultParticleRadius());
 	}
 }
