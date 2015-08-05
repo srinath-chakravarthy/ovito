@@ -56,23 +56,42 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 	// Get simulation cell info.
 	SimulationCellObject* simulationCell = state.findObject<SimulationCellObject>();
 	if(!simulationCell)
-		throw Exception(tr("No simulation cell available. Cannot write LAMMPS file."));
+		throw Exception(tr("No simulation cell defined. Cannot write LAMMPS file."));
 
 	AffineTransformation simCell = simulationCell->cellMatrix();
+
+	// Transform triclinic cell to LAMMPS canonical format.
+	Vector3 a,b,c;
+	AffineTransformation transformation;
+	bool transformCoordinates;
+	if(simCell.column(0).y() != 0 || simCell.column(0).z() != 0 || simCell.column(1).z() != 0) {
+		a.x() = simCell.column(0).length();
+		a.y() = a.z() = 0;
+		b.x() = simCell.column(1).dot(simCell.column(0)) / a.x();
+		b.y() = sqrt(simCell.column(1).squaredLength() - b.x()*b.x());
+		b.z() = 0;
+		c.x() = simCell.column(2).dot(simCell.column(0)) / a.x();
+		c.y() = (simCell.column(1).dot(simCell.column(2)) - b.x()*c.x()) / b.y();
+		c.z() = sqrt(simCell.column(2).squaredLength() - c.x()*c.x() - c.y()*c.y());
+		transformCoordinates = true;
+		transformation = AffineTransformation(a,b,c,simCell.translation()) * simCell.inverse();
+	}
+	else {
+		a = simCell.column(0);
+		b = simCell.column(1);
+		c = simCell.column(2);
+		transformCoordinates = false;
+	}
 
 	FloatType xlo = simCell.translation().x();
 	FloatType ylo = simCell.translation().y();
 	FloatType zlo = simCell.translation().z();
-	FloatType xhi = simCell.column(0).x() + xlo;
-	FloatType yhi = simCell.column(1).y() + ylo;
-	FloatType zhi = simCell.column(2).z() + zlo;
-	FloatType xy = simCell.column(1).x();
-	FloatType xz = simCell.column(2).x();
-	FloatType yz = simCell.column(2).y();
-
-	if(simCell.column(0).y() != 0 || simCell.column(0).z() != 0 || simCell.column(1).z() != 0)
-		throw Exception(tr("Cannot save simulation cell to a LAMMPS data file. This type of non-orthogonal "
-				"cell is not supported by LAMMPS and its file format. See the documentation of LAMMPS for details."));
+	FloatType xhi = a.x() + xlo;
+	FloatType yhi = b.y() + ylo;
+	FloatType zhi = c.z() + zlo;
+	FloatType xy = b.x();
+	FloatType xz = c.x();
+	FloatType yz = c.y();
 
 	textStream() << "# LAMMPS data file written by OVITO\n";
 	textStream() << posProperty->size() << " atoms\n";
@@ -105,8 +124,13 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 		textStream() << (identifierProperty ? identifierProperty->getInt(i) : (i+1));
 		textStream() << ' ';
 		textStream() << (particleTypeProperty ? particleTypeProperty->getInt(i) : 1);
-		for(size_t k = 0; k < 3; k++) {
-			textStream() << ' ' << (*p)[k];
+		if(!transformCoordinates) {
+			for(size_t k = 0; k < 3; k++)
+				textStream() << ' ' << (*p)[k];
+		}
+		else {
+			for(size_t k = 0; k < 3; k++)
+				textStream() << ' ' << transformation.prodrow(*p, k);
 		}
 		if(periodicImageProperty) {
 			const Point3I& pbc = periodicImageProperty->getPoint3I(i);
@@ -124,14 +148,19 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 		}
 	}
 
-	// Write atomic velocities
+	// Write atomic velocities.
 	if(velocityProperty) {
 		textStream() << "\nVelocities\n\n";
 		const Vector3* v = velocityProperty->constDataVector3();
 		for(size_t i = 0; i < velocityProperty->size(); i++, ++v) {
 			textStream() << (identifierProperty ? identifierProperty->getInt(i) : (i+1));
-			for(size_t k = 0; k < 3; k++) {
-				textStream() << ' ' << (*v)[k];
+			if(!transformCoordinates) {
+				for(size_t k = 0; k < 3; k++)
+					textStream() << ' ' << (*v)[k];
+			}
+			else {
+				for(size_t k = 0; k < 3; k++)
+					textStream() << ' ' << transformation.prodrow(*v, k);
 			}
 			textStream() << '\n';
 
