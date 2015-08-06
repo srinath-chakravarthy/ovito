@@ -45,9 +45,9 @@ def import_file(location, **params):
         
         **Multi-timestep files**
         
-        Some data formats can store multiple frames in a single file (e.g. XYZ and LAMMPS dump). OVITO cannot know 
-        that such a file contains multiple frames (reading the entire file is avoided for performance reasons). 
-        So explicitly tell OVITO to scan the entire file and load a sequence of frames by supplying the ``multiple_frames`` 
+        Some data formats can store multiple frames in a single file. OVITO cannot know in some cases (e.g. XYZ and LAMMPS dump)
+        that a file contains multiple frames (because reading the entire file is avoided for performance reasons). 
+        Then it is necessary to explicitly tell OVITO to scan the entire file and load a sequence of frames by supplying the ``multiple_frames`` 
         option:: 
         
             node = import_file("file.dump", multiple_frames = True)

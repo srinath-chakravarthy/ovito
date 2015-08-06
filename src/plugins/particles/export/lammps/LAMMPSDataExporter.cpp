@@ -23,6 +23,8 @@
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
+#include <plugins/particles/objects/BondsObject.h>
+#include <plugins/particles/objects/BondTypeProperty.h>
 #include "LAMMPSDataExporter.h"
 #include "../ParticleExporterSettingsDialog.h"
 
@@ -35,8 +37,42 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, LAMMPSDataExporter, ParticleExpor
 ******************************************************************************/
 bool LAMMPSDataExporter::showSettingsDialog(const PipelineFlowState& state, QWidget* parent)
 {
+	if(atomStyle() == LAMMPSDataImporter::AtomStyle_Atomic) {
+		QSettings settings;
+		settings.beginGroup("viz/exporter/lammps/data/");
+		setAtomStyle((LAMMPSDataImporter::LAMMPSAtomStyle)settings.value("atom_style", (int)atomStyle()).toInt());
+		settings.endGroup();
+	}
+
 	ParticleExporterSettingsDialog dialog(parent, this, state);
-	return (dialog.exec() == QDialog::Accepted);
+
+	QGroupBox* dataFormatGroupBox = new QGroupBox(tr("LAMMPS Atom Style"));
+	dialog.insertWidget(dataFormatGroupBox);
+
+	QHBoxLayout* layout = new QHBoxLayout(dataFormatGroupBox);
+	QComboBox* atomStyleBox = new QComboBox();
+	atomStyleBox->addItem("atomic", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Atomic));
+	atomStyleBox->addItem("bond", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Bond));
+	atomStyleBox->addItem("charge", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Charge));
+	atomStyleBox->addItem("molecular", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Molecular));
+	atomStyleBox->addItem("full", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Full));
+	atomStyleBox->setCurrentIndex(atomStyleBox->findData(QVariant::fromValue(atomStyle())));
+	layout->addWidget(atomStyleBox);
+	layout->addStretch(1);
+
+	if(dialog.exec() == QDialog::Accepted) {
+		setAtomStyle(atomStyleBox->itemData(atomStyleBox->currentIndex()).value<LAMMPSDataImporter::LAMMPSAtomStyle>());
+
+		// Remember the selected atom style for the next time.
+		QSettings settings;
+		settings.beginGroup("viz/exporter/lammps/data/");
+		settings.setValue("atom_style", (int)atomStyle());
+		settings.endGroup();
+
+		return true;
+	}
+	return false;
+
 }
 
 /******************************************************************************
@@ -52,6 +88,10 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 	ParticlePropertyObject* identifierProperty = ParticlePropertyObject::findInState(state, ParticleProperty::IdentifierProperty);
 	ParticlePropertyObject* periodicImageProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PeriodicImageProperty);
 	ParticleTypeProperty* particleTypeProperty = dynamic_object_cast<ParticleTypeProperty>(ParticlePropertyObject::findInState(state, ParticleProperty::ParticleTypeProperty));
+	ParticlePropertyObject* chargeProperty = ParticlePropertyObject::findInState(state, ParticleProperty::ChargeProperty);
+	ParticlePropertyObject* moleculeProperty = ParticlePropertyObject::findInState(state, ParticleProperty::MoleculeProperty);
+	BondsObject* bondsObj = state.findObject<BondsObject>();
+	BondTypeProperty* bondTypeProperty = dynamic_object_cast<BondTypeProperty>(BondPropertyObject::findInState(state, BondProperty::BondTypeProperty));
 
 	// Get simulation cell info.
 	SimulationCellObject* simulationCell = state.findObject<SimulationCellObject>();
@@ -93,8 +133,13 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 	FloatType xz = c.x();
 	FloatType yz = c.y();
 
+	// Decide if we want to export bonds.
+	bool writeBonds = (bondsObj != nullptr) && (atomStyle() != LAMMPSDataImporter::AtomStyle_Atomic);
+
 	textStream() << "# LAMMPS data file written by OVITO\n";
 	textStream() << posProperty->size() << " atoms\n";
+	if(writeBonds)
+		textStream() << (bondsObj->storage()->size()/2) << " bonds\n";
 
 	if(particleTypeProperty && particleTypeProperty->size() > 0) {
 		int numParticleTypes = std::max(
@@ -103,6 +148,15 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 		textStream() << numParticleTypes << " atom types\n";
 	}
 	else textStream() << "1 atom types\n";
+	if(writeBonds) {
+		if(bondTypeProperty && bondTypeProperty->size() > 0) {
+			int numBondTypes = std::max(
+					bondTypeProperty->bondTypes().size(),
+					*std::max_element(bondTypeProperty->constDataInt(), bondTypeProperty->constDataInt() + bondTypeProperty->size()));
+			textStream() << numBondTypes << " bond types\n";
+		}
+		else textStream() << "1 bond types\n";
+	}
 
 	textStream() << xlo << ' ' << xhi << " xlo xhi\n";
 	textStream() << ylo << ' ' << yhi << " ylo yhi\n";
@@ -114,23 +168,32 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 
 	size_t totalProgressCount = posProperty->size();
 	if(velocityProperty) totalProgressCount += posProperty->size();
+	if(writeBonds) totalProgressCount += bondsObj->storage()->size() / 2;
 	size_t currentProgress = 0;
 
-	// Write atomic positions.
+	// Write atoms.
 	textStream() << "Atoms\n\n";
 
-	const Point3* p = posProperty->constDataPoint3();
-	for(size_t i = 0; i < posProperty->size(); i++, ++p) {
+	for(size_t i = 0; i < posProperty->size(); i++) {
 		textStream() << (identifierProperty ? identifierProperty->getInt(i) : (i+1));
+		if(atomStyle() == LAMMPSDataImporter::AtomStyle_Bond || atomStyle() == LAMMPSDataImporter::AtomStyle_Molecular || atomStyle() == LAMMPSDataImporter::AtomStyle_Full) {
+			textStream() << ' ';
+			textStream() << (moleculeProperty ? moleculeProperty->getInt(i) : 1);
+		}
 		textStream() << ' ';
 		textStream() << (particleTypeProperty ? particleTypeProperty->getInt(i) : 1);
+		if(atomStyle() == LAMMPSDataImporter::AtomStyle_Charge || atomStyle() == LAMMPSDataImporter::AtomStyle_Full) {
+			textStream() << ' ';
+			textStream() << (chargeProperty ? chargeProperty->getFloat(i) : 0);
+		}
+		const Point3& pos = posProperty->getPoint3(i);
 		if(!transformCoordinates) {
 			for(size_t k = 0; k < 3; k++)
-				textStream() << ' ' << (*p)[k];
+				textStream() << ' ' << pos[k];
 		}
 		else {
 			for(size_t k = 0; k < 3; k++)
-				textStream() << ' ' << transformation.prodrow(*p, k);
+				textStream() << ' ' << transformation.prodrow(pos, k);
 		}
 		if(periodicImageProperty) {
 			const Point3I& pbc = periodicImageProperty->getPoint3I(i);
@@ -148,7 +211,7 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 		}
 	}
 
-	// Write atomic velocities.
+	// Write velocities.
 	if(velocityProperty) {
 		textStream() << "\nVelocities\n\n";
 		const Vector3* v = velocityProperty->constDataVector3();
@@ -171,6 +234,33 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 					return false;
 			}
 		}
+	}
+
+	// Write bonds.
+	if(writeBonds) {
+		textStream() << "Bonds\n\n";
+
+		int bondIndex = 1;
+		for(size_t i = 0; i < bondsObj->storage()->size(); i++) {
+			const Bond& bond = (*bondsObj->storage())[i];
+			if(bond.index2 < bond.index1) continue;	// Skip every other half-bond.
+			textStream() << bondIndex++;
+			textStream() << ' ';
+			textStream() << (bondTypeProperty ? bondTypeProperty->getInt(i) : 1);
+			textStream() << ' ';
+			textStream() << (identifierProperty ? identifierProperty->getInt(bond.index1) : (bond.index1+1));
+			textStream() << ' ';
+			textStream() << (identifierProperty ? identifierProperty->getInt(bond.index2) : (bond.index2+1));
+			textStream() << '\n';
+
+			currentProgress++;
+			if((currentProgress % 4096) == 0) {
+				progress.setPercentage(currentProgress * 100 / totalProgressCount);
+				if(progress.wasCanceled())
+					return false;
+			}
+		}
+		OVITO_ASSERT(bondIndex == bondsObj->storage()->size() / 2 + 1);
 	}
 
 	return true;
