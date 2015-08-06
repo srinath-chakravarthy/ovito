@@ -197,6 +197,11 @@
                 </row>
 
                 <row>
+                  <entry>fmod(A,B)</entry>
+                  <entry>Returns the floating-point remainder of A/B (rounded towards zero).</entry>
+                </row>
+
+                <row>
                   <entry>rint(A)</entry>
 
                   <entry>Rounds A to the closest integer. 0.5 is rounded to

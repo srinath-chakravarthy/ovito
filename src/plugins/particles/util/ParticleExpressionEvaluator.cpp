@@ -297,6 +297,9 @@ void ParticleExpressionEvaluator::WorkerThread::initialize(const std::vector<std
 			// Configure parser to accept alpha-numeric characters and '.' in variable names.
 			parser->DefineNameChars(_validVariableNameChars.constData());
 
+			// Define some extra math functions.
+			parser->DefineFun("fmod", fmod, false);
+
 			// Let the muParser process the math expression.
 			parser->SetExpr(*expr);
 
