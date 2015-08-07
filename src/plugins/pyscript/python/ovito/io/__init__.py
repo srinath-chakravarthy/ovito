@@ -52,6 +52,12 @@ def import_file(location, **params):
         
             node = import_file("file.dump", multiple_frames = True)
             print "Number of frames:", node.source.num_frames
+
+        **LAMMPS atom style**
+        
+        When trying to load a LAMMPS data file which is using an atom style other than "atomic", the atom style must be explicitly
+        specified as a string using the ``atom_style`` keyword parameter. The following LAMMPS atom styles are currently supported by
+        OVITO: ``angle``, ``atomic``, ``body``, ``bond``, ``charge``, ``dipole``, ``full``, ``molecular``.
             
     """
     
@@ -169,6 +175,13 @@ def export_file(node, file, format, **params):
             export_file(node, "output.xyz", "xyz", columns = 
               ["Particle Identifier", "Particle Type", "Position.X", "Position.Y", "Position.Z"]
             )
+            
+         **LAMMPS atom style**
+        
+        When writing files in the ``"lammps_data"`` format, the LAMMPS atom style "atomic" is used by default. If a different atom style 
+        should be used, it must be explicitly specified as a string using the ``atom_style`` keyword parameter.
+        The following LAMMPS atom styles are currently supported by OVITO:
+        ``angle``, ``atomic``, ``body``, ``bond``, ``charge``, ``dipole``, ``full``, ``molecular``.
         
     """
     

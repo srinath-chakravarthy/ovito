@@ -106,7 +106,8 @@ bool LAMMPSDataImporter::showAtomStyleDialog(QWidget* parent)
 			{ QStringLiteral("charge"), AtomStyle_Charge },
 			{ QStringLiteral("dipole"), AtomStyle_Dipole },
 			{ QStringLiteral("molecular"), AtomStyle_Molecular },
-			{ QStringLiteral("full"), AtomStyle_Full }
+			{ QStringLiteral("full"), AtomStyle_Full },
+			{ QStringLiteral("angle"), AtomStyle_Angle }
 	};
 	QStringList itemList = styleList.keys();
 

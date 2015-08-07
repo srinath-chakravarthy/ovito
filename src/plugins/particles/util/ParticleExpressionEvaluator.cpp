@@ -298,7 +298,7 @@ void ParticleExpressionEvaluator::WorkerThread::initialize(const std::vector<std
 			parser->DefineNameChars(_validVariableNameChars.constData());
 
 			// Define some extra math functions.
-			parser->DefineFun("fmod", fmod, false);
+			parser->DefineFun("fmod", static_cast<double (*)(double,double)>(fmod), false);
 
 			// Let the muParser process the math expression.
 			parser->SetExpr(*expr);

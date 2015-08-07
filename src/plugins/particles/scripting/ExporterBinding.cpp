@@ -70,14 +70,6 @@ BOOST_PYTHON_MODULE(ParticlesExporter)
 		scope s = ovito_class<LAMMPSDataExporter, ParticleExporter>()
 			.add_property("atomStyle", &LAMMPSDataExporter::atomStyle, &LAMMPSDataExporter::setAtomStyle)
 		;
-
-		enum_<LAMMPSDataImporter::LAMMPSAtomStyle>("LAMMPSAtomStyle")
-			.value("Atomic", LAMMPSDataImporter::AtomStyle_Atomic)
-			.value("Bond", LAMMPSDataImporter::AtomStyle_Bond)
-			.value("Charge", LAMMPSDataImporter::AtomStyle_Charge)
-			.value("Molecular", LAMMPSDataImporter::AtomStyle_Molecular)
-			.value("Full", LAMMPSDataImporter::AtomStyle_Full)
-		;
 	}
 
 	ovito_class<LAMMPSDumpExporter, ParticleExporter>()

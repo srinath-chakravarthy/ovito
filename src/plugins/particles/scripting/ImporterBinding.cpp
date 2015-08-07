@@ -94,12 +94,15 @@ BOOST_PYTHON_MODULE(ParticlesImporter)
 		;
 
 		enum_<LAMMPSDataImporter::LAMMPSAtomStyle>("LAMMPSAtomStyle")
-			.value("Unknown", LAMMPSDataImporter::AtomStyle_Unknown)
-			.value("Angle", LAMMPSDataImporter::AtomStyle_Angle)
-			.value("Atomic", LAMMPSDataImporter::AtomStyle_Atomic)
-			.value("Body", LAMMPSDataImporter::AtomStyle_Body)
-			.value("Bond", LAMMPSDataImporter::AtomStyle_Bond)
-			.value("Charge", LAMMPSDataImporter::AtomStyle_Charge)
+			.value("unknown", LAMMPSDataImporter::AtomStyle_Unknown)
+			.value("angle", LAMMPSDataImporter::AtomStyle_Angle)
+			.value("atomic", LAMMPSDataImporter::AtomStyle_Atomic)
+			.value("body", LAMMPSDataImporter::AtomStyle_Body)
+			.value("bond", LAMMPSDataImporter::AtomStyle_Bond)
+			.value("charge", LAMMPSDataImporter::AtomStyle_Charge)
+			.value("full", LAMMPSDataImporter::AtomStyle_Full)
+			.value("dipole", LAMMPSDataImporter::AtomStyle_Dipole)
+			.value("molecular", LAMMPSDataImporter::AtomStyle_Molecular)
 		;
 	}
 

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2015) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -51,11 +51,13 @@ bool LAMMPSDataExporter::showSettingsDialog(const PipelineFlowState& state, QWid
 
 	QHBoxLayout* layout = new QHBoxLayout(dataFormatGroupBox);
 	QComboBox* atomStyleBox = new QComboBox();
+	atomStyleBox->addItem("angle", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Angle));
 	atomStyleBox->addItem("atomic", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Atomic));
 	atomStyleBox->addItem("bond", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Bond));
 	atomStyleBox->addItem("charge", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Charge));
-	atomStyleBox->addItem("molecular", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Molecular));
+	atomStyleBox->addItem("dipole", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Dipole));
 	atomStyleBox->addItem("full", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Full));
+	atomStyleBox->addItem("molecular", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Molecular));
 	atomStyleBox->setCurrentIndex(atomStyleBox->findData(QVariant::fromValue(atomStyle())));
 	layout->addWidget(atomStyleBox);
 	layout->addStretch(1);
@@ -176,13 +178,13 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 
 	for(size_t i = 0; i < posProperty->size(); i++) {
 		textStream() << (identifierProperty ? identifierProperty->getInt(i) : (i+1));
-		if(atomStyle() == LAMMPSDataImporter::AtomStyle_Bond || atomStyle() == LAMMPSDataImporter::AtomStyle_Molecular || atomStyle() == LAMMPSDataImporter::AtomStyle_Full) {
+		if(atomStyle() == LAMMPSDataImporter::AtomStyle_Bond || atomStyle() == LAMMPSDataImporter::AtomStyle_Molecular || atomStyle() == LAMMPSDataImporter::AtomStyle_Full || atomStyle() == LAMMPSDataImporter::AtomStyle_Angle) {
 			textStream() << ' ';
 			textStream() << (moleculeProperty ? moleculeProperty->getInt(i) : 1);
 		}
 		textStream() << ' ';
 		textStream() << (particleTypeProperty ? particleTypeProperty->getInt(i) : 1);
-		if(atomStyle() == LAMMPSDataImporter::AtomStyle_Charge || atomStyle() == LAMMPSDataImporter::AtomStyle_Full) {
+		if(atomStyle() == LAMMPSDataImporter::AtomStyle_Charge || atomStyle() == LAMMPSDataImporter::AtomStyle_Dipole || atomStyle() == LAMMPSDataImporter::AtomStyle_Full) {
 			textStream() << ' ';
 			textStream() << (chargeProperty ? chargeProperty->getFloat(i) : 0);
 		}
