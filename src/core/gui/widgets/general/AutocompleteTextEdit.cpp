@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // 
-//  Copyright (2014) Alexander Stukowski
+//  Copyright (2015) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -20,14 +20,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <core/Core.h>
-#include "AutocompleteLineEdit.h"
+#include "AutocompleteTextEdit.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Widgets)
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-AutocompleteLineEdit::AutocompleteLineEdit(QWidget* parent) : QLineEdit(parent),
+AutocompleteTextEdit::AutocompleteTextEdit(QWidget* parent) : QPlainTextEdit(parent),
 		_wordSplitter("(?:(?<![\\w\\.])(?=[\\w\\.])|(?<=[\\w\\.])(?![\\w\\.]))")
 {
 	_wordListModel = new QStringListModel(this);
@@ -36,23 +36,25 @@ AutocompleteLineEdit::AutocompleteLineEdit(QWidget* parent) : QLineEdit(parent),
 	_completer->setCaseSensitivity(Qt::CaseInsensitive);
 	_completer->setModel(_wordListModel);
 	_completer->setWidget(this);
-	connect(_completer, (void (QCompleter::*)(const QString&))&QCompleter::activated, this, &AutocompleteLineEdit::onComplete);
+	connect(_completer, (void (QCompleter::*)(const QString&))&QCompleter::activated, this, &AutocompleteTextEdit::onComplete);
 }
 
 /******************************************************************************
 * Inserts a complete word into the text field.
 ******************************************************************************/
-void AutocompleteLineEdit::onComplete(const QString& completion)
+void AutocompleteTextEdit::onComplete(const QString& completion)
 {
 	QStringList tokens = getTokenList();
 	int pos = 0;
 	for(QString& token : tokens) {
 		pos += token.length();
-		if(pos >= cursorPosition()) {
+		if(pos >= textCursor().position()) {
 			int oldLen = token.length();
 			token = completion;
-			setText(tokens.join(QString()));
-			setCursorPosition(pos - oldLen + completion.length());
+			setPlainText(tokens.join(QString()));
+			QTextCursor cursor = textCursor();
+			cursor.setPosition(pos - oldLen + completion.length());
+			setTextCursor(cursor);
 			break;
 		}
 	}
@@ -61,16 +63,16 @@ void AutocompleteLineEdit::onComplete(const QString& completion)
 /******************************************************************************
 * Creates a list of tokens from the current text string.
 ******************************************************************************/
-QStringList AutocompleteLineEdit::getTokenList() const
+QStringList AutocompleteTextEdit::getTokenList() const
 {
 	// Split text at word boundaries. Consider '.' a word character.
-	return text().split(_wordSplitter);
+	return toPlainText().split(_wordSplitter);
 }
 
 /******************************************************************************
 * Handles key-press events.
 ******************************************************************************/
-void AutocompleteLineEdit::keyPressEvent(QKeyEvent* event)
+void AutocompleteTextEdit::keyPressEvent(QKeyEvent* event)
 {
 	if(_completer->popup()->isVisible()) {
 		if(event->key() == Qt::Key_Enter || event->key() == Qt::Key_Return ||
@@ -79,8 +81,12 @@ void AutocompleteLineEdit::keyPressEvent(QKeyEvent* event)
 	                return;
 		}
 	}
+	else if(event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter) {
+        Q_EMIT editingFinished();
+        return;
+    }
 
-	QLineEdit::keyPressEvent(event);
+	QPlainTextEdit::keyPressEvent(event);
 
 	QStringList tokens = getTokenList();
 	if(tokens.empty())
@@ -89,7 +95,7 @@ void AutocompleteLineEdit::keyPressEvent(QKeyEvent* event)
 	QString completionPrefix;
 	for(const QString& token : tokens) {
 		pos += token.length();
-		if(pos >= cursorPosition()) {
+		if(pos >= textCursor().position()) {
 			completionPrefix = token.trimmed();
 			break;
 		}
@@ -99,11 +105,38 @@ void AutocompleteLineEdit::keyPressEvent(QKeyEvent* event)
 		_completer->setCompletionPrefix(completionPrefix);
 		_completer->popup()->setCurrentIndex(_completer->completionModel()->index(0,0));
 	}
-	if(completionPrefix.isEmpty() == false && !_wordListModel->stringList().contains(completionPrefix))
-		_completer->complete();
+	if(completionPrefix.isEmpty() == false && !_wordListModel->stringList().contains(completionPrefix)) {
+		QRect cr = cursorRect();
+		cr.setWidth(_completer->popup()->sizeHintForColumn(0)
+				+ _completer->popup()->verticalScrollBar()->sizeHint().width());
+		_completer->complete(cr);
+	}
 	else
 		_completer->popup()->hide();
 }
+
+/******************************************************************************
+* Handles keyboard focus lost events.
+******************************************************************************/
+void AutocompleteTextEdit::focusOutEvent(QFocusEvent* event)
+{
+	if(event->reason() != Qt::PopupFocusReason || !(QApplication::activePopupWidget() && QApplication::activePopupWidget()->parentWidget() == this)) {
+		Q_EMIT editingFinished();
+	}
+	QPlainTextEdit::focusOutEvent(event);
+}
+
+/******************************************************************************
+* Returns the preferred size of the widget.
+******************************************************************************/
+QSize AutocompleteTextEdit::sizeHint() const
+{
+	QFontMetrics m(font());
+	int lineHeight = m.lineSpacing();
+	int numLines = 3;
+	return QSize(QPlainTextEdit::sizeHint().width(), numLines * lineHeight);
+}
+
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

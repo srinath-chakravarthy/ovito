@@ -130,8 +130,8 @@ void SelectExpressionModifierEditor::createUI(const RolloutInsertionParameters& 
 
 	layout->addWidget(new QLabel(tr("Boolean expression:")));
 	StringParameterUI* expressionUI = new StringParameterUI(this, PROPERTY_FIELD(SelectExpressionModifier::_expression));
-	expressionLineEdit = new AutocompleteLineEdit();
-	expressionUI->setTextBox(expressionLineEdit);
+	expressionEdit = new AutocompleteTextEdit();
+	expressionUI->setTextBox(expressionEdit);
 	layout->addWidget(expressionUI->textBox());
 
 	// Status label.
@@ -170,7 +170,7 @@ void SelectExpressionModifierEditor::updateEditorFields()
 	if(!mod) return;
 
 	variableNamesList->setText(mod->inputVariableTable());
-	expressionLineEdit->setWordList(mod->inputVariableNames());
+	expressionEdit->setWordList(mod->inputVariableNames());
 }
 
 OVITO_END_INLINE_NAMESPACE
