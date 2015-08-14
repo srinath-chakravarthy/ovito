@@ -100,6 +100,7 @@ ScatterPlotModifier::ScatterPlotModifier(DataSet* dataset) : ParticleModifier(da
 void ScatterPlotModifier::initializeModifier(PipelineObject* pipeline, ModifierApplication* modApp)
 {
 	ParticleModifier::initializeModifier(pipeline, modApp);
+
 	ParticlePropertyReference bestProperty;
 	if(xAxisProperty().isNull() || yAxisProperty().isNull()) {
 		// Select the first available particle property from the input state.

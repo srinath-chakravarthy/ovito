@@ -29,6 +29,7 @@
 #include <core/scene/pipeline/Modifier.h>
 #include <core/scene/pipeline/ModifierApplication.h>
 #include <core/scene/pipeline/PipelineObject.h>
+#include <plugins/pyscript/extensions/PythonScriptModifier.h>
 #include "PythonBinding.h"
 
 namespace PyScript {
@@ -172,6 +173,11 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 				"\n\n"
 				"The method will do nothing if the data object is not part of the collection. ",
 				args("self", "obj"))
+		.def("replace", &CompoundObject::replaceDataObject,
+				"Replaces a :py:class:`~ovito.data.DataObject` in the :py:class:`!DataCollection` with a different one. "
+				"\n\n"
+				"The method will do nothing if the data object to be replaced is not part of the collection. ",
+				args("self", "oldobj", "newobj"))
 		.def("setDataObjects", &CompoundObject::setDataObjects)
 	;
 
@@ -259,6 +265,25 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 		.def("remove", &SelectionSet::remove)
 		.def("boundingBox", &SelectionSet::boundingBox)
 		.def("setNode", &SelectionSet::setNode)
+	;
+
+	ovito_class<PythonScriptModifier, Modifier>(
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
+			"A modifier that executes a Python script function which computes the output of the modifier. "
+			"This class allows you to implement new modifier types in Python which can participate in OVITO's "
+			"data pipeline system and which may be used like the standard built-in data modifiers. ")
+
+		.add_property("script", make_function(&PythonScriptModifier::script, return_value_policy<copy_const_reference>()), &PythonScriptModifier::setScript,
+				"The source code of the user-defined Python script, which is executed by the modifier and which defines the ``modify()`` function. "
+				"Note that this property returns the source code entered by the user through the graphical user interface, not the callable Python function. "
+				"\n\n"
+				"If you want to set the modification script function from an already running Python script, you should set "
+				"the :py:attr:`.function` property instead as demonstrated in the example above.")
+
+		.add_property("function", &PythonScriptModifier::scriptFunction, &PythonScriptModifier::setScriptFunction,
+				"The Python function to be called every time the modification pipeline is evaluated by the system."
+				"\n\n"
+				":Default: ``None``\n")
 	;
 }
 

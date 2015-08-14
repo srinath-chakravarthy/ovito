@@ -41,6 +41,7 @@ SET(SourceFiles
 	binding/ContainerBinding.cpp
 	binding/AppBinding.cpp
 	extensions/PythonViewportOverlay.cpp
+	extensions/PythonScriptModifier.cpp
 )
 
 OVITO_STANDARD_PLUGIN(PyScript

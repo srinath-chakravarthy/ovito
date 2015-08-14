@@ -49,10 +49,8 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem)
  * sub-object references. This methods interprets the \c deepCopy parameter by returning the unmodified
  * input object if \c deepCopy==false.
  */
-class OVITO_CORE_EXPORT CloneHelper : public QObject
+class OVITO_CORE_EXPORT CloneHelper
 {
-	Q_OBJECT
-
 public:
 
 	/// \brief Default constructor.
@@ -67,11 +65,11 @@ public:
 	///                 of the input object will reference the same sub-objects as the original one.
 	/// \return The clone of the input object or \c NULL if \a obj was \c NULL.
 	/// \note If this CloneHelper instance has already been used to create a copy of the
-	///       input object \a obj then the existing clone of this object is returned.
+	///       input object \a obj, then the existing clone of this object is returned.
 	template<class T>
 	OORef<T> cloneObject(T* obj, bool deepCopy) {
 		OORef<RefTarget> p(cloneObjectImpl(obj, deepCopy));
-		OVITO_ASSERT_MSG(!p || p->getOOType().isDerivedFrom(T::OOType), "CloneHelper::cloneObject", ("The clone method of class " + obj->getOOType().name() + " did not return an assignable instance of the class " + T::OOType.name() + ".").toLocal8Bit().constData());
+		OVITO_ASSERT_MSG(!p || p->getOOType().isDerivedFrom(T::OOType), "CloneHelper::cloneObject", qPrintable("The clone method of class " + obj->getOOType().name() + " did not return an assignable instance of the class " + T::OOType.name() + "."));
 		return static_object_cast<T>(p);
 	}
 
@@ -84,7 +82,7 @@ public:
 	///                 of the input object will reference the same sub-objects as the original one.
 	/// \return The clone of the input object or \c NULL if \a obj was \c NULL.
 	/// \note If this CloneHelper instance has already been used to create a copy of the
-	///       input object \a obj then the existing clone of this object is returned.
+	///       input object \a obj, then the existing clone of this object is returned.
 	template<class T>
 	OORef<T> cloneObject(const OORef<T>& obj, bool deepCopy) {
 		return cloneObject(obj.get(), deepCopy);
@@ -99,7 +97,7 @@ public:
 	///                 of the input object will reference the same sub-objects as the original one.
 	/// \return The clone of the input object or \c NULL if \a reffield was \c NULL.
 	/// \note If this CloneHelper instance has already been used to create a copy of the
-	///       input object then the existing clone of this object is returned.
+	///       input object, then the existing clone of this object is returned.
 	///
 	/// This is the same method as the one above but takes a smart pointer instead of a raw pointer.
 	template<class T>
@@ -114,9 +112,9 @@ public:
 	///         object \a obj if \a deepCopy is \c false.
 	///
 	/// This method creates a real copy of the source object only if \a deepCopy is \c true.
-	/// Otherwise the original object is just returned.
+	/// Otherwise the original object is returned.
 	///
-	/// This method can be used by implementations of the RefTarget::clone() method
+	/// This method can be used in implementations of the RefTarget::clone() method
 	/// to copy/transfer references to sub-objects for deep copies as well as shallow copies.
 	template<class T>
 	OORef<T> copyReference(T* obj, bool deepCopy) {
@@ -130,7 +128,7 @@ public:
 	/// \return A deep copy of the input object if \a deepCopy is \c true or just the unmodified input
 	///         object if \a deepCopy is \c false.
 	///
-	/// This is the same method as above but takes a reference field as input instead of a raw pointer.
+	/// This is the same method as above, but it takes a reference field instead of a raw pointer.
 	template<class T>
 	OORef<T> copyReference(const ReferenceField<T>& reffield, bool deepCopy) {
 		return copyReference(static_cast<T*>(reffield), deepCopy);

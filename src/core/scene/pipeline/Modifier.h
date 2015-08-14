@@ -142,6 +142,16 @@ public:
 	/// This method is used to filter the list of available modifiers. The default implementation returns false.
 	virtual bool isApplicableTo(const PipelineFlowState& input) { return false; }
 
+	/// \brief Returns the title of this modifier object.
+	virtual QString objectTitle() override {
+		if(_title.value().isEmpty()) return RefTarget::objectTitle();
+		else return _title;
+	}
+
+	/// \brief Changes the title of this modifier.
+	/// \undoable
+	void setObjectTitle(const QString& title) { _title = title; }
+
 protected:
 
 	/// \brief This method is called by the system when the modifier has been inserted into a PipelineObject.
@@ -164,10 +174,14 @@ private:
 	/// Flag that indicates whether the modifier is enabled.
 	PropertyField<bool, bool, ReferenceEvent::TargetEnabledOrDisabled> _isEnabled;
 
+	/// The user-defined title of this modifier.
+	PropertyField<QString, QString, ReferenceEvent::TitleChanged> _title;
+
 	Q_OBJECT
 	OVITO_OBJECT
 
 	DECLARE_PROPERTY_FIELD(_isEnabled);
+	DECLARE_PROPERTY_FIELD(_title);
 
 	friend class PipelineObject;
 };

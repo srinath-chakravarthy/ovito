@@ -50,11 +50,11 @@ public:
 	static ScriptEngine* activeEngine() { return _activeEngine; }
 
 	/// \brief Executes a Python script consisting of one or more statements.
-	/// \param script The script source code.
+	/// \param script The script commands.
 	/// \param scriptArguments An optional list of command line arguments that will be passed to the script via sys.argv.
 	/// \return The exit code returned by the Python script.
 	/// \throw Exception on error.
-	int execute(const QString& commands, const QStringList& scriptArguments = QStringList());
+	int executeCommands(const QString& commands, const QStringList& scriptArguments = QStringList());
 
 	/// \brief Executes a Python script file.
 	/// \param scriptFile The script file path.
@@ -63,7 +63,17 @@ public:
 	/// \throw Exception on error.
 	int executeFile(const QString& file, const QStringList& scriptArguments = QStringList());
 
-	/// Provides access to the global namespace the script will be executed in by this script engine.
+	/// \brief Executes a callable Python object (e.g. a function).
+	/// \param callable The callable object.
+	/// \param argument The list of function arguments.
+	/// \return The value returned by the Python function.
+	/// \throw Exception on error.
+	boost::python::object callObject(const boost::python::object& callable, const boost::python::tuple& arguments = boost::python::tuple());
+
+	/// \brief Executes the given C++ function, which in turn may invoke Python functions in the context of this engine.
+	void execute(const std::function<void()>& func);
+
+	/// \brief Provides access to the global namespace the script will be executed in by this script engine.
 	boost::python::dict& mainNamespace() { return _mainNamespace; }
 
 Q_SIGNALS:

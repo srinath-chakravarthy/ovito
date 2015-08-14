@@ -113,7 +113,7 @@ void ScriptAutostarter::applicationStarted()
 		for(int index = scriptCommands.size() - 1; index >= 0; index--) {
 			const QString& command = scriptCommands[index];
 			try {
-				engine.execute(command, scriptArguments);
+				engine.executeCommands(command, scriptArguments);
 			}
 			catch(Exception& ex) {
 				ex.prependGeneralMessage(tr("Error during Python script execution."));

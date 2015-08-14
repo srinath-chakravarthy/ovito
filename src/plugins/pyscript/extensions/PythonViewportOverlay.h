@@ -34,7 +34,7 @@ namespace PyScript {
 using namespace Ovito;
 
 /**
- * \brief A viewport overlay that displays the color legend of a ColorCodingModifier.
+ * \brief A viewport overlay that runs a Python script which paints into the viewport.
  */
 class OVITO_PYSCRIPT_EXPORT PythonViewportOverlay : public ViewportOverlay
 {

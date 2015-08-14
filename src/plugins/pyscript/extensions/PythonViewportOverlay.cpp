@@ -72,8 +72,8 @@ PythonViewportOverlay::PythonViewportOverlay(DataSet* dataset) : ViewportOverlay
 			"\txpos = 10\n"
 			"\typos = painter.window().height() - 10\n"
 			"\tif ovito.dataset.selected_node:\n"
-			"\t\tpositions = ovito.dataset.selected_node.compute().position\n"
-			"\t\ttext = \"{} particles\".format(positions.size)\n"
+			"\t\tnum_particles = ovito.dataset.selected_node.compute().number_of_particles\n"
+			"\t\ttext = \"{} particles\".format(num_particles)\n"
 			"\telse:\n"
 			"\t\ttext = \"no particles\"\n"
 			"\tpainter.drawText(xpos, ypos, text)\n");
@@ -97,7 +97,7 @@ void PythonViewportOverlay::compileScript()
 {
 	_scriptOutput.clear();
 	try {
-		_scriptEngine.execute(script());
+		_scriptEngine.executeCommands(script());
 		_isCompiled = true;
 	}
 	catch(Exception& ex) {
@@ -132,7 +132,7 @@ void PythonViewportOverlay::render(Viewport* viewport, QPainter& painter, const 
 		_scriptEngine.mainNamespace()["__projParams"] = projParams;
 		_scriptEngine.mainNamespace()["__renderSettings"] = boost::python::ptr(renderSettings);
 		// Execute the script's render() function.
-		_scriptEngine.execute(
+		_scriptEngine.executeCommands(
 				"import sip\n"
 				"import numpy\n"
 				"import PyQt5.QtGui\n"
@@ -167,9 +167,7 @@ void PythonViewportOverlayEditor::createUI(const RolloutInsertionParameters& rol
 	layout->setSpacing(4);
 	int row = 0;
 
-	QFont font("Courier");
-	font.setStyleHint(QFont::Monospace);
-	font.setFixedPitch(true);
+	QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
 	layout->addWidget(new QLabel(tr("Python script:")), row++, 0);
 	_codeEditor = new QsciScintilla();

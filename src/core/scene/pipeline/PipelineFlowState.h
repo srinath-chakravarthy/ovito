@@ -60,12 +60,17 @@ public:
 			addObject(obj);
 	}
 
-	/// \brief Discards the contents of this state object.
+	/// \brief Discards all contents of this state object.
 	void clear() {
-		_objects.clear();
+		clearObjects();
 		_stateValidity.setEmpty();
 		_status = PipelineStatus();
 		_attributes.clear();
+	}
+
+	/// \brief Discards the data objects in this state object.
+	void clearObjects() {
+		_objects.clear();
 	}
 
 	/// \brief Returns true if the given object is part of this pipeline flow state.
@@ -96,7 +101,8 @@ public:
 		return nullptr;
 	}
 
-	/// \brief Replaces objects with copies if there are multiple references.
+	/// \brief Replaces the objects in this state with copies if there are multiple references.
+	///
 	/// After calling this method, none of the objects in the flow state is referenced by anybody else.
 	/// Thus, it becomes safe to modify the data objects.
 	void cloneObjectsIfNeeded(bool deepCopy);

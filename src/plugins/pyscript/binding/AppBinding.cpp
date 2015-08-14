@@ -21,6 +21,7 @@
 
 #include <plugins/pyscript/PyScript.h>
 #include <core/gui/app/Application.h>
+#include <core/reference/CloneHelper.h>
 #include <core/dataset/DataSet.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/scene/SceneNode.h>
@@ -94,6 +95,8 @@ BOOST_PYTHON_MODULE(PyScriptApp)
 		.def("deleteReferenceObject", &RefTarget::deleteReferenceObject)
 		.add_property("isBeingEdited", &RefTarget::isBeingEdited)
 		.add_property("objectTitle", &RefTarget::objectTitle)
+		.add_property("num_dependents",
+				static_cast<int (*)(RefTarget& target)>([](RefTarget& t) { return t.dependents().size(); }))
 	;
 
 	ovito_abstract_class<DataSet, RefTarget>(
@@ -131,6 +134,10 @@ BOOST_PYTHON_MODULE(PyScriptApp)
 		.def("fileSaveAs", &DataSetContainer::fileSaveAs)
 		.def("askForSaveChanges", &DataSetContainer::askForSaveChanges)
 		.add_property("window", make_function(&DataSetContainer::mainWindow, return_value_policy<reference_existing_object>()))
+	;
+
+	class_<CloneHelper>("CloneHelper", init<>())
+		.def("clone", (OORef<RefTarget> (CloneHelper::*)(RefTarget*, bool))&CloneHelper::cloneObject<RefTarget>)
 	;
 }
 

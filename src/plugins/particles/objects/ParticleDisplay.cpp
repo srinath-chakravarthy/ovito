@@ -396,8 +396,7 @@ void ParticleDisplay::render(TimePoint time, DataObject* dataObject, const Pipel
 				typeProperty,
 				selectionProperty,
 				transparencyProperty,
-				positionProperty)
-				|| resizeBuffer;
+				positionProperty) || resizeBuffer;
 
 		// Do we have to update the particle shapes in the geometry buffer?
 		bool updateShapes = _shapesCacheHelper.updateState(

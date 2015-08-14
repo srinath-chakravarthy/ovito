@@ -54,28 +54,28 @@ public:
 	typedef T* element_type;
 
 	/// Default constructor.
-	WeakVersionedOORef() Q_DECL_NOTHROW : _revision(0) {}
+	WeakVersionedOORef() Q_DECL_NOTHROW : _revision(std::numeric_limits<unsigned int>::max()) {}
 
 	/// Initialization constructor.
-	WeakVersionedOORef(T* p) : _ref(p), _revision(p ? p->revisionNumber() : 0) {}
+	WeakVersionedOORef(T* p) : _ref(p), _revision(p ? p->revisionNumber() : std::numeric_limits<unsigned int>::max()) {}
 
 	/// Initialization constructor with explicit revision number.
 	WeakVersionedOORef(T* p, unsigned int revision) : _ref(p), _revision(revision) {}
 
 	WeakVersionedOORef& operator=(T* rhs) {
 		_ref = rhs;
-		_revision = rhs ? rhs->revisionNumber() : 0;
+		_revision = rhs ? rhs->revisionNumber() : std::numeric_limits<unsigned int>::max();
 		return *this;
 	}
 
 	void reset() Q_DECL_NOTHROW {
 		_ref.clear();
-		_revision = 0;
+		_revision = std::numeric_limits<unsigned int>::max();
 	}
 
 	void reset(T* rhs) {
 		_ref = rhs;
-		_revision = rhs ? rhs->revisionNumber() : 0;
+		_revision = rhs ? rhs->revisionNumber() : std::numeric_limits<unsigned int>::max();
 	}
 
 	inline T* get() const Q_DECL_NOTHROW {

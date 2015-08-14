@@ -42,7 +42,7 @@ Particles.ParticleProperty._data_key = property(_ParticleProperty_data_key)
 # Returns a NumPy array wrapper for a particle property.
 def _ParticleProperty_array(self):
     """ 
-    This attribute returns a NumPy array providing read access to the per-particle data.
+    This attribute returns a NumPy array, which provides read access to the per-particle data stored in this particle property object.
         
     The returned array is one-dimensional for scalar particle properties (:py:attr:`.components` == 1),
     or two-dimensional for vector properties (:py:attr:`.components` > 1). The outer length of the array is 
@@ -50,15 +50,15 @@ def _ParticleProperty_array(self):
         
     Note that the returned NumPy array is read-only and provides a view of the internal data. 
     No copy of the data, which may be shared by multiple objects, is made. If you want to modify the 
-    data stored in this particle property, use :py:attr:`.mutable_array` instead.
+    data stored in this particle property, use :py:attr:`.marray` instead.
     """
     return numpy.asarray(self)
 Particles.ParticleProperty.array = property(_ParticleProperty_array)
 
-# Returns a NumPy array wrapper for a particle property.
-def _ParticleProperty_mutable_array(self):
+# Returns a NumPy array wrapper for a particle property with write access.
+def _ParticleProperty_marray(self):
     """ 
-    This attribute returns a NumPy array providing read/write access to the internal per-particle data.
+    This attribute returns a *mutable* NumPy array providing read/write access to the internal per-particle data.
         
     The returned array is one-dimensional for scalar particle properties (:py:attr:`.components` == 1),
     or two-dimensional for vector properties (:py:attr:`.components` > 1). The outer length of the array is 
@@ -81,8 +81,24 @@ def _ParticleProperty_mutable_array(self):
         pass
     o = DummyClass()
     o.__array_interface__ = self.__mutable_array_interface__
+    # Create reference to particle property object to keep it alive.
+    o.__base_property = self        
     return numpy.asarray(o)
-Particles.ParticleProperty.mutable_array = property(_ParticleProperty_mutable_array)
+
+# This is needed to enable the augmented assignment operators (+=, -=, etc.) for the 'marray' property.
+def _ParticleProperty_marray_assign(self, other):
+    if not hasattr(other, "__array_interface__"):
+        raise ValueError("Only objects supporting the array interface can be assigned to the 'marray' property.")
+    o = other.__array_interface__
+    s = self.__mutable_array_interface__
+    if o["shape"] != s["shape"] or o["typestr"] != s["typestr"] or o["data"] != s["data"]:
+        raise ValueError("Assignment to the 'marray' property is restricted. Left and right-hand side must be identical.")
+    # Assume that the data has been changed in the meantime.
+    self.changed()
+        
+Particles.ParticleProperty.marray = property(_ParticleProperty_marray, _ParticleProperty_marray_assign)
+# For backward compatibility with OVITO 2.5.1:
+Particles.ParticleProperty.mutable_array = property(lambda self: self.marray)
 
 # Returns a NumPy array wrapper for bonds list.
 def _Bonds_array(self):
@@ -154,7 +170,7 @@ class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
             raise KeyError("Data collection does not contain particle positions.")
         if not hasattr(data_collection, 'cell'):
             raise KeyError("Data collection does not contain simulation cell information.")
-        self.particle_count = data_collection.position.size
+        self.particle_count = data_collection.number_of_particles
         self.prepare(cutoff, data_collection.position, data_collection.cell)
         
     def find(self, index):
@@ -188,7 +204,11 @@ ovito.data.CutoffNeighborFinder = CutoffNeighborFinder
 def _ParticleProperty_create(prop_type, num_particles):
     """
         Static factory function that creates a new :py:class:`!ParticleProperty` instance for a standard particle property.
-        To create a new user-defined property, use :py:meth:`.create_user` instead.
+        To create a new user-defined property, use :py:meth:`.create_user` instead. 
+        
+        Note that this factory function is a low-level method. If you want to add a new 
+        particle property to an existing :py:class:`~ovito.data.DataCollection`, you can do so using the high-level method  
+        :py:meth:`~ovito.data.DataCollection.create_particle_property` instead.
         
         :param ParticleProperty.Type prop_type: The standard particle property to create. See the :py:attr:`.type` attribute for a list of possible values.
         :param int num_particles: The number of particles. This determines the size of the allocated data array.
@@ -205,7 +225,11 @@ ovito.data.ParticleProperty.create = staticmethod(_ParticleProperty_create)
 def _ParticleProperty_create_user(name, data_type, num_particles, num_components = 1):
     """
         Static factory function that creates a new :py:class:`!ParticleProperty` instance for a user-defined particle property.
-        To create one of the standard properties, use :py:meth:`.create` instead.
+        To create one of the standard properties, use :py:meth:`.create` instead. 
+        
+        Note that this factory function is a low-level method. If you want to add a new user-defined 
+        particle property to an existing :py:class:`~ovito.data.DataCollection`, you can do so using the high-level method 
+        :py:meth:`~ovito.data.DataCollection.create_user_particle_property` instead.
 
         :param str name: The name of the user-defined particle property to create.
         :param str data_type: Must be either ``"int"`` or ``"float"``.                
@@ -225,6 +249,113 @@ def _ParticleProperty_create_user(name, data_type, num_particles, num_components
         
     return ovito.data.ParticleProperty.createUserProperty(ovito.dataset, num_particles, data_type, num_components, 0, name, True)
 ovito.data.ParticleProperty.create_user = staticmethod(_ParticleProperty_create_user)
+
+# Extend DataCollection class by adding the 'create_particle_property()' and 'create_user_particle_property()' methods.
+def _DataCollection_create_particle_property(self, property_type, data = None):
+    """ 
+        Adds a standard particle property to this data collection.
+        
+        If the specified particle property already exists in this data collection, the existing property instance is returned.
+        Otherwise the method creates a new property instance using :py:meth:`ParticleProperty.create` and adds it to this data collection.
+        
+        The optional parameter *data* allows to directly set or initialize the values of the particle property.
+        
+        :param ParticleProperty.Type property_type: The standard particle property to create. See the :py:attr:`ParticleProperty.type` attribute for a list of possible values.
+        :param data: An optional data array (e.g. NumPy array), which contains the per-particle values used to initialize the particle property.
+                     The size of the array must match the number of particles in this data collection (see :py:attr:`.number_of_particles` attribute).                      
+        :returns: A newly created instance of the :py:class:`ovito.data.ParticleProperty` class or one of its sub-classes if the property did not exist yet in the data collection.
+                  Otherwise, the existing particle property object is returned.
+        
+    """
+    # Check if property already exists in the data collection.
+    prop = None
+    position_prop = None
+    for obj in self.values():
+        if isinstance(obj, ovito.data.ParticleProperty):
+            if obj.type == property_type:
+                prop = obj
+            if obj.type == ovito.data.ParticleProperty.Type.Position:
+                position_prop = obj
+
+    # First we have to determine the number of particles. This requires the 'Position' particle property
+    if position_prop == None:
+        raise RuntimeError("Cannot add new particle property to data collection, because data collection contains no particles.")
+    num_particles = position_prop.size
+                
+    if prop == None:
+        # If property does not exists yet, create a new ParticleProperty instance.
+        prop = ovito.data.ParticleProperty.create(property_type, num_particles)
+        self.add(prop)
+    else:
+        # Otherwise, make sure the existing property is a fresh copy so we can safely modify it.
+        prop = self.copy_if_needed(prop)
+        
+    # Initialize property with per-particle data if provided.
+    if data != None:
+        prop.marray[:] = data
+        prop.changed()
+    
+    return prop
+ovito.data.DataCollection.create_particle_property = _DataCollection_create_particle_property
+
+def _DataCollection_create_user_particle_property(self, name, data_type, num_components=1, data = None):
+    """ 
+        Adds a user-defined particle property to this data collection.
+        
+        If a particle property with the given name already exists in this data collection, the existing property instance is returned.
+        Otherwise the method creates a new property instance using :py:meth:`ParticleProperty.create_user` and adds it to this data collection.
+        
+        The optional parameter *data* allows to directly set or initialize the values of the particle property.
+        
+        :param str name: The name of the user-defined particle property to create.
+        :param str data_type: Must be either ``"int"`` or ``"float"``.                
+        :param int num_components: The number of components when creating a vector property.
+        :param data: An optional data array (e.g. NumPy array), which contains the per-particle values used to initialize the particle property.
+                     The size of the array must match the number of particles in this data collection (see :py:attr:`.number_of_particles` attribute).                      
+        :returns: A newly created instance of the :py:class:`~ovito.data.ParticleProperty` class or one of its sub-classes if the property did not exist yet in the data collection.
+                  Otherwise, the existing particle property object is returned.
+        
+    """
+    # Check if property already exists in the data collection.
+    prop = None
+    position_prop = None
+    for obj in self.values():
+        if isinstance(obj, ovito.data.ParticleProperty):
+            if obj.name == name:
+                prop = obj
+            if obj.type == ovito.data.ParticleProperty.Type.Position:
+                position_prop = obj
+
+    # First we have to determine the number of particles. This requires the 'Position' particle property
+    if position_prop == None:
+        raise RuntimeError("Cannot add new particle property to data collection, because data collection contains no particles.")
+    num_particles = position_prop.size
+                
+    if prop == None:
+        # If property does not exists yet, create a new ParticleProperty instance.
+        prop = ovito.data.ParticleProperty.create_user(name, data_type, num_particles, num_components)
+        self.add(prop)
+    else:
+        # Otherwise, make sure the existing property is a fresh copy so we can safely modify it.
+        prop = self.copy_if_needed(prop)
+        
+    # Initialize property with per-particle data if provided.
+    if data != None:
+        prop.marray[:] = data
+        prop.changed()
+    
+    return prop
+ovito.data.DataCollection.create_user_particle_property = _DataCollection_create_user_particle_property
+
+# Extend the DataCollection class with a 'number_of_particles' property.
+def _get_DataCollection_number_of_particles(self):
+    """ The number of particles stored in the data collection. """
+    # The number of particles is determined by the size of the 'Position' particle property.
+    for obj in self.values():
+        if isinstance(obj, ovito.data.ParticleProperty) and obj.type == ovito.data.ParticleProperty.Type.Position:
+            return obj.size
+    return 0
+ovito.data.DataCollection.number_of_particles = property(_get_DataCollection_number_of_particles)
 
 # Implement the 'type_list' property of the ParticleTypeProperty class, which provides access to particle types. 
 def _get_ParticleTypeProperty_type_list(self):
