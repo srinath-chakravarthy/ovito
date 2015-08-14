@@ -57,6 +57,17 @@ public:
 			_dataObjects.remove(index);
 	}
 
+	/// \brief Replaces a data object in the compound.
+	void replaceDataObject(DataObject* oldObj, DataObject* newObj) {
+		OVITO_ASSERT(newObj != nullptr);
+		OVITO_ASSERT(oldObj != nullptr);
+		int index = _dataObjects.indexOf(oldObj);
+		if(index >= 0) {
+			_dataObjects.remove(index);
+			_dataObjects.insert(index, newObj);
+		}
+	}
+
 	/// Replaces all data objects stored in this compound object with the data objects
 	/// stored in the pipeline flow state.
 	void setDataObjects(const PipelineFlowState& state);
@@ -107,7 +118,7 @@ protected:
 
 private:
 
-	/// Stores the data objects of the compound.
+	/// Stores the data objects in the compound.
 	VectorReferenceField<DataObject> _dataObjects;
 
 	/// Attributes set or loaded by the file importer which will be fed into the modification pipeline

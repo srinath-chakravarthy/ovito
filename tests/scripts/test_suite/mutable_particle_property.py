@@ -12,8 +12,8 @@ node.compute()
 print("Number of FCC atoms: {}".format(modifier.counts[CommonNeighborAnalysisModifier.Type.FCC]))
 
 print(node.source.position.array)
-print(node.source.position.mutable_array)
-node.source.position.mutable_array[0] = (0,0,0)
+print(node.source.position.marray)
+node.source.position.marray[0] = (0,0,0)
 node.source.position.changed()
 print(node.source.position.array)
 

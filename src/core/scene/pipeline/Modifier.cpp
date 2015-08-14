@@ -30,6 +30,8 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, Modifier, RefTarget);
 DEFINE_PROPERTY_FIELD(Modifier, _isEnabled, "IsEnabled");
 SET_PROPERTY_FIELD_LABEL(Modifier, _isEnabled, "Enabled");
+DEFINE_PROPERTY_FIELD(Modifier, _title, "Name");
+SET_PROPERTY_FIELD_LABEL(Modifier, _title, "Name");
 
 /******************************************************************************
 * Constructor.
@@ -37,6 +39,7 @@ SET_PROPERTY_FIELD_LABEL(Modifier, _isEnabled, "Enabled");
 Modifier::Modifier(DataSet* dataset) : RefTarget(dataset), _isEnabled(true)
 {
 	INIT_PROPERTY_FIELD(Modifier::_isEnabled);
+	INIT_PROPERTY_FIELD(Modifier::_title);
 }
 
 /******************************************************************************

@@ -193,7 +193,7 @@ BOOST_PYTHON_MODULE(Particles)
 					"through the :py:attr:`.mutable_array` attribute.\n\n"
 					"Calling this method on an input particle property is necessary to invalidate data caches down the modification "
 					"pipeline. Forgetting to call this method may result in an incomplete re-evaluation of the modification pipeline. "
-					"See :py:attr:`.mutable_array` for more information.")
+					"See :py:attr:`.marray` for more information.")
 			.def("nameWithComponent", &ParticlePropertyObject::nameWithComponent)
 			.add_property("name", make_function(&ParticlePropertyObject::name, return_value_policy<copy_const_reference>()), &ParticlePropertyObject::setName,
 					"The human-readable name of the particle property.")
@@ -352,18 +352,18 @@ BOOST_PYTHON_MODULE(Particles)
 			"The following example shows how to access the bond list create by a :py:class:`~.ovito.modifiers.CreateBondsModifier`:\n"
 			"\n"
 			".. literalinclude:: ../example_snippets/bonds_data_object.py\n"
-			"   :lines: 1-13\n"
+			"   :lines: 1-14\n"
 			"\n"
 			"OVITO represents each bond as two half-bonds, one pointing from a particle *A* to a particle *B*, and "
-			"the other half-bond pointing back from *B* to *A*. \n"
-			"The :py:attr:`.array` attribute returns a NumPy array that contains the stored half-bonds, which are basically "
-			"defined by pairs of particle indices."
+			"the other half-bond pointing back from *B* to *A*. Thus, for a given number of bonds, you will find twice as many half-bonds in the :py:class:`!Bonds` object. \n"
+			"The :py:attr:`.array` attribute returns a (read-only) NumPy array that contains the list of half-bonds, which are "
+			"defined by pairs of particle indices (the first one specifying the particle the half-bond is pointing away from)."
 			"\n\n"
-			"Every :py:class:`!Bonds` object is associated with a :py:class:`~ovito.vis.BondsDisplay` instance, "
+			"Furthermore, every :py:class:`!Bonds` object is associated with a :py:class:`~ovito.vis.BondsDisplay` instance, "
 			"which controls the visual appearance of the bonds. It can be accessed through the :py:attr:`~DataObject.display` attribute:\n"
 			"\n"
 			".. literalinclude:: ../example_snippets/bonds_data_object.py\n"
-			"   :lines: 15-\n",
+			"   :lines: 16-\n",
 			// Python class name:
 			"Bonds")
 		.add_property("__array_interface__", &BondsObject__array_interface__)
@@ -373,7 +373,9 @@ BOOST_PYTHON_MODULE(Particles)
 	;
 
 	ovito_class<ParticleType, RefTarget>(
-			"Defines the properties of a single particle type.")
+			"Stores the properties of a particle type or atom type."
+			"\n\n"
+			"The list of particle types is stored in the :py:class:`~ovito.data.ParticleTypeProperty` class.")
 		.add_property("id", &ParticleType::id, &ParticleType::setId,
 				"The identifier of the particle type.")
 		.add_property("color", &ParticleType::color, &ParticleType::setColor,
@@ -402,7 +404,7 @@ BOOST_PYTHON_MODULE(Particles)
 			.add_property("selection_color", &ParticleDisplay::selectionParticleColor)
 			.add_property("rendering_quality", &ParticleDisplay::renderingQuality, &ParticleDisplay::setRenderingQuality)
 			.add_property("shape", &ParticleDisplay::particleShape, &ParticleDisplay::setParticleShape,
-					"The shape of particles.\n"
+					"The display shape of particles.\n"
 					"Possible values:"
 					"\n\n"
 					"   * ``ParticleDisplay.Shape.Sphere`` (default) \n"

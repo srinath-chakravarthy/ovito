@@ -6,23 +6,23 @@ num_particles = 3
 
 # Create the particles position property.
 pos_prop = ParticleProperty.create(ParticleProperty.Type.Position, num_particles)
-pos_prop.mutable_array[0] = (1.0, 1.5, 0.3)
-pos_prop.mutable_array[1] = (7.0, 4.2, 6.0)
-pos_prop.mutable_array[2] = (5.0, 9.2, 8.0)
+pos_prop.marray[0] = (1.0, 1.5, 0.3)
+pos_prop.marray[1] = (7.0, 4.2, 6.0)
+pos_prop.marray[2] = (5.0, 9.2, 8.0)
 
 # Create the particle type property and insert two atom types.
 type_prop = ParticleProperty.create(ParticleProperty.Type.ParticleType, num_particles)
 type_prop.type_list.append(ParticleType(id = 1, name = 'Cu', color = (0.0,1.0,0.0)))
 type_prop.type_list.append(ParticleType(id = 2, name = 'Ni', color = (0.0,0.5,1.0)))
-type_prop.mutable_array[0] = 1  # First atom is Cu
-type_prop.mutable_array[1] = 2  # Second atom is Ni
-type_prop.mutable_array[2] = 2  # Third atom is Ni
+type_prop.marray[0] = 1  # First atom is Cu
+type_prop.marray[1] = 2  # Second atom is Ni
+type_prop.marray[2] = 2  # Third atom is Ni
 
 # Create a user-defined property.
 my_prop = ParticleProperty.create_user('My property', 'float', num_particles)
-my_prop.mutable_array[0] = 3.141
-my_prop.mutable_array[1] = 0.0
-my_prop.mutable_array[2] = 0.0
+my_prop.marray[0] = 3.141
+my_prop.marray[1] = 0.0
+my_prop.marray[2] = 0.0
 
 # Create a simulation box.
 cell = SimulationCell()

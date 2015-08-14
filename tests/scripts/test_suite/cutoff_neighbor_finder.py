@@ -3,7 +3,7 @@ from ovito.data import *
 
 node = import_file("../../files/LAMMPS/animation.dump.gz")
 
-num_particles = node.source.data.position.size
+num_particles = node.source.number_of_particles
 
 cutoff = 2.5
 finder = CutoffNeighborFinder(cutoff, node.source.data)

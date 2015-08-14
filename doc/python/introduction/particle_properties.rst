@@ -8,7 +8,8 @@ class, which holds the mass values for all particles in the system. A particle
 system is therefore nothing else than a collection of :py:class:`~ovito.data.ParticleProperty` instances.
 The only mandatory property, which is always present, is the ``Position`` property. Note that all 
 :py:class:`ParticleProperties <ovito.data.ParticleProperty>` contain the same number of values, 
-implicitly defining the number of particles in the system.
+implicitly defining the number of particles in the system. This number can be retrieved using the 
+:py:attr:`~ovito.data.DataCollection.number_of_particles` attribute.
 
 The properties forming a particle system are subsumed in a :py:class:`~ovito.data.DataCollection`,
 which is a general container for data objects in OVITO. In addition to per-particle properties, a data collection
@@ -62,11 +63,13 @@ properties are listed :ref:`here <standard-property-list>`.
 .. note::
 
    The :py:attr:`~ovito.data.ParticleProperty.array` attribute of a particle property allows
-   you to access the per-particle data as a NumPy array. The NumPy array is one-dimensional
+   you to access the per-particle data as a NumPy array. The array is one-dimensional
    for scalar particle properties and two-dimensional for vectorial properties.
-   In the current version of OVITO, the array is marked as read-only, and you cannot modify 
-   the values stored in a particle property directly. That means you have to use OVITO's modifiers to manipulate
-   the particle data, e.g. using the :py:class:`~ovito.modifiers.ComputePropertyModifier`.
+   The data in the array is marked as read-only, because OVITO requires that the data does not change without 
+   the program knowing it. If you really need to alter the values of a particle property
+   directly (e.g. because there is no modifier to achieve the same effect), then have a look
+   at the :py:attr:`~ovito.data.ParticleProperty.marray` attribute of the :py:class:`~ovito.data.ParticleProperty` class,
+   which provides write access to the internal data.
 
 -----------------------------------
 Particle type property

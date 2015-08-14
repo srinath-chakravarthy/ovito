@@ -219,7 +219,7 @@ void ScriptEngine::initializeInterpreter()
 /******************************************************************************
 * Executes one or more Python statements.
 ******************************************************************************/
-int ScriptEngine::execute(const QString& commands, const QStringList& scriptArguments)
+int ScriptEngine::executeCommands(const QString& commands, const QStringList& scriptArguments)
 {
 	if(QThread::currentThread() != QApplication::instance()->thread())
 		throw Exception(tr("Can run Python scripts only from the main thread."));
@@ -287,6 +287,69 @@ int ScriptEngine::execute(const QString& commands, const QStringList& scriptArgu
 	    _activeEngine = previousEngine;
 		throw Exception(tr("Unhandled exception thrown by Python interpreter."));
 	}
+}
+
+/******************************************************************************
+* Executes the given C++ function, which in turn may invoke Python functions in the
+* context of this engine, and catches possible exceptions.
+******************************************************************************/
+void ScriptEngine::execute(const std::function<void()>& func)
+{
+	if(QThread::currentThread() != QApplication::instance()->thread())
+		throw Exception(tr("Can run Python scripts only from the main thread."));
+
+	if(_mainNamespace.is_none())
+		throw Exception(tr("Python script engine is not initialized."));
+
+	// Remember the script engine that was active so we can restore it later.
+	ScriptEngine* previousEngine = _activeEngine;
+	_activeEngine = this;
+
+	try {
+		func();
+	    _activeEngine = previousEngine;
+	}
+	catch(const error_already_set&) {
+		if(PyErr_Occurred()) {
+			PyErr_Print();
+		}
+	    _activeEngine = previousEngine;
+		throw Exception(tr("Python interpreter has exited with an error. See interpreter output for details."));
+	}
+	catch(const Exception&) {
+	    _activeEngine = previousEngine;
+		throw;
+	}
+	catch(const std::exception& ex) {
+	    _activeEngine = previousEngine;
+		throw Exception(tr("Script execution error: %1").arg(QString::fromLocal8Bit(ex.what())));
+	}
+	catch(...) {
+	    _activeEngine = previousEngine;
+		throw Exception(tr("Unhandled exception thrown by Python interpreter."));
+	}
+}
+
+/******************************************************************************
+* Executes a callable Python object (e.g. a function).
+******************************************************************************/
+boost::python::object ScriptEngine::callObject(const boost::python::object& callable, const boost::python::tuple& arguments)
+{
+	boost::python::object result;
+	execute([&result, &callable, &arguments]() {
+		int numArgs = boost::python::len(arguments);
+		if(numArgs == 0) result = callable();
+		else if(numArgs == 1) result = callable((object)arguments[0]);
+		else if(numArgs == 2) result = callable((object)arguments[0], (object)arguments[1]);
+		else if(numArgs == 3) result = callable((object)arguments[0], (object)arguments[1], (object)arguments[2]);
+		else if(numArgs == 4) result = callable((object)arguments[0], (object)arguments[1], (object)arguments[2], (object)arguments[3]);
+		else if(numArgs == 5) result = callable((object)arguments[0], (object)arguments[1], (object)arguments[2], (object)arguments[3], (object)arguments[4]);
+		else {
+			OVITO_ASSERT(false);
+			throw Exception(tr("Number of arguments passed to Python function exceeds compile-time limit."));
+		}
+	});
+	return result;
 }
 
 /******************************************************************************

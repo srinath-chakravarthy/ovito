@@ -3,12 +3,11 @@ This module contains data container classes that are used by OVITO's modificatio
 
 **Data collection:**
 
-  * The :py:class:`DataCollection` class is a container for data objects. It can hold the 
-    input and the results of a modification pipeline.
+  * :py:class:`DataCollection` (container for data objects)
 
 **Data objects:**
 
-  * :py:class:`DataObject` (base class of all other data classes)
+  * :py:class:`DataObject` (base of all data object types)
   * :py:class:`Bonds`
   * :py:class:`ParticleProperty`
   * :py:class:`ParticleTypeProperty`
@@ -34,9 +33,11 @@ except ImportError:
 # Load the native module.
 from PyScriptScene import DataCollection
 from PyScriptScene import DataObject
+from PyScriptApp import CloneHelper
 
 # Give the DataCollection class a dict-like interface.
 DataCollection.__len__ = lambda self: len(self.objects)
+
 def _DataCollection__iter__(self):
     for o in self.objects:
         if hasattr(o, "_data_key"):
@@ -44,6 +45,7 @@ def _DataCollection__iter__(self):
         else:
             yield o.objectTitle
 DataCollection.__iter__ = _DataCollection__iter__
+
 def _DataCollection__getitem__(self, key):
     for o in self.objects:
         if hasattr(o, "_data_key"):
@@ -54,6 +56,7 @@ def _DataCollection__getitem__(self, key):
                 return o
     raise KeyError("DataCollection does not contain object key '%s'." % key)
 DataCollection.__getitem__ = _DataCollection__getitem__
+
 def _DataCollection__getattr__(self, name):
     for o in self.objects:
         if hasattr(o, "_data_attribute_name"):
@@ -61,21 +64,62 @@ def _DataCollection__getattr__(self, name):
                 return o
     raise AttributeError("DataCollection does not have an attribute named '%s'." % name)
 DataCollection.__getattr__ = _DataCollection__getattr__
+
 def _DataCollection__str__(self):
     return "DataCollection(" + str(list(self.keys())) + ")"
 DataCollection.__str__ = _DataCollection__str__
+
 # Mix in base class collections.Mapping:
 DataCollection.__bases__ = DataCollection.__bases__ + (collections.Mapping, )
 
+# Implement the DataCollection.copy_if_needed() method.
+def _DataCollection_copy_if_needed(self, obj):
+    """
+        Makes a copy of a data object if it was created upstream in the data pipeline.
+        
+        Typically, this method is used in implementations of a modifier function that  
+        participates in OVITO's data pipeline system. A modifier receives a collection with
+        input data objects from the system. However, directly modifying these input 
+        objects is not allowed because they are owned by the upstream part of the data pipeline.
+        This is where this method comes into play: It makes a copy of a data object and replaces
+        it with its copy in the modifier's output. The modifier can then go ahead and modify the copy as needed,
+        because it is now exclusively owned by the modifier.
+        
+        The method first checks if *obj*, which must be a data object from this data collection, is
+        owned by anybody else. If yes, it creates an exact copy of *obj* and replaces the original 
+        in this data collection with the copy. Now the copy is an independent object, which is referenced
+        by nobody except this data collection. Thus, the modifier function is now free to modify the contents
+        of the data object.
+        
+        Note that the :py:meth:`!copy_if_needed` method should always be called on the *output* data collection
+        of the modifier. 
+    
+        :param DataObject obj: The object in the output data collection to be copied. 
+        :return DataObject: An exact copy of *obj* if *obj* is owned by someone else. Otherwise the original instance is returned.
+    """
+    assert(isinstance(obj, DataObject))
+    # The object to be modified must be in this data collection.
+    if not obj in self.values():
+        raise ValueError("DataCollection.copy_if_needed() must be called with an object that is part of this data collection.")
+    # Check if object is owned by someone else. 
+    # This is indicated by the fact that the object has more than one dependent (which would be this data collection).
+    if obj.num_dependents > 1:
+        # Make a copy of the object so it can be safely modified.
+        clone = CloneHelper().clone(obj, False)
+        self.replace(obj, clone)
+        return clone
+    return obj
+DataCollection.copy_if_needed = _DataCollection_copy_if_needed
+
 # Implement 'display' attribute of DataObject class.
-def _DataObject_display(self):
+def _DataObject_get_display(self):
     """ The :py:class:`~ovito.vis.Display` object associated with this data object, which is responsible for
-        displaying the data. If this field is ``None``, the data is of a non-visual type.
+        displaying the data. If this field is ``None``, the data is non-visual.
     """ 
     if not self.displayObjects:
         return None # This data object doesn't have a display object.
     return self.displayObjects[0]
-DataObject.display = property(_DataObject_display)
+DataObject.display = property(_DataObject_get_display, DataObject.setDisplayObject)
 
 
 def _DataCollection_to_ase_atoms(self):
@@ -151,7 +195,7 @@ def _DataCollection_create_from_ase_atoms(cls, atoms):
     num_particles = len(atoms)
     position = ParticleProperty.create(ParticleProperty.Type.Position,
                                        num_particles)
-    position.mutable_array[...] = atoms.get_positions()
+    position.marray[...] = atoms.get_positions()
     data.add(position)
 
     # Set particle types from chemical symbols
@@ -161,7 +205,7 @@ def _DataCollection_create_from_ase_atoms(cls, atoms):
     type_list = list(set(symbols))
     for i, sym in enumerate(type_list):
         types.type_list.append(ParticleType(id=i+1, name=sym))
-    types.mutable_array[:] = [ type_list.index(sym)+1 for sym in symbols ]
+    types.marray[:] = [ type_list.index(sym)+1 for sym in symbols ]
     data.add(types)
 
     # Add other properties from atoms.arrays
@@ -182,7 +226,7 @@ def _DataCollection_create_from_ase_atoms(cls, atoms):
                                             typ,
                                             num_particles,
                                             num_components)
-        prop.mutable_array[...] = array
+        prop.marray[...] = array
         data.add(prop)
     
     return data

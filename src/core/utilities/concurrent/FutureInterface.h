@@ -67,7 +67,7 @@ public:
 	}
 	bool waitForSubTask(const std::shared_ptr<FutureInterfaceBase>& subTask);
 
-	void cancel();
+	virtual void cancel();
 
     bool reportStarted();
 

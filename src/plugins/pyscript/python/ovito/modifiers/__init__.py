@@ -39,6 +39,7 @@ Class name                                     User interface name
 :py:class:`IdentifyDiamondModifier`            :guilabel:`Identify diamond structure`
 :py:class:`InvertSelectionModifier`            :guilabel:`Invert selection`
 :py:class:`ManualSelectionModifier`            :guilabel:`Manual selection`
+:py:class:`PythonScriptModifier`               :guilabel:`Python script`
 :py:class:`ScatterPlotModifier`                :guilabel:`Scatter plot`
 :py:class:`SelectExpressionModifier`           :guilabel:`Expression select`
 :py:class:`SelectParticleTypeModifier`         :guilabel:`Select particle type`
@@ -55,3 +56,4 @@ Class name                                     User interface name
 
 # Load the native module.
 from PyScriptScene import Modifier
+from PyScriptScene import PythonScriptModifier

@@ -94,7 +94,6 @@ void CompoundObject::setDataObjects(const PipelineFlowState& state)
 	setAttributes(state.attributes());
 }
 
-
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

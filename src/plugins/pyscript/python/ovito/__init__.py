@@ -170,8 +170,7 @@ def _ObjectNode_compute(self):
     assert(state.status.type != PipelineStatus.Type.Error)
     assert(state.status.type != PipelineStatus.Type.Pending)
     
-    self.__output = ovito.data.DataCollection()        
-    state.cloneObjectsIfNeeded(True)
+    self.__output = ovito.data.DataCollection()
     self.__output.setDataObjects(state)
         
     return self.__output

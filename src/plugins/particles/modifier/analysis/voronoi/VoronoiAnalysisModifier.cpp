@@ -432,26 +432,27 @@ PipelineStatus VoronoiAnalysisModifier::applyComputationResults(TimePoint time, 
 						"Voronoi cell volume sum: %2").arg(_simulationBoxVolume).arg(_voronoiVolumeSum));
 	}
 
-	if(_voronoiIndices && _maxFaceOrder > _voronoiIndices->componentCount()) {
-		return PipelineStatus(PipelineStatus::Warning,
-				tr("The Voronoi tessellation contains faces with up to %1 edges "
-						"(ignoring edges below the length threshold). "
-						"The current maximum edge count parameter is less than this "
-						"value, and the computed Voronoi index vectors are therefore truncated. "
-						"You should consider increasing the maximum edge count parameter to %1 edges "
-						"to not truncate the Voronoi index vectors and avoid this message."
-						).arg(_maxFaceOrder));
-	}
-
 	if(_bonds) {
-		// Create the output data object.
+		// Create the output data object for bonds.
 		OORef<BondsObject> bondsObj(new BondsObject(dataset(), _bonds.data()));
 		bondsObj->setDisplayObject(_bondsDisplay);
 		// Insert output object into the pipeline.
 		output().addObject(bondsObj);
 	}
 
-	return PipelineStatus::Success;
+	if(_voronoiIndices && _maxFaceOrder > _voronoiIndices->componentCount()) {
+		return PipelineStatus(PipelineStatus::Warning,
+				tr("The Voronoi tessellation contains faces with up to %1 edges "
+						"(ignoring edges below the length threshold). "
+						"This number exceeds the current maximum edge count, "
+						"and the computed Voronoi index vectors are therefore truncated. "
+						"You should consider increasing the maximum edge count parameter to %1 edges "
+						"to not truncate the Voronoi index vectors and avoid this message."
+						).arg(_maxFaceOrder));
+	}
+	else {
+		return PipelineStatus::Success;
+	}
 }
 
 /******************************************************************************
