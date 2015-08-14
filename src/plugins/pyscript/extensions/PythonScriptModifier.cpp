@@ -278,7 +278,7 @@ void PythonScriptModifier::runScriptFunction()
 				engine->execute([this, &exhausted]() {
 					PyObject* item = PyIter_Next(_generatorObject->ptr());
 					if(item != NULL) {
-						boost::python::object itemObj(boost::python::handle<>(item));
+						boost::python::object itemObj{boost::python::handle<>(item)};
 						if(PyFloat_Check(item)) {
 							double progressValue = boost::python::extract<double>(item);
 							if(progressValue >= 0.0 && progressValue <= 1.0) {

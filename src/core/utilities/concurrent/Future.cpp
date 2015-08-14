@@ -217,6 +217,10 @@ bool FutureInterfaceBase::waitForSubTask(const std::shared_ptr<FutureInterfaceBa
 void FutureInterfaceBase::setProgressRange(int maximum)
 {
     QMutexLocker locker(&_mutex);
+
+	if(maximum == _progressMaximum || isCanceled() || isFinished())
+		return;
+
     _progressMaximum = maximum;
     computeTotalProgress();
     sendCallOut(FutureWatcher::CallOutEvent::ProgressRange, maximum);

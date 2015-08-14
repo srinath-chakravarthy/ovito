@@ -270,8 +270,9 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 	ovito_class<PythonScriptModifier, Modifier>(
 			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"A modifier that executes a Python script function which computes the output of the modifier. "
-			"This class allows you to implement new modifier types in Python which can participate in OVITO's "
-			"data pipeline system and which may be used like the standard built-in data modifiers. ")
+			"\n\n"
+			"This class makes it possible to implement new modifier types in Python which can participate in OVITO's "
+			"data pipeline system and which may be used like OVITO's standard built-in modifiers. ")
 
 		.add_property("script", make_function(&PythonScriptModifier::script, return_value_policy<copy_const_reference>()), &PythonScriptModifier::setScript,
 				"The source code of the user-defined Python script, which is executed by the modifier and which defines the ``modify()`` function. "

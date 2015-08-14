@@ -21,7 +21,6 @@
 
 #include <plugins/pyscript/PyScript.h>
 #include <core/gui/app/Application.h>
-#include <plugins/pyscript/extensions/PythonScriptModifier.h>
 #include "PythonBinding.h"
 
 namespace PyScript {
@@ -39,11 +38,6 @@ BOOST_PYTHON_MODULE(PyScript)
 	// Make environment information available to the script.
 	scope().attr("gui_mode") = Application::instance().guiMode();
 	scope().attr("headless_mode") = Application::instance().headlessMode();
-
-	// Register the progress callback helper class of the PythonScriptModifier.
-	class_<PythonScriptModifier::ProgressHelper, bases<>, std::shared_ptr<PythonScriptModifier::ProgressHelper>, boost::noncopyable>("PythonScriptModifierProgressHelper", no_init)
-		//.add_property("canceled", &PythonScriptModifier::ProgressHelper::processWaitingEvents)
-	;
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScript);
