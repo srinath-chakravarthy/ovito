@@ -66,7 +66,7 @@ void ScriptAutostarter::registerActions(ActionManager& actionManager)
 	QAction* runScriptFileAction = actionManager.createCommandAction(ACTION_SCRIPTING_RUN_FILE, tr("Run Script File..."));
 	connect(runScriptFileAction, &QAction::triggered, [&actionManager]() {
 		// Let the user select a script file on disk.
-		HistoryFileDialog dlg("ScriptFile", actionManager.mainWindow(), tr("Run Script File"), QString(), tr("Script files (*.py)"));
+		HistoryFileDialog dlg("ScriptFile", actionManager.mainWindow(), tr("Run Script File"), QString(), tr("Python scripts (*.py)"));
 		if(dlg.exec() != QDialog::Accepted)
 			return;
 		QString scriptFile = dlg.selectedFiles().front();

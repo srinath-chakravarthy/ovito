@@ -42,11 +42,11 @@ public:
 	/// Destructor.
 	virtual ~StringParameterUI();
 
-	/// This returns the text box managed by this ParameterUI.
-	QLineEdit* textBox() const { return _textBox; }
+	/// This returns the text widget managed by this ParameterUI.
+	QWidget* textBox() const { return _textBox; }
 	
-	/// Replaces the text box managed by this ParameterUI. The ParameterUI becomes the owner of the new text box.
-	void setTextBox(QLineEdit* textBox);
+	/// Replaces the text widget managed by this ParameterUI. The ParameterUI becomes the owner of the new widget.
+	void setTextBox(QWidget* textBox);
 
 	/// This method is called when a new editable object has been assigned to the properties owner this
 	/// parameter UI belongs to.  
@@ -70,7 +70,7 @@ public:
 	
 public:
 	
-	Q_PROPERTY(QLineEdit textBox READ textBox);
+	Q_PROPERTY(QWidget textBox READ textBox);
 	
 public Q_SLOTS:
 	
@@ -81,7 +81,7 @@ public Q_SLOTS:
 protected:
 
 	/// The text box of the UI component.
-	QPointer<QLineEdit> _textBox;
+	QPointer<QWidget> _textBox;
 
 private:
 

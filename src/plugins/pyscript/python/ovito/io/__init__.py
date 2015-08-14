@@ -176,7 +176,7 @@ def export_file(node, file, format, **params):
               ["Particle Identifier", "Particle Type", "Position.X", "Position.Y", "Position.Z"]
             )
             
-         **LAMMPS atom style**
+        **LAMMPS atom style**
         
         When writing files in the ``"lammps_data"`` format, the LAMMPS atom style "atomic" is used by default. If a different atom style 
         should be used, it must be explicitly specified as a string using the ``atom_style`` keyword parameter.

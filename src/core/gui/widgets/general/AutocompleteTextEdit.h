@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // 
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2015) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,13 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-/** 
- * \file AutocompleteLineEdit.h
- * \brief Contains the definition of the Ovito::AutocompleteLineEdit class.
- */
-
-#ifndef __OVITO_AUTOCOMPLETE_LINE_EDIT_H
-#define __OVITO_AUTOCOMPLETE_LINE_EDIT_H
+#ifndef __OVITO_AUTOCOMPLETE_TEXT_EDIT_H
+#define __OVITO_AUTOCOMPLETE_TEXT_EDIT_H
 
 #include <core/Core.h>
 
@@ -34,17 +29,25 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /**
  * \brief A text editor widget that provides auto-completion of words.
  */
-class OVITO_CORE_EXPORT AutocompleteLineEdit : public QLineEdit
+class OVITO_CORE_EXPORT AutocompleteTextEdit : public QPlainTextEdit
 {
 	Q_OBJECT
 	
 public:
 	
 	/// \brief Constructs the widget.
-	AutocompleteLineEdit(QWidget* parent = nullptr);
+	AutocompleteTextEdit(QWidget* parent = nullptr);
 	
 	/// Sets the list of words that can be completed.
 	void setWordList(const QStringList& words) { _wordListModel->setStringList(words); }
+
+	/// Returns the preferred size of the widget.
+	virtual QSize sizeHint() const override;
+
+Q_SIGNALS:
+
+	/// This signal is emitted when the Return or Enter key is pressed or the widget loses focus.
+	void editingFinished();
 
 protected Q_SLOTS:
 
@@ -55,6 +58,9 @@ protected:
 
 	/// Handles key-press events.
 	virtual void keyPressEvent(QKeyEvent* event) override;
+
+	/// Handles keyboard focus lost events.
+	virtual void focusOutEvent(QFocusEvent* event) override;
 
 	/// Creates a list of tokens from the current text string.
 	QStringList getTokenList() const;
@@ -75,4 +81,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_AUTOCOMPLETE_LINE_EDIT_H
+#endif // __OVITO_AUTOCOMPLETE_TEXT_EDIT_H
