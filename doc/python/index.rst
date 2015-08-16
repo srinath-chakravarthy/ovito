@@ -19,6 +19,7 @@ Introduction:
    introduction/modifiers
    introduction/particle_properties
    introduction/rendering
+   introduction/custom_modifiers
    introduction/examples
 
 Module Reference:

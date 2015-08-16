@@ -110,15 +110,15 @@ PipelineStatus PythonScriptModifier::modifyObject(TimePoint time, ModifierApplic
 {
 	if(state.status().type() != PipelineStatus::Pending) {
 		if(!_outputCache.stateValidity().contains(time) && !_computingInterval.contains(time)) {
-			// Stop already running script as soon as possible.
+			// Stop already running script.
 			stopRunningScript();
-			_inputCache = state;
 
 			// Limit validity interval of the computation to the current frame.
+			_inputCache = state;
 			_inputCache.intersectStateValidity(time);
 			_computingInterval = _inputCache.stateValidity();
 
-			// Request script execution now.
+			// Request script execution.
 			if(ScriptEngine::activeEngine() != nullptr) {
 				// When running in the context of an active script engine, process request immediately.
 				runScriptFunction();
@@ -187,7 +187,7 @@ void PythonScriptModifier::runScriptFunction()
 
 			try {
 
-				// Initialize local script engine or use already active script engine.
+				// Initialize local script engine if there is no active engine to re-use.
 				if(ScriptEngine::activeEngine() == nullptr) {
 					if(!_scriptEngine) {
 						_scriptEngine.reset(new ScriptEngine(dataset(), nullptr, false));
@@ -196,7 +196,7 @@ void PythonScriptModifier::runScriptFunction()
 						_mainNamespacePrototype = _scriptEngine->mainNamespace();
 					}
 
-					// Recompile script if needed.
+					// Compile script if needed.
 					if(!_modifyScriptFunction || _modifyScriptFunction->is_none()) {
 						compileScript();
 					}
@@ -211,6 +211,8 @@ void PythonScriptModifier::runScriptFunction()
 
 				// Construct progress callback object.
 				_runningTask = std::make_shared<ProgressHelper>();
+				// Register background task so user/system can cancel it.
+				dataset()->container()->taskManager().registerTask(_runningTask);
 				_runningTask->reportStarted();
 				_runningTask->setProgressText(tr("Running modifier script"));
 
@@ -245,9 +247,6 @@ void PythonScriptModifier::runScriptFunction()
 			// Check if the function has returned a generator object.
 			if(_generatorObject && !_generatorObject->is_none()) {
 
-				// Register background task so user/system can cancel it.
-				dataset()->container()->taskManager().registerTask(_runningTask);
-
 				// Keep calling this method in GUI mode. Otherwise stay in the outer while loop.
 				if(ScriptEngine::activeEngine() == nullptr)
 					QMetaObject::invokeMethod(this, "runScriptFunction", Qt::QueuedConnection);
@@ -264,44 +263,55 @@ void PythonScriptModifier::runScriptFunction()
 			// Perform one computation step by calling the generator object.
 			bool exhausted = false;
 			try {
+				// Make sure the actions of the modify() function are not recorded on the undo stack.
+				UndoSuspender noUndo(dataset());
+
+				// Get script engine to execute the script.
+				ScriptEngine* engine = ScriptEngine::activeEngine();
+				if(!engine) engine = _scriptEngine.get();
+
 				if(_runningTask->isCanceled()) {
 					_outputCache.setStateValidity(TimeInterval::empty());
 					throw Exception(tr("Modifier script execution has been canceled by the user."));
 				}
 
-				// Make sure the actions of the modify() function are not recorded on the undo stack.
-				UndoSuspender noUndo(dataset());
+				// Measure how long the script is running.
+				QTime time;
+				time.start();
+				do {
 
-				ScriptEngine* engine = ScriptEngine::activeEngine();
-				if(!engine) engine = _scriptEngine.get();
-
-				engine->execute([this, &exhausted]() {
-					PyObject* item = PyIter_Next(_generatorObject->ptr());
-					if(item != NULL) {
-						boost::python::object itemObj{boost::python::handle<>(item)};
-						if(PyFloat_Check(item)) {
-							double progressValue = boost::python::extract<double>(item);
-							if(progressValue >= 0.0 && progressValue <= 1.0) {
-								_runningTask->setProgressRange(100);
-								_runningTask->setProgressValue((int)(progressValue * 100.0));
+					engine->execute([this, &exhausted]() {
+						PyObject* item = PyIter_Next(_generatorObject->ptr());
+						if(item != NULL) {
+							boost::python::object itemObj{boost::python::handle<>(item)};
+							if(PyFloat_Check(item)) {
+								double progressValue = boost::python::extract<double>(item);
+								if(progressValue >= 0.0 && progressValue <= 1.0) {
+									_runningTask->setProgressRange(100);
+									_runningTask->setProgressValue((int)(progressValue * 100.0));
+								}
+								else {
+									_runningTask->setProgressRange(0);
+									_runningTask->setProgressValue(0);
+								}
 							}
 							else {
-								_runningTask->setProgressRange(0);
-								_runningTask->setProgressValue(0);
+								boost::python::extract<QString> get_str(item);
+								if(get_str.check())
+									_runningTask->setProgressText(get_str());
 							}
 						}
 						else {
-							boost::python::extract<QString> get_str(item);
-							if(get_str.check())
-								_runningTask->setProgressText(get_str());
+							exhausted = true;
+							if(PyErr_Occurred())
+								boost::python::throw_error_already_set();
 						}
-					}
-					else {
-						exhausted = true;
-						if(PyErr_Occurred())
-							boost::python::throw_error_already_set();
-					}
-				});
+					});
+
+					// Keep calling the generator object until
+					// 30 milliseconds have passed or until it is exhausted.
+				}
+				while(!exhausted && time.elapsed() < 30);
 
 				if(!exhausted) {
 					// Keep calling this method in GUI mode. Otherwise stay in the outer while loop.

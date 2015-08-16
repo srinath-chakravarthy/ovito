@@ -48,7 +48,7 @@ SET_PROPERTY_FIELD_LABEL(PythonViewportOverlay, _script, "Script");
 * Constructor.
 ******************************************************************************/
 PythonViewportOverlay::PythonViewportOverlay(DataSet* dataset) : ViewportOverlay(dataset),
-		_scriptEngine(dataset, nullptr, false), _isCompiled(false)
+		_scriptEngine(dataset, nullptr, false)
 {
 	INIT_PROPERTY_FIELD(PythonViewportOverlay::_script);
 
@@ -96,14 +96,29 @@ void PythonViewportOverlay::propertyChanged(const PropertyFieldDescriptor& field
 void PythonViewportOverlay::compileScript()
 {
 	_scriptOutput.clear();
+	_overlayScriptFunction = boost::python::object();
 	try {
 		_scriptEngine.executeCommands(script());
-		_isCompiled = true;
+
+		// Extract the render() function defined by the script.
+		_scriptEngine.execute([this]() {
+			try {
+				_overlayScriptFunction = _scriptEngine.mainNamespace()["render"];
+				if(!PyCallable_Check(_overlayScriptFunction.ptr())) {
+					_overlayScriptFunction = boost::python::object();
+					throw Exception(tr("Invalid Python script. It does not define a callable function render()."));
+				}
+			}
+			catch(const boost::python::error_already_set&) {
+				PyErr_Clear();
+				throw Exception(tr("Invalid Python script. It does not define the function render()."));
+			}
+		});
 	}
-	catch(Exception& ex) {
+	catch(const Exception& ex) {
 		_scriptOutput += ex.message();
-		_isCompiled = false;
 	}
+
 	notifyDependents(ReferenceEvent::ObjectStatusChanged);
 }
 
@@ -120,30 +135,40 @@ void PythonViewportOverlay::onScriptOutput(const QString& text)
 ******************************************************************************/
 void PythonViewportOverlay::render(Viewport* viewport, QPainter& painter, const ViewProjectionParameters& projParams, RenderSettings* renderSettings)
 {
-	if(!_isCompiled)
+	if(!compilationSucessful())
 		return;
 
 	_scriptOutput.clear();
 	try {
-		// Pass viewport, QPainter, and other information to Python script.
-		// The QPainter pointer will have to be converted to the representation used by PyQt.
-		_scriptEngine.mainNamespace()["__painter_pointer"] = reinterpret_cast<std::uintptr_t>(&painter);
-		_scriptEngine.mainNamespace()["__viewport"] = boost::python::ptr(viewport);
-		_scriptEngine.mainNamespace()["__projParams"] = projParams;
-		_scriptEngine.mainNamespace()["__renderSettings"] = boost::python::ptr(renderSettings);
-		// Execute the script's render() function.
-		_scriptEngine.executeCommands(
-				"import sip\n"
-				"import numpy\n"
-				"import PyQt5.QtGui\n"
-				"render(sip.wrapinstance(__painter_pointer, PyQt5.QtGui.QPainter), "
-				"   viewport=__viewport, "
-				"   render_settings=__renderSettings, "
-				"   is_perspective=__projParams.isPerspective, "
-				"   fov=__projParams.fieldOfView, "
-				"   view_tm=numpy.asarray(__projParams.viewMatrix), "
-				"   proj_tm=numpy.asarray(__projParams.projectionMatrix)"
-				")");
+
+		ScriptEngine* engine = ScriptEngine::activeEngine();
+		if(!engine) engine = &_scriptEngine;
+
+		engine->execute([this,engine,viewport,&painter,&projParams,renderSettings]() {
+
+			// Pass viewport, QPainter, and other information to the Python script function.
+			// The QPainter pointer has to be converted to the representation used by PyQt.
+
+			boost::python::object numpy_module = boost::python::import("numpy");
+			boost::python::object sip_module = boost::python::import("sip");
+			boost::python::object qtgui_module = boost::python::import("PyQt5.QtGui");
+
+			boost::python::dict kwargs;
+			kwargs["viewport"] = boost::python::ptr(viewport);
+			kwargs["render_settings"] = boost::python::ptr(renderSettings);
+			kwargs["is_perspective"] = projParams.isPerspective;
+			kwargs["fov"] = projParams.fieldOfView;
+			kwargs["view_tm"] = numpy_module.attr("asarray")(projParams.viewMatrix);
+			kwargs["proj_tm"] = numpy_module.attr("asarray")(projParams.projectionMatrix);
+
+			boost::python::object painter_ptr{reinterpret_cast<std::uintptr_t>(&painter)};
+			boost::python::object qpainter_class = qtgui_module.attr("QPainter");
+			boost::python::object sip_painter = sip_module.attr("wrapinstance")(painter_ptr, qpainter_class);
+			boost::python::tuple arguments = boost::python::make_tuple(sip_painter);
+
+			// Execute render() script function.
+			engine->callObject(_overlayScriptFunction, arguments, kwargs);
+		});
 	}
 	catch(const Exception& ex) {
 		_scriptOutput += ex.message();
@@ -209,6 +234,7 @@ void PythonViewportOverlayEditor::onContentsChanged(RefTarget* editObject)
 	if(editObject) {
 		_codeEditor->setText(overlay->script());
 		_codeEditor->setEnabled(true);
+		_errorDisplay->setText(overlay->scriptOutput());
 	}
 	else {
 		_codeEditor->setEnabled(false);

@@ -10,8 +10,8 @@
   <title>Introduction</title>
 
   <para>OVITO is a scientific data visualization and analysis software for
-  large-scale atomistic simulation models in materials science and engineering and related disciplines.
-  OVITO is made freely available for
+  large-scale atomistic simulation models in materials science and related disciplines.
+  OVITO is freely available for
   Windows, Linux, and Mac OS X under an open-source license. It is being developed by <link xlink:href="http://scholar.google.com/citations?user=f8Tw3eEAAAAJ">Dr. Alexander
   Stukowski</link> at the <link xlink:href="http://www.mawi.tu-darmstadt.de/mm/mm_mm_sw/index.en.jsp">
   Materials Science Department</link> of Darmstadt University of Technology, Germany.
@@ -19,7 +19,7 @@
   
   <para>
   The first publicly available version of OVITO was released in December 2009.
-  As of spring 2015, OVITO has more than 14,000 active users from the computational physics, materials science, and chemistry fields.
+  As of summer 2015, OVITO has more than 30,000 users from the computational physics, materials science, and chemistry fields.
   To introduce the software package to the community, a <link xlink:href="http://stacks.iop.org/0965-0393/18/015012">journal article about OVITO</link> was published in 2010.
   </para>
   
@@ -27,17 +27,21 @@
   <title>Program features</title>
 
   <para>OVITO is a software for visualizing and analyzing output data from particle-based simulations, notably molecular dynamics (MD) simulations of 
-  solid-state materials. Its main application area are large-scale simulations based on classical potentials 
+  solid-state materials. Its main application area are large simulations based on classical potentials 
   (10<superscript>3</superscript> - 10<superscript>8</superscript> particles).
   Some noteworthy program features are: <itemizedlist>
 
       <listitem>
-        <para><link linkend="usage.import">Import</link> and <link linkend="usage.export">export</link> of various file formats used by 
-        MD simulation codes including LAMMPS, XYZ, CFG, IMD, POSCAR, NetCDF, PDB, and FHI-aims.</para>
+        <para><link linkend="usage.import">Input</link> and <link linkend="usage.export">output</link> of various file formats used by 
+        MD simulation codes, including LAMMPS, XYZ, CFG, IMD, POSCAR, NetCDF, PDB, and FHI-aims.</para>
       </listitem>
 
       <listitem>
-        <para>Interactive display of large numbers of particles using hardware-accelerated OpenGL rendering.</para>
+        <para>Interactive display of large numbers of particles and bonds using hardware-accelerated OpenGL rendering.</para>
+      </listitem>
+
+      <listitem>
+        <para>Support for various particle shapes: spheres, cubes, ellipsoids, cylinders, and more.</para>
       </listitem>
 
       <listitem>
@@ -45,24 +49,19 @@
       </listitem>
 
       <listitem>
-        <para>Visualization and calculation of <link linkend="particles.modifiers.construct_surface_mesh">polyhedral meshes</link> from atomistic datasets.</para>
-      </listitem>
-      
-      <listitem>
         <para><link linkend="usage.rendering">High-quality image and movie output for publication</link></para>
       </listitem>
       
       <listitem>
-        <para><link linkend="usage.scripting">A powerful Python-based scripting interface to automate many tasks</link></para>
+        <para><link linkend="usage.scripting">A powerful Python-based scripting interface</link> 
+        allows you to automate analysis and visualization tasks 
+        and <link linkend="particles.modifiers.python_script">extend OVITO</link> with new functions.</para>
       </listitem>      
-
+      
       <listitem>
-        <para><link linkend="usage.modification_pipeline">Processing model</link>: Data modification and analysis functions are arranged in a data flow pipeline by the user; parameters can be altered at 
-        any time with immediate recalculation of the results. Available <link linkend="particles.modifiers">modification functions</link> include:<itemizedlist>
-        
-            <listitem>
-              <para><link linkend="particles.modifiers.slice">Slicing</link></para>
-            </listitem>
+        <para><link linkend="usage.modification_pipeline">Nondestructive data manipulation and analysis functions</link> 
+        are arranged in a data flow pipeline by the user. Parameters can be changed at 
+        any time and results will be immediately updated. Available <link linkend="particles.modifiers">modification functions</link> include:<itemizedlist>
 
             <listitem>
               <para><link linkend="particles.modifiers.expression_select">Selection of particles based on user-defined criteria (Boolean expressions)</link></para>
@@ -72,6 +71,10 @@
               <para><link linkend="particles.modifiers.color_coding">Color coding</link></para>
             </listitem>
 
+            <listitem>
+              <para><link linkend="particles.modifiers.slice">Slicing and cutting</link></para>
+            </listitem>
+            
             <listitem>
               <para><link linkend="particles.modifiers.affine_transformation">Transformation of particle coordinates</link></para>
             </listitem>
@@ -89,7 +92,7 @@
             </listitem>
 
             <listitem>
-              <para><link linkend="particles.modifiers.manual_selection">Manual selection of particles</link> and display of particle properties</para>
+              <para><link linkend="particles.modifiers.manual_selection">Manual selection of particles</link> and inspection of particle properties</para>
             </listitem>
             
           </itemizedlist> 
@@ -117,7 +120,7 @@
           </listitem>
           
           <listitem>
-            <para><link linkend="particles.modifiers.dislocation_analysis">Automated dislocation line identification</link></para>
+            <para><link linkend="particles.modifiers.dislocation_analysis">Automated dislocation line identification (DXA)</link></para>
           </listitem>
 
           <listitem>
@@ -125,7 +128,7 @@
           </listitem>
 
           <listitem>
-            <para><link linkend="particles.modifiers.atomic_strain">Calculation of atomic strain tensors</link></para>
+            <para><link linkend="particles.modifiers.atomic_strain">Atomic strain tensor calculation</link></para>
           </listitem>
           
           <listitem>
@@ -141,15 +144,15 @@
           </listitem>
           
 	      <listitem>
-            <para><link linkend="particles.modifiers.wigner_seitz_analysis">Wigner-Seitz cell analysis for identification of point defects</link></para>
+            <para><link linkend="particles.modifiers.wigner_seitz_analysis">Identification of point defects using Wigner-Seitz cell method</link></para>
           </listitem>
           
         </itemizedlist>
          
       </listitem>
-
+      
       <listitem>
-        <para>A modular software design that makes it easy to extend OVITO via plugins</para>
+        <para>A modular software design, which allows to extend OVITO via C++ plugins</para>
       </listitem>
       
     </itemizedlist>

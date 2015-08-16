@@ -201,18 +201,40 @@ BOOST_PYTHON_MODULE(PyScriptViewport)
 			"paint on top of the rendered image."
 			"\n\n"
 			"Note that an alternative to using the :py:class:`!PythonViewportOverlay` class is to directly manipulate the "
-			"output image returned by the :py:meth:`Viewport.render` method."
+			"static image returned by the :py:meth:`Viewport.render` method before saving it to disk. "
 			"\n\n"
 			"You can attach a Python overlay to a viewport by adding an instance of this class to the viewport's "
 			":py:attr:`~ovito.vis.Viewport.overlays` collection:"
 			"\n\n"
 			".. literalinclude:: ../example_snippets/python_viewport_overlay.py")
 		.add_property("script", make_function(&PythonViewportOverlay::script, return_value_policy<copy_const_reference>()), &PythonViewportOverlay::setScript,
-				"The user-defined Python script, which paints over the rendered viewport contents. "
-				"Note that the script must be specified as a string. It is executed by a separate "
-				"interpreter instance, i.e., it has no access to variables defined in the current scope. ")
+				"The source code of the user-defined Python script that defines the ``render()`` function. "
+				"Note that this property returns the source code entered by the user through the graphical user interface, not the callable Python function. "
+				"\n\n"
+				"If you want to set the render function from an already running Python script, you should set "
+				"the :py:attr:`.function` property instead as demonstrated in the example above.")
+		.add_property("function", &PythonViewportOverlay::scriptFunction, &PythonViewportOverlay::setScriptFunction,
+				"The Python function to be called every time the viewport is repainted or when an output image is being rendered."
+				"\n\n"
+				"The function must have a signature as shown in the example above. The *painter* parameter "
+				"passed to the user-defined function contains a `QPainter <http://pyqt.sourceforge.net/Docs/PyQt5/api/qpainter.html>`_ object, which provides "
+				"painting methods to draw arbitrary 2D graphics on top of the image rendered by OVITO. "
+				"\n\n"
+				"Additional keyword arguments are passed to the function in the *args* dictionary. "
+				"The following keys are defined: \n\n"
+				"   * ``viewport``: The :py:class:`~ovito.vis.Viewport` being rendered.\n"
+				"   * ``render_settings``: The active :py:class:`~ovito.vis.RenderSettings`.\n"
+				"   * ``is_perspective``: Flag indicating whether projection is perspective or parallel.\n"
+				"   * ``fov``: The field of view.\n"
+				"   * ``view_tm``: The camera transformation matrix.\n"
+				"   * ``proj_tm``: The projection matrix.\n"
+				"\n\n"
+				"Implementation note: Exceptions raised by the custom rendering function are not propagated to the calling context. "
+				"\n\n"
+				":Default: ``None``\n")
 		.add_property("output", make_function(&PythonViewportOverlay::scriptOutput, return_value_policy<copy_const_reference>()),
-				"The output text generated when compiling/running the Python script. May contain an error message when the execution of the script fails.")
+				"The output text generated when compiling/running the Python function. "
+				"Contain the error message when the most recent execution of the custom rendering function failed.")
 	;
 }
 

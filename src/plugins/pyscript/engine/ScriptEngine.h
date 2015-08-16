@@ -63,12 +63,13 @@ public:
 	/// \throw Exception on error.
 	int executeFile(const QString& file, const QStringList& scriptArguments = QStringList());
 
-	/// \brief Executes a callable Python object (e.g. a function).
+	/// \brief Calls a callable Python object (typically a function).
 	/// \param callable The callable object.
-	/// \param argument The list of function arguments.
+	/// \param arguments The list of function arguments.
+	/// \param kwargs The keyword arguments to be passed to the function.
 	/// \return The value returned by the Python function.
 	/// \throw Exception on error.
-	boost::python::object callObject(const boost::python::object& callable, const boost::python::tuple& arguments = boost::python::tuple());
+	boost::python::object callObject(const boost::python::object& callable, const boost::python::tuple& arguments = boost::python::tuple(), const boost::python::dict& kwargs = boost::python::dict());
 
 	/// \brief Executes the given C++ function, which in turn may invoke Python functions in the context of this engine.
 	void execute(const std::function<void()>& func);

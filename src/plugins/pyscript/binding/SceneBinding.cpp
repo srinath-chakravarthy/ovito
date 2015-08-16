@@ -272,7 +272,12 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 			"A modifier that executes a Python script function which computes the output of the modifier. "
 			"\n\n"
 			"This class makes it possible to implement new modifier types in Python which can participate in OVITO's "
-			"data pipeline system and which may be used like OVITO's standard built-in modifiers. ")
+			"data pipeline system and which may be used like OVITO's standard built-in modifiers. "
+			"You can learn more about the usage of this class in the :ref:`writing_custom_modifiers` section. "
+			"\n\n"
+			"Example:"
+			"\n\n"
+			".. literalinclude:: ../example_snippets/python_script_modifier.py")
 
 		.add_property("script", make_function(&PythonScriptModifier::script, return_value_policy<copy_const_reference>()), &PythonScriptModifier::setScript,
 				"The source code of the user-defined Python script, which is executed by the modifier and which defines the ``modify()`` function. "
@@ -283,6 +288,17 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 
 		.add_property("function", &PythonScriptModifier::scriptFunction, &PythonScriptModifier::setScriptFunction,
 				"The Python function to be called every time the modification pipeline is evaluated by the system."
+				"\n\n"
+				"The function must have a signature as shown in the example above. "
+				"The *frame* parameter contains the current animation frame number at which the data pipeline "
+				"is being evaluated. The :py:class:`~ovito.data.DataCollection` *input* holds the "
+				"input data objects of the modifier, which were produced by the upstream part of the modification "
+				"pipeline. *output* is the :py:class:`~ovito.data.DataCollection` where the modifier function "
+				"should store the modified or newly generated data objects. This data objects in this collection flow down the "
+				"modification pipeline and are eventually rendered in the viewports. "
+				"\n\n"
+				"By default the *output* data collection contains the same data objects as the *input* data collection. "
+				"Thus, without further action, all data gets passed through the modifier unmodified. "
 				"\n\n"
 				":Default: ``None``\n")
 	;

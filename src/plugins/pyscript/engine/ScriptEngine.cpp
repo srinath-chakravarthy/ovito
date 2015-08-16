@@ -331,23 +331,13 @@ void ScriptEngine::execute(const std::function<void()>& func)
 }
 
 /******************************************************************************
-* Executes a callable Python object (e.g. a function).
+* Calls a callable Python object (typically a function).
 ******************************************************************************/
-boost::python::object ScriptEngine::callObject(const boost::python::object& callable, const boost::python::tuple& arguments)
+boost::python::object ScriptEngine::callObject(const boost::python::object& callable, const boost::python::tuple& arguments, const boost::python::dict& kwargs)
 {
 	boost::python::object result;
-	execute([&result, &callable, &arguments]() {
-		int numArgs = boost::python::len(arguments);
-		if(numArgs == 0) result = callable();
-		else if(numArgs == 1) result = callable((object)arguments[0]);
-		else if(numArgs == 2) result = callable((object)arguments[0], (object)arguments[1]);
-		else if(numArgs == 3) result = callable((object)arguments[0], (object)arguments[1], (object)arguments[2]);
-		else if(numArgs == 4) result = callable((object)arguments[0], (object)arguments[1], (object)arguments[2], (object)arguments[3]);
-		else if(numArgs == 5) result = callable((object)arguments[0], (object)arguments[1], (object)arguments[2], (object)arguments[3], (object)arguments[4]);
-		else {
-			OVITO_ASSERT(false);
-			throw Exception(tr("Number of arguments passed to Python function exceeds compile-time limit."));
-		}
+	execute([&result, &callable, &arguments, &kwargs]() {
+		result = callable(boost::python::detail::args_proxy(arguments), boost::python::detail::kwds_proxy(kwargs));
 	});
 	return result;
 }

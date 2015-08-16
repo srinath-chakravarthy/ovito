@@ -11,6 +11,7 @@ do many things that are already familiar from the graphical user interface (and 
   * Set up a camera and render pictures or movies of the scene
   * Control the visual appearance of particles and other objects
   * Access per-particle data and other analysis results computed by OVITO
+  * Implement new modifier types
   * Export the output data to a file
 
 The following sections will introduce the essential concepts and walk you through different parts of OVITO's 

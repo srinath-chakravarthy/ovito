@@ -4,7 +4,7 @@ from ovito.data import *
 # The number of particles we are going to create.
 num_particles = 3
 
-# Create the particles position property.
+# Create the particle position property.
 pos_prop = ParticleProperty.create(ParticleProperty.Type.Position, num_particles)
 pos_prop.marray[0] = (1.0, 1.5, 0.3)
 pos_prop.marray[1] = (7.0, 4.2, 6.0)
@@ -18,13 +18,13 @@ type_prop.marray[0] = 1  # First atom is Cu
 type_prop.marray[1] = 2  # Second atom is Ni
 type_prop.marray[2] = 2  # Third atom is Ni
 
-# Create a user-defined property.
+# Create a user-defined particle property.
 my_prop = ParticleProperty.create_user('My property', 'float', num_particles)
 my_prop.marray[0] = 3.141
 my_prop.marray[1] = 0.0
 my_prop.marray[2] = 0.0
 
-# Create a simulation box.
+# Create the simulation box.
 cell = SimulationCell()
 cell.matrix = [[10,0,0,0],
                [0,10,0,0],
@@ -38,7 +38,7 @@ bonds.add_full(0, 1)    # Creates two half bonds 0->1 and 1->0.
 bonds.add_full(1, 2)    # Creates two half bonds 1->2 and 2->1.
 bonds.add_full(2, 0)    # Creates two half bonds 2->0 and 0->2.
 
-# Create a data collection to hold the particle properties, the bonds, and the simulation cell.
+# Create a data collection to hold the particle properties, bonds, and simulation cell.
 data = DataCollection()
 data.add(pos_prop)
 data.add(type_prop)
@@ -51,7 +51,7 @@ node = ObjectNode()
 node.source = data
 dataset.scene_nodes.append(node)
 
-# Select the new node and adjust viewport cameras to show everything.
+# Select the new node and adjust cameras of all viewports to show everything.
 dataset.selected_node = node
 for vp in dataset.viewports:
     vp.zoom_all()

@@ -84,7 +84,7 @@ public:
 	}
 
 	/// Sets the Python script function to be executed by the modifier.
-	void setScriptFunction(boost::python::object func) {
+	void setScriptFunction(const boost::python::object& func) {
 		_modifyScriptFunction = func;
 		invalidateCachedResults(false);
 	}
