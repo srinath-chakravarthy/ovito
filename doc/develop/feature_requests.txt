@@ -68,8 +68,6 @@ Performance improvements:
 Scripting features:
 
 - Scripting interface for viewport overlays (requested by lidong.cauc@gmail.com and johannes.moeller@fau.de).
-- Python-based modifiers.
-- Run Python scripts from the GUI (requested by dmitrii.shovkun@unitn.it)
 - Distribute Scipy with Ovito?
 - Scripting interface for bond properties.
 

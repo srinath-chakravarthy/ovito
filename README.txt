@@ -16,6 +16,17 @@ If you want to build OVITO from source, see http://www.ovito.org/manual/developm
 Change Log 
 ****************************************************************************************
 
+Release 2.5.1 (07-Aug-15):
+
+ - The LAMMPS data file exporter can now produce files with LAMMPS atom styles other than 'atomic'. It also exports bonds if present.
+ - Arbitrary triclinic simulation cells can now be exported to the LAMMPS data file format. 
+   They will be automatically transformed to the canonical LAMMPS representation.
+ - The LAMMPS data file parser now reads bond types, and you can change the display color of individual bond types in OVITO.
+ - Added the fmod(A,B) math function to the Compute Property and Expression Select modifiers.
+ - Added visualization support for cylindrical and spherocylindrical particles.
+ - Added a file parser for FHI-aims log files, which can contain multiple simulation frames.
+ - Added the 'Indicate line direction' option to the dislocation display object.
+
 Release 2.5.0 (25-Jul-15):
 
  - Added Python interface for Bin and Reduce modifier.

@@ -11,23 +11,24 @@ However, sometimes the capabilities provided by these built-in modifiers are not
 write your own, completely new type of modifier that can participate in the data pipeline system of OVITO.
 The following sections describe how this is done.
 
------------------------------------
-Inserting a custom modifier
------------------------------------
+----------------------------------------------
+Inserting a custom modifier into the pipeline
+----------------------------------------------
 
-Creating a custom modifier essentially requires writing a Python function with the following signature::
+Creating a user-defined modifier essentially requires writing a Python function with the following signature, 
+which is responsible for computing the effect of the custom modifier::
 
   def modify(frame, input, output):
       ...
 
 The meaning of the parameters and the implementation of this function will be described 
-in later sections. You can insert a custom modifier into the modification pipeline either using 
-OVITO's graphical user interface or programmatically:
+in later sections. You can insert the custom modifier into the modification pipeline either by using 
+OVITO's graphical user interface or programmatically from Python:
 
   1. Within the graphical user interface, select *Python script* from the modifier drop-down list to insert
      a Python script modifier into the modification pipeline. OVITO provides a text input field
      which allows you to enter the code for the ``modify()`` function. The 
-     `corresponding page <../../particles.modifiers.python_script.html>`_ in the
+     `corresponding page <../../particles.modifiers.python_script.html>`_ in the OVITO
      user manual provides more information on this procedure and on how you can save a custom script modifier 
      for future use within the graphical program.
      
@@ -49,14 +50,191 @@ OVITO's graphical user interface or programmatically:
      :py:class:`~ovito.modifiers.PythonScriptModifier` instance, which in turn is inserted into the modification pipeline.
      
 -----------------------------------
-Python modifier function
+The modifier function
 -----------------------------------
 
 The custom modifier function defined above is called by OVITO every time the modification pipeline
-is evaluated. It receives the data produced by the upstream part of the pipeline (e.g. a particle set
+is evaluated. It receives the data produced by the upstream part of the pipeline (e.g. the particles
 loaded by a :py:class:`~ovito.io.FileSource` and further processed by other modifiers that 
-precede the custom modifier in the pipeline). Our Python modifier function has the possibility to modify or extend
-the data as needed. After the user-defined function returns, the output continuous down the pipeline (i.e. is handed over to the next
-modifier in the pipeline), and, eventually, the final results are stored in the :py:attr:`~ovito.ObjectNode.output` cache 
-of the :py:class:`~ovito.ObjectNode` and displayed in the viewports.
+precede the custom modifier in the pipeline). Our Python modifier function then has the possibility to modify or extend
+the data as needed. After the user-defined Python function returns, the output continuous down the pipeline, and, eventually, 
+the final results are stored in the :py:attr:`~ovito.ObjectNode.output` cache of the :py:class:`~ovito.ObjectNode` and rendered in the viewports.
 
+Our custom modifier function is invoked by the system with three arguments:
+
+  * **frame** (*int*) -- The animation frame number at which the pipeline is evaluated. 
+  * **input** (:py:class:`~ovito.data.DataCollection`) -- Contains the input data objects that the modifier receives from upstream.
+  * **output** (:py:class:`~ovito.data.DataCollection`) -- This is where the modifier function should put its output data objects. 
+  
+The *input* :py:class:`~ovito.data.DataCollection`, and in particular the data objects stored in it, should not be modified by the user-defined function.
+They are owned by the upstream part of the modification pipeline and should only be accessed in a read-only fashion (e.g. by using the :py:attr:`~ovito.data.ParticleProperty.array`
+attribute instead of :py:attr:`~ovito.data.ParticleProperty.marray` to access per-particle values of a :py:class:`~ovito.data.ParticleProperty`).
+
+When the user-defined modifier function is invoked by the system, the *output* data collection already contains
+all data objects from the *input* collection. Thus, the default behaviour is that all objects (e.g. particle properties, simulation cell, etc.) are passed
+through unmodified. 
+
+Modifying existing data objects
+-----------------------------------
+
+For performance reasons no object copies are made by default, and the *output* collection references the same data objects as the *input* collection.
+This means, before it is safe to modify an existing data object in the *output* data collection, you have to make a copy first. Otherwise you risk 
+modifying data that is owned by the upstream part of the modification pipeline (e.g. the :py:class:`~ovito.io.FileSource`). An in-place copy of a data object
+is made using the :py:meth:`DataCollection.copy_if_needed() <ovito.data.DataCollection.copy_if_needed>` method. The following example demonstrates the 
+principle:: 
+
+   def modify(frame, input, output):
+   
+       # Simulation cell is passed through by default:
+       assert(output.cell is input.cell)
+       
+       # Make a copy of the simulation cell:
+       cell = output.copy_if_needed(output.cell)
+       
+       # Now we are allowed to modify the copy:
+       cell.pbc = (False, False, False)
+       
+       # The object was copied in place in the output data collection:
+       assert(cell is output.cell)
+       assert(cell is not input.cell)
+       
+
+Adding new data objects
+-----------------------------------
+
+The custom modifier function can inject new data objects into the modification pipeline simply by adding
+them to the *output* data collection::
+
+   def modify(frame, input, output):
+   
+       # Create a new bonds data object and a bond between atoms 0 and 1.
+       bonds = ovito.data.Bonds()
+       bonds.add_full(0, 1)
+       
+       # Insert into output collection:
+       output.add(bonds)
+       
+For adding new particle properties (or overwriting existing properties), 
+a special method :py:meth:`~ovito.data.DataCollection.create_particle_property` is provided 
+by the :py:class:`~ovito.data.DataCollection` class::
+
+   def modify(frame, input, output):   
+       # Create the 'Color' particle property and set the color of all particles to green:
+       color_property = output.create_particle_property(ParticleProperty.Type.Color)
+       color_property.marray[:] = (1.0, 0.0, 0.0)
+
+Note that :py:meth:`~ovito.data.DataCollection.create_particle_property` checks if the particle property already exists.
+If yes, it automatically copies it in place so you can overwrite its content. Otherwise a fresh :py:class:`~ovito.data.ParticleProperty` instance
+is created and added to the output data collection. That means :py:meth:`~ovito.data.DataCollection.create_particle_property`
+can be used in both scenarios: to modify an existing particle property or to output a new property. 
+
+Furthermore, there exists a second method, :py:meth:`~ovito.data.DataCollection.create_user_particle_property`,
+which is used to create custom particle properties (in contrast to 
+:py:attr:`standard properties <ovito.data.ParticleProperty.type>` like color, radius, etc.).
+
+Initialization phase
+-----------------------------------
+
+Initialization of parameters and other inputs needed by our custom modifier function should be done outside the function.
+For example, our modifier may require reference coordinates of particles, which need to be loaded from an external file. 
+One example is the *Displacement vectors* modifier of OVITO, which asks the user to load a reference configuration file with the
+coordinates that should be subtracted from the current particle coordinates. A corresponding implementation of this modifier in Python 
+would look as follows::
+
+    from ovito.data import ParticleProperty
+    from ovito.io import FileSource
+    
+    reference = FileSource(adjust_animation_interval = False)
+    reference.load("simulation.000000.dump")
+    
+    def modify(frame, input, output):
+        prop = output.create_particle_property(ParticleProperty.Type.Displacement)
+        prop.marray[:] = input.position.array - reference.position.array
+		
+The script above creates a :py:class:`~ovito.io.FileSource` to load the reference particle positions from an external
+simulation file. Setting :py:attr:`~ovito.io.FileSource.adjust_animation_interval` to False is required to
+prevent OVITO from automatically changing the animation length.
+
+Within the ``modify()`` function we can access the particle coordinates stored in the file source, which is a subclass
+of :py:class:`~ovito.data.DataCollection`.
+
+Asynchronous modifiers and progress reporting
+-----------------------------------------------
+
+Due to technical limitations the custom modifier function is always executed in the main thread of the application. 
+This is in constrast to the built-in asynchronous modifiers of OVITO, which are implemented in C++. 
+They are executed in a background thread to not block the graphical user interface during a long-running operation.
+
+That means, if our custom modifier function takes a long time to compute before returning control to OVITO, no input events 
+can be processed by the application and the user interface will freeze. To avoid this, you can make your modifier function asynchronous using 
+the ``yield`` Python statement (see the `Python docs <https://docs.python.org/3/reference/expressions.html#yieldexpr>`_ for more information). 
+Calling ``yield`` within the modifier function temporarily yields control to the
+main program, giving it the chance to process waiting user input events or refresh the viewports::
+
+   def modify(frame, input, output):   
+       for i in range(input.number_of_particles):
+           # Perform a small computation step
+           ...
+           # Temporarily yield control to the system
+           yield
+           
+In general, ``yield`` should be called periodically and as frequently as possible, for example after processing one particle from the input as 
+in the code above. 
+
+The ``yield`` keyword also gives the user (and the system) the possibility to cancel the execution of the custom
+modifier function. When the evaluation of the modification pipeline is interrupted, the ``yield`` statement simply does not return 
+and the function execution is aborted.
+
+Finally, the ``yield`` mechanisms gives the custom modifier function the possibility to report its progress to the system.
+The progress must be reported as a fraction in the range 0.0 to 1.0 using the ``yield`` statement. For example::
+
+   def modify(frame, input, output):
+       total_count = input.number_of_particles   
+       for i in range(0, total_count):
+           ...
+           yield (i/total_count)
+
+The current progress value will be displayed in the status bar by OVITO.
+Moreover, a string describing the current status can be yielded, which will also be displayed in the status bar::
+
+   def modify(frame, input, output):
+       yield "Performing an expensive analysis..."
+       ...
+
+Setting display parameters
+-----------------------------------
+
+Many data objects such as the :py:class:`~ovito.data.Bonds` or :py:class:`~ovito.data.SimulationCell` object are associated with
+a corresponding :py:class:`~ovito.vis.Display` object, which is responsible for rendering (visualizing) the data in the viewports.
+The necessary :py:class:`~ovito.vis.Display` object is created automatically when the data object is created and is attached to it by OVITO. 
+It can be accessed through the :py:attr:`~ovito.data.DataObject.display` attribute of the :py:class:`~ovito.data.DataObject` base class. 
+
+If the script modifier function injects a new data objects into the pipeline, it can configure the parameters of the attached display object.
+In the following example, the parameters of the :py:class:`~ovito.vis.BondsDisplay` are being initialized::
+
+   def modify(frame, input, output):
+   
+       # Create a new bonds data object.
+       bonds = ovito.data.Bonds()
+       output.add(bonds)
+       ...
+       
+       # Configure visual appearance of bonds.
+       bonds.display.color = (1.0, 1.0, 1.0)
+       bonds.display.use_particle_colors = False
+       bonds.display.width = 0.4
+       
+However, every time our modifier function is executed, it will create a new :py:class:`~ovito.data.Bonds` object together with a 
+new :py:class:`~ovito.vis.BondsDisplay` instance. If the modifier is used in an interactive OVITO session, this will lead to unexpected behavior 
+when the user tries to change the display settings.
+All parameter changes made by the user will get lost as soon as the modification pipeline is re-evaluated. To mitigate the problem, it is a good idea to 
+create the :py:class:`~ovito.vis.BondsDisplay` just once outside the modifier function and then attach it to the :py:class:`~ovito.data.Bonds`
+object created by the modifier function::
+
+   bonds_display = BondsDisplay(color = (1,0,0), use_particle_colors = False, width = 0.4)
+   
+   def modify(frame, input, output):   
+       bonds = ovito.data.Bonds(display = bonds_display)
+       output.add(bonds)
+
+       

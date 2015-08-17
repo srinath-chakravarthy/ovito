@@ -13,10 +13,15 @@
   <para>
   
     <informalfigure><screenshot><mediaobject><imageobject>
-       <imagedata fileref="images/modifiers/coordination_analysis_panel.png" format="PNG" />
+       <imagedata fileref="images/modifiers/python_script_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
   
   To be written.
+ 
+  </para>
+  <para>
+  More information can be found in the <link xlink:href="python/introduction/custom_modifiers.html">Scripting Reference</link>.
+  
   </para>
   
 </section>
