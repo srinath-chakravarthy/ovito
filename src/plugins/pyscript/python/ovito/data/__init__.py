@@ -9,6 +9,7 @@ This module contains data container classes that are used by OVITO's modificatio
 
   * :py:class:`DataObject` (base of all data object types)
   * :py:class:`Bonds`
+  * :py:class:`DislocationNetwork`  
   * :py:class:`ParticleProperty`
   * :py:class:`ParticleTypeProperty`
   * :py:class:`SimulationCell`
@@ -18,6 +19,7 @@ This module contains data container classes that are used by OVITO's modificatio
 
   * :py:class:`ParticleType`
   * :py:class:`CutoffNeighborFinder`
+  * :py:class:`DislocationSegment`
 
 """
 

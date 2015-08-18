@@ -265,7 +265,7 @@ public:
 };
 
 /// Indexing suite for std::array<T> containers, where T is a value type.
-template<class ArrayType>
+template<class ArrayType, class CallPolicies = return_value_policy<return_by_value>>
 class array_indexing_suite : public base_indexing_suite<ArrayType, array_indexing_suite<ArrayType>>
 {
 public:
@@ -276,8 +276,8 @@ public:
 		base_class::visit(cl);
         cl
             .def("__setitem__", &set_item)
-            .def("__getitem__", &get_item)
-            .def("__iter__", boost::python::iterator<ArrayType>())
+            .def("__getitem__", make_function(&get_item, CallPolicies()))
+            .def("__iter__", boost::python::iterator<ArrayType, CallPolicies>())
         ;
     }
 

@@ -76,10 +76,10 @@ public:
 	void setCircuitStretchability(int stretchability) { _circuitStretchability = stretchability; }
 
 	/// Returns the type of crystal to be analyzed.
-	int inputCrystalStructure() const { return _inputCrystalStructure; }
+	StructureAnalysis::LatticeStructureType inputCrystalStructure() const { return static_cast<StructureAnalysis::LatticeStructureType>(_inputCrystalStructure.value()); }
 
 	/// Sets the type of crystal to be analyzed.
-	void setInputCrystalStructure(int structureType) { _inputCrystalStructure = structureType; }
+	void setInputCrystalStructure(StructureAnalysis::LatticeStructureType structureType) { _inputCrystalStructure = structureType; }
 
 	/// Returns whether the interface mesh is output.
 	bool outputInterfaceMesh() const { return _outputInterfaceMesh; }
@@ -101,6 +101,36 @@ public:
 
 	/// Resets the modifier's result cache.
 	virtual void invalidateCachedResults() override;
+
+	/// Returns whether dislocation line smoothing is enabled.
+	bool lineSmoothingEnabled() const { return smoothDislocationsModifier()->smoothingEnabled(); }
+
+	/// Enables/disables dislocation line smoothing.
+	void setLineSmoothingEnabled(bool enable) { smoothDislocationsModifier()->setSmoothingEnabled(enable); }
+
+	/// Returns the dislocation line smoothing strength.
+	int lineSmoothingLevel() const { return smoothDislocationsModifier()->smoothingLevel(); }
+
+	/// Sets the dislocation line smoothing strength.
+	void setLineSmoothingLevel(int level) { smoothDislocationsModifier()->setSmoothingLevel(level); }
+
+	/// Returns whether coarsening of dislocation line points is enabled.
+	bool lineCoarseningEnabled() const { return smoothDislocationsModifier()->coarseningEnabled(); }
+
+	/// Enables/disables coarsening of dislocation line points.
+	void setLineCoarseningEnabled(bool enable) { smoothDislocationsModifier()->setCoarseningEnabled(enable); }
+
+	/// Returns the target distance between successive line points after coarsening.
+	FloatType linePointInterval() const { return smoothDislocationsModifier()->linePointInterval(); }
+
+	/// Sets the target distance between successive line points after coarsening.
+	void setLinePointInterval(FloatType d) { smoothDislocationsModifier()->setLinePointInterval(d); }
+
+	/// Returns the surface smoothing strength for the defect mesh.
+	int defectMeshSmoothingLevel() const { return smoothSurfaceModifier()->smoothingLevel(); }
+
+	/// Sets the surface smoothing strength for the defect mesh.
+	void setDefectMeshSmoothingLevel(int level) { smoothSurfaceModifier()->setSmoothingLevel(level); }
 
 protected:
 

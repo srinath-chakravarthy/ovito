@@ -16,6 +16,7 @@ This module contains classes related to data visualization and rendering.
 
   * :py:class:`Display` (base class of all display classes below)
   * :py:class:`BondsDisplay`
+  * :py:class:`DislocationDisplay`
   * :py:class:`ParticleDisplay`
   * :py:class:`SimulationCellDisplay`
   * :py:class:`SurfaceMeshDisplay`
