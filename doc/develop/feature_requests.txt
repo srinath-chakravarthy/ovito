@@ -57,7 +57,6 @@ New analysis features:
 
 New I/O functions:
 
-- Export of LAMMPS data files with other atom styles (requested by rafaelgonzalezvaldes@gmail.com)
 - Export to Blender (Paul Erhart, Filip Sund <filip.sund@fys.uio.no>)
 - Single precision floating-point numbers, which are used for custom particle properties, cannot represent large integer numbers exactly (e.g. 100400). Find a solution to make it work.
 - Parser for Gromacs XTC file format (Chirodeep Bakli <cbakli@gmail.com>)

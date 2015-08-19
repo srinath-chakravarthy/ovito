@@ -566,8 +566,7 @@ void ParticleDisplay::render(TimePoint time, DataObject* dataObject, const Pipel
 				Vector3 dir = Vector3(0, 0, length);
 				if(orientationProperty) {
 					const Quaternion& q = orientationProperty->getQuaternion(index);
-					if(std::abs(q.dot(q) - FloatType(1)) <= FLOATTYPE_EPSILON)
-						dir = q * dir;
+					dir = q * dir;
 				}
 				Point3 p = center - (dir * FloatType(0.5));
 				if(_spherocylinderBuffer) {
@@ -701,8 +700,7 @@ void ParticleDisplay::highlightParticle(int particleIndex, const PipelineFlowSta
 		Vector3 dir = Vector3(0, 0, length);
 		if(orientationProperty) {
 			const Quaternion& q = orientationProperty->getQuaternion(particleIndex);
-			if(std::abs(q.dot(q) - FloatType(1)) <= FLOATTYPE_EPSILON)
-				dir = q * dir;
+			dir = q * dir;
 		}
 		Point3 p = pos - (dir * FloatType(0.5));
 		cylinderBuffer = renderer->createArrowPrimitive(ArrowPrimitive::CylinderShape, ArrowPrimitive::NormalShading, ArrowPrimitive::HighQuality);

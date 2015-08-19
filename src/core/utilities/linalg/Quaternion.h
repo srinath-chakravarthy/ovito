@@ -339,7 +339,6 @@ Q_DECL_CONSTEXPR
 #endif
 inline Vector_3<T> operator*(const QuaternionT<T>& q, const Vector_3<T>& v)
 {
-	OVITO_ASSERT_MSG(std::abs(q.dot(q) - T(1)) <= T(FLOATTYPE_EPSILON), "Vector rotation", "Quaternion must be normalized.");
 	return Matrix_3<T>(T(1) - T(2)*(q.y()*q.y() + q.z()*q.z()),        T(2)*(q.x()*q.y() - q.w()*q.z()),        T(2)*(q.x()*q.z() + q.w()*q.y()),
 						  T(2)*(q.x()*q.y() + q.w()*q.z()), T(1) - T(2)*(q.x()*q.x() + q.z()*q.z()),        T(2)*(q.y()*q.z() - q.w()*q.x()),
 						  T(2)*(q.x()*q.z() - q.w()*q.y()),        T(2)*(q.y()*q.z() + q.w()*q.x()), T(1) - T(2)*(q.x()*q.x() + q.y()*q.y())) * v;
