@@ -151,7 +151,7 @@ class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
     """ 
     A utility class that computes particle neighbor lists.
     
-    This class allows a Python script to iterate over the neighbors of each particles within a given cutoff distance.
+    This class allows to iterate over the neighbors of each particle within a given cutoff distance.
     You can use it to build neighbors lists or perform other kinds of analyses that require neighbor information.
     
     The constructor takes a positive cutoff radius and a :py:class:`DataCollection <ovito.data.DataCollection>` 
@@ -179,16 +179,17 @@ class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
          
         :param int index: The index of the central particle whose neighbors should be iterated. Particle indices start at 0.
         :returns: A Python iterator that visits all neighbors of the central particle within the cutoff distance. 
-                  For each neighbor the iterator returns a tuple containing four entries:
+                  For each neighbor the iterator returns an object with the following attributes:
                   
-                      1. The index of current neighbor particle (starting at 0).
-                      2. The distance of the current neighbor from the central particle.
-                      3. The three-dimensional vector connecting the central particle with the current neighbor (taking into account periodic images).
-                      4. The periodic shift vector, which specifies how often the vector has crossed each periodic boundary of the simulation cell.
+                      * **index**: The index of the current neighbor particle (starting at 0).
+                      * **distance**: The distance of the current neighbor from the central particle.
+                      * **distance_squared**: The squared neighbor distance.
+                      * **delta**: The three-dimensional vector connecting the central particle with the current neighbor (taking into account periodicity).
+                      * **pbc_shift**: The periodic shift vector, which specifies how often each periodic boundary of the simulation cell is crossed when going from the central particle to the current neighbor.
         
-        Note that all periodic images of particles within the cutoff radius are visited. Thus, the same particle index (1st item above) may appear multiple times in the neighbor
+        Note that all periodic images of particles within the cutoff radius are visited. Thus, the same particle index may appear multiple times in the neighbor
         list of a central particle. In fact, the central particle may be among its own neighbors in a sufficiently small periodic simulation cell.
-        However, the computed vector (3rd item above) will be unique for each visited image of a neighboring particle.
+        However, the computed vector (``delta``) and PBC shift (``pbc_shift``) will be unique for each visited image of a neighboring particle.
         """
         if index < 0 or index >= self.particle_count:
             raise IndexError("Particle index is out of range.")
@@ -196,7 +197,7 @@ class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
         query = Particles.CutoffNeighborFinder.Query(self, index)
         # Iterate over neighbors.
         while not query.atEnd:
-            yield (query.current, math.sqrt(query.distanceSquared), tuple(query.delta), tuple(query.pbcShift))
+            yield query
             query.next()
             
 ovito.data.CutoffNeighborFinder = CutoffNeighborFinder

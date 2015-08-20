@@ -587,11 +587,16 @@ BOOST_PYTHON_MODULE(Particles)
 		class_<CutoffNeighborFinder::Query>("Query", init<const CutoffNeighborFinder&, size_t>())
 			.def("next", &CutoffNeighborFinder::Query::next)
 			.add_property("atEnd", &CutoffNeighborFinder::Query::atEnd)
-			.add_property("current", &CutoffNeighborFinder::Query::current)
-			.add_property("distanceSquared", &CutoffNeighborFinder::Query::distanceSquared)
-			.add_property("delta", make_function(&CutoffNeighborFinder::Query::delta, return_value_policy<copy_const_reference>()))
-			.add_property("pbcShift", static_cast<Vector3 (*)(CutoffNeighborFinder::Query&)>(
-					[](CutoffNeighborFinder::Query& query) { return Vector3(query.pbcShift()); }))
+			.add_property("index", &CutoffNeighborFinder::Query::current)
+			.add_property("distance_squared", &CutoffNeighborFinder::Query::distanceSquared)
+			.add_property("distance", static_cast<FloatType (*)(const CutoffNeighborFinder::Query&)>(
+					[](const CutoffNeighborFinder::Query& query) -> FloatType { return sqrt(query.distanceSquared()); }))
+			.add_property("delta", static_cast<tuple (*)(const CutoffNeighborFinder::Query&)>(
+					[](const CutoffNeighborFinder::Query& query) {
+						return make_tuple(query.delta().x(), query.delta().y(), query.delta().z()); }))
+			.add_property("pbc_shift", static_cast<tuple (*)(const CutoffNeighborFinder::Query&)>(
+					[](const CutoffNeighborFinder::Query& query) {
+						return make_tuple(query.pbcShift().x(), query.pbcShift().y(), query.pbcShift().z()); }))
 		;
 	}
 }

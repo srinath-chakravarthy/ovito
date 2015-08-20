@@ -14,4 +14,4 @@ for index in range(data.number_of_particles):
     print("Neighbors of particle %i:" % index)
     # Iterate over the neighbors of the current particle:
     for neigh in finder.find(index):
-        print(neigh)
+        print(neigh.index, neigh.distance, neigh.delta, neigh.pbc_shift)
