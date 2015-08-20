@@ -57,7 +57,7 @@ The custom modifier function defined above is called by OVITO every time the mod
 is evaluated. It receives the data produced by the upstream part of the pipeline (e.g. the particles
 loaded by a :py:class:`~ovito.io.FileSource` and further processed by other modifiers that 
 precede the custom modifier in the pipeline). Our Python modifier function then has the possibility to modify or extend
-the data as needed. After the user-defined Python function returns, the output continuous down the pipeline, and, eventually, 
+the data as needed. After the user-defined Python function returns, the output flows further down the pipeline, and, eventually, 
 the final results are stored in the :py:attr:`~ovito.ObjectNode.output` cache of the :py:class:`~ovito.ObjectNode` and rendered in the viewports.
 
 Our custom modifier function is invoked by the system with three arguments:
@@ -66,19 +66,19 @@ Our custom modifier function is invoked by the system with three arguments:
   * **input** (:py:class:`~ovito.data.DataCollection`) -- Contains the input data objects that the modifier receives from upstream.
   * **output** (:py:class:`~ovito.data.DataCollection`) -- This is where the modifier function should put its output data objects. 
   
-The *input* :py:class:`~ovito.data.DataCollection`, and in particular the data objects stored in it, should not be modified by the user-defined function.
-They are owned by the upstream part of the modification pipeline and should only be accessed in a read-only fashion (e.g. by using the :py:attr:`~ovito.data.ParticleProperty.array`
+The *input* :py:class:`~ovito.data.DataCollection`, and in particular the data objects stored in it, should not be modified by the modifier function.
+They are owned by the upstream part of the modification pipeline and must be accessed in a read-only fashion (e.g. by using the :py:attr:`~ovito.data.ParticleProperty.array`
 attribute instead of :py:attr:`~ovito.data.ParticleProperty.marray` to access per-particle values of a :py:class:`~ovito.data.ParticleProperty`).
 
 When the user-defined modifier function is invoked by the system, the *output* data collection already contains
-all data objects from the *input* collection. Thus, the default behaviour is that all objects (e.g. particle properties, simulation cell, etc.) are passed
+all data objects from the *input* collection. Thus, the default behavior is that all objects (e.g. particle properties, simulation cell, etc.) are passed
 through unmodified. 
 
 Modifying existing data objects
 -----------------------------------
 
-For performance reasons no object copies are made by default, and the *output* collection references the same data objects as the *input* collection.
-This means, before it is safe to modify an existing data object in the *output* data collection, you have to make a copy first. Otherwise you risk 
+For performance reasons no copies are made by default, and the *output* collection references the same data objects as the *input* collection.
+This means, before it is safe to modify a data object in the *output* data collection, you have to make a copy first. Otherwise you risk 
 modifying data that is owned by the upstream part of the modification pipeline (e.g. the :py:class:`~ovito.io.FileSource`). An in-place copy of a data object
 is made using the :py:meth:`DataCollection.copy_if_needed() <ovito.data.DataCollection.copy_if_needed>` method. The following example demonstrates the 
 principle:: 
@@ -162,14 +162,14 @@ Asynchronous modifiers and progress reporting
 -----------------------------------------------
 
 Due to technical limitations the custom modifier function is always executed in the main thread of the application. 
-This is in constrast to the built-in asynchronous modifiers of OVITO, which are implemented in C++. 
-They are executed in a background thread to not block the graphical user interface during a long-running operation.
+This is in contrast to the built-in asynchronous modifiers of OVITO, which are implemented in C++. 
+They are executed in a background thread to not block the graphical user interface during long-running operations.
 
-That means, if our custom modifier function takes a long time to compute before returning control to OVITO, no input events 
+That means, if our Python modifier function takes a long time to compute before returning control to OVITO, no input events 
 can be processed by the application and the user interface will freeze. To avoid this, you can make your modifier function asynchronous using 
 the ``yield`` Python statement (see the `Python docs <https://docs.python.org/3/reference/expressions.html#yieldexpr>`_ for more information). 
 Calling ``yield`` within the modifier function temporarily yields control to the
-main program, giving it the chance to process waiting user input events or refresh the viewports::
+main program, giving it the chance to process waiting user input events or repaint the viewports::
 
    def modify(frame, input, output):   
        for i in range(input.number_of_particles):
@@ -182,10 +182,10 @@ In general, ``yield`` should be called periodically and as frequently as possibl
 in the code above. 
 
 The ``yield`` keyword also gives the user (and the system) the possibility to cancel the execution of the custom
-modifier function. When the evaluation of the modification pipeline is interrupted, the ``yield`` statement simply does not return 
-and the function execution is aborted.
+modifier function. When the evaluation of the modification pipeline is interrupted by the system, the ``yield`` statement does not return 
+and the Python function execution is discontinued.
 
-Finally, the ``yield`` mechanisms gives the custom modifier function the possibility to report its progress to the system.
+Finally, the ``yield`` mechanism gives the custom modifier function the possibility to report its progress back to the system.
 The progress must be reported as a fraction in the range 0.0 to 1.0 using the ``yield`` statement. For example::
 
    def modify(frame, input, output):

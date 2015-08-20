@@ -29,7 +29,7 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util)
 /******************************************************************************
 * Prepares the neighbor list builder.
 ******************************************************************************/
-bool NearestNeighborFinder::prepare(ParticleProperty* posProperty, const SimulationCell& cellData, FutureInterfaceBase* progress)
+bool NearestNeighborFinder::prepare(ParticleProperty* posProperty, const SimulationCell& cellData, ParticleProperty* selectionProperty, FutureInterfaceBase* progress)
 {
 	OVITO_CHECK_POINTER(posProperty);
 
@@ -98,11 +98,11 @@ bool NearestNeighborFinder::prepare(ParticleProperty* posProperty, const Simulat
 
 	// Insert particles into tree structure. Refine tree as needed.
 	const Point3* p = posProperty->constDataPoint3();
+	const int* sel = selectionProperty ? selectionProperty->constDataInt() : nullptr;
 	atoms.resize(posProperty->size());
 	for(NeighborListAtom& a : atoms) {
 		if(progress && progress->isCanceled())
 			return false;
-
 		a.pos = *p;
 		// Wrap atomic positions back into simulation box.
 		Point3 rp = simCell.absoluteToReduced(a.pos);
@@ -114,7 +114,9 @@ bool NearestNeighborFinder::prepare(ParticleProperty* posProperty, const Simulat
 				}
 			}
 		}
-		insertParticle(&a, rp, root, 0);
+		if(!sel || *sel++) {
+			insertParticle(&a, rp, root, 0);
+		}
 		++p;
 	}
 

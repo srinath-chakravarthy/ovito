@@ -37,9 +37,9 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 DislocationAnalysisEngine::DislocationAnalysisEngine(const TimeInterval& validityInterval,
 		ParticleProperty* positions, const SimulationCell& simCell,
 		int inputCrystalStructure, int maxTrialCircuitSize, int maxCircuitElongation,
-		bool reconstructEdgeVectors) :
-	StructureIdentificationModifier::StructureIdentificationEngine(validityInterval, positions, simCell),
-	_structureAnalysis(positions, simCell, (StructureAnalysis::LatticeStructureType)inputCrystalStructure, structures()),
+		bool reconstructEdgeVectors, ParticleProperty* particleSelection) :
+	StructureIdentificationModifier::StructureIdentificationEngine(validityInterval, positions, simCell, particleSelection),
+	_structureAnalysis(positions, simCell, (StructureAnalysis::LatticeStructureType)inputCrystalStructure, selection(), structures()),
 	_defectMesh(new HalfEdgeMesh<>()),
 	_elasticMapping(_structureAnalysis, _tessellation),
 	_interfaceMesh(_elasticMapping),
@@ -107,7 +107,8 @@ void DislocationAnalysisEngine::perform()
 	nextProgressSubStep();
 	FloatType ghostLayerSize = 3.0f * _structureAnalysis.maximumNeighborDistance();
 	qDebug() << "Delaunay ghost layer size:" << ghostLayerSize;
-	if(!_tessellation.generateTessellation(_structureAnalysis.cell(), _structureAnalysis.positions()->constDataPoint3(), _structureAnalysis.atomCount(), ghostLayerSize, this))
+	if(!_tessellation.generateTessellation(_structureAnalysis.cell(), _structureAnalysis.positions()->constDataPoint3(),
+			_structureAnalysis.atomCount(), ghostLayerSize, selection() ? selection()->constDataInt() : nullptr, this))
 		return;
 
 	// Build list of edges in the tessellation.

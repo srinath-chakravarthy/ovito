@@ -210,9 +210,15 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> DislocationAnalysis
 	ParticlePropertyObject* posProperty = expectStandardProperty(ParticleProperty::PositionProperty);
 	SimulationCellObject* simCell = expectSimulationCell();
 
+	// Get particle selection.
+	ParticleProperty* selectionProperty = nullptr;
+	if(onlySelectedParticles())
+		selectionProperty = expectStandardProperty(ParticleProperty::SelectionProperty)->storage();
+
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<DislocationAnalysisEngine>(validityInterval, posProperty->storage(),
-			simCell->data(), inputCrystalStructure(), maxTrialCircuitSize(), circuitStretchability(), reconstructEdgeVectors());
+			simCell->data(), inputCrystalStructure(), maxTrialCircuitSize(), circuitStretchability(),
+			reconstructEdgeVectors(), selectionProperty);
 }
 
 /******************************************************************************
@@ -393,6 +399,9 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 
 	BooleanParameterUI* outputInterfaceMeshUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_outputInterfaceMesh));
 	sublayout->addWidget(outputInterfaceMeshUI->checkBox(), 1, 0);
+
+	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::_onlySelectedParticles));
+	sublayout->addWidget(onlySelectedParticlesUI->checkBox());
 
 	// Status label.
 	layout->addWidget(statusLabel());

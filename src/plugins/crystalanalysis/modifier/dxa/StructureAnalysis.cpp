@@ -57,10 +57,11 @@ void bitmapSort(iterator begin, iterator end, int max)
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-StructureAnalysis::StructureAnalysis(ParticleProperty* positions, const SimulationCell& simCell, LatticeStructureType inputCrystalType, ParticleProperty* outputStructures) :
+StructureAnalysis::StructureAnalysis(ParticleProperty* positions, const SimulationCell& simCell, LatticeStructureType inputCrystalType, ParticleProperty* particleSelection, ParticleProperty* outputStructures) :
 	_positions(positions), _simCell(simCell),
 	_inputCrystalType(inputCrystalType),
 	_structureTypes(outputStructures),
+	_particleSelection(particleSelection),
 	_neighborLists(new ParticleProperty(positions->size(), qMetaTypeId<int>(), MAX_NEIGHBORS, 0, QStringLiteral("Neighbors"), false)),
 	_neighborCounts(new ParticleProperty(positions->size(), ParticleProperty::CoordinationProperty, 0, true)),
 	_atomClusters(new ParticleProperty(positions->size(), ParticleProperty::ClusterProperty, 0, true)),
@@ -400,7 +401,7 @@ bool StructureAnalysis::identifyStructures(FutureInterfaceBase& progress)
 {
 	// Prepare the neighbor list.
 	NearestNeighborFinder neighFinder(MAX_NEIGHBORS);
-	if(!neighFinder.prepare(positions(), cell(), &progress))
+	if(!neighFinder.prepare(positions(), cell(), _particleSelection.data(), &progress))
 		return false;
 
 	// Identify local structure around each particle.
@@ -417,6 +418,10 @@ bool StructureAnalysis::identifyStructures(FutureInterfaceBase& progress)
 void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList, size_t particleIndex)
 {
 	OVITO_ASSERT(_structureTypes->getInt(particleIndex) == COORD_OTHER);
+
+	// Skip atoms that are not included in the analysis.
+	if(_particleSelection && _particleSelection->getInt(particleIndex) == 0)
+		return;
 
 	// Construct local neighbor list builder.
 	NearestNeighborFinder::Query<MAX_NEIGHBORS> neighQuery(neighList);
@@ -785,7 +790,7 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 
 				// Determine the misorientation matrix.
 				OVITO_ASSERT(std::abs(tm1.determinant()) > FLOATTYPE_EPSILON);
-				OVITO_ASSERT(std::abs(tm2.determinant()) > FLOATTYPE_EPSILON);
+				//OVITO_ASSERT(std::abs(tm2.determinant()) > FLOATTYPE_EPSILON);
 				Matrix3 tm2inverse;
 				if(!tm2.inverse(tm2inverse)) continue;
 				Matrix3 transition = tm1 * tm2inverse;
@@ -908,7 +913,7 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 
 			// Determine the misorientation matrix.
 			OVITO_ASSERT(std::abs(tm1.determinant()) > FLOATTYPE_EPSILON);
-			OVITO_ASSERT(std::abs(tm2.determinant()) > FLOATTYPE_EPSILON);
+			//OVITO_ASSERT(std::abs(tm2.determinant()) > FLOATTYPE_EPSILON);
 			Matrix3 tm1inverse;
 			if(!tm1.inverse(tm1inverse)) continue;
 			Matrix3 transition = tm2 * tm1inverse;

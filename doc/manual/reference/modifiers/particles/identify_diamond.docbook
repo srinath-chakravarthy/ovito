@@ -74,6 +74,15 @@
     </informaltable>
     </para>
 
+  <para>
+    The <emphasis>Use only selected particles</emphasis> option restricts the analysis to the
+    currently selected atoms. If this option is activated, unselected atoms will be ignored 
+    (as if they did not exist) and will be assigned the structure type "Other".
+    This option can be useful if you want to identify defects in a crystal with a non-diamond structure, 
+    but which has a sublattice that is a diamond lattice
+    (and you do not want to delete atoms belonging to the other sublattice(s) for some reason).
+  </para>
+  
   <simplesect>
     <title>How it works</title>
     <para>

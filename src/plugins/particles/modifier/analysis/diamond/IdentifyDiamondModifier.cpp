@@ -21,6 +21,7 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/utilities/concurrent/ParallelFor.h>
+#include <core/gui/properties/BooleanParameterUI.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
 
 #include "IdentifyDiamondModifier.h"
@@ -62,8 +63,13 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> IdentifyDiamondModi
 	ParticlePropertyObject* posProperty = expectStandardProperty(ParticleProperty::PositionProperty);
 	SimulationCellObject* simCell = expectSimulationCell();
 
+	// Get particle selection.
+	ParticleProperty* selectionProperty = nullptr;
+	if(onlySelectedParticles())
+		selectionProperty = expectStandardProperty(ParticleProperty::SelectionProperty)->storage();
+
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
-	return std::make_shared<DiamondIdentificationEngine>(validityInterval, posProperty->storage(), simCell->data());
+	return std::make_shared<DiamondIdentificationEngine>(validityInterval, posProperty->storage(), simCell->data(), selectionProperty);
 }
 
 /******************************************************************************
@@ -75,7 +81,7 @@ void IdentifyDiamondModifier::DiamondIdentificationEngine::perform()
 
 	// Prepare the neighbor list builder.
 	NearestNeighborFinder neighborFinder(4);
-	if(!neighborFinder.prepare(positions(), cell(), this))
+	if(!neighborFinder.prepare(positions(), cell(), selection(), this))
 		return;
 
 	// This data structure stores information about a single neighbor.
@@ -87,12 +93,16 @@ void IdentifyDiamondModifier::DiamondIdentificationEngine::perform()
 	std::vector<std::array<NeighborInfo,4>> neighLists(positions()->size());
 
 	// Determine four nearest neighbors of each atom and store vectors in the working array.
-	parallelFor(positions()->size(), *this, [&neighborFinder, &neighLists](size_t index) {
+	parallelFor(positions()->size(), *this, [this, &neighborFinder, &neighLists](size_t index) {
+		// Skip particles that are not included in the analysis.
+		if(selection() && selection()->getInt(index) == 0)
+			return;
 		NearestNeighborFinder::Query<4> neighQuery(neighborFinder);
 		neighQuery.findNeighbors(neighborFinder.particlePos(index));
 		for(int i = 0; i < neighQuery.results().size(); i++) {
 			neighLists[index][i].vec = neighQuery.results()[i].delta;
 			neighLists[index][i].index = neighQuery.results()[i].index;
+			OVITO_ASSERT(!selection() || selection()->getInt(neighLists[index][i].index));
 		}
 		for(int i = neighQuery.results().size(); i < 4; i++) {
 			neighLists[index][i].vec.setZero();
@@ -108,6 +118,10 @@ void IdentifyDiamondModifier::DiamondIdentificationEngine::perform()
 	parallelFor(positions()->size(), *this, [&neighLists, output, this](size_t index) {
 		// Mark atom as 'other' by default.
 		output->setInt(index, OTHER);
+
+		// Skip particles that are not included in the analysis.
+		if(selection() && selection()->getInt(index) == 0)
+			return;
 
 		const std::array<NeighborInfo,4>& nlist = neighLists[index];
 
@@ -174,6 +188,8 @@ void IdentifyDiamondModifier::DiamondIdentificationEngine::perform()
 		int ctype = output->getInt(index);
 		if(ctype != CUBIC_DIAMOND && ctype != HEX_DIAMOND)
 			continue;
+		if(selection() && selection()->getInt(index) == 0)
+			continue;
 
 		const std::array<NeighborInfo,4>& nlist = neighLists[index];
 		for(size_t i = 0; i < 4; i++) {
@@ -191,6 +207,8 @@ void IdentifyDiamondModifier::DiamondIdentificationEngine::perform()
 	for(size_t index = 0; index < output->size(); index++) {
 		int ctype = output->getInt(index);
 		if(ctype != CUBIC_DIAMOND_FIRST_NEIGH && ctype != HEX_DIAMOND_FIRST_NEIGH)
+			continue;
+		if(selection() && selection()->getInt(index) == 0)
 			continue;
 
 		const std::array<NeighborInfo,4>& nlist = neighLists[index];
@@ -219,6 +237,10 @@ void IdentifyDiamondModifierEditor::createUI(const RolloutInsertionParameters& r
 	QVBoxLayout* layout1 = new QVBoxLayout(rollout);
 	layout1->setContentsMargins(4,4,4,4);
 	layout1->setSpacing(6);
+
+	// Use only selected particles.
+	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::_onlySelectedParticles));
+	layout1->addWidget(onlySelectedParticlesUI->checkBox());
 
 	// Status label.
 	layout1->addWidget(statusLabel());

@@ -148,8 +148,12 @@ ParticlePropertyObject* ParticleModifier::expectCustomProperty(const QString& pr
 ParticlePropertyObject* ParticleModifier::expectStandardProperty(ParticleProperty::Type which) const
 {
 	ParticlePropertyObject* property = inputStandardProperty(which);
-	if(!property)
-		throw Exception(tr("The modifier cannot be evaluated because the input does not contain the required particle property '%1'.").arg(ParticleProperty::standardPropertyName(which)));
+	if(!property) {
+		if(which == ParticleProperty::SelectionProperty)
+			throw Exception(tr("No particle selection has been defined. Please select some particles first."));
+		else
+			throw Exception(tr("The modifier cannot be evaluated because the input does not contain the required particle property '%1'.").arg(ParticleProperty::standardPropertyName(which)));
+	}
 	return property;
 }
 

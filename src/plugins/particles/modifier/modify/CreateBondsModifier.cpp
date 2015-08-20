@@ -207,7 +207,7 @@ void CreateBondsModifier::BondsEngine::perform()
 
 	// Prepare the neighbor list.
 	CutoffNeighborFinder neighborFinder;
-	if(!neighborFinder.prepare(maxCutoff, _positions.data(), _simCell, this))
+	if(!neighborFinder.prepare(maxCutoff, _positions.data(), _simCell, nullptr, this))
 		return;
 
 	// Generate (half) bonds.

@@ -141,8 +141,8 @@ private:
 	public:
 
 		/// Constructor.
-		FixedCNAEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, FloatType cutoff) :
-			StructureIdentificationEngine(validityInterval, positions, simCell), _cutoff(cutoff) {}
+		FixedCNAEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, ParticleProperty* selection, FloatType cutoff) :
+			StructureIdentificationEngine(validityInterval, positions, simCell, selection), _cutoff(cutoff) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;
@@ -159,8 +159,8 @@ private:
 	public:
 
 		/// Constructor.
-		AdaptiveCNAEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell) :
-			StructureIdentificationEngine(validityInterval, positions, simCell) {}
+		AdaptiveCNAEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, ParticleProperty* selection) :
+			StructureIdentificationEngine(validityInterval, positions, simCell, selection) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;

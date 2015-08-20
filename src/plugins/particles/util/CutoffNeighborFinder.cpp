@@ -27,7 +27,7 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util)
 /******************************************************************************
 * Initialization function.
 ******************************************************************************/
-bool CutoffNeighborFinder::prepare(FloatType cutoffRadius, ParticleProperty* positions, const SimulationCell& cellData, FutureInterfaceBase* progress)
+bool CutoffNeighborFinder::prepare(FloatType cutoffRadius, ParticleProperty* positions, const SimulationCell& cellData, ParticleProperty* selectionProperty, FutureInterfaceBase* progress)
 {
 	OVITO_CHECK_POINTER(positions);
 
@@ -141,6 +141,9 @@ bool CutoffNeighborFinder::prepare(FloatType cutoffRadius, ParticleProperty* pos
 		NeighborListParticle& a = particles[pindex];
 		a.pos = *p;
 		a.pbcShift.setZero();
+
+		if(selectionProperty && selectionProperty->getInt(pindex) == 0)
+			continue;
 
 		// Determine the bin the atom is located in.
 		Point3 rp = reciprocalBinCell * (*p);

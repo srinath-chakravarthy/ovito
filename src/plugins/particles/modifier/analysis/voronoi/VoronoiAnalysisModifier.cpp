@@ -309,7 +309,7 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 	else {
 		// Prepare the nearest neighbor list generator.
 		NearestNeighborFinder nearestNeighborFinder;
-		if(!nearestNeighborFinder.prepare(_positions.data(), _simCell, this))
+		if(!nearestNeighborFinder.prepare(_positions.data(), _simCell, _selection.data(), this))
 			return;
 
 		// Squared particle radii (input was just radii).
@@ -369,12 +369,11 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 			int nvisits = 0;
 			auto visitFunc = [this, &v, &nvisits, index](const NearestNeighborFinder::Neighbor& n, FloatType& mrs) {
 				// Skip unselected particles (if requested).
-				if(!_selection || _selection->getInt(n.index)) {
-					FloatType rs = n.distanceSq;
-					if(!_radii.empty())
-						 rs += _radii[index] - _radii[n.index];
-					v.nplane(n.delta.x(), n.delta.y(), n.delta.z(), rs, n.index);
-				}
+				OVITO_ASSERT(!_selection || _selection->getInt(n.index));
+				FloatType rs = n.distanceSq;
+				if(!_radii.empty())
+					 rs += _radii[index] - _radii[n.index];
+				v.nplane(n.delta.x(), n.delta.y(), n.delta.z(), rs, n.index);
 				if(nvisits == 0) {
 					mrs = v.max_radius_squared();
 					nvisits = 100;

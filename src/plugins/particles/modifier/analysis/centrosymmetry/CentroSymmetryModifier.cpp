@@ -76,7 +76,7 @@ void CentroSymmetryModifier::CentroSymmetryEngine::perform()
 
 	// Prepare the neighbor list.
 	NearestNeighborFinder neighFinder(_nneighbors);
-	if(!neighFinder.prepare(positions(), cell(), this)) {
+	if(!neighFinder.prepare(positions(), cell(), nullptr, this)) {
 		return;
 	}
 

@@ -67,7 +67,7 @@ void ClusterAnalysisModifier::ClusterAnalysisEngine::perform()
 
 	// Prepare the neighbor finder.
 	CutoffNeighborFinder neighborFinder;
-	if(!neighborFinder.prepare(_cutoff, positions(), cell(), this))
+	if(!neighborFinder.prepare(_cutoff, positions(), cell(), nullptr, this))
 		return;
 
 	size_t particleCount = positions()->size();

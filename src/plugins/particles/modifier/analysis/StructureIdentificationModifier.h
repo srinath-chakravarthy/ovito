@@ -44,9 +44,10 @@ public:
 	public:
 
 		/// Constructor.
-		StructureIdentificationEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell) :
+		StructureIdentificationEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, ParticleProperty* selection = nullptr) :
 			ComputeEngine(validityInterval),
 			_positions(positions), _simCell(simCell),
+			_selection(selection),
 			_structures(new ParticleProperty(positions->size(), ParticleProperty::StructureTypeProperty, 0, false)) {}
 
 		/// Returns the property storage that contains the input particle positions.
@@ -55,6 +56,9 @@ public:
 		/// Returns the property storage that contains the computed per-particle structure types.
 		ParticleProperty* structures() const { return _structures.data(); }
 
+		/// Returns the property storage that contains the particle selection (optional).
+		ParticleProperty* selection() const { return _selection.data(); }
+
 		/// Returns the simulation cell data.
 		const SimulationCell& cell() const { return _simCell; }
 
@@ -62,6 +66,7 @@ public:
 
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
 		QExplicitlySharedDataPointer<ParticleProperty> _structures;
+		QExplicitlySharedDataPointer<ParticleProperty> _selection;
 		SimulationCell _simCell;
 	};
 
@@ -76,6 +81,12 @@ public:
 	/// Returns an array that contains the number of matching particles for each structure type.
 	const QList<int>& structureCounts() const { return _structureCounts; }
 
+	/// Returns whether analysis takes only selected particles into account.
+	bool onlySelectedParticles() const { return _onlySelectedParticles; }
+
+	/// Sets whether analysis only selected particles are taken into account.
+	void setOnlySelectedParticles(bool onlySelected) { _onlySelectedParticles = onlySelected; }
+
 protected:
 
 	/// Saves the class' contents to the given stream.
@@ -83,6 +94,9 @@ protected:
 
 	/// Loads the class' contents from the given stream.
 	virtual void loadFromStream(ObjectLoadStream& stream) override;
+
+	/// Is called when the value of a property of this object has changed.
+	virtual void propertyChanged(const PropertyFieldDescriptor& field) override;
 
 	/// Inserts a structure type into the list.
 	void addStructureType(ParticleType* type) { _structureTypes.push_back(type); }
@@ -107,12 +121,16 @@ private:
 	/// The number of matching particles for each structure type.
 	QList<int> _structureCounts;
 
+	/// Controls whether analysis should take into account only selected particles.
+	PropertyField<bool> _onlySelectedParticles;
+
 private:
 
 	Q_OBJECT
 	OVITO_OBJECT
 
 	DECLARE_VECTOR_REFERENCE_FIELD(_structureTypes);
+	DECLARE_PROPERTY_FIELD(_onlySelectedParticles);
 };
 
 /**

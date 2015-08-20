@@ -75,11 +75,12 @@ public:
 	/// \param cutoffRadius The cutoff radius for neighbor lists.
 	/// \param positions The ParticleProperty containing the particle coordinates.
 	/// \param simCell The input simulation cell geometry and boundary conditions.
+	/// \param selectionProperty Determines which particles are included in the neighbor search (optional).
 	/// \param progress An optional callback object that will be used to the report progress.
 	/// \return \c false when the operation has been canceled by the user;s
 	///         \c true on success.
 	/// \throw Exception on error.
-	bool prepare(FloatType cutoffRadius, ParticleProperty* positions, const SimulationCell& simCell, FutureInterfaceBase* progress = nullptr);
+	bool prepare(FloatType cutoffRadius, ParticleProperty* positions, const SimulationCell& simCell, ParticleProperty* selectionProperty = nullptr, FutureInterfaceBase* progress = nullptr);
 
 	/// Returns the cutoff radius set via prepare().
 	FloatType cutoffRadius() const { return _cutoffRadius; }

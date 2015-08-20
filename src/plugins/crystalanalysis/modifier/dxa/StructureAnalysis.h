@@ -89,7 +89,7 @@ public:
 public:
 
 	/// Constructor.
-	StructureAnalysis(ParticleProperty* positions, const SimulationCell& simCell, LatticeStructureType inputCrystalType, ParticleProperty* outputStructures);
+	StructureAnalysis(ParticleProperty* positions, const SimulationCell& simCell, LatticeStructureType inputCrystalType, ParticleProperty* particleSelection, ParticleProperty* outputStructures);
 
 	/// Identifies the atomic structures.
 	bool identifyStructures(FutureInterfaceBase& progress);
@@ -183,6 +183,7 @@ private:
 	QExplicitlySharedDataPointer<ParticleProperty> _neighborCounts;
 	QExplicitlySharedDataPointer<ParticleProperty> _atomClusters;
 	QExplicitlySharedDataPointer<ParticleProperty> _atomSymmetryPermutations;
+	QExplicitlySharedDataPointer<ParticleProperty> _particleSelection;
 	QExplicitlySharedDataPointer<ClusterGraph> _clusterGraph;
 	std::atomic<FloatType> _maximumNeighborDistance;
 	SimulationCell _simCell;

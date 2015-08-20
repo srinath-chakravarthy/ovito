@@ -66,8 +66,8 @@ private:
 	public:
 
 		/// Constructor.
-		DiamondIdentificationEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell) :
-			StructureIdentificationEngine(validityInterval, positions, simCell) {}
+		DiamondIdentificationEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, ParticleProperty* selection) :
+			StructureIdentificationEngine(validityInterval, positions, simCell, selection) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;

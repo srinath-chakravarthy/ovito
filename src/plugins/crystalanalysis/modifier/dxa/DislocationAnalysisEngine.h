@@ -44,7 +44,7 @@ public:
 	DislocationAnalysisEngine(const TimeInterval& validityInterval,
 			ParticleProperty* positions, const SimulationCell& simCell,
 			int inputCrystalStructure, int maxTrialCircuitSize, int maxCircuitElongation,
-			bool reconstructEdgeVectors);
+			bool reconstructEdgeVectors, ParticleProperty* particleSelection);
 
 	/// Computes the modifier's results and stores them in this object for later retrieval.
 	virtual void perform() override;

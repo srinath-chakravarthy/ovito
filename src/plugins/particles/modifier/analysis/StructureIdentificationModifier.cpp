@@ -27,14 +27,18 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) 
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, StructureIdentificationModifier, AsynchronousParticleModifier);
 DEFINE_VECTOR_REFERENCE_FIELD(StructureIdentificationModifier, _structureTypes, "StructureTypes", ParticleType);
+DEFINE_PROPERTY_FIELD(StructureIdentificationModifier, _onlySelectedParticles, "OnlySelectedParticles");
 SET_PROPERTY_FIELD_LABEL(StructureIdentificationModifier, _structureTypes, "Structure types");
+SET_PROPERTY_FIELD_LABEL(StructureIdentificationModifier, _onlySelectedParticles, "Use only selected particles");
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
-StructureIdentificationModifier::StructureIdentificationModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset)
+StructureIdentificationModifier::StructureIdentificationModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
+		_onlySelectedParticles(false)
 {
 	INIT_PROPERTY_FIELD(StructureIdentificationModifier::_structureTypes);
+	INIT_PROPERTY_FIELD(StructureIdentificationModifier::_onlySelectedParticles);
 }
 
 /******************************************************************************
@@ -47,6 +51,18 @@ void StructureIdentificationModifier::createStructureType(int id, ParticleTypePr
 	stype->setName(ParticleTypeProperty::getPredefinedStructureTypeName(predefType));
 	stype->setColor(ParticleTypeProperty::getDefaultParticleColor(ParticleProperty::StructureTypeProperty, stype->name(), id));
 	addStructureType(stype);
+}
+
+/******************************************************************************
+* Is called when the value of a property of this object has changed.
+******************************************************************************/
+void StructureIdentificationModifier::propertyChanged(const PropertyFieldDescriptor& field)
+{
+	AsynchronousParticleModifier::propertyChanged(field);
+
+	// Recompute results when the parameters have changed.
+	if(field == PROPERTY_FIELD(StructureIdentificationModifier::_onlySelectedParticles))
+		invalidateCachedResults();
 }
 
 /******************************************************************************

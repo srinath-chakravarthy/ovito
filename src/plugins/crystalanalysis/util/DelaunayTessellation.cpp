@@ -34,7 +34,7 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 /******************************************************************************
 * Generates the tessellation.
 ******************************************************************************/
-bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, const Point3* positions, size_t numPoints, FloatType ghostLayerSize, FutureInterfaceBase* progress)
+bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, const Point3* positions, size_t numPoints, FloatType ghostLayerSize, const int* selectedPoints, FutureInterfaceBase* progress)
 {
 	if(progress) progress->setProgressRange(0);
 	std::vector<DT::Point> cgalPoints;
@@ -60,6 +60,10 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 	cgalPoints.reserve(numPoints);
 	for(size_t i = 0; i < numPoints; i++, ++positions) {
 
+		// Skip points which are not included.
+		if(selectedPoints && !*selectedPoints++)
+			continue;
+
 		// Add a small random perturbation to the particle positions to make the Delaunay triangulation more robust
 		// against singular input data, e.g. particles forming an ideal crystal lattice.
 		Point3 wp = simCell.wrapPoint(*positions);
@@ -74,7 +78,7 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 			return false;
 	}
 
-	int vertexCount = numPoints;
+	int vertexCount = cgalPoints.size();
 
 	Vector3I stencilCount;
 	FloatType cuts[3][2];
@@ -119,7 +123,7 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 					}
 					if(!isClipped) {
 						cgalPoints.push_back(Point3WithIndex(cgalPoints[vertexIndex].x() + shift.x(),
-								cgalPoints[vertexIndex].y() + shift.y(), cgalPoints[vertexIndex].z() + shift.z(), vertexIndex, true));
+								cgalPoints[vertexIndex].y() + shift.y(), cgalPoints[vertexIndex].z() + shift.z(), cgalPoints[vertexIndex].index(), true));
 					}
 				}
 			}

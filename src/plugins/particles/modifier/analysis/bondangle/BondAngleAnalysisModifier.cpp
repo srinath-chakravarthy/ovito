@@ -62,8 +62,13 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> BondAngleAnalysisMo
 	ParticlePropertyObject* posProperty = expectStandardProperty(ParticleProperty::PositionProperty);
 	SimulationCellObject* simCell = expectSimulationCell();
 
+	// Get particle selection.
+	ParticleProperty* selectionProperty = nullptr;
+	if(onlySelectedParticles())
+		selectionProperty = expectStandardProperty(ParticleProperty::SelectionProperty)->storage();
+
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
-	return std::make_shared<BondAngleAnalysisEngine>(validityInterval, posProperty->storage(), simCell->data());
+	return std::make_shared<BondAngleAnalysisEngine>(validityInterval, posProperty->storage(), simCell->data(), selectionProperty);
 }
 
 /******************************************************************************
@@ -75,15 +80,19 @@ void BondAngleAnalysisModifier::BondAngleAnalysisEngine::perform()
 
 	// Prepare the neighbor list.
 	NearestNeighborFinder neighborFinder(14);
-	if(!neighborFinder.prepare(positions(), cell(), this))
+	if(!neighborFinder.prepare(positions(), cell(), selection(), this))
 		return;
 
 	// Create output storage.
 	ParticleProperty* output = structures();
 
 	// Perform analysis on each particle.
-	parallelFor(positions()->size(), *this, [&neighborFinder, output](size_t index) {
-		output->setInt(index, determineStructure(neighborFinder, index));
+	parallelFor(positions()->size(), *this, [this, &neighborFinder, output](size_t index) {
+		// Skip particles that are not included in the analysis.
+		if(!selection() || selection()->getInt(index))
+			output->setInt(index, determineStructure(neighborFinder, index));
+		else
+			output->setInt(index, OTHER);
 	});
 }
 
@@ -180,6 +189,10 @@ void BondAngleAnalysisModifierEditor::createUI(const RolloutInsertionParameters&
 	QVBoxLayout* layout1 = new QVBoxLayout(rollout);
 	layout1->setContentsMargins(4,4,4,4);
 	layout1->setSpacing(4);
+
+	// Use only selected particles.
+	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::_onlySelectedParticles));
+	layout1->addWidget(onlySelectedParticlesUI->checkBox());
 
 	// Status label.
 	layout1->addSpacing(10);

@@ -286,7 +286,7 @@ void AtomicStrainModifier::AtomicStrainEngine::perform()
 
 	// Prepare the neighbor list for the reference configuration.
 	CutoffNeighborFinder neighborFinder;
-	if(!neighborFinder.prepare(_cutoff, refPositions(), refCell(), this))
+	if(!neighborFinder.prepare(_cutoff, refPositions(), refCell(), nullptr, this))
 		return;
 
 	// Perform analysis on each particle.

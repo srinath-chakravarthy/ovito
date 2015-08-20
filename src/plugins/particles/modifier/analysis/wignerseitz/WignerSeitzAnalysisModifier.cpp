@@ -195,7 +195,7 @@ void WignerSeitzAnalysisModifier::WignerSeitzAnalysisEngine::perform()
 
 	// Prepare the closest-point query structure.
 	NearestNeighborFinder neighborTree(0);
-	if(!neighborTree.prepare(refPositions(), refCell(), this))
+	if(!neighborTree.prepare(refPositions(), refCell(), nullptr, this))
 		return;
 
 	// Create output storage.

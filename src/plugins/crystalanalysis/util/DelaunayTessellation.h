@@ -133,7 +133,7 @@ public:
 public:
 
 	/// Generates the Delaunay tessellation.
-	bool generateTessellation(const SimulationCell& simCell, const Point3* positions, size_t numPoints, FloatType ghostLayerSize, FutureInterfaceBase* progress = nullptr);
+	bool generateTessellation(const SimulationCell& simCell, const Point3* positions, size_t numPoints, FloatType ghostLayerSize, const int* selectedPoints = nullptr, FutureInterfaceBase* progress = nullptr);
 
 	/// Returns the tetrahedron cell on the opposite side of the given cell facet.
 	CellHandle mirrorCell(const CellHandle& cell, int facet) const {

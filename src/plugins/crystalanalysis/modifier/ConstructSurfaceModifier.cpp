@@ -159,21 +159,6 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 		throw Exception(tr("Radius parameter must be positive."));
 
 	double alpha = _radius * _radius;
-
-	// Generate the list of input vertices.
-	const Point3* inputPositions = positions()->constDataPoint3();
-	std::vector<Point3> selectedParticles;
-	size_t inputCount = positions()->size();
-	if(selection()) {
-		const int* sel = selection()->constDataInt();
-		for(const Point3& p : positions()->constPoint3Range()) {
-			if(*sel++)
-				selectedParticles.push_back(p);
-		}
-		inputPositions = selectedParticles.data();
-		inputCount = selectedParticles.size();
-	}
-
 	FloatType ghostLayerSize = _radius * 3.0f;
 
 	// Check if combination of radius parameter and simulation cell size is valid.
@@ -190,7 +175,10 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 
 	// If there are too few particles, don't build Delaunay tessellation.
 	// It is going to be invalid anyway.
-	if(inputCount <= 3)
+	size_t numInputParticles = positions()->size();
+	if(selection())
+		numInputParticles = positions()->size() - std::count(selection()->constDataInt(), selection()->constDataInt() + selection()->size(), 0);
+	if(numInputParticles <= 3)
 		return;
 
 	// Algorithm is divided into several sub-steps.
@@ -199,7 +187,8 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 
 	// Generate Delaunay tessellation.
 	DelaunayTessellation tessellation;
-	if(!tessellation.generateTessellation(_simCell, inputPositions, inputCount, ghostLayerSize, this))
+	if(!tessellation.generateTessellation(_simCell, positions()->constDataPoint3(), positions()->size(), ghostLayerSize,
+			selection() ? selection()->constDataInt() : nullptr, this))
 		return;
 
 	nextProgressSubStep();
@@ -249,7 +238,7 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 	setProgressRange(solidCellCount);
 
 	// Create the triangular mesh facets separating solid and open tetrahedra.
-	std::vector<HalfEdgeMesh<>::Vertex*> vertexMap(inputCount, nullptr);
+	std::vector<HalfEdgeMesh<>::Vertex*> vertexMap(positions()->size(), nullptr);
 	for(DelaunayTessellation::CellIterator cell = tessellation.begin_cells(); cell != tessellation.end_cells(); ++cell) {
 
 		// Start with the solid and local tetrahedra.
@@ -294,7 +283,7 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 				int vertexIndex = vertex->point().index();
 				OVITO_ASSERT(vertexIndex >= 0 && vertexIndex < vertexMap.size());
 				if(vertexMap[vertexIndex] == nullptr)
-					vertexMap[vertexIndex] = facetVertices[2-v] = _mesh->createVertex(inputPositions[vertexIndex]);
+					vertexMap[vertexIndex] = facetVertices[2-v] = _mesh->createVertex(positions()->getPoint3(vertexIndex));
 				else
 					facetVertices[2-v] = vertexMap[vertexIndex];
 			}

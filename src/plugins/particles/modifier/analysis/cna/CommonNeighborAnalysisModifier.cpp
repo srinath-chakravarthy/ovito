@@ -85,11 +85,16 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CommonNeighborAnaly
 	ParticlePropertyObject* posProperty = expectStandardProperty(ParticleProperty::PositionProperty);
 	SimulationCellObject* simCell = expectSimulationCell();
 
+	// Get particle selection.
+	ParticleProperty* selectionProperty = nullptr;
+	if(onlySelectedParticles())
+		selectionProperty = expectStandardProperty(ParticleProperty::SelectionProperty)->storage();
+
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	if(adaptiveMode())
-		return std::make_shared<AdaptiveCNAEngine>(validityInterval, posProperty->storage(), simCell->data());
+		return std::make_shared<AdaptiveCNAEngine>(validityInterval, posProperty->storage(), simCell->data(), selectionProperty);
 	else
-		return std::make_shared<FixedCNAEngine>(validityInterval, posProperty->storage(), simCell->data(), cutoff());
+		return std::make_shared<FixedCNAEngine>(validityInterval, posProperty->storage(), simCell->data(), selectionProperty, cutoff());
 }
 
 /******************************************************************************
@@ -101,15 +106,19 @@ void CommonNeighborAnalysisModifier::AdaptiveCNAEngine::perform()
 
 	// Prepare the neighbor list.
 	NearestNeighborFinder neighFinder(MAX_NEIGHBORS);
-	if(!neighFinder.prepare(positions(), cell(), this))
+	if(!neighFinder.prepare(positions(), cell(), selection(), this))
 		return;
 
 	// Create output storage.
 	ParticleProperty* output = structures();
 
 	// Perform analysis on each particle.
-	parallelFor(positions()->size(), *this, [&neighFinder, output](size_t index) {
-		output->setInt(index, determineStructureAdaptive(neighFinder, index));
+	parallelFor(positions()->size(), *this, [this, &neighFinder, output](size_t index) {
+		// Skip particles that are not included in the analysis.
+		if(!selection() || selection()->getInt(index))
+			output->setInt(index, determineStructureAdaptive(neighFinder, index));
+		else
+			output->setInt(index, OTHER);
 	});
 }
 
@@ -122,15 +131,19 @@ void CommonNeighborAnalysisModifier::FixedCNAEngine::perform()
 
 	// Prepare the neighbor list.
 	CutoffNeighborFinder neighborListBuilder;
-	if(!neighborListBuilder.prepare(_cutoff, positions(), cell(), this))
+	if(!neighborListBuilder.prepare(_cutoff, positions(), cell(), selection(), this))
 		return;
 
 	// Create output storage.
 	ParticleProperty* output = structures();
 
 	// Perform analysis on each particle.
-	parallelFor(positions()->size(), *this, [&neighborListBuilder, output](size_t index) {
-		output->setInt(index, determineStructureFixed(neighborListBuilder, index));
+	parallelFor(positions()->size(), *this, [this, &neighborListBuilder, output](size_t index) {
+		// Skip particles that are not included in the analysis.
+		if(!selection() || selection()->getInt(index))
+			output->setInt(index, determineStructureFixed(neighborListBuilder, index));
+		else
+			output->setInt(index, OTHER);
 	});
 }
 
@@ -480,6 +493,10 @@ void CommonNeighborAnalysisModifierEditor::createUI(const RolloutInsertionParame
 	connect(adaptiveModeUI->buttonFalse(), &QRadioButton::toggled, cutoffPresetsPUI, &CutoffRadiusPresetsUI::setEnabled);
 	cutoffRadiusPUI->setEnabled(false);
 	cutoffPresetsPUI->setEnabled(false);
+
+	// Use only selected particles.
+	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::_onlySelectedParticles));
+	layout1->addWidget(onlySelectedParticlesUI->checkBox());
 
 	// Status label.
 	layout1->addSpacing(10);
