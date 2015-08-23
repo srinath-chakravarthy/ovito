@@ -158,15 +158,18 @@ void ParticleInformationApplet::updateInformationDisplay()
 	if(_inputMode->_pickedParticles.empty())
 		infoText = tr("No particles selected.");
 	else if(_inputMode->_pickedParticles.size() >= 2) {
-		stream << QStringLiteral("<b>") << tr("Distances:") << QStringLiteral("</b>");
+		stream << QStringLiteral("<b>") << tr("Pair vectors:") << QStringLiteral("</b>");
 		stream << QStringLiteral("<table border=\"0\">");
 		for(size_t i = 0; i < _inputMode->_pickedParticles.size(); i++) {
 			const auto& p1 = _inputMode->_pickedParticles[i];
 			for(size_t j = i + 1; j < _inputMode->_pickedParticles.size(); j++) {
 				const auto& p2 = _inputMode->_pickedParticles[j];
+				Vector3 delta = p2.localPos - p1.localPos;
 				stream << QStringLiteral("<tr><td>(") <<
-						(p1.particleIndex+1) << QStringLiteral(",") << (p2.particleIndex+1) <<
-						QStringLiteral("):</td><td>") << (p1.localPos - p2.localPos).length() << QStringLiteral("</td></tr>");
+						(p1.particleIndex+1) << QStringLiteral(" - ") << (p2.particleIndex+1) <<
+						QStringLiteral("):</td><td>Distance = ") << delta.length() << QStringLiteral("</td></tr>");
+				stream << QStringLiteral("<tr><td colspan=\"2\">&nbsp;&nbsp;&nbsp;&nbsp;[") <<
+						delta.x() << QStringLiteral(", ") << delta.y() << QStringLiteral(", ") << delta.z() << QStringLiteral("]</td></tr>");
 			}
 		}
 		stream << QStringLiteral("</table><hr>");
