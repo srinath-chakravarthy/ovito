@@ -159,6 +159,11 @@ public:
 		/// Constructor.
 		Query(const NearestNeighborFinder& finder) : t(finder), queue(finder.numNeighbors) {}
 
+		/// Builds the sorted list of neighbors around the given particle.
+		void findNeighbors(size_t particleIndex) {
+			findNeighbors(t.particlePos(particleIndex));
+		}
+
 		/// Builds the sorted list of neighbors around the given point.
 		void findNeighbors(const Point3& query_point) {
 			queue.clear();

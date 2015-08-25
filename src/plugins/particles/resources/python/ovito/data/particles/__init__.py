@@ -161,6 +161,9 @@ class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
     iterate over the neighbors of a specific particle, for example:
     
     .. literalinclude:: ../example_snippets/cutoff_neighbor_finder.py
+    
+    If you want to determine the *N* nearest neighbors of a particle,
+    use the :py:class:`NearestNeighborFinder` class instead.    
     """
         
     def __init__(self, cutoff, data_collection):
@@ -201,6 +204,66 @@ class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
             query.next()
             
 ovito.data.CutoffNeighborFinder = CutoffNeighborFinder
+
+class NearestNeighborFinder(Particles.NearestNeighborFinder):
+    """ 
+    A utility class that finds the *N* nearest neighbors of a particle.
+    
+    The constructor takes the number of requested nearest neighbors, *N*, and a :py:class:`DataCollection <ovito.data.DataCollection>` 
+    containing the input particle positions and the cell geometry (including periodic boundary flags).
+    *N* must be a positive integer not greater than 30 (which is the built-in maximum supported by this class).
+    
+    Once the :py:class:`!NearestNeighborFinder` has been constructed, you can call its :py:meth:`.find` method to 
+    iterate over the sorted list of nearest neighbors of a specific particle, for example:
+    
+    .. literalinclude:: ../example_snippets/nearest_neighbor_finder.py
+    
+    If you want to iterate over all neighbors within a certain cutoff radius of a central particle,
+    use the :py:class:`CutoffNeighborFinder` class instead.
+    """
+        
+    def __init__(self, N, data_collection):
+        """ This is the constructor. """
+        super(self.__class__, self).__init__(N)
+        if N<=0 or N>30:
+            raise ValueError("The requested number of nearest neighbors is out of range.")
+        if not hasattr(data_collection, 'position'):
+            raise KeyError("Data collection does not contain particle positions.")
+        if not hasattr(data_collection, 'cell'):
+            raise KeyError("Data collection does not contain simulation cell information.")
+        self.particle_count = data_collection.number_of_particles
+        self.prepare(data_collection.position, data_collection.cell)
+        
+    def find(self, index):
+        """ 
+        Returns an iterator that visits the *N* nearest neighbors of the given particle in order of ascending distance.
+         
+        :param int index: The index of the central particle whose neighbors should be iterated. Particle indices start at 0.
+        :returns: A Python iterator that visits the *N* nearest neighbors of the central particle in order of ascending distance. 
+                  For each visited neighbor the iterator returns an object with the following attributes:
+                  
+                      * **index**: The index of the current neighbor particle (starting at 0).
+                      * **distance**: The distance of the current neighbor from the central particle.
+                      * **distance_squared**: The squared neighbor distance.
+                      * **delta**: The three-dimensional vector connecting the central particle with the current neighbor (taking into account periodicity).
+        
+        Note that several periodic images of the same particle may be visited. Thus, the same particle index may appear multiple times in the neighbor
+        list of a central particle. In fact, the central particle may be among its own neighbors in a sufficiently small periodic simulation cell.
+        However, the computed neighbor vector (``delta``) will be unique for each visited image of a neighboring particle.
+        
+        The number of neighbors actually visited may be smaller than the requested number, *N*, if the
+        system contains too few particles and no periodic boundary conditions are used.
+        """
+        if index < 0 or index >= self.particle_count:
+            raise IndexError("Particle index is out of range.")
+        # Construct the C++ neighbor query. 
+        query = Particles.NearestNeighborFinder.Query(self)
+        query.findNeighbors(index)
+        # Iterate over neighbors.
+        for i in range(query.count):
+            yield query[i]
+            
+ovito.data.NearestNeighborFinder = NearestNeighborFinder
 
 def _ParticleProperty_create(prop_type, num_particles):
     """

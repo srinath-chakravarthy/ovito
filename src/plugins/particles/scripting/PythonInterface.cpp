@@ -35,6 +35,7 @@
 #include <plugins/particles/objects/BondTypeProperty.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/particles/util/CutoffNeighborFinder.h>
+#include <plugins/particles/util/NearestNeighborFinder.h>
 #include <core/utilities/io/CompressedTextWriter.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -597,6 +598,36 @@ BOOST_PYTHON_MODULE(Particles)
 			.add_property("pbc_shift", static_cast<tuple (*)(const CutoffNeighborFinder::Query&)>(
 					[](const CutoffNeighborFinder::Query& query) {
 						return make_tuple(query.pbcShift().x(), query.pbcShift().y(), query.pbcShift().z()); }))
+		;
+	}
+
+	{
+		scope s = class_<NearestNeighborFinder>("NearestNeighborFinder", init<size_t>())
+			.def("prepare", static_cast<void (*)(NearestNeighborFinder&,ParticlePropertyObject&,SimulationCellObject&)>(
+					[](NearestNeighborFinder& finder, ParticlePropertyObject& positions, SimulationCellObject& cell) {
+				finder.prepare(positions.storage(), cell.data());
+			}))
+		;
+
+		typedef NearestNeighborFinder::Query<30> NearestNeighborQuery;
+
+		class_<NearestNeighborFinder::Neighbor>("Neighbor", no_init)
+			.def_readonly("index", &NearestNeighborFinder::Neighbor::index)
+			.def_readonly("distance_squared", &NearestNeighborFinder::Neighbor::distanceSq)
+			.add_property("distance", static_cast<FloatType (*)(const NearestNeighborFinder::Neighbor&)>(
+					[](const NearestNeighborFinder::Neighbor& n) -> FloatType { return sqrt(n.distanceSq); }))
+			.add_property("delta", static_cast<tuple (*)(const NearestNeighborFinder::Neighbor&)>(
+					[](const NearestNeighborFinder::Neighbor& n) {
+						return make_tuple(n.delta.x(), n.delta.y(), n.delta.z()); }))
+		;
+
+		class_<NearestNeighborQuery>("Query", init<const NearestNeighborFinder&>())
+			.def("findNeighbors", static_cast<void (NearestNeighborQuery::*)(size_t)>(&NearestNeighborQuery::findNeighbors))
+			.add_property("count", static_cast<int (*)(const NearestNeighborQuery&)>(
+					[](const NearestNeighborQuery& q) -> int { return q.results().size(); }))
+			.def("__getitem__", make_function(static_cast<const NearestNeighborFinder::Neighbor& (*)(const NearestNeighborQuery&, int index)>(
+					[](const NearestNeighborQuery& q, int index) -> const NearestNeighborFinder::Neighbor& { return q.results()[index]; }),
+					return_internal_reference<>()))
 		;
 	}
 }

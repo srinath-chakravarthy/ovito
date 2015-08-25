@@ -9,7 +9,7 @@ data = node.source
 cutoff = 3.5
 finder = CutoffNeighborFinder(cutoff, data)
 
-# Iterate over all input particles:
+# Loop over all input particles:
 for index in range(data.number_of_particles):
     print("Neighbors of particle %i:" % index)
     # Iterate over the neighbors of the current particle:

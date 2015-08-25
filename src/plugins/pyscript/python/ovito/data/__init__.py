@@ -15,10 +15,11 @@ This module contains data container classes that are used by OVITO's modificatio
   * :py:class:`SimulationCell`
   * :py:class:`SurfaceMesh`
 
-**Helper classes:**
+**Auxiliary classes:**
 
   * :py:class:`ParticleType`
   * :py:class:`CutoffNeighborFinder`
+  * :py:class:`NearestNeighborFinder`
   * :py:class:`DislocationSegment`
 
 """
