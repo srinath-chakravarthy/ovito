@@ -284,6 +284,10 @@ void AtomicStrainModifier::AtomicStrainEngine::perform()
 	if(isCanceled())
 		return;
 
+	// PBCs flags of the current configuration always override PBCs flags
+	// of the reference config.
+	_simCellRef.setPbcFlags(_simCell.pbcFlags());
+
 	// Prepare the neighbor list for the reference configuration.
 	CutoffNeighborFinder neighborFinder;
 	if(!neighborFinder.prepare(_cutoff, refPositions(), refCell(), nullptr, this))
