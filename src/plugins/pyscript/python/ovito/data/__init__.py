@@ -9,7 +9,7 @@ This module contains data container classes that are used by OVITO's modificatio
 
   * :py:class:`DataObject` (base of all data object types)
   * :py:class:`Bonds`
-  * :py:class:`DislocationNetwork`  
+  * :py:class:`DislocationNetwork`
   * :py:class:`ParticleProperty`
   * :py:class:`ParticleTypeProperty`
   * :py:class:`SimulationCell`
@@ -79,32 +79,32 @@ DataCollection.__bases__ = DataCollection.__bases__ + (collections.Mapping, )
 def _DataCollection_copy_if_needed(self, obj):
     """
         Makes a copy of a data object if it was created upstream in the data pipeline.
-        
-        Typically, this method is used in implementations of a modifier function that  
+
+        Typically, this method is used in implementations of a modifier function that
         participates in OVITO's data pipeline system. A modifier receives a collection with
-        input data objects from the system. However, directly modifying these input 
+        input data objects from the system. However, directly modifying these input
         objects is not allowed because they are owned by the upstream part of the data pipeline.
         This is where this method comes into play: It makes a copy of a data object and replaces
         it with its copy in the modifier's output. The modifier can then go ahead and modify the copy as needed,
         because it is now exclusively owned by the modifier.
-        
+
         The method first checks if *obj*, which must be a data object from this data collection, is
-        owned by anybody else. If yes, it creates an exact copy of *obj* and replaces the original 
+        owned by anybody else. If yes, it creates an exact copy of *obj* and replaces the original
         in this data collection with the copy. Now the copy is an independent object, which is referenced
         by nobody except this data collection. Thus, the modifier function is now free to modify the contents
         of the data object.
-        
+
         Note that the :py:meth:`!copy_if_needed` method should always be called on the *output* data collection
-        of the modifier. 
-    
-        :param DataObject obj: The object in the output data collection to be copied. 
+        of the modifier.
+
+        :param DataObject obj: The object in the output data collection to be copied.
         :return DataObject: An exact copy of *obj* if *obj* is owned by someone else. Otherwise the original instance is returned.
     """
     assert(isinstance(obj, DataObject))
     # The object to be modified must be in this data collection.
     if not obj in self.values():
         raise ValueError("DataCollection.copy_if_needed() must be called with an object that is part of this data collection.")
-    # Check if object is owned by someone else. 
+    # Check if object is owned by someone else.
     # This is indicated by the fact that the object has more than one dependent (which would be this data collection).
     if obj.num_dependents > 1:
         # Make a copy of the object so it can be safely modified.
@@ -118,7 +118,7 @@ DataCollection.copy_if_needed = _DataCollection_copy_if_needed
 def _DataObject_get_display(self):
     """ The :py:class:`~ovito.vis.Display` object associated with this data object, which is responsible for
         displaying the data. If this field is ``None``, the data is non-visual.
-    """ 
+    """
     if not self.displayObjects:
         return None # This data object doesn't have a display object.
     return self.displayObjects[0]
@@ -131,10 +131,10 @@ def _DataCollection_to_ase_atoms(self):
     stored in this :py:class:`!DataCollection`.
 
     .. note::
-    
+
        Calling this method raises an ImportError if ASE (`Atomistic Simulation Environment <https://wiki.fysik.dtu.dk/ase/>`_) is not available. Note that the built-in
-       Python interpreter shipping with OVITO does *not* contain the ASE module. 
-       It is therefore recommended to build OVITO from source (as explained in the user manual), 
+       Python interpreter shipping with OVITO does *not* contain the ASE module.
+       It is therefore recommended to build OVITO from source (as explained in the user manual),
        which will allow you to use all modules installed in the system's Python interpreter.
     """
 
@@ -142,8 +142,8 @@ def _DataCollection_to_ase_atoms(self):
 
     # Extract basic dat: pbc, cell, positions, particle types
     pbc = self.cell.pbc
-    cell_matrix = np.array(self.cell.matrix)    
-    cell, origin = cell_matrix[:, :3], cell_matrix[:, 3]
+    cell_matrix = np.array(self.cell.matrix)
+    cell, origin = cell_matrix[:, :3].T, cell_matrix[:, 3]
     info = {'cell_origin': origin }
     positions = np.array(self.position)
     type_names = dict([(t.id, t.name) for t in
@@ -158,7 +158,7 @@ def _DataCollection_to_ase_atoms(self):
                   info=info)
 
     # Convert any other particle properties to additional arrays
-    for name, prop in self.iteritems():
+    for name, prop in self.items():
         if name in ['Simulation cell',
                     'Position',
                     'Particle Type']:
@@ -166,7 +166,7 @@ def _DataCollection_to_ase_atoms(self):
         if not isinstance(prop, ParticleProperty):
             continue
         atoms.new_array(prop.name, prop.array)
-    
+
     return atoms
 
 DataCollection.to_ase_atoms = _DataCollection_to_ase_atoms
@@ -177,9 +177,9 @@ def _DataCollection_create_from_ase_atoms(cls, atoms):
     Converts an `ASE Atoms object <https://wiki.fysik.dtu.dk/ase/ase/atoms.html>`_ to a :py:class:`!DataCollection`.
 
     .. note::
-    
-       The built-in Python interpreter shipping with OVITO does *not* contain the ASE module (`Atomistic Simulation Environment <https://wiki.fysik.dtu.dk/ase/>`_). 
-       It is therefore recommended to build OVITO from source (as explained in the user manual), 
+
+       The built-in Python interpreter shipping with OVITO does *not* contain the ASE module (`Atomistic Simulation Environment <https://wiki.fysik.dtu.dk/ase/>`_).
+       It is therefore recommended to build OVITO from source (as explained in the user manual),
        which will allow you to use all modules installed in the system's Python interpreter.
     """
     data = cls()
@@ -190,7 +190,7 @@ def _DataCollection_create_from_ase_atoms(cls, atoms):
     matrix[:, :3] = atoms.get_cell()
     matrix[:, 3]  = atoms.info.get('cell_origin',
                                    [0., 0., 0.])
-    cell.matrix = matrix
+    cell.matrix = matrix.T
     cell.pbc = [bool(p) for p in atoms.get_pbc()]
     data.add(cell)
 
@@ -212,7 +212,24 @@ def _DataCollection_create_from_ase_atoms(cls, atoms):
     data.add(types)
 
     # Add other properties from atoms.arrays
-    for name, array in atoms.arrays.iteritems():
+    array_items =  atoms.arrays.items()
+
+    # Check for computed properties - forces, energies, stresses
+    calc = atoms.get_calculator()
+    if calc is not None:
+        for name in ['forces', 'energies', 'stresses']:
+            try:
+                array = calc.get_property(name,
+                                          atoms,
+                                          allow_calculation=False)
+            except NotImplementedError:
+                continue
+            if array is None:
+                continue
+            array_items[name] = array
+
+    # Create properties in DataCollection
+    for name, array in array_items:
         if name in ['positions', 'numbers']:
             continue
         if array.dtype.kind == 'i':
@@ -231,7 +248,7 @@ def _DataCollection_create_from_ase_atoms(cls, atoms):
                                             num_components)
         prop.marray[...] = array
         data.add(prop)
-    
+
     return data
 
 DataCollection.create_from_ase_atoms = classmethod(_DataCollection_create_from_ase_atoms)
