@@ -293,7 +293,7 @@ void AtomicStrainModifier::AtomicStrainEngine::perform()
 	if(!neighborFinder.prepare(_cutoff, refPositions(), refCell(), nullptr, this))
 		return;
 
-	// Perform analysis on each particle.
+	// Perform individual strain calculation for each particle.
 	parallelFor(positions()->size(), *this, [&neighborFinder, &refToCurrentIndexMap, &currentToRefIndexMap, this](size_t index) {
 		if(!this->computeStrain(index, neighborFinder, refToCurrentIndexMap, currentToRefIndexMap))
 			_numInvalidParticles.fetchAndAddRelaxed(1);

@@ -14,7 +14,7 @@ New visualization features:
 
 - Visualize polyhedra (like Vesta).
 - Particle text labels (joy5142@psu.edu)
-- More particle representations (e.g. open circles/rectangles).
+- More particle representations (e.g. open circles).
 - Test OpenGL rendering support for more than 12 million particles.
 
 Unresolved OpenGL problems:

@@ -211,25 +211,29 @@ def _DataCollection_create_from_ase_atoms(cls, atoms):
     types.marray[:] = [ type_list.index(sym)+1 for sym in symbols ]
     data.add(types)
 
-    # Add other properties from atoms.arrays
-    array_items =  atoms.arrays.items()
-
     # Check for computed properties - forces, energies, stresses
     calc = atoms.get_calculator()
     if calc is not None:
-        for name in ['forces', 'energies', 'stresses']:
+        for name, ptype in [('forces', ParticleProperty.Type.Force), 
+                            ('energies', ParticleProperty.Type.PotentialEnergy), 
+                            ('stresses', ParticleProperty.Type.StressTensor),
+                            ('charges', ParticleProperty.Type.Charge)]:
             try:
                 array = calc.get_property(name,
                                           atoms,
                                           allow_calculation=False)
+                if array is None:
+                    continue
             except NotImplementedError:
                 continue
-            if array is None:
-                continue
-            array_items[name] = array
+            
+            # Create a corresponding OVITO standard property.
+            prop = ParticleProperty.create(ptype, num_particles)
+            prop.marray[...] = array
+            data.add(prop)
 
-    # Create properties in DataCollection
-    for name, array in array_items:
+    # Create extra properties in DataCollection
+    for name, array in atoms.arrays.items():
         if name in ['positions', 'numbers']:
             continue
         if array.dtype.kind == 'i':
