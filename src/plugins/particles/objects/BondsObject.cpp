@@ -64,7 +64,7 @@ void BondsObject::loadFromStream(ObjectLoadStream& stream)
 * Remaps the bonds after some of the particles have been deleted.
 * Dangling bonds are removed too.
 ******************************************************************************/
-void BondsObject::particlesDeleted(const boost::dynamic_bitset<>& deletedParticlesMask)
+size_t BondsObject::particlesDeleted(const boost::dynamic_bitset<>& deletedParticlesMask, boost::dynamic_bitset<>& deletedBondsMask)
 {
 	// Build map that maps old particle indices to new indices.
 	std::vector<size_t> indexMap(deletedParticlesMask.size());
@@ -74,26 +74,38 @@ void BondsObject::particlesDeleted(const boost::dynamic_bitset<>& deletedParticl
 	for(size_t i = 0; i < deletedParticlesMask.size(); i++)
 		*index++ = deletedParticlesMask.test(i) ? std::numeric_limits<size_t>::max() : newParticleCount++;
 
+	OVITO_ASSERT(deletedBondsMask.empty() || deletedBondsMask.size() == modifiableStorage()->size());
+
 	auto result = modifiableStorage()->begin();
 	auto bond = modifiableStorage()->begin();
 	auto last = modifiableStorage()->end();
-	for(; bond != last; ++bond) {
+	size_t bondIndex = 0;
+	for(; bond != last; ++bond, ++bondIndex) {
 		// Remove invalid bonds.
-		if(bond->index1 >= oldParticleCount || bond->index2 >= oldParticleCount)
+		if(bond->index1 >= oldParticleCount || bond->index2 >= oldParticleCount) {
+			if(!deletedBondsMask.empty())
+				deletedBondsMask.set(bondIndex);
 			continue;
+		}
 
 		// Remove dangling bonds whose particles have gone.
-		if(deletedParticlesMask.test(bond->index1) || deletedParticlesMask.test(bond->index2))
+		if(deletedParticlesMask.test(bond->index1) || deletedParticlesMask.test(bond->index2)) {
+			if(!deletedBondsMask.empty())
+				deletedBondsMask.set(bondIndex);
 			continue;
+		}
 
-		// Keep but remap particle indices.
+		// Keep bond and remap particle indices.
 		result->pbcShift = bond->pbcShift;
 		result->index1 = indexMap[bond->index1];
 		result->index2 = indexMap[bond->index2];
 		++result;
+		if(!deletedBondsMask.empty())
+			deletedBondsMask.reset(bondIndex);
 	}
 	modifiableStorage()->erase(result, last);
 	changed();
+	return modifiableStorage()->size();
 }
 
 }	// End of namespace

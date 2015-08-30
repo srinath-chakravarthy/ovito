@@ -81,7 +81,7 @@ public:
 	void addObject(DataObject* obj);
 
 	/// \brief Replaces a data object with a new one.
-	void replaceObject(DataObject* oldObj, DataObject* newObj);
+	bool replaceObject(DataObject* oldObj, DataObject* newObj);
 
 	/// \brief Removes a data object from this state.
 	void removeObject(DataObject* dataObj) {

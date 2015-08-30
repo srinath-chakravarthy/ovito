@@ -62,7 +62,7 @@ void PipelineFlowState::addObject(DataObject* obj)
 /******************************************************************************
 * Replaces a data object with a new one.
 ******************************************************************************/
-void PipelineFlowState::replaceObject(DataObject* oldObj, DataObject* newObj)
+bool PipelineFlowState::replaceObject(DataObject* oldObj, DataObject* newObj)
 {
 	OVITO_CHECK_OBJECT_POINTER(oldObj);
 	for(int index = 0; index < _objects.size(); index++) {
@@ -71,10 +71,11 @@ void PipelineFlowState::replaceObject(DataObject* oldObj, DataObject* newObj)
 				_objects[index] = newObj;
 			else
 				_objects.remove(index);
-			return;
+			return true;
 		}
 	}
 	OVITO_ASSERT_MSG(false, "PipelineFlowState::replaceObject", "Old object not found.");
+	return false;
 }
 
 /******************************************************************************

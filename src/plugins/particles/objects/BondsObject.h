@@ -54,8 +54,8 @@ public:
 	}
 
 	/// Remaps the bonds after some of the particles have been deleted.
-	/// Dangling bonds are removed too.
-	void particlesDeleted(const boost::dynamic_bitset<>& deletedParticlesMask);
+	/// Dangling bonds are removed too and the list of deleted bonds is returned in the bitset object.
+	size_t particlesDeleted(const boost::dynamic_bitset<>& deletedParticlesMask, boost::dynamic_bitset<>& deletedBondsMask);
 
 	/// \brief Returns whether this object, when returned as an editable sub-object by another object,
 	///        should be displayed in the modification stack.

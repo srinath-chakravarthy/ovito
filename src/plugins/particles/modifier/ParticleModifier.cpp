@@ -24,6 +24,7 @@
 #include <plugins/particles/objects/ParticleDisplay.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
 #include <plugins/particles/objects/BondsObject.h>
+#include <plugins/particles/objects/BondPropertyObject.h>
 #include "ParticleModifier.h"
 
 #include <QtConcurrent>
@@ -419,18 +420,39 @@ size_t ParticleModifier::deleteParticles(const boost::dynamic_bitset<>& mask, si
 		pair.second->filterCopy(pair.first, mask);
 	});
 
-	// Delete bonds for particles that have been deleted.
+	// Delete dangling bonds, i.e. those that are adjacent to deleted particles.
+	boost::dynamic_bitset<> deletedBondsMask;
+	size_t newBondCount = 0;
 	for(const auto& outobj : _output.objects()) {
 		BondsObject* originalBondsObject = dynamic_object_cast<BondsObject>(outobj);
 		if(!originalBondsObject)
 			continue;
 
-		// Create copy.
+		// Create copy of bonds object.
 		OORef<BondsObject> newBondsObject = cloneHelper()->cloneObject(originalBondsObject, false);
-		newBondsObject->particlesDeleted(mask);
+		// Remap particle indices of stored bonds and remove dangling bonds.
+		deletedBondsMask.resize(newBondsObject->storage()->size());
+		newBondCount = newBondsObject->particlesDeleted(mask, deletedBondsMask);
 
 		// Replace original bonds object with the filtered one.
 		_output.replaceObject(originalBondsObject, newBondsObject);
+	}
+
+	// Process bond properties.
+	for(const auto& outobj : _output.objects()) {
+		BondPropertyObject* originalBondPropertyObject = dynamic_object_cast<BondPropertyObject>(outobj);
+		if(!originalBondPropertyObject)
+			continue;
+		if(originalBondPropertyObject->size() != deletedBondsMask.size())
+			continue;
+
+		// Create copy and remove elements belonging to deleted bonds.
+		OORef<BondPropertyObject> newBondPropertyObject = cloneHelper()->cloneObject(originalBondPropertyObject, false);
+		newBondPropertyObject->resize(newBondCount, false);
+		newBondPropertyObject->filterCopy(originalBondPropertyObject, deletedBondsMask);
+
+		// Replace original bond property object with the filtered one.
+		_output.replaceObject(originalBondPropertyObject, newBondPropertyObject);
 	}
 
 	return newParticleCount;

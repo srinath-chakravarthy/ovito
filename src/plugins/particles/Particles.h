@@ -73,6 +73,7 @@ namespace Ovito {
 		class ParticleTypeProperty;
 		class ParticleProperty;
 		class ParticleType;
+		class BondsStorage;
 		class BondPropertyObject;
 		class BondTypeProperty;
 		class BondProperty;
