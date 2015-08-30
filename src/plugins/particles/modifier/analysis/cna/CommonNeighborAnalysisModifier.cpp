@@ -21,11 +21,13 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/BooleanRadioButtonParameterUI.h>
+#include <core/gui/properties/IntegerRadioButtonParameterUI.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
 #include <plugins/particles/util/CutoffNeighborFinder.h>
 #include <plugins/particles/util/CutoffRadiusPresetsUI.h>
+#include <plugins/particles/objects/BondsObject.h>
+#include <plugins/particles/data/BondProperty.h>
 
 #include "CommonNeighborAnalysisModifier.h"
 
@@ -34,9 +36,9 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, CommonNeighborAnalysisModifier, StructureIdentificationModifier);
 SET_OVITO_OBJECT_EDITOR(CommonNeighborAnalysisModifier, CommonNeighborAnalysisModifierEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(CommonNeighborAnalysisModifier, _cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CommonNeighborAnalysisModifier, _adaptiveMode, "AdaptiveMode", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CommonNeighborAnalysisModifier, _cnaMode, "CNAMode", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(CommonNeighborAnalysisModifier, _cutoff, "Cutoff radius");
-SET_PROPERTY_FIELD_LABEL(CommonNeighborAnalysisModifier, _adaptiveMode, "Adaptive CNA");
+SET_PROPERTY_FIELD_LABEL(CommonNeighborAnalysisModifier, _cnaMode, "Mode");
 SET_PROPERTY_FIELD_UNITS(CommonNeighborAnalysisModifier, _cutoff, WorldParameterUnit);
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -47,10 +49,10 @@ OVITO_END_INLINE_NAMESPACE
 * Constructs the modifier object.
 ******************************************************************************/
 CommonNeighborAnalysisModifier::CommonNeighborAnalysisModifier(DataSet* dataset) : StructureIdentificationModifier(dataset),
-	_cutoff(3.2), _adaptiveMode(true)
+	_cutoff(3.2), _cnaMode(AdaptiveCutoffMode)
 {
 	INIT_PROPERTY_FIELD(CommonNeighborAnalysisModifier::_cutoff);
-	INIT_PROPERTY_FIELD(CommonNeighborAnalysisModifier::_adaptiveMode);
+	INIT_PROPERTY_FIELD(CommonNeighborAnalysisModifier::_cnaMode);
 
 	// Create the structure types.
 	createStructureType(OTHER, ParticleTypeProperty::PredefinedStructureType::OTHER);
@@ -69,7 +71,7 @@ void CommonNeighborAnalysisModifier::propertyChanged(const PropertyFieldDescript
 
 	// Recompute results when the parameters have been changed.
 	if(field == PROPERTY_FIELD(CommonNeighborAnalysisModifier::_cutoff) ||
-		field == PROPERTY_FIELD(CommonNeighborAnalysisModifier::_adaptiveMode))
+		field == PROPERTY_FIELD(CommonNeighborAnalysisModifier::_cnaMode))
 		invalidateCachedResults();
 }
 
@@ -91,10 +93,20 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CommonNeighborAnaly
 		selectionProperty = expectStandardProperty(ParticleProperty::SelectionProperty)->storage();
 
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
-	if(adaptiveMode())
+	if(mode() == AdaptiveCutoffMode) {
 		return std::make_shared<AdaptiveCNAEngine>(validityInterval, posProperty->storage(), simCell->data(), selectionProperty);
-	else
+	}
+	else if(mode() == BondMode) {
+		// Get bonds.
+		BondsObject* bondsObj = input().findObject<BondsObject>();
+		if(!bondsObj || !bondsObj->storage())
+			throw Exception(tr("No bonds are defined. Please use the 'Create Bonds' modifier first to generate some bonds between particles."));
+
+		return std::make_shared<BondCNAEngine>(validityInterval, posProperty->storage(), simCell->data(), selectionProperty, bondsObj->storage());
+	}
+	else {
 		return std::make_shared<FixedCNAEngine>(validityInterval, posProperty->storage(), simCell->data(), selectionProperty, cutoff());
+	}
 }
 
 /******************************************************************************
@@ -144,6 +156,29 @@ void CommonNeighborAnalysisModifier::FixedCNAEngine::perform()
 			output->setInt(index, determineStructureFixed(neighborListBuilder, index));
 		else
 			output->setInt(index, OTHER);
+	});
+}
+
+/******************************************************************************
+* Performs the actual analysis. This method is executed in a worker thread.
+******************************************************************************/
+void CommonNeighborAnalysisModifier::BondCNAEngine::perform()
+{
+	setProgressText(tr("Performing common neighbor analysis"));
+
+	// Compute per-bond CNA indices.
+	parallelFor(bonds()->size(), *this, [this](size_t index) {
+		cnaIndices()->setIntComponent(index, 0, 0);
+		cnaIndices()->setIntComponent(index, 1, 0);
+		cnaIndices()->setIntComponent(index, 2, 0);
+	});
+
+	// Create output storage.
+	ParticleProperty* output = structures();
+
+	// Classify particles.
+	parallelFor(positions()->size(), *this, [this, output](size_t index) {
+		output->setInt(index, OTHER);
 	});
 }
 
@@ -468,11 +503,13 @@ void CommonNeighborAnalysisModifierEditor::createUI(const RolloutInsertionParame
 	layout1->setContentsMargins(4,4,4,4);
 	layout1->setSpacing(6);
 
-	BooleanRadioButtonParameterUI* adaptiveModeUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(CommonNeighborAnalysisModifier::_adaptiveMode));
-	adaptiveModeUI->buttonTrue()->setText(tr("Adaptive CNA (variable cutoff)"));
-	adaptiveModeUI->buttonFalse()->setText(tr("Conventional CNA (fixed cutoff)"));
-	layout1->addWidget(adaptiveModeUI->buttonTrue());
-	layout1->addWidget(adaptiveModeUI->buttonFalse());
+	IntegerRadioButtonParameterUI* modeUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(CommonNeighborAnalysisModifier::_cnaMode));
+	QRadioButton* fixedCutoffModeBtn = modeUI->addRadioButton(CommonNeighborAnalysisModifier::FixedCutoffMode, tr("Conventional CNA (fixed cutoff)"));
+	QRadioButton* adaptiveModeBtn = modeUI->addRadioButton(CommonNeighborAnalysisModifier::AdaptiveCutoffMode, tr("Adaptive CNA (variable cutoff)"));
+	QRadioButton* bondModeBtn = modeUI->addRadioButton(CommonNeighborAnalysisModifier::BondMode, tr("Bond-based CNA"));
+	layout1->addWidget(adaptiveModeBtn);
+	layout1->addWidget(bondModeBtn);
+	layout1->addWidget(fixedCutoffModeBtn);
 
 	QGridLayout* gridlayout = new QGridLayout();
 	gridlayout->setContentsMargins(0,0,0,0);
@@ -489,8 +526,8 @@ void CommonNeighborAnalysisModifierEditor::createUI(const RolloutInsertionParame
 	gridlayout->addWidget(cutoffPresetsPUI->comboBox(), 1, 1, 1, 2);
 	layout1->addLayout(gridlayout);
 
-	connect(adaptiveModeUI->buttonFalse(), &QRadioButton::toggled, cutoffRadiusPUI, &FloatParameterUI::setEnabled);
-	connect(adaptiveModeUI->buttonFalse(), &QRadioButton::toggled, cutoffPresetsPUI, &CutoffRadiusPresetsUI::setEnabled);
+	connect(fixedCutoffModeBtn, &QRadioButton::toggled, cutoffRadiusPUI, &FloatParameterUI::setEnabled);
+	connect(fixedCutoffModeBtn, &QRadioButton::toggled, cutoffPresetsPUI, &CutoffRadiusPresetsUI::setEnabled);
 	cutoffRadiusPUI->setEnabled(false);
 	cutoffPresetsPUI->setEnabled(false);
 

@@ -23,6 +23,8 @@
 #define __OVITO_BONDS_STORAGE_H
 
 #include <plugins/particles/Particles.h>
+#include <boost/iterator/iterator_facade.hpp>
+#include <boost/range/iterator_range.hpp>
 
 namespace Ovito { namespace Particles {
 
@@ -56,6 +58,57 @@ public:
 
 	/// Reads the stored data from an input stream.
 	void loadFromStream(LoadStream& stream);
+};
+
+/**
+ * \brief Helper class that allows to efficiently iterate over the half-bonds that are adjacent to a particle.
+ */
+class OVITO_PARTICLES_EXPORT ParticleBondMap
+{
+public:
+
+	class bond_index_iterator : public boost::iterator_facade<bond_index_iterator, size_t const, boost::forward_traversal_tag> {
+	public:
+		bond_index_iterator(const ParticleBondMap* map, size_t startIndex) :
+			_map(map), _currentIndex(startIndex) {}
+	private:
+		size_t _currentIndex;
+		const ParticleBondMap* _map;
+
+		friend class boost::iterator_core_access;
+
+		void increment() {
+			OVITO_ASSERT(_currentIndex < _map->_nextBond.size());
+			_currentIndex = _map->_nextBond[_currentIndex];
+		}
+
+		bool equal(const bond_index_iterator& other) const {
+			return this->_currentIndex == other._currentIndex;
+		}
+
+		size_t dereference() const { return _currentIndex; }
+	};
+
+public:
+
+	/// Initializes the helper class.
+	ParticleBondMap(const BondsStorage* bonds, size_t numberOfParticles);
+
+	/// Returns an iterator range over the indices of the half-bonds adjacent to the given particle.
+	boost::iterator_range<bond_index_iterator> bondsOfParticle(size_t particleIndex) const {
+		OVITO_ASSERT(particleIndex < _startIndices.size());
+		return boost::iterator_range<bond_index_iterator>(
+				bond_index_iterator(this, _startIndices[particleIndex]),
+				bond_index_iterator(this, _nextBond.size()));
+	}
+
+private:
+
+	/// Contains the first half-bond index for each particle.
+	std::vector<size_t> _startIndices;
+
+	/// Stores the index of the next half-bond of particle in the linked list.
+	std::vector<size_t> _nextBond;
 };
 
 }	// End of namespace

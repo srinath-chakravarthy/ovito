@@ -24,6 +24,8 @@
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/modifier/analysis/StructureIdentificationModifier.h>
+#include <plugins/particles/data/BondsStorage.h>
+#include <plugins/particles/data/BondProperty.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
@@ -34,6 +36,13 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) 
 class OVITO_PARTICLES_EXPORT CommonNeighborAnalysisModifier : public StructureIdentificationModifier
 {
 public:
+
+	enum CNAMode {
+		FixedCutoffMode,	///< Performs the conventional CNA using a global cutoff radius.
+		AdaptiveCutoffMode,	///< Performs the adaptive CNA, which picks an optimal cutoff for each atom.
+		BondMode,			///< Performs the CNA based on the existing network of bonds.
+	};
+	Q_ENUMS(CNAMode);
 
 #ifndef Q_CC_MSVC
 	/// The maximum number of neighbor atoms taken into account for the common neighbor analysis.
@@ -109,11 +118,11 @@ public:
 	/// \sa cutoff()
 	void setCutoff(FloatType newCutoff) { _cutoff = newCutoff; }
 
-	/// \brief Returns true if the cutoff radius is determined adaptively for each particle.
-	bool adaptiveMode() const { return _adaptiveMode; }
+	/// Returns the selected mode of operation.
+	CNAMode mode() const { return _cnaMode; }
 
-	/// \brief Controls whether the cutoff radius should be determined adaptively for each particle.
-	void setAdaptiveMode(bool adaptive) { _adaptiveMode = adaptive; }
+	/// Sets the mode of operation.
+	void setMode(CNAMode mode) { _cnaMode = mode; }
 
 	/// Find all atoms that are nearest neighbors of the given pair of atoms.
 	static int findCommonNeighbors(const NeighborBondArray& neighborArray, int neighborIndex, unsigned int& commonNeighbors, int numNeighbors);
@@ -166,17 +175,42 @@ private:
 		virtual void perform() override;
 	};
 
+	/// Analysis engine that performs the common neighbor analysis based on existing bonds.
+	class BondCNAEngine : public StructureIdentificationEngine
+	{
+	public:
+
+		/// Constructor.
+		BondCNAEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, ParticleProperty* selection, BondsStorage* bonds) :
+			StructureIdentificationEngine(validityInterval, positions, simCell, selection), _bonds(bonds),
+			_cnaIndices(new BondProperty(bonds->size(), qMetaTypeId<int>(), 3, 0, tr("CNA Indices"), false)) {}
+
+		/// Computes the modifier's results and stores them in this object for later retrieval.
+		virtual void perform() override;
+
+		/// Returns the input bonds between particles.
+		BondsStorage* bonds() const { return _bonds.data(); }
+
+		/// Returns the output bonds property that stores the computed CNA indices.
+		BondProperty* cnaIndices() const { return _cnaIndices.data(); }
+
+	private:
+
+		QExplicitlySharedDataPointer<BondsStorage> _bonds;
+		QExplicitlySharedDataPointer<BondProperty> _cnaIndices;
+	};
+
 	/// Determines the coordination structure of a single particle using the common neighbor analysis method.
 	static StructureType determineStructureAdaptive(NearestNeighborFinder& neighList, size_t particleIndex);
 
 	/// Determines the coordination structure of a single particle using the common neighbor analysis method.
 	static StructureType determineStructureFixed(CutoffNeighborFinder& neighList, size_t particleIndex);
 
-	/// The cutoff radius for the CNA.
+	/// The cutoff radius used for the conventional CNA.
 	PropertyField<FloatType> _cutoff;
 
-	/// Controls whether the cutoff radius is determined adaptively for each particle.
-	PropertyField<bool> _adaptiveMode;
+	/// Controls how the CNA is performed.
+	PropertyField<CNAMode, int> _cnaMode;
 
 private:
 
@@ -187,7 +221,7 @@ private:
 	Q_CLASSINFO("ModifierCategory", "Analysis");
 
 	DECLARE_PROPERTY_FIELD(_cutoff);
-	DECLARE_PROPERTY_FIELD(_adaptiveMode);
+	DECLARE_PROPERTY_FIELD(_cnaMode);
 };
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)

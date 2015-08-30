@@ -53,5 +53,15 @@ void BondsStorage::loadFromStream(LoadStream& stream)
 	stream.closeChunk();
 }
 
+/******************************************************************************
+* Initializes the helper class.
+******************************************************************************/
+ParticleBondMap::ParticleBondMap(const BondsStorage* bonds, size_t numberOfParticles) :
+	_startIndices(numberOfParticles, bonds->size()),
+	_nextBond(bonds->size(), bonds->size())
+{
+}
+
+
 }	// End of namespace
 }	// End of namespace

@@ -589,8 +589,8 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	{
 		scope s = ovito_class<CommonNeighborAnalysisModifier, StructureIdentificationModifier>(
 				":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
-				"Performs the common neighbor analysis (CNA) to classify the local "
-				"structure of each particle. "
+				"Performs the common neighbor analysis (CNA) to classify the structure of the local neighborhood "
+				"of each particle. "
 				"\n\n"
 				"The modifier stores its results as integer values in the ``\"Structure Type\"`` particle property. "
 				"The following constants are defined: "
@@ -601,7 +601,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"   * ``CommonNeighborAnalysisModifier.Type.BCC`` (3)\n"
 				"   * ``CommonNeighborAnalysisModifier.Type.ICO`` (4)\n"
 				"\n"
-				"For example, to count the number of FCC atoms in a system::"
+				"For example, the following code counts the number of FCC atoms in the system::"
 				"\n\n"
 				"    from ovito.modifiers import *\n"
 				"    \n"
@@ -636,11 +636,11 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					"The cutoff radius used for the conventional common neighbor analysis (:py:attr:`.adaptive_mode` == ``False``)."
 					"\n\n"
 					":Default: 3.2\n")
-			.add_property("adaptive_mode", &CommonNeighborAnalysisModifier::adaptiveMode, &CommonNeighborAnalysisModifier::setAdaptiveMode,
-					"Activate the adaptive version of the common neighbor analysis, which automatically determine the optimal cutoff radius "
-					"for each atom. If ``False``, the conventional CNA is performed using a fixed neighbor cutoff radius."
-					"\n\n"
-					":Default: ``True``\n")
+			//.add_property("adaptive_mode", &CommonNeighborAnalysisModifier::adaptiveMode, &CommonNeighborAnalysisModifier::setAdaptiveMode,
+			//		"Activate the adaptive version of the common neighbor analysis, which automatically determine the optimal cutoff radius "
+			//		"for each atom. If ``False``, the conventional CNA is performed using a fixed neighbor cutoff radius."
+			//		"\n\n"
+			//		":Default: ``True``\n")
 		;
 
 		enum_<CommonNeighborAnalysisModifier::StructureType>("Type")
