@@ -145,14 +145,16 @@ would look as follows::
     from ovito.io import FileSource
     
     reference = FileSource(adjust_animation_interval = False)
-    reference.load("simulation.000000.dump")
+    reference.load("simulation.0.dump")
     
     def modify(frame, input, output):
         prop = output.create_particle_property(ParticleProperty.Type.Displacement)
-        prop.marray[:] = input.position.array - reference.position.array
+        
+        prop.marray[:] = (    input.particle_properties.position.array -
+                          reference.particle_properties.position.array)
 		
 The script above creates a :py:class:`~ovito.io.FileSource` to load the reference particle positions from an external
-simulation file. Setting :py:attr:`~ovito.io.FileSource.adjust_animation_interval` to False is required to
+simulation file. Setting :py:attr:`~ovito.io.FileSource.adjust_animation_interval` to false is required to
 prevent OVITO from automatically changing the animation length.
 
 Within the ``modify()`` function we can access the particle coordinates stored in the file source, which is a subclass
@@ -231,7 +233,7 @@ All parameter changes made by the user will get lost as soon as the modification
 create the :py:class:`~ovito.vis.BondsDisplay` just once outside the modifier function and then attach it to the :py:class:`~ovito.data.Bonds`
 object created by the modifier function::
 
-   bonds_display = BondsDisplay(color = (1,0,0), use_particle_colors = False, width = 0.4)
+   bonds_display = BondsDisplay(color=(1,0,0), use_particle_colors=False, width=0.4)
    
    def modify(frame, input, output):   
        bonds = ovito.data.Bonds(display = bonds_display)

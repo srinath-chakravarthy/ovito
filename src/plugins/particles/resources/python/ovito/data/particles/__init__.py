@@ -23,21 +23,154 @@ ovito.data.Bonds = Particles.Bonds
 ovito.data.SurfaceMesh = Particles.SurfaceMesh
 ovito.data.ParticleTypeProperty = Particles.ParticleTypeProperty
 ovito.data.ParticleType = Particles.ParticleType
+ovito.data.BondProperty = Particles.BondProperty
+ovito.data.BondTypeProperty = Particles.BondTypeProperty
+ovito.data.BondType = Particles.BondType
 
-# Register attribute keys by which data objects in a DataCollection can be accessed.
-Particles.SimulationCell._data_attribute_name = "cell"
-Particles.Bonds._data_attribute_name = "bonds"
-Particles.SurfaceMesh._data_attribute_name = "surface"
-
+# For backward-compatibility with OVITO 2.5.1:
 def _ParticleProperty_data_attribute_name(self):
     if self.type != Particles.ParticleProperty.Type.User:
         return re.sub('\W|^(?=\d)','_', self.name).lower()
     else:
         return None
 Particles.ParticleProperty._data_attribute_name = property(_ParticleProperty_data_attribute_name)
+
+# Access particle and bond properties by their name (not display title).
 def _ParticleProperty_data_key(self):
     return self.name
 Particles.ParticleProperty._data_key = property(_ParticleProperty_data_key)
+Particles.BondProperty._data_key = property(_ParticleProperty_data_key)
+
+# Implement the 'particle_properties' attribute of the DataCollection class.
+def _DataCollection_particle_properties(self):
+    """
+    Returns a dictionary view that provides access to the :py:class:`ParticleProperty` 
+    instances stored in this :py:class:`!DataCollection`.
+    """
+    
+    # Helper class used to implement the 'particle_properties' property of the DataCollection class.
+    class _ParticlePropertyView(collections.Mapping):
+        
+        def __init__(self, data_collection):
+            self._data_collection = data_collection
+            
+        def __len__(self):
+            property_count = 0
+            for obj in self._data_collection.objects:
+                if isinstance(obj, ovito.data.ParticleProperty): property_count += 1
+            return property_count
+        
+        def __getitem__(self, key):
+            if not isinstance(key, str):
+                raise TypeError("Property name key is not a string.")
+            for obj in self._data_collection.objects:
+                if isinstance(obj, ovito.data.ParticleProperty): 
+                    if obj.name == key:
+                        return obj
+            raise KeyError("The DataCollection contains no particle property with the name '%s'." % key)
+        
+        def __iter__(self):
+            for obj in self._data_collection.objects:
+                if isinstance(obj, ovito.data.ParticleProperty):
+                    yield obj.name
+               
+        def __getattr__(self, name):
+            for obj in self._data_collection.objects:
+                if isinstance(obj, ovito.data.ParticleProperty): 
+                    if obj.type != ovito.data.ParticleProperty.Type.User and re.sub('\W|^(?=\d)','_', obj.name).lower() == name:
+                        return obj
+            raise AttributeError("DataCollection does not contain the particle property '%s'." % name)
+     
+        def __repr__(self):
+            return repr(dict(self))
+     
+    return _ParticlePropertyView(self)
+ovito.data.DataCollection.particle_properties = property(_DataCollection_particle_properties)
+
+# Implement the 'bond_properties' attribute of the DataCollection class.
+def _DataCollection_bond_properties(self):
+    """
+    Returns a dictionary view that provides access to the :py:class:`BondProperty` 
+    instances stored in this :py:class:`!DataCollection`.
+    """
+    
+    # Helper class used to implement the 'bond_properties' property of the DataCollection class.
+    class _BondPropertyView(collections.Mapping):
+        
+        def __init__(self, data_collection):
+            self._data_collection = data_collection
+            
+        def __len__(self):
+            property_count = 0
+            for obj in self._data_collection.objects:
+                if isinstance(obj, ovito.data.BondProperty): property_count += 1
+            return property_count
+        
+        def __getitem__(self, key):
+            if not isinstance(key, str):
+                raise TypeError("Property name key is not a string.")
+            for obj in self._data_collection.objects:
+                if isinstance(obj, ovito.data.BondProperty): 
+                    if obj.name == key:
+                        return obj
+            raise KeyError("The DataCollection contains no bond property with the name '%s'." % key)
+        
+        def __iter__(self):
+            for obj in self._data_collection.objects:
+                if isinstance(obj, ovito.data.BondProperty):
+                    yield obj.name
+               
+        def __getattr__(self, name):
+            for obj in self._data_collection.objects:
+                if isinstance(obj, ovito.data.BondProperty): 
+                    if obj.type != ovito.data.BondProperty.Type.User and re.sub('\W|^(?=\d)','_', obj.name).lower() == name:
+                        return obj
+            raise AttributeError("DataCollection does not contain the bond property '%s'." % name)
+     
+    return _BondPropertyView(self)
+ovito.data.DataCollection.bond_properties = property(_DataCollection_bond_properties)
+
+# Implement 'cell' attribute of DataCollection class.
+def _DataCollection_cell(self):
+    """
+    Returns the :py:class:`SimulationCell` stored in this :py:class:`!DataCollection`.
+    
+    Accessing this property raises an ``AttributeError`` if the data collection
+    contains no simulation cell information.
+    """
+    for obj in self.objects:
+        if isinstance(obj, ovito.data.SimulationCell):
+            return obj
+    raise AttributeError("This DataCollection contains no simulation cell.")
+ovito.data.DataCollection.cell = property(_DataCollection_cell)
+
+# Implement 'bonds' attribute of DataCollection class.
+def _DataCollection_bonds(self):
+    """
+    Returns the :py:class:`Bonds` object stored in this :py:class:`!DataCollection`.
+    
+    Accessing this property raises an ``AttributeError`` if the data collection
+    contains no bonds.
+    """
+    for obj in self.objects:
+        if isinstance(obj, ovito.data.Bonds):
+            return obj
+    raise AttributeError("This DataCollection contains no bonds data object.")
+ovito.data.DataCollection.bonds = property(_DataCollection_bonds)
+
+# Implement 'surface' attribute of DataCollection class.
+def _DataCollection_surface(self):
+    """
+    Returns the :py:class:`SurfaceMesh` in this :py:class:`!DataCollection`.
+    
+    Accessing this property raises an ``AttributeError`` if the data collection
+    contains no surface mesh instance.
+    """
+    for obj in self.objects:
+        if isinstance(obj, ovito.data.SurfaceMesh):
+            return obj
+    raise AttributeError("This DataCollection contains no surface mesh.")
+ovito.data.DataCollection.surface = property(_DataCollection_surface)
 
 # Returns a NumPy array wrapper for a particle property.
 def _ParticleProperty_array(self):
@@ -99,6 +232,50 @@ def _ParticleProperty_marray_assign(self, other):
 Particles.ParticleProperty.marray = property(_ParticleProperty_marray, _ParticleProperty_marray_assign)
 # For backward compatibility with OVITO 2.5.1:
 Particles.ParticleProperty.mutable_array = property(lambda self: self.marray)
+
+# Returns a NumPy array wrapper for a bond property.
+def _BondProperty_array(self):
+    """ 
+    This attribute returns a NumPy array, which provides read access to the per-bond data stored in this bond property object.
+        
+    The returned array is one-dimensional for scalar bond properties (:py:attr:`.components` == 1),
+    or two-dimensional for vector properties (:py:attr:`.components` > 1). The outer length of the array is 
+    equal to the number of half-bonds in both cases.
+        
+    Note that the returned NumPy array is read-only and provides a view of the internal data. 
+    No copy of the data, which may be shared by multiple objects, is made. If you want to modify the 
+    data stored in this bond property, use :py:attr:`.marray` instead.
+    """
+    return numpy.asarray(self)
+Particles.BondProperty.array = property(_BondProperty_array)
+
+# Returns a NumPy array wrapper for a bond property with write access.
+def _BondProperty_marray(self):
+    """ 
+    This attribute returns a *mutable* NumPy array providing read/write access to the internal per-bond data.
+        
+    The returned array is one-dimensional for scalar bond properties (:py:attr:`.components` == 1),
+    or two-dimensional for vector properties (:py:attr:`.components` > 1). The outer length of the array is 
+    equal to the number of half-bonds in both cases.
+        
+    .. note::
+           
+       After you are done modifying the data in the returned NumPy array, you must call
+       :py:meth:`.changed`! Calling this method is necessary to inform the data pipeline system
+       that the input bond data has changed and the modification pipeline needs to be re-evaluated.
+       The reason is that OVITO cannot automatically detect modifications made by the script to 
+       the returned NumPy array. Therefore, an explicit call to :py:meth:`.changed` is necessary. 
+           
+    """
+    class DummyClass:
+        pass
+    o = DummyClass()
+    o.__array_interface__ = self.__mutable_array_interface__
+    # Create reference to particle property object to keep it alive.
+    o.__base_property = self
+    return numpy.asarray(o)
+        
+Particles.BondProperty.marray = property(_BondProperty_marray, _ParticleProperty_marray_assign)
 
 # Returns a NumPy array wrapper for bonds list.
 def _Bonds_array(self):
@@ -415,11 +592,21 @@ ovito.data.DataCollection.create_user_particle_property = _DataCollection_create
 def _get_DataCollection_number_of_particles(self):
     """ The number of particles stored in the data collection. """
     # The number of particles is determined by the size of the 'Position' particle property.
-    for obj in self.values():
+    for obj in self.objects:
         if isinstance(obj, ovito.data.ParticleProperty) and obj.type == ovito.data.ParticleProperty.Type.Position:
             return obj.size
     return 0
 ovito.data.DataCollection.number_of_particles = property(_get_DataCollection_number_of_particles)
+
+# Extend the DataCollection class with a 'number_of_bonds' property.
+def _get_DataCollection_number_of_bonds(self):
+    """ The number of half-bonds stored in the data collection. """
+    # The number of bonds is determined by the size of the BondsObject.
+    try:
+        return self.bonds.size
+    except:
+        return 0
+ovito.data.DataCollection.number_of_bonds = property(_get_DataCollection_number_of_bonds)
 
 # Implement the 'type_list' property of the ParticleTypeProperty class, which provides access to particle types. 
 def _get_ParticleTypeProperty_type_list(self):
@@ -444,3 +631,56 @@ def _get_ParticleTypeProperty_type_list(self):
             self.__owner.insertParticleType(index, obj)
     return ParticleTypeList(self)
 ovito.data.ParticleTypeProperty.type_list = property(_get_ParticleTypeProperty_type_list)
+
+# Implement the 'type_list' property of the BondTypeProperty class, which provides access to bond types. 
+def _get_BondTypeProperty_type_list(self):
+    """A mutable list of :py:class:`BondType` instances."""    
+    class BondTypeList(collections.MutableSequence):
+        def __init__(self, owner):
+            self.__owner = owner;
+        def __len__(self):
+            return len(self.__owner.bondTypes)
+        def __getitem__(self, index):
+            if index < 0: index += len(self)
+            return self.__owner.bondTypes[index]
+        def __delitem__(self, index):
+            if index < 0: index += len(self)
+            self.__owner.removeBondType(index)
+        def __setitem__(self, index, obj):
+            if index < 0: index += len(self)
+            self.__owner.removeBondType(index)
+            self.__owner.insertBondType(index, obj)
+        def insert(self, index, obj):
+            if index < 0: index += len(self)
+            self.__owner.insertBondType(index, obj)
+    return BondTypeList(self)
+ovito.data.BondTypeProperty.type_list = property(_get_BondTypeProperty_type_list)
+
+class Enumerator(Particles.Bonds.ParticleBondMap):
+    """
+    Utility class that allows to efficiently iterate over the bonds that are adjacent to a particular particle.
+
+    The class constructor takes the :py:class:`Bonds` object for which it will first build a lookup table.
+    After the :py:class:`!Enumerator` has been constructed, the half-bonds of a
+    particular particle can be found using the :py:meth:`.bonds_of_particle` method.
+
+    Warning: Do not modify the underlying :py:class:`Bonds` object while using the :py:class:`!Enumerator`.
+    Adding or deleting bonds would render the internal lookup table of the :py:class:`!Enumerator`
+    invalid.
+    """ 
+                   
+    def __init__(self, bonds):
+        """ This is the constructor. """
+        super(self.__class__, self).__init__(bonds)        
+    
+    def bonds_of_particle(self, particle_index):
+        """
+        Returns an iterator that yields the indices of the half-bonds connected to the given particle.
+        """
+        eol = self.endOfListValue
+        currentBondIndex = self.firstBondOfParticle(particle_index)
+        while currentBondIndex != eol:
+            yield currentBondIndex
+            currentBondIndex = self.nextBondOfParticle(currentBondIndex)
+ovito.data.Bonds.Enumerator = Enumerator
+del Enumerator

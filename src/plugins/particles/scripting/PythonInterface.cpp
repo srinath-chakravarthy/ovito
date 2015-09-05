@@ -191,7 +191,7 @@ BOOST_PYTHON_MODULE(Particles)
 			.def("changed", &ParticlePropertyObject::changed,
 					"Informs the particle property object that its internal data has changed. "
 					"This function must be called after each direct modification of the per-particle data "
-					"through the :py:attr:`.mutable_array` attribute.\n\n"
+					"through the :py:attr:`.array` attribute.\n\n"
 					"Calling this method on an input particle property is necessary to invalidate data caches down the modification "
 					"pipeline. Forgetting to call this method may result in an incomplete re-evaluation of the modification pipeline. "
 					"See :py:attr:`.marray` for more information.")
@@ -345,33 +345,45 @@ BOOST_PYTHON_MODULE(Particles)
 		.add_property("origin", make_function(&SimulationCellObject::origin, return_value_policy<copy_const_reference>()))
 	;
 
-	ovito_class<BondsObject, DataObject>(
-			":Base class: :py:class:`ovito.data.DataObject`\n\n"
-			"This data object stores a list of bonds between pairs of particles. "
-			"Typically bonds are loaded from a simulation file or are created using the :py:class:`~.ovito.modifiers.CreateBondsModifier` in the modification pipeline."
-			"\n\n"
-			"The following example shows how to access the bond list create by a :py:class:`~.ovito.modifiers.CreateBondsModifier`:\n"
-			"\n"
-			".. literalinclude:: ../example_snippets/bonds_data_object.py\n"
-			"   :lines: 1-14\n"
-			"\n"
-			"OVITO represents each bond as two half-bonds, one pointing from a particle *A* to a particle *B*, and "
-			"the other half-bond pointing back from *B* to *A*. Thus, for a given number of bonds, you will find twice as many half-bonds in the :py:class:`!Bonds` object. \n"
-			"The :py:attr:`.array` attribute returns a (read-only) NumPy array that contains the list of half-bonds, which are "
-			"defined by pairs of particle indices (the first one specifying the particle the half-bond is pointing away from)."
-			"\n\n"
-			"Furthermore, every :py:class:`!Bonds` object is associated with a :py:class:`~ovito.vis.BondsDisplay` instance, "
-			"which controls the visual appearance of the bonds. It can be accessed through the :py:attr:`~DataObject.display` attribute:\n"
-			"\n"
-			".. literalinclude:: ../example_snippets/bonds_data_object.py\n"
-			"   :lines: 16-\n",
-			// Python class name:
-			"Bonds")
-		.add_property("__array_interface__", &BondsObject__array_interface__)
-		.def("clear", &BondsObject::clear,
-				"Removes all stored bonds.")
-		.def("addBond", &BondsObject::addBond)
-	;
+	{
+		scope s = ovito_class<BondsObject, DataObject>(
+				":Base class: :py:class:`ovito.data.DataObject`\n\n"
+				"This data object stores a list of bonds between pairs of particles. "
+				"Typically bonds are loaded from a simulation file or are created using the :py:class:`~.ovito.modifiers.CreateBondsModifier` in the modification pipeline."
+				"\n\n"
+				"The following example shows how to access the bond list create by a :py:class:`~.ovito.modifiers.CreateBondsModifier`:\n"
+				"\n"
+				".. literalinclude:: ../example_snippets/bonds_data_object.py\n"
+				"   :lines: 1-14\n"
+				"\n"
+				"OVITO represents each bond as two half-bonds, one pointing from a particle *A* to a particle *B*, and "
+				"the other half-bond pointing back from *B* to *A*. Thus, for a given number of bonds, you will find twice as many half-bonds in the :py:class:`!Bonds` object. \n"
+				"The :py:attr:`.array` attribute returns a (read-only) NumPy array that contains the list of half-bonds, which are "
+				"defined by pairs of particle indices (the first one specifying the particle the half-bond is pointing away from)."
+				"\n\n"
+				"Furthermore, every :py:class:`!Bonds` object is associated with a :py:class:`~ovito.vis.BondsDisplay` instance, "
+				"which controls the visual appearance of the bonds. It can be accessed through the :py:attr:`~DataObject.display` attribute:\n"
+				"\n"
+				".. literalinclude:: ../example_snippets/bonds_data_object.py\n"
+				"   :lines: 16-\n",
+				// Python class name:
+				"Bonds")
+			.add_property("__array_interface__", &BondsObject__array_interface__)
+			.def("clear", &BondsObject::clear,
+					"Removes all stored bonds.")
+			.def("addBond", &BondsObject::addBond)
+			.add_property("size", &BondsObject::size)
+		;
+
+		class_<ParticleBondMap, boost::shared_ptr<ParticleBondMap>, boost::noncopyable>("ParticleBondMap", no_init)
+			.def("__init__", make_constructor(static_cast<boost::shared_ptr<ParticleBondMap> (*)(BondsObject*)>(
+					[](BondsObject* bonds) { return boost::make_shared<ParticleBondMap>(*bonds->storage()); }),
+					default_call_policies(), (arg("bonds"))))
+			.def("firstBondOfParticle", &ParticleBondMap::firstBondOfParticle)
+			.def("nextBondOfParticle", &ParticleBondMap::nextBondOfParticle)
+			.add_property("endOfListValue", &ParticleBondMap::endOfListValue)
+		;
+	}
 
 	ovito_class<ParticleType, RefTarget>(
 			"Stores the properties of a particle type or atom type."
@@ -558,8 +570,10 @@ BOOST_PYTHON_MODULE(Particles)
 			CompressedTextWriter writer(file);
 			output.saveToVTK(writer);
 		}),
+		"export_vtk(filename, cell)"
+		"\n\n"
 		"Writes the surface mesh to a VTK file, which is a simple text-based format and which can be opened with the software ParaView. "
-		"The method takes the output filename and a :py:class:`SimulationCell` object as input. The simulation cell information "
+		"The method takes the output filename and a :py:class:`~ovito.data.SimulationCell` object as input. The simulation cell information "
 		"is needed by the method to generate a non-periodic version of the mesh, which is truncated at the periodic boundaries "
 		"of the simulation cell (if it has any).")
 		.def("export_cap_vtk", static_cast<void (*)(SurfaceMesh&,const QString&,SimulationCellObject*)>(
@@ -572,7 +586,9 @@ BOOST_PYTHON_MODULE(Particles)
 			CompressedTextWriter writer(file);
 			output.saveToVTK(writer);
 		}),
-		"If the surface mesh has been generated from a simulation cell with periodic boundary conditions, then this "
+		"export_cap_vtk(filename, cell)"
+		"\n\n"
+		"If the surface mesh has been generated from a :py:class:`~ovito.data.SimulationCell` with periodic boundary conditions, then this "
 		"method computes the cap polygons from the intersection of the surface mesh with the periodic cell boundaries. "
 		"The cap polygons are written to a VTK file, which is a simple text-based format and which can be opened with the software ParaView.")
 	;
@@ -630,6 +646,98 @@ BOOST_PYTHON_MODULE(Particles)
 					return_internal_reference<>()))
 		;
 	}
+
+	{
+		scope s = ovito_abstract_class<BondPropertyObject, DataObject>(
+				":Base class: :py:class:`ovito.data.DataObject`\n\n"
+				"A data object that stores the values of a bond property.",
+				// Python class name:
+				"BondProperty")
+			.def("createUserProperty", &BondPropertyObject::createUserProperty)
+			.def("createStandardProperty", &BondPropertyObject::createStandardProperty)
+			.def("findInState", make_function((BondPropertyObject* (*)(const PipelineFlowState&, BondProperty::Type))&BondPropertyObject::findInState, return_value_policy<ovito_object_reference>()))
+			.def("findInState", make_function((BondPropertyObject* (*)(const PipelineFlowState&, const QString&))&BondPropertyObject::findInState, return_value_policy<ovito_object_reference>()))
+			.staticmethod("createUserProperty")
+			.staticmethod("createStandardProperty")
+			.staticmethod("findInState")
+			.def("changed", &BondPropertyObject::changed,
+					"Informs the bond property object that its internal data has changed. "
+					"This function must be called after each direct modification of the per-bond data "
+					"through the :py:attr:`.marray` attribute.\n\n"
+					"Calling this method on an input bond property is necessary to invalidate data caches down the modification "
+					"pipeline. Forgetting to call this method may result in an incomplete re-evaluation of the modification pipeline. "
+					"See :py:attr:`.marray` for more information.")
+			.def("nameWithComponent", &BondPropertyObject::nameWithComponent)
+			.add_property("name", make_function(&BondPropertyObject::name, return_value_policy<copy_const_reference>()), &BondPropertyObject::setName,
+					"The human-readable name of the bond property.")
+			.add_property("__len__", &BondPropertyObject::size)
+			.add_property("size", &BondPropertyObject::size, &BondPropertyObject::resize,
+					"The number of stored values, which is equal to the number of half-bonds.")
+			.add_property("type", &BondPropertyObject::type, &BondPropertyObject::setType,
+					".. _bond-types-list:"
+					"\n\n"
+					"The type of the bon property (user-defined or one of the standard types).\n"
+					"One of the following constants:"
+					"\n\n"
+					"======================================================= =================================================== ==========\n"
+					"Type constant                                           Property name                                       Data type \n"
+					"======================================================= =================================================== ==========\n"
+					"``BondProperty.Type.User``                              (a user-defined property with a non-standard name)  int/float \n"
+					"``BondProperty.Type.BondType``                          :guilabel:`Bond Type`                               int       \n"
+					"``BondProperty.Type.Selection``                         :guilabel:`Selection`                               int       \n"
+					"``BondProperty.Type.Color``                             :guilabel:`Color`                                   float     \n"
+					"======================================================= =================================================== ==========\n"
+					)
+			.add_property("dataType", &BondPropertyObject::dataType)
+			.add_property("dataTypeSize", &BondPropertyObject::dataTypeSize)
+			.add_property("stride", &BondPropertyObject::stride)
+			.add_property("components", &BondPropertyObject::componentCount,
+					"The number of vector components (if this is a vector bond property); otherwise 1 (= scalar property).")
+			.add_property("__array_interface__", &PropertyObject__array_interface__<BondPropertyObject,true>)
+			.add_property("__mutable_array_interface__", &PropertyObject__array_interface__<BondPropertyObject,false>)
+		;
+
+		enum_<BondProperty::Type>("Type")
+			.value("User", BondProperty::UserProperty)
+			.value("BondType", BondProperty::BondTypeProperty)
+			.value("Selection", BondProperty::SelectionProperty)
+			.value("Color", BondProperty::ColorProperty)
+		;
+	}
+
+	ovito_abstract_class<BondTypeProperty, BondPropertyObject>(
+			":Base class: :py:class:`ovito.data.BondProperty`\n\n"
+			"A special :py:class:`BondProperty` that stores a list of :py:class:`BondType` instances in addition "
+			"to the per-bond values. "
+			"\n\n"
+			"The bond property ``Bond Type`` is represented by an instance of this class. In addition to the regular per-bond "
+			"data (consisting of an integer per half-bond, indicating its type ID), this class holds the list of defined bond types. These are "
+			":py:class:`BondType` instances, which store the ID, name, and color of each bond type.")
+		.def("addBondType", &BondTypeProperty::addBondType)
+		.def("insertBondType", &BondTypeProperty::insertBondType)
+		.def("bondType", make_function((BondType* (BondTypeProperty::*)(int) const)&BondTypeProperty::bondType, return_value_policy<ovito_object_reference>()))
+		.def("bondType", make_function((BondType* (BondTypeProperty::*)(const QString&) const)&BondTypeProperty::bondType, return_value_policy<ovito_object_reference>()))
+		.def("removeBondType", &BondTypeProperty::removeBondType)
+		.def("clearBondTypes", &BondTypeProperty::clearBondTypes)
+		.add_property("bondTypes", make_function(&BondTypeProperty::bondTypes, return_internal_reference<>()))
+	;
+
+	ovito_class<BondType, RefTarget>(
+			"Stores the properties of a bond type."
+			"\n\n"
+			"The list of bond types is stored in the :py:class:`~ovito.data.BondTypeProperty` class.")
+		.add_property("id", &BondType::id, &BondType::setId,
+				"The identifier of the bond type.")
+		.add_property("color", &BondType::color, &BondType::setColor,
+				"The display color to use for bonds of this type.")
+		.add_property("name", make_function(&BondType::name, return_value_policy<copy_const_reference>()), &BondType::setName,
+				"The display name of this bond type.")
+	;
+
+	class_<QVector<BondType*>, boost::noncopyable>("QVector<BondType*>", no_init)
+		.def(QVector_OO_readonly_indexing_suite<BondType>())
+	;
+	python_to_container_conversion<QVector<BondType*>>();
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(Particles);

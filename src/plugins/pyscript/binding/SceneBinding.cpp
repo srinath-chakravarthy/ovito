@@ -98,7 +98,9 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 			"   * :py:class:`~ovito.data.ParticleProperty` and :py:class:`~ovito.data.ParticleTypeProperty`\n"
 			"   * :py:class:`~ovito.data.SimulationCell`\n"
 			"   * :py:class:`~ovito.data.Bonds`\n"
+			"   * :py:class:`~ovito.data.BondProperty` and :py:class:`~ovito.data.BondTypeProperty`\n"
 			"   * :py:class:`~ovito.data.SurfaceMesh`\n"
+			"   * :py:class:`~ovito.data.DislocationNetwork`\n"
 			"\n\n"
 			"Data collections hold the data that enters or leaves an :py:class:`~ovito.ObjectNode`'s modification pipeline. "
 			"The *input* data collection of the pipeline can be accessed through the node's :py:attr:`~ovito.ObjectNode.source` attribute::"
@@ -114,7 +116,7 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 			"of the modification pipeline, we need to call :py:meth:`ObjectNode.compute() <ovito.ObjectNode.compute>`, "
 			"which returns the *output* data collection after evaluating the modifiers::"
 			"\n\n"
-			"   >>> node.modifiers.append(CommonNeighborAnalysisModifier(adaptive_mode=True))\n"
+			"   >>> node.modifiers.append(CommonNeighborAnalysisModifier())\n"
 			"   >>> print(node.compute())\n"
 			"   DataCollection(['Simulation cell', 'Position', 'Color', 'Structure Type'])\n"
 			"\n"
@@ -126,32 +128,37 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 			"\n\n"
 			"In our example, the :py:class:`~ovito.modifiers.CommonNeighborAnalysisModifier` in the modification pipeline "
 			"has added additional particle properties to the :py:class:`!DataCollection`. "
-			"Particle properties, which are instances of the :py:class:`ParticleProperty` class, are so-called :py:class:`~ovito.data.DataObject`s. "
+			"Particle properties, which are instances of the :py:class:`ParticleProperty` class, are so-called :py:class:`data objects <ovito.data.DataObject>`. "
 			"Likewise, the simulation cell (:py:class:`SimulationCell`) and bonds (:py:class:`Bonds`) are data objects, which "
 			"can all be part of a data collection. "
 			"\n\n"
-			"Individual data objects in a collection can be accessed via key strings. Use the :py:meth:`.keys` method to "
-			"find out which data objects are in the collection::"
+			"The particle properties in a collection can be accessed through the :py:attr:`.particle_properties` dictionary view. "
+			"Use its ``keys()`` method to find out which particle properties are contained in the collection::"
 			"\n\n"
 			"   >>> data = node.compute()\n"
-			"   >>> data.keys()\n"
-			"   ['Simulation cell', 'Particle identifiers', 'Particle positions', \n"
-			"    'Potential Energy', 'Particle colors', 'Structure types']\n"
+			"   >>> list(data.particle_properties.keys())\n"
+			"   ['Particle Identifier', 'Position', \n"
+			"    'Potential Energy', 'Color', 'Structure Type']\n"
 			"\n\n"
-			"Specific data objects in the collection can be accessed using the dictionary interface::"
+			"Specific particle properties in the collection can be accessed using the dictionary interface::"
 			"\n\n"
-			"   >>> data['Potential Energy']\n"
+			"   >>> data.particle_properties['Potential Energy']\n"
 			"   <ParticleProperty at 0x11d01d60>\n"
 			"\n\n"
-			"More conveniently, however, standard particle properties, the simulation cell, and the bonds list can be directly accessed as object attributes, e.g.::"
+			"Standard particle properties, however, can be directly accessed more conveniently via corresponding Python attributes, e.g.::"
 			"\n\n"
-			"   >>> data.potential_energy\n"
+			"   >>> data.particle_properties.potential_energy\n"
 			"   <ParticleProperty at 0x11d01d60>\n"
 			"   \n"
-			"   >>> print(data.position.array)\n"
+			"   >>> print(data.particle_properties.position.array)\n"
 			"   [[ 0.          0.          0.        ]\n"
 			"    [ 0.8397975   0.8397975   0.        ]\n"
-			"    ...\n\n"
+			"    ...\n"
+			"\n\n"
+			"The :py:class:`~ovito.data.SimulationCell`, :py:class:`~ovito.data.Bonds`, and other data objects in the "
+			"data collection can be accessed through its :py:attr:`.cell`, :py:attr:`.bonds`, :py:attr:`.surface`, and "
+			":py:attr:`.dislocations` property::"
+			"\n\n"
 			"   >>> data.cell\n"
 			"   <SimulationCellObject at 0x24338a0>\n\n"
 			"   >>> data.cell.matrix\n"
@@ -163,21 +170,27 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 			"DataCollection")
 		.add_property("objects", make_function(&CompoundObject::dataObjects, return_internal_reference<>()))
 		.def("add", &CompoundObject::addDataObject,
+				"add(obj)"
+				"\n\n"
 				"Inserts a :py:class:`~ovito.data.DataObject` into the :py:class:`!DataCollection`. "
 				"\n\n"
 				"The method will do nothing if the data object is already part of the collection. "
 				"A data object can be part of several data collections. ",
 				args("self", "obj"))
 		.def("remove", &CompoundObject::removeDataObject,
+				"remove(obj)"
+				"\n\n"
 				"Removes a :py:class:`~ovito.data.DataObject` from the :py:class:`!DataCollection`. "
 				"\n\n"
 				"The method will do nothing if the data object is not part of the collection. ",
-				args("self", "obj"))
+				(arg("obj")))
 		.def("replace", &CompoundObject::replaceDataObject,
+				"replace(old_obj, new_obj)"
+				"\n\n"
 				"Replaces a :py:class:`~ovito.data.DataObject` in the :py:class:`!DataCollection` with a different one. "
 				"\n\n"
 				"The method will do nothing if the data object to be replaced is not part of the collection. ",
-				args("self", "oldobj", "newobj"))
+				(arg("old_obj"), arg("new_obj")))
 		.def("setDataObjects", &CompoundObject::setDataObjects)
 	;
 

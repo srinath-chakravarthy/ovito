@@ -9,4 +9,4 @@ file_source = node.source
 print('Simulation cell:')
 print(file_source.cell.matrix)
 print('Particle coordinates:')
-print(file_source.position.array)
+print(file_source.particle_properties.position.array)

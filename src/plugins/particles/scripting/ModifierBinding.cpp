@@ -605,7 +605,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"\n\n"
 				"    from ovito.modifiers import *\n"
 				"    \n"
-				"    modifier = CommonNeighborAnalysisModifier(adaptive_mode = True)\n"
+				"    modifier = CommonNeighborAnalysisModifier()\n"
 				"    node.modifiers.append(modifier)\n"
 				"    node.compute()\n"
 				"    print(\"Number of FCC atoms: %i\" % modifier.counts[CommonNeighborAnalysisModifier.Type.FCC])\n"
@@ -633,14 +633,33 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					"Note that accessing this output field is only possible after the modifier has computed its results. "
 					"Thus, you have to call :py:meth:`ovito.ObjectNode.compute` first to ensure that this information is up to date. ")
 			.add_property("cutoff", &CommonNeighborAnalysisModifier::cutoff, &CommonNeighborAnalysisModifier::setCutoff,
-					"The cutoff radius used for the conventional common neighbor analysis (:py:attr:`.adaptive_mode` == ``False``)."
+					"The cutoff radius used for the conventional common neighbor analysis. "
+					"This parameter is only used if :py:attr:`.mode`==``CommonNeighborAnalysisModifier.Mode.FixedCutoff``."
 					"\n\n"
 					":Default: 3.2\n")
-			//.add_property("adaptive_mode", &CommonNeighborAnalysisModifier::adaptiveMode, &CommonNeighborAnalysisModifier::setAdaptiveMode,
-			//		"Activate the adaptive version of the common neighbor analysis, which automatically determine the optimal cutoff radius "
-			//		"for each atom. If ``False``, the conventional CNA is performed using a fixed neighbor cutoff radius."
-			//		"\n\n"
-			//		":Default: ``True``\n")
+			.add_property("mode", &CommonNeighborAnalysisModifier::mode, &CommonNeighborAnalysisModifier::setMode,
+					"Selects the mode of operation. "
+					"Valid values are:"
+					"\n\n"
+					"  * ``CommonNeighborAnalysisModifier.Mode.FixedCutoff``\n"
+					"  * ``CommonNeighborAnalysisModifier.Mode.AdaptiveCutoff``\n"
+					"  * ``CommonNeighborAnalysisModifier.Mode.BondBased``\n"
+					"\n\n"
+					":Default: ``CommonNeighborAnalysisModifier.Mode.AdaptiveCutoff``\n")
+
+			// For backward compatibility with OVITO 2.5.1.
+			.add_property("adaptive_mode",
+					static_cast<bool (*)(CommonNeighborAnalysisModifier&)>(
+							[](CommonNeighborAnalysisModifier& mod) -> bool { return (mod.mode() == CommonNeighborAnalysisModifier::AdaptiveCutoffMode); }),
+					static_cast<void (*)(CommonNeighborAnalysisModifier&,bool)>(
+							[](CommonNeighborAnalysisModifier& mod, bool adaptive) { mod.setMode(adaptive ? CommonNeighborAnalysisModifier::AdaptiveCutoffMode : CommonNeighborAnalysisModifier::FixedCutoffMode); })
+					)
+		;
+
+		enum_<CommonNeighborAnalysisModifier::CNAMode>("Mode")
+			.value("FixedCutoff", CommonNeighborAnalysisModifier::FixedCutoffMode)
+			.value("AdaptiveCutoff", CommonNeighborAnalysisModifier::AdaptiveCutoffMode)
+			.value("BondBased", CommonNeighborAnalysisModifier::BondMode)
 		;
 
 		enum_<CommonNeighborAnalysisModifier::StructureType>("Type")

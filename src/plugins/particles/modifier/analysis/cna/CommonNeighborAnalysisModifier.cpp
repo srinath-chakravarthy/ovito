@@ -27,6 +27,7 @@
 #include <plugins/particles/util/CutoffNeighborFinder.h>
 #include <plugins/particles/util/CutoffRadiusPresetsUI.h>
 #include <plugins/particles/objects/BondsObject.h>
+#include <plugins/particles/objects/BondPropertyObject.h>
 #include <plugins/particles/data/BondProperty.h>
 
 #include "CommonNeighborAnalysisModifier.h"
@@ -76,6 +77,23 @@ void CommonNeighborAnalysisModifier::propertyChanged(const PropertyFieldDescript
 }
 
 /******************************************************************************
+* Parses the serialized contents of a property field in a custom way.
+******************************************************************************/
+bool CommonNeighborAnalysisModifier::loadPropertyFieldFromStream(ObjectLoadStream& stream, const ObjectLoadStream::SerializedPropertyField& serializedField)
+{
+	// This is for backward compatibility with OVITO 2.5.1.
+	if(serializedField.identifier == "AdaptiveMode" && serializedField.definingClass == &CommonNeighborAnalysisModifier::OOType) {
+		bool adaptiveMode;
+		stream >> adaptiveMode;
+		if(!adaptiveMode)
+			setMode(FixedCutoffMode);
+		return true;
+	}
+
+	return false;
+}
+
+/******************************************************************************
 * Creates and initializes a computation engine that will compute the modifier's results.
 ******************************************************************************/
 std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CommonNeighborAnalysisModifier::createEngine(TimePoint time, TimeInterval validityInterval)
@@ -97,7 +115,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CommonNeighborAnaly
 		return std::make_shared<AdaptiveCNAEngine>(validityInterval, posProperty->storage(), simCell->data(), selectionProperty);
 	}
 	else if(mode() == BondMode) {
-		// Get bonds.
+		// Get input bonds.
 		BondsObject* bondsObj = input().findObject<BondsObject>();
 		if(!bondsObj || !bondsObj->storage())
 			throw Exception(tr("No bonds are defined. Please use the 'Create Bonds' modifier first to generate some bonds between particles."));
@@ -166,19 +184,111 @@ void CommonNeighborAnalysisModifier::BondCNAEngine::perform()
 {
 	setProgressText(tr("Performing common neighbor analysis"));
 
+	// Prepare particle bond map.
+	ParticleBondMap bondMap(bonds());
+
 	// Compute per-bond CNA indices.
-	parallelFor(bonds()->size(), *this, [this](size_t index) {
-		cnaIndices()->setIntComponent(index, 0, 0);
-		cnaIndices()->setIntComponent(index, 1, 0);
-		cnaIndices()->setIntComponent(index, 2, 0);
+	bool maxNeighborLimitExceeded = false;
+	bool maxCommonNeighborBondLimitExceeded = false;
+	parallelFor(bonds().size(), *this, [this, &bondMap, &maxNeighborLimitExceeded, &maxCommonNeighborBondLimitExceeded](size_t bondIndex) {
+		const Bond& currentBond = bonds()[bondIndex];
+
+		// Determine common neighbors shared by both particles.
+		int numCommonNeighbors = 0;
+		std::array<std::pair<unsigned int, Vector_3<int8_t>>, 32> commonNeighbors;
+		for(size_t neighborBondIndex1 : bondMap.bondsOfParticle(currentBond.index1)) {
+			const Bond& neighborBond1 = bonds()[neighborBondIndex1];
+			OVITO_ASSERT(neighborBond1.index1 == currentBond.index1);
+			for(size_t neighborBondIndex2 : bondMap.bondsOfParticle(currentBond.index2)) {
+				const Bond& neighborBond2 = bonds()[neighborBondIndex2];
+				OVITO_ASSERT(neighborBond2.index1 == currentBond.index2);
+				if(neighborBond2.index2 == neighborBond1.index2 && neighborBond1.pbcShift == currentBond.pbcShift + neighborBond2.pbcShift) {
+					if(numCommonNeighbors == commonNeighbors.size()) {
+						maxNeighborLimitExceeded = true;
+						return;
+					}
+					commonNeighbors[numCommonNeighbors].first = neighborBond1.index2;
+					commonNeighbors[numCommonNeighbors].second = neighborBond1.pbcShift;
+					numCommonNeighbors++;
+					break;
+				}
+			}
+		}
+
+		// Determine which of the common neighbors are connected by bonds.
+		std::array<CNAPairBond, 64> commonNeighborBonds;
+		int numCommonNeighborBonds = 0;
+		for(int ni1 = 0; ni1 < numCommonNeighbors; ni1++) {
+			for(size_t neighborBondIndex : bondMap.bondsOfParticle(commonNeighbors[ni1].first)) {
+				const Bond& neighborBond = bonds()[neighborBondIndex];
+				for(int ni2 = 0; ni2 < ni1; ni2++) {
+					if(commonNeighbors[ni2].first == neighborBond.index2 && commonNeighbors[ni1].second + neighborBond.pbcShift == commonNeighbors[ni2].second) {
+						if(numCommonNeighborBonds == commonNeighborBonds.size()) {
+							maxCommonNeighborBondLimitExceeded = true;
+							return;
+						}
+						commonNeighborBonds[numCommonNeighborBonds++] = (1<<ni1) | (1<<ni2);
+						break;
+					}
+				}
+			}
+		}
+
+		// Determine the number of bonds in the longest continuous chain.
+		int maxChainLength = calcMaxChainLength(commonNeighborBonds.data(), numCommonNeighborBonds);
+
+		// Store results in bond property.
+		cnaIndices()->setIntComponent(bondIndex, 0, numCommonNeighbors);
+		cnaIndices()->setIntComponent(bondIndex, 1, numCommonNeighborBonds);
+		cnaIndices()->setIntComponent(bondIndex, 2, maxChainLength);
 	});
+	if(isCanceled())
+		return;
+	if(maxNeighborLimitExceeded)
+		throw Exception(tr("Two of the particles have more than 32 common neighbors, which is the built-in limit. Cannot perform CNA in this case."));
+	if(maxCommonNeighborBondLimitExceeded)
+		throw Exception(tr("There are more than 64 bonds between common neighbors, which is the built-in limit. Cannot perform CNA in this case."));
 
 	// Create output storage.
 	ParticleProperty* output = structures();
 
 	// Classify particles.
-	parallelFor(positions()->size(), *this, [this, output](size_t index) {
-		output->setInt(index, OTHER);
+	parallelFor(positions()->size(), *this, [this, output, &bondMap](size_t particleIndex) {
+
+		int n421 = 0;
+		int n422 = 0;
+		int n444 = 0;
+		int n555 = 0;
+		int n666 = 0;
+		int ntotal = 0;
+		for(size_t neighborBondIndex : bondMap.bondsOfParticle(particleIndex)) {
+			const Point3I& indices = cnaIndices()->getPoint3I(neighborBondIndex);
+			if(indices[0] == 4) {
+				if(indices[1] == 2) {
+					if(indices[2] == 1) n421++;
+					else if(indices[2] == 2) n422++;
+				}
+				else if(indices[1] == 4 && indices[2] == 4) n444++;
+			}
+			else if(indices[0] == 5 && indices[1] == 5 && indices[2] == 5) n555++;
+			else if(indices[0] == 6 && indices[1] == 6 && indices[2] == 6) n666++;
+			else {
+				output->setInt(particleIndex, OTHER);
+				return;
+			}
+			ntotal++;
+		}
+
+		if(n421 == 12 && ntotal == 12)
+			output->setInt(particleIndex, FCC);
+		else if(n421 == 6 && n422 == 6 && ntotal == 12)
+			output->setInt(particleIndex, HCP);
+		else if(n444 == 6 && n666 == 8 && ntotal == 14)
+			output->setInt(particleIndex, BCC);
+		else if(n555 == 12 && ntotal == 12)
+			output->setInt(particleIndex, ICO);
+		else
+			output->setInt(particleIndex, OTHER);
 	});
 }
 
@@ -189,10 +299,10 @@ int CommonNeighborAnalysisModifier::findCommonNeighbors(const NeighborBondArray&
 {
 	commonNeighbors = neighborArray.neighborArray[neighborIndex];
 #ifndef Q_CC_MSVC
-	// Count the number of bits set in neighbor bit field.
+	// Count the number of bits set in neighbor bit-field.
 	return __builtin_popcount(commonNeighbors);
 #else
-	// Count the number of bits set in neighbor bit field.
+	// Count the number of bits set in neighbor bit-field.
 	unsigned int v = commonNeighbors - ((commonNeighbors >> 1) & 0x55555555);
 	v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
 	return ((v + (v >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
@@ -488,6 +598,33 @@ CommonNeighborAnalysisModifier::StructureType CommonNeighborAnalysisModifier::de
 	return OTHER;
 }
 
+/******************************************************************************
+* Unpacks the results of the computation engine and stores them in the modifier.
+******************************************************************************/
+void CommonNeighborAnalysisModifier::transferComputationResults(ComputeEngine* engine)
+{
+	StructureIdentificationModifier::transferComputationResults(engine);
+
+	if(BondCNAEngine* bondEngine = dynamic_cast<BondCNAEngine*>(engine))
+		_cnaIndicesData = bondEngine->cnaIndices();
+	else
+		_cnaIndicesData.reset();
+}
+
+/******************************************************************************
+* Lets the modifier insert the cached computation results into the modification pipeline.
+******************************************************************************/
+PipelineStatus CommonNeighborAnalysisModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
+{
+	if(_cnaIndicesData && _cnaIndicesData->size() == inputBondCount()) {
+		// Create output bond property object.
+		OORef<BondPropertyObject> cnaIndicesProperty = BondPropertyObject::createFromStorage(dataset(), _cnaIndicesData.data());
+		// Insert into pipeline.
+		output().addObject(cnaIndicesProperty);
+	}
+	return StructureIdentificationModifier::applyComputationResults(time, validityInterval);
+}
+
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /******************************************************************************
@@ -504,11 +641,11 @@ void CommonNeighborAnalysisModifierEditor::createUI(const RolloutInsertionParame
 	layout1->setSpacing(6);
 
 	IntegerRadioButtonParameterUI* modeUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(CommonNeighborAnalysisModifier::_cnaMode));
-	QRadioButton* fixedCutoffModeBtn = modeUI->addRadioButton(CommonNeighborAnalysisModifier::FixedCutoffMode, tr("Conventional CNA (fixed cutoff)"));
+	QRadioButton* bondModeBtn = modeUI->addRadioButton(CommonNeighborAnalysisModifier::BondMode, tr("Bond-based CNA (without cutoff)"));
 	QRadioButton* adaptiveModeBtn = modeUI->addRadioButton(CommonNeighborAnalysisModifier::AdaptiveCutoffMode, tr("Adaptive CNA (variable cutoff)"));
-	QRadioButton* bondModeBtn = modeUI->addRadioButton(CommonNeighborAnalysisModifier::BondMode, tr("Bond-based CNA"));
-	layout1->addWidget(adaptiveModeBtn);
+	QRadioButton* fixedCutoffModeBtn = modeUI->addRadioButton(CommonNeighborAnalysisModifier::FixedCutoffMode, tr("Conventional CNA (fixed cutoff)"));
 	layout1->addWidget(bondModeBtn);
+	layout1->addWidget(adaptiveModeBtn);
 	layout1->addWidget(fixedCutoffModeBtn);
 
 	QGridLayout* gridlayout = new QGridLayout();

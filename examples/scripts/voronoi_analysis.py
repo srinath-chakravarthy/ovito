@@ -27,7 +27,7 @@ import numpy
 node = import_file("../data/CuZr_metallic_glass.dump.gz")
 
 # Set atomic radii (required for polydisperse Voronoi tessellation).
-atypes = node.source.particle_type.type_list
+atypes = node.source.particle_properties.particle_type.type_list
 atypes[0].radius = 1.35        # Cu atomic radius (atom type 1 in input file)
 atypes[1].radius = 1.55        # Zr atomic radius (atom type 2 in input file)
 
@@ -56,7 +56,7 @@ if voro.max_face_order > voro.edge_count:
 
 # Access computed Voronoi indices as NumPy array.
 # This is an (N)x(edge_count) array.
-voro_indices = node.output["Voronoi Index"].array
+voro_indices = node.output.particle_properties['Voronoi Index'].array
 
 # This helper function takes a two-dimensional array and computes a frequency 
 # histogram of the data rows using some NumPy magic. 

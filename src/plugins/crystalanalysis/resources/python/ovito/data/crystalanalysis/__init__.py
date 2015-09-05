@@ -12,8 +12,19 @@ import CrystalAnalysis
 ovito.data.DislocationNetwork = CrystalAnalysis.DislocationNetwork
 ovito.data.DislocationSegment = CrystalAnalysis.DislocationSegment
 
-# Register attribute keys by which data objects in a DataCollection can be accessed.
-CrystalAnalysis.DislocationNetwork._data_attribute_name = "dislocations"
+# Implement 'dislocations' attribute of DataCollection class.
+def _DataCollection_dislocations(self):
+    """
+    Returns the :py:class:`DislocationNetwork` object in this :py:class:`!DataCollection`.
+    
+    Accessing this property raises an ``AttributeError`` if the data collection
+    contains no dislocations object.
+    """
+    for obj in self.objects:
+        if isinstance(obj, ovito.data.DislocationNetwork):
+            return obj
+    raise AttributeError("This DataCollection contains no dislocations.")
+ovito.data.DataCollection.dislocations = property(_DataCollection_dislocations)
 
 # Implement the 'points' property of the DislocationSegment class.
 def _DislocationSegment_points(self):

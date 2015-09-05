@@ -229,7 +229,7 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 
 	;
 
-	class_<DislocationSegment, bases<>, DislocationSegment*, boost::noncopyable>("DislocationSegment",
+	class_<DislocationSegment, DislocationSegment*, boost::noncopyable>("DislocationSegment",
 		"A single dislocation line from a :py:class:`DislocationNetwork`. "
 		"\n\n"
 		"The list of dislocation segments is returned by the :py:attr:`DislocationNetwork.segments` attribute.",

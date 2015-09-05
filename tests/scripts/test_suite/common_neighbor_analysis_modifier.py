@@ -1,15 +1,21 @@
 from ovito import *
 from ovito.io import *
-from ovito.modifiers import CommonNeighborAnalysisModifier
+from ovito.data import *
+from ovito.modifiers import *
 
 import numpy
 
 node = import_file("../../files/CFG/fcc_coherent_twin.0.cfg")
+node.modifiers.append(CreateBondsModifier(cutoff = 0.8))
 modifier = CommonNeighborAnalysisModifier()
 
 print("Parameter defaults:")
-print("  start_value: {}".format(modifier.adaptive_mode))
-print("  end_value: {}".format(modifier.cutoff))
+print("  mode: {}".format(modifier.mode))
+print("  cutoff: {}".format(modifier.cutoff))
+
+modifier.mode = CommonNeighborAnalysisModifier.Mode.BondBased
+modifier.mode = CommonNeighborAnalysisModifier.Mode.FixedCutoff
+modifier.mode = CommonNeighborAnalysisModifier.Mode.AdaptiveCutoff
 
 node.modifiers.append(modifier)
 
@@ -24,11 +30,20 @@ print("Number of HCP atoms: {}".format(modifier.counts[CommonNeighborAnalysisMod
 print("Number of BCC atoms: {}".format(modifier.counts[CommonNeighborAnalysisModifier.Type.BCC]))
 
 assert(modifier.counts[CommonNeighborAnalysisModifier.Type.FCC] == 128)
-assert(node.output.structure_type.array[0] == 1)
-assert(node.output.structure_type.array[0] == CommonNeighborAnalysisModifier.Type.FCC)
-assert((node.output.color.array[0] == (1,0,0)).all())
+assert(node.output.particle_properties.structure_type.array[0] == 1)
+assert(node.output.particle_properties.structure_type.array[0] == CommonNeighborAnalysisModifier.Type.FCC)
+assert((node.output.particle_properties.color.array[0] == (1,0,0)).all())
 assert(CommonNeighborAnalysisModifier.Type.OTHER == 0)
 assert(CommonNeighborAnalysisModifier.Type.FCC == 1)
 assert(CommonNeighborAnalysisModifier.Type.HCP == 2)
 assert(CommonNeighborAnalysisModifier.Type.BCC == 3)
 assert(CommonNeighborAnalysisModifier.Type.ICO == 4)
+
+modifier.mode = CommonNeighborAnalysisModifier.Mode.BondBased
+print(node.output)
+node.compute()
+print("Number of bonds: ", node.output.number_of_bonds)
+print(node.output)
+print("Number of FCC atoms: {}".format(modifier.counts[CommonNeighborAnalysisModifier.Type.FCC]))
+assert(modifier.counts[CommonNeighborAnalysisModifier.Type.FCC] == 128)
+print(node.output.bond_properties['CNA Indices'].array)

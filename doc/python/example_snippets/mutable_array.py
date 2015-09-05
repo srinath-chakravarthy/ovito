@@ -12,12 +12,12 @@ output1 = node.compute()
 print('Number of remaining particles: ', output1.number_of_particles)
 
 # Modify pipeline input by changing the type of the first particle to 2.
-node.source.particle_type.marray[0] = 2
+node.source.particle_properties.particle_type.marray[0] = 2
 
 # Inform pipeline that input has changed.
 # Failing to do so would lead to incorrect results below. OVITO would assume the 
 # cached pipeline output is  still valid and wouldn't re-evaluate the modifiers.
-node.source.particle_type.changed()
+node.source.particle_properties.particle_type.changed()
 
 # Evaluate modification pipeline a second time.
 # Note that compute() may return cached results if it thinks the 

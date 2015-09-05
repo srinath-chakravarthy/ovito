@@ -10,7 +10,7 @@ for file in sys.argv[1:]:
         # This creates the ObjectNode and sets up the modification pipeline.
         node = import_file(file)
         # Insert a modifier into the pipeline.
-        cna = CommonNeighborAnalysisModifier(adaptive_mode=True)
+        cna = CommonNeighborAnalysisModifier()
         node.modifiers.append(cna)
     else:
         # To load subsequent files, call the load() function of the FileSource.

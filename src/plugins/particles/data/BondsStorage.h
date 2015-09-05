@@ -67,40 +67,57 @@ class OVITO_PARTICLES_EXPORT ParticleBondMap
 {
 public:
 
-	class bond_index_iterator : public boost::iterator_facade<bond_index_iterator, size_t const, boost::forward_traversal_tag> {
+	class bond_index_iterator : public boost::iterator_facade<bond_index_iterator, size_t const, boost::forward_traversal_tag, size_t> {
 	public:
 		bond_index_iterator(const ParticleBondMap* map, size_t startIndex) :
-			_map(map), _currentIndex(startIndex) {}
+			_bondMap(*map), _currentIndex(startIndex) {}
 	private:
 		size_t _currentIndex;
-		const ParticleBondMap* _map;
+		const ParticleBondMap& _bondMap;
 
 		friend class boost::iterator_core_access;
 
 		void increment() {
-			OVITO_ASSERT(_currentIndex < _map->_nextBond.size());
-			_currentIndex = _map->_nextBond[_currentIndex];
+			_currentIndex = _bondMap.nextBondOfParticle(_currentIndex);
 		}
 
 		bool equal(const bond_index_iterator& other) const {
 			return this->_currentIndex == other._currentIndex;
 		}
 
-		size_t dereference() const { return _currentIndex; }
+		size_t dereference() const {
+			OVITO_ASSERT(_currentIndex < _bondMap._nextBond.size());
+			return _currentIndex;
+		}
 	};
 
 public:
 
 	/// Initializes the helper class.
-	ParticleBondMap(const BondsStorage* bonds, size_t numberOfParticles);
+	ParticleBondMap(const BondsStorage& bonds);
 
 	/// Returns an iterator range over the indices of the half-bonds adjacent to the given particle.
 	boost::iterator_range<bond_index_iterator> bondsOfParticle(size_t particleIndex) const {
-		OVITO_ASSERT(particleIndex < _startIndices.size());
 		return boost::iterator_range<bond_index_iterator>(
-				bond_index_iterator(this, _startIndices[particleIndex]),
-				bond_index_iterator(this, _nextBond.size()));
+				bond_index_iterator(this, firstBondOfParticle(particleIndex)),
+				bond_index_iterator(this, endOfListValue()));
 	}
+
+	/// Returns the index of the first half-bond adjacent to the given particle.
+	/// Returns the half-bond count to indicate that the particle has no bonds at all.
+	size_t firstBondOfParticle(size_t particleIndex) const {
+		return particleIndex < _startIndices.size() ? _startIndices[particleIndex] : endOfListValue();
+	}
+
+	/// Returns the index of the next half-bond in the linked list of half-bonds of a particle.
+	/// Returns the half-bond count to indicate that the end of the particle's bond list has been reached.
+	size_t nextBondOfParticle(size_t bondIndex) const {
+		OVITO_ASSERT(bondIndex < _nextBond.size());
+		return _nextBond[bondIndex];
+	}
+
+	/// Returns the number of bonds, which is used to indicate the end of the per-particle bond list.
+	size_t endOfListValue() const { return _nextBond.size(); }
 
 private:
 

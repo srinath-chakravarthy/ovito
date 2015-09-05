@@ -88,6 +88,11 @@ protected:
 	/// not contain a simulation cell, an exception is thrown.
 	SimulationCellObject* expectSimulationCell() const;
 
+	/// Returns the input bonds.
+	/// The returned object may not be modified. If the input does
+	/// not contain any bonds, an exception is thrown.
+	BondsObject* expectBonds() const;
+
 	/// Creates a standard particle property in the modifier's output.
 	/// If the particle property already exists in the input, its contents are copied to the
 	/// output property by this method.
@@ -115,6 +120,9 @@ protected:
 
 	/// Returns the number of particles in the output.
 	size_t outputParticleCount() const { return _outputParticleCount; }
+
+	/// Returns the number of bonds in the input.
+	size_t inputBondCount() const { return _inputBondCount; }
 
 	/// Returns a vector with the input particles colors.
 	std::vector<Color> inputParticleColors(TimePoint time, TimeInterval& validityInterval);
@@ -165,6 +173,12 @@ protected:
 
 	/// The number of particles in the output.
 	size_t _outputParticleCount;
+
+	/// The number of bonds in the input.
+	size_t _inputBondCount;
+
+	/// The number of bonds in the output.
+	size_t _outputBondCount;
 
 	/// The status returned by the modifier.
 	PipelineStatus _modifierStatus;

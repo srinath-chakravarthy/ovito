@@ -142,6 +142,15 @@ protected:
 	/// Creates and initializes a computation engine that will compute the modifier's results.
 	virtual std::shared_ptr<ComputeEngine> createEngine(TimePoint time, TimeInterval validityInterval) override;
 
+	/// Parses the serialized contents of a property field in a custom way.
+	virtual bool loadPropertyFieldFromStream(ObjectLoadStream& stream, const ObjectLoadStream::SerializedPropertyField& serializedField) override;
+
+	/// Unpacks the results of the computation engine and stores them in the modifier.
+	virtual void transferComputationResults(ComputeEngine* engine) override;
+
+	/// Lets the modifier insert the cached computation results into the modification pipeline.
+	virtual PipelineStatus applyComputationResults(TimePoint time, TimeInterval& validityInterval) override;
+
 private:
 
 	/// Analysis engine that performs the conventional common neighbor analysis.
@@ -189,7 +198,7 @@ private:
 		virtual void perform() override;
 
 		/// Returns the input bonds between particles.
-		BondsStorage* bonds() const { return _bonds.data(); }
+		const BondsStorage& bonds() const { return *_bonds; }
 
 		/// Returns the output bonds property that stores the computed CNA indices.
 		BondProperty* cnaIndices() const { return _cnaIndices.data(); }
@@ -211,6 +220,9 @@ private:
 
 	/// Controls how the CNA is performed.
 	PropertyField<CNAMode, int> _cnaMode;
+
+	/// This stores the computed CNA bond indices.
+	QExplicitlySharedDataPointer<BondProperty> _cnaIndicesData;
 
 private:
 

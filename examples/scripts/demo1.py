@@ -45,7 +45,7 @@ print("Modification pipeline:")
 print(node.modifiers)
 	
 # Perform some analysis.
-cna = CommonNeighborAnalysisModifier(adaptive_mode = True)
+cna = CommonNeighborAnalysisModifier()
 node.modifiers.append(cna)
 
 # Block execution of the script until the node's modification pipeline is ready, that is, until 
@@ -54,7 +54,7 @@ node.compute()
 for c in enumerate(cna.counts):
 	print("Type %i: %i particles" % c)
 print(node.output['Position'].array)
-for t in node.output.structure_type.type_list:
+for t in node.output.particle_properties.structure_type.type_list:
 	print(t.id, t.name, t.color)
 
 # Read out analysis results.

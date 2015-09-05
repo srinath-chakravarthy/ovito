@@ -1,8 +1,8 @@
 from ovito import *
-from ovito.io import *
+from ovito.io import import_file
 
 node = import_file("../../files/LAMMPS/animation.dump.gz")
-cell = node.source.data.cell
+cell = node.source.cell
 
 print("  input pbc flags: {}".format(cell.pbc))
 cell.pbc = (False, True, True)

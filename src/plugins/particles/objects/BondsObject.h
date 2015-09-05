@@ -47,7 +47,12 @@ public:
 		changed();
 	}
 
-	/// Inserts a new bond into the list.
+	/// Returns the number of half-bonds.
+	size_t size() const {
+		return storage()->size();
+	}
+
+	/// Inserts a new half-bond into the list.
 	void addBond(unsigned int index1, unsigned int index2, Vector_3<int8_t> pbcShift = Vector_3<int8_t>::Zero()) {
 		modifiableStorage()->push_back(Bond{ pbcShift, index1, index2 });
 		changed();

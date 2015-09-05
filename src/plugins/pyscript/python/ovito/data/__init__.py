@@ -9,6 +9,8 @@ This module contains data container classes that are used by OVITO's modificatio
 
   * :py:class:`DataObject` (base of all data object types)
   * :py:class:`Bonds`
+  * :py:class:`BondProperty`
+  * :py:class:`BondTypeProperty`
   * :py:class:`DislocationNetwork`
   * :py:class:`ParticleProperty`
   * :py:class:`ParticleTypeProperty`
@@ -18,6 +20,7 @@ This module contains data container classes that are used by OVITO's modificatio
 **Auxiliary classes:**
 
   * :py:class:`ParticleType`
+  * :py:class:`BondType`
   * :py:class:`CutoffNeighborFinder`
   * :py:class:`NearestNeighborFinder`
   * :py:class:`DislocationSegment`
@@ -98,7 +101,7 @@ def _DataCollection_copy_if_needed(self, obj):
         of the modifier.
 
         :param DataObject obj: The object in the output data collection to be copied.
-        :return DataObject: An exact copy of *obj* if *obj* is owned by someone else. Otherwise the original instance is returned.
+        :return: An exact copy of *obj* if *obj* is owned by someone else. Otherwise the original instance is returned.
     """
     assert(isinstance(obj, DataObject))
     # The object to be modified must be in this data collection.
@@ -127,7 +130,7 @@ DataObject.display = property(_DataObject_get_display, DataObject.setDisplayObje
 
 def _DataCollection_to_ase_atoms(self):
     """
-    Constructs an `ASE Atoms object <https://wiki.fysik.dtu.dk/ase/ase/atoms.html>`_ from the particles
+    Constructs and returns an `ASE Atoms object <https://wiki.fysik.dtu.dk/ase/ase/atoms.html>`_ from the particles
     stored in this :py:class:`!DataCollection`.
 
     .. note::
@@ -136,6 +139,9 @@ def _DataCollection_to_ase_atoms(self):
        Python interpreter shipping with OVITO does *not* contain the ASE module.
        It is therefore recommended to build OVITO from source (as explained in the user manual),
        which will allow you to use all modules installed in the system's Python interpreter.
+       
+    :return: A new `ASE Atoms object <https://wiki.fysik.dtu.dk/ase/ase/atoms.html>`_ that contains the 
+             contains the converted particle data from this :py:class:`!DataCollection`.
     """
 
     from ase.atoms import Atoms
@@ -181,6 +187,9 @@ def _DataCollection_create_from_ase_atoms(cls, atoms):
        The built-in Python interpreter shipping with OVITO does *not* contain the ASE module (`Atomistic Simulation Environment <https://wiki.fysik.dtu.dk/ase/>`_).
        It is therefore recommended to build OVITO from source (as explained in the user manual),
        which will allow you to use all modules installed in the system's Python interpreter.
+
+    :param atoms: The `ASE Atoms object <https://wiki.fysik.dtu.dk/ase/ase/atoms.html>`_ to be converted.
+    :return: A new :py:class:`!DataCollection` instance containing the converted data from the ASE object.     
     """
     data = cls()
 

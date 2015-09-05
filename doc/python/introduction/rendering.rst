@@ -35,7 +35,7 @@ The visual display of particles is controlled by a :py:class:`~ovito.vis.Particl
 is attached to the position :py:class:`~ovito.data.ParticleProperty`. For example, to display 
 cubic particles, we would write::
 
-    >>> pos = node.source.position      # ParticleProperty storing the positions
+    >>> pos = node.source.particle_properties.position      # ParticleProperty storing the positions
     >>> pos.display.shape = ParticleDisplay.Shape.Square
 
 .. note::
@@ -62,8 +62,8 @@ in two equivalent ways: either directly though the :py:attr:`~ovito.modifiers.Ca
 or via the :py:attr:`~ovito.data.DataObject.display` attribute of the resulting particle property::
 
     >>> node.compute()                                      # Ensure pipeline output exists
-    >>> node.output.displacement.display.enabled = True     # Enable the display of arrows
-    >>> node.output.displacement.display.color = (0,0,1)    # Give arrows a blue color
+    >>> node.output.particle_properties.displacement.display.enabled = True     # Enable the display of arrows
+    >>> node.output.particle_properties.displacement.display.color = (0,0,1)    # Give arrows a blue color
     
 Similarly, the :py:class:`~ovito.modifiers.CreateBondsModifier` attached a :py:class:`~ovito.vis.BondsDisplay`
 to the :py:class:`~ovito.data.Bonds` data object it computes.

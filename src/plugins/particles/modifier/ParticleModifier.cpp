@@ -64,6 +64,10 @@ PipelineStatus ParticleModifier::modifyObject(TimePoint time, ModifierApplicatio
 			}
 		}
 
+		// Determine number of input bonds.
+		BondsObject* bondsObj = state.findObject<BondsObject>();
+		_outputBondCount = _inputBondCount = (bondsObj != nullptr) ? bondsObj->size() : 0;
+
 		// Let the derived class do the actual work.
 		TimeInterval validityInterval = state.stateValidity();
 		status = modifyParticles(time, validityInterval);
@@ -167,6 +171,17 @@ SimulationCellObject* ParticleModifier::expectSimulationCell() const
 	if(!cell)
 		throw Exception(tr("The modifier cannot be evaluated because the input does not contain a simulation cell."));
 	return cell;
+}
+
+/******************************************************************************
+* Returns the input bonds.
+******************************************************************************/
+BondsObject* ParticleModifier::expectBonds() const
+{
+	BondsObject* bondsObj = _input.findObject<BondsObject>();
+	if(!bondsObj)
+		throw Exception(tr("The modifier cannot be evaluated because the input does not contain any bonds."));
+	return bondsObj;
 }
 
 /******************************************************************************

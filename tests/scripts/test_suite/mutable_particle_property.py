@@ -5,7 +5,7 @@ from ovito.data import *
 import numpy as np
 
 node = import_file("../../files/CFG/shear.void.120.cfg")
-modifier = CommonNeighborAnalysisModifier(adaptive_mode = True)
+modifier = CommonNeighborAnalysisModifier()
 node.modifiers.append(modifier)
 node.compute()
 
