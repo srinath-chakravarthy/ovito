@@ -164,7 +164,7 @@ MainWindow::MainWindow() : _datasetContainer(this)
 	viewportControlBar1->addAction(actionManager()->getAction(ACTION_VIEWPORT_PICK_ORBIT_CENTER));
 	QToolBar* viewportControlBar2 = new QToolBar();
 	viewportControlBar2->addAction(actionManager()->getAction(ACTION_VIEWPORT_ZOOM_SCENE_EXTENTS));
-	viewportControlBar2->addAction(actionManager()->getAction(ACTION_VIEWPORT_ZOOM_SELECTION_EXTENTS));
+	viewportControlBar2->addAction(actionManager()->getAction(ACTION_VIEWPORT_ZOOM_SCENE_EXTENTS_ALL));
 	viewportControlBar2->addAction(actionManager()->getAction(ACTION_VIEWPORT_FOV));
 	viewportControlBar2->addAction(actionManager()->getAction(ACTION_VIEWPORT_MAXIMIZE));
 	QWidget* viewportControlPanel = new QWidget();

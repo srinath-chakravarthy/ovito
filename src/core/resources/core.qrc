@@ -42,6 +42,7 @@
 	<file>actions/viewport/mode_fov.png</file>
 	<file>actions/viewport/mode_set_orbit_center.png</file>
 	<file>actions/viewport/zoom_scene_extents.png</file>
+	<file>actions/viewport/zoom_scene_extents_all.png</file>
 	<file>actions/viewport/zoom_selection_extents.png</file>
 	
 	<file>actions/animation/animation_settings.png</file>

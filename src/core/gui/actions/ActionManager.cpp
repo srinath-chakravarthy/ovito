@@ -93,9 +93,9 @@ ActionManager::ActionManager(MainWindow* mainWindow) : QObject(mainWindow)
 	createCommandAction(ACTION_RENDER_ACTIVE_VIEWPORT, tr("Render Active Viewport"), ":/core/actions/rendering/render_active_viewport.png");
 
 	createCommandAction(ACTION_VIEWPORT_MAXIMIZE, tr("Maximize Active Viewport"), ":/core/actions/viewport/maximize_viewport.png", tr("Enlarge/reduce the active viewport."));
-	createCommandAction(ACTION_VIEWPORT_ZOOM_SCENE_EXTENTS, tr("Zoom Scene Extents"), ":/core/actions/viewport/zoom_scene_extents.png", tr("Zoom to show everything."));
-	createCommandAction(ACTION_VIEWPORT_ZOOM_SCENE_EXTENTS_ALL, tr("Zoom Scene Extents All"), ":/core/actions/viewport/zoom_scene_extents.png", tr("Zoom all viewports to show everything."));
-	createCommandAction(ACTION_VIEWPORT_ZOOM_SELECTION_EXTENTS, tr("Zoom Selection Extents"), ":/core/actions/viewport/zoom_selection_extents.png", tr("Zoom to show the selected objects."));
+	createCommandAction(ACTION_VIEWPORT_ZOOM_SCENE_EXTENTS, tr("Zoom Scene Extents"), ":/core/actions/viewport/zoom_scene_extents.png", tr("Zoom active viewport to show everything."));
+	createCommandAction(ACTION_VIEWPORT_ZOOM_SCENE_EXTENTS_ALL, tr("Zoom Scene Extents All"), ":/core/actions/viewport/zoom_scene_extents_all.png", tr("Zoom all viewports to show everything."));
+	createCommandAction(ACTION_VIEWPORT_ZOOM_SELECTION_EXTENTS, tr("Zoom Selection Extents"), ":/core/actions/viewport/zoom_selection_extents.png", tr("Zoom active viewport to show the selected objects."));
 	createCommandAction(ACTION_VIEWPORT_ZOOM_SELECTION_EXTENTS_ALL, tr("Zoom Selection Extents All"), ":/core/actions/viewport/zoom_selection_extents.png", tr("Zoom all viewports to show the selected objects."));
 
 	ViewportInputManager* vpInputManager = mainWindow->viewportInputManager();

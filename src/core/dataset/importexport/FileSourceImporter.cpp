@@ -252,11 +252,13 @@ bool FileSourceImporter::importFile(const QUrl& sourceUrl, ImportMode importMode
 	// Adjust the animation length number to match the number of frames in the input data source.
 	fileSource->adjustAnimationInterval(jumpToFrame);
 
-	// Adjust views to completely show the newly imported object.
-	OORef<DataSet> ds(dataset());
-	ds->runWhenSceneIsReady([ds]() {
-		ds->viewportConfig()->zoomToSelectionExtents();
-	});
+	if(importMode != ReplaceSelected) {
+		// Adjust views to completely show the newly imported object.
+		OORef<DataSet> ds(dataset());
+		ds->runWhenSceneIsReady([ds]() {
+			ds->viewportConfig()->zoomToSelectionExtents();
+		});
+	}
 
 	transaction.commit();
 	return true;

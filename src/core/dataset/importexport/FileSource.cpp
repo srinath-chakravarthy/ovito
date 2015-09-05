@@ -204,14 +204,6 @@ bool FileSource::setSource(QUrl sourceUrl, FileSourceImporter* importer, bool us
 		// Cancel any old load operation in progress.
 		cancelLoadOperation();
 
-		if(_adjustAnimationIntervalEnabled) {
-			// Adjust views to completely show the new object.
-			QPointer<DataSet> ds(dataset());
-			ds->runWhenSceneIsReady([ds]() {
-				if(ds) ds->viewportConfig()->zoomToSelectionExtents();
-			});
-		}
-
 		transaction.commit();
 		notifyDependents(ReferenceEvent::TitleChanged);
 
