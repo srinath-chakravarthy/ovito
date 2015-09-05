@@ -121,6 +121,7 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 		else if(patternTypeString == QStringLiteral("INTERFACE")) pattern.type = StructurePattern::Interface;
 		else if(patternTypeString == QStringLiteral("POINTDEFECT")) pattern.type = StructurePattern::PointDefect;
 		else throw Exception(tr("Failed to parse file. Invalid pattern type in line %1: %2").arg(stream.lineNumber()).arg(patternTypeString));
+		pattern.symmetryType = StructurePattern::CubicSymmetry;
 		if(sscanf(stream.readLine(), "COLOR " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING, &pattern.color.r(), &pattern.color.g(), &pattern.color.b()) != 3)
 			throw Exception(tr("Failed to parse file. Invalid pattern color in line %1.").arg(stream.lineNumber()));
 		int numFamilies;
@@ -400,6 +401,7 @@ void CAImporter::CrystalAnalysisFrameLoader::handOver(CompoundObject* container)
 		pattern->setLongName(_patterns[i].longName);
 		pattern->setStructureType(_patterns[i].type);
 		pattern->setId(_patterns[i].id);
+		pattern->setSymmetryType(_patterns[i].symmetryType);
 
 		// Update Burgers vector families.
 		for(int j = 0; j < _patterns[i].burgersVectorFamilies.size(); j++) {

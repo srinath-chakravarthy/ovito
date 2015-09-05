@@ -98,6 +98,7 @@ protected:
 		struct PatternInfo {
 			int id;
 			StructurePattern::StructureType type;
+			StructurePattern::SymmetryType symmetryType;
 			QString shortName;
 			QString longName;
 			Color color;
