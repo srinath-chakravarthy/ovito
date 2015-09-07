@@ -53,7 +53,7 @@ RenderSettings.custom_range = property(_get_RenderSettings_custom_range, _set_Re
 
 def _get_RenderSettings_size(self):
     """ 
-    Specifies the resolution of the generated image or movie in pixels. 
+    The size of the image or movie to be generated in pixels. 
     
     :Default: ``(640,480)`` 
     """
@@ -66,7 +66,7 @@ RenderSettings.size = property(_get_RenderSettings_size, _set_RenderSettings_siz
 
 def _get_RenderSettings_filename(self):
     """ 
-    A string specifying the file name under which the rendered image or movie will be saved.
+    A string specifying the file path under which the rendered image or movie should be saved.
     
     :Default: ``None``
     """
@@ -88,8 +88,8 @@ FrameBuffer.image = property(_get_FrameBuffer_image)
 def _Viewport_render(self, settings = None):
     """ Renders an image or movie of the viewport's view.
     
-        :param settings: A render settings object, which specifies the resolution, background color, output filename etc. of the image to be rendered. 
-                         If ``None``, the global settings are used (given by the :py:attr:`DataSet.render_settings <ovito.DataSet.render_settings>` attribute).
+        :param settings: A settings object, which specifies the resolution, background color, output filename etc. of the image to be rendered. 
+                         If ``None``, the global settings are used (given by :py:attr:`DataSet.render_settings <ovito.DataSet.render_settings>`).
         :type settings: :py:class:`RenderSettings`
         :returns: A `QImage <http://pyqt.sourceforge.net/Docs/PyQt5/api/qimage.html>`_ object on success, which contains the rendered picture; 
                   ``None`` if the rendering operation has been canceled by the user.

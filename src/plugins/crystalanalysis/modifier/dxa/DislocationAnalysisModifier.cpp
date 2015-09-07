@@ -215,10 +215,16 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> DislocationAnalysis
 	if(onlySelectedParticles())
 		selectionProperty = expectStandardProperty(ParticleProperty::SelectionProperty)->storage();
 
+	// Build list of preferred crystal orientations.
+	std::vector<Matrix3> preferredCrystalOrientations;
+	if(inputCrystalStructure() == StructureAnalysis::LATTICE_FCC || inputCrystalStructure() == StructureAnalysis::LATTICE_BCC || inputCrystalStructure() == StructureAnalysis::LATTICE_CUBIC_DIAMOND) {
+		preferredCrystalOrientations.push_back(Matrix3::Identity());
+	}
+
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<DislocationAnalysisEngine>(validityInterval, posProperty->storage(),
 			simCell->data(), inputCrystalStructure(), maxTrialCircuitSize(), circuitStretchability(),
-			reconstructEdgeVectors(), selectionProperty);
+			reconstructEdgeVectors(), selectionProperty, std::move(preferredCrystalOrientations));
 }
 
 /******************************************************************************

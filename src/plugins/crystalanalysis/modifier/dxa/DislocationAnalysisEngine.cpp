@@ -37,9 +37,10 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 DislocationAnalysisEngine::DislocationAnalysisEngine(const TimeInterval& validityInterval,
 		ParticleProperty* positions, const SimulationCell& simCell,
 		int inputCrystalStructure, int maxTrialCircuitSize, int maxCircuitElongation,
-		bool reconstructEdgeVectors, ParticleProperty* particleSelection) :
+		bool reconstructEdgeVectors, ParticleProperty* particleSelection,
+		std::vector<Matrix3>&& preferredCrystalOrientations) :
 	StructureIdentificationModifier::StructureIdentificationEngine(validityInterval, positions, simCell, particleSelection),
-	_structureAnalysis(positions, simCell, (StructureAnalysis::LatticeStructureType)inputCrystalStructure, selection(), structures()),
+	_structureAnalysis(positions, simCell, (StructureAnalysis::LatticeStructureType)inputCrystalStructure, selection(), structures(), std::move(preferredCrystalOrientations)),
 	_defectMesh(new HalfEdgeMesh<>()),
 	_elasticMapping(_structureAnalysis, _tessellation),
 	_interfaceMesh(_elasticMapping),

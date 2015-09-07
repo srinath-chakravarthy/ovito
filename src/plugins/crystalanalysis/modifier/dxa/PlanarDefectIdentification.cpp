@@ -313,7 +313,7 @@ bool PlanarDefectIdentification::extractPlanarDefects(int crystalStructure, Futu
 			if(!fullTransition->isSelfTransition()) {
 				bool isSymmetryRotation = false;
 				for(const auto& symElement : StructureAnalysis::latticeStructure(crystalStructure).permutations) {
-					if(fullTransition->tm.equals(symElement.first, CA_TRANSITION_MATRIX_EPSILON)) {
+					if(fullTransition->tm.equals(symElement.transformation, CA_TRANSITION_MATRIX_EPSILON)) {
 						isSymmetryRotation = true;
 						break;
 					}

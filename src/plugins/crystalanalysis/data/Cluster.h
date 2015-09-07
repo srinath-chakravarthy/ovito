@@ -159,8 +159,12 @@ struct Cluster
 	/// that are part of the cluster.
 	Point3 centerOfMass;
 
+	/// The index of the symmetry transformation applied to the lattice coordinate frame
+	/// of this cluster.
+	int symmetryTransformation;
+
 	/// Constructor.
-	Cluster(int _id, int _structure) : id(_id), structure(_structure), atomCount(0), transitions(nullptr) {}
+	Cluster(int _id, int _structure) : id(_id), structure(_structure), atomCount(0), transitions(nullptr), symmetryTransformation(0) {}
 
 	/// Inserts a transition into this cluster's list of transitions.
 	void insertTransition(ClusterTransition* newTransition) {

@@ -75,6 +75,13 @@ public:
 		int commonNeighbors[MAX_NEIGHBORS][2];
 	};
 
+	struct SymmetryPermutation {
+		Matrix3 transformation;
+		std::array<int, MAX_NEIGHBORS> permutation;
+		std::vector<int> product;
+		std::vector<int> inverseProduct;
+	};
+
 	struct LatticeStructure {
 		const CoordinationStructure* coordStructure;
 		std::vector<Vector3> latticeVectors;
@@ -83,13 +90,19 @@ public:
 
 		/// List of symmetry permutations of the lattice structure.
 		/// Each entry contains the rotation/reflection matrix and the corresponding permutation of the neighbor bonds.
-		std::vector<std::pair<Matrix3, std::array<int, MAX_NEIGHBORS>>> permutations;
+		std::vector<SymmetryPermutation> permutations;
 	};
 
 public:
 
 	/// Constructor.
-	StructureAnalysis(ParticleProperty* positions, const SimulationCell& simCell, LatticeStructureType inputCrystalType, ParticleProperty* particleSelection, ParticleProperty* outputStructures);
+	StructureAnalysis(
+			ParticleProperty* positions,
+			const SimulationCell& simCell,
+			LatticeStructureType inputCrystalType,
+			ParticleProperty* particleSelection,
+			ParticleProperty* outputStructures,
+			std::vector<Matrix3>&& preferredCrystalOrientations);
 
 	/// Identifies the atomic structures.
 	bool identifyStructures(FutureInterfaceBase& progress);
@@ -157,7 +170,7 @@ public:
 		OVITO_ASSERT(neighborIndex >= 0 && neighborIndex < _coordinationStructures[structureType].numNeighbors);
 		int symmetryPermutationIndex = _atomSymmetryPermutations->getInt(centralAtomIndex);
 		OVITO_ASSERT(symmetryPermutationIndex >= 0 && symmetryPermutationIndex < latticeStructure.permutations.size());
-		const std::array<int, MAX_NEIGHBORS>& permutation = latticeStructure.permutations[symmetryPermutationIndex].second;
+		const auto& permutation = latticeStructure.permutations[symmetryPermutationIndex].permutation;
 		return latticeStructure.latticeVectors[permutation[neighborIndex]];
 	}
 
@@ -187,6 +200,7 @@ private:
 	QExplicitlySharedDataPointer<ClusterGraph> _clusterGraph;
 	std::atomic<FloatType> _maximumNeighborDistance;
 	SimulationCell _simCell;
+	std::vector<Matrix3> _preferredCrystalOrientations;
 
 	static CoordinationStructure _coordinationStructures[NUM_COORD_TYPES];
 	static LatticeStructure _latticeStructures[NUM_LATTICE_TYPES];

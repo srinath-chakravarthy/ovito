@@ -144,7 +144,7 @@ def _get_FileSource_source_path(self, _originalGetterMethod = FileSource.source_
     return _originalGetterMethod.__get__(self)
 def _set_FileSource_source_path(self, url):
     """ Sets the URL of the file referenced by this FileSource. """
-    self.setSource(url, None) 
+    self.setSource(url, self.importer, True) 
 FileSource.source_path = property(_get_FileSource_source_path, _set_FileSource_source_path)
 
 def export_file(node, file, format, **params):

@@ -57,7 +57,9 @@ void bitmapSort(iterator begin, iterator end, int max)
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-StructureAnalysis::StructureAnalysis(ParticleProperty* positions, const SimulationCell& simCell, LatticeStructureType inputCrystalType, ParticleProperty* particleSelection, ParticleProperty* outputStructures) :
+StructureAnalysis::StructureAnalysis(ParticleProperty* positions, const SimulationCell& simCell,
+		LatticeStructureType inputCrystalType, ParticleProperty* particleSelection,
+		ParticleProperty* outputStructures, std::vector<Matrix3>&& preferredCrystalOrientations) :
 	_positions(positions), _simCell(simCell),
 	_inputCrystalType(inputCrystalType),
 	_structureTypes(outputStructures),
@@ -66,7 +68,8 @@ StructureAnalysis::StructureAnalysis(ParticleProperty* positions, const Simulati
 	_neighborCounts(new ParticleProperty(positions->size(), ParticleProperty::CoordinationProperty, 0, true)),
 	_atomClusters(new ParticleProperty(positions->size(), ParticleProperty::ClusterProperty, 0, true)),
 	_atomSymmetryPermutations(new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, QStringLiteral("SymmetryPermutations"), false)),
-	_clusterGraph(new ClusterGraph())
+	_clusterGraph(new ClusterGraph()),
+	_preferredCrystalOrientations(std::move(preferredCrystalOrientations))
 {
 	static bool initialized = false;
 	if(!initialized) {
@@ -353,7 +356,7 @@ void StructureAnalysis::initializeCoordinationStructures()
 		std::vector<int> permutation(latticeStruct->latticeVectors.size());
 		std::vector<int> lastPermutation(latticeStruct->latticeVectors.size(), -1);
 		std::iota(permutation.begin(), permutation.end(), 0);
-		Matrix3 t;
+		SymmetryPermutation symmetryPermutation;
 		do {
 			int changedFrom = std::mismatch(permutation.begin(), permutation.end(), lastPermutation.begin()).first - permutation.begin();
 			OVITO_ASSERT(changedFrom < coordStruct.numNeighbors);
@@ -363,8 +366,8 @@ void StructureAnalysis::initializeCoordinationStructures()
 				tm2.column(0) = latticeStruct->latticeVectors[permutation[nindices[0]]];
 				tm2.column(1) = latticeStruct->latticeVectors[permutation[nindices[1]]];
 				tm2.column(2) = latticeStruct->latticeVectors[permutation[nindices[2]]];
-				t = tm2 * tm1inverse;
-				if(!t.isOrthogonalMatrix()) {
+				symmetryPermutation.transformation = tm2 * tm1inverse;
+				if(!symmetryPermutation.transformation.isOrthogonalMatrix()) {
 					bitmapSort(permutation.begin() + nindices[2] + 1, permutation.end(), permutation.size());
 					continue;
 				}
@@ -373,17 +376,16 @@ void StructureAnalysis::initializeCoordinationStructures()
 			int sortFrom = nindices[2];
 			int invalidFrom;
 			for(invalidFrom = changedFrom; invalidFrom < coordStruct.numNeighbors; invalidFrom++) {
-				Vector3 v = t * coordStruct.latticeVectors[invalidFrom];
+				Vector3 v = symmetryPermutation.transformation * coordStruct.latticeVectors[invalidFrom];
 				if(!v.equals(latticeStruct->latticeVectors[permutation[invalidFrom]]))
 					break;
 			}
 			if(invalidFrom == coordStruct.numNeighbors) {
-				std::array<int, MAX_NEIGHBORS> p;
-				std::copy(permutation.begin(), permutation.begin() + coordStruct.numNeighbors, p.begin());
+				std::copy(permutation.begin(), permutation.begin() + coordStruct.numNeighbors, symmetryPermutation.permutation.begin());
 				for(const auto& entry : latticeStruct->permutations) {
-					OVITO_ASSERT(!entry.first.equals(t));
+					OVITO_ASSERT(!entry.transformation.equals(symmetryPermutation.transformation));
 				}
-				latticeStruct->permutations.push_back(std::make_pair(t, p));
+				latticeStruct->permutations.push_back(symmetryPermutation);
 			}
 			else {
 				sortFrom = invalidFrom;
@@ -391,6 +393,31 @@ void StructureAnalysis::initializeCoordinationStructures()
 			bitmapSort(permutation.begin() + sortFrom + 1, permutation.end(), permutation.size());
 		}
 		while(std::next_permutation(permutation.begin(), permutation.end()));
+
+		OVITO_ASSERT(latticeStruct->permutations.size() >= 1);
+		OVITO_ASSERT(latticeStruct->permutations.front().transformation.equals(Matrix3::Identity()));
+
+		// Determine products of symmetry transformations.
+		for(int s1 = 0; s1 < latticeStruct->permutations.size(); s1++) {
+			for(int s2 = 0; s2 < latticeStruct->permutations.size(); s2++) {
+				Matrix3 product = latticeStruct->permutations[s2].transformation * latticeStruct->permutations[s1].transformation;
+				for(int i = 0; i < latticeStruct->permutations.size(); i++) {
+					if(latticeStruct->permutations[i].transformation.equals(product)) {
+						latticeStruct->permutations[s1].product.push_back(i);
+						break;
+					}
+				}
+				OVITO_ASSERT(latticeStruct->permutations[s1].product.size() == s2 + 1);
+				Matrix3 inverseProduct = latticeStruct->permutations[s2].transformation.inverse() * latticeStruct->permutations[s1].transformation;
+				for(int i = 0; i < latticeStruct->permutations.size(); i++) {
+					if(latticeStruct->permutations[i].transformation.equals(product)) {
+						latticeStruct->permutations[s1].inverseProduct.push_back(i);
+						break;
+					}
+				}
+				OVITO_ASSERT(latticeStruct->permutations[s1].inverseProduct.size() == s2 + 1);
+			}
+		}
 	}
 }
 
@@ -671,7 +698,7 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 			// Save the atom's neighbor list.
 			int* neighborList = _neighborLists->dataInt() + _neighborLists->componentCount() * particleIndex;
 			for(int i = 0; i < nn; i++)
-				*neighborList++ = neighborIndices[neighborMapping[i]];
+				neighborList[i] = neighborIndices[neighborMapping[i]];
 			_neighborCounts->setInt(particleIndex, nn);
 
 			// Determine maximum neighbor distance.
@@ -698,7 +725,7 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 	progress.setProgressRange(positions()->size());
 	int progressCounter = 0;
 
-	// Continue finding atoms, which haven't been visited yet, and which are not part of a cluster.
+	// Iterate over atoms, looking for those that have not been visited yet.
 	for(size_t seedAtomIndex = 0; seedAtomIndex < positions()->size(); seedAtomIndex++) {
 		if(_atomClusters->getInt(seedAtomIndex) != 0) continue;
 		int coordStructureType = _structureTypes->getInt(seedAtomIndex);
@@ -734,7 +761,7 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 
 			// Look up symmetry permutation of current atom.
 			int symmetryPermutationIndex = _atomSymmetryPermutations->getInt(currentAtomIndex);
-			const std::array<int, MAX_NEIGHBORS>& permutation = latticeStructure.permutations[symmetryPermutationIndex].second;
+			const auto& permutation = latticeStructure.permutations[symmetryPermutationIndex].permutation;
 
 			// Visit neighbors of the current atom.
 			const int* neighborList = _neighborLists->constDataInt() + currentAtomIndex * _neighborLists->componentCount();
@@ -790,14 +817,13 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 
 				// Determine the misorientation matrix.
 				OVITO_ASSERT(std::abs(tm1.determinant()) > FLOATTYPE_EPSILON);
-				//OVITO_ASSERT(std::abs(tm2.determinant()) > FLOATTYPE_EPSILON);
 				Matrix3 tm2inverse;
 				if(!tm2.inverse(tm2inverse)) continue;
 				Matrix3 transition = tm1 * tm2inverse;
 
 				// Find the corresponding symmetry permutation.
 				for(int i = 0; i < latticeStructure.permutations.size(); i++) {
-					if(transition.equals(latticeStructure.permutations[i].first)) {
+					if(transition.equals(latticeStructure.permutations[i].transformation, CA_TRANSITION_MATRIX_EPSILON)) {
 
 						// Make the neighbor atom part of the current cluster.
 						_atomClusters->setInt(*neighborAtomIndex, cluster->id);
@@ -818,7 +844,47 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 
 		// Compute matrix, which transforms vectors from lattice space to simulation coordinates.
 		cluster->orientation = Matrix3(orientationW * orientationV.inverse());
+
+		if(latticeStructureType == _inputCrystalType && !_preferredCrystalOrientations.empty()) {
+			// Determine the symmetry permutation that leads to the best cluster orientation.
+			// The best cluster orientation is the one that forms the smallest angle with one of the
+			// preferred crystal orientations.
+			FloatType smallestDeviation = std::numeric_limits<FloatType>::max();
+			Matrix3 oldOrientation = cluster->orientation;
+			for(int symmetryPermutationIndex = 0; symmetryPermutationIndex < latticeStructure.permutations.size(); symmetryPermutationIndex++) {
+				const Matrix3& symmetryTMatrix = latticeStructure.permutations[symmetryPermutationIndex].transformation;
+				Matrix3 newOrientation = oldOrientation * symmetryTMatrix.inverse();
+				FloatType scaling = std::pow(std::abs(newOrientation.determinant()), 1.0/3.0);
+				for(const Matrix3& preferredOrientation : _preferredCrystalOrientations) {
+					FloatType deviation = 0;
+					for(size_t i = 0; i < 3; i++)
+						for(size_t j = 0; j < 3; j++)
+							deviation += std::abs(newOrientation(i, j)/scaling - preferredOrientation(i,j));
+					if(deviation < smallestDeviation) {
+						smallestDeviation = deviation;
+						cluster->symmetryTransformation = symmetryPermutationIndex;
+						cluster->orientation = newOrientation;
+					}
+				}
+			}
+		}
 	}
+
+	// Reorient clusters to achieve best crystal orientation.
+	for(size_t atomIndex = 0; atomIndex < positions()->size(); atomIndex++) {
+		int clusterId = _atomClusters->getInt(atomIndex);
+		if(clusterId == 0) continue;
+		Cluster* cluster = clusterGraph().findCluster(clusterId);
+		OVITO_ASSERT(cluster);
+		if(cluster->symmetryTransformation == 0) continue;
+		const LatticeStructure& latticeStructure = _latticeStructures[cluster->structure];
+		int oldPermutationIndex = _atomSymmetryPermutations->getInt(atomIndex);
+		int newPermutationIndex = latticeStructure.permutations[oldPermutationIndex].inverseProduct[cluster->symmetryTransformation];
+		_atomSymmetryPermutations->setInt(atomIndex, newPermutationIndex);
+	}
+	// Reset transformations of all clusters.
+	for(Cluster* cluster : clusterGraph().clusters())
+		cluster->symmetryTransformation = 0;
 
 	qDebug() << "Number of clusters:" << (clusterGraph().clusters().size() - 1);
 
@@ -847,7 +913,7 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 		const LatticeStructure& latticeStructure = _latticeStructures[structureType];
 		const CoordinationStructure& coordStructure = _coordinationStructures[structureType];
 		int symmetryPermutationIndex = _atomSymmetryPermutations->getInt(atomIndex);
-		const std::array<int, MAX_NEIGHBORS>& permutation = latticeStructure.permutations[symmetryPermutationIndex].second;
+		const auto& permutation = latticeStructure.permutations[symmetryPermutationIndex].permutation;
 
 		// Visit neighbors of the current atom.
 		const int* neighborList = _neighborLists->constDataInt() + atomIndex * _neighborLists->componentCount();
@@ -904,7 +970,7 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 				int neighborStructureType = _structureTypes->getInt(neighbor);
 				const LatticeStructure& neighborLatticeStructure = _latticeStructures[neighborStructureType];
 				int neighborSymmetryPermutationIndex = _atomSymmetryPermutations->getInt(neighbor);
-				const std::array<int, MAX_NEIGHBORS>& neighborPermutation = neighborLatticeStructure.permutations[neighborSymmetryPermutationIndex].second;
+				const auto& neighborPermutation = neighborLatticeStructure.permutations[neighborSymmetryPermutationIndex].permutation;
 
 				tm2.column(i) = neighborLatticeStructure.latticeVectors[neighborPermutation[j]];
 			}

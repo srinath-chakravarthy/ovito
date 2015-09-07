@@ -103,7 +103,12 @@ BOOST_PYTHON_MODULE(PyScriptRendering)
 					"\n\n"
 					":Default: ``False``")
 			.add_property("saveToFile", &RenderSettings::saveToFile, &RenderSettings::setSaveToFile)
-			.add_property("skipExistingImages", &RenderSettings::skipExistingImages, &RenderSettings::setSkipExistingImages)
+			.add_property("skip_existing_images", &RenderSettings::skipExistingImages, &RenderSettings::setSkipExistingImages,
+					"Controls whether animation frames for which the output image file already exists will be skipped "
+					"when rendering an animation sequence. This flag is ignored when directly rendering to a movie file and not an image file sequence. "
+					"Use this flag when the image sequence has already been partially rendered and you want to render just the missing frames. "
+					"\n\n"
+					":Default: ``False``")
 			.add_property("customRangeStart", &RenderSettings::customRangeStart, &RenderSettings::setCustomRangeStart)
 			.add_property("customRangeEnd", &RenderSettings::customRangeEnd, &RenderSettings::setCustomRangeEnd)
 			.add_property("everyNthFrame", &RenderSettings::everyNthFrame, &RenderSettings::setEveryNthFrame)

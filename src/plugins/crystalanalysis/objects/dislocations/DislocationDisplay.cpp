@@ -482,7 +482,7 @@ QString DislocationPickInfo::infoString(ObjectNode* objectNode, quint32 subobjec
 			structure = patternCatalog()->structureById(segment->burgersVector.cluster()->structure);
 		}
 		QString formattedBurgersVector = DislocationDisplay::formatBurgersVector(segment->burgersVector.localVec(), structure);
-		str = tr("Dislocation | True Burgers vector: %1").arg(formattedBurgersVector);
+		str = tr("True Burgers vector: %1").arg(formattedBurgersVector);
 		Vector3 transformedVector = segment->burgersVector.toSpatialVector();
 		str += tr(" | Spatial Burgers vector: [%1 %2 %3]")
 				.arg(QLocale::c().toString(transformedVector.x(), 'f', 4), 7)
