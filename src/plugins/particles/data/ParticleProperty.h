@@ -117,7 +117,7 @@ public:
 			OVITO_ASSERT(dataType() == standardPropertyDataType(newType));
 			OVITO_ASSERT(componentCount() == standardPropertyComponentCount(newType));
 			setName(standardPropertyName(newType));
-			_componentNames = standardPropertyComponentNames(newType);
+			setComponentNames(standardPropertyComponentNames(newType));
 		}
 		_type = newType;
 	}

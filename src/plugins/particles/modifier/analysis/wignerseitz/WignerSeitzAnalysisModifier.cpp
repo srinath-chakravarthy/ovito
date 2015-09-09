@@ -27,6 +27,7 @@
 #include <core/gui/properties/IntegerParameterUI.h>
 #include <core/gui/properties/SubObjectParameterUI.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
+#include <plugins/particles/objects/ParticleTypeProperty.h>
 #include "WignerSeitzAnalysisModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
@@ -38,11 +39,13 @@ DEFINE_FLAGS_PROPERTY_FIELD(WignerSeitzAnalysisModifier, _eliminateCellDeformati
 DEFINE_PROPERTY_FIELD(WignerSeitzAnalysisModifier, _useReferenceFrameOffset, "UseReferenceFrameOffet");
 DEFINE_PROPERTY_FIELD(WignerSeitzAnalysisModifier, _referenceFrameNumber, "ReferenceFrameNumber");
 DEFINE_FLAGS_PROPERTY_FIELD(WignerSeitzAnalysisModifier, _referenceFrameOffset, "ReferenceFrameOffset", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(WignerSeitzAnalysisModifier, _perTypeOccupancy, "PerTypeOccupancy", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _referenceObject, "Reference Configuration");
 SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _eliminateCellDeformation, "Eliminate homogeneous cell deformation");
 SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _useReferenceFrameOffset, "Use reference frame offset");
 SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _referenceFrameNumber, "Reference frame number");
 SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _referenceFrameOffset, "Reference frame offset");
+SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _perTypeOccupancy, "Output per-type occupancies");
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 	IMPLEMENT_OVITO_OBJECT(Particles, WignerSeitzAnalysisModifierEditor, ParticleModifierEditor);
@@ -54,13 +57,15 @@ OVITO_END_INLINE_NAMESPACE
 WignerSeitzAnalysisModifier::WignerSeitzAnalysisModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
 	_eliminateCellDeformation(false),
 	_useReferenceFrameOffset(false), _referenceFrameNumber(0), _referenceFrameOffset(-1),
-	_vacancyCount(0), _interstitialCount(0)
+	_vacancyCount(0), _interstitialCount(0),
+	_perTypeOccupancy(false)
 {
 	INIT_PROPERTY_FIELD(WignerSeitzAnalysisModifier::_referenceObject);
 	INIT_PROPERTY_FIELD(WignerSeitzAnalysisModifier::_eliminateCellDeformation);
 	INIT_PROPERTY_FIELD(WignerSeitzAnalysisModifier::_useReferenceFrameOffset);
 	INIT_PROPERTY_FIELD(WignerSeitzAnalysisModifier::_referenceFrameNumber);
 	INIT_PROPERTY_FIELD(WignerSeitzAnalysisModifier::_referenceFrameOffset);
+	INIT_PROPERTY_FIELD(WignerSeitzAnalysisModifier::_perTypeOccupancy);
 
 	// Create the file source object that will be responsible for loading
 	// and storing the reference configuration.
@@ -129,9 +134,23 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> WignerSeitzAnalysis
 	if(refCell->volume() < FLOATTYPE_EPSILON)
 		throw Exception(tr("Simulation cell is degenerate in the reference configuration."));
 
+	// Get the particle types.
+	ParticleProperty* typeProperty = nullptr;
+	int ptypeMinId = std::numeric_limits<int>::max();
+	int ptypeMaxId = std::numeric_limits<int>::lowest();
+	if(perTypeOccupancy()) {
+		ParticleTypeProperty* ptypeProp = static_object_cast<ParticleTypeProperty>(expectStandardProperty(ParticleProperty::ParticleTypeProperty));
+		// Determine range of particle type IDs.
+		for(ParticleType* pt : ptypeProp->particleTypes()) {
+			if(pt->id() < ptypeMinId) ptypeMinId = pt->id();
+			if(pt->id() > ptypeMaxId) ptypeMaxId = pt->id();
+		}
+		typeProperty = ptypeProp->storage();
+	}
+
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<WignerSeitzAnalysisEngine>(validityInterval, posProperty->storage(), inputCell->data(),
-			refPosProperty->storage(), refCell->data(), eliminateCellDeformation());
+			refPosProperty->storage(), refCell->data(), eliminateCellDeformation(), typeProperty, ptypeMinId, ptypeMaxId);
 }
 
 /******************************************************************************
@@ -198,22 +217,50 @@ void WignerSeitzAnalysisModifier::WignerSeitzAnalysisEngine::perform()
 	if(!neighborTree.prepare(refPositions(), refCell(), nullptr, this))
 		return;
 
+	// Determine the number of components of the occupancy property.
+	int ncomponents = 1;
+	int typemin, typemax;
+	if(particleTypes()) {
+		auto minmax = std::minmax_element(particleTypes()->constDataInt(), particleTypes()->constDataInt() + particleTypes()->size());
+		typemin = std::min(_ptypeMinId, *minmax.first);
+		typemax = std::max(_ptypeMaxId, *minmax.second);
+		if(typemin < 0)
+			throw Exception(tr("Negative particle types are not supported by this modifier."));
+		if(typemax > 32)
+			throw Exception(tr("Number of particle types is too large for this modifier. Cannot compute occupancy numbers for more than 32 particle types."));
+		ncomponents = typemax - typemin + 1;
+	}
+
 	// Create output storage.
-	ParticleProperty* output = occupancyNumbers();
-	setProgressRange(particleCount);
+	_occupancyNumbers = new ParticleProperty(refPositions()->size(), qMetaTypeId<int>(), ncomponents, 0, tr("Occupancy"), true);
+	if(ncomponents > 1 && typemin != 1) {
+		QStringList componentNames;
+		for(int i = typemin; i <= typemax; i++)
+			componentNames.push_back(QString::number(i));
+		occupancyNumbers()->setComponentNames(componentNames);
+	}
 
 	AffineTransformation tm;
 	if(_eliminateCellDeformation)
 		tm = refCell().matrix() * cell().inverseMatrix();
 
+	// Assign particles to reference sites.
 	FloatType closestDistanceSq;
 	int particleIndex = 0;
+	setProgressRange(particleCount);
 	for(const Point3& p : positions()->constPoint3Range()) {
 
 		Point3 p2 = _eliminateCellDeformation ? (tm * p) : p;
 		int closestIndex = neighborTree.findClosestParticle(p2, closestDistanceSq);
-		OVITO_ASSERT(closestIndex >= 0 && closestIndex < output->size());
-		output->dataInt()[closestIndex]++;
+		OVITO_ASSERT(closestIndex >= 0 && closestIndex < occupancyNumbers()->size());
+		if(ncomponents == 1) {
+			occupancyNumbers()->dataInt()[closestIndex]++;
+		}
+		else {
+			int offset = particleTypes()->getInt(closestIndex) - typemin;
+			OVITO_ASSERT(offset >= 0 && offset < occupancyNumbers()->componentCount());
+			occupancyNumbers()->dataInt()[closestIndex * ncomponents + offset]++;
+		}
 
 		particleIndex++;
 		if(!setProgressValueIntermittent(particleIndex))
@@ -223,9 +270,22 @@ void WignerSeitzAnalysisModifier::WignerSeitzAnalysisEngine::perform()
 	// Count defects.
 	_vacancyCount = 0;
 	_interstitialCount = 0;
-	for(int oc : output->constIntRange()) {
-		if(oc == 0) _vacancyCount++;
-		else if(oc > 1) _interstitialCount += oc - 1;
+	if(ncomponents == 1) {
+		for(int oc : occupancyNumbers()->constIntRange()) {
+			if(oc == 0) _vacancyCount++;
+			else if(oc > 1) _interstitialCount += oc - 1;
+		}
+	}
+	else {
+		const int* o = occupancyNumbers()->constDataInt();
+		for(size_t i = 0; i < particleCount; i++) {
+			int oc = 0;
+			for(int j = 0; j < ncomponents; j++) {
+				oc += *o++;
+			}
+			if(oc == 0) _vacancyCount++;
+			else if(oc > 1) _interstitialCount += oc - 1;
+		}
 	}
 }
 
@@ -281,6 +341,7 @@ void WignerSeitzAnalysisModifier::propertyChanged(const PropertyFieldDescriptor&
 
 	// Recompute modifier results when the parameters have changed.
 	if(field == PROPERTY_FIELD(WignerSeitzAnalysisModifier::_eliminateCellDeformation)
+			|| field == PROPERTY_FIELD(WignerSeitzAnalysisModifier::_perTypeOccupancy)
 			|| field == PROPERTY_FIELD(WignerSeitzAnalysisModifier::_useReferenceFrameOffset)
 			|| field == PROPERTY_FIELD(WignerSeitzAnalysisModifier::_referenceFrameNumber)
 			|| field == PROPERTY_FIELD(WignerSeitzAnalysisModifier::_referenceFrameOffset))
@@ -317,6 +378,9 @@ void WignerSeitzAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 
 	BooleanParameterUI* eliminateCellDeformationUI = new BooleanParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::_eliminateCellDeformation));
 	layout->addWidget(eliminateCellDeformationUI->checkBox());
+
+	BooleanParameterUI* perTypeOccupancyUI = new BooleanParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::_perTypeOccupancy));
+	layout->addWidget(perTypeOccupancyUI->checkBox());
 
 	QGroupBox* referenceFrameGroupBox = new QGroupBox(tr("Reference frame"));
 	layout->addWidget(referenceFrameGroupBox);

@@ -989,6 +989,16 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"The relative frame offset when using a sliding reference configuration (``use_frame_offset==True``)."
 				"\n\n"
 				":Default: -1\n")
+		.add_property("per_type_occupancies", &WignerSeitzAnalysisModifier::perTypeOccupancy, &WignerSeitzAnalysisModifier::setPerTypeOccupancy,
+				"A parameter flag that controls whether occupancy numbers are determined per particle type. "
+				"\n\n"
+				"If false, only the total occupancy number is computed for each reference site, which counts the number "
+				"of particles that occupy the site irrespective of their types. If true, then the ``Occupancy`` property "
+				"computed by the modifier becomes a vector property with one component per particle type. "
+				"Each property component counts the number of particles of the corresponding type that occupy a site. For example, "
+				"the property component ``Occupancy.1`` contains the number of particles of type 1 that occupy a site. "
+				"\n\n"
+				":Default: ``False``\n")
 		.add_property("vacancy_count", &WignerSeitzAnalysisModifier::vacancyCount,
 				"After the modifier has performed the analysis, this field contains the number of vacant sites. "
 				"Note that accessing this value is only possible after the modifier has computed its results. "

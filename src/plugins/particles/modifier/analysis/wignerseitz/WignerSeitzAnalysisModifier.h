@@ -77,6 +77,12 @@ public:
 	/// Sets the relative frame offset to use.
 	void setReferenceFrameOffset(int frameOffset) { _referenceFrameOffset = frameOffset; }
 
+	/// Returns whether per-type occupancy numbers are computed by the modifier.
+	bool perTypeOccupancy() const { return _perTypeOccupancy; }
+
+	/// Sets whether per-type occupancy numbers are computed by the modifier.
+	void setPerTypeOccupancy(bool enable) { _perTypeOccupancy = enable; }
+
 	/// Returns the number of vacant sites found during the last analysis run.
 	int vacancyCount() const { return _vacancyCount; }
 
@@ -109,12 +115,13 @@ private:
 
 		/// Constructor.
 		WignerSeitzAnalysisEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell,
-				ParticleProperty* refPositions, const SimulationCell& simCellRef, bool eliminateCellDeformation) :
+				ParticleProperty* refPositions, const SimulationCell& simCellRef, bool eliminateCellDeformation,
+				ParticleProperty* typeProperty, int ptypeMinId, int ptypeMaxId) :
 			ComputeEngine(validityInterval),
 			_positions(positions), _simCell(simCell),
 			_refPositions(refPositions), _simCellRef(simCellRef),
 			_eliminateCellDeformation(eliminateCellDeformation),
-			_occupancyNumbers(new ParticleProperty(refPositions->size(), qMetaTypeId<int>(), 1, 0, tr("Occupancy"), true)) {}
+			_typeProperty(typeProperty), _ptypeMinId(ptypeMinId), _ptypeMaxId(ptypeMaxId) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;
@@ -124,6 +131,9 @@ private:
 
 		/// Returns the property storage that contains the reference particle positions.
 		ParticleProperty* refPositions() const { return _refPositions.data(); }
+
+		/// Returns the property storage that contains the particle types.
+		ParticleProperty* particleTypes() const { return _typeProperty.data(); }
 
 		/// Returns the simulation cell data.
 		const SimulationCell& cell() const { return _simCell; }
@@ -147,9 +157,12 @@ private:
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
 		QExplicitlySharedDataPointer<ParticleProperty> _refPositions;
 		QExplicitlySharedDataPointer<ParticleProperty> _occupancyNumbers;
+		QExplicitlySharedDataPointer<ParticleProperty> _typeProperty;
 		bool _eliminateCellDeformation;
 		int _vacancyCount;
 		int _interstitialCount;
+		int _ptypeMinId;
+		int _ptypeMaxId;
 	};
 
 	/// Returns the reference state to be used to perform the analysis at the given time.
@@ -173,6 +186,9 @@ private:
 	/// Relative frame offset for reference coordinates.
 	PropertyField<int> _referenceFrameOffset;
 
+	/// Enable per-type occupancy numbers.
+	PropertyField<bool> _perTypeOccupancy;
+
 	/// The number of vacant sites found during the last analysis run.
 	int _vacancyCount;
 
@@ -192,6 +208,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_useReferenceFrameOffset);
 	DECLARE_PROPERTY_FIELD(_referenceFrameNumber);
 	DECLARE_PROPERTY_FIELD(_referenceFrameOffset);
+	DECLARE_PROPERTY_FIELD(_perTypeOccupancy);
 };
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)

@@ -100,6 +100,12 @@ public:
 	///         If this is only a single-valued property then an empty list is returned by this method.
 	const QStringList& componentNames() const { return _componentNames; }
 
+	/// \brief Sets the human-readable names for the vector components if this is a vector property.
+	void setComponentNames(const QStringList& names) {
+		OVITO_ASSERT(names.empty() || names.size() == componentCount());
+		_componentNames = names;
+	}
+
 	/// \brief Returns a read-only pointer to the raw elements stored in this property object.
 	const void* constData() const {
 		return _data.get();

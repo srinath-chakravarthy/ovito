@@ -16,39 +16,78 @@
        <imagedata fileref="images/modifiers/wigner_seitz_analysis_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
   
-    This analysis modifier can be used to identify and count vacancies and interstitial atoms in a crystal
+    This analysis modifier identifies point defects and counts vacancies and interstitials in a crystal
     using the so-called Wigner-Seitz cell method.
   </para>  
-  
+
   <para>
-    The Wigner-Seitz analysis takes two input configurations of the atomistic system as input: the current configuration containing the point defects 
-    and an ideal reference configuration, which defines the defect-free state of the system (typically a perfect crystal). 
-    The modifier loads the reference configuration from a separate input file. The particle set the modifier is applied to is considered the defective state.
+    The Wigner-Seitz cell method works as follows: We assume that there exist two configurations of
+    the atomistic system. One is the <emphasis>reference state</emphasis>, which is defect-free (typically a perfect crystal lattice).
+    The other is the <emphasis>displaced configuration</emphasis>, which is the defective state of the crystal to be analyzed
+    where some atoms have been displaced from their original sites.
+  </para>
+  <para>
+    Each atomic site in the reference configuration defines the center of a Wigner-Seitz cell (also called Voronoi cell),
+    which is the spatial region that belongs to that site. Any atom (from the displaced configuration) that is located within the Wigner-Seitz cell
+    of a reference site is said to occupy that site. The analysis modifier basically counts the number of
+    atoms from the displaced configuration that occupy each site from the reference configuration. Typically, 
+    sites are occupied by exactly one atom each. However, some sites may by occupied by zero atoms (then we call it a vacancy)
+    or by more than one atom (then we call the excess atoms interstitials).
+  </para>
+  <para>
+    The modifier outputs the number of atoms sitting on each site as a new particle property named <literal>Occupancy</literal>.
+    This property allows to subsequently filter out normal sites and show only defective sites (e.g. using the <link linkend="particles.modifiers.expression_select">Expression Select</link> modifier).
+    Furthermore, the modifier reports two global quantities:
+    <variablelist>
+      <varlistentry>
+        <term>Number of vacancies</term>
+        <listitem>
+          <para>This is the total number of sites in the reference configuration which are not occupied by any atom 
+          in the displaced configuration (sites with occupancy=0).</para>
+        </listitem>
+      </varlistentry> 
+      <varlistentry>
+        <term>Number of interstitials</term>
+        <listitem>
+          <para>This is the total number of excess atoms, summed over all sites of the reference configuration. 
+          A site with occupancy=2 has one excess atom. A site with occupancy=3 has two excess atoms, and so forth.</para>
+        </listitem>
+      </varlistentry> 
+    </variablelist>
+  </para>
+  <para>
+    The modifier does not require the reference configuration and the displaced configuration to have the same number of
+    atoms. However, if they do contain the same number of atoms, then the number of vacancies and the number of interstitials
+    reported by the modifier will be equal. That is because, in this case, the sum over all occupancy numbers is equal to the
+    number of sites in the reference configuration.
   </para>
   
-  <para>Use the <emphasis>"Reference: External file"</emphasis> panel to pick the
+  <para>
+    The modifier loads the <emphasis>reference configuration</emphasis> from a separate input file.
+    Use the <emphasis>"Reference: External file"</emphasis> panel to pick the
     file containing the reference particle positions, which define the defect-free state of the crystal.
-    Note that the number of particles in the reference file does not have to be same as in the current configuration.
+    The particle system which the Wigner-Seitz modifier is being applied to is
+    used as the <emphasis>displaced configuration</emphasis> for the analysis.
   </para>
   
   <para>
-    The Wigner-Seitz analysis works as follows: Every atom (crystal site) in the reference configuration has a counter, which is initialized to zero.
-    The algorithm then iterates over all atoms in the current configuration. For each atom, it determines the closest site in the reference
-    configuration. The counter of this site is incremented by one. In other words, the WS analysis counts the number of atoms located within the Wigner-Seitz (or Voronoi) 
-    cell of each reference site. This number is the site's <emphasis>occupancy</emphasis>.
+    <emphasis>IMPORTANT NOTE</emphasis>: 
+    After performing the analysis this modifier throws away the displaced configuration and completely replaces it with the 
+    reference configuration loaded from the external file. Thus, as a result of applying the Wigner-Seitz modifier you will 
+    now see the reference configuration (crystal with defects) instead of the displaced configuration (defective crystal) which you applied it to. 
+    This makes sense because the computed occupancy numbers apply to the atomic sites of the reference configuration, 
+    not to the atoms of the defective crystal. Keep in mind that the modifier only computes the number of atoms that occupy each
+    site. It does not tell you which atom from the defective configuration occupies which site.
   </para>
-
+  
   <para>
-    The computed occupancy numbers are output as a new particle property named <literal>Occupancy</literal> by the modifier. 
-    The occupancy property will be 0 for vacant sites, 1 for normal sites, and >1 for sites occupied by one or more excess atoms (interstitials).
-    The <link linkend="particles.modifiers.expression_select">Expression select modifier</link> can be used to select certain sites.
-  </para>
-
-  <para>
-    <emphasis>IMPORTANT</emphasis>: After performing the analysis the modifier throws away the current atom configuration and replaces it with the reference configuration
-    from the second input file. Thus, as a result of applying the WS modifier you will now see the reference configuration instead of the current
-    configuration. This makes sense because the computed occupancy numbers apply to the atomic sites of the reference configuration, not the displaced atoms
-    in the defective crystal.
+    However, if somewhat more detailed information is needed, the modifier provides the 
+    <emphasis>Output per-type occupancies</emphasis> option. If actived, the modifer breaks down the
+    occupancy number of each site into per-type counts. Thus, if your displaced configuration contains
+    atoms of different types, then this allows you to determine how many atoms of each type occupy each
+    site in the ideal reference crystal. The per-type occupancy numbers are output as
+    vector components of the <literal>Occupancy</literal> particle property. For example, the
+    property component <literal>Occupancy.1</literal> contains the number of atoms of type 1 that occupy a site.
   </para>
 
   <simplesect>
@@ -59,10 +98,17 @@
       <varlistentry>
         <term>Eliminate homogeneous cell deformation</term>
         <listitem>
-          <para>This option lets the modifier first rescale the current
-          simulation cell including all particle coordinates to match the 
+          <para>This option lets the modifier first rescale the 
+          simulation cell of the displaced configuration including all particle positions to match the 
           cell shape of the reference configuration before performing the Wigner-Seitz analysis. This effectively eliminates any
           macroscopic, homogeneous deformation of the simulation cell, and the atomic displacements will reflect only the internal motion of particles.</para>
+        </listitem>
+      </varlistentry>    
+
+      <varlistentry>
+        <term>Output per-type occupancies</term>
+        <listitem>
+          <para>If this option is active, the modifier outputs per-type occupancy numbers as explained above.</para>
         </listitem>
       </varlistentry>    
 
@@ -87,4 +133,16 @@
  
     </variablelist>
   </simplesect>
+  
+  <simplesect>
+    <title>Implementation detail</title>
+    <para>
+       The Wigner-Seitz cell of a site is by definition the locus of points in space that are closer to that 
+       site than to any of the other sites. Note, however, that the modifier never has to compute the shape of the 
+       Wigner-Seitz cells explicitly to perform the analysis. It rather determines 
+       the closest site from the reference configuration for each atom of the displaced configuration. 
+       The occupancy counter of that site is then incremented by one.
+    </para>
+  </simplesect>
+  
 </section>
