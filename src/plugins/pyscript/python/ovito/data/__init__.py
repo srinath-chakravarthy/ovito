@@ -139,8 +139,8 @@ def _DataCollection_to_ase_atoms(self):
        Python interpreter shipping with OVITO does *not* contain the ASE module.
        It is therefore recommended to build OVITO from source (as explained in the user manual),
        which will allow you to use all modules installed in the system's Python interpreter.
-       
-    :return: A new `ASE Atoms object <https://wiki.fysik.dtu.dk/ase/ase/atoms.html>`_ that contains the 
+
+    :return: A new `ASE Atoms object <https://wiki.fysik.dtu.dk/ase/ase/atoms.html>`_ that contains the
              contains the converted particle data from this :py:class:`!DataCollection`.
     """
 
@@ -171,7 +171,12 @@ def _DataCollection_to_ase_atoms(self):
             continue
         if not isinstance(prop, ParticleProperty):
             continue
-        atoms.new_array(prop.name, prop.array)
+        prop_name = prop.name
+        i = 1
+        while prop_name in atoms.arrays:
+            prop_name = '{0}_{1}'.format(prop.name, i)
+            i += 1
+        atoms.new_array(prop_name, prop.array)
 
     return atoms
 
@@ -189,17 +194,17 @@ def _DataCollection_create_from_ase_atoms(cls, atoms):
        which will allow you to use all modules installed in the system's Python interpreter.
 
     :param atoms: The `ASE Atoms object <https://wiki.fysik.dtu.dk/ase/ase/atoms.html>`_ to be converted.
-    :return: A new :py:class:`!DataCollection` instance containing the converted data from the ASE object.     
+    :return: A new :py:class:`!DataCollection` instance containing the converted data from the ASE object.
     """
     data = cls()
 
     # Set the unit cell and origin (if specified in atoms.info)
     cell = SimulationCell()
     matrix = np.zeros((3,4))
-    matrix[:, :3] = atoms.get_cell()
+    matrix[:, :3] = atoms.get_cell().T
     matrix[:, 3]  = atoms.info.get('cell_origin',
                                    [0., 0., 0.])
-    cell.matrix = matrix.T
+    cell.matrix = matrix
     cell.pbc = [bool(p) for p in atoms.get_pbc()]
     data.add(cell)
 
@@ -223,8 +228,8 @@ def _DataCollection_create_from_ase_atoms(cls, atoms):
     # Check for computed properties - forces, energies, stresses
     calc = atoms.get_calculator()
     if calc is not None:
-        for name, ptype in [('forces', ParticleProperty.Type.Force), 
-                            ('energies', ParticleProperty.Type.PotentialEnergy), 
+        for name, ptype in [('forces', ParticleProperty.Type.Force),
+                            ('energies', ParticleProperty.Type.PotentialEnergy),
                             ('stresses', ParticleProperty.Type.StressTensor),
                             ('charges', ParticleProperty.Type.Charge)]:
             try:
@@ -235,7 +240,7 @@ def _DataCollection_create_from_ase_atoms(cls, atoms):
                     continue
             except NotImplementedError:
                 continue
-            
+
             # Create a corresponding OVITO standard property.
             prop = ParticleProperty.create(ptype, num_particles)
             prop.marray[...] = array

@@ -6,14 +6,22 @@ from ovito import *
 from ovito.data import *
 from ovito.modifiers import *
 
+from ase.lattice import bulk
 from ase.io import read, write
+from ase.calculators.singlepoint import SinglePointCalculator
 
-# Read ASE Atoms instance from disk
-atoms = read(sys.argv[1])
+atoms = bulk('Si', cubic=True)
+atoms *= (5, 5, 5)
 
 # add some comuted properties
 atoms.new_array('real', (atoms.positions**2).sum(axis=1))
 atoms.new_array('int', np.array([-1]*len(atoms)))
+
+# calculate energy and forces with dummy calculator
+forces = -1.0*atoms.positions
+spc = SinglePointCalculator(atoms,
+							forces=forces)
+atoms.set_calculator(spc)
 
 # convert from Atoms to DataCollection
 data = DataCollection.create_from_ase_atoms(atoms)
@@ -29,7 +37,7 @@ new_data = node.compute()
 dataset.selected_node = node
 for vp in dataset.viewports:
     vp.zoom_all()
-    
+
 # Do the reverse conversion, after pipeline has been applied
 atoms = new_data.to_ase_atoms()
 
