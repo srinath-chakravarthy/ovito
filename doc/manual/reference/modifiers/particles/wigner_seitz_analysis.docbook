@@ -23,8 +23,8 @@
   <para>
     The Wigner-Seitz cell method works as follows: We assume that there exist two configurations of
     the atomistic system. One is the <emphasis>reference state</emphasis>, which is defect-free (typically a perfect crystal lattice).
-    The other is the <emphasis>displaced configuration</emphasis>, which is the defective state of the crystal to be analyzed
-    where some atoms have been displaced from their original sites.
+    The other is the <emphasis>displaced configuration</emphasis>, which represents the defective state of the crystal to be analyzed.
+    Here, some atoms have been displaced from their original sites.
   </para>
   <para>
     Each atomic site in the reference configuration defines the center of a Wigner-Seitz cell (also called Voronoi cell),
@@ -36,7 +36,7 @@
   </para>
   <para>
     The modifier outputs the number of atoms sitting on each site as a new particle property named <literal>Occupancy</literal>.
-    This property allows to subsequently filter out normal sites and show only defective sites (e.g. using the <link linkend="particles.modifiers.expression_select">Expression Select</link> modifier).
+    This property allows to subsequently filter out normal sites and show only defective sites (e.g. by using the <link linkend="particles.modifiers.expression_select">Expression Select</link> modifier).
     Furthermore, the modifier reports two global quantities:
     <variablelist>
       <varlistentry>
@@ -56,8 +56,8 @@
     </variablelist>
   </para>
   <para>
-    The modifier does not require the reference configuration and the displaced configuration to have the same number of
-    atoms. However, if they do contain the same number of atoms, then the number of vacancies and the number of interstitials
+    The number of atoms in the reference configuration and in the displaced configuration do not have to be the same. 
+    However, if the two configurations do contain the same number of atoms, then the number of vacancies and the number of interstitials
     reported by the modifier will be equal. That is because, in this case, the sum over all occupancy numbers is equal to the
     number of sites in the reference configuration.
   </para>

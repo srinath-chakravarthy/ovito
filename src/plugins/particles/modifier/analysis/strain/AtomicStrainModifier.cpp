@@ -26,6 +26,7 @@
 #include <core/gui/properties/BooleanParameterUI.h>
 #include <core/gui/properties/BooleanRadioButtonParameterUI.h>
 #include <core/gui/properties/IntegerParameterUI.h>
+#include <core/gui/properties/FloatParameterUI.h>
 #include <core/gui/properties/SubObjectParameterUI.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include "AtomicStrainModifier.h"
@@ -481,7 +482,7 @@ void AtomicStrainModifier::propertyChanged(const PropertyFieldDescriptor& field)
 {
 	AsynchronousParticleModifier::propertyChanged(field);
 
-	// Recompute brightness values when the parameters have been changed.
+	// Recompute results when the parameters change.
 	if(field == PROPERTY_FIELD(AtomicStrainModifier::_eliminateCellDeformation) ||
 			field == PROPERTY_FIELD(AtomicStrainModifier::_assumeUnwrappedCoordinates) ||
 			field == PROPERTY_FIELD(AtomicStrainModifier::_cutoff) ||
@@ -499,6 +500,7 @@ void AtomicStrainModifier::propertyChanged(const PropertyFieldDescriptor& field)
 ******************************************************************************/
 bool AtomicStrainModifier::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
+	// Recompute results when the reference configuration changes.
 	if(source == referenceConfiguration()) {
 		if(event->type() == ReferenceEvent::TargetChanged || event->type() == ReferenceEvent::PendingStateChanged) {
 			invalidateCachedResults();

@@ -17,14 +17,56 @@
     </imageobject></mediaobject></screenshot></informalfigure>
   
   This modifier evaluates a user-defined mathematical expression for every particle 
-  and stores the results in an output particle property. The modifier
-  can be used to assign a new property to a particle, or to change the
-  value of an existing particle property.</para>
+  and stores the results in a particle property. The modifier
+  can be used to assign a new property to particles, or to modify the
+  values of an existing particle property.</para>
 
-  <para>The entered math formula can depend on existing properties such as the position or type. 
-  The list of available input variables is displayed in the lower
-  panel. Variable and function names are case-sensitive.</para>
-
+  <para>
+  The math formula specified by the user can depend on existing particle properties such as the position or type. 
+  The list of available input variables is displayed in the lower panel as shown in the screenshot.
+  </para> 
+  
+  <para>OVITO differentiates between <emphasis>standard</emphasis> particle properties and <emphasis>custom</emphasis> particle properties.
+  The properties of the former type have specific meanings to OVITO (e.g. <literal>Position</literal> or <literal>Particle Identifier</literal>) while custom properties
+  have arbitrary, user-defined names (e.g. <literal>MyPropertyA</literal>) and the stored data is not interpreted by OVITO in any way.
+  The <emphasis>Compute property</emphasis> modifier allows you to create or modify both types of particle properties. If you use the 
+  modifier to assign values to a standard property such as <literal>Position</literal>, <literal>Color</literal>, or <literal>Radius</literal>,
+  it will immediately affect the visual appearance of particles. 
+  </para>
+  
+  <para>
+  The list of all standard properties known to OVITO can be found in the <emphasis>Output property</emphasis> drop-down list. If you want to create a custom particle property,
+  simply enter a name of your choice in the input field. Make sure the name of the custom property does not collide with one of the standard property names.
+  Note that particle property names in OVITO are case-sensitive.
+  </para>
+  
+  <para>
+  Some particle properties (e.g. <literal>Position</literal> or <literal>Color</literal>) are vector properties and have multiple components per particle. If you want to use the <emphasis>Compute property</emphasis>
+  modifier to assign values to such vector properties, then you have to enter multiple math expressions, one for each vector component.
+  Note that it is currently not possible to create custom vector properties with the modifier. It only allows you to create new scalar properties.
+  </para>
+  
+  <para>
+  If the particle property that you are computing already exists, then the existing values will be overwritten with the new ones 
+  computed by the modifier. The <emphasis>Compute only for selected particles</emphasis> option, however, makes it possible to restrict the 
+  assignment of new values to a subset of particles and preserve the existing values of unselected particles. If this option is activated and the particle property does not exist yet,
+  then unselected particles will be assigned the default value 0.
+  </para>
+  
+  <para>
+  The modifier provides a powerful way to derive new properties from existing properties and to influence the appearance or position of particles.
+  The ternary <literal>?:</literal> operator allows you make a property depend on user-defined conditions. For example, to make all particles
+  in the upper half of the simulation box semi-transparent and the particles in the lower half fuly opaque, use the following expression to 
+  compute the value of the <literal>Transparency</literal> property: 
+  <programlisting>(ReducedPosition.Z &gt; 0.5) ? 0.7 : 0.0</programlisting>
+  </para>
+  
+  <para>
+  For even more demanding applications which cannot be accomplished with static math expressions, 
+  e.g. if you would like to take into account neighbors of particles, please consider using the <link linkend="particles.modifiers.python_script">Python script</link> modifier, 
+  which lets you write new types of modifiers in a real programming language.
+  </para>
+  
   <simplesect>
     <title>Parameters</title>
 
@@ -49,264 +91,270 @@
       <varlistentry>
         <term>Expressions</term>
         <listitem>
-          <para>The panel contains one input field for every vector component
-          of the property to be computed. You enter a mathematical
-          expression in each field that will be evaluated for every
-          particle. The expression syntax supported by the modifier is very
-          similar to the C language. Arithmetic expressions can be created from
-          float literals, variables, or functions using the following operators
-          in the given order of precedence: 
-          <informaltable>
-          <tgroup cols="2">
-          <thead>
-            <row>
-              <entry>Operator</entry>
-              <entry>Description</entry>
-            </row>
-          </thead>
-              <tbody>
-                <row>
-                  <entry>(...)</entry>
-
-                  <entry>expressions in parentheses are evaluated first</entry>
-                </row>
-
-                <row>
-                  <entry>A^B</entry>
-
-                  <entry>exponentiation (A raised to the power B)</entry>
-                </row>
-
-                <row>
-                  <entry>A*B, A/B</entry>
-
-                  <entry>multiplication and division</entry>
-                </row>
-
-                <row>
-                  <entry>A+B, A-B</entry>
-
-                  <entry>addition and subtraction</entry>
-                </row>
-
-                <row>
-                  <entry>A==B, A!=B, A&lt;B, A&lt;=B, A&gt;B, A&gt;=B</entry>
-
-                  <entry>comparison between A and B (result is either 0 or
-                  1)</entry>
-                </row>
-
-                <row>
-                  <entry>A &amp;&amp; B</entry>
-
-                  <entry>logical AND operator: result is 1 if A and B differ from
-                  0, else 0</entry>
-                </row>
-
-                <row>
-                  <entry>A || B</entry>
-
-                  <entry>logical OR operator: result is 1 if A or B differ from
-                  0, else 0</entry>
-                </row>
-                
-                <row>
-                  <entry>A ? B : C</entry>
-                  <entry>If A differs from 0 (i.e. is true), the resulting value of this expression
-                  is B, else C.</entry>
-                </row>
-                
-              </tbody></tgroup>
-            </informaltable></para>
-
-          <para>The expression parser supports the following functions:
-          <informaltable>
-          <tgroup cols="2">
-          <thead>
-            <row>
-              <entry>Function name</entry>
-              <entry>Description</entry>
-            </row>
-          </thead>
-              <tbody>
-                <row>
-                  <entry>abs(A)</entry>
-
-                  <entry>Absolute value of A. If A is negative, returns -A
-                  otherwise returns A.</entry>
-                </row>
-
-                <row>
-                  <entry>acos(A)</entry>
-
-                  <entry>Arc-cosine of A. Returns the angle, measured in radians,
-                  whose cosine is A.</entry>
-                </row>
-
-                <row>
-                  <entry>acosh(A)</entry>
-
-                  <entry>Same as acos() but for hyperbolic cosine.</entry>
-                </row>
-
-                <row>
-                  <entry>asin(A)</entry>
-
-                  <entry>Arc-sine of A. Returns the angle, measured in radians,
-                  whose sine is A.</entry>
-                </row>
-
-                <row>
-                  <entry>asinh(A)</entry>
-
-                  <entry>Same as asin() but for hyperbolic sine.</entry>
-                </row>
-
-                <row>
-                  <entry>atan(A)</entry>
-
-                  <entry>Arc-tangent of A. Returns the angle, measured in
-                  radians, whose tangent is A.</entry>
-                </row>
-
-                <row>
-                  <entry>atan2(Y,X)</entry>
-
-                  <entry>Two argument variant of the arctangent function. Returns
-                  the angle, measured in radians. This function is documented
-                  <link
-                  xlink:href="http://en.wikipedia.org/wiki/Atan2">here</link>.</entry>
-                </row>
-
-                <row>
-                  <entry>atanh(A)</entry>
-
-                  <entry>Same as atan() but for hyperbolic tangent.</entry>
-                </row>
-
-                <row>
-                  <entry>avg(A,B,...)</entry>
-
-                  <entry>Returns the average of all arguments.</entry>
-                </row>
-
-                <row>
-                  <entry>cos(A)</entry>
-
-                  <entry>Cosine of A. Returns the cosine of the angle A, where A
-                  is measured in radians.</entry>
-                </row>
-
-                <row>
-                  <entry>cosh(A)</entry>
-
-                  <entry>Same as cos() but for hyperbolic cosine.</entry>
-                </row>
-
-                <row>
-                  <entry>exp(A)</entry>
-
-                  <entry>Exponential of A. Returns the value of e raised to the
-                  power A where e is the base of the natural logarithm, i.e.
-                  the non-repeating value approximately equal to
-                  2.71828182846.</entry>
-                </row>
-
-                <row>
-                  <entry>fmod(A,B)</entry>
-                  <entry>Returns the floating-point remainder of A/B (rounded towards zero).</entry>
-                </row>
-
-                <row>
-                  <entry>rint(A)</entry>
-
-                  <entry>Rounds A to the closest integer. 0.5 is rounded to
-                  1.</entry>
-                </row>
-
-                <row>
-                  <entry>ln(A)</entry>
-
-                  <entry>Natural (base e) logarithm of A.</entry>
-                </row>
-
-                <row>
-                  <entry>log10(A)</entry>
-
-                  <entry>Base 10 logarithm of A.</entry>
-                </row>
-
-                <row>
-                  <entry>log2(A)</entry>
-
-                  <entry>Base 2 logarithm of A.</entry>
-                </row>
-
-                <row>
-                  <entry>max(A,B,...)</entry>
-
-                  <entry>Returns the maximum of all parameter values.</entry>
-                </row>
-
-                <row>
-                  <entry>min(A,B,...)</entry>
-
-                  <entry>Returns the minimum of all parameter values.</entry>
-                </row>
-
-                <row>
-                  <entry>sign(A)</entry>
-                  <entry>Returns: 1 if A is positive; -1 if A is negative; 0 if A is zero.</entry>
-                </row>                
-
-                <row>
-                  <entry>sin(A)</entry>
-
-                  <entry>Sine of A. Returns the sine of the angle A, where A is
-                  measured in radians.</entry>
-                </row>
-
-                <row>
-                  <entry>sinh(A)</entry>
-
-                  <entry>Same as sin() but for hyperbolic sine.</entry>
-                </row>
-
-                <row>
-                  <entry>sqrt(A)</entry>
-
-                  <entry>Square root of a value.</entry>
-                </row>
-
-                <row>
-                  <entry>sum(A,B,...)</entry>
-
-                  <entry>Returns the sum of all parameter values.</entry>
-                </row>
-                
-                <row>
-                  <entry>tan(A)</entry>
-
-                  <entry>Tangent of A. Returns the tangent of the angle A, where
-                  A is measured in radians.</entry>
-                </row>
-              </tbody></tgroup>
-            </informaltable></para>
+          <para>This panel contains one input field for every vector component
+          of the property to be computed.</para> 
         </listitem>
       </varlistentry>
     </variablelist>
   </simplesect>
+            
+  <simplesect>
+    <title>Expression syntax</title>
+    <para>          
+   The expression syntax supported by the modifier is very
+   similar to the one of the C programming language. Variable names and function names are case-sensitive.   
+   Arithmetic expressions can be created from
+   float literals, variables, or functions using the following operators
+   in the given order of precedence: 
+   <informaltable>
+   <tgroup cols="2">
+   <thead>
+     <row>
+       <entry>Operator</entry>
+       <entry>Description</entry>
+     </row>
+   </thead>
+       <tbody>
+         <row>
+           <entry>(...)</entry>
+
+           <entry>expressions in parentheses are evaluated first</entry>
+         </row>
+
+         <row>
+           <entry>A^B</entry>
+
+           <entry>exponentiation (A raised to the power B)</entry>
+         </row>
+
+         <row>
+           <entry>A*B, A/B</entry>
+
+           <entry>multiplication and division</entry>
+         </row>
+
+         <row>
+           <entry>A+B, A-B</entry>
+
+           <entry>addition and subtraction</entry>
+         </row>
+
+         <row>
+           <entry>A==B, A!=B, A&lt;B, A&lt;=B, A&gt;B, A&gt;=B</entry>
+
+           <entry>comparison between A and B (result is either 0 or
+           1)</entry>
+         </row>
+
+         <row>
+           <entry>A &amp;&amp; B</entry>
+
+           <entry>logical AND operator: result is 1 if A and B differ from
+           0, else 0</entry>
+         </row>
+
+         <row>
+           <entry>A || B</entry>
+
+           <entry>logical OR operator: result is 1 if A or B differ from
+           0, else 0</entry>
+         </row>
+         
+         <row>
+           <entry>A ? B : C</entry>
+           <entry>If A differs from 0 (i.e. is true), the resulting value of this expression
+           is B, else C.</entry>
+         </row>
+         
+       </tbody></tgroup>
+     </informaltable></para>
+
+   <para>The expression parser supports the following functions:
+   <informaltable>
+   <tgroup cols="2">
+   <thead>
+     <row>
+       <entry>Function name</entry>
+       <entry>Description</entry>
+     </row>
+   </thead>
+       <tbody>
+         <row>
+           <entry>abs(A)</entry>
+
+           <entry>Absolute value of A. If A is negative, returns -A
+           otherwise returns A.</entry>
+         </row>
+
+         <row>
+           <entry>acos(A)</entry>
+
+           <entry>Arc-cosine of A. Returns the angle, measured in radians,
+           whose cosine is A.</entry>
+         </row>
+
+         <row>
+           <entry>acosh(A)</entry>
+
+           <entry>Same as acos() but for hyperbolic cosine.</entry>
+         </row>
+
+         <row>
+           <entry>asin(A)</entry>
+
+           <entry>Arc-sine of A. Returns the angle, measured in radians,
+           whose sine is A.</entry>
+         </row>
+
+         <row>
+           <entry>asinh(A)</entry>
+
+           <entry>Same as asin() but for hyperbolic sine.</entry>
+         </row>
+
+         <row>
+           <entry>atan(A)</entry>
+
+           <entry>Arc-tangent of A. Returns the angle, measured in
+           radians, whose tangent is A.</entry>
+         </row>
+
+         <row>
+           <entry>atan2(Y,X)</entry>
+
+           <entry>Two argument variant of the arctangent function. Returns
+           the angle, measured in radians. This function is documented
+           <link
+           xlink:href="http://en.wikipedia.org/wiki/Atan2">here</link>.</entry>
+         </row>
+
+         <row>
+           <entry>atanh(A)</entry>
+
+           <entry>Same as atan() but for hyperbolic tangent.</entry>
+         </row>
+
+         <row>
+           <entry>avg(A,B,...)</entry>
+
+           <entry>Returns the average of all arguments.</entry>
+         </row>
+
+         <row>
+           <entry>cos(A)</entry>
+
+           <entry>Cosine of A. Returns the cosine of the angle A, where A
+           is measured in radians.</entry>
+         </row>
+
+         <row>
+           <entry>cosh(A)</entry>
+
+           <entry>Same as cos() but for hyperbolic cosine.</entry>
+         </row>
+
+         <row>
+           <entry>exp(A)</entry>
+
+           <entry>Exponential of A. Returns the value of e raised to the
+           power A where e is the base of the natural logarithm, i.e.
+           the non-repeating value approximately equal to
+           2.71828182846.</entry>
+         </row>
+
+         <row>
+           <entry>fmod(A,B)</entry>
+           <entry>Returns the floating-point remainder of A/B (rounded towards zero).</entry>
+         </row>
+
+         <row>
+           <entry>rint(A)</entry>
+
+           <entry>Rounds A to the closest integer. 0.5 is rounded to
+           1.</entry>
+         </row>
+
+         <row>
+           <entry>ln(A)</entry>
+
+           <entry>Natural (base e) logarithm of A.</entry>
+         </row>
+
+         <row>
+           <entry>log10(A)</entry>
+
+           <entry>Base 10 logarithm of A.</entry>
+         </row>
+
+         <row>
+           <entry>log2(A)</entry>
+
+           <entry>Base 2 logarithm of A.</entry>
+         </row>
+
+         <row>
+           <entry>max(A,B,...)</entry>
+
+           <entry>Returns the maximum of all parameter values.</entry>
+         </row>
+
+         <row>
+           <entry>min(A,B,...)</entry>
+
+           <entry>Returns the minimum of all parameter values.</entry>
+         </row>
+
+         <row>
+           <entry>sign(A)</entry>
+           <entry>Returns: 1 if A is positive; -1 if A is negative; 0 if A is zero.</entry>
+         </row>                
+
+         <row>
+           <entry>sin(A)</entry>
+
+           <entry>Sine of A. Returns the sine of the angle A, where A is
+           measured in radians.</entry>
+         </row>
+
+         <row>
+           <entry>sinh(A)</entry>
+
+           <entry>Same as sin() but for hyperbolic sine.</entry>
+         </row>
+
+         <row>
+           <entry>sqrt(A)</entry>
+
+           <entry>Square root of a value.</entry>
+         </row>
+
+         <row>
+           <entry>sum(A,B,...)</entry>
+
+           <entry>Returns the sum of all parameter values.</entry>
+         </row>
+         
+         <row>
+           <entry>tan(A)</entry>
+
+           <entry>Tangent of A. Returns the tangent of the angle A, where
+           A is measured in radians.</entry>
+         </row>
+       </tbody></tgroup>
+     </informaltable>
+     </para>
+     <para> </para>
+  </simplesect>
 
   <simplesect>
     <title>Example 1</title>
-    <para>We want to compute the linear velocity of each
+    <para>Our aim is to compute the linear velocity of each
     particle based on the components v<subscript>x</subscript>,
     v<subscript>y</subscript>, and v<subscript>z</subscript> of their velocity
-    vectors. For this, we create a new user-defined property with the name "Linear
-    Velocity". The following
+    vectors. For this, we create a new user-defined property with the name "<literal>Speed</literal>". The following
     formula is entered into the expression field: <programlisting>sqrt(Velocity.X^2 + Velocity.Y^2 + Velocity.Z^2)</programlisting>
     Here we reference the X, Y, and Z components of the standard
-    <literal>Velocity</literal> particle property, which we assume is present in the
+    <literal>Velocity</literal> particle property, which must be present in the
     input dataset. The computed linear velocity property can 
     subsequently be used, for instance, to color particles with the <emphasis><link
     linkend="particles.modifiers.color_coding">Color Coding</link></emphasis>
@@ -317,11 +365,11 @@
     <title>Example 2</title>
     <para>The <emphasis>Compute property</emphasis> modifier can also be used to set
     particle properties which are not accessible by other means. One such example is
-    the per-particle radius: Let us assume we have selected a subset of particles that 
+    the per-particle radius: Let us assume we have already selected a subset of particles that 
     we want to give a different size.
-    We may use the <emphasis>Compute property</emphasis> modifier to set
-    the value of the <literal>Radius</literal> particle property, which stores the
-    per-particle display radii. The selection state of particles is stored in the
+    We can use the <emphasis>Compute property</emphasis> modifier to set
+    the value of the <literal>Radius</literal> particle property, which determines the
+    per-particle display radii. The selection state of particles is given by the
     <literal>Selection</literal> property. With the
     formula <programlisting>Selection ? 1.5 : 1.0</programlisting> we assign a
     radius that depends on the selection state of each particle, which can be either 1 or 0. 

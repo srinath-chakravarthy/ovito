@@ -240,7 +240,7 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 
 	// Write bonds.
 	if(writeBonds) {
-		textStream() << "Bonds\n\n";
+		textStream() << "\nBonds\n\n";
 
 		int bondIndex = 1;
 		for(size_t i = 0; i < bondsObj->storage()->size(); i++) {

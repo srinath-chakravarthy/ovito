@@ -306,11 +306,11 @@ private:
 	DECLARE_PROPERTY_FIELD(_referenceShown);
 	DECLARE_PROPERTY_FIELD(_eliminateCellDeformation);
 	DECLARE_PROPERTY_FIELD(_assumeUnwrappedCoordinates);
-	DECLARE_PROPERTY_FIELD(_cutoff)
-	DECLARE_PROPERTY_FIELD(_calculateDeformationGradients)
-	DECLARE_PROPERTY_FIELD(_calculateStrainTensors)
-	DECLARE_PROPERTY_FIELD(_calculateNonaffineSquaredDisplacements)
-	DECLARE_PROPERTY_FIELD(_selectInvalidParticles)
+	DECLARE_PROPERTY_FIELD(_cutoff);
+	DECLARE_PROPERTY_FIELD(_calculateDeformationGradients);
+	DECLARE_PROPERTY_FIELD(_calculateStrainTensors);
+	DECLARE_PROPERTY_FIELD(_calculateNonaffineSquaredDisplacements);
+	DECLARE_PROPERTY_FIELD(_selectInvalidParticles);
 	DECLARE_PROPERTY_FIELD(_useReferenceFrameOffset);
 	DECLARE_PROPERTY_FIELD(_referenceFrameNumber);
 	DECLARE_PROPERTY_FIELD(_referenceFrameOffset);
