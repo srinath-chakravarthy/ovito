@@ -77,6 +77,7 @@ SET(SourceFiles
 	modifier/selection/ClearSelectionModifier.cpp
 	modifier/properties/ComputePropertyModifier.cpp
 	modifier/properties/FreezePropertyModifier.cpp
+	modifier/properties/RadialComputeModifier.cpp
 	import/ParticleImporter.cpp
 	import/ParticleFrameLoader.cpp
 	import/InputColumnMapping.cpp

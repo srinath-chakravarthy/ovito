@@ -25,6 +25,7 @@
 #include <plugins/particles/Particles.h>
 #include <core/scene/pipeline/PipelineFlowState.h>
 #include <muParser.h>
+#include <boost/utility.hpp>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -43,14 +44,13 @@ public:
 	ParticleExpressionEvaluator() {}
 
 	/// Specifies the expressions to be evaluated for each particle and creates the input variables.
-	void initialize(const QStringList& expressions, const PipelineFlowState& inputState, int animationFrame);
+	void initialize(const QStringList& expressions, const PipelineFlowState& inputState, int animationFrame = 0);
+
+	/// Specifies the expressions to be evaluated for each particle and creates the input variables.
+	void initialize(const QStringList& expressions, const std::vector<ParticleProperty*>& inputProperties, const SimulationCell* simCell, int animationFrame = 0, int simulationTimestep = -1);
 
 	/// Initializes the parser object and evaluates the expressions for every particle.
 	void evaluate(const std::function<void(size_t,size_t,double)>& callback, const std::function<bool(size_t)>& filter = std::function<bool(size_t)>());
-
-	/// Initializes the list of input variables from the given input state.
-	/// NOTE: The pipeline flow state passed to this function may not be deleted while using the ParticleExpressionEvaluator.
-	void createInputVariables(const PipelineFlowState& inputState, int animationFrame = 0);
 
 	/// Returns the list of expressions.
 	const std::vector<std::string>& expression() const { return _expressions; }
@@ -62,9 +62,16 @@ public:
 	QString inputVariableTable() const;
 
 	/// Returns whether the expression results depend on animation time.
-	bool isTimeDependent() const {
-		return _usedVars.find("Frame") != _usedVars.end() ||
-				_usedVars.find("Timestep") != _usedVars.end();
+	bool isTimeDependent() const { return _isTimeDependent; }
+
+	/// Registers a new input variable whose value is recomputed for each particle.
+	template<typename Function>
+	void registerComputedVariable(const QString& variableName, Function&& function) {
+		ExpressionVariable v;
+		v.type = DERIVED_PARTICLE_PROPERTY;
+		v.name = variableName.toStdString();
+		v.function = std::forward<Function>(function);
+		addVariable(std::move(v));
 	}
 
 protected:
@@ -94,10 +101,26 @@ protected:
 		QString description;
 		/// A function that computes the variable's value for each particle.
 		std::function<double(size_t)> function;
+		/// Reference the origin particle property that contains the data.
+		QExplicitlySharedDataPointer<ParticleProperty> particleProperty;
 	};
 
-	/// One instance of this structure is created per worker thread.
-	struct WorkerThread {
+public:
+
+	/// One instance of this class is created per thread.
+	class Worker : boost::noncopyable {
+	public:
+
+		/// Initializes the worker instance.
+		Worker(ParticleExpressionEvaluator& evaluator);
+
+		/// Evaluates the expression for a specific particle and a specific vector component.
+		double evaluate(size_t particleIndex, size_t component);
+
+	private:
+
+		/// The worker routine.
+		void run(size_t startIndex, size_t endIndex, std::function<void(size_t,size_t,double)> callback, std::function<bool(size_t)> filter);
 
 		/// List of parser objects used by this thread.
 		std::vector<mu::Parser> _parsers;
@@ -105,18 +128,25 @@ protected:
 		/// List of input variables used by the parsers of this thread.
 		QVector<ExpressionVariable> _inputVariables;
 
+		/// List of input variables which are actually used in the expression.
+		std::vector<ExpressionVariable*> _activeVariables;
+
+		/// The index of the last particle for which the expressions were evaluated.
+		size_t _lastParticleIndex;
+
 		/// Error message reported by one of the parser objects (remains empty on success).
 		QString _errorMsg;
 
-		/// Initializes the parser objects of this thread.
-		void initialize(const std::vector<std::string>& expressions, const QVector<ExpressionVariable>& inputVariables, std::set<std::string>& usedVars);
-
-		/// The worker routine.
-		void run(size_t startIndex, size_t endIndex, std::function<void(size_t,size_t,double)> callback, std::function<bool(size_t)> filter);
+		friend class ParticleExpressionEvaluator;
 	};
 
+protected:
+
+	/// Initializes the list of input variables from the given input state.
+	void createInputVariables(const std::vector<ParticleProperty*>& inputProperties, const SimulationCell* simCell, int animationFrame, int simulationTimestep);
+
 	/// Registers an input variable if the name does not exist yet.
-	void addVariable(const ExpressionVariable& v);
+	void addVariable(ExpressionVariable&& v);
 
 	/// The list of expression that should be evaluated for each particle.
 	std::vector<std::string> _expressions;
@@ -124,8 +154,8 @@ protected:
 	/// The list of input variables.
 	QVector<ExpressionVariable> _inputVariables;
 
-	/// The list of variables references by the expressions.
-	std::set<std::string> _usedVars;
+	/// Indicates that the expression produces time-dependent results.
+	std::atomic<bool> _isTimeDependent;
 
 	/// The number of input particles.
 	size_t _particleCount;

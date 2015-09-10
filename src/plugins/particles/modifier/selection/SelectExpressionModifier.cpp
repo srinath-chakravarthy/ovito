@@ -109,7 +109,7 @@ void SelectExpressionModifier::initializeModifier(PipelineObject* pipeline, Modi
 	// Build list of available input variables.
 	PipelineFlowState input = pipeline->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
 	ParticleExpressionEvaluator evaluator;
-	evaluator.createInputVariables(input);
+	evaluator.initialize(QStringList(), input);
 	_variableNames = evaluator.inputVariableNames();
 	_variableTable = evaluator.inputVariableTable();
 }

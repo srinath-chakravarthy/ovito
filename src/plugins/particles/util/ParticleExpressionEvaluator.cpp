@@ -32,17 +32,65 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO
 QByteArray ParticleExpressionEvaluator::_validVariableNameChars("0123456789_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.");
 
 /******************************************************************************
+* Specifies the expressions to be evaluated for each particle and create the
+* list of input variables.
+******************************************************************************/
+void ParticleExpressionEvaluator::initialize(const QStringList& expressions, const PipelineFlowState& inputState, int animationFrame)
+{
+	// Build list of particle properties.
+	std::vector<ParticleProperty*> inputProperties;
+	for(DataObject* obj : inputState.objects()) {
+		if(ParticlePropertyObject* prop = dynamic_object_cast<ParticlePropertyObject>(obj)) {
+			inputProperties.push_back(prop->storage());
+		}
+	}
+
+	// Get simulation timestep.
+	int simulationTimestep = -1;
+	if(inputState.attributes().contains(QStringLiteral("Timestep"))) {
+		simulationTimestep = inputState.attributes().value(QStringLiteral("Timestep")).toInt();
+	}
+
+	// Get simulation cell.
+	SimulationCell simCell;
+	SimulationCellObject* simCellObj = inputState.findObject<SimulationCellObject>();
+	if(simCellObj) simCell = simCellObj->data();
+
+	// Call overloaded function.
+	initialize(expressions, inputProperties, simCellObj ? &simCell : nullptr, animationFrame, simulationTimestep);
+}
+
+/******************************************************************************
+* Specifies the expressions to be evaluated for each particle and create the
+* list of input variables.
+******************************************************************************/
+void ParticleExpressionEvaluator::initialize(const QStringList& expressions, const std::vector<ParticleProperty*>& inputProperties, const SimulationCell* simCell, int animationFrame, int simulationTimestep)
+{
+	// Create list of input variables.
+	createInputVariables(inputProperties, simCell, animationFrame, simulationTimestep);
+
+	// Copy expression strings into internal array.
+	_expressions.resize(expressions.size());
+	std::transform(expressions.begin(), expressions.end(), _expressions.begin(), [](const QString& s) -> std::string { return s.toStdString(); });
+
+	// Determine number of input particles.
+	_particleCount = inputProperties.empty() ? 0 : inputProperties.front()->size();
+	_isTimeDependent = false;
+}
+
+/******************************************************************************
 * Initializes the list of input variables from the given input state.
 ******************************************************************************/
-void ParticleExpressionEvaluator::createInputVariables(const PipelineFlowState& inputState, int animationFrame)
+void ParticleExpressionEvaluator::createInputVariables(const std::vector<ParticleProperty*>& inputProperties, const SimulationCell* simCell, int animationFrame, int simulationTimestep)
 {
 	_inputVariables.clear();
+	ParticleProperty* posProperty = nullptr;
 
 	int propertyIndex = 1;
 	size_t particleCount = 0;
-	for(DataObject* o : inputState.objects()) {
-		ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(o);
-		if(!property) continue;
+	for(ParticleProperty* property : inputProperties) {
+		if(property->type() == ParticleProperty::PositionProperty)
+			posProperty = property;
 
 		ExpressionVariable v;
 
@@ -53,6 +101,7 @@ void ParticleExpressionEvaluator::createInputVariables(const PipelineFlowState& 
 			v.type = PARTICLE_FLOAT_PROPERTY;
 		else
 			continue;
+		v.particleProperty = property;
 		particleCount = property->size();
 
 		// Derive a valid variable name from the property name by removing all invalid characters.
@@ -86,42 +135,31 @@ void ParticleExpressionEvaluator::createInputVariables(const PipelineFlowState& 
 				v.dataPointer = reinterpret_cast<const char*>(property->constDataFloat() + k);
 			v.stride = property->stride();
 
-			addVariable(v);
+			addVariable(ExpressionVariable(v));
 		}
 
 		propertyIndex++;
 	}
 
-	SimulationCellObject* simCell = inputState.findObject<SimulationCellObject>();
-
 	// Create variable for reduced particle coordinates.
-	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(inputState, ParticleProperty::PositionProperty);
 	if(posProperty && simCell) {
-		SimulationCell cellData = simCell->data();
-		ExpressionVariable v;
-		v.type = DERIVED_PARTICLE_PROPERTY;
-		v.name = "ReducedPosition.X";
-		v.function = [posProperty,cellData](size_t particleIndex) -> double {
+		SimulationCell cellData = *simCell;
+		registerComputedVariable("ReducedPosition.X", [posProperty,cellData](size_t particleIndex) -> double {
 			return cellData.inverseMatrix().prodrow(posProperty->getPoint3(particleIndex), 0);
-		};
-		addVariable(v);
-		v.name = "ReducedPosition.Y";
-		v.function = [posProperty,cellData](size_t particleIndex) -> double {
+		});
+		registerComputedVariable("ReducedPosition.Y", [posProperty,cellData](size_t particleIndex) -> double {
 			return cellData.inverseMatrix().prodrow(posProperty->getPoint3(particleIndex), 1);
-		};
-		addVariable(v);
-		v.name = "ReducedPosition.Z";
-		v.function = [posProperty,cellData](size_t particleIndex) -> double {
+		});
+		registerComputedVariable("ReducedPosition.Z", [posProperty,cellData](size_t particleIndex) -> double {
 			return cellData.inverseMatrix().prodrow(posProperty->getPoint3(particleIndex), 2);
-		};
-		addVariable(v);
+		});
 	}
 
 	// Create particle index variable.
 	ExpressionVariable pindexVar;
 	pindexVar.name = "ParticleIndex";
 	pindexVar.type = PARTICLE_INDEX;
-	addVariable(pindexVar);
+	addVariable(std::move(pindexVar));
 
 	// Create constant variables.
 	ExpressionVariable constVar;
@@ -131,22 +169,22 @@ void ParticleExpressionEvaluator::createInputVariables(const PipelineFlowState& 
 	constVar.type = GLOBAL_PARAMETER;
 	constVar.value = particleCount;
 	constVar.description = tr("number of particles");
-	addVariable(constVar);
+	addVariable(ExpressionVariable(constVar));
 
 	// Animation frame
 	constVar.name = "Frame";
 	constVar.type = GLOBAL_PARAMETER;
 	constVar.value = animationFrame;
 	constVar.description = tr("animation frame number");
-	addVariable(constVar);
+	addVariable(ExpressionVariable(constVar));
 
 	// Timestep.
-	if(inputState.attributes().contains(QStringLiteral("Timestep"))) {
+	if(simulationTimestep >= 0) {
 		constVar.name = "Timestep";
 		constVar.type = GLOBAL_PARAMETER;
-		constVar.value = inputState.attributes().value(QStringLiteral("Timestep")).toDouble();
+		constVar.value = simulationTimestep;
 		constVar.description = tr("simulation timestep");
-		addVariable(constVar);
+		addVariable(ExpressionVariable(constVar));
 	}
 
 	if(simCell) {
@@ -155,22 +193,22 @@ void ParticleExpressionEvaluator::createInputVariables(const PipelineFlowState& 
 		constVar.type = GLOBAL_PARAMETER;
 		constVar.value = simCell->volume();
 		constVar.description = tr("simulation cell volume");
-		addVariable(constVar);
+		addVariable(ExpressionVariable(constVar));
 
 		// Cell size
 		constVar.type = GLOBAL_PARAMETER;
-		constVar.value = std::abs(simCell->edgeVector1().x());
+		constVar.value = std::abs(simCell->matrix().column(0).x());
 		constVar.name = "CellSize.X";
 		constVar.description = tr("size along X");
-		addVariable(constVar);
-		constVar.value = std::abs(simCell->edgeVector2().y());
+		addVariable(ExpressionVariable(constVar));
+		constVar.value = std::abs(simCell->matrix().column(1).y());
 		constVar.name = "CellSize.Y";
 		constVar.description = tr("size along Y");
-		addVariable(constVar);
-		constVar.value = std::abs(simCell->edgeVector3().z());
+		addVariable(ExpressionVariable(constVar));
+		constVar.value = std::abs(simCell->matrix().column(2).z());
 		constVar.name = "CellSize.Z";
 		constVar.description = tr("size along Z");
-		addVariable(constVar);
+		addVariable(ExpressionVariable(constVar));
 	}
 
 	// Pi
@@ -178,17 +216,17 @@ void ParticleExpressionEvaluator::createInputVariables(const PipelineFlowState& 
 	constVar.type = CONSTANT;
 	constVar.value = M_PI;
 	constVar.description = QStringLiteral("%1...").arg(M_PI);
-	addVariable(constVar);
+	addVariable(ExpressionVariable(constVar));
 }
 
 /******************************************************************************
 * Registers an input variable if the name does not exist yet.
 ******************************************************************************/
-void ParticleExpressionEvaluator::addVariable(const ExpressionVariable& v)
+void ParticleExpressionEvaluator::addVariable(ExpressionVariable&& v)
 {
 	// Check if name is unique.
 	if(std::none_of(_inputVariables.begin(), _inputVariables.end(), [&v](const ExpressionVariable& v2) -> bool { return v2.name == v.name; }))
-		_inputVariables.push_back(v);
+		_inputVariables.push_back(std::move(v));
 }
 
 /******************************************************************************
@@ -203,32 +241,12 @@ QStringList ParticleExpressionEvaluator::inputVariableNames() const
 }
 
 /******************************************************************************
-* Specifies the expressions to be evaluated for each particle and create the
-* list of input variables.
-******************************************************************************/
-void ParticleExpressionEvaluator::initialize(const QStringList& expressions, const PipelineFlowState& inputState, int animationFrame)
-{
-	// Create list of input variables.
-	createInputVariables(inputState, animationFrame);
-
-	// Copy expression strings into internal array.
-	_expressions.resize(expressions.size());
-	std::transform(expressions.begin(), expressions.end(), _expressions.begin(), [](const QString& s) -> std::string { return s.toStdString(); });
-
-	// Determine number of input particles.
-	_particleCount = 0;
-	if(ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(inputState, ParticleProperty::PositionProperty))
-		_particleCount = posProperty->size();
-}
-
-/******************************************************************************
 * Initializes the parser object and evaluates the expressions for every particle
 ******************************************************************************/
 void ParticleExpressionEvaluator::evaluate(const std::function<void(size_t,size_t,double)>& callback, const std::function<bool(size_t)>& filter)
 {
 	// Make sure initialize() has been called.
 	OVITO_ASSERT(!_inputVariables.empty());
-	_usedVars.clear();
 
 	// Determine the number of parallel threads to use.
 	size_t nthreads = std::max(QThread::idealThreadCount(), 1);
@@ -240,16 +258,16 @@ void ParticleExpressionEvaluator::evaluate(const std::function<void(size_t,size_
 		nthreads = _particleCount;
 
 	if(nthreads == 1) {
-		WorkerThread worker;
-		worker.initialize(_expressions, _inputVariables, _usedVars);
+		Worker worker(*this);
 		worker.run(0, _particleCount, callback, filter);
 		if(worker._errorMsg.isEmpty() == false)
 			throw Exception(worker._errorMsg);
 	}
 	else if(nthreads > 1) {
-		std::vector<WorkerThread> workers(nthreads);
-		for(auto& worker : workers)
-			worker.initialize(_expressions, _inputVariables, _usedVars);
+		std::vector<std::unique_ptr<Worker>> workers;
+		workers.reserve(nthreads);
+		for(size_t i = 0; i < nthreads; i++)
+			workers.emplace_back(new Worker(*this));
 
 		// Spawn worker threads.
 		QFutureSynchronizer<void> synchronizer;
@@ -262,14 +280,14 @@ void ParticleExpressionEvaluator::evaluate(const std::function<void(size_t,size_
 			if(i == workers.size() - 1) endIndex = _particleCount;
 			OVITO_ASSERT(endIndex > startIndex);
 			OVITO_ASSERT(endIndex <= _particleCount);
-			synchronizer.addFuture(QtConcurrent::run(&workers[i], &WorkerThread::run, startIndex, endIndex, callback, filter));
+			synchronizer.addFuture(QtConcurrent::run(workers[i].get(), &Worker::run, startIndex, endIndex, callback, filter));
 		}
 		synchronizer.waitForFinished();
 
 		// Check for errors.
 		for(auto& worker : workers) {
-			if(worker._errorMsg.isEmpty() == false)
-				throw Exception(worker._errorMsg);
+			if(worker->_errorMsg.isEmpty() == false)
+				throw Exception(worker->_errorMsg);
 		}
 	}
 }
@@ -277,23 +295,28 @@ void ParticleExpressionEvaluator::evaluate(const std::function<void(size_t,size_
 /******************************************************************************
 * Initializes the parser objects of this thread.
 ******************************************************************************/
-void ParticleExpressionEvaluator::WorkerThread::initialize(const std::vector<std::string>& expressions, const QVector<ExpressionVariable>& inputVariables, std::set<std::string>& usedVars)
+ParticleExpressionEvaluator::Worker::Worker(ParticleExpressionEvaluator& evaluator)
 {
-	_parsers.resize(expressions.size());
-	_inputVariables = inputVariables;
+	_parsers.resize(evaluator._expressions.size());
+	_inputVariables = evaluator._inputVariables;
+	_lastParticleIndex = std::numeric_limits<size_t>::max();
+
+	// The list of used variables.
+	std::set<std::string> usedVariables;
 
 	auto parser = _parsers.begin();
-	auto expr = expressions.cbegin();
-	for(size_t i = 0; i < expressions.size(); i++, ++parser, ++expr) {
+	auto expr = evaluator._expressions.cbegin();
+	for(size_t i = 0; i < evaluator._expressions.size(); i++, ++parser, ++expr) {
 
 		if(expr->empty()) {
-			if(expressions.size() > 1)
+			if(evaluator._expressions.size() > 1)
 				throw Exception(tr("Expression %1 is empty.").arg(i+1));
 			else
 				throw Exception(tr("Expression is empty."));
 		}
 
 		try {
+
 			// Configure parser to accept alpha-numeric characters and '.' in variable names.
 			parser->DefineNameChars(_validVariableNameChars.constData());
 
@@ -307,59 +330,75 @@ void ParticleExpressionEvaluator::WorkerThread::initialize(const std::vector<std
 			for(auto& v : _inputVariables)
 				parser->DefineVar(v.name, &v.value);
 
-			// If the current animation time is used in the math expression then we have to
-			// reduce the validity interval to the current time only.
+			// Query list of used variables.
 			for(const auto& vname : parser->GetUsedVar())
-				usedVars.insert(vname.first);
+				usedVariables.insert(vname.first);
 		}
 		catch(mu::Parser::exception_type& ex) {
 			throw Exception(QString::fromStdString(ex.GetMsg()));
 		}
+	}
+
+	// If the current animation time is used in the math expression then we have to
+	// reduce the validity interval to the current time only.
+	if(usedVariables.find("Frame") != usedVariables.end() || usedVariables.find("Timestep") != usedVariables.end())
+		evaluator._isTimeDependent = true;
+
+	// Remove unused variables so they don't get updated unnecessarily.
+	for(ExpressionVariable& var : _inputVariables) {
+		if(usedVariables.find(var.name) != usedVariables.end())
+			_activeVariables.push_back(&var);
 	}
 }
 
 /******************************************************************************
 * The worker routine.
 ******************************************************************************/
-void ParticleExpressionEvaluator::WorkerThread::run(size_t startIndex, size_t endIndex, std::function<void(size_t,size_t,double)> callback, std::function<bool(size_t)> filter)
+void ParticleExpressionEvaluator::Worker::run(size_t startIndex, size_t endIndex, std::function<void(size_t,size_t,double)> callback, std::function<bool(size_t)> filter)
 {
-	try {
-		// Position variable pointers to first input particle.
-		for(auto& v : _inputVariables)
-			v.dataPointer += v.stride * startIndex;
+	for(size_t i = startIndex; i < endIndex; i++) {
+		if(filter && !filter(i))
+			continue;
 
-		int integerDataType = qMetaTypeId<int>();
-		for(size_t i = startIndex; i < endIndex; i++) {
-
-			// Update variable values for the current particle.
-			for(auto& v : _inputVariables) {
-				if(v.type == PARTICLE_FLOAT_PROPERTY) {
-					v.value = *reinterpret_cast<const FloatType*>(v.dataPointer);
-					v.dataPointer += v.stride;
-				}
-				if(v.type == PARTICLE_INT_PROPERTY) {
-					v.value = *reinterpret_cast<const int*>(v.dataPointer);
-					v.dataPointer += v.stride;
-				}
-				else if(v.type == PARTICLE_INDEX) {
-					v.value = i;
-				}
-				else if(v.type == DERIVED_PARTICLE_PROPERTY) {
-					v.value = v.function(i);
-				}
-			}
-
-			if(filter && !filter(i))
-				continue;
-
-			for(size_t j = 0; j < _parsers.size(); j++) {
-				// Evaluate expression for the current particle.
-				callback(i, j, _parsers[j].Eval());
-			}
+		for(size_t j = 0; j < _parsers.size(); j++) {
+			// Evaluate expression for the current particle.
+			callback(i, j, evaluate(i, j));
 		}
 	}
+}
+
+/******************************************************************************
+* The innermost evaluation routine.
+******************************************************************************/
+double ParticleExpressionEvaluator::Worker::evaluate(size_t particleIndex, size_t component)
+{
+	OVITO_ASSERT(component < _parsers.size());
+	try {
+		if(particleIndex != _lastParticleIndex) {
+			_lastParticleIndex = particleIndex;
+
+			// Update variable values for the current particle.
+			for(ExpressionVariable* v : _activeVariables) {
+				if(v->type == PARTICLE_FLOAT_PROPERTY) {
+					v->value = *reinterpret_cast<const FloatType*>(v->dataPointer + v->stride * particleIndex);
+				}
+				if(v->type == PARTICLE_INT_PROPERTY) {
+					v->value = *reinterpret_cast<const int*>(v->dataPointer + v->stride * particleIndex);
+				}
+				else if(v->type == PARTICLE_INDEX) {
+					v->value = particleIndex;
+				}
+				else if(v->type == DERIVED_PARTICLE_PROPERTY) {
+					v->value = v->function(particleIndex);
+				}
+			}
+		}
+
+		// Evaluate expression for the current particle.
+		return _parsers[component].Eval();
+	}
 	catch(const mu::Parser::exception_type& ex) {
-		_errorMsg = QString::fromStdString(ex.GetMsg());
+		throw Exception(QString::fromStdString(ex.GetMsg()));
 	}
 }
 

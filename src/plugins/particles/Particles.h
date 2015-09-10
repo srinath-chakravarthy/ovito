@@ -84,6 +84,7 @@ namespace Ovito {
 		class VectorDisplay;
 		class SurfaceMesh;
 		class SurfaceMeshDisplay;
+		class SimulationCell;
 		class SimulationCellObject;
 		class SimulationCellDisplay;
 

@@ -154,7 +154,7 @@ void ComputePropertyModifier::initializeModifier(PipelineObject* pipeline, Modif
 	// Generate list of available input variables.
 	PipelineFlowState input = pipeline->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
 	ParticleExpressionEvaluator evaluator;
-	evaluator.createInputVariables(input);
+	evaluator.initialize(QStringList(), input);
 	_inputVariableNames = evaluator.inputVariableNames();
 	_inputVariableTable = evaluator.inputVariableTable();
 }

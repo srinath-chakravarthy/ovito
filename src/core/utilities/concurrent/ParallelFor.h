@@ -111,6 +111,48 @@ void parallelFor(T loopCount, Function kernel)
 }
 
 template<class Function>
+bool parallelForChunks(size_t loopCount, FutureInterfaceBase& futureInterface, Function kernel)
+{
+	std::vector<std::thread> workers;
+	size_t num_threads = QThread::idealThreadCount();
+	if(num_threads < 1) num_threads = 1;
+	else if(num_threads > loopCount) {
+		if(loopCount <= 0) return true;
+		num_threads = loopCount;
+	}
+	size_t chunkSize = loopCount / num_threads;
+	size_t startIndex = 0;
+	for(size_t t = 0; t < num_threads; t++) {
+		if(t == num_threads - 1) {
+			chunkSize += loopCount % num_threads;
+			OVITO_ASSERT(startIndex + chunkSize == loopCount);
+			try {
+				kernel(startIndex, chunkSize, futureInterface);
+			}
+			catch(...) {
+				futureInterface.reportException();
+			}
+		}
+		else {
+			workers.push_back(std::thread([&kernel, startIndex, chunkSize, &futureInterface]() {
+				try {
+					kernel(startIndex, chunkSize, futureInterface);
+				}
+				catch(...) {
+					futureInterface.reportException();
+				}
+			}));
+		}
+		startIndex += chunkSize;
+	}
+	for(auto& t : workers)
+		t.join();
+
+	return !futureInterface.isCanceled();
+}
+
+
+template<class Function>
 void parallelForChunks(size_t loopCount, Function kernel)
 {
 	std::vector<std::thread> workers;
