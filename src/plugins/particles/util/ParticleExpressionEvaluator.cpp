@@ -165,58 +165,28 @@ void ParticleExpressionEvaluator::createInputVariables(const std::vector<Particl
 	ExpressionVariable constVar;
 
 	// Number of particles
-	constVar.name = "N";
-	constVar.type = GLOBAL_PARAMETER;
-	constVar.value = particleCount;
-	constVar.description = tr("number of particles");
-	addVariable(ExpressionVariable(constVar));
+	registerGlobalParameter("N", particleCount, tr("number of particles"));
 
 	// Animation frame
-	constVar.name = "Frame";
-	constVar.type = GLOBAL_PARAMETER;
-	constVar.value = animationFrame;
-	constVar.description = tr("animation frame number");
-	addVariable(ExpressionVariable(constVar));
+	registerGlobalParameter("Frame", animationFrame, tr("animation frame number"));
 
 	// Timestep.
 	if(simulationTimestep >= 0) {
-		constVar.name = "Timestep";
-		constVar.type = GLOBAL_PARAMETER;
-		constVar.value = simulationTimestep;
-		constVar.description = tr("simulation timestep");
-		addVariable(ExpressionVariable(constVar));
+		registerGlobalParameter("Timestep", simulationTimestep, tr("simulation timestep"));
 	}
 
 	if(simCell) {
 		// Cell volume
-		constVar.name = "CellVolume";
-		constVar.type = GLOBAL_PARAMETER;
-		constVar.value = simCell->volume();
-		constVar.description = tr("simulation cell volume");
-		addVariable(ExpressionVariable(constVar));
+		registerGlobalParameter("CellVolume", simCell->volume(), tr("simulation cell volume"));
 
 		// Cell size
-		constVar.type = GLOBAL_PARAMETER;
-		constVar.value = std::abs(simCell->matrix().column(0).x());
-		constVar.name = "CellSize.X";
-		constVar.description = tr("size along X");
-		addVariable(ExpressionVariable(constVar));
-		constVar.value = std::abs(simCell->matrix().column(1).y());
-		constVar.name = "CellSize.Y";
-		constVar.description = tr("size along Y");
-		addVariable(ExpressionVariable(constVar));
-		constVar.value = std::abs(simCell->matrix().column(2).z());
-		constVar.name = "CellSize.Z";
-		constVar.description = tr("size along Z");
-		addVariable(ExpressionVariable(constVar));
+		registerGlobalParameter("CellSize.X", std::abs(simCell->matrix().column(0).x()), tr("size along X"));
+		registerGlobalParameter("CellSize.Y", std::abs(simCell->matrix().column(1).y()), tr("size along Y"));
+		registerGlobalParameter("CellSize.Z", std::abs(simCell->matrix().column(2).z()), tr("size along Z"));
 	}
 
-	// Pi
-	constVar.name = "pi";
-	constVar.type = CONSTANT;
-	constVar.value = M_PI;
-	constVar.description = QStringLiteral("%1...").arg(M_PI);
-	addVariable(ExpressionVariable(constVar));
+	// Constant pi.
+	registerConstant("pi", M_PI, QStringLiteral("%1...").arg(M_PI));
 }
 
 /******************************************************************************
@@ -413,16 +383,16 @@ QString ParticleExpressionEvaluator::inputVariableTable() const
 			if(v.description.isEmpty())
 				str.append(QStringLiteral("<li>%1</li>").arg(QString::fromStdString(v.name)));
 			else
-				str.append(QStringLiteral("<li>%1 (<i>%2</i>)</li>").arg(QString::fromStdString(v.name)).arg(v.description));
+				str.append(QStringLiteral("<li>%1 (<i style=\"color: #555;\">%2</i>)</li>").arg(QString::fromStdString(v.name)).arg(v.description));
 		}
 	}
-	str.append(QStringLiteral("</ul></p><p><b>Global parameters:</b><ul>"));
+	str.append(QStringLiteral("</ul></p><p><b>Additional variables:</b><ul>"));
 	for(const ExpressionVariable& v : _inputVariables) {
 		if(v.type == GLOBAL_PARAMETER) {
 			if(v.description.isEmpty())
 				str.append(QStringLiteral("<li>%1</li>").arg(QString::fromStdString(v.name)));
 			else
-				str.append(QStringLiteral("<li>%1 (<i>%2</i>)</li>").arg(QString::fromStdString(v.name)).arg(v.description));
+				str.append(QStringLiteral("<li>%1 (<i style=\"color: #555;\">%2</i>)</li>").arg(QString::fromStdString(v.name)).arg(v.description));
 		}
 	}
 	str.append(QStringLiteral("</ul></p><p><b>Constants:</b><ul>"));
@@ -431,7 +401,7 @@ QString ParticleExpressionEvaluator::inputVariableTable() const
 			if(v.description.isEmpty())
 				str.append(QStringLiteral("<li>%1</li>").arg(QString::fromStdString(v.name)));
 			else
-				str.append(QStringLiteral("<li>%1 (<i>%2</i>)</li>").arg(QString::fromStdString(v.name)).arg(v.description));
+				str.append(QStringLiteral("<li>%1 (<i style=\"color: #555;\">%2</i>)</li>").arg(QString::fromStdString(v.name)).arg(v.description));
 		}
 	}
 	str.append(QStringLiteral("</ul></p><p></p>"));

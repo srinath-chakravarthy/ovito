@@ -178,6 +178,12 @@ protected:
 		/// Returns the property storage that will receive the computed values.
 		ParticleProperty* outputProperty() const { return _outputProperty.data(); }
 
+		/// Returns the list of available input variables.
+		const QStringList& inputVariableNames() const { return _inputVariableNames; }
+
+		/// Returns a human-readable text listing the input variables.
+		const QString& inputVariableTable() const { return _inputVariableTable; }
+
 	private:
 
 		FloatType _cutoff;
@@ -189,6 +195,8 @@ protected:
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
 		QExplicitlySharedDataPointer<ParticleProperty> _outputProperty;
 		std::vector<QExplicitlySharedDataPointer<ParticleProperty>> _inputProperties;
+		QStringList _inputVariableNames;
+		QString _inputVariableTable;
 	};
 
 private:
@@ -259,11 +267,14 @@ protected Q_SLOTS:
 private:
 
 	QWidget* rollout;
-	QGroupBox* expressionsGroupBox;
-	QList<QLineEdit*> expressionBoxes;
-	QList<QLabel*> expressionBoxLabels;
-
-	QVBoxLayout* expressionsLayout;
+	QGroupBox* selfExpressionsGroupBox;
+	QGroupBox* neighborExpressionsGroupBox;
+	QList<QLineEdit*> selfExpressionBoxes;
+	QList<QLineEdit*> neighborExpressionBoxes;
+	QList<QLabel*> selfExpressionBoxLabels;
+	QList<QLabel*> neighborExpressionBoxLabels;
+	QGridLayout* selfExpressionsLayout;
+	QGridLayout* neighborExpressionsLayout;
 
 	QLabel* variableNamesList;
 

@@ -66,11 +66,32 @@ public:
 
 	/// Registers a new input variable whose value is recomputed for each particle.
 	template<typename Function>
-	void registerComputedVariable(const QString& variableName, Function&& function) {
+	void registerComputedVariable(const QString& variableName, Function&& function, QString description = QString()) {
 		ExpressionVariable v;
 		v.type = DERIVED_PARTICLE_PROPERTY;
 		v.name = variableName.toStdString();
 		v.function = std::forward<Function>(function);
+		v.description = description;
+		addVariable(std::move(v));
+	}
+
+	/// Registers a new input variable whose value is recomputed for each particle.
+	void registerGlobalParameter(const QString& variableName, double value, QString description = QString()) {
+		ExpressionVariable v;
+		v.type = GLOBAL_PARAMETER;
+		v.name = variableName.toStdString();
+		v.value = value;
+		v.description = description;
+		addVariable(std::move(v));
+	}
+
+	/// Registers a new input variable whose value is recomputed for each particle.
+	void registerConstant(const QString& variableName, double value, QString description = QString()) {
+		ExpressionVariable v;
+		v.type = CONSTANT;
+		v.name = variableName.toStdString();
+		v.value = value;
+		v.description = description;
 		addVariable(std::move(v));
 	}
 
@@ -116,6 +137,22 @@ public:
 
 		/// Evaluates the expression for a specific particle and a specific vector component.
 		double evaluate(size_t particleIndex, size_t component);
+
+		/// Returns the storage address of a variable value.
+		double* variableAddress(const char* varName) {
+			for(ExpressionVariable& var : _inputVariables)
+				if(var.name == varName)
+					return &var.value;
+			OVITO_ASSERT(false);
+			return nullptr;
+		}
+
+		// Returns whether the given variable is being referenced in one of the expressions.
+		bool isVariableUsed(const char* varName) const {
+			for(const ExpressionVariable* var : _activeVariables)
+				if(var->name == varName) return true;
+			return false;
+		}
 
 	private:
 

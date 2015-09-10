@@ -68,13 +68,18 @@ void RadialComputeModifier::setPropertyComponentCount(int newComponentCount)
 
 	if(newComponentCount < propertyComponentCount()) {
 		setSelfExpressions(selfExpressions().mid(0, newComponentCount));
-		//setNeighborExpressions(neighborExpressions().mid(0, newComponentCount));
+		setNeighborExpressions(neighborExpressions().mid(0, newComponentCount));
 	}
 	else {
 		QStringList newList = selfExpressions();
 		while(newList.size() < newComponentCount)
 			newList.append("0");
 		setSelfExpressions(newList);
+
+		newList = neighborExpressions();
+		while(newList.size() < newComponentCount)
+			newList.append("0");
+		setNeighborExpressions(newList);
 	}
 }
 
@@ -112,6 +117,12 @@ void RadialComputeModifier::initializeModifier(PipelineObject* pipeline, Modifie
 	PipelineFlowState input = pipeline->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
 	ParticleExpressionEvaluator evaluator;
 	evaluator.initialize(QStringList(), input);
+	evaluator.registerGlobalParameter("Cutoff", _cutoff, tr("radius"));
+	evaluator.registerGlobalParameter("NumNeighbors", 0, tr("of central particle"));
+	evaluator.registerGlobalParameter("Distance", 0, tr("from central particle"));
+	evaluator.registerGlobalParameter("Delta.X", 0, tr("neighbor vector"));
+	evaluator.registerGlobalParameter("Delta.Y", 0, tr("neighbor vector"));
+	evaluator.registerGlobalParameter("Delta.Z", 0, tr("neighbor vector"));
 	_inputVariableNames = evaluator.inputVariableNames();
 	_inputVariableTable = evaluator.inputVariableTable();
 }
@@ -155,8 +166,10 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> RadialComputeModifi
 	else {
 		throw Exception(tr("Output property has not been specified."));
 	}
-	if(outp->componentCount() != propertyComponentCount() || selfExpressions().size() != outp->componentCount() || neighborExpressions().size() != outp->componentCount())
-		throw Exception(tr("Invalid number of components."));
+	if(selfExpressions().size() != outp->componentCount())
+		throw Exception(tr("Number of central expressions does not match component count of output property."));
+	if(neighborExpressions().size() != outp->componentCount())
+		throw Exception(tr("Number of neighbor expressions does not match component count of output property."));
 
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<RadialComputeEngine>(validityInterval, outp.data(), posProperty->storage(), inputCell->data(), cutoff(),
@@ -169,7 +182,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> RadialComputeModifi
 ******************************************************************************/
 void RadialComputeModifier::RadialComputeEngine::perform()
 {
-	setProgressText(tr("Performing radial property computation"));
+	setProgressText(tr("Computing particle property '%1'").arg(outputProperty()->name()));
 
 	OVITO_ASSERT(_selfExpressions.size() == outputProperty()->componentCount());
 	OVITO_ASSERT(_neighborExpressions.size() == outputProperty()->componentCount());
@@ -190,6 +203,18 @@ void RadialComputeModifier::RadialComputeEngine::perform()
 	selfEvaluator.initialize(_selfExpressions, inputProperties, &cell(), _frameNumber, _simulationTimestep);
 	neighborEvaluator.initialize(_neighborExpressions, inputProperties, &cell(), _frameNumber, _simulationTimestep);
 
+	selfEvaluator.registerGlobalParameter("Cutoff", _cutoff);
+	selfEvaluator.registerGlobalParameter("NumNeighbors", 0);
+	neighborEvaluator.registerGlobalParameter("Cutoff", _cutoff, tr("radius"));
+	neighborEvaluator.registerGlobalParameter("NumNeighbors", 0, tr("of central particle"));
+	neighborEvaluator.registerGlobalParameter("Distance", 0, tr("from central particle"));
+	neighborEvaluator.registerGlobalParameter("Delta.X", 0, tr("neighbor vector"));
+	neighborEvaluator.registerGlobalParameter("Delta.Y", 0, tr("neighbor vector"));
+	neighborEvaluator.registerGlobalParameter("Delta.Z", 0, tr("neighbor vector"));
+
+	_inputVariableNames = neighborEvaluator.inputVariableNames();
+	_inputVariableTable = neighborEvaluator.inputVariableTable();
+
 	// Parallelized loop over all particles.
 	setProgressRange(positions()->size());
 	setProgressValue(0);
@@ -197,9 +222,26 @@ void RadialComputeModifier::RadialComputeEngine::perform()
 		ParticleExpressionEvaluator::Worker selfWorker(selfEvaluator);
 		ParticleExpressionEvaluator::Worker neighborWorker(neighborEvaluator);
 
+		double* distanceVar = neighborWorker.variableAddress("Distance");
+		double* deltaX = neighborWorker.variableAddress("Delta.X");
+		double* deltaY = neighborWorker.variableAddress("Delta.Y");
+		double* deltaZ = neighborWorker.variableAddress("Delta.Z");
+		double* selfNumNeighbors = selfWorker.variableAddress("NumNeighbors");
+		double* neighNumNeighbors = neighborWorker.variableAddress("NumNeighbors");
+		if(!selfWorker.isVariableUsed("NumNeighbors") && !neighborWorker.isVariableUsed("NumNeighbors"))
+			selfNumNeighbors = neighNumNeighbors = nullptr;
+
 		size_t endIndex = startIndex + count;
 		size_t componentCount = outputProperty()->componentCount();
 		for(size_t particleIndex = startIndex; particleIndex < endIndex; particleIndex++) {
+
+			if(selfNumNeighbors != nullptr) {
+				// Determine number of neighbors.
+				int nneigh = 0;
+				for(CutoffNeighborFinder::Query neighQuery(neighborFinder, particleIndex); !neighQuery.atEnd(); neighQuery.next())
+					nneigh++;
+				*selfNumNeighbors = *neighNumNeighbors = nneigh;
+			}
 
 			for(size_t component = 0; component < componentCount; component++) {
 
@@ -208,12 +250,17 @@ void RadialComputeModifier::RadialComputeEngine::perform()
 
 				// Compute sum of neighbor terms.
 				for(CutoffNeighborFinder::Query neighQuery(neighborFinder, particleIndex); !neighQuery.atEnd(); neighQuery.next()) {
+					*distanceVar = sqrt(neighQuery.distanceSquared());
+					*deltaX = neighQuery.delta().x();
+					*deltaY = neighQuery.delta().y();
+					*deltaZ = neighQuery.delta().z();
 					value += neighborWorker.evaluate(neighQuery.current(), component);
 				}
 
 				// Store results.
-				if(outputProperty()->dataType() == QMetaType::Int)
+				if(outputProperty()->dataType() == QMetaType::Int) {
 					outputProperty()->setIntComponent(particleIndex, component, (int)value);
+				}
 				else {
 					outputProperty()->setFloatComponent(particleIndex, component, value);
 				}
@@ -237,6 +284,8 @@ void RadialComputeModifier::transferComputationResults(ComputeEngine* engine)
 {
 	RadialComputeEngine* eng = static_cast<RadialComputeEngine*>(engine);
 	_computedProperty = eng->outputProperty();
+	_inputVariableNames = eng->inputVariableNames();
+	_inputVariableTable = eng->inputVariableTable();
 }
 
 /******************************************************************************
@@ -293,11 +342,19 @@ void RadialComputeModifierEditor::createUI(const RolloutInsertionParameters& rol
 	ParticlePropertyParameterUI* outputPropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(RadialComputeModifier::_outputProperty), false, false);
 	propertiesLayout->addWidget(outputPropertyUI->comboBox());
 
-	expressionsGroupBox = new QGroupBox(tr("Expression(s)"));
-	mainLayout->addWidget(expressionsGroupBox);
-	expressionsLayout = new QVBoxLayout(expressionsGroupBox);
-	expressionsLayout->setContentsMargins(4,4,4,4);
-	expressionsLayout->setSpacing(1);
+	selfExpressionsGroupBox = new QGroupBox(tr("Central expression"));
+	mainLayout->addWidget(selfExpressionsGroupBox);
+	selfExpressionsLayout = new QGridLayout(selfExpressionsGroupBox);
+	selfExpressionsLayout->setContentsMargins(4,4,4,4);
+	selfExpressionsLayout->setSpacing(1);
+	selfExpressionsLayout->setColumnStretch(1,1);
+
+	neighborExpressionsGroupBox = new QGroupBox(tr("Neighbor expression"));
+	mainLayout->addWidget(neighborExpressionsGroupBox);
+	neighborExpressionsLayout = new QGridLayout(neighborExpressionsGroupBox);
+	neighborExpressionsLayout->setContentsMargins(4,4,4,4);
+	neighborExpressionsLayout->setSpacing(1);
+	neighborExpressionsLayout->setColumnStretch(1,1);
 
 	// Status label.
 	mainLayout->addWidget(statusLabel());
@@ -333,38 +390,70 @@ void RadialComputeModifierEditor::updateEditorFields()
 	RadialComputeModifier* mod = static_object_cast<RadialComputeModifier>(editObject());
 	if(!mod) return;
 
-	const QStringList& expr = mod->selfExpressions();
-	while(expr.size() > expressionBoxes.size()) {
+	const QStringList& selfExpr = mod->selfExpressions();
+	while(selfExpr.size() > selfExpressionBoxes.size()) {
 		QLabel* label = new QLabel();
 		AutocompleteLineEdit* edit = new AutocompleteLineEdit();
 		edit->setWordList(mod->inputVariableNames());
-		expressionsLayout->insertWidget(expressionBoxes.size()*2, label);
-		expressionsLayout->insertWidget(expressionBoxes.size()*2 + 1, edit);
-		expressionBoxes.push_back(edit);
-		expressionBoxLabels.push_back(label);
+		selfExpressionsLayout->addWidget(label, selfExpressionBoxes.size(), 0);
+		selfExpressionsLayout->addWidget(edit, selfExpressionBoxes.size(), 1);
+		selfExpressionBoxes.push_back(edit);
+		selfExpressionBoxLabels.push_back(label);
 		connect(edit, &AutocompleteLineEdit::editingFinished, this, &RadialComputeModifierEditor::onExpressionEditingFinished);
 	}
-	while(expr.size() < expressionBoxes.size()) {
-		delete expressionBoxes.takeLast();
-		delete expressionBoxLabels.takeLast();
+	while(selfExpr.size() < selfExpressionBoxes.size()) {
+		delete selfExpressionBoxes.takeLast();
+		delete selfExpressionBoxLabels.takeLast();
 	}
-	OVITO_ASSERT(expressionBoxes.size() == expr.size());
-	OVITO_ASSERT(expressionBoxLabels.size() == expr.size());
+	OVITO_ASSERT(selfExpressionBoxes.size() == selfExpr.size());
+	OVITO_ASSERT(selfExpressionBoxLabels.size() == selfExpr.size());
+
+	const QStringList& neighExpr = mod->neighborExpressions();
+	while(neighExpr.size() > neighborExpressionBoxes.size()) {
+		QLabel* label = new QLabel();
+		AutocompleteLineEdit* edit = new AutocompleteLineEdit();
+		edit->setWordList(mod->inputVariableNames());
+		neighborExpressionsLayout->addWidget(label, neighborExpressionBoxes.size(), 0);
+		neighborExpressionsLayout->addWidget(edit, neighborExpressionBoxes.size(), 1);
+		neighborExpressionBoxes.push_back(edit);
+		neighborExpressionBoxLabels.push_back(label);
+		connect(edit, &AutocompleteLineEdit::editingFinished, this, &RadialComputeModifierEditor::onExpressionEditingFinished);
+	}
+	while(neighExpr.size() < neighborExpressionBoxes.size()) {
+		delete neighborExpressionBoxes.takeLast();
+		delete neighborExpressionBoxLabels.takeLast();
+	}
+	OVITO_ASSERT(neighborExpressionBoxes.size() == neighExpr.size());
+	OVITO_ASSERT(neighborExpressionBoxLabels.size() == neighExpr.size());
 
 	QStringList standardPropertyComponentNames;
 	if(mod->outputProperty().type() != ParticleProperty::UserProperty) {
 		standardPropertyComponentNames = ParticleProperty::standardPropertyComponentNames(mod->outputProperty().type());
-		if(standardPropertyComponentNames.empty())
-			standardPropertyComponentNames.push_back(ParticleProperty::standardPropertyName(mod->outputProperty().type()));
 	}
-	for(int i = 0; i < expr.size(); i++) {
-		expressionBoxes[i]->setText(expr[i]);
-		if(i < standardPropertyComponentNames.size())
-			expressionBoxLabels[i]->setText(tr("%1:").arg(standardPropertyComponentNames[i]));
-		else if(expr.size() == 1)
-			expressionBoxLabels[i]->setText(mod->outputProperty().name());
-		else
-			expressionBoxLabels[i]->setText(tr("Component %1:").arg(i+1));
+
+	for(int i = 0; i < selfExpr.size(); i++) {
+		selfExpressionBoxes[i]->setText(selfExpr[i]);
+		if(selfExpr.size() == 1)
+			selfExpressionBoxLabels[i]->hide();
+		else {
+			if(i < standardPropertyComponentNames.size())
+				selfExpressionBoxLabels[i]->setText(tr("%1:").arg(standardPropertyComponentNames[i]));
+			else
+				selfExpressionBoxLabels[i]->setText(tr("%1:").arg(i+1));
+			selfExpressionBoxLabels[i]->show();
+		}
+	}
+	for(int i = 0; i < neighExpr.size(); i++) {
+		neighborExpressionBoxes[i]->setText(neighExpr[i]);
+		if(selfExpr.size() == 1)
+			neighborExpressionBoxLabels[i]->hide();
+		else {
+			if(i < standardPropertyComponentNames.size())
+				neighborExpressionBoxLabels[i]->setText(tr("%1:").arg(standardPropertyComponentNames[i]));
+			else
+				neighborExpressionBoxLabels[i]->setText(tr("%1:").arg(i+1));
+			neighborExpressionBoxLabels[i]->show();
+		}
 	}
 
 	variableNamesList->setText(mod->inputVariableTable());
@@ -377,17 +466,25 @@ void RadialComputeModifierEditor::updateEditorFields()
 ******************************************************************************/
 void RadialComputeModifierEditor::onExpressionEditingFinished()
 {
-	QLineEdit* edit = (QLineEdit*)sender();
-	int index = expressionBoxes.indexOf(edit);
-	OVITO_ASSERT(index >= 0);
-
 	RadialComputeModifier* mod = static_object_cast<RadialComputeModifier>(editObject());
-
-	undoableTransaction(tr("Change expression"), [mod, edit, index]() {
-		QStringList expr = mod->selfExpressions();
-		expr[index] = edit->text();
-		mod->setSelfExpressions(expr);
-	});
+	QLineEdit* edit = (QLineEdit*)sender();
+	int index = selfExpressionBoxes.indexOf(edit);
+	if(index >= 0) {
+		undoableTransaction(tr("Change central expression"), [mod, edit, index]() {
+			QStringList expr = mod->selfExpressions();
+			expr[index] = edit->text();
+			mod->setSelfExpressions(expr);
+		});
+	}
+	else {
+		int index = neighborExpressionBoxes.indexOf(edit);
+		OVITO_ASSERT(index >= 0);
+		undoableTransaction(tr("Change neighbor expression"), [mod, edit, index]() {
+			QStringList expr = mod->neighborExpressions();
+			expr[index] = edit->text();
+			mod->setNeighborExpressions(expr);
+		});
+	}
 }
 
 OVITO_END_INLINE_NAMESPACE
