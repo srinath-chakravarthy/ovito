@@ -20,11 +20,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <plugins/particles/util/ParticleExpressionEvaluator.h>
 #include <plugins/particles/util/ParticlePropertyParameterUI.h>
-#include <core/gui/widgets/general/AutocompleteLineEdit.h>
+#include <plugins/particles/util/CutoffNeighborFinder.h>
+#include <core/gui/properties/BooleanGroupBoxParameterUI.h>
+#include <core/gui/properties/FloatParameterUI.h>
+#include <core/gui/properties/BooleanParameterUI.h>
+#include <core/gui/properties/StringParameterUI.h>
+#include <core/gui/properties/VariantComboBoxParameterUI.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/scene/pipeline/PipelineObject.h>
+#include <core/utilities/concurrent/ParallelFor.h>
 #include "ComputePropertyModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Properties)
@@ -34,13 +39,48 @@ SET_OVITO_OBJECT_EDITOR(ComputePropertyModifier, ComputePropertyModifierEditor);
 DEFINE_PROPERTY_FIELD(ComputePropertyModifier, _expressions, "Expressions");
 DEFINE_PROPERTY_FIELD(ComputePropertyModifier, _outputProperty, "OutputProperty");
 DEFINE_PROPERTY_FIELD(ComputePropertyModifier, _onlySelectedParticles, "OnlySelectedParticles");
+DEFINE_PROPERTY_FIELD(ComputePropertyModifier, _neighborModeEnabled, "NeighborModeEnabled");
+DEFINE_PROPERTY_FIELD(ComputePropertyModifier, _neighborExpressions, "NeighborExpressions");
+DEFINE_FLAGS_PROPERTY_FIELD(ComputePropertyModifier, _cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _expressions, "Expressions");
 SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _outputProperty, "Output property");
 SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _onlySelectedParticles, "Compute only for selected particles");
+SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _neighborModeEnabled, "Include neighbor terms");
+SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _neighborExpressions, "Neighbor expressions");
+SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _cutoff, "Cutoff radius");
+SET_PROPERTY_FIELD_UNITS(ComputePropertyModifier, _cutoff, WorldParameterUnit);
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 	IMPLEMENT_OVITO_OBJECT(Particles, ComputePropertyModifierEditor, ParticleModifierEditor);
 OVITO_END_INLINE_NAMESPACE
+
+/******************************************************************************
+* Constructs a new instance of this class.
+******************************************************************************/
+ComputePropertyModifier::ComputePropertyModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
+	_outputProperty(tr("My property")), _expressions(QStringList("0")), _onlySelectedParticles(false),
+	_neighborExpressions(QStringList("0")), _cutoff(3), _neighborModeEnabled(false)
+{
+	INIT_PROPERTY_FIELD(ComputePropertyModifier::_expressions);
+	INIT_PROPERTY_FIELD(ComputePropertyModifier::_onlySelectedParticles);
+	INIT_PROPERTY_FIELD(ComputePropertyModifier::_outputProperty);
+	INIT_PROPERTY_FIELD(ComputePropertyModifier::_neighborModeEnabled);
+	INIT_PROPERTY_FIELD(ComputePropertyModifier::_cutoff);
+	INIT_PROPERTY_FIELD(ComputePropertyModifier::_neighborExpressions);
+}
+
+/******************************************************************************
+* Loads the class' contents from the given stream.
+******************************************************************************/
+void ComputePropertyModifier::loadFromStream(ObjectLoadStream& stream)
+{
+	// This is for backward compatibility with OVITO 2.5.1.
+	// AsynchronousParticleModifier was not the base class before.
+	if(stream.formatVersion() >= 20502)
+		AsynchronousParticleModifier::loadFromStream(stream);
+	else
+		ParticleModifier::loadFromStream(stream);
+}
 
 /******************************************************************************
 * Sets the number of vector components of the property to create.
@@ -51,12 +91,18 @@ void ComputePropertyModifier::setPropertyComponentCount(int newComponentCount)
 
 	if(newComponentCount < propertyComponentCount()) {
 		setExpressions(expressions().mid(0, newComponentCount));
+		setNeighborExpressions(neighborExpressions().mid(0, newComponentCount));
 	}
 	else {
 		QStringList newList = expressions();
 		while(newList.size() < newComponentCount)
 			newList.append("0");
 		setExpressions(newList);
+
+		newList = neighborExpressions();
+		while(newList.size() < newComponentCount)
+			newList.append("0");
+		setNeighborExpressions(newList);
 	}
 }
 
@@ -71,76 +117,17 @@ void ComputePropertyModifier::propertyChanged(const PropertyFieldDescriptor& fie
 		else
 			setPropertyComponentCount(1);
 	}
-	ParticleModifier::propertyChanged(field);
-}
 
-/******************************************************************************
-* This modifies the input object.
-******************************************************************************/
-PipelineStatus ComputePropertyModifier::modifyParticles(TimePoint time, TimeInterval& validityInterval)
-{
-	// The current animation frame number.
-	int currentFrame = dataset()->animationSettings()->timeToFrame(time);
+	AsynchronousParticleModifier::propertyChanged(field);
 
-	// Initialize the evaluator class.
-	ParticleExpressionEvaluator evaluator;
-	evaluator.initialize(expressions(), input(), currentFrame);
-
-	// Save list of available input variables, which will be displayed in the modifier's UI.
-	_inputVariableNames = evaluator.inputVariableNames();
-	_inputVariableTable = evaluator.inputVariableTable();
-
-	// Prepare the deep copy of the output property.
-	ParticlePropertyObject* prop;
-	if(outputProperty().type() != ParticleProperty::UserProperty) {
-		prop = outputStandardProperty(outputProperty().type(), onlySelectedParticles());
-	}
-	else if(!outputProperty().name().isEmpty() && propertyComponentCount() > 0)
-		prop = outputCustomProperty(outputProperty().name(), qMetaTypeId<FloatType>(), propertyComponentCount(), sizeof(FloatType) * propertyComponentCount(), onlySelectedParticles());
-	else
-		throw Exception(tr("Output property has not been specified."));
-	OVITO_CHECK_OBJECT_POINTER(prop);
-	if(prop->componentCount() != propertyComponentCount())
-		throw Exception(tr("Invalid number of components."));
-
-	// Get the selection property if the application of the modifier is restricted to selected particles.
-	std::function<bool(size_t)> selectionFilter;
-	if(onlySelectedParticles()) {
-		ParticlePropertyObject* selProperty = inputStandardProperty(ParticleProperty::SelectionProperty);
-		if(!selProperty)
-			throw Exception(tr("Evaluation has been restricted to selected particles, but no particle selection is defined."));
-		OVITO_ASSERT(selProperty->size() == inputParticleCount());
-		selectionFilter = [selProperty](size_t particleIndex) -> bool {
-			return selProperty->getInt(particleIndex);
-		};
-	}
-
-	if(inputParticleCount() != 0) {
-
-		// Shared memory management is not thread-safe. Make sure the deep copy of the data has been
-		// made before the worker threads are started.
-		prop->data();
-
-		if(prop->dataType() == qMetaTypeId<int>()) {
-			evaluator.evaluate([prop](size_t particleIndex, size_t componentIndex, double value) {
-				// Store computed integer value.
-				prop->setIntComponent(particleIndex, componentIndex, (int)value);
-			}, selectionFilter);
-		}
-		else {
-			evaluator.evaluate([prop](size_t particleIndex, size_t componentIndex, double value) {
-				// Store computed float value.
-				prop->setFloatComponent(particleIndex, componentIndex, (FloatType)value);
-			}, selectionFilter);
-		}
-
-		prop->changed();
-	}
-
-	if(evaluator.isTimeDependent())
-		validityInterval.intersect(time);
-
-	return PipelineStatus::Success;
+	// Throw away cached results if parameters change.
+	if(field == PROPERTY_FIELD(ComputePropertyModifier::_expressions) ||
+			field == PROPERTY_FIELD(ComputePropertyModifier::_neighborExpressions) ||
+			field == PROPERTY_FIELD(ComputePropertyModifier::_onlySelectedParticles) ||
+			field == PROPERTY_FIELD(ComputePropertyModifier::_neighborModeEnabled) ||
+			field == PROPERTY_FIELD(ComputePropertyModifier::_outputProperty) ||
+			field == PROPERTY_FIELD(ComputePropertyModifier::_cutoff))
+		invalidateCachedResults();
 }
 
 /******************************************************************************
@@ -149,7 +136,7 @@ PipelineStatus ComputePropertyModifier::modifyParticles(TimePoint time, TimeInte
 ******************************************************************************/
 void ComputePropertyModifier::initializeModifier(PipelineObject* pipeline, ModifierApplication* modApp)
 {
-	ParticleModifier::initializeModifier(pipeline, modApp);
+	AsynchronousParticleModifier::initializeModifier(pipeline, modApp);
 
 	// Generate list of available input variables.
 	PipelineFlowState input = pipeline->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
@@ -157,6 +144,240 @@ void ComputePropertyModifier::initializeModifier(PipelineObject* pipeline, Modif
 	evaluator.initialize(QStringList(), input);
 	_inputVariableNames = evaluator.inputVariableNames();
 	_inputVariableTable = evaluator.inputVariableTable();
+}
+
+/******************************************************************************
+* Creates and initializes a computation engine that will compute the modifier's results.
+******************************************************************************/
+std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> ComputePropertyModifier::createEngine(TimePoint time, TimeInterval validityInterval)
+{
+	// Get the particle positions.
+	ParticlePropertyObject* posProperty = expectStandardProperty(ParticleProperty::PositionProperty);
+
+	// Get simulation cell.
+	SimulationCellObject* inputCell = expectSimulationCell();
+
+	// The current animation frame number.
+	int currentFrame = dataset()->animationSettings()->timeToFrame(time);
+
+	// Get simulation timestep.
+	int simulationTimestep = -1;
+	if(input().attributes().contains(QStringLiteral("Timestep"))) {
+		simulationTimestep = input().attributes().value(QStringLiteral("Timestep")).toInt();
+	}
+
+	// Build list of all input particle properties, which will be passed to the compute engine.
+	std::vector<QExplicitlySharedDataPointer<ParticleProperty>> inputProperties;
+	for(DataObject* obj : input().objects()) {
+		if(ParticlePropertyObject* prop = dynamic_object_cast<ParticlePropertyObject>(obj)) {
+			inputProperties.emplace_back(prop->storage());
+		}
+	}
+
+	// Get particle selection
+	ParticleProperty* selProperty = nullptr;
+	if(onlySelectedParticles()) {
+		ParticlePropertyObject* selPropertyObj = inputStandardProperty(ParticleProperty::SelectionProperty);
+		if(!selPropertyObj)
+			throw Exception(tr("Compute modifier has been restricted to selected particles, but no particle selection is defined."));
+		OVITO_ASSERT(selPropertyObj->size() == inputParticleCount());
+		selProperty = selPropertyObj->storage();
+	}
+
+	// Prepare output property.
+	QExplicitlySharedDataPointer<ParticleProperty> outp;
+	if(outputProperty().type() != ParticleProperty::UserProperty) {
+		outp = new ParticleProperty(posProperty->size(), outputProperty().type(), 0, onlySelectedParticles());
+	}
+	else if(!outputProperty().name().isEmpty() && propertyComponentCount() > 0) {
+		outp = new ParticleProperty(posProperty->size(), qMetaTypeId<FloatType>(), propertyComponentCount(), 0, outputProperty().name(), onlySelectedParticles());
+	}
+	else {
+		throw Exception(tr("Output property has not been specified."));
+	}
+	if(expressions().size() != outp->componentCount())
+		throw Exception(tr("Number of expressions does not match component count of output property."));
+	if(neighborExpressions().size() != outp->componentCount())
+		throw Exception(tr("Number of neighbor expressions does not match component count of output property."));
+
+	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
+	return std::make_shared<PropertyComputeEngine>(validityInterval, time, outp.data(), posProperty->storage(),
+			selProperty, inputCell->data(), neighborModeEnabled() ? cutoff() : 0.0f,
+			expressions(), neighborExpressions(),
+			std::move(inputProperties), currentFrame, simulationTimestep);
+}
+
+/******************************************************************************
+* This is called by the constructor to prepare the compute engine.
+******************************************************************************/
+void ComputePropertyModifier::PropertyComputeEngine::initializeEngine(TimePoint time)
+{
+	OVITO_ASSERT(_expressions.size() == outputProperty()->componentCount());
+
+	// Make a copy of the list of input properties.
+	std::vector<ParticleProperty*> inputProperties;
+	for(const auto& p : _inputProperties)
+		inputProperties.push_back(p.data());
+
+	// Initialize expression evaluators.
+	_evaluator.initialize(_expressions, inputProperties, &cell(), _frameNumber, _simulationTimestep);
+	_inputVariableNames = _evaluator.inputVariableNames();
+	_inputVariableTable = _evaluator.inputVariableTable();
+
+	// Only used when neighbor mode is active.
+	if(neighborMode()) {
+		_evaluator.registerGlobalParameter("Cutoff", _cutoff);
+		_evaluator.registerGlobalParameter("NumNeighbors", 0);
+		OVITO_ASSERT(_neighborExpressions.size() == outputProperty()->componentCount());
+		_neighborEvaluator.initialize(_neighborExpressions, inputProperties, &cell(), _frameNumber, _simulationTimestep);
+		_neighborEvaluator.registerGlobalParameter("Cutoff", _cutoff);
+		_neighborEvaluator.registerGlobalParameter("NumNeighbors", 0);
+		_neighborEvaluator.registerGlobalParameter("Distance", 0);
+		_neighborEvaluator.registerGlobalParameter("Delta.X", 0);
+		_neighborEvaluator.registerGlobalParameter("Delta.Y", 0);
+		_neighborEvaluator.registerGlobalParameter("Delta.Z", 0);
+	}
+
+	// Determine if math expressions are time-dependent, i.e. if they reference the animation
+	// frame number. If yes, then we have to restrict the validity interval of the computation
+	// to the current time.
+	bool isTimeDependent = false;
+	ParticleExpressionEvaluator::Worker worker(_evaluator);
+	if(worker.isVariableUsed("Frame") || worker.isVariableUsed("Timestep"))
+		isTimeDependent = true;
+	else if(neighborMode()) {
+		ParticleExpressionEvaluator::Worker worker(_neighborEvaluator);
+		if(worker.isVariableUsed("Frame") || worker.isVariableUsed("Timestep"))
+			isTimeDependent = true;
+	}
+	if(isTimeDependent) {
+		TimeInterval iv = validityInterval();
+		iv.intersect(time);
+		setValidityInterval(iv);
+	}
+}
+
+/******************************************************************************
+* Performs the actual computation. This method is executed in a worker thread.
+******************************************************************************/
+void ComputePropertyModifier::PropertyComputeEngine::perform()
+{
+	setProgressText(tr("Computing particle property '%1'").arg(outputProperty()->name()));
+
+	// Only used when neighbor mode is active.
+	CutoffNeighborFinder neighborFinder;
+	if(neighborMode()) {
+		// Prepare the neighbor list.
+		if(!neighborFinder.prepare(_cutoff, positions(), cell(), nullptr, this))
+			return;
+	}
+
+	// Parallelized loop over all particles.
+	setProgressRange(positions()->size());
+	setProgressValue(0);
+	parallelForChunks(positions()->size(), *this, [this, &neighborFinder](size_t startIndex, size_t count, FutureInterfaceBase& futureInterface) {
+		ParticleExpressionEvaluator::Worker worker(_evaluator);
+		ParticleExpressionEvaluator::Worker neighborWorker(_neighborEvaluator);
+
+		double* distanceVar;
+		double* deltaX;
+		double* deltaY;
+		double* deltaZ;
+		double* selfNumNeighbors = nullptr;
+		double* neighNumNeighbors = nullptr;
+
+		if(neighborMode()) {
+			distanceVar = neighborWorker.variableAddress("Distance");
+			deltaX = neighborWorker.variableAddress("Delta.X");
+			deltaY = neighborWorker.variableAddress("Delta.Y");
+			deltaZ = neighborWorker.variableAddress("Delta.Z");
+			selfNumNeighbors = worker.variableAddress("NumNeighbors");
+			neighNumNeighbors = neighborWorker.variableAddress("NumNeighbors");
+			if(!worker.isVariableUsed("NumNeighbors") && !neighborWorker.isVariableUsed("NumNeighbors"))
+				selfNumNeighbors = neighNumNeighbors = nullptr;
+		}
+
+		size_t endIndex = startIndex + count;
+		size_t componentCount = outputProperty()->componentCount();
+		for(size_t particleIndex = startIndex; particleIndex < endIndex; particleIndex++) {
+
+			// Update progress indicator.
+			if((particleIndex % 1024) == 0)
+				futureInterface.incrementProgressValue(1024);
+
+			// Stop loop if canceled.
+			if(futureInterface.isCanceled())
+				return;
+
+			// Skip unselected particles if requested.
+			if(selection() && !selection()->getInt(particleIndex))
+				continue;
+
+			if(selfNumNeighbors != nullptr) {
+				// Determine number of neighbors.
+				int nneigh = 0;
+				for(CutoffNeighborFinder::Query neighQuery(neighborFinder, particleIndex); !neighQuery.atEnd(); neighQuery.next())
+					nneigh++;
+				*selfNumNeighbors = *neighNumNeighbors = nneigh;
+			}
+
+			for(size_t component = 0; component < componentCount; component++) {
+
+				// Compute self term.
+				FloatType value = worker.evaluate(particleIndex, component);
+
+				if(neighborMode()) {
+					// Compute sum of neighbor terms.
+					for(CutoffNeighborFinder::Query neighQuery(neighborFinder, particleIndex); !neighQuery.atEnd(); neighQuery.next()) {
+						*distanceVar = sqrt(neighQuery.distanceSquared());
+						*deltaX = neighQuery.delta().x();
+						*deltaY = neighQuery.delta().y();
+						*deltaZ = neighQuery.delta().z();
+						value += neighborWorker.evaluate(neighQuery.current(), component);
+					}
+				}
+
+				// Store results.
+				if(outputProperty()->dataType() == QMetaType::Int) {
+					outputProperty()->setIntComponent(particleIndex, component, (int)value);
+				}
+				else {
+					outputProperty()->setFloatComponent(particleIndex, component, value);
+				}
+			}
+		}
+	});
+}
+
+/******************************************************************************
+* Unpacks the results of the computation engine and stores them in the modifier.
+******************************************************************************/
+void ComputePropertyModifier::transferComputationResults(ComputeEngine* engine)
+{
+	PropertyComputeEngine* eng = static_cast<PropertyComputeEngine*>(engine);
+	_computedProperty = eng->outputProperty();
+	_inputVariableNames = eng->inputVariableNames();
+	_inputVariableTable = eng->inputVariableTable();
+}
+
+/******************************************************************************
+* Lets the modifier insert the cached computation results into the
+* modification pipeline.
+******************************************************************************/
+PipelineStatus ComputePropertyModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
+{
+	if(!_computedProperty)
+		throw Exception(tr("No computation results available."));
+
+	if(outputParticleCount() != _computedProperty->size())
+		throw Exception(tr("The number of input particles has changed. The stored results have become invalid."));
+
+	if(_computedProperty->type() == ParticleProperty::UserProperty)
+		outputCustomProperty(_computedProperty.data());
+	else
+		outputStandardProperty(_computedProperty.data());
+
+	return PipelineStatus::Success;
 }
 
 /******************************************************************************
@@ -177,7 +398,7 @@ bool ComputePropertyModifier::loadPropertyFieldFromStream(ObjectLoadStream& stre
 		setOutputProperty(ParticlePropertyReference((ParticleProperty::Type)propertyType, outputProperty().name()));
 		return true;
 	}
-	return ParticleModifier::loadPropertyFieldFromStream(stream, serializedField);
+	return AsynchronousParticleModifier::loadPropertyFieldFromStream(stream, serializedField);
 }
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -207,22 +428,50 @@ void ComputePropertyModifierEditor::createUI(const RolloutInsertionParameters& r
 	BooleanParameterUI* selectionFlagUI = new BooleanParameterUI(this, PROPERTY_FIELD(ComputePropertyModifier::_onlySelectedParticles));
 	propertiesLayout->addWidget(selectionFlagUI->checkBox());
 
-	expressionsGroupBox = new QGroupBox(tr("Expression(s)"));
+	expressionsGroupBox = new QGroupBox(tr("Expression"));
 	mainLayout->addWidget(expressionsGroupBox);
-	expressionsLayout = new QVBoxLayout(expressionsGroupBox);
+	expressionsLayout = new QGridLayout(expressionsGroupBox);
 	expressionsLayout->setContentsMargins(4,4,4,4);
 	expressionsLayout->setSpacing(1);
+	expressionsLayout->setColumnStretch(1,1);
 
 	// Status label.
 	mainLayout->addWidget(statusLabel());
 
-	QWidget* variablesRollout = createRollout(tr("Variables"), rolloutParams.after(rollout), "particles.modifiers.compute_property.html");
+    // Neighbor mode panel.
+	QWidget* neighorRollout = createRollout(tr("Neighbor particles"), rolloutParams.after(rollout), "particles.modifiers.compute_property.html");
+
+	mainLayout = new QVBoxLayout(neighorRollout);
+	mainLayout->setContentsMargins(4,4,4,4);
+
+	BooleanGroupBoxParameterUI* neighborModeUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(ComputePropertyModifier::_neighborModeEnabled));
+	mainLayout->addWidget(neighborModeUI->groupBox());
+
+	QGridLayout* gridlayout = new QGridLayout(neighborModeUI->childContainer());
+	gridlayout->setContentsMargins(4,4,4,4);
+	gridlayout->setColumnStretch(1, 1);
+	gridlayout->setRowStretch(1, 1);
+
+	// Cutoff parameter.
+	FloatParameterUI* cutoffRadiusUI = new FloatParameterUI(this, PROPERTY_FIELD(ComputePropertyModifier::_cutoff));
+	gridlayout->addWidget(cutoffRadiusUI->label(), 0, 0);
+	gridlayout->addLayout(cutoffRadiusUI->createFieldLayout(), 0, 1);
+	cutoffRadiusUI->setMinValue(0);
+
+	neighborExpressionsGroupBox = new QGroupBox(tr("Neighbor expression"));
+	gridlayout->addWidget(neighborExpressionsGroupBox, 1, 0, 1, 2);
+	neighborExpressionsLayout = new QGridLayout(neighborExpressionsGroupBox);
+	neighborExpressionsLayout->setContentsMargins(4,4,4,4);
+	neighborExpressionsLayout->setSpacing(1);
+	neighborExpressionsLayout->setColumnStretch(1,1);
+
+	QWidget* variablesRollout = createRollout(tr("Variables"), rolloutParams.after(neighorRollout), "particles.modifiers.compute_property.html");
     QVBoxLayout* variablesLayout = new QVBoxLayout(variablesRollout);
     variablesLayout->setContentsMargins(4,4,4,4);
-	variableNamesList = new QLabel();
-	variableNamesList->setWordWrap(true);
-	variableNamesList->setTextInteractionFlags(Qt::TextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard | Qt::LinksAccessibleByMouse | Qt::LinksAccessibleByKeyboard));
-	variablesLayout->addWidget(variableNamesList);
+    variableNamesDisplay = new QLabel();
+	variableNamesDisplay->setWordWrap(true);
+	variableNamesDisplay->setTextInteractionFlags(Qt::TextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard | Qt::LinksAccessibleByMouse | Qt::LinksAccessibleByKeyboard));
+	variablesLayout->addWidget(variableNamesDisplay);
 
 	// Update input variables list if another modifier has been loaded into the editor.
 	connect(this, &ComputePropertyModifierEditor::contentsReplaced, this, &ComputePropertyModifierEditor::updateEditorFields);
@@ -233,8 +482,11 @@ void ComputePropertyModifierEditor::createUI(const RolloutInsertionParameters& r
 ******************************************************************************/
 bool ComputePropertyModifierEditor::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
-	if(source == editObject() && event->type() == ReferenceEvent::TargetChanged) {
-		updateEditorFields();
+	if(source == editObject() && (event->type() == ReferenceEvent::TargetChanged || event->type() == ReferenceEvent::ObjectStatusChanged)) {
+		if(!editorUpdatePending) {
+			editorUpdatePending = true;
+			QMetaObject::invokeMethod(this, "updateEditorFields", Qt::QueuedConnection);
+		}
 	}
 	return ParticleModifierEditor::referenceEvent(source, event);
 }
@@ -244,16 +496,18 @@ bool ComputePropertyModifierEditor::referenceEvent(RefTarget* source, ReferenceE
 ******************************************************************************/
 void ComputePropertyModifierEditor::updateEditorFields()
 {
+	editorUpdatePending = false;
+
 	ComputePropertyModifier* mod = static_object_cast<ComputePropertyModifier>(editObject());
 	if(!mod) return;
 
 	const QStringList& expr = mod->expressions();
+	expressionsGroupBox->setTitle((expr.size() <= 1) ? tr("Expression") : tr("Expressions"));
 	while(expr.size() > expressionBoxes.size()) {
 		QLabel* label = new QLabel();
 		AutocompleteLineEdit* edit = new AutocompleteLineEdit();
-		edit->setWordList(mod->inputVariableNames());
-		expressionsLayout->insertWidget(expressionBoxes.size()*2, label);
-		expressionsLayout->insertWidget(expressionBoxes.size()*2 + 1, edit);
+		expressionsLayout->addWidget(label, expressionBoxes.size(), 0);
+		expressionsLayout->addWidget(edit, expressionBoxes.size(), 1);
 		expressionBoxes.push_back(edit);
 		expressionBoxLabels.push_back(label);
 		connect(edit, &AutocompleteLineEdit::editingFinished, this, &ComputePropertyModifierEditor::onExpressionEditingFinished);
@@ -265,24 +519,82 @@ void ComputePropertyModifierEditor::updateEditorFields()
 	OVITO_ASSERT(expressionBoxes.size() == expr.size());
 	OVITO_ASSERT(expressionBoxLabels.size() == expr.size());
 
+	const QStringList& neighExpr = mod->neighborExpressions();
+	neighborExpressionsGroupBox->setTitle((neighExpr.size() <= 1) ? tr("Neighbor expression") : tr("Neighbor expressions"));
+	while(neighExpr.size() > neighborExpressionBoxes.size()) {
+		QLabel* label = new QLabel();
+		AutocompleteLineEdit* edit = new AutocompleteLineEdit();
+		neighborExpressionsLayout->addWidget(label, neighborExpressionBoxes.size(), 0);
+		neighborExpressionsLayout->addWidget(edit, neighborExpressionBoxes.size(), 1);
+		neighborExpressionBoxes.push_back(edit);
+		neighborExpressionBoxLabels.push_back(label);
+		connect(edit, &AutocompleteLineEdit::editingFinished, this, &ComputePropertyModifierEditor::onExpressionEditingFinished);
+	}
+	while(neighExpr.size() < neighborExpressionBoxes.size()) {
+		delete neighborExpressionBoxes.takeLast();
+		delete neighborExpressionBoxLabels.takeLast();
+	}
+	OVITO_ASSERT(neighborExpressionBoxes.size() == neighExpr.size());
+	OVITO_ASSERT(neighborExpressionBoxLabels.size() == neighExpr.size());
+
 	QStringList standardPropertyComponentNames;
 	if(mod->outputProperty().type() != ParticleProperty::UserProperty) {
 		standardPropertyComponentNames = ParticleProperty::standardPropertyComponentNames(mod->outputProperty().type());
-		if(standardPropertyComponentNames.empty())
-			standardPropertyComponentNames.push_back(ParticleProperty::standardPropertyName(mod->outputProperty().type()));
+	}
+
+	QStringList inputVariableNames = mod->inputVariableNames();
+	if(mod->neighborModeEnabled()) {
+		inputVariableNames.append(QStringLiteral("Cutoff"));
+		inputVariableNames.append(QStringLiteral("NumNeighbors"));
 	}
 	for(int i = 0; i < expr.size(); i++) {
 		expressionBoxes[i]->setText(expr[i]);
-		if(i < standardPropertyComponentNames.size())
-			expressionBoxLabels[i]->setText(tr("%1:").arg(standardPropertyComponentNames[i]));
-		else if(expr.size() == 1)
-			expressionBoxLabels[i]->setText(mod->outputProperty().name());
-		else
-			expressionBoxLabels[i]->setText(tr("Component %1:").arg(i+1));
+		expressionBoxes[i]->setWordList(inputVariableNames);
+		if(expr.size() == 1)
+			expressionBoxLabels[i]->hide();
+		else {
+			if(i < standardPropertyComponentNames.size())
+				expressionBoxLabels[i]->setText(tr("%1:").arg(standardPropertyComponentNames[i]));
+			else
+				expressionBoxLabels[i]->setText(tr("%1:").arg(i+1));
+			expressionBoxLabels[i]->show();
+		}
+	}
+	if(mod->neighborModeEnabled()) {
+		inputVariableNames.append(QStringLiteral("Distance"));
+		inputVariableNames.append(QStringLiteral("Delta.X"));
+		inputVariableNames.append(QStringLiteral("Delta.Y"));
+		inputVariableNames.append(QStringLiteral("Delta.Z"));
+	}
+	for(int i = 0; i < neighExpr.size(); i++) {
+		neighborExpressionBoxes[i]->setText(neighExpr[i]);
+		neighborExpressionBoxes[i]->setWordList(inputVariableNames);
+		if(expr.size() == 1)
+			neighborExpressionBoxLabels[i]->hide();
+		else {
+			if(i < standardPropertyComponentNames.size())
+				neighborExpressionBoxLabels[i]->setText(tr("%1:").arg(standardPropertyComponentNames[i]));
+			else
+				neighborExpressionBoxLabels[i]->setText(tr("%1:").arg(i+1));
+			neighborExpressionBoxLabels[i]->show();
+		}
 	}
 
-	variableNamesList->setText(mod->inputVariableTable());
+	QString variableList = mod->inputVariableTable();
+	if(mod->neighborModeEnabled()) {
+		variableList.append(QStringLiteral("<p><b>Neighbor parameters:</b><ul>"));
+		variableList.append(QStringLiteral("<li>Cutoff (<i style=\"color: #555;\">radius</i>)</li>"));
+		variableList.append(QStringLiteral("<li>NumNeighbors (<i style=\"color: #555;\">of central particle</i>)</li>"));
+		variableList.append(QStringLiteral("<li>Distance (<i style=\"color: #555;\">from central particle</i>)</li>"));
+		variableList.append(QStringLiteral("<li>Delta.X (<i style=\"color: #555;\">neighbor vector</i>)</li>"));
+		variableList.append(QStringLiteral("<li>Delta.Y (<i style=\"color: #555;\">neighbor vector</i>)</li>"));
+		variableList.append(QStringLiteral("<li>Delta.X (<i style=\"color: #555;\">neighbor vector</i>)</li>"));
+		variableList.append(QStringLiteral("</ul></p>"));
+	}
+	variableList.append(QStringLiteral("<p></p>"));
+	variableNamesDisplay->setText(variableList);
 
+	neighborExpressionsGroupBox->updateGeometry();
 	container()->updateRolloutsLater();
 }
 
@@ -291,17 +603,25 @@ void ComputePropertyModifierEditor::updateEditorFields()
 ******************************************************************************/
 void ComputePropertyModifierEditor::onExpressionEditingFinished()
 {
-	QLineEdit* edit = (QLineEdit*)sender();
-	int index = expressionBoxes.indexOf(edit);
-	OVITO_ASSERT(index >= 0);
-
 	ComputePropertyModifier* mod = static_object_cast<ComputePropertyModifier>(editObject());
-
-	undoableTransaction(tr("Change expression"), [mod, edit, index]() {
-		QStringList expr = mod->expressions();
-		expr[index] = edit->text();
-		mod->setExpressions(expr);
-	});
+	AutocompleteLineEdit* edit = (AutocompleteLineEdit*)sender();
+	int index = expressionBoxes.indexOf(edit);
+	if(index >= 0) {
+		undoableTransaction(tr("Change expression"), [mod, edit, index]() {
+			QStringList expr = mod->expressions();
+			expr[index] = edit->text();
+			mod->setExpressions(expr);
+		});
+	}
+	else {
+		int index = neighborExpressionBoxes.indexOf(edit);
+		OVITO_ASSERT(index >= 0);
+		undoableTransaction(tr("Change neighbor function"), [mod, edit, index]() {
+			QStringList expr = mod->neighborExpressions();
+			expr[index] = edit->text();
+			mod->setNeighborExpressions(expr);
+		});
+	}
 }
 
 OVITO_END_INLINE_NAMESPACE

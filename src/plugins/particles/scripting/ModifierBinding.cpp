@@ -240,6 +240,13 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"If the output property is a scalar property, the list should comprise exactly one string. "
 				"\n\n"
 				":Default: ``[\"0\"]``\n")
+		.add_property("neighbor_expressions", make_function(&ComputePropertyModifier::neighborExpressions, return_value_policy<copy_const_reference>()), &ComputePropertyModifier::setNeighborExpressions,
+				"A list of strings containing the math expressions for the per-neighbor terms, one for each vector component of the output property. "
+				"If the output property is a scalar property, the list should comprise exactly one string. "
+				"\n\n"
+				"The neighbor expressions are only evaluated if :py:attr:`.neighbor_mode` is enabled."
+				"\n\n"
+				":Default: ``[\"0\"]``\n")
 		.add_property("output_property", make_function(&ComputePropertyModifier::outputProperty, return_value_policy<copy_const_reference>()), &ComputePropertyModifier::setOutputProperty,
 				"The output particle property in which the modifier should store the computed values. "
 				"\n\n"
@@ -250,6 +257,15 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"are preserved for unselected particles."
 				"\n\n"
 				":Default: ``False``\n")
+		.add_property("neighbor_mode", &ComputePropertyModifier::neighborModeEnabled, &ComputePropertyModifier::setNeighborModeEnabled,
+				"Boolean flag that enabled the neighbor computation mode, where contributions from neighbor particles within the "
+				"cutoff radius are taken into account. "
+				"\n\n"
+				":Default: ``False``\n")
+		.add_property("cutoff_radius", &ComputePropertyModifier::cutoff, &ComputePropertyModifier::setCutoff,
+				"The cutoff radius up to which neighboring particles are visited. This parameter is only used if :py:attr:`.neighbor_mode` is enabled. "
+				"\n\n"
+				":Default: 3.0\n")
 	;
 
 	ovito_class<FreezePropertyModifier, ParticleModifier>()

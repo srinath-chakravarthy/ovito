@@ -377,7 +377,7 @@ double ParticleExpressionEvaluator::Worker::evaluate(size_t particleIndex, size_
 ******************************************************************************/
 QString ParticleExpressionEvaluator::inputVariableTable() const
 {
-	QString str(tr("<p>The following inputs can be referenced in the expression:</p><p><b>Particle properties:</b><ul>"));
+	QString str(tr("<p>Available input variables:</p><p><b>Particle properties:</b><ul>"));
 	for(const ExpressionVariable& v : _inputVariables) {
 		if(v.type == PARTICLE_FLOAT_PROPERTY || v.type == PARTICLE_INT_PROPERTY || v.type == PARTICLE_INDEX || v.type == DERIVED_PARTICLE_PROPERTY) {
 			if(v.description.isEmpty())
@@ -386,7 +386,7 @@ QString ParticleExpressionEvaluator::inputVariableTable() const
 				str.append(QStringLiteral("<li>%1 (<i style=\"color: #555;\">%2</i>)</li>").arg(QString::fromStdString(v.name)).arg(v.description));
 		}
 	}
-	str.append(QStringLiteral("</ul></p><p><b>Additional variables:</b><ul>"));
+	str.append(QStringLiteral("</ul></p><p><b>Global parameters:</b><ul>"));
 	for(const ExpressionVariable& v : _inputVariables) {
 		if(v.type == GLOBAL_PARAMETER) {
 			if(v.description.isEmpty())
@@ -404,7 +404,7 @@ QString ParticleExpressionEvaluator::inputVariableTable() const
 				str.append(QStringLiteral("<li>%1 (<i style=\"color: #555;\">%2</i>)</li>").arg(QString::fromStdString(v.name)).arg(v.description));
 		}
 	}
-	str.append(QStringLiteral("</ul></p><p></p>"));
+	str.append(QStringLiteral("</ul></p>"));
 	return str;
 }
 

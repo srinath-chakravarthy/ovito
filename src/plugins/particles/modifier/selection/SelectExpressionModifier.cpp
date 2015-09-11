@@ -169,7 +169,7 @@ void SelectExpressionModifierEditor::updateEditorFields()
 	SelectExpressionModifier* mod = static_object_cast<SelectExpressionModifier>(editObject());
 	if(!mod) return;
 
-	variableNamesList->setText(mod->inputVariableTable());
+	variableNamesList->setText(mod->inputVariableTable() + QStringLiteral("<p></p>"));
 	expressionEdit->setWordList(mod->inputVariableNames());
 }
 

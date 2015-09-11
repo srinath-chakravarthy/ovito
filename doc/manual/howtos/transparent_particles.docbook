@@ -39,8 +39,8 @@
   </para>
   
   <para>
-    Note: The current program version cannot display particles with cylindrical or spherocylindrical shape 
-    that are semi-transparent. These particle shapes will always appear fully opaque.
+    Note: The current program version cannot display particles with <link linkend="howto.aspherical_particles">cylindrical or spherocylindrical shape</link> 
+    that are semi-transparent. These aspherical particles will always appear fully opaque.
   </para>
 
 </section>

@@ -41,7 +41,7 @@ class OVITO_PARTICLES_EXPORT ParticleExpressionEvaluator
 public:
 
 	/// \brief Constructor.
-	ParticleExpressionEvaluator() {}
+	ParticleExpressionEvaluator() : _particleCount(0), _isTimeDependent(false) {}
 
 	/// Specifies the expressions to be evaluated for each particle and creates the input variables.
 	void initialize(const QStringList& expressions, const PipelineFlowState& inputState, int animationFrame = 0);

@@ -23,48 +23,35 @@
 #define __OVITO_COMPUTE_PROPERTY_MODIFIER_H
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/StringParameterUI.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/VariantComboBoxParameterUI.h>
-#include "../ParticleModifier.h"
+#include <core/gui/widgets/general/AutocompleteLineEdit.h>
+#include <plugins/particles/util/ParticleExpressionEvaluator.h>
+#include "../AsynchronousParticleModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Properties)
 
 /**
  * \brief Computes the values of a particle property from a user-defined math expression.
  */
-class OVITO_PARTICLES_EXPORT ComputePropertyModifier : public ParticleModifier
+class OVITO_PARTICLES_EXPORT ComputePropertyModifier : public AsynchronousParticleModifier
 {
 public:
 
 	/// \brief Constructs a new instance of this class.
-	Q_INVOKABLE ComputePropertyModifier(DataSet* dataset) : ParticleModifier(dataset),
-		_outputProperty(tr("Custom property")), _expressions(QStringList("0")),
-		_onlySelectedParticles(false)
-	{
-		INIT_PROPERTY_FIELD(ComputePropertyModifier::_expressions);
-		INIT_PROPERTY_FIELD(ComputePropertyModifier::_outputProperty);
-		INIT_PROPERTY_FIELD(ComputePropertyModifier::_onlySelectedParticles);
-	}
-
-	/////////////////////////// specific methods ///////////////////////////////
+	Q_INVOKABLE ComputePropertyModifier(DataSet* dataset);
 
 	/// \brief Sets the math expressions that are used to calculate the values of the new property's components.
 	/// \param expressions The mathematical formulas, one for each component of the property to create.
 	/// \undoable
-	/// \sa expressions()
 	void setExpressions(const QStringList& expressions) { _expressions = expressions; }
 
 	/// \brief Returns the math expressions that are used to calculate the values of the new property's component.
 	/// \return The math formulas.
-	/// \sa setExpressions()
 	const QStringList& expressions() const { return _expressions; }
 
 	/// \brief Sets the math expression that is used to calculate the values of one of the new property's components.
 	/// \param index The property component for which the expression should be set.
 	/// \param expression The math formula.
 	/// \undoable
-	/// \sa expression()
 	void setExpression(const QString& expression, int index = 0) {
 		if(index < 0 || index >= expressions().size())
 			throw Exception("Property component index is out of range.");
@@ -77,7 +64,6 @@ public:
 	/// \param index The property component for which the expression should be returned.
 	/// \return The math formula used to calculates the channel's values.
 	/// \undoable
-	/// \sa setExpression()
 	const QString& expression(int index = 0) const {
 		if(index < 0 || index >= expressions().size())
 			throw Exception("Property component index is out of range.");
@@ -109,6 +95,49 @@ public:
 	/// \undoable
 	void setOnlySelectedParticles(bool enable) { _onlySelectedParticles = enable; }
 
+	/// Returns whether the contributions from neighbor terms are included in the computation.
+	bool neighborModeEnabled() const { return _neighborModeEnabled; }
+
+	/// Sets whether the contributions from neighbor terms are included in the computation.
+	void setNeighborModeEnabled(bool enable) { _neighborModeEnabled = enable; }
+
+	/// Returns the cutoff radius used to build the neighbor lists for the computation.
+	FloatType cutoff() const { return _cutoff; }
+
+	/// \brief Sets the cutoff radius used to build the neighbor lists for the computation.
+	void setCutoff(FloatType newCutoff) { _cutoff = newCutoff; }
+
+	/// \brief Sets the math expressions that are used to compute the neighbor-terms of the property function.
+	/// \param expressions The formulas, one for each component of the property to create.
+	/// \undoable
+	void setNeighborExpressions(const QStringList& expressions) { _neighborExpressions = expressions; }
+
+	/// \brief Returns the math expressions that are used to compute the neighbor-terms of the property function.
+	/// \return The math formulas.
+	const QStringList& neighborExpressions() const { return _neighborExpressions; }
+
+	/// \brief Sets the math expression that is used to compute the neighbor-terms of the property function.
+	/// \param index The property component for which the expression should be set.
+	/// \param expression The math formula.
+	/// \undoable
+	void setNeighborExpression(const QString& expression, int index = 0) {
+		if(index < 0 || index >= neighborExpressions().size())
+			throw Exception("Property component index is out of range.");
+		QStringList copy = _neighborExpressions;
+		copy[index] = expression;
+		_neighborExpressions = copy;
+	}
+
+	/// \brief Returns the math expression that is used to compute the neighbor-terms of the property function.
+	/// \param index The property component for which the expression should be returned.
+	/// \return The math formula.
+	/// \undoable
+	const QString& neighborExpression(int index = 0) const {
+		if(index < 0 || index >= neighborExpressions().size())
+			throw Exception("Property component index is out of range.");
+		return neighborExpressions()[index];
+	}
+
 	/// \brief Returns the list of available input variables.
 	const QStringList& inputVariableNames() const { return _inputVariableNames; }
 
@@ -116,6 +145,9 @@ public:
 	const QString& inputVariableTable() const { return _inputVariableTable; }
 
 protected:
+
+	/// Loads the class' contents from the given stream.
+	virtual void loadFromStream(ObjectLoadStream& stream) override;
 
 	/// \brief Allows the object to parse the serialized contents of a property field in a custom way.
 	virtual bool loadPropertyFieldFromStream(ObjectLoadStream& stream, const ObjectLoadStream::SerializedPropertyField& serializedField) override;
@@ -126,8 +158,82 @@ protected:
 	/// \brief Is called when the value of a property of this object has changed.
 	virtual void propertyChanged(const PropertyFieldDescriptor& field) override;
 
-	/// Modifies the particle object.
-	virtual PipelineStatus modifyParticles(TimePoint time, TimeInterval& validityInterval) override;
+	/// Creates a computation engine that will compute the modifier's results.
+	virtual std::shared_ptr<ComputeEngine> createEngine(TimePoint time, TimeInterval validityInterval) override;
+
+	/// Unpacks the results of the computation engine and stores them in the modifier.
+	virtual void transferComputationResults(ComputeEngine* engine) override;
+
+	/// Lets the modifier insert the cached computation results into the modification pipeline.
+	virtual PipelineStatus applyComputationResults(TimePoint time, TimeInterval& validityInterval) override;
+
+	/// Asynchronous compute engine that does the actual work in a background thread.
+	class PropertyComputeEngine : public ComputeEngine
+	{
+	public:
+
+		/// Constructor.
+		PropertyComputeEngine(const TimeInterval& validityInterval, TimePoint time,
+				ParticleProperty* outputProperty, ParticleProperty* positions, ParticleProperty* selectionProperty,
+				const SimulationCell& simCell, FloatType cutoff,
+				const QStringList& expressions, const QStringList& neighborExpressions,
+				std::vector<QExplicitlySharedDataPointer<ParticleProperty>>&& inputProperties,
+				int frameNumber, int simulationTimestep) :
+			ComputeEngine(validityInterval),
+			_outputProperty(outputProperty),
+			_positions(positions), _simCell(simCell),
+			_selection(selectionProperty),
+			_expressions(expressions), _neighborExpressions(neighborExpressions),
+			_cutoff(cutoff),
+			_frameNumber(frameNumber), _simulationTimestep(simulationTimestep),
+			_inputProperties(std::move(inputProperties)) {
+			initializeEngine(time);
+		}
+
+		/// This is called by the constructor to prepare the compute engine.
+		void initializeEngine(TimePoint time);
+
+		/// Computes the modifier's results and stores them for later retrieval.
+		virtual void perform() override;
+
+		/// Returns the property storage that contains the input particle positions.
+		ParticleProperty* positions() const { return _positions.data(); }
+
+		/// Returns the property storage that contains the input particle selection.
+		ParticleProperty* selection() const { return _selection.data(); }
+
+		/// Returns the simulation cell data.
+		const SimulationCell& cell() const { return _simCell; }
+
+		/// Returns the property storage that will receive the computed values.
+		ParticleProperty* outputProperty() const { return _outputProperty.data(); }
+
+		/// Returns the list of available input variables.
+		const QStringList& inputVariableNames() const { return _inputVariableNames; }
+
+		/// Returns a human-readable text listing the input variables.
+		const QString& inputVariableTable() const { return _inputVariableTable; }
+
+		/// Indicates whether contributions from particle neighbors are taken into account.
+		bool neighborMode() const { return _cutoff != 0; }
+
+	private:
+
+		FloatType _cutoff;
+		SimulationCell _simCell;
+		int _frameNumber;
+		int _simulationTimestep;
+		QStringList _expressions;
+		QStringList _neighborExpressions;
+		QExplicitlySharedDataPointer<ParticleProperty> _positions;
+		QExplicitlySharedDataPointer<ParticleProperty> _selection;
+		QExplicitlySharedDataPointer<ParticleProperty> _outputProperty;
+		std::vector<QExplicitlySharedDataPointer<ParticleProperty>> _inputProperties;
+		QStringList _inputVariableNames;
+		QString _inputVariableTable;
+		ParticleExpressionEvaluator _evaluator;
+		ParticleExpressionEvaluator _neighborEvaluator;
+	};
 
 	/// The math expressions for calculating the property values. One for every vector component.
 	PropertyField<QStringList> _expressions;
@@ -138,11 +244,23 @@ protected:
 	/// Controls whether the math expression is evaluated and output only for selected particles.
 	PropertyField<bool> _onlySelectedParticles;
 
+	/// Controls whether the contributions from neighbor terms are included in the computation.
+	PropertyField<bool> _neighborModeEnabled;
+
+	/// The math expressions for calculating the neighbor-terms of the property function.
+	PropertyField<QStringList> _neighborExpressions;
+
+	/// Controls the cutoff radius for the neighbor lists.
+	PropertyField<FloatType> _cutoff;
+
 	/// The list of input variables during the last evaluation.
 	QStringList _inputVariableNames;
 
 	/// Human-readable text listing the input variables during the last evaluation.
 	QString _inputVariableTable;
+
+	/// This stores the cached results of the modifier.
+	QExplicitlySharedDataPointer<ParticleProperty> _computedProperty;
 
 private:
 
@@ -156,6 +274,9 @@ private:
 	DECLARE_PROPERTY_FIELD(_expressions);
 	DECLARE_PROPERTY_FIELD(_outputProperty);
 	DECLARE_PROPERTY_FIELD(_onlySelectedParticles);
+	DECLARE_PROPERTY_FIELD(_neighborModeEnabled);
+	DECLARE_PROPERTY_FIELD(_neighborExpressions);
+	DECLARE_PROPERTY_FIELD(_cutoff);
 };
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -190,12 +311,18 @@ private:
 
 	QWidget* rollout;
 	QGroupBox* expressionsGroupBox;
-	QList<QLineEdit*> expressionBoxes;
+	QList<AutocompleteLineEdit*> expressionBoxes;
 	QList<QLabel*> expressionBoxLabels;
+	QGridLayout* expressionsLayout;
 
-	QVBoxLayout* expressionsLayout;
+	QGroupBox* neighborExpressionsGroupBox;
+	QList<AutocompleteLineEdit*> neighborExpressionBoxes;
+	QList<QLabel*> neighborExpressionBoxLabels;
+	QGridLayout* neighborExpressionsLayout;
 
-	QLabel* variableNamesList;
+	bool editorUpdatePending;
+
+	QLabel* variableNamesDisplay;
 
 	Q_OBJECT
 	OVITO_OBJECT
