@@ -89,14 +89,14 @@
    <para>
      The <menuchoice><guimenuitem>Create Camera</guimenuitem></menuchoice> function creates a camera object in the three-dimensional
      scene. The camera is linked to the viewport, and moving the camera object will automatically update the viewport's 
-     view accordingly. It is even possible to animate the camera object to create movies with
+     view accordingly. It is even possible to <link linkend="usage.animation.camera">animate the camera object</link> to create movies with
      a moving camera. Creating a camera object is also useful to fix the current viewport view and protect it against
      inadvertent or automatic changes, e.g. the automatic adjustment that is performed by OVITO when loading a new simulation dataset.
    </para>
    <para>
      The <menuchoice><guimenuitem>Preview Mode</guimenuitem></menuchoice> option activates a frame, which
      indicates the area that will be visible in the final output picture. The aspect ratio of the render frame can be 
-     adjusted in the <link linkend="core.render_settings">Render Settings</link> panel by changing the width and height
+     adjusted in the <link linkend="core.render_settings">Render settings</link> panel by changing the width and height
      of the output image or movie. 
      When the <menuchoice><guimenuitem>Preview Mode</guimenuitem></menuchoice>
      is active for a viewport, everything (including the background and <link linkend="viewport_overlays">overlays</link>) will 

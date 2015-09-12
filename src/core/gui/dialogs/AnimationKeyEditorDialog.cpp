@@ -314,9 +314,16 @@ AnimationKeyEditorDialog::AnimationKeyEditorDialog(KeyframeController* ctrl, con
 	hlayout->addWidget(toolbar);
 	mainLayout->addLayout(hlayout);
 
-	QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, Qt::Horizontal, this);
+	QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Help, Qt::Horizontal, this);
 	connect(buttonBox, &QDialogButtonBox::accepted, this, &AnimationKeyEditorDialog::onOk);
 	connect(buttonBox, &QDialogButtonBox::rejected, this, &AnimationKeyEditorDialog::reject);
+
+	// Implement Help button.
+	MainWindow* mainWindow = ctrl->dataset()->mainWindow();
+	connect(buttonBox, &QDialogButtonBox::helpRequested, [mainWindow]() {
+		mainWindow->openHelpTopic(QStringLiteral("usage.animation.html"));
+	});
+
 	mainLayout->addWidget(buttonBox);
 
 	connect(_tableWidget->selectionModel(), &QItemSelectionModel::selectionChanged, [this]() {

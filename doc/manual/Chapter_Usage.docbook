@@ -19,7 +19,7 @@
   <xi:include href="usage/rendering.docbook"/>
   <xi:include href="usage/miscellaneous.docbook"/>
   <xi:include href="usage/export_particles.docbook"/>
-  
   <xi:include href="usage/scripting.docbook"/>
+  <xi:include href="usage/animation.docbook"/>
  
 </chapter>

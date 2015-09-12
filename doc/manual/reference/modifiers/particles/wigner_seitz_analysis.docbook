@@ -63,18 +63,17 @@
   </para>
   
   <para>
-    The modifier loads the <emphasis>reference configuration</emphasis> from a separate input file.
+    The modifier loads the reference configuration from a separate input file.
     Use the <emphasis>"Reference: External file"</emphasis> panel to pick the
     file containing the reference particle positions, which define the defect-free state of the crystal.
-    The particle system which the Wigner-Seitz modifier is being applied to is
-    used as the <emphasis>displaced configuration</emphasis> for the analysis.
+    The displaced configuration is given by the particle dataset to which the Wigner-Seitz modifier is being applied.
   </para>
   
   <para>
     <emphasis>IMPORTANT NOTE</emphasis>: 
     After performing the analysis this modifier throws away the displaced configuration and completely replaces it with the 
-    reference configuration loaded from the external file. Thus, as a result of applying the Wigner-Seitz modifier you will 
-    now see the reference configuration (crystal with defects) instead of the displaced configuration (defective crystal) which you applied it to. 
+    reference configuration loaded from the external file. Thus, as an effect of applying the Wigner-Seitz modifier you will 
+    now see the reference configuration (defect-free crystal) instead of the displaced configuration (defective crystal) which you applied it to. 
     This makes sense because the computed occupancy numbers apply to the atomic sites of the reference configuration, 
     not to the atoms of the defective crystal. Keep in mind that the modifier only computes the number of atoms that occupy each
     site. It does not tell you which atom from the defective configuration occupies which site.
