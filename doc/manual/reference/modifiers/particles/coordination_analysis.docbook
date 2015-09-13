@@ -16,30 +16,21 @@
        <imagedata fileref="images/modifiers/coordination_analysis_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
   
-  This modifier determines the number of nearest neighbors
-  of each particle within a given cutoff radius (the <emphasis>coordination number</emphasis>).
+    This modifier determines the number of neighbors of each particle which are within 
+    a given cutoff radius. This is the so-called <emphasis>coordination number</emphasis> of a particle.
+    The modifier stores the results in the <literal>Coordination</literal> particle property.
+  </para>
+
+  <para>
+    In addition, the modifier also computes the radial pair distribution function (RDF) of the particle system.
+    The pair distribution function is normalized by the number density of particles (i.e. total number of
+    particles divided by the simulation cell volume).
   </para>
   
   <para>
-  The modifier stores its results, i.e. the number of neighbors each particle haa, in the <literal>Coordination</literal> particle property.
+    The current program version cannot compute partial pair distribution functions, which take into account
+    the type of particles. If this is a program feature you are interested in, please let the developer
+    of OVITO know.
   </para>
 
-  <para>
-  In addition to determining the number of neighbors of particles, the modifier also computes and displays the 
-  radial pair distribution function (RDF) up to the given cutoff distance.
-  </para>
-
-  <simplesect>
-    <title>Parameters</title>
-
-    <variablelist>
-      <varlistentry>
-        <term>Cutoff radius</term>
-        <listitem>
-          <para>The maximum distance between pairs of particles to be considered neighbors.</para>
-        </listitem>
-      </varlistentry>
-
-    </variablelist>
-  </simplesect>
 </section>

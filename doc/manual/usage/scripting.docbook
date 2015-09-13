@@ -7,20 +7,31 @@
          xmlns:xlink="http://www.w3.org/1999/xlink"
          xmlns:xi="http://www.w3.org/2001/XInclude"
          xmlns:ns="http://docbook.org/ns/docbook">
-  <title>Python scripts</title>
+  <title>Python scripting</title>
 
 	<para>
-	   OVITO provides a scripting interface that makes it possible to automate analysis and visualization tasks. This can be useful, for example,
-	   when a large number of input files needs to be batch-processed. OVITO's built-in Python interpreter allows you to
-	   invoke its functions from a Python script. The scripting interface provides programmatic access to most program features 
-	   such as input and output of data files, modifiers, and rendering of images and movies.
+	   OVITO provides a scripting interface that lets you automate analysis and visualization tasks. 
+	   This can be useful, for example, when a large number of input files needs to be batch-processed. 
+	   The scripting interface provides programmatic access to most program features such as input and output 
+	   of data files, modifiers, and rendering of images and movies.
 	</para>
 	<para>
-	   If you are not familiar with the Python language, you can find several tutorials and books online that cover this subject. 
-	   Note that OVITO supports the Python 3.4 language standard.
+	   If you are not familiar with the Python language, you can find several tutorials and books online 
+	   that cover this subject. Note that OVITO supports the Python 3.4 language standard.
 	</para>
 	<para>
-	   OVITO's scripting interface is completely documented in the separate <link xlink:href="python/index.html">OVITO Scripting Reference</link>.
+	   The scripting interface is completely documented in a separate 
+	   <link xlink:href="python/index.html">Scripting Reference</link> manual, which can also be accessed
+	   directly from OVITO's help menu.
+	</para>
+	<para>
+	   Furthermore, you can use Python to extend OVITO. 
+	   For example, the <link linkend="particles.modifiers.python_script">Python script modifier</link>
+	   provides a mechanism to write your own data manipulation function, which gets integrated into
+	   OVITO's modification pipeline system. The <link linkend="viewport_overlays.python_script">
+	   Python script overlay</link> lets you write your own Python function to include arbitrary 2D graphics
+	   in a rendered image or movie, for example to enrich the visualization with additional information 
+	   like a <link linkend="howto.scale_bar">scale bar</link>.
 	</para>
 
 </section>

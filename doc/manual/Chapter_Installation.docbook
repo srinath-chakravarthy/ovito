@@ -19,7 +19,7 @@
 
     <simplesect xml:id="installation.runovito.linux">
       <title>Linux</title>
-      <para>Extract the downloaded <filename>.tar.gz</filename> archive using the <command>tar</command> command, e.g.: <command>tar xzf ovito-2.4.0-x86_64.tar.gz</command>. 
+      <para>Extract the downloaded <filename>.tar.gz</filename> archive using the <command>tar</command> command, e.g.: <command>tar xzf ovito-2.5.1-x86_64.tar.gz</command>. 
       This will create a new subdirectory containing the program package. 
       Change into the new directory and start OVITO by running the executable <command>./bin/ovito</command>.
       </para>
@@ -40,10 +40,17 @@
 
       <para>Extract the <filename>.zip</filename> archive in a location of your choice (e.g. into the <filename>Applications</filename> folder).
       Then start OVITO by double-clicking the extracted application bundle.
-      MacOS X might refuse to start OVITO, because it was not downloaded from the official App Store.
+      Mac OS X might refuse to start OVITO, because it was not downloaded from the official App Store.
       Then right-click the application and select <menuchoice><guimenuitem>Open</guimenuitem></menuchoice> from 
       the context menu (only required the first time you start OVITO).
       </para>
+    </simplesect>
+
+    <simplesect>
+      <title>Building from source</title>
+
+      <para>You can also download the source code of OVITO and build the program yourself.
+      See the <link linkend="development">developer section</link> for instructions.</para>
     </simplesect>
 
 </chapter>

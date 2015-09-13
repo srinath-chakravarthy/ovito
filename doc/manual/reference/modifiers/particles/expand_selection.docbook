@@ -17,12 +17,12 @@
     </imageobject></mediaobject></screenshot></informalfigure>
 
     Expands the current particle selection by selecting particles that are neighbors 
-    of already selected particles. You can choose between three different neighboring criteria:
+    of already selected particles. You can choose between three different modes:
     <orderedlist>
     <listitem><para>A cutoff radius can be specified to select particles that are within
     a specific maximum range of already selected particles.</para></listitem>
-    <listitem><para>The modifier can select particles that are among the N nearest neighbors
-    of an already selected particle. The number N is adjustable.</para></listitem>
+    <listitem><para>The modifier can select particles that are among the <emphasis>N</emphasis> nearest neighbors
+    of an already selected particle. The number <emphasis>N</emphasis> is adjustable.</para></listitem>
     <listitem><para>If the system contains particle bonds, the modifier can expand the selection
     to particles that are bonded to at least one particle that is already selected.</para></listitem>
     </orderedlist>
@@ -44,7 +44,7 @@
         <term>N</term>
         <listitem>
           <para>The number of nearest neighbors to select around each already selected particle.
-          OVITO sorts the list of neighbors of a selected particle by ascending distance and selects the leading N entries 
+          OVITO sorts the list of neighbors of a selected particle by ascending distance and selects the leading <emphasis>N</emphasis> entries 
           from the list.</para>
         </listitem>
       </varlistentry>
@@ -54,7 +54,7 @@
         <listitem>
           <para>This parameter allows you to expand the selection in multiple recursive steps.
           For example, setting this parameter to a value of 2 will expand the current selection to the second shell of neighbors,
-          as if the modifier had been applied two times.</para>
+          as if the modifier had been applied twice.</para>
         </listitem>
       </varlistentry>
 

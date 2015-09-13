@@ -10,11 +10,21 @@
          xmlns:ns="http://docbook.org/ns/docbook">
   <title>Assign color</title>
 
-  <para>This modifier assigns a uniform color to all selected particles. If no
+  <para>
+    <informalfigure><screenshot><mediaobject><imageobject>
+       <imagedata fileref="images/modifiers/assign_color_panel.png" format="PNG" />
+    </imageobject></mediaobject></screenshot></informalfigure>
+
+  This modifier assigns a uniform color to all selected particles by setting their <literal>Color</literal> property. If no
   selection is defined, the color is assigned to all particles.</para>
 
-  <para>Note that selected particles are highlighted with a special color
-  (red by default). Since the highlighting would mask the actual color assigned by this
-  modifier, the modifier clears the current selection. You can suppress this behavior
-  by activating the <emphasis>Keep selection</emphasis> option.</para>
+  <para>Note that OVITO uses a red color by default to highlight selected particles.
+  Since this highlighting would mask the actual color assigned by this
+  modifier, the modifier clears the current selection by default. 
+  If you need to preserve the selection for further use down the pipeline, you can suppress this behavior
+  by checking the <guilabel>Keep selection</guilabel> option.</para>
+  
+  <para>
+   The color assigned by the modifier is an <link linkend="usage.animation.keyframes">animatable parameter</link>.
+  </para>
 </section>

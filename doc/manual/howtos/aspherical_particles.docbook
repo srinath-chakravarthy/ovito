@@ -43,7 +43,7 @@
     The <literal>Aspherical Shape</literal> particle property consists of three components <literal>X</literal>, <literal>Y</literal>, and <literal>Z</literal>
     which specify the size (radius) of ellipsoidal or box particles along the three principal axes. 
     Particles for which all three components of the <literal>Aspherical Shape</literal> property are zero, are rendered
-    as standard spheres (or cubes). In this case their size is controlled by the <literal>Radius</literal> property, as if the <literal>Aspherical Shape</literal> property was not present.
+    as standard spheres (or cubes). In this case their size is controlled by the <literal>Radius</literal> property, as if the <literal>Aspherical Shape</literal> property was not defined.
   </para>
 
   <para>
@@ -54,9 +54,9 @@
 
   <para>
     The orientation of aspherical particles is controlled by the <literal>Orientation</literal> particle property,
-    which has four components <literal>X</literal>, <literal>Y</literal>, <literal>Z</literal>, and <literal>W</literal> that form
-    a quaternion. If the <literal>Orientation</literal> property is not defined, or if all quaternion components are zero, 
-    no rotation is applied to aspherical particles and they remain aligned with the coordinate axes.
+    which has four components <literal>X</literal>, <literal>Y</literal>, <literal>Z</literal>, <literal>W</literal> that form
+    a quaternion. If the <literal>Orientation</literal> property is not defined, or if the four components do not form a unit quaternion, 
+    no rotation is applied to an aspherical particle and it remains aligned with the coordinate axes.
   </para>
 
   <para>

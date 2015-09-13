@@ -16,48 +16,41 @@
        <imagedata fileref="images/modifiers/displacement_vectors_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
   
-  This modifier calculates the displacement vectors of particles from two different
+  This modifier calculates the displacement vectors of particles based on two 
   configurations of the simulated system.</para>
 
-  <para>The input particle set, to which the modifier has been applied, is considered the
+  <para>The current particle set (the one you apply the modifier to) is used as the
   <emphasis>current</emphasis> (or deformed) configuration of the system. The
   <emphasis>reference</emphasis> (or initial) particle coordinates are
   loaded from a separate input file by the modifier.</para>
 
-  <para>The
-  modifier calculates the displacement vector of each particle by subtracting its
+  <para>
+  The modifier calculates the displacement vector of each particle by subtracting its
   position in the reference configuration from the particle's position in the
   current configuration. The calculated vectors are stored in the <literal>Displacement</literal>
-  particle property and can optionally be visualized as arrows.
-  Alternatively, one can use the <link
-  linkend="particles.modifiers.color_coding">Color coding modifier</link> to
-  visualize the displacement magnitudes through a color scheme.</para>
+  particle property and may be visualized as arrows.
+  Alternatively, you can use the <link linkend="particles.modifiers.color_coding">Color coding modifier</link> to
+  visualize the displacement magnitude of each particle.</para>
 
-  <para>Use the <emphasis>"Reference: External file"</emphasis> panel to pick the
-  file containing the initial particle positions. Note
-  that this reference file should contain the same set of particles as the
-  input configuration seen by the modifier. That implies that you should
-  not delete particles before applying the <emphasis>Displacement vectors</emphasis> modifier. 
-  The modifier should typically be placed at the beginning of the processing pipeline.</para>
-
-  <para>
-  To calculate the displacement vector of a particle, the modifier has to
-  find the corresponding particle in the supplied reference configuration.
-  If the particles have unique IDs assigned to them, the modifier will
-  use this information to map particles from the current configuration to
-  the reference configuration. If no particle IDs are available, the modifier assumes
-  that particles have the same ordering in both configurations.</para>
+  <para>Use the <guilabel>"Reference: External file"</guilabel> panel to select the
+  file containing the initial particle positions. If particles do not possess identifiers, then
+  the reference file must contain the same number of particles as the current configuration
+  and they must be stored in the exact same order. If particles have IDs, then
+  the modifier uses these unique IDs to map particles from the current configuration
+  to the reference configuration. The storage orders in the simulation files do not have to be the same in this case.
+  </para>
 
   <para>The vectors computed by the modifier are stored in the <literal>Displacement</literal>
-  particle property. This property is associated with a vector <emphasis>display object</emphasis>,
-  which allows rendering the displacement vectors as arrows. By default, the
-  display object is disabled. You have to enable it in the pipeline editor first to show the arrows in the viewports. 
+  particle property. In addition, the magnitude of each displacement vector is stored in the 
+  <literal>Displacement Magnitude</literal> particle property.
   </para>
   
   <para>    
-    The visual appearance of the vectors computed by this modifier is controlled through the attached 
-    <link linkend="display_objects.vectors">vector display object</link>. 
-  </para>  
+    The visual appearance of the computed vectors is controlled by the attached 
+    <link linkend="display_objects.vectors">vector display object</link>. Note that this display object
+    is disabled by default and you have to explicitly enable it in the pipeline editor to see the displacement arrows
+    in the viewports.
+  </para>
 
   <simplesect>
     <title>Parameters</title>

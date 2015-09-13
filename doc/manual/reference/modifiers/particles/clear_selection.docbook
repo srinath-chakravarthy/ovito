@@ -11,8 +11,8 @@
   <title>Clear selection</title>
 
   <para>
-    This modifier clears any existing selection of particles by removing 
-    the <literal>Selection</literal> particle property.
+    This modifier clears the current particle selection by removing 
+    the <literal>Selection</literal> <link linkend="usage.particle_properties">particle property</link>.
   </para>
   
 </section>

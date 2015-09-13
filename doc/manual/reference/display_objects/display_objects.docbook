@@ -46,11 +46,25 @@
             </row>
             <row>
               <entry><link linkend="display_objects.surface_mesh">Surface mesh</link></entry>
-              <entry>Displays a closed polygonal mesh.</entry>
+              <entry>Displays the smooth polygonal mesh, which is produced by the <link linkend="particles.modifiers.construct_surface_mesh">Construct Surface Mesh</link> modifier.</entry>
+            </row>
+            <row>
+              <entry>Triangle mesh</entry>
+              <entry>Displays a triangle mesh, loaded from a VTK file, for example.</entry>
             </row>
             <row>
               <entry><link linkend="display_objects.vectors">Vectors</link></entry>
-              <entry>Displays vectors associated with particles, e.g. displacement vectors.</entry>
+              <entry>Displays vectors associated with particles, e.g. <link linkend="particles.modifiers.displacement_vectors">displacement vectors</link>.</entry>
+            </row>
+            <row>
+              <entry>Trajectory lines</entry>
+              <entry>Displays the particle trajectory lines, which are created with the
+              <link linkend="howto.visualize_particle_trajectories"><guilabel>Create trajectory lines</guilabel></link> utility.</entry>
+            </row>
+            <row>
+              <entry>Dislocations</entry>
+              <entry>Displays the dislocation lines extracted by the 
+              <link linkend="particles.modifiers.dislocation_analysis">Dislocation analysis</link> modifier.</entry>
             </row>
           </tbody>
         </tgroup>

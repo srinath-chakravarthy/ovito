@@ -9,7 +9,12 @@
          xmlns:ns="http://docbook.org/ns/docbook">
   <title>Introduction</title>
 
-  <para>OVITO is a scientific data visualization and analysis software for
+  <para>
+    <informalfigure><screenshot><mediaobject><imageobject>
+       <imagedata fileref="images/ovito_screenshot.png" format="PNG" />
+    </imageobject></mediaobject></screenshot></informalfigure>
+  
+  OVITO is a scientific data visualization and analysis software for
   large-scale atomistic simulation models in materials science and related disciplines.
   OVITO is freely available for
   Windows, Linux, and Mac OS X under an open-source license. It is being developed by <link xlink:href="http://scholar.google.com/citations?user=f8Tw3eEAAAAJ">Dr. Alexander
@@ -19,7 +24,7 @@
   
   <para>
   The first publicly available version of OVITO was released in December 2009.
-  As of summer 2015, OVITO has more than 30,000 users from the computational physics, materials science, and chemistry fields.
+  As of summer 2015, OVITO has more than active 30,000 users from the computational physics, materials science, and chemistry fields.
   To introduce the software package to the community, a <link xlink:href="http://stacks.iop.org/0965-0393/18/015012">journal article about OVITO</link> was published in 2010.
   </para>
   
@@ -41,7 +46,7 @@
       </listitem>
 
       <listitem>
-        <para>Support for various particle shapes: spheres, cubes, ellipsoids, cylinders, and more.</para>
+        <para>Support for <link linkend="howto.aspherical_particles">various particle shapes</link>: spheres, cubes, ellipsoids, cylinders, and more.</para>
       </listitem>
 
       <listitem>
@@ -49,7 +54,7 @@
       </listitem>
 
       <listitem>
-        <para><link linkend="usage.rendering">High-quality image and movie output for publication</link></para>
+        <para>High-quality <link linkend="usage.rendering">image and movie rendering</link> for publication and a <link linkend="usage.animation">keyframe-based animation system</link>.</para>
       </listitem>
       
       <listitem>
@@ -64,7 +69,7 @@
         any time and results will be immediately updated. Available <link linkend="particles.modifiers">modification functions</link> include:<itemizedlist>
 
             <listitem>
-              <para><link linkend="particles.modifiers.expression_select">Selection of particles based on user-defined criteria (Boolean expressions)</link></para>
+              <para><link linkend="particles.modifiers.expression_select">Dynamic particle selections based on Boolean expressions</link></para>
             </listitem>
 
             <listitem>
@@ -80,7 +85,7 @@
             </listitem>
 
             <listitem>
-              <para><link linkend="particles.modifiers.compute_property">Calculation of derived particle properties using math formulas</link></para>
+              <para><link linkend="particles.modifiers.compute_property">Computing new particle properties</link></para>
             </listitem>
 
             <listitem>

@@ -27,19 +27,19 @@
     which is a vector of integers constituting a histogram of the number of edges on the faces of the Voronoi cell.
     This index vector can be considered a characteristic signature of a particle's coordination structure.
     For instance, an icosahedral coordination structure corresponds to the Voronoi index vector (0,0,0,0,12,0,...).
-    In other words, these indices describe a polyhdron with 12 faces with 5 edges each (a no faces with other edge counts). 
-    To select all atoms having this kind of icosahedral coordination structure we could use the 
+    In other words, these indices describe a polyhdron with exactly 12 faces with 5 edges each. 
+    To select all atoms having this kind of icosahedral coordination structure we can use the 
     <link linkend="particles.modifiers.expression_select">Expression select</link>
     modifier with the Boolean expression:
     <programlisting>VoronoiIndex.3==0 &amp;&amp; VoronoiIndex.4==0 &amp;&amp; VoronoiIndex.5==12 &amp;&amp; VoronoiIndex.6==0</programlisting>
-    (<literal>VoronoiIndex.1</literal> and <literal>VoronoiIndex.2</literal> are always zero because there are no faces with less than three edges.)
+    (<literal>VoronoiIndex.1</literal> and <literal>VoronoiIndex.2</literal> are always zero because faces with less than three edges do not exist.)
   </para>  
   
   <para>
     Note that the modifier calculates the Voronoi tessellation of the volume enclosed by the simulation cell only (and not 
     entire space). Thus, Voronoi cells will be truncated at the simulation box boundaries (unless periodic boundary conditions are used).
-    No computation will be performed for particles located outside the simulation box boundaries (but they will be considered in the 
-    calculation of Voronoi cells of particles inside the box). 
+    No computation will be performed for particles located outside the (non-periodic) simulation box boundaries 
+    (but they will still be taken into account when calculating the Voronoi cells of particles inside the box).
   </para>
   
   <simplesect> 
@@ -100,7 +100,7 @@
           <para>
              Note that bonds in periodic simulation cells are computed using the minimum image convention,
              which requires that the cell is at least twice as large in each periodic direction as the 
-             longest nearest neighbor bond. In cases where the cell is too small, the computed bonds might be incorrect.
+             longest neighbor bond. In cases where the cell is shorter, the computed bonds might be incorrect.
           </para>
         </listitem>
       </varlistentry>

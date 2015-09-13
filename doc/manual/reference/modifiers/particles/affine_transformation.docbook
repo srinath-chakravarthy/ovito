@@ -11,19 +11,29 @@
   <title>Affine transformation</title>
 
   <para>
-  
     <informalfigure><screenshot><mediaobject><imageobject>
        <imagedata fileref="images/modifiers/affine_transformation_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
-
-  Applies an affine transformation to the particle positions and/or
-  the simulation cell. The transformation is specified as a 3 x 3
-  matrix and a translation vector.</para>
-
-  <para>The modifier supports two modes: The user can either specify the
-  transformation matrix or the final shape of the simulation cell. 
-  In the latter mode the modifier computes the transformation matrix
-  such that the old simulation cell is mapped to the specified target shape.</para>
+    Applies an affine transformation to the particle positions and/or
+    the simulation cell. The transformation is either specified as a 3x3
+    matrix and an additional translation vector or by prescribing a 
+    target simulation cell to which the particles are mapped.
+  </para>
+  
+  <para>
+    Given the 3x3 transformation matrix <inlineequation><mathphrase><emphasis>M</emphasis></mathphrase></inlineequation> 
+    and the translation vector <inlineequation><mathphrase><emphasis>t</emphasis></mathphrase></inlineequation>,
+    the new position <inlineequation><mathphrase><emphasis>x'</emphasis></mathphrase></inlineequation> of
+    a particle at the old position <inlineequation><mathphrase><emphasis>x</emphasis></mathphrase></inlineequation>
+    is computed as
+    <inlineequation><mathphrase><emphasis>x'</emphasis> = <emphasis>M</emphasis>&#x22C5;<emphasis>x</emphasis> + <emphasis>t</emphasis></mathphrase></inlineequation>.
+    Vectors are column vectors in this notation.
+  </para>
+  
+  <para>
+    The <guibutton>Enter rotation</guibutton> button opens a utility that lets you enter a rotation
+    axis and an angle. It computes the corresponding transformation matrix for you.
+  </para>
 
   <simplesect>
     <title>Parameters</title>
@@ -33,8 +43,7 @@
         <term>Transform simulation cell</term>
 
         <listitem>
-          <para>Controls whether the transformation matrix is applied to the
-          simulation cell geometry.</para>
+          <para>Selects whether the transformation is applied to the simulation cell.</para>
         </listitem>
       </varlistentry>
 
@@ -42,19 +51,27 @@
         <term>Transform particles</term>
 
         <listitem>
-          <para>Controls whether the transformation is applied to the
-          atomic coordinates. You can select which particles are affected by the
+          <para>Selects whether the transformation is applied to the
+          particle coordinates. You can select which particles are affected by the
           modifier: All particles or only the selected ones.</para>
         </listitem>
       </varlistentry>
+      
+      <varlistentry>
+        <term>Transform surface mesh</term>
+
+        <listitem>
+          <para>Selects whether the transformation is applied to the surface mesh (if one exists).
+          Surface meshes are typically created with the <link linkend="particles.modifiers.construct_surface_mesh">Construct surface mesh</link> modifier.</para>
+        </listitem>
+      </varlistentry>
+
 
       <varlistentry>
         <term>Transformation matrix - Rotate/Scale/Shear</term>
 
         <listitem>
-          <para>The 3 x 3 matrix spcifying the affine transformation. The
-          particle coordinates are left-multiplied with this
-          matrix.</para>
+          <para>The 3x3 matrix specifying the affine transformation.</para>
         </listitem>
       </varlistentry>
 
@@ -62,9 +79,7 @@
         <term>Transformation matrix - Translation</term>
 
         <listitem>
-          <para>A translation vector that is added to the particle positions
-          and/or the simulation box after they have been transformed by the
-          3 x 3 matrix.</para>
+          <para>The translation that is added after multiplying a particle position with the matrix.</para>
         </listitem>
       </varlistentry>
 
@@ -73,9 +88,8 @@
 
         <listitem>
           <para>The three vectors that define the target simulation cell. The
-          3 x 3 transformation matrix applied to the particles coordinates
-          is calculated from the current simulation cell geometry and the
-          three target cell vectors.</para>
+          modifier will automatically calculate the transformation matrix based on this target cell shape and 
+          the input simulation cell.</para>
         </listitem>
       </varlistentry>
 

@@ -93,9 +93,9 @@ hr {
 }
 
 .figure p.title, .inlinefigure p.title, .informalfigure .informaltable td, .inlinefigure .informaltable td {
-    max-width: 8cm;
 	font-size: 80%;
 	font-weight: bold;
+	width: 4cm;
 }
 
 .informalfigure .informaltable .inlinefigure td {

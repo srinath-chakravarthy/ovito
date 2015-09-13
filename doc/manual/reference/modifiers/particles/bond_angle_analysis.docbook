@@ -21,8 +21,8 @@
   (FCC, BCC, HCP etc.) to each particle.</para> 
   
   <para>
-  In addition to assigning colors to particles, the modifier stores its results in the <literal>Structure Type</literal> particle property.
-  This allows you to select particles of a certain structural type, e.g. by using the 
+  The modifier stores the results in the <literal>Structure Type</literal> particle property.
+  This allows you to subsequently select particles of a certain structural type, e.g. by using the 
   <link linkend="particles.modifiers.select_particle_type">Select Particle Type</link> modifier.
   The structural type of each particle is encoded as an integer value:
   <itemizedlist>
@@ -64,7 +64,7 @@
   
   <para>
     The <emphasis>Use only selected particles</emphasis> option restricts the analysis to the
-    currently selected particles. If this option is activated, unselected particles will be ignored 
+    currently selected particles. If this option is checked, unselected particles will be ignored 
     (as if they did not exist) and will be assigned the structure type "Other".
     This option can be useful if you want to identify defects in a crystal with a structure
     not supported by this analysis algorithm, but which has a sublattice that can be identified by the bond-angle method

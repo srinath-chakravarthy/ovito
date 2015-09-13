@@ -14,29 +14,38 @@
     <para>
       The complete working state of the program, including the viewports, the modification pipeline, and display settings, can be saved to a <emphasis>state file</emphasis>
       by choosing <menuchoice><guimenu>File</guimenu><guimenuitem>Save Program State</guimenuitem></menuchoice> from the menu. This allows you to continue working at a later time 
-      and to preserve the current visualization setup for future use. For instance, you can use a state file as a template to visualize a multiple simulations 
+      and to preserve the current visualization setup for future use. For instance, you can use a state file as a template to visualize multiple simulations 
       using the same camera setup and modifier sequence. 
     </para>
     <para>       
-      By default, OVITO does not store any simulation data in the state file to keep it small. It only saves a reference
-      to the original data file that has been imported into OVITO, and the simulation data is restored from that external file when you load the state file.
+      Keep in mind that OVITO does not store any simulation data in the state file by default to keep it small. 
+      It only saves a reference to the original simulation data file that was imported into OVITO, and the data 
+      is restored from that external file when you load the state file.
     </para>
   </simplesect>
 
   <simplesect xml:id="usage.spinner_widgets">
-    <title>User interface: spinner control elements</title>
+    <title>Spinner widgets</title>
     <para>
     <informalfigure>
         <mediaobject><imageobject>
         <imagedata fileref="images/command_panel/spinner_widget.png" format="PNG" />
         </imageobject></mediaobject>
     </informalfigure>
-      A spinner is a graphical control element often used in OVITO's user interface for numeric parameters. 
+      A spinner is a graphical user interface element used in the program to let 
+      you change numeric parameters (see screenshot on the right).
+      Here is how you use the spinner widget.
       You can click or drag the spinner's up and down arrows to change the value in the adjacent text box.
-    To change a value using a spinner, do one of the following:
+      Do one of the following:
+      <informalfigure>
+        <mediaobject><imageobject>
+        <imagedata fileref="images/command_panel/particle_inspection_utility.png" format="PNG" />
+        </imageobject></mediaobject>
+      </informalfigure>
     <itemizedlist>    
-      <listitem>Click the spinner's up arrow to increment the value; click the down arrow to decrement the value.</listitem> 
-      <listitem>Click and hold for continuously changing the value. Drag upward to increase the value, or drag downward to decrease it.</listitem> 
+      <listitem><para>Click the spinner's up arrow to increment the value; click the down arrow to decrement the value in a stepwise manner.</para></listitem> 
+      <listitem><para>Click and hold for continuously changing the value. Drag upward to increase the value, or drag downward to decrease it.
+      For continuous parameters this is often the fastest method.</para></listitem> 
     </itemizedlist> 
     </para>
   </simplesect>
@@ -44,13 +53,12 @@
   <simplesect xml:id="usage.particle_inspection_utility">
     <title>Particle inspection utility</title>
     <para>
-      <informalfigure>
-        <mediaobject><imageobject>
-        <imagedata fileref="images/command_panel/particle_inspection_utility.png" format="PNG" scale="35" />
-        </imageobject></mediaobject>
-      </informalfigure>
-      The "Utilities" tab in OVITO's command panel contains a tool that allows you to 
-      inspect properties of individual particles and measure distances and angles between them.
+      The "Utilities" tab in OVITO's command panel provides a tool for 
+      inspecting properties of individual particles and measuring distances and angles between particles.
+    </para>
+    <para>
+      On the same tab you find another utility that lets you create 
+      <link linkend="howto.visualize_particle_trajectories">particle trajectory lines</link>.
     </para>
   </simplesect>
   

@@ -171,12 +171,16 @@
               <entry>PDB</entry>
               <entry><para>Basic support for Protein Data Bank (PDB) files.</para></entry>
             </row>
+            <row>
+              <entry>FHI-aims</entry>
+              <entry><para>Geometry and log-file formats used by the <emphasis>ab initio</emphasis> simulation package <link xlink:href="https://aimsclub.fhi-berlin.mpg.de/index.php">FHI-aims</link>.</para></entry>
+            </row>
           </tbody>
         </tgroup>
       </informaltable>  
   </para>
   <para>
-  	OVITO can load triangle meshes (polygonal data) in the following formats:  
+  	OVITO can load triangle meshes (polygonal data) in the following format:  
     <informaltable>
         <tgroup cols="2">
           <thead>

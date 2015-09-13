@@ -16,8 +16,9 @@
        <imagedata fileref="images/display_objects/bonds_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
     
-    This display object is responsible for rendering bonds that connect particles.
-    Bonds can be created with the <link linkend="particles.modifiers.create_bonds">Create bonds</link> modifier.
+    This display object is responsible for rendering bonds between particles.
+    Bonds can be loaded from a simulation file created within OVITO using the 
+    <link linkend="particles.modifiers.create_bonds">Create bonds</link> modifier.
   </para>
 
    <simplesect>
