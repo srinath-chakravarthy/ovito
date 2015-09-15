@@ -491,7 +491,7 @@ QString DislocationPickInfo::infoString(ObjectNode* objectNode, quint32 subobjec
 		str += tr(" | Cluster Id: %1").arg(segment->burgersVector.cluster()->id);
 		str += tr(" | Segment Id: %1").arg(segment->id);
 		if(structure) {
-			str += tr(" | Lattice structure: %1").arg(structure->name());
+			str += tr(" | Crystal structure: %1").arg(structure->name());
 		}
 	}
 	return str;

@@ -88,6 +88,9 @@ void DislocationInformationApplet::updateInformationDisplay()
 	QString infoText;
 	QTextStream stream(&infoText, QIODevice::WriteOnly);
 
+	QString cellColor1 = " style=\"background-color: #CCC;\"";
+	QString cellColor2 = " style=\"background-color: #EEE;\"";
+
 	for(auto& pickedDislocation : _inputMode->_pickedDislocations) {
 		OVITO_ASSERT(pickedDislocation.objNode);
 		const PipelineFlowState& flowState = pickedDislocation.objNode->evalPipeline(dataset->animationSettings()->time());
@@ -95,43 +98,51 @@ void DislocationInformationApplet::updateInformationDisplay()
 		if(!dislocationObj || pickedDislocation.segmentIndex >= dislocationObj->segments().size())
 			continue;
 
-		stream << QStringLiteral("<b>") << tr("Dislocation index") << QStringLiteral(" ") << (pickedDislocation.segmentIndex + 1) << QStringLiteral(":</b>");
+		stream << QStringLiteral("<b>") << tr("Dislocation") << QStringLiteral(" ") << (pickedDislocation.segmentIndex + 1) << QStringLiteral(":</b>");
 		stream << QStringLiteral("<table border=\"0\">");
 
+		int row = 0;
 		DislocationSegment* segment = dislocationObj->segments()[pickedDislocation.segmentIndex];
-		stream << tr("<tr><td>Segment Id:</td><td>%1</td></tr>").arg(segment->id);
+		stream << tr("<tr%1><td>Segment Id:</td><td>%2</td></tr>").arg((row++ % 2) ? cellColor1 : cellColor2).arg(segment->id);
 		StructurePattern* structure = nullptr;
 		Cluster* cluster = segment->burgersVector.cluster();
 		PatternCatalog* patternCatalog = flowState.findObject<PatternCatalog>();
 		if(patternCatalog != nullptr)
 			structure = patternCatalog->structureById(cluster->structure);
 		QString formattedBurgersVector = DislocationDisplay::formatBurgersVector(segment->burgersVector.localVec(), structure);
-		stream << tr("<tr><td>True Burgers vector:</td><td>%1</td></tr>").arg(formattedBurgersVector);
+		stream << tr("<tr%1><td>True Burgers vector:</td><td>%2</td></tr>").arg((row++ % 2) ? cellColor1 : cellColor2).arg(formattedBurgersVector);
 		Vector3 transformedVector = segment->burgersVector.toSpatialVector();
-		stream << tr("<tr><td>Spatial Burgers vector:</td><td>%1 %2 %3</td></tr>")
+		stream << tr("<tr%1><td>Spatial Burgers vector:</td><td>%2 %3 %4</td></tr>")
+				.arg((row++ % 2) ? cellColor1 : cellColor2)
 				.arg(QLocale::c().toString(transformedVector.x(), 'f', 4), 7)
 				.arg(QLocale::c().toString(transformedVector.y(), 'f', 4), 7)
 				.arg(QLocale::c().toString(transformedVector.z(), 'f', 4), 7);
-		stream << tr("<tr><td>Cluster Id:</td><td>%1</td></tr>").arg(segment->burgersVector.cluster()->id);
+		stream << tr("<tr%1><td>Cluster Id:</td><td>%2</td></tr>").arg((row++ % 2) ? cellColor1 : cellColor2).arg(segment->burgersVector.cluster()->id);
 		if(structure) {
-			stream << tr("<tr><td>Lattice structure:</td><td>%1</td></tr>").arg(structure->name());
+			stream << tr("<tr%1><td>Crystal structure:</td><td>%2</td></tr>").arg((row++ % 2) ? cellColor1 : cellColor2).arg(structure->name());
 			if(structure->symmetryType() == StructurePattern::CubicSymmetry) {
 				static const Vector3 latticeVectors[] = {{1,0,0},{0,1,0},{0,0,1}};
 				for(auto v = std::begin(latticeVectors); v != std::end(latticeVectors); ++v) {
-					Vector3 transformedVector = ClusterVector(Vector3(1,0,0), cluster).toSpatialVector();
-					stream << tr("<tr><td>Lattice vector [%1]:</td><td>%2 %3 %4</td></tr>")
-							.arg(DislocationDisplay::formatBurgersVector(*v, structure))
+					Vector3 transformedVector = ClusterVector(*v, cluster).toSpatialVector();
+					stream << tr("<tr%1><td>Lattice vector %2:</td><td>%3 %4 %5</td></tr>")
+							.arg((row++ % 2) ? cellColor1 : cellColor2)
+							.arg(DislocationDisplay::formatBurgersVector(*v, structure).replace(QStringLiteral(" "), QStringLiteral("&nbsp;")))
 							.arg(QLocale::c().toString(transformedVector.x(), 'f', 4), 7)
 							.arg(QLocale::c().toString(transformedVector.y(), 'f', 4), 7)
 							.arg(QLocale::c().toString(transformedVector.z(), 'f', 4), 7);
 				}
 			}
 			else if(structure->symmetryType() == StructurePattern::HexagonalSymmetry) {
-				static const Vector3 latticeVectors[] = {{1,0,0},{0,1,0},{0,0,sqrt(4.0f/3.0f)}};
+				static const Vector3 latticeVectors[] = {
+							Vector3(-sqrt(1.0f/8.0f),-sqrt(3.0f/8.0f),0),
+							Vector3(-sqrt(1.0f/8.0f),sqrt(3.0f/8.0f),0),
+							Vector3(0,0,sqrt(4.0f/3.0f))
+				};
 				for(auto v = std::begin(latticeVectors); v != std::end(latticeVectors); ++v) {
-					Vector3 transformedVector = ClusterVector(Vector3(1,0,0), cluster).toSpatialVector();
-					stream << tr("<tr><td>Lattice vector [%1]:</td><td>%2 %3 %4</td></tr>")
-							.arg(DislocationDisplay::formatBurgersVector(*v, structure))
+					Vector3 transformedVector = ClusterVector(*v, cluster).toSpatialVector();
+					stream << tr("<tr%1><td>Lattice vector %2:</td><td>%3 %4 %5</td></tr>")
+							.arg((row++ % 2) ? cellColor1 : cellColor2)
+							.arg(DislocationDisplay::formatBurgersVector(*v, structure).replace(QStringLiteral(" "), QStringLiteral("&nbsp;")))
 							.arg(QLocale::c().toString(transformedVector.x(), 'f', 4), 7)
 							.arg(QLocale::c().toString(transformedVector.y(), 'f', 4), 7)
 							.arg(QLocale::c().toString(transformedVector.z(), 'f', 4), 7);
