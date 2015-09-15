@@ -72,8 +72,9 @@ public:
 				pend = p + _lastPageNumber;
 			for(; p != pend; ++p)
 				_alloc.destroy(p);
-			if(!keepPageReserved || i != _pages.begin())
+			if(!keepPageReserved || i != _pages.cbegin()) {
 				_alloc.deallocate(*i, _pageSize);
+			}
 		}
 		if(!keepPageReserved) {
 			_pages.clear();

@@ -45,6 +45,9 @@ public:
 		/// Constructs a new compute engine.
 		ComputeEngine(const TimeInterval& validityInterval) : _validityInterval(validityInterval) {}
 
+		/// Destructor.
+		virtual ~ComputeEngine();
+
 		/// Returns the validity period of the results computed by this engine.
 		const TimeInterval& validityInterval() const { return _validityInterval; }
 

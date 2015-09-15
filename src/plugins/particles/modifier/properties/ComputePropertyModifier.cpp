@@ -34,7 +34,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Properties)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ComputePropertyModifier, ParticleModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ComputePropertyModifier, AsynchronousParticleModifier);
 SET_OVITO_OBJECT_EDITOR(ComputePropertyModifier, ComputePropertyModifierEditor);
 DEFINE_PROPERTY_FIELD(ComputePropertyModifier, _expressions, "Expressions");
 DEFINE_PROPERTY_FIELD(ComputePropertyModifier, _outputProperty, "OutputProperty");

@@ -26,6 +26,10 @@
 #include <core/utilities/concurrent/TaskManager.h>
 #include "AsynchronousParticleModifier.h"
 
+#ifdef Q_OS_LINUX
+	#include <malloc.h>
+#endif
+
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, AsynchronousParticleModifier, ParticleModifier);
@@ -210,6 +214,19 @@ void AsynchronousParticleModifier::deleteReferenceObject()
 	ParticleModifier::deleteReferenceObject();
 }
 
+/******************************************************************************
+* Destructor of compute engine.
+******************************************************************************/
+AsynchronousParticleModifier::ComputeEngine::~ComputeEngine()
+{
+#ifdef Q_OS_LINUX
+	// Some compute engines allocate a considerable amount of memory in small chunks,
+	// which is sometimes not released back to the OS by the C memory allocator.
+	// This call to malloc_trim() will explicitly trigger an attempt to release free memory
+	// at the top of the heap.
+	::malloc_trim(0);
+#endif
+}
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

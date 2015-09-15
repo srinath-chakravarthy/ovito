@@ -88,6 +88,7 @@ public:
 	ElasticMapping(StructureAnalysis& structureAnalysis, const DelaunayTessellation& tessellation) :
 		_structureAnalysis(structureAnalysis),
 		_tessellation(tessellation), _clusterGraph(structureAnalysis.clusterGraph()), _edgeCount(0),
+		_edgePool(16384),
 		_vertexEdges(structureAnalysis.atomCount(), nullptr), _vertexClusters(structureAnalysis.atomCount(), nullptr)
 	{}
 
