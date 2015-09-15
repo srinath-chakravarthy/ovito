@@ -50,6 +50,7 @@ SET(SourceFiles
 	modifier/dxa/DislocationTracer.cpp
 	modifier/dxa/PlanarDefectIdentification.cpp
 	util/DelaunayTessellation.cpp
+	util/DislocationInformationApplet.cpp
 )
 
 IF(OVITO_BUILD_PLUGIN_PYSCRIPT)

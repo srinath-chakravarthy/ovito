@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2015) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,28 +19,28 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_INFORMATION_APPLET_H
-#define __OVITO_PARTICLE_INFORMATION_APPLET_H
+#ifndef __OVITO_DISLOCATION_INFORMATION_APPLET_H
+#define __OVITO_DISLOCATION_INFORMATION_APPLET_H
 
-#include <plugins/particles/Particles.h>
+#include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/plugins/utility/UtilityApplet.h>
 #include <core/viewport/input/ViewportInputMode.h>
 #include <core/viewport/input/ViewportInputManager.h>
 #include <plugins/particles/util/ParticlePickingHelper.h>
 
-namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-class ParticleInformationInputMode;		// defined below
+class DislocationInformationInputMode;		// defined below
 
 /**
  * \brief This utility lets the user select particles in the viewports and lists their properties and distances.
  */
-class OVITO_PARTICLES_EXPORT ParticleInformationApplet : public UtilityApplet
+class OVITO_PARTICLES_EXPORT DislocationInformationApplet : public UtilityApplet
 {
 public:
 
 	/// Constructor.
-	Q_INVOKABLE ParticleInformationApplet() : UtilityApplet(), _panel(nullptr) {}
+	Q_INVOKABLE DislocationInformationApplet() : UtilityApplet(), _panel(nullptr) {}
 
 	/// Shows the UI of the utility in the given RolloutContainer.
 	virtual void openUtility(MainWindow* mainWindow, RolloutContainer* container, const RolloutInsertionParameters& rolloutParams = RolloutInsertionParameters()) override;
@@ -50,9 +50,6 @@ public:
 
 public Q_SLOTS:
 
-	/// This is called when new animation settings have been loaded.
-	void onAnimationSettingsReplaced(AnimationSettings* newAnimationSettings);
-
 	/// Updates the display of particle properties.
 	void updateInformationDisplay();
 
@@ -61,24 +58,23 @@ private:
 	MainWindow* _mainWindow;
 	QTextEdit* _infoDisplay;
 	QWidget* _panel;
-	ParticleInformationInputMode* _inputMode;
-	QMetaObject::Connection _timeChangeCompleteConnection;
+	DislocationInformationInputMode* _inputMode;
 
-	Q_CLASSINFO("DisplayName", "Inspect particles");
+	Q_CLASSINFO("DisplayName", "Inspect dislocations");
 
 	Q_OBJECT
 	OVITO_OBJECT
 };
 
 /**
- * Viewport input mode that lets the user pick one or more particles.
+ * Viewport input mode that lets the user pick a dislocation.
  */
-class ParticleInformationInputMode : public ViewportInputMode, ParticlePickingHelper
+class DislocationInformationInputMode : public ViewportInputMode
 {
 public:
 
 	/// Constructor.
-	ParticleInformationInputMode(ParticleInformationApplet* applet) : ViewportInputMode(applet),
+	DislocationInformationInputMode(DislocationInformationApplet* applet) : ViewportInputMode(applet),
 		_applet(applet) {}
 
 	/// Returns the activation behavior of this input mode.
@@ -101,18 +97,32 @@ public:
 
 private:
 
-	/// The particle information applet.
-	ParticleInformationApplet* _applet;
+	struct PickResult {
 
-	/// The selected particles whose properties are being displayed.
-	std::deque<PickResult> _pickedParticles;
+		/// The index of the picked dislocation segment.
+		int segmentIndex;
 
-	friend class ParticleInformationApplet;
+		/// The scene node that contains the picked segment.
+		OORef<ObjectNode> objNode;
+
+		/// The display object that rendered the picked segment.
+		OORef<DislocationDisplay> displayObj;
+	};
+
+	/// Determines the dislocation segment under the mouse cursor.
+	bool pickDislocationSegment(Viewport* vp, const QPoint& pos, PickResult& result) const;
+
+	/// The applet.
+	DislocationInformationApplet* _applet;
+
+	/// The selected dislocations whose properties are being displayed.
+	std::deque<PickResult> _pickedDislocations;
+
+	friend class DislocationInformationApplet;
 };
 
-OVITO_END_INLINE_NAMESPACE
-OVITO_END_INLINE_NAMESPACE
+}	// End of namespace
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTICLE_INFORMATION_APPLET_H
+#endif // __OVITO_DISLOCATION_INFORMATION_APPLET_H

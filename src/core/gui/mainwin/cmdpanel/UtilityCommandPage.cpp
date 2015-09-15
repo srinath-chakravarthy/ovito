@@ -43,8 +43,8 @@ UtilityCommandPage::UtilityCommandPage(MainWindow* mainWindow, QWidget* parent) 
 
 	// Create a rollout that displays the list of installed utility plugins.
 	QWidget* utilityListPanel = new QWidget();
-	QGridLayout* gridLayout = new QGridLayout(utilityListPanel);
-	gridLayout->setContentsMargins(4,4,4,4);
+	QVBoxLayout* buttonLayout = new QVBoxLayout(utilityListPanel);
+	buttonLayout->setContentsMargins(4,4,4,4);
 	rolloutContainer->addRollout(utilityListPanel, tr("Utilities"));
 
 #ifndef Q_OS_MACX
@@ -53,23 +53,28 @@ UtilityCommandPage::UtilityCommandPage(MainWindow* mainWindow, QWidget* parent) 
 							   		"}");
 #endif
 
-	// Close open utility when loading a new data set.
+	// Close any active utility when loading a new data set.
 	connect(&_datasetContainer, &DataSetContainer::dataSetChanged, this, &UtilityCommandPage::closeUtility);
 
 	utilitiesButtonGroup = new QButtonGroup(utilityListPanel);
 	utilitiesButtonGroup->setExclusive(false);
 
-	for(const OvitoObjectType* descriptor : PluginManager::instance().listClasses(UtilityApplet::OOType)) {
+	auto utilityClasses = PluginManager::instance().listClasses(UtilityApplet::OOType);
+	std::sort(utilityClasses.begin(), utilityClasses.end(), [](const OvitoObjectType* a, const OvitoObjectType* b) {
+		return a->displayName().compare(b->displayName()) < 0;
+	});
+
+	for(const OvitoObjectType* descriptor : utilityClasses) {
    		QString displayName = descriptor->displayName();
 
 		// Create a button that activates the utility.
 		QPushButton* btn = new QPushButton(displayName, utilityListPanel);
 		btn->setCheckable(true);
 		utilitiesButtonGroup->addButton(btn);
-		utilityListPanel->layout()->addWidget(btn);
+		buttonLayout->addWidget(btn);
 
 		// Associate button with the utility plugin class.
-		btn->setProperty("ClassDescriptor", qVariantFromValue((void*)descriptor));
+		btn->setProperty("ClassDescriptor", QVariant::fromValue(descriptor));
 	}
 
 	// Listen for events.
@@ -81,7 +86,7 @@ UtilityCommandPage::UtilityCommandPage(MainWindow* mainWindow, QWidget* parent) 
 ******************************************************************************/
 void UtilityCommandPage::onUtilityButton(QAbstractButton* button)
 {
-	const OvitoObjectType* descriptor = static_cast<const OvitoObjectType*>(button->property("ClassDescriptor").value<void*>());
+	const OvitoObjectType* descriptor = button->property("ClassDescriptor").value<const OvitoObjectType*>();
 	OVITO_CHECK_POINTER(descriptor);
 
 	if(button->isChecked() && currentUtility && currentUtility->getOOType() == *descriptor) {
@@ -114,7 +119,7 @@ void UtilityCommandPage::closeUtility()
 	if(!currentUtility) return;
 	OVITO_CHECK_OBJECT_POINTER(currentUtility);
 	OVITO_CHECK_POINTER(currentButton);
-	OVITO_ASSERT(currentButton->property("ClassDescriptor").value<void*>() == &currentUtility->getOOType());
+	OVITO_ASSERT(currentButton->property("ClassDescriptor").value<const OvitoObjectType*>() == &currentUtility->getOOType());
 
 	// Close the utility.
 	currentUtility->closeUtility(rolloutContainer);

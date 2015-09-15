@@ -26,6 +26,8 @@
 #include <core/reference/RefTargetListener.h>
 #include "ViewportInputMode.h"
 
+#include <boost/optional/optional.hpp>
+
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /******************************************************************************
@@ -39,7 +41,7 @@ class OVITO_CORE_EXPORT SelectionMode : public ViewportInputMode
 public:
 
 	/// Constructor.
-	SelectionMode(QObject* parent) : ViewportInputMode(parent), _viewport(nullptr), _hoverCursor(QPixmap(QStringLiteral(":/core/cursor/editing/cursor_mode_select.png"))) {}
+	SelectionMode(QObject* parent) : ViewportInputMode(parent), _viewport(nullptr) {}
 
 	/// \brief Returns the activation behavior of this input mode.
 	virtual InputModeType modeType() override { return ExclusiveMode; }
@@ -52,6 +54,13 @@ public:
 
 	/// \brief Handles the mouse move event for the given viewport.
 	virtual void mouseMoveEvent(Viewport* vp, QMouseEvent* event) override;
+
+	/// \brief Returns the cursor that is used by OVITO's viewports to indicate a selection.
+	static QCursor selectionCursor() {
+		if(!_hoverCursor)
+			_hoverCursor = QCursor(QPixmap(QStringLiteral(":/core/cursor/editing/cursor_mode_select.png")));
+		return _hoverCursor.get();
+	}
 
 protected:
 
@@ -68,7 +77,7 @@ protected:
 	Viewport* _viewport;
 
 	/// The cursor shown while the mouse cursor is over an object.
-	QCursor _hoverCursor;
+	static boost::optional<QCursor> _hoverCursor;
 };
 
 /******************************************************************************

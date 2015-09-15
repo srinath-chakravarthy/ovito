@@ -23,7 +23,6 @@
 #define __OVITO_PARCAS_FILE_IMPORTER_H
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/PropertiesEditor.h>
 #include <plugins/particles/import/ParticleImporter.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)

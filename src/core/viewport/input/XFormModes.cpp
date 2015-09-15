@@ -32,6 +32,9 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
+/// The cursor shown while the mouse cursor is over an object.
+boost::optional<QCursor> SelectionMode::_hoverCursor;
+
 /******************************************************************************
 * Handles the mouse down event for the given viewport.
 ******************************************************************************/
@@ -83,7 +86,7 @@ void SelectionMode::mouseMoveEvent(Viewport* vp, QMouseEvent* event)
 {
 	// Change mouse cursor while hovering over an object.
 	ViewportPickResult pickResult = vp->pick(event->localPos());
-	setCursor(pickResult.valid ? _hoverCursor : QCursor());
+	setCursor(pickResult.valid ? selectionCursor() : QCursor());
 
 	// Display a description of the object under the mouse cursor in the status bar.
 	if(pickResult.valid && pickResult.pickInfo)

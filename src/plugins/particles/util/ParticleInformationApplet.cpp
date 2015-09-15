@@ -53,7 +53,7 @@ void ParticleInformationApplet::openUtility(MainWindow* mainWindow, RolloutConta
 
 	_inputMode = new ParticleInformationInputMode(this);
 	ViewportModeAction* pickModeAction = new ViewportModeAction(_mainWindow, tr("Selection mode"), this, _inputMode);
-	layout->addWidget(pickModeAction->createPushButton());
+	//layout->addWidget(pickModeAction->createPushButton());
 
 	_infoDisplay = new QTextEdit(_panel);
 	_infoDisplay->setReadOnly(true);
@@ -228,6 +228,21 @@ void ParticleInformationInputMode::mouseReleaseEvent(Viewport* vp, QMouseEvent* 
 		vp->dataset()->viewportConfig()->updateViewports();
 	}
 	ViewportInputMode::mouseReleaseEvent(vp, event);
+}
+
+/******************************************************************************
+* Handles the mouse move event for the given viewport.
+******************************************************************************/
+void ParticleInformationInputMode::mouseMoveEvent(Viewport* vp, QMouseEvent* event)
+{
+	// Change mouse cursor while hovering over a particle.
+	PickResult pickResult;
+	if(pickParticle(vp, event->pos(), pickResult))
+		setCursor(SelectionMode::selectionCursor());
+	else
+		setCursor(QCursor());
+
+	ViewportInputMode::mouseMoveEvent(vp, event);
 }
 
 /******************************************************************************
