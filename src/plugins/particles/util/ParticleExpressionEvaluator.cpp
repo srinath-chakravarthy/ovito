@@ -326,14 +326,19 @@ ParticleExpressionEvaluator::Worker::Worker(ParticleExpressionEvaluator& evaluat
 ******************************************************************************/
 void ParticleExpressionEvaluator::Worker::run(size_t startIndex, size_t endIndex, std::function<void(size_t,size_t,double)> callback, std::function<bool(size_t)> filter)
 {
-	for(size_t i = startIndex; i < endIndex; i++) {
-		if(filter && !filter(i))
-			continue;
+	try {
+		for(size_t i = startIndex; i < endIndex; i++) {
+			if(filter && !filter(i))
+				continue;
 
-		for(size_t j = 0; j < _parsers.size(); j++) {
-			// Evaluate expression for the current particle.
-			callback(i, j, evaluate(i, j));
+			for(size_t j = 0; j < _parsers.size(); j++) {
+				// Evaluate expression for the current particle.
+				callback(i, j, evaluate(i, j));
+			}
 		}
+	}
+	catch(const Exception& ex) {
+		_errorMsg = ex.message();
 	}
 }
 

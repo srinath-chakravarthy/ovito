@@ -108,8 +108,9 @@ Box3 ParticleDisplay::particleBoundingBox(ParticlePropertyObject* positionProper
 	// Extend box to account for radii/shape of particles.
 	FloatType maxAtomRadius = defaultParticleRadius();
 	if(typeProperty) {
-		for(const auto& it : typeProperty->radiusMap())
+		for(const auto& it : typeProperty->radiusMap()) {
 			maxAtomRadius = std::max(maxAtomRadius, it.second);
+		}
 	}
 	if(shapeProperty) {
 		for(const Vector3& s : shapeProperty->constVector3Range())

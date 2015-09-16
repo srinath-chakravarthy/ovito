@@ -339,7 +339,6 @@ void Viewport::zoomToBox(const Box3& box)
 		setCameraPosition(box.center() - cameraDirection().resized(dist));
 	}
 	else {
-
 		// Setup projection.
 		FloatType aspectRatio = (FloatType)size().height() / size().width();
 		if(renderPreviewMode()) {

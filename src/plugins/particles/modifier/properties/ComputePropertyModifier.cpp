@@ -80,6 +80,10 @@ void ComputePropertyModifier::loadFromStream(ObjectLoadStream& stream)
 		AsynchronousParticleModifier::loadFromStream(stream);
 	else
 		ParticleModifier::loadFromStream(stream);
+
+	// This is also for backward compatibility with OVITO 2.5.1.
+	// Make sure the number of neighbor expressions is equal to the number of central expressions.
+	setPropertyComponentCount(propertyComponentCount());
 }
 
 /******************************************************************************
@@ -87,19 +91,21 @@ void ComputePropertyModifier::loadFromStream(ObjectLoadStream& stream)
 ******************************************************************************/
 void ComputePropertyModifier::setPropertyComponentCount(int newComponentCount)
 {
-	if(newComponentCount == propertyComponentCount()) return;
-
-	if(newComponentCount < propertyComponentCount()) {
+	if(newComponentCount < expressions().size()) {
 		setExpressions(expressions().mid(0, newComponentCount));
-		setNeighborExpressions(neighborExpressions().mid(0, newComponentCount));
 	}
-	else {
+	else if(newComponentCount > expressions().size()) {
 		QStringList newList = expressions();
 		while(newList.size() < newComponentCount)
 			newList.append("0");
 		setExpressions(newList);
+	}
 
-		newList = neighborExpressions();
+	if(newComponentCount < neighborExpressions().size()) {
+		setNeighborExpressions(neighborExpressions().mid(0, newComponentCount));
+	}
+	else if(newComponentCount > neighborExpressions().size()) {
+		QStringList newList = neighborExpressions();
 		while(newList.size() < newComponentCount)
 			newList.append("0");
 		setNeighborExpressions(newList);
@@ -485,7 +491,7 @@ bool ComputePropertyModifierEditor::referenceEvent(RefTarget* source, ReferenceE
 	if(source == editObject() && (event->type() == ReferenceEvent::TargetChanged || event->type() == ReferenceEvent::ObjectStatusChanged)) {
 		if(!editorUpdatePending) {
 			editorUpdatePending = true;
-			QMetaObject::invokeMethod(this, "updateEditorFields", Qt::QueuedConnection);
+			QMetaObject::invokeMethod(this, "updateEditorFields", Qt::QueuedConnection, Q_ARG(bool, event->type() == ReferenceEvent::TargetChanged));
 		}
 	}
 	return ParticleModifierEditor::referenceEvent(source, event);
@@ -494,7 +500,7 @@ bool ComputePropertyModifierEditor::referenceEvent(RefTarget* source, ReferenceE
 /******************************************************************************
 * Updates the enabled/disabled status of the editor's controls.
 ******************************************************************************/
-void ComputePropertyModifierEditor::updateEditorFields()
+void ComputePropertyModifierEditor::updateEditorFields(bool updateExpressions)
 {
 	editorUpdatePending = false;
 
@@ -548,7 +554,8 @@ void ComputePropertyModifierEditor::updateEditorFields()
 		inputVariableNames.append(QStringLiteral("NumNeighbors"));
 	}
 	for(int i = 0; i < expr.size(); i++) {
-		expressionBoxes[i]->setText(expr[i]);
+		if(updateExpressions)
+			expressionBoxes[i]->setText(expr[i]);
 		expressionBoxes[i]->setWordList(inputVariableNames);
 		if(expr.size() == 1)
 			expressionBoxLabels[i]->hide();
@@ -567,7 +574,8 @@ void ComputePropertyModifierEditor::updateEditorFields()
 		inputVariableNames.append(QStringLiteral("Delta.Z"));
 	}
 	for(int i = 0; i < neighExpr.size(); i++) {
-		neighborExpressionBoxes[i]->setText(neighExpr[i]);
+		if(updateExpressions)
+			neighborExpressionBoxes[i]->setText(neighExpr[i]);
 		neighborExpressionBoxes[i]->setWordList(inputVariableNames);
 		if(expr.size() == 1)
 			neighborExpressionBoxLabels[i]->hide();

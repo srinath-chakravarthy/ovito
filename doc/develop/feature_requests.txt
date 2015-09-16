@@ -49,7 +49,6 @@ New analysis features:
 - Plotting the value of a certain property of a certain particle versus simulation time. To make this work, all simulation frames need to be kept in memory (requested by Taojun & Mathieu Marciante).
 - Compute polar decomposition of deformation gradient, F=RU (requested by arun.prakash@fau.de).
 - Add modifier for computing the elastic deformation gradient.
-- Add 'Dislocation inspection utility'.
 
 New I/O functions:
 

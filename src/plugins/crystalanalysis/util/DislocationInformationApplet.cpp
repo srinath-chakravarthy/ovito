@@ -117,6 +117,7 @@ void DislocationInformationApplet::updateInformationDisplay()
 				.arg(QLocale::c().toString(transformedVector.x(), 'f', 4), 7)
 				.arg(QLocale::c().toString(transformedVector.y(), 'f', 4), 7)
 				.arg(QLocale::c().toString(transformedVector.z(), 'f', 4), 7);
+		stream << tr("<tr%1><td>Length:</td><td>%2</td></tr>").arg((row++ % 2) ? cellColor1 : cellColor2).arg(segment->calculateLength());
 		stream << tr("<tr%1><td>Cluster Id:</td><td>%2</td></tr>").arg((row++ % 2) ? cellColor1 : cellColor2).arg(segment->burgersVector.cluster()->id);
 		if(structure) {
 			stream << tr("<tr%1><td>Crystal structure:</td><td>%2</td></tr>").arg((row++ % 2) ? cellColor1 : cellColor2).arg(structure->name());

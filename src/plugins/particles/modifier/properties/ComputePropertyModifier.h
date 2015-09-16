@@ -305,7 +305,7 @@ protected Q_SLOTS:
 	void onExpressionEditingFinished();
 
 	/// Updates the enabled/disabled status of the editor's controls.
-	void updateEditorFields();
+	void updateEditorFields(bool updateExpressions = true);
 
 private:
 
