@@ -35,7 +35,7 @@ class DislocationInformationInputMode;		// defined below
 /**
  * \brief This utility lets the user select particles in the viewports and lists their properties and distances.
  */
-class OVITO_PARTICLES_EXPORT DislocationInformationApplet : public UtilityApplet
+class OVITO_CRYSTALANALYSIS_EXPORT DislocationInformationApplet : public UtilityApplet
 {
 public:
 

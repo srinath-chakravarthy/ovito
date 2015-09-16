@@ -38,7 +38,7 @@ public:
 	/**
 	 * Abstract base class for compute engines of AsynchronousParticleModifier implementations.
 	 */
-	class ComputeEngine : public AsynchronousTask
+	class OVITO_PARTICLES_EXPORT ComputeEngine : public AsynchronousTask
 	{
 	public:
 

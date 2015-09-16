@@ -42,7 +42,7 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 /**
  * Generates a Delaunay tessellation of a particle system.
  */
-class DelaunayTessellation
+class OVITO_CRYSTALANALYSIS_EXPORT DelaunayTessellation
 {
 public:
 
