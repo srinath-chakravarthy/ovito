@@ -193,7 +193,7 @@ void CreateTrajectoryApplet::onCreateTrajectory()
 		}
 
 		if(!posProperty)
-			throw Exception(tr("Currently no particle data object is selected from which trajectory lines can be generated."));
+			throw Exception(tr("No particle data object is currently selected from which trajectory lines can be generated."));
 
 		// Determine number of input particles.
 		size_t particleCount = 0;
@@ -201,7 +201,7 @@ void CreateTrajectoryApplet::onCreateTrajectory()
 			if(selectionProperty)
 				particleCount = std::count_if(selectionProperty->constDataInt(), selectionProperty->constDataInt() + selectionProperty->size(), [](int s) { return s != 0; });
 			if(!particleCount)
-				throw Exception(tr("Currently no particles are selected. No trajectory lines were created."));
+				throw Exception(tr("No particles are currently selected. No trajectory lines were created."));
 		}
 		else {
 			particleCount = posProperty->size();
@@ -229,7 +229,7 @@ void CreateTrajectoryApplet::onCreateTrajectory()
 			TimeInterval interval = trajObj->useCustomInterval() ?
 					trajObj->customInterval() : dataset->animationSettings()->animationInterval();
 			if(interval.duration() <= 0)
-				throw Exception(tr("Current sequence consists only of a single frame. No trajectory lines were created."));
+				throw Exception(tr("Loaded simulation sequence consists only of a single frame. No trajectory lines were created."));
 
 			// Generate trajectories.
 			if(!trajObj->generateTrajectories())

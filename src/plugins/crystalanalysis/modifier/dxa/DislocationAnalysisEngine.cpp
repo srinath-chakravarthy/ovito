@@ -56,7 +56,7 @@ DislocationAnalysisEngine::DislocationAnalysisEngine(const TimeInterval& validit
 ******************************************************************************/
 void DislocationAnalysisEngine::generateCellTooSmallError()
 {
-	throw Exception(DislocationAnalysisModifier::tr("Cannot perform dislocation analysis, because simulation cell is too small along shortest periodic direction. Please extend it first using the 'Show periodic images' modifier."));
+	throw Exception(DislocationAnalysisModifier::tr("Cannot perform analysis because simulation cell is too small along shortest periodic direction. Please extend it first using the 'Show periodic images' modifier."));
 }
 
 /******************************************************************************

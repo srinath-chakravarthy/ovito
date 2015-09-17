@@ -466,8 +466,11 @@ PipelineStatus AtomicStrainModifier::applyComputationResults(TimePoint time, Tim
 	if(calculateNonaffineSquaredDisplacements() && _nonaffineSquaredDisplacements)
 		outputStandardProperty(_nonaffineSquaredDisplacements.data());
 
-	outputCustomProperty(_volumetricStrainValues.data());
-	outputCustomProperty(_shearStrainValues.data());
+	if(_volumetricStrainValues)
+		outputCustomProperty(_volumetricStrainValues.data());
+
+	if(_shearStrainValues)
+		outputCustomProperty(_shearStrainValues.data());
 
 	if(invalidParticleCount() == 0)
 		return PipelineStatus::Success;

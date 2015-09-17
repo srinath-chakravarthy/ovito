@@ -696,9 +696,8 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 			_structureTypes->setInt(particleIndex, coordinationType);
 
 			// Save the atom's neighbor list.
-			int* neighborList = _neighborLists->dataInt() + _neighborLists->componentCount() * particleIndex;
 			for(int i = 0; i < nn; i++)
-				neighborList[i] = neighborIndices[neighborMapping[i]];
+				setNeighbor(particleIndex, i, neighborIndices[neighborMapping[i]]);
 			_neighborCounts->setInt(particleIndex, nn);
 
 			// Determine maximum neighbor distance.
@@ -764,18 +763,17 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 			const auto& permutation = latticeStructure.permutations[symmetryPermutationIndex].permutation;
 
 			// Visit neighbors of the current atom.
-			const int* neighborList = _neighborLists->constDataInt() + currentAtomIndex * _neighborLists->componentCount();
-			const int* neighborAtomIndex = neighborList;
-			for(int neighborIndex = 0; neighborIndex < coordStructure.numNeighbors; neighborIndex++, ++neighborAtomIndex) {
+			for(int neighborIndex = 0; neighborIndex < coordStructure.numNeighbors; neighborIndex++) {
 
 				// An atom should not be a neighbor of itself.
 				// We use the minimum image convention for simulation cells with periodic boundary conditions.
-				if(*neighborAtomIndex == currentAtomIndex)
+				int neighborAtomIndex = getNeighbor(currentAtomIndex, neighborIndex);
+				if(neighborAtomIndex == currentAtomIndex)
 					DislocationAnalysisEngine::generateCellTooSmallError();
 
 				// Add vector pair to matrices for computing the cluster orientation.
 				const Vector3& latticeVector = latticeStructure.latticeVectors[permutation[neighborIndex]];
-				const Vector3& spatialVector = cell().wrapVector(positions()->getPoint3(*neighborAtomIndex) - positions()->getPoint3(currentAtomIndex));
+				const Vector3& spatialVector = cell().wrapVector(positions()->getPoint3(neighborAtomIndex) - positions()->getPoint3(currentAtomIndex));
 				for(size_t i = 0; i < 3; i++) {
 					for(size_t j = 0; j < 3; j++) {
 						orientationV(i,j) += (double)(latticeVector[j] * latticeVector[i]);
@@ -784,11 +782,8 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 				}
 
 				// Skip neighbors which are already part of the cluster, or which have a different coordination structure type.
-				if(_atomClusters->getInt(*neighborAtomIndex) != 0) continue;
-				if(_structureTypes->getInt(*neighborAtomIndex) != coordStructureType) continue;
-
-				// Get neighbor list of neighboring atom.
-				const int* otherNeighborList = _neighborLists->constDataInt() + (*neighborAtomIndex) * _neighborLists->componentCount();
+				if(_atomClusters->getInt(neighborAtomIndex) != 0) continue;
+				if(_structureTypes->getInt(neighborAtomIndex) != coordStructureType) continue;
 
 				// Select three non-coplanar atoms, which are all neighbors of the current neighbor.
 				// One of them is the current central atom, two are common neighbors.
@@ -797,15 +792,16 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 				for(int i = 0; i < 3; i++) {
 					int atomIndex;
 					if(i != 2) {
-						atomIndex = neighborList[coordStructure.commonNeighbors[neighborIndex][i]];
+						atomIndex = getNeighbor(currentAtomIndex, coordStructure.commonNeighbors[neighborIndex][i]);
 						tm1.column(i) = latticeStructure.latticeVectors[permutation[coordStructure.commonNeighbors[neighborIndex][i]]] - latticeStructure.latticeVectors[permutation[neighborIndex]];
 					}
 					else {
 						atomIndex = currentAtomIndex;
 						tm1.column(i) = -latticeStructure.latticeVectors[permutation[neighborIndex]];
 					}
-					int j = std::find(otherNeighborList, otherNeighborList + coordStructure.numNeighbors, atomIndex) - otherNeighborList;
-					if(j >= coordStructure.numNeighbors) {
+					OVITO_ASSERT(numNeighbors(neighborAtomIndex) == coordStructure.numNeighbors);
+					int j = findNeighbor(neighborAtomIndex, atomIndex);
+					if(j == -1) {
 						properOverlap = false;
 						break;
 					}
@@ -826,14 +822,14 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 					if(transition.equals(latticeStructure.permutations[i].transformation, CA_TRANSITION_MATRIX_EPSILON)) {
 
 						// Make the neighbor atom part of the current cluster.
-						_atomClusters->setInt(*neighborAtomIndex, cluster->id);
+						_atomClusters->setInt(neighborAtomIndex, cluster->id);
 						cluster->atomCount++;
 
 						// Save the permutation index.
-						_atomSymmetryPermutations->setInt(*neighborAtomIndex, i);
+						_atomSymmetryPermutations->setInt(neighborAtomIndex, i);
 
 						// Recursively continue with the neighbor.
-						atomsToVisit.push_back(*neighborAtomIndex);
+						atomsToVisit.push_back(neighborAtomIndex);
 
 						break;
 					}
@@ -845,6 +841,7 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 		// Compute matrix, which transforms vectors from lattice space to simulation coordinates.
 		cluster->orientation = Matrix3(orientationW * orientationV.inverse());
 
+#if 0
 		if(latticeStructureType == _inputCrystalType && !_preferredCrystalOrientations.empty()) {
 			// Determine the symmetry permutation that leads to the best cluster orientation.
 			// The best cluster orientation is the one that forms the smallest angle with one of the
@@ -868,23 +865,8 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 				}
 			}
 		}
+#endif
 	}
-
-	// Reorient clusters to achieve best crystal orientation.
-	for(size_t atomIndex = 0; atomIndex < positions()->size(); atomIndex++) {
-		int clusterId = _atomClusters->getInt(atomIndex);
-		if(clusterId == 0) continue;
-		Cluster* cluster = clusterGraph().findCluster(clusterId);
-		OVITO_ASSERT(cluster);
-		if(cluster->symmetryTransformation == 0) continue;
-		const LatticeStructure& latticeStructure = _latticeStructures[cluster->structure];
-		int oldPermutationIndex = _atomSymmetryPermutations->getInt(atomIndex);
-		int newPermutationIndex = latticeStructure.permutations[oldPermutationIndex].inverseProduct[cluster->symmetryTransformation];
-		_atomSymmetryPermutations->setInt(atomIndex, newPermutationIndex);
-	}
-	// Reset transformations of all clusters.
-	for(Cluster* cluster : clusterGraph().clusters())
-		cluster->symmetryTransformation = 0;
 
 	qDebug() << "Number of clusters:" << (clusterGraph().clusters().size() - 1);
 
@@ -916,9 +898,8 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 		const auto& permutation = latticeStructure.permutations[symmetryPermutationIndex].permutation;
 
 		// Visit neighbors of the current atom.
-		const int* neighborList = _neighborLists->constDataInt() + atomIndex * _neighborLists->componentCount();
 		for(int ni = 0; ni < coordStructure.numNeighbors; ni++) {
-			int neighbor = neighborList[ni];
+			int neighbor = getNeighbor(atomIndex, ni);
 
 			// Skip neighbor atoms belonging to the same cluster or to no cluster at all.
 			int neighborClusterId = _atomClusters->getInt(neighbor);
@@ -926,10 +907,9 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 
 				// Add this atom to the neighbor's list of neighbors.
 				if(neighborClusterId == 0) {
-					int* otherNeighborList = _neighborLists->dataInt() + neighbor * _neighborLists->componentCount();
 					int otherNeighborListCount = _neighborCounts->getInt(neighbor);
 					if(otherNeighborListCount < _neighborLists->componentCount()) {
-						otherNeighborList[otherNeighborListCount++] = atomIndex;
+						setNeighbor(neighbor, otherNeighborListCount++, atomIndex);
 						_neighborCounts->setInt(neighbor, otherNeighborListCount);
 					}
 				}
@@ -943,9 +923,6 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 			if(cluster1->findTransition(cluster2))
 				continue;
 
-			// Get neighbor list of neighboring atom.
-			const int* otherNeighborList = _neighborLists->constDataInt() + neighbor * _neighborLists->componentCount();
-
 			// Select three non-coplanar atoms, which are all neighbors of the current neighbor.
 			// One of them is the current central atom, two are common neighbors.
 			Matrix3 tm1, tm2;
@@ -953,15 +930,16 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 			for(int i = 0; i < 3; i++) {
 				int ai;
 				if(i != 2) {
-					ai = neighborList[coordStructure.commonNeighbors[ni][i]];
+					ai = getNeighbor(atomIndex, coordStructure.commonNeighbors[ni][i]);
 					tm1.column(i) = latticeStructure.latticeVectors[permutation[coordStructure.commonNeighbors[ni][i]]] - latticeStructure.latticeVectors[permutation[ni]];
 				}
 				else {
 					ai = atomIndex;
 					tm1.column(i) = -latticeStructure.latticeVectors[permutation[ni]];
 				}
-				int j = std::find(otherNeighborList, otherNeighborList + coordStructure.numNeighbors, ai) - otherNeighborList;
-				if(j >= coordStructure.numNeighbors) {
+				OVITO_ASSERT(numNeighbors(neighbor) == coordStructure.numNeighbors);
+				int j = findNeighbor(neighbor, ai);
+				if(j == -1) {
 					properOverlap = false;
 					break;
 				}
@@ -996,6 +974,76 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 	return true;
 }
 
+/******************************************************************************
+* Combines clusters to super clusters.
+******************************************************************************/
+bool StructureAnalysis::formSuperClusters(FutureInterfaceBase& progress)
+{
+	progress.setProgressRange(clusterGraph().clusters().size());
+
+	for(size_t clusterIndex = 0; clusterIndex < clusterGraph().clusters().size(); clusterIndex++) {
+		// Update progress indicator.
+		if(!progress.setProgressValueIntermittent(clusterIndex))
+			return false;
+
+		Cluster* cluster = clusterGraph().clusters()[clusterIndex];
+		if(cluster->id == 0) continue;
+
+		// Merge defect clusters with parent lattice clusters.
+		if(cluster->structure != _inputCrystalType && cluster->parentTransition == nullptr) {
+			for(ClusterTransition* t = cluster->transitions; t != nullptr; t = t->next) {
+				if(t->cluster2->structure == _inputCrystalType) {
+					cluster->parentTransition = t;
+					break;
+				}
+			}
+
+			// Merge parent crystal cluster if there is no misorientation.
+			if(cluster->parentTransition != nullptr) {
+				const LatticeStructure& latticeStructure = this->latticeStructure(cluster->parentTransition->cluster2->structure);
+				for(ClusterTransition* t = cluster->parentTransition->next; t != nullptr; t = t->next) {
+					if(t->cluster2->structure == _inputCrystalType) {
+						OVITO_ASSERT(cluster->parentTransition->cluster2->structure == _inputCrystalType);
+						OVITO_ASSERT(t->reverse->cluster1->structure == _inputCrystalType);
+						Matrix3 misorientation = cluster->parentTransition->tm * t->reverse->tm;
+						for(const SymmetryPermutation& symElement : latticeStructure.permutations) {
+							if(symElement.transformation.equals(misorientation, CA_TRANSITION_MATRIX_EPSILON)) {
+								Cluster* otherCluster = t->cluster2;
+
+								// Detect and avoid cyclic dependencies.
+								bool isCyclic = false;
+								for(Cluster* c = cluster; c->parentTransition != nullptr; c = c->parentTransition->cluster2) {
+									if(c == otherCluster) {
+										isCyclic = true;
+										break;
+									}
+								}
+								if(isCyclic)
+									break;
+
+								// Find parent of other cluster.
+								Cluster* otherParentCluster = otherCluster;
+								ClusterTransition* newParentTransition = t->reverse;
+								while(otherParentCluster->parentTransition != nullptr) {
+									newParentTransition = clusterGraph().concatenateClusterTransitions(otherParentCluster->parentTransition->reverse, newParentTransition);
+									otherParentCluster = otherParentCluster->parentTransition->cluster2;
+									OVITO_ASSERT(otherParentCluster != cluster);
+								}
+								OVITO_ASSERT(otherParentCluster->parentTransition == nullptr);
+
+								otherParentCluster->parentTransition = newParentTransition;
+								OVITO_ASSERT(newParentTransition->cluster2 == cluster);
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return true;
+}
 
 }	// End of namespace
 }	// End of namespace

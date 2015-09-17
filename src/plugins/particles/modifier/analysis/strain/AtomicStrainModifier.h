@@ -162,8 +162,6 @@ private:
 			_refPositions(refPositions), _simCellRef(simCellRef),
 			_identifiers(identifiers), _refIdentifiers(refIdentifiers),
 			_cutoff(cutoff), _eliminateCellDeformation(eliminateCellDeformation), _assumeUnwrappedCoordinates(assumeUnwrappedCoordinates),
-			_calculateDeformationGradients(calculateDeformationGradients), _calculateStrainTensors(calculateStrainTensors),
-            _calculateNonaffineSquaredDisplacements(calculateNonaffineSquaredDisplacements),
 			_shearStrains(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, tr("Shear Strain"), false)),
 			_volumetricStrains(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, tr("Volumetric Strain"), false)),
 			_strainTensors(calculateStrainTensors ? new ParticleProperty(positions->size(), ParticleProperty::StrainTensorProperty, 0, false) : nullptr),
@@ -231,9 +229,6 @@ private:
 		QExplicitlySharedDataPointer<ParticleProperty> _invalidParticles;
 		bool _eliminateCellDeformation;
 		bool _assumeUnwrappedCoordinates;
-		bool _calculateDeformationGradients;
-		bool _calculateStrainTensors;
-		bool _calculateNonaffineSquaredDisplacements;
 		QAtomicInt _numInvalidParticles;
 	};
 

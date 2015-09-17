@@ -310,6 +310,14 @@ void ModifyCommandPage::onModifierStackDoubleClicked(const QModelIndex& index)
 			modifier->setEnabled(!modifier->isEnabled());
 		});
 	}
+
+	DisplayObject* displayObj = dynamic_object_cast<DisplayObject>(item->object());
+	if(displayObj) {
+		// Toggle enabled state of display object.
+		UndoableTransaction::handleExceptions(_datasetContainer.currentSet()->undoStack(), tr("Toggle display state"), [displayObj]() {
+			displayObj->setEnabled(!displayObj->isEnabled());
+		});
+	}
 }
 
 /******************************************************************************

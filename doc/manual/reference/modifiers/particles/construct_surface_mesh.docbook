@@ -60,7 +60,7 @@ JOM: Vol. 66, Issue 3 (2014), 399-407</link></literallayout>
   
   <para>
     The surface construction algorithm requires considerable memory, typically up to 1 kilobyte 
-    per input particle. So make sure your system has enough RAM available when applying this modifier to a large simulation dataset.
+    per input particle. So make sure your system has enough RAM available when applying this modifier to large datasets.
   </para>
   
   <para>    

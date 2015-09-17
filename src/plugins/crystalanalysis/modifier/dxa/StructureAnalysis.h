@@ -113,6 +113,9 @@ public:
 	/// Determines the transition matrices between clusters.
 	bool connectClusters(FutureInterfaceBase& progress);
 
+	/// Combines clusters to super clusters.
+	bool formSuperClusters(FutureInterfaceBase& progress);
+
 	/// Returns the number of input atoms.
 	int atomCount() const { return positions()->size(); }
 
@@ -148,9 +151,13 @@ public:
 	}
 
 	/// Returns an atom from an atom's neighbor list.
-	int getNeighbor(int centralAtomIndex, int neighborIndex) const {
-		const int* neighborList = _neighborLists->constDataInt() + (size_t)centralAtomIndex * _neighborLists->componentCount();
-		return neighborList[neighborIndex];
+	int getNeighbor(int centralAtomIndex, int neighborListIndex) const {
+		return _neighborLists->getIntComponent(centralAtomIndex, neighborListIndex);
+	}
+
+	/// Sets an entry in an atom's neighbor list.
+	void setNeighbor(int centralAtomIndex, int neighborListIndex, int neighborAtomIndex) const {
+		_neighborLists->setIntComponent(centralAtomIndex, neighborListIndex, neighborAtomIndex);
 	}
 
 	/// Returns the neighbor list index of the given atom.

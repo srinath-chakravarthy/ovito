@@ -49,6 +49,8 @@ SET(SourceFiles
 	modifier/dxa/InterfaceMesh.cpp
 	modifier/dxa/DislocationTracer.cpp
 	modifier/dxa/PlanarDefectIdentification.cpp
+	modifier/elasticstrain/ElasticStrainModifier.cpp
+	modifier/elasticstrain/ElasticStrainEngine.cpp
 	util/DelaunayTessellation.cpp
 	util/DislocationInformationApplet.cpp
 )

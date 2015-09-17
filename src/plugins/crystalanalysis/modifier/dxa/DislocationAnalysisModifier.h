@@ -30,6 +30,7 @@
 #include <plugins/crystalanalysis/data/DislocationNetwork.h>
 #include <plugins/crystalanalysis/data/ClusterGraph.h>
 #include <plugins/crystalanalysis/data/PlanarDefects.h>
+#include <plugins/crystalanalysis/modifier/dxa/StructureAnalysis.h>
 #include <plugins/crystalanalysis/modifier/SmoothDislocationsModifier.h>
 #include <plugins/crystalanalysis/modifier/SmoothSurfaceModifier.h>
 
