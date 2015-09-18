@@ -56,18 +56,31 @@ void ViewportWindow::determineOpenGLInfo()
 		return;		// Already done.
 
 	// Create a temporary GL context and an offscreen surface if necessary.
-	QOffscreenSurface offscreenSurface;
 	QOpenGLContext tempContext;
+	QOffscreenSurface offscreenSurface;
+	std::unique_ptr<QWindow> window;
 	if(QOpenGLContext::currentContext() == nullptr) {
 		tempContext.setFormat(ViewportSceneRenderer::getDefaultSurfaceFormat());
 		if(!tempContext.create())
 			throw Exception(tr("Failed to create temporary OpenGL context."));
-		offscreenSurface.setFormat(tempContext.format());
-		offscreenSurface.create();
-		if(!offscreenSurface.isValid())
-			throw Exception(tr("Failed to create temporary offscreen surface. Cannot query OpenGL information."));
-		if(!tempContext.makeCurrent(&offscreenSurface))
-			throw Exception(tr("Failed to make OpenGL context current on offscreen surface. Cannot query OpenGL information."));
+		if(Application::instance().headlessMode() == false) {
+			// Create a hidden, temporary window to make the GL context current.
+			window.reset(new QWindow());
+			window->setSurfaceType(QSurface::OpenGLSurface);
+			window->setFormat(tempContext.format());
+			window->create();
+			if(!tempContext.makeCurrent(window.get()))
+				throw Exception(tr("Failed to make OpenGL context current. Cannot query OpenGL information."));
+		}
+		else {
+			// Create temporary offscreen buffer to make GL context current.
+			offscreenSurface.setFormat(tempContext.format());
+			offscreenSurface.create();
+			if(!offscreenSurface.isValid())
+				throw Exception(tr("Failed to create temporary offscreen surface. Cannot query OpenGL information."));
+			if(!tempContext.makeCurrent(&offscreenSurface))
+				throw Exception(tr("Failed to make OpenGL context current on offscreen surface. Cannot query OpenGL information."));
+		}
 		OVITO_ASSERT(QOpenGLContext::currentContext() == &tempContext);
 	}
 
