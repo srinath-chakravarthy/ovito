@@ -38,7 +38,6 @@ ElasticStrainEngine::ElasticStrainEngine(const TimeInterval& validityInterval,
 	_structureAnalysis(positions, simCell, (StructureAnalysis::LatticeStructureType)inputCrystalStructure, selection(), structures(), std::move(preferredCrystalOrientations)),
 	_inputCrystalStructure(inputCrystalStructure),
 	_latticeConstant(latticeConstant),
-	_caRatio(caRatio),
 	_pushStrainTensorsForward(pushStrainTensorsForward),
 	_volumetricStrains(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, QStringLiteral("Volumetric Strain"), false)),
 	_strainTensors(calculateStrainTensors ? new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 6, 0, QStringLiteral("Elastic Strain"), false) : nullptr),
@@ -51,9 +50,15 @@ ElasticStrainEngine::ElasticStrainEngine(const TimeInterval& validityInterval,
 	if(deformationGradients())
 		deformationGradients()->setComponentNames(QStringList() << "XX" << "YX" << "ZX" << "XY" << "YY" << "ZY" << "XZ" << "YZ" << "ZZ");
 
-	// Cubic crystal structures always have a c/a ratio of one.
-	if(inputCrystalStructure == StructureAnalysis::LATTICE_FCC || inputCrystalStructure == StructureAnalysis::LATTICE_BCC || inputCrystalStructure == StructureAnalysis::LATTICE_CUBIC_DIAMOND)
-		_caRatio = 1;
+	if(inputCrystalStructure == StructureAnalysis::LATTICE_FCC || inputCrystalStructure == StructureAnalysis::LATTICE_BCC || inputCrystalStructure == StructureAnalysis::LATTICE_CUBIC_DIAMOND) {
+		// Cubic crystal structures always have a c/a ratio of one.
+		_axialScaling = 1;
+	}
+	else {
+		// Convert to internal units.
+		_latticeConstant *= sqrt(2.0);
+		_axialScaling = caRatio / sqrt(8.0/3.0);
+	}
 }
 
 /******************************************************************************
@@ -88,22 +93,21 @@ void ElasticStrainEngine::perform()
 			// The shape of the ideal unit cell.
 			Matrix3 idealUnitCellTM(_latticeConstant, 0, 0,
 									0, _latticeConstant, 0,
-									0, 0, _latticeConstant * _caRatio);
+									0, 0, _latticeConstant * _axialScaling);
 
 			// If the cluster is a defect (stacking fault), find the parent crystal cluster.
 			Cluster* parentCluster = nullptr;
-			if(localCluster->structure != _inputCrystalStructure) {
-				for(ClusterTransition* t = localCluster->transitions; t != nullptr; t = t->next) {
-					if(t->cluster2->structure == _inputCrystalStructure) {
-						parentCluster = t->cluster2;
-						idealUnitCellTM = t->tm * idealUnitCellTM;
-						break;
-					}
-				}
+			if(localCluster->parentTransition != nullptr) {
+				parentCluster = localCluster->parentTransition->cluster2;
+				idealUnitCellTM = idealUnitCellTM * localCluster->parentTransition->tm;
 			}
-			else parentCluster = localCluster;
+			else if(localCluster->structure == _inputCrystalStructure) {
+				parentCluster = localCluster;
+			}
 
 			if(parentCluster != nullptr) {
+				OVITO_ASSERT(parentCluster->structure == _inputCrystalStructure);
+
 				// For calculating the cluster orientation.
 				Matrix_3<double> orientationV = Matrix_3<double>::Zero();
 				Matrix_3<double> orientationW = Matrix_3<double>::Zero();

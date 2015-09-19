@@ -157,6 +157,33 @@ private:
 };
 
 /**
+ * \brief Converts a scalar value to a color.
+ */
+class ColorCodingBlueWhiteRedGradient : public ColorCodingGradient
+{
+public:
+
+	/// Constructor.
+	Q_INVOKABLE ColorCodingBlueWhiteRedGradient(DataSet* dataset) : ColorCodingGradient(dataset) {}
+
+	/// \brief Converts a scalar value to a color value.
+	/// \param t A value between 0 and 1.
+	/// \return The color that visualizes the given scalar value.
+	virtual Color valueToColor(FloatType t) override {
+		if(t <= FloatType(0.5))
+			return Color(t * 2, t * 2, 1);
+		else
+			return Color(1, (FloatType(1)-t) * 2, (FloatType(1)-t) * 2);
+	}
+
+private:
+
+	Q_OBJECT
+	OVITO_OBJECT
+	Q_CLASSINFO("DisplayName", "Blue-White-Red");
+};
+
+/**
  * \brief Converts a scalar value to a color based on a user-defined image.
  */
 class ColorCodingImageGradient : public ColorCodingGradient

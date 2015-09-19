@@ -60,6 +60,7 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingHSVGradient, ColorCodi
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingGrayscaleGradient, ColorCodingGradient);
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingHotGradient, ColorCodingGradient);
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingJetGradient, ColorCodingGradient);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingBlueWhiteRedGradient, ColorCodingGradient);
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingImageGradient, ColorCodingGradient);
 DEFINE_PROPERTY_FIELD(ColorCodingImageGradient, _image, "Image");
 

@@ -73,6 +73,10 @@
               <entry>Determines the number of near neighbors of each particle and computes the radial distribution function.</entry>
             </row>
             <row>
+              <entry><link linkend="particles.modifiers.elastic_strain">Elastic strain calculation</link></entry>
+              <entry>Calculates the atomic-level elastic strain tensors in crystalline systems.</entry>
+            </row>
+            <row>
               <entry><link linkend="particles.modifiers.histogram">Histogram</link></entry>
               <entry>Computes the histogram of a particle property.</entry>
             </row>
@@ -219,6 +223,8 @@
   <xi:include href="particles/dislocation_analysis.docbook"/>
 
   <xi:include href="particles/displacement_vectors.docbook"/>
+
+  <xi:include href="particles/elastic_strain.docbook"/>
 
   <xi:include href="particles/expand_selection.docbook"/>
 

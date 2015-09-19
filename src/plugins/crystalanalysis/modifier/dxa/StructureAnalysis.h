@@ -186,6 +186,9 @@ public:
 		return _latticeStructures[structureIndex];
 	}
 
+	/// Throws an exception which tells the user that the periodic simulation cell is too small.
+	static void generateCellTooSmallError(int dimension);
+
 private:
 
 	/// Determines the coordination structure of a particle.

@@ -199,7 +199,7 @@ PipelineStatus ElasticStrainModifier::applyComputationResults(TimePoint time, Ti
 void ElasticStrainModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 {
 	// Create the rollout.
-	QWidget* rollout = createRollout(tr("Elastic strain calculation"), rolloutParams);
+	QWidget* rollout = createRollout(tr("Elastic strain calculation"), rolloutParams, "particles.modifiers.elastic_strain.html");
 
     QVBoxLayout* layout = new QVBoxLayout(rollout);
 	layout->setContentsMargins(4,4,4,4);

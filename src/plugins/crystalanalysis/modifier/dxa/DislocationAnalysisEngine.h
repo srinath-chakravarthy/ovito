@@ -77,9 +77,6 @@ public:
 	/// Returns the planar defect identification engine.
 	PlanarDefectIdentification& planarDefectIdentification() { return _planarDefectIdentification; }
 
-	/// Throws an exception which tells the user that the periodic simulation cell is too small.
-	static void generateCellTooSmallError();
-
 private:
 
 	int _inputCrystalStructure;

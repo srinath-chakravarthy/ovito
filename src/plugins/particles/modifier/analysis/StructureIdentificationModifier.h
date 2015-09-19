@@ -164,7 +164,7 @@ protected:
 			if(index == 0)
 				return qVariantFromValue(tr("Color"));
 			else if(index == 1)
-				return qVariantFromValue(tr("Name"));
+				return qVariantFromValue(tr("Structure"));
 			else if(index == 2)
 				return qVariantFromValue(tr("Count"));
 			else if(index == 3)

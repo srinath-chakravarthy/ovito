@@ -73,6 +73,7 @@ void NumericalParameterUI::initUIControls(const QString& labelText)
 	if(isReferenceFieldUI() && propertyField()->targetClass()->isDerivedFrom(Controller::OOType)) {
 		_animateButton = new QToolButton();
 		_animateButton->setText(tr("A"));
+		_animateButton->setFocusPolicy(Qt::NoFocus);
 		static_cast<QToolButton*>(_animateButton.data())->setAutoRaise(true);
 		static_cast<QToolButton*>(_animateButton.data())->setToolButtonStyle(Qt::ToolButtonTextOnly);
 		_animateButton->setToolTip(tr("Animate parameter..."));

@@ -120,6 +120,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					" * ``ColorCodingModifier.Grayscale()``\n"
 					" * ``ColorCodingModifier.Hot()``\n"
 					" * ``ColorCodingModifier.Jet()``\n"
+					" * ``ColorCodingModifier.BlueWhiteRed()``\n"
 					" * ``ColorCodingModifier.Custom(\"<image file>\")``\n"
 					"\n"
 					"The last color map constructor expects the path to an image file on disk, "
@@ -143,6 +144,8 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 		ovito_class<ColorCodingHotGradient, ColorCodingGradient>(nullptr, "Hot")
 		;
 		ovito_class<ColorCodingJetGradient, ColorCodingGradient>(nullptr, "Jet")
+		;
+		ovito_class<ColorCodingBlueWhiteRedGradient, ColorCodingGradient>(nullptr, "BlueWhiteRed")
 		;
 		ovito_class<ColorCodingImageGradient, ColorCodingGradient>(nullptr, "Image")
 			.def("loadImage", &ColorCodingImageGradient::loadImage)

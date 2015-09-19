@@ -25,7 +25,6 @@
 #include <core/utilities/concurrent/ParallelFor.h>
 #include "StructureAnalysis.h"
 #include "DislocationAnalysisModifier.h"
-#include "DislocationAnalysisEngine.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -79,6 +78,16 @@ StructureAnalysis::StructureAnalysis(ParticleProperty* positions, const Simulati
 
 	// Reset atomic structure types.
 	std::fill(_structureTypes->dataInt(), _structureTypes->dataInt() + _structureTypes->size(), LATTICE_OTHER);
+}
+
+/******************************************************************************
+* Throws an exception which tells the user that the periodic simulation cell is too small.
+******************************************************************************/
+void StructureAnalysis::generateCellTooSmallError(int dimension)
+{
+	static const QString axes[3] = { QStringLiteral("X"), QStringLiteral("Y"), QStringLiteral("Z") };
+	throw Exception(DislocationAnalysisModifier::tr("Simulation box is too short along cell vector %1 (%2) to perform analysis. "
+			"Please extend it first using the 'Show periodic images' modifier.").arg(dimension+1).arg(axes[dimension]));
 }
 
 /******************************************************************************
@@ -457,6 +466,7 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 	neighQuery.findNeighbors(neighList.particlePos(particleIndex));
 	int numNeighbors = neighQuery.results().size();
 	int neighborIndices[MAX_NEIGHBORS];
+	Vector3 neighborVectors[MAX_NEIGHBORS];
 
 	// Number of neighbors to analyze.
 	int nn;
@@ -501,6 +511,7 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 		// Compute common neighbor bit-flag array.
 		for(int ni1 = 0; ni1 < nn; ni1++) {
 			neighborIndices[ni1] = neighQuery.results()[ni1].index;
+			neighborVectors[ni1] = neighQuery.results()[ni1].delta;
 			neighborArray.setNeighborBond(ni1, ni1, false);
 			for(int ni2 = ni1+1; ni2 < nn; ni2++)
 				neighborArray.setNeighborBond(ni1, ni2, (neighQuery.results()[ni1].delta - neighQuery.results()[ni2].delta).squaredLength() <= localCutoffSquared);
@@ -508,7 +519,6 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 	}
 	else {
 		// Generate list of second nearest neighbors.
-		std::array<Vector3,16> neighborVectors;
 		int outputIndex = 4;
 		for(size_t i = 0; i < 4; i++) {
 			const Vector3& v0 = neighQuery.results()[i].delta;
@@ -696,8 +706,17 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 			_structureTypes->setInt(particleIndex, coordinationType);
 
 			// Save the atom's neighbor list.
-			for(int i = 0; i < nn; i++)
+			for(int i = 0; i < nn; i++) {
+				const Vector3& neighborVector = neighborVectors[neighborMapping[i]];
+				// Check if neighbor vectors spans more than half of a periodic simulation cell.
+				for(size_t dim = 0; dim < 3; dim++) {
+					if(cell().pbcFlags()[dim]) {
+						if(std::abs(cell().inverseMatrix().prodrow(neighborVector, dim)) >= FloatType(0.5)+FLOATTYPE_EPSILON)
+							StructureAnalysis::generateCellTooSmallError(dim);
+					}
+				}
 				setNeighbor(particleIndex, i, neighborIndices[neighborMapping[i]]);
+			}
 			_neighborCounts->setInt(particleIndex, nn);
 
 			// Determine maximum neighbor distance.
@@ -768,8 +787,7 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 				// An atom should not be a neighbor of itself.
 				// We use the minimum image convention for simulation cells with periodic boundary conditions.
 				int neighborAtomIndex = getNeighbor(currentAtomIndex, neighborIndex);
-				if(neighborAtomIndex == currentAtomIndex)
-					DislocationAnalysisEngine::generateCellTooSmallError();
+				OVITO_ASSERT(neighborAtomIndex != currentAtomIndex);
 
 				// Add vector pair to matrices for computing the cluster orientation.
 				const Vector3& latticeVector = latticeStructure.latticeVectors[permutation[neighborIndex]];
@@ -1013,13 +1031,20 @@ bool StructureAnalysis::formSuperClusters(FutureInterfaceBase& progress)
 								// Detect and avoid cyclic dependencies.
 								bool isCyclic = false;
 								for(Cluster* c = cluster; c->parentTransition != nullptr; c = c->parentTransition->cluster2) {
-									if(c == otherCluster) {
+									if(c->parentTransition->cluster2 == otherCluster) {
 										isCyclic = true;
 										break;
 									}
 								}
-								if(isCyclic)
+								for(Cluster* c = otherCluster; c->parentTransition != nullptr; c = c->parentTransition->cluster2) {
+									if(c->parentTransition->cluster2 == cluster->parentTransition->cluster2) {
+										isCyclic = true;
+										break;
+									}
+								}
+								if(isCyclic) {
 									break;
+								}
 
 								// Find parent of other cluster.
 								Cluster* otherParentCluster = otherCluster;
@@ -1039,6 +1064,17 @@ bool StructureAnalysis::formSuperClusters(FutureInterfaceBase& progress)
 					}
 				}
 			}
+		}
+	}
+
+	for(size_t clusterIndex = 0; clusterIndex < clusterGraph().clusters().size(); clusterIndex++) {
+		Cluster* cluster = clusterGraph().clusters()[clusterIndex];
+		if(cluster->parentTransition != nullptr) {
+			ClusterTransition* newParentTransition = cluster->parentTransition;
+			while(newParentTransition->cluster2->parentTransition != nullptr) {
+				newParentTransition = clusterGraph().concatenateClusterTransitions(newParentTransition, newParentTransition->cluster2->parentTransition);
+			}
+			cluster->parentTransition = newParentTransition;
 		}
 	}
 

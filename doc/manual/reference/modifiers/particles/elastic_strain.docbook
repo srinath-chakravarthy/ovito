@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section version="5.0"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd"
+         xml:id="particles.modifiers.elastic_strain"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:ns="http://docbook.org/ns/docbook">
+  <title>Elastic strain calculation</title>
+
+  <para>
+    <informalfigure><screenshot><mediaobject><imageobject>
+       <imagedata fileref="images/modifiers/elastic_strain_panel.png" format="PNG" />
+    </imageobject></mediaobject></screenshot></informalfigure>
+      
+    This modifier computes the atomic-level elastic strain and deformation gradient tensors in crystalline systems.
+    It can be used to analyze elastic distortions in a crystal lattice. Furthermore, it allows to compute the local
+    crystal orientation in polycrystalline systems.
+  </para>
+  
+</section>

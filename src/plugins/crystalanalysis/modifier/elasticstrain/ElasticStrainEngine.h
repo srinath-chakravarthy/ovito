@@ -64,7 +64,7 @@ private:
 
 	int _inputCrystalStructure;
 	FloatType _latticeConstant;
-	FloatType _caRatio;
+	FloatType _axialScaling;
 	bool _pushStrainTensorsForward;
 	StructureAnalysis _structureAnalysis;
 	QExplicitlySharedDataPointer<ParticleProperty> _volumetricStrains;

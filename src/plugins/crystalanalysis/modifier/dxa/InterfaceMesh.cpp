@@ -162,8 +162,13 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 				OVITO_ASSERT(tessEdge != nullptr);
 				OVITO_ASSERT(tessEdge->hasClusterVector());
 
-				if(structureAnalysis().cell().isWrappedVector(edge->physicalVector))
-					DislocationAnalysisEngine::generateCellTooSmallError();
+				// Check if edge is spanning more than half of a periodic simulation cell.
+				for(size_t dim = 0; dim < 3; dim++) {
+					if(structureAnalysis().cell().pbcFlags()[dim]) {
+						if(std::abs(structureAnalysis().cell().inverseMatrix().prodrow(edge->physicalVector, dim)) >= FloatType(0.5)+FLOATTYPE_EPSILON)
+							StructureAnalysis::generateCellTooSmallError(dim);
+					}
+				}
 
 				edge->clusterVector = tessEdge->clusterVector;
 				edge->clusterTransition = tessEdge->clusterTransition;
