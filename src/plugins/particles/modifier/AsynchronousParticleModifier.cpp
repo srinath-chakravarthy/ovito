@@ -215,6 +215,18 @@ void AsynchronousParticleModifier::deleteReferenceObject()
 }
 
 /******************************************************************************
+* Is called when the value of a property of this object has changed.
+******************************************************************************/
+void AsynchronousParticleModifier::propertyChanged(const PropertyFieldDescriptor& field)
+{
+	ParticleModifier::propertyChanged(field);
+
+	// Stop compute engine when modifier is disbaled.
+	if(field == PROPERTY_FIELD(Modifier::_isEnabled) && !isEnabled())
+		stopRunningEngine();
+}
+
+/******************************************************************************
 * Destructor of compute engine.
 ******************************************************************************/
 AsynchronousParticleModifier::ComputeEngine::~ComputeEngine()

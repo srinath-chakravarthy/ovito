@@ -117,6 +117,18 @@ bool ParticleModifier::isApplicableTo(const PipelineFlowState& input)
 }
 
 /******************************************************************************
+* Is called when the value of a property of this object has changed.
+******************************************************************************/
+void ParticleModifier::propertyChanged(const PropertyFieldDescriptor& field)
+{
+	Modifier::propertyChanged(field);
+
+	// Clear status when modifier is disabled.
+	if(field == PROPERTY_FIELD(Modifier::_isEnabled) && !isEnabled())
+		setStatus(PipelineStatus(PipelineStatus::Success, tr("Modifier is currently disabled.")));
+}
+
+/******************************************************************************
 * Returns a standard particle property from the input state.
 ******************************************************************************/
 ParticlePropertyObject* ParticleModifier::inputStandardProperty(ParticleProperty::Type which) const

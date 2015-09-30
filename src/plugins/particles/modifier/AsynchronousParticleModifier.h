@@ -82,6 +82,9 @@ protected:
 	/// Loads the class' contents from the given stream.
 	virtual void loadFromStream(ObjectLoadStream& stream) override;
 
+	/// Is called when the value of a property of this object has changed.
+	virtual void propertyChanged(const PropertyFieldDescriptor& field) override;
+
 	/// Modifies the particle object. The time interval passed
 	/// to the function is reduced to the interval where the modified object is valid/constant.
 	virtual PipelineStatus modifyParticles(TimePoint time, TimeInterval& validityInterval) override;
