@@ -33,7 +33,13 @@
     modifier with the Boolean expression:
     <programlisting>VoronoiIndex.3==0 &amp;&amp; VoronoiIndex.4==0 &amp;&amp; VoronoiIndex.5==12 &amp;&amp; VoronoiIndex.6==0</programlisting>
     (<literal>VoronoiIndex.1</literal> and <literal>VoronoiIndex.2</literal> are always zero because faces with less than three edges do not exist.)
-  </para>  
+  </para> 
+  
+  <para>
+    If you are interested in the Voronoi indices computed by the analysis modifier for a particular atom, you can use the
+    <link linkend="usage.particle_inspection_utility">Particle Inspection</link> utility to select the atom
+    in the viewports and display its properties (including the assigned Voronoi indices).
+  </para> 
   
   <para>
     Note that the modifier calculates the Voronoi tessellation of the volume enclosed by the simulation cell only (and not 
