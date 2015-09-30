@@ -54,8 +54,8 @@ PipelineStatus WrapPeriodicImagesModifier::modifyParticles(TimePoint time, TimeI
 	ParticlePropertyObject* posProperty = outputStandardProperty(ParticleProperty::PositionProperty, true);
 
 	// Wrap bonds
-	for(const VersionedOORef<DataObject>& obj : output().objects()) {
-		BondsObject* bondsObj = dynamic_object_cast<BondsObject>(obj.get());
+	for(DataObject* obj : output().objects()) {
+		BondsObject* bondsObj = dynamic_object_cast<BondsObject>(obj);
 		if(bondsObj) {
 			// Is the object still a shallow copy of the input?
 			if(input().contains(bondsObj)) {

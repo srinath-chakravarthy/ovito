@@ -35,7 +35,7 @@ class OVITO_CORE_EXPORT NativePropertyFieldDescriptor : public PropertyFieldDesc
 {
 public:
 
-	/// Constructor	for a property field that stores a non-animatable.
+	/// Constructor	for a property field that stores a non-animatable parameter.
 	NativePropertyFieldDescriptor(const NativeOvitoObjectType* definingClass, const char* identifier, PropertyFieldFlags flags,
 			QVariant (*_propertyStorageReadFunc)(RefMaker*), void (*_propertyStorageWriteFunc)(RefMaker*, const QVariant&),
 			void (*_propertyStorageSaveFunc)(RefMaker*, SaveStream&), void (*_propertyStorageLoadFunc)(RefMaker*, LoadStream&))

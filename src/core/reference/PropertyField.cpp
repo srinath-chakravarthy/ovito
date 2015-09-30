@@ -56,12 +56,17 @@ void PropertyFieldBase::init(RefMaker* owner, PropertyFieldDescriptor* descripto
 ******************************************************************************/
 void PropertyFieldBase::generateTargetChangedEvent(ReferenceEvent::Type messageType)
 {
+	// Make sure we are not trying to generate a change message for objects that are not RefTargets.
+	OVITO_ASSERT_MSG(!descriptor()->shouldGenerateChangeEvent() || descriptor()->definingClass()->isDerivedFrom(RefTarget::OOType),
+			"PropertyFieldBase::generateTargetChangedEvent()",
+			qPrintable(QString("Flag PROPERTY_FIELD_NO_CHANGE_MESSAGE has not been set for property field '%1' of class '%2' even though '%2' is not derived from RefTarget.")
+					.arg(descriptor()->identifier()).arg(descriptor()->definingClass()->name())));
+
 	if(!descriptor()->shouldGenerateChangeEvent())
 		return;
 
 	// Send change message.
-	if(RefTarget* thisTarget = dynamic_object_cast<RefTarget>(owner()))
-		thisTarget->notifyDependents(messageType);
+	static_object_cast<RefTarget>(owner())->notifyDependents(messageType);
 }
 
 /******************************************************************************
@@ -159,12 +164,13 @@ void SingleReferenceFieldBase::setValue(RefTarget* newTarget)
 
 	// Make sure automatic undo is disabled for a reference field of a class that is not derived from RefTarget.
 	OVITO_ASSERT_MSG(descriptor()->automaticUndo() == false || owner()->isRefTarget(), "SingleReferenceFieldBase::setValue()",
-			"PROPERTY_FIELD_NO_UNDO flag has not been set for reference field of non-RefTarget derived class.");
+			qPrintable(QString("PROPERTY_FIELD_NO_UNDO flag has not been set for reference field '%1' of non-RefTarget derived class '%2'.")
+				.arg(descriptor()->identifier()).arg(descriptor()->definingClass()->name())));
 
 	if(descriptor()->automaticUndo() && owner()->dataset()->undoStack().isRecording()) {
-		SetReferenceOperation* op = new SetReferenceOperation(newTarget, *this);
-		owner()->dataset()->undoStack().push(op);
+		std::unique_ptr<SetReferenceOperation> op(new SetReferenceOperation(newTarget, *this));
 		op->redo();
+		owner()->dataset()->undoStack().push(std::move(op));
 		OVITO_ASSERT(_pointer == newTarget);
 	}
 	else {
@@ -294,13 +300,15 @@ int VectorReferenceFieldBase::insertInternal(RefTarget* newTarget, int index)
 
 	// Make sure automatic undo is disabled for a reference field of a class that is not derived from RefTarget.
 	OVITO_ASSERT_MSG(descriptor()->automaticUndo() == false || owner()->isRefTarget(), "VectorReferenceFieldBase::insertInternal()",
-			"PROPERTY_FIELD_NO_UNDO flag has not been set for reference field of non-RefTarget derived class.");
+			qPrintable(QString("PROPERTY_FIELD_NO_UNDO flag has not been set for reference field '%1' of non-RefTarget derived class '%2'.")
+					.arg(descriptor()->identifier()).arg(descriptor()->definingClass()->name())));
 
 	if(descriptor()->automaticUndo() && owner()->dataset()->undoStack().isRecording()) {
-		InsertReferenceOperation* op = new InsertReferenceOperation(newTarget, *this, index);
-		owner()->dataset()->undoStack().push(op);
+		std::unique_ptr<InsertReferenceOperation> op(new InsertReferenceOperation(newTarget, *this, index));
 		op->redo();
-		return op->insertionIndex();
+		int index = op->insertionIndex();
+		owner()->dataset()->undoStack().push(std::move(op));
+		return index;
 	}
 	else {
 		return addReference(newTarget, index);
@@ -317,12 +325,13 @@ void VectorReferenceFieldBase::remove(int i)
 
 	// Make sure automatic undo is disabled for a reference field of a class that is not derived from RefTarget.
 	OVITO_ASSERT_MSG(descriptor()->automaticUndo() == false || owner()->isRefTarget(), "VectorReferenceFieldBase::remove()",
-			"PROPERTY_FIELD_NO_UNDO flag has not been set for reference field of non-RefTarget derived class.");
+			qPrintable(QString("PROPERTY_FIELD_NO_UNDO flag has not been set for reference field '%1' of non-RefTarget derived class '%2'.")
+					.arg(descriptor()->identifier()).arg(descriptor()->definingClass()->name())));
 
 	if(descriptor()->automaticUndo() && owner()->dataset()->undoStack().isRecording()) {
-		RemoveReferenceOperation* op = new RemoveReferenceOperation(*this, i);
-		owner()->dataset()->undoStack().push(op);
+		std::unique_ptr<RemoveReferenceOperation> op(new RemoveReferenceOperation(*this, i));
 		op->redo();
+		owner()->dataset()->undoStack().push(std::move(op));
 	}
 	else {
 		removeReference(i);

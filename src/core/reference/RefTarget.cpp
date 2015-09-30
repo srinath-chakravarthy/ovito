@@ -23,7 +23,6 @@
 #include <core/reference/RefTarget.h>
 #include <core/reference/CloneHelper.h>
 #include <core/dataset/UndoStack.h>
-#include <core/gui/properties/PropertiesEditor.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem)
 
@@ -214,41 +213,6 @@ OORef<RefTarget> RefTarget::clone(bool deepCopy, CloneHelper& cloneHelper)
 QString RefTarget::objectTitle()
 {
 	return getOOType().displayName();
-}
-
-/******************************************************************************
-* Creates a PropertiesEditor for this object.
-******************************************************************************/
-OORef<PropertiesEditor> RefTarget::createPropertiesEditor()
-{
-	try {
-		// Look in the meta data of this RefTarget derived class and its super classes for the editor class.
-		for(const OvitoObjectType* clazz = &getOOType(); clazz != nullptr; clazz = clazz->superClass()) {
-			const OvitoObjectType* editorClass = clazz->editorClass();
-			if(editorClass) {
-				if(!editorClass->isDerivedFrom(PropertiesEditor::OOType))
-					throw Exception(tr("The editor class %1 assigned to the RefTarget-derived class %2 is not derived from PropertiesEditor.").arg(editorClass->name(), clazz->name()));
-				return dynamic_object_cast<PropertiesEditor>(editorClass->createInstance(nullptr));
-			}
-		}
-	}
-	catch(Exception& ex) {
-		ex.prependGeneralMessage(tr("Could no create editor component for the %1 object.").arg(objectTitle()));
-		ex.showError();
-	}
-	return nullptr;
-}
-
-/******************************************************************************
-* Determines whether this object is currently being edited in a PropertiesEditor.
-******************************************************************************/
-bool RefTarget::isBeingEdited() const
-{
-	for(RefMaker* m : dependents()) {
-		if(m->getOOType().isDerivedFrom(PropertiesEditor::OOType))
-			return true;
-	}
-	return false;
 }
 
 OVITO_END_INLINE_NAMESPACE

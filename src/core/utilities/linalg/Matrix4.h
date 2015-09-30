@@ -586,11 +586,7 @@ inline QDataStream& operator>>(QDataStream& stream, Matrix_4<T>& m) {
  * \brief Instantiation of the Matrix_4 class template with the default floating-point type.
  * \relates Matrix_4
  */
-typedef Matrix_4<FloatType>		Matrix4;
-
-// Type-specific OpenGL functions:
-inline void glLoadMatrix(const Matrix_4<GLdouble>& tm) { glLoadMatrixd(tm.elements()); }
-inline void glLoadMatrix(const Matrix_4<GLfloat>& tm) { glLoadMatrixf(tm.elements()); }
+using Matrix4 = Matrix_4<FloatType>;
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

@@ -170,16 +170,16 @@ void RefTargetListParameterUI::openSubEditor()
 		}
 		if(!subEditor() && editor()) {
 			if(selection) {
-				_subEditor = selection->createPropertiesEditor();
-				if(_subEditor)
-					_subEditor->initialize(editor()->container(), editor()->mainWindow(), _rolloutParams);
+				_subEditor = PropertiesEditor::create(selection);
 			}
 			else if(_defaultEditorClass) {
 				_subEditor = dynamic_object_cast<PropertiesEditor>(_defaultEditorClass->createInstance(nullptr));
-				if(_subEditor)
-					_subEditor->initialize(editor()->container(), editor()->mainWindow(), _rolloutParams);
 			}
-			else return;
+			else {
+				return;
+			}
+			if(subEditor())
+				subEditor()->initialize(editor()->container(), editor()->mainWindow(), _rolloutParams);
 		}
 		if(subEditor()) {
 			subEditor()->setEditObject(selection);

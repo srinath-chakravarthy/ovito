@@ -32,20 +32,47 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /**
  * \brief Base class for property editors for RefTarget derived objects.
  * 
- * The specific properties editor for a RefTarget derived object can be created
- * using the RefTarget::createPropertiesEditor() method.
- * 
- * Property editors live in a PropertiesPanel.
+ * A properties editor for a RefTarget derived object can be created using the PropertiesEditor::create() function.
  */
 class OVITO_CORE_EXPORT PropertiesEditor : public RefMaker
 {
-	
+public:
+
+	/// Registry for editor classes.
+	class Registry : private std::map<const OvitoObjectType*, const OvitoObjectType*>
+	{
+	public:
+		void registerEditorClass(const OvitoObjectType* refTargetClass, const OvitoObjectType* editorClass) {
+			insert(std::make_pair(refTargetClass, editorClass));
+		}
+		const OvitoObjectType* getEditorClass(const OvitoObjectType* refTargetClass) const {
+			auto entry = find(refTargetClass);
+			if(entry != end()) return entry->second;
+			else return nullptr;
+		}
+	};
+
+	/// Returns the global editor registry, which can be used to lookup the editor class for editable RefTarget class.
+	static Registry& registry() {
+		static Registry* reg = new Registry();
+		return *reg;
+	}
+
 protected:
 
 	/// \brief The constructor.
 	PropertiesEditor();
 
 public:
+
+	/// \brief Creates a PropertiesEditor for an editable object.
+	/// \param obj The object for which an editor should be created.
+	/// \return The new editor component that allows the user to edit the properties of the RefTarget object.
+	///         It will be automatically destroyed by the system when the editor is closed.
+	///         Returns NULL if no editor component is registered for the RefTarget type.
+	///
+	/// The returned editor object is not initialized yet. Call initialize() once to do so.
+	static OORef<PropertiesEditor> create(RefTarget* obj);
 
 	/// \brief The virtual destructor.
 	virtual ~PropertiesEditor() { clearAllReferences(); }
@@ -77,7 +104,7 @@ public:
 	/// \return The RefTarget derived object which is being edited in this editor.
 	///
 	/// \note This can be another object than the one used to create the editor via
-	///       RefTarget::createPropertiesEditor(). Editors are re-usable and the obejct being edited
+	///       PropertiesEditor::create(). Editors are re-usable and the object being edited
 	///       can be set with setEditObject().
 	///
 	/// \sa setEditObject()
@@ -90,6 +117,10 @@ public:
 	void undoableTransaction(const QString& operationLabel, Function&& func) {
 		UndoableTransaction::handleExceptions(dataset()->undoStack(), operationLabel, std::forward<Function>(func));
 	}
+
+	/// \brief Determines whether an editable object is currently being edited in a PropertiesEditor.
+	/// \return \c true if there is an active editor for the RefTarget; \c false otherwise.
+	static bool isObjectBeingEdited(const RefTarget* obj);
 
 public Q_SLOTS:
 
@@ -148,6 +179,10 @@ private:
 
 	DECLARE_REFERENCE_FIELD(_editObject);
 };
+
+/// This macro is used to assign a PropertiesEditor-derived class to a RefTarget-derived class.
+#define SET_OVITO_OBJECT_EDITOR(RefTargetClass, PropertiesEditorClass) \
+	static const int __editorSetter##RefTargetClass = (Ovito::PropertiesEditor::registry().registerEditorClass(&RefTargetClass::OOType, &PropertiesEditorClass::OOType), 0);
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

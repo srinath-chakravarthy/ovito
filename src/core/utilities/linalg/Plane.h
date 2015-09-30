@@ -291,7 +291,7 @@ inline QDataStream& operator>>(QDataStream& stream, Plane_3<T>& p) {
  * \brief Instantiation of the Plane_3 class template with the default floating-point type.
  * \relates Plane_3
  */
-typedef Plane_3<FloatType> Plane3;
+using Plane3 = Plane_3<FloatType>;
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

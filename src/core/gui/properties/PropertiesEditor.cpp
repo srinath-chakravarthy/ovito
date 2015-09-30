@@ -29,6 +29,42 @@ IMPLEMENT_OVITO_OBJECT(Core, PropertiesEditor, RefMaker);
 DEFINE_FLAGS_REFERENCE_FIELD(PropertiesEditor, _editObject, "EditObject", RefTarget, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_WEAK_REF | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
 
 /******************************************************************************
+* Creates a PropertiesEditor for an object.
+******************************************************************************/
+OORef<PropertiesEditor> PropertiesEditor::create(RefTarget* obj)
+{
+	OVITO_CHECK_POINTER(obj);
+	try {
+		// Look if an editor class has been registered for this RefTarget class and one of its super classes.
+		for(const OvitoObjectType* clazz = &obj->getOOType(); clazz != nullptr; clazz = clazz->superClass()) {
+			const OvitoObjectType* editorClass = registry().getEditorClass(clazz);
+			if(editorClass) {
+				if(!editorClass->isDerivedFrom(PropertiesEditor::OOType))
+					throw Exception(tr("The editor class %1 assigned to the RefTarget-derived class %2 is not derived from PropertiesEditor.").arg(editorClass->name(), clazz->name()));
+				return dynamic_object_cast<PropertiesEditor>(editorClass->createInstance(nullptr));
+			}
+		}
+	}
+	catch(Exception& ex) {
+		ex.prependGeneralMessage(tr("Could no create editor component for the %1 object.").arg(obj->objectTitle()));
+		ex.showError();
+	}
+	return nullptr;
+}
+
+/******************************************************************************
+* Determines whether this object is currently being edited in a PropertiesEditor.
+******************************************************************************/
+bool PropertiesEditor::isObjectBeingEdited(const RefTarget* obj)
+{
+	for(const RefMaker* m : obj->dependents()) {
+		if(m->getOOType().isDerivedFrom(PropertiesEditor::OOType))
+			return true;
+	}
+	return false;
+}
+
+/******************************************************************************
 * The constructor.
 ******************************************************************************/
 PropertiesEditor::PropertiesEditor() : RefMaker(nullptr), _container(nullptr), _mainWindow(nullptr)

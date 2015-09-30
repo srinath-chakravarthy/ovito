@@ -287,16 +287,16 @@ inline QDataStream& operator>>(QDataStream& stream, Box_2<T>& b) {
 }
 
 /**
- * \brief Template class instance of the Box_2 class used for floating-point calculations based on Point2.
+ * \brief Instance of the Box_2 class template used for floating-point calculations based on Point2.
  * \relates Box_2
  */
-typedef Box_2<FloatType>	Box2;
+using Box2 = Box_2<FloatType>;
 
 /**
- * \brief Template class instance of the Box_2 class used for integer calculations based on Point2I.
+ * \brief Instance of the Box_2 class template used for integer calculations based on Point2I.
  * \relates Box_2
  */
-typedef Box_2<int>			Box2I;
+using Box2I = Box_2<int>;
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

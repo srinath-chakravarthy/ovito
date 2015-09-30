@@ -30,10 +30,9 @@
 namespace Ovito {
 
 /// The default floating-point type used by OVITO.
-///
-typedef float FloatType;
+using FloatType = float;
 
-#define FLOATTYPE_FLOAT		// This tells the program that we're using 32-bit floating-point numbers.
+#define FLOATTYPE_FLOAT		// This tells the code that we're using 32-bit floating-point numbers.
 
 /// A small epsilon, which is used in OVITO to test if a number is (almost) zero.
 #define FLOATTYPE_EPSILON	Ovito::FloatType(1e-6)
@@ -49,10 +48,6 @@ typedef float FloatType;
 
 /// The format specifier to be passed to the sscanf() function to parse floating-point numbers of type Ovito::FloatType.
 #define FLOATTYPE_SCANF_STRING 		"%g"
-
-// Type-specific OpenGL functions:
-inline void glVertex3(FloatType x, FloatType y, FloatType z) { glVertex3f(x,y,z); }
-inline void glColor3(FloatType r, FloatType g, FloatType b) { glColor3f(r,g,b); }
 
 }	// End of namespace
 

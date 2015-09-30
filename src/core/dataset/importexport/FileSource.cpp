@@ -174,8 +174,7 @@ bool FileSource::setSource(QUrl sourceUrl, FileSourceImporter* importer, bool us
 		OORef<FileSourceImporter> _oldImporter;
 		OORef<FileSource> _obj;
 	};
-	if(dataset()->undoStack().isRecording())
-		dataset()->undoStack().push(new SetSourceOperation(this));
+	dataset()->undoStack().pushIfRecording<SetSourceOperation>(this);
 
 	_sourceUrl = sourceUrl;
 	_importer = importer;

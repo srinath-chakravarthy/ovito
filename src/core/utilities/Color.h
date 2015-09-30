@@ -490,19 +490,13 @@ inline QDataStream& operator>>(QDataStream& stream, ColorAT<T>& c) {
  * \brief Instantiation of the ColorT class template with the default floating-point type.
  * \relates ColorT
  */
-typedef ColorT<FloatType>	Color;
+using Color = ColorT<FloatType>;
 
 /**
  * \brief Instantiation of the ColorAT class template with the default floating-point type.
  * \relates ColorAT
  */
-typedef ColorAT<FloatType>	ColorA;
-
-// Type-specific OpenGL functions:
-inline void glColor3(const ColorT<GLdouble>& c) { glColor3dv(c.data()); }
-inline void glColor3(const ColorT<GLfloat>& c) { glColor3fv(c.data()); }
-inline void glColor4(const ColorAT<GLdouble>& c) { glColor4dv(c.data()); }
-inline void glColor4(const ColorAT<GLfloat>& c) { glColor4fv(c.data()); }
+using ColorA = ColorAT<FloatType>;
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

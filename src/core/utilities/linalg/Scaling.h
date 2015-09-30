@@ -229,7 +229,7 @@ inline QDataStream& operator>>(QDataStream& stream, ScalingT<T>& s) {
  * \brief Template class instance of the ScalingT template.
  * \relates ScalingT
  */
-typedef ScalingT<FloatType>		Scaling;
+using Scaling = ScalingT<FloatType>;
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

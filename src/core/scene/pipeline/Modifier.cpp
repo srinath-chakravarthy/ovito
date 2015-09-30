@@ -24,6 +24,7 @@
 #include <core/scene/pipeline/ModifierApplication.h>
 #include <core/scene/pipeline/PipelineObject.h>
 #include <core/animation/AnimationSettings.h>
+#include <core/gui/properties/PropertiesEditor.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
@@ -104,7 +105,7 @@ TimeInterval Modifier::modifierValidity(TimePoint time)
 	// Return an empty validity interval if the modifier is currently being edited
 	// to let the system create a pipeline cache point just before the modifier.
 	// This will speed up re-evaluation of the pipeline if the user adjusts this modifier's parameters interactively.
-	if(isBeingEdited())
+	if(PropertiesEditor::isObjectBeingEdited(this))
 		return TimeInterval::empty();
 
 	return TimeInterval::infinite();

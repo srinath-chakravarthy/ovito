@@ -167,7 +167,7 @@ inline QDataStream& operator>>(QDataStream& stream, Ray_3<T>& r) {
  * \brief Instantiation of the Ray_3 class template with the default floating-point type.
  * \relates Ray_3
  */
-typedef Ray_3<FloatType> Ray3;
+using Ray3 = Ray_3<FloatType>;
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

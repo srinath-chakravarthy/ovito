@@ -64,3 +64,8 @@ Scripting features:
 
 - Scripting interface for viewport overlays (requested by lidong.cauc@gmail.com and johannes.moeller@fau.de).
 - Distribute Scipy with Ovito?
+
+Documentation:
+
+- Application settings dialog
+

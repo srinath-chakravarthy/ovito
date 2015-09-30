@@ -319,7 +319,7 @@ inline LoadStream& operator>>(LoadStream& stream, SymmetricTensor2T<T>& m)
  * \brief Template class instance of the SymmetricTensor2T class.
  * \relates SymmetricTensor2T
  */
-typedef SymmetricTensor2T<FloatType> SymmetricTensor2;
+using SymmetricTensor2 = SymmetricTensor2T<FloatType>;
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

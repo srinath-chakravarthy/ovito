@@ -345,13 +345,13 @@ inline QDataStream& operator>>(QDataStream& stream, Vector_2<T>& v) {
  * \brief Instantiation of the Vector_2 class template with the default floating-point type.
  * \relates Vector_2
  */
-typedef Vector_2<FloatType>		Vector2;
+using Vector2 = Vector_2<FloatType>;
 
 /**
  * \brief Instantiation of the Vector_2 class template with the default integer type.
  * \relates Vector_2
  */
-typedef Vector_2<int>			Vector2I;
+using Vector2I = Vector_2<int>;
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

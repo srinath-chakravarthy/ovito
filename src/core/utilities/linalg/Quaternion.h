@@ -453,7 +453,7 @@ inline QDataStream& operator>>(QDataStream& stream, QuaternionT<T>& q) {
  * \brief Template class instance of the QuaternionT class used for floating-point quaternions.
  * \relates QuaternionT
  */
-typedef QuaternionT<FloatType>		Quaternion;
+using Quaternion = QuaternionT<FloatType>;
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

@@ -183,28 +183,22 @@ protected:
 	/// The flags that control the behavior of the property field.
 	PropertyFieldFlags _flags;
 
-	/// Stores a pointer to the function that can be used to read the property field's
-	/// value for a certain RefMaker instance.
+	/// Stores a pointer to the function that reads the property field's value for a certain RefMaker instance.
 	QVariant (*propertyStorageReadFunc)(RefMaker*);
 
-	/// Stores a pointer to the function that can be used to write the property field's
-	/// value for a certain RefMaker instance.
+	/// Stores a pointer to the function that sets the property field's value for a certain RefMaker instance.
 	void (*propertyStorageWriteFunc)(RefMaker*, const QVariant&);
 
-	/// Stores a pointer to the function that can be used to save the property field's
-	/// value to a stream.
+	/// Stores a pointer to the function that saves the property field's value to a stream.
 	void (*propertyStorageSaveFunc)(RefMaker*, SaveStream&);
 
-	/// Stores a pointer to the function that can be used to load the property field's
-	/// value from a stream.
+	/// Stores a pointer to the function that loads the property field's value from a stream.
 	void (*propertyStorageLoadFunc)(RefMaker*, LoadStream&);
 
-	/// Stores a pointer to the function that can be used to access the single reference field's
-	/// value for a certain RefMaker instance.
+	/// Stores a pointer to the function that returns the single reference field for a certain RefMaker instance.
 	SingleReferenceFieldBase& (*singleStorageAccessFunc)(RefMaker*);
 
-	/// Stores a pointer to the function that can be used to access the vector reference field's
-	/// values for a certain RefMaker instance.
+	/// Stores a pointer to the function that return the vector reference field for a certain RefMaker instance.
 	VectorReferenceFieldBase& (*vectorStorageAccessFunc)(RefMaker*);
 
 	/// The human-readable name of this property field. It will be used

@@ -219,7 +219,7 @@ size_t SliceModifier::filterParticles(boost::dynamic_bitset<>& mask, TimePoint t
 ******************************************************************************/
 void SliceModifier::render(TimePoint time, ObjectNode* contextNode, ModifierApplication* modApp, SceneRenderer* renderer, bool renderOverlay)
 {
-	if(!renderOverlay && isBeingEdited() && renderer->isInteractive() && !renderer->isPicking())
+	if(!renderOverlay && PropertiesEditor::isObjectBeingEdited(this) && renderer->isInteractive() && !renderer->isPicking())
 		renderVisual(time, contextNode, renderer);
 }
 
@@ -228,7 +228,7 @@ void SliceModifier::render(TimePoint time, ObjectNode* contextNode, ModifierAppl
 ******************************************************************************/
 Box3 SliceModifier::boundingBox(TimePoint time, ObjectNode* contextNode, ModifierApplication* modApp)
 {
-	if(isBeingEdited())
+	if(PropertiesEditor::isObjectBeingEdited(this))
 		return renderVisual(time, contextNode, nullptr);
 	else
 		return Box3();

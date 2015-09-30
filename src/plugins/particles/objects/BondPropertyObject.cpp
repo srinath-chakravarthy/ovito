@@ -98,8 +98,7 @@ void BondPropertyObject::setName(const QString& newName)
 		return;
 
 	// Make the property change undoable.
-	if(dataset()->undoStack().isRecording())
-		dataset()->undoStack().push(new SimplePropertyChangeOperation(this, "name"));
+	dataset()->undoStack().pushIfRecording<SimplePropertyChangeOperation>(this, "name");
 
 	modifiableStorage()->setName(newName);
 	changed();

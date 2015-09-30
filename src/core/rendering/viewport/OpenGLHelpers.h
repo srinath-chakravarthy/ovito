@@ -50,6 +50,31 @@ extern OVITO_CORE_EXPORT void checkOpenGLErrorStatus(const char* command, const 
     #define OVITO_REPORT_OPENGL_ERRORS()
 #endif
 
+// Type-specific OpenGL functions:
+#ifdef FLOATTYPE_FLOAT
+	inline void glVertex3(FloatType x, FloatType y, FloatType z) { glVertex3f(x,y,z); }
+	inline void glColor3(FloatType r, FloatType g, FloatType b) { glColor3f(r,g,b); }
+#else
+	inline void glVertex3(FloatType x, FloatType y, FloatType z) { glVertex3d(x,y,z); }
+	inline void glColor3(FloatType r, FloatType g, FloatType b) { glColor3d(r,g,b); }
+#endif
+
+// Type-specific OpenGL functions:
+inline void glVertex(const Point_3<GLdouble>& v) { glVertex3dv(v.data()); }
+inline void glVertex(const Point_3<GLfloat>& v) { glVertex3fv(v.data()); }
+inline void glVertex(const Point_2<GLdouble>& v) { glVertex2dv(v.data()); }
+inline void glVertex(const Point_2<GLfloat>& v) { glVertex2fv(v.data()); }
+inline void glVertex(const Vector_3<GLdouble>& v) { glVertex3dv(v.data()); }
+inline void glVertex(const Vector_3<GLfloat>& v) { glVertex3fv(v.data()); }
+inline void glVertex(const Vector_4<GLdouble>& v) { glVertex4dv(v.data()); }
+inline void glVertex(const Vector_4<GLfloat>& v) { glVertex4fv(v.data()); }
+inline void glLoadMatrix(const Matrix_4<GLdouble>& tm) { glLoadMatrixd(tm.elements()); }
+inline void glLoadMatrix(const Matrix_4<GLfloat>& tm) { glLoadMatrixf(tm.elements()); }
+inline void glColor3(const ColorT<GLdouble>& c) { glColor3dv(c.data()); }
+inline void glColor3(const ColorT<GLfloat>& c) { glColor3fv(c.data()); }
+inline void glColor4(const ColorAT<GLdouble>& c) { glColor4dv(c.data()); }
+inline void glColor4(const ColorAT<GLfloat>& c) { glColor4fv(c.data()); }
+
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

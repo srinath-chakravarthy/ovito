@@ -38,9 +38,9 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem)
 ******************************************************************************/
 OvitoObjectType::OvitoObjectType(const QString& name, const OvitoObjectType* superClass, bool isSerializable) :
 	_name(name), _displayName(name), _plugin(nullptr), _superClass(superClass),
-	_isSerializable(isSerializable), _firstPropertyField(NULL), _editorClass(nullptr), _isAbstract(false)
+	_isSerializable(isSerializable), _firstPropertyField(nullptr), _isAbstract(false)
 {
-	OVITO_ASSERT(superClass != NULL || name == QStringLiteral("OvitoObject"));
+	OVITO_ASSERT(superClass != nullptr || name == QStringLiteral("OvitoObject"));
 }
 
 /******************************************************************************
@@ -114,6 +114,7 @@ OvitoObjectType* OvitoObjectType::deserializeRTTI(ObjectLoadStream& stream)
 		OvitoObjectType* type = plugin->findClass(className);
 		if(!type) {
 
+			// This is for backward compatibility with OVITO 2.2.
 			// Handle legacy classes that no longer exist.
 			if(className == QStringLiteral("VectorController")
 					|| className == QStringLiteral("FloatController")

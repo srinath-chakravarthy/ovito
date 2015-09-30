@@ -39,12 +39,14 @@ class OVITO_CORE_EXPORT PropertyFieldBase
 public:
 
 #ifdef OVITO_DEBUG
-	/// One has to call init() once to fully setup this property field.
+	/// One has to call init() once to fully initialize this property field.
+	/// This is done by the INIT_PROPERTY_FIELD macro, which must be called from the owner's class constructor.
 	PropertyFieldBase() : _owner(nullptr), _descriptor(nullptr) {}
 #endif
 
 	/// Connects the property field to its owning RefMaker derived class.
-	/// This function must be called in the constructor of the RefMaker derived class for each of its property fields.
+	/// This function must be called in the constructor of the RefMaker derived class for each of its
+	/// property fields using the INIT_PROPERTY_FIELD macro.
 	void init(RefMaker* owner, PropertyFieldDescriptor* descriptor);
 
 	/// Returns the owner of this property field.
@@ -107,7 +109,7 @@ public:
 	PropertyField& operator=(const property_type& newValue) {
 		if(_value == newValue) return *this;
 		if(descriptor()->automaticUndo() && owner()->dataset()->undoStack().isRecording())
-			owner()->dataset()->undoStack().push(new PropertyChangeOperation(*this));
+			owner()->dataset()->undoStack().push(std::unique_ptr<PropertyChangeOperation>(new PropertyChangeOperation(*this)));
 		setPropertyValue(newValue);
 		return *this;
 	}

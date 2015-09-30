@@ -51,9 +51,9 @@ UndoStack::UndoStack() : _suspendCount(0), _index(-1), _cleanIndex(-1),
 * Registers a single undoable operation.
 * This object will be put onto the undo stack.
 ******************************************************************************/
-void UndoStack::push(UndoableOperation* operation)
+void UndoStack::push(std::unique_ptr<UndoableOperation> operation)
 {
-	OVITO_CHECK_POINTER(operation);
+	OVITO_CHECK_POINTER(operation.get());
 	OVITO_ASSERT_MSG(isUndoingOrRedoing() == false, "UndoStack::push()", "Cannot record an operation while undoing or redoing another operation.");
 	OVITO_ASSERT_MSG(!isSuspended(), "UndoStack::push()", "Not in recording state.");
 
@@ -64,19 +64,19 @@ void UndoStack::push(UndoableOperation* operation)
 	if(cleanIndex() > index()) _cleanIndex = -1;
 
 	if(_compoundStack.empty()) {
-		_operations.emplace_back(operation);
+		_operations.push_back(std::move(operation));
 		_index++;
 		OVITO_ASSERT(index() == count() - 1);
 		limitUndoStack();
 		indexChanged(index());
 		cleanChanged(false);
 		canUndoChanged(true);
-		undoTextChanged(operation->displayName());
+		undoTextChanged(undoText());
 		canRedoChanged(false);
 		redoTextChanged(QString());
 	}
 	else {
-		_compoundStack.back()->addOperation(operation);
+		_compoundStack.back()->addOperation(std::move(operation));
 	}
 }
 
@@ -99,7 +99,6 @@ void UndoStack::endCompoundOperation(bool commit)
 
 	if(!commit) {
 		UndoSuspender noUndo(*this);
-
 		// Undo operations in current compound operation first.
 		resetCurrentCompoundOperation();
 		// Then discard compound operation.
@@ -119,8 +118,8 @@ void UndoStack::endCompoundOperation(bool commit)
 			return;
 		}
 
-		// Put new operation on stack.
-		push(cop.release());
+		// Put new operation on the stack.
+		push(std::move(cop));
 	}
 }
 

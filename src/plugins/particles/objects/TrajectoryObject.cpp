@@ -108,8 +108,7 @@ void TrajectoryObject::setTrajectories(int trajectoryCount, const QVector<Point3
 	};
 
 	// Make a backup of the old trajectories so they may be restored.
-	if(dataset()->undoStack().isRecording())
-		dataset()->undoStack().push(new ReplaceTrajectoryOperation(this));
+	dataset()->undoStack().pushIfRecording<ReplaceTrajectoryOperation>(this);
 
 	_trajectoryCount = trajectoryCount;
 	_points = points;

@@ -366,16 +366,13 @@ inline QDataStream& operator>>(QDataStream& stream, Vector_3<T>& v) {
  * \brief Instantiation of the Vector_3 class template with the default floating-point type.
  * \relates Vector_3
  */
-typedef Vector_3<FloatType>		Vector3;
+using Vector3 = Vector_3<FloatType>;
 
 /**
  * \brief Instantiation of the Vector_3 class template with the default integer type.
  * \relates Vector_3
 */
-typedef Vector_3<int>			Vector3I;
-
-inline void glVertex(const Vector_3<GLdouble>& v) { glVertex3dv(v.data()); }
-inline void glVertex(const Vector_3<GLfloat>& v) { glVertex3fv(v.data()); }
+using Vector3I = Vector_3<int>;
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

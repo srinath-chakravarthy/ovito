@@ -741,7 +741,7 @@ inline QDataStream& operator>>(QDataStream& stream, Matrix_3<T>& m) {
  * \brief Instantiation of the Matrix_3 class template with the default floating-point type.
  * \relates Matrix_3
  */
-typedef Matrix_3<FloatType>		Matrix3;
+using Matrix3 = Matrix_3<FloatType>;
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

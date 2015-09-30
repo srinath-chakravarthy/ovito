@@ -165,8 +165,8 @@ bool CameraObject::isTargetCamera() const
 ******************************************************************************/
 void CameraObject::setIsTargetCamera(bool enable)
 {
-	if(dataset()->undoStack().isRecording())
-		dataset()->undoStack().push(new TargetChangedUndoOperation(this));
+	dataset()->undoStack().pushIfRecording<TargetChangedUndoOperation>(this);
+
 	for(ObjectNode* node : dependentNodes()) {
 		if(node->lookatTargetNode() == nullptr && enable) {
 			if(SceneNode* parentNode = node->parentNode()) {
@@ -192,8 +192,8 @@ void CameraObject::setIsTargetCamera(bool enable)
 			targetNode->deleteNode();
 		}
 	}
-	if(dataset()->undoStack().isRecording())
-		dataset()->undoStack().push(new TargetChangedRedoOperation(this));
+
+	dataset()->undoStack().pushIfRecording<TargetChangedRedoOperation>(this);
 	notifyDependents(ReferenceEvent::TargetChanged);
 }
 

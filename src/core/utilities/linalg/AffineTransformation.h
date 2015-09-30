@@ -809,7 +809,7 @@ inline QDataStream& operator>>(QDataStream& stream, AffineTransformationT<T>& m)
  * \brief Instantiation of the AffineTransformationT class template with the default floating-point type.
  * \relates AffineTransformationT
  */
-typedef AffineTransformationT<FloatType>		AffineTransformation;
+using AffineTransformation = AffineTransformationT<FloatType>;
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

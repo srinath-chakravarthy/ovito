@@ -241,8 +241,16 @@ public:
 	/// \param operation An instance of a UndoableOperation derived class that encapsulates
 	///                  the operation. The UndoStack becomes the owner of
 	///                  this object and is responsible for its deletion.
-	void push(UndoableOperation* operation);
+	void push(std::unique_ptr<UndoableOperation> operation);
 	
+	/// \brief Pushes an operation onto the undo stack if the undo stack is currently recording.
+	/// The undo record is only created if the undo stack is recording.
+	template<class UndoableOperationClass, class... Args>
+	void pushIfRecording(Args&&... args) {
+		if(isRecording())
+			push(std::unique_ptr<UndoableOperationClass>(new UndoableOperationClass(std::forward<Args>(args)...)));
+	}
+
 	/// \brief Suspends the recording of undoable operations.
 	///
 	/// Recording of operations is suspended by this method until a call to resume().
@@ -337,10 +345,9 @@ public:
 	/// value by calling the getter method.
 	template<typename ValueType, class ObjectType, typename GetterFunction, typename SetterFunction>
 	void undoablePropertyChange(ObjectType* obj, GetterFunction getterFunc, SetterFunction setterFunc) {
-		if(isRecording()) {
-			push(new SimpleValueChangeOperation<ValueType, ObjectType,
-					GetterFunction, SetterFunction>(obj, getterFunc, setterFunc));
-		}
+		pushIfRecording<
+				SimpleValueChangeOperation<ValueType, ObjectType, GetterFunction, SetterFunction>
+			>(obj, getterFunc, setterFunc);
 	}
 
 public Q_SLOTS:
@@ -417,7 +424,7 @@ private:
 		/// \param operation An instance of a UndoableOperation derived class that encapsulates
 		///                  the operation. The CompoundOperation becomes the owner of
 		///                  this object and is responsible for its deletion.
-		void addOperation(UndoableOperation* operation) { _subOperations.emplace_back(operation); }
+		void addOperation(std::unique_ptr<UndoableOperation> operation) { _subOperations.push_back(std::move(operation)); }
 
 		/// \brief Indicates whether this UndoableOperation is significant or can be ignored.
 		/// \return \c true if the CompoundOperation contains at least one sub-operation; \c false it is empty.

@@ -93,7 +93,6 @@ BOOST_PYTHON_MODULE(PyScriptApp)
 	ovito_abstract_class<RefTarget, RefMaker>()
 		.def("isReferencedBy", &RefTarget::isReferencedBy)
 		.def("deleteReferenceObject", &RefTarget::deleteReferenceObject)
-		.add_property("isBeingEdited", &RefTarget::isBeingEdited)
 		.add_property("objectTitle", &RefTarget::objectTitle)
 		.add_property("num_dependents",
 				static_cast<int (*)(RefTarget& target)>([](RefTarget& t) { return t.dependents().size(); }))

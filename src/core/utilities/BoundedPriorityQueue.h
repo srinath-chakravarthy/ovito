@@ -70,7 +70,10 @@ public:
 	bool empty() const { return _count == 0; }
 
 	/// Returns the greatest element.
-	const value_type& top() const { return _data[0]; }
+	const value_type& top() const {
+		OVITO_ASSERT(!empty());
+		return _data[0];
+	}
 
 	/// Inserts a new element into the priority queue.
 	void insert(const value_type& x) {
@@ -105,22 +108,22 @@ public:
 	}
 
 	/// Returns an iterator pointing to the first element in the queue.
-	const_iterator begin() const { return _data; }
+	const_iterator begin() const { return &_data[0]; }
 
 	/// Returns an iterator pointing to the element after the last element in the queue.
-	const_iterator end() const { return _data + _count; }
+	const_iterator end() const { return &_data[_count]; }
 
 	/// Returns the i-th entry in the queue.
 	const value_type& operator[](int i) const { OVITO_ASSERT(i < _count); return _data[i]; }
 
 	/// Sort the entries of the queue.
-	void sort() { std::sort(_data, _data + _count, _comp); }
+	void sort() { std::sort(_data.begin(), _data.begin() + _count, _comp); }
 
 protected:
 
 	int _count;
 	int _maxSize;
-	value_type _data[QUEUE_SIZE_LIMIT];
+	std::array<value_type, QUEUE_SIZE_LIMIT> _data;
 	Compare _comp;
 };
 
