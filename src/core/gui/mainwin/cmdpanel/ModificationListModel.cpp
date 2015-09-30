@@ -425,18 +425,117 @@ bool ModificationListModel::setData(const QModelIndex& index, const QVariant& va
 ******************************************************************************/
 Qt::ItemFlags ModificationListModel::flags(const QModelIndex& index) const
 {
-	OVITO_ASSERT(index.row() >= 0 && index.row() < _items.size());
-	ModificationListItem* item = this->item(index.row());
-	if(item->object() == nullptr) {
-		return Qt::NoItemFlags;
-	}
-	else {
-		if(dynamic_object_cast<DisplayObject>(item->object()) || dynamic_object_cast<Modifier>(item->object())) {
-			return QAbstractListModel::flags(index) | Qt::ItemIsUserCheckable;
+	if(index.row() >= 0 && index.row() < _items.size()) {
+		ModificationListItem* item = this->item(index.row());
+		if(item->object() == nullptr) {
+			return Qt::NoItemFlags;
+		}
+		else {
+			if(dynamic_object_cast<DisplayObject>(item->object())) {
+				return QAbstractListModel::flags(index) | Qt::ItemIsUserCheckable;
+			}
+			else if(dynamic_object_cast<Modifier>(item->object())) {
+				return QAbstractListModel::flags(index) | Qt::ItemIsUserCheckable | Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
+			}
 		}
 	}
 	return QAbstractListModel::flags(index);
 }
+
+/******************************************************************************
+* Returns the list of allowed MIME types.
+******************************************************************************/
+QStringList ModificationListModel::mimeTypes() const
+{
+    return QStringList() << QStringLiteral("application/ovito.modifier.list");
+}
+
+/******************************************************************************
+* Returns an object that contains serialized items of data corresponding to the
+* list of indexes specified.
+******************************************************************************/
+QMimeData* ModificationListModel::mimeData(const QModelIndexList& indexes) const
+{
+	QByteArray encodedData;
+	QDataStream stream(&encodedData, QIODevice::WriteOnly);
+	for(const QModelIndex& index : indexes) {
+		if(index.isValid()) {
+			stream << index.row();
+		}
+	}
+	std::unique_ptr<QMimeData> mimeData(new QMimeData());
+	mimeData->setData(QStringLiteral("application/ovito.modifier.list"), encodedData);
+	return mimeData.release();
+}
+
+/******************************************************************************
+* Returns true if the model can accept a drop of the data.
+******************************************************************************/
+bool ModificationListModel::canDropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent) const
+{
+	if(!data->hasFormat(QStringLiteral("application/ovito.modifier.list")))
+		return false;
+
+	if(column > 0)
+		return false;
+
+	return true;
+}
+
+/******************************************************************************
+* Handles the data supplied by a drag and drop operation that ended with the
+* given action.
+******************************************************************************/
+bool ModificationListModel::dropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent)
+{
+	if(!canDropMimeData(data, action, row, column, parent))
+		return false;
+
+	if(action == Qt::IgnoreAction)
+		return true;
+
+	if(row == -1 && parent.isValid())
+		row = parent.row();
+	if(row == -1)
+		return false;
+
+    QByteArray encodedData = data->data(QStringLiteral("application/ovito.modifier.list"));
+    QDataStream stream(&encodedData, QIODevice::ReadOnly);
+    QVector<int> indexList;
+    while(!stream.atEnd()) {
+    	int index;
+    	stream >> index;
+    	indexList.push_back(index);
+    }
+    if(indexList.size() != 1)
+    	return false;
+
+    ModificationListItem* movedItem = item(indexList[0]);
+	if(movedItem->modifierApplications().size() != 1)
+		return false;
+
+	OORef<ModifierApplication> modApp = movedItem->modifierApplications()[0];
+	OORef<PipelineObject> pipelineObj = modApp->pipelineObject();
+	if(!pipelineObj)
+		return false;
+
+	OVITO_ASSERT(pipelineObj->modifierApplications().contains(modApp));
+	int indexDelta = -(row - indexList[0]);
+
+	UndoableTransaction::handleExceptions(modApp->dataset()->undoStack(), tr("Move modifier"), [pipelineObj, modApp, indexDelta]() {
+		// Determine old position in stack.
+		int index = pipelineObj->modifierApplications().indexOf(modApp);
+		if(indexDelta == 0 || index+indexDelta < 0 || index+indexDelta >= pipelineObj->modifierApplications().size())
+			return;
+		// Remove ModifierApplication from the PipelineObject.
+		pipelineObj->removeModifier(modApp);
+		// Re-insert ModifierApplication into the PipelineObject.
+		pipelineObj->insertModifierApplication(modApp, index+indexDelta);
+	});
+
+	return true;
+}
+
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

@@ -80,6 +80,23 @@ public:
 	/// Populates the model with the given list items.
 	void setItems(const QList<OORef<ModificationListItem>>& newItems, const QList<OORef<ModificationListItem>>& newHiddenItems);
 
+	/// Returns the type of drag and drop operations supported by the model.
+	Qt::DropActions supportedDropActions() const override {
+	    return Qt::MoveAction;
+	}
+
+	/// Returns the list of allowed MIME types.
+	QStringList mimeTypes() const override;
+
+	/// Returns an object that contains serialized items of data corresponding to the list of indexes specified.
+	QMimeData* mimeData(const QModelIndexList& indexes) const override;
+
+	/// Returns true if the model can accept a drop of the data.
+	bool canDropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent) const override;
+
+	/// Handles the data supplied by a drag and drop operation that ended with the given action.
+	bool dropMimeData(const QMimeData* data, Qt::DropAction action, int row, int column, const QModelIndex& parent) override;
+
 	/// Returns true if the list model is currently in a valid state.
 	bool isUpToDate() const { return !_needListUpdate; }
 

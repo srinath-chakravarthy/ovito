@@ -72,6 +72,10 @@ ModifyCommandPage::ModifyCommandPage(MainWindow* mainWindow, QWidget* parent) : 
 	subLayout->setSpacing(2);
 
 	_modificationListWidget = new ModifierStackListView(upperContainer);
+	_modificationListWidget->setDragDropMode(QAbstractItemView::InternalMove);
+	_modificationListWidget->setDragEnabled(true);
+	_modificationListWidget->setAcceptDrops(true);
+	_modificationListWidget->setDropIndicatorShown(true);
 	_modificationListWidget->setModel(_modificationListModel);
 	_modificationListWidget->setSelectionModel(_modificationListModel->selectionModel());
 	connect(_modificationListModel, &ModificationListModel::selectedItemChanged, this, &ModifyCommandPage::onSelectedItemChanged);
