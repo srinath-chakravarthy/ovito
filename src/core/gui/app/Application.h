@@ -111,6 +111,15 @@ public:
 	/// Returns the list of auto-start objects created at application startup.
 	const std::vector<OORef<AutoStartObject>>& autostartObjects() const { return _autostartObjects; }
 
+	/// Returns the major version number of the application.
+	static int applicationVersionMajor();
+
+	/// Returns the minor version number of the application.
+	static int applicationVersionMinor();
+
+	/// Returns the revision version number of the application.
+	static int applicationVersionRevision();
+
 private:
 
 	/// Initializes the graphical user interface of the application.

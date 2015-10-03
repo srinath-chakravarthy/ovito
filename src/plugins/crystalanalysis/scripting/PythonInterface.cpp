@@ -25,6 +25,7 @@
 #include <plugins/crystalanalysis/modifier/SmoothSurfaceModifier.h>
 #include <plugins/crystalanalysis/modifier/dxa/DislocationAnalysisModifier.h>
 #include <plugins/crystalanalysis/modifier/dxa/StructureAnalysis.h>
+#include <plugins/crystalanalysis/modifier/elasticstrain/ElasticStrainModifier.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationDisplay.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
@@ -161,6 +162,66 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 			.value("HexagonalDiamond", StructureAnalysis::LATTICE_HEX_DIAMOND)
 		;
 	}
+
+	ovito_class<ElasticStrainModifier, StructureIdentificationModifier>(
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
+			"This modifier computes the atomic-level elastic strain and deformation gradient tensors in crystalline systems. "
+			"\n\n"
+			"The modifier first performs an identification of the local crystal structure and stores the results in the ``Structure Type`` particle "
+			"property. Possible structure type values are listed under the :py:attr:`.input_crystal_structure` property. "
+			"Atoms that do not form a crystalline structure or which are part of defects are assigned the special type ``OTHER`` (=0). "
+			"For these atoms the local elastic deformation cannot be computed. "
+			"\n\n"
+			"If :py:attr:`.calculate_deformation_gradients` is set to true, the modifier outputs a new particle property named ``Elastic Deformation Gradient``, "
+			"which contains the per-atom elastic deformation gradient tensors. Each tensor has nine components stored in column-major order. "
+			"Atoms for which the elastic deformation gradient could not be determined (i.e. which are classified as ``OTHER``) will be assigned the null tensor. "
+			"\n\n"
+			"If :py:attr:`.calculate_strain_tensors` is set to true, the modifier outputs a new particle property named ``Elastic Strain``, "
+			"which contains the per-atom elastic strain tensors. Each symmetric strain tensor has six components stored in the order XX, YY, ZZ, XY, XZ, YZ. "
+			"Atoms for which the elastic strain tensor could not be determined (i.e. which are classified as ``OTHER``) will be assigned the null tensor. "
+			"\n\n"
+			"Furthermore, the modifier generates a particle property ``Volumetric Strain``, which stores the trace divided by three of the local elastic strain tensor. "
+			"Atoms for which the elastic strain tensor could not be determined (i.e. which are classified as ``OTHER``) will be assigned a value of zero. "
+			"\n\n"
+			)
+		.add_property("input_crystal_structure", &ElasticStrainModifier::inputCrystalStructure, &ElasticStrainModifier::setInputCrystalStructure,
+				"The type of crystal to analyze. Must be one of: "
+				"\n\n"
+				"  * ``ElasticStrainModifier.Lattice.FCC``\n"
+				"  * ``ElasticStrainModifier.Lattice.HCP``\n"
+				"  * ``ElasticStrainModifier.Lattice.BCC``\n"
+				"  * ``ElasticStrainModifier.Lattice.CubicDiamond``\n"
+				"  * ``ElasticStrainModifier.Lattice.HexagonalDiamond``\n"
+				"\n\n"
+				":Default: ``ElasticStrainModifier.Lattice.FCC``\n")
+		.add_property("calculate_deformation_gradients", &ElasticStrainModifier::calculateDeformationGradients, &ElasticStrainModifier::setCalculateDeformationGradients,
+				"Flag that enables the output of the calculated elastic deformation gradient tensors. The per-particle tensors will be stored in a new "
+				"particle property named ``Elastic Deformation Gradient`` with nine components (stored in column-major order). "
+				"Particles for which the local elastic deformation cannot be calculated, are assigned the null tensor. "
+				"\n\n"
+				":Default: False\n")
+		.add_property("calculate_strain_tensors", &ElasticStrainModifier::calculateStrainTensors, &ElasticStrainModifier::setCalculateStrainTensors,
+				"Flag that enables the calculation and out of the elastic strain tensors. The symmetric strain tensors will be stored in a new "
+				"particle property named ``Elastic Strain`` with six components (XX, YY, ZZ, XY, XZ, YZ). "
+				"\n\n"
+				":Default: True\n")
+		.add_property("push_strain_tensors_forward", &ElasticStrainModifier::pushStrainTensorsForward, &ElasticStrainModifier::setPushStrainTensorsForward,
+				"Selects the frame in which the elastic strain tensors are calculated. "
+				"\n\n"
+				"If true, the *Eulerian-Almansi* finite strain tensor is computed, which measures the elastic strain in the global coordinate system (spatial frame). "
+				"\n\n"
+				"If false, the *Green-Lagrangian* strain tensor is computed, which measures the elastic strain in the local lattice coordinate system (material frame). "
+				"\n\n"
+				":Default: True\n")
+		.add_property("lattice_constant", &ElasticStrainModifier::latticeConstant, &ElasticStrainModifier::setLatticeConstant,
+				"Lattice constant (*a*:sub:`0`) of the ideal unit cell."
+				"\n\n"
+				":Default: 1.0\n")
+		.add_property("axial_ratio", &ElasticStrainModifier::axialRatio, &ElasticStrainModifier::setAxialRatio,
+				"The *c/a* ratio of the ideal unit cell for crystals with hexagonal symmetry."
+				"\n\n"
+				":Default: sqrt(8/3)\n")
+	;
 
 	ovito_class<SmoothDislocationsModifier, Modifier>()
 		.add_property("smoothingEnabled", &SmoothDislocationsModifier::smoothingEnabled, &SmoothDislocationsModifier::setSmoothingEnabled)

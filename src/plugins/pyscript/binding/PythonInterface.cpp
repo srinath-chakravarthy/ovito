@@ -33,7 +33,7 @@ BOOST_PYTHON_MODULE(PyScript)
 	docstring_options docoptions(true, false);
 
 	// Make Ovito program version number available to script.
-	scope().attr("version") = make_tuple(OVITO_VERSION_MAJOR, OVITO_VERSION_MINOR, OVITO_VERSION_REVISION);
+	scope().attr("version") = make_tuple(Application::applicationVersionMajor(), Application::applicationVersionMinor(), Application::applicationVersionRevision());
 
 	// Make environment information available to the script.
 	scope().attr("gui_mode") = Application::instance().guiMode();

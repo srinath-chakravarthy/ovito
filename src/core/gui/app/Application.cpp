@@ -68,6 +68,33 @@ Application::~Application()
 }
 
 /******************************************************************************
+* Returns the major version number of the application.
+******************************************************************************/
+int Application::applicationVersionMajor()
+{
+	// This compile-time constant is defined by the CMake build script.
+	return OVITO_VERSION_MAJOR;
+}
+
+/******************************************************************************
+* Returns the minor version number of the application.
+******************************************************************************/
+int Application::applicationVersionMinor()
+{
+	// This compile-time constant is defined by the CMake build script.
+	return OVITO_VERSION_MINOR;
+}
+
+/******************************************************************************
+* Returns the revision version number of the application.
+******************************************************************************/
+int Application::applicationVersionRevision()
+{
+	// This compile-time constant is defined by the CMake build script.
+	return OVITO_VERSION_REVISION;
+}
+
+/******************************************************************************
 * This is called on program startup.
 ******************************************************************************/
 bool Application::initialize(int& argc, char** argv)

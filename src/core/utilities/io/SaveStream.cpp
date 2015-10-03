@@ -21,6 +21,7 @@
 
 #include <core/Core.h>
 #include <core/utilities/Exception.h>
+#include <core/gui/app/Application.h>
 #include "SaveStream.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(IO)
@@ -56,9 +57,9 @@ SaveStream::SaveStream(QDataStream& destination) : _os(destination), _isOpen(fal
 	*this << QCoreApplication::applicationName();
 
 	// Write application version.
-	*this << (quint32)OVITO_VERSION_MAJOR;
-	*this << (quint32)OVITO_VERSION_MINOR;
-	*this << (quint32)OVITO_VERSION_REVISION;
+	*this << (quint32)Application::applicationVersionMajor();
+	*this << (quint32)Application::applicationVersionMinor();
+	*this << (quint32)Application::applicationVersionRevision();
 }
 
 /******************************************************************************

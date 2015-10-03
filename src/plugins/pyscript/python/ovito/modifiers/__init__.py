@@ -33,6 +33,7 @@ Class name                                     User interface name
 :py:class:`ComputePropertyModifier`            :guilabel:`Compute property`
 :py:class:`DeleteSelectedParticlesModifier`    :guilabel:`Delete selected particles`
 :py:class:`DislocationAnalysisModifier`        :guilabel:`Dislocation analysis (DXA)`
+:py:class:`ElasticStrainModifier`              :guilabel:`Elastic strain calculation`
 :py:class:`ExpandSelectionModifier`            :guilabel:`Expand selection`
 :py:class:`FreezePropertyModifier`             :guilabel:`Freeze property`
 :py:class:`HistogramModifier`                  :guilabel:`Histogram`

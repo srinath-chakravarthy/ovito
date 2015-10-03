@@ -10,3 +10,7 @@ ovito.modifiers.ConstructSurfaceModifier = CrystalAnalysis.ConstructSurfaceModif
 ovito.modifiers.SmoothDislocationsModifier = CrystalAnalysis.SmoothDislocationsModifier
 ovito.modifiers.SmoothSurfaceModifier = CrystalAnalysis.SmoothSurfaceModifier
 ovito.modifiers.DislocationAnalysisModifier = CrystalAnalysis.DislocationAnalysisModifier
+ovito.modifiers.ElasticStrainModifier = CrystalAnalysis.ElasticStrainModifier
+
+# Copy enum list.
+ovito.modifiers.ElasticStrainModifier.Lattice = ovito.modifiers.DislocationAnalysisModifier.Lattice

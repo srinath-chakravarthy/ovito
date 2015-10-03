@@ -28,6 +28,7 @@
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/dataset/UndoStack.h>
 #include <core/dataset/DataSetContainer.h>
+#include <core/gui/app/Application.h>
 #include <core/gui/actions/ActionManager.h>
 #include <core/gui/mainwin/MainWindow.h>
 #include <core/gui/widgets/selection/SceneNodeSelectionBox.h>
@@ -469,9 +470,9 @@ void ModifyCommandPage::createAboutPanel()
 		// Fetch newest web page from web server.
 		QNetworkAccessManager* networkAccessManager = new QNetworkAccessManager(_aboutRollout);
 		QString urlString = QString("http://www.ovito.org/appnews/v%1.%2.%3/?ovito=%4&OS=%5%6")
-				.arg(OVITO_VERSION_MAJOR)
-				.arg(OVITO_VERSION_MINOR)
-				.arg(OVITO_VERSION_REVISION)
+				.arg(Application::applicationVersionMajor())
+				.arg(Application::applicationVersionMinor())
+				.arg(Application::applicationVersionRevision())
 				.arg(QString(id.toHex()))
 				.arg(operatingSystemString)
 				.arg(QT_POINTER_SIZE*8);
