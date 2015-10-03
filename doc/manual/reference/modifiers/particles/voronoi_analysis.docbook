@@ -40,6 +40,12 @@
     <link linkend="usage.particle_inspection_utility">Particle Inspection</link> utility to select the atom
     in the viewports and display its properties (including the assigned Voronoi indices).
   </para> 
+
+  <para>
+    If you want to know what is the Voronoi index vector that occurs most frequently in your atomistic system, 
+    you can perform a statistical analysis of the computed Voronoi indices using a custom Python script.
+    You can find an example script in the <link xlink:href="python/introduction/examples.html#computing-voronoi-indices">OVITO scripting manual</link>.
+  </para>
   
   <para>
     Note that the modifier calculates the Voronoi tessellation of the volume enclosed by the simulation cell only (and not 

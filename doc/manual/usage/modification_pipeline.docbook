@@ -65,7 +65,8 @@
     <para>
        You can temporarily disable individual modifiers in the modification pipeline by unchecking the box next to them. 
        To permanently remove a modifier from the pipeline, use the <emphasis>Delete Modifier</emphasis> button in the toolbar on the right. 
-       The up and down arrow buttons can be used to change the order of modifiers in the pipeline.
+       The up and down arrow buttons can be used to change the order of modifiers in the pipeline, or you can 
+       drag and drop modifiers directly within the list to rearrange them.
     </para>
   </simplesect>
 

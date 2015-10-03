@@ -585,7 +585,10 @@ void FileSource::showURLSelectionDialog(QWidget* parent)
 
 			// Let the user select a new URL.
 			ImportRemoteFileDialog dialog(availableTypes, dataset(), parent, tr("Pick source"));
-			dialog.selectFile(sourceUrl());
+			QUrl oldUrl = sourceUrl();
+			if(loadedFrameIndex() >= 0 && loadedFrameIndex() < frames().size())
+				oldUrl = frames()[loadedFrameIndex()].sourceFile;
+			dialog.selectFile(oldUrl);
 			if(dialog.exec() != QDialog::Accepted)
 				return;
 

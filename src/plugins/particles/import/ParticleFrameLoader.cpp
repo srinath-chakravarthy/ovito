@@ -242,14 +242,15 @@ void ParticleFrameLoader::insertParticleTypes(ParticlePropertyObject* propertyOb
 
 	QSet<ParticleType*> activeTypes;
 	for(const auto& item : _particleTypes) {
-		OORef<ParticleType> ptype = typeProperty->particleType(item.id);
 		QString name = item.name;
 		if(name.isEmpty())
 			name = ParticleImporter::tr("Type %1").arg(item.id);
+		OORef<ParticleType> ptype = typeProperty->particleType(name);
 
 		if(ptype == nullptr) {
 			ptype = new ParticleType(typeProperty->dataset());
 			ptype->setId(item.id);
+			ptype->setName(name);
 
 			// Assign initial standard color to new particle types.
 			if(item.color != Color(0,0,0))
@@ -262,10 +263,10 @@ void ParticleFrameLoader::insertParticleTypes(ParticlePropertyObject* propertyOb
 
 			typeProperty->addParticleType(ptype);
 		}
+		else {
+			ptype->setId(item.id);
+		}
 		activeTypes.insert(ptype);
-
-		if(ptype->name().isEmpty())
-			ptype->setName(name);
 
 		if(item.color != Color(0,0,0))
 			ptype->setColor(item.color);
@@ -274,10 +275,12 @@ void ParticleFrameLoader::insertParticleTypes(ParticlePropertyObject* propertyOb
 			ptype->setRadius(item.radius);
 	}
 
-	// Remove unused particle types.
-	for(int index = typeProperty->particleTypes().size() - 1; index >= 0; index--) {
-		if(!activeTypes.contains(typeProperty->particleTypes()[index]))
-			typeProperty->removeParticleType(index);
+	if(_isNewFile) {
+		// Remove unused particle types.
+		for(int index = typeProperty->particleTypes().size() - 1; index >= 0; index--) {
+			if(!activeTypes.contains(typeProperty->particleTypes()[index]))
+				typeProperty->removeParticleType(index);
+		}
 	}
 }
 
