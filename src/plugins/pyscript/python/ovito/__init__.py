@@ -201,7 +201,7 @@ ObjectNode.remove_from_scene = _ObjectNode_remove_from_scene
 
 # Give SceneRoot class a list-like interface.
 SceneRoot.__len__ = lambda self: len(self.children)
-SceneRoot.__iter__ = lambda self: self.children.__iter__
+SceneRoot.__iter__ = lambda self: iter(self.children)
 SceneRoot.__getitem__ = lambda self, i: self.children[i]
 def _SceneRoot__setitem__(self, index, newNode):
     if index < 0: index += len(self)
