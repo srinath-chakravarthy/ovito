@@ -77,7 +77,7 @@ protected:
 
 		/// Constructor.
 		CrystalAnalysisFrameLoader(DataSetContainer* container, const FileSourceImporter::Frame& frame, bool loadParticles)
-			: ParticleFrameLoader(container, frame, true), _loadParticles(loadParticles), _defectSurface(new HalfEdgeMesh<>()) {}
+			: ParticleFrameLoader(container, frame, true), _loadParticles(loadParticles) {}
 
 		/// Inserts the data loaded by perform() into the provided container object. This function is
 		/// called by the system from the main thread after the asynchronous loading task has finished.
@@ -89,19 +89,19 @@ protected:
 		virtual void parseFile(CompressedTextReader& stream) override;
 
 		struct BurgersVectorFamilyInfo {
-			int id;
+			int id = 0;
 			QString name;
-			Vector3 burgersVector;
-			Color color;
+			Vector3 burgersVector = Vector3::Zero();
+			Color color = Color(1,1,1);
 		};
 
 		struct PatternInfo {
-			int id;
-			StructurePattern::StructureType type;
-			StructurePattern::SymmetryType symmetryType;
+			int id = 0;
+			StructurePattern::StructureType type = StructurePattern::Lattice;
+			StructurePattern::SymmetryType symmetryType = StructurePattern::CubicSymmetry;
 			QString shortName;
 			QString longName;
-			Color color;
+			Color color = Color(1,1,1);
 			QVector<BurgersVectorFamilyInfo> burgersVectorFamilies;
 		};
 
