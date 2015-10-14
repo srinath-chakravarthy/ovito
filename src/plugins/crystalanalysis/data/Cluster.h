@@ -132,14 +132,14 @@ struct Cluster
 	int structure;
 
 	/// The number of atoms that belong to the cluster.
-	int atomCount;
+	int atomCount = 0;
 
 	/// Linked list of transitions from this cluster to other clusters. They form the directed edges
 	/// of the cluster graph.
 	///
 	/// The elements in the linked list are always ordered in ascending distance order.
 	/// Thus, the self-transition (having distance 0) will always be a the head of the linked list (if it has already been created).
-	ClusterTransition* transitions;
+	ClusterTransition* transitions = nullptr;
 
 	/// This is a work variable used only during a recursive path search in the
 	/// cluster graph. It points to the preceding node in the path.
@@ -153,18 +153,18 @@ struct Cluster
 	/// Transformation matrix that transforms vectors from the cluster's internal coordinate space
 	/// to the global simulation frame. Note that this describes the (average) orientation of the
 	/// atom group in the simulation coordinate system.
-	Matrix3 orientation;
+	Matrix3 orientation = Matrix3::Identity();
 
 	/// The center of mass of the cluster. This is computed from the atoms
 	/// that are part of the cluster.
-	Point3 centerOfMass;
+	Point3 centerOfMass = Point3::Origin();
 
 	/// The transition from this cluster to its parent if the cluster
 	/// is a child cluster.
-	ClusterTransition* parentTransition;
+	ClusterTransition* parentTransition = nullptr;
 
 	/// Constructor.
-	Cluster(int _id, int _structure) : id(_id), structure(_structure), atomCount(0), transitions(nullptr), parentTransition(nullptr) {}
+	Cluster(int _id, int _structure) : id(_id), structure(_structure) {}
 
 	/// Inserts a transition into this cluster's list of transitions.
 	void insertTransition(ClusterTransition* newTransition) {
