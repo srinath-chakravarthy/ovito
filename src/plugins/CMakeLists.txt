@@ -1,6 +1,6 @@
 ###############################################################################
 # 
-#  Copyright (2014) Alexander Stukowski
+#  Copyright (2015) Alexander Stukowski
 #
 #  This file is part of OVITO (Open Visualization Tool).
 #
@@ -56,6 +56,12 @@ IF(OVITO_BUILD_PLUGIN_NETCDFPLUGIN)
 	ADD_SUBDIRECTORY(netcdf)
 ELSE()
 	FILE(REMOVE ${OVITO_PLUGINS_DIRECTORY}/NetCDFPlugin.json)
+ENDIF()
+
+IF(OVITO_BUILD_PLUGIN_VOROTOP)
+	ADD_SUBDIRECTORY(vorotop)
+ELSE()
+	FILE(REMOVE ${OVITO_PLUGINS_DIRECTORY}/VoroTop.json)
 ENDIF()
 
 # Propagate list of plugins to parent scope.
