@@ -32,7 +32,15 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPAC
 struct EmptyHalfEdgeMeshStruct {};
 
 /**
- * Stores a polygonal mesh using a half-edge data structure.
+ * Stores a closed polygonal mesh as a half-edge data structure.
+ *
+ * Each half-edge is adjacent to one face.
+ * Each half-edge has a pointer to the next half-edge adjacent to the same face.
+ * Each half-edge has a pointer to its opposite half-edge.
+ * Each half-edge has a pointer to to the vertex it points to.
+ * Each half-edge has a pointer to the next edge in the linked list of edges originating from the same vertex.
+ * Each vertex has a pointer to the first edge originating from it.
+ * Each face has a pointer to one of the edges adjacent to it.
  */
 template<class EdgeBase, class FaceBase, class VertexBase>
 class HalfEdgeMesh : public QSharedData

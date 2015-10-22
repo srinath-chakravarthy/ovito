@@ -310,27 +310,40 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 				if(sscanf(stream.readLine(), FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING, &burgersVector.x(), &burgersVector.y(), &burgersVector.z()) != 3)
 					throw Exception(tr("Failed to parse file. Invalid Burgers vector in line %1.").arg(stream.lineNumber()));
 
-				int clusterIndex;
-				if(sscanf(stream.readLine(), "%i", &clusterIndex) != 1 || clusterIndex < 0 || clusterIndex >= numClusters)
-					throw Exception(tr("Failed to parse file. Invalid segment cluster ID in line %1.").arg(stream.lineNumber()));
+				Cluster* cluster = nullptr;
+				if(fileFormatVersion <= 4) {
+					int clusterIndex;
+					if(sscanf(stream.readLine(), "%i", &clusterIndex) != 1 || clusterIndex < 0 || clusterIndex >= numClusters)
+						throw Exception(tr("Failed to parse file. Invalid cluster index in line %1.").arg(stream.lineNumber()));
+					cluster = _clusterGraph->clusters()[clusterIndex+1];
+				}
+				else {
+					int clusterId;
+					if(sscanf(stream.readLine(), "%i", &clusterId) != 1 || clusterId <= 0)
+						throw Exception(tr("Failed to parse file. Invalid cluster ID in line %1.").arg(stream.lineNumber()));
+					cluster = _clusterGraph->findCluster(clusterId);
+				}
+				if(!cluster)
+					throw Exception(tr("Failed to parse file. Invalid cluster reference in line %1.").arg(stream.lineNumber()));
 
-				DislocationSegment* segment = _dislocations->createSegment(ClusterVector(burgersVector, _clusterGraph->clusters()[clusterIndex+1]));
+				DislocationSegment* segment = _dislocations->createSegment(ClusterVector(burgersVector, cluster));
 
 				// Read polyline.
 				int numPoints;
 				if(sscanf(stream.readLine(), "%i", &numPoints) != 1 || numPoints <= 1)
 					throw Exception(tr("Failed to parse file. Invalid segment number of points in line %1.").arg(stream.lineNumber()));
 				segment->line.resize(numPoints);
-				segment->coreSize.resize(numPoints, 0);
-				auto cs = segment->coreSize.begin();
 				for(Point3& p : segment->line) {
 					if(fileFormatVersion <= 4) {
 						if(sscanf(stream.readLine(), FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING, &p.x(), &p.y(), &p.z()) != 3)
 							throw Exception(tr("Failed to parse file. Invalid point in line %1.").arg(stream.lineNumber()));
 					}
 					else {
-						if(sscanf(stream.readLine(), FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " %i", &p.x(), &p.y(), &p.z(), &(*cs++)) != 4)
+						int coreSize = 0;
+						if(sscanf(stream.readLine(), FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " %i", &p.x(), &p.y(), &p.z(), &coreSize) < 3)
 							throw Exception(tr("Failed to parse file. Invalid point in line %1.").arg(stream.lineNumber()));
+						if(coreSize > 0)
+							segment->coreSize.push_back(coreSize);
 					}
 				}
 

@@ -87,6 +87,8 @@ void SmoothDislocationsModifier::smoothDislocationLines(DislocationNetworkObject
 {
 	if(_coarseningEnabled || _smoothingEnabled) {
 		for(DislocationSegment* segment : dislocationsObj->modifiableSegments()) {
+			if(segment->coreSize.empty())
+				continue;
 			std::deque<Point3> line;
 			std::deque<int> coreSize;
 			coarsenDislocationLine(_coarseningEnabled.value() ? _linePointInterval.value() : 0, segment->line, segment->coreSize, line, coreSize, segment->isClosedLoop(), segment->isInfiniteLine());

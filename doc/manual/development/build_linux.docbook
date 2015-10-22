@@ -22,7 +22,8 @@
 <screen><command>sudo apt-get install build-essential git cmake-curses-gui qt5-default libcgal-dev libboost-dev libqt5scintilla2-dev \
                      libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavresample-dev \
                      libavutil-dev libswscale-dev libnetcdf-dev libhdf5-dev libhdf5-serial-dev \
-                     libbotan1.10-dev libmuparser-dev python3-dev libboost-python-dev python3-sphinx python3-numpy \
+                     libbotan1.10-dev libmuparser-dev python3-dev libboost-python-dev \
+                     python3-sphinx python3-numpy python3-sip python3-pyqt5 \
                      xsltproc docbook-xml docbook-xsl docbook-xsl-doc-html doxygen
 </command></screen>
   </para>
