@@ -257,7 +257,7 @@ void WignerSeitzAnalysisModifier::WignerSeitzAnalysisEngine::perform()
 			occupancyNumbers()->dataInt()[closestIndex]++;
 		}
 		else {
-			int offset = particleTypes()->getInt(closestIndex) - typemin;
+			int offset = particleTypes()->getInt(particleIndex) - typemin;
 			OVITO_ASSERT(offset >= 0 && offset < occupancyNumbers()->componentCount());
 			occupancyNumbers()->dataInt()[closestIndex * ncomponents + offset]++;
 		}
