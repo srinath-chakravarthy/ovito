@@ -2,11 +2,12 @@
 OVITO - Open Visualization Tool 
 ****************************************************************************************
 
-Author: Alexander Stukowski (mail@ovito.org)
-        (Institute of Materials Science, Darmstadt University of Technology, Germany)
+Main author: 
+      Alexander Stukowski (mail@ovito.org)
+      (Institute of Materials Science, Darmstadt University of Technology, Germany)
 
-OVITO is a scientific visualization and analysis software for atomistic simulation data. 
-See website for more information:
+OVITO is a scientific visualization and analysis software for atomistic and other
+particle simulation data. Visit the website for more information:
 
    http://www.ovito.org/
 
@@ -16,12 +17,57 @@ If you want to build OVITO from source, see http://www.ovito.org/manual/developm
 Change Log 
 ****************************************************************************************
 
+Release 2.6.0 (02-Nov-15):
+
+ - Added the <a+c> dislocation type for HCP crystals to the Dislocation Analysis modifier.
+ - Added the Elastic Strain Calculation modifier, which computes the atomic-level elastic 
+   strain and deformation gradient tensors in crystalline systems. It can be used to 
+   analyze local elastic distortions in a crystal lattice and to determine the local 
+   crystal orientation.
+ - The modification pipeline editor now supports drag and drop to change the order of 
+   modifiers in the pipeline. 
+ - Added the Dislocation Inspection utility, which displays further information 
+   about dislocation segments extracted by the Dislocation Analysis modifier.
+ - Added an introduction to OVITO's animation system to the manual, which explains how to 
+   animate parameters and the camera.
+ - The Compute Property modifier can now perform computations that take into account the 
+   local neighborhood of particles. For example, you can use this to average a quantity 
+   over spherical regions around each particle.
+ - Added a 'bond-based' mode to the Common Neighbor Analysis modifier, which computes the CNA 
+   indices based on existing bonds between particles. The modifier also outputs the computed 
+   CNA bond indices as a new bond property. This enables, for example, analyses of disordered 
+   systems using the classical CNA.
+ - It is now possible to write custom modifiers in Python.
+ - The Wigner-Seitz analysis modifier can now break down the computed site occupancy number 
+   into per-type numbers. This makes it easier to identify antisite defects, for example.
+ - Added a 'Use only selected particles' option to the Common Neighbor Analysis and the 
+   Identify Diamond Structure modifiers, which allows identifying sub-lattices.
+ - Added the NearestNeighborFinder Python class, which can be used from Python scripts to 
+   find the N nearest neighbors of a particle.
+ - Viewports are no longer automatically zoomed to show everything when replacing the currently 
+   loaded dataset with a new one. This makes it easier to preserve the current view configuration 
+   when switching to a different simulation file.
+ - Bug fixes in Python-ASE interface - Cell matrix is transposed and duplicate properties are handled.
+ - Fixed the assignment of dislocation lines that were loaded from a CrystalAnalysis file to 
+   Burgers vectors families. The CA file import was broken since version 2.4.4.
+ - Python scripts can now access the dislocation lines extracted by the DislocationAnalysisModifier. 
+ - Bug fix: Bond properties like the bond type are now updated when dangling bonds are removed 
+   due to deleted particles.
+ - Fixed bug in Atomic Strain modifier, which produced weird results when PBC flags of reference 
+   configuration do not match PBC flags of deformed configuration. Now PBC flags of deformed 
+   configuration always override the boundary conditions of the reference simulation cell.
+ - Fixed error in ovito.dataset.scene_nodes.__iter__() Python method.
+ - Fixed bug in file parser that led to wrong particle type names when loading a 
+   multi-frame XYZ file with varying set of named atom types.
+
 Release 2.5.1 (07-Aug-15):
 
- - The LAMMPS data file exporter can now produce files with LAMMPS atom styles other than 'atomic'. It also exports bonds if present.
+ - The LAMMPS data file exporter can now produce files with LAMMPS atom styles other than 'atomic'. 
+   It also exports bonds if present.
  - Arbitrary triclinic simulation cells can now be exported to the LAMMPS data file format. 
    They will be automatically transformed to the canonical LAMMPS representation.
- - The LAMMPS data file parser now reads bond types, and you can change the display color of individual bond types in OVITO.
+ - The LAMMPS data file parser now reads bond types, and you can change the display color of 
+   individual bond types in OVITO.
  - Added the fmod(A,B) math function to the Compute Property and Expression Select modifiers.
  - Added visualization support for cylindrical and spherocylindrical particles.
  - Added a file parser for FHI-aims log files, which can contain multiple simulation frames.
@@ -33,20 +79,27 @@ Release 2.5.0 (25-Jul-15):
  - Fixed viewport font issue on Macs with high-dpi display.
  - Added the Expand Selection modifier.
  - Added a 'No bonds between different molecules' option to the Create Bonds modifier.
- - Changed the behavior of the IMD file exporter: All particle properties to be exported, including the standard ones defined by the IMD format, must now be explicitly selected by the user.
+ - Changed the behavior of the IMD file exporter: All particle properties to be exported, 
+   including the standard ones defined by the IMD format, must now be explicitly selected by the user.
  - Integrated DXA (Dislocation Extraction Algorithm) into OVITO. 
  - Voronoi analysis modifier can now output bonds between neighboring atoms which share a Voronoi face.
  - Python scripting interface now allows conversion to/from ASE Atoms objects.
- - Python scripting interface now supports write access to particle properties and procedural generation of input particle datasets for OVITO's modification pipeline.
- - Bug fix: Large number of simultaneous SFTP download requests led to error message 'SFTP error: Server could not start session'.
+ - Python scripting interface now supports write access to particle properties and procedural 
+   generation of input particle datasets for OVITO's modification pipeline.
+ - Bug fix: Large number of simultaneous SFTP download requests led to error message 
+   'SFTP error: Server could not start session'.
  - Bug fix: Using the Python viewport overlay led to program crash on Windows 8 x64.
- - Scripting function Viewport.render() now returns the rendered image, which can be manipulated before saving it to disk.
+ - Scripting function Viewport.render() now returns the rendered image, which can be manipulated 
+   before saving it to disk.
  - Certain modifier and display parameters can now be animated using animation keys.
  - Fixed OpenGL rendering of bonds/arrows on certain Windows/NVidia systems.
  - Added import/export support for FHI-aims file format.
- - Colors and radii used for particle types (as well as structure types) can now be predefined by the user.
- - Migrated to version 5.4 of the Qt library. This may affect OpenGL rendering and the viewport display. Please report any issues that you experience.
- - Bin & Reduce modifier now takes into account the simulation box origin, uses double precision numbers to perform calculations, and 1D-plot now spans the entire interval.
+ - Colors and radii used for particle types (as well as structure types) can now be predefined 
+   by the user.
+ - Migrated to version 5.4 of the Qt library. This may affect OpenGL rendering and the viewport 
+   display. Please report any issues that you experience.
+ - Bin & Reduce modifier now takes into account the simulation box origin, uses double precision 
+   numbers to perform calculations, and 1D-plot now spans the entire interval.
  - Bug fix: NetCDF file importer doesn't close file handle, leading to error after loading several thousand frames.
  - Bug fix: LAMMPS data file parser stumbles over 'AngleTorsion Coeffs' file section.
  - Visualization of particle trajectory lines.

@@ -11,6 +11,25 @@
   <title>Elastic strain calculation</title>
 
   <para>
+      <informalfigure>
+      <informaltable frame="none">
+       <tgroup cols="1">
+          <tbody>
+            <row>
+              <entry><screenshot><mediaobject><imageobject>
+              <imagedata fileref="images/modifiers/elastic_strain_example.png" format="PNG" />
+              </imageobject></mediaobject></screenshot></entry>
+            </row>
+            <row>
+              <entry><para>
+               Local elastic strain around a prismatic dislocation dipole in CdTe computed by the
+               analysis modifier.
+              </para></entry>
+            </row>
+          </tbody>
+          </tgroup>
+        </informaltable>
+      </informalfigure>
     <informalfigure><screenshot><mediaobject><imageobject>
        <imagedata fileref="images/modifiers/elastic_strain_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>

@@ -102,7 +102,7 @@ IF(UNIX)
 		SET(OVITO_RELATIVE_SHARE_DIRECTORY "${MACOSX_BUNDLE_NAME}.app/Contents/Resources")
 		# The directory where the compiled plugins go to.
 		SET(OVITO_RELATIVE_PLUGINS_DIRECTORY "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins")	
-	ELSE(APPLE)
+	ELSE()
 		# The directory where the main executable goes to.
 		SET(OVITO_RELATIVE_BINARY_DIRECTORY "bin")
 		# The directory where the main libraries go to.
@@ -111,8 +111,8 @@ IF(UNIX)
 		SET(OVITO_RELATIVE_SHARE_DIRECTORY "share/ovito")
 		# The directory where the compiled plugins go to.
 		SET(OVITO_RELATIVE_PLUGINS_DIRECTORY "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins")
-	ENDIF(APPLE)
-ELSE(UNIX)
+	ENDIF()
+ELSE()
 	# The directory where the main executable goes to.
 	SET(OVITO_RELATIVE_BINARY_DIRECTORY ".")
 	# The directory where the main libraries go to.
@@ -121,7 +121,7 @@ ELSE(UNIX)
 	SET(OVITO_RELATIVE_SHARE_DIRECTORY ".")
 	# The directory where the compiled plugins go to.
 	SET(OVITO_RELATIVE_PLUGINS_DIRECTORY "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins")
-ENDIF(UNIX)
+ENDIF()
 
 # Controls whether a static or a shared OVITO executable is built.
 # In a static build, all plugins (and most third-party libraries) are linked into one big executable,
