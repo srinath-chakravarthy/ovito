@@ -3,6 +3,7 @@ User interface improvements:
 - Default directory for image/movie output should be the path of the current data file.
 - Add support for keyboard shortcuts (requested by Fossati, Paul C).
 - Add file export function to Construct Surface Mesh modifier, which allows to export the mesh to a VTK file (requested by konstantin.avchachov@helsinki.fi).
+- Avoid flickering in pipeline editor when playing animation.
  
 Work-flow improvements:
 
@@ -15,6 +16,9 @@ New visualization features:
 - Particle text labels (joy5142@psu.edu)
 - More particle representations (e.g. open circles).
 - Test OpenGL rendering support for more than 12 million particles.
+- Add support for transparent background to the Tachyon renderer.
+- Visualization of arbitrary vector properties (e.g. forces, magnetic moments). 
+- Colored vectors
 
 Unresolved OpenGL problems:
 
@@ -39,23 +43,27 @@ Unresolved OpenGL problems:
     Windows 8.1, Intel HD Graphics 4600 (driver v10.18.10.3277), Lenovo Y510p (gaoispingisme@gmail.com)
 - Frequent crashing
     MacBook Air with the operating system OS X 10.9.5 Maverick (yidong.xia@inl.gov)
+- Texture-mapped point sprites don't work in the perspective viewport on Diego's computer (Linux, Intel Opengl 2.1)
+  Workaround is to explicitly turn off the use point sprites.
 
 Unresolved bugs:
 
 - NearestNeighborFinder doesn't work properly for triclinic cells with small angles.
+- Negative animation end frame leads to codec error
 
 New analysis features:
 
 - Create Bonds modifier: Add 'lower bound' parameter such that, when using the modifier several times, bonds with different lengths can be assigned different colors.
 - Plotting the value of a certain property of a certain particle versus simulation time. To make this work, all simulation frames need to be kept in memory (requested by Taojun & Mathieu Marciante).
 - Compute polar decomposition of deformation gradient, F=RU (requested by arun.prakash@fau.de).
-- Add modifier for computing the elastic deformation gradient.
+- Calculation of type-specific RDF.
 
 New I/O functions:
 
 - Repair import of Crystal Analysis Tool CA files (amlan.dutta@bose.res.in).
 - Export to Blender (Paul Erhart, Filip Sund <filip.sund@fys.uio.no>)
 - Single precision floating-point numbers, which are used for custom particle properties, cannot represent large integer numbers exactly (e.g. 100400). Find a solution to make it work.
+- Check problem with PDB import (d_serov@rambler.ru)
 
 Performance improvements:
 

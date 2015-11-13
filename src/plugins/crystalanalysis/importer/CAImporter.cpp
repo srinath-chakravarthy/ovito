@@ -349,6 +349,7 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 
 				if(fileFormatVersion <= 4) {
 					// Read dislocation core size.
+					segment->coreSize.resize(numPoints);
 					for(int& coreSize : segment->coreSize) {
 						if(sscanf(stream.readLine(), "%i", &coreSize) != 1)
 							throw Exception(tr("Failed to parse file. Invalid core size in line %1.").arg(stream.lineNumber()));
