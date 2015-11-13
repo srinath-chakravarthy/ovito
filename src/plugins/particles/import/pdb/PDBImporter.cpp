@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2014) Alexander Stukowski
+//  Copyright (2015) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -40,7 +40,7 @@ bool PDBImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceLocation
 	// Read the first N lines.
 	for(int i = 0; i < 20 && !stream.eof(); i++) {
 		stream.readLine(86);
-		if(qstrlen(stream.line()) > 82)
+		if(qstrlen(stream.line()) > 83)
 			return false;
 		if(qstrlen(stream.line()) >= 7 && stream.line()[6] != ' ')
 			return false;
@@ -63,7 +63,7 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 	while(!stream.eof()) {
 		stream.readLine();
 		int lineLength = qstrlen(stream.line());
-		if(lineLength < 3 || lineLength > 82)
+		if(lineLength < 3 || lineLength > 83)
 			throw Exception(tr("Invalid line length detected in Protein Data Bank (PDB) file at line %1").arg(stream.lineNumber()));
 
 		// Parse simulation cell.
@@ -124,7 +124,7 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 	while(!stream.eof() && atomIndex < numAtoms) {
 		stream.readLine();
 		int lineLength = qstrlen(stream.line());
-		if(lineLength < 3 || lineLength > 82)
+		if(lineLength < 3 || lineLength > 83)
 			throw Exception(tr("Invalid line length detected in Protein Data Bank (PDB) file at line %1").arg(stream.lineNumber()));
 
 		// Parse atom definition.
