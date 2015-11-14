@@ -42,6 +42,20 @@ public:
 	/// Initializes the modify page.
     OverlayCommandPage(MainWindow* mainWindow, QWidget* parent);
 
+protected:
+
+	/// This event handler is called when the page is shown.
+	void showEvent(QShowEvent* event) override {
+		QWidget::showEvent(event);
+		onItemSelectionChanged();
+	}
+
+	/// This event handler is called when the page is hidden.
+	void hideEvent(QHideEvent* event) override {
+		QWidget::hideEvent(event);
+		_propertiesPanel->setEditObject(nullptr);
+	}
+
 protected Q_SLOTS:
 
 	/// This is called whenever the current viewport configuration of current dataset has been replaced by a new one.

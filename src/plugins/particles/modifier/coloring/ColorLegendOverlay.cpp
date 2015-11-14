@@ -34,6 +34,8 @@
 #include <core/scene/SceneRoot.h>
 #include <core/scene/ObjectNode.h>
 #include <core/scene/pipeline/PipelineObject.h>
+#include <core/viewport/input/ViewportInputManager.h>
+#include <core/gui/actions/ViewportModeAction.h>
 #include "ColorLegendOverlay.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring)
@@ -330,6 +332,10 @@ void ColorLegendOverlayEditor::createUI(const RolloutInsertionParameters& rollou
 	FloatParameterUI* offsetYPUI = new FloatParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_offsetY));
 	sublayout->addWidget(offsetYPUI->label(), 2, 0);
 	sublayout->addLayout(offsetYPUI->createFieldLayout(), 2, 1);
+
+	ViewportInputMode* moveOverlayMode = new MoveOverlayInputMode(this);
+	ViewportModeAction* moveOverlayAction = new ViewportModeAction(mainWindow(), tr("Move using mouse"), this, moveOverlayMode);
+	sublayout->addWidget(moveOverlayAction->createPushButton(), 3, 0, 1, 2);
 
 	QGroupBox* sizeBox = new QGroupBox(tr("Size"));
 	layout->addWidget(sizeBox, row++, 0, 1, 2);

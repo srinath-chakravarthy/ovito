@@ -66,6 +66,13 @@ public:
 	/// Returns the user-defined text to be used for the second numeric label.
 	const QString& label2() const { return _label2; }
 
+	/// Moves the position of the overlay in the viewport by the given amount,
+	/// which is specified as a fraction of the viewport render size.
+	virtual void moveOverlayInViewport(const Vector2& delta) override {
+		_offsetX = _offsetX + delta.x();
+		_offsetY = _offsetY + delta.y();
+	}
+
 public:
 
 	Q_PROPERTY(Ovito::Particles::ColorCodingModifier* modifier READ modifier WRITE setModifier);

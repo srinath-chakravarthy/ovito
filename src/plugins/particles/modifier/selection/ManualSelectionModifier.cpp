@@ -261,12 +261,12 @@ void ManualSelectionModifierEditor::createUI(const RolloutInsertionParameters& r
 	sublayout->setSpacing(6);
 	layout->addWidget(mouseSelectionGroup);
 
-	_selectParticleMode = new SelectParticleInputMode(this);
-	ViewportModeAction* pickModeAction = new ViewportModeAction(mainWindow(), tr("Pick particles"), this, _selectParticleMode);
+	ViewportInputMode* selectParticleMode = new SelectParticleInputMode(this);
+	ViewportModeAction* pickModeAction = new ViewportModeAction(mainWindow(), tr("Pick particles"), this, selectParticleMode);
 	sublayout->addWidget(pickModeAction->createPushButton());
 
-	_fenceParticleMode = new FenceParticleInputMode(this);
-	ViewportModeAction* fenceModeAction = new ViewportModeAction(mainWindow(), tr("Fence selection"), this, _fenceParticleMode);
+	ViewportInputMode* fenceParticleMode = new FenceParticleInputMode(this);
+	ViewportModeAction* fenceModeAction = new ViewportModeAction(mainWindow(), tr("Fence selection"), this, fenceParticleMode);
 	sublayout->addWidget(fenceModeAction->createPushButton());
 
 	// Deactivate input modes when editor is reset.

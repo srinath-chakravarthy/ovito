@@ -41,7 +41,7 @@ class OVITO_CORE_EXPORT SelectionMode : public ViewportInputMode
 public:
 
 	/// Constructor.
-	SelectionMode(QObject* parent) : ViewportInputMode(parent), _viewport(nullptr) {}
+	SelectionMode(QObject* parent) : ViewportInputMode(parent) {}
 
 	/// \brief Returns the activation behavior of this input mode.
 	virtual InputModeType modeType() override { return ExclusiveMode; }
@@ -74,7 +74,7 @@ protected:
 	QPointF _clickPoint;
 
 	/// The current viewport we are working in.
-	Viewport* _viewport;
+	Viewport* _viewport = nullptr;
 
 	/// The cursor shown while the mouse cursor is over an object.
 	static boost::optional<QCursor> _hoverCursor;
@@ -107,7 +107,7 @@ public:
 protected:
 
 	/// Protected constructor.
-	XFormMode(QObject* parent, const QString& cursorImagePath) : ViewportInputMode(parent), _viewport(nullptr), _xformCursor(QPixmap(cursorImagePath)) {
+	XFormMode(QObject* parent, const QString& cursorImagePath) : ViewportInputMode(parent), _xformCursor(QPixmap(cursorImagePath)) {
 		connect(&_selectedNode, &RefTargetListener<SceneNode>::notificationEvent, this, &XFormMode::onSceneNodeEvent);
 	}
 
@@ -157,11 +157,11 @@ protected:
 	/// Mouse position at first click.
 	QPointF _startPoint;
 
-	/// The current mouse position
+	/// The current mouse position.
 	QPointF _currentPoint;
 
 	/// The current viewport we are working in.
-	Viewport* _viewport;
+	Viewport* _viewport = nullptr;
 
 	/// The cursor shown while the mouse cursor is over an object.
 	QCursor _xformCursor;

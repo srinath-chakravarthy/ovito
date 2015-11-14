@@ -114,9 +114,6 @@ protected Q_SLOTS:
 
 private:
 
-	ViewportInputMode* _selectParticleMode;
-	ViewportInputMode* _fenceParticleMode;
-
 	Q_OBJECT
 	OVITO_OBJECT
 };

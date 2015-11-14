@@ -41,6 +41,13 @@ public:
 	/// \brief This method asks the overlay to paint its contents over the given viewport.
 	virtual void render(Viewport* viewport, QPainter& painter, const ViewProjectionParameters& projParams, RenderSettings* renderSettings) override;
 
+	/// Moves the position of the overlay in the viewport by the given amount,
+	/// which is specified as a fraction of the viewport render size.
+	virtual void moveOverlayInViewport(const Vector2& delta) override {
+		setOffsetX(offsetX() + delta.x());
+		setOffsetY(offsetY() + delta.y());
+	}
+
 	/// Returns the corner of the viewport where the tripod is shown.
 	int alignment() const { return _alignment; }
 

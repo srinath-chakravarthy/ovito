@@ -29,6 +29,7 @@
 #include <core/gui/properties/FloatParameterUI.h>
 #include <core/gui/properties/Vector3ParameterUI.h>
 #include <core/gui/properties/VariantComboBoxParameterUI.h>
+#include <core/gui/actions/ViewportModeAction.h>
 #include "CoordinateTripodOverlay.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -239,24 +240,28 @@ void CoordinateTripodOverlayEditor::createUI(const RolloutInsertionParameters& r
 	layout->addWidget(offsetYPUI->label(), 2, 0);
 	layout->addLayout(offsetYPUI->createFieldLayout(), 2, 1);
 
+	ViewportInputMode* moveOverlayMode = new MoveOverlayInputMode(this);
+	ViewportModeAction* moveOverlayAction = new ViewportModeAction(mainWindow(), tr("Move using mouse"), this, moveOverlayMode);
+	layout->addWidget(moveOverlayAction->createPushButton(), 3, 1);
+
 	FloatParameterUI* sizePUI = new FloatParameterUI(this, PROPERTY_FIELD(CoordinateTripodOverlay::_tripodSize));
-	layout->addWidget(sizePUI->label(), 3, 0);
-	layout->addLayout(sizePUI->createFieldLayout(), 3, 1);
+	layout->addWidget(sizePUI->label(), 4, 0);
+	layout->addLayout(sizePUI->createFieldLayout(), 4, 1);
 	sizePUI->setMinValue(0);
 
 	FloatParameterUI* lineWidthPUI = new FloatParameterUI(this, PROPERTY_FIELD(CoordinateTripodOverlay::_lineWidth));
-	layout->addWidget(lineWidthPUI->label(), 4, 0);
-	layout->addLayout(lineWidthPUI->createFieldLayout(), 4, 1);
+	layout->addWidget(lineWidthPUI->label(), 5, 0);
+	layout->addLayout(lineWidthPUI->createFieldLayout(), 5, 1);
 	lineWidthPUI->setMinValue(0);
 
 	FloatParameterUI* fontSizePUI = new FloatParameterUI(this, PROPERTY_FIELD(CoordinateTripodOverlay::_fontSize));
-	layout->addWidget(fontSizePUI->label(), 5, 0);
-	layout->addLayout(fontSizePUI->createFieldLayout(), 5, 1);
+	layout->addWidget(fontSizePUI->label(), 6, 0);
+	layout->addLayout(fontSizePUI->createFieldLayout(), 6, 1);
 	fontSizePUI->setMinValue(0);
 
 	FontParameterUI* labelFontPUI = new FontParameterUI(this, PROPERTY_FIELD(CoordinateTripodOverlay::_font));
-	layout->addWidget(labelFontPUI->label(), 6, 0);
-	layout->addWidget(labelFontPUI->fontPicker(), 6, 1);
+	layout->addWidget(labelFontPUI->label(), 7, 0);
+	layout->addWidget(labelFontPUI->fontPicker(), 7, 1);
 
 	// Create a second rollout.
 	rollout = createRollout(tr("Coordinate axes"), rolloutParams);
