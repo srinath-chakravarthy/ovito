@@ -62,6 +62,11 @@ apicolor rt_color(flt r, flt g, flt b) {
   return c;
 }
 
+colora tocolora(apicolor c) {
+	colora ca = { c.r, c.g, c.b, 1 };
+	return ca;
+}
+
 int rt_initialize(int * argc, char ***argv) {
   InitTextures();
 
@@ -295,6 +300,13 @@ void rt_rawimage_rgb24(SceneHandle voidscene, unsigned char *img) {
   scene->scenecheck = 1;
 }
 
+void rt_rawimage_rgba32(SceneHandle voidscene, unsigned char *img) {
+  scenedef * scene = (scenedef *) voidscene;
+  scene->img = (void *) img;
+  scene->imginternal = 0;  /* image was allocated by the caller */
+  scene->imgbufformat = RT_IMAGE_BUFFER_RGBA32;
+  scene->scenecheck = 1;
+}
 
 void rt_rawimage_rgb96f(SceneHandle voidscene, float *img) {
   scenedef * scene = (scenedef *) voidscene;
@@ -343,11 +355,12 @@ void rt_set_numthreads(SceneHandle voidscene, int numthreads) {
   scene->scenecheck = 1;
 }
 
-void rt_background(SceneHandle voidscene, apicolor col) {
+void rt_background(SceneHandle voidscene, colora col) {
   scenedef * scene = (scenedef *) voidscene;
   scene->bgtex.background.r = col.r;
   scene->bgtex.background.g = col.g;
   scene->bgtex.background.b = col.b;
+  scene->bgtex.background.a = col.a;
 }
 
 void rt_background_gradient(SceneHandle voidscene, 
@@ -480,19 +493,19 @@ void rt_shadermode(SceneHandle voidscene, int mode) {
   /* Main shader used for whole scene */
   switch (mode) {
     case RT_SHADER_LOWEST:
-      scene->shader = (color (*)(void *)) lowest_shader;
+      scene->shader = (colora (*)(void *)) lowest_shader;
       break;
     case RT_SHADER_LOW:
-      scene->shader = (color (*)(void *)) low_shader;
+      scene->shader = (colora (*)(void *)) low_shader;
       break;
     case RT_SHADER_MEDIUM:
-      scene->shader = (color (*)(void *)) medium_shader;
+      scene->shader = (colora (*)(void *)) medium_shader;
       break;
     case RT_SHADER_HIGH:
-      scene->shader = (color (*)(void *)) full_shader;
+      scene->shader = (colora (*)(void *)) full_shader;
       break;
     case RT_SHADER_FULL:
-      scene->shader = (color (*)(void *)) full_shader;
+      scene->shader = (colora (*)(void *)) full_shader;
       break;
     case RT_SHADER_AUTO:
     default:
@@ -529,7 +542,7 @@ void rt_phong_shader(SceneHandle voidscene, int mode) {
 SceneHandle rt_newscene(void) {
   scenedef * scene;
   SceneHandle voidscene;
-  apicolor bgcolor = rt_color(0.0, 0.0, 0.0);
+  color bgcolor = rt_color(0.0, 0.0, 0.0);
   apicolor ambcolor = rt_color(1.0, 1.0, 1.0);
 
   scene = (scenedef *) malloc(sizeof(scenedef));
@@ -563,7 +576,7 @@ SceneHandle rt_newscene(void) {
   rt_rescale_lights(voidscene, 1.0);
   rt_phong_shader(voidscene, RT_SHADER_BLINN);
 
-  rt_background(voidscene, bgcolor);
+  rt_background(voidscene, tocolora(bgcolor));
   rt_background_sky_sphere(voidscene, rt_vector(0.0, 1.0, 0.0), 0.3, 0, 
                            rt_color(0.0, 0.0, 0.0), rt_color(0.0, 0.0, 0.5));
   rt_background_mode(voidscene, RT_BACKGROUND_TEXTURE_SOLID);

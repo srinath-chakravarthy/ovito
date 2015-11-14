@@ -8,9 +8,9 @@
 void InitTextures(void);
 
 /* background texturing routines */
-color solid_background_texture(const ray *ry);
-color sky_sphere_background_texture(const ray *ry);
-color sky_plane_background_texture(const ray *ry);
+colora solid_background_texture(const ray *ry);
+colora sky_sphere_background_texture(const ray *ry);
+colora sky_plane_background_texture(const ray *ry);
 
 /* object texturing routines */
 color     constant_texture(const vector *, const texture *, const ray *);

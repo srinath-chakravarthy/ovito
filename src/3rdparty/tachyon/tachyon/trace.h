@@ -24,6 +24,6 @@ typedef struct {
 #endif
 } thr_parms;
 
-color trace(ray *);
+colora trace(ray *);
 void * thread_trace(thr_parms *); 
 

@@ -61,29 +61,29 @@ void camera_init(scenedef *scene) {
   switch (scene->camera.projection) {
     case RT_PROJECTION_PERSPECTIVE:
       if (scene->antialiasing > 0) {
-        scene->camera.cam_ray = (color (*)(void *,flt,flt)) cam_aa_perspective_ray;
+        scene->camera.cam_ray = (colora (*)(void *,flt,flt)) cam_aa_perspective_ray;
       } else {
-        scene->camera.cam_ray = (color (*)(void *,flt,flt)) cam_perspective_ray;
+        scene->camera.cam_ray = (colora (*)(void *,flt,flt)) cam_perspective_ray;
       }
       break;
 
     case RT_PROJECTION_PERSPECTIVE_DOF:
-      scene->camera.cam_ray = (color (*)(void *,flt,flt)) cam_aa_dof_ray;
+      scene->camera.cam_ray = (colora (*)(void *,flt,flt)) cam_aa_dof_ray;
       break;
 
     case RT_PROJECTION_ORTHOGRAPHIC:
       if (scene->antialiasing > 0) {
-        scene->camera.cam_ray = (color (*)(void *,flt,flt)) cam_aa_orthographic_ray;
+        scene->camera.cam_ray = (colora (*)(void *,flt,flt)) cam_aa_orthographic_ray;
       } else {
-        scene->camera.cam_ray = (color (*)(void *,flt,flt)) cam_orthographic_ray;
+        scene->camera.cam_ray = (colora (*)(void *,flt,flt)) cam_orthographic_ray;
       }
       break;
 
     case RT_PROJECTION_FISHEYE:
       if (scene->antialiasing > 0) {
-        scene->camera.cam_ray = (color (*)(void *,flt,flt)) cam_aa_fisheye_ray;
+        scene->camera.cam_ray = (colora (*)(void *,flt,flt)) cam_aa_fisheye_ray;
       } else {
-        scene->camera.cam_ray = (color (*)(void *,flt,flt)) cam_fisheye_ray;
+        scene->camera.cam_ray = (colora (*)(void *,flt,flt)) cam_fisheye_ray;
       }
       break;
   }
@@ -220,7 +220,7 @@ void camray_init(scenedef *scene, ray *primary, unsigned long serial,
  *  Generate a perspective camera ray incorporating
  *  antialiasing and depth-of-field.
  */
-color cam_aa_dof_ray(ray * ry, flt x, flt y) {
+colora cam_aa_dof_ray(ray * ry, flt x, flt y) {
   color col, sample;
   color colsum, colsumsq, colvar;
   int samples, samplegroup; 
@@ -317,8 +317,8 @@ color cam_aa_dof_ray(ray * ry, flt x, flt y) {
  *  Generate a perspective camera ray incorporating
  *  antialiasing and depth-of-field.
  */
-color cam_aa_dof_ray(ray * ry, flt x, flt y) {
-  color col, avcol;
+colora cam_aa_dof_ray(ray * ry, flt x, flt y) {
+  colora col, avcol;
   int alias; 
   scenedef * scene=ry->scene;
   float scale;
@@ -356,6 +356,7 @@ color cam_aa_dof_ray(ray * ry, flt x, flt y) {
     col.r += avcol.r;       /* accumulate antialiasing samples */
     col.g += avcol.g;
     col.b += avcol.b;
+    col.a += avcol.a;
   }
 
   /* average sample colors, back to range 0.0 - 1.0 */ 
@@ -363,6 +364,7 @@ color cam_aa_dof_ray(ray * ry, flt x, flt y) {
   col.r *= scale;
   col.g *= scale;
   col.b *= scale;
+  col.a *= scale;
 
   return col;
 }
@@ -372,7 +374,7 @@ color cam_aa_dof_ray(ray * ry, flt x, flt y) {
  * cam_dof_ray() 
  *  Generate a perspective camera ray for depth-of-field rendering
  */
-color cam_dof_ray(ray * ry, flt x, flt y) {
+colora cam_dof_ray(ray * ry, flt x, flt y) {
   flt rdx, rdy, rdz, len;
   scenedef * scene=ry->scene;
 
@@ -415,8 +417,8 @@ color cam_dof_ray(ray * ry, flt x, flt y) {
  * cam_aa_perspective_ray() 
  *  Generate a perspective camera ray incorporating antialiasing.
  */
-color cam_aa_perspective_ray(ray * ry, flt x, flt y) {
-  color col, avcol;
+colora cam_aa_perspective_ray(ray * ry, flt x, flt y) {
+  colora col, avcol;
   int alias; 
   scenedef * scene=ry->scene;
   float scale;
@@ -433,6 +435,7 @@ color cam_aa_perspective_ray(ray * ry, flt x, flt y) {
     col.r += avcol.r;       /* accumulate antialiasing samples */
     col.g += avcol.g;
     col.b += avcol.b;
+    col.a += avcol.a;
   }
 
   /* average sample colors, back to range 0.0 - 1.0 */ 
@@ -440,6 +443,7 @@ color cam_aa_perspective_ray(ray * ry, flt x, flt y) {
   col.r *= scale;
   col.g *= scale;
   col.b *= scale;
+  col.a *= scale;
 
   return col;
 }
@@ -449,7 +453,7 @@ color cam_aa_perspective_ray(ray * ry, flt x, flt y) {
  * cam_perspective_ray() 
  *  Generate a perspective camera ray, no antialiasing
  */
-color cam_perspective_ray(ray * ry, flt x, flt y) {
+colora cam_perspective_ray(ray * ry, flt x, flt y) {
   flt rdx, rdy, rdz, len;
   scenedef * scene=ry->scene;
 
@@ -493,8 +497,8 @@ color cam_perspective_ray(ray * ry, flt x, flt y) {
  *  Generate an orthographic camera ray, potentially incorporating
  *  antialiasing.
  */
-color cam_aa_orthographic_ray(ray * ry, flt x, flt y) {
-  color col, avcol;
+colora cam_aa_orthographic_ray(ray * ry, flt x, flt y) {
+  colora col, avcol;
   int alias; 
   scenedef * scene=ry->scene;
   float scale;
@@ -512,6 +516,7 @@ color cam_aa_orthographic_ray(ray * ry, flt x, flt y) {
     col.r += avcol.r;       /* accumulate antialiasing samples */
     col.g += avcol.g;
     col.b += avcol.b;
+    col.a += avcol.a;
   }
 
   /* average sample colors, back to range 0.0 - 1.0 */ 
@@ -519,6 +524,7 @@ color cam_aa_orthographic_ray(ray * ry, flt x, flt y) {
   col.r *= scale;
   col.g *= scale;
   col.b *= scale;
+  col.a *= scale;
 
   return col;
 }
@@ -527,7 +533,7 @@ color cam_aa_orthographic_ray(ray * ry, flt x, flt y) {
  * cam_orthographic_ray() 
  *  Generate an orthographic camera ray, no antialiasing
  */
-color cam_orthographic_ray(ray * ry, flt x, flt y) {
+colora cam_orthographic_ray(ray * ry, flt x, flt y) {
   scenedef * scene=ry->scene;
 
   /* starting from the lower left corner of the image plane, we move the   */
@@ -561,7 +567,7 @@ color cam_orthographic_ray(ray * ry, flt x, flt y) {
  * cam_fisheye_ray() 
  *  Generate a perspective camera ray, no antialiasing
  */
-color cam_fisheye_ray(ray * ry, flt x, flt y) {
+colora cam_fisheye_ray(ray * ry, flt x, flt y) {
   flt ax, ay;
   scenedef * scene=ry->scene;
 
@@ -597,8 +603,8 @@ color cam_fisheye_ray(ray * ry, flt x, flt y) {
  *  Generate a fisheye camera ray, potentially incorporating
  *  antialiasing.
  */
-color cam_aa_fisheye_ray(ray * ry, flt x, flt y) {
-  color col, avcol;
+colora cam_aa_fisheye_ray(ray * ry, flt x, flt y) {
+  colora col, avcol;
   int alias; 
   scenedef * scene=ry->scene;
   float scale;
@@ -616,6 +622,7 @@ color cam_aa_fisheye_ray(ray * ry, flt x, flt y) {
     col.r += avcol.r;       /* accumulate antialiasing samples */
     col.g += avcol.g;
     col.b += avcol.b;
+    col.a += avcol.a;
   }
 
   /* average sample colors, back to range 0.0 - 1.0 */ 
@@ -623,6 +630,7 @@ color cam_aa_fisheye_ray(ray * ry, flt x, flt y) {
   col.r *= scale;
   col.g *= scale;
   col.b *= scale;
+  col.a *= scale;
 
   return col;
 }

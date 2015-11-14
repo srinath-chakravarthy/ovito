@@ -70,13 +70,13 @@ printf("XXX Doh, unrecognized image map type!\n");
 
 
 /* standard solid background texture */
-color solid_background_texture(const ray *ry) {
+colora solid_background_texture(const ray *ry) {
   return ry->scene->bgtex.background;
 }
 
 
 /* sky sphere background texture, linear mapping */
-color sky_sphere_background_texture(const ray *ry) {
+colora sky_sphere_background_texture(const ray *ry) {
   color col;
   flt IdotG = VDot(&ry->d, &ry->scene->bgtex.gradient);
   flt range = ry->scene->bgtex.gradtopval - ry->scene->bgtex.gradbotval;
@@ -96,12 +96,12 @@ color sky_sphere_background_texture(const ray *ry) {
   col.b = val * ry->scene->bgtex.backgroundtop.b + 
           (1.0 - val) * ry->scene->bgtex.backgroundbot.b;
 
-  return col;
+  return tocolora(col);
 }
 
 
 /* sky orthographic plane background texture, linear mapping */
-color sky_plane_background_texture(const ray *ry) {
+colora sky_plane_background_texture(const ray *ry) {
   color col;
   flt IdotG = VDot(&ry->o, &ry->scene->bgtex.gradient);
   flt range = ry->scene->bgtex.gradtopval - ry->scene->bgtex.gradbotval;
@@ -121,7 +121,7 @@ color sky_plane_background_texture(const ray *ry) {
   col.b = val * ry->scene->bgtex.backgroundtop.b + 
           (1.0 - val) * ry->scene->bgtex.backgroundbot.b;
 
-  return col;
+  return tocolora(col);
 }
 
 

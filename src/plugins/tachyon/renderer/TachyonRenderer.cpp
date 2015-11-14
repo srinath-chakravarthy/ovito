@@ -118,14 +118,17 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, QProgressDialog* pro
 	//rt_normal_fixup_mode(_rtscene, 2);
 
 	// Create Tachyon frame buffer.
-	QImage img(renderSettings()->outputImageWidth(), renderSettings()->outputImageHeight(), QImage::Format_RGB888);
-	rt_rawimage_rgb24(_rtscene, img.bits());
+	QImage img(renderSettings()->outputImageWidth(), renderSettings()->outputImageHeight(), QImage::Format_RGBA8888);
+	rt_rawimage_rgba32(_rtscene, img.bits());
 
 	// Set background color.
 	TimeInterval iv;
 	Color backgroundColor;
 	renderSettings()->backgroundColorController()->getColorValue(time(), backgroundColor, iv);
-	rt_background(_rtscene, rt_color(backgroundColor.r(), backgroundColor.g(), backgroundColor.b()));
+	colora bgcolor = { backgroundColor.r(), backgroundColor.g(), backgroundColor.b(), 1.0 };
+	if(renderSettings()->generateAlphaChannel())
+		bgcolor.a = 0;
+	rt_background(_rtscene, bgcolor);
 
 	// Set equation used for rendering specular highlights.
 	rt_phong_shader(_rtscene, RT_SHADER_NULL_PHONG);
@@ -248,15 +251,15 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, QProgressDialog* pro
 			// Copy rendered image back into Ovito's frame buffer.
 			// Flip image since Tachyon fills the buffer upside down.
 			OVITO_ASSERT(frameBuffer->image().format() == QImage::Format_ARGB32);
-			int bperline = renderSettings()->outputImageWidth() * 3;
+			int bperline = renderSettings()->outputImageWidth() * 4;
 			for(int y = ystart; y < ystop; y++) {
 				uchar* dst = frameBuffer->image().scanLine(frameBuffer->image().height() - 1 - y) + xstart * 4;
-				uchar* src = img.bits() + y*bperline + xstart * 3;
-				for(int x = xstart; x < xstop; x++, dst += 4, src += 3) {
+				uchar* src = img.bits() + y*bperline + xstart * 4;
+				for(int x = xstart; x < xstop; x++, dst += 4, src += 4) {
 					dst[0] = src[2];
 					dst[1] = src[1];
 					dst[2] = src[0];
-					dst[3] = 255;
+					dst[3] = src[3];
 				}
 			}
 			frameBuffer->update(QRect(xstart, frameBuffer->image().height() - ystop, xstop - xstart, ystop - ystart));

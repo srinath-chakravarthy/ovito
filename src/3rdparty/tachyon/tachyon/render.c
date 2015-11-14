@@ -38,7 +38,7 @@ static void rt_autoshader(scenedef * scene) {
    */
   if (scene->shader == NULL) {
     /* No logic yet, just use max quality */
-    scene->shader = (color (*)(void *)) full_shader;
+    scene->shader = (colora (*)(void *)) full_shader;
   }
 }
 
@@ -284,6 +284,8 @@ void rendercheck(scenedef * scene) {
     /* allocate the image buffer accordinate to pixel format */
     if (scene->imgbufformat == RT_IMAGE_BUFFER_RGB24) {
       scene->img = malloc(scene->hres * scene->vres * 3);
+    } else if (scene->imgbufformat == RT_IMAGE_BUFFER_RGBA32) {
+        scene->img = malloc(scene->hres * scene->vres * 4);
     } else if (scene->imgbufformat == RT_IMAGE_BUFFER_RGB96F) {
       scene->img = malloc(sizeof(float) * scene->hres * scene->vres * 3);
     } else {

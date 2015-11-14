@@ -7,10 +7,10 @@
 #ifndef SHADE_H
 #define SHADE_H
 
-color lowest_shader(ray *);
-color low_shader(ray *);
-color medium_shader(ray *);
-color full_shader(ray *);
+colora lowest_shader(ray *);
+colora low_shader(ray *);
+colora medium_shader(ray *);
+colora full_shader(ray *);
 color shade_reflection(ray *, const shadedata *, flt);
 color shade_transmission(ray *, const shadedata *, flt);
 

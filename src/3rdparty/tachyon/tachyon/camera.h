@@ -17,13 +17,13 @@ void cameraposition(camdef * camera, vector center, vector viewvec,
 void getcameraposition(camdef * camera, vector * center, vector * viewvec, 
                        vector * upvec, vector *rightvec);
 
-color cam_aa_perspective_ray(ray *, flt, flt);
-color cam_perspective_ray(ray *, flt, flt);
-color cam_aa_dof_ray(ray *, flt, flt);
-color cam_dof_ray(ray *, flt, flt);
-color cam_aa_orthographic_ray(ray *, flt, flt);
-color cam_orthographic_ray(ray *, flt, flt);
-color cam_fisheye_ray(ray *, flt, flt);
-color cam_aa_fisheye_ray(ray *, flt, flt);
+colora cam_aa_perspective_ray(ray *, flt, flt);
+colora cam_perspective_ray(ray *, flt, flt);
+colora cam_aa_dof_ray(ray *, flt, flt);
+colora cam_dof_ray(ray *, flt, flt);
+colora cam_aa_orthographic_ray(ray *, flt, flt);
+colora cam_orthographic_ray(ray *, flt, flt);
+colora cam_fisheye_ray(ray *, flt, flt);
+colora cam_aa_fisheye_ray(ray *, flt, flt);
 
 

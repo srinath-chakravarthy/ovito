@@ -26,7 +26,7 @@
 #include <omp.h>
 #endif
 
-color trace(ray * primary) {
+colora trace(ray * primary) {
   if (primary->depth > 0) {
     intersect_objects(primary);
     return primary->scene->shader(primary);
@@ -180,7 +180,7 @@ void * thread_trace(thr_parms * t) {
 #endif
   unsigned long * local_mbox = NULL;
   scenedef * scene;
-  color col;
+  colora col;
   ray primary;
   int x, y, do_ui, hskip;
   int startx, stopx, xinc, starty, stopy, yinc, hsize, vres;
@@ -210,9 +210,15 @@ void * thread_trace(thr_parms * t) {
   yinc   = t->yinc;
  
   scene  = t->scene;
-  hsize  = scene->hres*3;
+  if (scene->imgbufformat == RT_IMAGE_BUFFER_RGBA32) {
+	  hsize  = scene->hres*4;
+	  hskip  = xinc * 4;
+  }
+  else {
+	  hsize  = scene->hres*3;
+	  hskip  = xinc * 3;
+  }
   vres   = scene->vres;
-  hskip  = xinc * 3;
   do_ui = (scene->mynode == 0 && my_tid == 0);
 
 #if !defined(DISABLEMBOX)
@@ -266,16 +272,21 @@ void * thread_trace(thr_parms * t) {
   /* 
    * Render the image in either RGB24 or RGB96F format
    */
-  if (scene->imgbufformat == RT_IMAGE_BUFFER_RGB24) {
+  if (scene->imgbufformat == RT_IMAGE_BUFFER_RGB24 || scene->imgbufformat == RT_IMAGE_BUFFER_RGBA32) {
     /* 24-bit unsigned char RGB, RT_IMAGE_BUFFER_RGB24 */
-    int addr, R,G,B;
+    int addr, R,G,B,A;
     unsigned char *img = (unsigned char *) scene->img;
 
 #if defined(_OPENMP)
 #pragma omp for schedule(runtime)
 #endif
     for (y=starty; y<=stopy; y+=yinc) {
-      addr = hsize * (y - 1) + (3 * (startx - 1));    /* row address */
+      if(scene->imgbufformat == RT_IMAGE_BUFFER_RGB24) {
+        addr = hsize * (y - 1) + (3 * (startx - 1));    /* row address */
+      }
+      else {
+        addr = hsize * (y - 1) + (4 * (startx - 1));    /* row address */
+      }
       for (x=startx; x<=stopx; x+=xinc,addr+=hskip) {
         primary.frng = cachefrng; /* each pixel uses the same AO RNG seed */
         col=scene->camera.cam_ray(&primary, x, y);    /* generate ray */ 
@@ -295,6 +306,13 @@ void * thread_trace(thr_parms * t) {
         if (B > 255) B = 255;       /* clamp pixel value to range 0-255      */
         if (B < 0) B = 0;
         img[addr + 2] = (byte) B;   /* Store final pixel to the image buffer */
+
+        if(scene->imgbufformat == RT_IMAGE_BUFFER_RGBA32) {
+            A = (int) (col.a * 255.0f); /* quantize float to integer */
+			if (A > 255) A = 255;       /* clamp pixel value to range 0-255      */
+			if (A < 0) A = 0;
+			img[addr + 3] = (byte) A;   /* Store final pixel to the image buffer */
+        }
       } /* end of x-loop */
 
       if (do_ui && !((y-1) % 16)) {

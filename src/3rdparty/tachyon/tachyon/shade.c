@@ -25,11 +25,11 @@
  *
  */
 
-color lowest_shader(ray * incident) {
+colora lowest_shader(ray * incident) {
   int numints;
   object const * obj;
   flt t = FHUGE;
-  color col;
+  colora col;
 
   numints=closest_intersection(&t, &obj, incident);
                 /* find the number of intersections */
@@ -41,6 +41,7 @@ color lowest_shader(ray * incident) {
     col.r = 0.0;
     col.g = 0.0;
     col.b = 0.0;
+    col.a = 0.0;
 
     return col;
   }
@@ -48,6 +49,7 @@ color lowest_shader(ray * incident) {
   col.r = 1.0;
   col.g = 1.0;
   col.b = 1.0;
+  col.a = 1.0;
 
   return col;
 }
@@ -58,7 +60,7 @@ color lowest_shader(ray * incident) {
  *
  */
 
-color low_shader(ray * incident) {
+colora low_shader(ray * incident) {
   int numints;
   object const * obj;
   vector hit;
@@ -76,7 +78,7 @@ color low_shader(ray * incident) {
 
   RAYPNT(hit, (*incident), t) /* find the point of intersection from t */
   incident->opticdist = FHUGE; 
-  return obj->tex->texfunc(&hit, obj->tex, incident);
+  return tocolora(obj->tex->texfunc(&hit, obj->tex, incident));
 }
 
 
@@ -86,8 +88,9 @@ color low_shader(ray * incident) {
  *
  */
 
-color medium_shader(ray * incident) {
-  color col, diffuse, phongcol; 
+colora medium_shader(ray * incident) {
+  colora cola;
+  color col, diffuse, phongcol;
   shadedata shadevars;
   flt inten;
   flt t = FHUGE;
@@ -102,16 +105,16 @@ color medium_shader(ray * incident) {
   if (numints < 1) {         
     /* if there weren't any object intersections then return the */
     /* background texture for the pixel color.                   */
-    col=incident->scene->bgtexfunc(incident);
+    cola=incident->scene->bgtexfunc(incident);
 
     /* Fog overrides the background color if we're using         */
     /* Tachyon radial fog, but not for OpenGL style fog.         */
     if (incident->scene->fog.type == RT_FOG_NORMAL &&
         incident->scene->fog.fog_fctn != NULL) {
-      col = fog_color(incident, col, t);
+      cola = tocolora(fog_color(incident, col, t));
     }
 
-    return col;
+    return cola;
   }
 
   RAYPNT(shadevars.hit, (*incident), t) /* find point of intersection from t */ 
@@ -122,7 +125,7 @@ color medium_shader(ray * incident) {
   if ((obj->tex->opacity < 1.0) && (incident->transcnt < 1)) {      
     /* spawn transmission rays / refraction */
     /* note: this will overwrite the old intersection list */
-    return shade_transmission(incident, &shadevars, 1.0);
+    return tocolora(shade_transmission(incident, &shadevars, 1.0));
   }
 
   /* execute the object's texture function */
@@ -130,7 +133,7 @@ color medium_shader(ray * incident) {
 
   if (obj->tex->flags & RT_TEXTURE_ISLIGHT) {  
                   /* if the current object is a light, then we  */
-    return col;   /* will only use the object's base color      */
+    return tocolora(col);   /* will only use the object's base color      */
   }
 
   diffuse.r = 0.0; 
@@ -216,7 +219,7 @@ color medium_shader(ray * incident) {
     col = fog_color(incident, col, t);
   }
 
-  return col;    /* return the color of the shaded pixel... */
+  return tocolora(col);    /* return the color of the shaded pixel... */
 }
 
 
@@ -226,7 +229,8 @@ color medium_shader(ray * incident) {
  *
  */
 
-color full_shader(ray * incident) {
+colora full_shader(ray * incident) {
+  colora cola;
   color col, diffuse, ambocccol, phongcol;
   shadedata shadevars;
   ray shadowray;
@@ -243,16 +247,16 @@ color full_shader(ray * incident) {
   if (numints < 1) {         
     /* if there weren't any object intersections then return the */
     /* background texture for the pixel color.                   */
-    col=incident->scene->bgtexfunc(incident);
+    cola=incident->scene->bgtexfunc(incident);
 
     /* Fog overrides the background color if we're using         */
     /* Tachyon radial fog, but not for OpenGL style fog.         */
     if (incident->scene->fog.type == RT_FOG_NORMAL &&
         incident->scene->fog.fog_fctn != NULL) {
-      col = fog_color(incident, col, t);
+      cola = tocolora(fog_color(incident, col, t));
     }
 
-    return col;
+    return cola;
   }
 
   RAYPNT(shadevars.hit, (*incident), t) /* find point of intersection from t */ 
@@ -263,7 +267,7 @@ color full_shader(ray * incident) {
   if ((obj->tex->opacity < 1.0) && (incident->transcnt < 1)) {      
     /* spawn transmission rays / refraction */
     /* note: this will overwrite the old intersection list */
-    return shade_transmission(incident, &shadevars, 1.0);
+    return tocolora(shade_transmission(incident, &shadevars, 1.0));
   }
 
   /* execute the object's texture function */
@@ -271,7 +275,7 @@ color full_shader(ray * incident) {
 
   if (obj->tex->flags & RT_TEXTURE_ISLIGHT) {  
                   /* if the current object is a light, then we  */
-    return col;   /* will only use the object's base color      */
+    return tocolora(col);   /* will only use the object's base color      */
   }
 
   diffuse.r = 0.0; 
@@ -394,7 +398,7 @@ color full_shader(ray * incident) {
     col = fog_color(incident, col, t);
   }
 
-  return col;    /* return the color of the shaded pixel... */
+  return tocolora(col);    /* return the color of the shaded pixel... */
 }
 
 
@@ -483,12 +487,17 @@ color shade_ambient_occlusion(ray * incident, const shadedata * shadevars) {
 color shade_reflection(ray * incident, const shadedata * shadevars, flt specular) {
   ray specray;
   color col;
+  colora cola;
   vector R;
 
   /* Do recursion depth test immediately to early-exit ASAP */
   if (incident->depth <= 1) {
     /* if ray is truncated, return the background texture as its color */
-    return incident->scene->bgtexfunc(incident);
+	cola = incident->scene->bgtexfunc(incident);
+	col.r = cola.r;
+	col.g = cola.g;
+	col.b = cola.b;
+    return col;
   }
   specray.depth=incident->depth - 1;     /* go up a level in recursion depth */
   specray.transcnt=incident->transcnt;   /* maintain trans surface count */
@@ -512,7 +521,10 @@ color shade_reflection(ray * incident, const shadedata * shadevars, flt specular
 
   /* inlined code from trace() to eliminate one level of recursion */
   intersect_objects(&specray);           /* trace specular reflection ray */
-  col=specray.scene->shader(&specray);
+  cola=specray.scene->shader(&specray);
+  col.r = cola.r;
+  col.g = cola.g;
+  col.b = cola.b;
 
   incident->serial = specray.serial;     /* update the serial number */
   incident->frng = specray.frng;         /* update AO RNG state      */
@@ -526,11 +538,16 @@ color shade_reflection(ray * incident, const shadedata * shadevars, flt specular
 color shade_transmission(ray * incident, const shadedata * shadevars, flt trans) {
   ray transray;
   color col;
+  colora cola;
 
   /* Do recursion depth test immediately to early-exit ASAP */
   if (incident->depth <= 1) {
     /* if ray is truncated, return the background texture as its color */
-    return incident->scene->bgtexfunc(incident);
+    cola = incident->scene->bgtexfunc(incident);
+	col.r = cola.r;
+	col.g = cola.g;
+	col.b = cola.b;
+    return col;
   }
   transray.o=shadevars->hit; 
   transray.d=incident->d;                 /* ray continues on incident path */
@@ -549,7 +566,10 @@ color shade_transmission(ray * incident, const shadedata * shadevars, flt trans)
 
   /* inlined code from trace() to eliminate one level of recursion */
   intersect_objects(&transray);           /* trace transmission ray */
-  col=transray.scene->shader(&transray);
+  cola=transray.scene->shader(&transray);
+  col.r = cola.r;
+  col.g = cola.g;
+  col.b = cola.b;
 
   incident->serial = transray.serial;     /* update the serial number */
   incident->frng = transray.frng;         /* update AO RNG state      */

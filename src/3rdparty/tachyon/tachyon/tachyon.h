@@ -57,6 +57,15 @@ typedef struct {
 } apicolor;
 
 typedef struct {
+   float r;
+   float g;
+   float b;
+   float a;
+} colora;
+
+colora tocolora(apicolor c);
+
+typedef struct {
   int texturefunc; /**< which texture function to use */
   apicolor col;    /**< base object color */
   int shadowcast;  /**< does the object cast a shadow */
@@ -217,6 +226,7 @@ void rt_image_gamma(SceneHandle voidscene, float gamma);
  * is enough space in the memory area for the entire image.
  */
 void rt_rawimage_rgb24(SceneHandle, unsigned char *rawimage);
+void rt_rawimage_rgba32(SceneHandle, unsigned char *rawimage);
 
 /**
  * Request Tachyon to save the output image in the specified
@@ -230,7 +240,7 @@ void rt_rawimage_rgb96f(SceneHandle, float *rawimage);
 void rt_set_numthreads(SceneHandle, int);
 
 /** Set the background color of the specified scene.  */
-void rt_background(SceneHandle, apicolor);
+void rt_background(SceneHandle, colora);
 
 /** 
  * Set parameters for gradient (sky plane or sphere) 
@@ -848,6 +858,7 @@ void rt_quadric(SceneHandle, void *tex, apivector center, flt a, flt b, flt c, f
  */
 #define RT_IMAGE_BUFFER_RGB24   0 /**< 24-bit color, unsigned char RGB */
 #define RT_IMAGE_BUFFER_RGB96F  1 /**< 96-bit color, 32-bit float RGB  */
+#define RT_IMAGE_BUFFER_RGBA32  2 /**< 32-bit color, unsigned char RGBA */
 
 
 /*
@@ -896,7 +907,7 @@ typedef struct {         /**< Scalar Volume Data */
  * Background texture data structure
  */
 typedef struct {
-  color background;      /**< solid background color     */
+  colora background;      /**< solid background color     */
   vector gradient;       /**< gradient direction vector for "up"  */
   flt gradtopval;        /**< texture dot product max parameter for top  */
   flt gradbotval;        /**< texture dot product min parameter for bot  */
@@ -1021,7 +1032,7 @@ typedef struct {
   flt bottom;                /**< bottom side of perspective frustum      */
   flt aperture;              /**< depth of field aperture                 */
   vector projcent;           /**< center of image plane in world coords   */
-  color (* cam_ray)(void *, flt, flt);   /**< camera ray generator fctn   */
+  colora (* cam_ray)(void *, flt, flt);   /**< camera ray generator fctn   */
   vector lowleft;            /**< lower left corner of image plane        */
   vector iplaneright;        /**< image plane right vector                */
   vector iplaneup;           /**< image plane up    vector                */
@@ -1102,11 +1113,11 @@ typedef struct {
   list * cliplist;           /**< linked list of clipping plane groups    */
   unsigned int flags;        /**< scene feature requirement flags         */
   camdef camera;             /**< camera definition                       */
-  color (* shader)(void *);  /**< main shader used for the whole scene    */  
+  colora (* shader)(void *);  /**< main shader used for the whole scene    */
   flt (* phongfunc)(const struct ray_t * incident, const shadedata * shadevars, flt specpower);              /**< phong shader used for whole scene       */ 
   int transmode;             /**< transparency mode flags                 */
   background_texture bgtex;  /**< background texture parameters           */
-  color (* bgtexfunc)(const struct ray_t * incident); /**< background texturing function ptr  */
+  colora (* bgtexfunc)(const struct ray_t * incident); /**< background texturing function ptr  */
   fogdata fog;               /**< fog parameters                          */
   displist objgroup;         /**< objects in the scene                    */
   list * lightlist;          /**< linked list of lights in the scene      */
