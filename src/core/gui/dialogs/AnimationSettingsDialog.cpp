@@ -148,18 +148,18 @@ void AnimationSettingsDialog::updateValues()
 ******************************************************************************/
 void AnimationSettingsDialog::onFramesPerSecondChanged(int index)
 {
-	int newTicksPerFrame = fpsBox->itemData(index).toInt();
+	qint64 newTicksPerFrame = fpsBox->itemData(index).toInt();
 	OVITO_ASSERT(newTicksPerFrame != 0);
 	
 	// Change the animation speed.
-	int oldTicksPerFrame = _animSettings->ticksPerFrame();
-	_animSettings->setTicksPerFrame(newTicksPerFrame);
+	qint64 oldTicksPerFrame = _animSettings->ticksPerFrame();
+	_animSettings->setTicksPerFrame((int)newTicksPerFrame);
 
 	// Rescale animation interval and animation keys.
 	TimeInterval oldInterval = _animSettings->animationInterval();
 	TimeInterval newInterval;
-	newInterval.setStart(oldInterval.start() * newTicksPerFrame / oldTicksPerFrame);
-	newInterval.setEnd(oldInterval.end() * newTicksPerFrame / oldTicksPerFrame);
+	newInterval.setStart((TimePoint)((qint64)oldInterval.start() * newTicksPerFrame / oldTicksPerFrame));
+	newInterval.setEnd((TimePoint)((qint64)oldInterval.end() * newTicksPerFrame / oldTicksPerFrame));
 	_animSettings->setAnimationInterval(newInterval);
 
 	_animSettings->dataset()->rescaleTime(oldInterval, newInterval);
