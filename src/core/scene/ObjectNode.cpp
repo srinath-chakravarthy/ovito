@@ -62,13 +62,16 @@ const PipelineFlowState& ObjectNode::evalPipeline(TimePoint time)
 				// Update list of active display objects.
 
 				// First discard those display objects which are no longer needed.
-				for(int i = displayObjects().size() - 1; i >= 0; i--) {
-					DisplayObject* displayObj = displayObjects()[i];
-					// Check if the display object is still being referenced by any of the objects
-					// that left the pipeline.
-					if(std::none_of(_pipelineCache.objects().begin(), _pipelineCache.objects().end(),
-							[displayObj](DataObject* obj) { return obj->displayObjects().contains(displayObj); })) {
-						_displayObjects.remove(i);
+				// (Only when we got the final pipeline results.)
+				if(_pipelineCache.status().type() != PipelineStatus::Pending) {
+					for(int i = displayObjects().size() - 1; i >= 0; i--) {
+						DisplayObject* displayObj = displayObjects()[i];
+						// Check if the display object is still being referenced by any of the objects
+						// that left the pipeline.
+						if(std::none_of(_pipelineCache.objects().begin(), _pipelineCache.objects().end(),
+								[displayObj](DataObject* obj) { return obj->displayObjects().contains(displayObj); })) {
+							_displayObjects.remove(i);
+						}
 					}
 				}
 

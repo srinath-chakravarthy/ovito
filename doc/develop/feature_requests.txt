@@ -3,8 +3,7 @@ User interface improvements:
 - Default directory for image/movie output should be the path of the current data file.
 - Add support for keyboard shortcuts (requested by Fossati, Paul C).
 - Add file export function to Construct Surface Mesh modifier, which allows to export the mesh to a VTK file (requested by konstantin.avchachov@helsinki.fi).
-- Avoid flickering in pipeline editor when playing animation.
- 
+
 Work-flow improvements:
 
 - Add support for low-dimensional systems.
@@ -49,7 +48,6 @@ Unresolved OpenGL problems:
 Unresolved bugs:
 
 - NearestNeighborFinder doesn't work properly for triclinic cells with small angles.
-- Negative animation end frame leads to codec error
 
 New analysis features:
 
