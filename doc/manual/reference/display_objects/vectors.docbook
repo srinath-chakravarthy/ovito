@@ -16,11 +16,11 @@
        <imagedata fileref="images/display_objects/vectors_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
     
-    This display object is responsible for visualizing per-particle vector quantities using arrow glyphs.
+    This display object is responsible for visualizing vector quantities that are associated with particles.
     
     The <link linkend="particles.modifiers.displacement_vectors">Displacement vectors</link> modifier, for example, 
-    calculates the displacement vector of each particle. The modifier also creates a vector display object to 
-    render the displacement vectors as arrows.
+    calculates the displacement vector of each particle. The modifier creates a vector display object to 
+    render the displacements as arrows.
   </para>
 
    <simplesect>
@@ -59,23 +59,23 @@
       </varlistentry>
 
       <varlistentry>
-        <term>Reverse arrow direction</term>
+        <term>Alignment</term>
         <listitem>
-          <para>Reverses head and tail of the arrows.</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>Flip vectors</term>
-        <listitem>
-          <para>Toggling this option mirrors the arrows at the particle locations.</para>
+          <para>Controls how arrows are positioned relative to the particles.</para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
         <term>Arrow color</term>
         <listitem>
-          <para>The display color of arrows. OVITO currently supports only uniform coloring.</para>
+          <para>The display color of arrows. The current program version supports only uniform coloring.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Reverse direction</term>
+        <listitem>
+          <para>Flips arrows to reverse their directions.</para>
         </listitem>
       </varlistentry>
 

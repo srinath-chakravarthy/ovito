@@ -76,7 +76,27 @@ OORef<ParticlePropertyObject> ParticlePropertyObject::createFromStorage(DataSet*
 	}
 	else if(storage->type() == ParticleProperty::DisplacementProperty) {
 		OORef<VectorDisplay> displayObj = new VectorDisplay(dataset);
+		displayObj->setObjectTitle(tr("Displacements"));
 		displayObj->loadUserDefaults();
+		displayObj->setEnabled(false);
+		propertyObj->addDisplayObject(displayObj);
+	}
+	else if(storage->type() == ParticleProperty::ForceProperty) {
+		OORef<VectorDisplay> displayObj = new VectorDisplay(dataset);
+		displayObj->setObjectTitle(tr("Forces"));
+		displayObj->loadUserDefaults();
+		displayObj->setEnabled(false);
+		displayObj->setReverseArrowDirection(false);
+		displayObj->setArrowPosition(VectorDisplay::Base);
+		propertyObj->addDisplayObject(displayObj);
+	}
+	else if(storage->type() == ParticleProperty::DipoleOrientationProperty) {
+		OORef<VectorDisplay> displayObj = new VectorDisplay(dataset);
+		displayObj->setObjectTitle(tr("Dipoles"));
+		displayObj->loadUserDefaults();
+		displayObj->setEnabled(false);
+		displayObj->setReverseArrowDirection(false);
+		displayObj->setArrowPosition(VectorDisplay::Center);
 		propertyObj->addDisplayObject(displayObj);
 	}
 

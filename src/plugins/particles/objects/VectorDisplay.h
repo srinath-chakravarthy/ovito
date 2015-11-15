@@ -38,6 +38,16 @@ class OVITO_PARTICLES_EXPORT VectorDisplay : public DisplayObject
 {
 public:
 
+	/// The position mode for the arrows.
+	enum ArrowPosition {
+		Base,
+		Center,
+		Head
+	};
+	Q_ENUMS(ArrowPosition);
+
+public:
+
 	/// \brief Constructor.
 	Q_INVOKABLE VectorDisplay(DataSet* dataset);
 
@@ -65,11 +75,11 @@ public:
 	/// Sets whether the arrow pointing direction should be reversed.
 	void setReverseArrowDirection(bool reverse) { _reverseArrowDirection = reverse; }
 
-	/// Returns whether vectors are flipped.
-	bool flipVectors() const { return _flipVectors; }
+	/// Returns how the arrows are positioned relative to the particles.
+	ArrowPosition arrowPosition() const { return _arrowPosition; }
 
-	/// Sets whether vectors should be flipped.
-	void setFlipVectors(bool flip) { _flipVectors = flip; }
+	/// Sets how the arrows are positioned relative to the particles.
+	void setArrowPosition(ArrowPosition posMode) { _arrowPosition = posMode; }
 
 	/// Returns the display color of the arrows.
 	const Color& arrowColor() const { return _arrowColor; }
@@ -99,13 +109,19 @@ protected:
 	/// Computes the bounding box of the arrows.
 	Box3 arrowBoundingBox(ParticlePropertyObject* vectorProperty, ParticlePropertyObject* positionProperty);
 
+    /// Loads the data of this class from an input stream.
+	virtual void loadFromStream(ObjectLoadStream& stream) override;
+
+	/// Parses the serialized contents of a property field in a custom way.
+	virtual bool loadPropertyFieldFromStream(ObjectLoadStream& stream, const ObjectLoadStream::SerializedPropertyField& serializedField) override;
+
 protected:
 
 	/// Enables the reversal of the arrow pointing direction.
 	PropertyField<bool> _reverseArrowDirection;
 
-	/// Controls the flipping of the vectors.
-	PropertyField<bool> _flipVectors;
+	/// Controls how the arrows are positioned relative to the particles.
+	PropertyField<ArrowPosition, int> _arrowPosition;
 
 	/// Controls the color of the arrows.
 	PropertyField<Color, QColor> _arrowColor;
@@ -134,7 +150,7 @@ protected:
 		FloatType,											// Arrow width
 		Color,												// Arrow color
 		bool,												// Reverse arrow direction
-		bool												// Flip vectors
+		ArrowPosition										// Arrow position
 		> _geometryCacheHelper;
 
 	/// The bounding box that includes all arrows.
@@ -149,6 +165,9 @@ protected:
 		FloatType										// Arrow width
 		> _boundingBoxCacheHelper;
 
+	/// This is for backward compatibility with OVITO 2.6.0.
+	bool _flipVectors = false;
+
 private:
 
 	Q_OBJECT
@@ -157,7 +176,7 @@ private:
 	Q_CLASSINFO("DisplayName", "Vectors");
 
 	DECLARE_PROPERTY_FIELD(_reverseArrowDirection);
-	DECLARE_PROPERTY_FIELD(_flipVectors);
+	DECLARE_PROPERTY_FIELD(_arrowPosition);
 	DECLARE_PROPERTY_FIELD(_arrowColor);
 	DECLARE_PROPERTY_FIELD(_arrowWidth);
 	DECLARE_PROPERTY_FIELD(_scalingFactor);
@@ -190,5 +209,9 @@ OVITO_END_INLINE_NAMESPACE
 
 }	// End of namespace
 }	// End of namespace
+
+Q_DECLARE_METATYPE(Ovito::Particles::VectorDisplay::ArrowPosition);
+Q_DECLARE_TYPEINFO(Ovito::Particles::VectorDisplay::ArrowPosition, Q_PRIMITIVE_TYPE);
+
 
 #endif // __OVITO_VECTOR_DISPLAY_H

@@ -39,8 +39,8 @@ OVITO_END_INLINE_NAMESPACE
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, VectorDisplay, DisplayObject);
 SET_OVITO_OBJECT_EDITOR(VectorDisplay, VectorDisplayEditor);
-DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _reverseArrowDirection, "ReverseArrowDirection", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _flipVectors, "FlipVectors", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(VectorDisplay, _reverseArrowDirection, "ReverseArrowDirection");
+DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _arrowPosition, "ArrowPosition", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _arrowColor, "ArrowColor", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _arrowWidth, "ArrowWidth", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _scalingFactor, "ScalingFactor", PROPERTY_FIELD_MEMORIZE);
@@ -49,8 +49,8 @@ DEFINE_PROPERTY_FIELD(VectorDisplay, _renderingQuality, "RenderingQuality");
 SET_PROPERTY_FIELD_LABEL(VectorDisplay, _arrowColor, "Arrow color");
 SET_PROPERTY_FIELD_LABEL(VectorDisplay, _arrowWidth, "Arrow width");
 SET_PROPERTY_FIELD_LABEL(VectorDisplay, _scalingFactor, "Scaling factor");
-SET_PROPERTY_FIELD_LABEL(VectorDisplay, _reverseArrowDirection, "Reverse arrow direction");
-SET_PROPERTY_FIELD_LABEL(VectorDisplay, _flipVectors, "Flip vectors");
+SET_PROPERTY_FIELD_LABEL(VectorDisplay, _reverseArrowDirection, "Reverse direction");
+SET_PROPERTY_FIELD_LABEL(VectorDisplay, _arrowPosition, "Position");
 SET_PROPERTY_FIELD_LABEL(VectorDisplay, _shadingMode, "Shading mode");
 SET_PROPERTY_FIELD_LABEL(VectorDisplay, _renderingQuality, "RenderingQuality");
 SET_PROPERTY_FIELD_UNITS(VectorDisplay, _arrowWidth, WorldParameterUnit);
@@ -59,7 +59,7 @@ SET_PROPERTY_FIELD_UNITS(VectorDisplay, _arrowWidth, WorldParameterUnit);
 * Constructor.
 ******************************************************************************/
 VectorDisplay::VectorDisplay(DataSet* dataset) : DisplayObject(dataset),
-	_reverseArrowDirection(false), _flipVectors(false), _arrowColor(1, 1, 0), _arrowWidth(0.5), _scalingFactor(1),
+	_reverseArrowDirection(false), _arrowPosition(Base), _arrowColor(1, 1, 0), _arrowWidth(0.5), _scalingFactor(1),
 	_shadingMode(ArrowPrimitive::FlatShading),
 	_renderingQuality(ArrowPrimitive::LowQuality)
 {
@@ -67,7 +67,7 @@ VectorDisplay::VectorDisplay(DataSet* dataset) : DisplayObject(dataset),
 	INIT_PROPERTY_FIELD(VectorDisplay::_arrowWidth);
 	INIT_PROPERTY_FIELD(VectorDisplay::_scalingFactor);
 	INIT_PROPERTY_FIELD(VectorDisplay::_reverseArrowDirection);
-	INIT_PROPERTY_FIELD(VectorDisplay::_flipVectors);
+	INIT_PROPERTY_FIELD(VectorDisplay::_arrowPosition);
 	INIT_PROPERTY_FIELD(VectorDisplay::_shadingMode);
 	INIT_PROPERTY_FIELD(VectorDisplay::_renderingQuality);
 }
@@ -152,7 +152,7 @@ void VectorDisplay::render(TimePoint time, DataObject* dataObject, const Pipelin
 	bool updateContents = _geometryCacheHelper.updateState(
 			vectorProperty,
 			positionProperty,
-			scalingFactor(), arrowWidth(), arrowColor(), reverseArrowDirection(), flipVectors())
+			scalingFactor(), arrowWidth(), arrowColor(), reverseArrowDirection(), arrowPosition())
 			|| recreateBuffer || (_buffer->elementCount() != vectorCount);
 
 	// Re-create the geometry buffer if necessary.
@@ -164,23 +164,21 @@ void VectorDisplay::render(TimePoint time, DataObject* dataObject, const Pipelin
 		_buffer->startSetElements(vectorCount);
 		if(vectorProperty && positionProperty) {
 			FloatType scalingFac = scalingFactor();
-			if(flipVectors() ^ reverseArrowDirection())
+			if(reverseArrowDirection())
 				scalingFac = -scalingFac;
 			const Point3* p_begin = positionProperty->constDataPoint3();
 			const Vector3* v_begin = vectorProperty->constDataVector3();
 			ColorA color(arrowColor());
 			FloatType width = arrowWidth();
 			ArrowPrimitive* buffer = _buffer.get();
-			if(!reverseArrowDirection()) {
-				for(int index = 0; index < vectorCount; index++) {
-					buffer->setElement(index, p_begin[index], v_begin[index] * scalingFac, color, width);
-				}
-			}
-			else {
-				for(int index = 0; index < vectorCount; index++) {
-					Vector3 v = v_begin[index] * scalingFac;
-					buffer->setElement(index, p_begin[index] - v, v, color, width);
-				}
+			for(int index = 0; index < vectorCount; index++) {
+				Vector3 v = v_begin[index] * scalingFac;
+				Point3 base = p_begin[index];
+				if(arrowPosition() == Head)
+					base -= v;
+				else if(arrowPosition() == Center)
+					base -= v * FloatType(0.5);
+				buffer->setElement(index, base, v, color, width);
 			}
 		}
 		_buffer->endSetElements();
@@ -189,6 +187,34 @@ void VectorDisplay::render(TimePoint time, DataObject* dataObject, const Pipelin
 	renderer->beginPickObject(contextNode);
 	_buffer->render(renderer);
 	renderer->endPickObject();
+}
+
+/******************************************************************************
+* Loads the data of this class from an input stream.
+******************************************************************************/
+void VectorDisplay::loadFromStream(ObjectLoadStream& stream)
+{
+	DisplayObject::loadFromStream(stream);
+
+	// This is for backward compatibility with OVITO 2.6.0.
+	if(_flipVectors && reverseArrowDirection()) {
+		setReverseArrowDirection(false);
+		setArrowPosition(Head);
+	}
+}
+
+/******************************************************************************
+* Parses the serialized contents of a property field in a custom way.
+******************************************************************************/
+bool VectorDisplay::loadPropertyFieldFromStream(ObjectLoadStream& stream, const ObjectLoadStream::SerializedPropertyField& serializedField)
+{
+	// This is for backward compatibility with OVITO 2.6.0.
+	if(serializedField.identifier == "FlipVectors" && serializedField.definingClass == &VectorDisplay::OOType) {
+		stream >> _flipVectors;
+		return true;
+	}
+
+	return false;
 }
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -237,15 +263,19 @@ void VectorDisplayEditor::createUI(const RolloutInsertionParameters& rolloutPara
 	layout->addLayout(arrowWidthUI->createFieldLayout(), row++, 1);
 	arrowWidthUI->setMinValue(0);
 
-	BooleanParameterUI* reverseArrowDirectionUI = new BooleanParameterUI(this, PROPERTY_FIELD(VectorDisplay::_reverseArrowDirection));
-	layout->addWidget(reverseArrowDirectionUI->checkBox(), row++, 0, 1, 2);
-
-	BooleanParameterUI* flipVectorsUI = new BooleanParameterUI(this, PROPERTY_FIELD(VectorDisplay::_flipVectors));
-	layout->addWidget(flipVectorsUI->checkBox(), row++, 0, 1, 2);
+	VariantComboBoxParameterUI* arrowPositionUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(VectorDisplay::_arrowPosition));
+	arrowPositionUI->comboBox()->addItem(QIcon(":/particles/icons/arrow_alignment_base.png"), tr("Base"), QVariant::fromValue(VectorDisplay::Base));
+	arrowPositionUI->comboBox()->addItem(QIcon(":/particles/icons/arrow_alignment_center.png"), tr("Center"), QVariant::fromValue(VectorDisplay::Center));
+	arrowPositionUI->comboBox()->addItem(QIcon(":/particles/icons/arrow_alignment_head.png"), tr("Head"), QVariant::fromValue(VectorDisplay::Head));
+	layout->addWidget(new QLabel(tr("Alignment:")), row, 0);
+	layout->addWidget(arrowPositionUI->comboBox(), row++, 1);
 
 	ColorParameterUI* arrowColorUI = new ColorParameterUI(this, PROPERTY_FIELD(VectorDisplay::_arrowColor));
 	layout->addWidget(arrowColorUI->label(), row, 0);
 	layout->addWidget(arrowColorUI->colorPicker(), row++, 1);
+
+	BooleanParameterUI* reverseArrowDirectionUI = new BooleanParameterUI(this, PROPERTY_FIELD(VectorDisplay::_reverseArrowDirection));
+	layout->addWidget(reverseArrowDirectionUI->checkBox(), row++, 1, 1, 1);
 }
 
 OVITO_END_INLINE_NAMESPACE

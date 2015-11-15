@@ -10,6 +10,10 @@
 	<file>icons/particle_shape_square.png</file>
 	<file>icons/particle_shape_cylinder.png</file>
 	<file>icons/particle_shape_spherocylinder.png</file>
+
+	<file>icons/arrow_alignment_base.png</file>
+	<file>icons/arrow_alignment_center.png</file>
+	<file>icons/arrow_alignment_head.png</file>
 	
 </qresource> 
 

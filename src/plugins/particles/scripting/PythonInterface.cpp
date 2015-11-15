@@ -439,38 +439,50 @@ BOOST_PYTHON_MODULE(Particles)
 		;
 	}
 
-	ovito_class<VectorDisplay, DisplayObject>(
-			":Base class: :py:class:`ovito.vis.Display`\n\n"
-			"Controls the visual appearance of vectors (arrows).")
-		.add_property("shading", &VectorDisplay::shadingMode, &VectorDisplay::setShadingMode,
-				"The shading style used for the arrows.\n"
-				"Possible values:"
-				"\n\n"
-				"   * ``VectorDisplay.Shading.Normal`` (default) \n"
-				"   * ``VectorDisplay.Shading.Flat``\n"
-				"\n")
-		.add_property("renderingQuality", &VectorDisplay::renderingQuality, &VectorDisplay::setRenderingQuality)
-		.add_property("reverse", &VectorDisplay::reverseArrowDirection, &VectorDisplay::setReverseArrowDirection,
-				"Boolean flag controlling the reversal of arrow directions."
-				"\n\n"
-				":Default: ``False``\n")
-		.add_property("flip", &VectorDisplay::flipVectors, &VectorDisplay::setFlipVectors,
-				"Boolean flag controlling the flipping of vectors."
-				"\n\n"
-				":Default: ``False``\n")
-		.add_property("color", make_function(&VectorDisplay::arrowColor, return_value_policy<copy_const_reference>()), &VectorDisplay::setArrowColor,
-				"The display color of arrows."
-				"\n\n"
-				":Default: ``(1.0, 1.0, 0.0)``\n")
-		.add_property("width", &VectorDisplay::arrowWidth, &VectorDisplay::setArrowWidth,
-				"Controls the width of arrows (in natural length units)."
-				"\n\n"
-				":Default: 0.5\n")
-		.add_property("scaling", &VectorDisplay::scalingFactor, &VectorDisplay::setScalingFactor,
-				"The uniform scaling factor applied to vectors."
-				"\n\n"
-				":Default: 1.0\n")
-	;
+	{
+		scope s = ovito_class<VectorDisplay, DisplayObject>(
+				":Base class: :py:class:`ovito.vis.Display`\n\n"
+				"Controls the visual appearance of vectors (arrows).")
+			.add_property("shading", &VectorDisplay::shadingMode, &VectorDisplay::setShadingMode,
+					"The shading style used for the arrows.\n"
+					"Possible values:"
+					"\n\n"
+					"   * ``VectorDisplay.Shading.Normal`` (default) \n"
+					"   * ``VectorDisplay.Shading.Flat``\n"
+					"\n")
+			.add_property("renderingQuality", &VectorDisplay::renderingQuality, &VectorDisplay::setRenderingQuality)
+			.add_property("reverse", &VectorDisplay::reverseArrowDirection, &VectorDisplay::setReverseArrowDirection,
+					"Boolean flag controlling the reversal of arrow directions."
+					"\n\n"
+					":Default: ``False``\n")
+			.add_property("alignment", &VectorDisplay::arrowPosition, &VectorDisplay::setArrowPosition,
+					"Controls the positioning of arrows with respect to the particles.\n"
+					"Possible values:"
+					"\n\n"
+					"   * ``VectorDisplay.Alignment.Base`` (default) \n"
+					"   * ``VectorDisplay.Alignment.Center``\n"
+					"   * ``VectorDisplay.Alignment.Head``\n"
+					"\n")
+			.add_property("color", make_function(&VectorDisplay::arrowColor, return_value_policy<copy_const_reference>()), &VectorDisplay::setArrowColor,
+					"The display color of arrows."
+					"\n\n"
+					":Default: ``(1.0, 1.0, 0.0)``\n")
+			.add_property("width", &VectorDisplay::arrowWidth, &VectorDisplay::setArrowWidth,
+					"Controls the width of arrows (in natural length units)."
+					"\n\n"
+					":Default: 0.5\n")
+			.add_property("scaling", &VectorDisplay::scalingFactor, &VectorDisplay::setScalingFactor,
+					"The uniform scaling factor applied to vectors."
+					"\n\n"
+					":Default: 1.0\n")
+		;
+
+		enum_<VectorDisplay::ArrowPosition>("Alignment")
+			.value("Base", VectorDisplay::Base)
+			.value("Center", VectorDisplay::Center)
+			.value("Head", VectorDisplay::Head)
+		;
+	}
 
 	ovito_class<SimulationCellDisplay, DisplayObject>(
 			":Base class: :py:class:`ovito.vis.Display`\n\n"
