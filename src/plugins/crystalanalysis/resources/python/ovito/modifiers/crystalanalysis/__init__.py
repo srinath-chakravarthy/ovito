@@ -3,6 +3,9 @@ import ovito.modifiers
 import ovito.modifiers.particles
 
 # Load the native code modules.
+import Particles
+import ParticlesImporter
+import ParticlesExporter
 import CrystalAnalysis
 
 # Inject modifier classes into parent module.

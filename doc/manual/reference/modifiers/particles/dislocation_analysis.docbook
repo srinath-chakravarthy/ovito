@@ -303,7 +303,14 @@ Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
     </para>
     <para>
         Note that you can position the mouse cursor over an extracted dislocation line in the viewports to let OVITO display its properties in the status bar 
-        of the main window.
+        of the main window. Alternatively, you can use the "Inspect Dislocations" utility on the utilities tab of OVITO's command panel to 
+        list more properties of individual dislocation lines.
+    </para>
+    <para>
+        The dislocation lines extracted by the modifier can be exported using OVITO's <link linkend="usage.export">file export function</link>.
+        Currently, a simple text-based output format is supported, which is also used by another code (<emphasis>Crystal Analysis Tool</emphasis>) that implements the DXA.
+        Please contact the author of OVITO if you need the specification of this CA dislocation file format. OVITO can also import CA files,
+        which allows saving the results of a (possibly) expensive dislocation analysis to disk and then reloding them again later.
     </para>
   </simplesect> 
        

@@ -5,7 +5,10 @@ import ovito.modifiers
 import ovito.modifiers.particles
 import numpy
 
-# Load the native code module
+# Load the native code modules
+import Particles
+import ParticlesImporter
+import ParticlesExporter
 import CrystalAnalysis
 
 # Inject selected classes into parent module.

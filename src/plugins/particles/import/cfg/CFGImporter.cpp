@@ -76,7 +76,7 @@ void CFGHeader::parse(CompressedTextReader& stream)
 
 	while(!stream.eof()) {
 
-		string line(stream.readLine());
+		string line(stream.readLineTrimLeft());
 
 		// Ignore comments
 		size_t commentChar = line.find('#');
@@ -218,7 +218,9 @@ void CFGImporter::CFGImportTask::parseFile(CompressedTextReader& stream)
 
 		if(header.isExtendedFormat) {
 			bool isNewType = true;
-			for(const char* line = stream.line(); *line != '\0'; ++line) {
+			const char* line = stream.line();
+			while(*line != '\0' && *line <= ' ') ++line;
+			for(; *line != '\0'; ++line) {
 				if(*line <= ' ') {
 					for(; *line != '\0'; ++line) {
 						if(*line > ' ') {
@@ -232,8 +234,7 @@ void CFGImporter::CFGImportTask::parseFile(CompressedTextReader& stream)
 			if(isNewType) {
 				// Parse mass and atom type name.
 				currentMass = atof(stream.line());
-				const char* line = stream.readLine();
-				while(*line != '\0' && *line <= ' ') ++line;
+				const char* line = stream.readLineTrimLeft();
 				const char* line_end = line;
 				while(*line_end != '\0' && *line_end > ' ') ++line_end;
 				currentAtomType = addParticleTypeName(line, line_end);

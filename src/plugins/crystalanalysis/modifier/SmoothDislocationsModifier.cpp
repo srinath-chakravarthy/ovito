@@ -94,7 +94,8 @@ void SmoothDislocationsModifier::smoothDislocationLines(DislocationNetworkObject
 			coarsenDislocationLine(_coarseningEnabled.value() ? _linePointInterval.value() : 0, segment->line, segment->coreSize, line, coreSize, segment->isClosedLoop(), segment->isInfiniteLine());
 			smoothDislocationLine(_smoothingEnabled.value() ? _smoothingLevel.value() : 0, line, segment->isClosedLoop());
 			segment->line = std::move(line);
-			segment->coreSize = std::move(coreSize);
+			//segment->coreSize = std::move(coreSize);
+			segment->coreSize.clear();
 		}
 		dislocationsObj->changed();
 	}

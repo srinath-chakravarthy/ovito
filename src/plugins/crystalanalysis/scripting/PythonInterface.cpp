@@ -33,6 +33,7 @@
 #include <plugins/crystalanalysis/objects/patterns/PatternCatalog.h>
 #include <plugins/crystalanalysis/objects/patterns/StructurePattern.h>
 #include <plugins/crystalanalysis/importer/CAImporter.h>
+#include <plugins/crystalanalysis/exporter/CAExporter.h>
 #include <plugins/pyscript/binding/PythonBinding.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
@@ -236,6 +237,9 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 
 	ovito_class<CAImporter, FileSourceImporter>()
 		.add_property("loadParticles", &CAImporter::loadParticles, &CAImporter::setLoadParticles)
+	;
+
+	ovito_class<CAExporter, ParticleExporter>()
 	;
 
 	ovito_class<DislocationDisplay, DisplayObject>(

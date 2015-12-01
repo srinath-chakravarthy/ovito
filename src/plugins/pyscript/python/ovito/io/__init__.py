@@ -161,6 +161,7 @@ def export_file(node, file, format, **params):
                             * ``"imd"`` -- IMD format
                             * ``"vasp"`` -- POSCAR format
                             * ``"xyz"`` -- XYZ format
+                            * ``"ca"`` -- Text-based format for storing dislocation lines (Crystal Analysis Tool)
         
         The function evaluates the modification pipeline of the given object node and exports
         the results to one or more files. By default, only the current animation frame is exported.

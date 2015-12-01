@@ -53,6 +53,15 @@
               <entry>IMD</entry>
               <entry><para>File format used by the molecular dynamics code <link xlink:href="http://imd.itap.physik.uni-stuttgart.de/">IMD</link>.</para></entry>
             </row>
+            <row>
+              <entry>FHI-aims</entry>
+              <entry><para>File format used by the <emphasis>ab initio</emphasis> simulation package <link xlink:href="https://aimsclub.fhi-berlin.mpg.de/index.php">FHI-aims</link>.</para></entry>
+            </row>
+            <row>
+              <entry>Crystal Analysis (CA)</entry>
+              <entry><para>A text-based file format used by the <emphasis>Crystal Analysis Tool</emphasis>, which can store dislocation line networks extracted by the 
+              <link linkend="particles.modifiers.dislocation_analysis">Dislocation Analysis</link> modifier.</para></entry>
+            </row>
           </tbody>
         </tgroup>
       </informaltable>  
