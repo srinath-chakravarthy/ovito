@@ -206,6 +206,38 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> ComputePropertyModi
 	if(neighborExpressions().size() != outp->componentCount())
 		throw Exception(tr("Number of neighbor expressions does not match component count of output property."));
 
+	// Initialize output property with original values when computation is restricted to selected particles.
+	if(onlySelectedParticles()) {
+		ParticlePropertyObject* originalPropertyObj = nullptr;
+		if(outputProperty().type() != ParticleProperty::UserProperty) {
+			originalPropertyObj = inputStandardProperty(outputProperty().type());
+		}
+		else {
+			for(DataObject* o : input().objects()) {
+				ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(o);
+				if(property && property->type() == ParticleProperty::UserProperty && property->name() == outp->name()) {
+					originalPropertyObj = property;
+					break;
+				}
+			}
+
+		}
+		if(originalPropertyObj && originalPropertyObj->dataType() == outp->dataType() &&
+				originalPropertyObj->componentCount() == outp->componentCount() && originalPropertyObj->stride() == outp->stride()) {
+			memcpy(outp->data(), originalPropertyObj->constData(), outp->stride() * outp->size());
+		}
+		else if(outputProperty().type() == ParticleProperty::ColorProperty) {
+			std::vector<Color> colors = inputParticleColors(time, validityInterval);
+			OVITO_ASSERT(outp->stride() == sizeof(Color) && outp->size() == colors.size());
+			memcpy(outp->data(), colors.data(), outp->stride() * outp->size());
+		}
+		else if(outputProperty().type() == ParticleProperty::RadiusProperty) {
+			std::vector<FloatType> radii = inputParticleRadii(time, validityInterval);
+			OVITO_ASSERT(outp->stride() == sizeof(FloatType) && outp->size() == radii.size());
+			memcpy(outp->data(), radii.data(), outp->stride() * outp->size());
+		}
+	}
+
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<PropertyComputeEngine>(validityInterval, time, outp.data(), posProperty->storage(),
 			selProperty, inputCell->data(), neighborModeEnabled() ? cutoff() : 0.0f,

@@ -1,6 +1,6 @@
 ###############################################################################
 # 
-#  Copyright (2013) Alexander Stukowski
+#  Copyright (2015) Alexander Stukowski
 #
 #  This file is part of OVITO (Open Visualization Tool).
 #
@@ -52,6 +52,8 @@ SET(SourceFiles
 	modifier/dxa/PlanarDefectIdentification.cpp
 	modifier/elasticstrain/ElasticStrainModifier.cpp
 	modifier/elasticstrain/ElasticStrainEngine.cpp
+#	modifier/grains/GrainSegmentationModifier.cpp
+#	modifier/grains/GrainSegmentationEngine.cpp
 	util/DelaunayTessellation.cpp
 	util/DislocationInformationApplet.cpp
 )

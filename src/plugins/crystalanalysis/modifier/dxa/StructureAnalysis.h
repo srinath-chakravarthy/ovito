@@ -102,7 +102,7 @@ public:
 			LatticeStructureType inputCrystalType,
 			ParticleProperty* particleSelection,
 			ParticleProperty* outputStructures,
-			std::vector<Matrix3>&& preferredCrystalOrientations);
+			std::vector<Matrix3>&& preferredCrystalOrientations = std::vector<Matrix3>());
 
 	/// Identifies the atomic structures.
 	bool identifyStructures(FutureInterfaceBase& progress);
