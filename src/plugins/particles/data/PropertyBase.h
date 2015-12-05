@@ -161,6 +161,13 @@ public:
 		return reinterpret_cast<const SymmetricTensor2*>(constData());
 	}
 
+	/// \brief Returns a read-only pointer to the first Matrix3 element in the property storage.
+	/// \note This method may only be used if this property is of data type Matrix3 or a FloatType channel with 9 components.
+	const Matrix3* constDataMatrix3() const {
+		OVITO_ASSERT(dataType() == qMetaTypeId<Matrix3>() || (dataType() == qMetaTypeId<FloatType>() && componentCount() == 9));
+		return reinterpret_cast<const Matrix3*>(constData());
+	}
+
 	/// \brief Returns a read-only pointer to the first quaternion element in the property storage.
 	/// \note This method may only be used if this property is of data type Quaternion or a FloatType channel with 4 components.
 	const Quaternion* constDataQuaternion() const {
@@ -203,6 +210,11 @@ public:
 	/// \brief Returns a range of const iterators over the elements stored in this object.
 	Range<const SymmetricTensor2*> constSymmetricTensor2Range() const {
 		return Range<const SymmetricTensor2*>(constDataSymmetricTensor2(), size());
+	}
+
+	/// \brief Returns a range of const iterators over the elements stored in this object.
+	Range<const Matrix3*> constMatrix3Range() const {
+		return Range<const Matrix3*>(constDataMatrix3(), size());
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
@@ -265,6 +277,13 @@ public:
 		return reinterpret_cast<SymmetricTensor2*>(data());
 	}
 
+	/// \brief Returns a read-write pointer to the first Matrix3 element in the property storage.
+	/// \note This method may only be used if this property is of data type Matrix3 or a FloatType channel with 9 components.
+	Matrix3* dataMatrix3() {
+		OVITO_ASSERT(dataType() == qMetaTypeId<Matrix3>() || (dataType() == qMetaTypeId<FloatType>() && componentCount() == 9));
+		return reinterpret_cast<Matrix3*>(data());
+	}
+
 	/// \brief Returns a read-write pointer to the first quaternion element in the property storage.
 	/// \note This method may only be used if this property is of data type Quaternion or a FloatType channel with 4 components.
 	Quaternion* dataQuaternion() {
@@ -307,6 +326,11 @@ public:
 	/// \brief Returns a range of iterators over the elements stored in this object.
 	Range<SymmetricTensor2*> symmetricTensor2Range() {
 		return Range<SymmetricTensor2*>(dataSymmetricTensor2(), size());
+	}
+
+	/// \brief Returns a range of iterators over the elements stored in this object.
+	Range<Matrix3*> matrix3Range() {
+		return Range<Matrix3*>(dataMatrix3(), size());
 	}
 
 	/// \brief Returns a range of iterators over the elements stored in this object.
@@ -366,6 +390,12 @@ public:
 	const SymmetricTensor2& getSymmetricTensor2(size_t particleIndex) const {
 		OVITO_ASSERT(particleIndex < size());
 		return constDataSymmetricTensor2()[particleIndex];
+	}
+
+	/// Returns a Matrix3 element stored for the given particle.
+	const Matrix3& getMatrix3(size_t particleIndex) const {
+		OVITO_ASSERT(particleIndex < size());
+		return constDataMatrix3()[particleIndex];
 	}
 
 	/// Returns a Quaternion element stored for the given particle.
@@ -428,6 +458,12 @@ public:
 		dataSymmetricTensor2()[particleIndex] = newValue;
 	}
 
+	/// Sets the value of a Matrix3 element for the given particle.
+	void setMatrix3(size_t particleIndex, const Matrix3& newValue) {
+		OVITO_ASSERT(particleIndex < size());
+		dataMatrix3()[particleIndex] = newValue;
+	}
+
 	/// Sets the value of a Quaternion element for the given particle.
 	void setQuaternion(size_t particleIndex, const Quaternion& newValue) {
 		OVITO_ASSERT(particleIndex < size());
@@ -435,7 +471,7 @@ public:
 	}
 
 	/// Copies the contents from the given source into this storage.
-	/// ELements for which the bit in the given mask is set are skipped.
+	/// Elements for which the bit in the given mask is set are skipped.
 	void filterCopy(const PropertyBase& source, const boost::dynamic_bitset<>& mask);
 
 protected:

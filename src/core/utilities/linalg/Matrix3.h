@@ -672,6 +672,22 @@ Q_DECL_CONSTEXPR inline Matrix_3<T> operator*(const Matrix_3<T>& a, const Matrix
 #endif
 }
 
+/// \brief Computes the sum of two matrices.
+/// \relates Matrix_3
+template<typename T>
+Q_DECL_CONSTEXPR inline Matrix_3<T> operator+(const Matrix_3<T>& a, const Matrix_3<T>& b)
+{
+	return Matrix_3<T>(a[0] + b[0], a[1] + b[1], a[2] + b[2]);
+}
+
+/// \brief Computes the difference of two matrices.
+/// \relates Matrix_3
+template<typename T>
+Q_DECL_CONSTEXPR inline Matrix_3<T> operator-(const Matrix_3<T>& a, const Matrix_3<T>& b)
+{
+	return Matrix_3<T>(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+}
+
 /// \brief Multiplies a matrix with a scalar value.
 /// \relates Matrix_3
 template<typename T>

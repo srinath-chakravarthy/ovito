@@ -71,6 +71,15 @@ private:
 	/// The type of crystal to be analyzed.
 	PropertyField<int> _inputCrystalStructure;
 
+	/// The minimum misorientation angle between adjacent grains.
+	PropertyField<FloatType> _misorientationThreshold;
+
+	/// Controls the amount of noise allowed inside a grain.
+	PropertyField<FloatType> _fluctuationTolerance;
+
+	/// The minimum number of crystalline atoms per grain.
+	PropertyField<int> _minGrainAtomCount;
+
 	/// The catalog of structure patterns.
 	ReferenceField<PatternCatalog> _patternCatalog;
 
@@ -87,6 +96,9 @@ private:
 	Q_CLASSINFO("ModifierCategory", "Analysis");
 
 	DECLARE_PROPERTY_FIELD(_inputCrystalStructure);
+	DECLARE_PROPERTY_FIELD(_misorientationThreshold);
+	DECLARE_PROPERTY_FIELD(_fluctuationTolerance);
+	DECLARE_PROPERTY_FIELD(_minGrainAtomCount);
 	DECLARE_REFERENCE_FIELD(_patternCatalog);
 };
 

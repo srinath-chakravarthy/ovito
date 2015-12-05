@@ -59,7 +59,6 @@ ParticleProperty::ParticleProperty(size_t particleCount, Type type, size_t compo
 	case AngularVelocityProperty:
 	case AngularMomentumProperty:
 	case TorqueProperty:
-	case AsphericalShapeProperty:
 		_dataType = qMetaTypeId<FloatType>();
 		_componentCount = 3;
 		_stride = sizeof(Vector3);
@@ -83,7 +82,6 @@ ParticleProperty::ParticleProperty(size_t particleCount, Type type, size_t compo
 	case CentroSymmetryProperty:
 	case DisplacementMagnitudeProperty:
 	case VelocityMagnitudeProperty:
-    case NonaffineSquaredDisplacementProperty:
 		_dataType = qMetaTypeId<FloatType>();
 		_componentCount = 1;
 		_stride = sizeof(FloatType);
@@ -188,7 +186,6 @@ QString ParticleProperty::standardPropertyName(Type which)
 	case SpinProperty: return ParticlePropertyObject::tr("Spin");
 	case CentroSymmetryProperty: return ParticlePropertyObject::tr("Centrosymmetry");
 	case VelocityMagnitudeProperty: return ParticlePropertyObject::tr("Velocity Magnitude");
-	case NonaffineSquaredDisplacementProperty: return ParticlePropertyObject::tr("Nonaffine Squared Displacement");
 	case MoleculeProperty: return ParticlePropertyObject::tr("Molecule Identifier");
 	case AsphericalShapeProperty: return ParticlePropertyObject::tr("Aspherical Shape");
 	default:
@@ -256,7 +253,6 @@ int ParticleProperty::standardPropertyDataType(Type which)
 	case TorqueProperty:
 	case CentroSymmetryProperty:
 	case VelocityMagnitudeProperty:
-	case NonaffineSquaredDisplacementProperty:
 	case AsphericalShapeProperty:
 		return qMetaTypeId<FloatType>();
 	default:
@@ -304,7 +300,6 @@ QMap<QString, ParticleProperty::Type> ParticleProperty::standardPropertyList()
 		table.insert(standardPropertyName(SpinProperty), SpinProperty);
 		table.insert(standardPropertyName(CentroSymmetryProperty), CentroSymmetryProperty);
 		table.insert(standardPropertyName(VelocityMagnitudeProperty), VelocityMagnitudeProperty);
-		table.insert(standardPropertyName(NonaffineSquaredDisplacementProperty), NonaffineSquaredDisplacementProperty);
 		table.insert(standardPropertyName(MoleculeProperty), MoleculeProperty);
 		table.insert(standardPropertyName(AsphericalShapeProperty), AsphericalShapeProperty);
 	}
@@ -335,7 +330,6 @@ size_t ParticleProperty::standardPropertyComponentCount(Type which)
 	case CentroSymmetryProperty:
 	case DisplacementMagnitudeProperty:
 	case VelocityMagnitudeProperty:
-    case NonaffineSquaredDisplacementProperty:
     case MoleculeProperty:
 		return 1;
 	case PositionProperty:
@@ -394,7 +388,6 @@ QStringList ParticleProperty::standardPropertyComponentNames(Type which, size_t 
 	case CentroSymmetryProperty:
 	case DisplacementMagnitudeProperty:
 	case VelocityMagnitudeProperty:
-    case NonaffineSquaredDisplacementProperty:
     case MoleculeProperty:
 		return emptyList;
 	case PositionProperty:

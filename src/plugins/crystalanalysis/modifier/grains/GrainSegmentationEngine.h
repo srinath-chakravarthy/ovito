@@ -38,7 +38,8 @@ public:
 	/// Constructor.
 	GrainSegmentationEngine(const TimeInterval& validityInterval,
 			ParticleProperty* positions, const SimulationCell& simCell,
-			int inputCrystalStructure);
+			int inputCrystalStructure, FloatType misorientationThreshold,
+			FloatType fluctuationTolerance, int minGrainAtomCount);
 
 	/// Computes the modifier's results and stores them in this object for later retrieval.
 	virtual void perform() override;
@@ -54,9 +55,113 @@ public:
 
 private:
 
+	/** This internal class stores working data for a grain of the polycrystal. */
+	struct Grain {
+
+		/// Number of atoms that belong to the grain.
+		int atomCount = 1;
+
+		/// Number of atoms that belong to the grain and for which a local orientation tensor was computed.
+		int latticeAtomCount = 0;
+
+		/// The (average) lattice orientation tensor of the grain.
+		Matrix3 orientation;
+
+		/// Cluster that is used to define the grain's lattice orientation.
+		Cluster* cluster = nullptr;
+
+		/// Unique ID assigned to the grain.
+		int id;
+
+		/// This field is used by the disjoint-set forest algorithm using union-by-rank and path compression.
+		size_t rank = 0;
+
+		/// Pointer to the parent grain. This field is used by the disjoint-set algorithm.
+		Grain* parent;
+
+		/// Returns true if this is a root grain in the disjoint set structure.
+		bool isRoot() const { return parent == this; }
+
+		/// Default constructor.
+		Grain() {
+			parent = this;
+		}
+
+		/// Merges another grain into this one.
+		void join(Grain& grainB, const Matrix3& alignmentTM = Matrix3::Zero()) {
+			grainB.parent = this;
+			if(grainB.cluster != nullptr) {
+				OVITO_ASSERT(cluster != nullptr);
+				FloatType weightA = FloatType(latticeAtomCount) / (latticeAtomCount + grainB.latticeAtomCount);
+				FloatType weightB = FloatType(1) - weightA;
+				orientation = weightA * orientation + weightB * (grainB.orientation * alignmentTM);
+			}
+			atomCount += grainB.atomCount;
+			latticeAtomCount += grainB.latticeAtomCount;
+		}
+	};
+
+	/**
+	 * This structure is an edge in the graph of grains connecting
+	 * two adjacent grains.
+	 */
+	struct GrainGraphEdge
+	{
+		/// Identifier of grain 1.
+		int a;
+
+		/// Identifier of grain 2.
+		int b;
+
+		/// Misorientation angle between the two grains.
+		FloatType misorientation;
+
+		/// This comparison operator is used to sort edges.
+		bool operator<(const GrainGraphEdge& other) const { return misorientation < other.misorientation; }
+	};
+
+
+	/// Calculates the misorientation angle between two lattice orientations.
+	FloatType calculateMisorientation(const Grain& grainA, const Grain& grainB, Matrix3* alignmentTM = nullptr);
+
+	/// Computes the angle of rotation from a rotation matrix.
+	static FloatType angleFromMatrix(const Matrix3& tm);
+
+	/// Tests if two grain should be merged and merges them if deemed necessary.
+	bool mergeTest(Grain& grainA, Grain& grainB, bool allowForFluctuations);
+
+	/// Returns the parent grain of another grain.
+	Grain& parentGrain(const Grain& grain) const {
+		Grain* parent = grain.parent;
+		while(!parent->isRoot()) parent = parent->parent;
+		return *parent;
+	}
+
+	/// Returns the parent grain of an atom.
+	Grain& parentGrain(int atomIndex) {
+		Grain& parent = parentGrain(_grains[atomIndex]);
+		// Perform path compression:
+		_grains[atomIndex].parent = &parent;
+		return parent;
+	}
+
+private:
+
 	int _inputCrystalStructure;
 	StructureAnalysis _structureAnalysis;
 	QExplicitlySharedDataPointer<ParticleProperty> _deformationGradients;
+
+	/// The minimum misorientation angle between adjacent grains.
+	FloatType _misorientationThreshold;
+
+	/// Controls the amount of noise allowed inside a grain.
+	FloatType _fluctuationTolerance;
+
+	/// The minimum number of crystalline atoms per grain.
+	int _minGrainAtomCount;
+
+	/// The working list of grains (contains one element per input atom).
+	std::vector<Grain> _grains;
 };
 
 }	// End of namespace

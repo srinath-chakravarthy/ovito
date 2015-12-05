@@ -149,7 +149,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> AtomicStrainModifie
 
 		// Results will only be valid for duration of current frame.
 		validityInterval.intersect(time);
-}
+	}
 	else {
 		// Always use the same, user-specified frame as reference configuration.
 		referenceFrame = _referenceFrameNumber;
@@ -464,7 +464,7 @@ PipelineStatus AtomicStrainModifier::applyComputationResults(TimePoint time, Tim
 		outputStandardProperty(_deformationGradients.data());
 
 	if(calculateNonaffineSquaredDisplacements() && _nonaffineSquaredDisplacements)
-		outputStandardProperty(_nonaffineSquaredDisplacements.data());
+		outputCustomProperty(_nonaffineSquaredDisplacements.data());
 
 	if(_volumetricStrainValues)
 		outputCustomProperty(_volumetricStrainValues.data());

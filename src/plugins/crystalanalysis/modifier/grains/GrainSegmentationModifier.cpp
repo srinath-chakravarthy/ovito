@@ -21,6 +21,7 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/gui/properties/FloatParameterUI.h>
+#include <core/gui/properties/IntegerParameterUI.h>
 #include <core/gui/properties/VariantComboBoxParameterUI.h>
 #include <core/gui/properties/SubObjectParameterUI.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
@@ -35,16 +36,30 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, GrainSegmentationModifier, 
 IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, GrainSegmentationModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(GrainSegmentationModifier, GrainSegmentationModifierEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _inputCrystalStructure, "CrystalStructure", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _misorientationThreshold, "MisorientationThreshold", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _fluctuationTolerance, "FluctuationTolerance", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _minGrainAtomCount, "MinGrainAtomCount", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(GrainSegmentationModifier, _patternCatalog, "PatternCatalog", PatternCatalog, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _inputCrystalStructure, "Input crystal structure");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _misorientationThreshold, "Misorientation threshold");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _fluctuationTolerance, "Tolerance");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _minGrainAtomCount, "Minimum grain size");
+SET_PROPERTY_FIELD_UNITS(GrainSegmentationModifier, _misorientationThreshold, AngleParameterUnit);
+SET_PROPERTY_FIELD_UNITS(GrainSegmentationModifier, _fluctuationTolerance, AngleParameterUnit);
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
 GrainSegmentationModifier::GrainSegmentationModifier(DataSet* dataset) : StructureIdentificationModifier(dataset),
-		_inputCrystalStructure(StructureAnalysis::LATTICE_FCC)
+		_inputCrystalStructure(StructureAnalysis::LATTICE_FCC),
+		_misorientationThreshold(3.0 * FLOATTYPE_PI / 180.0),
+		_fluctuationTolerance(2.0 * FLOATTYPE_PI / 180.0),
+		_minGrainAtomCount(10)
 {
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_inputCrystalStructure);
+	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_misorientationThreshold);
+	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_fluctuationTolerance);
+	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_minGrainAtomCount);
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_patternCatalog);
 
 	// Create pattern catalog.
@@ -79,7 +94,10 @@ void GrainSegmentationModifier::propertyChanged(const PropertyFieldDescriptor& f
 	StructureIdentificationModifier::propertyChanged(field);
 
 	// Recompute results when the parameters have changed.
-	if(field == PROPERTY_FIELD(GrainSegmentationModifier::_inputCrystalStructure))
+	if(field == PROPERTY_FIELD(GrainSegmentationModifier::_inputCrystalStructure) ||
+			field == PROPERTY_FIELD(GrainSegmentationModifier::_misorientationThreshold) ||
+			field == PROPERTY_FIELD(GrainSegmentationModifier::_fluctuationTolerance) ||
+			field == PROPERTY_FIELD(GrainSegmentationModifier::_minGrainAtomCount))
 		invalidateCachedResults();
 }
 
@@ -174,6 +192,28 @@ void GrainSegmentationModifierEditor::createUI(const RolloutInsertionParameters&
 	crystalStructureUI->comboBox()->addItem(tr("Diamond cubic / Zinc blende"), QVariant::fromValue((int)StructureAnalysis::LATTICE_CUBIC_DIAMOND));
 	crystalStructureUI->comboBox()->addItem(tr("Diamond hexagonal / Wurtzite"), QVariant::fromValue((int)StructureAnalysis::LATTICE_HEX_DIAMOND));
 	sublayout1->addWidget(crystalStructureUI->comboBox(), 0, 0, 1, 2);
+
+	QGroupBox* paramsBox = new QGroupBox(tr("Parameters"));
+	layout->addWidget(paramsBox);
+	QGridLayout* sublayout2 = new QGridLayout(paramsBox);
+	sublayout2->setContentsMargins(4,4,4,4);
+	sublayout2->setSpacing(4);
+	sublayout2->setColumnStretch(1, 1);
+
+	FloatParameterUI* misorientationThresholdUI = new FloatParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_misorientationThreshold));
+	sublayout2->addWidget(misorientationThresholdUI->label(), 0, 0);
+	sublayout2->addLayout(misorientationThresholdUI->createFieldLayout(), 0, 1);
+	misorientationThresholdUI->setMinValue(0);
+
+	FloatParameterUI* fluctuationToleranceUI = new FloatParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_fluctuationTolerance));
+	sublayout2->addWidget(fluctuationToleranceUI->label(), 1, 0);
+	sublayout2->addLayout(fluctuationToleranceUI->createFieldLayout(), 1, 1);
+	fluctuationToleranceUI->setMinValue(0);
+
+	IntegerParameterUI* minGrainAtomCountUI = new IntegerParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_minGrainAtomCount));
+	sublayout2->addWidget(minGrainAtomCountUI->label(), 2, 0);
+	sublayout2->addLayout(minGrainAtomCountUI->createFieldLayout(), 2, 1);
+	minGrainAtomCountUI->setMinValue(0);
 
 	// Status label.
 	layout->addWidget(statusLabel());

@@ -31,11 +31,15 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 ******************************************************************************/
 GrainSegmentationEngine::GrainSegmentationEngine(const TimeInterval& validityInterval,
 		ParticleProperty* positions, const SimulationCell& simCell,
-		int inputCrystalStructure) :
+		int inputCrystalStructure, FloatType misorientationThreshold,
+		FloatType fluctuationTolerance, int minGrainAtomCount) :
 	StructureIdentificationModifier::StructureIdentificationEngine(validityInterval, positions, simCell),
 	_structureAnalysis(positions, simCell, (StructureAnalysis::LatticeStructureType)inputCrystalStructure, selection(), structures()),
 	_inputCrystalStructure(inputCrystalStructure),
-	_deformationGradients(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 9, 0, QStringLiteral("Elastic Deformation Gradient"), false))
+	_deformationGradients(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 9, 0, QStringLiteral("Elastic Deformation Gradient"), false)),
+	_misorientationThreshold(misorientationThreshold),
+	_fluctuationTolerance(fluctuationTolerance),
+	_minGrainAtomCount(minGrainAtomCount)
 {
 	// Set component names of tensor property.
 	deformationGradients()->setComponentNames(QStringList() << "XX" << "YX" << "ZX" << "XY" << "YY" << "ZY" << "XZ" << "YZ" << "ZZ");
@@ -65,6 +69,11 @@ void GrainSegmentationEngine::perform()
 		return;
 
 	nextProgressSubStep();
+
+	// Initialize the working list of grains.
+	_grains.resize(positions()->size());
+
+	// Compute the local orientation tensor for all crystalline atoms.
 	parallelFor(positions()->size(), *this, [this](size_t particleIndex) {
 
 		Cluster* localCluster = _structureAnalysis.atomCluster(particleIndex);
@@ -86,8 +95,8 @@ void GrainSegmentationEngine::perform()
 				OVITO_ASSERT(parentCluster->structure == _inputCrystalStructure);
 
 				// For calculating the cluster orientation.
-				Matrix_3<double> orientationV = Matrix_3<double>::Zero();
-				Matrix_3<double> orientationW = Matrix_3<double>::Zero();
+				Matrix3 orientationV = Matrix3::Zero();
+				Matrix3 orientationW = Matrix3::Zero();
 
 				int numneigh = _structureAnalysis.numNeighbors(particleIndex);
 				for(int n = 0; n < numneigh; n++) {
@@ -97,30 +106,167 @@ void GrainSegmentationEngine::perform()
 					const Vector3& spatialVector = cell().wrapVector(positions()->getPoint3(neighborAtomIndex) - positions()->getPoint3(particleIndex));
 					for(size_t i = 0; i < 3; i++) {
 						for(size_t j = 0; j < 3; j++) {
-							orientationV(i,j) += (double)(latticeVector[j] * latticeVector[i]);
-							orientationW(i,j) += (double)(latticeVector[j] * spatialVector[i]);
+							orientationV(i,j) += latticeVector[j] * latticeVector[i];
+							orientationW(i,j) += latticeVector[j] * spatialVector[i];
 						}
 					}
 				}
 
-				// Calculate deformation gradient tensor.
-				Matrix_3<double> elasticF = orientationW * orientationV.inverse();
-				for(size_t col = 0; col < 3; col++) {
-					for(size_t row = 0; row < 3; row++) {
-						deformationGradients()->setFloatComponent(particleIndex, col*3+row, (FloatType)elasticF(row,col));
-					}
-				}
-
-				return;
+				// Calculate elastic deformation gradient tensor.
+				Grain& grain = _grains[particleIndex];
+				grain.orientation = orientationW * orientationV.inverse();
+				grain.cluster = parentCluster;
+				grain.latticeAtomCount = 1;
 			}
 		}
-
-		// Mark atom as invalid by setting all components of the tensor to zero.
-		for(size_t component = 0; component < 9; component++)
-			deformationGradients()->setFloatComponent(particleIndex, component, 0);
 	});
 
+	// Build grain graph.
+	std::vector<GrainGraphEdge> bulkEdges;
+	for(int atomA = 0; atomA < _grains.size(); atomA++) {
+		Grain& grainA = _grains[atomA];
+
+		// If the current atom is a crystal atom recognized by the atomic structure identification algorithm,
+		// then we connect it with the neighbors provided by the structure pattern.
+		// Skip disordered atoms.
+		if(grainA.cluster == nullptr) continue;
+
+		// Iterate over all neighbors of the atom.
+		int numNeighbors = _structureAnalysis.numNeighbors(atomA);
+		for(int ni = 0; ni < numNeighbors; ni++) {
+			// Lookup neighbor atom from neighbor list.
+			int atomB = _structureAnalysis.getNeighbor(atomA, ni);
+
+			Grain& grainB = _grains[atomB];
+			if(grainB.cluster != nullptr) {
+				// This test ensures that we will create only one edge per pair of neighbor atoms.
+				if(atomB <= atomA)
+					continue;
+
+				// Connect the two atoms with an edge.
+				GrainGraphEdge edge = { atomA, atomB, calculateMisorientation(grainA, grainB) };
+				bulkEdges.push_back(edge);
+			}
+			else {
+				// Add isolated GB atoms to an adjacent lattice grain.
+				if(grainB.parent->cluster > grainA.cluster) {
+					grainB.parent->atomCount--;
+					grainB.parent = &grainB;
+				}
+				if(grainB.isRoot())
+					grainA.join(grainB);
+			}
+		}
+	}
+
+	// Sort edges in order of ascending misorientation.
+	std::sort(bulkEdges.begin(), bulkEdges.end());
+
+	// Merge grains.
+	for(int pass = 1; pass <= 2; pass++) {
+		for(const GrainGraphEdge& edge : bulkEdges) {
+			Grain& grainA = parentGrain(edge.a);
+			Grain& grainB = parentGrain(edge.b);
+			if(pass == 1)
+				mergeTest(grainA, grainB, false);
+			else // Allow for fluctuations:
+				mergeTest(grainA, grainB, true);
+		}
+	}
+
 	endProgressSubSteps();
+}
+
+/******************************************************************************
+* Calculates the misorientation angle between two lattice orientations.
+******************************************************************************/
+FloatType GrainSegmentationEngine::calculateMisorientation(const Grain& grainA, const Grain& grainB, Matrix3* alignmentTM)
+{
+	Cluster* clusterA = grainA.cluster;
+	Cluster* clusterB = grainB.cluster;
+	OVITO_ASSERT(clusterA != nullptr && clusterB != nullptr);
+	Matrix3 inverseOrientationA = grainA.orientation.inverse();
+
+	if(clusterB == clusterA) {
+		if(alignmentTM) alignmentTM->setIdentity();
+		return angleFromMatrix(grainB.orientation * inverseOrientationA);
+	}
+	else if(clusterA->structure == clusterB->structure) {
+		const StructureAnalysis::LatticeStructure& latticeStructure = _structureAnalysis.latticeStructure(clusterA->structure);
+		FloatType smallestAngle = FLOATTYPE_MAX;
+		for(const StructureAnalysis::SymmetryPermutation& sge : latticeStructure.permutations) {
+			FloatType angle = angleFromMatrix(grainB.orientation * sge.transformation * inverseOrientationA);
+			if(angle < smallestAngle) {
+				smallestAngle = angle;
+				if(alignmentTM)
+					*alignmentTM = sge.transformation;
+			}
+		}
+		return smallestAngle;
+	}
+	else {
+		if(ClusterTransition* t = clusterGraph()->determineClusterTransition(clusterA, clusterB)) {
+			if(alignmentTM) *alignmentTM = t->tm;
+			return angleFromMatrix(grainB.orientation * t->tm * inverseOrientationA);
+		}
+		return FLOATTYPE_MAX;
+	}
+}
+
+/******************************************************************************
+* Computes the angle of rotation from a rotation matrix.
+******************************************************************************/
+FloatType GrainSegmentationEngine::angleFromMatrix(const Matrix3& tm)
+{
+	FloatType trace = tm(0,0) + tm(1,1) + tm(2,2) - FloatType(1);
+	Vector3 axis(tm(2,1) - tm(1,2), tm(0,2) - tm(2,0), tm(1,0) - tm(0,1));
+	FloatType angle = atan2(axis.length(), trace);
+	if(angle > FLOATTYPE_PI)
+		return (FloatType(2) * FLOATTYPE_PI) - angle;
+	else
+		return angle;
+}
+
+/******************************************************************************
+* Tests if two grain should be merged and merges them if deemed necessary.
+******************************************************************************/
+bool GrainSegmentationEngine::mergeTest(Grain& grainA, Grain& grainB, bool allowForFluctuations)
+{
+	if(&grainA == &grainB)
+		return false;
+	if(grainA.cluster == nullptr && grainB.cluster == nullptr)
+		return false;
+
+	if(grainA.cluster != nullptr && grainB.cluster != nullptr) {
+		Matrix3 alignmentTM;
+		FloatType misorientation = calculateMisorientation(grainA, grainB, &alignmentTM);
+
+		if(allowForFluctuations)
+			misorientation -= _fluctuationTolerance * sqrt(FloatType(1) / FloatType(grainA.latticeAtomCount) + FloatType(1) / FloatType(grainB.latticeAtomCount));
+
+		if(misorientation >= _misorientationThreshold &&
+		   grainA.latticeAtomCount >= _minGrainAtomCount && grainB.latticeAtomCount >= _minGrainAtomCount)
+			return false;
+
+		// Join the two grains.
+		if(grainA.rank > grainB.rank) {
+			grainA.join(grainB, alignmentTM);
+		}
+		else {
+			grainB.join(grainA, alignmentTM.inverse());
+			if(grainA.rank == grainB.rank)
+				grainB.rank++;
+		}
+	}
+	else {
+		// Join the crystal grain and the cluster of disordered atoms.
+		if(grainA.cluster != nullptr)
+			grainA.join(grainB);
+		else
+			grainB.join(grainA);
+	}
+
+	return true;
 }
 
 }	// End of namespace

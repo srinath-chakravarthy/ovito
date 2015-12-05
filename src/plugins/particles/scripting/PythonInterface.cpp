@@ -243,7 +243,6 @@ BOOST_PYTHON_MODULE(Particles)
 					"``ParticleProperty.Type.Spin``                          :guilabel:`Spin`                                    float     \n"
 					"``ParticleProperty.Type.CentroSymmetry``                :guilabel:`Centrosymmetry`                          float     \n"
 					"``ParticleProperty.Type.VelocityMagnitude``             :guilabel:`Velocity Magnitude`                      float     \n"
-					"``ParticleProperty.Type.NonaffineSquaredDisplacement``  :guilabel:`Nonaffine Squared Displacement`          float     \n"
 					"``ParticleProperty.Type.Molecule``                      :guilabel:`Molecule Identifier`                     int       \n"
 					"``ParticleProperty.Type.AsphericalShape``               :guilabel:`Aspherical Shape`                        float     \n"
 					"======================================================= =================================================== ==========\n"
@@ -291,7 +290,6 @@ BOOST_PYTHON_MODULE(Particles)
 			.value("Spin", ParticleProperty::SpinProperty)
 			.value("CentroSymmetry", ParticleProperty::CentroSymmetryProperty)
 			.value("VelocityMagnitude", ParticleProperty::VelocityMagnitudeProperty)
-			.value("NonaffineSquaredDisplacement", ParticleProperty::NonaffineSquaredDisplacementProperty)
 			.value("Molecule", ParticleProperty::MoleculeProperty)
 			.value("AsphericalShape", ParticleProperty::AsphericalShapeProperty)
 		;
