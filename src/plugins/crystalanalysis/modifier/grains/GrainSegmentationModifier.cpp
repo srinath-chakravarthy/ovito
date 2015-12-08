@@ -120,7 +120,8 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> GrainSegmentationMo
 
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<GrainSegmentationEngine>(validityInterval, posProperty->storage(),
-			simCell->data(), inputCrystalStructure());
+			simCell->data(), inputCrystalStructure(), misorientationThreshold(),
+			fluctuationTolerance(), minGrainAtomCount());
 }
 
 /******************************************************************************

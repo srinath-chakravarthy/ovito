@@ -49,6 +49,24 @@ public:
 	/// Sets the type of crystal to be analyzed.
 	void setInputCrystalStructure(StructureAnalysis::LatticeStructureType structureType) { _inputCrystalStructure = structureType; }
 
+	/// Returns the minimum misorientation angle between adjacent grains.
+	FloatType misorientationThreshold() const { return _misorientationThreshold; }
+
+	/// Sets the minimum misorientation angle between adjacent grains.
+	void setMisorientationThreshold(FloatType threshold) { _misorientationThreshold = threshold; }
+
+	/// Returns the amount of noise tolerated within a grain.
+	FloatType fluctuationTolerance() const { return _fluctuationTolerance; }
+
+	/// Sets the amount of noise tolerated within a grain.
+	void setFluctuationTolerance(FloatType tolerance) { _fluctuationTolerance = tolerance; }
+
+	/// Returns the minimum number of crystalline atoms per grain.
+	int minGrainAtomCount() const { return _minGrainAtomCount; }
+
+	/// Sets the minimum number of crystalline atoms per grain.
+	void setMinGrainAtomCount(int minAtoms) { _minGrainAtomCount = minAtoms; }
+
 	/// Resets the modifier's result cache.
 	virtual void invalidateCachedResults() override;
 

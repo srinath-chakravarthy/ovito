@@ -21,6 +21,7 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/utilities/concurrent/ParallelFor.h>
+#include <plugins/particles/util/NearestNeighborFinder.h>
 #include "GrainSegmentationEngine.h"
 #include "GrainSegmentationModifier.h"
 
@@ -52,7 +53,7 @@ void GrainSegmentationEngine::perform()
 {
 	setProgressText(GrainSegmentationModifier::tr("Performing grain segmentation"));
 
-	beginProgressSubSteps({ 35, 6, 1, 1, 20 });
+	beginProgressSubSteps({ 360, 97, 7, 1, 35, 83, 143, 1, 10, 170, 2 });
 	if(!_structureAnalysis.identifyStructures(*this))
 		return;
 
@@ -120,15 +121,20 @@ void GrainSegmentationEngine::perform()
 			}
 		}
 	});
+	if(isCanceled()) return;
+	nextProgressSubStep();
 
 	// Build grain graph.
 	std::vector<GrainGraphEdge> bulkEdges;
+	setProgressRange(_grains.size());
 	for(int atomA = 0; atomA < _grains.size(); atomA++) {
+		if(!setProgressValueIntermittent(atomA)) return;
 		Grain& grainA = _grains[atomA];
 
-		// If the current atom is a crystal atom recognized by the atomic structure identification algorithm,
-		// then we connect it with the neighbors provided by the structure pattern.
-		// Skip disordered atoms.
+		// If the current atom is a crystalline atom recognized by the atomic structure identification algorithm,
+		// then we connect it with its neighbors.
+
+		// Skip non-crystalline atoms.
 		if(grainA.cluster == nullptr) continue;
 
 		// Iterate over all neighbors of the atom.
@@ -158,20 +164,93 @@ void GrainSegmentationEngine::perform()
 			}
 		}
 	}
+	nextProgressSubStep();
 
 	// Sort edges in order of ascending misorientation.
 	std::sort(bulkEdges.begin(), bulkEdges.end());
 
 	// Merge grains.
-	for(int pass = 1; pass <= 2; pass++) {
-		for(const GrainGraphEdge& edge : bulkEdges) {
-			Grain& grainA = parentGrain(edge.a);
-			Grain& grainB = parentGrain(edge.b);
-			if(pass == 1)
-				mergeTest(grainA, grainB, false);
-			else // Allow for fluctuations:
-				mergeTest(grainA, grainB, true);
+	for(const GrainGraphEdge& edge : bulkEdges) {
+		mergeTest(parentGrain(edge.a), parentGrain(edge.b), false);
+		if(isCanceled()) return;
+	}
+	for(const GrainGraphEdge& edge : bulkEdges) {
+		mergeTest(parentGrain(edge.a), parentGrain(edge.b), true);
+		if(isCanceled()) return;
+	}
+	nextProgressSubStep();
+
+	// Dissolve crystal grains that are too small (i.e. number of atoms below the threshold set by user).
+	// Also dissolve grains that consist of stacking fault atoms only.
+	for(Grain& atomicGrain : _grains) {
+		Grain& rootGrain = parentGrain(atomicGrain);
+		if(rootGrain.latticeAtomCount < _minGrainAtomCount || rootGrain.cluster->structure != _inputCrystalStructure) {
+			atomicGrain.cluster = nullptr;                    // Dissolve grain.
+			atomicGrain.latticeAtomCount = 0;
 		}
+		else
+			atomicGrain.parent = &rootGrain;	// Path compression
+	}
+	if(isCanceled()) return;
+	nextProgressSubStep();
+
+	// Prepare the neighbor list builder.
+	NearestNeighborFinder neighborFinder(12);
+	if(!neighborFinder.prepare(positions(), cell(), nullptr, this))
+		return;
+
+	nextProgressSubStep();
+	// Add non-crystalline grain boundary atoms to the grains.
+	for(;;) {
+		bool done = true;
+		boost::dynamic_bitset<> mergedAtoms(positions()->size());
+		for(size_t atomA = 0; atomA < positions()->size(); atomA++) {
+			if(isCanceled()) return;
+			Grain& grainA = parentGrain(atomA);
+			if(grainA.cluster != nullptr) {
+				int numNeighbors = std::min(12, _structureAnalysis.numNeighbors(atomA));
+				for(int ni = 0; ni < numNeighbors; ni++) {
+					int atomB = _structureAnalysis.getNeighbor(atomA, ni);
+
+					if(mergedAtoms.test(atomB))
+						continue;
+
+					Grain &grainB = parentGrain(atomB);
+					if(mergeTest(grainA, grainB, true)) {
+						mergedAtoms.set(atomA);
+						done = false;
+					}
+				}
+			}
+			else {
+				NearestNeighborFinder::Query<12> neighQuery(neighborFinder);
+				neighQuery.findNeighbors(neighborFinder.particlePos(atomA));
+				for(int i = 0; i < neighQuery.results().size(); i++) {
+					int atomB = neighQuery.results()[i].index;
+
+					if(mergedAtoms.test(atomB))
+						continue;
+
+					Grain &grainB = parentGrain(atomB);
+					if(mergeTest(grainA, grainB, true)) {
+						mergedAtoms.set(atomA);
+						done = false;
+					}
+				}
+			}
+		}
+		if(done) break;
+	}
+	nextProgressSubStep();
+
+	// Now assign final contiguous IDs to parent grains.
+	_grainCount = assignIdsToGrains();
+
+	qDebug() << "Number of grains:" << _grainCount;
+
+	if(isCanceled()) return;
+	for(size_t atomIndex = 0; atomIndex < _grains.size(); atomIndex++) {
+		atomClusters()->setInt(atomIndex, parentGrain(atomIndex).id);
 	}
 
 	endProgressSubSteps();
@@ -267,6 +346,28 @@ bool GrainSegmentationEngine::mergeTest(Grain& grainA, Grain& grainB, bool allow
 	}
 
 	return true;
+}
+
+/******************************************************************************
+* Assigns contiguous IDs to all parent grains.
+******************************************************************************/
+size_t GrainSegmentationEngine::assignIdsToGrains()
+{
+	size_t numGrains = 0;
+	for(size_t atomIndex = 0; atomIndex < _grains.size(); atomIndex++) {
+		Grain& atomicGrain = _grains[atomIndex];
+		Grain& rootGrain = parentGrain(atomIndex);
+		if(rootGrain.cluster != nullptr) {
+			OVITO_ASSERT(rootGrain.atomCount >= _minGrainAtomCount);
+			if(atomicGrain.isRoot()) {
+				rootGrain.id = ++numGrains;
+			}
+		}
+		else {
+			rootGrain.id = 0;
+		}
+	}
+	return numGrains;
 }
 
 }	// End of namespace

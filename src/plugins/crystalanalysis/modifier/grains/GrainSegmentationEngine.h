@@ -130,6 +130,9 @@ private:
 	/// Tests if two grain should be merged and merges them if deemed necessary.
 	bool mergeTest(Grain& grainA, Grain& grainB, bool allowForFluctuations);
 
+	/// Assigns contiguous IDs to all parent grains.
+	size_t assignIdsToGrains();
+
 	/// Returns the parent grain of another grain.
 	Grain& parentGrain(const Grain& grain) const {
 		Grain* parent = grain.parent;
@@ -162,6 +165,9 @@ private:
 
 	/// The working list of grains (contains one element per input atom).
 	std::vector<Grain> _grains;
+
+	/// The final number of grains.
+	int _grainCount;
 };
 
 }	// End of namespace
