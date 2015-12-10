@@ -12,6 +12,7 @@ modifier = CommonNeighborAnalysisModifier()
 print("Parameter defaults:")
 print("  mode: {}".format(modifier.mode))
 print("  cutoff: {}".format(modifier.cutoff))
+print("  only_selected: {}".format(modifier.only_selected))
 
 modifier.mode = CommonNeighborAnalysisModifier.Mode.BondBased
 modifier.mode = CommonNeighborAnalysisModifier.Mode.FixedCutoff

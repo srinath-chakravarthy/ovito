@@ -100,7 +100,7 @@ def _Viewport_render(self, settings = None):
         
         .. literalinclude:: ../example_snippets/render_to_image.py
     """
-    if settings == None:
+    if settings is None:
         settings = self.dataset.render_settings
     elif isinstance(settings, dict):
         settings = RenderSettings(settings)

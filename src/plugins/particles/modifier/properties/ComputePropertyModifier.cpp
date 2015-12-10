@@ -203,7 +203,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> ComputePropertyModi
 	}
 	if(expressions().size() != outp->componentCount())
 		throw Exception(tr("Number of expressions does not match component count of output property."));
-	if(neighborExpressions().size() != outp->componentCount())
+	if(neighborModeEnabled() && neighborExpressions().size() != outp->componentCount())
 		throw Exception(tr("Number of neighbor expressions does not match component count of output property."));
 
 	// Initialize output property with original values when computation is restricted to selected particles.

@@ -12,6 +12,8 @@ print(modifier.expressions)
 print(modifier.only_selected)
 print(modifier.output_property)
 
+modifier.output_property = 'testprop' 
+
 modifier.expressions = ["Position.X * 2.0", "Position.Y / 2"]
 modifier.only_selected = False
 
@@ -23,8 +25,8 @@ modifier.output_property = "Color"
 modifier.expressions = ["Position.X / CellSize.X", "0", "0"]
 node.modifiers.append(modifier)
 
-print(node.compute()["Custom property"].array)
-print(node.compute().position.array)
-print(node.compute().color.array)
+print(node.compute()["testprop"].array)
+print(node.compute().particle_properties.position.array)
+print(node.compute().particle_properties.color.array)
 
-assert(node.compute()["Custom property"].array[0,0] == node.compute().position.array[0,0] * 2.0)
+assert(node.compute().particle_properties["testprop"].array[0,0] == node.compute().particle_properties.position.array[0,0] * 2.0)

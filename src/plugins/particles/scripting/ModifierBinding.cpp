@@ -665,6 +665,10 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					"  * ``CommonNeighborAnalysisModifier.Mode.BondBased``\n"
 					"\n\n"
 					":Default: ``CommonNeighborAnalysisModifier.Mode.AdaptiveCutoff``\n")
+			.add_property("only_selected", &CommonNeighborAnalysisModifier::onlySelectedParticles, &CommonNeighborAnalysisModifier::setOnlySelectedParticles,
+					"Lets the modifier perform the analysis only for selected particles. Particles that are not selected will be treated as if they did not exist."
+					"\n\n"
+					":Default: ``False``\n")
 
 			// For backward compatibility with OVITO 2.5.1.
 			.add_property("adaptive_mode",
@@ -723,6 +727,10 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					"A list of integers indicating the number of particles found for each structure type. "
 					"Note that accessing this output field is only possible after the modifier has computed its results. "
 					"Thus, you have to call :py:meth:`ovito.ObjectNode.compute` first to ensure that this information is up to date. ")
+			.add_property("only_selected", &IdentifyDiamondModifier::onlySelectedParticles, &IdentifyDiamondModifier::setOnlySelectedParticles,
+					"Lets the modifier perform the analysis only for selected particles. Particles that are not selected will be treated as if they did not exist."
+					"\n\n"
+					":Default: ``False``\n")
 		;
 
 		enum_<IdentifyDiamondModifier::StructureType>("Type")

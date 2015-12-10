@@ -519,11 +519,11 @@ def _DataCollection_create_particle_property(self, property_type, data = None):
                 position_prop = obj
 
     # First we have to determine the number of particles. This requires the 'Position' particle property
-    if position_prop == None:
+    if position_prop is None:
         raise RuntimeError("Cannot add new particle property to data collection, because data collection contains no particles.")
     num_particles = position_prop.size
                 
-    if prop == None:
+    if prop is None:
         # If property does not exists yet, create a new ParticleProperty instance.
         prop = ovito.data.ParticleProperty.create(property_type, num_particles)
         self.add(prop)
@@ -532,7 +532,7 @@ def _DataCollection_create_particle_property(self, property_type, data = None):
         prop = self.copy_if_needed(prop)
         
     # Initialize property with per-particle data if provided.
-    if data != None:
+    if data is not None:
         prop.marray[:] = data
         prop.changed()
     
@@ -568,11 +568,11 @@ def _DataCollection_create_user_particle_property(self, name, data_type, num_com
                 position_prop = obj
 
     # First we have to determine the number of particles. This requires the 'Position' particle property
-    if position_prop == None:
+    if position_prop is None:
         raise RuntimeError("Cannot add new particle property to data collection, because data collection contains no particles.")
     num_particles = position_prop.size
                 
-    if prop == None:
+    if prop is None:
         # If property does not exists yet, create a new ParticleProperty instance.
         prop = ovito.data.ParticleProperty.create_user(name, data_type, num_particles, num_components)
         self.add(prop)
@@ -581,7 +581,7 @@ def _DataCollection_create_user_particle_property(self, name, data_type, num_com
         prop = self.copy_if_needed(prop)
         
     # Initialize property with per-particle data if provided.
-    if data != None:
+    if data is not None:
         prop.marray[:] = data
         prop.changed()
     

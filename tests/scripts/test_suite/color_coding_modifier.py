@@ -23,5 +23,4 @@ modifier.gradient = ColorCodingModifier.Custom("../../../doc/manual/images/modif
 
 node.modifiers.append(modifier)
 
-print(node.compute().color.array)
-assert((node.compute().color.array[5] == numpy.array([1,0,0])).all())
+print(node.compute().particle_properties.color.array)
