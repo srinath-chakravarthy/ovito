@@ -3,6 +3,7 @@ User interface improvements:
 - Default directory for image/movie output should be the path of the current data file.
 - Add support for keyboard shortcuts (requested by Fossati, Paul C).
 - Add file export function to Construct Surface Mesh modifier, which allows to export the mesh to a VTK file (requested by konstantin.avchachov@helsinki.fi).
+- Moving the viewport camera should not stop animation playback (christian.leitold@gmail.com).
 
 Work-flow improvements:
 

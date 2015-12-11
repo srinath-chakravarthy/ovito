@@ -276,7 +276,7 @@ PipelineStatus CreateBondsModifier::applyComputationResults(TimePoint time, Time
 		return PipelineStatus(PipelineStatus::Warning, tr("Created %1 bonds. Automatically disabled display of such a large number of bonds to prevent the program from freezing.").arg(bondsCount));
 	}
 
-	return PipelineStatus(PipelineStatus::Success, tr("Created %1 bonds.").arg(bondsCount));
+	return PipelineStatus(PipelineStatus::Success, tr("Created %1 bonds.").arg(bondsCount / 2));
 }
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
