@@ -150,7 +150,8 @@ protected:
 		FloatType,											// Arrow width
 		Color,												// Arrow color
 		bool,												// Reverse arrow direction
-		ArrowPosition										// Arrow position
+		ArrowPosition,										// Arrow position
+		WeakVersionedOORef<ParticlePropertyObject>			// Vector color property + revision number
 		> _geometryCacheHelper;
 
 	/// The bounding box that includes all arrows.

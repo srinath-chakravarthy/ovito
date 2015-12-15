@@ -245,6 +245,7 @@ BOOST_PYTHON_MODULE(Particles)
 					"``ParticleProperty.Type.VelocityMagnitude``             :guilabel:`Velocity Magnitude`                      float     \n"
 					"``ParticleProperty.Type.Molecule``                      :guilabel:`Molecule Identifier`                     int       \n"
 					"``ParticleProperty.Type.AsphericalShape``               :guilabel:`Aspherical Shape`                        float     \n"
+					"``ParticleProperty.Type.VectorColor``                   :guilabel:`Vector Color`                        float     \n"
 					"======================================================= =================================================== ==========\n"
 					)
 			.add_property("dataType", &ParticlePropertyObject::dataType)
@@ -292,6 +293,7 @@ BOOST_PYTHON_MODULE(Particles)
 			.value("VelocityMagnitude", ParticleProperty::VelocityMagnitudeProperty)
 			.value("Molecule", ParticleProperty::MoleculeProperty)
 			.value("AsphericalShape", ParticleProperty::AsphericalShapeProperty)
+			.value("VectorColor", ParticleProperty::VectorColorProperty)
 		;
 	}
 

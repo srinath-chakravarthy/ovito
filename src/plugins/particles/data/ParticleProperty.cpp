@@ -65,6 +65,7 @@ ParticleProperty::ParticleProperty(size_t particleCount, Type type, size_t compo
 		OVITO_ASSERT(_stride == sizeof(Point3));
 		break;
 	case ColorProperty:
+	case VectorColorProperty:
 		_dataType = qMetaTypeId<FloatType>();
 		_componentCount = 3;
 		_stride = _componentCount * sizeof(FloatType);
@@ -188,6 +189,7 @@ QString ParticleProperty::standardPropertyName(Type which)
 	case VelocityMagnitudeProperty: return ParticlePropertyObject::tr("Velocity Magnitude");
 	case MoleculeProperty: return ParticlePropertyObject::tr("Molecule Identifier");
 	case AsphericalShapeProperty: return ParticlePropertyObject::tr("Aspherical Shape");
+	case VectorColorProperty: return ParticlePropertyObject::tr("Vector Color");
 	default:
 		OVITO_ASSERT_MSG(false, "ParticleProperty::standardPropertyName", "Invalid standard particle property type");
 		throw Exception(ParticlePropertyObject::tr("This is not a valid standard particle property type: %1").arg(which));
@@ -208,6 +210,7 @@ QString ParticleProperty::standardPropertyTitle(Type which)
 	case RadiusProperty: return ParticlePropertyObject::tr("Radii");
 	case StructureTypeProperty: return ParticlePropertyObject::tr("Structure types");
 	case IdentifierProperty: return ParticlePropertyObject::tr("Particle identifiers");
+	case VectorColorProperty: return ParticlePropertyObject::tr("Vector colors");
 	default:
 		return standardPropertyName(which);
 	}
@@ -254,6 +257,7 @@ int ParticleProperty::standardPropertyDataType(Type which)
 	case CentroSymmetryProperty:
 	case VelocityMagnitudeProperty:
 	case AsphericalShapeProperty:
+	case VectorColorProperty:
 		return qMetaTypeId<FloatType>();
 	default:
 		OVITO_ASSERT_MSG(false, "ParticleProperty::standardPropertyDataType", "Invalid standard particle property type");
@@ -302,6 +306,7 @@ QMap<QString, ParticleProperty::Type> ParticleProperty::standardPropertyList()
 		table.insert(standardPropertyName(VelocityMagnitudeProperty), VelocityMagnitudeProperty);
 		table.insert(standardPropertyName(MoleculeProperty), MoleculeProperty);
 		table.insert(standardPropertyName(AsphericalShapeProperty), AsphericalShapeProperty);
+		table.insert(standardPropertyName(VectorColorProperty), VectorColorProperty);
 	}
 	return table;
 }
@@ -343,6 +348,7 @@ size_t ParticleProperty::standardPropertyComponentCount(Type which)
 	case AngularMomentumProperty:
 	case TorqueProperty:
 	case AsphericalShapeProperty:
+	case VectorColorProperty:
 		return 3;
 	case StressTensorProperty:
 	case StrainTensorProperty:
@@ -402,6 +408,7 @@ QStringList ParticleProperty::standardPropertyComponentNames(Type which, size_t 
 	case AsphericalShapeProperty:
 		return xyzList;
 	case ColorProperty:
+	case VectorColorProperty:
 		return rgbList;
 	case StressTensorProperty:
 	case StrainTensorProperty:

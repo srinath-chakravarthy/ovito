@@ -71,7 +71,8 @@ public:
 		VelocityMagnitudeProperty = 32,
         // 33,
 		MoleculeProperty = 34,
-		AsphericalShapeProperty = 35
+		AsphericalShapeProperty = 35,
+		VectorColorProperty = 36
 	};
 	Q_ENUMS(Type);
 

@@ -16,11 +16,19 @@
        <imagedata fileref="images/display_objects/vectors_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
     
-    This display object is responsible for visualizing vector quantities that are associated with particles.
+    This display object is responsible for visualizing per-particle vector quantities.
     
     The <link linkend="particles.modifiers.displacement_vectors">Displacement vectors</link> modifier, for example, 
-    calculates the displacement vector of each particle. The modifier creates a vector display object to 
-    render the displacements as arrows.
+    calculates the displacement vector of each particle and stores it in the <literal>Displacement</literal>
+    property. To visualize the computed vectors as arrows, the modifier attaches a <emphasis>vector display object</emphasis>,
+    which newly appears under the "Display" section of the <link linkend="usage.modification_pipeline.pipeline_listbox">modification pipeline editor</link>.
+    The settings provided by this display object, which control the apearence of the vector arrows,
+    are described below.
+  </para>
+  <para>
+    By default all vector arrows have the same display color. It is possible to assign each vector an individual
+    color by setting the <literal>Vector Color</literal> particle property. This can be done using the
+    <link linkend="particles.modifiers.compute_property">Compute Property</link> modifier.
   </para>
 
    <simplesect>
@@ -68,7 +76,9 @@
       <varlistentry>
         <term>Arrow color</term>
         <listitem>
-          <para>The display color of arrows. The current program version supports only uniform coloring.</para>
+          <para>The display color of arrows. This uniform color is used when the <literal>Vector Color</literal>
+          particle property is not defined. Otherwise the per-particle colors defined by the <literal>Vector Color</literal> property 
+          are used when rendering vector arrows.</para>
         </listitem>
       </varlistentry>
 

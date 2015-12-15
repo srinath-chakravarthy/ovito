@@ -210,7 +210,7 @@ void WignerSeitzAnalysisModifier::WignerSeitzAnalysisEngine::perform()
 
 	size_t particleCount = positions()->size();
 	if(refPositions()->size() == 0)
-		return;
+		throw Exception(tr("Reference configuration for WS analysis contains no sites."));
 
 	// Prepare the closest-point query structure.
 	NearestNeighborFinder neighborTree(0);
@@ -278,7 +278,7 @@ void WignerSeitzAnalysisModifier::WignerSeitzAnalysisEngine::perform()
 	}
 	else {
 		const int* o = occupancyNumbers()->constDataInt();
-		for(size_t i = 0; i < particleCount; i++) {
+		for(size_t i = 0; i < refPositions()->size(); i++) {
 			int oc = 0;
 			for(int j = 0; j < ncomponents; j++) {
 				oc += *o++;

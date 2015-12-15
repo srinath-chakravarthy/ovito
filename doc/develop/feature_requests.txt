@@ -17,7 +17,6 @@ New visualization features:
 - More particle representations (e.g. open circles).
 - Test OpenGL rendering support for more than 12 million particles.
 - Visualization of arbitrary vector properties (e.g. forces, magnetic moments). 
-- Colored vectors
 - Color coding with logarithmic mapping 
 
 Unresolved OpenGL problems:

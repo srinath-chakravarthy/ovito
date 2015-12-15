@@ -135,6 +135,7 @@ void VectorDisplay::render(TimePoint time, DataObject* dataObject, const Pipelin
 	ParticlePropertyObject* positionProperty = ParticlePropertyObject::findInState(flowState, ParticleProperty::PositionProperty);
 	if(vectorProperty && (vectorProperty->dataType() != qMetaTypeId<FloatType>() || vectorProperty->componentCount() != 3))
 		vectorProperty = nullptr;
+	ParticlePropertyObject* vectorColorProperty = ParticlePropertyObject::findInState(flowState, ParticleProperty::VectorColorProperty);
 
 	// Get number of vectors.
 	int vectorCount = (vectorProperty && positionProperty) ? (int)vectorProperty->size() : 0;
@@ -152,7 +153,8 @@ void VectorDisplay::render(TimePoint time, DataObject* dataObject, const Pipelin
 	bool updateContents = _geometryCacheHelper.updateState(
 			vectorProperty,
 			positionProperty,
-			scalingFactor(), arrowWidth(), arrowColor(), reverseArrowDirection(), arrowPosition())
+			scalingFactor(), arrowWidth(), arrowColor(), reverseArrowDirection(), arrowPosition(),
+			vectorColorProperty)
 			|| recreateBuffer || (_buffer->elementCount() != vectorCount);
 
 	// Re-create the geometry buffer if necessary.
@@ -178,6 +180,8 @@ void VectorDisplay::render(TimePoint time, DataObject* dataObject, const Pipelin
 					base -= v;
 				else if(arrowPosition() == Center)
 					base -= v * FloatType(0.5);
+				if(vectorColorProperty)
+					color = ColorA(vectorColorProperty->getColor(index));
 				buffer->setElement(index, base, v, color, width);
 			}
 		}
