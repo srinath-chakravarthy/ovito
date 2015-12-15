@@ -235,11 +235,10 @@ private:
 	QMetaObject::Connection _autoKeyModeToggledConnection;
 	QMetaObject::Connection _animationIntervalChangedConnection;
 	QMetaObject::Connection _animationPlaybackChangedConnection;
+	QMetaObject::Connection _animationPlaybackToggledConnection;
 
 	/// The current dataset being edited in the main window.
 	OORef<DataSet> _dataset;
-
-	friend class AnimationPlaybackViewportMode;
 };
 
 OVITO_END_INLINE_NAMESPACE

@@ -247,7 +247,7 @@ public Q_SLOTS:
 	///       they have to generate a key when their value is changed.
 	void setAutoKeyMode(bool on);
 
-	/// \brief  Sets the current animation time to the start of the animation interval.
+	/// \brief Sets the current animation time to the start of the animation interval.
 	void jumpToAnimationStart();
 
 	/// \brief Sets the current animation time to the end of the animation interval.
@@ -264,6 +264,12 @@ public Q_SLOTS:
 
 	/// \brief Stops playback of the animation in the viewports.
 	void stopAnimationPlayback();
+
+	/// \brief Starts or stops animation playback in the viewports.
+	void setAnimationPlayback(bool on) {
+		if(on) startAnimationPlayback();
+		else stopAnimationPlayback();
+	}
 
 	/// Sets whether the animation is played back in a loop in the interactive viewports.
     void setLoopPlayback(bool loop) { _loopPlayback = loop; }

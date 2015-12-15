@@ -25,7 +25,7 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Anim)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, AnimationSettings, RefTarget);
-DEFINE_PROPERTY_FIELD(AnimationSettings, _time, "Time");
+DEFINE_FLAGS_PROPERTY_FIELD(AnimationSettings, _time, "Time", PROPERTY_FIELD_NO_UNDO);
 DEFINE_PROPERTY_FIELD(AnimationSettings, _animationInterval, "AnimationInterval");
 DEFINE_PROPERTY_FIELD(AnimationSettings, _ticksPerFrame, "TicksPerFrame");
 DEFINE_PROPERTY_FIELD(AnimationSettings, _playbackSpeed, "PlaybackSpeed");

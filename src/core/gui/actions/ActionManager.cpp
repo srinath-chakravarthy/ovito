@@ -35,34 +35,6 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)
 
 /******************************************************************************
-* This viewport mode plays the animation while it is active.
-******************************************************************************/
-class AnimationPlaybackViewportMode : public ViewportInputMode
-{
-public:
-
-	/// Constructor.
-	AnimationPlaybackViewportMode(ActionManager* actionManager) : ViewportInputMode(actionManager) {}
-
-	/// Returns the action manager, which owns this mode.
-	ActionManager* actionManager() const { return static_cast<ActionManager*>(parent()); }
-
-protected:
-
-	/// This is called by the system after the input handler has become active.
-	virtual void activated(bool temporaryActivation) override {
-		ViewportInputMode::activated(temporaryActivation);
-		actionManager()->_dataset->animationSettings()->startAnimationPlayback();
-	}
-
-	/// This is called by the system after the input handler has been deactivated.
-	virtual void deactivated(bool temporary) override {
-		actionManager()->_dataset->animationSettings()->stopAnimationPlayback();
-		ViewportInputMode::deactivated(temporary);
-	}
-};
-
-/******************************************************************************
 * Initializes the ActionManager.
 ******************************************************************************/
 ActionManager::ActionManager(MainWindow* mainWindow) : QObject(mainWindow)
@@ -116,7 +88,7 @@ ActionManager::ActionManager(MainWindow* mainWindow) : QObject(mainWindow)
 	createCommandAction(ACTION_START_ANIMATION_PLAYBACK, tr("Start Animation Playback"), ":/core/actions/animation/play_animation.png");
 	createCommandAction(ACTION_STOP_ANIMATION_PLAYBACK, tr("Stop Animation Playback"), ":/core/actions/animation/stop_animation.png");
 	createCommandAction(ACTION_ANIMATION_SETTINGS, tr("Animation Settings"), ":/core/actions/animation/animation_settings.png");
-	createViewportModeAction(ACTION_TOGGLE_ANIMATION_PLAYBACK, new AnimationPlaybackViewportMode(this), tr("Play Animation"), ":/core/actions/animation/play_animation.png");
+	createCommandAction(ACTION_TOGGLE_ANIMATION_PLAYBACK, tr("Play Animation"), ":/core/actions/animation/play_animation.png")->setCheckable(true);
 	createCommandAction(ACTION_AUTO_KEY_MODE_TOGGLE, tr("Auto Key Mode"), ":/core/actions/animation/animation_mode.png")->setCheckable(true);
 
 	QMetaObject::connectSlotsByName(this);
@@ -167,6 +139,7 @@ void ActionManager::onAnimationSettingsReplaced(AnimationSettings* newAnimationS
 	disconnect(_autoKeyModeToggledConnection);
 	disconnect(_animationIntervalChangedConnection);
 	disconnect(_animationPlaybackChangedConnection);
+	disconnect(_animationPlaybackToggledConnection);
 	QAction* autoKeyModeAction = getAction(ACTION_AUTO_KEY_MODE_TOGGLE);
 	QAction* animationPlaybackAction = getAction(ACTION_TOGGLE_ANIMATION_PLAYBACK);
 	if(newAnimationSettings) {
@@ -178,6 +151,7 @@ void ActionManager::onAnimationSettingsReplaced(AnimationSettings* newAnimationS
 		_autoKeyModeToggledConnection = connect(autoKeyModeAction, &QAction::toggled, newAnimationSettings, &AnimationSettings::setAutoKeyMode);
 		_animationIntervalChangedConnection = connect(newAnimationSettings, &AnimationSettings::intervalChanged, this, &ActionManager::onAnimationIntervalChanged);
 		_animationPlaybackChangedConnection = connect(newAnimationSettings, &AnimationSettings::playbackChanged, animationPlaybackAction, &QAction::setChecked);
+		_animationPlaybackToggledConnection = connect(animationPlaybackAction, &QAction::toggled, newAnimationSettings, &AnimationSettings::setAnimationPlayback);
 		onAnimationIntervalChanged(newAnimationSettings->animationInterval());
 	}
 	else {

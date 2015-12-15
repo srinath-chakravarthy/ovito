@@ -127,14 +127,22 @@ bool DataSet::referenceEvent(RefTarget* source, ReferenceEvent* event)
 ******************************************************************************/
 void DataSet::referenceReplaced(const PropertyFieldDescriptor& field, RefTarget* oldTarget, RefTarget* newTarget)
 {
-	if(field == PROPERTY_FIELD(DataSet::_viewportConfig))
+	if(field == PROPERTY_FIELD(DataSet::_viewportConfig)) {
 		Q_EMIT viewportConfigReplaced(viewportConfig());
-	else if(field == PROPERTY_FIELD(DataSet::_animSettings))
+	}
+	else if(field == PROPERTY_FIELD(DataSet::_animSettings)) {
+		// Stop animation playback when animation settings are being replaced.
+		if(AnimationSettings* oldAnimSettings = static_object_cast<AnimationSettings>(oldTarget))
+			oldAnimSettings->stopAnimationPlayback();
+
 		Q_EMIT animationSettingsReplaced(animationSettings());
-	else if(field == PROPERTY_FIELD(DataSet::_renderSettings))
+	}
+	else if(field == PROPERTY_FIELD(DataSet::_renderSettings)) {
 		Q_EMIT renderSettingsReplaced(renderSettings());
-	else if(field == PROPERTY_FIELD(DataSet::_selection))
+	}
+	else if(field == PROPERTY_FIELD(DataSet::_selection)) {
 		Q_EMIT selectionSetReplaced(selection());
+	}
 
 	// Install a signal/slot connection that updates the viewports every time the animation time changes.
 	if(field == PROPERTY_FIELD(DataSet::_viewportConfig) || field == PROPERTY_FIELD(DataSet::_animSettings)) {
