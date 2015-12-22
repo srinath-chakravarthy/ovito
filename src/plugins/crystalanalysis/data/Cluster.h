@@ -83,6 +83,9 @@ struct ClusterTransition
 	/// The distance of a self-transition A->A is defined to be zero.
 	int distance;
 
+	/// The number of bonds that are part of this cluster transition.
+	int area;
+
 	/// Returns true if this is the self-transition that connects a cluster with itself.
 	/// The transformation matrix of an identity transition is always the identity matrix.
 	bool isSelfTransition() const {
@@ -145,10 +148,16 @@ struct Cluster
 	/// cluster graph. It points to the preceding node in the path.
 	ClusterTransition* predecessor;
 
-	/// This is a work variable used only during a recursive shortest path search in the
-	/// cluster graph. It keeps track of the distance of this cluster from the
-	/// start node of the path search.
-	int distanceFromStart;
+	union {
+
+		/// This is a work variable used only during a recursive shortest path search in the
+		/// cluster graph. It keeps track of the distance of this cluster from the
+		/// start node of the path search.
+		int distanceFromStart;
+
+		/// Used by the disjoint-set forest algorithm using union-by-rank and path compression.
+		int rank;
+	};
 
 	/// Transformation matrix that transforms vectors from the cluster's internal coordinate space
 	/// to the global simulation frame. Note that this describes the (average) orientation of the

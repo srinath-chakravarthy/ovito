@@ -121,6 +121,8 @@ ClusterTransition* ClusterGraph::createClusterTransition(Cluster* clusterA, Clus
 	tBA->reverse = tAB;
 	tAB->distance = distance;
 	tBA->distance = distance;
+	tAB->area = 0;
+	tBA->area = 0;
 
 	// Insert the new transition and its reverse into the linked lists of the two clusters.
 	clusterA->insertTransition(tAB);
@@ -159,6 +161,7 @@ ClusterTransition* ClusterGraph::createSelfTransition(Cluster* cluster)
 		t->reverse = t;
 		t->distance = 0;
 		t->next = cluster->transitions;
+		t->area = 0;
 		cluster->transitions = t;
 		OVITO_ASSERT(t->isSelfTransition());
 		OVITO_ASSERT(t->next == nullptr || t->next->distance >= 1);

@@ -938,8 +938,11 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 			OVITO_ASSERT(cluster2);
 
 			// Skip if there is already a transition between the two clusters.
-			if(cluster1->findTransition(cluster2))
+			if(ClusterTransition* t = cluster1->findTransition(cluster2)) {
+				t->area++;
+				t->reverse->area++;
 				continue;
+			}
 
 			// Select three non-coplanar atoms, which are all neighbors of the current neighbor.
 			// One of them is the current central atom, two are common neighbors.
@@ -982,7 +985,9 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 
 			if(transition.isOrthogonalMatrix()) {
 				// Create a new transition between clusters.
-				clusterGraph().createClusterTransition(cluster1, cluster2, transition);
+				ClusterTransition* t = clusterGraph().createClusterTransition(cluster1, cluster2, transition);
+				t->area++;
+				t->reverse->area++;
 			}
 		}
 	}
@@ -997,68 +1002,44 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 ******************************************************************************/
 bool StructureAnalysis::formSuperClusters(FutureInterfaceBase& progress)
 {
-	progress.setProgressRange(clusterGraph().clusters().size());
+	size_t oldTransitionCount = clusterGraph().clusterTransitions().size();
 
 	for(size_t clusterIndex = 0; clusterIndex < clusterGraph().clusters().size(); clusterIndex++) {
-		// Update progress indicator.
-		if(!progress.setProgressValueIntermittent(clusterIndex))
-			return false;
-
 		Cluster* cluster = clusterGraph().clusters()[clusterIndex];
+		cluster->rank = 0;
 		if(cluster->id == 0) continue;
 
-		// Merge defect clusters with parent lattice clusters.
-		if(cluster->structure != _inputCrystalType && cluster->parentTransition == nullptr) {
+		if(progress.isCanceled())
+			return false;
+
+		OVITO_ASSERT(cluster->parentTransition == nullptr);
+		if(cluster->structure != _inputCrystalType) {
+			// Merge defect cluster with a parent lattice cluster.
+			ClusterTransition* bestMerge = nullptr;
 			for(ClusterTransition* t = cluster->transitions; t != nullptr; t = t->next) {
 				if(t->cluster2->structure == _inputCrystalType) {
-					cluster->parentTransition = t;
-					break;
+					OVITO_ASSERT(t->distance == 1);
+					if(bestMerge == nullptr || bestMerge->area < t->area) {
+						bestMerge = t;
+					}
 				}
 			}
 
-			// Merge parent crystal cluster if there is no misorientation.
-			if(cluster->parentTransition != nullptr) {
-				const LatticeStructure& latticeStructure = this->latticeStructure(cluster->parentTransition->cluster2->structure);
-				for(ClusterTransition* t = cluster->parentTransition->next; t != nullptr; t = t->next) {
-					if(t->cluster2->structure == _inputCrystalType) {
-						OVITO_ASSERT(cluster->parentTransition->cluster2->structure == _inputCrystalType);
-						OVITO_ASSERT(t->reverse->cluster1->structure == _inputCrystalType);
-						Matrix3 misorientation = cluster->parentTransition->tm * t->reverse->tm;
-						for(const SymmetryPermutation& symElement : latticeStructure.permutations) {
-							if(symElement.transformation.equals(misorientation, CA_TRANSITION_MATRIX_EPSILON)) {
-								Cluster* otherCluster = t->cluster2;
+			// Create transition between lattice clusters on both sides of the defect.
+			for(ClusterTransition* t1 = cluster->transitions; t1 != nullptr; t1 = t1->next) {
+				if(t1->cluster2->structure == _inputCrystalType) {
+					OVITO_ASSERT(t1->distance == 1);
+					for(ClusterTransition* t2 = t1->next; t2 != nullptr; t2 = t2->next) {
+						if(t2->cluster2->structure == _inputCrystalType && t2->cluster2 != t1->cluster2 && t2->distance == 1) {
 
-								// Detect and avoid cyclic dependencies.
-								bool isCyclic = false;
-								for(Cluster* c = cluster; c->parentTransition != nullptr; c = c->parentTransition->cluster2) {
-									if(c->parentTransition->cluster2 == otherCluster) {
-										isCyclic = true;
-										break;
-									}
-								}
-								for(Cluster* c = otherCluster; c->parentTransition != nullptr; c = c->parentTransition->cluster2) {
-									if(c->parentTransition->cluster2 == cluster->parentTransition->cluster2) {
-										isCyclic = true;
-										break;
-									}
-								}
-								if(isCyclic) {
+							// Check if the two clusters form a single crystal.
+							const LatticeStructure& latticeStructure = this->latticeStructure(t2->cluster2->structure);
+							Matrix3 misorientation = t2->tm * t1->reverse->tm;
+							for(const SymmetryPermutation& symElement : latticeStructure.permutations) {
+								if(symElement.transformation.equals(misorientation, CA_TRANSITION_MATRIX_EPSILON)) {
+									clusterGraph().createClusterTransition(t1->cluster2, t2->cluster2, misorientation, 2);
 									break;
 								}
-
-								// Find parent of other cluster.
-								Cluster* otherParentCluster = otherCluster;
-								ClusterTransition* newParentTransition = t->reverse;
-								while(otherParentCluster->parentTransition != nullptr) {
-									newParentTransition = clusterGraph().concatenateClusterTransitions(otherParentCluster->parentTransition->reverse, newParentTransition);
-									otherParentCluster = otherParentCluster->parentTransition->cluster2;
-									OVITO_ASSERT(otherParentCluster != cluster);
-								}
-								OVITO_ASSERT(otherParentCluster->parentTransition == nullptr);
-
-								otherParentCluster->parentTransition = newParentTransition;
-								OVITO_ASSERT(newParentTransition->cluster2 == cluster);
-								break;
 							}
 						}
 					}
@@ -1067,15 +1048,56 @@ bool StructureAnalysis::formSuperClusters(FutureInterfaceBase& progress)
 		}
 	}
 
-	for(size_t clusterIndex = 0; clusterIndex < clusterGraph().clusters().size(); clusterIndex++) {
-		Cluster* cluster = clusterGraph().clusters()[clusterIndex];
-		if(cluster->parentTransition != nullptr) {
-			ClusterTransition* newParentTransition = cluster->parentTransition;
-			while(newParentTransition->cluster2->parentTransition != nullptr) {
-				newParentTransition = clusterGraph().concatenateClusterTransitions(newParentTransition, newParentTransition->cluster2->parentTransition);
-			}
-			cluster->parentTransition = newParentTransition;
+	size_t newTransitionCount = clusterGraph().clusterTransitions().size();
+
+	auto getParentGrain = [this](Cluster* c) {
+		if(c->parentTransition == nullptr) return c;
+		ClusterTransition* newParentTransition = c->parentTransition;
+		Cluster* parent = newParentTransition->cluster2;
+		while(parent->parentTransition != nullptr) {
+			newParentTransition = clusterGraph().concatenateClusterTransitions(newParentTransition, parent->parentTransition);
+			parent = parent->parentTransition->cluster2;
 		}
+		c->parentTransition = newParentTransition;
+		return parent;
+	};
+
+	// Merge crystal-crystal pairs.
+	for(size_t index = oldTransitionCount; index < newTransitionCount; index++) {
+		ClusterTransition* t = clusterGraph().clusterTransitions()[index];
+		OVITO_ASSERT(t->distance == 2);
+		OVITO_ASSERT(t->cluster1->structure == _inputCrystalType && t->cluster2->structure == _inputCrystalType);
+
+		Cluster* parentCluster1 = getParentGrain(t->cluster1);
+		Cluster* parentCluster2 = getParentGrain(t->cluster2);
+		if(parentCluster1 == parentCluster2) continue;
+
+		if(progress.isCanceled())
+			return false;
+
+		ClusterTransition* parentTransition = t;
+		if(parentCluster2 != t->cluster2) {
+			OVITO_ASSERT(t->cluster2->parentTransition->cluster2 == parentCluster2);
+			parentTransition = clusterGraph().concatenateClusterTransitions(parentTransition, t->cluster2->parentTransition);
+		}
+		if(parentCluster1 != t->cluster1) {
+			OVITO_ASSERT(t->cluster1->parentTransition->cluster2 == parentCluster1);
+			parentTransition = clusterGraph().concatenateClusterTransitions(t->cluster1->parentTransition->reverse, parentTransition);
+		}
+
+		if(parentCluster1->rank > parentCluster2->rank) {
+			parentCluster2->parentTransition = parentTransition->reverse;
+		}
+		else {
+			parentCluster1->parentTransition = parentTransition;
+			if(parentCluster1->rank == parentCluster2->rank)
+				parentCluster2->rank++;
+		}
+	}
+
+	// Compress paths.
+	for(Cluster* cluster : clusterGraph().clusters()) {
+		getParentGrain(cluster);
 	}
 
 	return true;

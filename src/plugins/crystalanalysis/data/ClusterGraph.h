@@ -45,7 +45,7 @@ public:
 	const std::vector<Cluster*>& clusters() const { return _clusters; }
 
 	/// Returns the list of directed edges in the graph.
-	const std::list<ClusterTransition*>& clusterTransitions() const { return _clusterTransitions; }
+	const std::vector<ClusterTransition*>& clusterTransitions() const { return _clusterTransitions; }
 
 	/// Inserts a new node into the graph.
 	Cluster* createCluster(int structureType, int id = -1);
@@ -80,7 +80,7 @@ private:
 	std::map<int, Cluster*> _clusterMap;
 
 	/// The list of transitions between clusters. This list doesn't contain self-transitions.
-	std::list<ClusterTransition*> _clusterTransitions;
+	std::vector<ClusterTransition*> _clusterTransitions;
 
 	/// Memory pool for clusters.
 	MemoryPool<Cluster> _clusterPool;
