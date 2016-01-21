@@ -184,6 +184,11 @@ def export_file(node, file, format, **params):
         The following LAMMPS atom styles are currently supported by OVITO:
         ``angle``, ``atomic``, ``body``, ``bond``, ``charge``, ``dipole``, ``full``, ``molecular``.
         
+        **Multi-timestep files**
+        
+        The ``"lammps_dump"`` and ``"xyz"`` file formats can store multiple frames per file. To let OVITO export all
+        frames of the current animation to the output file, pass the keyword argument ``multiple_frames = True`` to the :py:func:`!export_file` function.
+        
     """
     
     # Look up the exporter class for the selected format.
