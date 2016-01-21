@@ -44,7 +44,7 @@ bool PDBImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceLocation
 			return false;
 		if(qstrlen(stream.line()) >= 7 && stream.line()[6] != ' ')
 			return false;
-		if(stream.lineStartsWith("HEADER ") || stream.lineStartsWith("ATOM   "))
+		if(stream.lineStartsWith("HEADER ") || stream.lineStartsWith("ATOM   ") || stream.lineStartsWith("HETATM "))
 			return true;
 	}
 	return false;
@@ -121,6 +121,7 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 	int atomIndex = 0;
 	Point3* p = posProperty->dataPoint3();
 	int* a = typeProperty->dataInt();
+	ParticleProperty* identifierProperty = nullptr;
 	while(!stream.eof() && atomIndex < numAtoms) {
 		stream.readLine();
 		int lineLength = qstrlen(stream.line());
@@ -144,9 +145,51 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 			if(lineLength <= 30 || sscanf(stream.line() + 30, "%8lg%8lg%8lg", &p->x(), &p->y(), &p->z()) != 3)
 #endif
 				throw Exception(tr("Invalid atom coordinates (line %1): %2").arg(stream.lineNumber()).arg(stream.lineString()));
+
+			// Parse atom ID (serial number).
+			unsigned int atomSerialNumber;
+			if(sscanf(stream.line() + 6, "%5u", &atomSerialNumber) == 1) {
+				if(!identifierProperty) {
+					identifierProperty = new ParticleProperty(numAtoms, ParticleProperty::IdentifierProperty, 0, true);
+					addParticleProperty(identifierProperty);
+				}
+				identifierProperty->setInt(atomIndex, atomSerialNumber);
+			}
+
 			atomIndex++;
 			++p;
 			++a;
+		}
+	}
+
+	// Parse bonds.
+	while(!stream.eof()) {
+		stream.readLine();
+		int lineLength = qstrlen(stream.line());
+		if(lineLength < 3 || lineLength > 83)
+			throw Exception(tr("Invalid line length detected in Protein Data Bank (PDB) file at line %1").arg(stream.lineNumber()));
+
+		// Parse bonds.
+		if(stream.lineStartsWith("CONECT")) {
+			// Parse first atom index.
+			unsigned int atomSerialNumber1;
+			if(lineLength <= 11 || sscanf(stream.line() + 6, "%5u", &atomSerialNumber1) != 1 || identifierProperty == nullptr)
+				throw Exception(tr("Invalid CONECT record (line %1): %2").arg(stream.lineNumber()).arg(stream.lineString()));
+			unsigned int atomIndex1 = std::find(identifierProperty->constDataInt(), identifierProperty->constDataInt() + identifierProperty->size(), atomSerialNumber1) - identifierProperty->constDataInt();
+			for(int i = 0; i < 10; i++) {
+				unsigned int atomSerialNumber2;
+				if(lineLength >= 16+5*i && sscanf(stream.line() + 11+5*i, "%5u", &atomSerialNumber2) == 1) {
+					unsigned int atomIndex2 = std::find(identifierProperty->constDataInt(), identifierProperty->constDataInt() + identifierProperty->size(), atomSerialNumber2) - identifierProperty->constDataInt();
+					if(atomIndex1 >= identifierProperty->size() || atomIndex2 >= identifierProperty->size())
+						throw Exception(tr("Nonexistent atom ID encountered in line %1 of PDB file.").arg(stream.lineNumber()));
+					if(!bonds())
+						setBonds(new BondsStorage());
+					bonds()->push_back({ Vector_3<int8_t>::Zero(), atomIndex1, atomIndex2 });
+				}
+			}
+		}
+		else if(stream.lineStartsWith("END")) {
+			break;
 		}
 	}
 
