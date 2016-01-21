@@ -59,6 +59,7 @@ ParticleProperty::ParticleProperty(size_t particleCount, Type type, size_t compo
 	case AngularVelocityProperty:
 	case AngularMomentumProperty:
 	case TorqueProperty:
+	case AsphericalShapeProperty:
 		_dataType = qMetaTypeId<FloatType>();
 		_componentCount = 3;
 		_stride = sizeof(Vector3);
