@@ -119,7 +119,11 @@ Box3 ParticleDisplay::particleBoundingBox(ParticlePropertyObject* positionProper
 			maxAtomRadius *= 2;
 	}
 	if(radiusProperty && radiusProperty->size() > 0) {
-		maxAtomRadius = *std::max_element(radiusProperty->constDataFloat(), radiusProperty->constDataFloat() + radiusProperty->size());
+		auto minmax = std::minmax_element(radiusProperty->constDataFloat(), radiusProperty->constDataFloat() + radiusProperty->size());
+		if(*minmax.first <= 0)
+			maxAtomRadius = std::max(maxAtomRadius, *minmax.second);
+		else
+			maxAtomRadius = *minmax.second;
 	}
 
 	// Extend the bounding box by the largest particle radius.
