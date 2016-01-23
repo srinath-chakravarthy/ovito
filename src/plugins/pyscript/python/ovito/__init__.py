@@ -137,8 +137,8 @@ def _ObjectNode_wait(self, signalError = True, msgText = None):
     #                        This may be the case if the input file could not be loaded, or if one of the modifiers reported an error.   
     #    :returns: ``True`` if the pipeline evaluation is complete, ``False`` if the operation has been canceled by the user.
     #
-    if not msgText: msgText = "Script is waiting for scene graph to become ready." 
-    if not self.waitUntilReady(self.dataset.anim.time, msgText):
+    if not msgText: msgText = "Data pipeline is being evaluated. Waiting for operation for complete." 
+    if not self.waitUntilReady(self.dataset.anim.time, msgText, ovito.get_progress_display()):
         return False
     if signalError:
         state = self.evalPipeline(self.dataset.anim.time)

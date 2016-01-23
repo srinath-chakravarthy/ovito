@@ -40,7 +40,7 @@ public:
 	/// Constructs the task manager for the given main window.
 	TaskManager(MainWindow* mainWindow);
 
-	/// Shuts down the task manager after cancelling all active tasks.
+	/// Shuts down the task manager after canceling all active tasks.
 	~TaskManager() {
 		cancelAllAndWait();
 	}

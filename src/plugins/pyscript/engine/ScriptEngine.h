@@ -52,6 +52,7 @@ public:
 	/// \brief Executes a Python script consisting of one or more statements.
 	/// \param script The script commands.
 	/// \param scriptArguments An optional list of command line arguments that will be passed to the script via sys.argv.
+	/// \param progressDisplay An optional progress display, which will be used to show the script execution status.
 	/// \return The exit code returned by the Python script.
 	/// \throw Exception on error.
 	int executeCommands(const QString& commands, const QStringList& scriptArguments = QStringList());
@@ -59,6 +60,7 @@ public:
 	/// \brief Executes a Python script file.
 	/// \param scriptFile The script file path.
 	/// \param scriptArguments An optional list of command line arguments that will be passed to the script via sys.argv.
+	/// \param progressDisplay An optional progress display, which will be used to show the script execution status.
 	/// \return The exit code returned by the Python script.
 	/// \throw Exception on error.
 	int executeFile(const QString& file, const QStringList& scriptArguments = QStringList());
@@ -76,6 +78,15 @@ public:
 
 	/// \brief Provides access to the global namespace the script will be executed in by this script engine.
 	boost::python::dict& mainNamespace() { return _mainNamespace; }
+
+	/// Returns the progress display that has been registered with the engine, which
+	/// is responsible for showing the progress of long-running operations
+	/// performed by a script.
+	AbstractProgressDisplay* progressDisplay() const { return _progressDisplay; }
+
+	/// Sets the progress display which will be used to show the progress of long-running operations
+	/// performed by a script.
+	void setProgressDisplay(AbstractProgressDisplay* progressDisplay) { _progressDisplay = progressDisplay; }
 
 Q_SIGNALS:
 
@@ -121,6 +132,11 @@ private:
 
 	/// The namespace (scope) the script will be executed in by this script engine.
 	boost::python::dict _mainNamespace;
+
+	/// The progress display that has been registered with the engine, which
+	/// is responsible for showing the progress of long-running operations
+	/// performed by a script.
+	AbstractProgressDisplay* _progressDisplay = nullptr;
 
 	/// Flag that indicates whether the global Python interpreter has been initialized.
 	static bool _isInterpreterInitialized;

@@ -133,10 +133,10 @@ public:
 
 	/// \brief This function blocks until the scene has become ready.
 	/// \param message The text to be shown to the user while waiting.
-	/// \param progressDialog An existing progress dialog to use to show the message.
-	///                       If NULL, the function will show its own dialog box.
+	/// \param progressDisplay The progress display/dialog to be use to show the message.
+	///                       If NULL, the function will show its own progress dialog box.
 	/// \return true on success; false if the operation has been canceled by the user.
-	bool waitUntilSceneIsReady(const QString& message, QProgressDialog* progressDialog = nullptr);
+	bool waitUntilSceneIsReady(const QString& message, AbstractProgressDisplay* progressDisplay = nullptr);
 
 	/// \brief Saves the dataset to the given file.
 	/// \throw Exception on error.
@@ -178,7 +178,7 @@ private:
 
 	/// Renders a single frame and saves the output file. This is part of the implementation of the renderScene() method.
 	bool renderFrame(TimePoint renderTime, int frameNumber, RenderSettings* settings, SceneRenderer* renderer,
-			Viewport* viewport, FrameBuffer* frameBuffer, VideoEncoder* videoEncoder, QProgressDialog* progressDialog);
+			Viewport* viewport, FrameBuffer* frameBuffer, VideoEncoder* videoEncoder, AbstractProgressDisplay* progressDisplay);
 
 	/// Returns a viewport configuration that is used as template for new scenes.
 	OORef<ViewportConfiguration> createDefaultViewportConfiguration();

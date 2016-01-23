@@ -52,7 +52,7 @@ public:
 	virtual void beginFrame(TimePoint time, const ViewProjectionParameters& params, Viewport* vp) override;
 
 	/// Renders the current animation frame.
-	virtual bool renderFrame(FrameBuffer* frameBuffer, QProgressDialog* progress) override;
+	virtual bool renderFrame(FrameBuffer* frameBuffer, AbstractProgressDisplay* progress) override;
 
 	/// Is called after rendering has finished.
 	virtual void endRender() override;

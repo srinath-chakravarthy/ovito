@@ -33,6 +33,7 @@
 #include <core/utilities/io/ObjectSaveStream.h>
 #include <core/utilities/io/ObjectLoadStream.h>
 #include <core/utilities/io/FileManager.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 
 #ifdef Q_OS_UNIX
 	#include <signal.h>
@@ -323,7 +324,7 @@ static QAtomicInt _userInterrupt;
 /******************************************************************************
 * This function blocks execution until some operation has been completed.
 ******************************************************************************/
-bool DataSetContainer::waitUntil(const std::function<bool()>& callback, const QString& message, QProgressDialog* progressDialog)
+bool DataSetContainer::waitUntil(const std::function<bool()>& callback, const QString& message, AbstractProgressDisplay* progressDisplay)
 {
 	OVITO_ASSERT_MSG(QThread::currentThread() == QApplication::instance()->thread(), "DataSetContainer::waitUntilReady()", "This function may only be called from the GUI thread.");
 
@@ -342,20 +343,22 @@ bool DataSetContainer::waitUntil(const std::function<bool()>& callback, const QS
 
 		// Show a modal progress dialog to block user interface while waiting.
 		std::unique_ptr<QProgressDialog> localDialog;
-		if(!progressDialog) {
+		std::unique_ptr<ProgressDialogAdapter> dialogAdapter;
+		if(!progressDisplay) {
 			localDialog.reset(new QProgressDialog(mainWindow()));
-			progressDialog = localDialog.get();
-			progressDialog->setWindowModality(Qt::WindowModal);
-			progressDialog->setAutoClose(false);
-			progressDialog->setAutoReset(false);
-			progressDialog->setMinimumDuration(0);
-			progressDialog->setValue(0);
+			localDialog->setWindowModality(Qt::WindowModal);
+			localDialog->setAutoClose(false);
+			localDialog->setAutoReset(false);
+			localDialog->setMinimumDuration(0);
+			localDialog->setValue(0);
+			dialogAdapter.reset(new ProgressDialogAdapter(localDialog.get()));
+			progressDisplay = dialogAdapter.get();
 		}
-		progressDialog->setLabelText(message);
+		progressDisplay->setStatusText(message);
 
 		// Poll callback function until it returns true.
 		while(!callback()) {
-			if(progressDialog->wasCanceled())
+			if(progressDisplay->wasCanceled())
 				return false;
 			QCoreApplication::processEvents(QEventLoop::WaitForMoreEvents, 50);
 		}

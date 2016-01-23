@@ -23,6 +23,7 @@
 #include <plugins/pyscript/binding/PythonBinding.h>
 #include <core/plugins/PluginManager.h>
 #include <core/gui/app/Application.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 #include "ScriptEngine.h"
 
 namespace PyScript {
@@ -251,26 +252,8 @@ int ScriptEngine::executeCommands(const QString& commands, const QStringList& sc
 				_activeEngine = previousEngine;
 				return handleSystemExit();
 			}
-#if 0
-			PyObject* ptype;
-			PyObject* pvalue;
-			PyObject* ptraceback;
-			PyErr_Fetch(&ptype, &pvalue, &ptraceback);
-			handle<> type(allow_null<>(ptype));
-			handle<> value(allow_null<>(pvalue));
-			handle<> traceback(allow_null<>(ptraceback));
 
-			object tb_module = import("traceback");
-			object format_exception = tb_module.attr("format_exception");
-			list strings = extract<list>(format_exception(type, value, traceback));
-
-			int n = len(strings);
-			for(int i = 0; i < n; i++) {
-				std::cerr << extract<std::string>(strings[i])();
-			}
-#else
 			PyErr_Print();
-#endif
 		}
 	    _activeEngine = previousEngine;
 		throw Exception(tr("Python interpreter has exited with an error. See interpreter output for details."));
@@ -394,17 +377,52 @@ int ScriptEngine::executeFile(const QString& filename, const QStringList& script
 	    return 0;
 	}
 	catch(const error_already_set&) {
-		// Handle call to sys.exit()
-		if(PyErr_Occurred() && PyErr_ExceptionMatches(PyExc_SystemExit)) {
+		OVITO_ASSERT(PyErr_Occurred());
+
+		// Handle calls to sys.exit()
+		if(PyErr_ExceptionMatches(PyExc_SystemExit)) {
 		    _activeEngine = previousEngine;
 			return handleSystemExit();
 		}
-		PyErr_Print();
+
+		// Prepare C++ exception object.
+	    Exception exception(tr("The Python script '%1' has exited with an error.").arg(filename));
+
+		// Retrieve Python error message and traceback.
+	    if(Application::instance().guiMode()) {
+			PyObject* extype;
+			PyObject* value;
+			PyObject* traceback;
+			PyErr_Fetch(&extype, &value, &traceback);
+			if(extype) {
+				object o_extype(handle<>(borrowed(extype)));
+				object o_value(handle<>(borrowed(value)));
+				object o_traceback(handle<>(borrowed(traceback)));
+				object mod_traceback = import("traceback");
+				try {
+					bool chain = PyObject_IsInstance(value, extype) == 1;
+					object lines = mod_traceback.attr("format_exception")(o_extype, o_value, o_traceback, object(), chain);
+
+					QString tracebackString;
+					for(int i = 0; i < len(lines); ++i)
+						tracebackString += extract<QString>(lines[i])();
+					exception.appendDetailMessage(tracebackString);
+				}
+				catch(const error_already_set&) {
+					PyErr_Print();
+				}
+			}
+	    }
+		else {
+			// Print error message to the console.
+			PyErr_Print();
+		}
+
+		// Deactivate script engine.
 	    _activeEngine = previousEngine;
-	    if(Application::instance().guiMode())
-			throw Exception(tr("The Python script '%1' has exited with an error. See console output for details.").arg(filename));
-	    else
-			throw Exception(tr("The Python script '%1' has exited with an error.").arg(filename));
+
+	    // Raise C++ exception.
+	    throw exception;
 	}
 	catch(const Exception&) {
 	    _activeEngine = previousEngine;

@@ -83,7 +83,7 @@ void PickingSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParame
 /******************************************************************************
 * Renders the current animation frame.
 ******************************************************************************/
-bool PickingSceneRenderer::renderFrame(FrameBuffer* frameBuffer, QProgressDialog* progress)
+bool PickingSceneRenderer::renderFrame(FrameBuffer* frameBuffer, AbstractProgressDisplay* progress)
 {
 	// Clear previous object records.
 	reset();

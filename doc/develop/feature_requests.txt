@@ -69,6 +69,8 @@ Performance improvements:
 
 Scripting features:
 
+- Show progress dialog while running script in the GUI.
+- Display script output and error messages when running a script via the GUI menu.
 - Scripting interface for viewport overlays (requested by lidong.cauc@gmail.com and johannes.moeller@fau.de).
 - Distribute Scipy with Ovito?
 

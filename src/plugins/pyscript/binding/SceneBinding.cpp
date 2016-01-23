@@ -29,6 +29,7 @@
 #include <core/scene/pipeline/Modifier.h>
 #include <core/scene/pipeline/ModifierApplication.h>
 #include <core/scene/pipeline/PipelineObject.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 #include <plugins/pyscript/extensions/PythonScriptModifier.h>
 #include "PythonBinding.h"
 

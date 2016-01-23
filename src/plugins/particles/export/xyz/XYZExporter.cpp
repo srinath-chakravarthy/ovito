@@ -22,6 +22,7 @@
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 #include "XYZExporter.h"
 #include "../ParticleExporterSettingsDialog.h"
 
@@ -80,7 +81,7 @@ bool XYZExporter::showSettingsDialog(const PipelineFlowState& state, QWidget* pa
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.
 ******************************************************************************/
-bool XYZExporter::exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, ProgressInterface& progress)
+bool XYZExporter::exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
 {
 	// Get particle positions.
 	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
@@ -200,12 +201,13 @@ bool XYZExporter::exportParticles(const PipelineFlowState& state, int frameNumbe
 	}
 	textStream() << '\n';
 
+	progress->setMaximum(100);
 	for(size_t i = 0; i < atomsCount; i++) {
 		columnWriter.writeParticle(i, textStream());
 
 		if((i % 4096) == 0) {
-			progress.setPercentage((quint64)i * 100 / atomsCount);
-			if(progress.wasCanceled())
+			progress->setValue((quint64)i * 100 / atomsCount);
+			if(progress->wasCanceled())
 				return false;
 		}
 	}

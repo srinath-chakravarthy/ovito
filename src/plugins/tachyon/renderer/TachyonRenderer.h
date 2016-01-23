@@ -45,7 +45,7 @@ public:
 
 	/// Renders a single animation frame into the given frame buffer.
 	/// Throws an exception on error. Returns false when the operation has been aborted by the user.
-	virtual bool renderFrame(FrameBuffer* frameBuffer, QProgressDialog* progress) override;
+	virtual bool renderFrame(FrameBuffer* frameBuffer, AbstractProgressDisplay* progress) override;
 
 	///	Finishes the rendering pass. This is called after all animation frames have been rendered
 	/// or when the rendering operation has been aborted.

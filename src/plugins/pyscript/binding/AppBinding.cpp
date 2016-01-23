@@ -38,6 +38,7 @@
 #include <core/rendering/FrameBuffer.h>
 #include <core/gui/widgets/rendering/FrameBufferWindow.h>
 #include <core/gui/mainwin/MainWindow.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 #include "PythonBinding.h"
 
 namespace PyScript {
@@ -138,6 +139,17 @@ BOOST_PYTHON_MODULE(PyScriptApp)
 	class_<CloneHelper>("CloneHelper", init<>())
 		.def("clone", (OORef<RefTarget> (CloneHelper::*)(RefTarget*, bool))&CloneHelper::cloneObject<RefTarget>)
 	;
+
+	class_<AbstractProgressDisplay, boost::noncopyable>("AbstractProgressDisplay", no_init)
+		.add_property("canceled", &AbstractProgressDisplay::wasCanceled)
+	;
+
+	// Let scripts access the current progress display.
+	def("get_progress_display", make_function(static_cast<AbstractProgressDisplay* (*)()>([]() -> AbstractProgressDisplay* {
+		if(ScriptEngine::activeEngine())
+			return ScriptEngine::activeEngine()->progressDisplay();
+		return nullptr;
+	}), return_value_policy<reference_existing_object>()));
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScriptApp);

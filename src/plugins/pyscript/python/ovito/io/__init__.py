@@ -124,7 +124,7 @@ def _FileSource_load(self, location, **params):
         raise RuntimeError("Operation has been canceled by the user.")
     
     # Block execution until data has been loaded. 
-    if not self.waitUntilReady(self.dataset.anim.time, "Script is waiting for I/O operation to finish."):
+    if not self.waitUntilReady(self.dataset.anim.time, "Script is waiting for I/O operation to finish.", ovito.get_progress_display()):
         raise RuntimeError("Operation has been canceled by the user.")
     
     # Raise Python error if loading failed.

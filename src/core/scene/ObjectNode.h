@@ -65,10 +65,10 @@ public:
 	///        pipeline has been fully evaluated.
 	/// \param time The animation time at which the modification pipeline should be evaluated.
 	/// \param message The text to be shown to the user while waiting.
-	/// \param progressDialog An existing progress dialog to use to show the message.
-	///                       If NULL, the function will show its own dialog box.
+	/// \param progressDisplay The progress display/dialog to be used to show the message.
+	///                       If NULL, the function will show its own progress dialog box.
 	/// \return true on success; false if the operation has been canceled by the user.
-	bool waitUntilReady(TimePoint time, const QString& message, QProgressDialog* progressDialog = nullptr);
+	bool waitUntilReady(TimePoint time, const QString& message, AbstractProgressDisplay* progressDisplay = nullptr);
 
 	/// \brief Applies a modifier by appending it to the end of the node's data pipeline.
 	/// \param mod The modifier to be inserted into the data flow pipeline.

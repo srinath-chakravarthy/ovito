@@ -289,11 +289,11 @@ void ObjectNode::setSourceObject(DataObject* sourceObject)
 * This function blocks execution until the node's modification
 * pipeline has been fully evaluated.
 ******************************************************************************/
-bool ObjectNode::waitUntilReady(TimePoint time, const QString& message, QProgressDialog* progressDialog)
+bool ObjectNode::waitUntilReady(TimePoint time, const QString& message, AbstractProgressDisplay* progressDisplay)
 {
 	return dataset()->container()->waitUntil([this, time]() {
 		return evalPipeline(time).status().type() != PipelineStatus::Pending;
-	}, message, progressDialog);
+	}, message, progressDisplay);
 }
 
 OVITO_END_INLINE_NAMESPACE

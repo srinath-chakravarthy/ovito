@@ -25,6 +25,7 @@
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/particles/objects/BondsObject.h>
 #include <plugins/particles/objects/BondTypeProperty.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 #include "LAMMPSDataExporter.h"
 #include "../ParticleExporterSettingsDialog.h"
 
@@ -80,7 +81,7 @@ bool LAMMPSDataExporter::showSettingsDialog(const PipelineFlowState& state, QWid
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.
 ******************************************************************************/
-bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, ProgressInterface& progress)
+bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
 {
 	// Get particle positions.
 	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
@@ -176,6 +177,7 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 	// Write atoms.
 	textStream() << "Atoms\n\n";
 
+	progress->setMaximum(100);
 	for(size_t i = 0; i < posProperty->size(); i++) {
 		textStream() << (identifierProperty ? identifierProperty->getInt(i) : (i+1));
 		if(atomStyle() == LAMMPSDataImporter::AtomStyle_Bond || atomStyle() == LAMMPSDataImporter::AtomStyle_Molecular || atomStyle() == LAMMPSDataImporter::AtomStyle_Full || atomStyle() == LAMMPSDataImporter::AtomStyle_Angle) {
@@ -207,8 +209,8 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 
 		currentProgress++;
 		if((currentProgress % 4096) == 0) {
-			progress.setPercentage(currentProgress * 100 / totalProgressCount);
-			if(progress.wasCanceled())
+			progress->setValue(currentProgress * 100 / totalProgressCount);
+			if(progress->wasCanceled())
 				return false;
 		}
 	}
@@ -231,8 +233,8 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 
 			currentProgress++;
 			if((currentProgress % 4096) == 0) {
-				progress.setPercentage(currentProgress * 100 / totalProgressCount);
-				if(progress.wasCanceled())
+				progress->setValue(currentProgress * 100 / totalProgressCount);
+				if(progress->wasCanceled())
 					return false;
 			}
 		}
@@ -257,8 +259,8 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 
 			currentProgress++;
 			if((currentProgress % 4096) == 0) {
-				progress.setPercentage(currentProgress * 100 / totalProgressCount);
-				if(progress.wasCanceled())
+				progress->setValue(currentProgress * 100 / totalProgressCount);
+				if(progress->wasCanceled())
 					return false;
 			}
 		}

@@ -23,6 +23,7 @@
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 #include "FHIAimsExporter.h"
 #include "../ParticleExporterSettingsDialog.h"
 
@@ -42,7 +43,7 @@ bool FHIAimsExporter::showSettingsDialog(const PipelineFlowState& state, QWidget
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.
 ******************************************************************************/
-bool FHIAimsExporter::exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, ProgressInterface& progress)
+bool FHIAimsExporter::exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
 {
 	// Get particle positions and types.
 	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
@@ -65,6 +66,7 @@ bool FHIAimsExporter::exportParticles(const PipelineFlowState& state, int frameN
 	}
 
 	// Output atoms.
+	progress->setMaximum(100);
 	for(size_t i = 0; i < posProperty->size(); i++) {
 		const Point3& p = posProperty->getPoint3(i);
 		const ParticleType* type = particleTypeProperty->particleType(particleTypeProperty->getInt(i));
@@ -79,8 +81,8 @@ bool FHIAimsExporter::exportParticles(const PipelineFlowState& state, int frameN
 		}
 
 		if((i % 1000) == 0) {
-			progress.setPercentage((qint64)i * 100 / posProperty->size());
-			if(progress.wasCanceled())
+			progress->setValue((qint64)i * 100 / posProperty->size());
+			if(progress->wasCanceled())
 				return false;
 		}
 	}

@@ -108,10 +108,10 @@ public:
 	/// \param callback This callback function will be polled to check whether the operation has finished.
 	///                 The callback function should return true to indicate that the operation has finished.
 	/// \param message The text to be shown to the user while waiting.
-	/// \param progressDialog An existing progress dialog to use to show the message.
-	///                       If NULL, the function will show its own dialog box.
+	/// \param progressDisplay The progress display/dialog to be used for showing the message.
+	///                       If NULL, the function will create and show its own progress dialog box.
 	/// \return true on success; false if the operation has been canceled by the user.
-	bool waitUntil(const std::function<bool()>& callback, const QString& message, QProgressDialog* progressDialog = nullptr);
+	bool waitUntil(const std::function<bool()>& callback, const QString& message, AbstractProgressDisplay* progressDisplay = nullptr);
 
 Q_SIGNALS:
 

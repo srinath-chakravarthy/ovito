@@ -23,6 +23,7 @@
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 #include "IMDExporter.h"
 #include "../ParticleExporterSettingsDialog.h"
 #include "../OutputColumnMapping.h"
@@ -69,7 +70,7 @@ bool IMDExporter::showSettingsDialog(const PipelineFlowState& state, QWidget* pa
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.
 ******************************************************************************/
-bool IMDExporter::exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, ProgressInterface& progress)
+bool IMDExporter::exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
 {
 	// Get particle positions.
 	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
@@ -182,13 +183,14 @@ bool IMDExporter::exportParticles(const PipelineFlowState& state, int frameNumbe
 	textStream() << "## IMD file written by " << QCoreApplication::applicationName() << "\n";
 	textStream() << "#E\n";
 
+	progress->setMaximum(100);
 	OutputColumnWriter columnWriter(colMapping, state);
 	for(size_t i = 0; i < atomsCount; i++) {
 		columnWriter.writeParticle(i, textStream());
 
 		if((i % 4096) == 0) {
-			progress.setPercentage((quint64)i * 100 / atomsCount);
-			if(progress.wasCanceled())
+			progress->setValue((quint64)i * 100 / atomsCount);
+			if(progress->wasCanceled())
 				return false;
 		}
 	}

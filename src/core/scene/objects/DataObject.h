@@ -110,10 +110,10 @@ public:
 	///        provide data via its evaluate() function.
 	/// \param time The animation time at which the object should be evaluated.
 	/// \param message The text to be shown to the user while waiting.
-	/// \param progressDialog An existing progress dialog to use to show the message.
-	///                       If NULL, the function will show its own dialog box.
+	/// \param progressDisplay A progress display/dialog to be used for showing the message.
+	///                       If NULL, the function will show its own progress dialog box.
 	/// \return true on success; false if the operation has been canceled by the user.
-	bool waitUntilReady(TimePoint time, const QString& message, QProgressDialog* progressDialog = nullptr);
+	bool waitUntilReady(TimePoint time, const QString& message, AbstractProgressDisplay* progressDisplay = nullptr);
 
 	/// \brief Returns a structure that describes the current status of the object.
 	///

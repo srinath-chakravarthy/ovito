@@ -139,7 +139,7 @@ protected:
 	virtual void closeOutputFile(bool exportCompleted);
 
 	/// \brief Exports a single animation frame to the current output file.
-	virtual bool exportFrame(const QVector<SceneNode*>& nodes, int frameNumber, TimePoint time, const QString& filePath, QProgressDialog* progressDialog);
+	virtual bool exportFrame(const QVector<SceneNode*>& nodes, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay);
 
 	/// \brief Writes the particles of one animation frame to the current output file.
 	/// \param state The pipeline results containing the particles to be exported.
@@ -148,7 +148,7 @@ protected:
 	/// \param filePath The path of the output file.
 	/// \throws Exception on error.
 	/// \return \a false when the operation has been canceled by the user; \a true on success.
-	virtual bool exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, ProgressInterface& progress) = 0;
+	virtual bool exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) = 0;
 
 	/// Returns the current file this exporter is writing to.
 	QFile& outputFile() { return _outputFile; }

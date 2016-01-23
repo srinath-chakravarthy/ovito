@@ -31,6 +31,7 @@
 #include <core/rendering/SceneRenderer.h>
 #include <core/gui/widgets/rendering/FrameBufferWindow.h>
 #include <core/gui/mainwin/MainWindow.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 #ifdef OVITO_VIDEO_OUTPUT_SUPPORT
 	#include <core/utilities/io/video/VideoEncoder.h>
 #endif
@@ -305,6 +306,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, boost::s
 
 		// Show progress dialog.
 		std::unique_ptr<QProgressDialog> progressDialog;
+		std::unique_ptr<ProgressDialogAdapter> progressDisplay;
 		if(Application::instance().guiMode()) {
 			progressDialog.reset(new QProgressDialog(frameBufferWindow ? (QWidget*)frameBufferWindow : (QWidget*)mainWindow()));
 			progressDialog->setWindowModality(Qt::WindowModal);
@@ -312,6 +314,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, boost::s
 			progressDialog->setAutoReset(false);
 			progressDialog->setMinimumDuration(0);
 			progressDialog->setValue(0);
+			progressDisplay.reset(new ProgressDialogAdapter(progressDialog.get()));
 		}
 
 		// Don't update viewports while rendering.
@@ -341,7 +344,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, boost::s
 				int frameNumber = animationSettings()->timeToFrame(renderTime);
 				if(frameBufferWindow)
 					frameBufferWindow->setWindowTitle(tr("Frame %1").arg(frameNumber));
-				if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer.get(), videoEncoder, progressDialog.get()))
+				if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer.get(), videoEncoder, progressDisplay.get()))
 					wasCanceled = true;
 			}
 			else if(settings->renderingRangeType() == RenderSettings::ANIMATION_INTERVAL || settings->renderingRangeType() == RenderSettings::CUSTOM_INTERVAL) {
@@ -372,7 +375,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, boost::s
 					int frameNumber = firstFrameNumber + frameIndex * settings->everyNthFrame() + settings->fileNumberBase();
 					if(frameBufferWindow)
 						frameBufferWindow->setWindowTitle(tr("Frame %1").arg(animationSettings()->timeToFrame(renderTime)));
-					if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer.get(), videoEncoder, progressDialog.get())) {
+					if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer.get(), videoEncoder, progressDisplay.get())) {
 						wasCanceled = true;
 						break;
 					}
@@ -410,7 +413,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, boost::s
 * Renders a single frame and saves the output file.
 ******************************************************************************/
 bool DataSet::renderFrame(TimePoint renderTime, int frameNumber, RenderSettings* settings, SceneRenderer* renderer, Viewport* viewport,
-		FrameBuffer* frameBuffer, VideoEncoder* videoEncoder, QProgressDialog* progressDialog)
+		FrameBuffer* frameBuffer, VideoEncoder* videoEncoder, AbstractProgressDisplay* progressDisplay)
 {
 	// Determine output filename for this frame.
 	QString imageFilename;
@@ -434,11 +437,11 @@ bool DataSet::renderFrame(TimePoint renderTime, int frameNumber, RenderSettings*
 	animationSettings()->setTime(renderTime);
 
 	// Wait until the scene is ready.
-	if(!waitUntilSceneIsReady(tr("Preparing frame %1").arg(frameNumber), progressDialog))
+	if(!waitUntilSceneIsReady(tr("Preparing frame %1").arg(frameNumber), progressDisplay))
 		return false;
 
-	if(progressDialog)
-		progressDialog->setLabelText(tr("Rendering frame %1").arg(frameNumber));
+	if(progressDisplay)
+		progressDisplay->setStatusText(tr("Rendering frame %1").arg(frameNumber));
 
 	// Request scene bounding box.
 	Box3 boundingBox = renderer->sceneBoundingBox(renderTime);
@@ -449,7 +452,7 @@ bool DataSet::renderFrame(TimePoint renderTime, int frameNumber, RenderSettings*
 	// Render one frame.
 	frameBuffer->clear();
 	renderer->beginFrame(renderTime, projParams, viewport);
-	if(!renderer->renderFrame(frameBuffer, progressDialog) || (progressDialog && progressDialog->wasCanceled())) {
+	if(!renderer->renderFrame(frameBuffer, progressDisplay) || (progressDisplay && progressDisplay->wasCanceled())) {
 		renderer->endFrame();
 		return false;
 	}
@@ -484,7 +487,7 @@ bool DataSet::renderFrame(TimePoint renderTime, int frameNumber, RenderSettings*
 /******************************************************************************
 * This function blocks until the scene has become ready.
 ******************************************************************************/
-bool DataSet::waitUntilSceneIsReady(const QString& message, QProgressDialog* progressDialog)
+bool DataSet::waitUntilSceneIsReady(const QString& message, AbstractProgressDisplay* progressDisplay)
 {
 	std::atomic_flag keepWaiting;
 	keepWaiting.test_and_set();
@@ -492,7 +495,7 @@ bool DataSet::waitUntilSceneIsReady(const QString& message, QProgressDialog* pro
 
 	return container()->waitUntil([&keepWaiting]() {
 		return !keepWaiting.test_and_set();
-	}, message, progressDialog);
+	}, message, progressDisplay);
 }
 
 /******************************************************************************

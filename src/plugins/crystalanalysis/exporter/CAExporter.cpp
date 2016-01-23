@@ -26,6 +26,7 @@
 #include <plugins/crystalanalysis/objects/patterns/PatternCatalog.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 #include "CAExporter.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
@@ -44,7 +45,7 @@ bool CAExporter::showSettingsDialog(const PipelineFlowState& state, QWidget* par
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.
 ******************************************************************************/
-bool CAExporter::exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, ProgressInterface& progress)
+bool CAExporter::exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
 {
 	// Get simulation cell info.
 	SimulationCellObject* simulationCell = state.findObject<SimulationCellObject>();

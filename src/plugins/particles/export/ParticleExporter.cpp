@@ -25,6 +25,7 @@
 #include <core/scene/objects/DataObject.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/gui/mainwin/MainWindow.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include "ParticleExporter.h"
@@ -161,12 +162,14 @@ bool ParticleExporter::writeOutputFiles(const QVector<SceneNode*>& nodes)
 
 	// Show progress dialog.
 	std::unique_ptr<QProgressDialog> progressDialog;
+	std::unique_ptr<ProgressDialogAdapter> progressDisplay;
 	if(Application::instance().guiMode()) {
 		progressDialog.reset(new QProgressDialog(dataset()->mainWindow()));
 		progressDialog->setWindowModality(Qt::WindowModal);
 		progressDialog->setAutoClose(false);
 		progressDialog->setAutoReset(false);
 		progressDialog->setMinimumDuration(0);
+		progressDisplay.reset(new ProgressDialogAdapter(progressDialog.get()));
 	}
 
 	// Compute the number of frames that need to be exported.
@@ -193,7 +196,7 @@ bool ParticleExporter::writeOutputFiles(const QVector<SceneNode*>& nodes)
 			throw Exception(tr("Cannot write animation frames to separate files. The filename must contain the '*' wildcard character, which gets replaced by the frame number."));
 	}
 
-	if(progressDialog) progressDialog->setMaximum(numberOfFrames * 100);
+	if(progressDisplay) progressDisplay->setMaximum(numberOfFrames * 100);
 	QDir dir = QFileInfo(outputFilename()).dir();
 	QString filename = outputFilename();
 
@@ -207,8 +210,8 @@ bool ParticleExporter::writeOutputFiles(const QVector<SceneNode*>& nodes)
 
 		// Export animation frames.
 		for(int frameIndex = 0; frameIndex < numberOfFrames; frameIndex++) {
-			if(progressDialog)
-				progressDialog->setValue(frameIndex * 100);
+			if(progressDisplay)
+				progressDisplay->setValue(frameIndex * 100);
 
 			int frameNumber = firstFrameNumber + frameIndex * everyNthFrame();
 
@@ -221,13 +224,13 @@ bool ParticleExporter::writeOutputFiles(const QVector<SceneNode*>& nodes)
 					return false;
 			}
 
-			if(!exportFrame(nodes, frameNumber, exportTime, filename, progressDialog.get()) && progressDialog)
-				progressDialog->cancel();
+			if(!exportFrame(nodes, frameNumber, exportTime, filename, progressDisplay.get()) && progressDisplay)
+				progressDisplay->cancel();
 
 			if(_exportAnimation && useWildcardFilename())
-				closeOutputFile(!progressDialog || !progressDialog->wasCanceled());
+				closeOutputFile(!progressDisplay || !progressDisplay->wasCanceled());
 
-			if(progressDialog && progressDialog->wasCanceled())
+			if(progressDisplay && progressDisplay->wasCanceled())
 				break;
 
 			// Go to next animation frame.
@@ -241,10 +244,10 @@ bool ParticleExporter::writeOutputFiles(const QVector<SceneNode*>& nodes)
 
 	// Close output file.
 	if(!_exportAnimation || !useWildcardFilename()) {
-		closeOutputFile(!progressDialog || !progressDialog->wasCanceled());
+		closeOutputFile(!progressDisplay || !progressDisplay->wasCanceled());
 	}
 
-	return !progressDialog || !progressDialog->wasCanceled();
+	return !progressDisplay || !progressDisplay->wasCanceled();
 }
 
 /******************************************************************************
@@ -277,25 +280,24 @@ void ParticleExporter::closeOutputFile(bool exportCompleted)
 /******************************************************************************
  * Exports a single animation frame to the current output file.
  *****************************************************************************/
-bool ParticleExporter::exportFrame(const QVector<SceneNode*>& nodes, int frameNumber, TimePoint time, const QString& filePath, QProgressDialog* progressDialog)
+bool ParticleExporter::exportFrame(const QVector<SceneNode*>& nodes, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay)
 {
 	// Jump to animation time.
 	dataset()->animationSettings()->setTime(time);
 
 	// Wait until the scene is ready.
-	if(!dataset()->waitUntilSceneIsReady(tr("Preparing frame %1 for export...").arg(frameNumber), progressDialog))
+	if(!dataset()->waitUntilSceneIsReady(tr("Preparing frame %1 for export...").arg(frameNumber), progressDisplay))
 		return false;
 
-	if(progressDialog)
-		progressDialog->setLabelText(tr("Exporting frame %1 to file '%2'.").arg(frameNumber).arg(filePath));
+	if(progressDisplay)
+		progressDisplay->setStatusText(tr("Exporting frame %1 to file '%2'.").arg(frameNumber).arg(filePath));
 
 	// Evaluate modification pipeline to get the particles to be exported.
 	PipelineFlowState state = getParticles(nodes, time);
 	if(state.isEmpty())
 		throw Exception(tr("The object to be exported does not contain any particles."));
 
-	ProgressInterface progressInterface(progressDialog);
-	return exportParticles(state, frameNumber, time, filePath, progressInterface);
+	return exportParticles(state, frameNumber, time, filePath, progressDisplay);
 }
 
 OVITO_END_INLINE_NAMESPACE

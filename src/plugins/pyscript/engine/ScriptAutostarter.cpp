@@ -25,6 +25,7 @@
 #include <core/gui/dialogs/HistoryFileDialog.h>
 #include <core/gui/mainwin/MainWindow.h>
 #include <core/dataset/DataSetContainer.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 #include "ScriptAutostarter.h"
 #include "ScriptEngine.h"
 
@@ -77,6 +78,18 @@ void ScriptAutostarter::registerActions(ActionManager& actionManager)
 		dataset->undoStack().beginCompoundOperation(tr("Script actions"));
 		try {
 			ScriptEngine engine(dataset);
+
+			// Show a progress dialog while script is running.
+			QProgressDialog progressDialog(actionManager.mainWindow());
+			progressDialog.setWindowModality(Qt::WindowModal);
+			progressDialog.setAutoClose(false);
+			progressDialog.setAutoReset(false);
+			progressDialog.setMinimumDuration(0);
+			progressDialog.setValue(0);
+			progressDialog.setLabelText(tr("Running script"));
+			ProgressDialogAdapter progressDisplay(&progressDialog);
+			engine.setProgressDisplay(&progressDisplay);
+
 			engine.executeFile(scriptFile);
 		}
 		catch(const Exception& ex) {

@@ -125,7 +125,7 @@ public:
 
 	/// Renders the current animation frame.
 	/// Returns false if the operation has been canceled by the user.
-	virtual bool renderFrame(FrameBuffer* frameBuffer, QProgressDialog* progress) = 0;
+	virtual bool renderFrame(FrameBuffer* frameBuffer, AbstractProgressDisplay* progress) = 0;
 
 	/// This method is called after renderFrame() has been called.
 	virtual void endFrame() {}

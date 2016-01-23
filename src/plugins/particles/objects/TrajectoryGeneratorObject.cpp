@@ -31,6 +31,7 @@
 #include <core/gui/properties/BooleanRadioButtonParameterUI.h>
 #include <core/gui/widgets/general/ElidedTextLabel.h>
 #include <core/viewport/ViewportConfiguration.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include "TrajectoryGeneratorObject.h"
@@ -81,21 +82,23 @@ TrajectoryGeneratorObject::TrajectoryGeneratorObject(DataSet* dataset) : Traject
 /******************************************************************************
 * Updates the stored trajectories from the source particle object.
 ******************************************************************************/
-bool TrajectoryGeneratorObject::generateTrajectories(QProgressDialog* progressDialog)
+bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* progressDisplay)
 {
 	// Suspend viewports while loading simulation frames.
 	ViewportSuspender noVPUpdates(this);
 
 	// Show progress dialog.
 	std::unique_ptr<QProgressDialog> localProgressDialog;
-	if(!progressDialog && Application::instance().guiMode()) {
+	std::unique_ptr<ProgressDialogAdapter> progressAdapter;
+	if(!progressDisplay && Application::instance().guiMode()) {
 		localProgressDialog.reset(new QProgressDialog(dataset()->mainWindow()));
 		localProgressDialog->setWindowModality(Qt::WindowModal);
 		localProgressDialog->setAutoClose(false);
 		localProgressDialog->setAutoReset(false);
 		localProgressDialog->setMinimumDuration(0);
 		localProgressDialog->setValue(0);
-		progressDialog = localProgressDialog.get();
+		progressAdapter.reset(new ProgressDialogAdapter(localProgressDialog.get()));
+		progressDisplay = progressAdapter.get();
 	}
 
 	TimePoint currentTime = dataset()->animationSettings()->time();
@@ -104,7 +107,7 @@ bool TrajectoryGeneratorObject::generateTrajectories(QProgressDialog* progressDi
 	if(!source())
 		throw Exception(tr("No input particle data object is selected from which trajectory lines can be generated."));
 
-	if(!source()->waitUntilReady(currentTime, tr("Waiting for input particles to become ready."), progressDialog))
+	if(!source()->waitUntilReady(currentTime, tr("Waiting for input particles to become ready."), progressDisplay))
 		return false;
 
 	const PipelineFlowState& state = source()->evalPipeline(currentTime);
@@ -154,15 +157,15 @@ bool TrajectoryGeneratorObject::generateTrajectories(QProgressDialog* progressDi
 	for(TimePoint time = interval.start(); time <= interval.end(); time += everyNthFrame() * dataset()->animationSettings()->ticksPerFrame()) {
 		sampleTimes.push_back(time);
 	}
-	if(progressDialog) {
-		progressDialog->setMaximum(sampleTimes.size());
-		progressDialog->setValue(0);
+	if(progressDisplay) {
+		progressDisplay->setMaximum(sampleTimes.size());
+		progressDisplay->setValue(0);
 	}
 
 	QVector<Point3> points;
 	points.reserve(particleCount * sampleTimes.size());
 	for(TimePoint time : sampleTimes) {
-		if(!source()->waitUntilReady(time, tr("Loading frame %1.").arg(dataset()->animationSettings()->timeToFrame(time)), progressDialog))
+		if(!source()->waitUntilReady(time, tr("Loading frame %1.").arg(dataset()->animationSettings()->timeToFrame(time)), progressDisplay))
 			return false;
 		const PipelineFlowState& state = source()->evalPipeline(time);
 		ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
@@ -211,16 +214,16 @@ bool TrajectoryGeneratorObject::generateTrajectories(QProgressDialog* progressDi
 			}
 		}
 
-		if(progressDialog) {
-			progressDialog->setValue(progressDialog->value() + 1);
-			if(progressDialog->wasCanceled()) return false;
+		if(progressDisplay) {
+			progressDisplay->setValue(progressDisplay->value() + 1);
+			if(progressDisplay->wasCanceled()) return false;
 		}
 	}
 
 	setTrajectories(particleCount, points, sampleTimes);
 
 	// Jump back to current animation time.
-	if(!source()->waitUntilReady(currentTime, tr("Going back to original frame."), progressDialog))
+	if(!source()->waitUntilReady(currentTime, tr("Going back to original frame."), progressDisplay))
 		return false;
 
 	return true;

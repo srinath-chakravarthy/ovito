@@ -188,7 +188,7 @@ void ViewportSceneRenderer::endFrame()
 /******************************************************************************
 * Renders the current animation frame.
 ******************************************************************************/
-bool ViewportSceneRenderer::renderFrame(FrameBuffer* frameBuffer, QProgressDialog* progress)
+bool ViewportSceneRenderer::renderFrame(FrameBuffer* frameBuffer, AbstractProgressDisplay* progress)
 {
 	OVITO_ASSERT(_glcontext == QOpenGLContext::currentContext());
 

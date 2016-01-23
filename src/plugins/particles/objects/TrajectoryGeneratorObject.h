@@ -84,7 +84,7 @@ public:
 	void setUnwrapTrajectories(bool unwrap) { _unwrapTrajectories = unwrap; }
 
 	/// Updates the stored trajectories from the source particle object.
-	bool generateTrajectories(QProgressDialog* progressDialog = nullptr);
+	bool generateTrajectories(AbstractProgressDisplay* progressDisplay = nullptr);
 
 private:
 

@@ -48,7 +48,7 @@ public:
 		_glVertexIDBufferSize(-1) {}
 
 	/// Renders the current animation frame.
-	virtual bool renderFrame(FrameBuffer* frameBuffer, QProgressDialog* progress) override;
+	virtual bool renderFrame(FrameBuffer* frameBuffer, AbstractProgressDisplay* progress) override;
 
 	/// This method is called just before renderFrame() is called.
 	virtual void beginFrame(TimePoint time, const ViewProjectionParameters& params, Viewport* vp) override;

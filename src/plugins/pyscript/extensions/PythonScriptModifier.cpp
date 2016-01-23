@@ -188,18 +188,16 @@ void PythonScriptModifier::runScriptFunction()
 			try {
 
 				// Initialize local script engine if there is no active engine to re-use.
-				if(ScriptEngine::activeEngine() == nullptr) {
-					if(!_scriptEngine) {
-						_scriptEngine.reset(new ScriptEngine(dataset(), nullptr, false));
-						connect(_scriptEngine.get(), &ScriptEngine::scriptOutput, this, &PythonScriptModifier::onScriptOutput);
-						connect(_scriptEngine.get(), &ScriptEngine::scriptError, this, &PythonScriptModifier::onScriptOutput);
-						_mainNamespacePrototype = _scriptEngine->mainNamespace();
-					}
+				if(!_scriptEngine) {
+					_scriptEngine.reset(new ScriptEngine(dataset(), nullptr, false));
+					connect(_scriptEngine.get(), &ScriptEngine::scriptOutput, this, &PythonScriptModifier::onScriptOutput);
+					connect(_scriptEngine.get(), &ScriptEngine::scriptError, this, &PythonScriptModifier::onScriptOutput);
+					_mainNamespacePrototype = _scriptEngine->mainNamespace();
+				}
 
-					// Compile script if needed.
-					if(!_modifyScriptFunction || _modifyScriptFunction->is_none()) {
-						compileScript();
-					}
+				// Compile script if needed.
+				if(!_modifyScriptFunction || _modifyScriptFunction->is_none()) {
+					compileScript();
 				}
 
 				// Check if script function has been set.

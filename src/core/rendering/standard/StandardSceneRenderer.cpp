@@ -139,7 +139,7 @@ void StandardSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParam
 /******************************************************************************
 * Renders the current animation frame.
 ******************************************************************************/
-bool StandardSceneRenderer::renderFrame(FrameBuffer* frameBuffer, QProgressDialog* progress)
+bool StandardSceneRenderer::renderFrame(FrameBuffer* frameBuffer, AbstractProgressDisplay* progress)
 {
 	// Let the base class do the main rendering work.
 	if(!ViewportSceneRenderer::renderFrame(frameBuffer, progress))

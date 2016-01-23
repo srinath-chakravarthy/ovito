@@ -24,6 +24,7 @@
 #include <core/rendering/RenderSettings.h>
 #include <core/reference/CloneHelper.h>
 #include <core/scene/ObjectNode.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 
 #include "TachyonRenderer.h"
 #include "TachyonRendererEditor.h"
@@ -106,9 +107,9 @@ bool TachyonRenderer::startRender(DataSet* dataset, RenderSettings* settings)
 /******************************************************************************
 * Renders a single animation frame into the given frame buffer.
 ******************************************************************************/
-bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, QProgressDialog* progress)
+bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, AbstractProgressDisplay* progress)
 {
-	if(progress) progress->setLabelText(tr("Preparing scene"));
+	if(progress) progress->setStatusText(tr("Preparing scene"));
 
 	// Create new scene and set up parameters.
 	_rtscene = rt_newscene();
@@ -209,7 +210,7 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, QProgressDialog* pro
 	// Render scene.
 	if(progress) {
 		progress->setMaximum(renderSettings()->outputImageWidth() * renderSettings()->outputImageHeight());
-		progress->setLabelText(tr("Rendering scene"));
+		progress->setStatusText(tr("Rendering scene"));
 	}
 
 	scenedef * scene = (scenedef *)_rtscene;

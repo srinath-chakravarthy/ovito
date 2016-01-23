@@ -46,6 +46,8 @@ namespace Ovito {
 			OVITO_END_INLINE_NAMESPACE
 		OVITO_END_INLINE_NAMESPACE
 		OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
+			class AbstractProgressDisplay;
+			class ProgressDialogAdapter;
 		OVITO_END_INLINE_NAMESPACE
 		OVITO_BEGIN_INLINE_NAMESPACE(Mesh)
 			class TriMesh;

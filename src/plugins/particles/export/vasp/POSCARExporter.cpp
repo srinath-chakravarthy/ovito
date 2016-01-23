@@ -23,6 +23,7 @@
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 #include "POSCARExporter.h"
 #include "../ParticleExporterSettingsDialog.h"
 
@@ -42,7 +43,7 @@ bool POSCARExporter::showSettingsDialog(const PipelineFlowState& state, QWidget*
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.
 ******************************************************************************/
-bool POSCARExporter::exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, ProgressInterface& progress)
+bool POSCARExporter::exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
 {
 	// Get particle positions.
 	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
@@ -102,6 +103,7 @@ bool POSCARExporter::exportParticles(const PipelineFlowState& state, int frameNu
 	size_t totalProgressCount = posProperty->size();
 	if(velocityProperty) totalProgressCount += posProperty->size();
 	size_t currentProgress = 0;
+	progress->setMaximum(100);
 
 	// Write atomic positions.
 	textStream() << "Cartesian\n";
@@ -115,8 +117,8 @@ bool POSCARExporter::exportParticles(const PipelineFlowState& state, int frameNu
 			currentProgress++;
 
 			if((currentProgress % 1000) == 0) {
-				progress.setPercentage(currentProgress * 100 / totalProgressCount);
-				if(progress.wasCanceled())
+				progress->setValue(currentProgress * 100 / totalProgressCount);
+				if(progress->wasCanceled())
 					return false;
 			}
 		}
@@ -135,8 +137,8 @@ bool POSCARExporter::exportParticles(const PipelineFlowState& state, int frameNu
 				currentProgress++;
 
 				if((currentProgress % 1000) == 0) {
-					progress.setPercentage(currentProgress * 100 / totalProgressCount);
-					if(progress.wasCanceled())
+					progress->setValue(currentProgress * 100 / totalProgressCount);
+					if(progress->wasCanceled())
 						return false;
 				}
 			}

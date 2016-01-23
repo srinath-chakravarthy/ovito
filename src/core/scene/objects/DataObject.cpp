@@ -139,11 +139,11 @@ QSet<ObjectNode*> DataObject::dependentNodes() const
 * This function blocks execution until the object is able ready to
 * provide data via its evaluate() function.
 ******************************************************************************/
-bool DataObject::waitUntilReady(TimePoint time, const QString& message, QProgressDialog* progressDialog)
+bool DataObject::waitUntilReady(TimePoint time, const QString& message, AbstractProgressDisplay* progressDisplay)
 {
 	return dataset()->container()->waitUntil([this, time]() {
 		return evaluate(time).status().type() != PipelineStatus::Pending;
-	}, message, progressDialog);
+	}, message, progressDisplay);
 }
 
 OVITO_END_INLINE_NAMESPACE
