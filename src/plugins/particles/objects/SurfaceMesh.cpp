@@ -38,6 +38,20 @@ SurfaceMesh::SurfaceMesh(DataSet* dataset, HalfEdgeMesh<>* mesh) : DataObjectWit
 }
 
 /******************************************************************************
+* Creates a copy of this object.
+******************************************************************************/
+OORef<RefTarget> SurfaceMesh::clone(bool deepCopy, CloneHelper& cloneHelper)
+{
+	// Let the base class create an instance of this class.
+	OORef<SurfaceMesh> clone = static_object_cast<SurfaceMesh>(DataObjectWithSharedStorage<HalfEdgeMesh<>>::clone(deepCopy, cloneHelper));
+
+	// Copy internal data.
+	clone->_cuttingPlanes = this->_cuttingPlanes;
+
+	return clone;
+}
+
+/******************************************************************************
 * Fairs a closed triangle mesh.
 ******************************************************************************/
 void SurfaceMesh::smoothMesh(HalfEdgeMesh<>& mesh, const SimulationCell& cell, int numIterations, FutureInterfaceBase* progress, FloatType k_PB, FloatType lambda)

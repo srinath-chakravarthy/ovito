@@ -100,7 +100,7 @@ std::shared_ptr<AsynchronousTask> SurfaceMeshDisplay::createEngine(TimePoint tim
 		// Check if the input has changed.
 		if(_preparationCacheHelper.updateState(dataObject, cellObject->data())) {
 			// Create compute engine.
-			return std::make_shared<PrepareSurfaceEngine>(surfaceMeshObj->storage(), cellObject->data(), surfaceMeshObj->isCompletelySolid());
+			return std::make_shared<PrepareSurfaceEngine>(surfaceMeshObj->storage(), cellObject->data(), surfaceMeshObj->isCompletelySolid(), surfaceMeshObj->cuttingPlanes());
 		}
 	}
 	else {
@@ -119,13 +119,13 @@ void SurfaceMeshDisplay::PrepareSurfaceEngine::perform()
 {
 	setProgressText(tr("Preparing surface mesh for display"));
 
-	if(!buildSurfaceMesh(*_inputMesh, _simCell, _surfaceMesh, this))
+	if(!buildSurfaceMesh(*_inputMesh, _simCell, _cuttingPlanes, _surfaceMesh, this))
 		throw Exception(tr("Failed to generate non-periodic version of surface mesh for display. Simulation cell might be too small."));
 
 	if(isCanceled())
 		return;
 
-	buildCapMesh(*_inputMesh, _simCell, _isCompletelySolid, _capPolygonsMesh, this);
+	buildCapMesh(*_inputMesh, _simCell, _isCompletelySolid, _cuttingPlanes, _capPolygonsMesh, this);
 }
 
 /******************************************************************************
@@ -209,7 +209,7 @@ void SurfaceMeshDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 /******************************************************************************
 * Generates the final triangle mesh, which will be rendered.
 ******************************************************************************/
-bool SurfaceMeshDisplay::buildSurfaceMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, TriMesh& output, FutureInterfaceBase* progress)
+bool SurfaceMeshDisplay::buildSurfaceMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress)
 {
 	// Convert half-edge mesh to triangle mesh.
 	input.convertToTriMesh(output);
@@ -238,7 +238,7 @@ bool SurfaceMeshDisplay::buildSurfaceMesh(const HalfEdgeMesh<>& input, const Sim
 			OVITO_ASSERT(p[dim] >= FloatType(0) && p[dim] <= FloatType(1));
 		}
 
-		// Clip faces.
+		// Split triangle faces at periodic boundaries.
 		int oldFaceCount = output.faceCount();
 		int oldVertexCount = output.vertexCount();
 		std::vector<Point3> newVertices;
@@ -261,6 +261,14 @@ bool SurfaceMeshDisplay::buildSurfaceMesh(const HalfEdgeMesh<>& input, const Sim
 	AffineTransformation cellMatrix = cell.matrix();
 	for(Point3& p : output.vertices())
 		p = cellMatrix * p;
+
+	// Clip mesh at cutting planes.
+	for(const Plane3& plane : cuttingPlanes) {
+		if(progress && progress->isCanceled())
+			return false;
+
+		output.clipAtPlane(plane);
+	}
 
 	output.invalidateVertices();
 	output.invalidateFaces();
@@ -355,7 +363,7 @@ bool SurfaceMeshDisplay::splitFace(TriMesh& output, TriMeshFace& face, int oldVe
 /******************************************************************************
 * Generates the triangle mesh for the PBC caps.
 ******************************************************************************/
-void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool isCompletelySolid, TriMesh& output, FutureInterfaceBase* progress)
+void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool isCompletelySolid, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress)
 {
 	// Convert vertex positions to reduced coordinates.
 	std::vector<Point3> reducedPos(input.vertexCount());
@@ -499,6 +507,14 @@ void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const Simulat
 	AffineTransformation cellMatrix = cell.matrix();
 	for(Point3& p : output.vertices())
 		p = cellMatrix * p;
+
+	// Clip mesh at cutting planes.
+	for(const Plane3& plane : cuttingPlanes) {
+		if(progress && progress->isCanceled())
+			return;
+
+		output.clipAtPlane(plane);
+	}
 }
 
 /******************************************************************************

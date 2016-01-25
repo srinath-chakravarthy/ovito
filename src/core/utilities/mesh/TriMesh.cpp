@@ -233,6 +233,94 @@ void TriMesh::saveToVTK(CompressedTextWriter& stream)
 		stream << "5\n";	// Triangle
 }
 
+/******************************************************************************
+* Clips the mesh at the given plane.
+******************************************************************************/
+void TriMesh::clipAtPlane(const Plane3& plane)
+{
+	TriMesh clippedMesh;
+
+	// Clip vertices.
+	std::vector<int> existingVertexMapping(vertexCount(), -1);
+	for(int vindex = 0; vindex < vertexCount(); vindex++) {
+		if(plane.classifyPoint(vertex(vindex)) != +1) {
+			existingVertexMapping[vindex] = clippedMesh.addVertex(vertex(vindex));
+		}
+	}
+
+	// Clip edges.
+	std::map<std::pair<int,int>, int> newVertexMapping;
+	for(const TriMeshFace& face : faces()) {
+		for(int v = 0; v < 3; v++) {
+			auto vindices = std::make_pair(face.vertex(v), face.vertex((v+1)%3));
+			if(vindices.first > vindices.second) std::swap(vindices.first, vindices.second);
+			const Point3& v1 = vertex(vindices.first);
+			const Point3& v2 = vertex(vindices.second);
+			// Check if edge intersects plane.
+			FloatType z1 = plane.pointDistance(v1);
+			FloatType z2 = plane.pointDistance(v2);
+			if((z1 < FLOATTYPE_EPSILON && z2 > FLOATTYPE_EPSILON) || (z2 < FLOATTYPE_EPSILON && z1 > FLOATTYPE_EPSILON)) {
+				if(newVertexMapping.find(vindices) == newVertexMapping.end()) {
+					Point3 intersection = v1 + (v1 - v2) * (z1 / (z2 - z1));
+					newVertexMapping.insert(std::make_pair(vindices, clippedMesh.addVertex(intersection)));
+				}
+			}
+		}
+	}
+
+	// Clip faces.
+	for(const TriMeshFace& face : faces()) {
+		for(int v0 = 0; v0 < 3; v0++) {
+			Point3 current_pos = vertex(face.vertex(v0));
+			int current_classification = plane.classifyPoint(current_pos);
+			if(current_classification == -1) {
+				int newface[4];
+				int newface_vcount = 0;
+				int next_classification;
+				for(int v = v0; v < v0 + 3; v++, current_classification = next_classification) {
+					next_classification = plane.classifyPoint(vertex(face.vertex((v+1)%3)));
+					if(next_classification <= 0 && current_classification <= 0) {
+						OVITO_ASSERT(existingVertexMapping[face.vertex(v%3)] >= 0);
+						OVITO_ASSERT(newface_vcount <= 3);
+						newface[newface_vcount++] = existingVertexMapping[face.vertex(v%3)];
+					}
+					else if((current_classification == +1 && next_classification == -1) || (current_classification == -1 && next_classification == +1)) {
+						auto vindices = std::make_pair(face.vertex(v%3), face.vertex((v+1)%3));
+						if(vindices.first > vindices.second) std::swap(vindices.first, vindices.second);
+						auto ve = newVertexMapping.find(vindices);
+						OVITO_ASSERT(ve != newVertexMapping.end());
+						if(current_classification == -1) {
+							OVITO_ASSERT(newface_vcount <= 3);
+							newface[newface_vcount++] = existingVertexMapping[face.vertex(v%3)];
+						}
+						OVITO_ASSERT(newface_vcount <= 3);
+						newface[newface_vcount++] = ve->second;
+					}
+				}
+				if(newface_vcount >= 3) {
+					OVITO_ASSERT(newface[0] >= 0 && newface[0] < clippedMesh.vertexCount());
+					OVITO_ASSERT(newface[1] >= 0 && newface[1] < clippedMesh.vertexCount());
+					OVITO_ASSERT(newface[2] >= 0 && newface[2] < clippedMesh.vertexCount());
+					TriMeshFace& face1 = clippedMesh.addFace();
+					face1.setVertices(newface[0], newface[1], newface[2]);
+					face1.setSmoothingGroups(face.smoothingGroups());
+					face1.setMaterialIndex(face.materialIndex());
+					if(newface_vcount == 4) {
+						OVITO_ASSERT(newface[3] >= 0 && newface[3] < clippedMesh.vertexCount());
+						OVITO_ASSERT(newface[3] != newface[0]);
+						TriMeshFace& face2 = clippedMesh.addFace();
+						face2.setVertices(newface[0], newface[2], newface[3]);
+						face2.setSmoothingGroups(face.smoothingGroups());
+						face2.setMaterialIndex(face.materialIndex());
+					}
+				}
+				break;
+			}
+		}
+	}
+
+	this->swap(clippedMesh);
+}
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

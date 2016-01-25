@@ -576,7 +576,7 @@ BOOST_PYTHON_MODULE(Particles)
 			if(!simCellObj)
 				throw Exception("A simulation cell is required to generate non-periodic mesh for export.");
 			TriMesh output;
-			if(!SurfaceMeshDisplay::buildSurfaceMesh(*mesh.storage(), simCellObj->data(), output))
+			if(!SurfaceMeshDisplay::buildSurfaceMesh(*mesh.storage(), simCellObj->data(), mesh.cuttingPlanes(), output))
 				throw Exception("Failed to generate non-periodic mesh for export. Simulation cell might be too small.");
 			QFile file(filename);
 			CompressedTextWriter writer(file);
@@ -593,7 +593,7 @@ BOOST_PYTHON_MODULE(Particles)
 			if(!simCellObj)
 				throw Exception("A simulation cell is required to generate cap mesh for export.");
 			TriMesh output;
-			SurfaceMeshDisplay::buildCapMesh(*mesh.storage(), simCellObj->data(), mesh.isCompletelySolid(), output);
+			SurfaceMeshDisplay::buildCapMesh(*mesh.storage(), simCellObj->data(), mesh.isCompletelySolid(), mesh.cuttingPlanes(), output);
 			QFile file(filename);
 			CompressedTextWriter writer(file);
 			output.saveToVTK(writer);

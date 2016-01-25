@@ -55,6 +55,15 @@ public:
 	/// Sets whether the entire simulation cell is part of the solid region.
 	void setCompletelySolid(bool flag) { _isCompletelySolid = flag; }
 
+	/// Returns the planar cuts applied to this mesh.
+	const QVector<Plane3>& cuttingPlanes() const { return _cuttingPlanes; }
+
+	/// Sets the planar cuts applied to this mesh.
+	void setCuttingPlanes(const QVector<Plane3>& planes) {
+		_cuttingPlanes = planes;
+		notifyDependents(ReferenceEvent::TargetChanged);
+	}
+
 	/// Fairs the triangle mesh stored in this object.
 	void smoothMesh(const SimulationCell& cell, int numIterations, FutureInterfaceBase* progress = nullptr, FloatType k_PB = 0.1f, FloatType lambda = 0.5f) {
 		smoothMesh(*modifiableStorage(), cell, numIterations, progress, k_PB, lambda);
@@ -69,10 +78,16 @@ protected:
 	/// Performs one iteration of the smoothing algorithm.
 	static void smoothMeshIteration(HalfEdgeMesh<>& mesh, FloatType prefactor, const SimulationCell& cell);
 
+	/// Creates a copy of this object.
+	virtual OORef<RefTarget> clone(bool deepCopy, CloneHelper& cloneHelper) override;
+
 private:
 
 	/// Indicates that the entire simulation cell is part of the solid region.
 	PropertyField<bool> _isCompletelySolid;
+
+	/// The planar cuts applied to this mesh.
+	QVector<Plane3> _cuttingPlanes;
 
 	Q_OBJECT
 	OVITO_OBJECT

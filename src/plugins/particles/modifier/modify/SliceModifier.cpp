@@ -35,6 +35,7 @@
 #include <core/gui/properties/BooleanParameterUI.h>
 #include <core/rendering/viewport/ViewportSceneRenderer.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
+#include <plugins/particles/objects/SurfaceMesh.h>
 #include "SliceModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
@@ -143,6 +144,32 @@ PipelineStatus SliceModifier::modifyParticles(TimePoint time, TimeInterval& vali
 			s = mask.test(i++);
 		selProperty->changed();
 	}
+
+	// Also slice surface meshes.
+	if(createSelection() == false) {
+		for(DataObject* obj : input().objects()) {
+			if(SurfaceMesh* inputMesh = dynamic_object_cast<SurfaceMesh>(obj)) {
+
+				FloatType sliceWidth = 0;
+				if(_widthCtrl) sliceWidth = _widthCtrl->getFloatValue(time, validityInterval);
+				sliceWidth *= 0.5;
+
+				OORef<SurfaceMesh> outputMesh = cloneHelper()->cloneObject(inputMesh, false);
+				QVector<Plane3> planes = inputMesh->cuttingPlanes();
+				Plane3 plane = slicingPlane(time, validityInterval);
+				if(sliceWidth <= 0) {
+					planes.push_back(plane);
+				}
+				else {
+					planes.push_back(Plane3(plane.normal, plane.dist + sliceWidth));
+					planes.push_back(Plane3(-plane.normal, -plane.dist + sliceWidth));
+				}
+				outputMesh->setCuttingPlanes(planes);
+				output().replaceObject(inputMesh, outputMesh);
+			}
+		}
+	}
+
 	return PipelineStatus(PipelineStatus::Success, statusMessage);
 }
 

@@ -87,10 +87,10 @@ public:
 	void setCapTransparency(FloatType transparency) { if(_capTransparency) _capTransparency->setCurrentFloatValue(transparency); }
 
 	/// Generates the final triangle mesh, which will be rendered.
-	static bool buildSurfaceMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, TriMesh& output, FutureInterfaceBase* progress = nullptr);
+	static bool buildSurfaceMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress = nullptr);
 
 	/// Generates the triangle mesh for the PBC cap.
-	static void buildCapMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool isCompletelySolid, TriMesh& output, FutureInterfaceBase* progress = nullptr);
+	static void buildCapMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool isCompletelySolid, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress = nullptr);
 
 protected:
 
@@ -106,8 +106,8 @@ protected:
 	public:
 
 		/// Constructor.
-		PrepareSurfaceEngine(HalfEdgeMesh<>* mesh, const SimulationCell& simCell, bool isCompletelySolid) :
-			_inputMesh(mesh), _simCell(simCell), _isCompletelySolid(isCompletelySolid) {}
+		PrepareSurfaceEngine(HalfEdgeMesh<>* mesh, const SimulationCell& simCell, bool isCompletelySolid, const QVector<Plane3>& cuttingPlanes) :
+			_inputMesh(mesh), _simCell(simCell), _isCompletelySolid(isCompletelySolid), _cuttingPlanes(cuttingPlanes) {}
 
 		/// Computes the results and stores them in this object for later retrieval.
 		virtual void perform() override;
@@ -120,6 +120,7 @@ protected:
 		QExplicitlySharedDataPointer<HalfEdgeMesh<>> _inputMesh;
 		SimulationCell _simCell;
 		bool _isCompletelySolid;
+		QVector<Plane3> _cuttingPlanes;
 		TriMesh _surfaceMesh;
 		TriMesh _capPolygonsMesh;
 	};

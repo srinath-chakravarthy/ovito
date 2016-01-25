@@ -150,6 +150,17 @@ public:
 	/// \brief Resets the mesh to the empty state.
 	void clear();
 
+	/// Swaps the contents of this mesh with another mesh.
+	void swap(TriMesh& other) {
+		_vertices.swap(other._vertices);
+		_faces.swap(other._faces);
+		std::swap(_boundingBox, other._boundingBox);
+		std::swap(_hasVertexColors, other._hasVertexColors);
+		_vertexColors.swap(other._vertexColors);
+		std::swap(_hasFaceColors, other._hasFaceColors);
+		_faceColors.swap(other._faceColors);
+	}
+
 	/// \brief Returns the bounding box of the mesh.
 	/// \return The bounding box of the mesh.
 	///
@@ -421,6 +432,11 @@ public:
 
 	/// \brief Exports the triangle mesh to a VTK file.
 	void saveToVTK(CompressedTextWriter& stream);
+
+	/************************************* Clipping *************************************/
+
+	/// Clips the mesh at the given plane.
+	void clipAtPlane(const Plane3& plane);
 
 private:
 
