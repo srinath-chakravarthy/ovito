@@ -69,7 +69,7 @@ public:
 		SpinProperty = 30,
 		CentroSymmetryProperty = 31,
 		VelocityMagnitudeProperty = 32,
-        // 33,
+        // 33 (removed),
 		MoleculeProperty = 34,
 		AsphericalShapeProperty = 35,
 		VectorColorProperty = 36

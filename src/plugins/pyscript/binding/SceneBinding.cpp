@@ -193,6 +193,29 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 				"The method will do nothing if the data object to be replaced is not part of the collection. ",
 				(arg("old_obj"), arg("new_obj")))
 		.def("setDataObjects", &CompoundObject::setDataObjects)
+		.add_property("attributes", static_cast<dict (*)(CompoundObject&)>([](CompoundObject& obj) {
+				dict a;
+				for(auto entry = obj.attributes().constBegin(); entry != obj.attributes().constEnd(); ++entry) {
+					switch(entry.value().type()) {
+						case QMetaType::Bool: a[entry.key()] = entry.value().toBool(); break;
+						case QMetaType::Int: a[entry.key()] = entry.value().toInt(); break;
+						case QMetaType::UInt: a[entry.key()] = entry.value().toUInt(); break;
+						case QMetaType::Double: a[entry.key()] = entry.value().toDouble(); break;
+						case QMetaType::Float: a[entry.key()] = entry.value().toFloat(); break;
+						case QMetaType::QString: a[entry.key()] = entry.value().toString(); break;
+					}
+				}
+				return a;
+			}),
+			"Returns a dictionary object containing additional metadata, which describes the contents of the :py:class:`!DataCollection`. "
+			"\n\n"
+			"If the particle dataset has been loaded from a LAMMPS dump file, for example, which contains the simulation timestep number, this "
+			"timestep information can be retrieved from the attributes dictionary as follows::"
+			"\n\n"
+			"   >>> data_collection = ovito.dataset.selected_node.compute()\n"
+			"   >>> data_collection.attributes['Timestep']\n"
+			"   140000\n"
+			"\n")
 	;
 
 	ovito_abstract_class<Modifier, RefTarget>(
