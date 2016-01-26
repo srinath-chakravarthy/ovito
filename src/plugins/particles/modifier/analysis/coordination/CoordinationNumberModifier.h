@@ -53,6 +53,12 @@ public:
 	/// Returns the Y coordinates of the RDF data points.
 	const QVector<double>& rdfY() const { return _rdfY; }
 
+	/// Returns the number of bins in the computed RDF histogram.
+	int numberOfBins() const { return _numberOfBins; }
+
+	/// Sets the number of bins in the computed RDF histogram.
+	void setNumberOfBins(int n) { _numberOfBins = n; }
+
 private:
 
 	/// Computes the modifier's results.
@@ -116,6 +122,9 @@ private:
 	/// Controls the cutoff radius for the neighbor lists.
 	PropertyField<FloatType> _cutoff;
 
+	/// Controls the number of RDF histogram bins.
+	PropertyField<FloatType> _numberOfBins;
+
 	/// The X coordinates of the RDF data points.
 	QVector<double> _rdfX;
 
@@ -129,6 +138,7 @@ private:
 	Q_CLASSINFO("ModifierCategory", "Analysis");
 
 	DECLARE_PROPERTY_FIELD(_cutoff);
+	DECLARE_PROPERTY_FIELD(_numberOfBins);
 };
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)

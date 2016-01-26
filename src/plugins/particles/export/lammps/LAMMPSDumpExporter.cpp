@@ -181,11 +181,11 @@ bool LAMMPSDumpExporter::exportParticles(const PipelineFlowState& state, int fra
 	textStream() << '\n';
 
 	OutputColumnWriter columnWriter(mapping, state);
-	progress->setMaximum(100);
+	if(progress) progress->setMaximum(100);
 	for(size_t i = 0; i < atomsCount; i++) {
 		columnWriter.writeParticle(i, textStream());
 
-		if((i % 4096) == 0) {
+		if(progress && (i % 4096) == 0) {
 			progress->setValue((quint64)i * 100 / atomsCount);
 			if(progress->wasCanceled())
 				return false;

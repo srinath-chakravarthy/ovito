@@ -103,7 +103,7 @@ bool POSCARExporter::exportParticles(const PipelineFlowState& state, int frameNu
 	size_t totalProgressCount = posProperty->size();
 	if(velocityProperty) totalProgressCount += posProperty->size();
 	size_t currentProgress = 0;
-	progress->setMaximum(100);
+	if(progress) progress->setMaximum(100);
 
 	// Write atomic positions.
 	textStream() << "Cartesian\n";
@@ -116,7 +116,7 @@ bool POSCARExporter::exportParticles(const PipelineFlowState& state, int frameNu
 			textStream() << (p->x() - origin.x()) << ' ' << (p->y() - origin.y()) << ' ' << (p->z() - origin.z()) << '\n';
 			currentProgress++;
 
-			if((currentProgress % 1000) == 0) {
+			if(progress && (currentProgress % 1000) == 0) {
 				progress->setValue(currentProgress * 100 / totalProgressCount);
 				if(progress->wasCanceled())
 					return false;
@@ -136,7 +136,7 @@ bool POSCARExporter::exportParticles(const PipelineFlowState& state, int frameNu
 				textStream() << v->x() << ' ' << v->y() << ' ' << v->z() << '\n';
 				currentProgress++;
 
-				if((currentProgress % 1000) == 0) {
+				if(progress && (currentProgress % 1000) == 0) {
 					progress->setValue(currentProgress * 100 / totalProgressCount);
 					if(progress->wasCanceled())
 						return false;

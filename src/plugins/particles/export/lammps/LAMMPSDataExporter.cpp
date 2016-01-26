@@ -177,7 +177,7 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 	// Write atoms.
 	textStream() << "Atoms\n\n";
 
-	progress->setMaximum(100);
+	if(progress) progress->setMaximum(100);
 	for(size_t i = 0; i < posProperty->size(); i++) {
 		textStream() << (identifierProperty ? identifierProperty->getInt(i) : (i+1));
 		if(atomStyle() == LAMMPSDataImporter::AtomStyle_Bond || atomStyle() == LAMMPSDataImporter::AtomStyle_Molecular || atomStyle() == LAMMPSDataImporter::AtomStyle_Full || atomStyle() == LAMMPSDataImporter::AtomStyle_Angle) {
@@ -208,7 +208,7 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 		textStream() << '\n';
 
 		currentProgress++;
-		if((currentProgress % 4096) == 0) {
+		if(progress && (currentProgress % 4096) == 0) {
 			progress->setValue(currentProgress * 100 / totalProgressCount);
 			if(progress->wasCanceled())
 				return false;
@@ -232,7 +232,7 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 			textStream() << '\n';
 
 			currentProgress++;
-			if((currentProgress % 4096) == 0) {
+			if(progress && (currentProgress % 4096) == 0) {
 				progress->setValue(currentProgress * 100 / totalProgressCount);
 				if(progress->wasCanceled())
 					return false;
@@ -258,7 +258,7 @@ bool LAMMPSDataExporter::exportParticles(const PipelineFlowState& state, int fra
 			textStream() << '\n';
 
 			currentProgress++;
-			if((currentProgress % 4096) == 0) {
+			if(progress && (currentProgress % 4096) == 0) {
 				progress->setValue(currentProgress * 100 / totalProgressCount);
 				if(progress->wasCanceled())
 					return false;

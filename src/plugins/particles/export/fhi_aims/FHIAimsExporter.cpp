@@ -66,7 +66,7 @@ bool FHIAimsExporter::exportParticles(const PipelineFlowState& state, int frameN
 	}
 
 	// Output atoms.
-	progress->setMaximum(100);
+	if(progress) progress->setMaximum(100);
 	for(size_t i = 0; i < posProperty->size(); i++) {
 		const Point3& p = posProperty->getPoint3(i);
 		const ParticleType* type = particleTypeProperty->particleType(particleTypeProperty->getInt(i));
@@ -80,7 +80,7 @@ bool FHIAimsExporter::exportParticles(const PipelineFlowState& state, int frameN
 			textStream() << ' ' << particleTypeProperty->getInt(i) << '\n';
 		}
 
-		if((i % 1000) == 0) {
+		if(progress && (i % 1000) == 0) {
 			progress->setValue((qint64)i * 100 / posProperty->size());
 			if(progress->wasCanceled())
 				return false;

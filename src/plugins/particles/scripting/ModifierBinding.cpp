@@ -798,11 +798,18 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Computes coordination numbers of particles and the radial distribution function (RDF) of the system."
 			"\n\n"
-			"The modifier stores the computed coordination numbers in the ``\"Coordination\"`` particle property.")
+			"The modifier stores the computed coordination numbers in the ``\"Coordination\"`` particle property."
+			"\n\n"
+			"Example showing how to export the RDF data to a text file:\n\n"
+			".. literalinclude:: ../example_snippets/coordination_analysis_modifier.py")
 		.add_property("cutoff", &CoordinationNumberModifier::cutoff, &CoordinationNumberModifier::setCutoff,
 				"The neighbor cutoff distance."
 				"\n\n"
 				":Default: 3.2\n")
+		.add_property("number_of_bins", &CoordinationNumberModifier::numberOfBins, &CoordinationNumberModifier::setNumberOfBins,
+				"The number of histogram bins to use when computing the RDF."
+				"\n\n"
+				":Default: 500\n")
 		.add_property("rdf_x", make_function(&CoordinationNumberModifier::rdfX, return_internal_reference<>()))
 		.add_property("rdf_y", make_function(&CoordinationNumberModifier::rdfY, return_internal_reference<>()))
 	;

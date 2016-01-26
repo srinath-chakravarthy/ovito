@@ -11,7 +11,9 @@ node.modifiers.append(modifier)
 print("Parameter defaults:")
 
 print("  cutoff: {}".format(modifier.cutoff))
+print("  number_of_bins: {}".format(modifier.number_of_bins))
 modifier.cutoff = 3.0
+modifier.number_of_bins = 400
 
 node.compute()
 

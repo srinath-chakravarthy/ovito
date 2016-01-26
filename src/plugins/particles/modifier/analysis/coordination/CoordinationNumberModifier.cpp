@@ -23,6 +23,7 @@
 #include <core/scene/objects/DataObject.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/gui/mainwin/MainWindow.h>
+#include <core/gui/properties/IntegerParameterUI.h>
 #include <qcustomplot.h>
 #include "CoordinationNumberModifier.h"
 
@@ -31,8 +32,10 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, CoordinationNumberModifier, AsynchronousParticleModifier);
 SET_OVITO_OBJECT_EDITOR(CoordinationNumberModifier, CoordinationNumberModifierEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(CoordinationNumberModifier, _cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CoordinationNumberModifier, _numberOfBins, "NumberOfBins", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(CoordinationNumberModifier, _cutoff, "Cutoff radius");
 SET_PROPERTY_FIELD_UNITS(CoordinationNumberModifier, _cutoff, WorldParameterUnit);
+SET_PROPERTY_FIELD_LABEL(CoordinationNumberModifier, _numberOfBins, "Number of histogram bins");
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 	IMPLEMENT_OVITO_OBJECT(Particles, CoordinationNumberModifierEditor, ParticleModifierEditor);
@@ -42,9 +45,10 @@ OVITO_END_INLINE_NAMESPACE
 * Constructs the modifier object.
 ******************************************************************************/
 CoordinationNumberModifier::CoordinationNumberModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
-	_cutoff(3.2)
+	_cutoff(3.2), _numberOfBins(500)
 {
 	INIT_PROPERTY_FIELD(CoordinationNumberModifier::_cutoff);
+	INIT_PROPERTY_FIELD(CoordinationNumberModifier::_numberOfBins);
 }
 
 /******************************************************************************
@@ -59,7 +63,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CoordinationNumberM
 	SimulationCellObject* inputCell = expectSimulationCell();
 
 	// The number of sampling intervals for the radial distribution function.
-	int rdfSampleCount = 500;
+	int rdfSampleCount = std::max(numberOfBins(), 4);
 
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<CoordinationAnalysisEngine>(validityInterval, posProperty->storage(), inputCell->data(), cutoff(), rdfSampleCount);
@@ -89,21 +93,22 @@ void CoordinationNumberModifier::CoordinationAnalysisEngine::perform()
 	size_t endIndex = chunkSize;
 	std::mutex mutex;
 	for(int t = 0; t < num_threads; t++) {
-		if(t == num_threads - 1)
+		if(t == num_threads - 1) {
 			endIndex += particleCount % num_threads;
+		}
 		workers.push_back(std::thread([&neighborListBuilder, startIndex, endIndex, &mutex, this]() {
-			int* coordOutput = _coordinationNumbers->dataInt();
 			FloatType rdfBinSize = (_cutoff + FLOATTYPE_EPSILON) / _rdfHistogram.size();
-			std::vector<size_t> threadLocalRDF(_rdfHistogram.size(), 0);
-			for(size_t i = startIndex; i < endIndex;) {
+			std::vector<double> threadLocalRDF(_rdfHistogram.size(), 0);
+			int* coordOutput = _coordinationNumbers->dataInt() + startIndex;
+			for(size_t i = startIndex; i < endIndex; ++coordOutput) {
 
-				int coordNumber = 0;
+				*coordOutput = 0;
 				for(CutoffNeighborFinder::Query neighQuery(neighborListBuilder, i); !neighQuery.atEnd(); neighQuery.next()) {
-					coordNumber++;
+					(*coordOutput)++;
 					size_t rdfInterval = (size_t)(sqrt(neighQuery.distanceSquared()) / rdfBinSize);
+					OVITO_ASSERT(rdfInterval < threadLocalRDF.size());
 					threadLocalRDF[rdfInterval]++;
 				}
-				coordOutput[i] = coordNumber;
 
 				i++;
 
@@ -172,7 +177,8 @@ void CoordinationNumberModifier::propertyChanged(const PropertyFieldDescriptor& 
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Recompute modifier results when the parameters have been changed.
-	if(field == PROPERTY_FIELD(CoordinationNumberModifier::_cutoff))
+	if(field == PROPERTY_FIELD(CoordinationNumberModifier::_cutoff) ||
+			field == PROPERTY_FIELD(CoordinationNumberModifier::_numberOfBins))
 		invalidateCachedResults();
 }
 
@@ -201,6 +207,12 @@ void CoordinationNumberModifierEditor::createUI(const RolloutInsertionParameters
 	gridlayout->addLayout(cutoffRadiusPUI->createFieldLayout(), 0, 1);
 	cutoffRadiusPUI->setMinValue(0);
 
+	// Number of bins parameter.
+	IntegerParameterUI* numBinsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(CoordinationNumberModifier::_numberOfBins));
+	gridlayout->addWidget(numBinsPUI->label(), 1, 0);
+	gridlayout->addLayout(numBinsPUI->createFieldLayout(), 1, 1);
+	numBinsPUI->setMinValue(4);
+
 	layout->addLayout(gridlayout);
 
 	_rdfPlot = new QCustomPlot();
@@ -213,7 +225,7 @@ void CoordinationNumberModifierEditor::createUI(const RolloutInsertionParameters
 	layout->addWidget(_rdfPlot);
 	connect(this, &CoordinationNumberModifierEditor::contentsReplaced, this, &CoordinationNumberModifierEditor::plotRDF);
 
-	QPushButton* saveDataButton = new QPushButton(tr("Export data to file"));
+	QPushButton* saveDataButton = new QPushButton(tr("Export data to text file"));
 	layout->addWidget(saveDataButton);
 	connect(saveDataButton, &QPushButton::clicked, this, &CoordinationNumberModifierEditor::onSaveData);
 

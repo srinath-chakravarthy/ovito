@@ -183,12 +183,12 @@ bool IMDExporter::exportParticles(const PipelineFlowState& state, int frameNumbe
 	textStream() << "## IMD file written by " << QCoreApplication::applicationName() << "\n";
 	textStream() << "#E\n";
 
-	progress->setMaximum(100);
+	if(progress) progress->setMaximum(100);
 	OutputColumnWriter columnWriter(colMapping, state);
 	for(size_t i = 0; i < atomsCount; i++) {
 		columnWriter.writeParticle(i, textStream());
 
-		if((i % 4096) == 0) {
+		if(progress && (i % 4096) == 0) {
 			progress->setValue((quint64)i * 100 / atomsCount);
 			if(progress->wasCanceled())
 				return false;
