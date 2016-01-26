@@ -324,7 +324,7 @@ void LAMMPSBinaryDumpImporter::LAMMPSBinaryDumpImportTask::parseFile(CompressedT
 	LAMMPSBinaryDumpHeader header;
 	if(!header.parse(file))
 		throw Exception(tr("Failed to read binary LAMMPS dump file: Invalid file header."));
-	setTimestep(header.ntimestep);
+	attributes().insert(QStringLiteral("Timestep"), QVariant::fromValue(header.ntimestep));
 
 	if(_parseFileHeaderOnly) {
 		_columnMapping.resize(header.size_one);

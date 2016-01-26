@@ -222,11 +222,8 @@ void ParticleFrameLoader::handOver(CompoundObject* container)
 		}
 	}
 
-	// Pass timestep number to modification pipeline system.
-	if(hasTimestep())
-		container->setAttributes({{ QStringLiteral("Timestep"), QVariant::fromValue(timestep()) }});
-	else
-		container->clearAttributes();
+	// Pass timestep information and other metadata to modification pipeline.
+	container->setAttributes(attributes());
 
 	container->removeInactiveObjects(activeObjects);
 }

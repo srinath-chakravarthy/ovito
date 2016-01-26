@@ -215,7 +215,8 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 			"   >>> data_collection = ovito.dataset.selected_node.compute()\n"
 			"   >>> data_collection.attributes['Timestep']\n"
 			"   140000\n"
-			"\n")
+			"\n\n"
+			"For *extended XYZ* files, the attributes dictionary contains all key/value pairs found in the comment line of the input file.\n")
 	;
 
 	ovito_abstract_class<Modifier, RefTarget>(

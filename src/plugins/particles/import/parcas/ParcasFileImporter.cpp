@@ -192,6 +192,9 @@ void ParcasFileImporter::ParcasFileImportTask::parseFile(CompressedTextReader& t
     if(natoms > std::numeric_limits<int>::max())
     	throw Exception(tr("PARCAS file parsing error: File contains %1 atoms. OVITO can handle only %2 atoms.").arg(natoms).arg(std::numeric_limits<int>::max()));
 
+	attributes().insert(QStringLiteral("Timestep"), QVariant::fromValue((int)frame_num));
+	attributes().insert(QStringLiteral("Time"), QVariant::fromValue(simu_time));
+
 	// Create particle properties for extra fields.
 	QVector<ParticleProperty*> properties;
     for(int i = 0; i < fields; i++) {
@@ -299,7 +302,6 @@ void ParcasFileImporter::ParcasFileImportTask::parseFile(CompressedTextReader& t
 		if(!setProgressValueIntermittent(i)) return;
 	}
 
-	setTimestep(frame_num);
 	setStatus(tr("%1 atoms at simulation time %2").arg(numAtoms).arg(simu_time));
 }
 

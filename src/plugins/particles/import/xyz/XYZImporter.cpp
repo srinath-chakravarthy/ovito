@@ -327,7 +327,8 @@ void XYZImporter::XYZImportTask::parseFile(CompressedTextReader& stream)
 			}
 		}
 	}
-	if((index = commentLine.toLower().indexOf("lattice=\"")) >= 0) {
+
+	if((index = commentLine.indexOf(QStringLiteral("Lattice=\""), 0, Qt::CaseInsensitive)) >= 0) {
 		// Extended XYZ format: Lattice="R11 R21 R31 R12 R22 R32 R13 R23 R33"
 		// See http://jrkermode.co.uk/quippy/io.html#extendedxyz for details
 
@@ -350,8 +351,57 @@ void XYZImporter::XYZImportTask::parseFile(CompressedTextReader& stream)
 			for(int k = 0; k < list.size() && k < 3; k++)
 				cellOrigin[k] = (FloatType)list[k].toDouble();
 		}
+
+		// Parse other key/value pairs from the extended XYZ comment line.
+		int key_start = 0;
+		for(;;) {
+			while(key_start < commentLine.size() && commentLine[key_start].isSpace())
+				key_start++;
+			if(key_start >= commentLine.size())
+				break;
+			int key_end = key_start + 1;
+			while(key_end < commentLine.size() && commentLine[key_end] != QChar('='))
+				key_end++;
+			if(key_end >= commentLine.size() - 1)
+				break;
+
+			int value_start = key_end + 1;
+			bool isQuoted = false;
+			if(commentLine[value_start] == QChar('\"')) {
+				value_start++;
+				isQuoted = true;
+			}
+			int value_end = value_start;
+			while(value_end < commentLine.size() && ((isQuoted && commentLine[value_end] != QChar('\"')) || (!isQuoted && !commentLine[value_end].isSpace())))
+				value_end++;
+			if(value_end > value_start) {
+				QString key = commentLine.mid(key_start, key_end - key_start);
+				QString value = commentLine.mid(value_start, value_end - value_start);
+				if(key != QStringLiteral("Lattice") && key != QStringLiteral("Properties")) {
+					bool ok;
+					int intValue = value.toInt(&ok);
+					if(ok)
+						attributes().insert(key, QVariant::fromValue(intValue));
+					else {
+						double doubleValue = value.toDouble(&ok);
+						if(ok)
+							attributes().insert(key, QVariant::fromValue(doubleValue));
+						else
+							attributes().insert(key, QVariant::fromValue(value));
+					}
+				}
+			}
+			key_start = value_end + 1;
+			if(isQuoted) key_start++;
+		}
 	}
 	else {
+
+		// Make comment line string available to Python scripts.
+		QString trimmedComment = commentLine.trimmed();
+		if(!trimmedComment.isEmpty())
+			attributes().insert(QStringLiteral("Comment"), QVariant::fromValue(trimmedComment));
+
 		// XYZ file written by Parcas MD code contain simulation cell info in comment line.
 
 		if((index = commentLine.indexOf("cell_orig ")) >= 0) {
@@ -384,7 +434,8 @@ void XYZImporter::XYZImportTask::parseFile(CompressedTextReader& stream)
 	if((index = commentLine.indexOf("pbc ")) >= 0) {
 		QStringList list = commentLine.mid(index + 4).split(ws_re);
 		simulationCell().setPbcFlags((bool)list[0].toInt(), (bool)list[1].toInt(), (bool)list[2].toInt());
-	} else if ((index = commentLine.indexOf("pbc=\"")) >= 0) {
+	}
+	else if ((index = commentLine.indexOf("pbc=\"")) >= 0) {
 		// Look for Extended XYZ PBC keyword
 		QString pbcStr = commentLine.mid(index + 5);
 		pbcStr.truncate(pbcStr.indexOf("\""));
@@ -395,8 +446,10 @@ void XYZImporter::XYZImportTask::parseFile(CompressedTextReader& stream)
 			parseBool(ba.data(), pbcFlags[i]);
 		}
 		simulationCell().setPbcFlags(pbcFlags[0], pbcFlags[1], pbcFlags[2]);
-	} else if (hasSimulationCell)
+	}
+	else if (hasSimulationCell) {
 		simulationCell().setPbcFlags(true, true, true);
+	}
 
 	if(_parseFileHeaderOnly) {
 		// Read first atoms line and count number of data columns.
@@ -415,7 +468,7 @@ void XYZImporter::XYZImportTask::parseFile(CompressedTextReader& stream)
 		// format is described at http://jrkermode.co.uk/quippy/io.html#extendedxyz
 		// example: Properties=species:S:1:pos:R:3 for atomic species (1 column, string property)
 		// and atomic positions (3 columns, real property)
-		if((index = commentLine.toLower().indexOf("properties=")) >= 0) {
+		if((index = commentLine.indexOf(QStringLiteral("properties="), 0, Qt::CaseInsensitive)) >= 0) {
 			QString propertiesStr = commentLine.mid(index + 11);
 			propertiesStr = propertiesStr.left(propertiesStr.indexOf(ws_re));
 			QStringList fields = propertiesStr.split(":");

@@ -91,6 +91,9 @@ void POSCARImporter::POSCARImportTask::parseFile(CompressedTextReader& stream)
 
 	// Read comment line.
 	stream.readLine();
+	QString trimmedComment = stream.lineString().trimmed();
+	if(!trimmedComment.isEmpty())
+		attributes().insert(QStringLiteral("Comment"), QVariant::fromValue(trimmedComment));
 
 	// Read global scaling factor
 	FloatType scaling_factor = 0;

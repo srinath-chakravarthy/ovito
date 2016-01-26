@@ -62,7 +62,6 @@ public:
 	/// Constructor.
 	ParticleFrameLoader(DataSetContainer* container, const FileSourceImporter::Frame& frame, bool isNewFile)
 		: FileSourceImporter::FrameLoader(container, frame),
-		  _timestep(-1),
 		  _isNewFile(isNewFile) {}
 
 	/// Loads the requested frame data from the external file.
@@ -240,14 +239,8 @@ public:
 	/// Returns the list of bond types.
 	const std::vector<BondTypeDefinition>& bondTypes() const { return _bondTypes; }
 
-	/// Returns the simulation timestep number, or -1 if undefined.
-	int timestep() const { return _timestep; }
-
-	/// Sets the simulation timestep number.
-	void setTimestep(int timestep) { _timestep = timestep; }
-
-	/// Returns true if the loaded file format contained information on the simulation timestep.
-	bool hasTimestep() const { return _timestep != -1; }
+	/// Returns the metadata read from the file header.
+	QVariantMap& attributes() { return _attributes; }
 
 	/// Sets the bonds between particles.
 	void setBonds(BondsStorage* bonds) { _bonds.reset(bonds); }
@@ -286,8 +279,8 @@ private:
 	/// The list of bond types.
 	std::vector<BondTypeDefinition> _bondTypes;
 
-	/// The simulation timestep number.
-	int _timestep;
+	/// The metadata read from the file header.
+	QVariantMap _attributes;
 
 	/// Flag indicating that the file currently being loaded has been newly selected by the user.
 	/// If not, then the file being loaded is just another frame from the existing sequence.
