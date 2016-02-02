@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section version="5.0"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd"
+         xml:id="modifier_presets" xmlns="http://docbook.org/ns/docbook"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:ns="http://docbook.org/ns/docbook">
+  <title>Modifier presets</title>
+
+  <para>
+  
+    <informalfigure><screenshot><mediaobject><imageobject>
+       <imagedata fileref="images/modifiers/save_modifier_preset_toolbutton.png" format="PNG" />
+    </imageobject></mediaobject></screenshot></informalfigure>
+    <informalfigure><screenshot><mediaobject><imageobject>
+       <imagedata fileref="images/modifiers/modifier_preset_dialog.png" format="PNG"  scale="60" />
+    </imageobject></mediaobject></screenshot></informalfigure>
+  
+  When you newly insert a modifier into the <link linkend="usage.modification_pipeline">modification pipeline</link>
+  its parameters are initialized with the built-in defaults or most recent settings.  
+  This may make it necessary for you to adjust parameters over and over again if you use a certain modifier on a regular basis.
+  </para>
+  
+  <para>
+  To avoid this, OVITO provides the option to save the parameters of a modifier (or combinations of modifiers) as named presets for future use.
+  Modifier presets are preserved across program sessions and allow you to quickly access often-used modifier
+  settings or combinations of modifiers (e.g. to first select a subset of particles and then delete them).
+  </para>
+  
+  <para>
+  The "Save modifier preset" tool button, which is indicated in the screenshot, lets you define a new modifier preset
+  based on one or more modifiers already in the current pipeline. The current parameter values and settings of the
+  selected modifiers will be saved under a user-defined preset name. The preset will then appear in the available modifier list, 
+  following the standard modifiers of OVITO. From here you can quickly insert the customized modifier(s) into the pipeline in the future.
+  </para>
+  
+</section>

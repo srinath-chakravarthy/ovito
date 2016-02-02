@@ -212,6 +212,10 @@ void WignerSeitzAnalysisModifier::WignerSeitzAnalysisEngine::perform()
 	if(refPositions()->size() == 0)
 		throw Exception(tr("Reference configuration for WS analysis contains no sites."));
 
+	// PBCs flags of the current configuration always override PBCs flags
+	// of the reference config.
+	_simCellRef.setPbcFlags(_simCell.pbcFlags());
+
 	// Prepare the closest-point query structure.
 	NearestNeighborFinder neighborTree(0);
 	if(!neighborTree.prepare(refPositions(), refCell(), nullptr, this))
@@ -250,8 +254,7 @@ void WignerSeitzAnalysisModifier::WignerSeitzAnalysisEngine::perform()
 	setProgressRange(particleCount);
 	for(const Point3& p : positions()->constPoint3Range()) {
 
-		Point3 p2 = _eliminateCellDeformation ? (tm * p) : p;
-		int closestIndex = neighborTree.findClosestParticle(p2, closestDistanceSq);
+		int closestIndex = neighborTree.findClosestParticle(_eliminateCellDeformation ? (tm * p) : p, closestDistanceSq);
 		OVITO_ASSERT(closestIndex >= 0 && closestIndex < occupancyNumbers()->size());
 		if(ncomponents == 1) {
 			occupancyNumbers()->dataInt()[closestIndex]++;

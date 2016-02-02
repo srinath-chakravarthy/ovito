@@ -24,6 +24,8 @@
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/UndoStack.h>
 #include <core/gui/properties/StringParameterUI.h>
+#include <core/gui/mainwin/MainWindow.h>
+#include <core/gui/actions/ActionManager.h>
 #include <core/utilities/concurrent/TaskManager.h>
 #include "PythonScriptModifier.h"
 
@@ -457,14 +459,23 @@ void PythonScriptModifierEditor::createUI(const RolloutInsertionParameters& roll
 	layout->setSpacing(4);
 	int row = 0;
 
+	QHBoxLayout* sublayout = new QHBoxLayout();
+	sublayout->setContentsMargins(0,0,0,0);
+	sublayout->setSpacing(10);
+
 	StringParameterUI* namePUI = new StringParameterUI(this, PROPERTY_FIELD(Modifier::_title));
 	layout->addWidget(new QLabel(tr("User-defined modifier name:")), row++, 0);
 	static_cast<QLineEdit*>(namePUI->textBox())->setPlaceholderText(PythonScriptModifier::OOType.displayName());
-	layout->addWidget(namePUI->textBox(), row++, 0);
+	sublayout->addWidget(namePUI->textBox(), 1);
+	layout->addLayout(sublayout, row++, 0);
+
+	QToolButton* savePresetButton = new QToolButton();
+	savePresetButton->setDefaultAction(mainWindow()->actionManager()->getAction(ACTION_MODIFIER_CREATE_PRESET));
+	sublayout->addWidget(savePresetButton);
 
 	QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
 
-	layout->addWidget(new QLabel(tr("Python script:")), row++, 0);
+	layout->addWidget(new QLabel(tr("Python code:")), row++, 0);
 	_codeEditor = new QsciScintilla();
 	_codeEditor->setEnabled(false);
 	_codeEditor->setAutoIndent(true);

@@ -154,6 +154,18 @@ public:
 	/// Returns the cell origin.
 	const Point3& origin() const { return _cellOrigin; }
 
+	/// Sets the first cell edge vector.
+	void setEdgeVector1(const Vector3& v) { _cellVector1 = v; }
+
+	/// Sets the second cell edge vector.
+	void setEdgeVector2(const Vector3& v) { _cellVector2 = v; }
+
+	/// Sets the third cell edge vector.
+	void setEdgeVector3(const Vector3& v) { _cellVector3 = v; }
+
+	/// Sets the cell origin.
+	void setOrigin(const Point3& origin) { _cellOrigin = origin; }
+
 	/// Computes the (positive) volume of the cell.
 	FloatType volume() const {
 		return std::abs(edgeVector1().dot(edgeVector2().cross(edgeVector3())));

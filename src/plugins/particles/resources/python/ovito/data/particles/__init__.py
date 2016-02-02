@@ -315,7 +315,7 @@ Particles.Bonds.add_full = _Bonds_add_full
 
 # Implement 'pbc' property of SimulationCell class.
 def _get_SimulationCell_pbc(self):
-    """ A tuple containing three boolean values, which specify periodic boundary flags of the simulation cell in each of the spatial directions. """
+    """ A tuple with three boolean values, which specify periodic boundary flags of the simulation cell along each cell vector. """
     return (self.pbc_x, self.pbc_y, self.pbc_z)
 def _set_SimulationCell_pbc(self, flags):
     assert(len(flags) == 3) # Expected tuple with three Boolean flags.
@@ -323,6 +323,22 @@ def _set_SimulationCell_pbc(self, flags):
     self.pbc_y = flags[1]
     self.pbc_z = flags[2]
 Particles.SimulationCell.pbc = property(_get_SimulationCell_pbc, _set_SimulationCell_pbc)
+
+# Implement 'matrix' property of SimulationCell class.
+def _get_SimulationCell_matrix(self):
+    """ A 3x4 matrix containing the three edge vectors of the cell (matrix columns 0 to 2)
+        and the cell origin (matrix column 3). """
+    a = numpy.asarray(self.cellMatrix)
+    a.setflags(write = 0)   # Mark array data as read-only, because it's only a temporary object.
+    return a
+def _set_SimulationCell_matrix(self, m):
+    a = numpy.asarray(m)
+    assert(a.shape == (3,4)) # Expected 3x4 matrix array
+    self.vector1 = a[:,0]
+    self.vector2 = a[:,1]
+    self.vector3 = a[:,2]
+    self.origin = a[:,3]
+Particles.SimulationCell.matrix = property(_get_SimulationCell_matrix, _set_SimulationCell_matrix)
 
 class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
     """ 

@@ -52,7 +52,7 @@ void ActionManager::on_HelpAbout_triggered()
 			QMessageBox::Ok, mainWindow());
 	msgBox.setInformativeText(tr(
 			"<p>A visualization and analysis software for atomistic simulation data.</p>"
-			"<p>Copyright (C) 2013-2015, Alexander Stukowski</p>"
+			"<p>Copyright (C) 2013-2016, Alexander Stukowski</p>"
 			"<p>"
 			"This is free, open-source software, and you are welcome to redistribute\n"
 			"it under certain conditions. See the source for copying conditions.</p>"

@@ -527,10 +527,10 @@ void ModifyCommandPage::onCreateCustomModifier()
 	layout->setSpacing(12);
 
 	QLabel* label = new QLabel(tr(
-			"This dialog allows you to save one or more modifiers and their parameters from the current modification pipeline as a preset for future use. "
-			"Tick those modifiers in the list below that you want to include in the saved modifier set. "
+			"This dialog window allows you to save the parameters of one or more modifiers from the current modification pipeline as a preset for future use. "
+			"Tick those modifiers in the list below that you want to be included in the saved modifier set. "
 			"Enter a name for the new preset, then click 'Save'. "
-			"The preset will appear in the list of available modifiers."));
+			"The new customized modifier will then appear in the list of available modifiers, following OVITO's standard modifiers."));
 	label->setWordWrap(true);
 	layout->addWidget(label);
 
@@ -605,7 +605,7 @@ void ModifyCommandPage::onCreateCustomModifier()
 	mainLayout->setStretch(0, 1);
 
 	mainLayout->addSpacing(12);
-	QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel);
+	QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Save | QDialogButtonBox::Cancel | QDialogButtonBox::Help);
 	connect(buttonBox, &QDialogButtonBox::accepted, [&dlg, nameBox, modifierListWidget]() {
 		QString name = nameBox->currentText().trimmed();
 		if(name.isEmpty()) {
@@ -627,6 +627,13 @@ void ModifyCommandPage::onCreateCustomModifier()
 		dlg.accept();
 	});
 	connect(buttonBox, &QDialogButtonBox::rejected, &dlg, &QDialog::reject);
+
+	// Implement Help button.
+	MainWindow* mainWindow = _actionManager->mainWindow();
+	connect(buttonBox, &QDialogButtonBox::helpRequested, [mainWindow]() {
+		mainWindow->openHelpTopic(QStringLiteral("modifier_presets.html"));
+	});
+
 	mainLayout->addWidget(buttonBox);
 	if(dlg.exec() == QDialog::Accepted) {
 		try {

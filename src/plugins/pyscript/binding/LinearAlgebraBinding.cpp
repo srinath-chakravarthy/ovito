@@ -37,24 +37,36 @@ struct python_to_vector_conversion
 
 	static void* convertible(PyObject* obj_ptr) {
 		// Check if Python object can be converted to target type.
-		if(PyTuple_Check(obj_ptr)) return obj_ptr;
+		if(PySequence_Check(obj_ptr)) return obj_ptr;
 		return nullptr;
 	}
 
 	static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data) {
 		T v;
-		tuple t = extract<tuple>(obj_ptr);
-		if(len(t) != v.size()) {
-			PyErr_Format(PyExc_ValueError, "Conversion to %s works only for tuples of length %i.", boost::python::type_id<T>().name(), (int)v.size());
+		Py_ssize_t seqLength = PySequence_Length(obj_ptr);
+		if(seqLength != v.size()) {
+			PyErr_Format(PyExc_ValueError, "Conversion to %s works only for sequences of length %i.", boost::python::type_id<T>().name(), (int)v.size());
 			throw_error_already_set();
 		}
 		for(size_t i = 0; i < v.size(); i++) {
-			extract<typename T::value_type> ex(t[i]);
-			if(!ex.check()) {
-				PyErr_Format(PyExc_TypeError, "Conversion to %s works only for tuples containing numbers.", boost::python::type_id<T>().name());
-				throw_error_already_set();
+			object item(handle<>(PySequence_ITEM(obj_ptr, i)));
+			extract<typename T::value_type> ex(item);
+			if(!ex.check() && PyObject_HasAttrString(item.ptr(), "item")) {
+				// Convert NumPy dtypes to standard Python types first by calling their item() method.
+				extract<typename T::value_type> ex2(item.attr("item")());
+				if(!ex2.check()) {
+					PyErr_Format(PyExc_TypeError, "Conversion to %s works only for sequences containing numbers.", boost::python::type_id<T>().name());
+					throw_error_already_set();
+				}
+				v[i] = ex2();
 			}
-			v[i] = ex();
+			else {
+				if(!ex.check()) {
+					PyErr_Format(PyExc_TypeError, "Conversion to %s works only for sequences containing numbers.", boost::python::type_id<T>().name());
+					throw_error_already_set();
+				}
+				v[i] = ex();
+			}
 		}
 		void* storage = ((converter::rvalue_from_python_storage<T>*)data)->storage.bytes;
 		new (storage) T(v);

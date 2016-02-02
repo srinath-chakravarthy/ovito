@@ -178,7 +178,18 @@ BOOST_PYTHON_MODULE(Particles)
 	{
 		scope s = ovito_abstract_class<ParticlePropertyObject, DataObject>(
 				":Base class: :py:class:`ovito.data.DataObject`\n\n"
-				"A data object that stores the values of a single particle property.",
+				"A data object that stores the per-particle values of a particle property. "
+				"\n\n"
+				"The list of properties associated with a particle dataset can be access via the "
+				":py:attr:`DataCollection.particle_properties` dictionary. The :py:attr:`.size` of a particle "
+				"property is always equal to the number of particles in the dataset. The per-particle data "
+				"of a property can be accessed as a NumPy array through the :py:attr:`.array` attribute. "
+				"\n\n"
+				"If you want to modify the property values, you have to use the :py:attr:`.marray` (*modifiable array*) "
+				"attribute instead, which provides read/write access to the underlying per-particle data. "
+				"After you are done modifying the property values, you should call :py:meth:`.changed` to inform "
+				"the system that it needs to update any state that depends on the data. "
+				,
 				// Python class name:
 				"ParticleProperty")
 			.def("createUserProperty", &ParticlePropertyObject::createUserProperty)
@@ -191,13 +202,13 @@ BOOST_PYTHON_MODULE(Particles)
 			.def("changed", &ParticlePropertyObject::changed,
 					"Informs the particle property object that its internal data has changed. "
 					"This function must be called after each direct modification of the per-particle data "
-					"through the :py:attr:`.array` attribute.\n\n"
+					"through the :py:attr:`.marray` attribute.\n\n"
 					"Calling this method on an input particle property is necessary to invalidate data caches down the modification "
 					"pipeline. Forgetting to call this method may result in an incomplete re-evaluation of the modification pipeline. "
 					"See :py:attr:`.marray` for more information.")
 			.def("nameWithComponent", &ParticlePropertyObject::nameWithComponent)
 			.add_property("name", make_function(&ParticlePropertyObject::name, return_value_policy<copy_const_reference>()), &ParticlePropertyObject::setName,
-					"The human-readable name of the particle property.")
+					"The human-readable name of this particle property.")
 			.add_property("__len__", &ParticlePropertyObject::size)
 			.add_property("size", &ParticlePropertyObject::size, &ParticlePropertyObject::resize,
 					"The number of particles.")
@@ -328,21 +339,24 @@ BOOST_PYTHON_MODULE(Particles)
 			":Base class: :py:class:`ovito.data.DataObject`\n\n"
 			"Stores the geometry and the boundary conditions of the simulation cell."
 			"\n\n"
-			"Instances of this class are associated with a :py:class:`~ovito.vis.SimulationCellDisplay` "
+			"Each instance of this class is associated with a corresponding :py:class:`~ovito.vis.SimulationCellDisplay` "
 			"that controls the visual appearance of the simulation cell. It can be accessed through "
-			"the :py:attr:`~DataObject.display` attribute of the :py:class:`~DataObject` base class.",
+			"the :py:attr:`~DataObject.display` attribute of the :py:class:`!SimulationCell` object, which is defined by the :py:class:`~DataObject` base class."
+			"\n\n"
+			"The simulation cell of a particle dataset can be accessed via the :py:attr:`DataCollection.cell` property."
+			"\n\n"
+			"Example:\n\n"
+			".. literalinclude:: ../example_snippets/simulation_cell.py\n",
 			// Python class name:
 			"SimulationCell")
 		.add_property("pbc_x", &SimulationCellObject::pbcX, &SimulationCellObject::setPbcX)
 		.add_property("pbc_y", &SimulationCellObject::pbcY, &SimulationCellObject::setPbcY)
 		.add_property("pbc_z", &SimulationCellObject::pbcZ, &SimulationCellObject::setPbcZ)
-		.add_property("matrix", &SimulationCellObject::cellMatrix, &SimulationCellObject::setCellMatrix,
-				"A 3x4 matrix containing the three edge vectors of the cell (matrix columns 0-2) "
-				"and the cell origin (matrix column 3).")
-		.add_property("vector1", make_function(&SimulationCellObject::edgeVector1, return_value_policy<copy_const_reference>()))
-		.add_property("vector2", make_function(&SimulationCellObject::edgeVector2, return_value_policy<copy_const_reference>()))
-		.add_property("vector3", make_function(&SimulationCellObject::edgeVector3, return_value_policy<copy_const_reference>()))
-		.add_property("origin", make_function(&SimulationCellObject::origin, return_value_policy<copy_const_reference>()))
+		.add_property("cellMatrix", &SimulationCellObject::cellMatrix, &SimulationCellObject::setCellMatrix)
+		.add_property("vector1", make_function(&SimulationCellObject::edgeVector1, return_value_policy<copy_const_reference>()), &SimulationCellObject::setEdgeVector1)
+		.add_property("vector2", make_function(&SimulationCellObject::edgeVector2, return_value_policy<copy_const_reference>()), &SimulationCellObject::setEdgeVector2)
+		.add_property("vector3", make_function(&SimulationCellObject::edgeVector3, return_value_policy<copy_const_reference>()), &SimulationCellObject::setEdgeVector3)
+		.add_property("origin", make_function(&SimulationCellObject::origin, return_value_policy<copy_const_reference>()), &SimulationCellObject::setOrigin)
 	;
 
 	{
@@ -662,7 +676,19 @@ BOOST_PYTHON_MODULE(Particles)
 	{
 		scope s = ovito_abstract_class<BondPropertyObject, DataObject>(
 				":Base class: :py:class:`ovito.data.DataObject`\n\n"
-				"A data object that stores the values of a bond property.",
+				"A data object that stores the per-bond values of a bond property. "
+				"Bond properties work similar to particle properties (see :py:class:`ParticleProperty` class)."
+				"\n\n"
+				"The list of bond properties associated with a particle dataset can be accessed via the "
+				":py:attr:`DataCollection.bond_properties` dictionary. "
+				"\n\n"
+				"The actual list of bonds, i.e. the connectivity information, which is stored in a :py:class:`Bonds` data object, can be accessed via the "
+				":py:attr:`DataCollection.bonds` property. "
+				"\n\n"
+				"Note that OVITO works with half-bonds, i.e., every full bond is represented as two half-bonds pointing "
+				"from particle A to particle B, and from B to A, respectively. "
+				"Thus, the :py:attr:`.size` of a bond property array is always twice as large as the number of full bonds "
+				"in a dataset.",
 				// Python class name:
 				"BondProperty")
 			.def("createUserProperty", &BondPropertyObject::createUserProperty)
@@ -673,7 +699,7 @@ BOOST_PYTHON_MODULE(Particles)
 			.staticmethod("createStandardProperty")
 			.staticmethod("findInState")
 			.def("changed", &BondPropertyObject::changed,
-					"Informs the bond property object that its internal data has changed. "
+					"Informs the bond property object that its stored data has changed. "
 					"This function must be called after each direct modification of the per-bond data "
 					"through the :py:attr:`.marray` attribute.\n\n"
 					"Calling this method on an input bond property is necessary to invalidate data caches down the modification "
@@ -684,7 +710,7 @@ BOOST_PYTHON_MODULE(Particles)
 					"The human-readable name of the bond property.")
 			.add_property("__len__", &BondPropertyObject::size)
 			.add_property("size", &BondPropertyObject::size, &BondPropertyObject::resize,
-					"The number of stored values, which is equal to the number of half-bonds.")
+					"The number of stored property values, which is always equal to the number of half-bonds.")
 			.add_property("type", &BondPropertyObject::type, &BondPropertyObject::setType,
 					".. _bond-types-list:"
 					"\n\n"

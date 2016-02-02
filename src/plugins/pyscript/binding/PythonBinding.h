@@ -312,8 +312,8 @@ struct python_to_container_conversion
 	}
 
 	static void* convertible(PyObject* obj_ptr) {
-		// Check if Python object can be converted to target type.
-		if(PyObject_HasAttrString(obj_ptr, "__iter__")) return obj_ptr;
+		// Check if Python object is iterable (and is not a string).
+		if(PyObject_HasAttrString(obj_ptr, "__iter__") && ! PyUnicode_Check(obj_ptr) && !PyBytes_Check(obj_ptr)) return obj_ptr;
 		return nullptr;
 	}
 
@@ -338,8 +338,8 @@ struct python_to_set_conversion
 	}
 
 	static void* convertible(PyObject* obj_ptr) {
-		// Check if Python object can be converted to target type.
-		if(PyObject_HasAttrString(obj_ptr, "__iter__")) return obj_ptr;
+		// Check if Python object is iterable (and is not a string).
+		if(PyObject_HasAttrString(obj_ptr, "__iter__") && ! PyUnicode_Check(obj_ptr) && !PyBytes_Check(obj_ptr)) return obj_ptr;
 		return nullptr;
 	}
 

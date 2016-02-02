@@ -266,11 +266,11 @@ bool XYZImporter::mapVariableToProperty(InputColumnMapping& columnMapping, int c
 inline bool parseBool(const char* s, int& d)
 {
 	if(s[1] != '\0') return false;
-	if(s[0] == 'T') {
+	if(s[0] == 'T' || s[0] == '1') {
 		d = 1;
 		return true;
 	}
-	else if(s[0] == 'F') {
+	else if(s[0] == 'F' || s[0] == '0') {
 		d = 0;
 		return true;
 	}
@@ -435,19 +435,19 @@ void XYZImporter::XYZImportTask::parseFile(CompressedTextReader& stream)
 		QStringList list = commentLine.mid(index + 4).split(ws_re);
 		simulationCell().setPbcFlags((bool)list[0].toInt(), (bool)list[1].toInt(), (bool)list[2].toInt());
 	}
-	else if ((index = commentLine.indexOf("pbc=\"")) >= 0) {
+	else if((index = commentLine.indexOf("pbc=\"")) >= 0) {
 		// Look for Extended XYZ PBC keyword
 		QString pbcStr = commentLine.mid(index + 5);
 		pbcStr.truncate(pbcStr.indexOf("\""));
 		QStringList list = pbcStr.split(ws_re);
 		int pbcFlags[3] = {0, 0, 0};
-		for (int i=0; i < list.size() && i < 3; i++) {
+		for(int i=0; i < list.size() && i < 3; i++) {
 			QByteArray ba = list[i].toLatin1();
 			parseBool(ba.data(), pbcFlags[i]);
 		}
 		simulationCell().setPbcFlags(pbcFlags[0], pbcFlags[1], pbcFlags[2]);
 	}
-	else if (hasSimulationCell) {
+	else if(hasSimulationCell) {
 		simulationCell().setPbcFlags(true, true, true);
 	}
 

@@ -143,7 +143,7 @@ def _ObjectNode_wait(self, signalError = True, msgText = None):
     if signalError:
         state = self.evalPipeline(self.dataset.anim.time)
         if state.status.type == PipelineStatus.Type.Error:
-            raise RuntimeError("Pipeline error: %s" % state.status.text)
+            raise RuntimeError("Data pipeline evaluation failed with the following error: %s" % state.status.text)
     return True
 ObjectNode.wait = _ObjectNode_wait
 
