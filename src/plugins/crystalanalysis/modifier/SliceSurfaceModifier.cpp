@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,7 +19,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <plugins/particles/Particles.h>
+#include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/viewport/Viewport.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/scene/ObjectNode.h>
@@ -35,46 +35,44 @@
 #include <core/gui/properties/BooleanParameterUI.h>
 #include <core/rendering/viewport/ViewportSceneRenderer.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
-#include "SliceModifier.h"
+#include <plugins/particles/objects/SurfaceMesh.h>
+#include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
+#include "SliceSurfaceModifier.h"
 
-namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SliceModifier, ParticleModifier);
-SET_OVITO_OBJECT_EDITOR(SliceModifier, SliceModifierEditor);
-DEFINE_REFERENCE_FIELD(SliceModifier, _normalCtrl, "PlaneNormal", Controller);
-DEFINE_REFERENCE_FIELD(SliceModifier, _distanceCtrl, "PlaneDistance", Controller);
-DEFINE_REFERENCE_FIELD(SliceModifier, _widthCtrl, "SliceWidth", Controller);
-DEFINE_PROPERTY_FIELD(SliceModifier, _createSelection, "CreateSelection");
-DEFINE_PROPERTY_FIELD(SliceModifier, _inverse, "Inverse");
-DEFINE_PROPERTY_FIELD(SliceModifier, _applyToSelection, "ApplyToSelection");
-SET_PROPERTY_FIELD_LABEL(SliceModifier, _normalCtrl, "Normal");
-SET_PROPERTY_FIELD_LABEL(SliceModifier, _distanceCtrl, "Distance");
-SET_PROPERTY_FIELD_LABEL(SliceModifier, _widthCtrl, "Slice width");
-SET_PROPERTY_FIELD_LABEL(SliceModifier, _createSelection, "Select particles (do not delete)");
-SET_PROPERTY_FIELD_LABEL(SliceModifier, _inverse, "Invert");
-SET_PROPERTY_FIELD_LABEL(SliceModifier, _applyToSelection, "Apply to selected particles only");
-SET_PROPERTY_FIELD_UNITS(SliceModifier, _normalCtrl, WorldParameterUnit);
-SET_PROPERTY_FIELD_UNITS(SliceModifier, _distanceCtrl, WorldParameterUnit);
-SET_PROPERTY_FIELD_UNITS(SliceModifier, _widthCtrl, WorldParameterUnit);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, SliceSurfaceModifier, Modifier);
+SET_OVITO_OBJECT_EDITOR(SliceSurfaceModifier, SliceSurfaceModifierEditor);
+DEFINE_REFERENCE_FIELD(SliceSurfaceModifier, _normalCtrl, "PlaneNormal", Controller);
+DEFINE_REFERENCE_FIELD(SliceSurfaceModifier, _distanceCtrl, "PlaneDistance", Controller);
+DEFINE_REFERENCE_FIELD(SliceSurfaceModifier, _widthCtrl, "SliceWidth", Controller);
+DEFINE_PROPERTY_FIELD(SliceSurfaceModifier, _inverse, "Inverse");
+DEFINE_PROPERTY_FIELD(SliceSurfaceModifier, _modifySurfaces, "ModifySurfaces");
+DEFINE_PROPERTY_FIELD(SliceSurfaceModifier, _modifyDislocations, "ModifyDislocations");
+SET_PROPERTY_FIELD_LABEL(SliceSurfaceModifier, _normalCtrl, "Normal");
+SET_PROPERTY_FIELD_LABEL(SliceSurfaceModifier, _distanceCtrl, "Distance");
+SET_PROPERTY_FIELD_LABEL(SliceSurfaceModifier, _widthCtrl, "Slice width");
+SET_PROPERTY_FIELD_LABEL(SliceSurfaceModifier, _inverse, "Invert");
+SET_PROPERTY_FIELD_LABEL(SliceSurfaceModifier, _modifySurfaces, "Apply to surfaces");
+SET_PROPERTY_FIELD_LABEL(SliceSurfaceModifier, _modifyDislocations, "Apply to dislocations");
+SET_PROPERTY_FIELD_UNITS(SliceSurfaceModifier, _normalCtrl, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS(SliceSurfaceModifier, _distanceCtrl, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS(SliceSurfaceModifier, _widthCtrl, WorldParameterUnit);
 
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, SliceModifierEditor, ParticleModifierEditor);
-OVITO_END_INLINE_NAMESPACE
+IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, SliceSurfaceModifierEditor, PropertiesEditor);
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
-SliceModifier::SliceModifier(DataSet* dataset) : ParticleModifier(dataset),
-	_createSelection(false),
-	_inverse(false),
-	_applyToSelection(false)
+SliceSurfaceModifier::SliceSurfaceModifier(DataSet* dataset) : Modifier(dataset),
+	_inverse(false), _modifySurfaces(true), _modifyDislocations(true)
 {
-	INIT_PROPERTY_FIELD(SliceModifier::_normalCtrl);
-	INIT_PROPERTY_FIELD(SliceModifier::_distanceCtrl);
-	INIT_PROPERTY_FIELD(SliceModifier::_widthCtrl);
-	INIT_PROPERTY_FIELD(SliceModifier::_createSelection);
-	INIT_PROPERTY_FIELD(SliceModifier::_inverse);
-	INIT_PROPERTY_FIELD(SliceModifier::_applyToSelection);
+	INIT_PROPERTY_FIELD(SliceSurfaceModifier::_normalCtrl);
+	INIT_PROPERTY_FIELD(SliceSurfaceModifier::_distanceCtrl);
+	INIT_PROPERTY_FIELD(SliceSurfaceModifier::_widthCtrl);
+	INIT_PROPERTY_FIELD(SliceSurfaceModifier::_inverse);
+	INIT_PROPERTY_FIELD(SliceSurfaceModifier::_modifySurfaces);
+	INIT_PROPERTY_FIELD(SliceSurfaceModifier::_modifyDislocations);
 
 	_normalCtrl = ControllerManager::instance().createVector3Controller(dataset);
 	_distanceCtrl = ControllerManager::instance().createFloatController(dataset);
@@ -85,9 +83,9 @@ SliceModifier::SliceModifier(DataSet* dataset) : ParticleModifier(dataset),
 /******************************************************************************
 * Asks the modifier for its validity interval at the given time.
 ******************************************************************************/
-TimeInterval SliceModifier::modifierValidity(TimePoint time)
+TimeInterval SliceSurfaceModifier::modifierValidity(TimePoint time)
 {
-	TimeInterval interval = ParticleModifier::modifierValidity(time);
+	TimeInterval interval = Modifier::modifierValidity(time);
 	interval.intersect(_normalCtrl->validityInterval(time));
 	interval.intersect(_distanceCtrl->validityInterval(time));
 	interval.intersect(_widthCtrl->validityInterval(time));
@@ -95,9 +93,17 @@ TimeInterval SliceModifier::modifierValidity(TimePoint time)
 }
 
 /******************************************************************************
+* Asks the modifier whether it can be applied to the given input data.
+******************************************************************************/
+bool SliceSurfaceModifier::isApplicableTo(const PipelineFlowState& input)
+{
+	return (input.findObject<SurfaceMesh>() != nullptr) || (input.findObject<DislocationNetworkObject>() != nullptr);
+}
+
+/******************************************************************************
 * Returns the slicing plane.
 ******************************************************************************/
-Plane3 SliceModifier::slicingPlane(TimePoint time, TimeInterval& validityInterval)
+Plane3 SliceSurfaceModifier::slicingPlane(TimePoint time, TimeInterval& validityInterval)
 {
 	Plane3 plane;
 	_normalCtrl->getVector3Value(time, plane.normal, validityInterval);
@@ -111,114 +117,62 @@ Plane3 SliceModifier::slicingPlane(TimePoint time, TimeInterval& validityInterva
 }
 
 /******************************************************************************
-* Modifies the particle object.
+* This modifies the input object.
 ******************************************************************************/
-PipelineStatus SliceModifier::modifyParticles(TimePoint time, TimeInterval& validityInterval)
+PipelineStatus SliceSurfaceModifier::modifyObject(TimePoint time, ModifierApplication* modApp, PipelineFlowState& state)
 {
-	QString statusMessage = tr("%n input particles", 0, inputParticleCount());
-
-	// Compute filter mask.
-	boost::dynamic_bitset<> mask(inputParticleCount());
-	size_t numRejected = filterParticles(mask, time, validityInterval);
-	size_t numKept = inputParticleCount() - numRejected;
-
-	if(createSelection() == false) {
-
-		statusMessage += tr("\n%n particles deleted", 0, numRejected);
-		statusMessage += tr("\n%n particles remaining", 0, numKept);
-		if(numRejected == 0)
-			return PipelineStatus(PipelineStatus::Success, statusMessage);
-
-		// Delete the rejected particles.
-		deleteParticles(mask, numRejected);
-	}
-	else {
-		statusMessage += tr("\n%n particles selected", 0, numRejected);
-		statusMessage += tr("\n%n particles unselected", 0, numKept);
-
-		ParticlePropertyObject* selProperty = outputStandardProperty(ParticleProperty::SelectionProperty);
-		OVITO_ASSERT(mask.size() == selProperty->size());
-		boost::dynamic_bitset<>::size_type i = 0;
-		for(int& s : selProperty->intRange())
-			s = mask.test(i++);
-		selProperty->changed();
-	}
-
-	return PipelineStatus(PipelineStatus::Success, statusMessage);
-}
-
-/******************************************************************************
-* Performs the actual rejection of particles.
-******************************************************************************/
-size_t SliceModifier::filterParticles(boost::dynamic_bitset<>& mask, TimePoint time, TimeInterval& validityInterval)
-{
-	// Get the required input properties.
-	ParticlePropertyObject* const posProperty = expectStandardProperty(ParticleProperty::PositionProperty);
-	ParticlePropertyObject* const selProperty = applyToSelection() ? inputStandardProperty(ParticleProperty::SelectionProperty) : nullptr;
-	OVITO_ASSERT(posProperty->size() == mask.size());
-	OVITO_ASSERT(!selProperty || selProperty->size() == mask.size());
+	TimeInterval validityInterval = state.stateValidity();
+	Plane3 plane = slicingPlane(time, validityInterval);
 
 	FloatType sliceWidth = 0;
 	if(_widthCtrl) sliceWidth = _widthCtrl->getFloatValue(time, validityInterval);
 	sliceWidth *= 0.5;
 
-	Plane3 plane = slicingPlane(time, validityInterval);
+	CloneHelper cloneHelper;
 
-	size_t na = 0;
-	boost::dynamic_bitset<>::size_type i = 0;
-	const Point3* p = posProperty->constDataPoint3();
-	const Point3* p_end = p + posProperty->size();
-
-	if(sliceWidth <= 0) {
-		if(selProperty) {
-			const int* s = selProperty->constDataInt();
-			for(; p != p_end; ++p, ++s, ++i) {
-				if(*s && plane.pointDistance(*p) > 0) {
-					mask.set(i);
-					na++;
+	for(DataObject* obj : state.objects()) {
+		if(_modifySurfaces) {
+			if(SurfaceMesh* inputMesh = dynamic_object_cast<SurfaceMesh>(obj)) {
+				OORef<SurfaceMesh> outputMesh = cloneHelper.cloneObject(inputMesh, false);
+				QVector<Plane3> planes = inputMesh->cuttingPlanes();
+				if(sliceWidth <= 0) {
+					planes.push_back(plane);
 				}
-				else mask.reset(i);
+				else {
+					planes.push_back(Plane3(plane.normal, plane.dist + sliceWidth));
+					planes.push_back(Plane3(-plane.normal, -plane.dist + sliceWidth));
+				}
+				outputMesh->setCuttingPlanes(planes);
+				state.replaceObject(inputMesh, outputMesh);
+				state.intersectStateValidity(validityInterval);
 			}
 		}
-		else {
-			for(; p != p_end; ++p, ++i) {
-				if(plane.pointDistance(*p) > 0) {
-					mask.set(i);
-					na++;
+		if(_modifyDislocations) {
+			if(DislocationNetworkObject* inputDislocations = dynamic_object_cast<DislocationNetworkObject>(obj)) {
+				OORef<DislocationNetworkObject> outputDislocations = cloneHelper.cloneObject(inputDislocations, false);
+				QVector<Plane3> planes = inputDislocations->cuttingPlanes();
+				if(sliceWidth <= 0) {
+					planes.push_back(plane);
 				}
-				else mask.reset(i);
+				else {
+					planes.push_back(Plane3(plane.normal, plane.dist + sliceWidth));
+					planes.push_back(Plane3(-plane.normal, -plane.dist + sliceWidth));
+				}
+				outputDislocations->setCuttingPlanes(planes);
+				state.replaceObject(inputDislocations, outputDislocations);
+				state.intersectStateValidity(validityInterval);
 			}
 		}
 	}
-	else {
-		bool invert = inverse();
-		if(selProperty) {
-			const int* s = selProperty->constDataInt();
-			for(; p != p_end; ++p, ++s, ++i) {
-				if(*s && invert == (plane.classifyPoint(*p, sliceWidth) == 0)) {
-					mask.set(i);
-					na++;
-				}
-				else mask.reset(i);
-			}
-		}
-		else {
-			for(; p != p_end; ++p, ++i) {
-				if(invert == (plane.classifyPoint(*p, sliceWidth) == 0)) {
-					mask.set(i);
-					na++;
-				}
-				else mask.reset(i);
-			}
-		}
-	}
-	return na;
+
+	return PipelineStatus::Success;
 }
+
 
 /******************************************************************************
 * Lets the modifier render itself into the viewport.
 ******************************************************************************/
-void SliceModifier::render(TimePoint time, ObjectNode* contextNode, ModifierApplication* modApp, SceneRenderer* renderer, bool renderOverlay)
+void SliceSurfaceModifier::render(TimePoint time, ObjectNode* contextNode, ModifierApplication* modApp, SceneRenderer* renderer, bool renderOverlay)
 {
 	if(!renderOverlay && PropertiesEditor::isObjectBeingEdited(this) && renderer->isInteractive() && !renderer->isPicking())
 		renderVisual(time, contextNode, renderer);
@@ -227,7 +181,7 @@ void SliceModifier::render(TimePoint time, ObjectNode* contextNode, ModifierAppl
 /******************************************************************************
 * Computes the bounding box of the visual representation of the modifier.
 ******************************************************************************/
-Box3 SliceModifier::boundingBox(TimePoint time, ObjectNode* contextNode, ModifierApplication* modApp)
+Box3 SliceSurfaceModifier::boundingBox(TimePoint time, ObjectNode* contextNode, ModifierApplication* modApp)
 {
 	if(PropertiesEditor::isObjectBeingEdited(this))
 		return renderVisual(time, contextNode, nullptr);
@@ -238,7 +192,7 @@ Box3 SliceModifier::boundingBox(TimePoint time, ObjectNode* contextNode, Modifie
 /******************************************************************************
 * Renders the modifier's visual representation and computes its bounding box.
 ******************************************************************************/
-Box3 SliceModifier::renderVisual(TimePoint time, ObjectNode* contextNode, SceneRenderer* renderer)
+Box3 SliceSurfaceModifier::renderVisual(TimePoint time, ObjectNode* contextNode, SceneRenderer* renderer)
 {
 	TimeInterval interval;
 
@@ -267,7 +221,7 @@ Box3 SliceModifier::renderVisual(TimePoint time, ObjectNode* contextNode, SceneR
 /******************************************************************************
 * Renders the plane in the viewports.
 ******************************************************************************/
-Box3 SliceModifier::renderPlane(SceneRenderer* renderer, const Plane3& plane, const Box3& bb, const ColorA& color) const
+Box3 SliceSurfaceModifier::renderPlane(SceneRenderer* renderer, const Plane3& plane, const Box3& bb, const ColorA& color) const
 {
 	// Compute intersection lines of slicing plane and bounding box.
 	QVector<Point3> vertices;
@@ -314,7 +268,7 @@ Box3 SliceModifier::renderPlane(SceneRenderer* renderer, const Plane3& plane, co
 /******************************************************************************
 * Computes the intersection lines of a plane and a quad.
 ******************************************************************************/
-void SliceModifier::planeQuadIntersection(const Point3 corners[8], const std::array<int,4>& quadVerts, const Plane3& plane, QVector<Point3>& vertices) const
+void SliceSurfaceModifier::planeQuadIntersection(const Point3 corners[8], const std::array<int,4>& quadVerts, const Plane3& plane, QVector<Point3>& vertices) const
 {
 	Point3 p1;
 	bool hasP1 = false;
@@ -341,9 +295,9 @@ void SliceModifier::planeQuadIntersection(const Point3 corners[8], const std::ar
 * This method is called by the system when the modifier has been inserted
 * into a PipelineObject.
 ******************************************************************************/
-void SliceModifier::initializeModifier(PipelineObject* pipeline, ModifierApplication* modApp)
+void SliceSurfaceModifier::initializeModifier(PipelineObject* pipeline, ModifierApplication* modApp)
 {
-	ParticleModifier::initializeModifier(pipeline, modApp);
+	Modifier::initializeModifier(pipeline, modApp);
 
 	// Get the input simulation cell to initially place the slicing plane in
 	// the center of the cell.
@@ -363,10 +317,10 @@ OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 /******************************************************************************
 * Sets up the UI widgets of the editor.
 ******************************************************************************/
-void SliceModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
+void SliceSurfaceModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 {
 	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Slice"), rolloutParams, "particles.modifiers.slice.html");
+	QWidget* rollout = createRollout(tr("Slice surface and dislocations"), rolloutParams);
 
     // Create the rollout contents.
 	QVBoxLayout* layout = new QVBoxLayout(rollout);
@@ -378,23 +332,23 @@ void SliceModifierEditor::createUI(const RolloutInsertionParameters& rolloutPara
 	gridlayout->setColumnStretch(1, 1);
 
 	// Distance parameter.
-	FloatParameterUI* distancePUI = new FloatParameterUI(this, PROPERTY_FIELD(SliceModifier::_distanceCtrl));
+	FloatParameterUI* distancePUI = new FloatParameterUI(this, PROPERTY_FIELD(SliceSurfaceModifier::_distanceCtrl));
 	gridlayout->addWidget(distancePUI->label(), 0, 0);
 	gridlayout->addLayout(distancePUI->createFieldLayout(), 0, 1);
 
 	// Normal parameter.
 	for(int i = 0; i < 3; i++) {
-		Vector3ParameterUI* normalPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SliceModifier::_normalCtrl), i);
+		Vector3ParameterUI* normalPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SliceSurfaceModifier::_normalCtrl), i);
 		normalPUI->label()->setTextFormat(Qt::RichText);
 		normalPUI->label()->setTextInteractionFlags(Qt::LinksAccessibleByMouse);
 		normalPUI->label()->setText(QStringLiteral("<a href=\"%1\">%2</a>").arg(i).arg(normalPUI->label()->text()));
-		connect(normalPUI->label(), &QLabel::linkActivated, this, &SliceModifierEditor::onXYZNormal);
+		connect(normalPUI->label(), &QLabel::linkActivated, this, &SliceSurfaceModifierEditor::onXYZNormal);
 		gridlayout->addWidget(normalPUI->label(), i+1, 0);
 		gridlayout->addLayout(normalPUI->createFieldLayout(), i+1, 1);
 	}
 
 	// Slice width parameter.
-	FloatParameterUI* widthPUI = new FloatParameterUI(this, PROPERTY_FIELD(SliceModifier::_widthCtrl));
+	FloatParameterUI* widthPUI = new FloatParameterUI(this, PROPERTY_FIELD(SliceSurfaceModifier::_widthCtrl));
 	gridlayout->addWidget(widthPUI->label(), 4, 0);
 	gridlayout->addLayout(widthPUI->createFieldLayout(), 4, 1);
 	widthPUI->setMinValue(0);
@@ -403,48 +357,37 @@ void SliceModifierEditor::createUI(const RolloutInsertionParameters& rolloutPara
 	layout->addSpacing(8);
 
 	// Invert parameter.
-	BooleanParameterUI* invertPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SliceModifier::_inverse));
+	BooleanParameterUI* invertPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SliceSurfaceModifier::_inverse));
 	layout->addWidget(invertPUI->checkBox());
 
-	// Create selection parameter.
-	BooleanParameterUI* createSelectionPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SliceModifier::_createSelection));
-	layout->addWidget(createSelectionPUI->checkBox());
+	layout->addSpacing(8);
 
-	// Apply to selection only parameter.
-	BooleanParameterUI* applyToSelectionPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SliceModifier::_applyToSelection));
-	layout->addWidget(applyToSelectionPUI->checkBox());
+	// Application parameters.
+	BooleanParameterUI* applyToSurfacesPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SliceSurfaceModifier::_modifySurfaces));
+	layout->addWidget(applyToSurfacesPUI->checkBox());
+	BooleanParameterUI* applyToDislocationsPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SliceSurfaceModifier::_modifyDislocations));
+	layout->addWidget(applyToDislocationsPUI->checkBox());
 
 	layout->addSpacing(8);
 	QPushButton* centerPlaneBtn = new QPushButton(tr("Move plane to simulation box center"), rollout);
-	connect(centerPlaneBtn, &QPushButton::clicked, this, &SliceModifierEditor::onCenterOfBox);
+	connect(centerPlaneBtn, &QPushButton::clicked, this, &SliceSurfaceModifierEditor::onCenterOfBox);
 	layout->addWidget(centerPlaneBtn);
 
 	// Add buttons for view alignment functions.
 	QPushButton* alignViewToPlaneBtn = new QPushButton(tr("Align view direction to plane normal"), rollout);
-	connect(alignViewToPlaneBtn, &QPushButton::clicked, this, &SliceModifierEditor::onAlignViewToPlane);
+	connect(alignViewToPlaneBtn, &QPushButton::clicked, this, &SliceSurfaceModifierEditor::onAlignViewToPlane);
 	layout->addWidget(alignViewToPlaneBtn);
 	QPushButton* alignPlaneToViewBtn = new QPushButton(tr("Align plane normal to view direction"), rollout);
-	connect(alignPlaneToViewBtn, &QPushButton::clicked, this, &SliceModifierEditor::onAlignPlaneToView);
+	connect(alignPlaneToViewBtn, &QPushButton::clicked, this, &SliceSurfaceModifierEditor::onAlignPlaneToView);
 	layout->addWidget(alignPlaneToViewBtn);
-
-	_pickParticlePlaneInputMode = new PickParticlePlaneInputMode(this);
-	_pickParticlePlaneInputModeAction = new ViewportModeAction(mainWindow(), tr("Pick three particles"), this, _pickParticlePlaneInputMode);
-	layout->addWidget(_pickParticlePlaneInputModeAction->createPushButton());
-
-	// Deactivate input mode when editor is reset.
-	connect(this, &PropertiesEditor::contentsReplaced, _pickParticlePlaneInputModeAction, &ViewportModeAction::deactivateMode);
-
-	// Status label.
-	layout->addSpacing(12);
-	layout->addWidget(statusLabel());
 }
 
 /******************************************************************************
 * Aligns the normal of the slicing plane with the X, Y, or Z axis.
 ******************************************************************************/
-void SliceModifierEditor::onXYZNormal(const QString& link)
+void SliceSurfaceModifierEditor::onXYZNormal(const QString& link)
 {
-	SliceModifier* mod = static_object_cast<SliceModifier>(editObject());
+	SliceSurfaceModifier* mod = static_object_cast<SliceSurfaceModifier>(editObject());
 	if(!mod) return;
 
 	undoableTransaction(tr("Set plane normal"), [mod, &link]() {
@@ -460,7 +403,7 @@ void SliceModifierEditor::onXYZNormal(const QString& link)
 /******************************************************************************
 * Aligns the slicing plane to the viewing direction.
 ******************************************************************************/
-void SliceModifierEditor::onAlignPlaneToView()
+void SliceSurfaceModifierEditor::onAlignPlaneToView()
 {
 	TimeInterval interval;
 
@@ -473,7 +416,7 @@ void SliceModifierEditor::onAlignPlaneToView()
 	const AffineTransformation& nodeTM = node->getWorldTransform(dataset()->animationSettings()->time(), interval);
 
 	// Get the base point of the current slicing plane in local coordinates.
-	SliceModifier* mod = static_object_cast<SliceModifier>(editObject());
+	SliceSurfaceModifier* mod = static_object_cast<SliceSurfaceModifier>(editObject());
 	if(!mod) return;
 	Plane3 oldPlaneLocal = mod->slicingPlane(dataset()->animationSettings()->time(), interval);
 	Point3 basePoint = Point3::Origin() + oldPlaneLocal.normal * oldPlaneLocal.dist;
@@ -494,7 +437,7 @@ void SliceModifierEditor::onAlignPlaneToView()
 /******************************************************************************
 * Aligns the current viewing direction to the slicing plane.
 ******************************************************************************/
-void SliceModifierEditor::onAlignViewToPlane()
+void SliceSurfaceModifierEditor::onAlignViewToPlane()
 {
 	TimeInterval interval;
 
@@ -507,7 +450,7 @@ void SliceModifierEditor::onAlignViewToPlane()
 	const AffineTransformation& nodeTM = node->getWorldTransform(dataset()->animationSettings()->time(), interval);
 
 	// Transform the current slicing plane to the world coordinate system.
-	SliceModifier* mod = static_object_cast<SliceModifier>(editObject());
+	SliceSurfaceModifier* mod = static_object_cast<SliceSurfaceModifier>(editObject());
 	if(!mod) return;
 	Plane3 planeLocal = mod->slicingPlane(dataset()->animationSettings()->time(), interval);
 	Plane3 planeWorld = nodeTM * planeLocal;
@@ -538,9 +481,9 @@ void SliceModifierEditor::onAlignViewToPlane()
 /******************************************************************************
 * Moves the plane to the center of the simulation box.
 ******************************************************************************/
-void SliceModifierEditor::onCenterOfBox()
+void SliceSurfaceModifierEditor::onCenterOfBox()
 {
-	SliceModifier* mod = static_object_cast<SliceModifier>(editObject());
+	SliceSurfaceModifier* mod = static_object_cast<SliceSurfaceModifier>(editObject());
 	if(!mod) return;
 
 	// Get the simulation cell from the input object to center the slicing plane in
@@ -557,127 +500,6 @@ void SliceModifierEditor::onCenterOfBox()
 	});
 }
 
-/******************************************************************************
-* This is called by the system after the input handler has become the active handler.
-******************************************************************************/
-void PickParticlePlaneInputMode::activated(bool temporary)
-{
-	ViewportInputMode::activated(temporary);
-	inputManager()->mainWindow()->statusBar()->showMessage(tr("Pick three particles to define a new slicing plane."));
-}
-
-/******************************************************************************
-* This is called by the system after the input handler is no longer the active handler.
-******************************************************************************/
-void PickParticlePlaneInputMode::deactivated(bool temporary)
-{
-	if(!temporary)
-		_pickedParticles.clear();
-	inputManager()->mainWindow()->statusBar()->clearMessage();
-	ViewportInputMode::deactivated(temporary);
-}
-
-/******************************************************************************
-* Handles the mouse events for a Viewport.
-******************************************************************************/
-void PickParticlePlaneInputMode::mouseReleaseEvent(Viewport* vp, QMouseEvent* event)
-{
-	if(event->button() == Qt::LeftButton) {
-
-		if(_pickedParticles.size() >= 3) {
-			_pickedParticles.clear();
-			vp->dataset()->viewportConfig()->updateViewports();
-		}
-
-		PickResult pickResult;
-		if(pickParticle(vp, event->pos(), pickResult)) {
-
-			// Do not select the same particle twice.
-			bool ignore = false;
-			if(_pickedParticles.size() >= 1 && _pickedParticles[0].worldPos.equals(pickResult.worldPos, FLOATTYPE_EPSILON)) ignore = true;
-			if(_pickedParticles.size() >= 2 && _pickedParticles[1].worldPos.equals(pickResult.worldPos, FLOATTYPE_EPSILON)) ignore = true;
-
-			if(!ignore) {
-				_pickedParticles.push_back(pickResult);
-				vp->dataset()->viewportConfig()->updateViewports();
-
-				if(_pickedParticles.size() == 3) {
-
-					// Get the slice modifier that is currently being edited.
-					SliceModifier* mod = dynamic_object_cast<SliceModifier>(_editor->editObject());
-					if(mod)
-						alignPlane(mod);
-					_pickedParticles.clear();
-				}
-			}
-		}
-	}
-
-	ViewportInputMode::mouseReleaseEvent(vp, event);
-}
-
-/******************************************************************************
-* Aligns the modifier's slicing plane to the three selected particles.
-******************************************************************************/
-void PickParticlePlaneInputMode::alignPlane(SliceModifier* mod)
-{
-	OVITO_ASSERT(_pickedParticles.size() == 3);
-
-	try {
-		Plane3 worldPlane(_pickedParticles[0].worldPos, _pickedParticles[1].worldPos, _pickedParticles[2].worldPos, true);
-		if(worldPlane.normal.equals(Vector3::Zero(), FLOATTYPE_EPSILON))
-			throw Exception(tr("Cannot set the new slicing plane. The three selected particle are colinear."));
-
-		// Get the object to world transformation for the currently selected node.
-		ObjectNode* node = _pickedParticles[0].objNode;
-		TimeInterval interval;
-		const AffineTransformation& nodeTM = node->getWorldTransform(mod->dataset()->animationSettings()->time(), interval);
-
-		// Transform new plane from world to object space.
-		Plane3 localPlane = nodeTM.inverse() * worldPlane;
-
-		// Flip new plane orientation if necessary to align it with old orientation.
-		if(localPlane.normal.dot(mod->normal()) < 0)
-			localPlane = -localPlane;
-
-		localPlane.normalizePlane();
-		UndoableTransaction::handleExceptions(mod->dataset()->undoStack(), tr("Align plane to particles"), [mod, &localPlane]() {
-			mod->setNormal(localPlane.normal);
-			mod->setDistance(localPlane.dist);
-		});
-	}
-	catch(const Exception& ex) {
-		ex.showError();
-	}
-}
-
-/******************************************************************************
-* Lets the input mode render its overlay content in a viewport.
-******************************************************************************/
-void PickParticlePlaneInputMode::renderOverlay3D(Viewport* vp, ViewportSceneRenderer* renderer)
-{
-	ViewportInputMode::renderOverlay3D(vp, renderer);
-
-	Q_FOREACH(const PickResult& pa, _pickedParticles) {
-		renderSelectionMarker(vp, renderer, pa);
-	}
-}
-
-/******************************************************************************
-* Computes the bounding box of the 3d visual viewport overlay rendered by the input mode.
-******************************************************************************/
-Box3 PickParticlePlaneInputMode::overlayBoundingBox(Viewport* vp, ViewportSceneRenderer* renderer)
-{
-	Box3 bbox = ViewportInputMode::overlayBoundingBox(vp, renderer);
-	Q_FOREACH(const PickResult& pa, _pickedParticles) {
-		bbox.addBox(selectionMarkerBoundingBox(vp, pa));
-	}
-	return bbox;
-}
-
-OVITO_END_INLINE_NAMESPACE
-
-OVITO_END_INLINE_NAMESPACE
-OVITO_END_INLINE_NAMESPACE
+}	// End of namespace
 }	// End of namespace
 }	// End of namespace

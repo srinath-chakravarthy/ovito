@@ -20,18 +20,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <core/scene/ObjectNode.h>
-#include <core/scene/SelectionSet.h>
 #include "DislocationNetworkObject.h"
-#if 0
-#include "DislocationInspector.h"
-#endif
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, DislocationNetworkObject, DataObject);
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, DislocationNetworkObjectEditor, PropertiesEditor);
-SET_OVITO_OBJECT_EDITOR(DislocationNetworkObject, DislocationNetworkObjectEditor);
 
 /******************************************************************************
 * Constructor.
@@ -42,51 +35,17 @@ DislocationNetworkObject::DislocationNetworkObject(DataSet* dataset, Dislocation
 }
 
 /******************************************************************************
-* Sets up the UI widgets of the editor.
+* Creates a copy of this object.
 ******************************************************************************/
-void DislocationNetworkObjectEditor::createUI(const RolloutInsertionParameters& rolloutParams)
+OORef<RefTarget> DislocationNetworkObject::clone(bool deepCopy, CloneHelper& cloneHelper)
 {
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Dislocations"), rolloutParams);
-	QVBoxLayout* rolloutLayout = new QVBoxLayout(rollout);
+	// Let the base class create an instance of this class.
+	OORef<DislocationNetworkObject> clone = static_object_cast<DislocationNetworkObject>(DataObjectWithSharedStorage<DislocationNetwork>::clone(deepCopy, cloneHelper));
 
-#if 0
-	QPushButton* openInspectorButton = new QPushButton(tr("Open Dislocation Inspector"), rollout);
-	rolloutLayout->addWidget(openInspectorButton);
-	connect(openInspectorButton, &QPushButton::clicked, this, &DislocationNetworkObjectEditor::onOpenInspector);
-#endif
-}
+	// Copy internal data.
+	clone->_cuttingPlanes = this->_cuttingPlanes;
 
-/******************************************************************************
-* Is called when the user presses the "Open Inspector" button.
-******************************************************************************/
-void DislocationNetworkObjectEditor::onOpenInspector()
-{
-	DislocationNetworkObject* dislocationsObj = static_object_cast<DislocationNetworkObject>(editObject());
-	if(!dislocationsObj) return;
-
-#if 0
-	QMainWindow* inspectorWindow = new QMainWindow(container()->window(), (Qt::WindowFlags)(Qt::Tool | Qt::CustomizeWindowHint | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint));
-	inspectorWindow->setWindowTitle(tr("Dislocation Inspector"));
-	PropertiesPanel* propertiesPanel = new PropertiesPanel(inspectorWindow);
-	propertiesPanel->hide();
-
-	QWidget* mainPanel = new QWidget(inspectorWindow);
-	QVBoxLayout* mainPanelLayout = new QVBoxLayout(mainPanel);
-	mainPanelLayout->setStretch(0,1);
-	mainPanelLayout->setContentsMargins(0,0,0,0);
-	inspectorWindow->setCentralWidget(mainPanel);
-
-	ObjectNode* node = dynamic_object_cast<ObjectNode>(dataset()->selection()->front());
-	DislocationInspector* inspector = new DislocationInspector(node);
-	connect(inspector, &QObject::destroyed, inspectorWindow, &QMainWindow::close);
-	inspector->setParent(propertiesPanel);
-	inspector->initialize(propertiesPanel, mainWindow(), RolloutInsertionParameters().insertInto(mainPanel));
-	inspector->setEditObject(dislocationsObj);
-	inspectorWindow->setAttribute(Qt::WA_DeleteOnClose);
-	inspectorWindow->resize(1000, 350);
-	inspectorWindow->show();
-#endif
+	return clone;
 }
 
 }	// End of namespace

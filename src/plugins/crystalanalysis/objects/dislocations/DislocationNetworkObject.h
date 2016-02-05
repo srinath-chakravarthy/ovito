@@ -25,7 +25,6 @@
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/crystalanalysis/data/DislocationNetwork.h>
 #include <core/scene/objects/DataObjectWithSharedStorage.h>
-#include <core/gui/properties/PropertiesEditor.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -48,33 +47,24 @@ public:
 	/// Returns the list of dislocation segments.
 	const std::vector<DislocationSegment*>& modifiableSegments() { return modifiableStorage()->segments(); }
 
-private:
+	/// Returns the planar cuts applied to this dislocation network.
+	const QVector<Plane3>& cuttingPlanes() const { return _cuttingPlanes; }
 
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-/******************************************************************************
-* A properties editor for the DislocationNetworkObject class.
-******************************************************************************/
-class OVITO_CRYSTALANALYSIS_EXPORT DislocationNetworkObjectEditor : public PropertiesEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE DislocationNetworkObjectEditor() {}
+	/// Sets the planar cuts applied to this dislocation network.
+	void setCuttingPlanes(const QVector<Plane3>& planes) {
+		_cuttingPlanes = planes;
+		notifyDependents(ReferenceEvent::TargetChanged);
+	}
 
 protected:
 
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-protected Q_SLOTS:
-
-	/// Is called when the user presses the "Open Inspector" button.
-	void onOpenInspector();
+	/// Creates a copy of this object.
+	virtual OORef<RefTarget> clone(bool deepCopy, CloneHelper& cloneHelper) override;
 
 private:
+
+	/// The planar cuts applied to this dislocation network.
+	QVector<Plane3> _cuttingPlanes;
 
 	Q_OBJECT
 	OVITO_OBJECT

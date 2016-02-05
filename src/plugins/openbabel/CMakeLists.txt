@@ -42,3 +42,5 @@ OVITO_STANDARD_PLUGIN(
 
 TARGET_INCLUDE_DIRECTORIES(OpenBabelPlugin PRIVATE "${OpenBabel_INCLUDE_DIRS}")
 
+# Link to ZLib library, which is needed by OpenBabel.
+TARGET_LINK_LIBRARIES(OpenBabelPlugin PRIVATE ${ZLIB_LIBRARIES})

@@ -150,13 +150,15 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 	if(updateContents) {
 		SimulationCell cellData = cellObject->data();
 		if(OORef<DislocationNetworkObject> dislocationObj = dataObject->convertTo<DislocationNetworkObject>(time)) {
+			// First perform a dry run to count number of render vertices/segments that are going to be generated.
 			int lineSegmentCount = 0, cornerCount = 0;
 			for(DislocationSegment* segment : dislocationObj->segments()) {
-				clipDislocationLine(segment->line, cellData, [&lineSegmentCount, &cornerCount](const Point3&, const Point3&, bool isInitialSegment) {
+				clipDislocationLine(segment->line, cellData, dislocationObj->cuttingPlanes(), [&lineSegmentCount, &cornerCount](const Point3&, const Point3&, bool isInitialSegment) {
 					lineSegmentCount++;
 					if(!isInitialSegment) cornerCount++;
 				});
 			}
+			// Allocate render buffer.
 			_segmentBuffer->startSetElements(lineSegmentCount);
 			std::vector<int> subobjToSegmentMap(lineSegmentCount + cornerCount);
 			int lineSegmentIndex = 0;
@@ -181,7 +183,7 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 					}
 				}
 				Color lineColor = family ? family->color() : Color(0.8,0.8,0.8);
-				clipDislocationLine(segment->line, cellData, [this, &lineSegmentIndex, &cornerPoints, &cornerColors, lineColor, lineRadius, &subobjToSegmentMap, &dislocationIndex, lineSegmentCount](const Point3& v1, const Point3& v2, bool isInitialSegment) {
+				clipDislocationLine(segment->line, cellData, dislocationObj->cuttingPlanes(), [this, &lineSegmentIndex, &cornerPoints, &cornerColors, lineColor, lineRadius, &subobjToSegmentMap, &dislocationIndex, lineSegmentCount](const Point3& v1, const Point3& v2, bool isInitialSegment) {
 					subobjToSegmentMap[lineSegmentIndex] = dislocationIndex;
 					_segmentBuffer->setElement(lineSegmentIndex++, v1, v2 - v1, ColorA(lineColor), lineRadius);
 					if(!isInitialSegment) {
@@ -210,6 +212,13 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 					subobjToSegmentMap.push_back(arrowIndex);
 					Point3 center = cellData.wrapPoint(segment->getPointOnLine(0.5f));
 					Vector3 dir = burgersVectorScaling() * segment->burgersVector.toSpatialVector();
+					// Check if arrow is clipped away by cutting planes.
+					for(const Plane3& plane : dislocationObj->cuttingPlanes()) {
+						if(plane.classifyPoint(center) > 0) {
+							dir.setZero(); // Hide arrow by setting length to zero.
+							break;
+						}
+					}
 					_burgersArrowBuffer->setElement(arrowIndex++, center, dir, arrowColor, arrowRadius);
 				}
 			}
@@ -272,7 +281,7 @@ void DislocationDisplay::renderOverlayMarker(TimePoint time, DataObject* dataObj
 	// Generate the polyline segments to render.
 	QVector<std::pair<Point3,Point3>> lineSegments;
 	QVector<Point3> cornerVertices;
-	clipDislocationLine(segment->line, cellData, [&lineSegments, &cornerVertices](const Point3& v1, const Point3& v2, bool isInitialSegment) {
+	clipDislocationLine(segment->line, cellData, dislocationObj->cuttingPlanes(), [&lineSegments, &cornerVertices](const Point3& v1, const Point3& v2, bool isInitialSegment) {
 		lineSegments.push_back({v1,v2});
 		if(!isInitialSegment)
 			cornerVertices.push_back(v1);
@@ -317,8 +326,31 @@ void DislocationDisplay::renderOverlayMarker(TimePoint time, DataObject* dataObj
 /******************************************************************************
 * Clips a dislocation line at the periodic box boundaries.
 ******************************************************************************/
-void DislocationDisplay::clipDislocationLine(const std::deque<Point3>& line, const SimulationCell& simulationCell, const std::function<void(const Point3&, const Point3&, bool)>& segmentCallback)
+void DislocationDisplay::clipDislocationLine(const std::deque<Point3>& line, const SimulationCell& simulationCell, const QVector<Plane3>& clippingPlanes, const std::function<void(const Point3&, const Point3&, bool)>& segmentCallback)
 {
+	bool isInitialSegment = true;
+	auto clippingFunction = [&clippingPlanes, &segmentCallback, &isInitialSegment](Point3 p1, Point3 p2) {
+		bool isClipped = false;
+		for(const Plane3& plane : clippingPlanes) {
+			FloatType c1 = plane.pointDistance(p1);
+			FloatType c2 = plane.pointDistance(p2);
+			if(c1 >= 0 && c2 >= 0.0) {
+				isClipped = true;
+				break;
+			}
+			else if(c1 > FLOATTYPE_EPSILON && c2 < -FLOATTYPE_EPSILON) {
+				p1 += (p2 - p1) * (c1 / (c1 - c2));
+			}
+			else if(c1 < -FLOATTYPE_EPSILON && c2 > FLOATTYPE_EPSILON) {
+				p2 += (p1 - p2) * (c2 / (c2 - c1));
+			}
+		}
+		if(!isClipped) {
+			segmentCallback(p1, p2, isInitialSegment);
+			isInitialSegment = false;
+		}
+	};
+
 	auto v1 = line.cbegin();
 	Point3 rp1 = simulationCell.absoluteToReduced(*v1);
 	Vector3 shiftVector = Vector3::Zero();
@@ -328,7 +360,6 @@ void DislocationDisplay::clipDislocationLine(const std::deque<Point3>& line, con
 			while(rp1[dim] < 0) { rp1[dim] += 1; shiftVector[dim] += 1; }
 		}
 	}
-	bool isInitialSegment = true;
 	for(auto v2 = v1 + 1; v2 != line.cend(); v1 = v2, ++v2) {
 		Point3 rp2 = simulationCell.absoluteToReduced(*v2) + shiftVector;
 		FloatType smallestT;
@@ -355,7 +386,7 @@ void DislocationDisplay::clipDislocationLine(const std::deque<Point3>& line, con
 			if(smallestT != FLOATTYPE_MAX) {
 				Point3 intersection = rp1 + smallestT * (rp2 - rp1);
 				intersection[crossDim] = floor(intersection[crossDim] + FloatType(0.5));
-				segmentCallback(simulationCell.reducedToAbsolute(rp1), simulationCell.reducedToAbsolute(intersection), isInitialSegment);
+				clippingFunction(simulationCell.reducedToAbsolute(rp1), simulationCell.reducedToAbsolute(intersection));
 				shiftVector[crossDim] -= crossDir;
 				rp1 = intersection;
 				rp1[crossDim] -= crossDir;
@@ -365,8 +396,7 @@ void DislocationDisplay::clipDislocationLine(const std::deque<Point3>& line, con
 		}
 		while(smallestT != FLOATTYPE_MAX);
 
-		segmentCallback(simulationCell.reducedToAbsolute(rp1), simulationCell.reducedToAbsolute(rp2), isInitialSegment);
-		isInitialSegment = false;
+		clippingFunction(simulationCell.reducedToAbsolute(rp1), simulationCell.reducedToAbsolute(rp2));
 		rp1 = rp2;
 	}
 }
