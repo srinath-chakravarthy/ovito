@@ -41,7 +41,14 @@ public:
 		_simulationCell = AffineTransformation::Zero();
 		_reciprocalSimulationCell = AffineTransformation::Zero();
 		_pbcFlags.fill(true);
+		_is2D = false;
 	}
+
+	/// Returns whether this is a 2D system.
+	bool is2D() const { return _is2D; }
+
+	/// Sets whether this is a 2D system.
+	void set2D(bool is2D) { _is2D = is2D; }
 
 	/// Returns the current simulation cell matrix.
 	const AffineTransformation& matrix() const { return _simulationCell; }
@@ -65,9 +72,14 @@ public:
 	/// Sets the PBC flags.
 	void setPbcFlags(bool pbcX, bool pbcY, bool pbcZ) { _pbcFlags[0] = pbcX; _pbcFlags[1] = pbcY; _pbcFlags[2] = pbcZ; }
 
-	/// Computes the (positive) volume of the cell.
-	FloatType volume() const {
+	/// Computes the (positive) volume of the three-dimensional cell.
+	FloatType volume3D() const {
 		return std::abs(_simulationCell.determinant());
+	}
+
+	/// Computes the (positive) volume of the two-dimensional cell.
+	FloatType volume2D() const {
+		return std::abs(_simulationCell.column(0).dot(_simulationCell.column(1)));
 	}
 
 	/// Returns true if the three edges of the cell are parallel to the three
@@ -81,7 +93,7 @@ public:
 
 	/// Checks if two simulation cells are identical.
 	bool operator==(const SimulationCell& other) const {
-		return (_simulationCell == other._simulationCell && _pbcFlags == other._pbcFlags);
+		return (_simulationCell == other._simulationCell && _pbcFlags == other._pbcFlags && _is2D == other._is2D);
 	}
 
 	/// Converts a point given in reduced cell coordinates to a point in absolute coordinates.
@@ -168,6 +180,9 @@ private:
 
 	/// PBC flags.
 	std::array<bool,3> _pbcFlags;
+
+	/// Indicates that it is a 2D system.
+	bool _is2D;
 };
 
 }	// End of namespace

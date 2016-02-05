@@ -129,9 +129,9 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> WignerSeitzAnalysis
 		throw Exception(tr("Reference configuration does not contain simulation cell info."));
 
 	// Check simulation cell(s).
-	if(inputCell->volume() < FLOATTYPE_EPSILON)
+	if(inputCell->volume3D() < FLOATTYPE_EPSILON)
 		throw Exception(tr("Simulation cell is degenerate in the deformed configuration."));
-	if(refCell->volume() < FLOATTYPE_EPSILON)
+	if(refCell->volume3D() < FLOATTYPE_EPSILON)
 		throw Exception(tr("Simulation cell is degenerate in the reference configuration."));
 
 	// Get the particle types.

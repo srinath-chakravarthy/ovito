@@ -45,6 +45,7 @@ Unresolved OpenGL problems:
 
 Unresolved bugs:
 
+- OVITO crashes under Windows 10 when using the Python script modifier (fsyed2309@mytu.tuskegee.edu). 
 - NearestNeighborFinder doesn't work properly for triclinic cells with small angles.
 
 New analysis features:

@@ -34,7 +34,16 @@ bool NearestNeighborFinder::prepare(ParticleProperty* posProperty, const Simulat
 	OVITO_CHECK_POINTER(posProperty);
 
 	simCell = cellData;
-	if(simCell.volume() <= FLOATTYPE_EPSILON)
+
+	// Automatically disable PBCs in Z direction for 2D systems.
+	if(simCell.is2D()) {
+		simCell.setPbcFlags(simCell.pbcFlags()[0], simCell.pbcFlags()[1], false);
+		AffineTransformation matrix = simCell.matrix();
+		matrix.column(2) = Vector3(0, 0, 0.01f);
+		simCell.setMatrix(matrix);
+	}
+
+	if(simCell.volume3D() <= FLOATTYPE_EPSILON)
 		throw Exception("Simulation cell is degenerate.");
 
 	// Compute normal vectors of simulation cell faces.

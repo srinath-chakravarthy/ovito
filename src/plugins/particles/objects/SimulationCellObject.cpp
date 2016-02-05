@@ -23,6 +23,7 @@
 #include <core/utilities/units/UnitsManager.h>
 #include <core/gui/properties/Vector3ParameterUI.h>
 #include <core/gui/properties/BooleanParameterUI.h>
+#include <core/gui/properties/BooleanRadioButtonParameterUI.h>
 #include <core/viewport/ViewportConfiguration.h>
 
 #include "SimulationCellObject.h"
@@ -43,6 +44,7 @@ DEFINE_PROPERTY_FIELD(SimulationCellObject, _cellOrigin, "CellTranslation");
 DEFINE_PROPERTY_FIELD(SimulationCellObject, _pbcX, "PeriodicX");
 DEFINE_PROPERTY_FIELD(SimulationCellObject, _pbcY, "PeriodicY");
 DEFINE_PROPERTY_FIELD(SimulationCellObject, _pbcZ, "PeriodicZ");
+DEFINE_PROPERTY_FIELD(SimulationCellObject, _is2D, "Is2D");
 SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _cellVector1, "Cell vector 1");
 SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _cellVector2, "Cell vector 2");
 SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _cellVector3, "Cell vector 3");
@@ -50,6 +52,7 @@ SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _cellOrigin, "Cell origin");
 SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _pbcX, "Periodic boundary conditions (X)");
 SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _pbcY, "Periodic boundary conditions (Y)");
 SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _pbcZ, "Periodic boundary conditions (Z)");
+SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _is2D, "2D");
 SET_PROPERTY_FIELD_UNITS(SimulationCellObject, _cellVector1, WorldParameterUnit);
 SET_PROPERTY_FIELD_UNITS(SimulationCellObject, _cellVector2, WorldParameterUnit);
 SET_PROPERTY_FIELD_UNITS(SimulationCellObject, _cellVector3, WorldParameterUnit);
@@ -67,6 +70,7 @@ void SimulationCellObject::init(DataSet* dataset)
 	INIT_PROPERTY_FIELD(SimulationCellObject::_pbcX);
 	INIT_PROPERTY_FIELD(SimulationCellObject::_pbcY);
 	INIT_PROPERTY_FIELD(SimulationCellObject::_pbcZ);
+	INIT_PROPERTY_FIELD(SimulationCellObject::_is2D);
 
 	// Attach a display object.
 	addDisplayObject(new SimulationCellDisplay(dataset));
@@ -87,6 +91,21 @@ void SimulationCellEditor::createUI(const RolloutInsertionParameters& rolloutPar
 	layout1->setSpacing(8);
 
 	{
+		QGroupBox* dimensionalityGroupBox = new QGroupBox(tr("Dimensionality"), rollout);
+		layout1->addWidget(dimensionalityGroupBox);
+
+		QGridLayout* layout2 = new QGridLayout(dimensionalityGroupBox);
+		layout2->setContentsMargins(4,4,4,4);
+		layout2->setSpacing(2);
+
+		BooleanRadioButtonParameterUI* is2dPUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(SimulationCellObject::_is2D));
+		is2dPUI->buttonTrue()->setText("2D");
+		is2dPUI->buttonFalse()->setText("3D");
+		layout2->addWidget(is2dPUI->buttonTrue(), 0, 0);
+		layout2->addWidget(is2dPUI->buttonFalse(), 0, 1);
+	}
+
+	{
 		QGroupBox* pbcGroupBox = new QGroupBox(tr("Periodic boundary conditions"), rollout);
 		layout1->addWidget(pbcGroupBox);
 
@@ -102,7 +121,7 @@ void SimulationCellEditor::createUI(const RolloutInsertionParameters& rolloutPar
 		pbcyPUI->checkBox()->setText("Y");
 		layout2->addWidget(pbcyPUI->checkBox(), 0, 1);
 
-		BooleanParameterUI* pbczPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SimulationCellObject::_pbcZ));
+		pbczPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SimulationCellObject::_pbcZ));
 		pbczPUI->checkBox()->setText("Z");
 		layout2->addWidget(pbczPUI->checkBox(), 0, 2);
 	}
@@ -199,6 +218,7 @@ void SimulationCellEditor::createUI(const RolloutInsertionParameters& rolloutPar
 			sublayout->addLayout(layout2);
 			for(int i = 0; i < 3; i++) {
 				Vector3ParameterUI* vPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SimulationCellObject::_cellVector3), i);
+				zvectorPUI[i] = vPUI;
 				layout2->addLayout(vPUI->createFieldLayout(), 0, i*2);
 				layout2->setColumnStretch(i*2, 1);
 				if(i != 2)
@@ -215,6 +235,7 @@ void SimulationCellEditor::createUI(const RolloutInsertionParameters& rolloutPar
 			sublayout->addLayout(layout2);
 			for(int i = 0; i < 3; i++) {
 				Vector3ParameterUI* vPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SimulationCellObject::_cellOrigin), i);
+				if(i == 2) zoriginPUI = vPUI;
 				layout2->addLayout(vPUI->createFieldLayout(), 0, i*2);
 				layout2->setColumnStretch(i*2, 1);
 				if(i != 2)
@@ -257,6 +278,13 @@ void SimulationCellEditor::updateSimulationBoxSize()
 			simCellSizeSpinners[dim]->setFloatValue(cellTM(dim,dim));
 		}
 	}
+
+	pbczPUI->setEnabled(!cell->is2D());
+	simCellSizeSpinners[2]->setEnabled(!cell->is2D());
+	zvectorPUI[0]->setEnabled(!cell->is2D());
+	zvectorPUI[1]->setEnabled(!cell->is2D());
+	zvectorPUI[2]->setEnabled(!cell->is2D());
+	zoriginPUI->setEnabled(!cell->is2D());
 }
 
 /******************************************************************************

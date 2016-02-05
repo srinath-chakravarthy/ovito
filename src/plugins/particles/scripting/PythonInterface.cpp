@@ -352,6 +352,11 @@ BOOST_PYTHON_MODULE(Particles)
 		.add_property("pbc_x", &SimulationCellObject::pbcX, &SimulationCellObject::setPbcX)
 		.add_property("pbc_y", &SimulationCellObject::pbcY, &SimulationCellObject::setPbcY)
 		.add_property("pbc_z", &SimulationCellObject::pbcZ, &SimulationCellObject::setPbcZ)
+		.add_property("is2D", &SimulationCellObject::is2D, &SimulationCellObject::set2D,
+				"Specifies whether the system is two-dimensional (true) or three-dimensional (false). "
+				"For two-dimensional systems the PBC flag in the third direction (z) is ignored. "
+				"\n\n"
+				":Default: ``false``\n")
 		.add_property("cellMatrix", &SimulationCellObject::cellMatrix, &SimulationCellObject::setCellMatrix)
 		.add_property("vector1", make_function(&SimulationCellObject::edgeVector1, return_value_policy<copy_const_reference>()), &SimulationCellObject::setEdgeVector1)
 		.add_property("vector2", make_function(&SimulationCellObject::edgeVector2, return_value_policy<copy_const_reference>()), &SimulationCellObject::setEdgeVector2)

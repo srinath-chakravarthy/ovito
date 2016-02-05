@@ -107,6 +107,15 @@ public:
 	///        the column mapping.
 	void setFileExcerpt(const QString& text) { _fileExcerpt = text; }
 
+	/// \brief Returns true if an input column has been mapped to the Position.Z property.
+	///
+	/// This method can be used to detect 2D datasets.
+	bool hasZCoordinates() const {
+		return std::any_of(begin(), end(), [](const InputColumnInfo& column) {
+			return column.property.type() == ParticleProperty::PositionProperty && column.property.vectorComponent() == 2;
+		});
+	}
+
 private:
 
 	/// A string with the first few lines of the file, which is meant as a hint for the user to figure out

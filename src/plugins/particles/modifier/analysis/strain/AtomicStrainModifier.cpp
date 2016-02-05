@@ -189,9 +189,9 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> AtomicStrainModifie
 		throw Exception(tr("Reference configuration does not contain simulation cell info."));
 
 	// Check simulation cell(s).
-	if(inputCell->volume() < FLOATTYPE_EPSILON)
+	if(inputCell->volume3D() < FLOATTYPE_EPSILON)
 		throw Exception(tr("Simulation cell is degenerate in the deformed configuration."));
-	if(refCell->volume() < FLOATTYPE_EPSILON)
+	if(refCell->volume3D() < FLOATTYPE_EPSILON)
 		throw Exception(tr("Simulation cell is degenerate in the reference configuration."));
 
 	// Get particle identifiers.
@@ -285,9 +285,14 @@ void AtomicStrainModifier::AtomicStrainEngine::perform()
 	if(isCanceled())
 		return;
 
+	// Automatically disable PBCs in Z direction for 2D systems.
+	if(_simCell.is2D())
+		_simCell.setPbcFlags(_simCell.pbcFlags()[0], _simCell.pbcFlags()[1], false);
+
 	// PBCs flags of the current configuration always override PBCs flags
 	// of the reference config.
 	_simCellRef.setPbcFlags(_simCell.pbcFlags());
+	_simCellRef.set2D(_simCell.is2D());
 
 	// Prepare the neighbor list for the reference configuration.
 	CutoffNeighborFinder neighborFinder;
@@ -341,6 +346,14 @@ bool AtomicStrainModifier::AtomicStrainEngine::computeStrain(size_t particleInde
 
 			numNeighbors++;
 		}
+	}
+
+	// Special handling for 2D systems.
+	if(_simCell.is2D()) {
+		// Assume plane strain.
+		V(2,2) = W(2,2) = 1;
+		V(0,2) = V(1,2) = V(2,0) = V(2,1) = 0;
+		W(0,2) = W(1,2) = W(2,0) = W(2,1) = 0;
 	}
 
 	// Check if matrix can be inverted.
@@ -407,7 +420,6 @@ bool AtomicStrainModifier::AtomicStrainEngine::computeStrain(size_t particleInde
 
         _nonaffineSquaredDisplacements->setFloat(particleIndex, D2min);
 	}
-
 
 	// Calculate von Mises shear strain.
 	double xydiff = strain.xx() - strain.yy();

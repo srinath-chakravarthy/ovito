@@ -429,6 +429,9 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 				}
 			}
 		}
+		else if(stream.lineStartsWith("METADATA ")) {
+			// Ignore. This is for future use.
+		}
 		else if(stream.line()[0] != '\0') {
 			throw Exception(tr("Failed to parse file. Invalid keyword in line %1: %2").arg(stream.lineNumber()).arg(stream.lineString()));
 		}

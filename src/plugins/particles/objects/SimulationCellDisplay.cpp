@@ -66,7 +66,11 @@ Box3 SimulationCellDisplay::boundingBox(TimePoint time, DataObject* dataObject, 
 	SimulationCellObject* cellObject = dynamic_object_cast<SimulationCellObject>(dataObject);
 	OVITO_CHECK_OBJECT_POINTER(cellObject);
 
-	return cellObject->boundingBox().padBox(simulationCellLineWidth());
+	AffineTransformation matrix = cellObject->cellMatrix();
+	if(cellObject->is2D())
+		matrix.column(2).setZero();
+
+	return Box3(Point3(0), Point3(1)).transformed(matrix).padBox(simulationCellLineWidth());
 }
 
 /******************************************************************************
@@ -102,10 +106,11 @@ void SimulationCellDisplay::renderWireframe(SimulationCellObject* cell, SceneRen
 			|| !_wireframePickingGeometry->isValid(renderer)) {
 		_wireframeGeometry = renderer->createLinePrimitive();
 		_wireframePickingGeometry = renderer->createLinePrimitive();
-		_wireframeGeometry->setVertexCount(24);
-		_wireframePickingGeometry->setVertexCount(24, renderer->defaultLinePickingWidth());
+		_wireframeGeometry->setVertexCount(cell->is2D() ? 8 : 24);
+		_wireframePickingGeometry->setVertexCount(_wireframeGeometry->vertexCount(), renderer->defaultLinePickingWidth());
 		Point3 corners[8];
 		corners[0] = cell->origin();
+		if(cell->is2D()) corners[0].z() = 0;
 		corners[1] = corners[0] + cell->edgeVector1();
 		corners[2] = corners[1] + cell->edgeVector2();
 		corners[3] = corners[0] + cell->edgeVector2();
@@ -151,10 +156,11 @@ void SimulationCellDisplay::renderSolid(SimulationCellObject* cell, SceneRendere
 			|| !_cornerGeometry->isValid(renderer)) {
 		_edgeGeometry = renderer->createArrowPrimitive(ArrowPrimitive::CylinderShape, ArrowPrimitive::NormalShading, ArrowPrimitive::HighQuality);
 		_cornerGeometry = renderer->createParticlePrimitive(ParticlePrimitive::NormalShading, ParticlePrimitive::HighQuality);
-		_edgeGeometry->startSetElements(12);
+		_edgeGeometry->startSetElements(cell->is2D() ? 4 : 12);
 		ColorA color = (ColorA)simulationCellRenderingColor();
 		Point3 corners[8];
 		corners[0] = cell->origin();
+		if(cell->is2D()) corners[0].z() = 0;
 		corners[1] = corners[0] + cell->edgeVector1();
 		corners[2] = corners[1] + cell->edgeVector2();
 		corners[3] = corners[0] + cell->edgeVector2();
@@ -166,16 +172,18 @@ void SimulationCellDisplay::renderSolid(SimulationCellObject* cell, SceneRendere
 		_edgeGeometry->setElement(1, corners[1], corners[2] - corners[1], color, simulationCellLineWidth());
 		_edgeGeometry->setElement(2, corners[2], corners[3] - corners[2], color, simulationCellLineWidth());
 		_edgeGeometry->setElement(3, corners[3], corners[0] - corners[3], color, simulationCellLineWidth());
-		_edgeGeometry->setElement(4, corners[4], corners[5] - corners[4], color, simulationCellLineWidth());
-		_edgeGeometry->setElement(5, corners[5], corners[6] - corners[5], color, simulationCellLineWidth());
-		_edgeGeometry->setElement(6, corners[6], corners[7] - corners[6], color, simulationCellLineWidth());
-		_edgeGeometry->setElement(7, corners[7], corners[4] - corners[7], color, simulationCellLineWidth());
-		_edgeGeometry->setElement(8, corners[0], corners[4] - corners[0], color, simulationCellLineWidth());
-		_edgeGeometry->setElement(9, corners[1], corners[5] - corners[1], color, simulationCellLineWidth());
-		_edgeGeometry->setElement(10, corners[2], corners[6] - corners[2], color, simulationCellLineWidth());
-		_edgeGeometry->setElement(11, corners[3], corners[7] - corners[3], color, simulationCellLineWidth());
+		if(cell->is2D() == false) {
+			_edgeGeometry->setElement(4, corners[4], corners[5] - corners[4], color, simulationCellLineWidth());
+			_edgeGeometry->setElement(5, corners[5], corners[6] - corners[5], color, simulationCellLineWidth());
+			_edgeGeometry->setElement(6, corners[6], corners[7] - corners[6], color, simulationCellLineWidth());
+			_edgeGeometry->setElement(7, corners[7], corners[4] - corners[7], color, simulationCellLineWidth());
+			_edgeGeometry->setElement(8, corners[0], corners[4] - corners[0], color, simulationCellLineWidth());
+			_edgeGeometry->setElement(9, corners[1], corners[5] - corners[1], color, simulationCellLineWidth());
+			_edgeGeometry->setElement(10, corners[2], corners[6] - corners[2], color, simulationCellLineWidth());
+			_edgeGeometry->setElement(11, corners[3], corners[7] - corners[3], color, simulationCellLineWidth());
+		}
 		_edgeGeometry->endSetElements();
-		_cornerGeometry->setSize(8);
+		_cornerGeometry->setSize(cell->is2D() ? 4 : 8);
 		_cornerGeometry->setParticlePositions(corners);
 		_cornerGeometry->setParticleRadius(simulationCellLineWidth());
 		_cornerGeometry->setParticleColor(simulationCellRenderingColor());

@@ -37,7 +37,15 @@ bool CutoffNeighborFinder::prepare(FloatType cutoffRadius, ParticleProperty* pos
 		throw Exception("Invalid parameter: Neighbor cutoff radius must be positive.");
 
 	simCell = cellData;
-	if(simCell.volume() <= FLOATTYPE_EPSILON)
+
+	// Automatically disable PBCs in Z direction for 2D systems.
+	if(simCell.is2D()) {
+		simCell.setPbcFlags(simCell.pbcFlags()[0], simCell.pbcFlags()[1], false);
+		AffineTransformation matrix = simCell.matrix();
+		matrix.column(2) = Vector3(0, 0, 0.01f);
+		simCell.setMatrix(matrix);
+	}
+	if(simCell.volume3D() <= FLOATTYPE_EPSILON)
 		throw Exception("Invalid input data: Simulation cell is degenerate.");
 
 	AffineTransformation binCell;
@@ -51,13 +59,23 @@ bool CutoffNeighborFinder::prepare(FloatType cutoffRadius, ParticleProperty* pos
 		FloatType x = std::abs(simCell.matrix().column(i).dot(planeNormals[i]) / _cutoffRadius);
 		binDim[i] = std::max((int)floor(std::min(x, FloatType(binCountLimit))), 1);
 	}
+	if(simCell.is2D())
+		binDim[2] = 1;
+
 	// Impose limit on the total number of bins.
 	qint64 binCount = (qint64)binDim[0] * (qint64)binDim[1] * (qint64)binDim[2];
 	// Reduce bin count in each dimension by the same fraction to stay below total upper limit.
 	if(binCount > binCountLimit) {
-		FloatType factor = pow((FloatType)binCountLimit / binCount, 1.0/3.0);
-		for(size_t i = 0; i < 3; i++)
-			binDim[i] = std::max((int)(binDim[i] * factor), 1);
+		if(!simCell.is2D()) {
+			FloatType factor = pow((FloatType)binCountLimit / binCount, 1.0/3.0);
+			for(size_t i = 0; i < 3; i++)
+				binDim[i] = std::max((int)(binDim[i] * factor), 1);
+		}
+		else {
+			FloatType factor = pow((FloatType)binCountLimit / binCount, 1.0/2.0);
+			for(size_t i = 0; i < 2; i++)
+				binDim[i] = std::max((int)(binDim[i] * factor), 1);
+		}
 	}
 	binCount = (qint64)binDim[0] * (qint64)binDim[1] * (qint64)binDim[2];
 	OVITO_ASSERT(binCount < 0xFFFFFFFF);
@@ -102,9 +120,12 @@ bool CutoffNeighborFinder::prepare(FloatType cutoffRadius, ParticleProperty* pos
 
 	for(int stencilRadius = 0; stencilRadius < 100; stencilRadius++) {
 		size_t oldCount = stencil.size();
-		for(int ix = -stencilRadius; ix <= stencilRadius; ix++) {
-			for(int iy = -stencilRadius; iy <= stencilRadius; iy++) {
-				for(int iz = -stencilRadius; iz <= stencilRadius; iz++) {
+		int stencilRadiusX = simCell.pbcFlags()[0] ? stencilRadius : std::min(stencilRadius, binDim[0] - 1);
+		int stencilRadiusY = simCell.pbcFlags()[1] ? stencilRadius : std::min(stencilRadius, binDim[1] - 1);
+		int stencilRadiusZ = simCell.pbcFlags()[2] ? stencilRadius : std::min(stencilRadius, binDim[2] - 1);
+		for(int ix = -stencilRadiusX; ix <= stencilRadiusX; ix++) {
+			for(int iy = -stencilRadiusY; iy <= stencilRadiusY; iy++) {
+				for(int iz = -stencilRadiusZ; iz <= stencilRadiusZ; iz++) {
 					if(std::abs(ix) < stencilRadius && std::abs(iy) < stencilRadius && std::abs(iz) < stencilRadius)
 						continue;
 					FloatType shortestDistance = FLOATTYPE_MAX;
@@ -199,7 +220,7 @@ CutoffNeighborFinder::Query::Query(const CutoffNeighborFinder& finder, size_t pa
 	for(size_t k = 0; k < 3; k++) {
 		_centerBin[k] = (int)floor(_builder.reciprocalBinCell.prodrow(_center, k));
 		if(_centerBin[k] < 0) _centerBin[k] = 0;
-		else if(_centerBin[k] >= _builder.binDim[k]) _centerBin[k] = _builder.binDim[k];
+		else if(_centerBin[k] >= _builder.binDim[k]) _centerBin[k] = _builder.binDim[k] - 1;
 	}
 
 	next();

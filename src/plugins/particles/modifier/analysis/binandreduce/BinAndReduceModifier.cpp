@@ -169,7 +169,7 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
 		throw Exception(tr("Simulation cell is degenerate."));
 
     // Compute the distance of the two cell faces (normal.length() is area of face).
-    FloatType cellVolume = cell.volume();
+    FloatType cellVolume = cell.volume3D();
     _xAxisRangeStart = (expectSimulationCell()->origin() - Point3::Origin()).dot(normalX.normalized());
     _xAxisRangeEnd = _xAxisRangeStart + cellVolume / normalX.length();
     if(!is1D()) {

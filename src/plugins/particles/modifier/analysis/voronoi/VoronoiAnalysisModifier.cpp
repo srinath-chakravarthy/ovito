@@ -133,7 +133,7 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 	setProgressText(tr("Computing Voronoi cells"));
 
 	// Compute the total simulation cell volume.
-	_simulationBoxVolume = _simCell.volume();
+	_simulationBoxVolume = _simCell.volume3D();
 
 	if(_positions->size() == 0 || _simulationBoxVolume == 0)
 		return;	// Nothing to do

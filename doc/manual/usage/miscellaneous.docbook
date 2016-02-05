@@ -53,11 +53,12 @@
   <simplesect xml:id="usage.particle_inspection_utility">
     <title>Particle inspection utility</title>
     <para>
-      The "Utilities" tab in OVITO's command panel provides a tool for 
-      inspecting properties of individual particles and measuring distances and angles between particles.
+      The "Utilities" tab in OVITO's command panel, which is shown in the screenshoft on the right, provides a tool for 
+      inspecting the properties of individual particles. It also allows you to measure distances between pairs of selected particles and 
+      angles formed by triplets.
     </para>
     <para>
-      On the same tab you find another utility that lets you create 
+      There is also a utility on the same command panel tab that lets you visualize 
       <link linkend="howto.visualize_particle_trajectories">particle trajectory lines</link>.
     </para>
   </simplesect>

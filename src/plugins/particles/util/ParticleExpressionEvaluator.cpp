@@ -177,7 +177,7 @@ void ParticleExpressionEvaluator::createInputVariables(const std::vector<Particl
 
 	if(simCell) {
 		// Cell volume
-		registerGlobalParameter("CellVolume", simCell->volume(), tr("simulation cell volume"));
+		registerGlobalParameter("CellVolume", simCell->volume3D(), tr("simulation cell volume"));
 
 		// Cell size
 		registerGlobalParameter("CellSize.X", std::abs(simCell->matrix().column(0).x()), tr("size along X"));

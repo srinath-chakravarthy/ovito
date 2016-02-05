@@ -327,6 +327,9 @@ void LAMMPSTextDumpImporter::LAMMPSTextDumpImportTask::parseFile(CompressedTextR
 					}
 				}
 
+				// Detect dimensionality of system.
+				simulationCell().set2D(!columnMapping.hasZCoordinates());
+
 				setStatus(tr("%1 particles at timestep %2").arg(numParticles).arg(timestep));
 				return;	// Done!
 			}

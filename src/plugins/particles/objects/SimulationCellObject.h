@@ -26,6 +26,8 @@
 #include <core/scene/objects/DataObject.h>
 #include <core/gui/properties/PropertiesEditor.h>
 #include <core/gui/properties/FloatParameterUI.h>
+#include <core/gui/properties/BooleanParameterUI.h>
+#include <core/gui/properties/Vector3ParameterUI.h>
 #include <plugins/particles/data/SimulationCell.h>
 
 namespace Ovito { namespace Particles {
@@ -43,14 +45,14 @@ public:
 	/// \brief Constructor. Creates an empty simulation cell.
 	Q_INVOKABLE SimulationCellObject(DataSet* dataset) : DataObject(dataset),
 		_cellVector1(Vector3::Zero()), _cellVector2(Vector3::Zero()), _cellVector3(Vector3::Zero()),
-		_cellOrigin(Point3::Origin()), _pbcX(false), _pbcY(false), _pbcZ(false) {
+		_cellOrigin(Point3::Origin()), _pbcX(false), _pbcY(false), _pbcZ(false), _is2D(false) {
 		init(dataset);
 	}
 
 	/// \brief Constructs a cell from the given cell data structure.
 	explicit SimulationCellObject(DataSet* dataset, const SimulationCell& data) : DataObject(dataset),
 			_cellVector1(data.matrix().column(0)), _cellVector2(data.matrix().column(1)), _cellVector3(data.matrix().column(2)),
-			_cellOrigin(Point3::Origin() + data.matrix().column(3)), _pbcX(data.pbcFlags()[0]), _pbcY(data.pbcFlags()[1]), _pbcZ(data.pbcFlags()[2]) {
+			_cellOrigin(Point3::Origin() + data.matrix().column(3)), _pbcX(data.pbcFlags()[0]), _pbcY(data.pbcFlags()[1]), _pbcZ(data.pbcFlags()[2]), _is2D(data.is2D()) {
 		init(dataset);
 	}
 
@@ -60,19 +62,19 @@ public:
 	/// \param a3 The third edge vector.
 	/// \param origin The origin position.
 	SimulationCellObject(DataSet* dataset, const Vector3& a1, const Vector3& a2, const Vector3& a3,
-			const Point3& origin = Point3::Origin(), bool pbcX = false, bool pbcY = false, bool pbcZ = false) :
+			const Point3& origin = Point3::Origin(), bool pbcX = false, bool pbcY = false, bool pbcZ = false, bool is2D = false) :
 		DataObject(dataset),
 		_cellVector1(a1), _cellVector2(a2), _cellVector3(a3),
-		_cellOrigin(origin), _pbcX(pbcX), _pbcY(pbcY), _pbcZ(pbcZ) {
+		_cellOrigin(origin), _pbcX(pbcX), _pbcY(pbcY), _pbcZ(pbcZ), _is2D(is2D) {
 		init(dataset);
 	}
 
 	/// \brief Constructs a cell from a matrix that specifies its shape and position in space.
 	/// \param cellMatrix The matrix
-	SimulationCellObject(DataSet* dataset, const AffineTransformation& cellMatrix, bool pbcX = false, bool pbcY = false, bool pbcZ = false) :
+	SimulationCellObject(DataSet* dataset, const AffineTransformation& cellMatrix, bool pbcX = false, bool pbcY = false, bool pbcZ = false, bool is2D = false) :
 		DataObject(dataset),
 		_cellVector1(cellMatrix.column(0)), _cellVector2(cellMatrix.column(1)), _cellVector3(cellMatrix.column(2)),
-		_cellOrigin(Point3::Origin() + cellMatrix.column(3)), _pbcX(pbcX), _pbcY(pbcY), _pbcZ(pbcZ) {
+		_cellOrigin(Point3::Origin() + cellMatrix.column(3)), _pbcX(pbcX), _pbcY(pbcY), _pbcZ(pbcZ), _is2D(is2D) {
 		init(dataset);
 	}
 
@@ -81,24 +83,25 @@ public:
 	/// \param pbcX Specifies whether periodic boundary conditions are enabled in the X direction.
 	/// \param pbcY Specifies whether periodic boundary conditions are enabled in the Y direction.
 	/// \param pbcZ Specifies whether periodic boundary conditions are enabled in the Z direction.
-	SimulationCellObject(DataSet* dataset, const Box3& box, bool pbcX = false, bool pbcY = false, bool pbcZ = false) :
+	SimulationCellObject(DataSet* dataset, const Box3& box, bool pbcX = false, bool pbcY = false, bool pbcZ = false, bool is2D = false) :
 		DataObject(dataset),
 		_cellVector1(box.sizeX(), 0, 0), _cellVector2(0, box.sizeY(), 0), _cellVector3(0, 0, box.sizeZ()),
-		_cellOrigin(box.minc), _pbcX(pbcX), _pbcY(pbcY), _pbcZ(pbcZ) {
+		_cellOrigin(box.minc), _pbcX(pbcX), _pbcY(pbcY), _pbcZ(pbcZ), _is2D(is2D) {
 		init(dataset);
 		OVITO_ASSERT_MSG(box.sizeX() >= 0 && box.sizeY() >= 0 && box.sizeZ() >= 0, "SimulationCellObject constructor", "The simulation box must have a non-negative volume.");
 	}
 
 	/// \brief Sets the cell geometry to match the given cell data structure.
-	void setData(const SimulationCell& data, bool setPBCFlags = true) {
+	void setData(const SimulationCell& data, bool setBoundaryFlags = true) {
 		_cellVector1 = data.matrix().column(0);
 		_cellVector2 = data.matrix().column(1);
 		_cellVector3 = data.matrix().column(2);
 		_cellOrigin = Point3::Origin() + data.matrix().column(3);
-		if(setPBCFlags) {
+		if(setBoundaryFlags) {
 			_pbcX = data.pbcFlags()[0];
 			_pbcY = data.pbcFlags()[1];
 			_pbcZ = data.pbcFlags()[2];
+			_is2D = data.is2D();
 		}
 	}
 
@@ -107,6 +110,7 @@ public:
 		SimulationCell data;
 		data.setMatrix(cellMatrix());
 		data.setPbcFlags(pbcX(), pbcY(), pbcZ());
+		data.set2D(is2D());
 		return data;
 	}
 
@@ -166,9 +170,14 @@ public:
 	/// Sets the cell origin.
 	void setOrigin(const Point3& origin) { _cellOrigin = origin; }
 
-	/// Computes the (positive) volume of the cell.
-	FloatType volume() const {
+	/// Computes the (positive) volume of the three-dimensional cell.
+	FloatType volume3D() const {
 		return std::abs(edgeVector1().dot(edgeVector2().cross(edgeVector3())));
+	}
+
+	/// Computes the (positive) volume of the two-dimensional cell.
+	FloatType volume2D() const {
+		return std::abs(edgeVector1().dot(edgeVector2()));
 	}
 
 	/// \brief Enables or disables periodic boundary conditions in the three spatial directions.
@@ -199,11 +208,11 @@ public:
 	/// \brief Sets periodic boundary flag for the Z direction.
 	void setPbcZ(bool enable) { _pbcZ = enable; }
 
-	/// \brief Computes the axis-aligned bounding box of the simulation cell.
-	/// \return An axis-aligned box that completely covers the simulation cell.
-	Box3 boundingBox() const {
-		return Box3(Point3(0), Point3(1)).transformed(cellMatrix());
-	}
+	/// Returns whether this is a 2D system.
+	bool is2D() const { return _is2D; }
+
+	/// Sets whether this is a 2D system.
+	void set2D(bool is2D) { _is2D = is2D; }
 
 	/// \brief Returns the title of this object.
 	virtual QString objectTitle() override { return tr("Simulation cell"); }
@@ -229,6 +238,9 @@ protected:
 	/// Specifies periodic boundary condition in the Z direction.
 	PropertyField<bool> _pbcZ;
 
+	/// Stores the dimensionality of the system.
+	PropertyField<bool> _is2D;
+
 private:
 
 	Q_OBJECT
@@ -243,6 +255,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_pbcX);
 	DECLARE_PROPERTY_FIELD(_pbcY);
 	DECLARE_PROPERTY_FIELD(_pbcZ);
+	DECLARE_PROPERTY_FIELD(_is2D);
 };
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -286,6 +299,9 @@ private:
 	void changeSimulationBoxSize(int dim);
 
 	SpinnerWidget* simCellSizeSpinners[3];
+	BooleanParameterUI* pbczPUI;
+	Vector3ParameterUI* zvectorPUI[3];
+	Vector3ParameterUI* zoriginPUI;
 
 	Q_OBJECT
 	OVITO_OBJECT
