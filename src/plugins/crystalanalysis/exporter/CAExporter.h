@@ -36,7 +36,7 @@ class OVITO_CRYSTALANALYSIS_EXPORT CAExporter : public ParticleExporter
 public:
 
 	/// \brief Constructs a new instance of this class.
-	Q_INVOKABLE CAExporter(DataSet* dataset) : ParticleExporter(dataset) {}
+	Q_INVOKABLE CAExporter(DataSet* dataset) : ParticleExporter(dataset), _meshExportEnabled(true) {}
 
 	/// \brief Returns the file filter that specifies the files that can be exported by this service.
 	virtual QString fileFilter() override { return QStringLiteral("*"); }
@@ -47,12 +47,21 @@ public:
 	/// \brief Opens the export settings dialog for this exporter service.
 	virtual bool showSettingsDialog(const PipelineFlowState& state, QWidget* parent) override;
 
+	/// Returns whether the DXA defect mesh is exported (in addition to the dislocation lines).
+	bool meshExportEnabled() const { return _meshExportEnabled; }
+
+	/// Sets whether the DXA defect mesh is exported (in addition to the dislocation lines).
+	void setMeshExportEnabled(bool enable) { _meshExportEnabled = enable; }
+
 protected:
 
 	/// \brief Writes the particles of one animation frame to the current output file.
 	virtual bool exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress) override;
 
 private:
+
+	/// Controls whether the DXA defect mesh is exported (in addition to the dislocation lines).
+	bool _meshExportEnabled;
 
 	Q_OBJECT
 	OVITO_OBJECT

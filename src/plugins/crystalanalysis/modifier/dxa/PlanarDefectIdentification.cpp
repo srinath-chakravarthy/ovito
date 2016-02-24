@@ -240,7 +240,7 @@ bool PlanarDefectIdentification::extractPlanarDefects(int crystalStructure, Futu
 			DelaunayTessellation::CellHandle cell2 = mirrorCell.first;
 
 			// Check if it is also a good tet. If not, skip it.
-			if(!cell2->info().flag) continue;
+			if(!cell2->info().userField) continue;
 
 			// We will visit this pair of cells twice, therefore we have to skip it in half of the cases.
 			// Use the indices of the two vertices not shared by the two tets as a criterion.

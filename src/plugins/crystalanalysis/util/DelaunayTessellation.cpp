@@ -235,10 +235,10 @@ void DelaunayTessellation::dumpToVTKFile(const QString& filename) const
 		stream << "10" << "\n";
 
 	stream << endl << "CELL_DATA " << numCells << "\n";
-	stream << endl << "SCALARS flag int" << "\n";
+	stream << endl << "SCALARS userfield int" << "\n";
 	stream << "LOOKUP_TABLE default" << "\n";
 	for(auto cell = _dt.finite_cells_begin(); cell != _dt.finite_cells_end(); ++cell) {
-		stream << cell->info().flag << "\n";
+		stream << cell->info().userField << "\n";
 	}
 
 	stream << endl << "SCALARS index int" << "\n";

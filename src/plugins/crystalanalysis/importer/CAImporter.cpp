@@ -546,21 +546,27 @@ void CAImporter::CrystalAnalysisFrameLoader::handOver(CompoundObject* container)
 		patternCatalog->removePattern(i);
 
 	// Insert cluster graph.
-	OORef<ClusterGraphObject> clusterGraph = oldObjects.findObject<ClusterGraphObject>();
-	if(!clusterGraph) {
-		clusterGraph = new ClusterGraphObject(container->dataset());
+	OORef<ClusterGraphObject> clusterGraph;
+	if(_clusterGraph) {
+		clusterGraph = oldObjects.findObject<ClusterGraphObject>();
+		if(!clusterGraph) {
+			clusterGraph = new ClusterGraphObject(container->dataset());
+		}
+		clusterGraph->setStorage(_clusterGraph.data());
 	}
-	clusterGraph->setStorage(_clusterGraph.data());
 
 	// Insert dislocations.
-	OORef<DislocationNetworkObject> dislocationNetwork = oldObjects.findObject<DislocationNetworkObject>();
-	if(!dislocationNetwork) {
-		dislocationNetwork = new DislocationNetworkObject(container->dataset());
-		OORef<DislocationDisplay> displayObj = new DislocationDisplay(container->dataset());
-		displayObj->loadUserDefaults();
-		dislocationNetwork->setDisplayObject(displayObj);
+	OORef<DislocationNetworkObject> dislocationNetwork;
+	if(_dislocations) {
+		dislocationNetwork = oldObjects.findObject<DislocationNetworkObject>();
+		if(!dislocationNetwork) {
+			dislocationNetwork = new DislocationNetworkObject(container->dataset());
+			OORef<DislocationDisplay> displayObj = new DislocationDisplay(container->dataset());
+			displayObj->loadUserDefaults();
+			dislocationNetwork->setDisplayObject(displayObj);
+		}
+		dislocationNetwork->setStorage(_dislocations.data());
 	}
-	dislocationNetwork->setStorage(_dislocations.data());
 
 	// Insert particles.
 	if(_particleLoadTask) {
@@ -580,9 +586,12 @@ void CAImporter::CrystalAnalysisFrameLoader::handOver(CompoundObject* container)
 
 	if(_defectSurface)
 		container->addDataObject(defectSurfaceObj);
-	container->addDataObject(patternCatalog);
-	container->addDataObject(clusterGraph);
-	container->addDataObject(dislocationNetwork);
+	if(patternCatalog)
+		container->addDataObject(patternCatalog);
+	if(clusterGraph)
+		container->addDataObject(clusterGraph);
+	if(dislocationNetwork)
+		container->addDataObject(dislocationNetwork);
 }
 
 /******************************************************************************

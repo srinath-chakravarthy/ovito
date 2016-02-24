@@ -26,6 +26,7 @@
 #include <plugins/crystalanalysis/modifier/dxa/DislocationAnalysisModifier.h>
 #include <plugins/crystalanalysis/modifier/dxa/StructureAnalysis.h>
 #include <plugins/crystalanalysis/modifier/elasticstrain/ElasticStrainModifier.h>
+#include <plugins/crystalanalysis/modifier/grains/GrainSegmentationModifier.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationDisplay.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
@@ -224,6 +225,13 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 				":Default: sqrt(8/3)\n")
 	;
 
+	ovito_class<GrainSegmentationModifier, StructureIdentificationModifier>()
+		.add_property("input_crystal_structure", &GrainSegmentationModifier::inputCrystalStructure, &GrainSegmentationModifier::setInputCrystalStructure)
+		.add_property("misorientation_threshold", &GrainSegmentationModifier::misorientationThreshold, &GrainSegmentationModifier::setMisorientationThreshold)
+		.add_property("fluctuation_tolerance", &GrainSegmentationModifier::fluctuationTolerance, &GrainSegmentationModifier::setFluctuationTolerance)
+		.add_property("min_atom_count", &GrainSegmentationModifier::minGrainAtomCount, &GrainSegmentationModifier::setMinGrainAtomCount)
+	;
+
 	ovito_class<SmoothDislocationsModifier, Modifier>()
 		.add_property("smoothingEnabled", &SmoothDislocationsModifier::smoothingEnabled, &SmoothDislocationsModifier::setSmoothingEnabled)
 		.add_property("smoothingLevel", &SmoothDislocationsModifier::smoothingLevel, &SmoothDislocationsModifier::setSmoothingLevel)
@@ -240,6 +248,7 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 	;
 
 	ovito_class<CAExporter, ParticleExporter>()
+		.add_property("export_mesh", &CAExporter::meshExportEnabled, &CAExporter::setMeshExportEnabled)
 	;
 
 	ovito_class<DislocationDisplay, DisplayObject>(

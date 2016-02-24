@@ -86,11 +86,17 @@ public:
 	/// Sets the transparency of the surface cap mesh.
 	void setCapTransparency(FloatType transparency) { if(_capTransparency) _capTransparency->setCurrentFloatValue(transparency); }
 
+	/// Returns whether the mesh' orientation is flipped.
+	bool reverseOrientation() const { return _reverseOrientation; }
+
+	/// Sets whether the mesh' orientation is flipped.
+	void setReverseOrientation(bool reverse) { _reverseOrientation = reverse; }
+
 	/// Generates the final triangle mesh, which will be rendered.
-	static bool buildSurfaceMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress = nullptr);
+	static bool buildSurfaceMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool reverseOrientation, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress = nullptr);
 
 	/// Generates the triangle mesh for the PBC cap.
-	static void buildCapMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool isCompletelySolid, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress = nullptr);
+	static void buildCapMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool isCompletelySolid, bool reverseOrientation, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress = nullptr);
 
 protected:
 
@@ -106,8 +112,8 @@ protected:
 	public:
 
 		/// Constructor.
-		PrepareSurfaceEngine(HalfEdgeMesh<>* mesh, const SimulationCell& simCell, bool isCompletelySolid, const QVector<Plane3>& cuttingPlanes) :
-			_inputMesh(mesh), _simCell(simCell), _isCompletelySolid(isCompletelySolid), _cuttingPlanes(cuttingPlanes) {}
+		PrepareSurfaceEngine(HalfEdgeMesh<>* mesh, const SimulationCell& simCell, bool isCompletelySolid, bool reverseOrientation, const QVector<Plane3>& cuttingPlanes) :
+			_inputMesh(mesh), _simCell(simCell), _isCompletelySolid(isCompletelySolid), _reverseOrientation(reverseOrientation), _cuttingPlanes(cuttingPlanes) {}
 
 		/// Computes the results and stores them in this object for later retrieval.
 		virtual void perform() override;
@@ -120,6 +126,7 @@ protected:
 		QExplicitlySharedDataPointer<HalfEdgeMesh<>> _inputMesh;
 		SimulationCell _simCell;
 		bool _isCompletelySolid;
+		bool _reverseOrientation;
 		QVector<Plane3> _cuttingPlanes;
 		TriMesh _surfaceMesh;
 		TriMesh _capPolygonsMesh;
@@ -157,6 +164,9 @@ protected:
 	/// Controls whether the surface mesh is rendered using smooth shading.
 	PropertyField<bool> _smoothShading;
 
+	/// Controls whether the mesh' orientation is flipped.
+	PropertyField<bool> _reverseOrientation;
+
 	/// Controls the transparency of the surface mesh.
 	ReferenceField<Controller> _surfaceTransparency;
 
@@ -187,7 +197,8 @@ protected:
 	/// that require recomputing the cached triangle mesh for rendering.
 	SceneObjectCacheHelper<
 		WeakVersionedOORef<DataObject>,		// Source object + revision number
-		SimulationCell						// Simulation cell geometry
+		SimulationCell,						// Simulation cell geometry
+		bool								// Reverse orientation flag
 		> _preparationCacheHelper;
 
 	/// Indicates that the triangle mesh representation of the surface has recently been updated.
@@ -204,6 +215,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_capColor);
 	DECLARE_PROPERTY_FIELD(_showCap);
 	DECLARE_PROPERTY_FIELD(_smoothShading);
+	DECLARE_PROPERTY_FIELD(_reverseOrientation);
 	DECLARE_REFERENCE_FIELD(_surfaceTransparency);
 	DECLARE_REFERENCE_FIELD(_capTransparency);
 };

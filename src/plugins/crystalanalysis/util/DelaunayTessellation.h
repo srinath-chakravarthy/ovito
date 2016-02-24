@@ -92,7 +92,7 @@ public:
 	/// Data structure attached to each tessellation cell.
 	struct CellInfo {
 		bool isGhost;	// Indicates whether this is a ghost tetrahedron.
-		bool flag;		// An additional flag that can be used by client code.
+		int userField;	// An additional field that can be used by client code.
 		int index;		// An index assigned to the cell.
 	};
 

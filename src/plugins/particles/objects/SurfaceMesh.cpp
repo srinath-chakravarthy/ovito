@@ -86,11 +86,27 @@ void SurfaceMesh::smoothMeshIteration(HalfEdgeMesh<>& mesh, FloatType prefactor,
 	parallelFor(mesh.vertexCount(), [&mesh, &displacements, prefactor, cell, absoluteToReduced](int index) {
 		HalfEdgeMesh<>::Vertex* vertex = mesh.vertex(index);
 		Vector3 d = Vector3::Zero();
+#if 1
+		// Go in positive direction around vertex, facet by facet.
+		HalfEdgeMesh<>::Edge* currentEdge = vertex->edges();
+		if(currentEdge != nullptr) {
+			int numManifoldEdges = 0;
+			do {
+				OVITO_ASSERT(currentEdge != nullptr && currentEdge->face() != nullptr);
+				d += cell.wrapVector(currentEdge->vertex2()->pos() - vertex->pos());
+				numManifoldEdges++;
+				currentEdge = currentEdge->prevFaceEdge()->oppositeEdge();
+			}
+			while(currentEdge != vertex->edges());
+			d *= (prefactor / numManifoldEdges);
+		}
+#else
 		for(HalfEdgeMesh<>::Edge* edge = vertex->edges(); edge != nullptr; edge = edge->nextVertexEdge()) {
 			d += cell.wrapVector(edge->vertex2()->pos() - vertex->pos());
 		}
 		if(vertex->edges() != nullptr)
 			d *= (prefactor / vertex->numEdges());
+#endif
 		displacements[index] = d;
 	});
 

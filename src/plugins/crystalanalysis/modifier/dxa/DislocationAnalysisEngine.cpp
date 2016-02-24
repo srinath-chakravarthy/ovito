@@ -38,6 +38,7 @@ DislocationAnalysisEngine::DislocationAnalysisEngine(const TimeInterval& validit
 		ParticleProperty* positions, const SimulationCell& simCell,
 		int inputCrystalStructure, int maxTrialCircuitSize, int maxCircuitElongation,
 		bool reconstructEdgeVectors, ParticleProperty* particleSelection,
+		ParticleProperty* crystalClusters,
 		std::vector<Matrix3>&& preferredCrystalOrientations) :
 	StructureIdentificationModifier::StructureIdentificationEngine(validityInterval, positions, simCell, particleSelection),
 	_structureAnalysis(positions, simCell, (StructureAnalysis::LatticeStructureType)inputCrystalStructure, selection(), structures(), std::move(preferredCrystalOrientations)),
@@ -47,7 +48,8 @@ DislocationAnalysisEngine::DislocationAnalysisEngine(const TimeInterval& validit
 	_dislocationTracer(_interfaceMesh, &_structureAnalysis.clusterGraph(), maxTrialCircuitSize, maxCircuitElongation),
 	_inputCrystalStructure(inputCrystalStructure),
 	_planarDefectIdentification(_elasticMapping),
-	_reconstructEdgeVectors(reconstructEdgeVectors)
+	_reconstructEdgeVectors(reconstructEdgeVectors),
+	_crystalClusters(crystalClusters)
 {
 }
 
@@ -121,7 +123,7 @@ void DislocationAnalysisEngine::perform()
 
 	// Assign tetrahedra to good or bad crystal region.
 	nextProgressSubStep();
-	if(!_interfaceMesh.classifyTetrahedra(_structureAnalysis.maximumNeighborDistance(), *this))
+	if(!_interfaceMesh.classifyTetrahedra(_structureAnalysis.maximumNeighborDistance(), crystalClusters(), *this))
 		return;
 
 	// Create the mesh facets.

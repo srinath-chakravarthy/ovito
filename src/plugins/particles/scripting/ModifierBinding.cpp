@@ -653,7 +653,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					"Thus, you have to call :py:meth:`ovito.ObjectNode.compute` first to ensure that this information is up to date. ")
 			.add_property("cutoff", &CommonNeighborAnalysisModifier::cutoff, &CommonNeighborAnalysisModifier::setCutoff,
 					"The cutoff radius used for the conventional common neighbor analysis. "
-					"This parameter is only used if :py:attr:`.mode`==``CommonNeighborAnalysisModifier.Mode.FixedCutoff``."
+					"This parameter is only used if :py:attr:`.mode` == ``CommonNeighborAnalysisModifier.Mode.FixedCutoff``."
 					"\n\n"
 					":Default: 3.2\n")
 			.add_property("mode", &CommonNeighborAnalysisModifier::mode, &CommonNeighborAnalysisModifier::setMode,

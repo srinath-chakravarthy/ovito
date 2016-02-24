@@ -27,10 +27,37 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
+/** Find the most common element in the [first, last) range.
+
+    O(n) in time; O(1) in space.
+
+    [first, last) must be valid sorted range.
+    Elements must be equality comparable.
+*/
+template <class ForwardIterator>
+ForwardIterator most_common(ForwardIterator first, ForwardIterator last)
+{
+	ForwardIterator it(first), max_it(first);
+	size_t count = 0, max_count = 0;
+	for( ; first != last; ++first) {
+		if(*it == *first)
+			count++;
+		else {
+			it = first;
+			count = 1;
+		}
+		if(count > max_count) {
+			max_count = count;
+			max_it = it;
+		}
+	}
+	return max_it;
+}
+
 /******************************************************************************
 * Classifies each tetrahedron of the tessellation as being either good or bad.
 ******************************************************************************/
-bool InterfaceMesh::classifyTetrahedra(FloatType maximumNeighborDistance, FutureInterfaceBase& progress)
+bool InterfaceMesh::classifyTetrahedra(FloatType maximumNeighborDistance, ParticleProperty* crystalClusters, FutureInterfaceBase& progress)
 {
 	_numGoodTetrahedra = 0;
 	_isCompletelyGood = true;
@@ -60,7 +87,16 @@ bool InterfaceMesh::classifyTetrahedra(FloatType maximumNeighborDistance, Future
 			isGood = false;
 		}
 
-		cell->info().flag = isGood;
+		if(!crystalClusters || !isGood) {
+			cell->info().userField = isGood;
+		}
+		else {
+			std::array<int,4> clusters;
+			for(int v = 0; v < 4; v++)
+				clusters[v] = crystalClusters->getInt(cell->vertex(v)->point().index());
+			std::sort(std::begin(clusters), std::end(clusters));
+			cell->info().userField = *most_common(std::begin(clusters), std::end(clusters)) + 1;
+		}
 
 		if(isGood) {
 			if(!cell->info().isGhost)
@@ -110,7 +146,8 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 		// Start with the primary images of the good tetrahedra.
 		if(cell->info().index == -1)
 			continue;
-		OVITO_ASSERT(cell->info().flag);
+		int goodRegionIndex = cell->info().userField;
+		OVITO_ASSERT(goodRegionIndex != 0);
 
 		// Update progress indicator.
 		if(!progress.setProgressValueIntermittent(cell->info().index))
@@ -129,8 +166,8 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 
 			// Test if the adjacent tetrahedron belongs to the bad region.
 			DelaunayTessellation::CellHandle adjacentCell = tessellation().mirrorCell(cell, f);
-			if(adjacentCell->info().flag)
-				continue;	// It's also a good tet. That means we don't create an interface facet here.
+			if(adjacentCell->info().userField == goodRegionIndex)
+				continue;	// It's also a good tet from the same region. That means we don't create an interface facet here.
 
 			// Create the three vertices of the face or use existing output vertices.
 			std::array<Vertex*, 3> facetVertices;
@@ -187,7 +224,7 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 	// This helper function finds the real cell corresponding to a (good) ghost cell.
 	auto findRealTet = [&tetrahedra](DelaunayTessellation::CellHandle cell) -> const Tetrahedron& {
 		OVITO_ASSERT(cell->info().isGhost);
-		OVITO_ASSERT(cell->info().flag);
+		OVITO_ASSERT(cell->info().userField);
 		std::array<int,4> cellVerts;
 		for(size_t i = 0; i < 4; i++) {
 			cellVerts[i] = cell->vertex(i)->point().index();
@@ -199,7 +236,7 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 		if(iter == tetrahedra.end())
 			throw Exception(DislocationAnalysisModifier::tr("DXA failed: Cannot construct interface mesh for this input dataset; real cell not found. This should not happen. Please report this issue to the developer."));
 		OVITO_ASSERT(iter->second.cell->info().isGhost == false);
-		OVITO_ASSERT(iter->second.cell->info().flag);
+		OVITO_ASSERT(iter->second.cell->info().userField);
 		return iter->second;
 	};
 
@@ -229,7 +266,7 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 				OVITO_ASSERT(circulator != circulator_start);
 				do {
 					// Look for the first bad cell while going around the edge.
-					if(circulator->first->info().flag == false)
+					if(circulator->first->info().userField != tet.cell->info().userField)
 						break;
 
 					--circulator;
@@ -239,7 +276,7 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 
 				// Get the adjacent cell, which must be good.
 				std::pair<DelaunayTessellation::CellHandle,int> mirrorFacet = tessellation().mirrorFacet(circulator);
-				OVITO_ASSERT(mirrorFacet.first->info().flag == true);
+				OVITO_ASSERT(mirrorFacet.first->info().userField == tet.cell->info().userField);
 				Face* oppositeFace = nullptr;
 				// If the cell is a ghost cell, find the corresponding real cell.
 				if(mirrorFacet.first->info().isGhost) {

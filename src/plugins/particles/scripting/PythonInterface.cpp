@@ -548,6 +548,10 @@ BOOST_PYTHON_MODULE(Particles)
 				"Enables smooth shading of the triangulated surface mesh."
 				"\n\n"
 				":Default: ``True``\n")
+		.add_property("reverse_orientation", &SurfaceMeshDisplay::reverseOrientation, &SurfaceMeshDisplay::setReverseOrientation,
+				"Flips the orientation of the surface. This affects the generation of cap polygons."
+				"\n\n"
+				":Default: ``False``\n")
 	;
 
 	ovito_class<BondsDisplay, DisplayObject>(
@@ -595,7 +599,7 @@ BOOST_PYTHON_MODULE(Particles)
 			if(!simCellObj)
 				throw Exception("A simulation cell is required to generate non-periodic mesh for export.");
 			TriMesh output;
-			if(!SurfaceMeshDisplay::buildSurfaceMesh(*mesh.storage(), simCellObj->data(), mesh.cuttingPlanes(), output))
+			if(!SurfaceMeshDisplay::buildSurfaceMesh(*mesh.storage(), simCellObj->data(), false, mesh.cuttingPlanes(), output))
 				throw Exception("Failed to generate non-periodic mesh for export. Simulation cell might be too small.");
 			QFile file(filename);
 			CompressedTextWriter writer(file);
@@ -612,7 +616,7 @@ BOOST_PYTHON_MODULE(Particles)
 			if(!simCellObj)
 				throw Exception("A simulation cell is required to generate cap mesh for export.");
 			TriMesh output;
-			SurfaceMeshDisplay::buildCapMesh(*mesh.storage(), simCellObj->data(), mesh.isCompletelySolid(), mesh.cuttingPlanes(), output);
+			SurfaceMeshDisplay::buildCapMesh(*mesh.storage(), simCellObj->data(), mesh.isCompletelySolid(), false, mesh.cuttingPlanes(), output);
 			QFile file(filename);
 			CompressedTextWriter writer(file);
 			output.saveToVTK(writer);

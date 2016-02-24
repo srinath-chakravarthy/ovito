@@ -350,6 +350,9 @@ public:
 	/// This must be called each time the faces of the mesh have been modified.
 	void invalidateFaces() {}
 
+	/// \brief Flip the orientation of all faces.
+	void flipFaces();
+
 	/// \brief Returns whether this mesh has colors associated with its faces.
 	bool hasFaceColors() const {
 		return _hasFaceColors;

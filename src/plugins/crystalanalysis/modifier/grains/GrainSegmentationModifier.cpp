@@ -76,13 +76,16 @@ GrainSegmentationModifier::GrainSegmentationModifier(DataSet* dataset) : Structu
 	};
 	OVITO_STATIC_ASSERT(sizeof(predefTypes)/sizeof(predefTypes[0]) == StructureAnalysis::NUM_LATTICE_TYPES);
 	for(int id = 0; id < StructureAnalysis::NUM_LATTICE_TYPES; id++) {
-		OORef<StructurePattern> stype(new StructurePattern(dataset));
-		stype->setId(id);
+		OORef<StructurePattern> stype = _patternCatalog->structureById(id);
+		if(!stype) {
+			stype = new StructurePattern(dataset);
+			stype->setId(id);
+			stype->setStructureType(StructurePattern::Lattice);
+			_patternCatalog->addPattern(stype);
+		}
 		stype->setName(ParticleTypeProperty::getPredefinedStructureTypeName(predefTypes[id]));
 		stype->setColor(ParticleTypeProperty::getDefaultParticleColor(ParticleProperty::StructureTypeProperty, stype->name(), id));
-		stype->setStructureType(StructurePattern::Lattice);
 		addStructureType(stype);
-		_patternCatalog->addPattern(stype);
 	}
 }
 

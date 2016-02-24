@@ -149,6 +149,18 @@ void TriMesh::loadFromStream(LoadStream& stream)
 }
 
 /******************************************************************************
+* Flip the orientation of all faces.
+******************************************************************************/
+void TriMesh::flipFaces()
+{
+	for(TriMeshFace& face : faces()) {
+		face.setVertices(face.vertex(2), face.vertex(1), face.vertex(0));
+		face.setEdgeVisibility(face.edgeVisible(2), face.edgeVisible(1), face.edgeVisible(0));
+	}
+	invalidateFaces();
+}
+
+/******************************************************************************
 * Performs a ray intersection calculation.
 ******************************************************************************/
 bool TriMesh::intersectRay(const Ray3& ray, FloatType& t, Vector3& normal, int& faceIndex, bool backfaceCull) const

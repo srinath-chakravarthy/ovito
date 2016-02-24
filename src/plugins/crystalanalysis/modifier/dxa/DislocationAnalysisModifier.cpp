@@ -111,13 +111,16 @@ DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : Str
 	};
 	OVITO_STATIC_ASSERT(sizeof(predefTypes)/sizeof(predefTypes[0]) == StructureAnalysis::NUM_LATTICE_TYPES);
 	for(int id = 0; id < StructureAnalysis::NUM_LATTICE_TYPES; id++) {
-		OORef<StructurePattern> stype(new StructurePattern(dataset));
-		stype->setId(id);
+		OORef<StructurePattern> stype = _patternCatalog->structureById(id);
+		if(!stype) {
+			stype = new StructurePattern(dataset);
+			stype->setId(id);
+			stype->setStructureType(StructurePattern::Lattice);
+			_patternCatalog->addPattern(stype);
+		}
 		stype->setName(ParticleTypeProperty::getPredefinedStructureTypeName(predefTypes[id]));
 		stype->setColor(ParticleTypeProperty::getDefaultParticleColor(ParticleProperty::StructureTypeProperty, stype->name(), id));
-		stype->setStructureType(StructurePattern::Lattice);
 		addStructureType(stype);
-		_patternCatalog->addPattern(stype);
 	}
 
 	// Create Burgers vector families.
@@ -229,10 +232,14 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> DislocationAnalysis
 		preferredCrystalOrientations.push_back(Matrix3::Identity());
 	}
 
+	// Get cluster property.
+	ParticlePropertyObject* clusterProperty = inputStandardProperty(ParticleProperty::ClusterProperty);
+
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<DislocationAnalysisEngine>(validityInterval, posProperty->storage(),
 			simCell->data(), inputCrystalStructure(), maxTrialCircuitSize(), circuitStretchability(),
-			reconstructEdgeVectors(), selectionProperty, std::move(preferredCrystalOrientations));
+			reconstructEdgeVectors(), selectionProperty,
+			clusterProperty ? clusterProperty->storage() : nullptr, std::move(preferredCrystalOrientations));
 }
 
 /******************************************************************************
@@ -293,6 +300,8 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 
 	// Output cluster graph.
 	OORef<ClusterGraphObject> clusterGraphObj(new ClusterGraphObject(dataset(), _clusterGraph.data()));
+	if(ClusterGraphObject* oldClusterGraph = output().findObject<ClusterGraphObject>())
+		output().removeObject(oldClusterGraph);
 	output().addObject(clusterGraphObj);
 
 	// Output dislocations.
@@ -328,8 +337,11 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 	}
 
 	// Output pattern catalog.
-	if(_patternCatalog)
+	if(_patternCatalog) {
+		if(PatternCatalog* oldCatalog = output().findObject<PatternCatalog>())
+			output().removeObject(oldCatalog);
 		output().addObject(_patternCatalog);
+	}
 
 	// Output particle properties.
 	if(_atomClusters)

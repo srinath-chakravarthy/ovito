@@ -97,8 +97,8 @@ private:
 	public:
 
 		/// Constructor.
-		ConstructSurfaceEngine(const TimeInterval& validityInterval, ParticleProperty* positions, ParticleProperty* selection, const SimulationCell& simCell, FloatType radius, int smoothingLevel) :
-			ComputeEngine(validityInterval), _positions(positions), _selection(selection), _simCell(simCell), _radius(radius), _smoothingLevel(smoothingLevel), _isCompletelySolid(false), _mesh(new HalfEdgeMesh<>()) {}
+		ConstructSurfaceEngine(const TimeInterval& validityInterval, ParticleProperty* positions, ParticleProperty* selection, ParticleProperty* atomClusters, const SimulationCell& simCell, FloatType radius, int smoothingLevel) :
+			ComputeEngine(validityInterval), _positions(positions), _selection(selection), _atomClusters(atomClusters), _simCell(simCell), _radius(radius), _smoothingLevel(smoothingLevel), _isCompletelySolid(false), _mesh(new HalfEdgeMesh<>()) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;
@@ -111,6 +111,9 @@ private:
 
 		/// Returns the input particle selection.
 		ParticleProperty* selection() const { return _selection.data(); }
+
+		/// Returns the input particle property that stores the cluster assignment of atoms.
+		ParticleProperty* atomClusters() const { return _atomClusters.data(); }
 
 		/// Returns the computed solid volume.
 		FloatType solidVolume() const { return (FloatType)_solidVolume; }
@@ -130,6 +133,7 @@ private:
 		int _smoothingLevel;
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
 		QExplicitlySharedDataPointer<ParticleProperty> _selection;
+		QExplicitlySharedDataPointer<ParticleProperty> _atomClusters;
 		QExplicitlySharedDataPointer<HalfEdgeMesh<>> _mesh;
 		SimulationCell _simCell;
 		double _solidVolume;

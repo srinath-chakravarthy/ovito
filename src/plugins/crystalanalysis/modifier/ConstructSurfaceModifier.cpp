@@ -105,11 +105,13 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> ConstructSurfaceMod
 	ParticlePropertyObject* selProperty = nullptr;
 	if(onlySelectedParticles())
 		selProperty = expectStandardProperty(ParticleProperty::SelectionProperty);
+	ParticlePropertyObject* clusterProperty = inputStandardProperty(ParticleProperty::ClusterProperty);
 	SimulationCellObject* simCell = expectSimulationCell();
 
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<ConstructSurfaceEngine>(validityInterval, posProperty->storage(),
 			selProperty ? selProperty->storage() : nullptr,
+			clusterProperty ? clusterProperty->storage() : nullptr,
 			simCell->data(), radius(), smoothingLevel());
 }
 
@@ -146,6 +148,33 @@ PipelineStatus ConstructSurfaceModifier::applyComputationResults(TimePoint time,
 	return PipelineStatus(PipelineStatus::Success, tr("Surface area: %1\nSolid volume: %2\nTotal volume: %3\nSolid volume fraction: %4\nSurface area per solid volume: %5\nSurface area per total volume: %6")
 			.arg(surfaceArea()).arg(solidVolume()).arg(totalVolume())
 			.arg(solidVolume() / totalVolume()).arg(surfaceArea() / solidVolume()).arg(surfaceArea() / totalVolume()));
+}
+
+/** Find the most common element in the [first, last) range.
+
+    O(n) in time; O(1) in space.
+
+    [first, last) must be valid sorted range.
+    Elements must be equality comparable.
+*/
+template <class ForwardIterator>
+ForwardIterator most_common(ForwardIterator first, ForwardIterator last)
+{
+	ForwardIterator it(first), max_it(first);
+	size_t count = 0, max_count = 0;
+	for( ; first != last; ++first) {
+		if(*it == *first)
+			count++;
+		else {
+			it = first;
+			count = 1;
+		}
+		if(count > max_count) {
+			max_count = count;
+			max_it = it;
+		}
+	}
+	return max_it;
 }
 
 /******************************************************************************
@@ -213,7 +242,17 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 						cell->vertex(3)->point(),
 						alpha) != CGAL::POSITIVE;
 
-		cell->info().flag = isSolid;
+		if(!atomClusters() || !isSolid) {
+			cell->info().userField = isSolid;
+		}
+		else {
+			std::array<int,4> clusters;
+			for(int v = 0; v < 4; v++)
+				clusters[v] = atomClusters()->getInt(cell->vertex(v)->point().index());
+			std::sort(std::begin(clusters), std::end(clusters));
+			cell->info().userField = *most_common(std::begin(clusters), std::end(clusters)) + 1;
+		}
+
 		if(isSolid && !cell->info().isGhost) {
 			cell->info().index = solidCellCount++;
 		}
@@ -244,7 +283,8 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 		// Start with the solid and local tetrahedra.
 		if(cell->info().index == -1)
 			continue;
-		OVITO_ASSERT(cell->info().flag);
+		int solidRegion = cell->info().userField;
+		OVITO_ASSERT(solidRegion);
 
 		// Update progress indicator.
 		if(!setProgressValueIntermittent(cell->info().index))
@@ -273,7 +313,7 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 
 			// Test if the adjacent tetrahedron belongs to the open region.
 			DelaunayTessellation::CellHandle adjacentCell = tessellation.mirrorCell(cell, f);
-			if(adjacentCell->info().flag)
+			if(adjacentCell->info().userField == solidRegion)
 				continue;
 
 			// Create the three vertices of the face or use existing output vertices.
@@ -326,7 +366,7 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 				OVITO_ASSERT(circulator != circulator_start);
 				do {
 					// Look for the first open cell while going around the edge.
-					if(circulator->first->info().flag == false)
+					if(circulator->first->info().userField != tet.cell->info().userField)
 						break;
 					--circulator;
 				}
@@ -335,7 +375,7 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 
 				// Get the adjacent cell, which must be solid.
 				std::pair<DelaunayTessellation::CellHandle,int> mirrorFacet = tessellation.mirrorFacet(circulator);
-				OVITO_ASSERT(mirrorFacet.first->info().flag == true);
+				OVITO_ASSERT(mirrorFacet.first->info().userField == tet.cell->info().userField);
 				HalfEdgeMesh<>::Face* oppositeFace = nullptr;
 				// If the cell is a ghost cell, find the corresponding real cell.
 				if(mirrorFacet.first->info().isGhost) {
@@ -387,6 +427,9 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 			}
 		}
 	}
+
+	// Make sure each mesh vertex is only part of one surface manifold.
+	_mesh->duplicateSharedVertices();
 
 	nextProgressSubStep();
 	SurfaceMesh::smoothMesh(*_mesh, _simCell, _smoothingLevel, this);

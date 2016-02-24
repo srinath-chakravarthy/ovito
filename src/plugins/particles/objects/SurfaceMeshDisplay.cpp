@@ -44,6 +44,7 @@ DEFINE_FLAGS_PROPERTY_FIELD(SurfaceMeshDisplay, _surfaceColor, "SurfaceColor", P
 DEFINE_FLAGS_PROPERTY_FIELD(SurfaceMeshDisplay, _capColor, "CapColor", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(SurfaceMeshDisplay, _showCap, "ShowCap", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(SurfaceMeshDisplay, _smoothShading, "SmoothShading");
+DEFINE_PROPERTY_FIELD(SurfaceMeshDisplay, _reverseOrientation, "ReverseOrientation");
 DEFINE_REFERENCE_FIELD(SurfaceMeshDisplay, _surfaceTransparency, "SurfaceTransparency", Controller);
 DEFINE_REFERENCE_FIELD(SurfaceMeshDisplay, _capTransparency, "CapTransparency", Controller);
 SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _surfaceColor, "Surface color");
@@ -52,6 +53,7 @@ SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _showCap, "Show cap polygons");
 SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _smoothShading, "Smooth shading");
 SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _surfaceTransparency, "Surface transparency");
 SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _capTransparency, "Cap transparency");
+SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _reverseOrientation, "Inside out");
 SET_PROPERTY_FIELD_UNITS(SurfaceMeshDisplay, _surfaceTransparency, PercentParameterUnit);
 SET_PROPERTY_FIELD_UNITS(SurfaceMeshDisplay, _capTransparency, PercentParameterUnit);
 
@@ -59,7 +61,7 @@ SET_PROPERTY_FIELD_UNITS(SurfaceMeshDisplay, _capTransparency, PercentParameterU
 * Constructor.
 ******************************************************************************/
 SurfaceMeshDisplay::SurfaceMeshDisplay(DataSet* dataset) : AsynchronousDisplayObject(dataset),
-	_surfaceColor(1, 1, 1), _capColor(0.8, 0.8, 1.0), _showCap(true), _smoothShading(true), _trimeshUpdate(true)
+	_surfaceColor(1, 1, 1), _capColor(0.8, 0.8, 1.0), _showCap(true), _smoothShading(true), _trimeshUpdate(true), _reverseOrientation(false)
 {
 	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_surfaceColor);
 	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_capColor);
@@ -67,6 +69,7 @@ SurfaceMeshDisplay::SurfaceMeshDisplay(DataSet* dataset) : AsynchronousDisplayOb
 	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_smoothShading);
 	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_surfaceTransparency);
 	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_capTransparency);
+	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_reverseOrientation);
 
 	_surfaceTransparency = ControllerManager::instance().createFloatController(dataset);
 	_capTransparency = ControllerManager::instance().createFloatController(dataset);
@@ -98,9 +101,9 @@ std::shared_ptr<AsynchronousTask> SurfaceMeshDisplay::createEngine(TimePoint tim
 	// Check if input is available.
 	if(cellObject && surfaceMeshObj) {
 		// Check if the input has changed.
-		if(_preparationCacheHelper.updateState(dataObject, cellObject->data())) {
+		if(_preparationCacheHelper.updateState(dataObject, cellObject->data(), reverseOrientation())) {
 			// Create compute engine.
-			return std::make_shared<PrepareSurfaceEngine>(surfaceMeshObj->storage(), cellObject->data(), surfaceMeshObj->isCompletelySolid(), surfaceMeshObj->cuttingPlanes());
+			return std::make_shared<PrepareSurfaceEngine>(surfaceMeshObj->storage(), cellObject->data(), surfaceMeshObj->isCompletelySolid(), reverseOrientation(), surfaceMeshObj->cuttingPlanes());
 		}
 	}
 	else {
@@ -119,13 +122,13 @@ void SurfaceMeshDisplay::PrepareSurfaceEngine::perform()
 {
 	setProgressText(tr("Preparing surface mesh for display"));
 
-	if(!buildSurfaceMesh(*_inputMesh, _simCell, _cuttingPlanes, _surfaceMesh, this))
+	if(!buildSurfaceMesh(*_inputMesh, _simCell, _reverseOrientation, _cuttingPlanes, _surfaceMesh, this))
 		throw Exception(tr("Failed to generate non-periodic version of surface mesh for display. Simulation cell might be too small."));
 
 	if(isCanceled())
 		return;
 
-	buildCapMesh(*_inputMesh, _simCell, _isCompletelySolid, _cuttingPlanes, _capPolygonsMesh, this);
+	buildCapMesh(*_inputMesh, _simCell, _isCompletelySolid, _reverseOrientation, _cuttingPlanes, _capPolygonsMesh, this);
 }
 
 /******************************************************************************
@@ -140,7 +143,7 @@ void SurfaceMeshDisplay::transferComputationResults(AsynchronousTask* engine)
 	}
 	else {
 		// Reset cache when compute task has been canceled.
-		_preparationCacheHelper.updateState(nullptr, SimulationCell());
+		_preparationCacheHelper.updateState(nullptr, SimulationCell(), false);
 	}
 }
 
@@ -209,10 +212,14 @@ void SurfaceMeshDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 /******************************************************************************
 * Generates the final triangle mesh, which will be rendered.
 ******************************************************************************/
-bool SurfaceMeshDisplay::buildSurfaceMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress)
+bool SurfaceMeshDisplay::buildSurfaceMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool reverseOrientation, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress)
 {
 	// Convert half-edge mesh to triangle mesh.
 	input.convertToTriMesh(output);
+
+	// Flip orientation of mesh faces if requested.
+	if(reverseOrientation)
+		output.flipFaces();
 
 	// Check for early abortion.
 	if(progress && progress->isCanceled())
@@ -363,7 +370,7 @@ bool SurfaceMeshDisplay::splitFace(TriMesh& output, TriMeshFace& face, int oldVe
 /******************************************************************************
 * Generates the triangle mesh for the PBC caps.
 ******************************************************************************/
-void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool isCompletelySolid, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress)
+void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool isCompletelySolid, bool reverseOrientation, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress)
 {
 	// Convert vertex positions to reduced coordinates.
 	std::vector<Point3> reducedPos(input.vertexCount());
@@ -403,11 +410,16 @@ void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const Simulat
 
 				const Point3& v1 = reducedPos[edge->vertex1()->index()];
 				const Point3& v2 = reducedPos[edge->vertex2()->index()];
-				if(v2[dim] - v1[dim] >= 0.5f) {
+				if(v2[dim] - v1[dim] >= FloatType(0.5)) {
 					std::vector<Point2> contour = traceContour(edge, reducedPos, cell, dim);
 					clipContour(contour, std::array<bool,2>{{ cell.pbcFlags()[(dim+1)%3], cell.pbcFlags()[(dim+2)%3] }}, openContours, closedContours);
 				}
 			}
+		}
+
+		if(reverseOrientation) {
+			for(auto& contour : openContours)
+				std::reverse(std::begin(contour), std::end(contour));
 		}
 
 		// Feed contours into tessellator to create triangles.
@@ -485,6 +497,8 @@ void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const Simulat
 					isBoxCornerInside3DRegion = isCornerInside3DRegion(input, reducedPos, cell.pbcFlags(), isCompletelySolid);
 				else
 					isBoxCornerInside3DRegion = isCornerInside2DRegion(closedContours);
+				if(reverseOrientation)
+					isBoxCornerInside3DRegion = !isBoxCornerInside3DRegion;
 			}
 			if(isBoxCornerInside3DRegion) {
 				tessellator.beginContour();
@@ -944,6 +958,9 @@ void SurfaceMeshDisplayEditor::createUI(const RolloutInsertionParameters& rollou
 	sublayout->addLayout(capTransparencyUI->createFieldLayout(), 1, 1);
 	capTransparencyUI->setMinValue(0);
 	capTransparencyUI->setMaxValue(1);
+
+	BooleanParameterUI* reverseOrientationUI = new BooleanParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_reverseOrientation));
+	sublayout->addWidget(reverseOrientationUI->checkBox(), 2, 0, 1, 2);
 }
 
 OVITO_END_INLINE_NAMESPACE

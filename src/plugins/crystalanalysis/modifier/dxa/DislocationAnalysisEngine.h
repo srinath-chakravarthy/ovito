@@ -45,6 +45,7 @@ public:
 			ParticleProperty* positions, const SimulationCell& simCell,
 			int inputCrystalStructure, int maxTrialCircuitSize, int maxCircuitElongation,
 			bool reconstructEdgeVectors, ParticleProperty* particleSelection,
+			ParticleProperty* crystalClusters,
 			std::vector<Matrix3>&& preferredCrystalOrientations);
 
 	/// Computes the modifier's results and stores them in this object for later retrieval.
@@ -77,11 +78,15 @@ public:
 	/// Returns the planar defect identification engine.
 	PlanarDefectIdentification& planarDefectIdentification() { return _planarDefectIdentification; }
 
+	/// Returns the input particle property that stores the cluster assignment of atoms.
+	ParticleProperty* crystalClusters() const { return _crystalClusters.data(); }
+
 private:
 
 	int _inputCrystalStructure;
 	bool _reconstructEdgeVectors;
 	QExplicitlySharedDataPointer<HalfEdgeMesh<>> _defectMesh;
+	QExplicitlySharedDataPointer<ParticleProperty> _crystalClusters;
 	StructureAnalysis _structureAnalysis;
 	DelaunayTessellation _tessellation;
 	ElasticMapping _elasticMapping;
