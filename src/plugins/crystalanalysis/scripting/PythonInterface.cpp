@@ -127,11 +127,13 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 					"  * ``DislocationAnalysisModifier.Lattice.HexagonalDiamond``\n"
 					"\n\n"
 					":Default: ``DislocationAnalysisModifier.Lattice.FCC``\n")
+#if 0
 			.add_property("reconstruct_edge_vectors", &DislocationAnalysisModifier::reconstructEdgeVectors, &DislocationAnalysisModifier::setReconstructEdgeVectors,
 					"Flag that enables the reconstruction of ideal lattice vectors in highly distorted crystal regions. This algorithm step is supposed to improve "
 					"the identification of dislocations in some situations, but it may have undesirable side effect. Use with care, only for experts!"
 					"\n\n"
 					":Default: False\n")
+#endif
 			.add_property("line_smoothing_enabled", &DislocationAnalysisModifier::lineSmoothingEnabled, &DislocationAnalysisModifier::setLineSmoothingEnabled,
 					"Flag that enables the smoothing of extracted dislocation lines after they have been coarsened."
 					"\n\n"

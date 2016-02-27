@@ -25,7 +25,7 @@
 #include "DislocationAnalysisEngine.h"
 #include "DislocationAnalysisModifier.h"
 
-#if 1
+#if 0
 #include <fstream>
 #endif
 
@@ -121,6 +121,9 @@ void DislocationAnalysisEngine::perform()
 	nextProgressSubStep();
 	if(!_elasticMapping.assignIdealVectorsToEdges(_reconstructEdgeVectors, 4, *this))
 		return;
+
+	// Free some memory that is no longer needed.
+	_structureAnalysis.freeNeighborLists();
 
 	// Assign tetrahedra to good or bad crystal region.
 	nextProgressSubStep();
