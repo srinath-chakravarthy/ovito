@@ -420,14 +420,16 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	sublayout->setSpacing(4);
 	sublayout->setColumnStretch(0, 1);
 
+#if 0
 	BooleanParameterUI* reconstructEdgeVectorsUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_reconstructEdgeVectors));
 	sublayout->addWidget(reconstructEdgeVectorsUI->checkBox(), 0, 0);
+#endif
+
+	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::_onlySelectedParticles));
+	sublayout->addWidget(onlySelectedParticlesUI->checkBox(), 0, 0);
 
 	BooleanParameterUI* outputInterfaceMeshUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_outputInterfaceMesh));
 	sublayout->addWidget(outputInterfaceMeshUI->checkBox(), 1, 0);
-
-	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::_onlySelectedParticles));
-	sublayout->addWidget(onlySelectedParticlesUI->checkBox());
 
 	// Status label.
 	layout->addWidget(statusLabel());

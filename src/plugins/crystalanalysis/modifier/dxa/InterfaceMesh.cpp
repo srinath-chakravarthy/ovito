@@ -113,9 +113,6 @@ bool InterfaceMesh::classifyTetrahedra(FloatType maximumNeighborDistance, Partic
 		}
 	}
 
-	qDebug() << "Number of good tetrahedra:" << _numGoodTetrahedra;
-	qDebug() << "Number of bad tetrahedra:" << (tessellation().number_of_primary_tetrahedra() - _numGoodTetrahedra);
-
 	return true;
 }
 
@@ -161,6 +158,7 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 		}
 
 		// Iterate over the four faces of the tetrahedron cell.
+		bool hasInterface = false;
 		for(int f = 0; f < 4; f++) {
 			tet.meshFacets[f] = nullptr;
 
@@ -187,6 +185,7 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 
 			// Create a new triangle facet.
 			Face* face = tet.meshFacets[f] = createFace(facetVertices.begin(), facetVertices.end());
+			hasInterface = true;
 
 			// Transfer cluster vectors from tessellation edges to mesh edges.
 			Edge* edge = face->edges();
@@ -194,10 +193,6 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 				OVITO_ASSERT(edge->vertex1() == facetVertices[i]);
 				OVITO_ASSERT(edge->vertex2() == facetVertices[(i+1)%3]);
 				edge->physicalVector = vertexPositions[(i+1)%3] - vertexPositions[i];
-
-				ElasticMapping::TessellationEdge* tessEdge = elasticMapping().findEdge(vertexIndices[i], vertexIndices[(i+1)%3]);
-				OVITO_ASSERT(tessEdge != nullptr);
-				OVITO_ASSERT(tessEdge->hasClusterVector());
 
 				// Check if edge is spanning more than half of a periodic simulation cell.
 				for(size_t dim = 0; dim < 3; dim++) {
@@ -207,13 +202,18 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 					}
 				}
 
-				edge->clusterVector = tessEdge->clusterVector;
-				edge->clusterTransition = tessEdge->clusterTransition;
+				// Transfer cluster vector from Delaunay edge to interface mesh edge.
+				std::tie(edge->clusterVector, edge->clusterTransition) = elasticMapping().getEdgeClusterVector(vertexIndices[i], vertexIndices[(i+1)%3]);
 			}
 		}
 
-		std::sort(vertexIndices.begin(), vertexIndices.end());
-		tetrahedraList.push_back(tetrahedra.insert(std::make_pair(vertexIndices, tet)).first);
+		if(hasInterface) {
+			std::sort(vertexIndices.begin(), vertexIndices.end());
+			tetrahedraList.push_back(tetrahedra.insert(std::make_pair(vertexIndices, tet)).first);
+		}
+		else {
+			tetrahedraList.push_back(tetrahedra.end());
+		}
 	}
 
 	// Link half-edges with opposite half-edges.
@@ -300,6 +300,7 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 					}
 				}
 				else {
+					OVITO_ASSERT(tetrahedraList[mirrorFacet.first->info().index] != tetrahedra.end());
 					const Tetrahedron& mirrorTet = tetrahedraList[mirrorFacet.first->info().index]->second;
 					oppositeFace = mirrorTet.meshFacets[mirrorFacet.second];
 				}
@@ -329,8 +330,6 @@ bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
 
 	// Make sure each vertex is only part of a single manifold.
 	duplicateSharedVertices();
-
-	qDebug() << "Number of interface mesh faces:" << faceCount();
 
 	// Validate constructed mesh.
 #ifdef OVITO_DEBUG

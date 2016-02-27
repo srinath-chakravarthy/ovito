@@ -73,7 +73,7 @@ boost::optional<ClusterVector> CrystalPathFinder::findPath(int atomIndex1, int a
 		OVITO_ASSERT(_visitedAtoms.test(currentAtom) == true);
 
 		Cluster* currentCluster = structureAnalysis().atomCluster(currentAtom);
-		int numNeighbors = structureAnalysis().numNeighbors(currentAtom);
+		int numNeighbors = structureAnalysis().numberOfNeighbors(currentAtom);
 
 		for(int neighborIndex = 0; neighborIndex < numNeighbors; neighborIndex++) {
 
@@ -96,7 +96,7 @@ boost::optional<ClusterVector> CrystalPathFinder::findPath(int atomIndex1, int a
 				Cluster* neighborCluster = structureAnalysis().atomCluster(neighbor);
 				if(neighborCluster->id == 0) continue;
 
-				int numNeighbors2 = structureAnalysis().numNeighbors(neighbor);
+				int numNeighbors2 = structureAnalysis().numberOfNeighbors(neighbor);
 				for(int neighborIndex2 = 0; neighborIndex2 < numNeighbors2; neighborIndex2++) {
 					if(structureAnalysis().getNeighbor(neighbor, neighborIndex2) == currentAtom) {
 						step = ClusterVector(-structureAnalysis().neighborLatticeVector(neighbor, neighborIndex2), neighborCluster);

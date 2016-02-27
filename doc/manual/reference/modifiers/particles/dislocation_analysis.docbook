@@ -125,6 +125,7 @@ Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
           </para>
         </listitem>
       </varlistentry>
+      <!-- 
       <varlistentry>
         <term>Reconstruct edge vectors</term>
         <listitem>
@@ -148,16 +149,7 @@ Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
           </para>
         </listitem>
       </varlistentry>
-      <varlistentry>
-        <term>Output interface mesh</term>
-        <listitem>
-          <para>Tells the analysis modifier to display the so-called interface mesh, a closed manifold which separates 
-          the good crystal region from the bad crystal region. This is a geometric structure
-          computed internally by the algorithm, which is normally not of interest. In other words this option is only for debugging purposes
-          and allows to follow the intermediate stages of the algorithm.
-          </para>
-        </listitem>
-      </varlistentry>
+       -->
       <varlistentry>
         <term>Use only selected particles</term>
         <listitem>
@@ -167,6 +159,15 @@ Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
           This option can be useful if you want to identify dislocations in a crystal with a structure
           not supported by the modifier, but which has a sublattice that is supported
           (and you do not want to delete atoms belonging to the other sublattice(s) for some reason).
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Output interface mesh</term>
+        <listitem>
+          <para>Tells the analysis modifier to display the so-called interface mesh, a closed manifold which separates 
+          the good crystal region from the bad crystal region. The interface mesh is normally not of interest and 
+          this option exists only for debugging purposes.
           </para>
         </listitem>
       </varlistentry>

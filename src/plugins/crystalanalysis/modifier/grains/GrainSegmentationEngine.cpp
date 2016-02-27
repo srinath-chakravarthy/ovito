@@ -99,7 +99,7 @@ void GrainSegmentationEngine::perform()
 				Matrix3 orientationV = Matrix3::Zero();
 				Matrix3 orientationW = Matrix3::Zero();
 
-				int numneigh = _structureAnalysis.numNeighbors(particleIndex);
+				int numneigh = _structureAnalysis.numberOfNeighbors(particleIndex);
 				for(int n = 0; n < numneigh; n++) {
 					int neighborAtomIndex = _structureAnalysis.getNeighbor(particleIndex, n);
 					// Add vector pair to matrices for computing the elastic deformation gradient.
@@ -138,7 +138,7 @@ void GrainSegmentationEngine::perform()
 		if(grainA.cluster == nullptr) continue;
 
 		// Iterate over all neighbors of the atom.
-		int numNeighbors = _structureAnalysis.numNeighbors(atomA);
+		int numNeighbors = _structureAnalysis.numberOfNeighbors(atomA);
 		for(int ni = 0; ni < numNeighbors; ni++) {
 			// Lookup neighbor atom from neighbor list.
 			int atomB = _structureAnalysis.getNeighbor(atomA, ni);
@@ -208,7 +208,7 @@ void GrainSegmentationEngine::perform()
 			if(isCanceled()) return;
 			Grain& grainA = parentGrain(atomA);
 			if(grainA.cluster != nullptr) {
-				int numNeighbors = std::min(12, _structureAnalysis.numNeighbors(atomA));
+				int numNeighbors = std::min(12, _structureAnalysis.numberOfNeighbors(atomA));
 				for(int ni = 0; ni < numNeighbors; ni++) {
 					int atomB = _structureAnalysis.getNeighbor(atomA, ni);
 

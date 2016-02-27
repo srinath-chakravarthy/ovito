@@ -428,7 +428,7 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 		}
 	}
 
-	// Make sure each mesh vertex is only part of one surface manifold.
+	// Make sure every mesh vertex is only part of one surface manifold.
 	_mesh->duplicateSharedVertices();
 
 	nextProgressSubStep();

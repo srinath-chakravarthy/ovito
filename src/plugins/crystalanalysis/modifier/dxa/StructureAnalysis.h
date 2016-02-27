@@ -61,11 +61,7 @@ public:
 	};
 
 	/// The maximum number of neighbor atoms taken into account for the common neighbor analysis.
-#ifndef Q_CC_MSVC
-	static constexpr int MAX_NEIGHBORS = 16;
-#else
 	enum { MAX_NEIGHBORS = 16 };
-#endif
 
 	struct CoordinationStructure {
 		int numNeighbors;
@@ -87,6 +83,7 @@ public:
 		std::vector<Vector3> latticeVectors;
 		Matrix3 primitiveCell;
 		Matrix3 primitiveCellInverse;
+		int maxNeighbors;
 
 		/// List of symmetry permutations of the lattice structure.
 		/// Each entry contains the rotation/reflection matrix and the corresponding permutation of the neighbor bonds.
@@ -146,8 +143,12 @@ public:
 	}
 
 	/// Returns the number of neighbors of the given atom.
-	int numNeighbors(int atomIndex) const {
-		return _neighborCounts->getInt(atomIndex);
+	int numberOfNeighbors(int atomIndex) const {
+		const int* neighborList = _neighborLists->constDataInt() + (size_t)atomIndex * _neighborLists->componentCount();
+		size_t count = 0;
+		while(count < _neighborLists->componentCount() && neighborList[count] != -1)
+			count++;
+		return count;
 	}
 
 	/// Returns an atom from an atom's neighbor list.
@@ -163,9 +164,9 @@ public:
 	/// Returns the neighbor list index of the given atom.
 	int findNeighbor(int centralAtomIndex, int neighborAtomIndex) const {
 		const int* neighborList = _neighborLists->constDataInt() + (size_t)centralAtomIndex * _neighborLists->componentCount();
-		const int* neighborList_end = neighborList + numNeighbors(centralAtomIndex);
-		for(int index = 0; neighborList != neighborList_end; ++neighborList, ++index) {
-			if(*neighborList == neighborAtomIndex) return index;
+		for(size_t index = 0; index < _neighborLists->componentCount() && neighborList[index] != -1; index++) {
+			if(neighborList[index] == neighborAtomIndex)
+				return index;
 		}
 		return -1;
 	}
@@ -194,8 +195,8 @@ private:
 	/// Determines the coordination structure of a particle.
 	void determineLocalStructure(NearestNeighborFinder& neighList, size_t particleIndex);
 
-	/// Prepares the list of coordination structures.
-	static void initializeCoordinationStructures();
+	/// Prepares the list of coordination and lattice structures.
+	static void initializeListOfStructures();
 
 private:
 
@@ -203,7 +204,6 @@ private:
 	QExplicitlySharedDataPointer<ParticleProperty> _positions;
 	QExplicitlySharedDataPointer<ParticleProperty> _structureTypes;
 	QExplicitlySharedDataPointer<ParticleProperty> _neighborLists;
-	QExplicitlySharedDataPointer<ParticleProperty> _neighborCounts;
 	QExplicitlySharedDataPointer<ParticleProperty> _atomClusters;
 	QExplicitlySharedDataPointer<ParticleProperty> _atomSymmetryPermutations;
 	QExplicitlySharedDataPointer<ParticleProperty> _particleSelection;

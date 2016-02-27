@@ -29,7 +29,9 @@
 #include "ElasticMapping.h"
 #include "InterfaceMesh.h"
 #include "DislocationTracer.h"
+#if 0
 #include "PlanarDefectIdentification.h"
+#endif
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -75,8 +77,10 @@ public:
 	/// Returns the extracted dislocation network.
 	DislocationNetwork* dislocationNetwork() { return &_dislocationTracer.network(); }
 
+#if 0
 	/// Returns the planar defect identification engine.
 	PlanarDefectIdentification& planarDefectIdentification() { return _planarDefectIdentification; }
+#endif
 
 	/// Returns the input particle property that stores the cluster assignment of atoms.
 	ParticleProperty* crystalClusters() const { return _crystalClusters.data(); }
@@ -92,7 +96,9 @@ private:
 	ElasticMapping _elasticMapping;
 	InterfaceMesh _interfaceMesh;
 	DislocationTracer _dislocationTracer;
+#if 0
 	PlanarDefectIdentification _planarDefectIdentification;
+#endif
 };
 
 }	// End of namespace

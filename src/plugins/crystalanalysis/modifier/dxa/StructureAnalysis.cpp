@@ -63,8 +63,6 @@ StructureAnalysis::StructureAnalysis(ParticleProperty* positions, const Simulati
 	_inputCrystalType(inputCrystalType),
 	_structureTypes(outputStructures),
 	_particleSelection(particleSelection),
-	_neighborLists(new ParticleProperty(positions->size(), qMetaTypeId<int>(), MAX_NEIGHBORS, 0, QStringLiteral("Neighbors"), false)),
-	_neighborCounts(new ParticleProperty(positions->size(), ParticleProperty::CoordinationProperty, 0, true)),
 	_atomClusters(new ParticleProperty(positions->size(), ParticleProperty::ClusterProperty, 0, true)),
 	_atomSymmetryPermutations(new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, QStringLiteral("SymmetryPermutations"), false)),
 	_clusterGraph(new ClusterGraph()),
@@ -72,9 +70,14 @@ StructureAnalysis::StructureAnalysis(ParticleProperty* positions, const Simulati
 {
 	static bool initialized = false;
 	if(!initialized) {
-		initializeCoordinationStructures();
+		initializeListOfStructures();
 		initialized = true;
 	}
+
+	// Allocate memory for neighbor lists.
+	_neighborLists = new ParticleProperty(positions->size(), qMetaTypeId<int>(),
+			latticeStructure(inputCrystalType).maxNeighbors, 0, QStringLiteral("Neighbors"), false);
+	std::fill(_neighborLists->dataInt(), _neighborLists->dataInt() + _neighborLists->size() * _neighborLists->componentCount(), -1);
 
 	// Reset atomic structure types.
 	std::fill(_structureTypes->dataInt(), _structureTypes->dataInt() + _structureTypes->size(), LATTICE_OTHER);
@@ -93,12 +96,13 @@ void StructureAnalysis::generateCellTooSmallError(int dimension)
 /******************************************************************************
 * Prepares the list of coordination structures.
 ******************************************************************************/
-void StructureAnalysis::initializeCoordinationStructures()
+void StructureAnalysis::initializeListOfStructures()
 {
 	_coordinationStructures[COORD_OTHER].numNeighbors = 0;
 	_latticeStructures[LATTICE_OTHER].coordStructure = &_coordinationStructures[COORD_OTHER];
 	_latticeStructures[LATTICE_OTHER].primitiveCell.setZero();
 	_latticeStructures[LATTICE_OTHER].primitiveCellInverse.setZero();
+	_latticeStructures[LATTICE_OTHER].maxNeighbors = 0;
 
 	// FCC
 	Vector3 fccVec[12] = {
@@ -130,6 +134,7 @@ void StructureAnalysis::initializeCoordinationStructures()
 	_latticeStructures[LATTICE_FCC].primitiveCell.column(0) = Vector3(0.5,0.5,0.0);
 	_latticeStructures[LATTICE_FCC].primitiveCell.column(1) = Vector3(0.0,0.5,0.5);
 	_latticeStructures[LATTICE_FCC].primitiveCell.column(2) = Vector3(0.5,0.0,0.5);
+	_latticeStructures[LATTICE_FCC].maxNeighbors = 12;
 
 	// HCP
 	Vector3 hcpVec[18] = {
@@ -168,6 +173,7 @@ void StructureAnalysis::initializeCoordinationStructures()
 	_latticeStructures[LATTICE_HCP].primitiveCell.column(0) = Vector3(sqrt(0.5)/2, -sqrt(6.0)/4, 0.0);
 	_latticeStructures[LATTICE_HCP].primitiveCell.column(1) = Vector3(sqrt(0.5)/2, sqrt(6.0)/4, 0.0);
 	_latticeStructures[LATTICE_HCP].primitiveCell.column(2) = Vector3(0.0, 0.0, sqrt(8.0/6.0));
+	_latticeStructures[LATTICE_HCP].maxNeighbors = 12;
 
 	// BCC
 	Vector3 bccVec[14] = {
@@ -201,6 +207,7 @@ void StructureAnalysis::initializeCoordinationStructures()
 	_latticeStructures[LATTICE_BCC].primitiveCell.column(0) = Vector3(0.1,0.0,0.0);
 	_latticeStructures[LATTICE_BCC].primitiveCell.column(1) = Vector3(0.0,1.0,0.0);
 	_latticeStructures[LATTICE_BCC].primitiveCell.column(2) = Vector3(0.5,0.5,0.5);
+	_latticeStructures[LATTICE_BCC].maxNeighbors = 14;
 
 	// Cubic diamond
 	Vector3 diamondCubicVec[] = {
@@ -246,6 +253,7 @@ void StructureAnalysis::initializeCoordinationStructures()
 	_latticeStructures[LATTICE_CUBIC_DIAMOND].primitiveCell.column(0) = Vector3(0.5,0.5,0.0);
 	_latticeStructures[LATTICE_CUBIC_DIAMOND].primitiveCell.column(1) = Vector3(0.0,0.5,0.5);
 	_latticeStructures[LATTICE_CUBIC_DIAMOND].primitiveCell.column(2) = Vector3(0.5,0.0,0.5);
+	_latticeStructures[LATTICE_CUBIC_DIAMOND].maxNeighbors = 16;
 
 	// Hexagonal diamond
 	Vector3 diamondHexVec[] = {
@@ -306,6 +314,7 @@ void StructureAnalysis::initializeCoordinationStructures()
 	_latticeStructures[LATTICE_HEX_DIAMOND].primitiveCell.column(0) = Vector3(sqrt(0.5)/2, -sqrt(6.0)/4, 0.0);
 	_latticeStructures[LATTICE_HEX_DIAMOND].primitiveCell.column(1) = Vector3(sqrt(0.5)/2, sqrt(6.0)/4, 0.0);
 	_latticeStructures[LATTICE_HEX_DIAMOND].primitiveCell.column(2) = Vector3(0.0, 0.0, sqrt(8.0/6.0));
+	_latticeStructures[LATTICE_HEX_DIAMOND].maxNeighbors = 16;
 
 	for(auto coordStruct = std::begin(_coordinationStructures); coordStruct != std::end(_coordinationStructures); ++coordStruct) {
 		// Find two non-coplanar common neighbors for every neighbor bond.
@@ -436,7 +445,8 @@ void StructureAnalysis::initializeCoordinationStructures()
 bool StructureAnalysis::identifyStructures(FutureInterfaceBase& progress)
 {
 	// Prepare the neighbor list.
-	NearestNeighborFinder neighFinder(MAX_NEIGHBORS);
+	int maxNeighborListSize = std::min((int)_neighborLists->componentCount() + 1, (int)MAX_NEIGHBORS);
+	NearestNeighborFinder neighFinder(maxNeighborListSize);
 	if(!neighFinder.prepare(positions(), cell(), _particleSelection.data(), &progress))
 		return false;
 
@@ -717,7 +727,6 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 				}
 				setNeighbor(particleIndex, i, neighborIndices[neighborMapping[i]]);
 			}
-			_neighborCounts->setInt(particleIndex, nn);
 
 			// Determine maximum neighbor distance.
 			// This is a thread-safe implementation.
@@ -817,7 +826,7 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 						atomIndex = currentAtomIndex;
 						tm1.column(i) = -latticeStructure.latticeVectors[permutation[neighborIndex]];
 					}
-					OVITO_ASSERT(numNeighbors(neighborAtomIndex) == coordStructure.numNeighbors);
+					OVITO_ASSERT(numberOfNeighbors(neighborAtomIndex) == coordStructure.numNeighbors);
 					int j = findNeighbor(neighborAtomIndex, atomIndex);
 					if(j == -1) {
 						properOverlap = false;
@@ -925,11 +934,9 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 
 				// Add this atom to the neighbor's list of neighbors.
 				if(neighborClusterId == 0) {
-					int otherNeighborListCount = _neighborCounts->getInt(neighbor);
-					if(otherNeighborListCount < _neighborLists->componentCount()) {
-						setNeighbor(neighbor, otherNeighborListCount++, atomIndex);
-						_neighborCounts->setInt(neighbor, otherNeighborListCount);
-					}
+					int otherNeighborListCount = numberOfNeighbors(neighbor);
+					if(otherNeighborListCount < _neighborLists->componentCount())
+						setNeighbor(neighbor, otherNeighborListCount, atomIndex);
 				}
 
 				continue;
@@ -958,7 +965,7 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 					ai = atomIndex;
 					tm1.column(i) = -latticeStructure.latticeVectors[permutation[ni]];
 				}
-				OVITO_ASSERT(numNeighbors(neighbor) == coordStructure.numNeighbors);
+				OVITO_ASSERT(numberOfNeighbors(neighbor) == coordStructure.numNeighbors);
 				int j = findNeighbor(neighbor, ai);
 				if(j == -1) {
 					properOverlap = false;

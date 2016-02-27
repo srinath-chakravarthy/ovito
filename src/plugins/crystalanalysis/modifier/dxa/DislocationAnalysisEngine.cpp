@@ -47,7 +47,9 @@ DislocationAnalysisEngine::DislocationAnalysisEngine(const TimeInterval& validit
 	_interfaceMesh(_elasticMapping),
 	_dislocationTracer(_interfaceMesh, &_structureAnalysis.clusterGraph(), maxTrialCircuitSize, maxCircuitElongation),
 	_inputCrystalStructure(inputCrystalStructure),
+#if 0
 	_planarDefectIdentification(_elasticMapping),
+#endif
 	_reconstructEdgeVectors(reconstructEdgeVectors),
 	_crystalClusters(crystalClusters)
 {
@@ -101,7 +103,6 @@ void DislocationAnalysisEngine::perform()
 
 	nextProgressSubStep();
 	FloatType ghostLayerSize = 3.0f * _structureAnalysis.maximumNeighborDistance();
-	qDebug() << "Delaunay ghost layer size:" << ghostLayerSize;
 	if(!_tessellation.generateTessellation(_structureAnalysis.cell(), _structureAnalysis.positions()->constDataPoint3(),
 			_structureAnalysis.atomCount(), ghostLayerSize, selection() ? selection()->constDataInt() : nullptr, this))
 		return;

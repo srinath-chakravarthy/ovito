@@ -112,7 +112,7 @@ void ElasticStrainEngine::perform()
 				Matrix_3<double> orientationV = Matrix_3<double>::Zero();
 				Matrix_3<double> orientationW = Matrix_3<double>::Zero();
 
-				int numneigh = _structureAnalysis.numNeighbors(particleIndex);
+				int numneigh = _structureAnalysis.numberOfNeighbors(particleIndex);
 				for(int n = 0; n < numneigh; n++) {
 					int neighborAtomIndex = _structureAnalysis.getNeighbor(particleIndex, n);
 					// Add vector pair to matrices for computing the elastic deformation gradient.
