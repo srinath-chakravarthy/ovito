@@ -1,0 +1,289 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (2016) Alexander Stukowski
+//
+//  This file is part of OVITO (Open Visualization Tool).
+//
+//  OVITO is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  OVITO is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#include <plugins/particles/Particles.h>
+#include <core/rendering/SceneRenderer.h>
+#include <core/gui/properties/ColorParameterUI.h>
+#include <core/gui/properties/BooleanParameterUI.h>
+#include <core/gui/properties/FloatParameterUI.h>
+#include <core/gui/properties/BooleanGroupBoxParameterUI.h>
+#include <core/utilities/mesh/TriMesh.h>
+#include <core/animation/controller/Controller.h>
+#include <plugins/particles/objects/SimulationCellObject.h>
+#include "PartitionMeshDisplay.h"
+
+namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
+
+IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, PartitionMeshDisplayEditor, PropertiesEditor);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, PartitionMeshDisplay, AsynchronousDisplayObject);
+SET_OVITO_OBJECT_EDITOR(PartitionMeshDisplay, PartitionMeshDisplayEditor);
+DEFINE_FLAGS_PROPERTY_FIELD(PartitionMeshDisplay, _surfaceColor, "SurfaceColor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(PartitionMeshDisplay, _showCap, "ShowCap", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(PartitionMeshDisplay, _smoothShading, "SmoothShading");
+DEFINE_REFERENCE_FIELD(PartitionMeshDisplay, _surfaceTransparency, "SurfaceTransparency", Controller);
+DEFINE_REFERENCE_FIELD(PartitionMeshDisplay, _capTransparency, "CapTransparency", Controller);
+SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _surfaceColor, "Outer surface color");
+SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _showCap, "Show cap polygons");
+SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _smoothShading, "Smooth shading");
+SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _surfaceTransparency, "Surface transparency");
+SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _capTransparency, "Cap transparency");
+SET_PROPERTY_FIELD_UNITS(PartitionMeshDisplay, _surfaceTransparency, PercentParameterUnit);
+SET_PROPERTY_FIELD_UNITS(PartitionMeshDisplay, _capTransparency, PercentParameterUnit);
+
+/******************************************************************************
+* Constructor.
+******************************************************************************/
+PartitionMeshDisplay::PartitionMeshDisplay(DataSet* dataset) : AsynchronousDisplayObject(dataset),
+	_surfaceColor(1, 1, 1), _showCap(true), _smoothShading(true), _trimeshUpdate(true)
+{
+	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_surfaceColor);
+	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_showCap);
+	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_smoothShading);
+	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_surfaceTransparency);
+	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_capTransparency);
+
+	_surfaceTransparency = ControllerManager::instance().createFloatController(dataset);
+	_capTransparency = ControllerManager::instance().createFloatController(dataset);
+}
+
+/******************************************************************************
+* Computes the bounding box of the displayed data.
+******************************************************************************/
+Box3 PartitionMeshDisplay::boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState)
+{
+	// We'll use the entire simulation cell as bounding box for the mesh.
+	if(SimulationCellObject* cellObject = flowState.findObject<SimulationCellObject>())
+		return Box3(Point3(0,0,0), Point3(1,1,1)).transformed(cellObject->cellMatrix());
+	else
+		return Box3();
+}
+
+/******************************************************************************
+* Creates a computation engine that will prepare the data to be displayed.
+******************************************************************************/
+std::shared_ptr<AsynchronousTask> PartitionMeshDisplay::createEngine(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState)
+{
+	// Get the simulation cell.
+	SimulationCellObject* cellObject = flowState.findObject<SimulationCellObject>();
+
+	// Get the partition mesh.
+	PartitionMesh* partitionMeshObj = dynamic_object_cast<PartitionMesh>(dataObject);
+
+	// Check if input is available.
+	if(cellObject && partitionMeshObj) {
+		// Check if the input has changed.
+		if(_preparationCacheHelper.updateState(dataObject, cellObject->data())) {
+			// Create compute engine.
+			return std::make_shared<PrepareMeshEngine>(partitionMeshObj->storage(), cellObject->data(), partitionMeshObj->spaceFillingRegion(), partitionMeshObj->cuttingPlanes());
+		}
+	}
+	else {
+		_surfaceMesh.clear();
+		_capPolygonsMesh.clear();
+		_trimeshUpdate = true;
+	}
+
+	return std::shared_ptr<AsynchronousTask>();
+}
+
+/******************************************************************************
+* Computes the results and stores them in this object for later retrieval.
+******************************************************************************/
+void PartitionMeshDisplay::PrepareMeshEngine::perform()
+{
+	setProgressText(tr("Preparing microstrcture mesh for display"));
+
+	if(!buildMesh(*_inputMesh, _simCell, _cuttingPlanes, _surfaceMesh, this))
+		throw Exception(tr("Failed to generate non-periodic version of microstructure mesh for display. Simulation cell might be too small."));
+
+	if(isCanceled())
+		return;
+}
+
+/******************************************************************************
+* Unpacks the results of the computation engine and stores them in the display object.
+******************************************************************************/
+void PartitionMeshDisplay::transferComputationResults(AsynchronousTask* engine)
+{
+	if(engine) {
+		_surfaceMesh = static_cast<PrepareMeshEngine*>(engine)->surfaceMesh();
+		_capPolygonsMesh = static_cast<PrepareMeshEngine*>(engine)->capPolygonsMesh();
+		_trimeshUpdate = true;
+	}
+	else {
+		// Reset cache when compute task has been canceled.
+		_preparationCacheHelper.updateState(nullptr, SimulationCell());
+	}
+}
+
+/******************************************************************************
+* Lets the display object render the data object.
+******************************************************************************/
+void PartitionMeshDisplay::render(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState, SceneRenderer* renderer, ObjectNode* contextNode)
+{
+	// Check if geometry preparation was successful.
+	// If not, reset triangle mesh.
+	if(status().type() == PipelineStatus::Error && _surfaceMesh.faceCount() != 0) {
+		_surfaceMesh.clear();
+		_capPolygonsMesh.clear();
+		_trimeshUpdate = true;
+	}
+
+	// Get the rendering colors for the surface and cap meshes.
+	FloatType transp_surface = 0;
+	FloatType transp_cap = 0;
+	TimeInterval iv;
+	if(_surfaceTransparency) transp_surface = _surfaceTransparency->getFloatValue(time, iv);
+	if(_capTransparency) transp_cap = _capTransparency->getFloatValue(time, iv);
+	ColorA color_surface(surfaceColor(), 1.0f - transp_surface);
+
+	// Do we have to re-create the render primitives from scratch?
+	bool recreateSurfaceBuffer = !_surfaceBuffer || !_surfaceBuffer->isValid(renderer);
+	bool recreateCapBuffer = _showCap && (!_capBuffer || !_capBuffer->isValid(renderer));
+
+	// Do we have to update the render primitives?
+	bool updateContents = _geometryCacheHelper.updateState(color_surface, _smoothShading)
+					|| recreateSurfaceBuffer || recreateCapBuffer || _trimeshUpdate;
+
+	// Re-create the render primitives if necessary.
+	if(recreateSurfaceBuffer)
+		_surfaceBuffer = renderer->createMeshPrimitive();
+	if(recreateCapBuffer && _showCap)
+		_capBuffer = renderer->createMeshPrimitive();
+
+	// Update render primitives.
+	if(updateContents) {
+
+		// Assign smoothing group to faces to interpolate normals.
+		const quint32 smoothingGroup = _smoothShading ? 1 : 0;
+		for(auto& face : _surfaceMesh.faces())
+			face.setSmoothingGroups(smoothingGroup);
+
+		_surfaceBuffer->setMesh(_surfaceMesh, color_surface);
+		if(_showCap)
+			_capBuffer->setMesh(_capPolygonsMesh, color_surface);
+
+		// Reset update flag.
+		_trimeshUpdate = false;
+	}
+
+	// Handle picking of triangles.
+	renderer->beginPickObject(contextNode);
+	_surfaceBuffer->render(renderer);
+	if(_showCap)
+		_capBuffer->render(renderer);
+	else
+		_capBuffer.reset();
+	renderer->endPickObject();
+}
+
+/******************************************************************************
+* Generates the final triangle mesh, which will be rendered.
+******************************************************************************/
+bool PartitionMeshDisplay::buildMesh(const PartitionMeshData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress)
+{
+	// Convert half-edge mesh to triangle mesh.
+	input.convertToTriMesh(output);
+
+	// Check for early abortion.
+	if(progress && progress->isCanceled())
+		return false;
+
+	// Convert vertex positions to reduced coordinates.
+	for(Point3& p : output.vertices()) {
+		p = cell.absoluteToReduced(p);
+		OVITO_ASSERT(std::isfinite(p.x()) && std::isfinite(p.y()) && std::isfinite(p.z()));
+	}
+
+	// Check for early abortion.
+	if(progress && progress->isCanceled())
+		return false;
+
+	// Convert vertex positions back from reduced coordinates to absolute coordinates.
+	AffineTransformation cellMatrix = cell.matrix();
+	for(Point3& p : output.vertices())
+		p = cellMatrix * p;
+
+	// Clip mesh at cutting planes.
+	for(const Plane3& plane : cuttingPlanes) {
+		if(progress && progress->isCanceled())
+			return false;
+
+		output.clipAtPlane(plane);
+	}
+
+	output.invalidateVertices();
+	output.invalidateFaces();
+
+	return true;
+}
+
+/******************************************************************************
+* Sets up the UI widgets of the editor.
+******************************************************************************/
+void PartitionMeshDisplayEditor::createUI(const RolloutInsertionParameters& rolloutParams)
+{
+	// Create a rollout.
+	QWidget* rollout = createRollout(QString(), rolloutParams);
+
+    // Create the rollout contents.
+	QVBoxLayout* layout = new QVBoxLayout(rollout);
+	layout->setContentsMargins(4,4,4,4);
+	layout->setSpacing(4);
+
+	QGroupBox* surfaceGroupBox = new QGroupBox(tr("Surface"));
+	QGridLayout* sublayout = new QGridLayout(surfaceGroupBox);
+	sublayout->setContentsMargins(4,4,4,4);
+	sublayout->setSpacing(4);
+	sublayout->setColumnStretch(1, 1);
+	layout->addWidget(surfaceGroupBox);
+
+	ColorParameterUI* surfaceColorUI = new ColorParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_surfaceColor));
+	sublayout->addWidget(surfaceColorUI->label(), 0, 0);
+	sublayout->addWidget(surfaceColorUI->colorPicker(), 0, 1);
+
+	FloatParameterUI* surfaceTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_surfaceTransparency));
+	sublayout->addWidget(new QLabel(tr("Transparency:")), 1, 0);
+	sublayout->addLayout(surfaceTransparencyUI->createFieldLayout(), 1, 1);
+	surfaceTransparencyUI->setMinValue(0);
+	surfaceTransparencyUI->setMaxValue(1);
+
+	BooleanParameterUI* smoothShadingUI = new BooleanParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_smoothShading));
+	sublayout->addWidget(smoothShadingUI->checkBox(), 2, 0, 1, 2);
+
+	BooleanGroupBoxParameterUI* capGroupUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_showCap));
+	capGroupUI->groupBox()->setTitle(tr("Cap polygons"));
+	sublayout = new QGridLayout(capGroupUI->childContainer());
+	sublayout->setContentsMargins(4,4,4,4);
+	sublayout->setSpacing(4);
+	sublayout->setColumnStretch(1, 1);
+	layout->addWidget(capGroupUI->groupBox());
+
+	FloatParameterUI* capTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_capTransparency));
+	sublayout->addWidget(new QLabel(tr("Transparency:")), 0, 0);
+	sublayout->addLayout(capTransparencyUI->createFieldLayout(), 0, 1);
+	capTransparencyUI->setMinValue(0);
+	capTransparencyUI->setMaxValue(1);
+}
+
+}	// End of namespace
+}	// End of namespace
+}	// End of namespace

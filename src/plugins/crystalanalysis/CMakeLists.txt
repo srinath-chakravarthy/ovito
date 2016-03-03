@@ -36,6 +36,8 @@ SET(SourceFiles
 	objects/clusters/ClusterGraphObject.cpp
 	objects/dislocations/DislocationNetworkObject.cpp
 	objects/dislocations/DislocationDisplay.cpp
+	objects/partition_mesh/PartitionMesh.cpp
+	objects/partition_mesh/PartitionMeshDisplay.cpp
 	data/ClusterGraph.cpp
 	data/DislocationNetwork.cpp
 	data/PlanarDefects.cpp

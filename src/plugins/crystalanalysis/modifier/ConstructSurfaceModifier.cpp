@@ -308,6 +308,7 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 		_solidVolume += std::abs(ad.dot(cd.cross(bd))) / 6.0;
 
 		// Iterate over the four faces of the tetrahedron cell.
+		bool hasSurfaceFacet = false;
 		for(int f = 0; f < 4; f++) {
 			tet.meshFacets[f] = nullptr;
 
@@ -330,10 +331,16 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 
 			// Create a new triangle facet.
 			tet.meshFacets[f] = _mesh->createFace(facetVertices.begin(), facetVertices.end());
+			hasSurfaceFacet = true;
 		}
 
-		std::sort(vertexIndices.begin(), vertexIndices.end());
-		tetrahedraList.push_back(tetrahedra.insert(std::make_pair(vertexIndices, tet)).first);
+		if(hasSurfaceFacet) {
+			std::sort(vertexIndices.begin(), vertexIndices.end());
+			tetrahedraList.push_back(tetrahedra.insert(std::make_pair(vertexIndices, tet)).first);
+		}
+		else {
+			tetrahedraList.push_back(tetrahedra.end());
+		}
 	}
 
 	// Links half-edges to opposite half-edges.
@@ -406,6 +413,7 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 					}
 				}
 				else {
+					OVITO_ASSERT(tetrahedraList[mirrorFacet.first->info().index] != tetrahedra.end());
 					const Tetrahedron& mirrorTet = tetrahedraList[mirrorFacet.first->info().index]->second;
 					oppositeFace = mirrorTet.meshFacets[mirrorFacet.second];
 				}

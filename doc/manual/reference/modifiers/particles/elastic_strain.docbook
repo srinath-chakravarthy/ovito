@@ -44,25 +44,27 @@
     the gradient of the elastic displacements, i.e. <emphasis role="strong">F<superscript>e</superscript></emphasis>
     = &#x2207;<emphasis role="strong">u<superscript>e</superscript></emphasis> + <emphasis role="strong">I</emphasis>.
     It transforms vectors from an imaginary, ideal, strain-free and stress-free crystal state to the 
-    physical configuration of the crystal (which is given by the simulation snapshot to be analyzed) in the following way:
+    physical configuration of the crystal (i.e. the simulation snapshot to be analyzed) in the following way:
     <informalequation>
        <mathphrase>&#x0394;<emphasis role="strong">x</emphasis> = <emphasis role="strong">F<superscript>e</superscript></emphasis>&#x22c5;&#x0394;<emphasis role="strong">X</emphasis></mathphrase>
     </informalequation>
     Here, &#x0394;<emphasis role="strong">X</emphasis> is a (column) vector in the ideal crystal lattice (sometimes called the
     <emphasis>material frame</emphasis>)
     and &#x0394;<emphasis role="strong">x</emphasis> is the corresponding vector in the elastically strained crystal
-    (the <emphasis>spatial frame</emphasis>). While &#x0394;<emphasis role="strong">X</emphasis> is expressed
-    in a coordinate system that is aligned with the Bravais cell, &#x0394;<emphasis role="strong">x</emphasis> is 
-    in the global simulation coordinate system. Thus, the computed transformation tensor includes information about the local crystal orientation.
+    (the <emphasis>spatial frame</emphasis>). The vector &#x0394;<emphasis role="strong">X</emphasis> is expressed
+    in the coordinate system aligned with the lattice Bravais cell, whereas &#x0394;<emphasis role="strong">x</emphasis> is 
+    given in the global simulation coordinate system. Thus, the transformation tensor <emphasis role="strong">F<superscript>e</superscript></emphasis> carries information 
+    about the crystal orientation in addition to the elastic stretch deformation.
   </para>
   
   <para>
     In fact, the elastic deformation gradient tensor can be thought of as being composed of two parts, 
     <emphasis role="strong">F<superscript>e</superscript></emphasis> = <emphasis role="strong">R</emphasis>&#x22c5;<emphasis role="strong">U<superscript>e</superscript></emphasis>,
-    where <emphasis role="strong">R</emphasis> is an orthogonal rotation-reflection matrix that describes the local lattice orientation
-    and <emphasis role="strong">U<superscript>e</superscript></emphasis> is a positive definite stretch tensor. 
+    where <emphasis role="strong">R</emphasis> is an orthogonal rotation-reflection matrix that describes the local lattice orientation within the simulation coordinate system
+    and <emphasis role="strong">U<superscript>e</superscript></emphasis> is a positive definite stretch tensor that describes the elastic distortion of the crystal. 
     Note, however, that in the current program version only <emphasis role="strong">F<superscript>e</superscript></emphasis> is computed, 
     not its polar decomposition into <emphasis role="strong">R</emphasis> and <emphasis role="strong">U<superscript>e</superscript></emphasis>.
+    That is something you currently have to do outside of OVITO if you need it.
   </para>
   
   <para>
