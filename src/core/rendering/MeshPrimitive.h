@@ -39,6 +39,28 @@ public:
 
 	/// \brief Returns the number of triangle faces stored in the buffer.
 	virtual int faceCount() = 0;
+
+	/// \brief Enables or disables the culling of triangles not facing the viewer.
+	void setCullFaces(bool enable) { _cullFaces = enable; }
+
+	/// \brief Returns whether the culling of triangles not facing the viewer is enabled.
+	bool cullFaces() const { return _cullFaces; }
+
+	/// Returns the array of materials referenced by the materialIndex() field of the mesh faces.
+	const std::vector<ColorA>& materialColors() const { return _materialColors; }
+
+	/// Sets array of materials referenced by the materialIndex() field of the mesh faces.
+	void setMaterialColors(std::vector<ColorA> colors) {
+		_materialColors = std::move(colors);
+	}
+
+private:
+
+	/// Controls the culling of triangles not facing the viewer.
+	bool _cullFaces = false;
+
+	/// The array of materials referenced by the materialIndex() field of the mesh faces.
+	std::vector<ColorA> _materialColors;
 };
 
 OVITO_END_INLINE_NAMESPACE

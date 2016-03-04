@@ -36,12 +36,17 @@ struct PartitionMeshEdge
 
 struct PartitionMeshFace
 {
+	/// The face on the opposite side of the manifold.
+	HalfEdgeMesh<PartitionMeshEdge, PartitionMeshFace, EmptyHalfEdgeMeshStruct>::Face* oppositeFace = nullptr;
+
+	/// The region to which this face belongs.
+	int region;
 };
 
-using PartitionMeshData = HalfEdgeMesh<PartitionMeshFace, PartitionMeshEdge, EmptyHalfEdgeMeshStruct>;
+using PartitionMeshData = HalfEdgeMesh<PartitionMeshEdge, PartitionMeshFace, EmptyHalfEdgeMeshStruct>;
 
 /**
- * \brief A closed triangle mesh representing a surface.
+ * \brief A closed triangle mesh representing the outer surfaces and the inner interfaces of a microstructure.
  */
 class OVITO_CRYSTALANALYSIS_EXPORT PartitionMesh : public DataObjectWithSharedStorage<PartitionMeshData>
 {

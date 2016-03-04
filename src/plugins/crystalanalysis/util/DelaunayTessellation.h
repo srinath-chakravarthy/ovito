@@ -154,10 +154,10 @@ public:
 	}
 
 	/// Returns the total number of tetrahedra in the tessellation.
-	DT::size_type number_of_tetrahedra() const { return _dt.number_of_cells(); }
+	DT::size_type numberOfTetrahedra() const { return _dt.number_of_cells(); }
 
 	/// Returns the number of finite cells in the primary image of the simulation cell.
-	DT::size_type number_of_primary_tetrahedra() const { return _numPrimaryTetrahedra; }
+	DT::size_type numberOfPrimaryTetrahedra() const { return _numPrimaryTetrahedra; }
 
 	CellIterator begin_cells() const { return _dt.cells_begin(); }
 	CellIterator end_cells() const { return _dt.cells_end(); }
@@ -182,6 +182,11 @@ public:
 		return _dt.tds().mirror_facet(*facet);
 	}
 
+	/// Returns the corresponding facet of a cell as seen from an adjacent cell.
+	std::pair<CellHandle,int> mirrorFacet(const CellHandle& cell, int facet) const {
+		return _dt.tds().mirror_facet(DT::Triangulation_data_structure::Facet(cell, facet));
+	}
+
 	/// Returns a reference to the internal CGAL Delaunay triangulation object.
 	DT& dt() { return _dt; }
 
@@ -190,6 +195,9 @@ public:
 
 	/// Writes the tessellation to a VTK file for visualization.
 	void dumpToVTKFile(const QString& filename) const;
+
+	/// Returns the simulation cell geometry.
+	const SimulationCell& simCell() const { return _simCell; }
 
 private:
 
@@ -201,6 +209,9 @@ private:
 
 	/// The number of finite cells in the primary image of the simulation cell.
 	DT::size_type _numPrimaryTetrahedra = 0;
+
+	/// The simulation cell geometry.
+	SimulationCell _simCell;
 };
 
 }	// End of namespace

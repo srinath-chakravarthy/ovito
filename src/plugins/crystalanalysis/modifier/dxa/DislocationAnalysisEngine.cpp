@@ -62,7 +62,7 @@ void DislocationAnalysisEngine::perform()
 {
 	setProgressText(DislocationAnalysisModifier::tr("Dislocation analysis (DXA)"));
 
-	beginProgressSubSteps({ 35, 6, 1, 220, 60, 1, 53, 104, 90, 146, 20 });
+	beginProgressSubSteps({ 35, 6, 1, 220, 60, 1, 53, 190, 146, 20 });
 	if(!_structureAnalysis.identifyStructures(*this))
 		return;
 
@@ -125,14 +125,9 @@ void DislocationAnalysisEngine::perform()
 	// Free some memory that is no longer needed.
 	_structureAnalysis.freeNeighborLists();
 
-	// Assign tetrahedra to good or bad crystal region.
-	nextProgressSubStep();
-	if(!_interfaceMesh.classifyTetrahedra(_structureAnalysis.maximumNeighborDistance(), crystalClusters(), *this))
-		return;
-
 	// Create the mesh facets.
 	nextProgressSubStep();
-	if(!_interfaceMesh.createMesh(*this))
+	if(!_interfaceMesh.createMesh(_structureAnalysis.maximumNeighborDistance(), crystalClusters(), *this))
 		return;
 
 	// Trace dislocation lines.

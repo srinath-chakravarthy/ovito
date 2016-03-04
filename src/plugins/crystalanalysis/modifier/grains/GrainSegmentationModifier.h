@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2015) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -27,6 +27,8 @@
 #include <plugins/crystalanalysis/objects/patterns/PatternCatalog.h>
 #include <plugins/crystalanalysis/data/ClusterGraph.h>
 #include <plugins/crystalanalysis/modifier/dxa/StructureAnalysis.h>
+#include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
+#include <plugins/crystalanalysis/objects/partition_mesh/PartitionMeshDisplay.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -67,6 +69,33 @@ public:
 	/// Sets the minimum number of crystalline atoms per grain.
 	void setMinGrainAtomCount(int minAtoms) { _minGrainAtomCount = minAtoms; }
 
+	/// \brief Returns the radius parameter used during construction of the free surface.
+	FloatType probeSphereRadius() const { return _probeSphereRadius; }
+
+	/// \brief Sets the radius parameter used during construction of the free surface.
+	void setProbeSphereRadius(FloatType radius) { _probeSphereRadius = radius; }
+
+	/// \brief Returns the level of smoothing applied to the constructed partition mesh.
+	int smoothingLevel() const { return _smoothingLevel; }
+
+	/// \brief Sets the level of smoothing applied to the constructed partition mesh.
+	void setSmoothingLevel(int level) { _smoothingLevel = level; }
+
+	/// Returns whether only selected particles are taken into account.
+	bool onlySelectedParticles() const { return _onlySelectedParticles; }
+
+	/// Sets whether only selected particles should be taken into account.
+	void setOnlySelectedParticles(bool onlySelected) { _onlySelectedParticles = onlySelected; }
+
+	/// Returns whether the generation of the partition mesh is enabled.
+	bool outputPartitionMesh() const { return _outputPartitionMesh; }
+
+	/// Enables the generation of the partition mesh.
+	void setOutputPartitionMesh(bool enable) { _outputPartitionMesh = enable; }
+
+	/// \brief Returns the display object that is responsible for rendering the grain boundary mesh.
+	PartitionMeshDisplay* meshDisplay() const { return _meshDisplay; }
+
 	/// Resets the modifier's result cache.
 	virtual void invalidateCachedResults() override;
 
@@ -74,6 +103,9 @@ protected:
 
 	/// Is called when the value of a property of this object has changed.
 	virtual void propertyChanged(const PropertyFieldDescriptor& field) override;
+
+	/// Handles reference events sent by reference targets of this object.
+	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
 
 	/// Creates a computation engine that will compute the modifier's results.
 	virtual std::shared_ptr<ComputeEngine> createEngine(TimePoint time, TimeInterval validityInterval) override;
@@ -98,6 +130,27 @@ private:
 	/// The minimum number of crystalline atoms per grain.
 	PropertyField<int> _minGrainAtomCount;
 
+	/// Enables the generation of the partition mesh.
+	PropertyField<bool> _outputPartitionMesh;
+
+	/// Controls the radius of the probe sphere used when constructing the free surfaces.
+	PropertyField<FloatType> _probeSphereRadius;
+
+	/// Controls the amount of smoothing applied to the mesh.
+	PropertyField<int> _smoothingLevel;
+
+	/// Controls whether only selected particles should be taken into account.
+	PropertyField<bool> _onlySelectedParticles;
+
+	/// The display object for rendering the mesh.
+	ReferenceField<PartitionMeshDisplay> _meshDisplay;
+
+	/// This stores the cached mesh produced by the modifier.
+	QExplicitlySharedDataPointer<PartitionMeshData> _partitionMesh;
+
+	/// The ID of the grain that entirely fills the simulation cell (if any).
+	int _spaceFillingRegion;
+
 	/// The catalog of structure patterns.
 	ReferenceField<PatternCatalog> _patternCatalog;
 
@@ -117,7 +170,12 @@ private:
 	DECLARE_PROPERTY_FIELD(_misorientationThreshold);
 	DECLARE_PROPERTY_FIELD(_fluctuationTolerance);
 	DECLARE_PROPERTY_FIELD(_minGrainAtomCount);
+	DECLARE_PROPERTY_FIELD(_outputPartitionMesh);
+	DECLARE_PROPERTY_FIELD(_probeSphereRadius);
+	DECLARE_PROPERTY_FIELD(_smoothingLevel);
+	DECLARE_PROPERTY_FIELD(_onlySelectedParticles);
 	DECLARE_REFERENCE_FIELD(_patternCatalog);
+	DECLARE_REFERENCE_FIELD(_meshDisplay);
 };
 
 /**

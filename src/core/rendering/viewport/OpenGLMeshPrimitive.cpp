@@ -49,8 +49,20 @@ void OpenGLMeshPrimitive::setMesh(const TriMesh& mesh, const ColorA& meshColor)
 	_vertexBuffer.create(QOpenGLBuffer::StaticDraw, mesh.faceCount(), 3);
 	if(mesh.hasVertexColors() || mesh.hasFaceColors())
 		_hasAlpha = false;
-	else
-		_hasAlpha = (meshColor.a() != 1);
+	else {
+		if(materialColors().empty()) {
+			_hasAlpha = (meshColor.a() != 1);
+		}
+		else {
+			_hasAlpha = false;
+			for(const ColorA& c : materialColors()) {
+				if(c.a() != 1) {
+					_hasAlpha = true;
+					break;
+				}
+			}
+		}
+	}
 
 	if(mesh.faceCount() == 0)
 		return;
@@ -93,6 +105,9 @@ void OpenGLMeshPrimitive::setMesh(const TriMesh& mesh, const ColorA& meshColor)
 			else if(mesh.hasFaceColors()) {
 				rv->color = mesh.faceColor(face - mesh.faces().constBegin());
 				_hasAlpha |= (rv->color.a() != 1);
+			}
+			else if(face->materialIndex() < materialColors().size() && face->materialIndex() >= 0) {
+				rv->color = materialColors()[face->materialIndex()];
 			}
 			else {
 				rv->color = defaultVertexColor;
@@ -182,7 +197,13 @@ void OpenGLMeshPrimitive::render(SceneRenderer* renderer)
 
 	vpRenderer->rebindVAO();
 
-	glDisable(GL_CULL_FACE);
+	if(cullFaces()) {
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_FRONT);
+	}
+	else {
+		glDisable(GL_CULL_FACE);
+	}
 
 	QOpenGLShaderProgram* shader;
 	if(!renderer->isPicking())
@@ -255,6 +276,12 @@ void OpenGLMeshPrimitive::render(SceneRenderer* renderer)
 	shader->release();
 
 	OVITO_REPORT_OPENGL_ERRORS();
+
+	// Restore old state.
+	if(cullFaces()) {
+		glDisable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+	}
 }
 
 OVITO_END_INLINE_NAMESPACE

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2015) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -22,6 +22,8 @@
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
+#include <plugins/crystalanalysis/util/DelaunayTessellation.h>
+#include <plugins/crystalanalysis/util/ManifoldConstructionHelper.h>
 #include "GrainSegmentationEngine.h"
 #include "GrainSegmentationModifier.h"
 
@@ -32,15 +34,19 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 ******************************************************************************/
 GrainSegmentationEngine::GrainSegmentationEngine(const TimeInterval& validityInterval,
 		ParticleProperty* positions, const SimulationCell& simCell,
+		ParticleProperty* selection,
 		int inputCrystalStructure, FloatType misorientationThreshold,
-		FloatType fluctuationTolerance, int minGrainAtomCount) :
-	StructureIdentificationModifier::StructureIdentificationEngine(validityInterval, positions, simCell),
-	_structureAnalysis(positions, simCell, (StructureAnalysis::LatticeStructureType)inputCrystalStructure, selection(), structures()),
+		FloatType fluctuationTolerance, int minGrainAtomCount,
+		FloatType probeSphereRadius, int meshSmoothingLevel) :
+	StructureIdentificationModifier::StructureIdentificationEngine(validityInterval, positions, simCell, selection),
+	_structureAnalysis(positions, simCell, (StructureAnalysis::LatticeStructureType)inputCrystalStructure, selection, structures()),
 	_inputCrystalStructure(inputCrystalStructure),
 	_deformationGradients(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 9, 0, QStringLiteral("Elastic Deformation Gradient"), false)),
 	_misorientationThreshold(misorientationThreshold),
 	_fluctuationTolerance(fluctuationTolerance),
-	_minGrainAtomCount(minGrainAtomCount)
+	_minGrainAtomCount(minGrainAtomCount),
+	_probeSphereRadius(probeSphereRadius),
+	_meshSmoothingLevel(meshSmoothingLevel)
 {
 	// Set component names of tensor property.
 	deformationGradients()->setComponentNames(QStringList() << "XX" << "YX" << "ZX" << "XY" << "YY" << "ZY" << "XZ" << "YZ" << "ZZ");
@@ -249,11 +255,31 @@ void GrainSegmentationEngine::perform()
 	qDebug() << "Number of grains:" << _grainCount;
 
 	if(isCanceled()) return;
+
+	// Create output cluster graph.
+	_outputClusterGraph = new ClusterGraph();
+	for(const Grain& grain : _grains) {
+		if(grain.isRoot()) {
+			if(_outputClusterGraph->findCluster(grain.id) == nullptr) {
+				Cluster* cluster = _outputClusterGraph->createCluster(grain.cluster->structure, grain.id);
+				cluster->atomCount = grain.atomCount;
+				cluster->orientation = grain.orientation;
+				cluster->color = Color(1,1,0);
+			}
+		}
+	}
+
 	for(size_t atomIndex = 0; atomIndex < _grains.size(); atomIndex++) {
 		atomClusters()->setInt(atomIndex, parentGrain(atomIndex).id);
 	}
 
 	endProgressSubSteps();
+
+	if(_probeSphereRadius > 0) {
+		setProgressText(GrainSegmentationModifier::tr("Building grain boundary mesh"));
+		if(!buildPartitionMesh())
+			return;
+	}
 }
 
 /******************************************************************************
@@ -284,7 +310,7 @@ FloatType GrainSegmentationEngine::calculateMisorientation(const Grain& grainA, 
 		return smallestAngle;
 	}
 	else {
-		if(ClusterTransition* t = clusterGraph()->determineClusterTransition(clusterA, clusterB)) {
+		if(ClusterTransition* t = _structureAnalysis.clusterGraph().determineClusterTransition(clusterA, clusterB)) {
 			if(alignmentTM) *alignmentTM = t->tm;
 			return angleFromMatrix(grainB.orientation * t->tm * inverseOrientationA);
 		}
@@ -368,6 +394,101 @@ size_t GrainSegmentationEngine::assignIdsToGrains()
 		}
 	}
 	return numGrains;
+}
+
+/** Find the most common element in the [first, last) range.
+
+    O(n) in time; O(1) in space.
+
+    [first, last) must be valid sorted range.
+    Elements must be equality comparable.
+*/
+template <class ForwardIterator>
+ForwardIterator most_common(ForwardIterator first, ForwardIterator last)
+{
+	ForwardIterator it(first), max_it(first);
+	size_t count = 0, max_count = 0;
+	for( ; first != last; ++first) {
+		if(*it == *first)
+			count++;
+		else {
+			it = first;
+			count = 1;
+		}
+		if(count > max_count) {
+			max_count = count;
+			max_it = it;
+		}
+	}
+	return max_it;
+}
+
+/******************************************************************************
+* Builds the triangle mesh for the grain boundaries.
+******************************************************************************/
+bool GrainSegmentationEngine::buildPartitionMesh()
+{
+	double alpha = _probeSphereRadius * _probeSphereRadius;
+	FloatType ghostLayerSize = _probeSphereRadius * 3.0f;
+
+	// Check if combination of radius parameter and simulation cell size is valid.
+	for(size_t dim = 0; dim < 3; dim++) {
+		if(cell().pbcFlags()[dim]) {
+			int stencilCount = (int)ceil(ghostLayerSize / cell().matrix().column(dim).dot(cell().cellNormalVector(dim)));
+			if(stencilCount > 1)
+				throw Exception(GrainSegmentationModifier::tr("Cannot generate Delaunay tessellation. Simulation cell is too small or probe sphere radius parameter is too large."));
+		}
+	}
+
+	_mesh = new PartitionMeshData();
+
+	// If there are too few particles, don't build Delaunay tessellation.
+	// It is going to be invalid anyway.
+	size_t numInputParticles = positions()->size();
+	if(selection())
+		numInputParticles = positions()->size() - std::count(selection()->constDataInt(), selection()->constDataInt() + selection()->size(), 0);
+	if(numInputParticles <= 3)
+		return true;
+
+	// The algorithm is divided into several sub-steps.
+	// Assign weights to sub-steps according to estimated runtime.
+	beginProgressSubSteps({ 20, 10, 1 });
+
+	// Generate Delaunay tessellation.
+	DelaunayTessellation tessellation;
+	if(!tessellation.generateTessellation(cell(), positions()->constDataPoint3(), positions()->size(), ghostLayerSize,
+			selection() ? selection()->constDataInt() : nullptr, this))
+		return false;
+
+	nextProgressSubStep();
+
+	// Determines the grain a Delaunay cell belongs to.
+	auto tetrahedronRegion = [this](DelaunayTessellation::CellHandle cell) {
+		std::array<int,4> clusters;
+		for(int v = 0; v < 4; v++)
+			clusters[v] = atomClusters()->getInt(cell->vertex(v)->point().index());
+		std::sort(std::begin(clusters), std::end(clusters));
+		return (*most_common(std::begin(clusters), std::end(clusters)) + 1);
+	};
+
+	// Assign triangle faces to grains.
+	auto prepareMeshFace = [this](PartitionMeshData::Face* face, const std::array<int,3>& vertexIndices, const std::array<DelaunayTessellation::VertexHandle,3>& vertexHandles, DelaunayTessellation::CellHandle cell) {
+		face->region = cell->info().userField - 1;
+	};
+
+	ManifoldConstructionHelper<PartitionMeshData, true, true> manifoldConstructor(tessellation, *_mesh, alpha, positions());
+	if(!manifoldConstructor.construct(tetrahedronRegion, this, prepareMeshFace))
+		return false;
+	_spaceFillingGrain = manifoldConstructor.spaceFillingRegion();
+
+	nextProgressSubStep();
+
+	// Make sure every mesh vertex is only part of one surface manifold.
+	_mesh->duplicateSharedVertices();
+
+	endProgressSubSteps();
+
+	return true;
 }
 
 }	// End of namespace

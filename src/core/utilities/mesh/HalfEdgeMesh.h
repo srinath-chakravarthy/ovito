@@ -201,6 +201,17 @@ public:
 			return c;
 		}
 
+		/// Returns the edge of this face that connects the given vertices.
+		Edge* findEdge(Vertex* v1, Vertex* v2) const {
+			Edge* e = edges();
+			do {
+				if(e->vertex2() == v2 && e->vertex1() == v1) return e;
+				e = e->nextFaceEdge();
+			}
+			while(e != edges());
+			return nullptr;
+		}
+
 	protected:
 
 		/// Constructor.

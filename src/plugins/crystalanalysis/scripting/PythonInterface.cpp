@@ -61,7 +61,7 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 			"Example:\n\n"
 			".. literalinclude:: ../example_snippets/construct_surface_modifier.py"
 			)
-		.add_property("radius", &ConstructSurfaceModifier::radius, &ConstructSurfaceModifier::setRadius,
+		.add_property("radius", &ConstructSurfaceModifier::probeSphereRadius, &ConstructSurfaceModifier::setProbeSphereRadius,
 				"The radius of the probe sphere used in the surface construction algorithm."
 				"\n\n"
 				"A rule of thumb is that the radius parameter should be slightly larger than the typical distance between "

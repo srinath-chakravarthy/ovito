@@ -27,6 +27,7 @@
 #include <core/gui/properties/SubObjectParameterUI.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/crystalanalysis/util/DelaunayTessellation.h>
+#include <plugins/crystalanalysis/util/ManifoldConstructionHelper.h>
 #include "ConstructSurfaceModifier.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
@@ -35,24 +36,24 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, ConstructSurfaceModifier, A
 IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, ConstructSurfaceModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(ConstructSurfaceModifier, ConstructSurfaceModifierEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(ConstructSurfaceModifier, _smoothingLevel, "SmoothingLevel", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(ConstructSurfaceModifier, _radius, "Radius", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(ConstructSurfaceModifier, _probeSphereRadius, "Radius", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(ConstructSurfaceModifier, _surfaceMeshDisplay, "SurfaceMeshDisplay", SurfaceMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(ConstructSurfaceModifier, _onlySelectedParticles, "OnlySelectedParticles");
 SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, _smoothingLevel, "Smoothing level");
-SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, _radius, "Probe sphere radius");
+SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, _probeSphereRadius, "Probe sphere radius");
 SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, _surfaceMeshDisplay, "Surface mesh display");
 SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, _onlySelectedParticles, "Use only selected particles");
-SET_PROPERTY_FIELD_UNITS(ConstructSurfaceModifier, _radius, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS(ConstructSurfaceModifier, _probeSphereRadius, WorldParameterUnit);
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
 ConstructSurfaceModifier::ConstructSurfaceModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
-	_smoothingLevel(8), _radius(4), _onlySelectedParticles(false),
+	_smoothingLevel(8), _probeSphereRadius(4), _onlySelectedParticles(false),
 	_solidVolume(0), _totalVolume(0), _surfaceArea(0)
 {
 	INIT_PROPERTY_FIELD(ConstructSurfaceModifier::_smoothingLevel);
-	INIT_PROPERTY_FIELD(ConstructSurfaceModifier::_radius);
+	INIT_PROPERTY_FIELD(ConstructSurfaceModifier::_probeSphereRadius);
 	INIT_PROPERTY_FIELD(ConstructSurfaceModifier::_surfaceMeshDisplay);
 	INIT_PROPERTY_FIELD(ConstructSurfaceModifier::_onlySelectedParticles);
 
@@ -69,7 +70,7 @@ void ConstructSurfaceModifier::propertyChanged(const PropertyFieldDescriptor& fi
 
 	// Recompute results when the parameters have changed.
 	if(field == PROPERTY_FIELD(ConstructSurfaceModifier::_smoothingLevel)
-			|| field == PROPERTY_FIELD(ConstructSurfaceModifier::_radius)
+			|| field == PROPERTY_FIELD(ConstructSurfaceModifier::_probeSphereRadius)
 			|| field == PROPERTY_FIELD(ConstructSurfaceModifier::_onlySelectedParticles))
 		invalidateCachedResults();
 }
@@ -105,14 +106,12 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> ConstructSurfaceMod
 	ParticlePropertyObject* selProperty = nullptr;
 	if(onlySelectedParticles())
 		selProperty = expectStandardProperty(ParticleProperty::SelectionProperty);
-	ParticlePropertyObject* clusterProperty = inputStandardProperty(ParticleProperty::ClusterProperty);
 	SimulationCellObject* simCell = expectSimulationCell();
 
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<ConstructSurfaceEngine>(validityInterval, posProperty->storage(),
 			selProperty ? selProperty->storage() : nullptr,
-			clusterProperty ? clusterProperty->storage() : nullptr,
-			simCell->data(), radius(), smoothingLevel());
+			simCell->data(), probeSphereRadius(), smoothingLevel());
 }
 
 /******************************************************************************
@@ -150,33 +149,6 @@ PipelineStatus ConstructSurfaceModifier::applyComputationResults(TimePoint time,
 			.arg(solidVolume() / totalVolume()).arg(surfaceArea() / solidVolume()).arg(surfaceArea() / totalVolume()));
 }
 
-/** Find the most common element in the [first, last) range.
-
-    O(n) in time; O(1) in space.
-
-    [first, last) must be valid sorted range.
-    Elements must be equality comparable.
-*/
-template <class ForwardIterator>
-ForwardIterator most_common(ForwardIterator first, ForwardIterator last)
-{
-	ForwardIterator it(first), max_it(first);
-	size_t count = 0, max_count = 0;
-	for( ; first != last; ++first) {
-		if(*it == *first)
-			count++;
-		else {
-			it = first;
-			count = 1;
-		}
-		if(count > max_count) {
-			max_count = count;
-			max_it = it;
-		}
-	}
-	return max_it;
-}
-
 /******************************************************************************
 * Performs the actual analysis. This method is executed in a worker thread.
 ******************************************************************************/
@@ -212,7 +184,7 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 
 	// Algorithm is divided into several sub-steps.
 	// Assign weights to sub-steps according to estimated runtime.
-	beginProgressSubSteps({ 20, 1, 6, 1, 1 });
+	beginProgressSubSteps({ 20, 1, 6, 1 });
 
 	// Generate Delaunay tessellation.
 	DelaunayTessellation tessellation;
@@ -221,220 +193,26 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 		return;
 
 	nextProgressSubStep();
-	setProgressRange(tessellation.number_of_tetrahedra());
 
-	// Classify cells into solid and open tetrahedra.
-	int ntotal = 0;
-	int solidCellCount = 0;
-	_isCompletelySolid = true;
-	for(DelaunayTessellation::CellIterator cell = tessellation.begin_cells(); cell != tessellation.end_cells(); ++cell, ++ntotal) {
-
-		// Update progress indicator.
-		if(!setProgressValueIntermittent(ntotal))
-			return;
-
-		// Alpha shape criterion: This determines whether the Delaunay tetrahedron is part of the solid region.
-		bool isSolid = tessellation.isValidCell(cell) &&
-				tessellation.dt().geom_traits().compare_squared_radius_3_object()(
-						cell->vertex(0)->point(),
-						cell->vertex(1)->point(),
-						cell->vertex(2)->point(),
-						cell->vertex(3)->point(),
-						alpha) != CGAL::POSITIVE;
-
-		if(!atomClusters() || !isSolid) {
-			cell->info().userField = isSolid;
+	// Determines the region a solid Delaunay cell belongs to.
+	// We use this callback function to compute the total volume of the solid region.
+	auto tetrahedronRegion = [this](DelaunayTessellation::CellHandle cell) {
+		if(cell->info().isGhost == false) {
+			Point3 p0 = cell->vertex(0)->point();
+			Vector3 ad = (Point3)cell->vertex(1)->point() - p0;
+			Vector3 bd = (Point3)cell->vertex(2)->point() - p0;
+			Vector3 cd = (Point3)cell->vertex(3)->point() - p0;
+			_solidVolume += std::abs(ad.dot(cd.cross(bd))) / 6.0;
 		}
-		else {
-			std::array<int,4> clusters;
-			for(int v = 0; v < 4; v++)
-				clusters[v] = atomClusters()->getInt(cell->vertex(v)->point().index());
-			std::sort(std::begin(clusters), std::end(clusters));
-			cell->info().userField = *most_common(std::begin(clusters), std::end(clusters)) + 1;
-		}
-
-		if(isSolid && !cell->info().isGhost) {
-			cell->info().index = solidCellCount++;
-		}
-		else {
-			if(!cell->info().isGhost) _isCompletelySolid = false;
-			cell->info().index = -1;
-		}
-	}
-
-	// Stores pointers to the mesh facets generated for a solid, local
-	// tetrahedron of the Delaunay tessellation.
-	struct Tetrahedron {
-		/// Pointers to the mesh facets associated with the four faces of the tetrahedron.
-		std::array<HalfEdgeMesh<>::Face*, 4> meshFacets;
-		DelaunayTessellation::CellHandle cell;
+		return 1;
 	};
-	std::map<std::array<int,4>, Tetrahedron> tetrahedra;
-	std::vector<std::map<std::array<int,4>, Tetrahedron>::const_iterator> tetrahedraList;
-	tetrahedraList.reserve(solidCellCount);
+
+	ManifoldConstructionHelper<HalfEdgeMesh<>, true> manifoldConstructor(tessellation, *mesh(), alpha, positions());
+	if(!manifoldConstructor.construct(tetrahedronRegion, this))
+		return;
+	_isCompletelySolid = (manifoldConstructor.spaceFillingRegion() == 1);
 
 	nextProgressSubStep();
-	setProgressRange(solidCellCount);
-
-	// Create the triangular mesh facets separating solid and open tetrahedra.
-	std::vector<HalfEdgeMesh<>::Vertex*> vertexMap(positions()->size(), nullptr);
-	for(DelaunayTessellation::CellIterator cell = tessellation.begin_cells(); cell != tessellation.end_cells(); ++cell) {
-
-		// Start with the solid and local tetrahedra.
-		if(cell->info().index == -1)
-			continue;
-		int solidRegion = cell->info().userField;
-		OVITO_ASSERT(solidRegion);
-
-		// Update progress indicator.
-		if(!setProgressValueIntermittent(cell->info().index))
-			return;
-
-		Tetrahedron tet;
-		tet.cell = cell;
-		Point3 unwrappedVerts[4];
-		std::array<int,4> vertexIndices;
-		for(size_t i = 0; i < 4; i++) {
-			vertexIndices[i] = cell->vertex(i)->point().index();
-			unwrappedVerts[i] = cell->vertex(i)->point();
-		}
-
-		// Compute cell volume.
-		Vector3 ad = unwrappedVerts[0] - unwrappedVerts[3];
-		Vector3 bd = unwrappedVerts[1] - unwrappedVerts[3];
-		Vector3 cd = unwrappedVerts[2] - unwrappedVerts[3];
-		if(_simCell.isWrappedVector(ad) || _simCell.isWrappedVector(bd) || _simCell.isWrappedVector(cd))
-			throw Exception(tr("Cannot construct surface mesh. Simulation cell length is too small for the given radius parameter."));
-		_solidVolume += std::abs(ad.dot(cd.cross(bd))) / 6.0;
-
-		// Iterate over the four faces of the tetrahedron cell.
-		bool hasSurfaceFacet = false;
-		for(int f = 0; f < 4; f++) {
-			tet.meshFacets[f] = nullptr;
-
-			// Test if the adjacent tetrahedron belongs to the open region.
-			DelaunayTessellation::CellHandle adjacentCell = tessellation.mirrorCell(cell, f);
-			if(adjacentCell->info().userField == solidRegion)
-				continue;
-
-			// Create the three vertices of the face or use existing output vertices.
-			std::array<HalfEdgeMesh<>::Vertex*,3> facetVertices;
-			for(int v = 0; v < 3; v++) {
-				DelaunayTessellation::VertexHandle vertex = cell->vertex(DelaunayTessellation::cellFacetVertexIndex(f, v));
-				int vertexIndex = vertex->point().index();
-				OVITO_ASSERT(vertexIndex >= 0 && vertexIndex < vertexMap.size());
-				if(vertexMap[vertexIndex] == nullptr)
-					vertexMap[vertexIndex] = facetVertices[2-v] = _mesh->createVertex(positions()->getPoint3(vertexIndex));
-				else
-					facetVertices[2-v] = vertexMap[vertexIndex];
-			}
-
-			// Create a new triangle facet.
-			tet.meshFacets[f] = _mesh->createFace(facetVertices.begin(), facetVertices.end());
-			hasSurfaceFacet = true;
-		}
-
-		if(hasSurfaceFacet) {
-			std::sort(vertexIndices.begin(), vertexIndices.end());
-			tetrahedraList.push_back(tetrahedra.insert(std::make_pair(vertexIndices, tet)).first);
-		}
-		else {
-			tetrahedraList.push_back(tetrahedra.end());
-		}
-	}
-
-	// Links half-edges to opposite half-edges.
-	nextProgressSubStep();
-	setProgressRange(tetrahedra.size());
-	int counter = 0;
-
-	for(auto tetIter = tetrahedra.cbegin(); tetIter != tetrahedra.cend(); ++tetIter, ++counter) {
-
-		// Update progress indicator.
-		if(!setProgressValueIntermittent(counter))
-			return;
-
-		const Tetrahedron& tet = tetIter->second;
-		for(int f = 0; f < 4; f++) {
-			HalfEdgeMesh<>::Face* facet = tet.meshFacets[f];
-			if(facet == nullptr) continue;
-
-			HalfEdgeMesh<>::Edge* edge = facet->edges();
-			for(int e = 0; e < 3; e++, edge = edge->nextFaceEdge()) {
-				OVITO_CHECK_POINTER(edge);
-				if(edge->oppositeEdge() != nullptr) continue;
-				int vertexIndex1 = DelaunayTessellation::cellFacetVertexIndex(f, 2-e);
-				int vertexIndex2 = DelaunayTessellation::cellFacetVertexIndex(f, (4-e)%3);
-				DelaunayTessellation::FacetCirculator circulator_start = tessellation.incident_facets(tet.cell, vertexIndex1, vertexIndex2, tet.cell, f);
-				DelaunayTessellation::FacetCirculator circulator = circulator_start;
-				OVITO_ASSERT(circulator->first == tet.cell);
-				OVITO_ASSERT(circulator->second == f);
-				--circulator;
-				OVITO_ASSERT(circulator != circulator_start);
-				do {
-					// Look for the first open cell while going around the edge.
-					if(circulator->first->info().userField != tet.cell->info().userField)
-						break;
-					--circulator;
-				}
-				while(circulator != circulator_start);
-				OVITO_ASSERT(circulator != circulator_start);
-
-				// Get the adjacent cell, which must be solid.
-				std::pair<DelaunayTessellation::CellHandle,int> mirrorFacet = tessellation.mirrorFacet(circulator);
-				OVITO_ASSERT(mirrorFacet.first->info().userField == tet.cell->info().userField);
-				HalfEdgeMesh<>::Face* oppositeFace = nullptr;
-				// If the cell is a ghost cell, find the corresponding real cell.
-				if(mirrorFacet.first->info().isGhost) {
-					OVITO_ASSERT(mirrorFacet.first->info().index == -1);
-					std::array<int,4> cellVerts;
-					for(size_t i = 0; i < 4; i++) {
-						cellVerts[i] = mirrorFacet.first->vertex(i)->point().index();
-						OVITO_ASSERT(cellVerts[i] != -1);
-					}
-					std::array<int,3> faceVerts;
-					for(size_t i = 0; i < 3; i++) {
-						faceVerts[i] = cellVerts[DelaunayTessellation::cellFacetVertexIndex(mirrorFacet.second, i)];
-						OVITO_ASSERT(faceVerts[i] != -1);
-					}
-					std::sort(cellVerts.begin(), cellVerts.end());
-					const Tetrahedron& realTet = tetrahedra[cellVerts];
-					for(int fi = 0; fi < 4; fi++) {
-						if(realTet.meshFacets[fi] == nullptr) continue;
-						std::array<int,3> faceVerts2;
-						for(size_t i = 0; i < 3; i++) {
-							faceVerts2[i] = realTet.cell->vertex(DelaunayTessellation::cellFacetVertexIndex(fi, i))->point().index();
-							OVITO_ASSERT(faceVerts2[i] != -1);
-						}
-						if(std::is_permutation(faceVerts.begin(), faceVerts.end(), faceVerts2.begin())) {
-							oppositeFace = realTet.meshFacets[fi];
-							break;
-						}
-					}
-				}
-				else {
-					OVITO_ASSERT(tetrahedraList[mirrorFacet.first->info().index] != tetrahedra.end());
-					const Tetrahedron& mirrorTet = tetrahedraList[mirrorFacet.first->info().index]->second;
-					oppositeFace = mirrorTet.meshFacets[mirrorFacet.second];
-				}
-				if(oppositeFace == nullptr)
-					throw Exception(tr("Cannot construct surface mesh for this input dataset. Opposite cell face not found."));
-				OVITO_ASSERT(oppositeFace != facet);
-				HalfEdgeMesh<>::Edge* oppositeEdge = oppositeFace->edges();
-				do {
-					OVITO_CHECK_POINTER(oppositeEdge);
-					if(oppositeEdge->vertex1() == edge->vertex2()) {
-						edge->linkToOppositeEdge(oppositeEdge);
-						break;
-					}
-					oppositeEdge = oppositeEdge->nextFaceEdge();
-				}
-				while(oppositeEdge != oppositeFace->edges());
-				if(edge->oppositeEdge() == nullptr)
-					throw Exception(tr("Cannot construct surface mesh for this input dataset. Opposite half-edge not found."));
-			}
-		}
-	}
 
 	// Make sure every mesh vertex is only part of one surface manifold.
 	_mesh->duplicateSharedVertices();
@@ -467,7 +245,7 @@ void ConstructSurfaceModifierEditor::createUI(const RolloutInsertionParameters& 
 	layout->setSpacing(6);
 	layout->setColumnStretch(1, 1);
 
-	FloatParameterUI* radiusUI = new FloatParameterUI(this, PROPERTY_FIELD(ConstructSurfaceModifier::_radius));
+	FloatParameterUI* radiusUI = new FloatParameterUI(this, PROPERTY_FIELD(ConstructSurfaceModifier::_probeSphereRadius));
 	layout->addWidget(radiusUI->label(), 0, 0);
 	layout->addLayout(radiusUI->createFieldLayout(), 0, 1);
 	radiusUI->setMinValue(0);

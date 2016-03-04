@@ -20,6 +20,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
+#include <plugins/crystalanalysis/util/ManifoldConstructionHelper.h>
 #include "InterfaceMesh.h"
 #include "DislocationTracer.h"
 #include "DislocationAnalysisModifier.h"
@@ -55,278 +56,64 @@ ForwardIterator most_common(ForwardIterator first, ForwardIterator last)
 }
 
 /******************************************************************************
-* Classifies each tetrahedron of the tessellation as being either good or bad.
+* Creates the mesh facets separating good and bad tetrahedra.
 ******************************************************************************/
-bool InterfaceMesh::classifyTetrahedra(FloatType maximumNeighborDistance, ParticleProperty* crystalClusters, FutureInterfaceBase& progress)
+bool InterfaceMesh::createMesh(FloatType maximumNeighborDistance, ParticleProperty* crystalClusters, FutureInterfaceBase& progress)
 {
-	_numGoodTetrahedra = 0;
+	progress.beginProgressSubSteps(2);
+
 	_isCompletelyGood = true;
 	_isCompletelyBad = true;
+
+	// Determines if a tetrahedron belongs to the good or bad crystal region.
+	auto tetrahedronRegion = [this,crystalClusters](DelaunayTessellation::CellHandle cell) {
+		if(elasticMapping().isElasticMappingCompatible(cell)) {
+			_isCompletelyBad = false;
+			if(crystalClusters) {
+				std::array<int,4> clusters;
+				for(int v = 0; v < 4; v++)
+					clusters[v] = crystalClusters->getInt(cell->vertex(v)->point().index());
+				std::sort(std::begin(clusters), std::end(clusters));
+				return (*most_common(std::begin(clusters), std::end(clusters)) + 1);
+			}
+			else return 1;
+		}
+		else {
+			_isCompletelyGood = false;
+			return 0;
+		}
+	};
+
+	// Transfer cluster vectors from tessellation edges to mesh edges.
+	auto prepareMeshFace = [this](Face* face, const std::array<int,3>& vertexIndices, const std::array<DelaunayTessellation::VertexHandle,3>& vertexHandles, DelaunayTessellation::CellHandle cell) {
+		// Obtain unwrapped vertex positions.
+		Point3 vertexPositions[3] = { vertexHandles[0]->point(), vertexHandles[1]->point(), vertexHandles[2]->point() };
+
+		Edge* edge = face->edges();
+		for(int i = 0; i < 3; i++, edge = edge->nextFaceEdge()) {
+			edge->physicalVector = vertexPositions[(i+1)%3] - vertexPositions[i];
+
+			// Check if edge is spanning more than half of a periodic simulation cell.
+			for(size_t dim = 0; dim < 3; dim++) {
+				if(structureAnalysis().cell().pbcFlags()[dim]) {
+					if(std::abs(structureAnalysis().cell().inverseMatrix().prodrow(edge->physicalVector, dim)) >= FloatType(0.5)+FLOATTYPE_EPSILON)
+						StructureAnalysis::generateCellTooSmallError(dim);
+				}
+			}
+
+			// Transfer cluster vector from Delaunay edge to interface mesh edge.
+			std::tie(edge->clusterVector, edge->clusterTransition) = elasticMapping().getEdgeClusterVector(vertexIndices[i], vertexIndices[(i+1)%3]);
+		}
+	};
 
 	// Threshold for filtering out elements at the surface.
 	double alpha = 5.0 * maximumNeighborDistance;
 
-	progress.setProgressRange(tessellation().number_of_tetrahedra());
-	int progressCounter = 0;
-	for(DelaunayTessellation::CellIterator cell = tessellation().begin_cells(); cell != tessellation().end_cells(); ++cell) {
+	ManifoldConstructionHelper<InterfaceMesh> manifoldConstructor(tessellation(), *this, alpha, structureAnalysis().positions());
+	if(!manifoldConstructor.construct(tetrahedronRegion, &progress, prepareMeshFace))
+		return false;
 
-		// Update progress indicator.
-		if(!progress.setProgressValueIntermittent(progressCounter++))
-			return false;
-
-		// Determine whether the tetrahedron belongs to the good or the bad crystal region.
-		bool isGood = elasticMapping().isElasticMappingCompatible(cell);
-
-		// Alpha shape criterion.
-		if(isGood && tessellation().dt().geom_traits().compare_squared_radius_3_object()(
-						cell->vertex(0)->point(),
-						cell->vertex(1)->point(),
-						cell->vertex(2)->point(),
-						cell->vertex(3)->point(),
-						alpha) == CGAL::POSITIVE) {
-			isGood = false;
-		}
-
-		if(!crystalClusters || !isGood) {
-			cell->info().userField = isGood;
-		}
-		else {
-			std::array<int,4> clusters;
-			for(int v = 0; v < 4; v++)
-				clusters[v] = crystalClusters->getInt(cell->vertex(v)->point().index());
-			std::sort(std::begin(clusters), std::end(clusters));
-			cell->info().userField = *most_common(std::begin(clusters), std::end(clusters)) + 1;
-		}
-
-		if(isGood) {
-			if(!cell->info().isGhost)
-				cell->info().index = _numGoodTetrahedra++;
-			else
-				cell->info().index = -1;
-			_isCompletelyBad = false;
-		}
-		else {
-			if(!cell->info().isGhost) {
-				_isCompletelyGood = false;
-			}
-			cell->info().index = -1;
-		}
-	}
-
-	return true;
-}
-
-/******************************************************************************
-* Creates the mesh facets separating good and bad tetrahedra.
-******************************************************************************/
-bool InterfaceMesh::createMesh(FutureInterfaceBase& progress)
-{
-	progress.beginProgressSubSteps(2);
-	progress.setProgressRange(_numGoodTetrahedra);
-
-	// Stores pointers to the mesh facets generated for a good
-	// tetrahedron of the Delaunay tessellation.
-	struct Tetrahedron {
-		// Pointers to the mesh facets associated with the four faces of the tetrahedron.
-		std::array<Face*, 4> meshFacets;
-		DelaunayTessellation::CellHandle cell;
-	};
-
-	std::map<std::array<int,4>, Tetrahedron> tetrahedra;
-	std::vector<std::map<std::array<int,4>, Tetrahedron>::const_iterator> tetrahedraList;
-	tetrahedraList.reserve(_numGoodTetrahedra);
-
-	// Create the triangular mesh facets separating solid and open tetrahedra.
-	std::vector<HalfEdgeMesh::Vertex*> vertexMap(structureAnalysis().atomCount(), nullptr);
-	for(DelaunayTessellation::CellIterator cell = tessellation().begin_cells(); cell != tessellation().end_cells(); ++cell) {
-
-		// Start with the primary images of the good tetrahedra.
-		if(cell->info().index == -1)
-			continue;
-		int goodRegionIndex = cell->info().userField;
-		OVITO_ASSERT(goodRegionIndex != 0);
-
-		// Update progress indicator.
-		if(!progress.setProgressValueIntermittent(cell->info().index))
-			return false;
-
-		Tetrahedron tet;
-		tet.cell = cell;
-		std::array<int,4> vertexIndices;
-		for(size_t i = 0; i < 4; i++) {
-			vertexIndices[i] = cell->vertex(i)->point().index();
-		}
-
-		// Iterate over the four faces of the tetrahedron cell.
-		bool hasInterface = false;
-		for(int f = 0; f < 4; f++) {
-			tet.meshFacets[f] = nullptr;
-
-			// Test if the adjacent tetrahedron belongs to the bad region.
-			DelaunayTessellation::CellHandle adjacentCell = tessellation().mirrorCell(cell, f);
-			if(adjacentCell->info().userField == goodRegionIndex)
-				continue;	// It's also a good tet from the same region. That means we don't create an interface facet here.
-
-			// Create the three vertices of the face or use existing output vertices.
-			std::array<Vertex*, 3> facetVertices;
-			Point3 vertexPositions[3];
-			int vertexIndices[3];
-			for(int v = 0; v < 3; v++) {
-				DelaunayTessellation::VertexHandle vertex = cell->vertex(DelaunayTessellation::cellFacetVertexIndex(f, v));
-				int vertexIndex = vertex->point().index();
-				OVITO_ASSERT(vertexIndex >= 0 && vertexIndex < vertexMap.size());
-				if(vertexMap[vertexIndex] == nullptr)
-					vertexMap[vertexIndex] = facetVertices[v] = createVertex(structureAnalysis().positions()->getPoint3(vertexIndex));
-				else
-					facetVertices[v] = vertexMap[vertexIndex];
-				vertexPositions[v] = (Point3)vertex->point();
-				vertexIndices[v] = vertexIndex;
-			}
-
-			// Create a new triangle facet.
-			Face* face = tet.meshFacets[f] = createFace(facetVertices.begin(), facetVertices.end());
-			hasInterface = true;
-
-			// Transfer cluster vectors from tessellation edges to mesh edges.
-			Edge* edge = face->edges();
-			for(int i = 0; i < 3; i++, edge = edge->nextFaceEdge()) {
-				OVITO_ASSERT(edge->vertex1() == facetVertices[i]);
-				OVITO_ASSERT(edge->vertex2() == facetVertices[(i+1)%3]);
-				edge->physicalVector = vertexPositions[(i+1)%3] - vertexPositions[i];
-
-				// Check if edge is spanning more than half of a periodic simulation cell.
-				for(size_t dim = 0; dim < 3; dim++) {
-					if(structureAnalysis().cell().pbcFlags()[dim]) {
-						if(std::abs(structureAnalysis().cell().inverseMatrix().prodrow(edge->physicalVector, dim)) >= FloatType(0.5)+FLOATTYPE_EPSILON)
-							StructureAnalysis::generateCellTooSmallError(dim);
-					}
-				}
-
-				// Transfer cluster vector from Delaunay edge to interface mesh edge.
-				std::tie(edge->clusterVector, edge->clusterTransition) = elasticMapping().getEdgeClusterVector(vertexIndices[i], vertexIndices[(i+1)%3]);
-			}
-		}
-
-		if(hasInterface) {
-			std::sort(vertexIndices.begin(), vertexIndices.end());
-			tetrahedraList.push_back(tetrahedra.insert(std::make_pair(vertexIndices, tet)).first);
-		}
-		else {
-			tetrahedraList.push_back(tetrahedra.end());
-		}
-	}
-
-	// Link half-edges with opposite half-edges.
 	progress.nextProgressSubStep();
-	progress.setProgressRange(tetrahedra.size());
-	int progressCounter = 0;
-
-	// This helper function finds the real cell corresponding to a (good) ghost cell.
-	auto findRealTet = [&tetrahedra](DelaunayTessellation::CellHandle cell) -> const Tetrahedron& {
-		OVITO_ASSERT(cell->info().isGhost);
-		OVITO_ASSERT(cell->info().userField);
-		std::array<int,4> cellVerts;
-		for(size_t i = 0; i < 4; i++) {
-			cellVerts[i] = cell->vertex(i)->point().index();
-			OVITO_ASSERT(cellVerts[i] != -1);
-		}
-		std::sort(cellVerts.begin(), cellVerts.end());
-		auto iter = tetrahedra.find(cellVerts);
-		OVITO_ASSERT(iter != tetrahedra.end());
-		if(iter == tetrahedra.end())
-			throw Exception(DislocationAnalysisModifier::tr("DXA failed: Cannot construct interface mesh for this input dataset; real cell not found. This should not happen. Please report this issue to the developer."));
-		OVITO_ASSERT(iter->second.cell->info().isGhost == false);
-		OVITO_ASSERT(iter->second.cell->info().userField);
-		return iter->second;
-	};
-
-	for(auto tetIter = tetrahedra.cbegin(); tetIter != tetrahedra.cend(); ++tetIter) {
-
-		// Update progress indicator.
-		if(!progress.setProgressValueIntermittent(progressCounter))
-			return false;
-
-		const Tetrahedron& tet = tetIter->second;
-
-		for(int f = 0; f < 4; f++) {
-			Face* facet = tet.meshFacets[f];
-			if(facet == nullptr) continue;
-
-			Edge* edge = facet->edges();
-			for(int e = 0; e < 3; e++, edge = edge->nextFaceEdge()) {
-				OVITO_CHECK_POINTER(edge);
-				if(edge->oppositeEdge() != nullptr) continue;
-				int vertexIndex1 = DelaunayTessellation::cellFacetVertexIndex(f, e);
-				int vertexIndex2 = DelaunayTessellation::cellFacetVertexIndex(f, (e+1)%3);
-				DelaunayTessellation::FacetCirculator circulator_start = tessellation().incident_facets(tet.cell, vertexIndex2, vertexIndex1, tet.cell, f);
-				DelaunayTessellation::FacetCirculator circulator = circulator_start;
-				OVITO_ASSERT(circulator->first == tet.cell);
-				OVITO_ASSERT(circulator->second == f);
-				--circulator;
-				OVITO_ASSERT(circulator != circulator_start);
-				do {
-					// Look for the first bad cell while going around the edge.
-					if(circulator->first->info().userField != tet.cell->info().userField)
-						break;
-
-					--circulator;
-				}
-				while(circulator != circulator_start);
-				OVITO_ASSERT(circulator != circulator_start);
-
-				// Get the adjacent cell, which must be good.
-				std::pair<DelaunayTessellation::CellHandle,int> mirrorFacet = tessellation().mirrorFacet(circulator);
-				OVITO_ASSERT(mirrorFacet.first->info().userField == tet.cell->info().userField);
-				Face* oppositeFace = nullptr;
-				// If the cell is a ghost cell, find the corresponding real cell.
-				if(mirrorFacet.first->info().isGhost) {
-					const Tetrahedron& realTet = findRealTet(mirrorFacet.first);
-					std::array<int,3> faceVerts;
-					for(size_t i = 0; i < 3; i++) {
-						faceVerts[i] = mirrorFacet.first->vertex(DelaunayTessellation::cellFacetVertexIndex(mirrorFacet.second, i))->point().index();
-						OVITO_ASSERT(faceVerts[i] != -1);
-					}
-					for(int fi = 0; fi < 4; fi++) {
-						if(realTet.meshFacets[fi] == nullptr) continue;
-						std::array<int,3> faceVerts2;
-						for(size_t i = 0; i < 3; i++) {
-							faceVerts2[i] = realTet.cell->vertex(DelaunayTessellation::cellFacetVertexIndex(fi, i))->point().index();
-							OVITO_ASSERT(faceVerts2[i] != -1);
-						}
-						if(std::is_permutation(faceVerts.begin(), faceVerts.end(), faceVerts2.begin())) {
-							oppositeFace = realTet.meshFacets[fi];
-							break;
-						}
-					}
-				}
-				else {
-					OVITO_ASSERT(tetrahedraList[mirrorFacet.first->info().index] != tetrahedra.end());
-					const Tetrahedron& mirrorTet = tetrahedraList[mirrorFacet.first->info().index]->second;
-					oppositeFace = mirrorTet.meshFacets[mirrorFacet.second];
-				}
-				if(oppositeFace == nullptr) {
-					throw Exception(DislocationAnalysisModifier::tr("DXA failed: Cannot construct interface mesh for this input dataset; adjacent cell face not found. This should not happen. Please report this issue to the developer."));
-				}
-				OVITO_ASSERT(oppositeFace != facet);
-				Edge* oppositeEdge = oppositeFace->edges();
-				do {
-					OVITO_CHECK_POINTER(oppositeEdge);
-					if(oppositeEdge->vertex1() == edge->vertex2()) {
-						edge->linkToOppositeEdge(oppositeEdge);
-						OVITO_ASSERT(edge->physicalVector.equals(-oppositeEdge->physicalVector, CA_ATOM_VECTOR_EPSILON));
-						OVITO_ASSERT(edge->clusterTransition == oppositeEdge->clusterTransition->reverse);
-						OVITO_ASSERT(edge->clusterTransition->reverse == oppositeEdge->clusterTransition);
-						OVITO_ASSERT(edge->clusterVector.equals(-oppositeEdge->clusterTransition->transform(oppositeEdge->clusterVector), CA_LATTICE_VECTOR_EPSILON));
-						break;
-					}
-					oppositeEdge = oppositeEdge->nextFaceEdge();
-				}
-				while(oppositeEdge != oppositeFace->edges());
-				if(edge->oppositeEdge() == nullptr)
-					throw Exception(DislocationAnalysisModifier::tr("DXA failed: Cannot construct interface mesh for this input dataset. Opposite half-edge not found. This should not happen. Please report this issue to the developer."));
-			}
-		}
-	}
 
 	// Make sure each vertex is only part of a single manifold.
 	duplicateSharedVertices();

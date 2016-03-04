@@ -35,7 +35,7 @@ static const int edgeVertices[6][2] = {{0,1},{0,2},{0,3},{1,2},{1,3},{2,3}};
 ******************************************************************************/
 bool ElasticMapping::generateTessellationEdges(FutureInterfaceBase& progress)
 {
-	progress.setProgressRange(tessellation().number_of_primary_tetrahedra());
+	progress.setProgressRange(tessellation().numberOfPrimaryTetrahedra());
 
 	// Generate list of tessellation edges.
 	for(DelaunayTessellation::CellIterator cell = tessellation().begin_cells(); cell != tessellation().end_cells(); ++cell) {

@@ -43,10 +43,10 @@ public:
 	SurfaceMeshDisplay* surfaceMeshDisplay() const { return _surfaceMeshDisplay; }
 
 	/// \brief Returns the radius parameter used during construction of the surface.
-	FloatType radius() const { return _radius; }
+	FloatType probeSphereRadius() const { return _probeSphereRadius; }
 
 	/// \brief Sets the radius parameter used during construction of the surface.
-	void setRadius(FloatType radius) { _radius = radius; }
+	void setProbeSphereRadius(FloatType radius) { _probeSphereRadius = radius; }
 
 	/// \brief Returns the level of smoothing applied to the constructed surface mesh.
 	int smoothingLevel() const { return _smoothingLevel; }
@@ -97,8 +97,8 @@ private:
 	public:
 
 		/// Constructor.
-		ConstructSurfaceEngine(const TimeInterval& validityInterval, ParticleProperty* positions, ParticleProperty* selection, ParticleProperty* atomClusters, const SimulationCell& simCell, FloatType radius, int smoothingLevel) :
-			ComputeEngine(validityInterval), _positions(positions), _selection(selection), _atomClusters(atomClusters), _simCell(simCell), _radius(radius), _smoothingLevel(smoothingLevel), _isCompletelySolid(false), _mesh(new HalfEdgeMesh<>()) {}
+		ConstructSurfaceEngine(const TimeInterval& validityInterval, ParticleProperty* positions, ParticleProperty* selection, const SimulationCell& simCell, FloatType radius, int smoothingLevel) :
+			ComputeEngine(validityInterval), _positions(positions), _selection(selection), _simCell(simCell), _radius(radius), _smoothingLevel(smoothingLevel), _isCompletelySolid(false), _mesh(new HalfEdgeMesh<>()) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;
@@ -111,9 +111,6 @@ private:
 
 		/// Returns the input particle selection.
 		ParticleProperty* selection() const { return _selection.data(); }
-
-		/// Returns the input particle property that stores the cluster assignment of atoms.
-		ParticleProperty* atomClusters() const { return _atomClusters.data(); }
 
 		/// Returns the computed solid volume.
 		FloatType solidVolume() const { return (FloatType)_solidVolume; }
@@ -133,7 +130,6 @@ private:
 		int _smoothingLevel;
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
 		QExplicitlySharedDataPointer<ParticleProperty> _selection;
-		QExplicitlySharedDataPointer<ParticleProperty> _atomClusters;
 		QExplicitlySharedDataPointer<HalfEdgeMesh<>> _mesh;
 		SimulationCell _simCell;
 		double _solidVolume;
@@ -142,7 +138,7 @@ private:
 	};
 
 	/// Controls the radius of the probe sphere.
-	PropertyField<FloatType> _radius;
+	PropertyField<FloatType> _probeSphereRadius;
 
 	/// Controls the amount of smoothing.
 	PropertyField<int> _smoothingLevel;
@@ -174,7 +170,7 @@ private:
 	Q_CLASSINFO("DisplayName", "Construct surface mesh");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
 
-	DECLARE_PROPERTY_FIELD(_radius);
+	DECLARE_PROPERTY_FIELD(_probeSphereRadius);
 	DECLARE_PROPERTY_FIELD(_smoothingLevel);
 	DECLARE_PROPERTY_FIELD(_onlySelectedParticles);
 	DECLARE_REFERENCE_FIELD(_surfaceMeshDisplay);

@@ -45,6 +45,7 @@ Unresolved OpenGL problems:
 
 Unresolved bugs:
 
+- GIF video export broken in the official Linux program package.
 - OVITO crashes under Windows 10 when using the Python script modifier (fsyed2309@mytu.tuskegee.edu). 
 - NearestNeighborFinder doesn't work properly for triclinic cells with small angles.
 
@@ -57,7 +58,6 @@ New analysis features:
 
 New I/O functions:
 
-- Repair import of Crystal Analysis Tool CA files (amlan.dutta@bose.res.in).
 - Export to Blender (Paul Erhart, Filip Sund <filip.sund@fys.uio.no>)
 - Single precision floating-point numbers, which are used for custom particle properties, cannot represent large integer numbers exactly (e.g. 100400). Find a solution to make it work.
 - Load atomic trajectories from LAMMPS dump files and import bond information from a separate LAMMPS data file (suggested by jorge.ramirez@upm.es, HeineDR@corning.com).

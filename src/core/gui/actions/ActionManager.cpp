@@ -27,6 +27,7 @@
 #include <core/dataset/UndoStack.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/scene/SelectionSet.h>
+#include <core/scene/SceneRoot.h>
 #include <core/viewport/input/NavigationModes.h>
 #include <core/viewport/input/ViewportInputMode.h>
 #include <core/viewport/input/ViewportInputManager.h>
@@ -235,6 +236,10 @@ void ActionManager::on_EditDelete_triggered()
 		// Delete all nodes in selection set.
 		for(SceneNode* node : _dataset->selection()->nodes())
 			node->deleteNode();
+
+		// Automatically select one of the remaining nodes.
+		if(_dataset->sceneRoot()->children().isEmpty() == false)
+			_dataset->selection()->setNode(_dataset->sceneRoot()->children().front());
 	});
 }
 

@@ -130,7 +130,8 @@ PipelineStatus SliceSurfaceModifier::modifyObject(TimePoint time, ModifierApplic
 
 	CloneHelper cloneHelper;
 
-	for(DataObject* obj : state.objects()) {
+	for(int i = 0; i < state.objects().size(); i++) {
+		DataObject* obj = state.objects()[i];
 		if(_modifySurfaces) {
 			if(SurfaceMesh* inputMesh = dynamic_object_cast<SurfaceMesh>(obj)) {
 				OORef<SurfaceMesh> outputMesh = cloneHelper.cloneObject(inputMesh, false);
@@ -145,6 +146,7 @@ PipelineStatus SliceSurfaceModifier::modifyObject(TimePoint time, ModifierApplic
 				outputMesh->setCuttingPlanes(planes);
 				state.replaceObject(inputMesh, outputMesh);
 				state.intersectStateValidity(validityInterval);
+				continue;
 			}
 		}
 		if(_modifyDislocations) {
@@ -161,6 +163,7 @@ PipelineStatus SliceSurfaceModifier::modifyObject(TimePoint time, ModifierApplic
 				outputDislocations->setCuttingPlanes(planes);
 				state.replaceObject(inputDislocations, outputDislocations);
 				state.intersectStateValidity(validityInterval);
+				continue;
 			}
 		}
 	}

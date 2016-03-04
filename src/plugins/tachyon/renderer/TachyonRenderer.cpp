@@ -556,10 +556,13 @@ void TachyonRenderer::renderMesh(const DefaultMeshPrimitive& meshBuffer)
 			else
 				rv->normal = *faceNormal;
 			rv->pos = tm * mesh.vertex(face->vertex(v));
+
 			if(mesh.hasVertexColors())
 				rv->color = ColorAT<float>(mesh.vertexColor(face->vertex(v)));
 			else if(mesh.hasFaceColors())
 				rv->color = ColorAT<float>(mesh.faceColor(face - mesh.faces().constBegin()));
+			else if(face->materialIndex() < meshBuffer.materialColors().size() && face->materialIndex() >= 0)
+				rv->color = meshBuffer.materialColors()[face->materialIndex()];
 			else
 				rv->color = defaultVertexColor;
 		}
@@ -597,14 +600,30 @@ void TachyonRenderer::renderMesh(const DefaultMeshPrimitive& meshBuffer)
 		}
 	}
 
+	// Precompute some camera-related information that is needed for face culling.
+	Point_3<float> cameraPos = Point_3<float>::Origin() + (Vector_3<float>)projParams().inverseViewMatrix.translation();
+	Vector3 projectionSpaceDirection = projParams().inverseProjectionMatrix * Point3(0,0,1) - projParams().inverseProjectionMatrix * Point3(0,0,-1);
+	Vector_3<float> cameraDirection = (Vector_3<float>)(projParams().inverseViewMatrix * projectionSpaceDirection);
+
 	// Pass transformed triangles to Tachyon renderer.
+	faceNormal = faceNormals.begin();
 	void* tex = getTachyonTexture(1.0f, 1.0f, 1.0f, defaultVertexColor.a());
-	for(auto rv = renderVertices.begin(); rv != renderVertices.end(); ) {
+	for(auto rv = renderVertices.begin(); rv != renderVertices.end(); ++faceNormal) {
 		auto rv0 = rv++;
 		auto rv1 = rv++;
 		auto rv2 = rv++;
 
-		if(mesh.hasVertexColors() || mesh.hasFaceColors())
+		// Perform culling of triangles not facing the viewer.
+		if(meshBuffer.cullFaces()) {
+			if(projParams().isPerspective) {
+				if(faceNormal->dot(rv0->pos - cameraPos) >= 0) continue;
+			}
+			else {
+				if(faceNormal->dot(cameraDirection) >= 0) continue;
+			}
+		}
+
+		if(mesh.hasVertexColors() || mesh.hasFaceColors() || meshBuffer.materialColors().empty() == false)
 			tex = getTachyonTexture(1.0f, 1.0f, 1.0f, defaultVertexColor.a());
 
 		rt_vcstri(_rtscene, tex,

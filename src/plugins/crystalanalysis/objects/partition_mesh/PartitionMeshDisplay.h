@@ -119,6 +119,9 @@ protected:
 
 protected:
 
+	/// Splits a triangle face at a periodic boundary.
+	static bool splitFace(TriMesh& output, int faceIndex, int oldVertexCount, std::vector<Point3>& newVertices, std::map<std::pair<int,int>,std::pair<int,int>>& newVertexLookupMap, const SimulationCell& cell, size_t dim);
+
 	/// Controls the display color of the outer surface mesh.
 	PropertyField<Color, QColor> _surfaceColor;
 
@@ -150,7 +153,8 @@ protected:
 	/// that require updating the geometry buffer.
 	SceneObjectCacheHelper<
 		ColorA,								// Surface color
-		bool								// Smooth shading
+		bool,								// Smooth shading
+		WeakVersionedOORef<DataObject>		// Cluster graph
 		> _geometryCacheHelper;
 
 	/// This helper structure is used to detect any changes in the input data

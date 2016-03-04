@@ -168,12 +168,15 @@ struct Cluster
 	/// that are part of the cluster.
 	Point3 centerOfMass = Point3::Origin();
 
+	/// The visualization color of the atom cluster.
+	Color color;
+
 	/// The transition from this cluster to its parent if the cluster
 	/// is a child cluster.
 	ClusterTransition* parentTransition = nullptr;
 
 	/// Constructor.
-	Cluster(int _id, int _structure) : id(_id), structure(_structure) {}
+	Cluster(int _id, int _structure) : id(_id), structure(_structure), color(1,1,1) {}
 
 	/// Inserts a transition into this cluster's list of transitions.
 	void insertTransition(ClusterTransition* newTransition) {

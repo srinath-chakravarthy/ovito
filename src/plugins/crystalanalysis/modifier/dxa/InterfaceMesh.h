@@ -91,11 +91,8 @@ public:
 	/// Returns the structure analysis object.
 	const StructureAnalysis& structureAnalysis() const { return elasticMapping().structureAnalysis(); }
 
-	/// Classifies each tetrahedron of the tessellation as being either good or bad.
-	bool classifyTetrahedra(FloatType maximumNeighborDistance, ParticleProperty* crystalClusters, FutureInterfaceBase& progress);
-
 	/// Creates the mesh facets separating good and bad tetrahedra.
-	bool createMesh(FutureInterfaceBase& progress);
+	bool createMesh(FloatType maximumNeighborDistance, ParticleProperty* crystalClusters, FutureInterfaceBase& progress);
 
 	/// Returns whether all tessellation cells belong to the good region.
 	bool isCompletelyGood() const { return _isCompletelyGood; }
@@ -111,9 +108,6 @@ private:
 	/// The underlying mapping from the physical configuration of the system
 	/// to the stress-free imaginary configuration.
 	const ElasticMapping& _elasticMapping;
-
-	/// The of tessellation cells belonging to the good crystal region.
-	int _numGoodTetrahedra;
 
 	/// Indicates that all tessellation cells belong to the good region.
 	bool _isCompletelyGood;

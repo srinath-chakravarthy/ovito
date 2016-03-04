@@ -56,6 +56,8 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 #endif
 	rng.seed(4);
 
+	_simCell = simCell;
+
 	// Insert the original points first.
 	cgalPoints.reserve(numPoints);
 	for(size_t i = 0; i < numPoints; i++, ++positions) {
