@@ -72,7 +72,9 @@ public:
         // 33 (removed),
 		MoleculeProperty = 34,
 		AsphericalShapeProperty = 35,
-		VectorColorProperty = 36
+		VectorColorProperty = 36,
+		ElasticStrainTensorProperty = 37,
+		ElasticDeformationGradientProperty = 38
 	};
 	Q_ENUMS(Type);
 

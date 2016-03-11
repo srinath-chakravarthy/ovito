@@ -37,6 +37,7 @@
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/particles/objects/SurfaceMesh.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
+#include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
 #include "SliceSurfaceModifier.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
@@ -97,7 +98,9 @@ TimeInterval SliceSurfaceModifier::modifierValidity(TimePoint time)
 ******************************************************************************/
 bool SliceSurfaceModifier::isApplicableTo(const PipelineFlowState& input)
 {
-	return (input.findObject<SurfaceMesh>() != nullptr) || (input.findObject<DislocationNetworkObject>() != nullptr);
+	return (input.findObject<SurfaceMesh>() != nullptr)
+			|| (input.findObject<DislocationNetworkObject>() != nullptr)
+			|| (input.findObject<PartitionMesh>() != nullptr);
 }
 
 /******************************************************************************
@@ -135,6 +138,21 @@ PipelineStatus SliceSurfaceModifier::modifyObject(TimePoint time, ModifierApplic
 		if(_modifySurfaces) {
 			if(SurfaceMesh* inputMesh = dynamic_object_cast<SurfaceMesh>(obj)) {
 				OORef<SurfaceMesh> outputMesh = cloneHelper.cloneObject(inputMesh, false);
+				QVector<Plane3> planes = inputMesh->cuttingPlanes();
+				if(sliceWidth <= 0) {
+					planes.push_back(plane);
+				}
+				else {
+					planes.push_back(Plane3(plane.normal, plane.dist + sliceWidth));
+					planes.push_back(Plane3(-plane.normal, -plane.dist + sliceWidth));
+				}
+				outputMesh->setCuttingPlanes(planes);
+				state.replaceObject(inputMesh, outputMesh);
+				state.intersectStateValidity(validityInterval);
+				continue;
+			}
+			if(PartitionMesh* inputMesh = dynamic_object_cast<PartitionMesh>(obj)) {
+				OORef<PartitionMesh> outputMesh = cloneHelper.cloneObject(inputMesh, false);
 				QVector<Plane3> planes = inputMesh->cuttingPlanes();
 				if(sliceWidth <= 0) {
 					planes.push_back(plane);

@@ -155,14 +155,14 @@ BOOST_PYTHON_MODULE(Particles)
 			component = parts[1].toInt(&ok);
 			if(!ok) {
 				if(type == ParticleProperty::UserProperty)
-					throw Exception(QString("Invalid component name or index for particle property '%1': %2").arg(parts[0]).arg(parts[1]));
+					throw Exception(QString("Invalid component index for user particle property '%1': %2").arg(parts[0]).arg(parts[1]));
 
-				// Perhaps the name was used instead of an integer.
+				// Perhaps the component name was used instead of an integer.
 				const QString componentName = parts[1].toUpper();
 				QStringList standardNames = ParticleProperty::standardPropertyComponentNames(type);
 				component = standardNames.indexOf(componentName);
 				if(component < 0)
-					throw Exception(QString("Unknown component name '%1' for particle property '%2'. Possible components are: %3").arg(parts[1]).arg(parts[0]).arg(standardNames.join(',')));
+					throw Exception(QString("Component name '%1' is not defined for particle property '%2'. Possible components are: %3").arg(parts[1]).arg(parts[0]).arg(standardNames.join(',')));
 			}
 		}
 

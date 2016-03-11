@@ -33,6 +33,8 @@
 #include <plugins/crystalanalysis/objects/patterns/BurgersVectorFamily.h>
 #include <plugins/crystalanalysis/objects/patterns/PatternCatalog.h>
 #include <plugins/crystalanalysis/objects/patterns/StructurePattern.h>
+#include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
+#include <plugins/crystalanalysis/objects/partition_mesh/PartitionMeshDisplay.h>
 #include <plugins/crystalanalysis/importer/CAImporter.h>
 #include <plugins/crystalanalysis/exporter/CAExporter.h>
 #include <plugins/pyscript/binding/PythonBinding.h>
@@ -232,6 +234,31 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 		.add_property("misorientation_threshold", &GrainSegmentationModifier::misorientationThreshold, &GrainSegmentationModifier::setMisorientationThreshold)
 		.add_property("fluctuation_tolerance", &GrainSegmentationModifier::fluctuationTolerance, &GrainSegmentationModifier::setFluctuationTolerance)
 		.add_property("min_atom_count", &GrainSegmentationModifier::minGrainAtomCount, &GrainSegmentationModifier::setMinGrainAtomCount)
+		.add_property("probe_sphere_radius", &GrainSegmentationModifier::probeSphereRadius, &GrainSegmentationModifier::setProbeSphereRadius,
+				"The radius of the probe sphere used in the free surface construction algorithm."
+				"\n\n"
+				"A rule of thumb is that the probe sphere radius should be slightly larger than the typical distance between "
+				"nearest neighbor atoms."
+				"\n\n"
+				"This parameter is ignored if :py:attr:`.output_mesh` is false."
+				"\n\n"
+				":Default: 4.0\n")
+		.add_property("smoothing_level", &GrainSegmentationModifier::smoothingLevel, &GrainSegmentationModifier::setSmoothingLevel,
+				"The number of iterations of the smoothing algorithm applied to the computed grain boundary mesh. "
+				"\n\n"
+				"This parameter is ignored if :py:attr:`.output_mesh` is false."
+				"\n\n"
+				":Default: 5\n")
+		.add_property("only_selected", &GrainSegmentationModifier::onlySelectedParticles, &GrainSegmentationModifier::setOnlySelectedParticles,
+				"This flag tells the modifier to ignore unselected particles."
+				"\n\n"
+				":Default: ``False``\n")
+		.add_property("output_mesh", &GrainSegmentationModifier::outputPartitionMesh, &GrainSegmentationModifier::setOutputPartitionMesh,
+				"This flag controls the generation of the grain boundary mesh. "
+				"If true, the modifier will generate a geometric representation of the grain boundary network "
+				"in addition to assigning each input atom to a grain. "
+				"\n\n"
+				":Default: ``False``\n")
 	;
 
 	ovito_class<SmoothDislocationsModifier, Modifier>()
@@ -343,6 +370,31 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 		.def(array_indexing_suite<std::deque<Point3>>())
 	;
 
+	ovito_class<PartitionMesh, DataObject>()
+	;
+
+	ovito_class<PartitionMeshDisplay, DisplayObject>()
+		.add_property("surface_color", make_function(&PartitionMeshDisplay::surfaceColor, return_value_policy<copy_const_reference>()), &PartitionMeshDisplay::setSurfaceColor,
+				"The display color of the outer free surface."
+				"\n\n"
+				":Default: ``(1.0, 1.0, 1.0)``\n")
+		.add_property("show_cap", &PartitionMeshDisplay::showCap, &PartitionMeshDisplay::setShowCap,
+				"Controls the visibility of cap polygons, which are created at the intersection of the mesh with periodic box boundaries."
+				"\n\n"
+				":Default: ``True``\n")
+		.add_property("surface_transparency", &PartitionMeshDisplay::surfaceTransparency, &PartitionMeshDisplay::setSurfaceTransparency,
+				"The level of transparency of the displayed surface. Valid range is 0.0 -- 1.0."
+				"\n\n"
+				":Default: 0.0\n")
+		.add_property("cap_transparency", &PartitionMeshDisplay::capTransparency, &PartitionMeshDisplay::setCapTransparency,
+				"The level of transparency of the displayed cap polygons. Valid range is 0.0 -- 1.0."
+				"\n\n"
+				":Default: 0.0\n")
+		.add_property("smooth_shading", &PartitionMeshDisplay::smoothShading, &PartitionMeshDisplay::setSmoothShading,
+				"Enables smooth shading of the triangulated surface mesh."
+				"\n\n"
+				":Default: ``True``\n")
+	;
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(CrystalAnalysis);

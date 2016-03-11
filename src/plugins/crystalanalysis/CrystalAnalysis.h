@@ -43,6 +43,8 @@ namespace Ovito {
 			class ClusterGraphObject;
 			class ClusterGraph;
 			class DislocationNetwork;
+			class PartitionMesh;
+			class PartitionMeshDisplay;
 			struct DislocationNode;
 			struct DislocationSegment;
 		}

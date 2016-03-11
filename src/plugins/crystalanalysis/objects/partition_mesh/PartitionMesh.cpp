@@ -51,6 +51,99 @@ OORef<RefTarget> PartitionMesh::clone(bool deepCopy, CloneHelper& cloneHelper)
 	return clone;
 }
 
+/******************************************************************************
+* Fairs a closed triangle mesh.
+******************************************************************************/
+void PartitionMesh::smoothMesh(PartitionMeshData& mesh, const SimulationCell& cell, int numIterations, FutureInterfaceBase* progress, FloatType k_PB, FloatType lambda)
+{
+	// This is the implementation of the mesh smoothing algorithm:
+	//
+	// Gabriel Taubin
+	// A Signal Processing Approach To Fair Surface Design
+	// In SIGGRAPH 95 Conference Proceedings, pages 351-358 (1995)
+
+	FloatType mu = 1.0f / (k_PB - 1.0f/lambda);
+	if(progress) progress->setProgressRange(numIterations);
+
+	for(int iteration = 0; iteration < numIterations; iteration++) {
+		smoothMeshIteration(mesh, lambda, cell);
+		smoothMeshIteration(mesh, mu, cell);
+		if(progress && !progress->setProgressValue(iteration+1))
+			return;
+	}
+}
+
+/******************************************************************************
+* Performs one iteration of the smoothing algorithm.
+******************************************************************************/
+void PartitionMesh::smoothMeshIteration(PartitionMeshData& mesh, FloatType prefactor, const SimulationCell& cell)
+{
+	const AffineTransformation absoluteToReduced = cell.inverseMatrix();
+	const AffineTransformation reducedToAbsolute = cell.matrix();
+
+	// Compute displacement for each vertex.
+	std::vector<Vector3> displacements(mesh.vertexCount());
+	parallelFor(mesh.vertexCount(), [&mesh, &displacements, prefactor, cell, absoluteToReduced](int index) {
+		PartitionMeshData::Vertex* vertex = mesh.vertex(index);
+		Vector3 d = Vector3::Zero();
+
+		// Count the number of edges incident on this vertex which are triple lines.
+		int numTripleLines = 0;
+		PartitionMeshData::Edge* tripleLines[2] = { nullptr, nullptr };
+		for(PartitionMeshData::Edge* edge = vertex->edges(); edge != nullptr; edge = edge->nextVertexEdge()) {
+			// Check if it is a triple line:
+			if(edge->oppositeEdge()->nextManifoldEdge->oppositeEdge()->nextManifoldEdge == edge) {
+				continue;	// No, it's not.
+			}
+			if(numTripleLines == 0) {
+				tripleLines[0] = edge;
+				numTripleLines++;
+			}
+			else {
+				// Check if we have visited this triple line edge before to avoid double counting.
+				PartitionMeshData::Edge* iterEdge = edge;
+				do {
+					if(iterEdge == tripleLines[0] || iterEdge == tripleLines[1]) {
+						break;
+					}
+					iterEdge = iterEdge->oppositeEdge()->nextManifoldEdge;
+				}
+				while(iterEdge != edge);
+				if(iterEdge == edge) {
+					if(numTripleLines < 2) tripleLines[numTripleLines] = edge;
+					numTripleLines++;
+				}
+			}
+		}
+
+		if(numTripleLines == 0) {
+			PartitionMeshData::Edge* currentEdge = vertex->edges();
+			OVITO_ASSERT(currentEdge != nullptr);
+			int numManifoldEdges = 0;
+			do {
+				OVITO_ASSERT(currentEdge != nullptr && currentEdge->face() != nullptr);
+				d += cell.wrapVector(currentEdge->vertex2()->pos() - vertex->pos());
+				numManifoldEdges++;
+				currentEdge = currentEdge->prevFaceEdge()->oppositeEdge();
+			}
+			while(currentEdge != vertex->edges());
+			d *= (prefactor / numManifoldEdges);
+		}
+		else if(numTripleLines == 2) {
+			d += cell.wrapVector(tripleLines[0]->vertex2()->pos() - vertex->pos());
+			d += cell.wrapVector(tripleLines[1]->vertex2()->pos() - vertex->pos());
+			d *= (prefactor / 2);
+		}
+
+		displacements[index] = d;
+	});
+
+	// Apply computed displacements.
+	auto d = displacements.cbegin();
+	for(PartitionMeshData::Vertex* vertex : mesh.vertices())
+		vertex->pos() += (*d++);
+}
+
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

@@ -9,6 +9,7 @@ import CrystalAnalysis
 
 # Inject selected classes into parent module.
 ovito.vis.DislocationDisplay = CrystalAnalysis.DislocationDisplay
+ovito.vis.PartitionMeshDisplay = CrystalAnalysis.PartitionMeshDisplay
 
 # Inject enum types.
 ovito.vis.DislocationDisplay.Shading = ovito.vis.ArrowShadingMode

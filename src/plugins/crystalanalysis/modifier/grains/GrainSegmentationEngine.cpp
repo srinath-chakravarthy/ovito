@@ -256,6 +256,10 @@ void GrainSegmentationEngine::perform()
 
 	if(isCanceled()) return;
 
+	static const Color grainColorList[] = {
+			Color(1,1,0), Color(0,1,0), Color(0,1,1), Color(0,0,1), Color(0.5,1.0,0.5), Color(0.5,0.5,1.5)
+	};
+
 	// Create output cluster graph.
 	_outputClusterGraph = new ClusterGraph();
 	for(const Grain& grain : _grains) {
@@ -264,7 +268,7 @@ void GrainSegmentationEngine::perform()
 				Cluster* cluster = _outputClusterGraph->createCluster(grain.cluster->structure, grain.id);
 				cluster->atomCount = grain.atomCount;
 				cluster->orientation = grain.orientation;
-				cluster->color = Color(1,1,0);
+				cluster->color = grainColorList[grain.id % (sizeof(grainColorList)/sizeof(grainColorList[0]))];
 			}
 		}
 	}
@@ -476,12 +480,108 @@ bool GrainSegmentationEngine::buildPartitionMesh()
 		face->region = cell->info().userField - 1;
 	};
 
+	// Cross-links adjacent manifolds.
+	auto linkManifolds = [](PartitionMeshData::Edge* edge1, PartitionMeshData::Edge* edge2) {
+		OVITO_ASSERT(edge1->nextManifoldEdge == nullptr || edge1->nextManifoldEdge == edge2);
+		OVITO_ASSERT(edge2->nextManifoldEdge == nullptr || edge2->nextManifoldEdge == edge1);
+		OVITO_ASSERT(edge2->vertex2() == edge1->vertex1());
+		OVITO_ASSERT(edge2->vertex1() == edge1->vertex2());
+		OVITO_ASSERT(edge1->face()->oppositeFace == nullptr || edge1->face()->oppositeFace == edge2->face());
+		OVITO_ASSERT(edge2->face()->oppositeFace == nullptr || edge2->face()->oppositeFace == edge1->face());
+		edge1->nextManifoldEdge = edge2;
+		edge2->nextManifoldEdge = edge1;
+		edge1->face()->oppositeFace = edge2->face();
+		edge2->face()->oppositeFace = edge1->face();
+	};
+
 	ManifoldConstructionHelper<PartitionMeshData, true, true> manifoldConstructor(tessellation, *_mesh, alpha, positions());
-	if(!manifoldConstructor.construct(tetrahedronRegion, this, prepareMeshFace))
+	if(!manifoldConstructor.construct(tetrahedronRegion, this, prepareMeshFace, linkManifolds))
 		return false;
 	_spaceFillingGrain = manifoldConstructor.spaceFillingRegion();
 
 	nextProgressSubStep();
+
+	std::vector<PartitionMeshData::Edge*> visitedEdges;
+	std::vector<PartitionMeshData::Vertex*> visitedVertices;
+	size_t oldVertexCount = _mesh->vertices().size();
+	for(size_t vertexIndex = 0; vertexIndex < oldVertexCount; vertexIndex++) {
+		if(isCanceled())
+			return false;
+
+		PartitionMeshData::Vertex* vertex = _mesh->vertices()[vertexIndex];
+		visitedEdges.clear();
+		// Visit all manifolds that this vertex is part of.
+		for(PartitionMeshData::Edge* startEdge = vertex->edges(); startEdge != nullptr; startEdge = startEdge->nextVertexEdge()) {
+			if(std::find(visitedEdges.cbegin(), visitedEdges.cend(), startEdge) != visitedEdges.cend()) continue;
+			// Traverse the manifold around the current vertex edge by edge.
+			// Detect if there are two edges connecting to the same neighbor vertex.
+			visitedVertices.clear();
+			PartitionMeshData::Edge* endEdge = startEdge;
+			PartitionMeshData::Edge* currentEdge = startEdge;
+			do {
+				OVITO_ASSERT(currentEdge->vertex1() == vertex);
+				OVITO_ASSERT(std::find(visitedEdges.cbegin(), visitedEdges.cend(), currentEdge) == visitedEdges.cend());
+
+				if(std::find(visitedVertices.cbegin(), visitedVertices.cend(), currentEdge->vertex2()) != visitedVertices.cend()) {
+					// Encountered the same neighbor vertex twice.
+					// That means the manifold is self-intersecting and we should split the central vertex
+
+					// Retrieve the other edge where the manifold intersects itself.
+					auto iter = std::find_if(visitedEdges.rbegin(), visitedEdges.rend(), [currentEdge](PartitionMeshData::Edge* e) {
+						return e->vertex2() == currentEdge->vertex2();
+					});
+					OVITO_ASSERT(iter != visitedEdges.rend());
+					PartitionMeshData::Edge* otherEdge = *iter;
+
+					// Rewire edges to produce two separate manifolds.
+					PartitionMeshData::Edge* oppositeEdge1 = otherEdge->unlinkFromOppositeEdge();
+					PartitionMeshData::Edge* oppositeEdge2 = currentEdge->unlinkFromOppositeEdge();
+					currentEdge->linkToOppositeEdge(oppositeEdge1);
+					otherEdge->linkToOppositeEdge(oppositeEdge2);
+
+					// Split the vertex.
+					PartitionMeshData::Vertex* newVertex = _mesh->createVertex(vertex->pos());
+
+					// Transfer one group of manifolds to the new vertex.
+					std::vector<PartitionMeshData::Edge*> transferredEdges;
+					std::deque<PartitionMeshData::Edge*> edgesToBeVisited;
+					edgesToBeVisited.push_back(otherEdge);
+					do {
+						PartitionMeshData::Edge* edge = edgesToBeVisited.front();
+						edgesToBeVisited.pop_front();
+						PartitionMeshData::Edge* iterEdge = edge;
+						do {
+							PartitionMeshData::Edge* iterEdge2 = iterEdge;
+							do {
+								if(std::find(transferredEdges.cbegin(), transferredEdges.cend(), iterEdge2) == transferredEdges.cend()) {
+									vertex->transferEdgeToVertex(iterEdge2, newVertex);
+									transferredEdges.push_back(iterEdge2);
+									edgesToBeVisited.push_back(iterEdge2);
+								}
+								iterEdge2 = iterEdge2->oppositeEdge()->nextManifoldEdge;
+								OVITO_ASSERT(iterEdge2 != nullptr);
+							}
+							while(iterEdge2 != iterEdge);
+							iterEdge = iterEdge->prevFaceEdge()->oppositeEdge();
+						}
+						while(iterEdge != edge);
+					}
+					while(!edgesToBeVisited.empty());
+
+					if(otherEdge == startEdge)
+						endEdge = currentEdge;
+				}
+				visitedVertices.push_back(currentEdge->vertex2());
+				visitedEdges.push_back(currentEdge);
+
+				currentEdge = currentEdge->prevFaceEdge()->oppositeEdge();
+			}
+			while(currentEdge != endEdge);
+		}
+	}
+
+	// Smooth the generated triangle mesh.
+	PartitionMesh::smoothMesh(*_mesh, cell(), _meshSmoothingLevel, this);
 
 	// Make sure every mesh vertex is only part of one surface manifold.
 	_mesh->duplicateSharedVertices();

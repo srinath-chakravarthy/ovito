@@ -30,6 +30,7 @@
 #include <plugins/crystalanalysis/objects/patterns/StructurePattern.h>
 #include <plugins/crystalanalysis/data/ClusterGraph.h>
 #include <plugins/crystalanalysis/data/DislocationNetwork.h>
+#include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -116,6 +117,9 @@ protected:
 
 		/// The dislocation segments.
 		QExplicitlySharedDataPointer<DislocationNetwork> _dislocations;
+
+		/// The partition mesh.
+		QExplicitlySharedDataPointer<PartitionMeshData> _partitionMesh;
 
 		/// Controls whether particles should be loaded too.
 		bool _loadParticles;

@@ -26,6 +26,7 @@
 #include <plugins/crystalanalysis/objects/patterns/PatternCatalog.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
+#include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
 #include <core/utilities/concurrent/ProgressDisplay.h>
 #include "CAExporter.h"
 
@@ -55,10 +56,13 @@ bool CAExporter::exportParticles(const PipelineFlowState& state, int frameNumber
 	// Get dislocation lines.
 	DislocationNetworkObject* dislocationObj = state.findObject<DislocationNetworkObject>();
 
-	// Get defect mesh.
+	// Get defect/surface mesh.
 	SurfaceMesh* defectMesh = meshExportEnabled() ? state.findObject<SurfaceMesh>() : nullptr;
 
-	if(!dislocationObj && !defectMesh)
+	// Get partition mesh.
+	PartitionMesh* partitionMesh = meshExportEnabled() ? state.findObject<PartitionMesh>() : nullptr;
+
+	if(!dislocationObj && !defectMesh && !partitionMesh)
 		throw Exception(tr("Dataset to be exported contains no dislocation lines nor a surface mesh. Cannot write CA file."));
 
 	// Get cluster graph.
@@ -72,7 +76,7 @@ bool CAExporter::exportParticles(const PipelineFlowState& state, int frameNumber
 		throw Exception(tr("Dataset to be exported contains no structure pattern catalog. Cannot write CA file."));
 
 	// Write file header.
-	textStream() << "CA_FILE_VERSION 5\n";
+	textStream() << "CA_FILE_VERSION 6\n";
 	textStream() << "CA_LIB_VERSION 0.0.0\n";
 
 	if(patternCatalog) {
@@ -122,6 +126,7 @@ bool CAExporter::exportParticles(const PipelineFlowState& state, int frameNumber
 			textStream() << "CLUSTER_ORIENTATION\n";
 			for(size_t row = 0; row < 3; row++)
 				textStream() << cluster->orientation(row,0) << " " << cluster->orientation(row,1) << " " << cluster->orientation(row,2) << "\n";
+			textStream() << "CLUSTER_COLOR " << cluster->color.r() << " " << cluster->color.g() << " " << cluster->color.b() << "\n";
 			textStream() << "END_CLUSTER\n";
 		}
 
@@ -215,6 +220,45 @@ bool CAExporter::exportParticles(const PipelineFlowState& state, int frameNumber
 			HalfEdgeMesh<>::Edge* e = facet->edges();
 			do {
 				textStream() << e->oppositeEdge()->face()->index() << " ";
+				e = e->nextFaceEdge();
+			}
+			while(e != facet->edges());
+			textStream() << "\n";
+		}
+	}
+
+	if(partitionMesh) {
+		// Serialize list of vertices.
+		textStream() << "PARTITION_MESH_VERTICES " << partitionMesh->storage()->vertices().size() << "\n";
+		for(PartitionMeshData::Vertex* vertex : partitionMesh->storage()->vertices()) {
+
+			// Make sure indices have been assigned to vertices.
+			OVITO_ASSERT(vertex->index() >= 0 && vertex->index() < partitionMesh->storage()->vertices().size());
+
+			textStream() << vertex->pos().x() << " " << vertex->pos().y() << " " << vertex->pos().z() << "\n";
+		}
+
+		// Serialize list of facets.
+		textStream() << "PARTITION_MESH_FACETS " << partitionMesh->storage()->faces().size() << "\n";
+		for(PartitionMeshData::Face* facet : partitionMesh->storage()->faces()) {
+			textStream() << facet->region << " ";
+			PartitionMeshData::Edge* e = facet->edges();
+			do {
+				textStream() << e->vertex1()->index() << " ";
+				e = e->nextFaceEdge();
+			}
+			while(e != facet->edges());
+			textStream() << "\n";
+		}
+
+		// Serialize facet adjacency information.
+		for(PartitionMeshData::Face* facet : partitionMesh->storage()->faces()) {
+			OVITO_ASSERT(facet->oppositeFace != nullptr);
+			textStream() << facet->oppositeFace->index() << " ";
+			PartitionMeshData::Edge* e = facet->edges();
+			do {
+				OVITO_ASSERT(facet->oppositeFace->findEdge(e->nextManifoldEdge->vertex1(), e->nextManifoldEdge->vertex2()) != nullptr);
+				textStream() << e->oppositeEdge()->face()->index() << " " << e->nextManifoldEdge->vertex1()->index() << " " << e->nextManifoldEdge->vertex2()->index() << " ";
 				e = e->nextFaceEdge();
 			}
 			while(e != facet->edges());

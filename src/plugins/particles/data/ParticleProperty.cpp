@@ -90,12 +90,14 @@ ParticleProperty::ParticleProperty(size_t particleCount, Type type, size_t compo
 		break;
 	case StressTensorProperty:
 	case StrainTensorProperty:
+	case ElasticStrainTensorProperty:
 		_dataType = qMetaTypeId<FloatType>();
 		_componentCount = 6;
 		_stride = _componentCount * sizeof(FloatType);
 		OVITO_ASSERT(_stride == sizeof(SymmetricTensor2));
 		break;
 	case DeformationGradientProperty:
+	case ElasticDeformationGradientProperty:
 		_dataType = qMetaTypeId<FloatType>();
 		_componentCount = 9;
 		_stride = _componentCount * sizeof(FloatType);
@@ -191,6 +193,8 @@ QString ParticleProperty::standardPropertyName(Type which)
 	case MoleculeProperty: return ParticlePropertyObject::tr("Molecule Identifier");
 	case AsphericalShapeProperty: return ParticlePropertyObject::tr("Aspherical Shape");
 	case VectorColorProperty: return ParticlePropertyObject::tr("Vector Color");
+	case ElasticStrainTensorProperty: return ParticlePropertyObject::tr("Elastic Strain");
+	case ElasticDeformationGradientProperty: return ParticlePropertyObject::tr("Elastic Deformation Gradient");
 	default:
 		OVITO_ASSERT_MSG(false, "ParticleProperty::standardPropertyName", "Invalid standard particle property type");
 		throw Exception(ParticlePropertyObject::tr("This is not a valid standard particle property type: %1").arg(which));
@@ -259,6 +263,8 @@ int ParticleProperty::standardPropertyDataType(Type which)
 	case VelocityMagnitudeProperty:
 	case AsphericalShapeProperty:
 	case VectorColorProperty:
+	case ElasticStrainTensorProperty:
+	case ElasticDeformationGradientProperty:
 		return qMetaTypeId<FloatType>();
 	default:
 		OVITO_ASSERT_MSG(false, "ParticleProperty::standardPropertyDataType", "Invalid standard particle property type");
@@ -308,6 +314,8 @@ QMap<QString, ParticleProperty::Type> ParticleProperty::standardPropertyList()
 		table.insert(standardPropertyName(MoleculeProperty), MoleculeProperty);
 		table.insert(standardPropertyName(AsphericalShapeProperty), AsphericalShapeProperty);
 		table.insert(standardPropertyName(VectorColorProperty), VectorColorProperty);
+		table.insert(standardPropertyName(ElasticStrainTensorProperty), ElasticStrainTensorProperty);
+		table.insert(standardPropertyName(ElasticDeformationGradientProperty), ElasticDeformationGradientProperty);
 	}
 	return table;
 }
@@ -353,8 +361,10 @@ size_t ParticleProperty::standardPropertyComponentCount(Type which)
 		return 3;
 	case StressTensorProperty:
 	case StrainTensorProperty:
+	case ElasticStrainTensorProperty:
 		return 6;
 	case DeformationGradientProperty:
+	case ElasticDeformationGradientProperty:
 		return 9;
 	case OrientationProperty:
 		return 4;
@@ -374,6 +384,7 @@ QStringList ParticleProperty::standardPropertyComponentNames(Type which, size_t 
 	const static QStringList rgbList = QStringList() << "R" << "G" << "B";
 	const static QStringList symmetricTensorList = QStringList() << "XX" << "YY" << "ZZ" << "XY" << "XZ" << "YZ";
 	const static QStringList matrix3List = QStringList() << "11" << "21" << "31" << "12" << "22" << "32" << "13" << "23" << "33";
+	const static QStringList tensorList = QStringList() << "XX" << "YX" << "ZX" << "XY" << "YY" << "ZY" << "XZ" << "YZ" << "ZZ";
 	const static QStringList quaternionList = QStringList() << "X" << "Y" << "Z" << "W";
 
 	switch(which) {
@@ -413,9 +424,12 @@ QStringList ParticleProperty::standardPropertyComponentNames(Type which, size_t 
 		return rgbList;
 	case StressTensorProperty:
 	case StrainTensorProperty:
+	case ElasticStrainTensorProperty:
 		return symmetricTensorList;
 	case DeformationGradientProperty:
 		return matrix3List;
+	case ElasticDeformationGradientProperty:
+		return tensorList;
 	case OrientationProperty:
 		return quaternionList;
 	default:

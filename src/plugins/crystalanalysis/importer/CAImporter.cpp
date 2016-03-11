@@ -34,6 +34,8 @@
 #include <plugins/particles/objects/ParticleTypeProperty.h>
 #include <plugins/particles/objects/SurfaceMesh.h>
 #include <plugins/particles/objects/SurfaceMeshDisplay.h>
+#include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
+#include <plugins/crystalanalysis/objects/partition_mesh/PartitionMeshDisplay.h>
 #include "CAImporter.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
@@ -83,15 +85,15 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 	// Read file header.
 	stream.readLine();
 	if(!stream.lineStartsWith("CA_FILE_VERSION "))
-		throw Exception(tr("Failed to parse file. This is not a proper file written by the Crystal Analysis Tool."));
+		throw Exception(tr("Failed to parse file. This is not a proper file written by the Crystal Analysis Tool or OVITO."));
 	int fileFormatVersion = 0;
 	if(sscanf(stream.line(), "CA_FILE_VERSION %i", &fileFormatVersion) != 1)
-		throw Exception(tr("Failed to parse file. This is not a proper file written by the Crystal Analysis Tool."));
-	if(fileFormatVersion != 4 && fileFormatVersion != 5)
+		throw Exception(tr("Failed to parse file. This is not a proper file written by the Crystal Analysis Tool or OVITO."));
+	if(fileFormatVersion != 4 && fileFormatVersion != 5 && fileFormatVersion != 6)
 		throw Exception(tr("Failed to parse file. This file format version is not supported: %1").arg(fileFormatVersion));
 	stream.readLine();
 	if(!stream.lineStartsWith("CA_LIB_VERSION"))
-		throw Exception(tr("Failed to parse file. This is not a proper file written by the Crystal Analysis Tool."));
+		throw Exception(tr("Failed to parse file. This is not a proper file written by the Crystal Analysis Tool or OVITO."));
 
 	QString caFilename;
 	QString atomsFilename;
@@ -232,6 +234,7 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 					int patternId = 0, clusterId = 0, atomCount = 0;
 					Point3 centerOfMass = Point3::Origin();
 					Matrix3 orientation = Matrix3::Identity();
+					Color color(1,1,1);
 					while(!stream.eof()) {
 						stream.readLineTrimLeft();
 						if(stream.lineStartsWith("CLUSTER ")) {
@@ -250,6 +253,10 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 							if(sscanf(stream.line(), "CLUSTER_CENTER_OF_MASS " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING, &centerOfMass.x(), &centerOfMass.y(), &centerOfMass.z()) != 3)
 								throw Exception(tr("Failed to parse file. Invalid cluster center in line %1.").arg(stream.lineNumber()));
 						}
+						else if(stream.lineStartsWith("CLUSTER_COLOR ")) {
+							if(sscanf(stream.line(), "CLUSTER_COLOR " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING, &color.r(), &color.g(), &color.b()) != 3)
+								throw Exception(tr("Failed to parse file. Invalid cluster color in line %1.").arg(stream.lineNumber()));
+						}
 						else if(stream.lineStartsWith("CLUSTER_ORIENTATION")) {
 							for(size_t row = 0; row < 3; row++) {
 								if(sscanf(stream.readLine(), FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING,
@@ -266,6 +273,7 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 					cluster->atomCount = atomCount;
 					cluster->centerOfMass = centerOfMass;
 					cluster->orientation = orientation;
+					cluster->color = color;
 				}
 			}
 		}
@@ -387,7 +395,7 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 				_defectSurface->createVertex(p);
 			}
 		}
-		else if(stream.lineStartsWith("DEFECT_MESH_FACETS ")) {
+		else if(stream.lineStartsWith("DEFECT_MESH_FACETS ") && _defectSurface) {
 			// Read defect mesh facets.
 			int numDefectMeshFacets;
 			if(sscanf(stream.line(), "DEFECT_MESH_FACETS %i", &numDefectMeshFacets) != 1)
@@ -415,17 +423,72 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 					OVITO_CHECK_POINTER(edge);
 					if(edge->oppositeEdge() != nullptr) continue;
 					HalfEdgeMesh<>::Face* oppositeFace = _defectSurface->face(v[i]);
-					HalfEdgeMesh<>::Edge* oppositeEdge = oppositeFace->edges();
-					do {
-						OVITO_CHECK_POINTER(oppositeEdge);
-						if(oppositeEdge->vertex1() == edge->vertex2() && oppositeEdge->vertex2() == edge->vertex1()) {
-							edge->linkToOppositeEdge(oppositeEdge);
-							break;
-						}
-						oppositeEdge = oppositeEdge->nextFaceEdge();
-					}
-					while(oppositeEdge != oppositeFace->edges());
-					OVITO_ASSERT(edge->oppositeEdge());
+					HalfEdgeMesh<>::Edge* oppositeEdge = oppositeFace->findEdge(edge->vertex2(), edge->vertex1());
+					OVITO_ASSERT(oppositeEdge != nullptr);
+					edge->linkToOppositeEdge(oppositeEdge);
+				}
+			}
+		}
+		else if(stream.lineStartsWith("PARTITION_MESH_VERTICES ")) {
+			// Read partition mesh vertices.
+			int numVertices;
+			if(sscanf(stream.line(), "PARTITION_MESH_VERTICES %i", &numVertices) != 1)
+				throw Exception(tr("Failed to parse file. Invalid number of mesh vertices in line %1.").arg(stream.lineNumber()));
+			setProgressText(tr("Reading partition mesh"));
+			setProgressRange(numVertices);
+			_partitionMesh = new PartitionMeshData();
+			_partitionMesh->reserveVertices(numVertices);
+			for(int index = 0; index < numVertices; index++) {
+				if(!setProgressValueIntermittent(index)) return;
+				Point3 p;
+				if(sscanf(stream.readLine(), FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING, &p.x(), &p.y(), &p.z()) != 3)
+					throw Exception(tr("Failed to parse file. Invalid point in line %1.").arg(stream.lineNumber()));
+				_partitionMesh->createVertex(p);
+			}
+		}
+		else if(stream.lineStartsWith("PARTITION_MESH_FACETS ") && _partitionMesh) {
+			// Read partition mesh facets.
+			int numFacets;
+			if(sscanf(stream.line(), "PARTITION_MESH_FACETS %i", &numFacets) != 1)
+				throw Exception(tr("Failed to parse file. Invalid number of mesh facets in line %1.").arg(stream.lineNumber()));
+			setProgressRange(numFacets * 2);
+			_partitionMesh->reserveFaces(numFacets);
+			for(int index = 0; index < numFacets; index++) {
+				if(!setProgressValueIntermittent(index))
+					return;
+				int v[3];
+				int region;
+				if(sscanf(stream.readLine(), "%i %i %i %i", &region, &v[0], &v[1], &v[2]) != 4)
+					throw Exception(tr("Failed to parse file. Invalid triangle facet in line %1.").arg(stream.lineNumber()));
+				PartitionMeshData::Face* face = _partitionMesh->createFace({ _partitionMesh->vertex(v[0]), _partitionMesh->vertex(v[1]), _partitionMesh->vertex(v[2]) });
+				face->region = region;
+			}
+
+			// Read facet adjacency information.
+			for(int index = 0; index < numFacets; index++) {
+				if(!setProgressValueIntermittent(index + numFacets))
+					return;
+				int v[3];
+				int mfe[3][2];
+				int oppositeFaceIndex;
+				if(sscanf(stream.readLine(), "%i %i %i %i %i %i %i %i %i %i", &oppositeFaceIndex,
+						&v[0], &mfe[0][0], &mfe[0][1],
+						&v[1], &mfe[1][0], &mfe[1][1],
+						&v[2], &mfe[2][0], &mfe[2][1]) != 10)
+					throw Exception(tr("Failed to parse file. Invalid triangle adjacency info in line %1.").arg(stream.lineNumber()));
+				PartitionMeshData::Face* oppositeFace = _partitionMesh->face(oppositeFaceIndex);
+				_partitionMesh->face(index)->oppositeFace = oppositeFace;
+				PartitionMeshData::Edge* edge = _partitionMesh->face(index)->edges();
+				for(int i = 0; i < 3; i++, edge = edge->nextFaceEdge()) {
+					OVITO_CHECK_POINTER(edge);
+					PartitionMeshData::Edge* manifoldEdge = oppositeFace->findEdge(_partitionMesh->vertex(mfe[i][0]), _partitionMesh->vertex(mfe[i][1]));
+					OVITO_ASSERT(manifoldEdge != nullptr);
+					edge->nextManifoldEdge = manifoldEdge;
+					if(edge->oppositeEdge() != nullptr) continue;
+					PartitionMeshData::Face* adjacentFace = _partitionMesh->face(v[i]);
+					PartitionMeshData::Edge* oppositeEdge = adjacentFace->findEdge(edge->vertex2(), edge->vertex1());
+					OVITO_ASSERT(oppositeEdge != nullptr);
+					edge->linkToOppositeEdge(oppositeEdge);
 				}
 			}
 		}
@@ -496,6 +559,18 @@ void CAImporter::CrystalAnalysisFrameLoader::handOver(CompoundObject* container)
 			defectSurfaceObj->setDisplayObject(displayObj);
 		}
 		defectSurfaceObj->setStorage(_defectSurface.data());
+	}
+
+	// Insert partition mesh.
+	OORef<PartitionMesh> partitionMeshObj = oldObjects.findObject<PartitionMesh>();
+	if(_partitionMesh) {
+		if(!defectSurfaceObj) {
+			partitionMeshObj = new PartitionMesh(container->dataset());
+			OORef<PartitionMeshDisplay> displayObj = new PartitionMeshDisplay(container->dataset());
+			displayObj->loadUserDefaults();
+			partitionMeshObj->setDisplayObject(displayObj);
+		}
+		partitionMeshObj->setStorage(_partitionMesh.data());
 	}
 
 	// Insert pattern catalog.
@@ -586,6 +661,8 @@ void CAImporter::CrystalAnalysisFrameLoader::handOver(CompoundObject* container)
 
 	if(_defectSurface)
 		container->addDataObject(defectSurfaceObj);
+	if(_partitionMesh)
+		container->addDataObject(partitionMeshObj);
 	if(patternCatalog)
 		container->addDataObject(patternCatalog);
 	if(clusterGraph)

@@ -50,6 +50,11 @@ public:
 				DelaunayTessellation::CellHandle cell) {}
 	};
 
+	// A no-op manifold cross-linking functor.
+	struct DefaultLinkManifoldsFunc {
+		void operator()(typename HalfEdgeStructureType::Edge* edge1, typename HalfEdgeStructureType::Edge* edge2) {}
+	};
+
 public:
 
 	/// Constructor.
@@ -57,8 +62,9 @@ public:
 			ParticleProperty* positions) : _tessellation(tessellation), _mesh(outputMesh), _alpha(alpha), _positions(positions) {}
 
 	/// This is the main function, which constructs the manifold triangle mesh.
-	template<typename CellRegionFunc, typename PrepareMeshFaceFunc = DefaultPrepareMeshFaceFunc>
-	bool construct(CellRegionFunc&& determineCellRegion, FutureInterfaceBase* progress, PrepareMeshFaceFunc&& prepareMeshFaceFunc = PrepareMeshFaceFunc())
+	template<typename CellRegionFunc, typename PrepareMeshFaceFunc = DefaultPrepareMeshFaceFunc, typename LinkManifoldsFunc = DefaultLinkManifoldsFunc>
+	bool construct(CellRegionFunc&& determineCellRegion, FutureInterfaceBase* progress,
+			PrepareMeshFaceFunc&& prepareMeshFaceFunc = PrepareMeshFaceFunc(), LinkManifoldsFunc&& linkManifoldsFunc = LinkManifoldsFunc())
 	{
 		// Algorithm is divided into several sub-steps.
 		// Assign weights to sub-steps according to estimated runtime.
@@ -77,7 +83,7 @@ public:
 		if(progress) progress->nextProgressSubStep();
 
 		// Connect triangles with one another to form a closed manifold.
-		if(!linkHalfedges(progress))
+		if(!linkHalfedges(std::move(linkManifoldsFunc), progress))
 			return false;
 
 		if(progress) progress->endProgressSubSteps();
@@ -203,7 +209,7 @@ private:
 				// Tell client code about the new facet.
 				prepareMeshFaceFunc(face, vertexIndices, vertexHandles, cell);
 
-				// Create additional face for exerior region if requested.
+				// Create additional face for exterior region if requested.
 				if(CreateTwoSidedMesh && adjacentCell->info().userField == 0) {
 
 					// Build face vertex list.
@@ -281,7 +287,8 @@ private:
 		return adjacentFace;
 	}
 
-	bool linkHalfedges(FutureInterfaceBase* progress)
+	template<typename LinkManifoldsFunc>
+	bool linkHalfedges(LinkManifoldsFunc&& linkManifoldsFunc, FutureInterfaceBase* progress)
 	{
 		if(progress) progress->setProgressRange(_tetrahedraFaceList.size());
 
@@ -299,6 +306,7 @@ private:
 				typename HalfEdgeStructureType::Face* facet = (*tet)[f];
 				if(facet == nullptr) continue;
 
+				// Link within manifold.
 				typename HalfEdgeStructureType::Edge* edge = facet->edges();
 				for(int e = 0; e < 3; e++, edge = edge->nextFaceEdge()) {
 					OVITO_CHECK_POINTER(edge);
@@ -313,10 +321,26 @@ private:
 				if(CreateTwoSidedMesh) {
 					std::pair<DelaunayTessellation::CellHandle,int> oppositeFacet = _tessellation.mirrorFacet(cell, f);
 					OVITO_ASSERT(oppositeFacet.first->info().userField != cell->info().userField);
-					if(oppositeFacet.first->info().userField == 0) {
-						typename HalfEdgeStructureType::Face* outerFacet = findCellFace(oppositeFacet);
-						OVITO_ASSERT(outerFacet != nullptr);
+					typename HalfEdgeStructureType::Face* outerFacet = findCellFace(oppositeFacet);
+					OVITO_ASSERT(outerFacet != nullptr);
 
+					// Link across manifolds
+					typename HalfEdgeStructureType::Edge* edge1 = facet->edges();
+					for(int e1 = 0; e1 < 3; e1++, edge1 = edge1->nextFaceEdge()) {
+						bool found = false;
+						for(typename HalfEdgeStructureType::Edge* edge2 = outerFacet->edges(); ; edge2 = edge2->nextFaceEdge()) {
+							if(edge2->vertex1() == edge1->vertex2()) {
+								OVITO_ASSERT(edge2->vertex2() == edge1->vertex1());
+								linkManifoldsFunc(edge1, edge2);
+								found = true;
+								break;
+							}
+						}
+						OVITO_ASSERT(found);
+					}
+
+					if(oppositeFacet.first->info().userField == 0) {
+						// Link within opposite manifold.
 						typename HalfEdgeStructureType::Edge* edge = outerFacet->edges();
 						for(int e = 0; e < 3; e++, edge = edge->nextFaceEdge()) {
 							OVITO_CHECK_POINTER(edge);

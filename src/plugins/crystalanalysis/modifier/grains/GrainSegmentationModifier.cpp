@@ -67,7 +67,7 @@ GrainSegmentationModifier::GrainSegmentationModifier(DataSet* dataset) : Structu
 		_misorientationThreshold(3.0 * FLOATTYPE_PI / 180.0),
 		_fluctuationTolerance(2.0 * FLOATTYPE_PI / 180.0),
 		_minGrainAtomCount(10),
-		_smoothingLevel(8),
+		_smoothingLevel(5),
 		_probeSphereRadius(4),
 		_onlySelectedParticles(false),
 		_outputPartitionMesh(false)

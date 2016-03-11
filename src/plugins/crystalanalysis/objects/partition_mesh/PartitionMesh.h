@@ -30,8 +30,12 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
+struct PartitionMeshFace;	// defined below
+
 struct PartitionMeshEdge
 {
+	/// Pointer to the next manifold sharing this edge.
+	HalfEdgeMesh<PartitionMeshEdge, PartitionMeshFace, EmptyHalfEdgeMeshStruct>::Edge* nextManifoldEdge = nullptr;
 };
 
 struct PartitionMeshFace
@@ -79,7 +83,13 @@ public:
 		notifyDependents(ReferenceEvent::TargetChanged);
 	}
 
+	/// Fairs a triangle mesh.
+	static void smoothMesh(PartitionMeshData& mesh, const SimulationCell& cell, int numIterations, FutureInterfaceBase* progress = nullptr, FloatType k_PB = 0.1f, FloatType lambda = 0.5f);
+
 protected:
+
+	/// Performs one iteration of the smoothing algorithm.
+	static void smoothMeshIteration(PartitionMeshData& mesh, FloatType prefactor, const SimulationCell& cell);
 
 	/// Creates a copy of this object.
 	virtual OORef<RefTarget> clone(bool deepCopy, CloneHelper& cloneHelper) override;

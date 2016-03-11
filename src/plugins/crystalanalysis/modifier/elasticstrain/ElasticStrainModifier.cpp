@@ -185,10 +185,10 @@ PipelineStatus ElasticStrainModifier::applyComputationResults(TimePoint time, Ti
 		outputStandardProperty(_atomClusters.data());
 
 	if(calculateStrainTensors() && _strainTensors && _strainTensors->size() == outputParticleCount())
-		outputCustomProperty(_strainTensors.data());
+		outputStandardProperty(_strainTensors.data());
 
 	if(calculateDeformationGradients() && _deformationGradients && _deformationGradients->size() == outputParticleCount())
-		outputCustomProperty(_deformationGradients.data());
+		outputStandardProperty(_deformationGradients.data());
 
 	if(_volumetricStrainValues && _volumetricStrainValues->size() == outputParticleCount())
 		outputCustomProperty(_volumetricStrainValues.data());

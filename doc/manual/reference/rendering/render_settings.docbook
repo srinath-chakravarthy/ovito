@@ -15,8 +15,9 @@
        <imagedata fileref="images/rendering/render_settings_panel.png" format="PNG" />
      </imageobject></mediaobject></screenshot></informalfigure>  
     
-    This panel, which is located on the <guilabel>Render</guilabel> tab of the main window, lets you modify the general parameters 
-    for <link linkend="usage.rendering">rendering images and movies</link>.
+    This panel lets you set general parameters 
+    for <link linkend="usage.rendering">rendering images and movies</link>, e.g. output resolution, backround color, etc. 
+    It is found on the <guilabel>Render</guilabel> tab in the main window
   </para>
       
   <simplesect>
@@ -33,25 +34,27 @@
         </listitem>
       </varlistentry>
 
-<!-- 
       <varlistentry>
         <term>Every Nth frame</term>
 
         <listitem>
-          <para>When rendering an animation, this number controls 
-          how many frames from the animation interval are actually rendered. 
-          Set this to 1 to render every frame. Set this to 2 to render only every other frame, etc.</para>
+          <para>This setting controls how many frames of the current animation are actually rendered. 
+          Set this to 1 to render every frame. A value of 2 will render only every other frame, etc.
+          Thus, you can use this setting to reduce the number of output video frames for very long simulation sequences.
+          </para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
         <term>File number base</term>
         <listitem>
-          <para>When rendering a series of image files, OVITO includes the current frame number in the generated filename.
-          This parameter lets you choose another base file number, i.e. an offset.</para>
+          <para>When rendering an animation as a series of image files (rather than one video file), 
+          OVITO includes the frame number in the output filename. This parameter lets you choose another base file number, 
+          i.e. an offset. This can be useful if you want to collect the video frames from several animation sequences
+          in one directory, which will later be combined into a single movie using an external video encoding program.</para>
         </listitem>
       </varlistentry>
- -->
+      
       <varlistentry>
         <term>Output image size</term>
 

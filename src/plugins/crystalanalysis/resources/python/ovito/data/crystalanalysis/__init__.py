@@ -14,6 +14,7 @@ import CrystalAnalysis
 # Inject selected classes into parent module.
 ovito.data.DislocationNetwork = CrystalAnalysis.DislocationNetwork
 ovito.data.DislocationSegment = CrystalAnalysis.DislocationSegment
+ovito.data.PartitionMesh = CrystalAnalysis.PartitionMesh
 
 # Implement 'dislocations' attribute of DataCollection class.
 def _DataCollection_dislocations(self):

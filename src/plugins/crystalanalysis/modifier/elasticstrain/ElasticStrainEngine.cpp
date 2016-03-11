@@ -40,16 +40,9 @@ ElasticStrainEngine::ElasticStrainEngine(const TimeInterval& validityInterval,
 	_latticeConstant(latticeConstant),
 	_pushStrainTensorsForward(pushStrainTensorsForward),
 	_volumetricStrains(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, QStringLiteral("Volumetric Strain"), false)),
-	_strainTensors(calculateStrainTensors ? new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 6, 0, QStringLiteral("Elastic Strain"), false) : nullptr),
-	_deformationGradients(calculateDeformationGradients ? new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 9, 0, QStringLiteral("Elastic Deformation Gradient"), false) : nullptr)
+	_strainTensors(calculateStrainTensors ? new ParticleProperty(positions->size(), ParticleProperty::ElasticStrainTensorProperty, 0, false) : nullptr),
+	_deformationGradients(calculateDeformationGradients ? new ParticleProperty(positions->size(), ParticleProperty::ElasticDeformationGradientProperty, 0, false) : nullptr)
 {
-
-	// Set component names of tensor properties.
-	if(strainTensors())
-		strainTensors()->setComponentNames(QStringList() << "XX" << "YY" << "ZZ" << "XY" << "XZ" << "YZ");
-	if(deformationGradients())
-		deformationGradients()->setComponentNames(QStringList() << "XX" << "YX" << "ZX" << "XY" << "YY" << "ZY" << "XZ" << "YZ" << "ZZ");
-
 	if(inputCrystalStructure == StructureAnalysis::LATTICE_FCC || inputCrystalStructure == StructureAnalysis::LATTICE_BCC || inputCrystalStructure == StructureAnalysis::LATTICE_CUBIC_DIAMOND) {
 		// Cubic crystal structures always have a c/a ratio of one.
 		_axialScaling = 1;
