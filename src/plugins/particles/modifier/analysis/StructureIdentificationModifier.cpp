@@ -129,9 +129,11 @@ PipelineStatus StructureIdentificationModifier::applyComputationResults(TimePoin
 	ParticlePropertyObject* colorProperty = outputStandardProperty(ParticleProperty::ColorProperty);
 	const int* s = structureProperty->constDataInt();
 	for(Color& c : colorProperty->colorRange()) {
-		OVITO_ASSERT(*s >= 0 && *s < structureTypeColors.size());
-		c = structureTypeColors[*s];
-		typeCounters[*s]++;
+		if(*s >= 0 && *s < structureTypeColors.size()) {
+			c = structureTypeColors[*s];
+			typeCounters[*s]++;
+		}
+		else c.setWhite();
 		++s;
 	}
 	colorProperty->changed();
