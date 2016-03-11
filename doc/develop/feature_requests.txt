@@ -45,7 +45,7 @@ Unresolved OpenGL problems:
 
 Unresolved bugs:
 
-- GIF video export broken in the official Linux program package.
+- export_file() function doesn't accept tensor component names for user properties, only indices (anurag.chaudhry@intel.com).
 - OVITO crashes under Windows 10 when using the Python script modifier (fsyed2309@mytu.tuskegee.edu). 
 - NearestNeighborFinder doesn't work properly for triclinic cells with small angles.
 

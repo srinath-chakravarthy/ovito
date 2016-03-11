@@ -539,14 +539,17 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 			if(neighQuery2.results().size() < 4) return;
 			for(size_t j = 0; j < 4; j++) {
 				Vector3 v = v0 + neighQuery2.results()[j].delta;
-				if(neighQuery2.results()[j].index == particleIndex) continue;
-				if(outputIndex == 16) return;
+				if(neighQuery2.results()[j].index == particleIndex && v.isZero())
+					continue;
+				if(outputIndex == 16)
+					return;
 				neighborIndices[outputIndex] = neighQuery2.results()[j].index;
 				neighborVectors[outputIndex] = v;
 				neighborArray.setNeighborBond(i, outputIndex, true);
 				outputIndex++;
 			}
-			if(outputIndex != i*3 + 7) return;
+			if(outputIndex != i*3 + 7)
+				return;
 		}
 
 		// Compute local scale factor.
