@@ -301,9 +301,14 @@ void VideoEncoder::writeFrame(const QImage& image)
 
 	if(got_packet_ptr && pkt.size) {
 		pkt.stream_index = _videoStream->index;
-		if(av_interleaved_write_frame(_formatContext.get(), &pkt) < 0) {
+		int errcode = av_write_frame(_formatContext.get(), &pkt);		
+		if(errcode < 0) {
 			av_free_packet(&pkt);
-			throw Exception(tr("Error while writing video frame."));
+			char msgbuf[1024];
+			if(av_strerror(errcode, msgbuf, sizeof(msgbuf)) == 0)
+				throw Exception(tr("Error while writing video frame: %1").arg(msgbuf));
+			else
+				throw Exception(tr("Error while writing video frame."));
 		}
 		av_free_packet(&pkt);
 	}
