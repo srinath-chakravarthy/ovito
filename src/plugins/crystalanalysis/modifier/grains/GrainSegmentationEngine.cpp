@@ -568,8 +568,9 @@ bool GrainSegmentationEngine::buildPartitionMesh()
 					}
 					while(!edgesToBeVisited.empty());
 
-					if(otherEdge == startEdge)
+					if(otherEdge == endEdge) {
 						endEdge = currentEdge;
+					}
 				}
 				visitedVertices.push_back(currentEdge->vertex2());
 				visitedEdges.push_back(currentEdge);
