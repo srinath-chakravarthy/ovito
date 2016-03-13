@@ -564,7 +564,7 @@ void CAImporter::CrystalAnalysisFrameLoader::handOver(CompoundObject* container)
 	// Insert partition mesh.
 	OORef<PartitionMesh> partitionMeshObj = oldObjects.findObject<PartitionMesh>();
 	if(_partitionMesh) {
-		if(!defectSurfaceObj) {
+		if(!partitionMeshObj) {
 			partitionMeshObj = new PartitionMesh(container->dataset());
 			OORef<PartitionMeshDisplay> displayObj = new PartitionMeshDisplay(container->dataset());
 			displayObj->loadUserDefaults();
