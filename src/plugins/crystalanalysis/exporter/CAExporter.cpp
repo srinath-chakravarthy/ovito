@@ -127,6 +127,7 @@ bool CAExporter::exportParticles(const PipelineFlowState& state, int frameNumber
 			for(size_t row = 0; row < 3; row++)
 				textStream() << cluster->orientation(row,0) << " " << cluster->orientation(row,1) << " " << cluster->orientation(row,2) << "\n";
 			textStream() << "CLUSTER_COLOR " << cluster->color.r() << " " << cluster->color.g() << " " << cluster->color.b() << "\n";
+			textStream() << "CLUSTER_SIZE " << cluster->atomCount << "\n";
 			textStream() << "END_CLUSTER\n";
 		}
 

@@ -167,6 +167,8 @@ public:
 			return n;
 		}
 
+		/// Disconnects an edge from this vertex and adds it to the list of edges of another vertex.
+		/// Also transfers the opposite edge to the new vertex.
 		void transferEdgeToVertex(Edge* edge, Vertex* newVertex) {
 			OVITO_ASSERT(edge->oppositeEdge() != nullptr);
 			OVITO_ASSERT(edge->oppositeEdge()->vertex2() == this);
@@ -545,64 +547,6 @@ public:
 
 		output.invalidateVertices();
 		output.invalidateFaces();
-	}
-
-	/// Duplicates a vertex that is part of more than one manifold.
-	bool duplicateSharedVertex(Vertex* vertex) {
-		std::vector<Edge*> visitedEdges;
-		OVITO_ASSERT(vertex->numEdges() >= 2);
-
-		// Go in positive direction around vertex, facet by facet.
-		Edge* currentEdge = vertex->edges();
-		int numManifoldEdges = 0;
-		do {
-			OVITO_ASSERT(currentEdge != nullptr && currentEdge->face() != nullptr);
-			currentEdge = currentEdge->prevFaceEdge()->oppositeEdge();
-			numManifoldEdges++;
-		}
-		while(currentEdge != vertex->edges());
-
-		if(numManifoldEdges == vertex->numEdges())
-			return false;		// Vertex is not part of multiple manifolds.
-
-		visitedEdges.clear();
-		currentEdge = vertex->edges();
-		do {
-			visitedEdges.push_back(currentEdge);
-			currentEdge = currentEdge->prevFaceEdge()->oppositeEdge();
-		}
-		while(currentEdge != vertex->edges());
-
-		int oldEdgeCount = vertex->numEdges();
-		int newEdgeCount = visitedEdges.size();
-
-		while(visitedEdges.size() != oldEdgeCount) {
-
-			// Create a second vertex that takes the edges not visited yet.
-			Vertex* secondVertex = createVertex(vertex->pos());
-
-			Edge* startEdge;
-			for(startEdge = vertex->edges(); startEdge != nullptr; startEdge = startEdge->nextVertexEdge()) {
-				if(std::find(visitedEdges.cbegin(), visitedEdges.cend(), startEdge) == visitedEdges.end())
-					break;
-			}
-			OVITO_ASSERT(startEdge != nullptr);
-
-			currentEdge = startEdge;
-			do {
-				OVITO_ASSERT(std::find(visitedEdges.cbegin(), visitedEdges.cend(), currentEdge) == visitedEdges.end());
-				visitedEdges.push_back(currentEdge);
-				OVITO_ASSERT(vertex->edges() != currentEdge);
-				vertex->removeEdge(currentEdge);
-				secondVertex->addEdge(currentEdge);
-				Edge* oppositeEdge = currentEdge->oppositeEdge();
-				oppositeEdge->_vertex2 = secondVertex;
-				currentEdge = currentEdge->prevFaceEdge()->oppositeEdge();
-			}
-			while(currentEdge != startEdge);
-		}
-		OVITO_ASSERT(vertex->numEdges() == newEdgeCount);
-		return true;
 	}
 
 	/// Duplicates vertices which are part of more than one manifold.
