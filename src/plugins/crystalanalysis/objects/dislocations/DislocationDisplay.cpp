@@ -363,12 +363,13 @@ void DislocationDisplay::clipDislocationLine(const std::deque<Point3>& line, con
 	for(auto v2 = v1 + 1; v2 != line.cend(); v1 = v2, ++v2) {
 		Point3 rp2 = simulationCell.absoluteToReduced(*v2) + shiftVector;
 		FloatType smallestT;
+		bool clippedDimensions[3] = { false, false, false };
 		do {
 			size_t crossDim;
 			FloatType crossDir;
 			smallestT = FLOATTYPE_MAX;
 			for(size_t dim = 0; dim < 3; dim++) {
-				if(simulationCell.pbcFlags()[dim]) {
+				if(simulationCell.pbcFlags()[dim] && !clippedDimensions[dim]) {
 					int d = (int)floor(rp2[dim]) - (int)floor(rp1[dim]);
 					if(d == 0) continue;
 					FloatType t;
@@ -376,7 +377,7 @@ void DislocationDisplay::clipDislocationLine(const std::deque<Point3>& line, con
 						t = (ceil(rp1[dim]) - rp1[dim]) / (rp2[dim] - rp1[dim]);
 					else
 						t = (floor(rp1[dim]) - rp1[dim]) / (rp2[dim] - rp1[dim]);
-					if(t > 0 && t < smallestT) {
+					if(t >= 0 && t < smallestT) {
 						smallestT = t;
 						crossDim = dim;
 						crossDir = (d > 0) ? 1 : -1;
@@ -384,9 +385,14 @@ void DislocationDisplay::clipDislocationLine(const std::deque<Point3>& line, con
 				}
 			}
 			if(smallestT != FLOATTYPE_MAX) {
+				clippedDimensions[crossDim] = true;
 				Point3 intersection = rp1 + smallestT * (rp2 - rp1);
 				intersection[crossDim] = floor(intersection[crossDim] + FloatType(0.5));
-				clippingFunction(simulationCell.reducedToAbsolute(rp1), simulationCell.reducedToAbsolute(intersection));
+				Point3 rp1abs = simulationCell.reducedToAbsolute(rp1);
+				Point3 intabs = simulationCell.reducedToAbsolute(intersection);
+				if(!intabs.equals(rp1abs)) {
+					clippingFunction(rp1abs, intabs);
+				}
 				shiftVector[crossDim] -= crossDir;
 				rp1 = intersection;
 				rp1[crossDim] -= crossDir;

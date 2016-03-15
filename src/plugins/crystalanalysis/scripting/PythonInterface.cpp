@@ -351,12 +351,10 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 				"See also the :py:attr:`.is_loop` property. ")
 		.add_property("length", &DislocationSegment::calculateLength,
 				"Returns the length of this dislocation segment.")
-		.add_property("true_burgers_vector", make_function(static_cast<const Vector3& (*)(const DislocationSegment&)>(
-				[](const DislocationSegment& segment) -> const Vector3& { return segment.burgersVector.localVec(); }), return_internal_reference<>()),
+		.add_property("true_burgers_vector", make_function(+[](const DislocationSegment& segment) -> const Vector3& { return segment.burgersVector.localVec(); }, return_internal_reference<>()),
 				"The Burgers vector of the segment, expressed in the local coordinate system of the crystal. Also known as the True Burgers vector.")
 		.def_readonly("_line", &DislocationSegment::line)
-		.add_property("cluster_id", static_cast<int (*)(const DislocationSegment&)>(
-				[](const DislocationSegment& segment) { return segment.burgersVector.cluster()->id; }),
+		.add_property("cluster_id", +[](const DislocationSegment& segment) { return segment.burgersVector.cluster()->id; },
 				"The unique identifier of the cluster of crystal atoms that contains this dislocation segment. "
 				"\n\n"
 				"The Burgers vector of the segment is expressed in the local coordinate system of this atomic cluster.")

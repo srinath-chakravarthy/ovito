@@ -60,7 +60,7 @@ export CXX=g++-4.8
 	-fontconfig \
 	-skip qtconnectivity -skip qtmultimedia -skip qtwebkit -skip qtwebkit-examples -skip qtxmlpatterns -skip qtlocation \
 	-skip qtsensors -skip qtdeclarative -skip qtdoc -skip qtquick1 -skip qtquickcontrols \
-	-skip qtserialport -skip qtgraphicaleffects -skip qttranslations \
+	-skip qtserialport -skip qtgraphicaleffects -skip qttranslations -skip qtwebchannel \
 	-prefix $HOME/progs/qt5
 
 make
@@ -68,7 +68,7 @@ make install
 
 **************************************************************************
 QScintilla2
-**************************************************************************
+*************************************************************************
 export CC=gcc-4.8
 export CXX=g++-4.8
 cd QScintilla-gpl-2.9/Qt4Qt5/

@@ -110,7 +110,7 @@ std::shared_ptr<AsynchronousTask> PartitionMeshDisplay::createEngine(TimePoint t
 ******************************************************************************/
 void PartitionMeshDisplay::PrepareMeshEngine::perform()
 {
-	setProgressText(tr("Preparing microstrcture mesh for display"));
+	setProgressText(tr("Preparing microstructure mesh for display"));
 
 	if(!buildMesh(*_inputMesh, _simCell, _cuttingPlanes, _surfaceMesh, this))
 		throw Exception(tr("Failed to generate non-periodic version of microstructure mesh for display. Simulation cell might be too small."));

@@ -151,7 +151,6 @@ SET(SourceFiles
 	utilities/concurrent/Future.cpp
 	utilities/concurrent/TaskManager.cpp
 	utilities/mesh/TriMesh.cpp
-	utilities/mesh/HalfEdgeMesh.cpp
 	rendering/SceneRenderer.cpp
 	rendering/viewport/ViewportSceneRenderer.cpp
 	rendering/viewport/OpenGLLinePrimitive.cpp

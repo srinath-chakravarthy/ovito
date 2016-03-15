@@ -45,9 +45,7 @@ BOOST_PYTHON_MODULE(PyScriptRendering)
 		.def(init<int, int>())
 		.add_property("width", &FrameBuffer::width)
 		.add_property("height", &FrameBuffer::height)
-		.add_property("_image", static_cast<std::uintptr_t (*)(const FrameBuffer&)>([](const FrameBuffer& fb) {
-			return reinterpret_cast<std::uintptr_t>(&fb.image());
-		}))
+		.add_property("_image", +[](const FrameBuffer& fb) { return reinterpret_cast<std::uintptr_t>(&fb.image()); })
 	;
 
 	class_<FrameBufferWindow, bases<>, FrameBufferWindow, boost::noncopyable>("FrameBufferWindow", no_init)
