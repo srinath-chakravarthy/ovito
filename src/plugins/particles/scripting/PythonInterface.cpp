@@ -395,7 +395,7 @@ BOOST_PYTHON_MODULE(Particles)
 		;
 
 		class_<ParticleBondMap, boost::shared_ptr<ParticleBondMap>, boost::noncopyable>("ParticleBondMap", no_init)
-			.def("__init__", make_constructor(+[](BondsObject* bonds) { return boost::make_shared<ParticleBondMap>(*bonds->storage()); },
+			.def("__init__", make_constructor(lambda_address([](BondsObject* bonds) { return boost::make_shared<ParticleBondMap>(*bonds->storage()); }),
 					default_call_policies(), (arg("bonds"))))
 			.def("firstBondOfParticle", &ParticleBondMap::firstBondOfParticle)
 			.def("nextBondOfParticle", &ParticleBondMap::nextBondOfParticle)
@@ -593,7 +593,7 @@ BOOST_PYTHON_MODULE(Particles)
 			".. literalinclude:: ../example_snippets/surface_mesh.py"
 		)
 		.add_property("isCompletelySolid", &SurfaceMesh::isCompletelySolid, &SurfaceMesh::setCompletelySolid)
-		.def("export_vtk", +[](SurfaceMesh& mesh, const QString& filename, SimulationCellObject* simCellObj) {
+		.def("export_vtk", lambda_address([](SurfaceMesh& mesh, const QString& filename, SimulationCellObject* simCellObj) {
 			if(!simCellObj)
 				throw Exception("A simulation cell is required to generate non-periodic mesh for export.");
 			TriMesh output;
@@ -602,14 +602,14 @@ BOOST_PYTHON_MODULE(Particles)
 			QFile file(filename);
 			CompressedTextWriter writer(file);
 			output.saveToVTK(writer);
-		},
+		}),
 		"export_vtk(filename, cell)"
 		"\n\n"
 		"Writes the surface mesh to a VTK file, which is a simple text-based format and which can be opened with the software ParaView. "
 		"The method takes the output filename and a :py:class:`~ovito.data.SimulationCell` object as input. The simulation cell information "
 		"is needed by the method to generate a non-periodic version of the mesh, which is truncated at the periodic boundaries "
 		"of the simulation cell (if it has any).")
-		.def("export_cap_vtk", +[](SurfaceMesh& mesh, const QString& filename, SimulationCellObject* simCellObj) {
+		.def("export_cap_vtk", lambda_address([](SurfaceMesh& mesh, const QString& filename, SimulationCellObject* simCellObj) {
 			if(!simCellObj)
 				throw Exception("A simulation cell is required to generate cap mesh for export.");
 			TriMesh output;
@@ -617,7 +617,7 @@ BOOST_PYTHON_MODULE(Particles)
 			QFile file(filename);
 			CompressedTextWriter writer(file);
 			output.saveToVTK(writer);
-		},
+		}),
 		"export_cap_vtk(filename, cell)"
 		"\n\n"
 		"If the surface mesh has been generated from a :py:class:`~ovito.data.SimulationCell` with periodic boundary conditions, then this "
@@ -627,9 +627,9 @@ BOOST_PYTHON_MODULE(Particles)
 
 	{
 		scope s = class_<CutoffNeighborFinder>("CutoffNeighborFinder", init<>())
-			.def("prepare", +[](CutoffNeighborFinder& finder, FloatType cutoff, ParticlePropertyObject& positions, SimulationCellObject& cell) {
+			.def("prepare", lambda_address([](CutoffNeighborFinder& finder, FloatType cutoff, ParticlePropertyObject& positions, SimulationCellObject& cell) {
 				finder.prepare(cutoff, positions.storage(), cell.data());
-			})
+			}))
 		;
 
 		class_<CutoffNeighborFinder::Query>("Query", init<const CutoffNeighborFinder&, size_t>())
@@ -637,17 +637,17 @@ BOOST_PYTHON_MODULE(Particles)
 			.add_property("atEnd", &CutoffNeighborFinder::Query::atEnd)
 			.add_property("index", &CutoffNeighborFinder::Query::current)
 			.add_property("distance_squared", &CutoffNeighborFinder::Query::distanceSquared)
-			.add_property("distance", +[](const CutoffNeighborFinder::Query& query) -> FloatType { return sqrt(query.distanceSquared()); })
-			.add_property("delta", +[](const CutoffNeighborFinder::Query& query) { return make_tuple(query.delta().x(), query.delta().y(), query.delta().z()); })
-			.add_property("pbc_shift", +[](const CutoffNeighborFinder::Query& query) { return make_tuple(query.pbcShift().x(), query.pbcShift().y(), query.pbcShift().z()); })
+			.add_property("distance", lambda_address([](const CutoffNeighborFinder::Query& query) -> FloatType { return sqrt(query.distanceSquared()); }))
+			.add_property("delta", lambda_address([](const CutoffNeighborFinder::Query& query) { return make_tuple(query.delta().x(), query.delta().y(), query.delta().z()); }))
+			.add_property("pbc_shift", lambda_address([](const CutoffNeighborFinder::Query& query) { return make_tuple(query.pbcShift().x(), query.pbcShift().y(), query.pbcShift().z()); }))
 		;
 	}
 
 	{
 		scope s = class_<NearestNeighborFinder>("NearestNeighborFinder", init<size_t>())
-			.def("prepare", +[](NearestNeighborFinder& finder, ParticlePropertyObject& positions, SimulationCellObject& cell) {
+			.def("prepare", lambda_address([](NearestNeighborFinder& finder, ParticlePropertyObject& positions, SimulationCellObject& cell) {
 				finder.prepare(positions.storage(), cell.data());
-			})
+			}))
 		;
 
 		typedef NearestNeighborFinder::Query<30> NearestNeighborQuery;
@@ -655,14 +655,14 @@ BOOST_PYTHON_MODULE(Particles)
 		class_<NearestNeighborFinder::Neighbor>("Neighbor", no_init)
 			.def_readonly("index", &NearestNeighborFinder::Neighbor::index)
 			.def_readonly("distance_squared", &NearestNeighborFinder::Neighbor::distanceSq)
-			.add_property("distance", +[](const NearestNeighborFinder::Neighbor& n) -> FloatType { return sqrt(n.distanceSq); })
-			.add_property("delta", +[](const NearestNeighborFinder::Neighbor& n) { return make_tuple(n.delta.x(), n.delta.y(), n.delta.z()); })
+			.add_property("distance", lambda_address([](const NearestNeighborFinder::Neighbor& n) -> FloatType { return sqrt(n.distanceSq); }))
+			.add_property("delta", lambda_address([](const NearestNeighborFinder::Neighbor& n) { return make_tuple(n.delta.x(), n.delta.y(), n.delta.z()); }))
 		;
 
 		class_<NearestNeighborQuery>("Query", init<const NearestNeighborFinder&>())
 			.def("findNeighbors", static_cast<void (NearestNeighborQuery::*)(size_t)>(&NearestNeighborQuery::findNeighbors))
-			.add_property("count", +[](const NearestNeighborQuery& q) -> int { return q.results().size(); })
-			.def("__getitem__", make_function(+[](const NearestNeighborQuery& q, int index) -> const NearestNeighborFinder::Neighbor& { return q.results()[index]; },
+			.add_property("count", lambda_address([](const NearestNeighborQuery& q) -> int { return q.results().size(); }))
+			.def("__getitem__", make_function(lambda_address([](const NearestNeighborQuery& q, int index) -> const NearestNeighborFinder::Neighbor& { return q.results()[index]; }),
 					return_internal_reference<>()))
 		;
 	}

@@ -95,7 +95,7 @@ BOOST_PYTHON_MODULE(PyScriptApp)
 		.def("isReferencedBy", &RefTarget::isReferencedBy)
 		.def("deleteReferenceObject", &RefTarget::deleteReferenceObject)
 		.add_property("objectTitle", &RefTarget::objectTitle)
-		.add_property("num_dependents", +[](RefTarget& t) { return t.dependents().size(); })
+		.add_property("num_dependents", lambda_address([](RefTarget& t) { return t.dependents().size(); }))
 	;
 
 	ovito_abstract_class<DataSet, RefTarget>(
@@ -144,11 +144,11 @@ BOOST_PYTHON_MODULE(PyScriptApp)
 	;
 
 	// Let scripts access the current progress display.
-	def("get_progress_display", make_function(+[]() -> AbstractProgressDisplay* {
+	def("get_progress_display", make_function(lambda_address([]() -> AbstractProgressDisplay* {
 		if(ScriptEngine::activeEngine())
 			return ScriptEngine::activeEngine()->progressDisplay();
 		return nullptr;
-	}, return_value_policy<reference_existing_object>()));
+	}), return_value_policy<reference_existing_object>()));
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScriptApp);

@@ -59,7 +59,7 @@ BOOST_PYTHON_MODULE(PyScriptViewport)
 				":py:attr:`DataSet.viewports <ovito.DataSet.viewports>` attribute.")
 			.add_property("isRendering", &Viewport::isRendering)
 			.add_property("isPerspective", &Viewport::isPerspectiveProjection)
-            .add_property("type", &Viewport::viewType, +[](Viewport& vp, Viewport::ViewType vt) { vp.setViewType(vt); },
+            .add_property("type", &Viewport::viewType, lambda_address([](Viewport& vp, Viewport::ViewType vt) { vp.setViewType(vt); }),
 					"The type of projection:"
 					"\n\n"
 					"  * ``Viewport.Type.PERSPECTIVE``\n"

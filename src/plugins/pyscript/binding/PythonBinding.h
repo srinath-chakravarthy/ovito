@@ -355,6 +355,45 @@ struct python_to_set_conversion
 	}
 };
 
+
+/*
+ * The following code defines a helper template function lambda_address() that
+ * can be used to convert a C++ lambda function without captures to a plain C function
+ * pointer.
+ * The purpose of this helper function is to avoid writing explicit casts when passing
+ * lambda functions to Boost.Python. An alternative approach is to use the 
+ * plus operator trick
+ * 
+ *    +[](...) { ... }
+ *
+ * to convert a lambda to a function pointer. But this trick does not work with the 
+ * MSVC 13 compiler.
+ */
+namespace detail {
+
+	template <typename T>
+	struct identity { using type = T; };
+
+	template <typename...>
+	using void_t = void;
+
+	template <typename F>
+	struct call_operator;
+
+	template <typename C, typename R, typename... A>
+	struct call_operator<R(C::*)(A...)> : identity<R(A...)> {};
+
+	template <typename C, typename R, typename... A>
+	struct call_operator<R(C::*)(A...) const> : identity<R(A...)> {};
+
+	template <typename F>
+	using call_operator_t = typename call_operator<F>::type;
+};
+
+template<typename L>
+auto lambda_address(L&& lambda) -> detail::call_operator_t<decltype(&L::operator())>*
+{ return lambda; }	
+
 };	// End of namespace
 
 #endif

@@ -513,15 +513,15 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					":Default: 200\n")
 			.add_property("_binData", make_function(&BinAndReduceModifier::binData, return_internal_reference<>()))
 			.add_property("_is1D", &BinAndReduceModifier::is1D)
-			.add_property("axis_range_x", +[](BinAndReduceModifier& modifier) {
+			.add_property("axis_range_x", lambda_address([](BinAndReduceModifier& modifier) {
 					return make_tuple(modifier.xAxisRangeStart(), modifier.xAxisRangeEnd());
-				},
+				}),
 				"A 2-tuple containing the range of the generated bin grid along the first binning axis. "
 				"Note that this is an output attribute which is only valid after the modifier has performed the bin and reduce operation. "
 				"That means you have to call :py:meth:`ovito.ObjectNode.compute` first to evaluate the data pipeline.")
-			.add_property("axis_range_y", +[](BinAndReduceModifier& modifier) {
+			.add_property("axis_range_y", lambda_address([](BinAndReduceModifier& modifier) {
 					return make_tuple(modifier.yAxisRangeStart(), modifier.yAxisRangeEnd());
-				},
+				}),
 				"A 2-tuple containing the range of the generated bin grid along the second binning axis. "
 				"Note that this is an output attribute which is only valid after the modifier has performed the bin and reduce operation. "
 				"That means you have to call :py:meth:`ovito.ObjectNode.compute` first to evaluate the data pipeline.")
@@ -672,8 +672,8 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 
 			// For backward compatibility with OVITO 2.5.1.
 			.add_property("adaptive_mode",
-					+[](CommonNeighborAnalysisModifier& mod) -> bool { return (mod.mode() == CommonNeighborAnalysisModifier::AdaptiveCutoffMode); },
-					+[](CommonNeighborAnalysisModifier& mod, bool adaptive) { mod.setMode(adaptive ? CommonNeighborAnalysisModifier::AdaptiveCutoffMode : CommonNeighborAnalysisModifier::FixedCutoffMode); }
+					lambda_address([](CommonNeighborAnalysisModifier& mod) -> bool { return (mod.mode() == CommonNeighborAnalysisModifier::AdaptiveCutoffMode); }),
+					lambda_address([](CommonNeighborAnalysisModifier& mod, bool adaptive) { mod.setMode(adaptive ? CommonNeighborAnalysisModifier::AdaptiveCutoffMode : CommonNeighborAnalysisModifier::FixedCutoffMode); })
 					)
 		;
 

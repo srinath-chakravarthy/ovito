@@ -45,7 +45,7 @@ BOOST_PYTHON_MODULE(PyScriptFileIO)
 		.add_property("isEmpty", &QUrl::isEmpty)
 		.add_property("isLocalFile", &QUrl::isLocalFile)
 		.add_property("isValid", &QUrl::isValid)
-        .def("__str__", +[](const QUrl& url) { return url.toString(QUrl::PreferLocalFile); })
+        .def("__str__", lambda_address([](const QUrl& url) { return url.toString(QUrl::PreferLocalFile); }))
 		.def(self == other<QUrl>())
 		.def(self != other<QUrl>())
 	;
