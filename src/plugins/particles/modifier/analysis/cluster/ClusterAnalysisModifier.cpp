@@ -20,6 +20,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
+#include <core/gui/properties/BooleanParameterUI.h>
 #include "ClusterAnalysisModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
@@ -27,7 +28,9 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ClusterAnalysisModifier, AsynchronousParticleModifier);
 SET_OVITO_OBJECT_EDITOR(ClusterAnalysisModifier, ClusterAnalysisModifierEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(ClusterAnalysisModifier, _cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(ClusterAnalysisModifier, _onlySelectedParticles, "OnlySelectedParticles");
 SET_PROPERTY_FIELD_LABEL(ClusterAnalysisModifier, _cutoff, "Cutoff radius");
+SET_PROPERTY_FIELD_LABEL(ClusterAnalysisModifier, _onlySelectedParticles, "Use only selected particles");
 SET_PROPERTY_FIELD_UNITS(ClusterAnalysisModifier, _cutoff, WorldParameterUnit);
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -38,9 +41,10 @@ OVITO_END_INLINE_NAMESPACE
 * Constructs the modifier object.
 ******************************************************************************/
 ClusterAnalysisModifier::ClusterAnalysisModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
-	_cutoff(3.2), _numClusters(0)
+	_cutoff(3.2), _onlySelectedParticles(false), _numClusters(0)
 {
 	INIT_PROPERTY_FIELD(ClusterAnalysisModifier::_cutoff);
+	INIT_PROPERTY_FIELD(ClusterAnalysisModifier::_onlySelectedParticles);
 }
 
 /******************************************************************************
@@ -54,8 +58,13 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> ClusterAnalysisModi
 	// Get simulation cell.
 	SimulationCellObject* inputCell = expectSimulationCell();
 
+	// Get particle selection.
+	ParticleProperty* selectionProperty = nullptr;
+	if(onlySelectedParticles())
+		selectionProperty = expectStandardProperty(ParticleProperty::SelectionProperty)->storage();
+
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
-	return std::make_shared<ClusterAnalysisEngine>(validityInterval, posProperty->storage(), inputCell->data(), cutoff());
+	return std::make_shared<ClusterAnalysisEngine>(validityInterval, posProperty->storage(), inputCell->data(), cutoff(), selectionProperty);
 }
 
 /******************************************************************************
@@ -67,7 +76,7 @@ void ClusterAnalysisModifier::ClusterAnalysisEngine::perform()
 
 	// Prepare the neighbor finder.
 	CutoffNeighborFinder neighborFinder;
-	if(!neighborFinder.prepare(_cutoff, positions(), cell(), nullptr, this))
+	if(!neighborFinder.prepare(_cutoff, positions(), cell(), selection(), this))
 		return;
 
 	size_t particleCount = positions()->size();
@@ -78,6 +87,12 @@ void ClusterAnalysisModifier::ClusterAnalysisEngine::perform()
 	_numClusters = 0;
 
 	for(size_t seedParticleIndex = 0; seedParticleIndex < particleCount; seedParticleIndex++) {
+
+		// Skip unselected particles that are not included in the analysis.
+		if(selection() && !selection()->getInt(seedParticleIndex)) {
+			_particleClusters->setInt(seedParticleIndex, 0);
+			continue;
+		}
 
 		// Skip particles that have already been assigned to a cluster.
 		if(_particleClusters->getInt(seedParticleIndex) != -1)
@@ -144,7 +159,8 @@ void ClusterAnalysisModifier::propertyChanged(const PropertyFieldDescriptor& fie
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Recompute modifier results when the parameters have been changed.
-	if(field == PROPERTY_FIELD(ClusterAnalysisModifier::_cutoff))
+	if(field == PROPERTY_FIELD(ClusterAnalysisModifier::_cutoff) ||
+			field == PROPERTY_FIELD(ClusterAnalysisModifier::_onlySelectedParticles))
 		invalidateCachedResults();
 }
 
@@ -172,6 +188,10 @@ void ClusterAnalysisModifierEditor::createUI(const RolloutInsertionParameters& r
 	gridlayout->addWidget(cutoffRadiusPUI->label(), 0, 0);
 	gridlayout->addLayout(cutoffRadiusPUI->createFieldLayout(), 0, 1);
 	cutoffRadiusPUI->setMinValue(0);
+
+	// Use only selected particles.
+	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(ClusterAnalysisModifier::_onlySelectedParticles));
+	gridlayout->addWidget(onlySelectedParticlesUI->checkBox(), 1, 0, 1, 2);
 
 	layout->addLayout(gridlayout);
 

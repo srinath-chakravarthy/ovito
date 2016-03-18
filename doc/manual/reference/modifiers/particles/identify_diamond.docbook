@@ -11,12 +11,18 @@
   <title>Identify diamond structure</title>
 
   <para>  
-  This analysis modifier finds atoms that are arranged in a cubic or hexagonal diamond lattice.
+  This analysis modifier finds atoms that are arranged in a cubic or hexagonal diamond lattice. This structure identification method has been described in Appendix A of
+    <blockquote><para>
+<literallayout><link xlink:href="http://arxiv.org/abs/1601.06597">E. Maras et al.
+Global transition path search for dislocation formation in Ge on Si(001)
+arXiv:1601.06597 (2016)</link></literallayout>
+    </para></blockquote>
+    Please cite this paper when you use this method in your work.  
   </para>
 
   <para>
-  The modifier analyzes the local enviroment of each atom up to the second neighbor shell to determine the local structure type.
-  The results are stored in the <literal>Structure Type</literal> particle property, with the assigned type encoded as an integer value:
+  The algorithm analyzes the local enviroment of each atom up to the second neighbor shell to determine the local structure type.
+  The results are stored in the <literal>Structure Type</literal> particle property, with the type assigned to each atom encoded as an integer value:
   <informaltable>
         <tgroup cols="3">
           <colspec colname='id'/>
@@ -145,9 +151,7 @@
     cubic diamond. If they form a HCP structure, then the central atom is marked as an hexagonal diamond atom.
     </para>
     <para>
-    Please note that the described method was recently developed and is not officially published yet in citable form.
-    A manuscript that will contain technical details of the structure identification method is being prepared. 
-    Please contact the author of OVITO for more information.
+    Further details can be found in the <link xlink:href="http://arxiv.org/abs/1601.06597">paper</link>.
     </para>
   </simplesect>
 

@@ -47,9 +47,8 @@
        <imagedata fileref="images/modifiers/slice_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
   
-  This modifier deletes particles on one side of an infinite cutting plane. 
-  Alternatively, the modifier can cut out a slice of particles as shown
-  in the third picture on the right.</para>
+  This modifier deletes all particles located on one side of an infinite cutting plane. 
+  Alternatively, the modifier can cut out a slice of particles as shown in the third picture on the right.</para>
 
   <para>Several buttons in the modifier's parameter panel allow to position and align the slicing plane:</para>
 
@@ -98,27 +97,23 @@
       </varlistentry>
 
       <varlistentry>
-        <term>Invert</term>
+        <term>Reverse orientation</term>
         <listitem>
-          <para>Inverts the selection of particles, i.e., reverses the slicing
-          plane's orientation.</para>
+          <para>Effectively flips the slicing plane's orientation. Removes particles on the opposite side of the plane.</para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
-        <term>Select particles (do not delete)</term>
+        <term>Create selection (do not delete)</term>
         <listitem>
-          <para>If activated, the modifier selects particles instead of
-          deleting them.</para>
+          <para>Lets the modifier select particles instead of deleting them.</para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
-        <term>Apply to selected particles only</term>
+        <term>Apply to selection only</term>
         <listitem>
-          <para>If activated, the modifier touches only particles that are
-          selected. This option can be used to restrict the modifier's action
-          to a subset of particles.</para>
+          <para>Restricts the effect of the modifier to particles that are currently selected.</para>
         </listitem>
       </varlistentry>
     </variablelist>

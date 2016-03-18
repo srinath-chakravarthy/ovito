@@ -7,7 +7,7 @@
          xmlns:xlink="http://www.w3.org/1999/xlink"
          xmlns:xi="http://www.w3.org/2001/XInclude"
          xmlns:ns="http://docbook.org/ns/docbook">
-  <title>Show trajectories of particles</title>
+  <title>Visualize particle trajectories</title>
 
   <para>
      <figure>

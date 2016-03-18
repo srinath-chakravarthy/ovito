@@ -52,9 +52,9 @@ PipelineStatus ParticleModifier::modifyObject(TimePoint time, ModifierApplicatio
 
 	try {
 		ParticlePropertyObject* posProperty = inputStandardProperty(ParticleProperty::PositionProperty);
-		if(!posProperty)
+		if(!posProperty && !this->isApplicableTo(_input))
 			throw Exception(tr("This modifier cannot be evaluated because the input does not contain any particles."));
-		_outputParticleCount = _inputParticleCount = posProperty->size();
+		_outputParticleCount = _inputParticleCount = (posProperty != nullptr) ? posProperty->size() : 0;
 
 		// Verify input, make sure array length of particle properties is consistent.
 		for(DataObject* obj : state.objects()) {

@@ -56,22 +56,6 @@ public:
 	/// \brief Asks the modifier whether it can be applied to the given input data.
 	virtual bool isApplicableTo(const PipelineFlowState& input) override;
 
-protected:
-
-	/// Saves the class' contents to the given stream.
-	virtual void saveToStream(ObjectSaveStream& stream) override;
-
-	/// Loads the class' contents from the given stream.
-	virtual void loadFromStream(ObjectLoadStream& stream) override;
-
-	/// Is called when the value of a property of this object has changed.
-	virtual void propertyChanged(const PropertyFieldDescriptor& field) override;
-
-	/// Modifies the particle object. This function must be implemented by sub-classes
-	/// do the modifier specific work. The time interval passed
-	/// to the function should be reduced to the interval where the returned object is valid/constant.
-	virtual PipelineStatus modifyParticles(TimePoint time, TimeInterval& validityInterval) = 0;
-
 	/// Returns a standard particle property from the input state.
 	/// The returned property may be NULL if it does not exist.
 	ParticlePropertyObject* inputStandardProperty(ParticleProperty::Type which) const;
@@ -148,6 +132,22 @@ protected:
 		if(!_cloneHelper) _cloneHelper.reset(new CloneHelper());
 		return _cloneHelper.data();
 	}
+
+protected:
+
+	/// Saves the class' contents to the given stream.
+	virtual void saveToStream(ObjectSaveStream& stream) override;
+
+	/// Loads the class' contents from the given stream.
+	virtual void loadFromStream(ObjectLoadStream& stream) override;
+
+	/// Is called when the value of a property of this object has changed.
+	virtual void propertyChanged(const PropertyFieldDescriptor& field) override;
+
+	/// Modifies the particle object. This function must be implemented by sub-classes
+	/// do the modifier specific work. The time interval passed
+	/// to the function should be reduced to the interval where the returned object is valid/constant.
+	virtual PipelineStatus modifyParticles(TimePoint time, TimeInterval& validityInterval) = 0;
 
 	/// Sets the status returned by the modifier and generates a ReferenceEvent::ObjectStatusChanged event.
 	void setStatus(const PipelineStatus& status);

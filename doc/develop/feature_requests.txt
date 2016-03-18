@@ -7,7 +7,6 @@ User interface improvements:
 Work-flow improvements:
 
 - Add support for low-dimensional systems.
-- Vieport overlays: make it possible to move overlays around using the mouse.
 
 New visualization features:
 

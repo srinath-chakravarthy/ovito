@@ -41,7 +41,7 @@
        <imagedata fileref="images/modifiers/cluster_analysis_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
   
-    This modifier decomposes a particle system into disconnected sets of particles (clusters).
+    This modifier decomposes a particle system into disconnected sets of particles (clusters) based on a distance criterion.
   </para>
   
   <para>
@@ -66,6 +66,15 @@
         <term>Cutoff radius</term>
         <listitem>
           <para>The threshold up to which two particles are considered direct neighbors.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Use only selected particles</term>
+        <listitem>
+          <para>If this option is active, the clustering algorithm is restricted to selected
+          particles. Unselected particles will be treated as if they do not exist and will be assigned
+          the cluster ID 0. 
           </para>
         </listitem>
       </varlistentry>

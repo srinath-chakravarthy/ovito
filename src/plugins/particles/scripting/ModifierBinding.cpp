@@ -790,6 +790,10 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"This output field contains the number of clusters found. "
 				"Note that accessing this value is only possible after the modifier has computed its results. "
 				"Thus, you have to call :py:meth:`ovito.ObjectNode.compute` first to ensure that this information is up to date. ")
+		.add_property("only_selected", &ClusterAnalysisModifier::onlySelectedParticles, &ClusterAnalysisModifier::setOnlySelectedParticles,
+				"Lets the modifier perform the analysis only for selected particles. Particles that are not selected will be assigned cluster ID 0 and treated as if they did not exist."
+				"\n\n"
+				":Default: ``False``\n")
 	;
 
 	ovito_class<CoordinationNumberModifier, AsynchronousParticleModifier>(

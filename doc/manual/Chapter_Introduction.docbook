@@ -15,7 +15,7 @@
     </imageobject></mediaobject></screenshot></informalfigure>
   
   OVITO is a scientific data visualization and analysis software for
-  large-scale atomistic simulation models in materials science and related disciplines.
+  atomistic simulation models in materials science and related disciplines.
   OVITO is freely available for
   Windows, Linux, and Mac OS X under an open-source license. It is being developed by <link xlink:href="http://scholar.google.com/citations?user=f8Tw3eEAAAAJ">Dr. Alexander
   Stukowski</link> at the <link xlink:href="http://www.mawi.tu-darmstadt.de/mm/mm_mm_sw/index.en.jsp">
@@ -23,17 +23,17 @@
   </para>
   
   <para>
-  The first publicly available version of OVITO was released in December 2009.
-  As of summer 2015, OVITO has more than active 30,000 users from the computational physics, materials science, and chemistry fields.
-  To introduce the software package to the community, a <link xlink:href="http://stacks.iop.org/0965-0393/18/015012">journal article about OVITO</link> was published in 2010.
+  The first version of OVITO was released in December 2009 and its initial feature set was described in 
+  a <link xlink:href="http://stacks.iop.org/0965-0393/18/015012">journal article about OVITO</link> in 2010.
+  Today OVITO has more than active 50,000 users from the computational physics, materials science, and chemistry fields.
   </para>
   
   <simplesect>
   <title>Program features</title>
 
-  <para>OVITO is a software for visualizing and analyzing output data from particle-based simulations, notably molecular dynamics (MD) simulations of 
-  solid-state materials. Its main application area are large simulations based on classical potentials 
-  (10<superscript>3</superscript> - 10<superscript>8</superscript> particles).
+  <para>OVITO is a software for visualizing and analyzing output data from particle-based simulation models, notably molecular dynamics (MD) simulations of 
+  solid-state materials. Its main focus is on large simulation models based on classical potentials 
+  (10<superscript>3</superscript> - 10<superscript>8</superscript> atoms).
   Some noteworthy program features are: <itemizedlist>
 
       <listitem>
@@ -50,7 +50,7 @@
       </listitem>
 
       <listitem>
-        <para>An easy-to-use interface, flexible software design, and a <link linkend="usage.particle_properties">data model</link> that supports an arbitrary number of particle properties.</para>
+        <para>An easy-to-use interface, a flexible software design, and a <link linkend="usage.particle_properties">data model</link> that supports an arbitrary number of particle properties.</para>
       </listitem>
 
       <listitem>
@@ -59,14 +59,14 @@
       
       <listitem>
         <para><link linkend="usage.scripting">A powerful Python-based scripting interface</link> 
-        allows you to automate analysis and visualization tasks 
+        that allows one to automate analysis and visualization tasks 
         and <link linkend="particles.modifiers.python_script">extend OVITO</link> with new functions.</para>
       </listitem>      
       
       <listitem>
         <para><link linkend="usage.modification_pipeline">Nondestructive data manipulation and analysis functions</link> 
         are arranged in a data flow pipeline by the user. Parameters can be changed at 
-        any time and results will be immediately updated. Available <link linkend="particles.modifiers">modification functions</link> include:<itemizedlist>
+        any time and results will be immediately recalculated. Available <link linkend="particles.modifiers">modification functions</link> include:<itemizedlist>
 
             <listitem>
               <para><link linkend="particles.modifiers.expression_select">Dynamic particle selections based on Boolean expressions</link></para>
@@ -141,7 +141,7 @@
           </listitem>
 
           <listitem>
-            <para><link linkend="particles.modifiers.construct_surface_mesh">Reconstruction of surface geometry from point-like particles</link></para>
+            <para><link linkend="particles.modifiers.construct_surface_mesh">Reconstruction of geometric surfaces from atomistic models</link></para>
           </listitem>
 
 	      <listitem>

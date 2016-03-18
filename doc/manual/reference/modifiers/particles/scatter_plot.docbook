@@ -17,8 +17,9 @@
     </imageobject></mediaobject></screenshot></informalfigure>
   
     This modifier computes and displays a scatter plot for two particle properties.
-    A scatter plot consists of one data point per input particle. The first particle property controls
-    the X-coordinates and the second property the Y-coordinates of points.
+    This type of plot can be used to study possible correlations between two particle properties.    
+    A scatter plot consists of one data point per input particle. The first property determines
+    the X-coordinates and the second property the Y-coordinates of the points.
   </para>
   
   <para>

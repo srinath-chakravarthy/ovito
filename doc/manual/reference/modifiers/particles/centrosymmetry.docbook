@@ -23,8 +23,8 @@
   </para>
   
   <para>
-    The centro-symmetry parameter is calculated by OVITO using 
-    an <link xlink:href="http://lammps.sandia.gov/doc/compute_centro_atom.html">algorithm also implemented in LAMMPS</link>.
+    OVITO uses the same <link xlink:href="http://lammps.sandia.gov/doc/compute_centro_atom.html">algorithm as LAMMPS</link>
+    to calculate the centro-symmetry parameter.
   </para>
   
   <para>
@@ -43,6 +43,14 @@
   <para>
     Note that this modifier requires access to the complete set of particles to perform the analysis. It should therefore be placed at the 
     beginning of the processing pipeline, preceding any modifiers that delete particles.
+  </para>
+  
+  <para>
+    After you have computed the centro-symmetry parameter (CSP) values with this analysis modifier, you can use the 
+    <link linkend="particles.modifiers.color_coding">Color Coding</link> modifier to color atoms according to their CSP value.
+    Or you can use the <link linkend="particles.modifiers.expression_select">Expression Select</link> modifier to select atoms 
+    having a low CSP value. These undisturbed atoms can then be hidden using the <link linkend="particles.modifiers.delete_selected_particles">Delete Selected Particles</link>
+    modifier to reveal crystal defect atoms.
   </para>
   
 </section>

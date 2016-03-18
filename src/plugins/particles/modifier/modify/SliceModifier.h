@@ -50,6 +50,9 @@ public:
 	/// Computes the bounding box of the visual representation of the modifier.
 	virtual Box3 boundingBox(TimePoint time,  ObjectNode* contextNode, ModifierApplication* modApp) override;
 
+	/// Asks the modifier whether it can be applied to the given input data.
+	virtual bool isApplicableTo(const PipelineFlowState& input) override;
+
 	// Property access functions:
 
 	/// Returns the plane's distance from the origin.
@@ -117,9 +120,6 @@ protected:
 	/// Modifies the particle object.
 	virtual PipelineStatus modifyParticles(TimePoint time, TimeInterval& validityInterval) override;
 
-	/// Performs the actual rejection of particles.
-	size_t filterParticles(boost::dynamic_bitset<>& mask, TimePoint time, TimeInterval& validityInterval);
-
 	/// \brief Renders the modifier's visual representation and computes its bounding box.
 	Box3 renderVisual(TimePoint time, ObjectNode* contextNode, SceneRenderer* renderer);
 
@@ -161,6 +161,54 @@ private:
 	DECLARE_PROPERTY_FIELD(_createSelection);
 	DECLARE_PROPERTY_FIELD(_inverse);
 	DECLARE_PROPERTY_FIELD(_applyToSelection);
+};
+
+/**
+ * \brief Abstract base class for slice functions that operate on different kinds of data.
+ */
+class OVITO_PARTICLES_EXPORT SliceModifierFunction : public RefTarget
+{
+protected:
+
+	/// Abstract class constructor.
+	SliceModifierFunction(DataSet* dataset) : RefTarget(dataset) {}
+
+public:
+
+	/// \brief Applies a slice operation to a data object.
+	virtual PipelineStatus apply(SliceModifier* modifier, TimePoint time, const Plane3& plane, FloatType sliceWidth) = 0;
+
+	/// \brief Returns whether this slice function can be applied to the given input data.
+	virtual bool isApplicableTo(const PipelineFlowState& input) = 0;
+
+private:
+
+	Q_OBJECT
+	OVITO_OBJECT
+};
+
+/**
+ * \brief Slice function that operates on particles.
+ */
+class OVITO_PARTICLES_EXPORT SliceParticlesFunction : public SliceModifierFunction
+{
+public:
+
+	/// Constructor.
+	Q_INVOKABLE SliceParticlesFunction(DataSet* dataset) : SliceModifierFunction(dataset) {}
+
+	/// \brief Applies a slice operation to a data object.
+	virtual PipelineStatus apply(SliceModifier* modifier, TimePoint time, const Plane3& plane, FloatType sliceWidth) override;
+
+	/// \brief Returns whether this slice function can be applied to the given input data.
+	virtual bool isApplicableTo(const PipelineFlowState& input) override {
+		return (input.findObject<ParticlePropertyObject>() != nullptr);
+	}
+
+private:
+
+	Q_OBJECT
+	OVITO_OBJECT
 };
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)

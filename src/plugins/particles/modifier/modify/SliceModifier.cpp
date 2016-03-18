@@ -34,12 +34,15 @@
 #include <core/gui/properties/Vector3ParameterUI.h>
 #include <core/gui/properties/BooleanParameterUI.h>
 #include <core/rendering/viewport/ViewportSceneRenderer.h>
+#include <core/plugins/PluginManager.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include "SliceModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SliceModifier, ParticleModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SliceModifierFunction, RefTarget);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SliceParticlesFunction, SliceModifierFunction);
 SET_OVITO_OBJECT_EDITOR(SliceModifier, SliceModifierEditor);
 DEFINE_REFERENCE_FIELD(SliceModifier, _normalCtrl, "PlaneNormal", Controller);
 DEFINE_REFERENCE_FIELD(SliceModifier, _distanceCtrl, "PlaneDistance", Controller);
@@ -50,9 +53,9 @@ DEFINE_PROPERTY_FIELD(SliceModifier, _applyToSelection, "ApplyToSelection");
 SET_PROPERTY_FIELD_LABEL(SliceModifier, _normalCtrl, "Normal");
 SET_PROPERTY_FIELD_LABEL(SliceModifier, _distanceCtrl, "Distance");
 SET_PROPERTY_FIELD_LABEL(SliceModifier, _widthCtrl, "Slice width");
-SET_PROPERTY_FIELD_LABEL(SliceModifier, _createSelection, "Select particles (do not delete)");
-SET_PROPERTY_FIELD_LABEL(SliceModifier, _inverse, "Invert");
-SET_PROPERTY_FIELD_LABEL(SliceModifier, _applyToSelection, "Apply to selected particles only");
+SET_PROPERTY_FIELD_LABEL(SliceModifier, _createSelection, "Create selection (do not delete)");
+SET_PROPERTY_FIELD_LABEL(SliceModifier, _inverse, "Reverse orientation");
+SET_PROPERTY_FIELD_LABEL(SliceModifier, _applyToSelection, "Apply to selection only");
 SET_PROPERTY_FIELD_UNITS(SliceModifier, _normalCtrl, WorldParameterUnit);
 SET_PROPERTY_FIELD_UNITS(SliceModifier, _distanceCtrl, WorldParameterUnit);
 SET_PROPERTY_FIELD_UNITS(SliceModifier, _widthCtrl, WorldParameterUnit);
@@ -95,6 +98,25 @@ TimeInterval SliceModifier::modifierValidity(TimePoint time)
 }
 
 /******************************************************************************
+* Asks the modifier whether it can be applied to the given input data.
+******************************************************************************/
+bool SliceModifier::isApplicableTo(const PipelineFlowState& input)
+{
+	UndoSuspender noUndo(this);
+
+	for(const OvitoObjectType* clazz : PluginManager::instance().listClasses(SliceModifierFunction::OOType)) {
+		// Create instance of the slice function class.
+		OORef<SliceModifierFunction> sliceFunc = static_object_cast<SliceModifierFunction>(clazz->createInstance(dataset()));
+
+		// Let the slice function decide if can handle the input data type.
+		if(sliceFunc->isApplicableTo(input))
+			return true;
+	}
+
+	return false;
+}
+
+/******************************************************************************
 * Returns the slicing plane.
 ******************************************************************************/
 Plane3 SliceModifier::slicingPlane(TimePoint time, TimeInterval& validityInterval)
@@ -115,56 +137,58 @@ Plane3 SliceModifier::slicingPlane(TimePoint time, TimeInterval& validityInterva
 ******************************************************************************/
 PipelineStatus SliceModifier::modifyParticles(TimePoint time, TimeInterval& validityInterval)
 {
-	QString statusMessage = tr("%n input particles", 0, inputParticleCount());
+	// Retrieve modifier parameters.
+	FloatType sliceWidth = 0;
+	if(_widthCtrl) sliceWidth = _widthCtrl->getFloatValue(time, validityInterval);
+	Plane3 plane = slicingPlane(time, validityInterval);
 
-	// Compute filter mask.
-	boost::dynamic_bitset<> mask(inputParticleCount());
-	size_t numRejected = filterParticles(mask, time, validityInterval);
-	size_t numKept = inputParticleCount() - numRejected;
+	// Apply all registered and activated slice functions to the input data.
+	PipelineStatus status(PipelineStatus::Success);
+	for(const OvitoObjectType* clazz : PluginManager::instance().listClasses(SliceModifierFunction::OOType)) {
+		OVITO_ASSERT(!dataset()->undoStack().isRecording());
 
-	if(createSelection() == false) {
+		// Create instance of the slice function class.
+		OORef<SliceModifierFunction> sliceFunc = static_object_cast<SliceModifierFunction>(clazz->createInstance(dataset()));
 
-		statusMessage += tr("\n%n particles deleted", 0, numRejected);
-		statusMessage += tr("\n%n particles remaining", 0, numKept);
-		if(numRejected == 0)
-			return PipelineStatus(PipelineStatus::Success, statusMessage);
+		// Skip function if not applicable.
+		if(!sliceFunc->isApplicableTo(input()))
+			continue;
 
-		// Delete the rejected particles.
-		deleteParticles(mask, numRejected);
+		// Call the slice function.
+		PipelineStatus funcStatus = sliceFunc->apply(this, time, plane, sliceWidth);
+
+		// Append status text and code returned by the slice function to the status returned to our caller.
+		if(status.type() == PipelineStatus::Success)
+			status.setType(funcStatus.type());
+		if(funcStatus.text().isEmpty() == false) {
+			if(status.text().isEmpty() == false)
+				status.setText(status.text() + QStringLiteral("\n") + funcStatus.text());
+			else
+				status.setText(funcStatus.text());
+		}
 	}
-	else {
-		statusMessage += tr("\n%n particles selected", 0, numRejected);
-		statusMessage += tr("\n%n particles unselected", 0, numKept);
 
-		ParticlePropertyObject* selProperty = outputStandardProperty(ParticleProperty::SelectionProperty);
-		OVITO_ASSERT(mask.size() == selProperty->size());
-		boost::dynamic_bitset<>::size_type i = 0;
-		for(int& s : selProperty->intRange())
-			s = mask.test(i++);
-		selProperty->changed();
-	}
-
-	return PipelineStatus(PipelineStatus::Success, statusMessage);
+	return status;
 }
 
 /******************************************************************************
 * Performs the actual rejection of particles.
 ******************************************************************************/
-size_t SliceModifier::filterParticles(boost::dynamic_bitset<>& mask, TimePoint time, TimeInterval& validityInterval)
+PipelineStatus SliceParticlesFunction::apply(SliceModifier* modifier, TimePoint time, const Plane3& plane, FloatType sliceWidth)
 {
+	QString statusMessage = tr("%n input particles", 0, modifier->inputParticleCount());
+
+	boost::dynamic_bitset<> mask(modifier->inputParticleCount());
+
 	// Get the required input properties.
-	ParticlePropertyObject* const posProperty = expectStandardProperty(ParticleProperty::PositionProperty);
-	ParticlePropertyObject* const selProperty = applyToSelection() ? inputStandardProperty(ParticleProperty::SelectionProperty) : nullptr;
+	ParticlePropertyObject* const posProperty = modifier->expectStandardProperty(ParticleProperty::PositionProperty);
+	ParticlePropertyObject* const selProperty = modifier->applyToSelection() ? modifier->inputStandardProperty(ParticleProperty::SelectionProperty) : nullptr;
 	OVITO_ASSERT(posProperty->size() == mask.size());
 	OVITO_ASSERT(!selProperty || selProperty->size() == mask.size());
 
-	FloatType sliceWidth = 0;
-	if(_widthCtrl) sliceWidth = _widthCtrl->getFloatValue(time, validityInterval);
-	sliceWidth *= 0.5;
+	sliceWidth *= FloatType(0.5);
 
-	Plane3 plane = slicingPlane(time, validityInterval);
-
-	size_t na = 0;
+	size_t numRejected = 0;
 	boost::dynamic_bitset<>::size_type i = 0;
 	const Point3* p = posProperty->constDataPoint3();
 	const Point3* p_end = p + posProperty->size();
@@ -175,7 +199,7 @@ size_t SliceModifier::filterParticles(boost::dynamic_bitset<>& mask, TimePoint t
 			for(; p != p_end; ++p, ++s, ++i) {
 				if(*s && plane.pointDistance(*p) > 0) {
 					mask.set(i);
-					na++;
+					numRejected++;
 				}
 				else mask.reset(i);
 			}
@@ -184,20 +208,20 @@ size_t SliceModifier::filterParticles(boost::dynamic_bitset<>& mask, TimePoint t
 			for(; p != p_end; ++p, ++i) {
 				if(plane.pointDistance(*p) > 0) {
 					mask.set(i);
-					na++;
+					numRejected++;
 				}
 				else mask.reset(i);
 			}
 		}
 	}
 	else {
-		bool invert = inverse();
+		bool invert = modifier->inverse();
 		if(selProperty) {
 			const int* s = selProperty->constDataInt();
 			for(; p != p_end; ++p, ++s, ++i) {
 				if(*s && invert == (plane.classifyPoint(*p, sliceWidth) == 0)) {
 					mask.set(i);
-					na++;
+					numRejected++;
 				}
 				else mask.reset(i);
 			}
@@ -206,13 +230,38 @@ size_t SliceModifier::filterParticles(boost::dynamic_bitset<>& mask, TimePoint t
 			for(; p != p_end; ++p, ++i) {
 				if(invert == (plane.classifyPoint(*p, sliceWidth) == 0)) {
 					mask.set(i);
-					na++;
+					numRejected++;
 				}
 				else mask.reset(i);
 			}
 		}
 	}
-	return na;
+
+	size_t numKept = modifier->inputParticleCount() - numRejected;
+
+	if(modifier->createSelection() == false) {
+
+		statusMessage += tr("\n%n particles deleted", 0, numRejected);
+		statusMessage += tr("\n%n particles remaining", 0, numKept);
+		if(numRejected == 0)
+			return PipelineStatus(PipelineStatus::Success, statusMessage);
+
+		// Delete the rejected particles.
+		modifier->deleteParticles(mask, numRejected);
+	}
+	else {
+		statusMessage += tr("\n%n particles selected", 0, numRejected);
+		statusMessage += tr("\n%n particles unselected", 0, numKept);
+
+		ParticlePropertyObject* selProperty = modifier->outputStandardProperty(ParticleProperty::SelectionProperty);
+		OVITO_ASSERT(mask.size() == selProperty->size());
+		boost::dynamic_bitset<>::size_type i = 0;
+		for(int& s : selProperty->intRange())
+			s = mask.test(i++);
+		selProperty->changed();
+	}
+
+	return PipelineStatus(PipelineStatus::Success, statusMessage);
 }
 
 /******************************************************************************
@@ -383,11 +432,13 @@ void SliceModifierEditor::createUI(const RolloutInsertionParameters& rolloutPara
 	gridlayout->addLayout(distancePUI->createFieldLayout(), 0, 1);
 
 	// Normal parameter.
+	static const QString axesNames[3] = { QStringLiteral("X"), QStringLiteral("Y"), QStringLiteral("Z") };
 	for(int i = 0; i < 3; i++) {
 		Vector3ParameterUI* normalPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SliceModifier::_normalCtrl), i);
 		normalPUI->label()->setTextFormat(Qt::RichText);
 		normalPUI->label()->setTextInteractionFlags(Qt::LinksAccessibleByMouse);
 		normalPUI->label()->setText(QStringLiteral("<a href=\"%1\">%2</a>").arg(i).arg(normalPUI->label()->text()));
+		normalPUI->label()->setToolTip(tr("Click here to align plane normal with %1 axis").arg(axesNames[i]));
 		connect(normalPUI->label(), &QLabel::linkActivated, this, &SliceModifierEditor::onXYZNormal);
 		gridlayout->addWidget(normalPUI->label(), i+1, 0);
 		gridlayout->addLayout(normalPUI->createFieldLayout(), i+1, 1);

@@ -73,13 +73,13 @@
   <simplesect xml:id="usage.modification_pipeline.input">
     <title>The input section</title>
     <para>
-      The <guilabel>Input</guilabel> section in the pipeline editor represents the data source of the modification pipeline, i.e. the external simulation file.
-      Selecting the filename entry opens a <link linkend="scene_objects.file_source">panel</link> in the area below the pipeline editor that, 
-      among other things, allows you to replace the input of the existing modification pipeline with a different file. 
+      The last section in the pipeline editor, which is labeled <guilabel>Input</guilabel>, represents the data source of the modification pipeline, i.e. the external simulation file.
+      Selecting the filename entry opens a <link linkend="scene_objects.file_source">panel</link> in the area below the pipeline editor that 
+      shows information regarding the loaded file and allows you to replace the input of the modification pipeline with data from a different file. 
     </para>
     <para>
       Depending on the contents of the loaded input file, the <guilabel>Input</guilabel> section lists additional 
-      sub-entries corresponding to various parts of the input dataset such as the simulation box and the list of 
+      sub-entries for various parts of the input dataset such as the simulation cell and the list of 
       particle types.
     </para>
   </simplesect>

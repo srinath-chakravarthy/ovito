@@ -50,6 +50,9 @@ public:
 	/// Returns the type of status stores in this object.
 	StatusType type() const { return _type; }
 
+	/// Changes the type of the status.
+	void setType(StatusType type) { _type = type; }
+
 	/// Returns a text string describing the status.
 	const QString& text() const { return _text; }
 

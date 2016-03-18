@@ -7,7 +7,7 @@
          xmlns:xlink="http://www.w3.org/1999/xlink"
          xmlns:xi="http://www.w3.org/2001/XInclude"
          xmlns:ns="http://docbook.org/ns/docbook">
-  <title>Visualize particles with non-spherical shapes</title>
+  <title>Non-spherical particles</title>
 
   <para>
      <figure>
@@ -17,7 +17,7 @@
        </imageobject></mediaobject></screenshot>
     </figure> 
      <figure>
-      <title>Box particles</title>
+      <title>Box-shaped particles</title>
       <screenshot><mediaobject><imageobject>
             <imagedata fileref="images/howtos/box_particles_example1.png" format="png" />
        </imageobject></mediaobject></screenshot>

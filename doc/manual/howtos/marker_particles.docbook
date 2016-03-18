@@ -7,7 +7,7 @@
          xmlns:xlink="http://www.w3.org/1999/xlink"
          xmlns:xi="http://www.w3.org/2001/XInclude"
          xmlns:ns="http://docbook.org/ns/docbook">
-  <title>Use marker atoms to visualize internal motion</title>
+  <title>Visualize motion with marker atoms</title>
 
   <para>
      <figure>
@@ -26,8 +26,8 @@
     <orderedlist>
     	<listitem><para>First we apply the <link linkend="particles.modifiers.slice">Slice</link> modifier   
     	at frame 0 of the simulation (the initial state) to select a stripe of atoms. 
-    	Activate the <emphasis>Select particles</emphasis> option
-    	to let the modifier create a selection (instead of deleting atoms). 
+    	Activate the modifier's <emphasis>Create selection</emphasis> option
+    	to let the modifier select the atoms instead of deleting them. 
     	</para></listitem>
 
     	<listitem><para>We then apply the <link linkend="particles.modifiers.freeze_property">Freeze property</link> 

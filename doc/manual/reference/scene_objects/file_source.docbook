@@ -16,11 +16,11 @@
        <imagedata fileref="images/scene_objects/file_source_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
     
-    This panel shows what data was loaded by OVITO and allows
-    you to change the source of the data, e.g. by picking a new external input file.  
+    This panel shows information regarding the data that was loaded by OVITO from an external file and allows
+    you to change the data source by picking a different input file.  
                 
-	The panel is automatically displayed when you first <link linkend="usage.import">import a data file</link>.
-	You can access it again later by selecting the <link linkend="usage.modification_pipeline.input">input data item</link> in the modification pipeline editor.
+	The file source panel is automatically displayed after you <link linkend="usage.import">import a data file</link>.
+	You can access it again later by selecting the <link linkend="usage.modification_pipeline.input">corresponding entry</link> in the modification pipeline editor.
   </para>
 
    <simplesect>
@@ -103,6 +103,28 @@
          
      </para>    
 
+   </simplesect>
+   
+   <simplesect>
+     <title>Animation</title>
+     <para>
+        This sub-panel contains controls that determine how the simulation frames loaded from the input file(s) are
+        mapped to OVITO's internal animation timeline. Please see the documentation of the <link linkend="usage.animation">animation system</link> for further information.
+     </para>
+   </simplesect>
+
+   <simplesect>
+     <title>Specific format settings</title>
+     <para>
+        Depending on the loaded file type, an additional panel is displayed that allows you to specify further settings.
+        In the screenshot above, for example, the <emphasis>LAMMPS dump</emphasis> panel provides additional settings
+        that controls the import of data from a LAMMPS dump file.        
+     </para>
+     <para>
+        The option <guibutton>File contains time series</guibutton> tells OVITO that the input file contains more than
+        one simulation frames. After activating this check box, OVITO scans the entire file to discover all frames
+        and displays them in the animation timeline.
+     </para>
    </simplesect>
     
 </section>

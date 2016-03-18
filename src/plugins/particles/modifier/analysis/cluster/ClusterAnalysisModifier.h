@@ -45,6 +45,12 @@ public:
 	/// \brief Sets the cutoff radius used to build the neighbor lists for the analysis.
 	void setCutoff(FloatType newCutoff) { _cutoff = newCutoff; }
 
+	/// Returns whether analysis takes only selected particles into account.
+	bool onlySelectedParticles() const { return _onlySelectedParticles; }
+
+	/// Sets whether analysis only selected particles are taken into account.
+	void setOnlySelectedParticles(bool onlySelected) { _onlySelectedParticles = onlySelected; }
+
 	/// Returns the number of clusters found during the last successful evaluation of the modifier.
 	size_t clusterCount() const { return _numClusters; }
 
@@ -70,9 +76,10 @@ private:
 	public:
 
 		/// Constructor.
-		ClusterAnalysisEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, FloatType cutoff) :
+		ClusterAnalysisEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, FloatType cutoff, ParticleProperty* selection) :
 			ComputeEngine(validityInterval),
 			_positions(positions), _simCell(simCell), _cutoff(cutoff),
+			_selection(selection),
 			_particleClusters(new ParticleProperty(positions->size(), ParticleProperty::ClusterProperty, 0, false)) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
@@ -90,6 +97,9 @@ private:
 		/// Returns the cutoff radius.
 		FloatType cutoff() const { return _cutoff; }
 
+		/// Returns the property storage that contains the particle selection (optional).
+		ParticleProperty* selection() const { return _selection.data(); }
+
 		/// Returns the number of clusters.
 		size_t numClusters() const { return _numClusters; }
 
@@ -99,6 +109,7 @@ private:
 		SimulationCell _simCell;
 		size_t _numClusters;
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
+		QExplicitlySharedDataPointer<ParticleProperty> _selection;
 		QExplicitlySharedDataPointer<ParticleProperty> _particleClusters;
 	};
 
@@ -107,6 +118,9 @@ private:
 
 	/// Controls the cutoff radius for the neighbor lists.
 	PropertyField<FloatType> _cutoff;
+
+	/// Controls whether analysis should take into account only selected particles.
+	PropertyField<bool> _onlySelectedParticles;
 
 	/// The number of clusters identified during the last evaluation of the modifier.
 	size_t _numClusters;
@@ -120,6 +134,7 @@ private:
 	Q_CLASSINFO("ModifierCategory", "Analysis");
 
 	DECLARE_PROPERTY_FIELD(_cutoff);
+	DECLARE_PROPERTY_FIELD(_onlySelectedParticles);
 };
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)

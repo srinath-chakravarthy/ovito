@@ -23,159 +23,54 @@
 #define __OVITO_SLICE_SURFACE_MODIFIER_H
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <core/animation/controller/Controller.h>
-#include <core/scene/pipeline/Modifier.h>
+#include <plugins/particles/modifier/modify/SliceModifier.h>
+#include <plugins/particles/objects/SurfaceMesh.h>
+#include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
+#include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 /**
- * \brief This modifier cuts surface meshes.
+ * \brief Slice function that operates on surface meshes.
  */
-class OVITO_CRYSTALANALYSIS_EXPORT SliceSurfaceModifier : public Modifier
+class OVITO_CRYSTALANALYSIS_EXPORT SliceSurfaceFunction : public SliceModifierFunction
 {
 public:
 
 	/// Constructor.
-	Q_INVOKABLE SliceSurfaceModifier(DataSet* dataset);
+	Q_INVOKABLE SliceSurfaceFunction(DataSet* dataset) : SliceModifierFunction(dataset) {}
 
-	/// Asks the modifier for its validity interval at the given time.
-	virtual TimeInterval modifierValidity(TimePoint time) override;
+	/// \brief Applies a slice operation to a data object.
+	virtual PipelineStatus apply(SliceModifier* modifier, TimePoint time, const Plane3& plane, FloatType sliceWidth) override;
 
-	/// Lets the modifier render itself into the viewport.
-	virtual void render(TimePoint time, ObjectNode* contextNode, ModifierApplication* modApp, SceneRenderer* renderer, bool renderOverlay) override;
-
-	/// Computes the bounding box of the visual representation of the modifier.
-	virtual Box3 boundingBox(TimePoint time,  ObjectNode* contextNode, ModifierApplication* modApp) override;
-
-	/// This modifies the input object.
-	virtual PipelineStatus modifyObject(TimePoint time, ModifierApplication* modApp, PipelineFlowState& state) override;
-
-	/// \brief Asks the modifier whether it can be applied to the given input data.
-	virtual bool isApplicableTo(const PipelineFlowState& input) override;
-
-	// Property access functions:
-
-	/// Returns the plane's distance from the origin.
-	FloatType distance() const { return _distanceCtrl ? _distanceCtrl->currentFloatValue() : 0.0f; }
-
-	/// Sets the plane's distance from the origin.
-	void setDistance(FloatType newDistance) { if(_distanceCtrl) _distanceCtrl->setCurrentFloatValue(newDistance); }
-
-	/// Returns the controller for the plane distance.
-	Controller* distanceController() const { return _distanceCtrl; }
-
-	/// Sets the controller for the plane distance.
-	void setDistanceController(Controller* ctrl) { _distanceCtrl = ctrl; }
-
-	/// Returns the plane's normal vector.
-	Vector3 normal() const { return _normalCtrl ? _normalCtrl->currentVector3Value() : Vector3(0,0,1); }
-
-	/// Sets the plane's distance from the origin.
-	void setNormal(const Vector3& newNormal) { if(_normalCtrl) _normalCtrl->setCurrentVector3Value(newNormal); }
-
-	/// Returns the controller for the plane normal.
-	Controller* normalController() const { return _normalCtrl; }
-
-	/// Sets the controller for the plane normal.
-	void setNormalController(Controller* ctrl) { _normalCtrl = ctrl; }
-
-	/// Returns the slice width.
-	FloatType sliceWidth() const { return _widthCtrl ? _widthCtrl->currentFloatValue() : 0.0f; }
-
-	/// Sets the slice width.
-	void setSliceWidth(FloatType newWidth) { if(_widthCtrl) _widthCtrl->setCurrentFloatValue(newWidth); }
-
-	/// Returns the controller for the slice width.
-	Controller* sliceWidthController() const { return _widthCtrl; }
-
-	/// Sets the controller for the slice width.
-	void setSliceWidthController(Controller* ctrl) { _widthCtrl = ctrl; }
-
-	/// Returns whether the plane's orientation should be flipped.
-	bool inverse() const { return _inverse; }
-
-	/// Sets whether the plane's orientation should be flipped.
-	void setInverse(bool inverse) { _inverse = inverse; }
-
-	/// Returns the slicing plane.
-	Plane3 slicingPlane(TimePoint time, TimeInterval& validityInterval);
-
-protected:
-
-	/// This virtual method is called by the system when the modifier has been inserted into a PipelineObject.
-	virtual void initializeModifier(PipelineObject* pipeline, ModifierApplication* modApp) override;
-
-	/// \brief Renders the modifier's visual representation and computes its bounding box.
-	Box3 renderVisual(TimePoint time, ObjectNode* contextNode, SceneRenderer* renderer);
-
-	/// Renders the plane in the viewport.
-	Box3 renderPlane(SceneRenderer* renderer, const Plane3& plane, const Box3& box, const ColorA& color) const;
-
-	/// Computes the intersection lines of a plane and a quad.
-	void planeQuadIntersection(const Point3 corners[8], const std::array<int,4>& quadVerts, const Plane3& plane, QVector<Point3>& vertices) const;
-
-	/// This controller stores the normal of the slicing plane.
-	ReferenceField<Controller> _normalCtrl;
-
-	/// This controller stores the distance of the slicing plane from the origin.
-	ReferenceField<Controller> _distanceCtrl;
-
-	/// Controls the slice width.
-	ReferenceField<Controller> _widthCtrl;
-
-	/// Controls whether the selection/plane orientation should be inverted.
-	PropertyField<bool> _inverse;
-
-	/// Controls whether the modifier cuts surfaces meshes.
-	PropertyField<bool> _modifySurfaces;
-
-	/// Controls whether the modifier cuts dislocation lines.
-	PropertyField<bool> _modifyDislocations;
+	/// \brief Returns whether this slice function can be applied to the given input data.
+	virtual bool isApplicableTo(const PipelineFlowState& input) override {
+		return (input.findObject<SurfaceMesh>() != nullptr) || (input.findObject<PartitionMesh>() != nullptr);
+	}
 
 private:
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	Q_CLASSINFO("DisplayName", "Slice surfaces and dislocations");
-	Q_CLASSINFO("ModifierCategory", "Modification");
-
-	DECLARE_REFERENCE_FIELD(_normalCtrl);
-	DECLARE_REFERENCE_FIELD(_distanceCtrl);
-	DECLARE_REFERENCE_FIELD(_widthCtrl);
-	DECLARE_PROPERTY_FIELD(_inverse);
-	DECLARE_PROPERTY_FIELD(_modifySurfaces);
-	DECLARE_PROPERTY_FIELD(_modifyDislocations);
 };
 
 /**
- * A properties editor for the SliceSurfaceModifier class.
+ * \brief Slice function that operates on dislocation lines.
  */
-class SliceSurfaceModifierEditor : public PropertiesEditor
+class OVITO_CRYSTALANALYSIS_EXPORT SliceDislocationsFunction : public SliceModifierFunction
 {
 public:
 
-	/// Default constructor.
-	Q_INVOKABLE SliceSurfaceModifierEditor() {}
+	/// Constructor.
+	Q_INVOKABLE SliceDislocationsFunction(DataSet* dataset) : SliceModifierFunction(dataset) {}
 
-protected:
+	/// \brief Applies a slice operation to a data object.
+	virtual PipelineStatus apply(SliceModifier* modifier, TimePoint time, const Plane3& plane, FloatType sliceWidth) override;
 
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-protected Q_SLOTS:
-
-	/// Aligns the slicing plane to the viewing direction.
-	void onAlignPlaneToView();
-
-	/// Aligns the current viewing direction to the slicing plane.
-	void onAlignViewToPlane();
-
-	/// Aligns the normal of the slicing plane with the X, Y, or Z axis.
-	void onXYZNormal(const QString& link);
-
-	/// Moves the plane to the center of the simulation box.
-	void onCenterOfBox();
+	/// \brief Returns whether this slice function can be applied to the given input data.
+	virtual bool isApplicableTo(const PipelineFlowState& input) override {
+		return (input.findObject<DislocationNetworkObject>() != nullptr);
+	}
 
 private:
 
