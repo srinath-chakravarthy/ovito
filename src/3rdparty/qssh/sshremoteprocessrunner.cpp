@@ -1,32 +1,32 @@
-/**************************************************************************
+/****************************************************************************
 **
-** This file is part of Qt Creator
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing
 **
-** Copyright (c) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** This file is part of Qt Creator.
 **
-** Contact: http://www.qt-project.org/
-**
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company.  For licensing terms and
+** conditions see http://www.qt.io/terms-conditions.  For further information
+** use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
-**
-** This file may be used under the terms of the GNU Lesser General Public
-** License version 2.1 as published by the Free Software Foundation and
-** appearing in the file LICENSE.LGPL included in the packaging of this file.
-** Please review the following information to ensure the GNU Lesser General
-** Public License version 2.1 requirements will be met:
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file.  Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Nokia gives you certain additional
-** rights. These rights are described in the Nokia Qt LGPL Exception
+** In addition, as a special exception, The Qt Company gives you certain additional
+** rights.  These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
-** Other Usage
-**
-** Alternatively, this file may be used in accordance with the terms and
-** conditions contained in a signed written agreement between you and Nokia.
-**
-**
-**************************************************************************/
+****************************************************************************/
 
 #include "sshremoteprocessrunner.h"
 
@@ -37,7 +37,8 @@
 /*!
     \class QSsh::SshRemoteProcessRunner
 
-    \brief Convenience class for running a remote process over an SSH connection.
+    \brief The SshRemoteProcessRunner class is a convenience class for
+    running a remote process over an SSH connection.
 */
 
 namespace QSsh {
@@ -111,14 +112,15 @@ void SshRemoteProcessRunner::runInternal(const QByteArray &command,
     d->m_exitSignal = SshRemoteProcess::NoSignal;
     d->m_exitCode = -1;
     d->m_command = command;
-    d->m_connection = SshConnectionManager::instance().acquireConnection(sshParams);
-    connect(d->m_connection, SIGNAL(error(QSsh::SshError)),
-        SLOT(handleConnectionError(QSsh::SshError)));
-    connect(d->m_connection, SIGNAL(disconnected()), SLOT(handleDisconnected()));
+    d->m_connection = QSsh::acquireConnection(sshParams);
+    connect(d->m_connection, &SshConnection::error,
+            this, &SshRemoteProcessRunner::handleConnectionError);
+    connect(d->m_connection, &SshConnection::disconnected,
+            this, &SshRemoteProcessRunner::handleDisconnected);
     if (d->m_connection->state() == SshConnection::Connected) {
         handleConnected();
     } else {
-        connect(d->m_connection, SIGNAL(connected()), SLOT(handleConnected()));
+        connect(d->m_connection, &SshConnection::connected, this, &SshRemoteProcessRunner::handleConnected);
         if (d->m_connection->state() == SshConnection::Unconnected)
             d->m_connection->connectToHost();
     }
@@ -144,7 +146,7 @@ void SshRemoteProcessRunner::handleConnectionError(QSsh::SshError error)
     d->m_lastConnectionError = error;
     d->m_lastConnectionErrorString = d->m_connection->errorString();
     handleDisconnected();
-    Q_EMIT connectionError();
+    emit connectionError();
 }
 
 void SshRemoteProcessRunner::handleDisconnected()
@@ -159,7 +161,7 @@ void SshRemoteProcessRunner::handleProcessStarted()
     QSSH_ASSERT_AND_RETURN(d->m_state == Connected);
 
     setState(ProcessRunning);
-    Q_EMIT processStarted();
+    emit processStarted();
 }
 
 void SshRemoteProcessRunner::handleProcessFinished(int exitStatus)
@@ -182,19 +184,19 @@ void SshRemoteProcessRunner::handleProcessFinished(int exitStatus)
     }
     d->m_processErrorString = d->m_process->errorString();
     setState(Inactive);
-    Q_EMIT processClosed(exitStatus);
+    emit processClosed(exitStatus);
 }
 
 void SshRemoteProcessRunner::handleStdout()
 {
     d->m_stdout += d->m_process->readAllStandardOutput();
-    Q_EMIT readyReadStandardOutput();
+    emit readyReadStandardOutput();
 }
 
 void SshRemoteProcessRunner::handleStderr()
 {
     d->m_stderr += d->m_process->readAllStandardError();
-    Q_EMIT readyReadStandardError();
+    emit readyReadStandardError();
 }
 
 void SshRemoteProcessRunner::setState(int newState)
@@ -211,7 +213,7 @@ void SshRemoteProcessRunner::setState(int newState)
         }
         if (d->m_connection) {
             disconnect(d->m_connection, 0, this, 0);
-            SshConnectionManager::instance().releaseConnection(d->m_connection);
+            QSsh::releaseConnection(d->m_connection);
             d->m_connection = 0;
         }
     }

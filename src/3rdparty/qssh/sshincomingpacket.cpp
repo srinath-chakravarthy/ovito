@@ -1,35 +1,37 @@
-/**************************************************************************
+/****************************************************************************
 **
-** This file is part of Qt Creator
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing
 **
-** Copyright (c) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** This file is part of Qt Creator.
 **
-** Contact: http://www.qt-project.org/
-**
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company.  For licensing terms and
+** conditions see http://www.qt.io/terms-conditions.  For further information
+** use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
-**
-** This file may be used under the terms of the GNU Lesser General Public
-** License version 2.1 as published by the Free Software Foundation and
-** appearing in the file LICENSE.LGPL included in the packaging of this file.
-** Please review the following information to ensure the GNU Lesser General
-** Public License version 2.1 requirements will be met:
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file.  Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Nokia gives you certain additional
-** rights. These rights are described in the Nokia Qt LGPL Exception
+** In addition, as a special exception, The Qt Company gives you certain additional
+** rights.  These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
-** Other Usage
-**
-** Alternatively, this file may be used in accordance with the terms and
-** conditions contained in a signed written agreement between you and Nokia.
-**
-**
-**************************************************************************/
+****************************************************************************/
 
 #include "sshincomingpacket_p.h"
 
+#include "ssh_global.h"
+#include "sshbotanconversions_p.h"
 #include "sshcapabilities_p.h"
 
 namespace QSsh {
@@ -161,49 +163,86 @@ SshKeyExchangeInit SshIncomingPacket::extractKeyExchangeInitData() const
             = SshPacketParser::asNameList(m_data, &offset);
         exchangeData.firstKexPacketFollows
             = SshPacketParser::asBool(m_data, &offset);
-    } catch (SshPacketParseException &) {
+    } catch (const SshPacketParseException &) {
         throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_KEY_EXCHANGE_FAILED,
             "Key exchange failed: Server sent invalid SSH_MSG_KEXINIT packet.");
     }
     return exchangeData;
 }
 
-SshKeyExchangeReply SshIncomingPacket::extractKeyExchangeReply(const QByteArray &pubKeyAlgo) const
+static void getHostKeySpecificReplyData(SshKeyExchangeReply &replyData,
+                                        const QByteArray &hostKeyAlgo, const QByteArray &input)
+{
+    quint32 offset = 0;
+    if (hostKeyAlgo == SshCapabilities::PubKeyDss || hostKeyAlgo == SshCapabilities::PubKeyRsa) {
+        // DSS: p and q, RSA: e and n
+        replyData.hostKeyParameters << SshPacketParser::asBigInt(input, &offset);
+        replyData.hostKeyParameters << SshPacketParser::asBigInt(input, &offset);
+
+        // g and y
+        if (hostKeyAlgo == SshCapabilities::PubKeyDss) {
+            replyData.hostKeyParameters << SshPacketParser::asBigInt(input, &offset);
+            replyData.hostKeyParameters << SshPacketParser::asBigInt(input, &offset);
+        }
+    } else {
+        QSSH_ASSERT_AND_RETURN(hostKeyAlgo.startsWith(SshCapabilities::PubKeyEcdsaPrefix));
+        if (SshPacketParser::asString(input, &offset)
+                != hostKeyAlgo.mid(11)) { // Without "ecdsa-sha2-" prefix.
+            throw SshPacketParseException();
+        }
+        replyData.q = SshPacketParser::asString(input, &offset);
+    }
+}
+
+static QByteArray &padToWidth(QByteArray &data, int targetWidth)
+{
+    return data.prepend(QByteArray(targetWidth - data.count(), 0));
+}
+
+SshKeyExchangeReply SshIncomingPacket::extractKeyExchangeReply(const QByteArray &kexAlgo,
+                                                               const QByteArray &hostKeyAlgo) const
 {
     Q_ASSERT(isComplete());
     Q_ASSERT(type() == SSH_MSG_KEXDH_REPLY);
 
     try {
         SshKeyExchangeReply replyData;
-        quint32 offset = TypeOffset + 1;
-        const quint32 k_sLength
-            = SshPacketParser::asUint32(m_data, &offset);
-        if (offset + k_sLength > currentDataSize())
+        quint32 topLevelOffset = TypeOffset + 1;
+        replyData.k_s = SshPacketParser::asString(m_data, &topLevelOffset);
+        quint32 k_sOffset = 0;
+        if (SshPacketParser::asString(replyData.k_s, &k_sOffset) != hostKeyAlgo)
             throw SshPacketParseException();
-        replyData.k_s = m_data.mid(offset - 4, k_sLength + 4);
-        if (SshPacketParser::asString(m_data, &offset) != pubKeyAlgo)
-            throw SshPacketParseException();
+        getHostKeySpecificReplyData(replyData, hostKeyAlgo, replyData.k_s.mid(k_sOffset));
 
-        // DSS: p and q, RSA: e and n
-        replyData.parameters << SshPacketParser::asBigInt(m_data, &offset);
-        replyData.parameters << SshPacketParser::asBigInt(m_data, &offset);
-
-        // g and y
-        if (pubKeyAlgo == SshCapabilities::PubKeyDss) {
-            replyData.parameters << SshPacketParser::asBigInt(m_data, &offset);
-            replyData.parameters << SshPacketParser::asBigInt(m_data, &offset);
+        if (kexAlgo == SshCapabilities::DiffieHellmanGroup1Sha1) {
+            replyData.f = SshPacketParser::asBigInt(m_data, &topLevelOffset);
+        } else {
+            QSSH_ASSERT_AND_RETURN_VALUE(kexAlgo.startsWith(SshCapabilities::EcdhKexNamePrefix),
+                                         SshKeyExchangeReply());
+            replyData.q_s = SshPacketParser::asString(m_data, &topLevelOffset);
         }
-
-        replyData.f = SshPacketParser::asBigInt(m_data, &offset);
-        offset += 4;
-        if (SshPacketParser::asString(m_data, &offset) != pubKeyAlgo)
+        const QByteArray fullSignature = SshPacketParser::asString(m_data, &topLevelOffset);
+        quint32 sigOffset = 0;
+        if (SshPacketParser::asString(fullSignature, &sigOffset) != hostKeyAlgo)
             throw SshPacketParseException();
-        replyData.signatureBlob = SshPacketParser::asString(m_data, &offset);
+        replyData.signatureBlob = SshPacketParser::asString(fullSignature, &sigOffset);
+        if (hostKeyAlgo.startsWith(SshCapabilities::PubKeyEcdsaPrefix)) {
+            // Botan's PK_Verifier wants the signature in this format.
+            quint32 blobOffset = 0;
+            const Botan::BigInt r = SshPacketParser::asBigInt(replyData.signatureBlob, &blobOffset);
+            const Botan::BigInt s = SshPacketParser::asBigInt(replyData.signatureBlob, &blobOffset);
+            const int width = SshCapabilities::ecdsaIntegerWidthInBytes(hostKeyAlgo);
+            QByteArray encodedR = convertByteArray(Botan::BigInt::encode(r));
+            replyData.signatureBlob = padToWidth(encodedR, width);
+            QByteArray encodedS = convertByteArray(Botan::BigInt::encode(s));
+            replyData.signatureBlob += padToWidth(encodedS, width);
+        }
+        replyData.k_s.prepend(m_data.mid(TypeOffset + 1, 4));
         return replyData;
-    } catch (SshPacketParseException &) {
+    } catch (const SshPacketParseException &) {
         throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_KEY_EXCHANGE_FAILED,
             "Key exchange failed: "
-            "Server sent invalid SSH_MSG_KEXDH_REPLY packet.");
+            "Server sent invalid key exchange reply packet.");
     }
 }
 
@@ -218,7 +257,7 @@ SshDisconnect SshIncomingPacket::extractDisconnect() const
         msg.reasonCode = SshPacketParser::asUint32(m_data, &offset);
         msg.description = SshPacketParser::asUserString(m_data, &offset);
         msg.language = SshPacketParser::asString(m_data, &offset);
-    } catch (SshPacketParseException &) {
+    } catch (const SshPacketParseException &) {
         throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_PROTOCOL_ERROR,
             "Invalid SSH_MSG_DISCONNECT.");
     }
@@ -237,9 +276,34 @@ SshUserAuthBanner SshIncomingPacket::extractUserAuthBanner() const
         msg.message = SshPacketParser::asUserString(m_data, &offset);
         msg.language = SshPacketParser::asString(m_data, &offset);
         return msg;
-    } catch (SshPacketParseException &) {
+    } catch (const SshPacketParseException &) {
         throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_PROTOCOL_ERROR,
             "Invalid SSH_MSG_USERAUTH_BANNER.");
+    }
+}
+
+SshUserAuthInfoRequestPacket SshIncomingPacket::extractUserAuthInfoRequest() const
+{
+    Q_ASSERT(isComplete());
+    Q_ASSERT(type() == SSH_MSG_USERAUTH_INFO_REQUEST);
+
+    try {
+        SshUserAuthInfoRequestPacket msg;
+        quint32 offset = TypeOffset + 1;
+        msg.name = SshPacketParser::asUserString(m_data, &offset);
+        msg.instruction = SshPacketParser::asUserString(m_data, &offset);
+        msg.languageTag = SshPacketParser::asString(m_data, &offset);
+        const quint32 promptCount = SshPacketParser::asUint32(m_data, &offset);
+        msg.prompts.reserve(promptCount);
+        msg.echos.reserve(promptCount);
+        for (quint32 i = 0; i < promptCount; ++i) {
+            msg.prompts << SshPacketParser::asUserString(m_data, &offset);
+            msg.echos << SshPacketParser::asBool(m_data, &offset);
+        }
+        return msg;
+    } catch (const SshPacketParseException &) {
+        throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_PROTOCOL_ERROR,
+            "Invalid SSH_MSG_USERAUTH_INFO_REQUEST.");
     }
 }
 
@@ -255,7 +319,7 @@ SshDebug SshIncomingPacket::extractDebug() const
         msg.message = SshPacketParser::asUserString(m_data, &offset);
         msg.language = SshPacketParser::asString(m_data, &offset);
         return msg;
-    } catch (SshPacketParseException &) {
+    } catch (const SshPacketParseException &) {
         throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_PROTOCOL_ERROR,
             "Invalid SSH_MSG_DEBUG.");
     }
@@ -271,7 +335,7 @@ SshUnimplemented SshIncomingPacket::extractUnimplemented() const
         quint32 offset = TypeOffset + 1;
         msg.invalidMsgSeqNr = SshPacketParser::asUint32(m_data, &offset);
         return msg;
-    } catch (SshPacketParseException &) {
+    } catch (const SshPacketParseException &) {
         throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_PROTOCOL_ERROR,
             "Invalid SSH_MSG_UNIMPLEMENTED.");
     }
@@ -289,7 +353,7 @@ SshChannelOpenFailure SshIncomingPacket::extractChannelOpenFailure() const
         openFailure.reasonCode = SshPacketParser::asUint32(m_data, &offset);
         openFailure.reasonString = QString::fromLocal8Bit(SshPacketParser::asString(m_data, &offset));
         openFailure.language = SshPacketParser::asString(m_data, &offset);
-    } catch (SshPacketParseException &) {
+    } catch (const SshPacketParseException &) {
         throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_PROTOCOL_ERROR,
             "Server sent invalid SSH_MSG_CHANNEL_OPEN_FAILURE packet.");
     }
@@ -308,7 +372,7 @@ SshChannelOpenConfirmation SshIncomingPacket::extractChannelOpenConfirmation() c
         confirmation.remoteChannel = SshPacketParser::asUint32(m_data, &offset);
         confirmation.remoteWindowSize = SshPacketParser::asUint32(m_data, &offset);
         confirmation.remoteMaxPacketSize = SshPacketParser::asUint32(m_data, &offset);
-    } catch (SshPacketParseException &) {
+    } catch (const SshPacketParseException &) {
         throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_PROTOCOL_ERROR,
             "Server sent invalid SSH_MSG_CHANNEL_OPEN_CONFIRMATION packet.");
     }
@@ -325,7 +389,7 @@ SshChannelWindowAdjust SshIncomingPacket::extractWindowAdjust() const
         quint32 offset = TypeOffset + 1;
         adjust.localChannel = SshPacketParser::asUint32(m_data, &offset);
         adjust.bytesToAdd = SshPacketParser::asUint32(m_data, &offset);
-    } catch (SshPacketParseException &) {
+    } catch (const SshPacketParseException &) {
         throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_PROTOCOL_ERROR,
             "Invalid SSH_MSG_CHANNEL_WINDOW_ADJUST packet.");
     }
@@ -342,7 +406,7 @@ SshChannelData SshIncomingPacket::extractChannelData() const
         quint32 offset = TypeOffset + 1;
         data.localChannel = SshPacketParser::asUint32(m_data, &offset);
         data.data = SshPacketParser::asString(m_data, &offset);
-    } catch (SshPacketParseException &) {
+    } catch (const SshPacketParseException &) {
         throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_PROTOCOL_ERROR,
             "Invalid SSH_MSG_CHANNEL_DATA packet.");
     }
@@ -360,7 +424,7 @@ SshChannelExtendedData SshIncomingPacket::extractChannelExtendedData() const
         data.localChannel = SshPacketParser::asUint32(m_data, &offset);
         data.type = SshPacketParser::asUint32(m_data, &offset);
         data.data = SshPacketParser::asString(m_data, &offset);
-    } catch (SshPacketParseException &) {
+    } catch (const SshPacketParseException &) {
         throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_PROTOCOL_ERROR,
             "Invalid SSH_MSG_CHANNEL_EXTENDED_DATA packet.");
     }
@@ -382,7 +446,7 @@ SshChannelExitStatus SshIncomingPacket::extractChannelExitStatus() const
         if (SshPacketParser::asBool(m_data, &offset))
             throw SshPacketParseException();
         exitStatus.exitStatus = SshPacketParser::asUint32(m_data, &offset);
-    } catch (SshPacketParseException &) {
+    } catch (const SshPacketParseException &) {
         throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_PROTOCOL_ERROR,
             "Invalid exit-status packet.");
     }
@@ -407,7 +471,7 @@ SshChannelExitSignal SshIncomingPacket::extractChannelExitSignal() const
         exitSignal.coreDumped = SshPacketParser::asBool(m_data, &offset);
         exitSignal.error = SshPacketParser::asUserString(m_data, &offset);
         exitSignal.language = SshPacketParser::asString(m_data, &offset);
-    } catch (SshPacketParseException &) {
+    } catch (const SshPacketParseException &) {
         throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_PROTOCOL_ERROR,
             "Invalid exit-signal packet.");
     }
@@ -421,7 +485,7 @@ quint32 SshIncomingPacket::extractRecipientChannel() const
     try {
         quint32 offset = TypeOffset + 1;
         return SshPacketParser::asUint32(m_data, &offset);
-    } catch (SshPacketParseException &) {
+    } catch (const SshPacketParseException &) {
         throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_PROTOCOL_ERROR,
             "Server sent invalid packet.");
     }
@@ -436,7 +500,7 @@ QByteArray SshIncomingPacket::extractChannelRequestType() const
         quint32 offset = TypeOffset + 1;
         SshPacketParser::asUint32(m_data, &offset);
         return SshPacketParser::asString(m_data, &offset);
-    } catch (SshPacketParseException &) {
+    } catch (const SshPacketParseException &) {
         throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_PROTOCOL_ERROR,
             "Invalid SSH_MSG_CHANNEL_REQUEST packet.");
     }

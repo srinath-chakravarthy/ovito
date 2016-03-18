@@ -44,6 +44,9 @@ ADD_LIBRARY(QSsh ${OVITO_DEFAULT_LIBRARY_TYPE}
 	sshremoteprocess.cpp
 	sshremoteprocessrunner.cpp
 	sshsendfacility.cpp
+	sshhostkeydatabase.cpp
+	sshdirecttcpiptunnel.cpp
+	sshinit.cpp
 )
 
 # Export symbols when building a Windows DLL.

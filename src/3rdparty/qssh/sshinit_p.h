@@ -27,25 +27,11 @@
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ****************************************************************************/
-#ifndef KEYPASSWORDRETRIEVER_H
-#define KEYPASSWORDRETRIEVER_H
-
-#include <botan/botan.h>
-#include <botan/ui.h>
-
-#include <string>
 
 namespace QSsh {
 namespace Internal {
 
-class SshKeyPasswordRetriever : public Botan::User_Interface
-{
-public:
-    std::string get_passphrase(const std::string &what, const std::string &source,
-        UI_Result &result) const;
-};
+void initSsh();
 
 } // namespace Internal
 } // namespace QSsh
-
-#endif // KEYPASSWORDRETRIEVER_H

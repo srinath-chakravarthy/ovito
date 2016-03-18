@@ -1,32 +1,32 @@
-/**************************************************************************
+/****************************************************************************
 **
-** This file is part of Qt Creator
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing
 **
-** Copyright (c) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** This file is part of Qt Creator.
 **
-** Contact: http://www.qt-project.org/
-**
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company.  For licensing terms and
+** conditions see http://www.qt.io/terms-conditions.  For further information
+** use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
-**
-** This file may be used under the terms of the GNU Lesser General Public
-** License version 2.1 as published by the Free Software Foundation and
-** appearing in the file LICENSE.LGPL included in the packaging of this file.
-** Please review the following information to ensure the GNU Lesser General
-** Public License version 2.1 requirements will be met:
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file.  Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Nokia gives you certain additional
-** rights. These rights are described in the Nokia Qt LGPL Exception
+** In addition, as a special exception, The Qt Company gives you certain additional
+** rights.  These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
-** Other Usage
-**
-** Alternatively, this file may be used in accordance with the terms and
-** conditions contained in a signed written agreement between you and Nokia.
-**
-**
-**************************************************************************/
+****************************************************************************/
 
 #include "sshconnectionmanager.h"
 
@@ -38,33 +38,42 @@
 #include <QMutexLocker>
 #include <QObject>
 #include <QThread>
+#include <QTimer>
 
 namespace QSsh {
 namespace Internal {
+class UnaquiredConnection {
+public:
+    UnaquiredConnection(SshConnection *conn) : connection(conn), scheduledForRemoval(false) {}
 
-class SshConnectionManagerPrivate : public QObject
+    SshConnection *connection;
+    bool scheduledForRemoval;
+};
+bool operator==(const UnaquiredConnection &c1, const UnaquiredConnection &c2) {
+    return c1.connection == c2.connection;
+}
+bool operator!=(const UnaquiredConnection &c1, const UnaquiredConnection &c2) {
+    return !(c1 == c2);
+}
+
+class SshConnectionManager : public QObject
 {
     Q_OBJECT
 
 public:
-
-    static QMutex instanceMutex;
-    static SshConnectionManager &instance()
-    {
-        static SshConnectionManager manager;
-        return manager;
-    }
-
-    SshConnectionManagerPrivate()
+    SshConnectionManager()
     {
         moveToThread(QCoreApplication::instance()->thread());
+        connect(&m_removalTimer, &QTimer::timeout,
+                this, &SshConnectionManager::removeInactiveConnections);
+        m_removalTimer.start(150000); // For a total timeout of five minutes.
     }
 
-    ~SshConnectionManagerPrivate()
+    ~SshConnectionManager()
     {
-        Q_FOREACH (SshConnection * const connection, m_unacquiredConnections) {
-            disconnect(connection, 0, this, 0);
-            delete connection;
+        foreach (const UnaquiredConnection &connection, m_unacquiredConnections) {
+            disconnect(connection.connection, 0, this, 0);
+            delete connection.connection;
         }
 
         QSSH_ASSERT(m_acquiredConnections.isEmpty());
@@ -76,22 +85,23 @@ public:
         QMutexLocker locker(&m_listMutex);
 
         // Check in-use connections:
-        Q_FOREACH (SshConnection * const connection, m_acquiredConnections) {
+        foreach (SshConnection * const connection, m_acquiredConnections) {
             if (connection->connectionParameters() != sshParams)
                 continue;
 
             if (connection->thread() != QThread::currentThread())
-                break;
+                continue;
 
             if (m_deprecatedConnections.contains(connection)) // we were asked to no longer use this one...
-                break;
+                continue;
 
             m_acquiredConnections.append(connection);
             return connection;
         }
 
-        // Checked cached open connections:
-        Q_FOREACH (SshConnection * const connection, m_unacquiredConnections) {
+        // Check cached open connections:
+        foreach (const UnaquiredConnection &c, m_unacquiredConnections) {
+            SshConnection * const connection = c.connection;
             if (connection->state() != SshConnection::Connected
                     || connection->connectionParameters() != sshParams)
                 continue;
@@ -105,14 +115,15 @@ public:
                     Q_ARG(QObject *, QThread::currentThread()));
             }
 
-            m_unacquiredConnections.removeOne(connection);
+            m_unacquiredConnections.removeOne(c);
             m_acquiredConnections.append(connection);
             return connection;
         }
 
         // create a new connection:
         SshConnection * const connection = new SshConnection(sshParams);
-        connect(connection, SIGNAL(disconnected()), this, SLOT(cleanup()));
+        connect(connection, &SshConnection::disconnected,
+                this, &SshConnectionManager::cleanup);
         m_acquiredConnections.append(connection);
 
         return connection;
@@ -133,24 +144,21 @@ public:
                 || connection->state() != SshConnection::Connected) {
             doDelete = true;
         } else {
-            QSSH_ASSERT_AND_RETURN(!m_unacquiredConnections.contains(connection));
+            QSSH_ASSERT_AND_RETURN(!m_unacquiredConnections.contains(UnaquiredConnection(connection)));
 
             // It can happen that two or more connections with the same parameters were acquired
             // if the clients were running in different threads. Only keep one of them in
             // such a case.
             bool haveConnection = false;
-            Q_FOREACH (SshConnection * const conn, m_unacquiredConnections) {
-                if (conn->connectionParameters() == connection->connectionParameters()) {
+            foreach (const UnaquiredConnection &c, m_unacquiredConnections) {
+                if (c.connection->connectionParameters() == connection->connectionParameters()) {
                     haveConnection = true;
                     break;
                 }
             }
             if (!haveConnection) {
-                // Let's nag clients who release connections with open channels.
-                const int channelCount = connection->closeAllChannels();
-                //QSSH_ASSERT(channelCount == 0);
-
-                m_unacquiredConnections.append(connection);
+                connection->closeAllChannels(); // Clean up after neglectful clients.
+                m_unacquiredConnections.append(UnaquiredConnection(connection));
             } else {
                 doDelete = true;
             }
@@ -168,7 +176,7 @@ public:
         QMutexLocker locker(&m_listMutex);
 
         for (int i = 0; i < m_unacquiredConnections.count(); ++i) {
-            SshConnection * const connection = m_unacquiredConnections.at(i);
+            SshConnection * const connection = m_unacquiredConnections.at(i).connection;
             if (connection->connectionParameters() == sshParams) {
                 disconnect(connection, 0, this, 0);
                 delete connection;
@@ -177,7 +185,7 @@ public:
             }
         }
 
-        Q_FOREACH (SshConnection * const connection, m_acquiredConnections) {
+        foreach (SshConnection * const connection, m_acquiredConnections) {
             if (connection->connectionParameters() == sshParams) {
                 if (!m_deprecatedConnections.contains(connection))
                     m_deprecatedConnections.append(connection);
@@ -191,7 +199,7 @@ private:
         connection->moveToThread(qobject_cast<QThread *>(threadObj));
     }
 
-private Q_SLOTS:
+private slots:
     void cleanup()
     {
         QMutexLocker locker(&m_listMutex);
@@ -200,9 +208,24 @@ private Q_SLOTS:
         if (!currentConnection)
             return;
 
-        if (m_unacquiredConnections.removeOne(currentConnection)) {
+        if (m_unacquiredConnections.removeOne(UnaquiredConnection(currentConnection))) {
             disconnect(currentConnection, 0, this, 0);
             currentConnection->deleteLater();
+        }
+    }
+
+    void removeInactiveConnections()
+    {
+        QMutexLocker locker(&m_listMutex);
+        for (int i = m_unacquiredConnections.count() - 1; i >= 0; --i) {
+            UnaquiredConnection &c = m_unacquiredConnections[i];
+            if (c.scheduledForRemoval) {
+                disconnect(c.connection, 0, this, 0);
+                c.connection->deleteLater();
+                m_unacquiredConnections.removeAt(i);
+            } else {
+                c.scheduledForRemoval = true;
+            }
         }
     }
 
@@ -210,47 +233,42 @@ private:
     // We expect the number of concurrently open connections to be small.
     // If that turns out to not be the case, we can still use a data
     // structure with faster access.
-    QList<SshConnection *> m_unacquiredConnections;
+    QList<UnaquiredConnection> m_unacquiredConnections;
 
     // Can contain the same connection more than once; this acts as a reference count.
     QList<SshConnection *> m_acquiredConnections;
 
     QList<SshConnection *> m_deprecatedConnections;
     QMutex m_listMutex;
+    QTimer m_removalTimer;
 };
-
-QMutex SshConnectionManagerPrivate::instanceMutex;
 
 } // namespace Internal
 
-SshConnectionManager &SshConnectionManager::instance()
+static QMutex instanceMutex;
+
+static Internal::SshConnectionManager &instance()
 {
-    QMutexLocker locker(&Internal::SshConnectionManagerPrivate::instanceMutex);
-    return Internal::SshConnectionManagerPrivate::instance();
+    static Internal::SshConnectionManager manager;
+    return manager;
 }
 
-SshConnectionManager::SshConnectionManager()
-    : d(new Internal::SshConnectionManagerPrivate)
+SshConnection *acquireConnection(const SshConnectionParameters &sshParams)
 {
+    QMutexLocker locker(&instanceMutex);
+    return instance().acquireConnection(sshParams);
 }
 
-SshConnectionManager::~SshConnectionManager()
+void releaseConnection(SshConnection *connection)
 {
+    QMutexLocker locker(&instanceMutex);
+    instance().releaseConnection(connection);
 }
 
-SshConnection *SshConnectionManager::acquireConnection(const SshConnectionParameters &sshParams)
+void forceNewConnection(const SshConnectionParameters &sshParams)
 {
-    return d->acquireConnection(sshParams);
-}
-
-void SshConnectionManager::releaseConnection(SshConnection *connection)
-{
-    d->releaseConnection(connection);
-}
-
-void SshConnectionManager::forceNewConnection(const SshConnectionParameters &sshParams)
-{
-    d->forceNewConnection(sshParams);
+    QMutexLocker locker(&instanceMutex);
+    instance().forceNewConnection(sshParams);
 }
 
 } // namespace QSsh

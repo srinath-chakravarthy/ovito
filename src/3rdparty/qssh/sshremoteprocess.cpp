@@ -1,36 +1,37 @@
-/**************************************************************************
+/****************************************************************************
 **
-** This file is part of Qt Creator
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing
 **
-** Copyright (c) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** This file is part of Qt Creator.
 **
-** Contact: http://www.qt-project.org/
-**
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company.  For licensing terms and
+** conditions see http://www.qt.io/terms-conditions.  For further information
+** use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
-**
-** This file may be used under the terms of the GNU Lesser General Public
-** License version 2.1 as published by the Free Software Foundation and
-** appearing in the file LICENSE.LGPL included in the packaging of this file.
-** Please review the following information to ensure the GNU Lesser General
-** Public License version 2.1 requirements will be met:
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file.  Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Nokia gives you certain additional
-** rights. These rights are described in the Nokia Qt LGPL Exception
+** In addition, as a special exception, The Qt Company gives you certain additional
+** rights.  These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
-** Other Usage
-**
-** Alternatively, this file may be used in accordance with the terms and
-** conditions contained in a signed written agreement between you and Nokia.
-**
-**
-**************************************************************************/
+****************************************************************************/
 
 #include "sshremoteprocess.h"
 #include "sshremoteprocess_p.h"
 
+#include "ssh_global.h"
 #include "sshincomingpacket_p.h"
 #include "sshsendfacility_p.h"
 
@@ -44,7 +45,8 @@
 /*!
     \class QSsh::SshRemoteProcess
 
-    \brief This class implements an SSH channel for running a remote process.
+    \brief The SshRemoteProcess class implements an SSH channel for running a
+    remote process.
 
     Objects are created via SshConnection::createRemoteProcess.
     The process is started via the start() member function.
@@ -84,9 +86,8 @@ SshRemoteProcess::SshRemoteProcess(quint32 channelId, Internal::SshSendFacility 
 
 SshRemoteProcess::~SshRemoteProcess()
 {
-    Q_ASSERT(d->channelState() == Internal::SshRemoteProcessPrivate::Inactive
-        || d->channelState() == Internal::SshRemoteProcessPrivate::CloseRequested
-        || d->channelState() == Internal::SshRemoteProcessPrivate::Closed);
+    QSSH_ASSERT(d->channelState() != Internal::AbstractSshChannel::SessionEstablished);
+    close();
     delete d;
 }
 
@@ -159,20 +160,29 @@ void SshRemoteProcess::setReadChannel(QProcess::ProcessChannel channel)
 
 void SshRemoteProcess::init()
 {
-    connect(d, SIGNAL(started()), this, SIGNAL(started()),
-        Qt::QueuedConnection);
-    connect(d, SIGNAL(readyReadStandardOutput()), this, SIGNAL(readyReadStandardOutput()),
-        Qt::QueuedConnection);
-    connect(d, SIGNAL(readyRead()), this, SIGNAL(readyRead()), Qt::QueuedConnection);
-    connect(d, SIGNAL(readyReadStandardError()), this,
-        SIGNAL(readyReadStandardError()), Qt::QueuedConnection);
-    connect(d, SIGNAL(closed(int)), this, SIGNAL(closed(int)), Qt::QueuedConnection);
+    connect(d, &Internal::SshRemoteProcessPrivate::started,
+            this, &SshRemoteProcess::started, Qt::QueuedConnection);
+    connect(d, &Internal::SshRemoteProcessPrivate::readyReadStandardOutput,
+            this, &SshRemoteProcess::readyReadStandardOutput, Qt::QueuedConnection);
+    connect(d, &Internal::SshRemoteProcessPrivate::readyRead,
+            this, &SshRemoteProcess::readyRead, Qt::QueuedConnection);
+    connect(d, &Internal::SshRemoteProcessPrivate::readyReadStandardError,
+            this, &SshRemoteProcess::readyReadStandardError, Qt::QueuedConnection);
+    connect(d, &Internal::SshRemoteProcessPrivate::closed,
+            this, &SshRemoteProcess::closed, Qt::QueuedConnection);
+    connect(d, &Internal::SshRemoteProcessPrivate::eof,
+            this, &SshRemoteProcess::readChannelFinished, Qt::QueuedConnection);
 }
 
 void SshRemoteProcess::addToEnvironment(const QByteArray &var, const QByteArray &value)
 {
     if (d->channelState() == Internal::SshRemoteProcessPrivate::Inactive)
         d->m_env << qMakePair(var, value); // Cached locally and sent on start()
+}
+
+void SshRemoteProcess::clearEnvironment()
+{
+    d->m_env.clear();
 }
 
 void SshRemoteProcess::requestTerminal(const SshPseudoTerminal &terminal)
@@ -205,8 +215,8 @@ void SshRemoteProcess::sendSignal(Signal signal)
             QSSH_ASSERT_AND_RETURN(signalString);
             d->m_sendFacility.sendChannelSignalPacket(d->remoteChannel(), signalString);
         }
-    }  catch (Botan::Exception &e) {
-        setErrorString(QString::fromUtf8(e.what()));
+    }  catch (const Botan::Exception &e) {
+        setErrorString(QString::fromLatin1(e.what()));
         d->closeChannel();
     }
 }
@@ -262,10 +272,10 @@ void SshRemoteProcessPrivate::setProcState(ProcessState newState)
 #endif
     m_procState = newState;
     if (newState == StartFailed) {
-        Q_EMIT closed(SshRemoteProcess::FailedToStart);
+        emit closed(SshRemoteProcess::FailedToStart);
     } else if (newState == Running) {
         m_wasRunning = true;
-        Q_EMIT started();
+        emit started();
     }
 }
 
@@ -278,15 +288,15 @@ void SshRemoteProcessPrivate::closeHook()
 {
     if (m_wasRunning) {
         if (m_signal != SshRemoteProcess::NoSignal)
-            Q_EMIT closed(SshRemoteProcess::CrashExit);
+            emit closed(SshRemoteProcess::CrashExit);
         else
-            Q_EMIT closed(SshRemoteProcess::NormalExit);
+            emit closed(SshRemoteProcess::NormalExit);
     }
 }
 
 void SshRemoteProcessPrivate::handleOpenSuccessInternal()
 {
-   Q_FOREACH (const EnvVar &envVar, m_env) {
+   foreach (const EnvVar &envVar, m_env) {
        m_sendFacility.sendEnvPacket(remoteChannel(), envVar.first,
            envVar.second);
    }
@@ -299,7 +309,7 @@ void SshRemoteProcessPrivate::handleOpenSuccessInternal()
    else
        m_sendFacility.sendExecPacket(remoteChannel(), m_command);
    setProcState(ExecRequested);
-   m_timeoutTimer->start(ReplyTimeout);
+   m_timeoutTimer.start(ReplyTimeout);
 }
 
 void SshRemoteProcessPrivate::handleOpenFailureInternal(const QString &reason)
@@ -314,7 +324,7 @@ void SshRemoteProcessPrivate::handleChannelSuccess()
         throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_PROTOCOL_ERROR,
             "Unexpected SSH_MSG_CHANNEL_SUCCESS message.");
     }
-    m_timeoutTimer->stop();
+    m_timeoutTimer.stop();
     setProcState(Running);
 }
 
@@ -324,7 +334,7 @@ void SshRemoteProcessPrivate::handleChannelFailure()
         throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_PROTOCOL_ERROR,
             "Unexpected SSH_MSG_CHANNEL_FAILURE message.");
     }
-    m_timeoutTimer->stop();
+    m_timeoutTimer.stop();
     setProcState(StartFailed);
     closeChannel();
 }
@@ -332,9 +342,9 @@ void SshRemoteProcessPrivate::handleChannelFailure()
 void SshRemoteProcessPrivate::handleChannelDataInternal(const QByteArray &data)
 {
     m_stdout += data;
-    Q_EMIT readyReadStandardOutput();
+    emit readyReadStandardOutput();
     if (m_readChannel == QProcess::StandardOutput)
-        Q_EMIT readyRead();
+        emit readyRead();
 }
 
 void SshRemoteProcessPrivate::handleChannelExtendedDataInternal(quint32 type,
@@ -344,9 +354,9 @@ void SshRemoteProcessPrivate::handleChannelExtendedDataInternal(quint32 type,
         qWarning("Unknown extended data type %u", type);
     } else {
         m_stderr += data;
-        Q_EMIT readyReadStandardError();
+        emit readyReadStandardError();
         if (m_readChannel == QProcess::StandardError)
-            Q_EMIT readyRead();
+            emit readyRead();
     }
 }
 
@@ -375,7 +385,7 @@ void SshRemoteProcessPrivate::handleExitSignal(const SshChannelExitSignal &signa
     }
 
     throw SshServerException(SSH_DISCONNECT_PROTOCOL_ERROR, "Invalid signal",
-        tr("Server sent invalid signal '%1'").arg(QString::fromUtf8(signal.signal)));
+        tr("Server sent invalid signal \"%1\"").arg(QString::fromUtf8(signal.signal)));
 }
 
 } // namespace Internal

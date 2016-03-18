@@ -27,25 +27,44 @@
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ****************************************************************************/
-#ifndef KEYPASSWORDRETRIEVER_H
-#define KEYPASSWORDRETRIEVER_H
 
-#include <botan/botan.h>
-#include <botan/ui.h>
+#ifndef SSHKEYCREATIONDIALOG_H
+#define SSHKEYCREATIONDIALOG_H
 
-#include <string>
+#include "ssh_global.h"
+
+#include <QDialog>
 
 namespace QSsh {
-namespace Internal {
+class SshKeyGenerator;
 
-class SshKeyPasswordRetriever : public Botan::User_Interface
+namespace Ui { class SshKeyCreationDialog; }
+
+class QSSH_EXPORT SshKeyCreationDialog : public QDialog
 {
+    Q_OBJECT
 public:
-    std::string get_passphrase(const std::string &what, const std::string &source,
-        UI_Result &result) const;
+    SshKeyCreationDialog(QWidget *parent = 0);
+    ~SshKeyCreationDialog();
+
+    QString privateKeyFilePath() const;
+    QString publicKeyFilePath() const;
+
+private slots:
+    void keyTypeChanged();
+    void generateKeys();
+    void handleBrowseButtonClicked();
+
+private:
+    void setPrivateKeyFile(const QString &filePath);
+    void saveKeys();
+    bool userForbidsOverwriting();
+
+private:
+    SshKeyGenerator *m_keyGenerator;
+    Ui::SshKeyCreationDialog *m_ui;
 };
 
-} // namespace Internal
 } // namespace QSsh
 
-#endif // KEYPASSWORDRETRIEVER_H
+#endif  // SSHKEYCREATIONDIALOG_H

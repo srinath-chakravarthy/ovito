@@ -1,43 +1,43 @@
-/**************************************************************************
+/****************************************************************************
 **
-** This file is part of Qt Creator
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing
 **
-** Copyright (c) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** This file is part of Qt Creator.
 **
-** Contact: http://www.qt-project.org/
-**
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company.  For licensing terms and
+** conditions see http://www.qt.io/terms-conditions.  For further information
+** use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
-**
-** This file may be used under the terms of the GNU Lesser General Public
-** License version 2.1 as published by the Free Software Foundation and
-** appearing in the file LICENSE.LGPL included in the packaging of this file.
-** Please review the following information to ensure the GNU Lesser General
-** Public License version 2.1 requirements will be met:
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file.  Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Nokia gives you certain additional
-** rights. These rights are described in the Nokia Qt LGPL Exception
+** In addition, as a special exception, The Qt Company gives you certain additional
+** rights.  These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
-** Other Usage
-**
-** Alternatively, this file may be used in accordance with the terms and
-** conditions contained in a signed written agreement between you and Nokia.
-**
-**
-**************************************************************************/
+****************************************************************************/
 
-#ifndef SSHCHANNELLAYER_P_H
-#define SSHCHANNELLAYER_P_H
+#ifndef SSHCHANNELMANAGER_P_H
+#define SSHCHANNELMANAGER_P_H
 
 #include <QHash>
 #include <QObject>
 #include <QSharedPointer>
 
 namespace QSsh {
-
 class SftpChannel;
+class SshDirectTcpIpTunnel;
 class SshRemoteProcess;
 
 namespace Internal {
@@ -55,8 +55,10 @@ public:
     QSharedPointer<SshRemoteProcess> createRemoteProcess(const QByteArray &command);
     QSharedPointer<SshRemoteProcess> createRemoteShell();
     QSharedPointer<SftpChannel> createSftpChannel();
-    int channelCount() const;
+    QSharedPointer<SshDirectTcpIpTunnel> createTunnel(const QString &originatingHost,
+            quint16 originatingPort, const QString &remoteHost, quint16 remotePort);
 
+    int channelCount() const;
     enum CloseAllMode { CloseAllRegular, CloseAllAndReset };
     int closeAllChannels(CloseAllMode mode);
 
@@ -72,7 +74,7 @@ public:
     void handleChannelEof(const SshIncomingPacket &packet);
     void handleChannelClose(const SshIncomingPacket &packet);
 
-Q_SIGNALS:
+signals:
     void timeout();
 
 private:
@@ -95,4 +97,4 @@ private:
 } // namespace Internal
 } // namespace QSsh
 
-#endif // SSHCHANNELLAYER_P_H
+#endif // SSHCHANNELMANAGER_P_H

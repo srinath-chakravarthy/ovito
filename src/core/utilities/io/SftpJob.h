@@ -69,8 +69,8 @@ protected Q_SLOTS:
 	/// Is called when the SSH connection has been established.
     void onSshConnectionEstablished();
 
-    /// Is called when the SFTP channel could not be created.
-    void onSftpChannelInitializationFailed(const QString& reason);
+    /// Is called when an SFTP error occurs.
+    void onSftpChannelError(const QString& reason);
 
     /// Is called when the SFTP channel has been created.
 	virtual void onSftpChannelInitialized() = 0;

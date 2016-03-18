@@ -1,35 +1,35 @@
-/**************************************************************************
+/****************************************************************************
 **
-** This file is part of Qt Creator
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing
 **
-** Copyright (c) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** This file is part of Qt Creator.
 **
-** Contact: http://www.qt-project.org/
-**
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company.  For licensing terms and
+** conditions see http://www.qt.io/terms-conditions.  For further information
+** use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
-**
-** This file may be used under the terms of the GNU Lesser General Public
-** License version 2.1 as published by the Free Software Foundation and
-** appearing in the file LICENSE.LGPL included in the packaging of this file.
-** Please review the following information to ensure the GNU Lesser General
-** Public License version 2.1 requirements will be met:
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file.  Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Nokia gives you certain additional
-** rights. These rights are described in the Nokia Qt LGPL Exception
+** In addition, as a special exception, The Qt Company gives you certain additional
+** rights.  These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
-** Other Usage
-**
-** Alternatively, this file may be used in accordance with the terms and
-** conditions contained in a signed written agreement between you and Nokia.
-**
-**
-**************************************************************************/
+****************************************************************************/
 
-#ifndef SSHABSTRACTCRYPTOFACILITY_P_H
-#define SSHABSTRACTCRYPTOFACILITY_P_H
+#ifndef SSHCRYPTOFACILITY_P_H
+#define SSHCRYPTOFACILITY_P_H
 
 #include <botan/botan.h>
 #include <botan/hmac.h>
@@ -54,9 +54,13 @@ public:
     quint32 macLength() const { return m_macLength; }
 
 protected:
+    enum Mode { CbcMode, CtrMode };
+
     SshAbstractCryptoFacility();
     void convert(QByteArray &data, quint32 offset, quint32 dataSize) const;
     QByteArray sessionId() const { return m_sessionId; }
+    Botan::Keyed_Filter *makeCtrCipherMode(Botan::BlockCipher *cipher,
+        const Botan::InitializationVector &iv, const Botan::SymmetricKey &key);
 
 private:
     SshAbstractCryptoFacility(const SshAbstractCryptoFacility &);
@@ -65,15 +69,14 @@ private:
     virtual QByteArray cryptAlgoName(const SshKeyExchange &kex) const = 0;
     virtual QByteArray hMacAlgoName(const SshKeyExchange &kex) const = 0;
     virtual Botan::Keyed_Filter *makeCipherMode(Botan::BlockCipher *cipher,
-        Botan::BlockCipherModePaddingMethod *paddingMethod,
-        const Botan::InitializationVector &iv,
-        const Botan::SymmetricKey &key) = 0;
+        Mode mode, const Botan::InitializationVector &iv, const Botan::SymmetricKey &key) = 0;
     virtual char ivChar() const = 0;
     virtual char keyChar() const = 0;
     virtual char macChar() const = 0;
 
     QByteArray generateHash(const SshKeyExchange &kex, char c, quint32 length);
     void checkInvariant() const;
+    static Mode getMode(const QByteArray &algoName);
 
     QByteArray m_sessionId;
     QScopedPointer<Botan::Pipe> m_pipe;
@@ -99,8 +102,7 @@ private:
     virtual QByteArray cryptAlgoName(const SshKeyExchange &kex) const;
     virtual QByteArray hMacAlgoName(const SshKeyExchange &kex) const;
     virtual Botan::Keyed_Filter *makeCipherMode(Botan::BlockCipher *cipher,
-        Botan::BlockCipherModePaddingMethod *paddingMethod,
-        const Botan::InitializationVector &iv, const Botan::SymmetricKey &key);
+        Mode mode, const Botan::InitializationVector &iv, const Botan::SymmetricKey &key);
     virtual char ivChar() const { return 'A'; }
     virtual char keyChar() const { return 'C'; }
     virtual char macChar() const { return 'E'; }
@@ -114,6 +116,8 @@ private:
     static const QByteArray PrivKeyFileStartLineDsa;
     static const QByteArray PrivKeyFileEndLineRsa;
     static const QByteArray PrivKeyFileEndLineDsa;
+    static const QByteArray PrivKeyFileStartLineEcdsa;
+    static const QByteArray PrivKeyFileEndLineEcdsa;
 
     QByteArray m_authKeyAlgoName;
     QByteArray m_authPubKeyBlob;
@@ -131,8 +135,7 @@ private:
     virtual QByteArray cryptAlgoName(const SshKeyExchange &kex) const;
     virtual QByteArray hMacAlgoName(const SshKeyExchange &kex) const;
     virtual Botan::Keyed_Filter *makeCipherMode(Botan::BlockCipher *cipher,
-        Botan::BlockCipherModePaddingMethod *paddingMethod,
-        const Botan::InitializationVector &iv, const Botan::SymmetricKey &key);
+        Mode mode, const Botan::InitializationVector &iv, const Botan::SymmetricKey &key);
     virtual char ivChar() const { return 'B'; }
     virtual char keyChar() const { return 'D'; }
     virtual char macChar() const { return 'F'; }
@@ -141,4 +144,4 @@ private:
 } // namespace Internal
 } // namespace QSsh
 
-#endif // SSHABSTRACTCRYPTOFACILITY_P_H
+#endif // SSHCRYPTOFACILITY_P_H

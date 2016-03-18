@@ -27,25 +27,57 @@
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ****************************************************************************/
-#ifndef KEYPASSWORDRETRIEVER_H
-#define KEYPASSWORDRETRIEVER_H
+#ifndef SSHDIRECTTCPIPTUNNEL_P_H
+#define SSHDIRECTTCPIPTUNNEL_P_H
 
-#include <botan/botan.h>
-#include <botan/ui.h>
-
-#include <string>
+#include "sshchannel_p.h"
 
 namespace QSsh {
+class SshDirectTcpIpTunnel;
+
 namespace Internal {
 
-class SshKeyPasswordRetriever : public Botan::User_Interface
+class SshDirectTcpIpTunnelPrivate : public AbstractSshChannel
 {
+    Q_OBJECT
+
+    friend class QSsh::SshDirectTcpIpTunnel;
+
 public:
-    std::string get_passphrase(const std::string &what, const std::string &source,
-        UI_Result &result) const;
+    explicit SshDirectTcpIpTunnelPrivate(quint32 channelId, const QString &originatingHost,
+            quint16 originatingPort, const QString &remoteHost, quint16 remotePort,
+            SshSendFacility &sendFacility);
+
+signals:
+    void initialized();
+    void readyRead();
+    void error(const QString &reason);
+    void closed();
+
+private slots:
+    void handleEof();
+
+private:
+    void handleChannelSuccess();
+    void handleChannelFailure();
+
+    void handleOpenSuccessInternal();
+    void handleOpenFailureInternal(const QString &reason);
+    void handleChannelDataInternal(const QByteArray &data);
+    void handleChannelExtendedDataInternal(quint32 type, const QByteArray &data);
+    void handleExitStatus(const SshChannelExitStatus &exitStatus);
+    void handleExitSignal(const SshChannelExitSignal &signal);
+
+    void closeHook();
+
+    const QString m_originatingHost;
+    const quint16 m_originatingPort;
+    const QString m_remoteHost;
+    const quint16 m_remotePort;
+    QByteArray m_data;
 };
 
 } // namespace Internal
 } // namespace QSsh
 
-#endif // KEYPASSWORDRETRIEVER_H
+#endif // SSHDIRECTTCPIPTUNNEL_P_H

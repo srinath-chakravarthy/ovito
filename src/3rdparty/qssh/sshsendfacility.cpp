@@ -1,32 +1,32 @@
-/**************************************************************************
+/****************************************************************************
 **
-** This file is part of Qt Creator
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing
 **
-** Copyright (c) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** This file is part of Qt Creator.
 **
-** Contact: http://www.qt-project.org/
-**
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company.  For licensing terms and
+** conditions see http://www.qt.io/terms-conditions.  For further information
+** use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
-**
-** This file may be used under the terms of the GNU Lesser General Public
-** License version 2.1 as published by the Free Software Foundation and
-** appearing in the file LICENSE.LGPL included in the packaging of this file.
-** Please review the following information to ensure the GNU Lesser General
-** Public License version 2.1 requirements will be met:
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file.  Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Nokia gives you certain additional
-** rights. These rights are described in the Nokia Qt LGPL Exception
+** In addition, as a special exception, The Qt Company gives you certain additional
+** rights.  These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
-** Other Usage
-**
-** Alternatively, this file may be used in accordance with the terms and
-** conditions contained in a signed written agreement between you and Nokia.
-**
-**
-**************************************************************************/
+****************************************************************************/
 
 #include "sshsendfacility_p.h"
 
@@ -85,6 +85,12 @@ void SshSendFacility::sendKeyDhInitPacket(const Botan::BigInt &e)
     sendPacket();
 }
 
+void SshSendFacility::sendKeyEcdhInitPacket(const QByteArray &clientQ)
+{
+    m_outgoingPacket.generateKeyEcdhInitPacket(clientQ);
+    sendPacket();
+}
+
 void SshSendFacility::sendNewKeysPacket()
 {
     m_outgoingPacket.generateNewKeysPacket();
@@ -110,17 +116,30 @@ void SshSendFacility::sendUserAuthServiceRequestPacket()
     sendPacket();
 }
 
-void SshSendFacility::sendUserAuthByPwdRequestPacket(const QByteArray &user,
+void SshSendFacility::sendUserAuthByPasswordRequestPacket(const QByteArray &user,
     const QByteArray &service, const QByteArray &pwd)
 {
-    m_outgoingPacket.generateUserAuthByPwdRequestPacket(user, service, pwd);
+    m_outgoingPacket.generateUserAuthByPasswordRequestPacket(user, service, pwd);
     sendPacket();
     }
 
-void SshSendFacility::sendUserAuthByKeyRequestPacket(const QByteArray &user,
+void SshSendFacility::sendUserAuthByPublicKeyRequestPacket(const QByteArray &user,
     const QByteArray &service)
 {
-    m_outgoingPacket.generateUserAuthByKeyRequestPacket(user, service);
+    m_outgoingPacket.generateUserAuthByPublicKeyRequestPacket(user, service);
+    sendPacket();
+}
+
+void SshSendFacility::sendUserAuthByKeyboardInteractiveRequestPacket(const QByteArray &user,
+                                                                     const QByteArray &service)
+{
+    m_outgoingPacket.generateUserAuthByKeyboardInteractiveRequestPacket(user, service);
+    sendPacket();
+}
+
+void SshSendFacility::sendUserAuthInfoResponsePacket(const QStringList &responses)
+{
+    m_outgoingPacket.generateUserAuthInfoResponsePacket(responses);
     sendPacket();
 }
 
@@ -147,6 +166,15 @@ void SshSendFacility::sendSessionPacket(quint32 channelId, quint32 windowSize,
 {
     m_outgoingPacket.generateSessionPacket(channelId, windowSize,
         maxPacketSize);
+    sendPacket();
+}
+
+void SshSendFacility::sendDirectTcpIpPacket(quint32 channelId, quint32 windowSize,
+    quint32 maxPacketSize, const QByteArray &remoteHost, quint32 remotePort,
+    const QByteArray &localIpAddress, quint32 localPort)
+{
+    m_outgoingPacket.generateDirectTcpIpPacket(channelId, windowSize, maxPacketSize, remoteHost,
+            remotePort, localIpAddress, localPort);
     sendPacket();
 }
 

@@ -27,25 +27,27 @@
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ****************************************************************************/
-#ifndef KEYPASSWORDRETRIEVER_H
-#define KEYPASSWORDRETRIEVER_H
+#include "sshinit_p.h"
 
 #include <botan/botan.h>
-#include <botan/ui.h>
 
-#include <string>
+#include <QMutex>
+#include <QMutexLocker>
 
 namespace QSsh {
 namespace Internal {
 
-class SshKeyPasswordRetriever : public Botan::User_Interface
+static bool initialized = false;
+static QMutex initMutex;
+
+void initSsh()
 {
-public:
-    std::string get_passphrase(const std::string &what, const std::string &source,
-        UI_Result &result) const;
-};
+    QMutexLocker locker(&initMutex);
+    if (!initialized) {
+        Botan::LibraryInitializer::initialize("thread_safe=true");
+        initialized = true;
+    }
+}
 
 } // namespace Internal
 } // namespace QSsh
-
-#endif // KEYPASSWORDRETRIEVER_H

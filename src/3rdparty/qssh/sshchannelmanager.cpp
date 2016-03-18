@@ -1,44 +1,45 @@
-/**************************************************************************
+/****************************************************************************
 **
-** This file is part of Qt Creator
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing
 **
-** Copyright (c) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** This file is part of Qt Creator.
 **
-** Contact: http://www.qt-project.org/
-**
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company.  For licensing terms and
+** conditions see http://www.qt.io/terms-conditions.  For further information
+** use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
-**
-** This file may be used under the terms of the GNU Lesser General Public
-** License version 2.1 as published by the Free Software Foundation and
-** appearing in the file LICENSE.LGPL included in the packaging of this file.
-** Please review the following information to ensure the GNU Lesser General
-** Public License version 2.1 requirements will be met:
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file.  Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Nokia gives you certain additional
-** rights. These rights are described in the Nokia Qt LGPL Exception
+** In addition, as a special exception, The Qt Company gives you certain additional
+** rights.  These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
-** Other Usage
-**
-** Alternatively, this file may be used in accordance with the terms and
-** conditions contained in a signed written agreement between you and Nokia.
-**
-**
-**************************************************************************/
+****************************************************************************/
 
 #include "sshchannelmanager_p.h"
 
 #include "sftpchannel.h"
 #include "sftpchannel_p.h"
+#include "sshdirecttcpiptunnel.h"
+#include "sshdirecttcpiptunnel_p.h"
 #include "sshincomingpacket_p.h"
 #include "sshremoteprocess.h"
 #include "sshremoteprocess_p.h"
 #include "sshsendfacility_p.h"
 
 #include <QList>
-#include <QDebug>
 
 namespace QSsh {
 namespace Internal {
@@ -67,7 +68,7 @@ void SshChannelManager::handleChannelOpenFailure(const SshIncomingPacket &packet
    ChannelIterator it = lookupChannelAsIterator(failure.localChannel);
    try {
        it.value()->handleOpenFailure(failure.reasonString);
-   } catch (SshServerException &e) {
+   } catch (const SshServerException &e) {
        removeChannel(it);
        throw e;
    }
@@ -169,6 +170,15 @@ QSsh::SftpChannel::Ptr SshChannelManager::createSftpChannel()
     return sftp;
 }
 
+SshDirectTcpIpTunnel::Ptr SshChannelManager::createTunnel(const QString &originatingHost,
+        quint16 originatingPort, const QString &remoteHost, quint16 remotePort)
+{
+    SshDirectTcpIpTunnel::Ptr tunnel(new SshDirectTcpIpTunnel(m_nextLocalChannelId++,
+            originatingHost, originatingPort, remoteHost, remotePort, m_sendFacility));
+    insertChannel(tunnel->d, tunnel);
+    return tunnel;
+}
+
 void SshChannelManager::insertChannel(AbstractSshChannel *priv,
     const QSharedPointer<QObject> &pub)
 {
@@ -179,9 +189,14 @@ void SshChannelManager::insertChannel(AbstractSshChannel *priv,
 
 int SshChannelManager::closeAllChannels(CloseAllMode mode)
 {
-    const int count = m_channels.count();
+    int count = 0;
     for (ChannelIterator it = m_channels.begin(); it != m_channels.end(); ++it) {
-        it.value()->closeChannel();
+        AbstractSshChannel * const channel = it.value();
+        QSSH_ASSERT(channel->channelState() != AbstractSshChannel::Closed);
+        if (channel->channelState() != AbstractSshChannel::CloseRequested) {
+            channel->closeChannel();
+            ++count;
+        }
     }
     if (mode == CloseAllAndReset) {
         m_channels.clear();
@@ -197,9 +212,16 @@ int SshChannelManager::channelCount() const
 
 void SshChannelManager::removeChannel(ChannelIterator it)
 {
-    Q_ASSERT(it != m_channels.end() && "Unexpected channel lookup failure.");
+    if (it == m_channels.end()) {
+        throw SshClientException(SshInternalError,
+                QLatin1String("Internal error: Unexpected channel lookup failure"));
+    }
     const int removeCount = m_sessions.remove(it.value());
-    Q_ASSERT(removeCount == 1 && "Session for channel not found.");
+    if (removeCount != 1) {
+        throw SshClientException(SshInternalError,
+                QString::fromLatin1("Internal error: Unexpected session count %1 for channel.")
+                                 .arg(removeCount));
+    }
     m_channels.erase(it);
 }
 

@@ -1,32 +1,32 @@
-/**************************************************************************
+/****************************************************************************
 **
-** This file is part of Qt Creator
+** Copyright (C) 2015 The Qt Company Ltd.
+** Contact: http://www.qt.io/licensing
 **
-** Copyright (c) 2012 Nokia Corporation and/or its subsidiary(-ies).
+** This file is part of Qt Creator.
 **
-** Contact: http://www.qt-project.org/
-**
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company.  For licensing terms and
+** conditions see http://www.qt.io/terms-conditions.  For further information
+** use the contact form at http://www.qt.io/contact-us.
 **
 ** GNU Lesser General Public License Usage
-**
-** This file may be used under the terms of the GNU Lesser General Public
-** License version 2.1 as published by the Free Software Foundation and
-** appearing in the file LICENSE.LGPL included in the packaging of this file.
-** Please review the following information to ensure the GNU Lesser General
-** Public License version 2.1 requirements will be met:
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 2.1 or version 3 as published by the Free
+** Software Foundation and appearing in the file LICENSE.LGPLv21 and
+** LICENSE.LGPLv3 included in the packaging of this file.  Please review the
+** following information to ensure the GNU Lesser General Public License
+** requirements will be met: https://www.gnu.org/licenses/lgpl.html and
 ** http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html.
 **
-** In addition, as a special exception, Nokia gives you certain additional
-** rights. These rights are described in the Nokia Qt LGPL Exception
+** In addition, as a special exception, The Qt Company gives you certain additional
+** rights.  These rights are described in The Qt Company LGPL Exception
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
-** Other Usage
-**
-** Alternatively, this file may be used in accordance with the terms and
-** conditions contained in a signed written agreement between you and Nokia.
-**
-**
-**************************************************************************/
+****************************************************************************/
 
 #include "sshconnection.h"
 #include "sshconnection_p.h"
@@ -35,8 +35,11 @@
 #include "sshcapabilities_p.h"
 #include "sshchannelmanager_p.h"
 #include "sshcryptofacility_p.h"
+#include "sshdirecttcpiptunnel.h"
 #include "sshexception_p.h"
+#include "sshinit_p.h"
 #include "sshkeyexchange_p.h"
+#include "sshremoteprocess.h"
 
 #include <botan/botan.h>
 
@@ -50,7 +53,8 @@
 /*!
     \class QSsh::SshConnection
 
-    \brief This class provides an SSH connection, implementing protocol version 2.0
+    \brief The SshConnection class provides an SSH connection, implementing
+    protocol version 2.0.
 
     It can spawn channels for remote execution and SFTP operations (version 3).
     It operates asynchronously (non-blocking) and is not thread-safe.
@@ -58,38 +62,23 @@
 
 namespace QSsh {
 
-namespace {
-    const QByteArray ClientId("SSH-2.0-QtCreator\r\n");
-
-    bool staticInitializationsDone = false;
-    QMutex staticInitMutex;
-
-    void doStaticInitializationsIfNecessary()
-    {
-        QMutexLocker locker(&staticInitMutex);
-        if (!staticInitializationsDone) {
-            Botan::LibraryInitializer::initialize("thread_safe=true");
-            qRegisterMetaType<QSsh::SshError>("QSsh::SshError");
-            qRegisterMetaType<QSsh::SftpJobId>("QSsh::SftpJobId");
-            qRegisterMetaType<QSsh::SftpFileInfo>("QSsh::SftpFileInfo");
-            qRegisterMetaType<QList <QSsh::SftpFileInfo> >("QList<QSsh::SftpFileInfo>");
-            staticInitializationsDone = true;
-        }
-    }
-} // anonymous namespace
-
+const QByteArray ClientId("SSH-2.0-QtCreator\r\n");
 
 SshConnectionParameters::SshConnectionParameters() :
-    timeout(0),  authenticationType(AuthenticationByKey), port(0), proxyType(NoProxy)
+    timeout(0),  authenticationType(AuthenticationTypePublicKey), port(0),
+    hostKeyCheckingMode(SshHostKeyCheckingNone)
 {
+    options |= SshIgnoreDefaultProxy;
+    options |= SshEnableStrictConformanceChecks;
 }
 
 static inline bool equals(const SshConnectionParameters &p1, const SshConnectionParameters &p2)
 {
     return p1.host == p2.host && p1.userName == p2.userName
             && p1.authenticationType == p2.authenticationType
-            && (p1.authenticationType == SshConnectionParameters::AuthenticationByPassword ?
+            && (p1.authenticationType == SshConnectionParameters::AuthenticationTypePassword ?
                     p1.password == p2.password : p1.privateKeyFile == p2.privateKeyFile)
+            && p1.hostKeyCheckingMode == p2.hostKeyCheckingMode
             && p1.timeout == p2.timeout && p1.port == p2.port;
 }
 
@@ -103,12 +92,15 @@ bool operator!=(const SshConnectionParameters &p1, const SshConnectionParameters
     return !equals(p1, p2);
 }
 
-// TODO: Mechanism for checking the host key. First connection to host: save, later: compare
 
 SshConnection::SshConnection(const SshConnectionParameters &serverInfo, QObject *parent)
     : QObject(parent)
 {
-    doStaticInitializationsIfNecessary();
+    Internal::initSsh();
+    qRegisterMetaType<QSsh::SshError>("QSsh::SshError");
+    qRegisterMetaType<QSsh::SftpJobId>("QSsh::SftpJobId");
+    qRegisterMetaType<QSsh::SftpFileInfo>("QSsh::SftpFileInfo");
+    qRegisterMetaType<QList <QSsh::SftpFileInfo> >("QList<QSsh::SftpFileInfo>");
 
     d = new Internal::SshConnectionPrivate(this, serverInfo);
     connect(d, SIGNAL(connected()), this, SIGNAL(connected()),
@@ -192,6 +184,13 @@ QSharedPointer<SftpChannel> SshConnection::createSftpChannel()
     return d->createSftpChannel();
 }
 
+SshDirectTcpIpTunnel::Ptr SshConnection::createTunnel(const QString &originatingHost,
+        quint16 originatingPort, const QString &remoteHost, quint16 remotePort)
+{
+    QSSH_ASSERT_AND_RETURN_VALUE(state() == Connected, SshDirectTcpIpTunnel::Ptr());
+    return d->createTunnel(originatingHost, originatingPort, remoteHost, remotePort);
+}
+
 int SshConnection::closeAllChannels()
 {
     try {
@@ -218,8 +217,8 @@ SshConnectionPrivate::SshConnectionPrivate(SshConnection *conn,
       m_conn(conn)
 {
     setupPacketHandlers();
-    m_socket->setProxy(m_connParams.proxyType == SshConnectionParameters::DefaultProxy
-        ? QNetworkProxy::DefaultProxy : QNetworkProxy::NoProxy);
+    m_socket->setProxy((m_connParams.options & SshIgnoreDefaultProxy)
+            ? QNetworkProxy::NoProxy : QNetworkProxy::DefaultProxy);
     m_timeoutTimer.setSingleShot(true);
     m_timeoutTimer.setInterval(m_connParams.timeout * 1000);
     m_keepAliveTimer.setSingleShot(true);
@@ -246,8 +245,11 @@ void SshConnectionPrivate::setupPacketHandlers()
     setupPacketHandler(SSH_MSG_SERVICE_ACCEPT,
         StateList() << UserAuthServiceRequested,
         &This::handleServiceAcceptPacket);
-    setupPacketHandler(SSH_MSG_USERAUTH_PASSWD_CHANGEREQ,
-        StateList() << UserAuthRequested, &This::handlePasswordExpiredPacket);
+    if (m_connParams.authenticationType == SshConnectionParameters::AuthenticationTypePassword
+            || m_connParams.authenticationType == SshConnectionParameters::AuthenticationTypeTryAllPasswordBasedMethods) {
+        setupPacketHandler(SSH_MSG_USERAUTH_PASSWD_CHANGEREQ,
+                StateList() << UserAuthRequested, &This::handlePasswordExpiredPacket);
+    }
     setupPacketHandler(SSH_MSG_GLOBAL_REQUEST,
         StateList() << ConnectionEstablished, &This::handleGlobalRequest);
 
@@ -258,6 +260,11 @@ void SshConnectionPrivate::setupPacketHandlers()
         &This::handleUserAuthSuccessPacket);
     setupPacketHandler(SSH_MSG_USERAUTH_FAILURE, authReqList,
         &This::handleUserAuthFailurePacket);
+    if (m_connParams.authenticationType == SshConnectionParameters::AuthenticationTypeKeyboardInteractive
+            || m_connParams.authenticationType == SshConnectionParameters::AuthenticationTypeTryAllPasswordBasedMethods) {
+        setupPacketHandler(SSH_MSG_USERAUTH_INFO_REQUEST, authReqList,
+                &This::handleUserAuthInfoRequestPacket);
+    }
 
     const StateList connectedList
         = StateList() << ConnectionEstablished;
@@ -324,15 +331,15 @@ void SshConnectionPrivate::handleIncomingData()
         if (m_serverId.isEmpty())
             handleServerId();
         handlePackets();
-    } catch (SshServerException &e) {
+    } catch (const SshServerException &e) {
         closeConnection(e.error, SshProtocolError, e.errorStringServer,
             tr("SSH Protocol error: %1").arg(e.errorStringUser));
-    } catch (SshClientException &e) {
+    } catch (const SshClientException &e) {
         closeConnection(SSH_DISCONNECT_BY_APPLICATION, e.error, "",
             e.errorString);
-    } catch (Botan::Exception &e) {
+    } catch (const Botan::Exception &e) {
         closeConnection(SSH_DISCONNECT_BY_APPLICATION, SshInternalError, "",
-            tr("Botan library exception: %1").arg(QString::fromUtf8(e.what())));
+            tr("Botan library exception: %1").arg(QString::fromLatin1(e.what())));
     }
 }
 
@@ -357,8 +364,8 @@ void SshConnectionPrivate::handleServerId()
     if (newLinePos > 255 - 1) {
         throw SshServerException(SSH_DISCONNECT_PROTOCOL_ERROR,
             "Identification string too long.",
-            tr("Server identification string is %1 characters long, but the maximum "
-               "allowed length is 255.").arg(newLinePos + 1));
+            tr("Server identification string is %n characters long, but the maximum "
+               "allowed length is 255.", 0, newLinePos + 1));
     }
 
     const bool hasCarriageReturn = m_incomingData.at(newLinePos - 1) == '\r';
@@ -380,34 +387,33 @@ void SshConnectionPrivate::handleServerId()
     if (!versionIdpattern.exactMatch(QString::fromLatin1(m_serverId))) {
         throw SshServerException(SSH_DISCONNECT_PROTOCOL_ERROR,
             "Identification string is invalid.",
-            tr("Server Identification string '%1' is invalid.")
+            tr("Server Identification string \"%1\" is invalid.")
                     .arg(QString::fromLatin1(m_serverId)));
     }
     const QString serverProtoVersion = versionIdpattern.cap(1);
     if (serverProtoVersion != QLatin1String("2.0") && serverProtoVersion != QLatin1String("1.99")) {
         throw SshServerException(SSH_DISCONNECT_PROTOCOL_VERSION_NOT_SUPPORTED,
             "Invalid protocol version.",
-            tr("Server protocol version is '%1', but needs to be 2.0 or 1.99.")
+            tr("Server protocol version is \"%1\", but needs to be 2.0 or 1.99.")
                     .arg(serverProtoVersion));
     }
 
-#if 0
-    // Disable this check to accept older OpenSSH servers that do this wrong.
-    if (serverProtoVersion == QLatin1String("2.0") && !hasCarriageReturn) {
-        throw SshServerException(SSH_DISCONNECT_PROTOCOL_ERROR,
-            "Identification string is invalid.",
-            tr("Server identification string is invalid (missing carriage return)."));
-    }
-#endif
+    if (m_connParams.options & SshEnableStrictConformanceChecks) {
+        if (serverProtoVersion == QLatin1String("2.0") && !hasCarriageReturn) {
+            throw SshServerException(SSH_DISCONNECT_PROTOCOL_ERROR,
+                    "Identification string is invalid.",
+                    tr("Server identification string is invalid (missing carriage return)."));
+        }
 
-    if (serverProtoVersion == QLatin1String("1.99") && m_serverHasSentDataBeforeId) {
-        throw SshServerException(SSH_DISCONNECT_PROTOCOL_ERROR,
-            "No extra data preceding identification string allowed for 1.99.",
-            tr("Server reports protocol version 1.99, but sends data "
-               "before the identification string, which is not allowed."));
+        if (serverProtoVersion == QLatin1String("1.99") && m_serverHasSentDataBeforeId) {
+            throw SshServerException(SSH_DISCONNECT_PROTOCOL_ERROR,
+                    "No extra data preceding identification string allowed for 1.99.",
+                    tr("Server reports protocol version 1.99, but sends data "
+                       "before the identification string, which is not allowed."));
+        }
     }
 
-    m_keyExchange.reset(new SshKeyExchange(m_sendFacility));
+    m_keyExchange.reset(new SshKeyExchange(m_connParams, m_sendFacility));
     m_keyExchange->sendKexInitPacket(m_serverId);
     m_keyExchangeState = KexInitSent;
 }
@@ -433,15 +439,14 @@ void SshConnectionPrivate::handleCurrentPacket()
     }
 
     QHash<SshPacketType, HandlerInStates>::ConstIterator it
-        = m_packetHandlers.find(m_incomingPacket.type());
-    if (it == m_packetHandlers.end()) {
+        = m_packetHandlers.constFind(m_incomingPacket.type());
+    if (it == m_packetHandlers.constEnd()) {
         m_sendFacility.sendMsgUnimplementedPacket(m_incomingPacket.serverSeqNr());
         return;
     }
     if (!it.value().first.contains(m_state)) {
-        throw SshServerException(SSH_DISCONNECT_PROTOCOL_ERROR,
-            "Unexpected packet.", tr("Unexpected packet of type %1.")
-            .arg(m_incomingPacket.type()));
+        handleUnexpectedPacket();
+        return;
     }
     (this->*it.value().second)();
 }
@@ -457,16 +462,15 @@ void SshConnectionPrivate::handleKeyExchangeInitPacket()
 
     // Server-initiated re-exchange.
     if (m_keyExchangeState == NoKeyExchange) {
-        m_keyExchange.reset(new SshKeyExchange(m_sendFacility));
+        m_keyExchange.reset(new SshKeyExchange(m_connParams, m_sendFacility));
         m_keyExchange->sendKexInitPacket(m_serverId);
     }
 
     // If the server sends a guessed packet, the guess must be wrong,
     // because the algorithms we support require us to initiate the
     // key exchange.
-    if (m_keyExchange->sendDhInitPacket(m_incomingPacket)) {
+    if (m_keyExchange->sendDhInitPacket(m_incomingPacket))
         m_ignoreNextPacket = true;
-    }
 
     m_keyExchangeState = DhInitSent;
 }
@@ -505,29 +509,69 @@ void SshConnectionPrivate::handleNewKeysPacket()
 
 void SshConnectionPrivate::handleServiceAcceptPacket()
 {
-    if (m_connParams.authenticationType == SshConnectionParameters::AuthenticationByPassword) {
-        m_sendFacility.sendUserAuthByPwdRequestPacket(m_connParams.userName.toUtf8(),
-            SshCapabilities::SshConnectionService, m_connParams.password.toUtf8());
-    } else {
-        m_sendFacility.sendUserAuthByKeyRequestPacket(m_connParams.userName.toUtf8(),
-            SshCapabilities::SshConnectionService);
+    switch (m_connParams.authenticationType) {
+    case SshConnectionParameters::AuthenticationTypeTryAllPasswordBasedMethods:
+        m_triedAllPasswordBasedMethods = false;
+        // Fall-through.
+    case SshConnectionParameters::AuthenticationTypePassword:
+        m_sendFacility.sendUserAuthByPasswordRequestPacket(m_connParams.userName.toUtf8(),
+                SshCapabilities::SshConnectionService, m_connParams.password.toUtf8());
+        break;
+    case SshConnectionParameters::AuthenticationTypeKeyboardInteractive:
+        m_sendFacility.sendUserAuthByKeyboardInteractiveRequestPacket(m_connParams.userName.toUtf8(),
+                SshCapabilities::SshConnectionService);
+        break;
+    case SshConnectionParameters::AuthenticationTypePublicKey:
+        m_sendFacility.sendUserAuthByPublicKeyRequestPacket(m_connParams.userName.toUtf8(),
+                SshCapabilities::SshConnectionService);
+        break;
     }
     m_state = UserAuthRequested;
 }
 
 void SshConnectionPrivate::handlePasswordExpiredPacket()
 {
-    if (m_connParams.authenticationType == SshConnectionParameters::AuthenticationByKey) {
-        throw SSH_SERVER_EXCEPTION(SSH_DISCONNECT_PROTOCOL_ERROR,
-            "Got SSH_MSG_USERAUTH_PASSWD_CHANGEREQ, but did not use password.");
+    if (m_connParams.authenticationType == SshConnectionParameters::AuthenticationTypeTryAllPasswordBasedMethods
+            && m_triedAllPasswordBasedMethods) {
+        // This means we just tried to authorize via "keyboard-interactive", in which case
+        // this type of packet is not allowed.
+        handleUnexpectedPacket();
+        return;
+    }
+    throw SshClientException(SshAuthenticationError, tr("Password expired."));
+}
+
+void SshConnectionPrivate::handleUserAuthInfoRequestPacket()
+{
+    if (m_connParams.authenticationType == SshConnectionParameters::AuthenticationTypeTryAllPasswordBasedMethods
+            && !m_triedAllPasswordBasedMethods) {
+        // This means we just tried to authorize via "password", in which case
+        // this type of packet is not allowed.
+        handleUnexpectedPacket();
+        return;
     }
 
-    throw SshClientException(SshAuthenticationError, tr("Password expired."));
+    const SshUserAuthInfoRequestPacket requestPacket
+            = m_incomingPacket.extractUserAuthInfoRequest();
+    QStringList responses;
+    responses.reserve(requestPacket.prompts.count());
+
+    // Not very interactive, admittedly, but we don't want to be for now.
+    for (int i = 0;  i < requestPacket.prompts.count(); ++i)
+        responses << m_connParams.password;
+    m_sendFacility.sendUserAuthInfoResponsePacket(responses);
 }
 
 void SshConnectionPrivate::handleUserAuthBannerPacket()
 {
-    Q_EMIT dataAvailable(m_incomingPacket.extractUserAuthBanner().message);
+    emit dataAvailable(m_incomingPacket.extractUserAuthBanner().message);
+}
+
+void SshConnectionPrivate::handleUnexpectedPacket()
+{
+    throw SshServerException(SSH_DISCONNECT_PROTOCOL_ERROR,
+                             "Unexpected packet.", tr("Unexpected packet of type %1.")
+                             .arg(m_incomingPacket.type()));
 }
 
 void SshConnectionPrivate::handleGlobalRequest()
@@ -539,7 +583,7 @@ void SshConnectionPrivate::handleUserAuthSuccessPacket()
 {
     m_state = ConnectionEstablished;
     m_timeoutTimer.stop();
-    Q_EMIT connected();
+    emit connected();
     m_lastInvalidMsgSeqNr = InvalidSeqNr;
     connect(&m_keepAliveTimer, SIGNAL(timeout()), SLOT(sendKeepAlivePacket()));
     m_keepAliveTimer.start();
@@ -547,16 +591,27 @@ void SshConnectionPrivate::handleUserAuthSuccessPacket()
 
 void SshConnectionPrivate::handleUserAuthFailurePacket()
 {
+    // TODO: Evaluate "authentications that can continue" field and act on it.
+    if (m_connParams.authenticationType
+            == SshConnectionParameters::AuthenticationTypeTryAllPasswordBasedMethods
+        && !m_triedAllPasswordBasedMethods) {
+        m_triedAllPasswordBasedMethods = true;
+        m_sendFacility.sendUserAuthByKeyboardInteractiveRequestPacket(
+                    m_connParams.userName.toUtf8(),
+                    SshCapabilities::SshConnectionService);
+        return;
+    }
+
     m_timeoutTimer.stop();
-    const QString errorMsg = m_connParams.authenticationType == SshConnectionParameters::AuthenticationByPassword
-        ? tr("Server rejected password.") : tr("Server rejected key.");
+    const QString errorMsg = m_connParams.authenticationType == SshConnectionParameters::AuthenticationTypePublicKey
+        ? tr("Server rejected key.") : tr("Server rejected password.");
     throw SshClientException(SshAuthenticationError, errorMsg);
 }
 void SshConnectionPrivate::handleDebugPacket()
 {
     const SshDebug &msg = m_incomingPacket.extractDebug();
     if (msg.display)
-        Q_EMIT dataAvailable(msg.message);
+        emit dataAvailable(msg.message);
 }
 
 void SshConnectionPrivate::handleUnimplementedPacket()
@@ -691,12 +746,12 @@ void SshConnectionPrivate::connectToHost()
     m_serverHasSentDataBeforeId = false;
 
     try {
-        if (m_connParams.authenticationType == SshConnectionParameters::AuthenticationByKey)
+        if (m_connParams.authenticationType == SshConnectionParameters::AuthenticationTypePublicKey)
             createPrivateKey();
     } catch (const SshClientException &ex) {
         m_error = ex.error;
         m_errorString = ex.errorString;
-        Q_EMIT error(m_error);
+        emit error(m_error);
         return;
     }
 
@@ -731,11 +786,11 @@ void SshConnectionPrivate::closeConnection(SshErrorCode sshError,
     try {
         m_channelManager->closeAllChannels(SshChannelManager::CloseAllAndReset);
         m_sendFacility.sendDisconnectPacket(sshError, serverErrorString);
-    } catch (Botan::Exception &) {}  // Nothing sensible to be done here.
+    } catch (const Botan::Exception &) {}  // Nothing sensible to be done here.
     if (m_error != SshNoError)
-        Q_EMIT error(userError);
+        emit error(userError);
     if (m_state == ConnectionEstablished)
-        Q_EMIT disconnected();
+        emit disconnected();
     if (canUseSocket())
         m_socket->disconnectFromHost();
     m_state = SocketUnconnected;
@@ -772,6 +827,12 @@ QSharedPointer<SshRemoteProcess> SshConnectionPrivate::createRemoteShell()
 QSharedPointer<SftpChannel> SshConnectionPrivate::createSftpChannel()
 {
     return m_channelManager->createSftpChannel();
+}
+
+SshDirectTcpIpTunnel::Ptr SshConnectionPrivate::createTunnel(const QString &originatingHost,
+        quint16 originatingPort, const QString &remoteHost, quint16 remotePort)
+{
+    return m_channelManager->createTunnel(originatingHost, originatingPort, remoteHost, remotePort);
 }
 
 const quint64 SshConnectionPrivate::InvalidSeqNr = static_cast<quint64>(-1);

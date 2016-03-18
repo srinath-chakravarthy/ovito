@@ -89,13 +89,13 @@ void SftpJob::start()
 		}
 	}
 	connectionParams.port = _url.port(22);
-	connectionParams.authenticationType = QSsh::SshConnectionParameters::AuthenticationByPassword;
+	connectionParams.authenticationType = QSsh::SshConnectionParameters::AuthenticationTypeTryAllPasswordBasedMethods;
 	connectionParams.timeout = 10;
 
 	_futureInterface->setProgressText(tr("Connecting to remote server %1").arg(_url.host()));
 
 	// Open connection
-	_connection = QSsh::SshConnectionManager::instance().acquireConnection(connectionParams);
+	_connection = QSsh::acquireConnection(connectionParams);
 	OVITO_CHECK_POINTER(_connection);
 
 	// Listen for signals of the connection.
@@ -123,7 +123,7 @@ void SftpJob::shutdown(bool success)
 	}
 	if(_connection) {
 		QObject::disconnect(_connection, 0, this, 0);
-		QSsh::SshConnectionManager::instance().releaseConnection(_connection);
+		QSsh::releaseConnection(_connection);
 		_connection = nullptr;
 	}
 
@@ -171,7 +171,7 @@ void SftpJob::onSshConnectionError(QSsh::SshError error)
 		if(dialog.exec() == QDialog::Accepted) {
 			// Start over with new login information.
 			QObject::disconnect(_connection, 0, this, 0);
-			QSsh::SshConnectionManager::instance().releaseConnection(_connection);
+			QSsh::releaseConnection(_connection);
 			_connection = nullptr;
 			_url.setUserName(dialog.username());
 			_url.setPassword(dialog.password());
@@ -212,14 +212,14 @@ void SftpJob::onSshConnectionEstablished()
 
 	_sftpChannel = _connection->createSftpChannel();
 	connect(_sftpChannel.data(), &QSsh::SftpChannel::initialized, this, &SftpJob::onSftpChannelInitialized);
-	connect(_sftpChannel.data(), &QSsh::SftpChannel::initializationFailed, this, &SftpJob::onSftpChannelInitializationFailed);
+	connect(_sftpChannel.data(), &QSsh::SftpChannel::channelError, this, &SftpJob::onSftpChannelError);
 	_sftpChannel->initialize();
 }
 
 /******************************************************************************
 * Is called when the SFTP channel could not be created.
 ******************************************************************************/
-void SftpJob::onSftpChannelInitializationFailed(const QString& reason)
+void SftpJob::onSftpChannelError(const QString& reason)
 {
 	try {
 		throw Exception(tr("Cannot access URL\n\n%1\n\nSFTP error: %2").arg(_url.toString(QUrl::RemovePassword | QUrl::PreferLocalFile | QUrl::PrettyDecoded)).arg(reason));

@@ -27,25 +27,62 @@
 ** version 1.1, included in the file LGPL_EXCEPTION.txt in this package.
 **
 ****************************************************************************/
-#ifndef KEYPASSWORDRETRIEVER_H
-#define KEYPASSWORDRETRIEVER_H
 
-#include <botan/botan.h>
-#include <botan/ui.h>
+#ifndef  SSHDIRECTTCPIPTUNNEL_H
+#define  SSHDIRECTTCPIPTUNNEL_H
 
-#include <string>
+#include "ssh_global.h"
+
+#include <QIODevice>
+#include <QSharedPointer>
 
 namespace QSsh {
-namespace Internal {
 
-class SshKeyPasswordRetriever : public Botan::User_Interface
+namespace Internal {
+class SshChannelManager;
+class SshDirectTcpIpTunnelPrivate;
+class SshSendFacility;
+} // namespace Internal
+
+class QSSH_EXPORT SshDirectTcpIpTunnel : public QIODevice
 {
+    Q_OBJECT
+
+    friend class Internal::SshChannelManager;
+
 public:
-    std::string get_passphrase(const std::string &what, const std::string &source,
-        UI_Result &result) const;
+    typedef QSharedPointer<SshDirectTcpIpTunnel> Ptr;
+
+    ~SshDirectTcpIpTunnel();
+
+    // QIODevice stuff
+    bool atEnd() const;
+    qint64 bytesAvailable() const;
+    bool canReadLine() const;
+    void close();
+    bool isSequential() const { return true; }
+
+    void initialize();
+
+signals:
+    void initialized();
+    void error(const QString &reason);
+    void tunnelClosed();
+
+private:
+    SshDirectTcpIpTunnel(quint32 channelId, const QString &originatingHost,
+            quint16 originatingPort, const QString &remoteHost, quint16 remotePort,
+            Internal::SshSendFacility &sendFacility);
+
+    // QIODevice stuff
+    qint64 readData(char *data, qint64 maxlen);
+    qint64 writeData(const char *data, qint64 len);
+
+    Q_SLOT void handleError(const QString &reason);
+
+    Internal::SshDirectTcpIpTunnelPrivate * const d;
 };
 
-} // namespace Internal
 } // namespace QSsh
 
-#endif // KEYPASSWORDRETRIEVER_H
+#endif // SSHDIRECTTCPIPTUNNEL_H
