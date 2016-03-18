@@ -248,7 +248,7 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 				"\n\n"
 				"This parameter is ignored if :py:attr:`.output_mesh` is false."
 				"\n\n"
-				":Default: 5\n")
+				":Default: 8\n")
 		.add_property("only_selected", &GrainSegmentationModifier::onlySelectedParticles, &GrainSegmentationModifier::setOnlySelectedParticles,
 				"This flag tells the modifier to ignore unselected particles."
 				"\n\n"

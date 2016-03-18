@@ -39,6 +39,7 @@ SET_OVITO_OBJECT_EDITOR(PartitionMeshDisplay, PartitionMeshDisplayEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(PartitionMeshDisplay, _surfaceColor, "SurfaceColor", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(PartitionMeshDisplay, _showCap, "ShowCap", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(PartitionMeshDisplay, _smoothShading, "SmoothShading");
+DEFINE_PROPERTY_FIELD(PartitionMeshDisplay, _flipOrientation, "FlipOrientation");
 DEFINE_REFERENCE_FIELD(PartitionMeshDisplay, _surfaceTransparency, "SurfaceTransparency", Controller);
 DEFINE_REFERENCE_FIELD(PartitionMeshDisplay, _capTransparency, "CapTransparency", Controller);
 SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _surfaceColor, "Free surface color");
@@ -46,6 +47,7 @@ SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _showCap, "Show cap polygons");
 SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _smoothShading, "Smooth shading");
 SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _surfaceTransparency, "Surface transparency");
 SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _capTransparency, "Cap transparency");
+SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _flipOrientation, "Flip surface orientation");
 SET_PROPERTY_FIELD_UNITS(PartitionMeshDisplay, _surfaceTransparency, PercentParameterUnit);
 SET_PROPERTY_FIELD_UNITS(PartitionMeshDisplay, _capTransparency, PercentParameterUnit);
 
@@ -53,13 +55,14 @@ SET_PROPERTY_FIELD_UNITS(PartitionMeshDisplay, _capTransparency, PercentParamete
 * Constructor.
 ******************************************************************************/
 PartitionMeshDisplay::PartitionMeshDisplay(DataSet* dataset) : AsynchronousDisplayObject(dataset),
-	_surfaceColor(1, 1, 1), _showCap(true), _smoothShading(true), _trimeshUpdate(true)
+	_surfaceColor(1, 1, 1), _showCap(true), _smoothShading(true), _flipOrientation(false), _trimeshUpdate(true)
 {
 	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_surfaceColor);
 	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_showCap);
 	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_smoothShading);
 	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_surfaceTransparency);
 	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_capTransparency);
+	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_flipOrientation);
 
 	_surfaceTransparency = ControllerManager::instance().createFloatController(dataset);
 	_capTransparency = ControllerManager::instance().createFloatController(dataset);
@@ -91,9 +94,9 @@ std::shared_ptr<AsynchronousTask> PartitionMeshDisplay::createEngine(TimePoint t
 	// Check if input is available.
 	if(cellObject && partitionMeshObj) {
 		// Check if the input has changed.
-		if(_preparationCacheHelper.updateState(dataObject, cellObject->data())) {
+		if(_preparationCacheHelper.updateState(dataObject, cellObject->data(), flipOrientation())) {
 			// Create compute engine.
-			return std::make_shared<PrepareMeshEngine>(partitionMeshObj->storage(), cellObject->data(), partitionMeshObj->spaceFillingRegion(), partitionMeshObj->cuttingPlanes());
+			return std::make_shared<PrepareMeshEngine>(partitionMeshObj->storage(), cellObject->data(), partitionMeshObj->spaceFillingRegion(), partitionMeshObj->cuttingPlanes(), flipOrientation());
 		}
 	}
 	else {
@@ -115,6 +118,9 @@ void PartitionMeshDisplay::PrepareMeshEngine::perform()
 	if(!buildMesh(*_inputMesh, _simCell, _cuttingPlanes, _surfaceMesh, this))
 		throw Exception(tr("Failed to generate non-periodic version of microstructure mesh for display. Simulation cell might be too small."));
 
+	if(_flipOrientation)
+		_surfaceMesh.flipFaces();
+
 	if(isCanceled())
 		return;
 }
@@ -131,7 +137,7 @@ void PartitionMeshDisplay::transferComputationResults(AsynchronousTask* engine)
 	}
 	else {
 		// Reset cache when compute task has been canceled.
-		_preparationCacheHelper.updateState(nullptr, SimulationCell());
+		_preparationCacheHelper.updateState(nullptr, SimulationCell(), false);
 	}
 }
 
@@ -164,7 +170,7 @@ void PartitionMeshDisplay::render(TimePoint time, DataObject* dataObject, const 
 	bool recreateCapBuffer = _showCap && (!_capBuffer || !_capBuffer->isValid(renderer));
 
 	// Do we have to update the render primitives?
-	bool updateContents = _geometryCacheHelper.updateState(color_surface, _smoothShading, clusterGraph)
+	bool updateContents = _geometryCacheHelper.updateState(color_surface, smoothShading(), clusterGraph)
 					|| recreateSurfaceBuffer || recreateCapBuffer || _trimeshUpdate;
 
 	// Re-create the render primitives if necessary.
@@ -419,6 +425,9 @@ void PartitionMeshDisplayEditor::createUI(const RolloutInsertionParameters& roll
 
 	BooleanParameterUI* smoothShadingUI = new BooleanParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_smoothShading));
 	sublayout->addWidget(smoothShadingUI->checkBox(), 2, 0, 1, 2);
+
+	BooleanParameterUI* flipOrientationUI = new BooleanParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_flipOrientation));
+	sublayout->addWidget(flipOrientationUI->checkBox(), 3, 0, 1, 2);
 
 	BooleanGroupBoxParameterUI* capGroupUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_showCap));
 	capGroupUI->groupBox()->setTitle(tr("Cap polygons"));

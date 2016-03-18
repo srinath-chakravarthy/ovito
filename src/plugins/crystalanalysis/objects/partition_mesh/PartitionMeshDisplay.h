@@ -69,6 +69,12 @@ public:
 	/// Sets whether the mesh is rendered using smooth shading.
 	void setSmoothShading(bool smoothShading) { _smoothShading = smoothShading; }
 
+	/// Returns whether the orientation of mesh faces is flipped.
+	bool flipOrientation() const { return _flipOrientation; }
+
+	/// Sets whether the orientation of mesh faces is flipped.
+	void setFlipOrientation(bool flipOrientation) { _flipOrientation = flipOrientation; }
+
 	/// Returns the transparency of the surface mesh.
 	FloatType surfaceTransparency() const { return _surfaceTransparency ? _surfaceTransparency->currentFloatValue() : 0.0f; }
 
@@ -98,8 +104,8 @@ protected:
 	public:
 
 		/// Constructor.
-		PrepareMeshEngine(PartitionMeshData* mesh, const SimulationCell& simCell, int spaceFillingRegion, const QVector<Plane3>& cuttingPlanes) :
-			_inputMesh(mesh), _simCell(simCell), _spaceFillingRegion(spaceFillingRegion), _cuttingPlanes(cuttingPlanes) {}
+		PrepareMeshEngine(PartitionMeshData* mesh, const SimulationCell& simCell, int spaceFillingRegion, const QVector<Plane3>& cuttingPlanes, bool flipOrientation) :
+			_inputMesh(mesh), _simCell(simCell), _spaceFillingRegion(spaceFillingRegion), _cuttingPlanes(cuttingPlanes), _flipOrientation(flipOrientation) {}
 
 		/// Computes the results and stores them in this object for later retrieval.
 		virtual void perform() override;
@@ -112,6 +118,7 @@ protected:
 		QExplicitlySharedDataPointer<PartitionMeshData> _inputMesh;
 		SimulationCell _simCell;
 		int _spaceFillingRegion;
+		bool _flipOrientation;
 		QVector<Plane3> _cuttingPlanes;
 		TriMesh _surfaceMesh;
 		TriMesh _capPolygonsMesh;
@@ -130,6 +137,9 @@ protected:
 
 	/// Controls whether the mesh is rendered using smooth shading.
 	PropertyField<bool> _smoothShading;
+
+	/// Controls whether the orientation of mesh faces is flipped.
+	PropertyField<bool> _flipOrientation;
 
 	/// Controls the transparency of the surface mesh.
 	ReferenceField<Controller> _surfaceTransparency;
@@ -161,7 +171,8 @@ protected:
 	/// that require recomputing the cached triangle mesh for rendering.
 	SceneObjectCacheHelper<
 		WeakVersionedOORef<DataObject>,		// Source object + revision number
-		SimulationCell						// Simulation cell geometry
+		SimulationCell,						// Simulation cell geometry
+		bool								// Flip orientation
 		> _preparationCacheHelper;
 
 	/// Indicates that the triangle mesh representation of the surface has recently been updated.
@@ -177,6 +188,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_surfaceColor);
 	DECLARE_PROPERTY_FIELD(_showCap);
 	DECLARE_PROPERTY_FIELD(_smoothShading);
+	DECLARE_PROPERTY_FIELD(_flipOrientation);
 	DECLARE_REFERENCE_FIELD(_surfaceTransparency);
 	DECLARE_REFERENCE_FIELD(_capTransparency);
 };

@@ -43,6 +43,8 @@ Unresolved OpenGL problems:
     MacBook Air with the operating system OS X 10.9.5 Maverick (yidong.xia@inl.gov)
 - Texture-mapped point sprites don't work in the perspective viewport on Diego's computer (Linux, Intel Opengl 2.1)
   Workaround is to explicitly turn off the use point sprites.
+- High-quality particle rendering does not work properly (spheres are cut in half), 
+    Ovito 2.6.1 Linux, Mesa DRI Intel(R) Sandybridge Mobile, 3.3 (Core Profile) Mesa 11.1.2  (morten.nagel@helsinki.fi)
 
 Unresolved bugs:
 
