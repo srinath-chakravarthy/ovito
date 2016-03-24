@@ -76,7 +76,12 @@ public:
 
 	/// \brief Sets the path where this dataset is stored.
 	/// \param path The new path (should be absolute) where the dataset will be stored.
-	void setFilePath(const QString& path) { _filePath = path; }
+	void setFilePath(const QString& path) {
+		if(path != _filePath) {
+			_filePath = path;
+			Q_EMIT filePathChanged(_filePath);
+		}
+	}
 
 	/// \brief Returns the undo stack that keeps track of changes made to this dataset.
 	UndoStack& undoStack() {
@@ -165,6 +170,9 @@ Q_SIGNALS:
 	///        has been replaced by another one.
 	/// \note This signal is NOT emitted when nodes are added or removed from the current selection set.
     void selectionSetReplaced(SelectionSet* newSelectionSet);
+
+	/// \brief This signal is emitted whenever the dataset has been saved under a new file name.
+    void filePathChanged(const QString& filePath);
 
 protected:
 

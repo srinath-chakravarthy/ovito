@@ -433,5 +433,18 @@ void MainWindow::setCurrentCommandPanelPage(CommandPanelPage page)
 	_commandPanel->setCurrentPage(page);
 }
 
+/******************************************************************************
+* Sets the file path associated with this window and updates the window's title.
+******************************************************************************/
+void MainWindow::setWindowFilePath(const QString& filePath)
+{
+	if(filePath.isEmpty())
+		setWindowTitle(tr("Ovito (Open Visualization Tool) [*]"));
+	else
+		setWindowTitle(tr("Ovito (Open Visualization Tool) - %1[*]").arg(QFileInfo(filePath).fileName()));
+	QMainWindow::setWindowFilePath(filePath);
+}
+
+
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

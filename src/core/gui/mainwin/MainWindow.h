@@ -106,6 +106,9 @@ public:
 	/// Sets the page of the command panel that is currently visible.
 	void setCurrentCommandPanelPage(CommandPanelPage page);
 
+	/// Sets the file path associated with this window and updates the window's title.
+	void setWindowFilePath(const QString& filePath);
+
 protected:
 
 	/// Is called when the user closes the window.

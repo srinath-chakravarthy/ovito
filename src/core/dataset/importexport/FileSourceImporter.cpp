@@ -187,6 +187,7 @@ bool FileSourceImporter::importFile(const QUrl& sourceUrl, ImportMode importMode
 		dataset()->clearScene();
 		if(!dataset()->undoStack().isRecording())
 			dataset()->undoStack().clear();
+		dataset()->setFilePath(QString());
 	}
 	else if(importMode == AddToScene) {
 		existingFileSource = nullptr;

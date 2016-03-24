@@ -72,11 +72,17 @@ void DataSetContainer::referenceReplaced(const PropertyFieldDescriptor& field, R
 		disconnect(_viewportConfigReplacedConnection);
 		disconnect(_animationSettingsReplacedConnection);
 		disconnect(_renderSettingsReplacedConnection);
+		disconnect(_undoStackCleanChangedConnection);
+		disconnect(_filePathChangedConnection);
 		if(currentSet()) {
 			_selectionSetReplacedConnection = connect(currentSet(), &DataSet::selectionSetReplaced, this, &DataSetContainer::onSelectionSetReplaced);
 			_viewportConfigReplacedConnection = connect(currentSet(), &DataSet::viewportConfigReplaced, this, &DataSetContainer::viewportConfigReplaced);
 			_animationSettingsReplacedConnection = connect(currentSet(), &DataSet::animationSettingsReplaced, this, &DataSetContainer::animationSettingsReplaced);
 			_renderSettingsReplacedConnection = connect(currentSet(), &DataSet::renderSettingsReplaced, this, &DataSetContainer::renderSettingsReplaced);
+			if(mainWindow()) {
+				_filePathChangedConnection = connect(currentSet(), &DataSet::filePathChanged, [this](const QString& filePath) { mainWindow()->setWindowFilePath(filePath); });
+				_undoStackCleanChangedConnection = connect(&currentSet()->undoStack(), &UndoStack::cleanChanged, [this](bool isClean) { mainWindow()->setWindowModified(!isClean); });
+			}
 		}
 
 		Q_EMIT dataSetChanged(currentSet());
@@ -96,6 +102,10 @@ void DataSetContainer::referenceReplaced(const PropertyFieldDescriptor& field, R
 			Q_EMIT renderSettingsReplaced(nullptr);
 		}
 
+		if(mainWindow()) {
+			mainWindow()->setWindowFilePath(currentSet() ? currentSet()->filePath() : QString());
+			mainWindow()->setWindowModified(currentSet() ? !currentSet()->undoStack().isClean() : false);
+		}
 	}
 	RefMaker::referenceReplaced(field, oldTarget, newTarget);
 }
@@ -223,8 +233,17 @@ bool DataSetContainer::askForSaveChanges()
 	if(!currentSet() || currentSet()->undoStack().isClean() || currentSet()->filePath().isEmpty() || !mainWindow())
 		return true;
 
+	QString message;
+	if(currentSet()->filePath().isEmpty() == false) {
+		message = tr("The current scene has been modified. Do you want to save the changes?");
+		message += QString("\n\nFile: %1").arg(currentSet()->filePath());
+	}
+	else {
+		message = tr("The current scene has not been saved. Do you want to save it?");
+	}
+
 	QMessageBox::StandardButton result = QMessageBox::question(mainWindow(), tr("Save changes"),
-		tr("The current scene has been modified. Do you want to save the changes?"),
+		message,
 		QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel, QMessageBox::Cancel);
 	if(result == QMessageBox::Cancel)
 		return false; // Operation canceled by user

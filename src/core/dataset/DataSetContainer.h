@@ -191,6 +191,8 @@ private:
 	QMetaObject::Connection _renderSettingsReplacedConnection;
 	QMetaObject::Connection _animationTimeChangedConnection;
 	QMetaObject::Connection _animationTimeChangeCompleteConnection;
+	QMetaObject::Connection _undoStackCleanChangedConnection;
+	QMetaObject::Connection _filePathChangedConnection;
 
 	Q_OBJECT
 	OVITO_OBJECT
