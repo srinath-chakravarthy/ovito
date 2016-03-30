@@ -42,6 +42,7 @@ DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, _burgersVectorScaling, "BurgersV
 DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, _burgersVectorColor, "BurgersVectorColor", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(DislocationDisplay, _showBurgersVectors, "ShowBurgersVectors");
 DEFINE_PROPERTY_FIELD(DislocationDisplay, _showLineDirections, "ShowLineDirections");
+DEFINE_PROPERTY_FIELD(DislocationDisplay, _indicateDislocationCharacter, "IndicateDislocationCharacter");
 SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _lineWidth, "Dislocation line width");
 SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _shadingMode, "Shading mode");
 SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _burgersVectorWidth, "Burgers vector width");
@@ -49,6 +50,7 @@ SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _burgersVectorScaling, "Burgers vec
 SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _burgersVectorColor, "Burgers vector color");
 SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _showBurgersVectors, "Show Burgers vectors");
 SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _showLineDirections, "Indicate line directions");
+SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _indicateDislocationCharacter, "Indicate character");
 SET_PROPERTY_FIELD_UNITS(DislocationDisplay, _lineWidth, WorldParameterUnit);
 SET_PROPERTY_FIELD_UNITS(DislocationDisplay, _burgersVectorWidth, WorldParameterUnit);
 
@@ -59,7 +61,7 @@ DislocationDisplay::DislocationDisplay(DataSet* dataset) : DisplayObject(dataset
 	_lineWidth(1.0f), _shadingMode(ArrowPrimitive::NormalShading),
 	_burgersVectorWidth(0.6f), _burgersVectorScaling(3.0f),
 	_burgersVectorColor(0.7, 0.7, 0.7),
-	_showBurgersVectors(false), _showLineDirections(false)
+	_showBurgersVectors(false), _showLineDirections(false), _indicateDislocationCharacter(false)
 {
 	INIT_PROPERTY_FIELD(DislocationDisplay::_lineWidth);
 	INIT_PROPERTY_FIELD(DislocationDisplay::_shadingMode);
@@ -68,6 +70,7 @@ DislocationDisplay::DislocationDisplay(DataSet* dataset) : DisplayObject(dataset
 	INIT_PROPERTY_FIELD(DislocationDisplay::_burgersVectorColor);
 	INIT_PROPERTY_FIELD(DislocationDisplay::_showBurgersVectors);
 	INIT_PROPERTY_FIELD(DislocationDisplay::_showLineDirections);
+	INIT_PROPERTY_FIELD(DislocationDisplay::_indicateDislocationCharacter);
 }
 
 /******************************************************************************
@@ -137,7 +140,7 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 	bool updateContents = _geometryCacheHelper.updateState(
 			dataObject, cellObject->data(), patternCatalog, lineWidth(),
 			showBurgersVectors(), burgersVectorScaling(),
-			burgersVectorWidth(), burgersVectorColor()) || recreateBuffers;
+			burgersVectorWidth(), burgersVectorColor(), indicateDislocationCharacter()) || recreateBuffers;
 
 	// Re-create the geometry buffers if necessary.
 	if(recreateBuffers) {
@@ -170,7 +173,7 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 			cornerColors.reserve(cornerCount);
 			for(DislocationSegment* segment : dislocationObj->segments()) {
 				BurgersVectorFamily* family = nullptr;
-				if(patternCatalog) {
+				if(patternCatalog && !indicateDislocationCharacter()) {
 					Cluster* cluster = segment->burgersVector.cluster();
 					OVITO_ASSERT(cluster != nullptr);
 					StructurePattern* pattern = patternCatalog->structureById(cluster->structure);
@@ -183,8 +186,18 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 					}
 				}
 				Color lineColor = family ? family->color() : Color(0.8,0.8,0.8);
-				clipDislocationLine(segment->line, cellData, dislocationObj->cuttingPlanes(), [this, &lineSegmentIndex, &cornerPoints, &cornerColors, lineColor, lineRadius, &subobjToSegmentMap, &dislocationIndex, lineSegmentCount](const Point3& v1, const Point3& v2, bool isInitialSegment) {
+				Vector3 normalizedBurgersVector = segment->burgersVector.toSpatialVector();
+				normalizedBurgersVector.normalizeSafely();
+				clipDislocationLine(segment->line, cellData, dislocationObj->cuttingPlanes(), [this, &lineSegmentIndex, &cornerPoints, &cornerColors, lineColor, lineRadius, &subobjToSegmentMap, &dislocationIndex, lineSegmentCount, normalizedBurgersVector](const Point3& v1, const Point3& v2, bool isInitialSegment) mutable {
 					subobjToSegmentMap[lineSegmentIndex] = dislocationIndex;
+					if(indicateDislocationCharacter()) {
+						Vector3 delta = v2 - v1;
+						FloatType dot = std::abs(delta.dot(normalizedBurgersVector));
+						if(dot != 0) dot /= delta.length();
+						if(dot > 1) dot = 1;
+						FloatType angle = std::acos(dot) / (FLOATTYPE_PI/2);
+						lineColor = Color(FloatType(1)-angle, angle, 0);
+					}
 					_segmentBuffer->setElement(lineSegmentIndex++, v1, v2 - v1, ColorA(lineColor), lineRadius);
 					if(!isInitialSegment) {
 						subobjToSegmentMap[cornerPoints.size() + lineSegmentCount] = dislocationIndex;
@@ -594,6 +607,15 @@ void DislocationDisplayEditor::createUI(const RolloutInsertionParameters& rollou
 	// Show line directions.
 	BooleanParameterUI* showLineDirectionsUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_showLineDirections));
 	layout->addWidget(showLineDirectionsUI->checkBox());
+
+	// Indicate dislocation character.
+	sublayout = new QGridLayout();
+	sublayout->setContentsMargins(0,0,0,0);
+	sublayout->setSpacing(0);
+	BooleanParameterUI* indicateDislocationCharacterUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_indicateDislocationCharacter));
+	sublayout->addWidget(indicateDislocationCharacterUI->checkBox(), 0, 0);
+	sublayout->addWidget(new QLabel(tr("<p> (<font color=\"#FF0000\">screw</font>/<font color=\"#00DD00\">edge</font>)</p>")), 0, 1);
+	layout->addLayout(sublayout);
 }
 
 }	// End of namespace

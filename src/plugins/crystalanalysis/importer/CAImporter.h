@@ -31,6 +31,7 @@
 #include <plugins/crystalanalysis/data/ClusterGraph.h>
 #include <plugins/crystalanalysis/data/DislocationNetwork.h>
 #include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
+#include <plugins/crystalanalysis/objects/slip_surface/SlipSurface.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -120,6 +121,9 @@ protected:
 
 		/// The partition mesh.
 		QExplicitlySharedDataPointer<PartitionMeshData> _partitionMesh;
+
+		/// The slip surfaces.
+		QExplicitlySharedDataPointer<SlipSurfaceData> _slipSurface;
 
 		/// Controls whether particles should be loaded too.
 		bool _loadParticles;

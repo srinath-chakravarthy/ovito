@@ -24,6 +24,7 @@
 #include <plugins/particles/objects/SurfaceMesh.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
 #include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
+#include <plugins/crystalanalysis/objects/slip_surface/SlipSurface.h>
 #include "SliceSurfaceModifier.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
@@ -52,6 +53,19 @@ PipelineStatus SliceSurfaceFunction::apply(SliceModifier* modifier, TimePoint ti
 		}
 		else if(PartitionMesh* inputMesh = dynamic_object_cast<PartitionMesh>(obj)) {
 			OORef<PartitionMesh> outputMesh = modifier->cloneHelper()->cloneObject(inputMesh, false);
+			QVector<Plane3> planes = inputMesh->cuttingPlanes();
+			if(sliceWidth <= 0) {
+				planes.push_back(plane);
+			}
+			else {
+				planes.push_back(Plane3(plane.normal, plane.dist + sliceWidth/2));
+				planes.push_back(Plane3(-plane.normal, -plane.dist + sliceWidth/2));
+			}
+			outputMesh->setCuttingPlanes(planes);
+			modifier->output().replaceObject(inputMesh, outputMesh);
+		}
+		else if(SlipSurface* inputMesh = dynamic_object_cast<SlipSurface>(obj)) {
+			OORef<SlipSurface> outputMesh = modifier->cloneHelper()->cloneObject(inputMesh, false);
 			QVector<Plane3> planes = inputMesh->cuttingPlanes();
 			if(sliceWidth <= 0) {
 				planes.push_back(plane);

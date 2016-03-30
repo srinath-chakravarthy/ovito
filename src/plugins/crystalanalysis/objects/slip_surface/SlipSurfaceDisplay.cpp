@@ -21,7 +21,6 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/rendering/SceneRenderer.h>
-#include <core/gui/properties/ColorParameterUI.h>
 #include <core/gui/properties/BooleanParameterUI.h>
 #include <core/gui/properties/FloatParameterUI.h>
 #include <core/gui/properties/BooleanGroupBoxParameterUI.h>
@@ -29,49 +28,35 @@
 #include <core/animation/controller/Controller.h>
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
-#include "PartitionMeshDisplay.h"
+#include "SlipSurfaceDisplay.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, PartitionMeshDisplayEditor, PropertiesEditor);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, PartitionMeshDisplay, AsynchronousDisplayObject);
-SET_OVITO_OBJECT_EDITOR(PartitionMeshDisplay, PartitionMeshDisplayEditor);
-DEFINE_FLAGS_PROPERTY_FIELD(PartitionMeshDisplay, _surfaceColor, "SurfaceColor", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(PartitionMeshDisplay, _showCap, "ShowCap", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(PartitionMeshDisplay, _smoothShading, "SmoothShading");
-DEFINE_PROPERTY_FIELD(PartitionMeshDisplay, _flipOrientation, "FlipOrientation");
-DEFINE_REFERENCE_FIELD(PartitionMeshDisplay, _surfaceTransparency, "SurfaceTransparency", Controller);
-DEFINE_REFERENCE_FIELD(PartitionMeshDisplay, _capTransparency, "CapTransparency", Controller);
-SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _surfaceColor, "Free surface color");
-SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _showCap, "Show cap polygons");
-SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _smoothShading, "Smooth shading");
-SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _surfaceTransparency, "Surface transparency");
-SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _capTransparency, "Cap transparency");
-SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _flipOrientation, "Flip surface orientation");
-SET_PROPERTY_FIELD_UNITS(PartitionMeshDisplay, _surfaceTransparency, PercentParameterUnit);
-SET_PROPERTY_FIELD_UNITS(PartitionMeshDisplay, _capTransparency, PercentParameterUnit);
+IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, SlipSurfaceDisplayEditor, PropertiesEditor);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, SlipSurfaceDisplay, AsynchronousDisplayObject);
+SET_OVITO_OBJECT_EDITOR(SlipSurfaceDisplay, SlipSurfaceDisplayEditor);
+DEFINE_PROPERTY_FIELD(SlipSurfaceDisplay, _smoothShading, "SmoothShading");
+DEFINE_REFERENCE_FIELD(SlipSurfaceDisplay, _surfaceTransparency, "SurfaceTransparency", Controller);
+SET_PROPERTY_FIELD_LABEL(SlipSurfaceDisplay, _smoothShading, "Smooth shading");
+SET_PROPERTY_FIELD_LABEL(SlipSurfaceDisplay, _surfaceTransparency, "Surface transparency");
+SET_PROPERTY_FIELD_UNITS(SlipSurfaceDisplay, _surfaceTransparency, PercentParameterUnit);
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-PartitionMeshDisplay::PartitionMeshDisplay(DataSet* dataset) : AsynchronousDisplayObject(dataset),
-	_surfaceColor(1, 1, 1), _showCap(true), _smoothShading(true), _flipOrientation(false), _trimeshUpdate(true)
+SlipSurfaceDisplay::SlipSurfaceDisplay(DataSet* dataset) : AsynchronousDisplayObject(dataset),
+	_smoothShading(false), _trimeshUpdate(true)
 {
-	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_surfaceColor);
-	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_showCap);
-	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_smoothShading);
-	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_surfaceTransparency);
-	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_capTransparency);
-	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_flipOrientation);
+	INIT_PROPERTY_FIELD(SlipSurfaceDisplay::_smoothShading);
+	INIT_PROPERTY_FIELD(SlipSurfaceDisplay::_surfaceTransparency);
 
 	_surfaceTransparency = ControllerManager::instance().createFloatController(dataset);
-	_capTransparency = ControllerManager::instance().createFloatController(dataset);
 }
 
 /******************************************************************************
 * Computes the bounding box of the displayed data.
 ******************************************************************************/
-Box3 PartitionMeshDisplay::boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState)
+Box3 SlipSurfaceDisplay::boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState)
 {
 	// We'll use the entire simulation cell as bounding box for the mesh.
 	if(SimulationCellObject* cellObject = flowState.findObject<SimulationCellObject>())
@@ -83,25 +68,24 @@ Box3 PartitionMeshDisplay::boundingBox(TimePoint time, DataObject* dataObject, O
 /******************************************************************************
 * Creates a computation engine that will prepare the data to be displayed.
 ******************************************************************************/
-std::shared_ptr<AsynchronousTask> PartitionMeshDisplay::createEngine(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState)
+std::shared_ptr<AsynchronousTask> SlipSurfaceDisplay::createEngine(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState)
 {
 	// Get the simulation cell.
 	SimulationCellObject* cellObject = flowState.findObject<SimulationCellObject>();
 
-	// Get the partition mesh.
-	PartitionMesh* partitionMeshObj = dynamic_object_cast<PartitionMesh>(dataObject);
+	// Get the slip surface.
+	SlipSurface* slipSurfaceObj = dynamic_object_cast<SlipSurface>(dataObject);
 
 	// Check if input is available.
-	if(cellObject && partitionMeshObj) {
+	if(cellObject && slipSurfaceObj) {
 		// Check if the input has changed.
-		if(_preparationCacheHelper.updateState(dataObject, cellObject->data(), flipOrientation())) {
+		if(_preparationCacheHelper.updateState(dataObject, cellObject->data())) {
 			// Create compute engine.
-			return std::make_shared<PrepareMeshEngine>(partitionMeshObj->storage(), cellObject->data(), partitionMeshObj->spaceFillingRegion(), partitionMeshObj->cuttingPlanes(), flipOrientation());
+			return std::make_shared<PrepareMeshEngine>(slipSurfaceObj->storage(), cellObject->data(), slipSurfaceObj->cuttingPlanes());
 		}
 	}
 	else {
 		_surfaceMesh.clear();
-		_capPolygonsMesh.clear();
 		_trimeshUpdate = true;
 	}
 
@@ -111,15 +95,12 @@ std::shared_ptr<AsynchronousTask> PartitionMeshDisplay::createEngine(TimePoint t
 /******************************************************************************
 * Computes the results and stores them in this object for later retrieval.
 ******************************************************************************/
-void PartitionMeshDisplay::PrepareMeshEngine::perform()
+void SlipSurfaceDisplay::PrepareMeshEngine::perform()
 {
-	setProgressText(tr("Preparing microstructure mesh for display"));
+	setProgressText(tr("Preparing slip surface for display"));
 
 	if(!buildMesh(*_inputMesh, _simCell, _cuttingPlanes, _surfaceMesh, this))
-		throw Exception(tr("Failed to generate non-periodic version of microstructure mesh for display. Simulation cell might be too small."));
-
-	if(_flipOrientation)
-		_surfaceMesh.flipFaces();
+		throw Exception(tr("Failed to generate non-periodic version of slip surface for display. Simulation cell might be too small."));
 
 	if(isCanceled())
 		return;
@@ -128,56 +109,49 @@ void PartitionMeshDisplay::PrepareMeshEngine::perform()
 /******************************************************************************
 * Unpacks the results of the computation engine and stores them in the display object.
 ******************************************************************************/
-void PartitionMeshDisplay::transferComputationResults(AsynchronousTask* engine)
+void SlipSurfaceDisplay::transferComputationResults(AsynchronousTask* engine)
 {
 	if(engine) {
 		_surfaceMesh = static_cast<PrepareMeshEngine*>(engine)->surfaceMesh();
-		_capPolygonsMesh = static_cast<PrepareMeshEngine*>(engine)->capPolygonsMesh();
 		_trimeshUpdate = true;
 	}
 	else {
 		// Reset cache when compute task has been canceled.
-		_preparationCacheHelper.updateState(nullptr, SimulationCell(), false);
+		_preparationCacheHelper.updateState(nullptr, SimulationCell());
 	}
 }
 
 /******************************************************************************
 * Lets the display object render the data object.
 ******************************************************************************/
-void PartitionMeshDisplay::render(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState, SceneRenderer* renderer, ObjectNode* contextNode)
+void SlipSurfaceDisplay::render(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState, SceneRenderer* renderer, ObjectNode* contextNode)
 {
 	// Check if geometry preparation was successful.
 	// If not, reset triangle mesh.
 	if(status().type() == PipelineStatus::Error && _surfaceMesh.faceCount() != 0) {
 		_surfaceMesh.clear();
-		_capPolygonsMesh.clear();
 		_trimeshUpdate = true;
 	}
 
 	// Get the cluster graph.
 	ClusterGraphObject* clusterGraph = flowState.findObject<ClusterGraphObject>();
 
-	// Get the rendering colors for the surface and cap meshes.
+	// Get the rendering colors for the surface.
 	FloatType transp_surface = 0;
-	FloatType transp_cap = 0;
 	TimeInterval iv;
 	if(_surfaceTransparency) transp_surface = _surfaceTransparency->getFloatValue(time, iv);
-	if(_capTransparency) transp_cap = _capTransparency->getFloatValue(time, iv);
-	ColorA color_surface(surfaceColor(), 1.0f - transp_surface);
+	ColorA color_surface(1, 1, 1, 1.0f - transp_surface);
 
 	// Do we have to re-create the render primitives from scratch?
 	bool recreateSurfaceBuffer = !_surfaceBuffer || !_surfaceBuffer->isValid(renderer);
-	bool recreateCapBuffer = _showCap && (!_capBuffer || !_capBuffer->isValid(renderer));
 
 	// Do we have to update the render primitives?
-	bool updateContents = _geometryCacheHelper.updateState(color_surface, smoothShading(), clusterGraph)
-					|| recreateSurfaceBuffer || recreateCapBuffer || _trimeshUpdate;
+	bool updateContents = _geometryCacheHelper.updateState(transp_surface, smoothShading(), clusterGraph)
+					|| recreateSurfaceBuffer || _trimeshUpdate;
 
 	// Re-create the render primitives if necessary.
 	if(recreateSurfaceBuffer)
 		_surfaceBuffer = renderer->createMeshPrimitive();
-	if(recreateCapBuffer && _showCap)
-		_capBuffer = renderer->createMeshPrimitive();
 
 	// Update render primitives.
 	if(updateContents) {
@@ -188,6 +162,7 @@ void PartitionMeshDisplay::render(TimePoint time, DataObject* dataObject, const 
 			face.setSmoothingGroups(smoothingGroup);
 		}
 
+#if 0
 		// Define surface colors for the regions by taking them from the cluster graph.
 		int maxClusterId = 0;
 		if(clusterGraph) {
@@ -204,12 +179,9 @@ void PartitionMeshDisplay::render(TimePoint time, DataObject* dataObject, const 
 			}
 		}
 		_surfaceBuffer->setMaterialColors(std::move(materialColors));
+#endif
 
 		_surfaceBuffer->setMesh(_surfaceMesh, color_surface);
-		_surfaceBuffer->setCullFaces(true);
-
-		if(_showCap)
-			_capBuffer->setMesh(_capPolygonsMesh, color_surface);
 
 		// Reset update flag.
 		_trimeshUpdate = false;
@@ -218,30 +190,28 @@ void PartitionMeshDisplay::render(TimePoint time, DataObject* dataObject, const 
 	// Handle picking of triangles.
 	renderer->beginPickObject(contextNode);
 	_surfaceBuffer->render(renderer);
-	if(_showCap)
-		_capBuffer->render(renderer);
-	else
-		_capBuffer.reset();
 	renderer->endPickObject();
 }
 
 /******************************************************************************
 * Generates the final triangle mesh, which will be rendered.
 ******************************************************************************/
-bool PartitionMeshDisplay::buildMesh(const PartitionMeshData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress)
+bool SlipSurfaceDisplay::buildMesh(const SlipSurfaceData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress)
 {
 	// Convert half-edge mesh to triangle mesh.
 	input.convertToTriMesh(output);
 
-	// Transfer region IDs to triangle faces.
+#if 0
+	// Color faces according to slip vector.
 	auto fout = output.faces().begin();
-	for(PartitionMeshData::Face* face : input.faces()) {
-		for(PartitionMeshData::Edge* edge = face->edges()->nextFaceEdge()->nextFaceEdge(); edge != face->edges(); edge = edge->nextFaceEdge()) {
+	for(SlipSurfaceData::Face* face : input.faces()) {
+		for(SlipSurfaceData::Edge* edge = face->edges()->nextFaceEdge()->nextFaceEdge(); edge != face->edges(); edge = edge->nextFaceEdge()) {
 			fout->setMaterialIndex(face->region);
 			++fout;
 		}
 	}
 	OVITO_ASSERT(fout == output.faces().end());
+#endif
 
 	// Check for early abortion.
 	if(progress && progress->isCanceled())
@@ -308,7 +278,7 @@ bool PartitionMeshDisplay::buildMesh(const PartitionMeshData& input, const Simul
 /******************************************************************************
 * Splits a triangle face at a periodic boundary.
 ******************************************************************************/
-bool PartitionMeshDisplay::splitFace(TriMesh& output, int faceIndex, int oldVertexCount, std::vector<Point3>& newVertices,
+bool SlipSurfaceDisplay::splitFace(TriMesh& output, int faceIndex, int oldVertexCount, std::vector<Point3>& newVertices,
 		std::map<std::pair<int,int>,std::pair<int,int>>& newVertexLookupMap, const SimulationCell& cell, size_t dim)
 {
 	TriMeshFace& face = output.face(faceIndex);
@@ -396,7 +366,7 @@ bool PartitionMeshDisplay::splitFace(TriMesh& output, int faceIndex, int oldVert
 /******************************************************************************
 * Sets up the UI widgets of the editor.
 ******************************************************************************/
-void PartitionMeshDisplayEditor::createUI(const RolloutInsertionParameters& rolloutParams)
+void SlipSurfaceDisplayEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 {
 	// Create a rollout.
 	QWidget* rollout = createRollout(QString(), rolloutParams);
@@ -413,35 +383,14 @@ void PartitionMeshDisplayEditor::createUI(const RolloutInsertionParameters& roll
 	sublayout->setColumnStretch(1, 1);
 	layout->addWidget(surfaceGroupBox);
 
-	ColorParameterUI* surfaceColorUI = new ColorParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_surfaceColor));
-	sublayout->addWidget(surfaceColorUI->label(), 0, 0);
-	sublayout->addWidget(surfaceColorUI->colorPicker(), 0, 1);
-
-	FloatParameterUI* surfaceTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_surfaceTransparency));
-	sublayout->addWidget(new QLabel(tr("Transparency:")), 1, 0);
-	sublayout->addLayout(surfaceTransparencyUI->createFieldLayout(), 1, 1);
+	FloatParameterUI* surfaceTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(SlipSurfaceDisplay::_surfaceTransparency));
+	sublayout->addWidget(new QLabel(tr("Transparency:")), 0, 0);
+	sublayout->addLayout(surfaceTransparencyUI->createFieldLayout(), 0, 1);
 	surfaceTransparencyUI->setMinValue(0);
 	surfaceTransparencyUI->setMaxValue(1);
 
-	BooleanParameterUI* smoothShadingUI = new BooleanParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_smoothShading));
-	sublayout->addWidget(smoothShadingUI->checkBox(), 2, 0, 1, 2);
-
-	BooleanParameterUI* flipOrientationUI = new BooleanParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_flipOrientation));
-	sublayout->addWidget(flipOrientationUI->checkBox(), 3, 0, 1, 2);
-
-	BooleanGroupBoxParameterUI* capGroupUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_showCap));
-	capGroupUI->groupBox()->setTitle(tr("Cap polygons"));
-	sublayout = new QGridLayout(capGroupUI->childContainer());
-	sublayout->setContentsMargins(4,4,4,4);
-	sublayout->setSpacing(4);
-	sublayout->setColumnStretch(1, 1);
-	layout->addWidget(capGroupUI->groupBox());
-
-	FloatParameterUI* capTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_capTransparency));
-	sublayout->addWidget(new QLabel(tr("Transparency:")), 0, 0);
-	sublayout->addLayout(capTransparencyUI->createFieldLayout(), 0, 1);
-	capTransparencyUI->setMinValue(0);
-	capTransparencyUI->setMaxValue(1);
+	BooleanParameterUI* smoothShadingUI = new BooleanParameterUI(this, PROPERTY_FIELD(SlipSurfaceDisplay::_smoothShading));
+	sublayout->addWidget(smoothShadingUI->checkBox(), 1, 0, 1, 2);
 }
 
 }	// End of namespace

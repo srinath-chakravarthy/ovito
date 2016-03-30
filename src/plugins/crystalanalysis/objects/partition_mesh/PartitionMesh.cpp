@@ -19,7 +19,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <plugins/particles/Particles.h>
+#include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include "PartitionMesh.h"
 

@@ -128,23 +128,29 @@ public:
 	/// Sets the scaling factor Burgers vectors.
 	void setBurgersVectorScaling(FloatType factor) { _burgersVectorScaling = factor; }
 
-	/// Returns the display color for Burgers vectors.
+	/// Returns the display color for Burgers vector arrows.
 	const Color& burgersVectorColor() const { return _burgersVectorColor; }
 
-	/// Sets the display color for Burgers vectors.
+	/// Sets the display color for Burgers vector arrows.
 	void setBurgersVectorColor(const Color& color) { _burgersVectorColor = color; }
 
-	/// Returns whether the display of Burgers vectors is enabled.
+	/// Returns whether the display of Burgers vector arrows is enabled.
 	bool showBurgersVectors() const { return _showBurgersVectors; }
 
-	/// Controls the display of Burgers vectors.
+	/// Controls the display of Burgers vector arrows.
 	void setShowBurgersVectors(bool enabled) { _showBurgersVectors = enabled; }
 
-	/// Returns whether line directions are shown.
+	/// Returns whether line directions are indicated.
 	bool showLineDirections() const { return _showLineDirections; }
 
-	/// Sets whether line directions are shown.
+	/// Sets whether line directions should be indicated.
 	void setShowLineDirections(bool enabled) { _showLineDirections = enabled; }
+
+	/// Returns whether local dislocation character should be indicated.
+	bool indicateDislocationCharacter() const { return _indicateDislocationCharacter; }
+
+	/// Sets whether local dislocation character should be indicated.
+	void setIndicateDislocationCharacter(bool enabled) { _indicateDislocationCharacter = enabled; }
 
 	/// \brief Renders an overlay marker for a single dislocation segment.
 	void renderOverlayMarker(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState, int segmentIndex, SceneRenderer* renderer, ObjectNode* contextNode);
@@ -183,7 +189,8 @@ protected:
 		bool,								// Burgers vector display
 		FloatType,							// Burgers vectors scaling
 		FloatType,							// Burgers vector width
-		Color								// Burgers vector color
+		Color,								// Burgers vector color
+		bool								// Indicate local dislocation character
 		> _geometryCacheHelper;
 
 	/// The cached bounding box.
@@ -221,6 +228,9 @@ protected:
 	/// Controls the display of the line directions.
 	PropertyField<bool> _showLineDirections;
 
+	/// Controls whether the local dislocation character is indicated.
+	PropertyField<bool> _indicateDislocationCharacter;
+
 	/// The data record used for picking dislocations in the viewports.
 	OORef<DislocationPickInfo> _pickInfo;
 
@@ -238,6 +248,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_burgersVectorColor);
 	DECLARE_PROPERTY_FIELD(_showBurgersVectors);
 	DECLARE_PROPERTY_FIELD(_showLineDirections);
+	DECLARE_PROPERTY_FIELD(_indicateDislocationCharacter);
 };
 
 /**

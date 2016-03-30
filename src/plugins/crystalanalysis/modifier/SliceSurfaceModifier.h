@@ -27,6 +27,7 @@
 #include <plugins/particles/objects/SurfaceMesh.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
 #include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
+#include <plugins/crystalanalysis/objects/slip_surface/SlipSurface.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -45,7 +46,7 @@ public:
 
 	/// \brief Returns whether this slice function can be applied to the given input data.
 	virtual bool isApplicableTo(const PipelineFlowState& input) override {
-		return (input.findObject<SurfaceMesh>() != nullptr) || (input.findObject<PartitionMesh>() != nullptr);
+		return (input.findObject<SurfaceMesh>() != nullptr) || (input.findObject<PartitionMesh>() != nullptr) || (input.findObject<SlipSurface>() != nullptr);
 	}
 
 private:

@@ -36,6 +36,8 @@
 #include <plugins/particles/objects/SurfaceMeshDisplay.h>
 #include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
 #include <plugins/crystalanalysis/objects/partition_mesh/PartitionMeshDisplay.h>
+#include <plugins/crystalanalysis/objects/slip_surface/SlipSurface.h>
+#include <plugins/crystalanalysis/objects/slip_surface/SlipSurfaceDisplay.h>
 #include "CAImporter.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
@@ -89,7 +91,7 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 	int fileFormatVersion = 0;
 	if(sscanf(stream.line(), "CA_FILE_VERSION %i", &fileFormatVersion) != 1)
 		throw Exception(tr("Failed to parse file. This is not a proper file written by the Crystal Analysis Tool or OVITO."));
-	if(fileFormatVersion != 4 && fileFormatVersion != 5 && fileFormatVersion != 6)
+	if(fileFormatVersion != 4 && fileFormatVersion != 5 && fileFormatVersion != 6 && fileFormatVersion != 7)
 		throw Exception(tr("Failed to parse file. This file format version is not supported: %1").arg(fileFormatVersion));
 	stream.readLine();
 	if(!stream.lineStartsWith("CA_LIB_VERSION"))
@@ -492,6 +494,41 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 				}
 			}
 		}
+		else if(stream.lineStartsWith("SLIP_SURFACE_VERTICES ")) {
+			// Read slip surface vertices.
+			int numVertices;
+			if(sscanf(stream.line(), "SLIP_SURFACE_VERTICES %i", &numVertices) != 1)
+				throw Exception(tr("Failed to parse file. Invalid number of mesh vertices in line %1.").arg(stream.lineNumber()));
+			setProgressText(tr("Reading slip surfaces"));
+			setProgressRange(numVertices);
+			_slipSurface = new SlipSurfaceData();
+			_slipSurface->reserveVertices(numVertices);
+			for(int index = 0; index < numVertices; index++) {
+				if(!setProgressValueIntermittent(index)) return;
+				Point3 p;
+				if(sscanf(stream.readLine(), FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING, &p.x(), &p.y(), &p.z()) != 3)
+					throw Exception(tr("Failed to parse file. Invalid point in line %1.").arg(stream.lineNumber()));
+				_slipSurface->createVertex(p);
+			}
+		}
+		else if(stream.lineStartsWith("SLIP_SURFACE_FACETS ") && _slipSurface) {
+			// Read slip surface facets.
+			int numFacets;
+			if(sscanf(stream.line(), "SLIP_SURFACE_FACETS %i", &numFacets) != 1)
+				throw Exception(tr("Failed to parse file. Invalid number of mesh facets in line %1.").arg(stream.lineNumber()));
+			setProgressRange(numFacets);
+			_slipSurface->reserveFaces(numFacets);
+			for(int index = 0; index < numFacets; index++) {
+				if(!setProgressValueIntermittent(index))
+					return;
+				Vector3 slipVector;
+				int clusterId;
+				int v[3];
+				if(sscanf(stream.readLine(), FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " %i %i %i %i", &slipVector.x(), &slipVector.y(), &slipVector.z(), &clusterId, &v[0], &v[1], &v[2]) != 7)
+					throw Exception(tr("Failed to parse file. Invalid triangle facet in line %1.").arg(stream.lineNumber()));
+				SlipSurfaceData::Face* face = _slipSurface->createFace({ _slipSurface->vertex(v[0]), _slipSurface->vertex(v[1]), _slipSurface->vertex(v[2]) });
+			}
+		}
 		else if(stream.lineStartsWith("METADATA ")) {
 			// Ignore. This is for future use.
 		}
@@ -553,7 +590,7 @@ void CAImporter::CrystalAnalysisFrameLoader::handOver(CompoundObject* container)
 	OORef<SurfaceMesh> defectSurfaceObj = oldObjects.findObject<SurfaceMesh>();
 	if(_defectSurface) {
 		if(!defectSurfaceObj) {
-			defectSurfaceObj = new SurfaceMesh(container->dataset());
+			defectSurfaceObj = new SurfaceMesh(container->dataset(), _defectSurface.data());
 			OORef<SurfaceMeshDisplay> displayObj = new SurfaceMeshDisplay(container->dataset());
 			displayObj->loadUserDefaults();
 			defectSurfaceObj->setDisplayObject(displayObj);
@@ -565,12 +602,24 @@ void CAImporter::CrystalAnalysisFrameLoader::handOver(CompoundObject* container)
 	OORef<PartitionMesh> partitionMeshObj = oldObjects.findObject<PartitionMesh>();
 	if(_partitionMesh) {
 		if(!partitionMeshObj) {
-			partitionMeshObj = new PartitionMesh(container->dataset());
+			partitionMeshObj = new PartitionMesh(container->dataset(), _partitionMesh.data());
 			OORef<PartitionMeshDisplay> displayObj = new PartitionMeshDisplay(container->dataset());
 			displayObj->loadUserDefaults();
 			partitionMeshObj->setDisplayObject(displayObj);
 		}
 		partitionMeshObj->setStorage(_partitionMesh.data());
+	}
+
+	// Insert slip surface.
+	OORef<SlipSurface> slipSurfaceObj = oldObjects.findObject<SlipSurface>();
+	if(_slipSurface) {
+		if(!slipSurfaceObj) {
+			slipSurfaceObj = new SlipSurface(container->dataset(), _slipSurface.data());
+			OORef<SlipSurfaceDisplay> displayObj = new SlipSurfaceDisplay(container->dataset());
+			displayObj->loadUserDefaults();
+			slipSurfaceObj->setDisplayObject(displayObj);
+		}
+		slipSurfaceObj->setStorage(_slipSurface.data());
 	}
 
 	// Insert pattern catalog.
@@ -663,6 +712,8 @@ void CAImporter::CrystalAnalysisFrameLoader::handOver(CompoundObject* container)
 		container->addDataObject(defectSurfaceObj);
 	if(_partitionMesh)
 		container->addDataObject(partitionMeshObj);
+	if(_slipSurface)
+		container->addDataObject(slipSurfaceObj);
 	if(patternCatalog)
 		container->addDataObject(patternCatalog);
 	if(clusterGraph)

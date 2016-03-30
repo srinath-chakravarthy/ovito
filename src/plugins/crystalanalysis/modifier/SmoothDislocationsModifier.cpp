@@ -167,11 +167,12 @@ void SmoothDislocationsModifier::coarsenDislocationLine(FloatType linePointInter
 		++inputPtr;
 		++inputCoreSizePtr;
 	}
-	while(2*count*count < (int)(linePointInterval * sum) && count < input.size()/minNumPoints/2-1);
+	while(2*count*count < (int)(linePointInterval * sum) && count+1 < input.size()/minNumPoints/2);
 
 	// Average over a half interval, starting from the end of the segment.
 	auto inputPtrEnd = input.cend() - 1;
 	auto inputCoreSizePtrEnd = coreSize.cend() - 1;
+	OVITO_ASSERT(inputPtr < inputPtrEnd);
 	while(count*count < (int)(linePointInterval * sum) && count < input.size()/minNumPoints) {
 		sum += *inputCoreSizePtrEnd;
 		com += *inputPtrEnd - input.back();

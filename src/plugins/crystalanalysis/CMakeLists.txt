@@ -38,6 +38,8 @@ SET(SourceFiles
 	objects/dislocations/DislocationDisplay.cpp
 	objects/partition_mesh/PartitionMesh.cpp
 	objects/partition_mesh/PartitionMeshDisplay.cpp
+	objects/slip_surface/SlipSurface.cpp
+	objects/slip_surface/SlipSurfaceDisplay.cpp
 	data/ClusterGraph.cpp
 	data/DislocationNetwork.cpp
 	data/PlanarDefects.cpp

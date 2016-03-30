@@ -177,7 +177,7 @@ public:
 
 	/// Computes the (positive) volume of the two-dimensional cell.
 	FloatType volume2D() const {
-		return std::abs(edgeVector1().dot(edgeVector2()));
+		return edgeVector1().cross(edgeVector2()).length();
 	}
 
 	/// \brief Enables or disables periodic boundary conditions in the three spatial directions.

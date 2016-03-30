@@ -79,7 +79,7 @@ public:
 
 	/// Computes the (positive) volume of the two-dimensional cell.
 	FloatType volume2D() const {
-		return std::abs(_simulationCell.column(0).dot(_simulationCell.column(1)));
+		return _simulationCell.column(0).cross(_simulationCell.column(1)).length();
 	}
 
 	/// Returns true if the three edges of the cell are parallel to the three

@@ -311,6 +311,10 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 				"Boolean flag that enables the visualization of line directions."
 				"\n\n"
 				":Default: ``False``\n")
+		.add_property("indicate_character", &DislocationDisplay::indicateDislocationCharacter, &DislocationDisplay::setIndicateDislocationCharacter,
+				"Activates the coloring of dislocation lines based on the local screw/edge character."
+				"\n\n"
+				":Default: ``False``\n")
 	;
 
 	ovito_class<DislocationNetworkObject, DataObject>(
