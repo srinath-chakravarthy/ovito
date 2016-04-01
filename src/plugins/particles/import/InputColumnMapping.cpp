@@ -109,8 +109,7 @@ void InputColumnMapping::validate() const
  *****************************************************************************/
 InputColumnReader::InputColumnReader(const InputColumnMapping& mapping, ParticleFrameLoader& destination, size_t particleCount)
 	: _mapping(mapping), _destination(destination),
-	  _intMetaTypeId(qMetaTypeId<int>()), _floatMetaTypeId(qMetaTypeId<FloatType>()),
-	  _usingNamedParticleTypes(false)
+	  _intMetaTypeId(qMetaTypeId<int>()), _floatMetaTypeId(qMetaTypeId<FloatType>())
 {
 	mapping.validate();
 
@@ -140,7 +139,13 @@ InputColumnReader::InputColumnReader(const InputColumnMapping& mapping, Particle
 				if(!property) {
 					// Create standard property.
 					property = new ParticleProperty(particleCount, pref.type(), 0, true);
-					destination.addParticleProperty(property);
+
+					// Also create a particle type list if it is a type property.
+					ParticleFrameLoader::ParticleTypeList* typeList = nullptr;
+					if(pref.type() == ParticleProperty::ParticleTypeProperty || pref.type() == ParticleProperty::StructureTypeProperty)
+						typeList = new ParticleFrameLoader::ParticleTypeList();
+
+					destination.addParticleProperty(property, typeList);
 				}
 			}
 			else {
@@ -191,7 +196,8 @@ InputColumnReader::InputColumnReader(const InputColumnMapping& mapping, Particle
 	for(TargetPropertyRecord& rec : _properties) {
 		if(rec.property) {
 			rec.count = rec.property->size();
-			rec.isTypeProperty = (rec.property->type() == ParticleProperty::ParticleTypeProperty);
+			rec.typeList = destination.getTypeListOfParticleProperty(rec.property);
+			rec.numericParticleTypes = true;
 			if(rec.property->dataType() == qMetaTypeId<FloatType>()) {
 				rec.data = reinterpret_cast<uint8_t*>(rec.property->dataFloat() + rec.vectorComponent);
 				rec.isInt = false;
@@ -312,7 +318,7 @@ void InputColumnReader::readParticle(size_t particleIndex, const char* s)
  *****************************************************************************/
 void InputColumnReader::parseField(size_t particleIndex, int columnIndex, const char* token, const char* token_end)
 {
-	const TargetPropertyRecord& prec = _properties[columnIndex];
+	TargetPropertyRecord& prec = _properties[columnIndex];
 	if(!prec.property || !prec.data) return;
 
 	if(particleIndex >= prec.count)
@@ -325,7 +331,7 @@ void InputColumnReader::parseField(size_t particleIndex, int columnIndex, const 
 	else {
 		int& d = *reinterpret_cast<int*>(prec.data + particleIndex * prec.stride);
 		bool ok = parseInt(token, token_end, d);
-		if(!prec.isTypeProperty) {
+		if(prec.typeList == nullptr) {
 			if(!ok) {
 				ok = parseBool(token, token_end, d);
 				if(!ok)
@@ -335,11 +341,11 @@ void InputColumnReader::parseField(size_t particleIndex, int columnIndex, const 
 		else {
 			// Automatically register a new particle type if a new type identifier is encountered.
 			if(ok) {
-				_destination.addParticleTypeId(d);
+				prec.typeList->addParticleTypeId(d);
 			}
 			else {
-				d = _destination.addParticleTypeName(token, token_end);
-				_usingNamedParticleTypes = true;
+				d = prec.typeList->addParticleTypeName(token, token_end);
+				prec.numericParticleTypes = false;
 			}
 		}
 	}
@@ -370,12 +376,31 @@ void InputColumnReader::readParticle(size_t particleIndex, const double* values,
 			}
 			else {
 				int ival = (int)*token;
-				if(prec->isTypeProperty) {
+				if(prec->typeList) {
 					// Automatically register a new particle type if a new type identifier is encountered.
-					_destination.addParticleTypeId(ival);
+					prec->typeList->addParticleTypeId(ival);
 				}
 				*reinterpret_cast<int*>(prec->data + particleIndex * prec->stride) = ival;
 			}
+		}
+	}
+}
+
+/******************************************************************************
+ * Sorts the created particle types either by numeric ID or by name,
+ * depending on how they were stored in the input file.
+ *****************************************************************************/
+void InputColumnReader::sortParticleTypes()
+{
+	for(const TargetPropertyRecord& p : _properties) {
+		if(p.property && p.typeList != nullptr) {
+			// Since we created particle types on the go while reading the particle, the assigned particle type IDs
+			// depends on the storage order of particles in the file. We rather want a well-defined particle type ordering, that's
+			// why we sort them now according to their names.
+			if(p.numericParticleTypes)
+				p.typeList->sortParticleTypesById();
+			else
+				p.typeList->sortParticleTypesByName(p.property);
 		}
 	}
 }

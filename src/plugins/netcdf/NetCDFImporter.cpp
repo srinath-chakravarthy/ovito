@@ -477,6 +477,8 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 						// Find property to load this information into.
 						ParticleProperty::Type propertyType = column.property.type();
 
+						ParticleFrameLoader::ParticleTypeList* typeList = nullptr;
+
 						if(propertyType != ParticleProperty::UserProperty) {
 							// Look for existing standard property.
 							for(const auto& p : particleProperties()) {
@@ -488,7 +490,12 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 							if(!property) {
 								// Create standard property.
 								property = new ParticleProperty(particleCount, propertyType, 0, true);
-								addParticleProperty(property);
+
+								// Also create a particle type list if it is a type property.
+								if(propertyType == ParticleProperty::ParticleTypeProperty)
+									typeList = new ParticleFrameLoader::ParticleTypeList();
+
+								addParticleProperty(property, typeList);
 							}
 						}
 						else {
@@ -529,7 +536,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 								}
 								else {
 									// Create particles types if this is the particle type property.
-									if (propertyType == ParticleProperty::ParticleTypeProperty) {
+									if (propertyType == ParticleProperty::ParticleTypeProperty && typeList != nullptr) {
 										if (type == NC_CHAR) {
 											// We can only read this if there is an additional dimension
 											if (nDims == nDimsDetected+1) {
@@ -559,7 +566,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 												QMap<QString, int> particleNameToType;
 												int i = 0;
 												while (particleName != discoveredParticleNames.constEnd()) {
-													addParticleTypeId(i, particleName.key());
+													typeList->addParticleTypeId(i, particleName.key());
 													particleNameToType[particleName.key()] = i;
 													i++;
 													particleName++;
@@ -593,7 +600,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 											for (int i = 0; i <= maxType; i++) {
 												// Only define atom type if really present.
 												if (typeCount[i] > 0)
-													addParticleTypeId(i);
+													typeList->addParticleTypeId(i);
 											}
 										}
 									}

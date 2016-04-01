@@ -64,6 +64,12 @@ public:
 	/// \brief Returns true if the file column is mapped to a particle property; false otherwise (file column will be ignored during import).
 	bool isMapped() const { return dataType != QMetaType::Void; }
 
+	/// \brief Indicates whether this column is mapped to a particle type property.
+	bool isTypeProperty() const {
+		return (property.type() == ParticleProperty::ParticleTypeProperty)
+				|| (property.type() == ParticleProperty::StructureTypeProperty);
+	}
+
 	/// The target particle property this column is mapped to.
 	ParticlePropertyReference property;
 
@@ -160,8 +166,8 @@ public:
 	/// \brief Processes the values from one line of the input file and stores them in the particle properties.
 	void readParticle(size_t particleIndex, const double* values, int nvalues);
 
-	/// Returns whether particle types were specified in the file as strings instead of numeric IDs.
-	bool usingNamedParticleTypes() const { return _usingNamedParticleTypes; }
+	/// \brief Sorts the created particle types either by numeric ID or by name, depending on how they were stored in the input file.
+	void sortParticleTypes();
 
 private:
 
@@ -180,8 +186,9 @@ private:
 		size_t stride;
 		size_t count;
 		int vectorComponent;
-		bool isTypeProperty;
 		bool isInt;
+		ParticleFrameLoader::ParticleTypeList* typeList;
+		bool numericParticleTypes;
 	};
 
 	/// Stores the destination particle properties.
@@ -189,9 +196,6 @@ private:
 
 	/// The Qt data type identifiers.
 	int _intMetaTypeId, _floatMetaTypeId;
-
-	/// Indicates that particle types were specified in the file as strings instead of numeric IDs.
-	bool _usingNamedParticleTypes;
 };
 
 OVITO_END_INLINE_NAMESPACE

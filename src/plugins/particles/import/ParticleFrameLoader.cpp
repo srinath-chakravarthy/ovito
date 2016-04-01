@@ -70,7 +70,7 @@ void ParticleFrameLoader::perform()
 * This method is used by file parsers that create particle types on the go while the read the particle data.
 * In such a case, the assignment of IDs to types depends on the storage order of particles in the file, which is not desirable.
 ******************************************************************************/
-void ParticleFrameLoader::sortParticleTypesByName()
+void ParticleFrameLoader::ParticleTypeList::sortParticleTypesByName(ParticleProperty* typeProperty)
 {
 	// Check if type IDs form a consecutive sequence starting at 1.
 	for(size_t index = 0; index < _particleTypes.size(); index++) {
@@ -94,7 +94,6 @@ void ParticleFrameLoader::sortParticleTypesByName()
 	}
 
 	// Remap particle type IDs.
-	ParticleProperty* typeProperty = particleProperty(ParticleProperty::ParticleTypeProperty);
 	if(typeProperty) {
 		for(int& t : typeProperty->intRange()) {
 			OVITO_ASSERT(t >= 1 && t < mapping.size());
@@ -106,7 +105,7 @@ void ParticleFrameLoader::sortParticleTypesByName()
 /******************************************************************************
 * Sorts particle types with ascending identifier.
 ******************************************************************************/
-void ParticleFrameLoader::sortParticleTypesById()
+void ParticleFrameLoader::ParticleTypeList::sortParticleTypesById()
 {
 	auto compare = [](const ParticleTypeDefinition& a, const ParticleTypeDefinition& b) -> bool { return a.id < b.id; };
 	std::sort(_particleTypes.begin(), _particleTypes.end(), compare);
@@ -169,9 +168,11 @@ void ParticleFrameLoader::handOver(CompoundObject* container)
 			container->addDataObject(propertyObj);
 		}
 
-		if(propertyObj->type() == ParticleProperty::ParticleTypeProperty) {
-			insertParticleTypes(propertyObj);
+		// Transfer particle types.
+		if(ParticleTypeList* typeList = getTypeListOfParticleProperty(propertyObj->storage())) {
+			insertParticleTypes(propertyObj, typeList);
 		}
+
 		activeObjects.insert(propertyObj);
 	}
 
@@ -215,9 +216,11 @@ void ParticleFrameLoader::handOver(CompoundObject* container)
 				container->addDataObject(propertyObj);
 			}
 
-			if(propertyObj->type() == BondProperty::BondTypeProperty) {
-				insertBondTypes(propertyObj);
+			// Transfer bond types.
+			if(BondTypeList* typeList = getTypeListOfBondProperty(propertyObj->storage())) {
+				insertBondTypes(propertyObj, typeList);
 			}
+
 			activeObjects.insert(propertyObj);
 		}
 	}
@@ -231,45 +234,53 @@ void ParticleFrameLoader::handOver(CompoundObject* container)
 /******************************************************************************
 * Inserts the stores particle types into the given destination object.
 ******************************************************************************/
-void ParticleFrameLoader::insertParticleTypes(ParticlePropertyObject* propertyObj)
+void ParticleFrameLoader::insertParticleTypes(ParticlePropertyObject* propertyObj, ParticleTypeList* typeList)
 {
 	ParticleTypeProperty* typeProperty = dynamic_object_cast<ParticleTypeProperty>(propertyObj);
 	if(!typeProperty)
 		return;
 
 	QSet<ParticleType*> activeTypes;
-	for(const auto& item : _particleTypes) {
-		QString name = item.name;
-		if(name.isEmpty())
-			name = ParticleImporter::tr("Type %1").arg(item.id);
-		OORef<ParticleType> ptype = typeProperty->particleType(name);
+	if(typeList) {
+		for(const auto& item : typeList->particleTypes()) {
+			QString name = item.name;
+			if(name.isEmpty())
+				name = ParticleImporter::tr("Type %1").arg(item.id);
+			OORef<ParticleType> ptype = typeProperty->particleType(name);
+			if(ptype) {
+				ptype->setId(item.id);
+			}
+			else {
+				ptype = typeProperty->particleType(item.id);
+				if(ptype) {
+					if(item.name.isEmpty() == false)
+						ptype->setName(item.name);
+				}
+				else {
+					ptype = new ParticleType(typeProperty->dataset());
+					ptype->setId(item.id);
+					ptype->setName(name);
 
-		if(ptype == nullptr) {
-			ptype = new ParticleType(typeProperty->dataset());
-			ptype->setId(item.id);
-			ptype->setName(name);
+					// Assign initial standard color to new particle types.
+					if(item.color != Color(0,0,0))
+						ptype->setColor(item.color);
+					else
+						ptype->setColor(ParticleTypeProperty::getDefaultParticleColor(ParticleProperty::ParticleTypeProperty, name, ptype->id()));
 
-			// Assign initial standard color to new particle types.
+					if(item.radius == 0)
+						ptype->setRadius(ParticleTypeProperty::getDefaultParticleRadius(ParticleProperty::ParticleTypeProperty, name, ptype->id()));
+
+					typeProperty->addParticleType(ptype);
+				}
+			}
+			activeTypes.insert(ptype);
+
 			if(item.color != Color(0,0,0))
 				ptype->setColor(item.color);
-			else
-				ptype->setColor(ParticleTypeProperty::getDefaultParticleColor(ParticleProperty::ParticleTypeProperty, name, ptype->id()));
 
-			if(item.radius == 0)
-				ptype->setRadius(ParticleTypeProperty::getDefaultParticleRadius(ParticleProperty::ParticleTypeProperty, name, ptype->id()));
-
-			typeProperty->addParticleType(ptype);
+			if(item.radius != 0)
+				ptype->setRadius(item.radius);
 		}
-		else {
-			ptype->setId(item.id);
-		}
-		activeTypes.insert(ptype);
-
-		if(item.color != Color(0,0,0))
-			ptype->setColor(item.color);
-
-		if(item.radius != 0)
-			ptype->setRadius(item.radius);
 	}
 
 	if(_isNewFile) {
@@ -284,44 +295,46 @@ void ParticleFrameLoader::insertParticleTypes(ParticlePropertyObject* propertyOb
 /******************************************************************************
 * Inserts the stores bond types into the given destination object.
 ******************************************************************************/
-void ParticleFrameLoader::insertBondTypes(BondPropertyObject* propertyObj)
+void ParticleFrameLoader::insertBondTypes(BondPropertyObject* propertyObj, BondTypeList* typeList)
 {
 	BondTypeProperty* typeProperty = dynamic_object_cast<BondTypeProperty>(propertyObj);
 	if(!typeProperty)
 		return;
 
 	QSet<BondType*> activeTypes;
-	for(const auto& item : _bondTypes) {
-		OORef<BondType> type = typeProperty->bondType(item.id);
-		QString name = item.name;
-		if(name.isEmpty())
-			name = ParticleImporter::tr("Type %1").arg(item.id);
+	if(typeList) {
+		for(const auto& item : typeList->bondTypes()) {
+			OORef<BondType> type = typeProperty->bondType(item.id);
+			QString name = item.name;
+			if(name.isEmpty())
+				name = ParticleImporter::tr("Type %1").arg(item.id);
 
-		if(type == nullptr) {
-			type = new BondType(typeProperty->dataset());
-			type->setId(item.id);
+			if(type == nullptr) {
+				type = new BondType(typeProperty->dataset());
+				type->setId(item.id);
 
-			// Assign initial standard color to new bond type.
+				// Assign initial standard color to new bond type.
+				if(item.color != Color(0,0,0))
+					type->setColor(item.color);
+				else
+					type->setColor(BondTypeProperty::getDefaultBondColor(BondProperty::BondTypeProperty, name, type->id()));
+
+				if(item.radius == 0)
+					type->setRadius(BondTypeProperty::getDefaultBondRadius(BondProperty::BondTypeProperty, name, type->id()));
+
+				typeProperty->addBondType(type);
+			}
+			activeTypes.insert(type);
+
+			if(type->name().isEmpty())
+				type->setName(name);
+
 			if(item.color != Color(0,0,0))
 				type->setColor(item.color);
-			else
-				type->setColor(BondTypeProperty::getDefaultBondColor(BondProperty::BondTypeProperty, name, type->id()));
 
-			if(item.radius == 0)
-				type->setRadius(BondTypeProperty::getDefaultBondRadius(BondProperty::BondTypeProperty, name, type->id()));
-
-			typeProperty->addBondType(type);
+			if(item.radius != 0)
+				type->setRadius(item.radius);
 		}
-		activeTypes.insert(type);
-
-		if(type->name().isEmpty())
-			type->setName(name);
-
-		if(item.color != Color(0,0,0))
-			type->setColor(item.color);
-
-		if(item.radius != 0)
-			type->setRadius(item.radius);
 	}
 
 	// Remove unused bond types.

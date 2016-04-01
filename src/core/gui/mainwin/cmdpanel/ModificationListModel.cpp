@@ -133,7 +133,7 @@ void ModificationListModel::refreshList()
 				items.push_back(new ModificationListItem(displayObj));
 		}
 		if(!items.empty())
-			items.push_front(new ModificationListItem(nullptr, false, tr("Display")));
+			items.push_front(new ModificationListItem(nullptr, nullptr, tr("Display")));
 
 		// Walk up the pipeline.
 		do {
@@ -144,7 +144,7 @@ void ModificationListModel::refreshList()
 			if(modObj) {
 
 				if(!modObj->modifierApplications().empty())
-					items.push_back(new ModificationListItem(nullptr, false, tr("Modifications")));
+					items.push_back(new ModificationListItem(nullptr, nullptr, tr("Modifications")));
 
 				hiddenItems.push_back(new ModificationListItem(modObj));
 
@@ -158,7 +158,7 @@ void ModificationListModel::refreshList()
 					for(int j = 0; j < app->modifier()->editableSubObjectCount(); j++) {
 						RefTarget* subobject = app->modifier()->editableSubObject(j);
 						if(subobject != NULL && subobject->isSubObjectEditable()) {
-							items.push_back(new ModificationListItem(subobject, true));
+							items.push_back(new ModificationListItem(subobject, item));
 						}
 					}
 				}
@@ -166,10 +166,11 @@ void ModificationListModel::refreshList()
 				cmnObject = modObj->sourceObject();
 			}
 			else {
-				items.push_back(new ModificationListItem(nullptr, false, tr("Input")));
+				items.push_back(new ModificationListItem(nullptr, nullptr, tr("Input")));
 
 				// Create an entry for the data object.
-				items.push_back(new ModificationListItem(cmnObject));
+				ModificationListItem* item = new ModificationListItem(cmnObject);
+				items.push_back(item);
 				if(defaultObjectToSelect == nullptr)
 					defaultObjectToSelect = cmnObject;
 
@@ -177,7 +178,7 @@ void ModificationListModel::refreshList()
 				for(int i = 0; i < cmnObject->editableSubObjectCount(); i++) {
 					RefTarget* subobject = cmnObject->editableSubObject(i);
 					if(subobject != NULL && subobject->isSubObjectEditable()) {
-						items.push_back(new ModificationListItem(subobject, true));
+						items.push_back(new ModificationListItem(subobject, item));
 					}
 				}
 
@@ -278,6 +279,9 @@ void ModificationListModel::applyModifiers(const QVector<OORef<Modifier>>& modif
 	_nextToSelectObject = modifiers.front();
 
 	if(currentItem) {
+		while(currentItem->parent()) {
+			currentItem = currentItem->parent();
+		}
 		if(dynamic_object_cast<Modifier>(currentItem->object())) {
 			for(ModifierApplication* modApp : currentItem->modifierApplications()) {
 				PipelineObject* pipelineObj = modApp->pipelineObject();

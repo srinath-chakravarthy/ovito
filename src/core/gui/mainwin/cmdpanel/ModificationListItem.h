@@ -39,7 +39,7 @@ class ModificationListItem : public RefMaker
 public:
 
 	/// Constructor.
-	ModificationListItem(RefTarget* object, bool isSubObject = false, const QString& title = QString());
+	ModificationListItem(RefTarget* object, ModificationListItem* parent = nullptr, const QString& title = QString());
 
 	/// Returns the object represented by this list item.
 	RefTarget* object() const { return _object; }
@@ -51,10 +51,10 @@ public:
 	void setModifierApplications(const QVector<ModifierApplication*>& modApps) { _modApps = modApps; }
 
 	/// Returns true if this is a sub-object entry.
-	bool isSubObject() const { return _isSubObject; }
+	bool isSubObject() const { return _parent != nullptr; }
 
-	/// Sets whether this is a sub-object entry.
-	void setSubObject(bool isSub) { _isSubObject = isSub; }
+	/// Returns the parent entry if this item represents a sub-object.
+	ModificationListItem* parent() const { return _parent; }
 
 	/// Returns the status of the object represented by the list item.
 	PipelineStatus status() const;
@@ -83,8 +83,8 @@ private:
 	/// The list of modifier application if this is a modifier item.
 	VectorReferenceField<ModifierApplication> _modApps;
 
-	/// Indicates that this is a sub-object entry.
-	bool _isSubObject;
+	/// If this is a sub-object entry then this points to the parent.
+	ModificationListItem* _parent;
 
 	/// Title text if this is a section header item.
 	QString _title;

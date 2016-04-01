@@ -115,8 +115,10 @@ void ModifierListBox::updateAvailableModifiers()
 	setCurrentIndex(0);
 
 	ModificationListItem* currentItem = _modificationList->selectedItem();
-	if(currentItem == nullptr) {
+	if(currentItem == nullptr)
 		return;
+	while(currentItem->parent()) {
+		currentItem = currentItem->parent();
 	}
 
 	// Retrieve the input state which a newly inserted modifier would be applied to.

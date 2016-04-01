@@ -115,7 +115,8 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 	ParticleProperty* posProperty = new ParticleProperty(numAtoms, ParticleProperty::PositionProperty, 0, true);
 	addParticleProperty(posProperty);
 	ParticleProperty* typeProperty = new ParticleProperty(numAtoms, ParticleProperty::ParticleTypeProperty, 0, true);
-	addParticleProperty(typeProperty);
+	ParticleFrameLoader::ParticleTypeList* typeList = new ParticleFrameLoader::ParticleTypeList();
+	addParticleProperty(typeProperty, typeList);
 
 	// Parse atoms.
 	int atomIndex = 0;
@@ -138,7 +139,7 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 				for(const char* c = stream.line() + 12; c <= stream.line() + std::min(15, lineLength); ++c)
 					if(*c != ' ') atomType[atomTypeLength++] = *c;
 			}
-			*a = addParticleTypeName(atomType, atomType + atomTypeLength);
+			*a = typeList->addParticleTypeName(atomType, atomType + atomTypeLength);
 #ifdef FLOATTYPE_FLOAT
 			if(lineLength <= 30 || sscanf(stream.line() + 30, "%8g%8g%8g", &p->x(), &p->y(), &p->z()) != 3)
 #else

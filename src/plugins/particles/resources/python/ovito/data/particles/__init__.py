@@ -626,7 +626,12 @@ ovito.data.DataCollection.number_of_bonds = property(_get_DataCollection_number_
 
 # Implement the 'type_list' property of the ParticleTypeProperty class, which provides access to particle types. 
 def _get_ParticleTypeProperty_type_list(self):
-    """A mutable list of :py:class:`ParticleType` instances."""    
+    """ A (mutable) list of :py:class:`ParticleType` instances. 
+    
+        Note that the particle types may be stored in arbitrary order in this type list. 
+        Each type has a unique integer ID (given by the :py:attr:`ParticleType.id' attribute).
+        The numbers stored in the particle type property array refer to these type IDs.
+    """
     class ParticleTypeList(collections.MutableSequence):
         def __init__(self, owner):
             self.__owner = owner;

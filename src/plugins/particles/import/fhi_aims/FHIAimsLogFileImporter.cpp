@@ -120,7 +120,8 @@ void FHIAimsLogFileImporter::FHIAimsImportTask::parseFile(CompressedTextReader& 
 	ParticleProperty* posProperty = new ParticleProperty(totalAtomCount, ParticleProperty::PositionProperty, 0, false);
 	addParticleProperty(posProperty);
 	ParticleProperty* typeProperty = new ParticleProperty(totalAtomCount, ParticleProperty::ParticleTypeProperty, 0, false);
-	addParticleProperty(typeProperty);
+	ParticleFrameLoader::ParticleTypeList* typeList = new ParticleFrameLoader::ParticleTypeList();
+	addParticleProperty(typeProperty, typeList);
 
 	// Return to beginning of frame.
 	stream.seek(fileOffset);
@@ -140,7 +141,7 @@ void FHIAimsLogFileImporter::FHIAimsImportTask::parseFile(CompressedTextReader& 
 						throw Exception(tr("Invalid fractional atom coordinates (in line %1). Cell vectors have not been specified: %2").arg(stream.lineNumber()).arg(stream.lineString()));
 					pos = cell * pos;
 				}
-				typeProperty->setInt(i, addParticleTypeName(atomTypeName));
+				typeProperty->setInt(i, typeList->addParticleTypeName(atomTypeName));
 				break;
 			}
 		}
@@ -149,7 +150,7 @@ void FHIAimsLogFileImporter::FHIAimsImportTask::parseFile(CompressedTextReader& 
 	// Since we created particle types on the go while reading the particles, the assigned particle type IDs
 	// depend on the storage order of particles in the file. We rather want a well-defined particle type ordering, that's
 	// why we sort them now.
-	sortParticleTypesByName();
+	typeList->sortParticleTypesByName(typeProperty);
 
 	// Set simulation cell.
 	if(lattVecCount == 3) {

@@ -310,12 +310,24 @@ BOOST_PYTHON_MODULE(Particles)
 
 	ovito_abstract_class<ParticleTypeProperty, ParticlePropertyObject>(
 			":Base class: :py:class:`ovito.data.ParticleProperty`\n\n"
-			"A special :py:class:`ParticleProperty` that stores a list of :py:class:`ParticleType` instances in addition "
-			"to the per-particle values. "
+			"A specialization of the :py:class:`ParticleProperty` class, which holds a list of :py:class:`ParticleType` instances in addition "
+			"to the per-particle type values. "
 			"\n\n"
-			"The particle properties ``Particle Type`` and ``Structure Type`` are represented by instances of this class. In addition to the regular per-particle "
-			"data (consisting of an integer per particle, indicating its type ID), this class holds the list of defined particle types. These are "
-			":py:class:`ParticleType` instances, which store the ID, name, color, and radius of each particle type.")
+			"OVITO encodes the types of particles as integer values starting at 1. "
+			"Like for any other particle property, these numeric per-particle types can be accessed through the :py:attr:`~ParticleProperty.array` NumPy array "
+			"of the base class, or modified through the :py:attr:`~ParticleProperty.marray` mutable NumPy interface. "
+			"\n\n"
+			"In addition, the :py:class:`!ParticleTypeProperty` class provides the :py:attr:`type_list` attribute, which lists all defined particle types. "
+			"Each defined :py:attr:`ParticleType` has a unique integer ID (starting at 1), a name (e.g. the chemical symbol) and a display color and radius. "
+			"This list can therefore be used to resolve NUMERIC type IDs to type names. "
+			"The following code demonstrates this. It prints the type name of each atom in a system: "
+			"\n\n"
+			".. literalinclude:: ../example_snippets/particle_type_print_names.py\n"
+			"\n\n"
+			"The standard particle properties ``Particle Type`` and ``Structure Type`` are both associated with instances of this class. "
+			"Thus, several classifications of particles can co-exist. For example, while the ``Particle Type`` property stores the chemical type of "
+			"atoms (e.g. C, H, Fe, Ni, etc.) and the ``Structure Type`` property stores the structural type computed for each atom (e.g. FCC, BCC, Diamond, etc.). "
+			"For both kinds of types a separate instance of the :py:class:`!ParticleTypeProperty` class is created by OVITO. ")
 		.def("addParticleType", &ParticleTypeProperty::addParticleType)
 		.def("insertParticleType", &ParticleTypeProperty::insertParticleType)
 		.def("particleType", make_function((ParticleType* (ParticleTypeProperty::*)(int) const)&ParticleTypeProperty::particleType, return_value_policy<ovito_object_reference>()))
@@ -708,7 +720,7 @@ BOOST_PYTHON_MODULE(Particles)
 			.add_property("type", &BondPropertyObject::type, &BondPropertyObject::setType,
 					".. _bond-types-list:"
 					"\n\n"
-					"The type of the bon property (user-defined or one of the standard types).\n"
+					"The type of the bond property (user-defined or one of the standard types).\n"
 					"One of the following constants:"
 					"\n\n"
 					"======================================================= =================================================== ==========\n"

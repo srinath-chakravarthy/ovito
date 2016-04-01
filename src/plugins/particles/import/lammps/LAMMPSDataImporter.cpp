@@ -253,14 +253,6 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 			Vector3(xz, yz, zhi - zlo),
 			Vector3(xlo, ylo, zlo)));
 
-	// Create atom types.
-	for(int i = 1; i <= natomtypes; i++)
-		addParticleTypeId(i);
-
-	// Create bond types.
-	for(int i = 1; i <= nbondtypes; i++)
-		addBondTypeId(i);
-
 	// Skip to following line after first non-blank line.
 	while(!stream.eof() && string(stream.line()).find_first_not_of(" \t\n\r") == string::npos) {
 		stream.readLine();
@@ -270,6 +262,22 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 	bool foundAtomsSection = false;
 	if(natoms == 0)
 		foundAtomsSection = true;
+
+	// Create standard particle properties.
+	ParticleProperty* posProperty = new ParticleProperty(natoms, ParticleProperty::PositionProperty, 0, true);
+	addParticleProperty(posProperty);
+	Point3* pos = posProperty->dataPoint3();
+	ParticleProperty* typeProperty = new ParticleProperty(natoms, ParticleProperty::ParticleTypeProperty, 0, true);
+	ParticleFrameLoader::ParticleTypeList* typeList = new ParticleFrameLoader::ParticleTypeList();
+	addParticleProperty(typeProperty, typeList);
+	int* atomType = typeProperty->dataInt();
+	ParticleProperty* identifierProperty = new ParticleProperty(natoms, ParticleProperty::IdentifierProperty, 0, true);
+	addParticleProperty(identifierProperty);
+	int* atomId = identifierProperty->dataInt();
+
+	// Create atom types.
+	for(int i = 1; i <= natomtypes; i++)
+		typeList->addParticleTypeId(i);
 
 	// Read identifier strings one by one in free-form part of data file.
 	QByteArray keyword = QByteArray(stream.line()).trimmed();
@@ -285,16 +293,6 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 				bool withPBCImageFlags = detectAtomStyle(stream.line(), keyword);
 				if(_detectAtomStyle)
 					return;
-
-				ParticleProperty* posProperty = new ParticleProperty(natoms, ParticleProperty::PositionProperty, 0, true);
-				addParticleProperty(posProperty);
-				Point3* pos = posProperty->dataPoint3();
-				ParticleProperty* typeProperty = new ParticleProperty(natoms, ParticleProperty::ParticleTypeProperty, 0, true);
-				addParticleProperty(typeProperty);
-				int* atomType = typeProperty->dataInt();
-				ParticleProperty* identifierProperty = new ParticleProperty(natoms, ParticleProperty::IdentifierProperty, 0, true);
-				addParticleProperty(identifierProperty);
-				int* atomId = identifierProperty->dataInt();
 
 				Point3I* pbcImage = nullptr;
 				if(withPBCImageFlags) {
@@ -431,7 +429,7 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 				if(*start) {
 					QStringList words = QString::fromLocal8Bit(start).split(QRegularExpression("\\s+"), QString::SkipEmptyParts);
 					if(words.size() == 2)
-						setParticleTypeName(i, words[1]);
+						typeList->setParticleTypeName(i, words[1]);
 				}
 			}
 		}
@@ -476,8 +474,13 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 
 			// Create bond type property.
 			BondProperty* typeProperty = new BondProperty(nbonds * 2, BondProperty::BondTypeProperty, 0, true);
-			addBondProperty(typeProperty);
+			ParticleFrameLoader::BondTypeList* bondTypeList = new ParticleFrameLoader::BondTypeList();
+			addBondProperty(typeProperty, bondTypeList);
 			int* bondType = typeProperty->dataInt();
+
+			// Create bond types.
+			for(int i = 1; i <= nbondtypes; i++)
+				bondTypeList->addBondTypeId(i);
 
 			setProgressRange(nbonds);
 			for(int i = 0; i < nbonds; i++) {

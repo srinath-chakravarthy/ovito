@@ -152,13 +152,14 @@ void POSCARImporter::POSCARImportTask::parseFile(CompressedTextReader& stream)
 	ParticleProperty* posProperty = new ParticleProperty(totalAtomCount, ParticleProperty::PositionProperty, 0, false);
 	addParticleProperty(posProperty);
 	ParticleProperty* typeProperty = new ParticleProperty(totalAtomCount, ParticleProperty::ParticleTypeProperty, 0, false);
-	addParticleProperty(typeProperty);
+	ParticleFrameLoader::ParticleTypeList* typeList = new ParticleFrameLoader::ParticleTypeList();
+	addParticleProperty(typeProperty, typeList);
 
 	// Read atom coordinates.
 	Point3* p = posProperty->dataPoint3();
 	int* a = typeProperty->dataInt();
 	for(int atype = 1; atype <= atomCounts.size(); atype++) {
-		addParticleTypeId(atype, (atomTypeNames.size() == atomCounts.size()) ? atomTypeNames[atype-1] : QString());
+		typeList->addParticleTypeId(atype, (atomTypeNames.size() == atomCounts.size()) ? atomTypeNames[atype-1] : QString());
 		for(int i = 0; i < atomCounts[atype-1]; i++, ++p, ++a) {
 			*a = atype;
 			if(sscanf(stream.readLine(), FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING,

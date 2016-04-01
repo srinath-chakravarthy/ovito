@@ -195,9 +195,11 @@ void CFGImporter::CFGImportTask::parseFile(CompressedTextReader& stream)
 	FloatType* massPointer = nullptr;
 	int* atomTypePointer = nullptr;
 	ParticleProperty* typeProperty = nullptr;
+	ParticleFrameLoader::ParticleTypeList* typeList = nullptr;
 	if(header.isExtendedFormat) {
 		typeProperty = new ParticleProperty(header.numParticles, ParticleProperty::ParticleTypeProperty, 0, false);
-		addParticleProperty(typeProperty);
+		typeList = new ParticleFrameLoader::ParticleTypeList();
+		addParticleProperty(typeProperty, typeList);
 		atomTypePointer = typeProperty->dataInt();
 		ParticleProperty* massProperty = new ParticleProperty(header.numParticles, ParticleProperty::MassProperty, 0, false);
 		addParticleProperty(massProperty);
@@ -237,7 +239,7 @@ void CFGImporter::CFGImportTask::parseFile(CompressedTextReader& stream)
 				const char* line = stream.readLineTrimLeft();
 				const char* line_end = line;
 				while(*line_end != '\0' && *line_end > ' ') ++line_end;
-				currentAtomType = addParticleTypeName(line, line_end);
+				currentAtomType = typeList->addParticleTypeName(line, line_end);
 
 				continue;
 			}
@@ -258,10 +260,9 @@ void CFGImporter::CFGImportTask::parseFile(CompressedTextReader& stream)
 	// Since we created particle types on the go while reading the particles, the assigned particle type IDs
 	// depend on the storage order of particles in the file. We rather want a well-defined particle type ordering, that's
 	// why we sort them now.
-	if(header.isExtendedFormat || columnParser.usingNamedParticleTypes())
-		sortParticleTypesByName();
-	else
-		sortParticleTypesById();
+	columnParser.sortParticleTypes();
+	if(header.isExtendedFormat)
+		typeList->sortParticleTypesByName(typeProperty);
 
 	AffineTransformation H((header.transform * header.H0).transposed());
 	H.translation() = H * Vector3(-0.5f, -0.5f, -0.5f);

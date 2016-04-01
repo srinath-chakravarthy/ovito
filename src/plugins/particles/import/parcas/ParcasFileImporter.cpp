@@ -232,16 +232,22 @@ void ParcasFileImporter::ParcasFileImportTask::parseFile(CompressedTextReader& t
 			Vector3(-boxDim[0]/2, -boxDim[1]/2, -boxDim[2]/2)));
 	simulationCell().setPbcFlags(box_x < 0, box_y < 0, box_z < 0);
 
+	// Create the required standard properties.
+    int numAtoms = (int)natoms;
+	ParticleProperty* posProperty = new ParticleProperty(natoms, ParticleProperty::PositionProperty, 0, true);
+	addParticleProperty(posProperty);
+	ParticleProperty* typeProperty = new ParticleProperty(natoms, ParticleProperty::ParticleTypeProperty, 0, true);
+	ParticleFrameLoader::ParticleTypeList* typeList = new ParticleFrameLoader::ParticleTypeList();
+	addParticleProperty(typeProperty, typeList);
+	ParticleProperty* identifierProperty = new ParticleProperty(natoms, ParticleProperty::IdentifierProperty, 0, true);
+	addParticleProperty(identifierProperty);
+
 	// Create atom types in OVITO.
     std::vector<std::array<char,5>> types(maxtype - mintype + 1);
     for(int i = mintype; i <= maxtype; i++) {
     	stream.read(types[i - mintype].data(), 4);
     	types[i - mintype][4] = '\0';
-#if 0
-    	qDebug() << "Type-" << i << " " << types[i - mintype].data();
-#endif
-
-		addParticleTypeId(i, QString::fromLatin1(types[i - mintype].data()).trimmed());
+		typeList->addParticleTypeId(i, QString::fromLatin1(types[i - mintype].data()).trimmed());
     }
 
 	// The actual header is now parsed. Check the offsets.
@@ -253,16 +259,7 @@ void ParcasFileImporter::ParcasFileImportTask::parseFile(CompressedTextReader& t
     if(!file.seek((qint64)atom_off))
     	throw Exception(tr("PARCAS file parsing error: Seek error: %1").arg(file.errorString()));
 
-    int numAtoms = (int)natoms;
 	setProgressRange(numAtoms);
-
-	// Create the required standard properties.
-	ParticleProperty* posProperty = new ParticleProperty(natoms, ParticleProperty::PositionProperty, 0, true);
-	addParticleProperty(posProperty);
-	ParticleProperty* typeProperty = new ParticleProperty(natoms, ParticleProperty::ParticleTypeProperty, 0, true);
-	addParticleProperty(typeProperty);
-	ParticleProperty* identifierProperty = new ParticleProperty(natoms, ParticleProperty::IdentifierProperty, 0, true);
-	addParticleProperty(identifierProperty);
 
 	// Parse atoms.
 	for(int i = 0; i < numAtoms; i++) {

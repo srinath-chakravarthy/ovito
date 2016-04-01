@@ -530,10 +530,7 @@ void XYZImporter::XYZImportTask::parseFile(CompressedTextReader& stream)
 	// Since we created particle types on the go while reading the particle, the assigned particle type IDs
 	// depends on the storage order of particles in the file. We rather want a well-defined particle type ordering, that's
 	// why we sort them now according to their names.
-	if(columnParser.usingNamedParticleTypes())
-		sortParticleTypesByName();
-	else
-		sortParticleTypesById();
+	columnParser.sortParticleTypes();
 
 	ParticleProperty* posProperty = particleProperty(ParticleProperty::PositionProperty);
 	if(posProperty && numParticles > 0) {

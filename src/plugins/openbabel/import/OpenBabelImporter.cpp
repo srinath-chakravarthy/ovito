@@ -55,7 +55,8 @@ void OpenBabelImporter::OpenBabelImportTask::parseFile(CompressedTextReader& str
 	ParticleProperty* posProperty = new ParticleProperty(mol.NumAtoms(), ParticleProperty::PositionProperty, 0, false);
 	addParticleProperty(posProperty);
 	ParticleProperty* typeProperty = new ParticleProperty(mol.NumAtoms(), ParticleProperty::ParticleTypeProperty, 0, false);
-	addParticleProperty(typeProperty);
+	ParticleFrameLoader::ParticleTypeList* typeList = new ParticleFrameLoader::ParticleTypeList();
+	addParticleProperty(typeProperty, typeList);
 	ParticleProperty* identifierProperty = new ParticleProperty(mol.NumAtoms(), ParticleProperty::IdentifierProperty, 0, false);
 	addParticleProperty(identifierProperty);
 
@@ -74,7 +75,7 @@ void OpenBabelImporter::OpenBabelImportTask::parseFile(CompressedTextReader& str
 		while(*typeNameEnd != '\0' && !std::isdigit(*typeNameEnd))
 			++typeNameEnd;
 
-		*type = addParticleTypeName(typeName, typeNameEnd);
+		*type = typeList->addParticleTypeName(typeName, typeNameEnd);
 		*id = obatom->GetId();
 
 		++pos;
@@ -85,7 +86,7 @@ void OpenBabelImporter::OpenBabelImportTask::parseFile(CompressedTextReader& str
 	// Since we created particle types on the go while reading the particles, the assigned particle type IDs
 	// depend on the storage order of particles in the file. We rather want a well-defined particle type ordering, that's
 	// why we sort them now.
-	sortParticleTypesByName();
+	typeList->sortParticleTypesByName(typeProperty);
 
 	// Transfer bonds.
 	if(mol.NumBonds() > 0) {
