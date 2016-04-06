@@ -64,17 +64,18 @@
 #include <QException>
 #include <QStringList>
 #include <QSettings>
-#include <QMenuBar>
-#include <QMenu>
 #include <QUrl>
 #include <QPointer>
 #include <QFileInfo>
 #include <QResource>
 #include <QDir>
-#include <QtWidgets>
 #include <QtDebug>
-#include <QtGui>
-#include <qopengl.h>
+#include <QMetaClassInfo>
+#include <QColor>
+#include <QGenericMatrix>
+#include <QMatrix4x4>
+#include <QDateTime>
+#include <QThread>
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
 #  error "OVITO requires at least Qt 5.2"
@@ -130,21 +131,6 @@
 */
 /*! \namespace Ovito::Scene
     \brief This namespace contains the scene graph and modification pipeline framework.
-*/
-/*! \namespace Ovito::Gui
-    \brief This namespace contains the graphical user interface classes.
-*/
-/*! \namespace Ovito::Gui::Widgets
-    \brief This namespace contains the widget classes that can be used in the graphical user interface.
-*/
-/*! \namespace Ovito::Gui::Params
-    \brief This namespace contains GUI classes for parameter editing.
-*/
-/*! \namespace Ovito::Gui::ViewportInput
-    \brief This namespace contains classes for interaction with the viewports.
-*/
-/*! \namespace Ovito::Gui::Dialogs
-    \brief This namespace contains common dialog box classes.
 */
 
 /******************************************************************************

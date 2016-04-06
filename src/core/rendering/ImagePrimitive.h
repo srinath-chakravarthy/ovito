@@ -25,16 +25,18 @@
 #include <core/Core.h>
 #include "PrimitiveBase.h"
 
+#include <QImage>
+
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
 
 /**
- * \brief Abstract base class for drawing bitmaps.
+ * \brief Abstract base class for drawing bitmaps in the viewports.
  */
 class OVITO_CORE_EXPORT ImagePrimitive : public PrimitiveBase
 {
 public:
 
-	/// \brief Sets the text to be rendered.
+	/// \brief Sets the mage to be rendered.
 	virtual void setImage(const QImage& image) { _image = image; }
 
 	/// \brief Returns the image stored in the buffer.

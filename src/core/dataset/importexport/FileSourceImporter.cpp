@@ -26,7 +26,6 @@
 #include <core/scene/SelectionSet.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/viewport/ViewportConfiguration.h>
-#include <core/gui/mainwin/MainWindow.h>
 #include <core/utilities/io/FileManager.h>
 #include "FileSourceImporter.h"
 #include "FileSource.h"

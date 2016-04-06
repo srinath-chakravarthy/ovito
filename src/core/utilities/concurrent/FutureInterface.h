@@ -25,6 +25,9 @@
 #include <core/Core.h>
 #include "FutureWatcher.h"
 
+#include <QWaitCondition>
+#include <QElapsedTimer>
+
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
 
 template<typename R> class Future;						// Defined in Future.h

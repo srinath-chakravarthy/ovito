@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
-// 
-//  Copyright (2014) Alexander Stukowski
+//
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,19 +19,4 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/viewport/overlay/ViewportOverlay.h>
-
-namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View)
-
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, ViewportOverlay, RefTarget);
-
-/******************************************************************************
-* Constructor.
-******************************************************************************/
-ViewportOverlay::ViewportOverlay(DataSet* dataset) : RefTarget(dataset)
-{
-}
-
-OVITO_END_INLINE_NAMESPACE
-}	// End of namespace
+#include <gui/GUI.h>

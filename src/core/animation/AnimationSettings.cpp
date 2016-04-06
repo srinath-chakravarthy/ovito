@@ -22,6 +22,8 @@
 #include <core/Core.h>
 #include "AnimationSettings.h"
 
+#include <QTimer>
+
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Anim)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, AnimationSettings, RefTarget);

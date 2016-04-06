@@ -28,7 +28,6 @@
 
 #include <QThreadPool>
 #include <QMetaObject>
-#include <QSignalMapper>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
 
@@ -42,7 +41,7 @@ class OVITO_CORE_EXPORT TaskManager : public QObject
 public:
 
 	/// Constructs the task manager for the given main window.
-	TaskManager();
+	TaskManager(MainWindow* mainWindow);
 
 	/// Shuts down the task manager after canceling all active tasks.
 	~TaskManager() {
@@ -181,6 +180,18 @@ private Q_SLOTS:
 	/// \brief Is called when a task has finished.
 	void taskFinished(QObject* object);
 
+	/// \brief Is called when the progress of a task has changed
+	void taskProgressValueChanged(QObject* object);
+
+	/// \brief Is called when the status text of a task has changed.
+	void taskProgressTextChanged(QObject* object);
+
+	/// \brief Shows the progress indicator widgets.
+	void showIndicator();
+
+	/// \brief Updates the displayed information in the indicator widget.
+	void updateIndicator();
+
 private:
 	
 	QSignalMapper _taskStartedSignalMapper;
@@ -188,7 +199,28 @@ private:
 	QSignalMapper _taskProgressValueChangedSignalMapper;
 	QSignalMapper _taskProgressTextChangedSignalMapper;
 
-	std::vector<FutureWatcher*> _runningTaskStack;
+	QStack<FutureWatcher*> _taskStack;
+
+	/// The window this progress manager is associated with.
+	MainWindow* _mainWindow;
+
+	/// The progress bar widget.
+	QProgressBar* _progressBar;
+
+	/// The button that lets the user cancel running tasks.
+	QAbstractButton* _cancelTaskButton;
+
+	/// The parent widget of the progress bar and the cancel button.
+	QWidget* _progressWidget;
+
+	/// The label that displays the current progress text.
+	QLabel* _progressTextDisplay;
+
+	/// This is used to automatically destroy the progress indicator widget on application shutdown.
+	QObjectCleanupHandler _widgetCleanupHandler;
+
+	/// True if the indicator widget is currently visible.
+	bool _indicatorVisible;
 };
 
 OVITO_END_INLINE_NAMESPACE

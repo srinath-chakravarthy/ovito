@@ -62,6 +62,46 @@ public:
 	/// Use the task manager to start and control background jobs.
 	TaskManager& taskManager() { return _taskManager; }
 
+	/// \brief Imports a given file into the current dataset.
+	/// \param url The location of the file to import.
+	/// \param importerType The FileImporter type to use. If NULL, the file format will be automatically detected.
+	/// \return true if the file was successfully imported; false if operation has been canceled by the user.
+	/// \throw Exception on error.
+	bool importFile(const QUrl& url, const OvitoObjectType* importerType = nullptr, FileImporter::ImportMode importMode = FileImporter::AskUser);
+
+	/// \brief Creates an empty dataset and makes it the current dataset.
+	/// \return \c true if the operation was completed; \c false if the operation has been canceled by the user.
+	/// \throw Exception on error.
+	bool fileNew();
+
+	/// \brief Loads the given file and makes it the current dataset.
+	/// \return \c true if the file has been successfully loaded; \c false if the operation has been canceled by the user.
+	/// \throw Exception on error.
+	bool fileLoad(const QString& filename);
+
+	/// \brief Save the current dataset.
+	/// \return \c true, if the dataset has been saved; \c false if the operation has been canceled by the user.
+	/// \throw Exception on error.
+	/// 
+	/// If the current dataset has not been assigned a file path, then this method
+	/// displays a file selector dialog by calling fileSaveAs() to let the user select a file path.
+	bool fileSave();
+
+	/// \brief Lets the user select a new destination filename for the current dataset. Then saves the dataset by calling fileSave().
+	/// \param filename If \a filename is an empty string that this method asks the user for a filename. Otherwise
+	///                 the provided filename is used.
+	/// \return \c true, if the dataset has been saved; \c false if the operation has been canceled by the user.
+	/// \throw Exception on error.
+	bool fileSaveAs(const QString& filename = QString());
+
+	/// \brief Asks the user if changes made to the dataset should be saved.
+	/// \return \c false if the operation has been canceled by the user; \c true on success.
+	/// \throw Exception on error.
+	/// 
+	/// If the current dataset has been changed, this method asks the user if changes should be saved.
+	/// If yes, then the dataset is saved by calling fileSave().
+	bool askForSaveChanges();
+
 	/// \brief This function blocks execution until some operation has been completed.
 	///        The function displays a progress dialog to block access to the application main window.
 	///        The dialog allows the user to cancel the operation.

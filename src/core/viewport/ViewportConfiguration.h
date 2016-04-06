@@ -24,7 +24,6 @@
 
 #include <core/Core.h>
 #include <core/viewport/Viewport.h>
-#include <core/rendering/viewport/ViewportSceneRenderer.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View)
 
@@ -64,10 +63,6 @@ public:
 	/// \return The maximized viewport or \c NULL if no one is currently maximized.
 	Viewport* maximizedViewport() { return _maximizedViewport; }
 
-	/// \brief Immediately repaints all viewports that have been scheduled for an update using updateViewports().
-	/// \sa updateViewports()
-	void processViewportUpdates();
-
 	/// \brief A call to this method suspends redrawing of the viewports.
 	///
 	/// To resume redrawing of viewports call resumeViewportUpdates().
@@ -94,9 +89,6 @@ public:
 	///        is currently being updated.
 	/// \return \c true if there is currently a rendering operation going on.
 	bool isRendering() const;
-
-	/// Returns the renderer to be used for rendering the interactive viewports.
-	ViewportSceneRenderer* viewportRenderer();
 
 	/// Changes the way the center of rotation is chosen.
 	void setOrbitCenterMode(OrbitCenterMode mode) { _orbitCenterMode = mode; }
@@ -142,19 +134,6 @@ public Q_SLOTS:
 			vp->zoomToSceneExtents();
 	}
 
-	/// \brief This will flag all viewports for redrawing.
-	///
-	/// This function does not cause an immediate repaint of the viewports; instead it schedules a
-	/// paint event for processing when Qt returns to the main event loop. You can call this method as often
-	/// as you want; it will return immediately and will cause only one viewport repaint when Qt returns to the
-	/// main event loop.
-	///
-	/// To update only a single viewport, Viewport::updateViewport() should be used.
-	///
-	/// To redraw all viewports immediately without waiting for the paint event to be processed,
-	/// call processViewportUpdates() subsequently.
-	void updateViewports();
-
 protected:
 
 	/// Is called when the value of a reference field of this RefMaker changes.
@@ -190,9 +169,6 @@ private:
 
 	/// Indicates that the viewports have been invalidated while updates were suspended.
 	bool _viewportsNeedUpdate;
-
-	/// The renderer for the interactive viewports.
-	OORef<ViewportSceneRenderer> _viewportRenderer;
 
 	/// Controls around which point the viewport camera should orbit.
     PropertyField<OrbitCenterMode, int> _orbitCenterMode;

@@ -125,7 +125,7 @@ public:
 	///        sequence, the buffer will contain only the last rendered frame when the function returns.
 	/// \return true on success; false if operation has been canceled by the user.
 	/// \throw Exception on error.
-	bool renderScene(RenderSettings* settings, Viewport* viewport, FrameBuffer* frameBuffer, AbstractProgressDisplay* progressDisplay = nullptr);
+	bool renderScene(RenderSettings* settings, Viewport* viewport, boost::shared_ptr<FrameBuffer> frameBuffer = boost::shared_ptr<FrameBuffer>());
 
 	/// \brief Checks all scene nodes if their geometry pipeline is fully evaluated at the given animation time.
 	bool isSceneReady(TimePoint time) const;

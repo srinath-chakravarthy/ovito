@@ -23,6 +23,8 @@
 #include <core/plugins/NativePlugin.h>
 #include <core/object/NativeOvitoObjectType.h>
 
+#include <QJsonObject>
+
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(PluginSystem) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /******************************************************************************

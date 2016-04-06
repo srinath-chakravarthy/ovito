@@ -23,6 +23,10 @@
 #include <core/plugins/Plugin.h>
 #include <core/plugins/PluginManager.h>
 
+#include <QJsonObject>
+#include <QJsonValue>
+#include <QJsonArray>
+
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(PluginSystem)
 
 /******************************************************************************

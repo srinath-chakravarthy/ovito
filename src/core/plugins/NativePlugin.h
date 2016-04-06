@@ -25,6 +25,8 @@
 #include <core/Core.h>
 #include "Plugin.h"
 
+#include <QLibrary>
+
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(PluginSystem) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**

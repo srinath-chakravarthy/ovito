@@ -27,8 +27,6 @@
 #include <core/viewport/Viewport.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/scene/ObjectNode.h>
-#include <core/gui/dialogs/ImportFileDialog.h>
-#include <core/gui/dialogs/ImportRemoteFileDialog.h>
 #include <core/dataset/importexport/FileImporter.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/UndoStack.h>

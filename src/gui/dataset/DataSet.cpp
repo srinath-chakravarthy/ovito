@@ -21,7 +21,6 @@
 
 #include <core/Core.h>
 #include <core/dataset/DataSet.h>
-#include <core/dataset/DataSetContainer.h>
 #include <core/viewport/Viewport.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/animation/AnimationSettings.h>
@@ -30,12 +29,11 @@
 #include <core/rendering/RenderSettings.h>
 #include <core/rendering/FrameBuffer.h>
 #include <core/rendering/SceneRenderer.h>
+#include <core/gui/mainwin/MainWindow.h>
 #include <core/utilities/concurrent/ProgressDisplay.h>
 #ifdef OVITO_VIDEO_OUTPUT_SUPPORT
 	#include <core/utilities/io/video/VideoEncoder.h>
 #endif
-
-#include <QPainter>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem)
 
@@ -106,15 +104,15 @@ OORef<ViewportConfiguration> DataSet::createDefaultViewportConfiguration()
 ******************************************************************************/
 bool DataSet::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
-	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSet::referenceEvent", "Reference events may only be processed in the main thread.");
+	OVITO_ASSERT_MSG(QThread::currentThread() == QApplication::instance()->thread(), "DataSet::referenceEvent", "Reference events may only be processed in the GUI thread.");
 
 	if(event->type() == ReferenceEvent::TargetChanged || event->type() == ReferenceEvent::PendingStateChanged) {
 
 		// Update the viewports whenever something has changed in the current data set.
 		if(source != viewportConfig() && source != animationSettings()) {
 			// Do not automatically update while in the process of jumping to a new animation frame.
-			//if(!animationSettings()->isTimeChanging())
-			//	viewportConfig()->updateViewports();
+			if(!animationSettings()->isTimeChanging())
+				viewportConfig()->updateViewports();
 
 			if(source == sceneRoot() && event->type() == ReferenceEvent::PendingStateChanged) {
 				notifySceneReadyListeners();
@@ -149,10 +147,10 @@ void DataSet::referenceReplaced(const PropertyFieldDescriptor& field, RefTarget*
 	// Install a signal/slot connection that updates the viewports every time the animation time changes.
 	if(field == PROPERTY_FIELD(DataSet::_viewportConfig) || field == PROPERTY_FIELD(DataSet::_animSettings)) {
 		disconnect(_updateViewportOnTimeChangeConnection);
-		//if(animationSettings() && viewportConfig()) {
-		//	_updateViewportOnTimeChangeConnection = connect(animationSettings(), &AnimationSettings::timeChangeComplete, viewportConfig(), &ViewportConfiguration::updateViewports);
-		//	viewportConfig()->updateViewports();
-		//}
+		if(animationSettings() && viewportConfig()) {
+			_updateViewportOnTimeChangeConnection = connect(animationSettings(), &AnimationSettings::timeChangeComplete, viewportConfig(), &ViewportConfiguration::updateViewports);
+			viewportConfig()->updateViewports();
+		}
 	}
 
 	RefTarget::referenceReplaced(field, oldTarget, newTarget);
@@ -170,6 +168,14 @@ DataSetContainer* DataSet::container() const
 	}
 	OVITO_ASSERT_MSG(false, "DataSet::container()", "DataSet is not in a DataSetContainer.");
 	return nullptr;
+}
+
+/******************************************************************************
+* Returns a pointer to the main window in which this dataset is being edited.
+******************************************************************************/
+MainWindow* DataSet::mainWindow() const
+{
+	return container()->mainWindow();
 }
 
 /******************************************************************************
@@ -200,7 +206,7 @@ void DataSet::rescaleTime(const TimeInterval& oldAnimationInterval, const TimeIn
 ******************************************************************************/
 bool DataSet::isSceneReady(TimePoint time) const
 {
-	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSet::isSceneReady", "This function may only be called from the main thread.");
+	OVITO_ASSERT_MSG(QThread::currentThread() == QApplication::instance()->thread(), "DataSet::isSceneReady", "This function may only be called from the GUI thread.");
 	OVITO_CHECK_OBJECT_POINTER(sceneRoot());
 
 	// Iterate over all object nodes and request an evaluation of their geometry pipeline.
@@ -217,7 +223,7 @@ bool DataSet::isSceneReady(TimePoint time) const
 ******************************************************************************/
 void DataSet::runWhenSceneIsReady(const std::function<void()>& fn)
 {
-	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSet::runWhenSceneIsReady", "This function may only be called from the main thread.");
+	OVITO_ASSERT_MSG(QThread::currentThread() == QApplication::instance()->thread(), "DataSet::runWhenSceneIsReady", "This function may only be called from the GUI thread.");
 	OVITO_CHECK_OBJECT_POINTER(sceneRoot());
 
 	TimePoint time = animationSettings()->time();
@@ -251,11 +257,21 @@ void DataSet::notifySceneReadyListeners()
 * This is the high-level rendering function, which invokes the renderer to generate one or more
 * output images of the scene. All rendering parameters are specified in the RenderSettings object.
 ******************************************************************************/
-bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuffer* frameBuffer, AbstractProgressDisplay* progressDisplay)
+bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, boost::shared_ptr<FrameBuffer> frameBuffer, FrameBufferWindow* frameBufferWindow)
 {
 	OVITO_CHECK_OBJECT_POINTER(settings);
 	OVITO_CHECK_OBJECT_POINTER(viewport);
-	OVITO_ASSERT(frameBuffer);
+
+	// If the caller did not supply a frame buffer, get the default frame buffer for the output image, or create a temporary one if necessary.
+	if(!frameBuffer) {
+		if(Application::instance().guiMode()) {
+			OVITO_ASSERT(mainWindow());
+			frameBufferWindow = mainWindow()->frameBufferWindow();
+			frameBuffer = frameBufferWindow->frameBuffer();
+		}
+		if(!frameBuffer)
+			frameBuffer = boost::make_shared<FrameBuffer>(settings->outputImageWidth(), settings->outputImageHeight());
+	}
 
 	// Get the selected scene renderer.
 	SceneRenderer* renderer = settings->renderer();
@@ -264,10 +280,40 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuf
 	bool wasCanceled = false;
 	try {
 
-		// Resize output frame buffer.
+		// Set up the frame buffer for the output image.
+		if(frameBufferWindow && frameBufferWindow->frameBuffer() != frameBuffer) {
+			frameBufferWindow->setFrameBuffer(frameBuffer);
+			frameBufferWindow->resize(frameBufferWindow->sizeHint());
+		}
 		if(frameBuffer->size() != QSize(settings->outputImageWidth(), settings->outputImageHeight())) {
 			frameBuffer->setSize(QSize(settings->outputImageWidth(), settings->outputImageHeight()));
 			frameBuffer->clear();
+			if(frameBufferWindow)
+				frameBufferWindow->resize(frameBufferWindow->sizeHint());
+		}
+		if(frameBufferWindow) {
+			if(frameBufferWindow->isHidden()) {
+				// Center frame buffer window in main window.
+				if(frameBufferWindow->parentWidget()) {
+					QSize s = frameBufferWindow->frameGeometry().size();
+					frameBufferWindow->move(frameBufferWindow->parentWidget()->geometry().center() - QPoint(s.width() / 2, s.height() / 2));
+				}
+				frameBufferWindow->show();
+			}
+			frameBufferWindow->activateWindow();
+		}
+
+		// Show progress dialog.
+		std::unique_ptr<QProgressDialog> progressDialog;
+		std::unique_ptr<ProgressDialogAdapter> progressDisplay;
+		if(Application::instance().guiMode()) {
+			progressDialog.reset(new QProgressDialog(frameBufferWindow ? (QWidget*)frameBufferWindow : (QWidget*)mainWindow()));
+			progressDialog->setWindowModality(Qt::WindowModal);
+			progressDialog->setAutoClose(false);
+			progressDialog->setAutoReset(false);
+			progressDialog->setMinimumDuration(0);
+			progressDialog->setValue(0);
+			progressDisplay.reset(new ProgressDialogAdapter(progressDialog.get()));
 		}
 
 		// Don't update viewports while rendering.
@@ -295,7 +341,9 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuf
 				// Render a single frame.
 				TimePoint renderTime = animationSettings()->time();
 				int frameNumber = animationSettings()->timeToFrame(renderTime);
-				if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer, videoEncoder, progressDisplay))
+				if(frameBufferWindow)
+					frameBufferWindow->setWindowTitle(tr("Frame %1").arg(frameNumber));
+				if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer.get(), videoEncoder, progressDisplay.get()))
 					wasCanceled = true;
 			}
 			else if(settings->renderingRangeType() == RenderSettings::ANIMATION_INTERVAL || settings->renderingRangeType() == RenderSettings::CUSTOM_INTERVAL) {
@@ -315,20 +363,22 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuf
 				numberOfFrames = (numberOfFrames + settings->everyNthFrame() - 1) / settings->everyNthFrame();
 				if(numberOfFrames < 1)
 					throw Exception(tr("Invalid rendering range: Frame %1 to %2").arg(settings->customRangeStart()).arg(settings->customRangeEnd()));
-				if(progressDisplay)
-					progressDisplay->setMaximum(numberOfFrames);
+				if(progressDialog)
+					progressDialog->setMaximum(numberOfFrames);
 
 				// Render frames, one by one.
 				for(int frameIndex = 0; frameIndex < numberOfFrames; frameIndex++) {
-					if(progressDisplay)
-						progressDisplay->setValue(frameIndex);
+					if(progressDialog)
+						progressDialog->setValue(frameIndex);
 
 					int frameNumber = firstFrameNumber + frameIndex * settings->everyNthFrame() + settings->fileNumberBase();
-					if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer, videoEncoder, progressDisplay)) {
+					if(frameBufferWindow)
+						frameBufferWindow->setWindowTitle(tr("Frame %1").arg(animationSettings()->timeToFrame(renderTime)));
+					if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer.get(), videoEncoder, progressDisplay.get())) {
 						wasCanceled = true;
 						break;
 					}
-					if(progressDisplay && progressDisplay->wasCanceled())
+					if(progressDialog && progressDialog->wasCanceled())
 						break;
 
 					// Go to next animation frame.
@@ -346,7 +396,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuf
 		// Shutdown renderer.
 		renderer->endRender();
 
-		if(progressDisplay && progressDisplay->wasCanceled())
+		if(progressDialog && progressDialog->wasCanceled())
 			wasCanceled = true;
 	}
 	catch(...) {
