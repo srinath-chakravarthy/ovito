@@ -32,6 +32,7 @@ Unresolved OpenGL problems:
 - Crash when moving the viewport camera:
     Windows, AMD Radeon HD8490, Core profile 3.2 (ljloverq@163.com)
     Windows, ATI Mobility Radeon HD 5650, 3.2.9756 Core Profile Forward-Compatible Context (biyikli.emre@gmail.com)
+    Windows, AMD Radeon(TM) HD8490, 3.2.13399 Core Profile Context 15.200.1062.1003 (zr3@zips.uakron.edu)
     Workaround is to disable the use of geometry shaders.
 - Simulation cell doesn't show up in rendered images:
     Windows, Intel HD graphics, OpenGL 2.1 (Karsten's laptop)
@@ -42,7 +43,7 @@ Unresolved OpenGL problems:
 - Frequent crashing
     MacBook Air with the operating system OS X 10.9.5 Maverick (yidong.xia@inl.gov)
 - Texture-mapped point sprites don't work in the perspective viewport on Diego's computer (Linux, Intel Opengl 2.1)
-  Workaround is to explicitly turn off the use point sprites.
+    Workaround is to explicitly turn off the use point sprites.
 - High-quality particle rendering does not work properly (spheres are cut in half), 
     Ovito 2.6.1 Linux, Mesa DRI Intel(R) Sandybridge Mobile, 3.3 (Core Profile) Mesa 11.1.2  (morten.nagel@helsinki.fi)
 
@@ -64,7 +65,6 @@ New I/O functions:
 - Single precision floating-point numbers, which are used for custom particle properties, cannot represent large integer numbers exactly (e.g. 100400). Find a solution to make it work.
 - Load atomic trajectories from LAMMPS dump files and import bond information from a separate LAMMPS data file (suggested by jorge.ramirez@upm.es, HeineDR@corning.com).
 - Add support for more file formats using OpenBabel.
-- Update QSsh version to support more encryption methods (tafaltens@purdue.edu)
 
 Performance improvements:
 

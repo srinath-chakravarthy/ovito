@@ -19,7 +19,7 @@ from PyScriptFileIO import *
 def import_file(location, **params):
     """ This high-level function imports an external data file. 
     
-        This Python function corresponds to the *Open Local File* command in OVITO's
+        This Python function corresponds to the *Load File* command in OVITO's
         user interface. The format of the imported file is automatically detected.
         However, depending on the file's format, additional keyword parameters may need to be supplied to 
         the file parser to specify how the data should be interpreted. 
