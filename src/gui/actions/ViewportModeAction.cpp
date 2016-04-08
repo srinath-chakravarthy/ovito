@@ -19,10 +19,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/actions/ViewportModeAction.h>
-#include <core/gui/mainwin/MainWindow.h>
-#include <core/viewport/input/ViewportInputManager.h>
+#include <gui/GUI.h>
+#include <gui/actions/ViewportModeAction.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/viewport/input/ViewportInputManager.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(ViewportInput)
 

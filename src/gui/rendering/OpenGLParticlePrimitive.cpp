@@ -19,9 +19,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "OpenGLParticlePrimitive.h"
-#include "ViewportSceneRenderer.h"
+#include "OpenGLSceneRenderer.h"
 
 /// The maximum resolution of the texture used for billboard rendering of particles. Specified as a power of two.
 #define BILLBOARD_TEXTURE_LEVELS 	8
@@ -31,7 +31,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAM
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-OpenGLParticlePrimitive::OpenGLParticlePrimitive(ViewportSceneRenderer* renderer, ShadingMode shadingMode,
+OpenGLParticlePrimitive::OpenGLParticlePrimitive(OpenGLSceneRenderer* renderer, ShadingMode shadingMode,
 		RenderingQuality renderingQuality, ParticleShape shape, bool translucentParticles) :
 	ParticlePrimitive(shadingMode, renderingQuality, shape, translucentParticles),
 	_contextGroup(QOpenGLContextGroup::currentContextGroup()),
@@ -65,38 +65,38 @@ OpenGLParticlePrimitive::OpenGLParticlePrimitive(ViewportSceneRenderer* renderer
 		if(shadingMode == FlatShading) {
 			if(shape == SphericalShape || shape == EllipsoidShape) {
 				_shader = renderer->loadShaderProgram("particle_pointsprite_spherical_flat",
-						":/core/glsl/particles/pointsprites/sphere/without_depth.vs",
-						":/core/glsl/particles/pointsprites/sphere/flat_shading.fs");
+						":/gui/glsl/particles/pointsprites/sphere/without_depth.vs",
+						":/gui/glsl/particles/pointsprites/sphere/flat_shading.fs");
 				_pickingShader = renderer->loadShaderProgram("particle_pointsprite_spherical_nodepth_picking",
-						":/core/glsl/particles/pointsprites/sphere/picking/without_depth.vs",
-						":/core/glsl/particles/pointsprites/sphere/picking/flat_shading.fs");
+						":/gui/glsl/particles/pointsprites/sphere/picking/without_depth.vs",
+						":/gui/glsl/particles/pointsprites/sphere/picking/flat_shading.fs");
 			}
 			else if(shape == SquareShape || shape == BoxShape) {
 				_shader = renderer->loadShaderProgram("particle_pointsprite_square_flat",
-						":/core/glsl/particles/pointsprites/sphere/without_depth.vs",
-						":/core/glsl/particles/pointsprites/square/flat_shading.fs");
+						":/gui/glsl/particles/pointsprites/sphere/without_depth.vs",
+						":/gui/glsl/particles/pointsprites/square/flat_shading.fs");
 				_pickingShader = renderer->loadShaderProgram("particle_pointsprite_square_flat_picking",
-						":/core/glsl/particles/pointsprites/sphere/picking/without_depth.vs",
-						":/core/glsl/particles/pointsprites/square/picking/flat_shading.fs");
+						":/gui/glsl/particles/pointsprites/sphere/picking/without_depth.vs",
+						":/gui/glsl/particles/pointsprites/square/picking/flat_shading.fs");
 			}
 		}
 		else if(shadingMode == NormalShading) {
 			if(shape == SphericalShape) {
 				if(renderingQuality == LowQuality) {
 					_shader = renderer->loadShaderProgram("particle_pointsprite_spherical_shaded_nodepth",
-							":/core/glsl/particles/pointsprites/sphere/without_depth.vs",
-							":/core/glsl/particles/pointsprites/sphere/without_depth.fs");
+							":/gui/glsl/particles/pointsprites/sphere/without_depth.vs",
+							":/gui/glsl/particles/pointsprites/sphere/without_depth.fs");
 					_pickingShader = renderer->loadShaderProgram("particle_pointsprite_spherical_nodepth_picking",
-							":/core/glsl/particles/pointsprites/sphere/picking/without_depth.vs",
-							":/core/glsl/particles/pointsprites/sphere/picking/flat_shading.fs");
+							":/gui/glsl/particles/pointsprites/sphere/picking/without_depth.vs",
+							":/gui/glsl/particles/pointsprites/sphere/picking/flat_shading.fs");
 				}
 				else if(renderingQuality == MediumQuality) {
 					_shader = renderer->loadShaderProgram("particle_pointsprite_spherical_shaded_depth",
-							":/core/glsl/particles/pointsprites/sphere/with_depth.vs",
-							":/core/glsl/particles/pointsprites/sphere/with_depth.fs");
+							":/gui/glsl/particles/pointsprites/sphere/with_depth.vs",
+							":/gui/glsl/particles/pointsprites/sphere/with_depth.fs");
 					_pickingShader = renderer->loadShaderProgram("particle_pointsprite_spherical_shaded_depth_picking",
-							":/core/glsl/particles/pointsprites/sphere/picking/with_depth.vs",
-							":/core/glsl/particles/pointsprites/sphere/picking/with_depth.fs");
+							":/gui/glsl/particles/pointsprites/sphere/picking/with_depth.vs",
+							":/gui/glsl/particles/pointsprites/sphere/picking/with_depth.fs");
 				}
 			}
 		}
@@ -106,41 +106,41 @@ OpenGLParticlePrimitive::OpenGLParticlePrimitive(ViewportSceneRenderer* renderer
 			if(shape == SphericalShape || shape == EllipsoidShape) {
 				if(_usingGeometryShader) {
 					_shader = renderer->loadShaderProgram("particle_geomshader_imposter_spherical_flat",
-							":/core/glsl/particles/imposter/sphere/without_depth.vs",
-							":/core/glsl/particles/imposter/sphere/flat_shading.fs",
-							":/core/glsl/particles/imposter/sphere/without_depth.gs");
+							":/gui/glsl/particles/imposter/sphere/without_depth.vs",
+							":/gui/glsl/particles/imposter/sphere/flat_shading.fs",
+							":/gui/glsl/particles/imposter/sphere/without_depth.gs");
 					_pickingShader = renderer->loadShaderProgram("particle_geomshader_imposter_spherical_nodepth_picking",
-							":/core/glsl/particles/imposter/sphere/picking/without_depth.vs",
-							":/core/glsl/particles/imposter/sphere/picking/flat_shading.fs",
-							":/core/glsl/particles/imposter/sphere/picking/without_depth.gs");
+							":/gui/glsl/particles/imposter/sphere/picking/without_depth.vs",
+							":/gui/glsl/particles/imposter/sphere/picking/flat_shading.fs",
+							":/gui/glsl/particles/imposter/sphere/picking/without_depth.gs");
 				}
 				else {
 					_shader = renderer->loadShaderProgram("particle_imposter_spherical_flat",
-							":/core/glsl/particles/imposter/sphere/without_depth_tri.vs",
-							":/core/glsl/particles/imposter/sphere/flat_shading.fs");
+							":/gui/glsl/particles/imposter/sphere/without_depth_tri.vs",
+							":/gui/glsl/particles/imposter/sphere/flat_shading.fs");
 					_pickingShader = renderer->loadShaderProgram("particle_imposter_spherical_nodepth_picking",
-							":/core/glsl/particles/imposter/sphere/picking/without_depth_tri.vs",
-							":/core/glsl/particles/imposter/sphere/picking/flat_shading.fs");
+							":/gui/glsl/particles/imposter/sphere/picking/without_depth_tri.vs",
+							":/gui/glsl/particles/imposter/sphere/picking/flat_shading.fs");
 				}
 			}
 			else if(shape == SquareShape || shape == BoxShape) {
 				if(_usingGeometryShader) {
 					_shader = renderer->loadShaderProgram("particle_geomshader_imposter_square_flat",
-							":/core/glsl/particles/imposter/sphere/without_depth.vs",
-							":/core/glsl/particles/pointsprites/square/flat_shading.fs",
-							":/core/glsl/particles/imposter/sphere/without_depth.gs");
+							":/gui/glsl/particles/imposter/sphere/without_depth.vs",
+							":/gui/glsl/particles/pointsprites/square/flat_shading.fs",
+							":/gui/glsl/particles/imposter/sphere/without_depth.gs");
 					_pickingShader = renderer->loadShaderProgram("particle_geomshader_imposter_square_flat_picking",
-							":/core/glsl/particles/imposter/sphere/picking/without_depth.vs",
-							":/core/glsl/particles/pointsprites/square/picking/flat_shading.fs",
-							":/core/glsl/particles/imposter/sphere/picking/without_depth.gs");
+							":/gui/glsl/particles/imposter/sphere/picking/without_depth.vs",
+							":/gui/glsl/particles/pointsprites/square/picking/flat_shading.fs",
+							":/gui/glsl/particles/imposter/sphere/picking/without_depth.gs");
 				}
 				else {
 					_shader = renderer->loadShaderProgram("particle_imposter_square_flat",
-							":/core/glsl/particles/imposter/sphere/without_depth_tri.vs",
-							":/core/glsl/particles/pointsprites/square/flat_shading.fs");
+							":/gui/glsl/particles/imposter/sphere/without_depth_tri.vs",
+							":/gui/glsl/particles/pointsprites/square/flat_shading.fs");
 					_pickingShader = renderer->loadShaderProgram("particle_imposter_square_flat_picking",
-							":/core/glsl/particles/imposter/sphere/picking/without_depth_tri.vs",
-							":/core/glsl/particles/pointsprites/square/picking/flat_shading.fs");
+							":/gui/glsl/particles/imposter/sphere/picking/without_depth_tri.vs",
+							":/gui/glsl/particles/pointsprites/square/picking/flat_shading.fs");
 				}
 			}
 		}
@@ -149,41 +149,41 @@ OpenGLParticlePrimitive::OpenGLParticlePrimitive(ViewportSceneRenderer* renderer
 				if(renderingQuality == LowQuality) {
 					if(_usingGeometryShader) {
 						_shader = renderer->loadShaderProgram("particle_geomshader_imposter_spherical_shaded_nodepth",
-								":/core/glsl/particles/imposter/sphere/without_depth.vs",
-								":/core/glsl/particles/imposter/sphere/without_depth.fs",
-								":/core/glsl/particles/imposter/sphere/without_depth.gs");
+								":/gui/glsl/particles/imposter/sphere/without_depth.vs",
+								":/gui/glsl/particles/imposter/sphere/without_depth.fs",
+								":/gui/glsl/particles/imposter/sphere/without_depth.gs");
 						_pickingShader = renderer->loadShaderProgram("particle_geomshader_imposter_spherical_nodepth_picking",
-								":/core/glsl/particles/imposter/sphere/picking/without_depth.vs",
-								":/core/glsl/particles/imposter/sphere/picking/flat_shading.fs",
-								":/core/glsl/particles/imposter/sphere/picking/without_depth.gs");
+								":/gui/glsl/particles/imposter/sphere/picking/without_depth.vs",
+								":/gui/glsl/particles/imposter/sphere/picking/flat_shading.fs",
+								":/gui/glsl/particles/imposter/sphere/picking/without_depth.gs");
 					}
 					else {
 						_shader = renderer->loadShaderProgram("particle_imposter_spherical_shaded_nodepth",
-								":/core/glsl/particles/imposter/sphere/without_depth_tri.vs",
-								":/core/glsl/particles/imposter/sphere/without_depth.fs");
+								":/gui/glsl/particles/imposter/sphere/without_depth_tri.vs",
+								":/gui/glsl/particles/imposter/sphere/without_depth.fs");
 						_pickingShader = renderer->loadShaderProgram("particle_imposter_spherical_nodepth_picking",
-								":/core/glsl/particles/imposter/sphere/picking/without_depth_tri.vs",
-								":/core/glsl/particles/imposter/sphere/picking/flat_shading.fs");
+								":/gui/glsl/particles/imposter/sphere/picking/without_depth_tri.vs",
+								":/gui/glsl/particles/imposter/sphere/picking/flat_shading.fs");
 					}
 				}
 				else if(renderingQuality == MediumQuality) {
 					if(_usingGeometryShader) {
 						_shader = renderer->loadShaderProgram("particle_geomshader_imposter_spherical_shaded_depth",
-								":/core/glsl/particles/imposter/sphere/with_depth.vs",
-								":/core/glsl/particles/imposter/sphere/with_depth.fs",
-								":/core/glsl/particles/imposter/sphere/with_depth.gs");
+								":/gui/glsl/particles/imposter/sphere/with_depth.vs",
+								":/gui/glsl/particles/imposter/sphere/with_depth.fs",
+								":/gui/glsl/particles/imposter/sphere/with_depth.gs");
 						_pickingShader = renderer->loadShaderProgram("particle_geomshader_imposter_spherical_shaded_depth_picking",
-								":/core/glsl/particles/imposter/sphere/picking/with_depth.vs",
-								":/core/glsl/particles/imposter/sphere/picking/with_depth.fs",
-								":/core/glsl/particles/imposter/sphere/picking/with_depth.gs");
+								":/gui/glsl/particles/imposter/sphere/picking/with_depth.vs",
+								":/gui/glsl/particles/imposter/sphere/picking/with_depth.fs",
+								":/gui/glsl/particles/imposter/sphere/picking/with_depth.gs");
 					}
 					else {
 						_shader = renderer->loadShaderProgram("particle_imposter_spherical_shaded_depth",
-								":/core/glsl/particles/imposter/sphere/with_depth_tri.vs",
-								":/core/glsl/particles/imposter/sphere/with_depth.fs");
+								":/gui/glsl/particles/imposter/sphere/with_depth_tri.vs",
+								":/gui/glsl/particles/imposter/sphere/with_depth.fs");
 						_pickingShader = renderer->loadShaderProgram("particle_imposter_spherical_shaded_depth_picking",
-								":/core/glsl/particles/imposter/sphere/picking/with_depth_tri.vs",
-								":/core/glsl/particles/imposter/sphere/picking/with_depth.fs");
+								":/gui/glsl/particles/imposter/sphere/picking/with_depth_tri.vs",
+								":/gui/glsl/particles/imposter/sphere/picking/with_depth.fs");
 					}
 				}
 			}
@@ -194,77 +194,77 @@ OpenGLParticlePrimitive::OpenGLParticlePrimitive(ViewportSceneRenderer* renderer
 			if(_usingGeometryShader) {
 				if(shape == SphericalShape && renderingQuality == HighQuality) {
 					_shader = renderer->loadShaderProgram("particle_geomshader_sphere",
-							":/core/glsl/particles/geometry/sphere/sphere.vs",
-							":/core/glsl/particles/geometry/sphere/sphere.fs",
-							":/core/glsl/particles/geometry/sphere/sphere.gs");
+							":/gui/glsl/particles/geometry/sphere/sphere.vs",
+							":/gui/glsl/particles/geometry/sphere/sphere.fs",
+							":/gui/glsl/particles/geometry/sphere/sphere.gs");
 					_pickingShader = renderer->loadShaderProgram("particle_geomshader_sphere_picking",
-							":/core/glsl/particles/geometry/sphere/picking/sphere.vs",
-							":/core/glsl/particles/geometry/sphere/picking/sphere.fs",
-							":/core/glsl/particles/geometry/sphere/picking/sphere.gs");
+							":/gui/glsl/particles/geometry/sphere/picking/sphere.vs",
+							":/gui/glsl/particles/geometry/sphere/picking/sphere.fs",
+							":/gui/glsl/particles/geometry/sphere/picking/sphere.gs");
 				}
 				else if(shape == SquareShape) {
 					_shader = renderer->loadShaderProgram("particle_geomshader_cube",
-							":/core/glsl/particles/geometry/cube/cube.vs",
-							":/core/glsl/particles/geometry/cube/cube.fs",
-							":/core/glsl/particles/geometry/cube/cube.gs");
+							":/gui/glsl/particles/geometry/cube/cube.vs",
+							":/gui/glsl/particles/geometry/cube/cube.fs",
+							":/gui/glsl/particles/geometry/cube/cube.gs");
 					_pickingShader = renderer->loadShaderProgram("particle_geomshader_cube_picking",
-							":/core/glsl/particles/geometry/cube/picking/cube.vs",
-							":/core/glsl/particles/geometry/cube/picking/cube.fs",
-							":/core/glsl/particles/geometry/cube/picking/cube.gs");
+							":/gui/glsl/particles/geometry/cube/picking/cube.vs",
+							":/gui/glsl/particles/geometry/cube/picking/cube.fs",
+							":/gui/glsl/particles/geometry/cube/picking/cube.gs");
 				}
 				else if(shape == BoxShape) {
 					_shader = renderer->loadShaderProgram("particle_geomshader_box",
-							":/core/glsl/particles/geometry/box/box.vs",
-							":/core/glsl/particles/geometry/cube/cube.fs",
-							":/core/glsl/particles/geometry/box/box.gs");
+							":/gui/glsl/particles/geometry/box/box.vs",
+							":/gui/glsl/particles/geometry/cube/cube.fs",
+							":/gui/glsl/particles/geometry/box/box.gs");
 					_pickingShader = renderer->loadShaderProgram("particle_geomshader_box_picking",
-							":/core/glsl/particles/geometry/box/picking/box.vs",
-							":/core/glsl/particles/geometry/cube/picking/cube.fs",
-							":/core/glsl/particles/geometry/box/picking/box.gs");
+							":/gui/glsl/particles/geometry/box/picking/box.vs",
+							":/gui/glsl/particles/geometry/cube/picking/cube.fs",
+							":/gui/glsl/particles/geometry/box/picking/box.gs");
 				}
 				else if(shape == EllipsoidShape) {
 					_shader = renderer->loadShaderProgram("particle_geomshader_ellipsoid",
-							":/core/glsl/particles/geometry/ellipsoid/ellipsoid.vs",
-							":/core/glsl/particles/geometry/ellipsoid/ellipsoid.fs",
-							":/core/glsl/particles/geometry/ellipsoid/ellipsoid.gs");
+							":/gui/glsl/particles/geometry/ellipsoid/ellipsoid.vs",
+							":/gui/glsl/particles/geometry/ellipsoid/ellipsoid.fs",
+							":/gui/glsl/particles/geometry/ellipsoid/ellipsoid.gs");
 					_pickingShader = renderer->loadShaderProgram("particle_geomshader_ellipsoid_picking",
-							":/core/glsl/particles/geometry/ellipsoid/picking/ellipsoid.vs",
-							":/core/glsl/particles/geometry/ellipsoid/picking/ellipsoid.fs",
-							":/core/glsl/particles/geometry/ellipsoid/picking/ellipsoid.gs");
+							":/gui/glsl/particles/geometry/ellipsoid/picking/ellipsoid.vs",
+							":/gui/glsl/particles/geometry/ellipsoid/picking/ellipsoid.fs",
+							":/gui/glsl/particles/geometry/ellipsoid/picking/ellipsoid.gs");
 				}
 			}
 			else {
 				if(shape == SphericalShape && renderingQuality == HighQuality) {
 					_shader = renderer->loadShaderProgram("particle_tristrip_sphere",
-							":/core/glsl/particles/geometry/sphere/sphere_tristrip.vs",
-							":/core/glsl/particles/geometry/sphere/sphere.fs");
+							":/gui/glsl/particles/geometry/sphere/sphere_tristrip.vs",
+							":/gui/glsl/particles/geometry/sphere/sphere.fs");
 					_pickingShader = renderer->loadShaderProgram("particle_tristrip_sphere_picking",
-							":/core/glsl/particles/geometry/sphere/picking/sphere_tristrip.vs",
-							":/core/glsl/particles/geometry/sphere/picking/sphere.fs");
+							":/gui/glsl/particles/geometry/sphere/picking/sphere_tristrip.vs",
+							":/gui/glsl/particles/geometry/sphere/picking/sphere.fs");
 				}
 				else if(shape == SquareShape) {
 					_shader = renderer->loadShaderProgram("particle_tristrip_cube",
-							":/core/glsl/particles/geometry/cube/cube_tristrip.vs",
-							":/core/glsl/particles/geometry/cube/cube.fs");
+							":/gui/glsl/particles/geometry/cube/cube_tristrip.vs",
+							":/gui/glsl/particles/geometry/cube/cube.fs");
 					_pickingShader = renderer->loadShaderProgram("particle_tristrip_cube_picking",
-							":/core/glsl/particles/geometry/cube/picking/cube_tristrip.vs",
-							":/core/glsl/particles/geometry/cube/picking/cube.fs");
+							":/gui/glsl/particles/geometry/cube/picking/cube_tristrip.vs",
+							":/gui/glsl/particles/geometry/cube/picking/cube.fs");
 				}
 				else if(shape == BoxShape) {
 					_shader = renderer->loadShaderProgram("particle_tristrip_box",
-							":/core/glsl/particles/geometry/box/box_tristrip.vs",
-							":/core/glsl/particles/geometry/cube/cube.fs");
+							":/gui/glsl/particles/geometry/box/box_tristrip.vs",
+							":/gui/glsl/particles/geometry/cube/cube.fs");
 					_pickingShader = renderer->loadShaderProgram("particle_tristrip_box_picking",
-							":/core/glsl/particles/geometry/box/picking/box_tristrip.vs",
-							":/core/glsl/particles/geometry/cube/picking/cube.fs");
+							":/gui/glsl/particles/geometry/box/picking/box_tristrip.vs",
+							":/gui/glsl/particles/geometry/cube/picking/cube.fs");
 				}
 				else if(shape == EllipsoidShape) {
 					_shader = renderer->loadShaderProgram("particle_tristrip_ellipsoid",
-							":/core/glsl/particles/geometry/ellipsoid/ellipsoid_tristrip.vs",
-							":/core/glsl/particles/geometry/ellipsoid/ellipsoid.fs");
+							":/gui/glsl/particles/geometry/ellipsoid/ellipsoid_tristrip.vs",
+							":/gui/glsl/particles/geometry/ellipsoid/ellipsoid.fs");
 					_pickingShader = renderer->loadShaderProgram("particle_tristrip_ellipsoid_picking",
-							":/core/glsl/particles/geometry/ellipsoid/picking/ellipsoid_tristrip.vs",
-							":/core/glsl/particles/geometry/ellipsoid/picking/ellipsoid.fs");
+							":/gui/glsl/particles/geometry/ellipsoid/picking/ellipsoid_tristrip.vs",
+							":/gui/glsl/particles/geometry/ellipsoid/picking/ellipsoid.fs");
 				}
 			}
 		}
@@ -453,7 +453,7 @@ void OpenGLParticlePrimitive::setParticleOrientations(const Quaternion* orientat
 ******************************************************************************/
 bool OpenGLParticlePrimitive::isValid(SceneRenderer* renderer)
 {
-	ViewportSceneRenderer* vpRenderer = dynamic_object_cast<ViewportSceneRenderer>(renderer);
+	OpenGLSceneRenderer* vpRenderer = dynamic_object_cast<OpenGLSceneRenderer>(renderer);
 	if(!vpRenderer) return false;
 	return (_particleCount >= 0) && (_contextGroup == vpRenderer->glcontext()->shareGroup());
 }
@@ -469,7 +469,7 @@ void OpenGLParticlePrimitive::render(SceneRenderer* renderer)
 	OVITO_STATIC_ASSERT(sizeof(Color) == 12);
 	OVITO_STATIC_ASSERT(sizeof(ColorA) == 16);
 
-	ViewportSceneRenderer* vpRenderer = dynamic_object_cast<ViewportSceneRenderer>(renderer);
+	OpenGLSceneRenderer* vpRenderer = dynamic_object_cast<OpenGLSceneRenderer>(renderer);
 
 	if(particleCount() <= 0 || !vpRenderer)
 		return;
@@ -494,7 +494,7 @@ void OpenGLParticlePrimitive::render(SceneRenderer* renderer)
 /******************************************************************************
 * Renders the particles using OpenGL point sprites.
 ******************************************************************************/
-void OpenGLParticlePrimitive::renderPointSprites(ViewportSceneRenderer* renderer)
+void OpenGLParticlePrimitive::renderPointSprites(OpenGLSceneRenderer* renderer)
 {
 	OVITO_ASSERT(!_positionsBuffers.empty());
 	OVITO_ASSERT(_positionsBuffers.front().verticesPerElement() == 1);
@@ -517,7 +517,7 @@ void OpenGLParticlePrimitive::renderPointSprites(ViewportSceneRenderer* renderer
 	// Pick the right OpenGL shader program.
 	QOpenGLShaderProgram* shader = renderer->isPicking() ? _pickingShader : _shader;
 	if(!shader->bind())
-		throw Exception(QStringLiteral("Failed to bind OpenGL shader program."));
+		renderer->throwException(QStringLiteral("Failed to bind OpenGL shader program."));
 
 	// This is how our point sprite's size will be modified based on the distance from the viewer.
 	GLint viewportCoords[4];
@@ -603,7 +603,7 @@ void OpenGLParticlePrimitive::renderPointSprites(ViewportSceneRenderer* renderer
 /******************************************************************************
 * Renders a cube for each particle using triangle strips.
 ******************************************************************************/
-void OpenGLParticlePrimitive::renderBoxes(ViewportSceneRenderer* renderer)
+void OpenGLParticlePrimitive::renderBoxes(OpenGLSceneRenderer* renderer)
 {
 	int verticesPerElement = _positionsBuffers.front().verticesPerElement();
 	OVITO_ASSERT(!_usingGeometryShader || verticesPerElement == 1);
@@ -612,7 +612,7 @@ void OpenGLParticlePrimitive::renderBoxes(ViewportSceneRenderer* renderer)
 	// Pick the right OpenGL shader program.
 	QOpenGLShaderProgram* shader = renderer->isPicking() ? _pickingShader : _shader;
 	if(!shader->bind())
-		throw Exception(QStringLiteral("Failed to bind OpenGL shader program."));
+		renderer->throwException(QStringLiteral("Failed to bind OpenGL shader program."));
 
 	// Need to render only the front facing sides of the cubes.
 	glCullFace(GL_BACK);
@@ -775,14 +775,14 @@ void OpenGLParticlePrimitive::renderBoxes(ViewportSceneRenderer* renderer)
 /******************************************************************************
 * Renders particles using quads.
 ******************************************************************************/
-void OpenGLParticlePrimitive::renderImposters(ViewportSceneRenderer* renderer)
+void OpenGLParticlePrimitive::renderImposters(OpenGLSceneRenderer* renderer)
 {
 	int verticesPerElement = _positionsBuffers.front().verticesPerElement();
 
 	// Pick the right OpenGL shader program.
 	QOpenGLShaderProgram* shader = renderer->isPicking() ? _pickingShader : _shader;
 	if(!shader->bind())
-		throw Exception(QStringLiteral("Failed to bind OpenGL shader program."));
+		renderer->throwException(QStringLiteral("Failed to bind OpenGL shader program."));
 
 	if(particleShape() == SphericalShape && shadingMode() == NormalShading && !renderer->isPicking())
 		activateBillboardTexture(renderer);
@@ -890,7 +890,7 @@ void OpenGLParticlePrimitive::renderImposters(ViewportSceneRenderer* renderer)
 /******************************************************************************
 * Creates the textures used for billboard rendering of particles.
 ******************************************************************************/
-void OpenGLParticlePrimitive::initializeBillboardTexture(ViewportSceneRenderer* renderer)
+void OpenGLParticlePrimitive::initializeBillboardTexture(OpenGLSceneRenderer* renderer)
 {
 	static std::vector<std::array<GLubyte,4>> textureImages[BILLBOARD_TEXTURE_LEVELS];
 	static bool generatedImages = false;
@@ -947,7 +947,7 @@ void OpenGLParticlePrimitive::initializeBillboardTexture(ViewportSceneRenderer* 
 /******************************************************************************
 * Activates a texture for billboard rendering of spherical particles.
 ******************************************************************************/
-void OpenGLParticlePrimitive::activateBillboardTexture(ViewportSceneRenderer* renderer)
+void OpenGLParticlePrimitive::activateBillboardTexture(OpenGLSceneRenderer* renderer)
 {
 	OVITO_ASSERT(_billboardTexture.isCreated());
 	OVITO_ASSERT(shadingMode() != FlatShading);
@@ -971,7 +971,7 @@ void OpenGLParticlePrimitive::activateBillboardTexture(ViewportSceneRenderer* re
 /******************************************************************************
 * Deactivates the texture used for billboard rendering of spherical particles.
 ******************************************************************************/
-void OpenGLParticlePrimitive::deactivateBillboardTexture(ViewportSceneRenderer* renderer)
+void OpenGLParticlePrimitive::deactivateBillboardTexture(OpenGLSceneRenderer* renderer)
 {
 	// Disable texture mapping again when not using core profile.
 	if(renderer->isCoreProfile() == false)
@@ -982,7 +982,7 @@ void OpenGLParticlePrimitive::deactivateBillboardTexture(ViewportSceneRenderer* 
 * Returns an array of particle indices, sorted back-to-front, which is used
 * to render translucent particles.
 ******************************************************************************/
-std::vector<GLuint> OpenGLParticlePrimitive::determineRenderingOrder(ViewportSceneRenderer* renderer)
+std::vector<GLuint> OpenGLParticlePrimitive::determineRenderingOrder(OpenGLSceneRenderer* renderer)
 {
 	// Create array of particle indices.
 	std::vector<GLuint> indices(particleCount());

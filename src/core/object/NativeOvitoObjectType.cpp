@@ -100,7 +100,7 @@ OvitoObject* NativeOvitoObjectType::createInstanceImpl(DataSet* dataset) const
 	}
 
 	if(!obj)
-		throw Exception(Plugin::tr("Failed to instantiate class '%1'.").arg(name()));
+		dataset->throwException(Plugin::tr("Failed to instantiate class '%1'.").arg(name()));
 
 	return obj;
 }

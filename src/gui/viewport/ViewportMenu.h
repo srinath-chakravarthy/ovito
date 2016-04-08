@@ -34,7 +34,7 @@ class ViewportMenu : public QMenu
 public:
 
 	/// Initializes the menu.
-	ViewportMenu(Viewport* vp);
+	ViewportMenu(ViewportWindow* vpWindow);
 
 	/// Displays the menu.
 	void show(const QPoint& pos);
@@ -63,6 +63,9 @@ private:
 	/// The viewport this menu belongs to.
 	Viewport* _viewport;
 	
+	/// The window this menu is shown in.
+	ViewportWindow* _vpWindow;
+
 	/// The view type sub-menu.
 	QMenu* _viewTypeMenu;
 };

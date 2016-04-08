@@ -22,9 +22,9 @@
 #ifndef __OVITO_OPENGL_BUFFER_H
 #define __OVITO_OPENGL_BUFFER_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "OpenGLHelpers.h"
-#include "ViewportSceneRenderer.h"
+#include "OpenGLSceneRenderer.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -32,7 +32,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAM
  * \brief A wrapper for the QOpenGLBuffer class, which adds more features.
  */
 template<typename T>
-class OVITO_CORE_EXPORT OpenGLBuffer
+class OVITO_GUI_EXPORT OpenGLBuffer
 {
 public:
 
@@ -160,7 +160,7 @@ public:
 	}
 
 	/// Binds this buffer to a vertex attribute of a vertex shader.
-	void bind(ViewportSceneRenderer* renderer, QOpenGLShaderProgram* shader, const char* attributeName, GLenum type, int offset, int tupleSize, int stride = 0) {
+	void bind(OpenGLSceneRenderer* renderer, QOpenGLShaderProgram* shader, const char* attributeName, GLenum type, int offset, int tupleSize, int stride = 0) {
 		OVITO_ASSERT(isCreated());
 		OVITO_ASSERT(type != GL_FLOAT || (sizeof(T) == sizeof(GLfloat)*tupleSize && stride == 0) || sizeof(T) == stride);
 		OVITO_ASSERT(type != GL_INT || (sizeof(T) == sizeof(GLint)*tupleSize && stride == 0) || sizeof(T) == stride);
@@ -172,12 +172,12 @@ public:
 	}
 
 	/// After rendering is done, release the binding of the buffer to a shader attribute.
-	void detach(ViewportSceneRenderer* renderer, QOpenGLShaderProgram* shader, const char* attributeName) {
+	void detach(OpenGLSceneRenderer* renderer, QOpenGLShaderProgram* shader, const char* attributeName) {
 		OVITO_CHECK_OPENGL(shader->disableAttributeArray(attributeName));
 	}
 
 	/// Binds this buffer to the vertex position attribute of a vertex shader.
-	void bindPositions(ViewportSceneRenderer* renderer, QOpenGLShaderProgram* shader, size_t byteOffset = 0) {
+	void bindPositions(OpenGLSceneRenderer* renderer, QOpenGLShaderProgram* shader, size_t byteOffset = 0) {
 		OVITO_ASSERT(isCreated());
 		OVITO_STATIC_ASSERT(sizeof(T) >= sizeof(GLfloat)*3);
 
@@ -197,7 +197,7 @@ public:
 	}
 
 	/// After rendering is done, release the binding of the buffer to the vertex position attribute.
-	void detachPositions(ViewportSceneRenderer* renderer, QOpenGLShaderProgram* shader) {
+	void detachPositions(OpenGLSceneRenderer* renderer, QOpenGLShaderProgram* shader) {
 		if(renderer->glformat().majorVersion() >= 3) {
 			OVITO_CHECK_OPENGL(shader->disableAttributeArray("position"));
 		}
@@ -207,7 +207,7 @@ public:
 	}
 
 	/// Binds this buffer to the vertex color attribute of a vertex shader.
-	void bindColors(ViewportSceneRenderer* renderer, QOpenGLShaderProgram* shader, int components, size_t byteOffset = 0) {
+	void bindColors(OpenGLSceneRenderer* renderer, QOpenGLShaderProgram* shader, int components, size_t byteOffset = 0) {
 		OVITO_ASSERT(isCreated());
 		OVITO_ASSERT(sizeof(T) >= sizeof(GLfloat)*components);
 		OVITO_ASSERT(components == 3 || components == 4);
@@ -228,7 +228,7 @@ public:
 	}
 
 	/// After rendering is done, release the binding of the buffer to the vertex color attribute.
-	void detachColors(ViewportSceneRenderer* renderer, QOpenGLShaderProgram* shader) {
+	void detachColors(OpenGLSceneRenderer* renderer, QOpenGLShaderProgram* shader) {
 		if(renderer->glformat().majorVersion() >= 3) {
 			OVITO_CHECK_OPENGL(shader->disableAttributeArray("color"));
 		}
@@ -238,7 +238,7 @@ public:
 	}
 
 	/// Binds this buffer to the vertex normal attribute of a vertex shader.
-	void bindNormals(ViewportSceneRenderer* renderer, QOpenGLShaderProgram* shader, size_t byteOffset = 0) {
+	void bindNormals(OpenGLSceneRenderer* renderer, QOpenGLShaderProgram* shader, size_t byteOffset = 0) {
 		OVITO_ASSERT(isCreated());
 		OVITO_STATIC_ASSERT(sizeof(T) >= sizeof(GLfloat)*3);
 
@@ -258,7 +258,7 @@ public:
 	}
 
 	/// After rendering is done, release the binding of the buffer to the vertex normal attribute.
-	void detachNormals(ViewportSceneRenderer* renderer, QOpenGLShaderProgram* shader) {
+	void detachNormals(OpenGLSceneRenderer* renderer, QOpenGLShaderProgram* shader) {
 		if(renderer->glformat().majorVersion() >= 3) {
 			OVITO_CHECK_OPENGL(shader->disableAttributeArray("normal"));
 		}

@@ -22,7 +22,7 @@
 #ifndef __OVITO_VECTOR3_PARAMETER_UI_H
 #define __OVITO_VECTOR3_PARAMETER_UI_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "FloatParameterUI.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
@@ -31,7 +31,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 * A parameter UI for Vector3 properties. 
 * This ParameterUI lets the user edit one of the X, Y and Z components of the vector.
 ******************************************************************************/
-class OVITO_CORE_EXPORT Vector3ParameterUI : public FloatParameterUI
+class OVITO_GUI_EXPORT Vector3ParameterUI : public FloatParameterUI
 {
 public:
 

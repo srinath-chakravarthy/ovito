@@ -34,6 +34,8 @@ SET(SourceFiles
 	plugins/Plugin.cpp
 	plugins/NativePlugin.cpp
 	plugins/PluginManager.cpp
+	plugins/autostart/AutoStartObject.cpp
+	app/Application.cpp
 	reference/CloneHelper.cpp
 	reference/PropertyFieldDescriptor.cpp
 	reference/PropertyField.cpp
@@ -55,7 +57,6 @@ SET(SourceFiles
 	dataset/importexport/FileImporter.cpp
 	dataset/importexport/FileSourceImporter.cpp
 	dataset/importexport/FileSource.cpp
-	dataset/importexport/FileSourceEditor.cpp
 	scene/SceneNode.cpp
 	scene/ObjectNode.cpp
 	scene/SceneRoot.cpp
@@ -138,8 +139,10 @@ ENDIF()
 TARGET_COMPILE_DEFINITIONS(Core PUBLIC "$<$<CONFIG:Debug>:OVITO_DEBUG>")
 
 # Pass version information to source code.
+SET_SOURCE_FILES_PROPERTIES("app/Application.cpp" PROPERTIES COMPILE_DEFINITIONS 
+    "OVITO_VERSION_MAJOR=${OVITO_VERSION_MAJOR};OVITO_VERSION_MINOR=${OVITO_VERSION_MINOR};OVITO_VERSION_REVISION=${OVITO_VERSION_REVISION};OVITO_VERSION_STRING=\"${OVITO_VERSION_STRING}\"")
 SET_SOURCE_FILES_PROPERTIES("utilities/io/SaveStream.cpp" "utilities/io/LoadStream.cpp" PROPERTIES COMPILE_DEFINITIONS 
-    "OVITO_VERSION_MAJOR=${OVITO_VERSION_MAJOR};OVITO_VERSION_MINOR=${OVITO_VERSION_MINOR};OVITO_VERSION_REVISION=${OVITO_VERSION_REVISION};OVITO_VERSION_STRING=\"${OVITO_VERSION_STRING}\";OVITO_FILE_FORMAT_VERSION=${OVITO_FILE_FORMAT_VERSION}")
+    "OVITO_FILE_FORMAT_VERSION=${OVITO_FILE_FORMAT_VERSION}")
 
 # Speed up compilation by using precompiled headers.
 ADD_PRECOMPILED_HEADER(Core core/Core.h)

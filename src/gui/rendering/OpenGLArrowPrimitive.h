@@ -22,7 +22,7 @@
 #ifndef __OVITO_VIEWPORT_ARROW_GEOMETRY_BUFFER_H
 #define __OVITO_VIEWPORT_ARROW_GEOMETRY_BUFFER_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/rendering/ArrowPrimitive.h>
 #include "OpenGLBuffer.h"
 
@@ -31,12 +31,12 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAM
 /**
  * \brief Buffer object that stores a set of arrows to be rendered in the viewports.
  */
-class OVITO_CORE_EXPORT OpenGLArrowPrimitive : public ArrowPrimitive
+class OVITO_GUI_EXPORT OpenGLArrowPrimitive : public ArrowPrimitive
 {
 public:
 
 	/// Constructor.
-	OpenGLArrowPrimitive(ViewportSceneRenderer* renderer, ArrowPrimitive::Shape shape, ShadingMode shadingMode, RenderingQuality renderingQuality);
+	OpenGLArrowPrimitive(OpenGLSceneRenderer* renderer, ArrowPrimitive::Shape shape, ShadingMode shadingMode, RenderingQuality renderingQuality);
 
 	/// \brief Allocates a geometry buffer with the given number of elements.
 	virtual void startSetElements(int elementCount) override;
@@ -71,10 +71,10 @@ private:
 	void createArrowElement(int index, const Point3& pos, const Vector3& dir, const ColorA& color, FloatType width);
 
 	/// Renders the geometry as triangle mesh with normals.
-	void renderWithNormals(ViewportSceneRenderer* renderer);
+	void renderWithNormals(OpenGLSceneRenderer* renderer);
 
 	/// Renders the geometry as with extra information passed to the vertex shader.
-	void renderWithElementInfo(ViewportSceneRenderer* renderer);
+	void renderWithElementInfo(OpenGLSceneRenderer* renderer);
 
 private:
 

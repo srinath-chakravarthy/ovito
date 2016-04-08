@@ -22,16 +22,16 @@
 #ifndef __OVITO_UTILITY_COMMAND_PAGE_H
 #define __OVITO_UTILITY_COMMAND_PAGE_H
 
-#include <core/Core.h>
-#include <core/gui/widgets/general/RolloutContainer.h>
-#include <core/plugins/utility/UtilityApplet.h>
+#include <gui/GUI.h>
+#include <gui/widgets/general/RolloutContainer.h>
+#include <plugins/utility/UtilityApplet.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
  * The utility page lets the user invoke utility plugins.
  */
-class OVITO_CORE_EXPORT UtilityCommandPage : public QWidget
+class OVITO_GUI_EXPORT UtilityCommandPage : public QWidget
 {
 	Q_OBJECT
 
@@ -59,7 +59,7 @@ protected Q_SLOTS:
 private:
 
 	/// The container of the current dataset.
-	DataSetContainer& _datasetContainer;
+	GuiDataSetContainer& _datasetContainer;
 
 	/// This panel shows the utility plugin UI.
 	RolloutContainer* rolloutContainer;

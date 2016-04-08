@@ -35,8 +35,8 @@ ENDIF()
 # Builds the main executable of the application
 ADD_EXECUTABLE(${PROJECT_NAME} ${OVITO_WIN32_EXECUTABLE} MACOSX_BUNDLE Main.cpp ${WINDOWS_RESOURCES})
 
-# The executable depends on the core module of course.
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} Core)
+# The executable depends on the core and the gui modules, of course.
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} Core Gui)
 
 # Put the executable into the right directory.
 SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OVITO_BINARY_DIRECTORY}")

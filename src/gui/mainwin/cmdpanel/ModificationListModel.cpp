@@ -19,14 +19,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/scene/objects/DataObject.h>
 #include <core/scene/pipeline/PipelineObject.h>
 #include <core/scene/pipeline/Modifier.h>
 #include <core/scene/ObjectNode.h>
 #include <core/scene/SelectionSet.h>
-#include <core/gui/actions/ActionManager.h>
 #include <core/dataset/DataSetContainer.h>
+#include <gui/actions/ActionManager.h>
 #include "ModificationListModel.h"
 #include "ModifyCommandPage.h"
 
@@ -38,11 +38,11 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 ModificationListModel::ModificationListModel(DataSetContainer& datasetContainer, QObject* parent) : QAbstractListModel(parent),
 	_datasetContainer(datasetContainer),
 	_nextToSelectObject(nullptr), _needListUpdate(false),
-	_statusInfoIcon(":/core/mainwin/status/status_info.png"),
-	_statusWarningIcon(":/core/mainwin/status/status_warning.png"),
-	_statusErrorIcon(":/core/mainwin/status/status_error.png"),
-	_statusNoneIcon(":/core/mainwin/status/status_none.png"),
-	_statusPendingIcon(":/core/mainwin/status/status_pending.gif"),
+	_statusInfoIcon(":/gui/mainwin/status/status_info.png"),
+	_statusWarningIcon(":/gui/mainwin/status/status_warning.png"),
+	_statusErrorIcon(":/gui/mainwin/status/status_error.png"),
+	_statusNoneIcon(":/gui/mainwin/status/status_none.png"),
+	_statusPendingIcon(":/gui/mainwin/status/status_pending.gif"),
 	_sectionHeaderFont(QGuiApplication::font())
 {
 	connect(&_statusPendingIcon, &QMovie::frameChanged, this, &ModificationListModel::iconAnimationFrameChanged);

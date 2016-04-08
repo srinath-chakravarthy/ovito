@@ -19,23 +19,23 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "OpenGLMeshPrimitive.h"
-#include "ViewportSceneRenderer.h"
+#include "OpenGLSceneRenderer.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-OpenGLMeshPrimitive::OpenGLMeshPrimitive(ViewportSceneRenderer* renderer) :
+OpenGLMeshPrimitive::OpenGLMeshPrimitive(OpenGLSceneRenderer* renderer) :
 	_contextGroup(QOpenGLContextGroup::currentContextGroup()), _hasAlpha(false)
 {
 	OVITO_ASSERT(renderer->glcontext()->shareGroup() == _contextGroup);
 
 	// Initialize OpenGL shader.
-	_shader = renderer->loadShaderProgram("mesh", ":/core/glsl/mesh/mesh.vs", ":/core/glsl/mesh/mesh.fs");
-	_pickingShader = renderer->loadShaderProgram("mesh.picking", ":/core/glsl/mesh/picking/mesh.vs", ":/core/glsl/mesh/picking/mesh.fs");
+	_shader = renderer->loadShaderProgram("mesh", ":/gui/glsl/mesh/mesh.vs", ":/gui/glsl/mesh/mesh.fs");
+	_pickingShader = renderer->loadShaderProgram("mesh.picking", ":/gui/glsl/mesh/picking/mesh.vs", ":/gui/glsl/mesh/picking/mesh.fs");
 }
 
 /******************************************************************************
@@ -172,7 +172,7 @@ void OpenGLMeshPrimitive::setMesh(const TriMesh& mesh, const ColorA& meshColor)
 ******************************************************************************/
 bool OpenGLMeshPrimitive::isValid(SceneRenderer* renderer)
 {
-	ViewportSceneRenderer* vpRenderer = qobject_cast<ViewportSceneRenderer*>(renderer);
+	OpenGLSceneRenderer* vpRenderer = qobject_cast<OpenGLSceneRenderer*>(renderer);
 	if(!vpRenderer) return false;
 	return _vertexBuffer.isCreated() && (_contextGroup == vpRenderer->glcontext()->shareGroup());
 }
@@ -183,7 +183,7 @@ bool OpenGLMeshPrimitive::isValid(SceneRenderer* renderer)
 void OpenGLMeshPrimitive::render(SceneRenderer* renderer)
 {
 	OVITO_ASSERT(_contextGroup == QOpenGLContextGroup::currentContextGroup());
-	ViewportSceneRenderer* vpRenderer = dynamic_object_cast<ViewportSceneRenderer>(renderer);
+	OpenGLSceneRenderer* vpRenderer = dynamic_object_cast<OpenGLSceneRenderer>(renderer);
 
 	if(faceCount() <= 0 || !vpRenderer)
 		return;
@@ -212,7 +212,7 @@ void OpenGLMeshPrimitive::render(SceneRenderer* renderer)
 		shader = _pickingShader;
 
 	if(!shader->bind())
-		throw Exception(QStringLiteral("Failed to bind OpenGL shader."));
+		renderer->throwException(QStringLiteral("Failed to bind OpenGL shader."));
 
 	shader->setUniformValue("modelview_projection_matrix", (QMatrix4x4)(vpRenderer->projParams().projectionMatrix * vpRenderer->modelViewTM()));
 

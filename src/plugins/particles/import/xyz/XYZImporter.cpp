@@ -29,9 +29,9 @@
 #include <core/utilities/concurrent/Future.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/importexport/FileSource.h>
-#include <core/gui/mainwin/MainWindow.h>
-#include <core/gui/app/Application.h>
-#include <core/gui/properties/BooleanParameterUI.h>
+#include <core/app/Application.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/properties/BooleanParameterUI.h>
 #include <plugins/particles/import/InputColumnMappingDialog.h>
 #include "XYZImporter.h"
 
@@ -94,16 +94,16 @@ bool XYZImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceLocation
 * This method is called by the FileSource each time a new source
 * file has been selected by the user.
 ******************************************************************************/
-bool XYZImporter::inspectNewFile(FileSource* obj)
+bool XYZImporter::inspectNewFile(FileSource* obj, int frameIndex)
 {
-	if(!ParticleImporter::inspectNewFile(obj))
+	if(!ParticleImporter::inspectNewFile(obj, frameIndex))
 		return false;
 
-	if(obj->frames().empty())
+	if(frameIndex < 0 || frameIndex >= obj->frames().size())
 		return false;
 
 	// Start task that inspects the file header to determine the number of columns.
-	std::shared_ptr<XYZImportTask> inspectionTask = std::make_shared<XYZImportTask>(dataset()->container(), obj->frames().front());
+	std::shared_ptr<XYZImportTask> inspectionTask = std::make_shared<XYZImportTask>(dataset()->container(), obj->frames()[frameIndex]);
 	if(!dataset()->container()->taskManager().runTask(inspectionTask))
 		return false;
 
@@ -141,7 +141,7 @@ bool XYZImporter::inspectNewFile(FileSource* obj)
 				column.columnName.clear();
 		}
 
-		InputColumnMappingDialog dialog(mapping, dataset()->mainWindow());
+		InputColumnMappingDialog dialog(mapping, MainWindow::fromDataset(dataset()));
 		if(dialog.exec() == QDialog::Accepted) {
 			setColumnMapping(dialog.mapping());
 			// Remember the user-defined mapping for the next time.

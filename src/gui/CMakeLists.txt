@@ -20,9 +20,9 @@
 ###############################################################################
 
 SET(SourceFiles 
-	app/Application.cpp
 	mainwin/MainWindow.cpp
 	mainwin/ViewportsPanel.cpp
+	mainwin/TaskDisplayWidget.cpp
 	mainwin/cmdpanel/CommandPanel.cpp
 	mainwin/cmdpanel/RenderCommandPage.cpp
 	mainwin/cmdpanel/ModifyCommandPage.cpp
@@ -49,6 +49,8 @@ SET(SourceFiles
 	actions/AnimationActions.cpp
 	actions/RenderActions.cpp
 	actions/ViewportModeAction.cpp
+	dataset/importexport/FileSourceEditor.cpp
+	dataset/GuiDataSetContainer.cpp
 	widgets/general/RolloutContainer.cpp
 	widgets/general/SpinnerWidget.cpp
 	widgets/general/ColorPickerWidget.cpp
@@ -66,8 +68,8 @@ SET(SourceFiles
 	widgets/selection/SceneNodeSelectionBox.cpp
 	widgets/display/CoordinateDisplayWidget.cpp
 	widgets/display/StatusWidget.cpp
-	plugins/autostart/AutoStartObject.cpp
 	plugins/utility/UtilityApplet.cpp
+	plugins/autostart/GuiAutoStartObject.cpp
 	properties/PropertiesEditor.cpp
 	properties/PropertiesPanel.cpp
 	properties/ParameterUI.cpp
@@ -97,6 +99,7 @@ SET(SourceFiles
 	rendering/OpenGLArrowPrimitive.cpp
 	rendering/OpenGLMeshPrimitive.cpp
 	rendering/OpenGLSharedResource.cpp
+	rendering/OpenGLSceneRenderer.cpp
 	rendering/StandardSceneRenderer.cpp
 	rendering/StandardSceneRendererEditor.cpp
 	rendering/RenderSettingsEditor.cpp
@@ -107,6 +110,11 @@ SET(SourceFiles
 	viewport/input/NavigationModes.cpp
 	viewport/input/XFormModes.cpp
 	viewport/picking/PickingSceneRenderer.cpp
+	viewport/overlay/CoordinateTripodOverlayEditor.cpp
+	viewport/overlay/MoveOverlayInputMode.cpp
+	app/GuiApplication.cpp
+	scene/objects/camera/CameraObjectEditor.cpp
+	scene/objects/geometry/TriMeshDisplayEditor.cpp
 )
 
 # Compile resources.
@@ -125,7 +133,7 @@ TARGET_LINK_LIBRARIES(Gui PUBLIC Core)
 TARGET_LINK_LIBRARIES(Gui PRIVATE ${OPENGL_gl_LIBRARY})
 
 # Link Qt5.
-TARGET_LINK_LIBRARIES(Gui PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets Qt5::OpenGL)
+TARGET_LINK_LIBRARIES(Gui PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets Qt5::OpenGL Qt5::Network)
 
 # Pass version information to source code.
 SET_SOURCE_FILES_PROPERTIES("app/Application.cpp" PROPERTIES COMPILE_DEFINITIONS 

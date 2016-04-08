@@ -27,7 +27,7 @@
 #ifndef __OVITO_OPENGL_TEXT_PRIMITIVE_H
 #define __OVITO_OPENGL_TEXT_PRIMITIVE_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/rendering/TextPrimitive.h>
 #include "OpenGLTexture.h"
 
@@ -36,12 +36,12 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAM
 /**
  * \brief Buffer object that stores a text string to be rendered in the viewports.
  */
-class OVITO_CORE_EXPORT OpenGLTextPrimitive : public TextPrimitive
+class OVITO_GUI_EXPORT OpenGLTextPrimitive : public TextPrimitive
 {
 public:
 
 	/// Constructor.
-	OpenGLTextPrimitive(ViewportSceneRenderer* renderer);
+	OpenGLTextPrimitive(OpenGLSceneRenderer* renderer);
 
 	/// \brief Sets the text to be rendered.
 	virtual void setText(const QString& text) override {

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,43 +19,37 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_AUTO_START_OBJECT_H
-#define __OVITO_AUTO_START_OBJECT_H
+#ifndef __OVITO_TRIMESH_DISPLAY_EDITOR_H
+#define __OVITO_TRIMESH_DISPLAY_EDITOR_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
+#include <gui/properties/PropertiesEditor.h>
 
-namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(PluginSystem)
+namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene) OVITO_BEGIN_INLINE_NAMESPACE(StdObj) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
- * \brief Base class that allows plugins to execute code on application startup.
- *
- * Derive a sub-class from this class if you want to perform something on application startup.
+ * \brief A properties editor for the TriMeshDisplay class.
  */
-class OVITO_CORE_EXPORT AutoStartObject : public OvitoObject
+class TriMeshDisplayEditor : public PropertiesEditor
 {
-protected:
-
-	/// \brief The default constructor.
-	AutoStartObject() {}
-
 public:
 
-	/// \brief Registers plugin-specific command line options.
-	virtual void registerCommandLineOptions(QCommandLineParser& cmdLineParser) {}
+	/// Constructor.
+	Q_INVOKABLE TriMeshDisplayEditor() {}
 
-	/// \brief Is called when a new main window is created.
-	virtual void registerActions(ActionManager& actionManager) {}
+protected:
 
-	/// \brief Is called after the application has been completely initialized.
-	virtual void applicationStarted() {}
-
-private:
+	/// Creates the user interface controls for the editor.
+	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
 
 	Q_OBJECT
 	OVITO_OBJECT
 };
 
 OVITO_END_INLINE_NAMESPACE
+OVITO_END_INLINE_NAMESPACE
+OVITO_END_INLINE_NAMESPACE
+OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_AUTO_START_OBJECT_H
+#endif // __OVITO_TRIMESH_DISPLAY_EDITOR_H

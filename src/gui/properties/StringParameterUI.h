@@ -22,7 +22,7 @@
 #ifndef __OVITO_STRING_PARAMETER_UI_H
 #define __OVITO_STRING_PARAMETER_UI_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "ParameterUI.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
@@ -30,7 +30,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /******************************************************************************
 * This UI allows the user to edit a string property of the object being edited.
 ******************************************************************************/
-class OVITO_CORE_EXPORT StringParameterUI : public PropertyParameterUI
+class OVITO_GUI_EXPORT StringParameterUI : public PropertyParameterUI
 {
 public:
 	/// Constructor for a Qt property.

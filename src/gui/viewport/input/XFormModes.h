@@ -22,7 +22,7 @@
 #ifndef __OVITO_XFORM_VIEWPORT_MODES_H
 #define __OVITO_XFORM_VIEWPORT_MODES_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/reference/RefTargetListener.h>
 #include "ViewportInputMode.h"
 
@@ -34,7 +34,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 * The default input mode for the viewports. This mode lets the user
 * select scene nodes.
 ******************************************************************************/
-class OVITO_CORE_EXPORT SelectionMode : public ViewportInputMode
+class OVITO_GUI_EXPORT SelectionMode : public ViewportInputMode
 {
 	Q_OBJECT
 
@@ -47,18 +47,18 @@ public:
 	virtual InputModeType modeType() override { return ExclusiveMode; }
 
 	/// \brief Handles the mouse down event for the given viewport.
-	virtual void mousePressEvent(Viewport* vp, QMouseEvent* event) override;
+	virtual void mousePressEvent(ViewportWindow* vpwin, QMouseEvent* event) override;
 
 	/// \brief Handles the mouse up event for the given viewport.
-	virtual void mouseReleaseEvent(Viewport* vp, QMouseEvent* event) override;
+	virtual void mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event) override;
 
 	/// \brief Handles the mouse move event for the given viewport.
-	virtual void mouseMoveEvent(Viewport* vp, QMouseEvent* event) override;
+	virtual void mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event) override;
 
 	/// \brief Returns the cursor that is used by OVITO's viewports to indicate a selection.
 	static QCursor selectionCursor() {
 		if(!_hoverCursor)
-			_hoverCursor = QCursor(QPixmap(QStringLiteral(":/core/cursor/editing/cursor_mode_select.png")));
+			_hoverCursor = QCursor(QPixmap(QStringLiteral(":/gui/cursor/editing/cursor_mode_select.png")));
 		return _hoverCursor.get();
 	}
 
@@ -83,20 +83,20 @@ protected:
 /******************************************************************************
 * Base class for selection, move, rotate and scale modes.
 ******************************************************************************/
-class OVITO_CORE_EXPORT XFormMode : public ViewportInputMode
+class OVITO_GUI_EXPORT XFormMode : public ViewportInputMode
 {
 	Q_OBJECT
 
 public:
 
 	/// \brief Handles the mouse down event for the given viewport.
-	virtual void mousePressEvent(Viewport* vp, QMouseEvent* event) override;
+	virtual void mousePressEvent(ViewportWindow* vpwin, QMouseEvent* event) override;
 
 	/// \brief Handles the mouse up event for the given viewport.
-	virtual void mouseReleaseEvent(Viewport* vp, QMouseEvent* event) override;
+	virtual void mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event) override;
 
 	/// \brief Handles the mouse move event for the given viewport.
-	virtual void mouseMoveEvent(Viewport* vp, QMouseEvent* event) override;
+	virtual void mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event) override;
 
 	/// \brief Returns the origin of the transformation system to use for xform modes.
 	Point3 transformationCenter();
@@ -173,14 +173,14 @@ protected:
 /******************************************************************************
 * This mode lets the user move scene nodes.
 ******************************************************************************/
-class OVITO_CORE_EXPORT MoveMode : public XFormMode
+class OVITO_GUI_EXPORT MoveMode : public XFormMode
 {
 	Q_OBJECT
 
 public:
 
 	/// Constructor.
-	MoveMode(QObject* parent) : XFormMode(parent, QStringLiteral(":/core/cursor/editing/cursor_mode_move.png")) {}
+	MoveMode(QObject* parent) : XFormMode(parent, QStringLiteral(":/gui/cursor/editing/cursor_mode_move.png")) {}
 
 protected:
 
@@ -218,14 +218,14 @@ private:
 /******************************************************************************
 * This mode lets the user rotate scene nodes.
 ******************************************************************************/
-class OVITO_CORE_EXPORT RotateMode : public XFormMode
+class OVITO_GUI_EXPORT RotateMode : public XFormMode
 {
 	Q_OBJECT
 
 public:
 
 	/// Constructor.
-	RotateMode(QObject* parent) : XFormMode(parent, QStringLiteral(":/core/cursor/editing/cursor_mode_rotate.png")) {}
+	RotateMode(QObject* parent) : XFormMode(parent, QStringLiteral(":/gui/cursor/editing/cursor_mode_rotate.png")) {}
 
 protected:
 

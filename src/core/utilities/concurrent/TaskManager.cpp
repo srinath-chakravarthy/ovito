@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // 
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -25,56 +25,49 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
 
 /******************************************************************************
-* Initializes the progress manager.
+* Initializes the task manager.
 ******************************************************************************/
 TaskManager::TaskManager()
 {
 	qRegisterMetaType<std::shared_ptr<FutureInterfaceBase>>("std::shared_ptr<FutureInterfaceBase>");
-
-	connect(&_taskStartedSignalMapper, (void (QSignalMapper::*)(QObject*))&QSignalMapper::mapped, this, &TaskManager::taskStarted);
-	connect(&_taskFinishedSignalMapper, (void (QSignalMapper::*)(QObject*))&QSignalMapper::mapped, this, &TaskManager::taskFinished);
-	connect(&_taskProgressValueChangedSignalMapper, (void (QSignalMapper::*)(QObject*))&QSignalMapper::mapped, this, &TaskManager::taskProgressValueChanged);
-	connect(&_taskProgressTextChangedSignalMapper, (void (QSignalMapper::*)(QObject*))&QSignalMapper::mapped, this, &TaskManager::taskProgressTextChanged);
 }
 
 /******************************************************************************
-* Registers a future with the progress manager.
+* Registers a future with the task manager.
 ******************************************************************************/
 void TaskManager::addTaskInternal(std::shared_ptr<FutureInterfaceBase> futureInterface)
 {
+	// Create a task watcher which will generate start/stop notification signals.
 	FutureWatcher* watcher = new FutureWatcher(this);
-	connect(watcher, &FutureWatcher::started, &_taskStartedSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-	connect(watcher, &FutureWatcher::finished, &_taskFinishedSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-	connect(watcher, &FutureWatcher::progressRangeChanged, &_taskProgressValueChangedSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-	connect(watcher, &FutureWatcher::progressValueChanged, &_taskProgressValueChangedSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-	connect(watcher, &FutureWatcher::progressTextChanged, &_taskProgressTextChangedSignalMapper, (void (QSignalMapper::*)())&QSignalMapper::map);
-	_taskStartedSignalMapper.setMapping(watcher, watcher);
-	_taskFinishedSignalMapper.setMapping(watcher, watcher);
-	_taskProgressValueChangedSignalMapper.setMapping(watcher, watcher);
-	_taskProgressTextChangedSignalMapper.setMapping(watcher, watcher);
+	connect(watcher, &FutureWatcher::started, this, &TaskManager::taskStartedInternal);
+	connect(watcher, &FutureWatcher::finished, this, &TaskManager::taskFinishedInternal);
 
-	// Activate the future watcher.
+	// Activate the watcher.
 	watcher->setFutureInterface(futureInterface);
 }
 
 /******************************************************************************
 * Is called when a task has started to run.
 ******************************************************************************/
-void TaskManager::taskStarted(QObject* object)
+void TaskManager::taskStartedInternal()
 {
-	FutureWatcher* watcher = static_cast<FutureWatcher*>(object);
+	FutureWatcher* watcher = static_cast<FutureWatcher*>(sender());
 	_runningTaskStack.push_back(watcher);
+
+	Q_EMIT taskStarted(watcher);
 }
 
 /******************************************************************************
 * Is called when a task has finished.
 ******************************************************************************/
-void TaskManager::taskFinished(QObject* object)
+void TaskManager::taskFinishedInternal()
 {
-	FutureWatcher* watcher = static_cast<FutureWatcher*>(object);
-	OVITO_ASSERT( != _runningTaskStack.end());
+	FutureWatcher* watcher = static_cast<FutureWatcher*>(sender());
+	OVITO_ASSERT(std::find(_runningTaskStack.begin(), _runningTaskStack.end(), watcher) != _runningTaskStack.end());
 	_runningTaskStack.erase(std::find(_runningTaskStack.begin(), _runningTaskStack.end(), watcher));
 	watcher->deleteLater();
+
+	Q_EMIT taskFinished(watcher);
 }
 
 /******************************************************************************
@@ -82,7 +75,7 @@ void TaskManager::taskFinished(QObject* object)
 ******************************************************************************/
 void TaskManager::cancelAll()
 {
-	for(FutureWatcher* watcher : _taskStack)
+	for(FutureWatcher* watcher : _runningTaskStack)
 		watcher->cancel();
 }
 
@@ -100,7 +93,7 @@ void TaskManager::cancelAllAndWait()
 ******************************************************************************/
 void TaskManager::waitForAll()
 {
-	for(FutureWatcher* watcher : _taskStack) {
+	for(FutureWatcher* watcher : _runningTaskStack) {
 		try {
 			watcher->waitForFinished();
 		}
@@ -123,7 +116,7 @@ bool TaskManager::waitForTask(const std::shared_ptr<FutureInterfaceBase>& future
 	FutureWatcher watcher;
 	watcher.setFutureInterface(futureInterface);
 	while(!watcher.isFinished()) {
-		QCoreApplication::processEvents(QEventLoop::WaitForMoreEvents, 100);
+		QCoreApplication::processEvents(QEventLoop::WaitForMoreEvents, 50);
 	}
 
 	return !futureInterface->isCanceled();

@@ -22,7 +22,7 @@
 #ifndef __OVITO_MODIFICATION_LIST_ITEM_H
 #define __OVITO_MODIFICATION_LIST_ITEM_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/reference/RefMaker.h>
 #include <core/reference/RefTarget.h>
 #include <core/scene/pipeline/ModifierApplication.h>

@@ -27,14 +27,14 @@
 #ifndef __OVITO_COLOR_PICKER_WIDGET_H
 #define __OVITO_COLOR_PICKER_WIDGET_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Widgets)
 
 /**
  * \brief A UI control lets the user choose a color.
  */
-class OVITO_CORE_EXPORT ColorPickerWidget : public QAbstractButton
+class OVITO_GUI_EXPORT ColorPickerWidget : public QAbstractButton
 {
 	Q_OBJECT
 	

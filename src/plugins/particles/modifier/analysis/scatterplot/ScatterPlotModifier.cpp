@@ -21,10 +21,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/IntegerParameterUI.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/mainwin/MainWindow.h>
+#include <gui/properties/IntegerParameterUI.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/mainwin/MainWindow.h>
 #include <core/scene/pipeline/PipelineObject.h>
 #include <core/animation/AnimationSettings.h>
 #include <plugins/particles/util/ParticlePropertyParameterUI.h>
@@ -127,17 +127,17 @@ PipelineStatus ScatterPlotModifier::modifyParticles(TimePoint time, TimeInterval
 {
 	// Get the source property.
 	if(xAxisProperty().isNull())
-		throw Exception(tr("Select a particle property first."));
+		throwException(tr("Select a particle property first."));
 	ParticlePropertyObject* xProperty = xAxisProperty().findInState(input());
 	ParticlePropertyObject* yProperty = yAxisProperty().findInState(input());
 	if(!xProperty)
-		throw Exception(tr("The selected particle property with the name '%1' does not exist.").arg(xAxisProperty().name()));
+		throwException(tr("The selected particle property with the name '%1' does not exist.").arg(xAxisProperty().name()));
 	if(!yProperty)
-		throw Exception(tr("The selected particle property with the name '%1' does not exist.").arg(yAxisProperty().name()));
+		throwException(tr("The selected particle property with the name '%1' does not exist.").arg(yAxisProperty().name()));
 	if(xAxisProperty().vectorComponent() >= (int)xProperty->componentCount())
-		throw Exception(tr("The selected vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(xAxisProperty().name()).arg(xProperty->componentCount()));
+		throwException(tr("The selected vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(xAxisProperty().name()).arg(xProperty->componentCount()));
 	if(yAxisProperty().vectorComponent() >= (int)yProperty->componentCount())
-		throw Exception(tr("The selected vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(yAxisProperty().name()).arg(yProperty->componentCount()));
+		throwException(tr("The selected vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(yAxisProperty().name()).arg(yProperty->componentCount()));
 
 	size_t xVecComponent = std::max(0, xAxisProperty().vectorComponent());
 	size_t xVecComponentCount = xProperty->componentCount();
@@ -650,7 +650,7 @@ void ScatterPlotModifierEditor::onSaveData()
 
 		QFile file(fileName);
 		if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
-			throw Exception(tr("Could not open file for writing: %1").arg(file.errorString()));
+			modifier->throwException(tr("Could not open file for writing: %1").arg(file.errorString()));
 
 		QTextStream stream(&file);
 

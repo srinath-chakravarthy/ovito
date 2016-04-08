@@ -32,7 +32,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(PluginSystem)
 /******************************************************************************
 * Constructor for the Plugin class.
 ******************************************************************************/
-Plugin::Plugin(const QString& manifestFile) : _isLoaded(false)
+Plugin::Plugin(const QString& manifestFile, bool builtinPlugin) : _isLoaded(builtinPlugin)
 {
 	// Load plugin manifest.
 	QFile file(manifestFile);

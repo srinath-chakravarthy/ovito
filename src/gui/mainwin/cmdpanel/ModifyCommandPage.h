@@ -22,10 +22,10 @@
 #ifndef __OVITO_MODIFY_COMMAND_PAGE_H
 #define __OVITO_MODIFY_COMMAND_PAGE_H
 
-#include <core/Core.h>
-#include <core/gui/properties/PropertiesPanel.h>
-#include <core/gui/widgets/general/RolloutContainer.h>
-#include <core/viewport/input/ViewportInputManager.h>
+#include <gui/GUI.h>
+#include <gui/properties/PropertiesPanel.h>
+#include <gui/widgets/general/RolloutContainer.h>
+#include <viewport/input/ViewportInputManager.h>
 #include <core/reference/RefTargetListener.h>
 
 // QtNetwork module
@@ -40,7 +40,7 @@ class ModifierListBox;			// defined in ModifierListBox.h
 /**
  * The command panel tab lets the user modify the selected object.
  */
-class OVITO_CORE_EXPORT ModifyCommandPage : public QWidget
+class OVITO_GUI_EXPORT ModifyCommandPage : public QWidget
 {
 	Q_OBJECT
 

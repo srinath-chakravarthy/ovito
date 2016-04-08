@@ -24,14 +24,14 @@
 
 #include <core/animation/AnimationSettings.h>
 #include <core/dataset/UndoStack.h>
-#include <core/gui/widgets/general/SpinnerWidget.h>
+#include <gui/widgets/general/SpinnerWidget.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
  * This dialog box lets the user manage the animation settings.
  */
-class OVITO_CORE_EXPORT AnimationSettingsDialog : public QDialog, private UndoableTransaction
+class OVITO_GUI_EXPORT AnimationSettingsDialog : public QDialog, private UndoableTransaction
 {
 	Q_OBJECT
 	

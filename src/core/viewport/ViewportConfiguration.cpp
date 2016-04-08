@@ -25,7 +25,6 @@
 #include <core/scene/SelectionSet.h>
 #include <core/scene/SceneRoot.h>
 #include <core/animation/AnimationSettings.h>
-#include <core/rendering/viewport/ViewportSceneRenderer.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View)
 
@@ -129,16 +128,6 @@ void ViewportConfiguration::resumeViewportUpdates()
 	_viewportSuspendCount--;
 	if(_viewportSuspendCount == 0 && _viewportsNeedUpdate)
 		updateViewports();
-}
-
-/******************************************************************************
-* Returns the renderer to be used for rendering the interactive viewports.
-******************************************************************************/
-ViewportSceneRenderer* ViewportConfiguration::viewportRenderer()
-{
-	if(!_viewportRenderer)
-		_viewportRenderer = new ViewportSceneRenderer(dataset());
-	return _viewportRenderer;
 }
 
 /******************************************************************************

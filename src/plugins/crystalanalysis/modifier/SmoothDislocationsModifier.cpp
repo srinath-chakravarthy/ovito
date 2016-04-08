@@ -21,9 +21,9 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/crystalanalysis/data/DislocationNetwork.h>
-#include <core/gui/properties/IntegerParameterUI.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/BooleanGroupBoxParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <gui/properties/BooleanGroupBoxParameterUI.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include "SmoothDislocationsModifier.h"
 

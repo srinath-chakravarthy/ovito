@@ -37,7 +37,7 @@ class OVITO_CORE_EXPORT DataSetContainer : public RefMaker
 public:
 
 	/// \brief Constructor.
-	DataSetContainer(MainWindow* mainWindow = nullptr);
+	DataSetContainer();
 
 	/// \brief Destructor.
 	virtual ~DataSetContainer() {
@@ -52,9 +52,6 @@ public:
 	/// \brief Sets the current dataset being edited by the user.
 	/// \param set The dataset that should be shown in the main window.
 	void setCurrentSet(DataSet* set) { _currentSet = set; }
-
-	/// Returns the window this dataset container is linked to (may be NULL).
-	MainWindow* mainWindow() const { return _mainWindow; }
 
 	/// \brief Returns the manager of background tasks.
 	/// \return Reference to the task manager, which is part of this dataset manager.
@@ -71,7 +68,7 @@ public:
 	/// \param progressDisplay The progress display/dialog to be used for showing the message.
 	///                       If NULL, the function will create and show its own progress dialog box.
 	/// \return true on success; false if the operation has been canceled by the user.
-	bool waitUntil(const std::function<bool()>& callback, const QString& message, AbstractProgressDisplay* progressDisplay = nullptr);
+	virtual bool waitUntil(const std::function<bool()>& callback, const QString& message, AbstractProgressDisplay* progressDisplay = nullptr);
 
 Q_SIGNALS:
 
@@ -119,6 +116,12 @@ Q_SIGNALS:
 	/// \brief This signal is emitted when the scene becomes ready after the current animation time has changed.
 	void timeChangeComplete();
 
+	/// \brief This signal is emitted whenever the file path of the active dataset changes.
+	void filePathChanged(const QString& filePath);
+
+	/// \brief This signal is emitted whenever the modification status (clean state) of the active dataset changes.
+	void modificationStatusChanged(bool isClean);
+
 protected:
 
 	/// Is called when the value of a reference field of this RefMaker changes.
@@ -134,13 +137,10 @@ protected Q_SLOTS:
 
 private:
 
-	/// The window this dataset container is linked to (may be NULL).
-	MainWindow* _mainWindow;
-
 	/// The current dataset being edited by the user.
     ReferenceField<DataSet> _currentSet;
 
-	/// The container for background tasks.
+	/// The list of running compute tasks.
 	TaskManager _taskManager;
 
 	QMetaObject::Connection _selectionSetReplacedConnection;

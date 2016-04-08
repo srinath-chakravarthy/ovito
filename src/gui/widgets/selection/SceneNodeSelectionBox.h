@@ -22,7 +22,7 @@
 #ifndef __OVITO_SCENE_NODE_SELECTION_BOX_H
 #define __OVITO_SCENE_NODE_SELECTION_BOX_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 

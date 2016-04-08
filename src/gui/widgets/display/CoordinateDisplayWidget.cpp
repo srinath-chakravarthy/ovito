@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/widgets/general/SpinnerWidget.h>
+#include <gui/GUI.h>
+#include <gui/widgets/general/SpinnerWidget.h>
 #include <core/dataset/DataSet.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/UndoStack.h>

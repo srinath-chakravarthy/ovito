@@ -22,17 +22,17 @@
 #ifndef __OVITO_PROPERTIES_PANEL_H
 #define __OVITO_PROPERTIES_PANEL_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/reference/RefTarget.h>
-#include <core/gui/properties/PropertiesEditor.h>
-#include <core/gui/widgets/general/RolloutContainer.h>
+#include <gui/properties/PropertiesEditor.h>
+#include <gui/widgets/general/RolloutContainer.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Widgets)
 
 /******************************************************************************
 * This panel lets the user edit the properties of some RefTarget derived object.
 ******************************************************************************/
-class OVITO_CORE_EXPORT PropertiesPanel : public RolloutContainer
+class OVITO_GUI_EXPORT PropertiesPanel : public RolloutContainer
 {
 	Q_OBJECT
 	

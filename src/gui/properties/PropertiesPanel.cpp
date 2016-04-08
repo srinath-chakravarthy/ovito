@@ -19,8 +19,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/properties/PropertiesPanel.h>
+#include <gui/GUI.h>
+#include <gui/properties/PropertiesPanel.h>
+#include <gui/mainwin/MainWindow.h>
 #include <core/dataset/UndoStack.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Widgets)
@@ -68,8 +69,11 @@ void PropertiesPanel::setEditObject(RefTarget* newEditObject)
 		// Open new properties editor.
 		_editor = PropertiesEditor::create(newEditObject);
 		if(editor()) {
-			editor()->initialize(this, newEditObject->dataset()->mainWindow(), RolloutInsertionParameters());
-			editor()->setEditObject(newEditObject);
+			MainWindow* mainWindow = qobject_cast<MainWindow*>(window());
+			if(mainWindow) {
+				editor()->initialize(this, mainWindow, RolloutInsertionParameters());
+				editor()->setEditObject(newEditObject);
+			}
 		}
 	}
 }

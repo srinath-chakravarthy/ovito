@@ -19,16 +19,16 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/actions/ActionManager.h>
-#include <core/gui/mainwin/MainWindow.h>
-#include <core/gui/dialogs/ApplicationSettingsDialog.h>
-#include <core/gui/dialogs/ImportFileDialog.h>
-#include <core/gui/dialogs/ImportRemoteFileDialog.h>
+#include <gui/GUI.h>
+#include <gui/actions/ActionManager.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/dialogs/ApplicationSettingsDialog.h>
+#include <gui/dialogs/ImportFileDialog.h>
+#include <gui/dialogs/ImportRemoteFileDialog.h>
+#include <gui/viewport/ViewportWindow.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/importexport/FileImporter.h>
 #include <core/dataset/importexport/FileExporter.h>
-#include <core/viewport/ViewportWindow.h>
 #include <core/scene/SelectionSet.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)
@@ -212,11 +212,9 @@ void ActionManager::on_FileOpen_triggered()
 ******************************************************************************/
 void ActionManager::on_FileSave_triggered()
 {
-	if(Application::instance().guiMode()) {
-		// Set focus to main window.
-		// This will process any pending user inputs in QLineEdit fields.
-		mainWindow()->setFocus();
-	}
+	// Set focus to main window.
+	// This will process any pending user inputs in QLineEdit fields.
+	mainWindow()->setFocus();
 
 	try {
 		mainWindow()->datasetContainer().fileSave();
@@ -244,10 +242,8 @@ void ActionManager::on_FileSaveAs_triggered()
 ******************************************************************************/
 void ActionManager::on_Settings_triggered()
 {
-	if(Application::instance().guiMode()) {
-		ApplicationSettingsDialog dlg(mainWindow());
-		dlg.exec();
-	}
+	ApplicationSettingsDialog dlg(mainWindow());
+	dlg.exec();
 }
 
 /******************************************************************************

@@ -22,8 +22,8 @@
 #ifndef __OVITO_STANDARD_SCENE_RENDERER_EDITOR_H
 #define __OVITO_STANDARD_SCENE_RENDERER_EDITOR_H
 
-#include <core/Core.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/GUI.h>
+#include <gui/properties/PropertiesEditor.h>
 #include <core/reference/RefTarget.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAMESPACE(Internal)

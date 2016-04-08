@@ -23,11 +23,11 @@
 #include <core/scene/objects/DataObject.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/dataset/importexport/FileSource.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/BooleanRadioButtonParameterUI.h>
-#include <core/gui/properties/IntegerParameterUI.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/SubObjectParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/BooleanRadioButtonParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <gui/properties/SubObjectParameterUI.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include "AtomicStrainModifier.h"
 
@@ -134,7 +134,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> AtomicStrainModifie
 
 	// Get the reference positions of the particles.
 	if(!referenceConfiguration())
-		throw Exception(tr("Cannot calculate displacements. Reference configuration has not been specified."));
+		throwException(tr("Cannot calculate displacements. Reference configuration has not been specified."));
 
 	// What is the reference frame number to use?
 	int referenceFrame;
@@ -160,7 +160,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> AtomicStrainModifie
 	if(FileSource* linkedFileObj = dynamic_object_cast<FileSource>(referenceConfiguration())) {
 		if(linkedFileObj->numberOfFrames() > 0) {
 			if(referenceFrame < 0 || referenceFrame >= linkedFileObj->numberOfFrames())
-				throw Exception(tr("Requested reference frame %1 is out of range.").arg(referenceFrame));
+				throwException(tr("Requested reference frame %1 is out of range.").arg(referenceFrame));
 			refState = linkedFileObj->requestFrame(referenceFrame);
 		}
 	}
@@ -172,27 +172,27 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> AtomicStrainModifie
 	if(refState.status().type() == PipelineStatus::Pending)
 		throw PipelineStatus(PipelineStatus::Pending, tr("Waiting for input data to become ready..."));
 	if(refState.isEmpty())
-		throw Exception(tr("Reference configuration has not been specified yet or is empty. Please pick a reference simulation file."));
+		throwException(tr("Reference configuration has not been specified yet or is empty. Please pick a reference simulation file."));
 	// Make sure we really got back the requested reference frame.
 	if(refState.attributes().value(QStringLiteral("Frame"), referenceFrame).toInt() != referenceFrame)
-		throw Exception(tr("Requested reference frame %1 is out of range.").arg(referenceFrame));
+		throwException(tr("Requested reference frame %1 is out of range.").arg(referenceFrame));
 
 	// Get the reference position property.
 	ParticlePropertyObject* refPosProperty = ParticlePropertyObject::findInState(refState, ParticleProperty::PositionProperty);
 	if(!refPosProperty)
-		throw Exception(tr("The reference configuration does not contain particle positions."));
+		throwException(tr("The reference configuration does not contain particle positions."));
 
 	// Get simulation cells.
 	SimulationCellObject* inputCell = expectSimulationCell();
 	SimulationCellObject* refCell = refState.findObject<SimulationCellObject>();
 	if(!refCell)
-		throw Exception(tr("Reference configuration does not contain simulation cell info."));
+		throwException(tr("Reference configuration does not contain simulation cell info."));
 
 	// Check simulation cell(s).
 	if(inputCell->volume3D() < FLOATTYPE_EPSILON)
-		throw Exception(tr("Simulation cell is degenerate in the deformed configuration."));
+		throwException(tr("Simulation cell is degenerate in the deformed configuration."));
 	if(refCell->volume3D() < FLOATTYPE_EPSILON)
-		throw Exception(tr("Simulation cell is degenerate in the reference configuration."));
+		throwException(tr("Simulation cell is degenerate in the reference configuration."));
 
 	// Get particle identifiers.
 	ParticlePropertyObject* identifierProperty = inputStandardProperty(ParticleProperty::IdentifierProperty);
@@ -461,10 +461,10 @@ void AtomicStrainModifier::transferComputationResults(ComputeEngine* engine)
 PipelineStatus AtomicStrainModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
 {
 	if(!_shearStrainValues || !_volumetricStrainValues)
-		throw Exception(tr("No computation results available."));
+		throwException(tr("No computation results available."));
 
 	if(outputParticleCount() != _shearStrainValues->size() || outputParticleCount() != _volumetricStrainValues->size())
-		throw Exception(tr("The number of input particles has changed. The stored results have become invalid."));
+		throwException(tr("The number of input particles has changed. The stored results have become invalid."));
 
 	if(selectInvalidParticles() && _invalidParticles)
 		outputStandardProperty(_invalidParticles.data());

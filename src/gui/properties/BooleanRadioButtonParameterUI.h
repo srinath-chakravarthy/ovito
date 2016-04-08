@@ -22,7 +22,7 @@
 #ifndef __OVITO_BOOLEAN_RADIO_BUTTON_PARAMETER_UI_H
 #define __OVITO_BOOLEAN_RADIO_BUTTON_PARAMETER_UI_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "ParameterUI.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
@@ -31,7 +31,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 * This UI allows the user to change a boolean-value property of the object being edited
 * using two radio buttons.
 ******************************************************************************/
-class OVITO_CORE_EXPORT BooleanRadioButtonParameterUI : public PropertyParameterUI
+class OVITO_GUI_EXPORT BooleanRadioButtonParameterUI : public PropertyParameterUI
 {
 public:
 

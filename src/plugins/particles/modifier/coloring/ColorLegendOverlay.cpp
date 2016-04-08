@@ -22,20 +22,21 @@
 #include <plugins/particles/Particles.h>
 #include <core/viewport/Viewport.h>
 #include <core/rendering/RenderSettings.h>
-#include <core/gui/properties/BooleanGroupBoxParameterUI.h>
-#include <core/gui/properties/StringParameterUI.h>
-#include <core/gui/properties/ColorParameterUI.h>
-#include <core/gui/properties/FontParameterUI.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/Vector3ParameterUI.h>
-#include <core/gui/properties/VariantComboBoxParameterUI.h>
-#include <core/gui/properties/CustomParameterUI.h>
 #include <core/dataset/DataSet.h>
 #include <core/scene/SceneRoot.h>
 #include <core/scene/ObjectNode.h>
 #include <core/scene/pipeline/PipelineObject.h>
-#include <core/viewport/input/ViewportInputManager.h>
-#include <core/gui/actions/ViewportModeAction.h>
+#include <gui/properties/BooleanGroupBoxParameterUI.h>
+#include <gui/properties/StringParameterUI.h>
+#include <gui/properties/ColorParameterUI.h>
+#include <gui/properties/FontParameterUI.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <gui/properties/Vector3ParameterUI.h>
+#include <gui/properties/VariantComboBoxParameterUI.h>
+#include <gui/properties/CustomParameterUI.h>
+#include <gui/viewport/input/ViewportInputManager.h>
+#include <gui/viewport/overlay/MoveOverlayInputMode.h>
+#include <gui/actions/ViewportModeAction.h>
 #include "ColorLegendOverlay.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring)

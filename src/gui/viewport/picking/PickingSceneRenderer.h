@@ -22,15 +22,15 @@
 #ifndef __OVITO_PICKING_SCENE_RENDERER_H
 #define __OVITO_PICKING_SCENE_RENDERER_H
 
-#include <core/Core.h>
-#include <core/rendering/viewport/ViewportSceneRenderer.h>
+#include <gui/GUI.h>
+#include <gui/rendering/ViewportSceneRenderer.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
  * \brief A viewport renderer used for object picking.
  */
-class OVITO_CORE_EXPORT PickingSceneRenderer : public ViewportSceneRenderer
+class OVITO_GUI_EXPORT PickingSceneRenderer : public ViewportSceneRenderer
 {
 public:
 
@@ -51,7 +51,7 @@ public:
 	virtual void beginFrame(TimePoint time, const ViewProjectionParameters& params, Viewport* vp) override;
 
 	/// Renders the current animation frame.
-	virtual bool renderFrame(FrameBuffer* frameBuffer, AbstractProgressDisplay* progress) override;
+	virtual bool renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress) override;
 
 	/// This method is called after renderFrame() has been called.
 	virtual void endFrame() override;

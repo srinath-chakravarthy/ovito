@@ -20,24 +20,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <core/Core.h>
-#include <core/gui/app/Application.h>
-#include <core/gui/mainwin/MainWindow.h>
 #include <core/dataset/UndoStack.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/animation/controller/Controller.h>
 #include <core/plugins/PluginManager.h>
 #include <core/plugins/autostart/AutoStartObject.h>
 #include <core/utilities/io/FileManager.h>
-#include <core/rendering/viewport/ViewportSceneRenderer.h>
+#include "Application.h"
 
-#ifdef Q_OS_MACX
-	#include <Carbon/Carbon.h>
-#endif
-
-namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) 
+namespace Ovito {
 
 /// The one and only instance of this class.
-Application Application::_instance;
+Application* Application::_instance = nullptr;
 
 /// Stores a pointer to the original Qt message handler function, which has been replaced with our own handler.
 QtMessageHandler Application::defaultQtMessageHandler = nullptr;
@@ -56,8 +50,11 @@ void Application::qtMessageOutput(QtMsgType type, const QMessageLogContext& cont
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-Application::Application() : _exitCode(0), _consoleMode(false), _headlessMode(false)
+Application::Application() : _exitCode(0), _consoleMode(true), _headlessMode(true)
 {
+	// Set global application pointer.
+	OVITO_ASSERT(_instance == nullptr);	// Only allowed to create one Application class instance.
+	_instance = this;
 }
 
 /******************************************************************************
@@ -65,6 +62,7 @@ Application::Application() : _exitCode(0), _consoleMode(false), _headlessMode(fa
 ******************************************************************************/
 Application::~Application()
 {
+	_instance = nullptr;
 }
 
 /******************************************************************************
@@ -102,6 +100,9 @@ bool Application::initialize(int& argc, char** argv)
 	// Install custom Qt error message handler to catch fatal errors in debug mode.
 	defaultQtMessageHandler = qInstallMessageHandler(qtMessageOutput);
 
+	// Install default exception handler.
+	Exception::setExceptionHandler(consoleExceptionHandler);
+
 #ifdef Q_OS_LINUX
 	// Migrate settings file from old "Alexander Stukowski" directory to new default location.
 	// This is for backward compatibility with OVITO version 2.4.4 and earlier.
@@ -118,7 +119,7 @@ bool Application::initialize(int& argc, char** argv)
 	}
 #endif
 
-	// Set the application name provided by the active branding class.
+	// Set the application name.
 	QCoreApplication::setApplicationName(tr("Ovito"));
 	QCoreApplication::setOrganizationName(tr("Ovito"));
 	QCoreApplication::setOrganizationDomain("ovito.org");
@@ -158,11 +159,7 @@ bool Application::initialize(int& argc, char** argv)
 
 	// Register command line arguments.
 	_cmdLineParser.setApplicationDescription(tr("OVITO - Open Visualization Tool"));
-	_cmdLineParser.addOption(QCommandLineOption(QStringList{{"h", "help"}}, tr("Shows this list of program options and exits.")));
-	_cmdLineParser.addOption(QCommandLineOption(QStringList{{"v", "version"}}, tr("Prints the program version and exits.")));
-	_cmdLineParser.addOption(QCommandLineOption(QStringList{{"nogui"}}, tr("Run in console mode without showing the graphical user interface.")));
-	_cmdLineParser.addOption(QCommandLineOption(QStringList{{"glversion"}}, tr("Selects a specific version of the OpenGL standard."), tr("VERSION")));
-	_cmdLineParser.addOption(QCommandLineOption(QStringList{{"glcompatprofile"}}, tr("Request the OpenGL compatibility profile instead of the core profile.")));
+	registerCommandLineParameters(_cmdLineParser);
 
 	// Parse command line arguments.
 	// Ignore unknown command line options for now.
@@ -182,71 +179,24 @@ bool Application::initialize(int& argc, char** argv)
 	_cmdLineParser.parse(filteredArguments);
 
 	// Output program version if requested.
-	if(_cmdLineParser.isSet("version")) {
+	if(cmdLineParser().isSet("version")) {
 		std::cout << qPrintable(QCoreApplication::applicationName()) << " " << qPrintable(QCoreApplication::applicationVersion()) << std::endl;
 		_consoleMode = true;
 		return true;
 	}
 
-	// Check if program was started in console mode.
-	if(_cmdLineParser.isSet("nogui")) {
-		_consoleMode = true;
-#if defined(Q_OS_LINUX)
-		// On Unix/Linux, console mode means headless mode if no X server is available.
-		if(qEnvironmentVariableIsEmpty("DISPLAY")) {
-			_headlessMode = true;
-		}
-#elif defined(Q_OS_OSX)
-		// Don't let Qt move the app to the foreground when running in console mode.
-		::setenv("QT_MAC_DISABLE_FOREGROUND_APPLICATION_TRANSFORM", "1", 1);
-#endif
+	// Interpret the command line arguments.
+	if(!processCommandLineParameters()) {
+		return true;
 	}
 
 	// Create Qt application object.
-	if(headlessMode()) {
-#if defined(Q_OS_LINUX)
-		// Determine font directory path.
-		std::string applicationPath = argv[0];
-		auto sepIndex = applicationPath.rfind('/');
-		if(sepIndex != std::string::npos)
-			applicationPath.resize(sepIndex + 1);
-		std::string fontPath = applicationPath + "../share/ovito/fonts";
-
-		// On Linux, use the 'minimal' QPA platform plugin instead of the standard XCB plugin when no X server is available.
-		// Still create a Qt GUI application object, because otherwise we cannot use (offscreen) font rendering functions.
-		qputenv("QT_QPA_PLATFORM", "minimal");
-		// Enable rudimentary font rendering support, which is implemented by the 'minimal' platform plugin:
-		qputenv("QT_DEBUG_BACKINGSTORE", "1");
-		qputenv("QT_QPA_FONTDIR", fontPath.c_str());
-
-		_app.reset(new QApplication(argc, argv));
-#else
-		_app.reset(new QCoreApplication(argc, argv));
-#endif
-	}
-	else {
-		_app.reset(new QApplication(argc, argv));
-	}
+	createQtApplication(argc, argv);
 
 	// Reactivate default "C" locale, which, in the meantime, might have been changed by QCoreApplication.
 	std::setlocale(LC_NUMERIC, "C");
 
-	// Install global exception handler.
-	// The GUI exception handler shows a message box with the error message.
-	// The console mode exception handler prints the error message to stderr.
-	if(guiMode())
-		Exception::setExceptionHandler(guiExceptionHandler);
-	else
-		Exception::setExceptionHandler(consoleExceptionHandler);
-
 	try {
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-		// Set the global default OpenGL surface format.
-		// This will let Qt use core profile contexts.
-		QSurfaceFormat::setDefaultFormat(ViewportSceneRenderer::getDefaultSurfaceFormat());
-#endif
-
 		// Initialize global objects in the right order.
 		PluginManager::initialize();
 		ControllerManager::initialize();
@@ -271,45 +221,18 @@ bool Application::initialize(int& argc, char** argv)
 		if(_cmdLineParser.isSet("help"))
 			_consoleMode = true;
 
-		if(guiMode()) {
-			// Set up graphical user interface.
-			initializeGUI();
-		}
-		else {
-			// Create a dataset container.
-			_datasetContainer = new DataSetContainer();
-			_datasetContainer->setParent(this);
-		}
-
 		// Handle --help command line option. Print list of command line options and quit.
 		if(_cmdLineParser.isSet("help")) {
 			std::cout << qPrintable(_cmdLineParser.helpText()) << std::endl;
 			return true;
 		}
 
-		// Load state file specified on the command line.
-		if(cmdLineParser().positionalArguments().empty() == false) {
-			QString startupFilename = cmdLineParser().positionalArguments().front();
-			if(startupFilename.endsWith(".ovito", Qt::CaseInsensitive))
-				datasetContainer()->fileLoad(startupFilename);
-		}
-
-		// Create an empty dataset if nothing has been loaded.
-		if(datasetContainer()->currentSet() == nullptr)
-			datasetContainer()->fileNew();
-
-		// Import data file specified on  the command line.
-		if(cmdLineParser().positionalArguments().empty() == false) {
-			QString importFilename = cmdLineParser().positionalArguments().front();
-			if(!importFilename.endsWith(".ovito", Qt::CaseInsensitive)) {
-				QUrl importURL = FileManager::instance().urlFromUserInput(importFilename);
-				datasetContainer()->importFile(importURL);
-				datasetContainer()->currentSet()->undoStack().setClean();
-			}
-		}
+		// Prepares application to start running.
+		if(!startupApplication())
+			return true;
 
 		// Invoke auto-start objects.
-		for(const auto& obj : _autostartObjects)
+		for(const auto& obj : autostartObjects())
 			obj->applicationStarted();
 	}
 	catch(const Exception& ex) {
@@ -321,52 +244,73 @@ bool Application::initialize(int& argc, char** argv)
 }
 
 /******************************************************************************
+* Defines the program's command line parameters.
+******************************************************************************/
+void Application::registerCommandLineParameters(QCommandLineParser& parser)
+{
+	parser.addOption(QCommandLineOption(QStringList{{"h", "help"}}, tr("Shows this list of program options and exits.")));
+	parser.addOption(QCommandLineOption(QStringList{{"v", "version"}}, tr("Prints the program version and exits.")));
+}
+
+/******************************************************************************
+* Interprets the command line parameters provided to the application.
+******************************************************************************/
+bool Application::processCommandLineParameters()
+{
+	// Output program version if requested.
+	if(cmdLineParser().isSet("version")) {
+		std::cout << qPrintable(QCoreApplication::applicationName()) << " " << qPrintable(QCoreApplication::applicationVersion()) << std::endl;
+		return false;
+	}
+
+	return true;
+}
+
+/******************************************************************************
+* Create the global instance of the right QCoreApplication derived class.
+******************************************************************************/
+void Application::createQtApplication(int& argc, char** argv)
+{
+	if(headlessMode()) {
+#if defined(Q_OS_LINUX)
+		// Determine font directory path.
+		std::string applicationPath = argv[0];
+		auto sepIndex = applicationPath.rfind('/');
+		if(sepIndex != std::string::npos)
+			applicationPath.resize(sepIndex + 1);
+		std::string fontPath = applicationPath + "../share/ovito/fonts";
+
+		// On Linux, use the 'minimal' QPA platform plugin instead of the standard XCB plugin when no X server is available.
+		// Still create a Qt GUI application object, because otherwise we cannot use (offscreen) font rendering functions.
+		qputenv("QT_QPA_PLATFORM", "minimal");
+		// Enable rudimentary font rendering support, which is implemented by the 'minimal' platform plugin:
+		qputenv("QT_DEBUG_BACKINGSTORE", "1");
+		qputenv("QT_QPA_FONTDIR", fontPath.c_str());
+
+		_app.reset(new QGuiApplication(argc, argv));
+#else
+		_app.reset(new QCoreApplication(argc, argv));
+#endif
+	}
+}
+
+/******************************************************************************
 * Starts the main event loop.
 ******************************************************************************/
 int Application::runApplication()
 {
 	if(guiMode()) {
 		// Enter the main event loop.
-		return QApplication::exec();
+		return QCoreApplication::exec();
 	}
 	else {
 		// Deliver all events that have been posted during the initialization.
 		QCoreApplication::processEvents();
-		// Just quit the application after all background tasks have finished.
+		// Wait for all background tasks to finish before quitting.
 		if(_datasetContainer)
 			_datasetContainer->taskManager().waitForAll();
 		return _exitCode;
 	}
-}
-
-/******************************************************************************
-* Initializes the graphical user interface of the application.
-******************************************************************************/
-void Application::initializeGUI()
-{
-	// Set the application icon.
-	QIcon mainWindowIcon;
-	mainWindowIcon.addFile(":/core/mainwin/window_icon_256.png");
-	mainWindowIcon.addFile(":/core/mainwin/window_icon_128.png");
-	mainWindowIcon.addFile(":/core/mainwin/window_icon_48.png");
-	mainWindowIcon.addFile(":/core/mainwin/window_icon_32.png");
-	mainWindowIcon.addFile(":/core/mainwin/window_icon_16.png");
-	QApplication::setWindowIcon(mainWindowIcon);
-
-	// Create the main window.
-	MainWindow* mainWin = new MainWindow();
-	_datasetContainer = &mainWin->datasetContainer();
-
-	// Make the application shutdown as soon as the last main window has been closed.
-	QGuiApplication::setQuitOnLastWindowClosed(true);
-
-	// Show the main window.
-#ifndef OVITO_DEBUG
-	mainWin->showMaximized();
-#else
-	mainWin->show();
-#endif
-	mainWin->restoreLayout();
 }
 
 /******************************************************************************
@@ -410,26 +354,6 @@ void Application::processRunOnceList()
 }
 
 /******************************************************************************
-* Handler function for exceptions used in GUI mode.
-******************************************************************************/
-void Application::guiExceptionHandler(const Exception& exception)
-{
-	exception.logError();
-	QMessageBox msgbox;
-	msgbox.setWindowTitle(tr("Error - %1").arg(QCoreApplication::applicationName()));
-	msgbox.setStandardButtons(QMessageBox::Ok);
-	msgbox.setText(exception.message());
-	msgbox.setIcon(QMessageBox::Critical);
-	if(exception.messages().size() > 1) {
-		QString detailText;
-		for(int i = 1; i < exception.messages().size(); i++)
-			detailText += exception.messages()[i] + "\n";
-		msgbox.setDetailedText(detailText);
-	}
-	msgbox.exec();
-}
-
-/******************************************************************************
 * Handler function for exceptions used in console mode.
 ******************************************************************************/
 void Application::consoleExceptionHandler(const Exception& exception)
@@ -440,5 +364,4 @@ void Application::consoleExceptionHandler(const Exception& exception)
 	std::cerr << std::flush;
 }
 
-OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

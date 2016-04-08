@@ -22,7 +22,7 @@
 #ifndef __OVITO_CUSTOM_PARAMETER_UI_H
 #define __OVITO_CUSTOM_PARAMETER_UI_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "ParameterUI.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
@@ -30,7 +30,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /******************************************************************************
 * Utility class for creating UIs for custom parameter types.
 ******************************************************************************/
-class OVITO_CORE_EXPORT CustomParameterUI : public PropertyParameterUI
+class OVITO_GUI_EXPORT CustomParameterUI : public PropertyParameterUI
 {
 public:
 

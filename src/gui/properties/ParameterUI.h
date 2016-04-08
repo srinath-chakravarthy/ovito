@@ -27,7 +27,7 @@
 #ifndef __OVITO_PARAMETER_UI_H
 #define __OVITO_PARAMETER_UI_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/reference/RefTarget.h>
 #include "PropertiesEditor.h"
 
@@ -37,7 +37,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
  * \brief Base class for UI components that allow the user to edit a parameter
  *        of a RefTarget derived object in the PropertiesEditor.
  */
-class OVITO_CORE_EXPORT ParameterUI : public RefMaker
+class OVITO_GUI_EXPORT ParameterUI : public RefMaker
 {
 public:
 
@@ -150,7 +150,7 @@ private:
  * \brief Base class for UI components that allow the user to edit a property of
  *        an object that is stored in a reference field, a property field, or a Qt property.
  */
-class OVITO_CORE_EXPORT PropertyParameterUI : public ParameterUI
+class OVITO_GUI_EXPORT PropertyParameterUI : public ParameterUI
 {
 public:
 	

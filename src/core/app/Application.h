@@ -25,7 +25,7 @@
 #include <core/Core.h>
 #include <core/utilities/Exception.h>
 
-namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)
+namespace Ovito {
 
 /**
  * \brief The main application.
@@ -38,14 +38,15 @@ public:
 
 	/// \brief Returns the one and only instance of this class.
 	inline static Application& instance() {
-		return _instance;
+		OVITO_ASSERT_MSG(_instance != nullptr, "Application::instance()", "Application object has not been created yet.");
+		return *_instance;
 	}
 
 	/// \brief Constructor.
 	Application();
 
 	/// \brief Destructor.
-	~Application();
+	virtual ~Application();
 
 	/// \brief Initializes the application.
 	/// \param argc The number of command line arguments.
@@ -120,16 +121,27 @@ public:
 	/// Returns the revision version number of the application.
 	static int applicationVersionRevision();
 
-private:
+protected:
 
-	/// Initializes the graphical user interface of the application.
-	void initializeGUI();
+	/// Defines the program's command line parameters.
+	virtual void registerCommandLineParameters(QCommandLineParser& parser);
+
+	/// Interprets the command line parameters provided to the application.
+	virtual bool processCommandLineParameters();
+
+	/// Create the global instance of the right QCoreApplication derived class.
+	virtual void createQtApplication(int& argc, char** argv);
+
+	/// Prepares application to start running.
+	virtual bool startupApplication() = 0;
+
+private:
 
 	/// Executes the functions registered with the runOnceLater() function.
 	/// This method is called after the events in the event queue have been processed.
 	Q_INVOKABLE void processRunOnceList();
 
-private:
+protected:
 
 	/// The Qt application object.
 	QScopedPointer<QCoreApplication> _app;
@@ -158,17 +170,13 @@ private:
 	/// The default message handler method of Qt.
 	static QtMessageHandler defaultQtMessageHandler;
 
-	/// Handler function for exceptions used in GUI mode.
-	static void guiExceptionHandler(const Exception& exception);
-
 	/// Handler function for exceptions used in console mode.
 	static void consoleExceptionHandler(const Exception& exception);
 
 	/// The one and only instance of this class.
-	static Application _instance;
+	static Application* _instance;
 };
 
-OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
 #endif // __OVITO_APPLICATION_H

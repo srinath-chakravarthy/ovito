@@ -22,10 +22,10 @@
 #ifndef __OVITO_ANIMATION_KEY_EDITOR_DIALOG_H
 #define __OVITO_ANIMATION_KEY_EDITOR_DIALOG_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/dataset/UndoStack.h>
 #include <core/reference/RefTargetListener.h>
-#include <core/gui/properties/ParameterUI.h>
+#include <gui/properties/ParameterUI.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 

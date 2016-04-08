@@ -62,6 +62,32 @@ ParameterUnit* UnitsManager::getUnit(const QMetaObject* parameterUnitClass)
 /******************************************************************************
 * Converts the given string to a value.
 ******************************************************************************/
+FloatType FloatParameterUnit::parseString(const QString& valueString)
+{
+	double value;
+	bool ok;
+	value = valueString.toDouble(&ok);
+	if(!ok)
+		dataset()->throwException(tr("Invalid floating-point value: %1").arg(valueString));
+	return (FloatType)value;
+}
+
+/******************************************************************************
+* Converts the given string to a value.
+******************************************************************************/
+FloatType IntegerParameterUnit::parseString(const QString& valueString)
+{
+	int value;
+	bool ok;
+	value = valueString.toInt(&ok);
+	if(!ok)
+		dataset()->throwException(tr("Invalid integer value: %1").arg(valueString));
+	return (FloatType)value;
+}
+
+/******************************************************************************
+* Converts the given string to a value.
+******************************************************************************/
 FloatType PercentParameterUnit::parseString(const QString& valueString)
 {
 	return FloatParameterUnit::parseString(QString(valueString).remove(QChar('%')));

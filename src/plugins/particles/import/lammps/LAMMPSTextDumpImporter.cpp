@@ -24,10 +24,10 @@
 #include <core/utilities/concurrent/Future.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/importexport/FileSource.h>
-#include <core/gui/mainwin/MainWindow.h>
-#include <core/gui/app/Application.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/BooleanRadioButtonParameterUI.h>
+#include <core/app/Application.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/BooleanRadioButtonParameterUI.h>
+#include <gui/mainwin/MainWindow.h>
 #include <plugins/particles/import/InputColumnMappingDialog.h>
 #include "LAMMPSTextDumpImporter.h"
 

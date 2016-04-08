@@ -21,12 +21,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/IntegerParameterUI.h>
-#include <core/gui/properties/IntegerRadioButtonParameterUI.h>
-#include <core/gui/properties/VariantComboBoxParameterUI.h>
-#include <core/gui/mainwin/MainWindow.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
+#include <gui/properties/IntegerRadioButtonParameterUI.h>
+#include <gui/properties/VariantComboBoxParameterUI.h>
+#include <gui/mainwin/MainWindow.h>
 #include <core/scene/pipeline/PipelineObject.h>
 #include <core/animation/AnimationSettings.h>
 #include <plugins/particles/util/ParticlePropertyParameterUI.h>
@@ -125,12 +125,12 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
 
 	// Get the source property.
 	if(sourceProperty().isNull())
-		throw Exception(tr("Select a particle property first."));
+		throwException(tr("Select a particle property first."));
 	ParticlePropertyObject* property = sourceProperty().findInState(input());
 	if(!property)
-		throw Exception(tr("The selected particle property with the name '%1' does not exist.").arg(sourceProperty().name()));
+		throwException(tr("The selected particle property with the name '%1' does not exist.").arg(sourceProperty().name()));
 	if(sourceProperty().vectorComponent() >= (int)property->componentCount())
-		throw Exception(tr("The selected vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(sourceProperty().name()).arg(property->componentCount()));
+		throwException(tr("The selected vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(sourceProperty().name()).arg(property->componentCount()));
 
 	size_t vecComponent = std::max(0, sourceProperty().vectorComponent());
 	size_t vecComponentCount = property->componentCount();
@@ -166,7 +166,7 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
         normalY = expectSimulationCell()->edgeVector1().cross(expectSimulationCell()->edgeVector2());
     }
 	if(normalX == Vector3::Zero() || normalY == Vector3::Zero())
-		throw Exception(tr("Simulation cell is degenerate."));
+		throwException(tr("Simulation cell is degenerate."));
 
     // Compute the distance of the two cell faces (normal.length() is area of face).
     FloatType cellVolume = cell.volume3D();
@@ -594,7 +594,7 @@ void BinAndReduceModifierEditor::onSaveData()
 
 		QFile file(fileName);
 		if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
-			throw Exception(tr("Could not open file for writing: %1").arg(file.errorString()));
+			throwException(tr("Could not open file for writing: %1").arg(file.errorString()));
 
 		int binDataSizeX = std::max(1, modifier->numberOfBinsX());
 		int binDataSizeY = std::max(1, modifier->numberOfBinsY());

@@ -35,11 +35,13 @@
 namespace Ovito {
 
 	OVITO_BEGIN_INLINE_NAMESPACE(PluginSystem)
-		class AutoStartObject;
 		class UtilityApplet;
+		class GuiAutoStartObject;
 	OVITO_END_INLINE_NAMESPACE
 	OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
+		class OpenGLSceneRenderer;
 		class ViewportSceneRenderer;
+		class StandardSceneRenderer;
 		OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 		OVITO_END_INLINE_NAMESPACE
 	OVITO_END_INLINE_NAMESPACE
@@ -50,7 +52,7 @@ namespace Ovito {
 	OVITO_END_INLINE_NAMESPACE
 	OVITO_BEGIN_INLINE_NAMESPACE(Gui)
 		class MainWindow;
-		class Application;
+		class GuiApplication;
 		class ActionManager;
 		OVITO_BEGIN_INLINE_NAMESPACE(Widgets)
 			class PropertiesPanel;

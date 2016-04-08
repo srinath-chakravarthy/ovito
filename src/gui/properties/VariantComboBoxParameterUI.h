@@ -22,7 +22,7 @@
 #ifndef __OVITO_VARIANT_COMBO_BOX_PARAMETER_UI_H
 #define __OVITO_VARIANT_COMBO_BOX_PARAMETER_UI_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "ParameterUI.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
@@ -30,7 +30,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /******************************************************************************
 * This UI lets the user change a property using a combo box widget.
 ******************************************************************************/
-class OVITO_CORE_EXPORT VariantComboBoxParameterUI : public PropertyParameterUI
+class OVITO_GUI_EXPORT VariantComboBoxParameterUI : public PropertyParameterUI
 {
 public:
 

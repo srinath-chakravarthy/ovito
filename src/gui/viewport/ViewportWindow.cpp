@@ -19,13 +19,17 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/viewport/ViewportWindow.h>
+#include <gui/GUI.h>
 #include <core/viewport/Viewport.h>
 #include <core/viewport/ViewportConfiguration.h>
-#include <core/viewport/input/ViewportInputManager.h>
-#include <core/rendering/viewport/ViewportSceneRenderer.h>
-#include <core/gui/mainwin/MainWindow.h>
+#include <core/rendering/RenderSettings.h>
+#include <core/app/Application.h>
+#include <gui/viewport/input/ViewportInputManager.h>
+#include <gui/rendering/ViewportSceneRenderer.h>
+#include <gui/viewport/picking/PickingSceneRenderer.h>
+#include <gui/mainwin/MainWindow.h>
+#include "ViewportWindow.h"
+#include "ViewportMenu.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -174,8 +178,12 @@ ViewportWindow::ViewportWindow(Viewport* owner, QWidget* parentWidget) :
 		QOpenGLWidget(parentWidget),
 #endif
 		_viewport(owner), _updateRequested(false),
-		_mainWindow(owner->dataset()->mainWindow())
+		_mainWindow(MainWindow::fromDataset(owner->dataset())),
+		_renderDebugCounter(0)
 {
+	// Associate the viewport with this window.
+	owner->setWindow(this);
+
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
 	_updatePending = false;
 
@@ -204,6 +212,36 @@ ViewportWindow::ViewportWindow(Viewport* owner, QWidget* parentWidget) :
 	// Determine OpenGL vendor string so other parts of the code can decide
 	// which OpenGL features are save to use.
 	determineOpenGLInfo();
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
+	// Create a QWidget for this QWindow.
+	_widget = QWidget::createWindowContainer(this, parentWidget);
+	_widget->setAttribute(Qt::WA_DeleteOnClose);
+#endif
+
+	// Create the viewport renderer.
+	// It is shared by all viewports of a dataset.
+	for(Viewport* vp : owner->dataset()->viewportConfig()->viewports()) {
+		if(vp->window() != nullptr) {
+			_viewportRenderer = static_cast<ViewportWindow*>(vp->window())->_viewportRenderer;
+			if(_viewportRenderer) break;
+		}
+	}
+	if(!_viewportRenderer)
+		_viewportRenderer = new ViewportSceneRenderer(owner->dataset());
+
+	// Create the object picking renderer.
+	_pickingRenderer = new PickingSceneRenderer(owner->dataset());
+}
+
+/******************************************************************************
+* Destructor.
+******************************************************************************/
+ViewportWindow::~ViewportWindow()
+{
+	// Detach from Viewport class.
+	if(viewport())
+		viewport()->setWindow(nullptr);
 }
 
 /******************************************************************************
@@ -228,7 +266,7 @@ void ViewportWindow::renderLater()
 * If an update request is pending for this viewport window, immediately
 * processes it and redraw the window contents.
 ******************************************************************************/
-void ViewportWindow::processUpdateRequest()
+void ViewportWindow::processViewportUpdate()
 {
 	if(_updateRequested) {
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
@@ -238,6 +276,243 @@ void ViewportWindow::processUpdateRequest()
 		OVITO_ASSERT_MSG(!_viewport->dataset()->viewportConfig()->isRendering(), "ViewportWindow::processUpdateRequest()", "Recursive viewport repaint detected.");
 		repaint();
 #endif
+	}
+}
+
+/******************************************************************************
+* Displays the context menu for this viewport.
+******************************************************************************/
+void ViewportWindow::showViewportMenu(const QPoint& pos)
+{
+#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
+	requestActivate();
+#endif
+
+	// Create the context menu for the viewport.
+	ViewportMenu contextMenu(this);
+
+	// Show menu.
+	contextMenu.show(pos);
+}
+
+/******************************************************************************
+* Renders the viewport caption text.
+******************************************************************************/
+void ViewportWindow::renderViewportTitle()
+{
+	// Create a rendering buffer that is responsible for rendering the viewport's caption text.
+	if(!_captionBuffer || !_captionBuffer->isValid(_viewportRenderer)) {
+		_captionBuffer = _viewportRenderer->createTextPrimitive();
+		_captionBuffer->setFont(ViewportSettings::getSettings().viewportFont());
+	}
+
+	if(_cursorInContextMenuArea && !_captionBuffer->font().underline()) {
+		QFont font = _captionBuffer->font();
+		font.setUnderline(true);
+		_captionBuffer->setFont(font);
+	}
+	else if(!_cursorInContextMenuArea && _captionBuffer->font().underline()) {
+		QFont font = _captionBuffer->font();
+		font.setUnderline(false);
+		_captionBuffer->setFont(font);
+	}
+
+	QString str = viewport()->viewportTitle();
+	if(viewport()->renderPreviewMode())
+		str += tr(" (preview)");
+#ifdef OVITO_DEBUG
+	str += QString(" [%1]").arg(++_renderDebugCounter);
+#endif
+	_captionBuffer->setText(str);
+	Color textColor = Viewport::viewportColor(ViewportSettings::COLOR_VIEWPORT_CAPTION);
+	if(viewport()->renderPreviewMode() && textColor == _viewportRenderer->renderSettings()->backgroundColor())
+		textColor = Vector3(1,1,1) - (Vector3)textColor;
+	_captionBuffer->setColor(ColorA(textColor));
+
+	QFontMetricsF metrics(_captionBuffer->font());
+	QPointF pos = QPointF(2, 2) * devicePixelRatio();
+	_contextMenuArea = QRect(0, 0, std::max(metrics.width(_captionBuffer->text()), 30.0) + pos.x(), metrics.height() + pos.y());
+	_captionBuffer->renderWindow(_viewportRenderer, Point2(pos.x(), pos.y()), Qt::AlignLeft | Qt::AlignTop);
+}
+
+/******************************************************************************
+* Sets whether mouse grab should be enabled or not for this viewport window.
+******************************************************************************/
+bool ViewportWindow::setMouseGrabEnabled(bool grab)
+{
+#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
+	return QWindow::setMouseGrabEnabled(grab);
+#else
+	if(grab) {
+		grabMouse();
+		return true;
+	}
+	else {
+		releaseMouse();
+		return false;
+	}
+#endif
+}
+
+/******************************************************************************
+* Sets the cursor shape for this viewport window.
+******************************************************************************/
+void ViewportWindow::setCursor(const QCursor& cursor)
+{
+	// Changing the cursor leads to program crash on MacOS and Qt <= 5.2.0.
+#if !defined(Q_OS_MACX) || (QT_VERSION >= QT_VERSION_CHECK(5, 2, 1))
+#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
+	QWindow::setCursor(cursor);
+#else
+	QOpenGLWidget::setCursor(cursor);
+#endif
+#endif
+}
+
+/******************************************************************************
+* Restores the default arrow cursor for this viewport window.
+******************************************************************************/
+void ViewportWindow::unsetCursor()
+{
+#if !defined(Q_OS_MACX) || (QT_VERSION >= QT_VERSION_CHECK(5, 2, 1))
+#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
+	QWindow::unsetCursor();
+#else
+	QOpenGLWidget::unsetCursor();
+#endif
+#endif
+}
+
+/******************************************************************************
+* Render the axis tripod symbol in the corner of the viewport that indicates
+* the coordinate system orientation.
+******************************************************************************/
+void ViewportWindow::renderOrientationIndicator()
+{
+	const FloatType tripodSize = FloatType(60) * devicePixelRatio();			// pixels
+	const FloatType tripodArrowSize = FloatType(0.17); 	// percentage of the above value.
+
+	// Turn off depth-testing.
+	OVITO_CHECK_OPENGL(glDisable(GL_DEPTH_TEST));
+
+	// Setup projection matrix.
+	ViewProjectionParameters projParams = viewport()->projectionParams();
+	FloatType xscale = size().width() / tripodSize;
+	FloatType yscale = size().height() / tripodSize;
+	projParams.projectionMatrix = Matrix4::translation(Vector3(-1.0 + 1.3f/xscale, -1.0 + 1.3f/yscale, 0))
+									* Matrix4::ortho(-xscale, xscale, -yscale, yscale, -2, 2);
+	projParams.inverseProjectionMatrix = projParams.projectionMatrix.inverse();
+	projParams.viewMatrix.setIdentity();
+	projParams.inverseViewMatrix.setIdentity();
+	_viewportRenderer->setProjParams(projParams);
+	_viewportRenderer->setWorldTransform(AffineTransformation::Identity());
+
+    static const ColorA axisColors[3] = { ColorA(1, 0, 0), ColorA(0, 1, 0), ColorA(0.4f, 0.4f, 1) };
+	static const QString labels[3] = { QStringLiteral("x"), QStringLiteral("y"), QStringLiteral("z") };
+
+	// Create line buffer.
+	if(!_orientationTripodGeometry || !_orientationTripodGeometry->isValid(_viewportRenderer)) {
+		_orientationTripodGeometry = _viewportRenderer->createLinePrimitive();
+		_orientationTripodGeometry->setVertexCount(18);
+		ColorA vertexColors[18];
+		for(int i = 0; i < 18; i++)
+			vertexColors[i] = axisColors[i / 6];
+		_orientationTripodGeometry->setVertexColors(vertexColors);
+	}
+
+	// Render arrows.
+	Point3 vertices[18];
+	for(int axis = 0, index = 0; axis < 3; axis++) {
+		Vector3 dir = viewport()->projectionParams().viewMatrix.column(axis).normalized();
+		vertices[index++] = Point3::Origin();
+		vertices[index++] = Point3::Origin() + dir;
+		vertices[index++] = Point3::Origin() + dir;
+		vertices[index++] = Point3::Origin() + (dir + tripodArrowSize * Vector3(dir.y() - dir.x(), -dir.x() - dir.y(), dir.z()));
+		vertices[index++] = Point3::Origin() + dir;
+		vertices[index++] = Point3::Origin() + (dir + tripodArrowSize * Vector3(-dir.y() - dir.x(), dir.x() - dir.y(), dir.z()));
+	}
+	_orientationTripodGeometry->setVertexPositions(vertices);
+	_orientationTripodGeometry->render(_viewportRenderer);
+
+	// Render x,y,z labels.
+	for(int axis = 0; axis < 3; axis++) {
+
+		// Create a rendering buffer that is responsible for rendering the text label.
+		if(!_orientationTripodLabels[axis] || !_orientationTripodLabels[axis]->isValid(_viewportRenderer)) {
+			_orientationTripodLabels[axis] = _viewportRenderer->createTextPrimitive();
+			_orientationTripodLabels[axis]->setFont(ViewportSettings::getSettings().viewportFont());
+			_orientationTripodLabels[axis]->setColor(axisColors[axis]);
+			_orientationTripodLabels[axis]->setText(labels[axis]);
+		}
+
+		Point3 p = Point3::Origin() + viewport()->projectionParams().viewMatrix.column(axis).resized(1.2f);
+		Point3 ndcPoint = projParams.projectionMatrix * p;
+		Point2 windowPoint(( ndcPoint.x() + 1.0) * size().width()  / 2,
+							(-ndcPoint.y() + 1.0) * size().height() / 2);
+		_orientationTripodLabels[axis]->renderWindow(_viewportRenderer, windowPoint, Qt::AlignHCenter | Qt::AlignVCenter);
+	}
+
+	// Restore old rendering attributes.
+	OVITO_CHECK_OPENGL(glEnable(GL_DEPTH_TEST));
+}
+
+/******************************************************************************
+* Renders the frame on top of the scene that indicates the visible rendering area.
+******************************************************************************/
+void ViewportWindow::renderRenderFrame()
+{
+	// Create a rendering buffer that is responsible for rendering the frame.
+	if(!_renderFrameOverlay || !_renderFrameOverlay->isValid(_viewportRenderer)) {
+		_renderFrameOverlay = _viewportRenderer->createImagePrimitive();
+		QImage image(1, 1, QImage::Format_ARGB32_Premultiplied);
+		image.fill(0xA0FFFFFF);
+		_renderFrameOverlay->setImage(image);
+	}
+
+	Box2 rect = viewport()->renderFrameRect();
+
+	// Render rectangle borders
+	_renderFrameOverlay->renderViewport(_viewportRenderer, Point2(-1,-1), Vector2(1.0 + rect.minc.x(), 2));
+	_renderFrameOverlay->renderViewport(_viewportRenderer, Point2(rect.maxc.x(),-1), Vector2(1.0 - rect.maxc.x(), 2));
+	_renderFrameOverlay->renderViewport(_viewportRenderer, Point2(rect.minc.x(),-1), Vector2(rect.width(), 1.0 + rect.minc.y()));
+	_renderFrameOverlay->renderViewport(_viewportRenderer, Point2(rect.minc.x(),rect.maxc.y()), Vector2(rect.width(), 1.0 - rect.maxc.y()));
+}
+
+/******************************************************************************
+* Determines the object that is visible under the given mouse cursor position.
+******************************************************************************/
+ViewportPickResult ViewportWindow::pick(const QPointF& pos)
+{
+	// Cannot perform picking while viewport is not visible or currently rendering.
+	if(!isExposed() || viewport()->isRendering()) {
+		ViewportPickResult result;
+		result.valid = false;
+		return result;
+	}
+
+	try {
+		if(_pickingRenderer->isRefreshRequired()) {
+			// Let the viewport do the actual rendering work.
+			viewport()->renderInteractive(_pickingRenderer);
+		}
+
+		// Query which object is located at the given window position.
+		ViewportPickResult result;
+		const PickingSceneRenderer::ObjectRecord* objInfo;
+		std::tie(objInfo, result.subobjectId) = _pickingRenderer->objectAtLocation((pos * devicePixelRatio()).toPoint());
+		result.valid = (objInfo != nullptr);
+		if(objInfo) {
+			result.objectNode = objInfo->objectNode;
+			result.pickInfo = objInfo->pickInfo;
+			result.worldPosition = _pickingRenderer->worldPositionFromLocation((pos * devicePixelRatio()).toPoint());
+		}
+		return result;
+	}
+	catch(const Exception& ex) {
+		ex.showError();
+		ViewportPickResult result;
+		result.valid = false;
+		return result;
 	}
 }
 
@@ -251,7 +526,7 @@ bool ViewportWindow::event(QEvent* event)
 	// Handle update request events posted by renderLater().
 	if(event->type() == QEvent::UpdateLater) {
 		_updatePending = false;
-		processUpdateRequest();
+		processViewportUpdate();
 		return true;
 	}
 	return QWindow::event(event);
@@ -306,7 +581,7 @@ void ViewportWindow::mouseDoubleClickEvent(QMouseEvent* event)
 	ViewportInputMode* mode = _mainWindow->viewportInputManager()->activeMode();
 	if(mode) {
 		try {
-			mode->mouseDoubleClickEvent(_viewport, event);
+			mode->mouseDoubleClickEvent(this, event);
 		}
 		catch(const Exception& ex) {
 			qWarning() << "Uncaught exception in viewport mouse event handler:";
@@ -320,18 +595,18 @@ void ViewportWindow::mouseDoubleClickEvent(QMouseEvent* event)
 ******************************************************************************/
 void ViewportWindow::mousePressEvent(QMouseEvent* event)
 {
-	_viewport->dataset()->viewportConfig()->setActiveViewport(_viewport);
+	viewport()->dataset()->viewportConfig()->setActiveViewport(_viewport);
 
 	// Intercept mouse clicks on the viewport caption.
-	if(_viewport->_contextMenuArea.contains(event->pos())) {
-		_viewport->showViewportMenu(event->pos());
+	if(_contextMenuArea.contains(event->pos())) {
+		showViewportMenu(event->pos());
 		return;
 	}
 
 	ViewportInputMode* mode = _mainWindow->viewportInputManager()->activeMode();
 	if(mode) {
 		try {
-			mode->mousePressEvent(_viewport, event);
+			mode->mousePressEvent(this, event);
 		}
 		catch(const Exception& ex) {
 			qWarning() << "Uncaught exception in viewport mouse event handler:";
@@ -348,7 +623,7 @@ void ViewportWindow::mouseReleaseEvent(QMouseEvent* event)
 	ViewportInputMode* mode = _mainWindow->viewportInputManager()->activeMode();
 	if(mode) {
 		try {
-			mode->mouseReleaseEvent(_viewport, event);
+			mode->mouseReleaseEvent(this, event);
 		}
 		catch(const Exception& ex) {
 			qWarning() << "Uncaught exception in viewport mouse event handler:";
@@ -362,22 +637,22 @@ void ViewportWindow::mouseReleaseEvent(QMouseEvent* event)
 ******************************************************************************/
 void ViewportWindow::mouseMoveEvent(QMouseEvent* event)
 {
-	if(_viewport->_contextMenuArea.contains(event->pos()) && !_viewport->_cursorInContextMenuArea) {
-		_viewport->_cursorInContextMenuArea = true;
-		_viewport->updateViewport();
+	if(_contextMenuArea.contains(event->pos()) && !_cursorInContextMenuArea) {
+		_cursorInContextMenuArea = true;
+		viewport()->updateViewport();
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
 		startTimer(0);
 #endif
 	}
-	else if(!_viewport->_contextMenuArea.contains(event->pos()) && _viewport->_cursorInContextMenuArea) {
-		_viewport->_cursorInContextMenuArea = false;
-		_viewport->updateViewport();
+	else if(!_contextMenuArea.contains(event->pos()) && _cursorInContextMenuArea) {
+		_cursorInContextMenuArea = false;
+		viewport()->updateViewport();
 	}
 
 	ViewportInputMode* mode = _mainWindow->viewportInputManager()->activeMode();
 	if(mode) {
 		try {
-			mode->mouseMoveEvent(_viewport, event);
+			mode->mouseMoveEvent(this, event);
 		}
 		catch(const Exception& ex) {
 			qWarning() << "Uncaught exception in viewport mouse event handler:";
@@ -394,7 +669,7 @@ void ViewportWindow::wheelEvent(QWheelEvent* event)
 	ViewportInputMode* mode = _mainWindow->viewportInputManager()->activeMode();
 	if(mode) {
 		try {
-			mode->wheelEvent(_viewport, event);
+			mode->wheelEvent(this, event);
 		}
 		catch(const Exception& ex) {
 			qWarning() << "Uncaught exception in viewport mouse event handler:";
@@ -410,12 +685,12 @@ void ViewportWindow::wheelEvent(QWheelEvent* event)
 ******************************************************************************/
 void ViewportWindow::timerEvent(QTimerEvent* event)
 {
-	if(_viewport->_contextMenuArea.contains(mapFromGlobal(QCursor::pos())))
+	if(_contextMenuArea.contains(mapFromGlobal(QCursor::pos())))
 		return;
 
-	if(_viewport->_cursorInContextMenuArea) {
-		_viewport->_cursorInContextMenuArea = false;
-		_viewport->updateViewport();
+	if(_cursorInContextMenuArea) {
+		_cursorInContextMenuArea = false;
+		viewport()->updateViewport();
 	}
 	killTimer(event->timerId());
 }
@@ -427,13 +702,31 @@ void ViewportWindow::timerEvent(QTimerEvent* event)
 ******************************************************************************/
 void ViewportWindow::leaveEvent(QEvent* event)
 {
-	if(_viewport->_cursorInContextMenuArea) {
-		_viewport->_cursorInContextMenuArea = false;
-		_viewport->updateViewport();
+	if(_cursorInContextMenuArea) {
+		_cursorInContextMenuArea = false;
+		viewport()->updateViewport();
 	}
 }
 
 #endif
+
+/******************************************************************************
+* Renders custom GUI elements in the viewport on top of the scene.
+******************************************************************************/
+void ViewportWindow::renderGui()
+{
+	if(viewport()->renderPreviewMode()) {
+		// Render render frame.
+		renderRenderFrame();
+	}
+	else {
+		// Render orientation tripod.
+		renderOrientationIndicator();
+	}
+
+	// Render viewport caption.
+	renderViewportTitle();
+}
 
 /******************************************************************************
 * Immediately redraws the contents of this window.
@@ -448,7 +741,7 @@ void ViewportWindow::renderNow()
 	_updateRequested = false;
 
 	// Do not re-enter rendering function of the same viewport.
-	if(_viewport->isRendering())
+	if(!viewport() || viewport()->isRendering())
 		return;
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
@@ -505,8 +798,46 @@ void ViewportWindow::renderNow()
 	}
 
 	OVITO_REPORT_OPENGL_ERRORS();
-	if(!_viewport->dataset()->viewportConfig()->isSuspended()) {
-		_viewport->render(context());
+	if(!viewport()->dataset()->viewportConfig()->isSuspended()) {
+
+		// Invalidate picking buffer every time the visible contents of the viewport change.
+		_pickingRenderer->reset();
+
+		QSize vpSize = viewportWindowSize();
+		if(!vpSize.isEmpty()) {
+
+			// Set up OpenGL viewport.
+			glViewport(0, 0, vpSize.width(), vpSize.height());
+
+			try {
+				// Let the Viewport class do the actual rendering work.
+				viewport()->renderInteractive(_viewportRenderer);
+			}
+			catch(Exception& ex) {
+				if(ex.context() == nullptr) ex.setContext(viewport()->dataset());
+				ex.prependGeneralMessage(tr("An unexpected error occurred while rendering the viewport contents. The program will quit."));
+
+				QString openGLReport;
+				QTextStream stream(&openGLReport, QIODevice::WriteOnly | QIODevice::Text);
+				stream << "OpenGL version: " << context()->format().majorVersion() << QStringLiteral(".") << context()->format().minorVersion() << endl;
+				stream << "OpenGL profile: " << (context()->format().profile() == QSurfaceFormat::CoreProfile ? "core" : (context()->format().profile() == QSurfaceFormat::CompatibilityProfile ? "compatibility" : "none")) << endl;
+				stream << "OpenGL vendor: " << QString((const char*)glGetString(GL_VENDOR)) << endl;
+				stream << "OpenGL renderer: " << QString((const char*)glGetString(GL_RENDERER)) << endl;
+				stream << "OpenGL version string: " << QString((const char*)glGetString(GL_VERSION)) << endl;
+				stream << "OpenGL shading language: " << QString((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION)) << endl;
+				stream << "OpenGL shader programs: " << QOpenGLShaderProgram::hasOpenGLShaderPrograms() << endl;
+				stream << "OpenGL geometry shaders: " << QOpenGLShader::hasOpenGLShaders(QOpenGLShader::Geometry, context()) << endl;
+				stream << "Using point sprites: " << pointSpritesEnabled() << endl;
+				stream << "Using geometry shaders: " << geometryShadersEnabled() << endl;
+				stream << "Context sharing: " << contextSharingEnabled() << endl;
+				ex.appendDetailMessage(openGLReport);
+
+				viewport()->dataset()->viewportConfig()->suspendViewportUpdates();
+				QCoreApplication::removePostedEvents(nullptr, 0);
+				ex.showError();
+				QCoreApplication::instance()->quit();
+			}
+		}
 	}
 	else {
 		Color backgroundColor = Viewport::viewportColor(ViewportSettings::COLOR_VIEWPORT_BKG);

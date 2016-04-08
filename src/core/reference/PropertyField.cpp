@@ -159,7 +159,7 @@ void SingleReferenceFieldBase::setValue(RefTarget* newTarget)
     // Check object type
 	if(newTarget && !newTarget->getOOType().isDerivedFrom(*descriptor()->targetClass())) {
 		OVITO_ASSERT_MSG(false, "SingleReferenceFieldBase::SetValue", "Tried to create a reference to an incompatible object for this reference field.");
-		throw Exception(QString("Cannot set a reference field of type %1 to an incompatible object of type %2.").arg(descriptor()->targetClass()->name(), newTarget->getOOType().name()));
+		owner()->throwException(QString("Cannot set a reference field of type %1 to an incompatible object of type %2.").arg(descriptor()->targetClass()->name(), newTarget->getOOType().name()));
 	}
 
 	// Make sure automatic undo is disabled for a reference field of a class that is not derived from RefTarget.
@@ -295,7 +295,7 @@ int VectorReferenceFieldBase::insertInternal(RefTarget* newTarget, int index)
     // Check object type
 	if(newTarget && !newTarget->getOOType().isDerivedFrom(*descriptor()->targetClass())) {
 		OVITO_ASSERT_MSG(false, "VectorReferenceFieldBase::insert", "Cannot add incompatible object to this vector reference field.");
-		throw Exception(QString("Cannot add an object to a reference field of type %1 that has the incompatible type %2.").arg(descriptor()->targetClass()->name(), newTarget->getOOType().name()));
+		owner()->throwException(QString("Cannot add an object to a reference field of type %1 that has the incompatible type %2.").arg(descriptor()->targetClass()->name(), newTarget->getOOType().name()));
 	}
 
 	// Make sure automatic undo is disabled for a reference field of a class that is not derived from RefTarget.

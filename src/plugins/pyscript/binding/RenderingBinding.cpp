@@ -22,14 +22,14 @@
 #include <plugins/pyscript/PyScript.h>
 #include <core/rendering/RenderSettings.h>
 #include <core/rendering/SceneRenderer.h>
-#include <core/rendering/standard/StandardSceneRenderer.h>
 #include <core/rendering/noninteractive/NonInteractiveSceneRenderer.h>
 #include <core/rendering/ParticlePrimitive.h>
 #include <core/rendering/ArrowPrimitive.h>
 #include <core/rendering/FrameBuffer.h>
-#include <core/gui/widgets/rendering/FrameBufferWindow.h>
 #include <core/scene/objects/DisplayObject.h>
 #include <core/scene/objects/geometry/TriMeshDisplay.h>
+#include <gui/rendering/StandardSceneRenderer.h>
+#include <gui/widgets/rendering/FrameBufferWindow.h>
 #include "PythonBinding.h"
 
 namespace PyScript {

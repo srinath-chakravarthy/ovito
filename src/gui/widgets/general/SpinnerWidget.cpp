@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/mainwin/MainWindow.h>
+#include <gui/GUI.h>
+#include <gui/mainwin/MainWindow.h>
 #include "SpinnerWidget.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Widgets)
@@ -110,7 +110,7 @@ void SpinnerWidget::onTextChanged()
 			bool ok;
 			newValue = textBox()->text().toDouble(&ok);
 			if(!ok)
-				throw Exception(tr("Invalid floating-point value: %1").arg(textBox()->text()));
+				throw Exception(tr("Invalid floating-point value: %1").arg(textBox()->text()), this);
 			setFloatValue(newValue, true);
 		}
 	}

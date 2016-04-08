@@ -76,9 +76,6 @@ public:
 	/// \sa findClass()
 	const QVector<OvitoObjectType*>& classes() const { return _classes; }
 
-	/// \brief Indicates whether this is the built-in pseudo plugin, which represents OVITO's core library.
-	bool isCore() const { return pluginId() == QStringLiteral("Core"); }
-
 	/// \brief Returns all other plugins this plugin (directly) depends on.
 	QSet<Plugin*> dependencies() const;
 
@@ -86,8 +83,9 @@ protected:
 
 	/// \brief Constructor that loads the given manifest file.
 	/// \param manifestFile Path to the plugin's JSON manifest file.
+	/// \param builtinPlugin Indicates whether this plugin is statically linked into the executable.
 	/// \throw Exception If a parsing error occurred.
-	Plugin(const QString& manifestFile);
+	Plugin(const QString& manifestFile, bool builtinPlugin);
 
 	/// \brief Implementation method that loads the plugin.
 	/// \throw Exception if an error occurred.

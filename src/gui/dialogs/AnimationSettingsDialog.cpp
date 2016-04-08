@@ -19,10 +19,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/dataset/UndoStack.h>
 #include <core/utilities/units/UnitsManager.h>
-#include <core/gui/mainwin/MainWindow.h>
+#include <gui/mainwin/MainWindow.h>
 #include "AnimationSettingsDialog.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -113,9 +113,8 @@ AnimationSettingsDialog::AnimationSettingsDialog(AnimationSettings* animSettings
 	connect(buttonBox, &QDialogButtonBox::rejected, this, &AnimationSettingsDialog::reject);
 
 	// Implement Help button.
-	MainWindow* mainWindow = _animSettings->dataset()->mainWindow();
-	connect(buttonBox, &QDialogButtonBox::helpRequested, [mainWindow]() {
-		mainWindow->openHelpTopic(QStringLiteral("animation.animation_settings_dialog.html"));
+	connect(buttonBox, &QDialogButtonBox::helpRequested, []() {
+		MainWindow::openHelpTopic(QStringLiteral("animation.animation_settings_dialog.html"));
 	});
 
 	layout1->addWidget(buttonBox); 

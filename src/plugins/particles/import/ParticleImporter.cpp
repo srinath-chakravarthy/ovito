@@ -120,9 +120,9 @@ void ParticleImporter::propertyChanged(const PropertyFieldDescriptor& field)
 * This method is called by the FileSource each time a new source
 * file has been selected by the user.
 ******************************************************************************/
-bool ParticleImporter::inspectNewFile(FileSource* obj)
+bool ParticleImporter::inspectNewFile(FileSource* obj, int frameIndex)
 {
-	if(!FileSourceImporter::inspectNewFile(obj))
+	if(!FileSourceImporter::inspectNewFile(obj, frameIndex))
 		return false;
 
 	// Set flag that this file is new.

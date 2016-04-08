@@ -23,7 +23,7 @@
 #define __OVITO_PYSCRIPT_AUTOSTARTER_OBJECT_H
 
 #include <plugins/pyscript/PyScript.h>
-#include <core/plugins/autostart/AutoStartObject.h>
+#include <gui/plugins/autostart/GuiAutoStartObject.h>
 
 namespace PyScript {
 
@@ -33,7 +33,7 @@ using namespace Ovito;
  * \brief An auto-start object that is automatically invoked on application startup
  *        and that will execute a script files passed on the command line.
  */
-class ScriptAutostarter : public AutoStartObject
+class ScriptAutostarter : public GuiAutoStartObject
 {
 public:
 

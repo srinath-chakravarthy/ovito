@@ -27,14 +27,14 @@
 #include <core/animation/controller/Controller.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/scene/pipeline/PipelineObject.h>
-#include <core/gui/actions/ActionManager.h>
-#include <core/gui/actions/ViewportModeAction.h>
-#include <core/gui/mainwin/MainWindow.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/Vector3ParameterUI.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/rendering/viewport/ViewportSceneRenderer.h>
 #include <core/plugins/PluginManager.h>
+#include <gui/actions/ViewportModeAction.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <gui/properties/Vector3ParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/rendering/ViewportSceneRenderer.h>
+#include <gui/viewport/ViewportWindow.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include "SliceModifier.h"
 
@@ -269,8 +269,9 @@ PipelineStatus SliceParticlesFunction::apply(SliceModifier* modifier, TimePoint 
 ******************************************************************************/
 void SliceModifier::render(TimePoint time, ObjectNode* contextNode, ModifierApplication* modApp, SceneRenderer* renderer, bool renderOverlay)
 {
-	if(!renderOverlay && PropertiesEditor::isObjectBeingEdited(this) && renderer->isInteractive() && !renderer->isPicking())
+	if(!renderOverlay && isObjectBeingEdited() && renderer->isInteractive() && !renderer->isPicking()) {
 		renderVisual(time, contextNode, renderer);
+	}
 }
 
 /******************************************************************************
@@ -278,7 +279,7 @@ void SliceModifier::render(TimePoint time, ObjectNode* contextNode, ModifierAppl
 ******************************************************************************/
 Box3 SliceModifier::boundingBox(TimePoint time, ObjectNode* contextNode, ModifierApplication* modApp)
 {
-	if(PropertiesEditor::isObjectBeingEdited(this))
+	if(isObjectBeingEdited())
 		return renderVisual(time, contextNode, nullptr);
 	else
 		return Box3();
@@ -631,17 +632,17 @@ void PickParticlePlaneInputMode::deactivated(bool temporary)
 /******************************************************************************
 * Handles the mouse events for a Viewport.
 ******************************************************************************/
-void PickParticlePlaneInputMode::mouseReleaseEvent(Viewport* vp, QMouseEvent* event)
+void PickParticlePlaneInputMode::mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	if(event->button() == Qt::LeftButton) {
 
 		if(_pickedParticles.size() >= 3) {
 			_pickedParticles.clear();
-			vp->dataset()->viewportConfig()->updateViewports();
+			vpwin->viewport()->dataset()->viewportConfig()->updateViewports();
 		}
 
 		PickResult pickResult;
-		if(pickParticle(vp, event->pos(), pickResult)) {
+		if(pickParticle(vpwin, event->pos(), pickResult)) {
 
 			// Do not select the same particle twice.
 			bool ignore = false;
@@ -650,7 +651,7 @@ void PickParticlePlaneInputMode::mouseReleaseEvent(Viewport* vp, QMouseEvent* ev
 
 			if(!ignore) {
 				_pickedParticles.push_back(pickResult);
-				vp->dataset()->viewportConfig()->updateViewports();
+				vpwin->viewport()->dataset()->viewportConfig()->updateViewports();
 
 				if(_pickedParticles.size() == 3) {
 
@@ -664,7 +665,7 @@ void PickParticlePlaneInputMode::mouseReleaseEvent(Viewport* vp, QMouseEvent* ev
 		}
 	}
 
-	ViewportInputMode::mouseReleaseEvent(vp, event);
+	ViewportInputMode::mouseReleaseEvent(vpwin, event);
 }
 
 /******************************************************************************
@@ -677,7 +678,7 @@ void PickParticlePlaneInputMode::alignPlane(SliceModifier* mod)
 	try {
 		Plane3 worldPlane(_pickedParticles[0].worldPos, _pickedParticles[1].worldPos, _pickedParticles[2].worldPos, true);
 		if(worldPlane.normal.equals(Vector3::Zero(), FLOATTYPE_EPSILON))
-			throw Exception(tr("Cannot set the new slicing plane. The three selected particle are colinear."));
+			mod->throwException(tr("Cannot set the new slicing plane. The three selected particle are colinear."));
 
 		// Get the object to world transformation for the currently selected node.
 		ObjectNode* node = _pickedParticles[0].objNode;

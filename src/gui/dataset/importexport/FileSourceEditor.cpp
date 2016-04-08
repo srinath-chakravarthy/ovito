@@ -19,18 +19,22 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/properties/FilenameParameterUI.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/BooleanActionParameterUI.h>
-#include <core/gui/properties/IntegerParameterUI.h>
-#include <core/gui/properties/SubObjectParameterUI.h>
+#include <gui/GUI.h>
+#include <gui/properties/FilenameParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/BooleanActionParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
+#include <gui/properties/SubObjectParameterUI.h>
+#include <gui/dialogs/ImportFileDialog.h>
+#include <gui/dialogs/ImportRemoteFileDialog.h>
 #include <core/animation/AnimationSettings.h>
+#include <core/dataset/importexport/FileSource.h>
 #include "FileSourceEditor.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Core, FileSourceEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(Gui, FileSourceEditor, PropertiesEditor);
+SET_OVITO_OBJECT_EDITOR(FileSource, FileSourceEditor);
 
 /******************************************************************************
 * Sets up the UI of the editor.
@@ -51,12 +55,12 @@ void FileSourceEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 	toolbar->setStyleSheet("QToolBar { padding: 0px; margin: 0px; border: 0px none black; }");
 	layout->addWidget(toolbar);
 
-	toolbar->addAction(QIcon(":/core/actions/file/import_object_changefile.png"), tr("Pick new file"), this, SLOT(onPickLocalInputFile()));
-	toolbar->addAction(QIcon(":/core/actions/file/file_import_remote.png"), tr("Pick new remote file"), this, SLOT(onPickRemoteInputFile()));
-	toolbar->addAction(QIcon(":/core/actions/file/import_object_reload.png"), tr("Reload data from external file"), this, SLOT(onReloadFrame()));
-	toolbar->addAction(QIcon(":/core/actions/file/import_object_refresh_animation.png"), tr("Update time series"), this, SLOT(onReloadAnimation()));
+	toolbar->addAction(QIcon(":/gui/actions/file/import_object_changefile.png"), tr("Pick new file"), this, SLOT(onPickLocalInputFile()));
+	toolbar->addAction(QIcon(":/gui/actions/file/file_import_remote.png"), tr("Pick new remote file"), this, SLOT(onPickRemoteInputFile()));
+	toolbar->addAction(QIcon(":/gui/actions/file/import_object_reload.png"), tr("Reload data from external file"), this, SLOT(onReloadFrame()));
+	toolbar->addAction(QIcon(":/gui/actions/file/import_object_refresh_animation.png"), tr("Update time series"), this, SLOT(onReloadAnimation()));
 
-	QAction* saveDataWithSceneAction = toolbar->addAction(QIcon(":/core/actions/file/import_object_save_with_scene.png"), tr("Store copy of loaded data in state file"));
+	QAction* saveDataWithSceneAction = toolbar->addAction(QIcon(":/gui/actions/file/import_object_save_with_scene.png"), tr("Store copy of loaded data in state file"));
 	new BooleanActionParameterUI(this, "saveWithScene", saveDataWithSceneAction);
 
 	QGroupBox* sourceBox = new QGroupBox(tr("Data source"), rollout);
@@ -186,8 +190,38 @@ void FileSourceEditor::onEditorContentsReplaced(RefTarget* newObject)
 void FileSourceEditor::onPickLocalInputFile()
 {
 	FileSource* obj = static_object_cast<FileSource>(editObject());
-	if(obj)
-		obj->showFileSelectionDialog(container()->window());
+	if(!obj) return;
+
+	try {
+		QUrl newSourceUrl;
+		const OvitoObjectType* importerType;
+
+		// Put code in a block: Need to release dialog before loading new input file.
+		{
+			// Offer only file importer types that are compatible with a FileSource.
+			QVector<OvitoObjectType*> availableTypes;
+			for(OvitoObjectType* type : FileImporter::availableImporters()) {
+				if(type->isDerivedFrom(FileSourceImporter::OOType))
+					availableTypes.push_back(type);
+			}
+
+			// Let the user select a file.
+			ImportFileDialog dialog(availableTypes, dataset(), container()->window(), tr("Pick input file"));
+			if(obj->sourceUrl().isLocalFile())
+				dialog.selectFile(obj->sourceUrl().toLocalFile());
+			if(dialog.exec() != QDialog::Accepted)
+				return;
+
+			newSourceUrl = QUrl::fromLocalFile(dialog.fileToImport());
+			importerType = dialog.selectedFileImporterType();
+		}
+
+		// Set the new input location.
+		obj->setSource(newSourceUrl, importerType);
+	}
+	catch(const Exception& ex) {
+		ex.showError();
+	}
 }
 
 /******************************************************************************
@@ -196,8 +230,40 @@ void FileSourceEditor::onPickLocalInputFile()
 void FileSourceEditor::onPickRemoteInputFile()
 {
 	FileSource* obj = static_object_cast<FileSource>(editObject());
-	if(obj)
-		obj->showURLSelectionDialog(container()->window());
+	if(!obj) return;
+
+	try {
+		QUrl newSourceUrl;
+		const OvitoObjectType* importerType;
+
+		// Put code in a block: Need to release dialog before loading new input file.
+		{
+			// Offer only file importer types that are compatible with a FileSource.
+			QVector<OvitoObjectType*> availableTypes;
+			for(OvitoObjectType* type : FileImporter::availableImporters()) {
+				if(type->isDerivedFrom(FileSourceImporter::OOType))
+					availableTypes.push_back(type);
+			}
+
+			// Let the user select a new URL.
+			ImportRemoteFileDialog dialog(availableTypes, dataset(), container()->window(), tr("Pick source"));
+			QUrl oldUrl = obj->sourceUrl();
+			if(obj->loadedFrameIndex() >= 0 && obj->loadedFrameIndex() < obj->frames().size())
+				oldUrl = obj->frames()[obj->loadedFrameIndex()].sourceFile;
+			dialog.selectFile(oldUrl);
+			if(dialog.exec() != QDialog::Accepted)
+				return;
+
+			newSourceUrl = dialog.fileToImport();
+			importerType = dialog.selectedFileImporterType();
+		}
+
+		// Set the new input location.
+		obj->setSource(newSourceUrl, importerType);
+	}
+	catch(const Exception& ex) {
+		ex.showError();
+	}
 }
 
 /******************************************************************************
@@ -250,9 +316,9 @@ void FileSourceEditor::onWildcardPatternEntered()
 		fileInfo.setFile(fileInfo.dir(), pattern);
 		newUrl.setPath(fileInfo.filePath());
 		if(!newUrl.isValid())
-			throw Exception(tr("URL is not valid."));
+			throwException(tr("URL is not valid."));
 
-		obj->setSource(newUrl, obj->importer());
+		obj->setSource(newUrl, obj->importer(), false);
 	});
 	updateInformationLabel();
 }

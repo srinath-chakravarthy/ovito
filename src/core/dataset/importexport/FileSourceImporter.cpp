@@ -24,6 +24,7 @@
 #include <core/scene/SceneRoot.h>
 #include <core/scene/objects/DataObject.h>
 #include <core/scene/SelectionSet.h>
+#include <core/dataset/DataSetContainer.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/utilities/io/FileManager.h>
@@ -65,7 +66,7 @@ void FileSourceImporter::requestFramesUpdate()
 		FileSource* obj = dynamic_object_cast<FileSource>(refmaker);
 		if(obj) {
 			try {
-				// If wildcard pattern seach has been disabled, replace
+				// If wildcard pattern search has been disabled, replace
 				// wildcard pattern URL with an actual filename first.
 				if(!autoGenerateWildcardPattern()) {
 					QFileInfo fileInfo(obj->sourceUrl().path());
@@ -73,7 +74,7 @@ void FileSourceImporter::requestFramesUpdate()
 						if(obj->loadedFrameIndex() >= 0 && obj->loadedFrameIndex() < obj->frames().size()) {
 							QUrl currentUrl = obj->frames()[obj->loadedFrameIndex()].sourceFile;
 							if(currentUrl != obj->sourceUrl()) {
-								obj->setSource(currentUrl, this);
+								obj->setSource(currentUrl, this, false);
 								continue;
 							}
 						}
@@ -94,6 +95,23 @@ void FileSourceImporter::requestFramesUpdate()
 }
 
 /******************************************************************************
+* Determines if the option to replace the currently selected object
+* with the new file is available.
+******************************************************************************/
+bool FileSourceImporter::isReplaceExistingPossible(const QUrl& sourceUrl)
+{
+	// Look for an existing FileSource in the scene whose
+	// data source we can replace with the new file.
+	for(SceneNode* node : dataset()->selection()->nodes()) {
+		if(ObjectNode* objNode = dynamic_object_cast<ObjectNode>(node)) {
+			if(dynamic_object_cast<FileSource>(objNode->sourceObject()))
+				return true;
+		}
+	}
+	return false;
+}
+
+/******************************************************************************
 * Imports the given file into the scene.
 * Return true if the file has been imported.
 * Return false if the import has been aborted by the user.
@@ -104,93 +122,28 @@ bool FileSourceImporter::importFile(const QUrl& sourceUrl, ImportMode importMode
 	OORef<FileSource> existingFileSource;
 	ObjectNode* existingNode = nullptr;
 
-	if(dataset()->sceneRoot()->children().empty() == false) {
-
-		if(importMode != AddToScene) {
-			// Look for an existing FileSource in the scene whose
-			// data source we can replace with the newly imported file.
-			for(SceneNode* node : dataset()->selection()->nodes()) {
-				if(ObjectNode* objNode = dynamic_object_cast<ObjectNode>(node)) {
-					existingFileSource = dynamic_object_cast<FileSource>(objNode->sourceObject());
-					if(existingFileSource) {
-						existingNode = objNode;
-						break;
-					}
-				}
-			}
-		}
-
-		if(existingFileSource) {
-			if(importMode == AskUser) {
-				// Ask user if the current import node including any applied modifiers should be kept.
-				QMessageBox msgBox(QMessageBox::Question, tr("Import file"),
-						tr("When importing the selected file, do you want to keep the existing objects?"),
-						QMessageBox::NoButton, dataset()->mainWindow());
-
-				QPushButton* cancelButton = msgBox.addButton(QMessageBox::Cancel);
-				QPushButton* resetSceneButton = msgBox.addButton(tr("No"), QMessageBox::NoRole);
-				QPushButton* addToSceneButton = msgBox.addButton(tr("Add to scene"), QMessageBox::YesRole);
-				QPushButton* replaceSourceButton = msgBox.addButton(tr("Replace selected"), QMessageBox::AcceptRole);
-				msgBox.setDefaultButton(resetSceneButton);
-				msgBox.setEscapeButton(cancelButton);
-				msgBox.exec();
-
-				if(msgBox.clickedButton() == cancelButton) {
-					return false; // Operation canceled by user.
-				}
-				else if(msgBox.clickedButton() == resetSceneButton) {
-					importMode = ResetScene;
-					// Ask user if current scene should be saved before it is replaced by the imported data.
-					if(!dataset()->container()->askForSaveChanges())
-						return false;
-				}
-				else if(msgBox.clickedButton() == addToSceneButton) {
-					importMode = AddToScene;
-				}
-				else {
-					importMode = ReplaceSelected;
-				}
-			}
-		}
-		else {
-			if(importMode == AskUser) {
-				// Ask user if the current scene should be completely replaced by the imported data.
-				QMessageBox::StandardButton result = QMessageBox::question(dataset()->mainWindow(), tr("Import file"),
-					tr("Do you want to keep the existing objects in the current scene?"),
-					QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel, QMessageBox::Cancel);
-
-				if(result == QMessageBox::Cancel) {
-					return false; // Operation canceled by user.
-				}
-				else if(result == QMessageBox::No) {
-					importMode = ResetScene;
-
-					// Ask user if current scene should be saved before it is replaced by the imported data.
-					if(!dataset()->container()->askForSaveChanges())
-						return false;
-				}
-				else {
-					importMode = AddToScene;
+	if(importMode == ReplaceSelected) {
+		// Look for an existing FileSource in the scene whose
+		// data source we can replace with the newly imported file.
+		for(SceneNode* node : dataset()->selection()->nodes()) {
+			if(ObjectNode* objNode = dynamic_object_cast<ObjectNode>(node)) {
+				existingFileSource = dynamic_object_cast<FileSource>(objNode->sourceObject());
+				if(existingFileSource) {
+					existingNode = objNode;
+					break;
 				}
 			}
 		}
 	}
-	else {
-		if(importMode == AddToScene)
-			importMode = ResetScene;
-	}
-
-	if(importMode == ResetScene) {
-		existingFileSource = nullptr;
-		existingNode = nullptr;
+	else if(importMode == ResetScene) {
 		dataset()->clearScene();
 		if(!dataset()->undoStack().isRecording())
 			dataset()->undoStack().clear();
 		dataset()->setFilePath(QString());
 	}
-	else if(importMode == AddToScene) {
-		existingFileSource = nullptr;
-		existingNode = nullptr;
+	else {
+		if(dataset()->sceneRoot()->children().empty())
+			importMode = ResetScene;
 	}
 
 	UndoableTransaction transaction(dataset()->undoStack(), tr("Import '%1'").arg(QFileInfo(sourceUrl.path()).fileName()));
@@ -213,7 +166,7 @@ bool FileSourceImporter::importFile(const QUrl& sourceUrl, ImportMode importMode
 		fileSource = existingFileSource;
 
 	// Set the input location and importer.
-	if(!fileSource->setSource(sourceUrl, this)) {
+	if(!fileSource->setSource(sourceUrl, this, false)) {
 		return false;
 	}
 
@@ -303,15 +256,21 @@ Future<QVector<FileSourceImporter::Frame>> FileSourceImporter::findWildcardMatch
 			QUrl directoryUrl = sourceUrl;
 			directoryUrl.setPath(fileInfo.path());
 
-			// Retrieve list of files in remote directory.
-			Future<QStringList> fileListFuture = FileManager::instance().listDirectoryContents(directoryUrl);
-			if(!datasetContainer->taskManager().waitForTask(fileListFuture))
-				return Future<QVector<Frame>>::createCanceled();
+			try {
+				// Retrieve list of files in remote directory.
+				Future<QStringList> fileListFuture = FileManager::instance().listDirectoryContents(directoryUrl);
+				if(!datasetContainer->taskManager().waitForTask(fileListFuture))
+					return Future<QVector<Frame>>::createCanceled();
 
-			// Filter file names.
-			for(const QString& filename : fileListFuture.result()) {
-				if(matchesWildcardPattern(pattern, filename))
-					entries << filename;
+				// Filter file names.
+				for(const QString& filename : fileListFuture.result()) {
+					if(matchesWildcardPattern(pattern, filename))
+						entries << filename;
+				}
+			}
+			catch(Exception& ex) {
+				if(ex.context() == nullptr) ex.setContext(datasetContainer);
+				throw;
 			}
 		}
 

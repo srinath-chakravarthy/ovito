@@ -22,7 +22,7 @@
 #ifndef __OVITO_INTEGER_RADIO_BUTTON_PARAMETER_UI_H
 #define __OVITO_INTEGER_RADIO_BUTTON_PARAMETER_UI_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "ParameterUI.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
@@ -31,7 +31,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 * This UI lets the user change an integer-value property of the object 
 * being edited using a set of radio buttons.
 ******************************************************************************/
-class OVITO_CORE_EXPORT IntegerRadioButtonParameterUI : public PropertyParameterUI
+class OVITO_GUI_EXPORT IntegerRadioButtonParameterUI : public PropertyParameterUI
 {
 public:
 

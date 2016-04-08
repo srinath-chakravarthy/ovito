@@ -22,7 +22,7 @@
 #ifndef __OVITO_OPENGL_HELPERS_H
 #define __OVITO_OPENGL_HELPERS_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -35,7 +35,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAM
 #define OVITO_OPENGL_REQUESTED_VERSION_MINOR		2
 
 /// Reports OpenGL error status codes.
-extern OVITO_CORE_EXPORT void checkOpenGLErrorStatus(const char* command, const char* sourceFile, int sourceLine);
+extern OVITO_GUI_EXPORT void checkOpenGLErrorStatus(const char* command, const char* sourceFile, int sourceLine);
 
 // OpenGL debugging macro:
 #ifdef OVITO_DEBUG

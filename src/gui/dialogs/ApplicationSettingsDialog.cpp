@@ -19,13 +19,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/plugins/PluginManager.h>
 #include "ApplicationSettingsDialog.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Dialogs)
 	
-IMPLEMENT_OVITO_OBJECT(Core, ApplicationSettingsDialogPage, OvitoObject);
+IMPLEMENT_OVITO_OBJECT(Gui, ApplicationSettingsDialogPage, OvitoObject);
 
 /******************************************************************************
 * The constructor of the settings dialog class.

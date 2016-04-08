@@ -22,7 +22,7 @@
 #ifndef __OVITO_FRAME_BUFFER_WINDOW_H
 #define __OVITO_FRAME_BUFFER_WINDOW_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/rendering/FrameBuffer.h>
 #include "FrameBufferWidget.h"
 
@@ -31,7 +31,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /**
  * This window displays the contents of a FrameBuffer.
  */
-class OVITO_CORE_EXPORT FrameBufferWindow : public QMainWindow
+class OVITO_GUI_EXPORT FrameBufferWindow : public QMainWindow
 {
 public:
 

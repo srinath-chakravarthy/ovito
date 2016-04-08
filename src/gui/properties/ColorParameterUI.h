@@ -22,8 +22,8 @@
 #ifndef __OVITO_COLOR_PARAMETER_UI_H
 #define __OVITO_COLOR_PARAMETER_UI_H
 
-#include <core/Core.h>
-#include <core/gui/widgets/general/ColorPickerWidget.h>
+#include <gui/GUI.h>
+#include <gui/widgets/general/ColorPickerWidget.h>
 #include "ParameterUI.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
@@ -31,7 +31,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /******************************************************************************
 * Allows the user to edit a color parameter in the properties panel.
 ******************************************************************************/
-class OVITO_CORE_EXPORT ColorParameterUI : public PropertyParameterUI
+class OVITO_GUI_EXPORT ColorParameterUI : public PropertyParameterUI
 {
 public:
 

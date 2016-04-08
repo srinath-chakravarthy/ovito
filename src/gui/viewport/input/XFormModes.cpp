@@ -19,16 +19,17 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/widgets/display/CoordinateDisplayWidget.h>
+#include <gui/viewport/ViewportWindow.h>
 #include <core/dataset/UndoStack.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/scene/SelectionSet.h>
-#include <core/gui/mainwin/MainWindow.h>
-#include <core/gui/widgets/display/CoordinateDisplayWidget.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/viewport/Viewport.h>
-#include <core/viewport/input/ViewportInputManager.h>
-#include <core/viewport/input/XFormModes.h>
+#include "ViewportInputManager.h"
+#include "XFormModes.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -38,26 +39,26 @@ boost::optional<QCursor> SelectionMode::_hoverCursor;
 /******************************************************************************
 * Handles the mouse down event for the given viewport.
 ******************************************************************************/
-void SelectionMode::mousePressEvent(Viewport* vp, QMouseEvent* event)
+void SelectionMode::mousePressEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	if(event->button() == Qt::LeftButton) {
-		_viewport = vp;
+		_viewport = vpwin->viewport();
 		_clickPoint = event->localPos();
 	}
 	else if(event->button() == Qt::RightButton) {
 		_viewport = nullptr;
 	}
-	ViewportInputMode::mousePressEvent(vp, event);
+	ViewportInputMode::mousePressEvent(vpwin, event);
 }
 
 /******************************************************************************
 * Handles the mouse up event for the given viewport.
 ******************************************************************************/
-void SelectionMode::mouseReleaseEvent(Viewport* vp, QMouseEvent* event)
+void SelectionMode::mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	if(_viewport != nullptr) {
 		// Select object under mouse cursor.
-		ViewportPickResult pickResult = vp->pick(_clickPoint);
+		ViewportPickResult pickResult = vpwin->pick(_clickPoint);
 		if(pickResult.valid && pickResult.objectNode) {
 			_viewport->dataset()->undoStack().beginCompoundOperation(tr("Select"));
 			_viewport->dataset()->selection()->setNode(pickResult.objectNode);
@@ -65,7 +66,7 @@ void SelectionMode::mouseReleaseEvent(Viewport* vp, QMouseEvent* event)
 		}
 		_viewport = nullptr;
 	}
-	ViewportInputMode::mouseReleaseEvent(vp, event);
+	ViewportInputMode::mouseReleaseEvent(vpwin, event);
 }
 
 /******************************************************************************
@@ -82,10 +83,10 @@ void SelectionMode::deactivated(bool temporary)
 /******************************************************************************
 * Handles the mouse move event for the given viewport.
 ******************************************************************************/
-void SelectionMode::mouseMoveEvent(Viewport* vp, QMouseEvent* event)
+void SelectionMode::mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	// Change mouse cursor while hovering over an object.
-	ViewportPickResult pickResult = vp->pick(event->localPos());
+	ViewportPickResult pickResult = vpwin->pick(event->localPos());
 	setCursor(pickResult.valid ? selectionCursor() : QCursor());
 
 	// Display a description of the object under the mouse cursor in the status bar.
@@ -94,7 +95,7 @@ void SelectionMode::mouseMoveEvent(Viewport* vp, QMouseEvent* event)
 	else
 		inputManager()->mainWindow()->statusBar()->clearMessage();
 
-	ViewportInputMode::mouseMoveEvent(vp, event);
+	ViewportInputMode::mouseMoveEvent(vpwin, event);
 }
 
 /******************************************************************************
@@ -172,15 +173,15 @@ void XFormMode::onTimeChanged(TimePoint time)
 /******************************************************************************
 * Handles the mouse down event for the given viewport.
 ******************************************************************************/
-void XFormMode::mousePressEvent(Viewport* vp, QMouseEvent* event)
+void XFormMode::mousePressEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	if(event->button() == Qt::LeftButton) {
 		if(_viewport == nullptr) {
 
 			// Select object under mouse cursor.
-			ViewportPickResult pickResult = vp->pick(event->localPos());
+			ViewportPickResult pickResult = vpwin->pick(event->localPos());
 			if(pickResult.valid && pickResult.objectNode) {
-				_viewport = vp;
+				_viewport = vpwin->viewport();
 				_startPoint = event->localPos();
 				_viewport->dataset()->undoStack().beginCompoundOperation(undoDisplayName());
 				_viewport->dataset()->selection()->setNode(pickResult.objectNode);
@@ -199,13 +200,13 @@ void XFormMode::mousePressEvent(Viewport* vp, QMouseEvent* event)
 			return;
 		}
 	}
-	ViewportInputMode::mousePressEvent(vp, event);
+	ViewportInputMode::mousePressEvent(vpwin, event);
 }
 
 /******************************************************************************
 * Handles the mouse up event for the given viewport.
 ******************************************************************************/
-void XFormMode::mouseReleaseEvent(Viewport* vp, QMouseEvent* event)
+void XFormMode::mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	if(_viewport) {
 		// Commit change.
@@ -213,37 +214,37 @@ void XFormMode::mouseReleaseEvent(Viewport* vp, QMouseEvent* event)
 		_viewport->dataset()->undoStack().endCompoundOperation();
 		_viewport = nullptr;
 	}
-	ViewportInputMode::mouseReleaseEvent(vp, event);
+	ViewportInputMode::mouseReleaseEvent(vpwin, event);
 }
 
 /******************************************************************************
 * Handles the mouse move event for the given viewport.
 ******************************************************************************/
-void XFormMode::mouseMoveEvent(Viewport* vp, QMouseEvent* event)
+void XFormMode::mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
-	if(_viewport == vp) {
+	if(_viewport == vpwin->viewport()) {
 #if 1
 		// Take the current mouse cursor position to make the input mode
 		// look more responsive. The cursor position recorded when the mouse event was
 		// generates may be too old.
-		_currentPoint = vp->widget()->mapFromGlobal(QCursor::pos());
+		_currentPoint = vpwin->widget()->mapFromGlobal(QCursor::pos());
 #else
 		_currentPoint = event->localPos();
 #endif
 
-		vp->dataset()->undoStack().resetCurrentCompoundOperation();
+		_viewport->dataset()->undoStack().resetCurrentCompoundOperation();
 		doXForm();
 
 		// Force immediate viewport repaints.
-		vp->dataset()->mainWindow()->processViewportUpdates();
+		MainWindow::fromDataset(_viewport->dataset())->processViewportUpdates();
 	}
 	else {
 
 		// Change mouse cursor while hovering over an object.
-		ViewportPickResult pickResult = vp->pick(event->localPos());
+		ViewportPickResult pickResult = vpwin->pick(event->localPos());
 		setCursor(pickResult.valid ? _xformCursor : QCursor());
 	}
-	ViewportInputMode::mouseMoveEvent(vp, event);
+	ViewportInputMode::mouseMoveEvent(vpwin, event);
 }
 
 /******************************************************************************

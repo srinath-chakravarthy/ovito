@@ -22,7 +22,7 @@
 #ifndef __OVITO_APPLICATION_SETTINGS_DIALOG_H
 #define __OVITO_APPLICATION_SETTINGS_DIALOG_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Dialogs)
 	
@@ -31,7 +31,7 @@ class ApplicationSettingsDialog;		// defined below.
 /**
  * \brief Abstract base class for tab providers for the application's settings dialog.
  */
-class OVITO_CORE_EXPORT ApplicationSettingsDialogPage : public OvitoObject
+class OVITO_GUI_EXPORT ApplicationSettingsDialogPage : public OvitoObject
 {
 protected:
 
@@ -62,7 +62,7 @@ private:
  * Plugins can add additional pages to this dialog by deriving new classes from
  * the ApplicationSettingsDialogPage class.
  */
-class OVITO_CORE_EXPORT ApplicationSettingsDialog : public QDialog
+class OVITO_GUI_EXPORT ApplicationSettingsDialog : public QDialog
 {
 	Q_OBJECT
 	

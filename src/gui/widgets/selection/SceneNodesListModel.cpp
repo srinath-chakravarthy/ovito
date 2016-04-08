@@ -19,7 +19,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/scene/SceneNode.h>
 #include <core/scene/SceneRoot.h>
 #include <core/dataset/DataSetContainer.h>

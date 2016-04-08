@@ -20,8 +20,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <core/gui/properties/ColorParameterUI.h>
-#include <core/gui/properties/StringParameterUI.h>
+#include <gui/properties/ColorParameterUI.h>
+#include <gui/properties/StringParameterUI.h>
 #include <plugins/crystalanalysis/data/ClusterVector.h>
 #include "BurgersVectorFamily.h"
 #include "StructurePattern.h"

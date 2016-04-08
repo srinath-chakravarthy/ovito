@@ -22,7 +22,9 @@
 #ifndef __OVITO_VIEWPORTS_PANEL_H
 #define __OVITO_VIEWPORTS_PANEL_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
+#include <core/viewport/ViewportConfiguration.h>
+#include <core/animation/AnimationSettings.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -37,6 +39,9 @@ public:
 
 	/// \brief Constructs the viewport panel.
 	ViewportsPanel(MainWindow* parent);
+
+	/// \brief Returns the widget that is associated with the given viewport.
+	static QWidget* viewportWidget(Viewport* vp);
 
 public Q_SLOTS:
 

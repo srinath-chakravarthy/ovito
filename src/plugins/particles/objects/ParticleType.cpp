@@ -20,10 +20,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/ColorParameterUI.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/StringParameterUI.h>
-#include <core/gui/mainwin/MainWindow.h>
+#include <gui/properties/ColorParameterUI.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <gui/properties/StringParameterUI.h>
+#include <gui/mainwin/MainWindow.h>
 #include <plugins/particles/data/ParticleProperty.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
 

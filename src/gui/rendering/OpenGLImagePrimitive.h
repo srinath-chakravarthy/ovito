@@ -22,7 +22,7 @@
 #ifndef __OVITO_OPENGL_IMAGE_PRIMITIVE_H
 #define __OVITO_OPENGL_IMAGE_PRIMITIVE_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/rendering/ImagePrimitive.h>
 #include "OpenGLTexture.h"
 
@@ -31,12 +31,12 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAM
 /**
  * \brief Buffer object that stores an image to be rendered in the viewports.
  */
-class OVITO_CORE_EXPORT OpenGLImagePrimitive : public ImagePrimitive
+class OVITO_GUI_EXPORT OpenGLImagePrimitive : public ImagePrimitive
 {
 public:
 
 	/// Constructor.
-	OpenGLImagePrimitive(ViewportSceneRenderer* renderer);
+	OpenGLImagePrimitive(OpenGLSceneRenderer* renderer);
 
 	/// \brief Sets the image to be rendered.
 	virtual void setImage(const QImage& image) override {

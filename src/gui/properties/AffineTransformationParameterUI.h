@@ -22,7 +22,7 @@
 #ifndef __OVITO_AFFINE_TRANSFORMATION_PARAMETER_UI_H
 #define __OVITO_AFFINE_TRANSFORMATION_PARAMETER_UI_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "FloatParameterUI.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
@@ -31,7 +31,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 * A parameter UI for AffineTransformation type properties.
 * This ParameterUI lets the user edit the individual matrix components.
 ******************************************************************************/
-class OVITO_CORE_EXPORT AffineTransformationParameterUI : public FloatParameterUI
+class OVITO_GUI_EXPORT AffineTransformationParameterUI : public FloatParameterUI
 {
 public:
 

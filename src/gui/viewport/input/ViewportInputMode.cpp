@@ -19,11 +19,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
+#include <gui/viewport/ViewportWindow.h>
 #include <core/viewport/Viewport.h>
-#include <core/viewport/input/ViewportInputManager.h>
-#include <core/viewport/input/ViewportInputMode.h>
-#include <core/viewport/input/NavigationModes.h>
+#include "ViewportInputManager.h"
+#include "ViewportInputMode.h"
+#include "NavigationModes.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(ViewportInput)
 
@@ -84,7 +85,7 @@ void ViewportInputMode::setCursor(const QCursor& cursor)
 /******************************************************************************
 * Handles the mouse down event for the given viewport.
 ******************************************************************************/
-void ViewportInputMode::mousePressEvent(Viewport* vp, QMouseEvent* event)
+void ViewportInputMode::mousePressEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	_lastMousePressEvent.reset();
 	ViewportInputManager* manager = inputManager();
@@ -96,7 +97,7 @@ void ViewportInputMode::mousePressEvent(Viewport* vp, QMouseEvent* event)
 			activateTemporaryNavigationMode(manager->panMode());
 			if(manager->activeMode() == manager->panMode()) {
 				QMouseEvent leftMouseEvent(event->type(), event->localPos(), event->windowPos(), event->screenPos(), Qt::LeftButton, Qt::LeftButton, event->modifiers());
-				manager->activeMode()->mousePressEvent(vp, &leftMouseEvent);
+				manager->activeMode()->mousePressEvent(vpwin, &leftMouseEvent);
 			}
 		}
 	}
@@ -106,14 +107,14 @@ void ViewportInputMode::mousePressEvent(Viewport* vp, QMouseEvent* event)
 	else if(event->button() == Qt::MidButton) {
 		activateTemporaryNavigationMode(manager->panMode());
 		if(manager->activeMode() == manager->panMode())
-			manager->activeMode()->mousePressEvent(vp, event);
+			manager->activeMode()->mousePressEvent(vpwin, event);
 	}
 }
 
 /******************************************************************************
 * Handles the mouse up event for the given viewport.
 ******************************************************************************/
-void ViewportInputMode::mouseReleaseEvent(Viewport* vp, QMouseEvent* event)
+void ViewportInputMode::mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	_lastMousePressEvent.reset();
 }
@@ -121,14 +122,14 @@ void ViewportInputMode::mouseReleaseEvent(Viewport* vp, QMouseEvent* event)
 /******************************************************************************
 * Handles the mouse move event for the given viewport.
 ******************************************************************************/
-void ViewportInputMode::mouseMoveEvent(Viewport* vp, QMouseEvent* event)
+void ViewportInputMode::mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	if(_lastMousePressEvent && (event->pos() - _lastMousePressEvent->pos()).manhattanLength() > 2) {
 		if(this != inputManager()->orbitMode()) {
 			ViewportInputManager* manager = inputManager();
 			activateTemporaryNavigationMode(inputManager()->orbitMode());
 			if(manager->activeMode() == manager->orbitMode())
-				manager->activeMode()->mousePressEvent(vp, _lastMousePressEvent.get());
+				manager->activeMode()->mousePressEvent(vpwin, _lastMousePressEvent.get());
 		}
 		_lastMousePressEvent.reset();
 	}
@@ -137,21 +138,21 @@ void ViewportInputMode::mouseMoveEvent(Viewport* vp, QMouseEvent* event)
 /******************************************************************************
 * Handles the mouse wheel event for the given viewport.
 ******************************************************************************/
-void ViewportInputMode::wheelEvent(Viewport* vp, QWheelEvent* event)
+void ViewportInputMode::wheelEvent(ViewportWindow* vpwin, QWheelEvent* event)
 {
 	_lastMousePressEvent.reset();
-	inputManager()->zoomMode()->zoom(vp, (FloatType)event->delta());
+	inputManager()->zoomMode()->zoom(vpwin->viewport(), (FloatType)event->delta());
 	event->accept();
 }
 
 /******************************************************************************
 * Handles the mouse double-click events for the given viewport.
 ******************************************************************************/
-void ViewportInputMode::mouseDoubleClickEvent(Viewport* vp, QMouseEvent* event)
+void ViewportInputMode::mouseDoubleClickEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	_lastMousePressEvent.reset();
 	if(event->button() == Qt::LeftButton) {
-		inputManager()->pickOrbitCenterMode()->pickOrbitCenter(vp, event->pos());
+		inputManager()->pickOrbitCenterMode()->pickOrbitCenter(vpwin, event->pos());
 		_showOrbitCenter = true;
 		event->accept();
 	}

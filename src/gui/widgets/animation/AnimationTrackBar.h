@@ -22,7 +22,7 @@
 #ifndef __OVITO_ANIMATION_TRACK_BAR_H
 #define __OVITO_ANIMATION_TRACK_BAR_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/reference/RefTargetListener.h>
 #include <core/animation/controller/KeyframeController.h>
 #include "AnimationTimeSlider.h"

@@ -19,9 +19,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "OpenGLTextPrimitive.h"
-#include "ViewportSceneRenderer.h"
+#include "OpenGLSceneRenderer.h"
 
 #include <QGLWidget>
 
@@ -30,7 +30,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAM
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-OpenGLTextPrimitive::OpenGLTextPrimitive(ViewportSceneRenderer* renderer) :
+OpenGLTextPrimitive::OpenGLTextPrimitive(OpenGLSceneRenderer* renderer) :
 	_contextGroup(QOpenGLContextGroup::currentContextGroup()),
 	_needTextureUpdate(true),
 	_textureImage(1, 1, QImage::Format_RGB32)
@@ -38,14 +38,14 @@ OpenGLTextPrimitive::OpenGLTextPrimitive(ViewportSceneRenderer* renderer) :
 	OVITO_ASSERT(renderer->glcontext()->shareGroup() == _contextGroup);
 
 	// Initialize OpenGL shader.
-	_shader = renderer->loadShaderProgram("text", ":/core/glsl/text/text.vs", ":/core/glsl/text/text.fs");
+	_shader = renderer->loadShaderProgram("text", ":/gui/glsl/text/text.vs", ":/gui/glsl/text/text.fs");
 
 	// Create vertex buffer
 	if(!_vertexBuffer.create())
-		throw Exception(QStringLiteral("Failed to create OpenGL vertex buffer."));
+		renderer->throwException(QStringLiteral("Failed to create OpenGL vertex buffer."));
 	_vertexBuffer.setUsagePattern(QOpenGLBuffer::DynamicDraw);
 	if(!_vertexBuffer.bind())
-			throw Exception(QStringLiteral("Failed to bind OpenGL vertex buffer."));
+		renderer->throwException(QStringLiteral("Failed to bind OpenGL vertex buffer."));
 	OVITO_CHECK_OPENGL(_vertexBuffer.allocate(4 * sizeof(Point2)));
 	_vertexBuffer.release();
 
@@ -58,7 +58,7 @@ OpenGLTextPrimitive::OpenGLTextPrimitive(ViewportSceneRenderer* renderer) :
 ******************************************************************************/
 bool OpenGLTextPrimitive::isValid(SceneRenderer* renderer)
 {
-	ViewportSceneRenderer* vpRenderer = qobject_cast<ViewportSceneRenderer*>(renderer);
+	OpenGLSceneRenderer* vpRenderer = qobject_cast<OpenGLSceneRenderer*>(renderer);
 	if(!vpRenderer) return false;
 	return (_contextGroup == vpRenderer->glcontext()->shareGroup()) && _texture.isCreated() && _vertexBuffer.isCreated();
 }
@@ -84,7 +84,7 @@ void OpenGLTextPrimitive::renderWindow(SceneRenderer* renderer, const Point2& po
 	OVITO_ASSERT(_contextGroup == QOpenGLContextGroup::currentContextGroup());
 	OVITO_ASSERT(_texture.isCreated());
 	OVITO_STATIC_ASSERT(sizeof(FloatType) == sizeof(float) && sizeof(Point2) == sizeof(float)*2);
-	ViewportSceneRenderer* vpRenderer = dynamic_object_cast<ViewportSceneRenderer>(renderer);
+	OpenGLSceneRenderer* vpRenderer = dynamic_object_cast<OpenGLSceneRenderer>(renderer);
 
 	if(text().isEmpty() || !vpRenderer || renderer->isPicking())
 		return;
@@ -163,12 +163,12 @@ void OpenGLTextPrimitive::renderWindow(SceneRenderer* renderer, const Point2& po
 	OVITO_CHECK_OPENGL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
 	if(!_shader->bind())
-		throw Exception(QStringLiteral("Failed to bind OpenGL shader."));
+		renderer->throwException(QStringLiteral("Failed to bind OpenGL shader."));
 
 	if(vpRenderer->glformat().majorVersion() >= 3) {
 
 		if(!_vertexBuffer.bind())
-			throw Exception(QStringLiteral("Failed to bind OpenGL vertex buffer."));
+			renderer->throwException(QStringLiteral("Failed to bind OpenGL vertex buffer."));
 
 		// Set up look-up table for texture coordinates.
 		static const QVector2D uvcoords[] = {{0,0}, {1,0}, {0,1}, {1,1}};

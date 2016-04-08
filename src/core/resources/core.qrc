@@ -2,7 +2,7 @@
 
 <qresource prefix="/core">
 
-	<file>Core.json</file>
+	<file>PluginManifest.json</file>
 	
 	<file>3dicons/camera.ply</file>
 

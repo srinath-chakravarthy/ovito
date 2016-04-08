@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,10 +19,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/dataset/DataSetContainer.h>
+#include <gui/GUI.h>
 #include <core/dataset/importexport/FileImporter.h>
 #include <core/dataset/UndoStack.h>
+#include <core/app/Application.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/scene/SceneRoot.h>
 #include <core/scene/SelectionSet.h>
@@ -32,123 +32,26 @@
 #include <core/utilities/io/ObjectLoadStream.h>
 #include <core/utilities/io/FileManager.h>
 #include <core/utilities/concurrent/ProgressDisplay.h>
-
-#ifdef Q_OS_UNIX
-	#include <signal.h>
-#endif
+#include <gui/mainwin/MainWindow.h>
+#include <gui/utilities/concurrent/ProgressDialogAdapter.h>
+#include "GuiDataSetContainer.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem)
 
-IMPLEMENT_OVITO_OBJECT(Core, DataSetContainer, RefMaker);
-DEFINE_FLAGS_REFERENCE_FIELD(DataSetContainer, _currentSet, "CurrentSet", DataSet, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
+IMPLEMENT_OVITO_OBJECT(Gui, GuiDataSetContainer, DataSetContainer);
 
 /******************************************************************************
 * Initializes the dataset manager.
 ******************************************************************************/
-DataSetContainer::DataSetContainer(MainWindow* mainWindow) : RefMaker(nullptr),
-	_mainWindow(mainWindow), _taskManager(mainWindow)
+GuiDataSetContainer::GuiDataSetContainer(MainWindow* mainWindow) : DataSetContainer(),
+	_mainWindow(mainWindow)
 {
-	INIT_PROPERTY_FIELD(DataSetContainer::_currentSet);
-}
-
-/******************************************************************************
-* Is called when the value of a reference field of this RefMaker changes.
-******************************************************************************/
-void DataSetContainer::referenceReplaced(const PropertyFieldDescriptor& field, RefTarget* oldTarget, RefTarget* newTarget)
-{
-	if(field == PROPERTY_FIELD(DataSetContainer::_currentSet)) {
-
-		if(oldTarget) {
-			DataSet* oldDataSet = static_object_cast<DataSet>(oldTarget);
-
-			// Stop animation playback for the old dataset.
-			oldDataSet->animationSettings()->stopAnimationPlayback();
-		}
-
-		// Forward signals from the current dataset.
-		disconnect(_selectionSetReplacedConnection);
-		disconnect(_viewportConfigReplacedConnection);
-		disconnect(_animationSettingsReplacedConnection);
-		disconnect(_renderSettingsReplacedConnection);
-		disconnect(_undoStackCleanChangedConnection);
-		disconnect(_filePathChangedConnection);
-		if(currentSet()) {
-			_selectionSetReplacedConnection = connect(currentSet(), &DataSet::selectionSetReplaced, this, &DataSetContainer::onSelectionSetReplaced);
-			_viewportConfigReplacedConnection = connect(currentSet(), &DataSet::viewportConfigReplaced, this, &DataSetContainer::viewportConfigReplaced);
-			_animationSettingsReplacedConnection = connect(currentSet(), &DataSet::animationSettingsReplaced, this, &DataSetContainer::animationSettingsReplaced);
-			_renderSettingsReplacedConnection = connect(currentSet(), &DataSet::renderSettingsReplaced, this, &DataSetContainer::renderSettingsReplaced);
-			if(mainWindow()) {
-				_filePathChangedConnection = connect(currentSet(), &DataSet::filePathChanged, [this](const QString& filePath) { mainWindow()->setWindowFilePath(filePath); });
-				_undoStackCleanChangedConnection = connect(&currentSet()->undoStack(), &UndoStack::cleanChanged, [this](bool isClean) { mainWindow()->setWindowModified(!isClean); });
-			}
-		}
-
-		Q_EMIT dataSetChanged(currentSet());
-
-		if(currentSet()) {
-			Q_EMIT viewportConfigReplaced(currentSet()->viewportConfig());
-			Q_EMIT animationSettingsReplaced(currentSet()->animationSettings());
-			Q_EMIT renderSettingsReplaced(currentSet()->renderSettings());
-			onSelectionSetReplaced(currentSet()->selection());
-			onAnimationSettingsReplaced(currentSet()->animationSettings());
-		}
-		else {
-			onSelectionSetReplaced(nullptr);
-			onAnimationSettingsReplaced(nullptr);
-			Q_EMIT viewportConfigReplaced(nullptr);
-			Q_EMIT animationSettingsReplaced(nullptr);
-			Q_EMIT renderSettingsReplaced(nullptr);
-		}
-
-		if(mainWindow()) {
-			mainWindow()->setWindowFilePath(currentSet() ? currentSet()->filePath() : QString());
-			mainWindow()->setWindowModified(currentSet() ? !currentSet()->undoStack().isClean() : false);
-		}
-	}
-	RefMaker::referenceReplaced(field, oldTarget, newTarget);
-}
-
-/******************************************************************************
-* This handler is invoked when the current selection set of the current dataset
-* has been replaced.
-******************************************************************************/
-void DataSetContainer::onSelectionSetReplaced(SelectionSet* newSelectionSet)
-{
-	// Forward signals from the current selection set.
-	disconnect(_selectionSetChangedConnection);
-	disconnect(_selectionSetChangeCompleteConnection);
-	if(newSelectionSet) {
-		_selectionSetChangedConnection = connect(newSelectionSet, &SelectionSet::selectionChanged, this, &DataSetContainer::selectionChanged);
-		_selectionSetChangeCompleteConnection = connect(newSelectionSet, &SelectionSet::selectionChangeComplete, this, &DataSetContainer::selectionChangeComplete);
-	}
-	Q_EMIT selectionSetReplaced(newSelectionSet);
-	Q_EMIT selectionChanged(newSelectionSet);
-	Q_EMIT selectionChangeComplete(newSelectionSet);
-}
-
-/******************************************************************************
-* This handler is invoked when the current animation settings of the current
-* dataset have been replaced.
-******************************************************************************/
-void DataSetContainer::onAnimationSettingsReplaced(AnimationSettings* newAnimationSettings)
-{
-	// Forward signals from the current animation settings object.
-	disconnect(_animationTimeChangedConnection);
-	disconnect(_animationTimeChangeCompleteConnection);
-	if(newAnimationSettings) {
-		_animationTimeChangedConnection = connect(newAnimationSettings, &AnimationSettings::timeChanged, this, &DataSetContainer::timeChanged);
-		_animationTimeChangeCompleteConnection = connect(newAnimationSettings, &AnimationSettings::timeChangeComplete, this, &DataSetContainer::timeChangeComplete);
-	}
-	if(newAnimationSettings) {
-		Q_EMIT timeChanged(newAnimationSettings->time());
-		Q_EMIT timeChangeComplete();
-	}
 }
 
 /******************************************************************************
 * Save the current dataset.
 ******************************************************************************/
-bool DataSetContainer::fileSave()
+bool GuiDataSetContainer::fileSave()
 {
 	if(currentSet() == nullptr)
 		return false;
@@ -174,7 +77,7 @@ bool DataSetContainer::fileSave()
 * This is the implementation of the "Save As" action.
 * Returns true, if the scene has been saved.
 ******************************************************************************/
-bool DataSetContainer::fileSaveAs(const QString& filename)
+bool GuiDataSetContainer::fileSaveAs(const QString& filename)
 {
 	if(currentSet() == nullptr)
 		return false;
@@ -182,7 +85,7 @@ bool DataSetContainer::fileSaveAs(const QString& filename)
 	if(filename.isEmpty()) {
 
 		if(!mainWindow())
-			throw Exception(tr("Cannot save program state. No filename has been specified."));
+			currentSet()->throwException(tr("Cannot save program state. No filename has been specified."));
 
 		QFileDialog dialog(mainWindow(), tr("Save Program State As"));
 		dialog.setNameFilter(tr("State Files (*.ovito);;All Files (*)"));
@@ -226,7 +129,7 @@ bool DataSetContainer::fileSaveAs(const QString& filename)
 * to save the changes.
 * Returns false if the operation has been canceled by the user.
 ******************************************************************************/
-bool DataSetContainer::askForSaveChanges()
+bool GuiDataSetContainer::askForSaveChanges()
 {
 	if(!currentSet() || currentSet()->undoStack().isClean() || currentSet()->filePath().isEmpty() || !mainWindow())
 		return true;
@@ -256,7 +159,7 @@ bool DataSetContainer::askForSaveChanges()
 /******************************************************************************
 * Creates an empty dataset and makes it the current dataset.
 ******************************************************************************/
-bool DataSetContainer::fileNew()
+bool GuiDataSetContainer::fileNew()
 {
 	OORef<DataSet> newSet = new DataSet();
 	newSet->loadUserDefaults();
@@ -267,14 +170,14 @@ bool DataSetContainer::fileNew()
 /******************************************************************************
 * Loads the given state file.
 ******************************************************************************/
-bool DataSetContainer::fileLoad(const QString& filename)
+bool GuiDataSetContainer::fileLoad(const QString& filename)
 {
 	// Load dataset from file.
 	OORef<DataSet> dataSet;
-	{
+	try {
 		QFile fileStream(filename);
 		if(!fileStream.open(QIODevice::ReadOnly))
-			throw Exception(tr("Failed to open state file '%1' for reading.").arg(filename));
+			throw Exception(tr("Failed to open state file '%1' for reading.").arg(filename), this);
 
 		QDataStream dataStream(&fileStream);
 		ObjectLoadStream stream(dataStream);
@@ -293,6 +196,11 @@ bool DataSetContainer::fileLoad(const QString& filename)
 		dataSet = stream.loadObject<DataSet>();
 		stream.close();
 	}
+	catch(Exception& ex) {
+		// Provide a local context for the error.
+		ex.setContext(this);
+		throw ex;
+	}
 	OVITO_CHECK_OBJECT_POINTER(dataSet);
 	dataSet->setFilePath(filename);
 	setCurrentSet(dataSet);
@@ -302,10 +210,12 @@ bool DataSetContainer::fileLoad(const QString& filename)
 /******************************************************************************
 * Imports a given file into the scene.
 ******************************************************************************/
-bool DataSetContainer::importFile(const QUrl& url, const OvitoObjectType* importerType, FileImporter::ImportMode importMode)
+bool GuiDataSetContainer::importFile(const QUrl& url, const OvitoObjectType* importerType)
 {
+	OVITO_ASSERT(currentSet() != nullptr);
+
 	if(!url.isValid())
-		throw Exception(tr("Failed to import file. URL is not valid: %1").arg(url.toString()));
+		throw Exception(tr("Failed to import file. URL is not valid: %1").arg(url.toString()), currentSet());
 
 	OORef<FileImporter> importer;
 	if(!importerType) {
@@ -318,32 +228,82 @@ bool DataSetContainer::importFile(const QUrl& url, const OvitoObjectType* import
 		// Detect file format.
 		importer = FileImporter::autodetectFileFormat(currentSet(), fetchFileFuture.result(), url.path());
 		if(!importer)
-			throw Exception(tr("Could not detect the format of the file to be imported. The format might not be supported."));
+			currentSet()->throwException(tr("Could not detect the format of the file to be imported. The format might not be supported."));
 	}
 	else {
 		importer = static_object_cast<FileImporter>(importerType->createInstance(currentSet()));
 		if(!importer)
-			throw Exception(tr("Failed to import file. Could not initialize import service."));
+			currentSet()->throwException(tr("Failed to import file. Could not initialize import service."));
 	}
 
 	// Load user-defined default settings for the importer.
 	importer->loadUserDefaults();
 
+	// Determine how the file's data should be inserted into the current scene.
+	FileImporter::ImportMode importMode = FileImporter::ResetScene;
+
+	if(mainWindow()) {
+		if(importer->isReplaceExistingPossible(url)) {
+			// Ask user if the current import node including any applied modifiers should be kept.
+			QMessageBox msgBox(QMessageBox::Question, tr("Import file"),
+					tr("When importing the selected file, do you want to keep the existing objects?"),
+					QMessageBox::NoButton, mainWindow());
+
+			QPushButton* cancelButton = msgBox.addButton(QMessageBox::Cancel);
+			QPushButton* resetSceneButton = msgBox.addButton(tr("No"), QMessageBox::NoRole);
+			QPushButton* addToSceneButton = msgBox.addButton(tr("Add to scene"), QMessageBox::YesRole);
+			QPushButton* replaceSourceButton = msgBox.addButton(tr("Replace selected"), QMessageBox::AcceptRole);
+			msgBox.setDefaultButton(resetSceneButton);
+			msgBox.setEscapeButton(cancelButton);
+			msgBox.exec();
+
+			if(msgBox.clickedButton() == cancelButton) {
+				return false; // Operation canceled by user.
+			}
+			else if(msgBox.clickedButton() == resetSceneButton) {
+				importMode = FileImporter::ResetScene;
+				// Ask user if current scene should be saved before it is replaced by the imported data.
+				if(!askForSaveChanges())
+					return false;
+			}
+			else if(msgBox.clickedButton() == addToSceneButton) {
+				importMode = FileImporter::AddToScene;
+			}
+			else {
+				importMode = FileImporter::ReplaceSelected;
+			}
+		}
+		else if(currentSet()->sceneRoot()->children().empty() == false) {
+			// Ask user if the current scene should be completely replaced by the imported data.
+			QMessageBox::StandardButton result = QMessageBox::question(mainWindow(), tr("Import file"),
+				tr("Do you want to keep the existing objects in the current scene?"),
+				QMessageBox::Yes|QMessageBox::No|QMessageBox::Cancel, QMessageBox::Cancel);
+
+			if(result == QMessageBox::Cancel) {
+				return false; // Operation canceled by user.
+			}
+			else if(result == QMessageBox::No) {
+				importMode = FileImporter::ResetScene;
+
+				// Ask user if current scene should be saved before it is replaced by the imported data.
+				if(!askForSaveChanges())
+					return false;
+			}
+			else {
+				importMode = FileImporter::AddToScene;
+			}
+		}
+	}
+
 	return importer->importFile(url, importMode);
 }
-
-// Boolean flag which is set by the POSIX signal handler when user
-// presses Ctrl+C to interrupt the program. In console mode, the
-// DataSetContainer::waitUntil() function breaks out of the waiting loop
-// when this flag is set.
-static QAtomicInt _userInterrupt;
 
 /******************************************************************************
 * This function blocks execution until some operation has been completed.
 ******************************************************************************/
-bool DataSetContainer::waitUntil(const std::function<bool()>& callback, const QString& message, AbstractProgressDisplay* progressDisplay)
+bool GuiDataSetContainer::waitUntil(const std::function<bool()>& callback, const QString& message, AbstractProgressDisplay* progressDisplay)
 {
-	OVITO_ASSERT_MSG(QThread::currentThread() == QApplication::instance()->thread(), "DataSetContainer::waitUntilReady()", "This function may only be called from the GUI thread.");
+	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "GuiDataSetContainer::waitUntilReady()", "This function may only be called from the main thread.");
 
 	// Check if operation is already completed.
 	if(callback())
@@ -381,10 +341,6 @@ bool DataSetContainer::waitUntil(const std::function<bool()>& callback, const QS
 		}
 	}
 	else {
-#ifdef Q_OS_UNIX
-		// Install POSIX signal handler to catch Ctrl+C key press in console mode.
-		auto oldSignalHandler = ::signal(SIGINT, [](int) { _userInterrupt.storeRelease(1); });
-#endif
 #if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
 		// Disable viewport repaints while processing events to
 		// avoid recursive calls to repaint().
@@ -392,38 +348,25 @@ bool DataSetContainer::waitUntil(const std::function<bool()>& callback, const QS
 			mainWindow()->viewportsPanel()->setUpdatesEnabled(false);
 #endif
 		try {
+			bool result = DataSetContainer::waitUntil(callback, message, progressDisplay);
 
-			// Poll callback function until it returns true.
-			while(!callback() && !_userInterrupt.loadAcquire()) {
-				QCoreApplication::processEvents(QEventLoop::WaitForMoreEvents, 20);
-			}
-
-#ifdef Q_OS_UNIX
-			::signal(SIGINT, oldSignalHandler);
-#endif
 #if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
 			// Resume repainting the viewports.
 			if(Application::instance().guiMode())
 				mainWindow()->viewportsPanel()->setUpdatesEnabled(true);
 #endif
+
+			return result;
 		}
 		catch(...) {
-#ifdef Q_OS_UNIX
-			::signal(SIGINT, oldSignalHandler);
-#endif
 #if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
 			// Resume repainting the viewports.
 			if(Application::instance().guiMode())
 				mainWindow()->viewportsPanel()->setUpdatesEnabled(true);
 #endif
-		}
-		if(_userInterrupt.load()) {
-			taskManager().cancelAll();
-			return false;
+			throw;
 		}
 	}
-
-	return true;
 }
 
 OVITO_END_INLINE_NAMESPACE

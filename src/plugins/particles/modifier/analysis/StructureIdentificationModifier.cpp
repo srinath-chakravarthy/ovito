@@ -101,10 +101,10 @@ void StructureIdentificationModifier::transferComputationResults(ComputeEngine* 
 PipelineStatus StructureIdentificationModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
 {
 	if(!_structureData)
-		throw Exception(tr("No computation results available."));
+		throwException(tr("No computation results available."));
 
 	if(inputParticleCount() != _structureData->size())
-		throw Exception(tr("The number of input particles has changed. The stored analysis results have become invalid."));
+		throwException(tr("The number of input particles has changed. The stored analysis results have become invalid."));
 
 	// Create output property object.
 	ParticleTypeProperty* structureProperty = static_object_cast<ParticleTypeProperty>(outputStandardProperty(_structureData.data()));

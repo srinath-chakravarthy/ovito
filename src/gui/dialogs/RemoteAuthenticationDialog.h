@@ -22,7 +22,7 @@
 #ifndef __OVITO_REMOTE_AUTHENTICATION_DIALOG_H
 #define __OVITO_REMOTE_AUTHENTICATION_DIALOG_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/dataset/importexport/FileImporter.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -30,7 +30,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /**
  * This dialog asks the user for a username/password for a remote server.
  */
-class OVITO_CORE_EXPORT RemoteAuthenticationDialog : public QDialog
+class OVITO_GUI_EXPORT RemoteAuthenticationDialog : public QDialog
 {
 	Q_OBJECT
 	

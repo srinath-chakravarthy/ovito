@@ -24,10 +24,10 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DataObject.h>
-#include <core/gui/properties/PropertiesEditor.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/Vector3ParameterUI.h>
+#include <gui/properties/PropertiesEditor.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/Vector3ParameterUI.h>
 #include <plugins/particles/data/SimulationCell.h>
 
 namespace Ovito { namespace Particles {

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/dialogs/SaveImageFileDialog.h>
+#include <gui/GUI.h>
+#include <gui/dialogs/SaveImageFileDialog.h>
 #include "FrameBufferWindow.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Widgets)
@@ -57,10 +57,10 @@ FrameBufferWindow::FrameBufferWindow(QWidget* parent) :
 	setCentralWidget(scrollArea);
 
 	QToolBar* toolBar = addToolBar(tr("Frame Buffer"));
-	toolBar->addAction(QIcon(":/core/framebuffer/save_picture.png"), tr("Save to file"), this, SLOT(saveImage()));
-	toolBar->addAction(QIcon(":/core/framebuffer/copy_picture_to_clipboard.png"), tr("Copy to clipboard"), this, SLOT(copyImageToClipboard()));
+	toolBar->addAction(QIcon(":/gui/framebuffer/save_picture.png"), tr("Save to file"), this, SLOT(saveImage()));
+	toolBar->addAction(QIcon(":/gui/framebuffer/copy_picture_to_clipboard.png"), tr("Copy to clipboard"), this, SLOT(copyImageToClipboard()));
 	toolBar->addSeparator();
-	toolBar->addAction(QIcon(":/core/framebuffer/auto_crop.png"), tr("Auto-crop image"), this, SLOT(autoCrop()));
+	toolBar->addAction(QIcon(":/gui/framebuffer/auto_crop.png"), tr("Auto-crop image"), this, SLOT(autoCrop()));
 
 	// Disable context menu in toolbar.
 	setContextMenuPolicy(Qt::NoContextMenu);

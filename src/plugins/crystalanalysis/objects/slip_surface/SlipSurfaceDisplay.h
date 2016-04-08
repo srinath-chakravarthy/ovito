@@ -28,7 +28,7 @@
 #include <core/utilities/mesh/TriMesh.h>
 #include <core/utilities/mesh/HalfEdgeMesh.h>
 #include <core/rendering/MeshPrimitive.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/properties/PropertiesEditor.h>
 #include <core/animation/controller/Controller.h>
 #include <plugins/particles/data/SimulationCell.h>
 #include "SlipSurface.h"

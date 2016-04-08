@@ -22,8 +22,8 @@
 #ifndef __OVITO_TACHYON_RENDERER_EDITOR_H
 #define __OVITO_TACHYON_RENDERER_EDITOR_H
 
-#include <core/Core.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/GUI.h>
+#include <gui/properties/PropertiesEditor.h>
 #include <core/reference/RefTarget.h>
 
 namespace Ovito { namespace Tachyon { OVITO_BEGIN_INLINE_NAMESPACE(Internal)

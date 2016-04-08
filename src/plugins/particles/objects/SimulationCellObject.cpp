@@ -21,9 +21,9 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/utilities/units/UnitsManager.h>
-#include <core/gui/properties/Vector3ParameterUI.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/BooleanRadioButtonParameterUI.h>
+#include <gui/properties/Vector3ParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/BooleanRadioButtonParameterUI.h>
 #include <core/viewport/ViewportConfiguration.h>
 
 #include "SimulationCellObject.h"

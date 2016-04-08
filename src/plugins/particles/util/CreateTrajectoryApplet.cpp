@@ -22,11 +22,11 @@
 #include <plugins/particles/Particles.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/utilities/units/UnitsManager.h>
-#include <core/gui/widgets/general/SpinnerWidget.h>
-#include <core/gui/mainwin/MainWindow.h>
 #include <core/scene/SelectionSet.h>
 #include <core/scene/ObjectNode.h>
 #include <core/scene/SceneRoot.h>
+#include <gui/widgets/general/SpinnerWidget.h>
+#include <gui/mainwin/MainWindow.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/TrajectoryGeneratorObject.h>
 #include "CreateTrajectoryApplet.h"
@@ -193,7 +193,7 @@ void CreateTrajectoryApplet::onCreateTrajectory()
 		}
 
 		if(!posProperty)
-			throw Exception(tr("No particle data object is currently selected from which trajectory lines can be generated."));
+			dataset->throwException(tr("No particle data object is currently selected from which trajectory lines can be generated."));
 
 		// Determine number of input particles.
 		size_t particleCount = 0;
@@ -201,12 +201,12 @@ void CreateTrajectoryApplet::onCreateTrajectory()
 			if(selectionProperty)
 				particleCount = std::count_if(selectionProperty->constDataInt(), selectionProperty->constDataInt() + selectionProperty->size(), [](int s) { return s != 0; });
 			if(!particleCount)
-				throw Exception(tr("No particles are currently selected. No trajectory lines were created."));
+				dataset->throwException(tr("No particles are currently selected. No trajectory lines were created."));
 		}
 		else {
 			particleCount = posProperty->size();
 			if(!particleCount)
-				throw Exception(tr("Input contains no particles. No trajectory lines were created."));
+				dataset->throwException(tr("Input contains no particles. No trajectory lines were created."));
 		}
 
 		OORef<ObjectNode> node;
@@ -229,7 +229,7 @@ void CreateTrajectoryApplet::onCreateTrajectory()
 			TimeInterval interval = trajObj->useCustomInterval() ?
 					trajObj->customInterval() : dataset->animationSettings()->animationInterval();
 			if(interval.duration() <= 0)
-				throw Exception(tr("Loaded simulation sequence consists only of a single frame. No trajectory lines were created."));
+				dataset->throwException(tr("Loaded simulation sequence consists only of a single frame. No trajectory lines were created."));
 
 			// Generate trajectories.
 			if(!trajObj->generateTrajectories())

@@ -106,12 +106,12 @@ void PythonViewportOverlay::compileScript()
 				_overlayScriptFunction = _scriptEngine.mainNamespace()["render"];
 				if(!PyCallable_Check(_overlayScriptFunction.ptr())) {
 					_overlayScriptFunction = boost::python::object();
-					throw Exception(tr("Invalid Python script. It does not define a callable function render()."));
+					throwException(tr("Invalid Python script. It does not define a callable function render()."));
 				}
 			}
 			catch(const boost::python::error_already_set&) {
 				PyErr_Clear();
-				throw Exception(tr("Invalid Python script. It does not define the function render()."));
+				throwException(tr("Invalid Python script. It does not define the function render()."));
 			}
 		});
 	}

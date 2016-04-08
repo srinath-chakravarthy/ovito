@@ -21,10 +21,10 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/utilities/concurrent/ParallelFor.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/BooleanGroupBoxParameterUI.h>
-#include <core/gui/properties/IntegerParameterUI.h>
-#include <core/gui/properties/FloatParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/BooleanGroupBoxParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
+#include <gui/properties/FloatParameterUI.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
 #include <plugins/particles/objects/BondsObject.h>
 #include "VoronoiAnalysisModifier.h"
@@ -411,10 +411,10 @@ void VoronoiAnalysisModifier::transferComputationResults(ComputeEngine* engine)
 PipelineStatus VoronoiAnalysisModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
 {
 	if(!_coordinationNumbers)
-		throw Exception(tr("No computation results available."));
+		throwException(tr("No computation results available."));
 
 	if(inputParticleCount() != _coordinationNumbers->size())
-		throw Exception(tr("The number of input particles has changed. The stored results have become invalid."));
+		throwException(tr("The number of input particles has changed. The stored results have become invalid."));
 
 	outputStandardProperty(_coordinationNumbers.data());
 	outputCustomProperty(_atomicVolumes.data());

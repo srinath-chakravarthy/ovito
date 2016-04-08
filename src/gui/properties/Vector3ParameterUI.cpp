@@ -19,15 +19,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/properties/Vector3ParameterUI.h>
+#include <gui/GUI.h>
+#include <gui/properties/Vector3ParameterUI.h>
 #include <core/animation/controller/Controller.h>
 #include <core/animation/AnimationSettings.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
 
 // Gives the class run-time type information.
-IMPLEMENT_OVITO_OBJECT(Core, Vector3ParameterUI, FloatParameterUI);
+IMPLEMENT_OVITO_OBJECT(Gui, Vector3ParameterUI, FloatParameterUI);
 
 /******************************************************************************
 * Constructor for a Qt property.
@@ -124,7 +124,7 @@ void Vector3ParameterUI::updateUI()
 				val = editObject()->property(propertyName());
 				OVITO_ASSERT_MSG(val.isValid() && (val.canConvert<Vector3>() || val.canConvert<Point3>()), "Vector3ParameterUI::updateUI()", QString("The object class %1 does not define a property with the name %2 that can be cast to Vector3/Point3 type.").arg(editObject()->metaObject()->className(), QString(propertyName())).toLocal8Bit().constData());
 				if(!val.isValid() || !(val.canConvert<Vector3>() || val.canConvert<Point3>())) {
-					throw Exception(tr("The object class %1 does not define a property with the name %2 that can be cast to Vector3/Point3 type.").arg(editObject()->metaObject()->className(), QString(propertyName())));
+					editObject()->throwException(tr("The object class %1 does not define a property with the name %2 that can be cast to Vector3/Point3 type.").arg(editObject()->metaObject()->className(), QString(propertyName())));
 				}
 			}
 			else if(isPropertyFieldUI()) {

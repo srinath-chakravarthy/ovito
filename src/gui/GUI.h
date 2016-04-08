@@ -40,6 +40,7 @@
 #include <QtWidgets>
 #include <QtDebug>
 #include <QtGui>
+#include <QCommandLineParser>
 #include <qopengl.h>
 
 #ifdef Gui_EXPORTS		// This is defined by CMake when building the Gui library.

@@ -19,19 +19,19 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/properties/ParameterUI.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/GUI.h>
+#include <gui/properties/ParameterUI.h>
+#include <gui/properties/PropertiesEditor.h>
 #include <core/animation/controller/Controller.h>
 #include <core/animation/controller/KeyframeController.h>
 #include <core/animation/AnimationSettings.h>
-#include <core/gui/dialogs/AnimationKeyEditorDialog.h>
+#include <gui/dialogs/AnimationKeyEditorDialog.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
 
 // Gives the class run-time type information.
-IMPLEMENT_OVITO_OBJECT(Core, ParameterUI, RefMaker);
-IMPLEMENT_OVITO_OBJECT(Core, PropertyParameterUI, ParameterUI);
+IMPLEMENT_OVITO_OBJECT(Gui, ParameterUI, RefMaker);
+IMPLEMENT_OVITO_OBJECT(Gui, PropertyParameterUI, ParameterUI);
 DEFINE_FLAGS_REFERENCE_FIELD(ParameterUI, _editObject, "EditObject", RefTarget, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_WEAK_REF | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
 DEFINE_FLAGS_REFERENCE_FIELD(PropertyParameterUI, _parameterObject, "ParameterObject", RefTarget, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_WEAK_REF | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
 

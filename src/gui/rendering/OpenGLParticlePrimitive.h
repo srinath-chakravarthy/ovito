@@ -22,7 +22,7 @@
 #ifndef __OVITO_OPENGL_PARTICLE_PRIMITIVE_H
 #define __OVITO_OPENGL_PARTICLE_PRIMITIVE_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/rendering/ParticlePrimitive.h>
 #include "OpenGLBuffer.h"
 #include "OpenGLTexture.h"
@@ -32,12 +32,12 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAM
 /**
  * \brief This class is responsible for rendering particle primitives using OpenGL.
  */
-class OVITO_CORE_EXPORT OpenGLParticlePrimitive : public ParticlePrimitive, public std::enable_shared_from_this<OpenGLParticlePrimitive>
+class OVITO_GUI_EXPORT OpenGLParticlePrimitive : public ParticlePrimitive, public std::enable_shared_from_this<OpenGLParticlePrimitive>
 {
 public:
 
 	/// Constructor.
-	OpenGLParticlePrimitive(ViewportSceneRenderer* renderer,
+	OpenGLParticlePrimitive(OpenGLSceneRenderer* renderer,
 			ShadingMode shadingMode, RenderingQuality renderingQuality, ParticleShape shape, bool translucentParticles);
 
 	/// \brief Allocates a geometry buffer with the given number of particles.
@@ -88,25 +88,25 @@ public:
 protected:
 
 	/// Creates the texture used for billboard rendering of particles.
-	void initializeBillboardTexture(ViewportSceneRenderer* renderer);
+	void initializeBillboardTexture(OpenGLSceneRenderer* renderer);
 
 	/// Activates a texture for billboard rendering of particles.
-	void activateBillboardTexture(ViewportSceneRenderer* renderer);
+	void activateBillboardTexture(OpenGLSceneRenderer* renderer);
 
 	/// Deactivates the texture used for billboard rendering of spherical particles.
-	void deactivateBillboardTexture(ViewportSceneRenderer* renderer);
+	void deactivateBillboardTexture(OpenGLSceneRenderer* renderer);
 
 	/// Renders the particles using OpenGL point sprites.
-	void renderPointSprites(ViewportSceneRenderer* renderer);
+	void renderPointSprites(OpenGLSceneRenderer* renderer);
 
 	/// Renders a box for each particle using triangle strips.
-	void renderBoxes(ViewportSceneRenderer* renderer);
+	void renderBoxes(OpenGLSceneRenderer* renderer);
 
 	/// Renders the particles using quads.
-	void renderImposters(ViewportSceneRenderer* renderer);
+	void renderImposters(OpenGLSceneRenderer* renderer);
 
 	/// Returns an array of particle indices, sorted back-to-front, which is used to render translucent particles.
-	std::vector<GLuint> determineRenderingOrder(ViewportSceneRenderer* renderer);
+	std::vector<GLuint> determineRenderingOrder(OpenGLSceneRenderer* renderer);
 
 private:
 

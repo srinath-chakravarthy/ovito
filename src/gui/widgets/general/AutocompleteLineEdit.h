@@ -27,14 +27,14 @@
 #ifndef __OVITO_AUTOCOMPLETE_LINE_EDIT_H
 #define __OVITO_AUTOCOMPLETE_LINE_EDIT_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Widgets)
 
 /**
  * \brief A text editor widget that provides auto-completion of words.
  */
-class OVITO_CORE_EXPORT AutocompleteLineEdit : public QLineEdit
+class OVITO_GUI_EXPORT AutocompleteLineEdit : public QLineEdit
 {
 	Q_OBJECT
 	

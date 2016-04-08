@@ -21,7 +21,7 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/objects/SurfaceMesh.h>
-#include <core/gui/properties/IntegerParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include "SmoothSurfaceModifier.h"
 

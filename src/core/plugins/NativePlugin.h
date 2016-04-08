@@ -49,7 +49,7 @@ public:
 protected:
 
 	/// \brief Constructor that loads the given manifest file.
-	NativePlugin(const QString& manifestFile);
+	NativePlugin(const QString& manifestFile, bool builtinPlugin);
 
 	/// \brief Loads the plugin's dynamic link library.
 	/// \throw Exception on error.

@@ -19,14 +19,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/properties/VariantComboBoxParameterUI.h>
+#include <gui/GUI.h>
+#include <gui/properties/VariantComboBoxParameterUI.h>
 #include <core/dataset/UndoStack.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
 
 // Gives the class run-time type information.
-IMPLEMENT_OVITO_OBJECT(Core, VariantComboBoxParameterUI, PropertyParameterUI);
+IMPLEMENT_OVITO_OBJECT(Gui, VariantComboBoxParameterUI, PropertyParameterUI);
 
 /******************************************************************************
 * Constructor for a Qt property.

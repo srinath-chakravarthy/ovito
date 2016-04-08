@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/properties/BooleanGroupBoxParameterUI.h>
+#include <gui/GUI.h>
+#include <gui/properties/BooleanGroupBoxParameterUI.h>
 #include <core/dataset/UndoStack.h>
 #include <core/animation/controller/Controller.h>
 #include <core/animation/AnimationSettings.h>
@@ -28,7 +28,7 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
 
 // Gives the class run-time type information.
-IMPLEMENT_OVITO_OBJECT(Core, BooleanGroupBoxParameterUI, PropertyParameterUI);
+IMPLEMENT_OVITO_OBJECT(Gui, BooleanGroupBoxParameterUI, PropertyParameterUI);
 
 /******************************************************************************
 * Constructor for a Qt property.
@@ -113,7 +113,7 @@ void BooleanGroupBoxParameterUI::updateUI()
 				val = editObject()->property(propertyName());
 				OVITO_ASSERT_MSG(val.isValid(), "BooleanGroupBoxParameterUI::updateUI()", QString("The object class %1 does not define a property with the name %2 that can be cast to bool type.").arg(editObject()->metaObject()->className(), QString(propertyName())).toLocal8Bit().constData());
 				if(!val.isValid()) {
-					throw Exception(tr("The object class %1 does not define a property with the name %2 that can be cast to bool type.").arg(editObject()->metaObject()->className(), QString(propertyName())));
+					editObject()->throwException(tr("The object class %1 does not define a property with the name %2 that can be cast to bool type.").arg(editObject()->metaObject()->className(), QString(propertyName())));
 				}
 			}
 			else if(isPropertyFieldUI()) {

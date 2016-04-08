@@ -153,7 +153,7 @@ OORef<RefTarget> RefTarget::clone(bool deepCopy, CloneHelper& cloneHelper)
 	// Create a new instance of the object's class.
 	OORef<RefTarget> clone = static_object_cast<RefTarget>(getOOType().createInstance(dataset()));
 	if(!clone || !clone->getOOType().isDerivedFrom(getOOType()))
-		throw Exception(tr("Failed to create clone instance of class %1.").arg(getOOType().name()));
+		throwException(tr("Failed to create clone instance of class %1.").arg(getOOType().name()));
 
 	// Clone properties and referenced objects.
 	for(const OvitoObjectType* clazz = &getOOType(); clazz; clazz = clazz->superClass()) {
@@ -214,6 +214,39 @@ QString RefTarget::objectTitle()
 {
 	return getOOType().displayName();
 }
+
+/******************************************************************************
+* Flags this object when it is opened in an editor.
+******************************************************************************/
+void RefTarget::setObjectEditingFlag()
+{
+	// Increment counter.
+	QVariant oldValue = property("OVITO_OBJECT_EDIT_COUNTER");
+	setProperty("OVITO_OBJECT_EDIT_COUNTER", oldValue.toInt() + 1);
+}
+
+/******************************************************************************
+* Unflags this object when it is no longer opened in an editor.
+******************************************************************************/
+void RefTarget::unsetObjectEditingFlag()
+{
+	// Decrement counter.
+	QVariant oldValue = property("OVITO_OBJECT_EDIT_COUNTER");
+	OVITO_ASSERT(oldValue.toInt() > 0);
+	if(oldValue.toInt() == 1)
+		setProperty("OVITO_OBJECT_EDIT_COUNTER", QVariant());
+	else
+		setProperty("OVITO_OBJECT_EDIT_COUNTER", oldValue.toInt() - 1);
+}
+
+/******************************************************************************
+* Determines if this object's properties are currently being edited in an editor.
+******************************************************************************/
+bool RefTarget::isObjectBeingEdited() const
+{
+	return (property("OVITO_OBJECT_EDIT_COUNTER").toInt() != 0);
+}
+
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

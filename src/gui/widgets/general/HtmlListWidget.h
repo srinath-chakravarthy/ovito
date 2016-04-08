@@ -22,14 +22,14 @@
 #ifndef __OVITO_HTML_LIST_WIDGET_H
 #define __OVITO_HTML_LIST_WIDGET_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Widgets)
 
 /**
  * \brief A QListWidget that supports HTML text items.
  */
-class OVITO_CORE_EXPORT HtmlListWidget : public QListWidget
+class OVITO_GUI_EXPORT HtmlListWidget : public QListWidget
 {
 public:
 	

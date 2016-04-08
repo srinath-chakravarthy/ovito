@@ -23,7 +23,7 @@
 #define __OVITO_XYZ_IMPORTER_H
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/properties/PropertiesEditor.h>
 #include <plugins/particles/import/InputColumnMapping.h>
 #include <plugins/particles/import/ParticleImporter.h>
 
@@ -55,7 +55,7 @@ public:
 
 	/// This method is called by the FileSource each time a new source
 	/// file has been selected by the user.
-	virtual bool inspectNewFile(FileSource* obj) override;
+	virtual bool inspectNewFile(FileSource* obj, int frameIndex) override;
 
 	/// \brief Returns the user-defined mapping between data columns in the input file and
 	///        the internal particle properties.

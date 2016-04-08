@@ -24,8 +24,9 @@
 #include <core/scene/SceneRoot.h>
 #include <core/scene/objects/DataObject.h>
 #include <core/animation/AnimationSettings.h>
-#include <core/gui/mainwin/MainWindow.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/app/Application.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/utilities/concurrent/ProgressDialogAdapter.h>
 
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include "ParticleExporter.h"
@@ -107,10 +108,10 @@ bool ParticleExporter::exportToFile(const QVector<SceneNode*>& nodes, const QStr
 		// Get the data to be exported.
 		PipelineFlowState flowState = getParticles(nodes, dataset()->animationSettings()->time());
 		if(flowState.isEmpty())
-			throw Exception(tr("The selected object does not contain any particles that could be exported."));
+			throwException(tr("The selected object does not contain any particles that could be exported."));
 
 		// Show optional export settings dialog.
-		if(!showSettingsDialog(flowState, dataset()->mainWindow()))
+		if(!showSettingsDialog(flowState, MainWindow::fromDataset(dataset())))
 			return false;
 	}
 
@@ -137,7 +138,7 @@ PipelineFlowState ParticleExporter::getParticles(const QVector<SceneNode*>& node
 			for(DataObject* obj : state.objects()) {
 				if(ParticlePropertyObject* p = dynamic_object_cast<ParticlePropertyObject>(obj)) {
 					if(p->size() != posProperty->size())
-						throw Exception(tr("Data produced by modification pipeline is invalid. Array size is not the same for all particle properties."));
+						throwException(tr("Data produced by modification pipeline is invalid. Array size is not the same for all particle properties."));
 				}
 			}
 
@@ -158,13 +159,13 @@ bool ParticleExporter::writeOutputFiles(const QVector<SceneNode*>& nodes)
 	OVITO_ASSERT_MSG(startFrame() <= endFrame(), "ParticleExporter::writeOutputFiles()", "Export interval has not been set. ParticleExporter::setStartFrame() and ParticleExporter::setEndFrame() must be called first.");
 
 	if(startFrame() > endFrame())
-		throw Exception(tr("The animation interval to be exported is empty or has not been set."));
+		throwException(tr("The animation interval to be exported is empty or has not been set."));
 
 	// Show progress dialog.
 	std::unique_ptr<QProgressDialog> progressDialog;
 	std::unique_ptr<ProgressDialogAdapter> progressDisplay;
 	if(Application::instance().guiMode()) {
-		progressDialog.reset(new QProgressDialog(dataset()->mainWindow()));
+		progressDialog.reset(new QProgressDialog(MainWindow::fromDataset(dataset())));
 		progressDialog->setWindowModality(Qt::WindowModal);
 		progressDialog->setAutoClose(false);
 		progressDialog->setAutoReset(false);
@@ -180,7 +181,7 @@ bool ParticleExporter::writeOutputFiles(const QVector<SceneNode*>& nodes)
 		exportTime = dataset()->animationSettings()->frameToTime(firstFrameNumber);
 		numberOfFrames = (endFrame() - startFrame() + everyNthFrame()) / everyNthFrame();
 		if(numberOfFrames < 1 || everyNthFrame() < 1)
-			throw Exception(tr("Invalid export animation range: Frame %1 to %2").arg(startFrame()).arg(endFrame()));
+			throwException(tr("Invalid export animation range: Frame %1 to %2").arg(startFrame()).arg(endFrame()));
 	}
 	else {
 		exportTime = dataset()->animationSettings()->time();
@@ -191,9 +192,9 @@ bool ParticleExporter::writeOutputFiles(const QVector<SceneNode*>& nodes)
 	// Validate export settings.
 	if(_exportAnimation && useWildcardFilename()) {
 		if(wildcardFilename().isEmpty())
-			throw Exception(tr("Cannot write animation frame to separate files. Wildcard pattern has not been specified."));
+			throwException(tr("Cannot write animation frame to separate files. Wildcard pattern has not been specified."));
 		if(wildcardFilename().contains(QChar('*')) == false)
-			throw Exception(tr("Cannot write animation frames to separate files. The filename must contain the '*' wildcard character, which gets replaced by the frame number."));
+			throwException(tr("Cannot write animation frames to separate files. The filename must contain the '*' wildcard character, which gets replaced by the frame number."));
 	}
 
 	if(progressDisplay) progressDisplay->setMaximum(numberOfFrames * 100);
@@ -295,9 +296,16 @@ bool ParticleExporter::exportFrame(const QVector<SceneNode*>& nodes, int frameNu
 	// Evaluate modification pipeline to get the particles to be exported.
 	PipelineFlowState state = getParticles(nodes, time);
 	if(state.isEmpty())
-		throw Exception(tr("The object to be exported does not contain any particles."));
+		throwException(tr("The object to be exported does not contain any particles."));
 
-	return exportParticles(state, frameNumber, time, filePath, progressDisplay);
+	try {
+		return exportParticles(state, frameNumber, time, filePath, progressDisplay);
+	}
+	catch(Exception& ex) {
+		// Provide a local context for errors that occurred during export.
+		if(ex.context() == nullptr) ex.setContext(dataset());
+		throw;
+	}
 }
 
 OVITO_END_INLINE_NAMESPACE

@@ -19,11 +19,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/viewport/Viewport.h>
-#include <core/gui/widgets/general/SpinnerWidget.h>
-#include <core/gui/mainwin/MainWindow.h>
 #include <core/utilities/units/UnitsManager.h>
+#include <gui/widgets/general/SpinnerWidget.h>
+#include <gui/mainwin/MainWindow.h>
 #include "AdjustCameraDialog.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -193,7 +193,7 @@ AdjustCameraDialog::AdjustCameraDialog(Viewport* viewport, QWidget* parent) :
 	connect(buttonBox, &QDialogButtonBox::accepted, this, &AdjustCameraDialog::accept);
 	connect(buttonBox, &QDialogButtonBox::rejected, this, &AdjustCameraDialog::onCancel);
 	connect(buttonBox, &QDialogButtonBox::helpRequested, [this]() {
-		_viewport->dataset()->mainWindow()->openHelpTopic("viewports.adjust_view_dialog.html");
+		MainWindow::openHelpTopic("viewports.adjust_view_dialog.html");
 	});
 	mainLayout->addWidget(buttonBox);
 

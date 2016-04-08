@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2014) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,56 +19,21 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VIEWPORT_OVERLAY_H
-#define __OVITO_VIEWPORT_OVERLAY_H
+#ifndef __OVITO_MOVE_OVERLAY_INPUT_MODE_H
+#define __OVITO_MOVE_OVERLAY_INPUT_MODE_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/reference/RefTarget.h>
 #include <core/scene/pipeline/PipelineStatus.h>
-#include <core/viewport/input/ViewportInputMode.h>
+#include <gui/viewport/input/ViewportInputMode.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View)
-
-/**
- * \brief Abstract base class for all viewport overlays.
- */
-class OVITO_CORE_EXPORT ViewportOverlay : public RefTarget
-{
-protected:
-
-	/// \brief Constructor.
-	ViewportOverlay(DataSet* dataset);
-
-public:
-
-	/// \brief This method asks the overlay to paint its contents over the given viewport.
-	virtual void render(Viewport* viewport, QPainter& painter, const ViewProjectionParameters& projParams, RenderSettings* renderSettings) = 0;
-
-	/// \brief Returns the status of the object, which may indicate an error condition.
-	///
-	/// The default implementation of this method returns an empty status object.
-	/// The object should generate a ReferenceEvent::ObjectStatusChanged event when its status changes.
-	virtual PipelineStatus status() const { return PipelineStatus(); }
-
-	/// \brief Moves the position of the overlay in the viewport by the given amount,
-	///        which is specified as a fraction of the viewport render size.
-	///
-	/// Overlay implementations should override this method if they support positioning.
-	/// The default method implementation does nothing.
-	virtual void moveOverlayInViewport(const Vector2& delta) {};
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
 
 /**
  * Viewport mouse input mode, which allows the user to interactively move a viewport overlay
  * using the mouse.
  */
-class OVITO_CORE_EXPORT MoveOverlayInputMode : public ViewportInputMode
+class OVITO_GUI_EXPORT MoveOverlayInputMode : public ViewportInputMode
 {
 public:
 
@@ -80,13 +45,13 @@ public:
 	virtual void deactivated(bool temporary) override;
 
 	/// Handles the mouse down events for a Viewport.
-	virtual void mousePressEvent(Viewport* vp, QMouseEvent* event) override;
+	virtual void mousePressEvent(ViewportWindow* vpwin, QMouseEvent* event) override;
 
 	/// Handles the mouse move events for a Viewport.
-	virtual void mouseMoveEvent(Viewport* vp, QMouseEvent* event) override;
+	virtual void mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event) override;
 
 	/// Handles the mouse up events for a Viewport.
-	virtual void mouseReleaseEvent(Viewport* vp, QMouseEvent* event) override;
+	virtual void mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event) override;
 
 	/// Returns the current viewport we are working in.
 	Viewport* viewport() const { return _viewport; }
@@ -115,4 +80,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_VIEWPORT_OVERLAY_H
+#endif // __OVITO_MOVE_OVERLAY_INPUT_MODE_H

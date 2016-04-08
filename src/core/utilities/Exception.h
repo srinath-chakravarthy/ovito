@@ -87,16 +87,18 @@ public:
 
 	/// Creates an exception with a default error message.
 	/// You should use the constructor taking a message string instead to construct an Exception.
-	Exception();
+	Exception(QObject* context = nullptr);
 
 	/// Initializes the Exception object with a message string describing the error that has occurred.
 	/// \param message The human-readable message describing the error, which will be displayed by showError().
-	explicit Exception(const QString& message);
+	/// \param context Pointer to an optional object that provides the context for this exception or error.
+	explicit Exception(const QString& message, QObject* context = nullptr);
 
 	/// \brief Multi-message constructor that initializes the Exception object with multiple message string.
 	/// \param errorMessages The list of message strings describing the error. The list should be ordered with
 	///                      the most general error description first, followed by the more detailed information.
-	explicit Exception(const QStringList& errorMessages) : _messages(errorMessages) {}
+	/// \param context Pointer to an optional object that provides the context for this exception or error.
+	explicit Exception(const QStringList& errorMessages, QObject* context = nullptr);
 
 	// Default destructor.
 	virtual ~Exception() = default;
@@ -133,14 +135,20 @@ public:
 	/// In console mode, this method prints the error messages(s) to the console.
 	void showError() const;
 
+	/// Returns a pointer to an object that provides the context for this exception or error.
+	QObject* context() const { return _context; }
+
+	/// Sets the context object for this exception or error.
+	void setContext(QObject* context) { _context = context; }
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// The following two functions are required by the base class QtConcurrent::Exception
 
 	// Raises this exception object.
-	virtual void raise() const { throw *this; }
+	virtual void raise() const override { throw *this; }
 
 	// Creates a copy of this exception object.
-	virtual Exception *clone() const { return new Exception(*this); }
+	virtual Exception* clone() const override { return new Exception(*this); }
 
 public:
 
@@ -156,6 +164,9 @@ private:
 	/// The message strings describing the exception.
 	/// This list is ordered with the most general error description coming first followed by the more detailed information.
 	QStringList _messages;
+
+	/// Pointer to an object that provides the context for this exception or error.
+	QPointer<QObject> _context;
 
 	/// The current exception handler for displaying error messages.
 	static ExceptionHandler exceptionHandler;

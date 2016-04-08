@@ -19,7 +19,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/scene/objects/DataObject.h>
 #include <core/scene/pipeline/PipelineObject.h>
 #include <core/scene/pipeline/Modifier.h>
@@ -28,10 +28,10 @@
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/dataset/UndoStack.h>
 #include <core/dataset/DataSetContainer.h>
-#include <core/gui/app/Application.h>
-#include <core/gui/actions/ActionManager.h>
-#include <core/gui/mainwin/MainWindow.h>
-#include <core/gui/widgets/selection/SceneNodeSelectionBox.h>
+#include <core/app/Application.h>
+#include <gui/actions/ActionManager.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/widgets/selection/SceneNodeSelectionBox.h>
 #include "ModifyCommandPage.h"
 #include "ModificationListModel.h"
 #include "ModifierListBox.h"
@@ -90,33 +90,33 @@ ModifyCommandPage::ModifyCommandPage(MainWindow* mainWindow, QWidget* parent) : 
 #endif
 	subLayout->addWidget(editToolbar);
 
-	QAction* deleteModifierAction = _actionManager->createCommandAction(ACTION_MODIFIER_DELETE, tr("Delete Modifier"), ":/core/actions/modify/delete_modifier.png");
+	QAction* deleteModifierAction = _actionManager->createCommandAction(ACTION_MODIFIER_DELETE, tr("Delete Modifier"), ":/gui/actions/modify/delete_modifier.png");
 	connect(deleteModifierAction, &QAction::triggered, this, &ModifyCommandPage::onDeleteModifier);
 	editToolbar->addAction(deleteModifierAction);
 
 	editToolbar->addSeparator();
 
-	QAction* moveModifierUpAction = _actionManager->createCommandAction(ACTION_MODIFIER_MOVE_UP, tr("Move Modifier Up"), ":/core/actions/modify/modifier_move_up.png");
+	QAction* moveModifierUpAction = _actionManager->createCommandAction(ACTION_MODIFIER_MOVE_UP, tr("Move Modifier Up"), ":/gui/actions/modify/modifier_move_up.png");
 	connect(moveModifierUpAction, &QAction::triggered, this, &ModifyCommandPage::onModifierMoveUp);
 	editToolbar->addAction(moveModifierUpAction);
-	QAction* moveModifierDownAction = mainWindow->actionManager()->createCommandAction(ACTION_MODIFIER_MOVE_DOWN, tr("Move Modifier Down"), ":/core/actions/modify/modifier_move_down.png");
+	QAction* moveModifierDownAction = mainWindow->actionManager()->createCommandAction(ACTION_MODIFIER_MOVE_DOWN, tr("Move Modifier Down"), ":/gui/actions/modify/modifier_move_down.png");
 	connect(moveModifierDownAction, &QAction::triggered, this, &ModifyCommandPage::onModifierMoveDown);
 	editToolbar->addAction(moveModifierDownAction);
 
 	QAction* toggleModifierStateAction = _actionManager->createCommandAction(ACTION_MODIFIER_TOGGLE_STATE, tr("Enable/Disable Modifier"));
 	toggleModifierStateAction->setCheckable(true);
-	QIcon toggleStateActionIcon(QString(":/core/actions/modify/modifier_enabled_large.png"));
-	toggleStateActionIcon.addFile(QString(":/core/actions/modify/modifier_disabled_large.png"), QSize(), QIcon::Normal, QIcon::On);
+	QIcon toggleStateActionIcon(QString(":/gui/actions/modify/modifier_enabled_large.png"));
+	toggleStateActionIcon.addFile(QString(":/gui/actions/modify/modifier_disabled_large.png"), QSize(), QIcon::Normal, QIcon::On);
 	toggleModifierStateAction->setIcon(toggleStateActionIcon);
 	connect(toggleModifierStateAction, &QAction::triggered, this, &ModifyCommandPage::onModifierToggleState);
 
 	editToolbar->addSeparator();
-	QAction* createCustomModifierAction = _actionManager->createCommandAction(ACTION_MODIFIER_CREATE_PRESET, tr("Save Modifier Preset"), ":/core/actions/modify/modifier_save_preset.png");
+	QAction* createCustomModifierAction = _actionManager->createCommandAction(ACTION_MODIFIER_CREATE_PRESET, tr("Save Modifier Preset"), ":/gui/actions/modify/modifier_save_preset.png");
 	connect(createCustomModifierAction, &QAction::triggered, this, &ModifyCommandPage::onCreateCustomModifier);
 	editToolbar->addAction(createCustomModifierAction);
 
 	editToolbar->addSeparator();
-	QAction* helpAction = new QAction(QIcon(":/core/mainwin/command_panel/help.png"), tr("Open Online Help"), this);
+	QAction* helpAction = new QAction(QIcon(":/gui/mainwin/command_panel/help.png"), tr("Open Online Help"), this);
 	connect(helpAction, &QAction::triggered, [mainWindow] {
 		mainWindow->openHelpTopic("usage.modification_pipeline.html");
 	});
@@ -252,7 +252,7 @@ void ModifyCommandPage::onModifierAdd(int index)
 						QByteArray buffer = settings.value(presetName).toByteArray();
 						QDataStream dstream(buffer);
 						ObjectLoadStream stream(dstream);
-						stream.setDataSet(_datasetContainer.currentSet());
+						stream.setDataset(_datasetContainer.currentSet());
 						for(int chunkId = stream.expectChunkRange(0,1); chunkId == 1; chunkId = stream.expectChunkRange(0,1)) {
 							modifierSet.push_front(stream.loadObject<Modifier>());
 							stream.closeChunk();
@@ -261,6 +261,7 @@ void ModifyCommandPage::onModifierAdd(int index)
 						stream.close();
 					}
 					catch(Exception& ex) {
+						if(ex.context() == nullptr) ex.setContext(_datasetContainer.currentSet());
 						ex.prependGeneralMessage(tr("Failed to load stored modifier set."));
 						throw;
 					}
@@ -567,7 +568,7 @@ void ModifyCommandPage::onCreateCustomModifier()
 	sublayout->setColumnStretch(0, 1);
 	QToolButton* deletePresetButton = new QToolButton();
 	sublayout->addWidget(deletePresetButton, 1, 1);
-	QAction* deletePresetAction = new QAction(QIcon(":/core/actions/edit/edit_delete.png"), tr("Delete selected preset"), &dlg);
+	QAction* deletePresetAction = new QAction(QIcon(":/gui/actions/edit/edit_delete.png"), tr("Delete selected preset"), &dlg);
 	deletePresetAction->setEnabled(false);
 	deletePresetButton->setDefaultAction(deletePresetAction);
 	sublayout->addWidget(new QLabel(tr("<p style=\"color: #686868; margin-right: 8;\"><span style=\"font-size: small;\">Use this button to delete an existing preset that you no longer need.</span> ") + QChar(0x2191) + QStringLiteral("</p>")), 2, 0, 1, 2, Qt::AlignRight);

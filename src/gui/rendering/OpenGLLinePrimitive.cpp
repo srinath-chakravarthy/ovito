@@ -19,26 +19,26 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "OpenGLLinePrimitive.h"
-#include "ViewportSceneRenderer.h"
+#include "OpenGLSceneRenderer.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-OpenGLLinePrimitive::OpenGLLinePrimitive(ViewportSceneRenderer* renderer) :
+OpenGLLinePrimitive::OpenGLLinePrimitive(OpenGLSceneRenderer* renderer) :
 	_contextGroup(QOpenGLContextGroup::currentContextGroup()),
 	_indicesBuffer(QOpenGLBuffer::IndexBuffer)
 {
 	OVITO_ASSERT(renderer->glcontext()->shareGroup() == _contextGroup);
 
 	// Initialize OpenGL shaders.
-	_shader = renderer->loadShaderProgram("line", ":/core/glsl/lines/line.vs", ":/core/glsl/lines/line.fs");
-	_pickingShader = renderer->loadShaderProgram("line.picking", ":/core/glsl/lines/picking/line.vs", ":/core/glsl/lines/picking/line.fs");
-	_thickLineShader = renderer->loadShaderProgram("thick_line", ":/core/glsl/lines/thick_line.vs", ":/core/glsl/lines/line.fs");
-	_thickLinePickingShader = renderer->loadShaderProgram("thick_line.picking", ":/core/glsl/lines/picking/thick_line.vs", ":/core/glsl/lines/picking/line.fs");
+	_shader = renderer->loadShaderProgram("line", ":/gui/glsl/lines/line.vs", ":/gui/glsl/lines/line.fs");
+	_pickingShader = renderer->loadShaderProgram("line.picking", ":/gui/glsl/lines/picking/line.vs", ":/gui/glsl/lines/picking/line.fs");
+	_thickLineShader = renderer->loadShaderProgram("thick_line", ":/gui/glsl/lines/thick_line.vs", ":/gui/glsl/lines/line.fs");
+	_thickLinePickingShader = renderer->loadShaderProgram("thick_line.picking", ":/gui/glsl/lines/picking/thick_line.vs", ":/gui/glsl/lines/picking/line.fs");
 	
 	// Use VBO to store glDrawElements() indices only on a real core profile implementation.
 	_useIndexVBO = (renderer->glformat().profile() == QSurfaceFormat::CoreProfile);
@@ -128,7 +128,7 @@ void OpenGLLinePrimitive::setLineColor(const ColorA color)
 ******************************************************************************/
 bool OpenGLLinePrimitive::isValid(SceneRenderer* renderer)
 {
-	ViewportSceneRenderer* vpRenderer = qobject_cast<ViewportSceneRenderer*>(renderer);
+	OpenGLSceneRenderer* vpRenderer = qobject_cast<OpenGLSceneRenderer*>(renderer);
 	if(!vpRenderer) return false;
 	return _positionsBuffer.isCreated() && (_contextGroup == vpRenderer->glcontext()->shareGroup());
 }
@@ -140,7 +140,7 @@ void OpenGLLinePrimitive::render(SceneRenderer* renderer)
 {
 	OVITO_ASSERT(_contextGroup == QOpenGLContextGroup::currentContextGroup());
 	OVITO_STATIC_ASSERT(sizeof(FloatType) == 4);
-	ViewportSceneRenderer* vpRenderer = dynamic_object_cast<ViewportSceneRenderer>(renderer);
+	OpenGLSceneRenderer* vpRenderer = dynamic_object_cast<OpenGLSceneRenderer>(renderer);
 
 	if(vertexCount() <= 0 || !vpRenderer)
 		return;
@@ -156,7 +156,7 @@ void OpenGLLinePrimitive::render(SceneRenderer* renderer)
 /******************************************************************************
 * Renders the lines using GL_LINES mode.
 ******************************************************************************/
-void OpenGLLinePrimitive::renderLines(ViewportSceneRenderer* renderer)
+void OpenGLLinePrimitive::renderLines(OpenGLSceneRenderer* renderer)
 {
 	QOpenGLShaderProgram* shader;
 	if(!renderer->isPicking())
@@ -165,7 +165,7 @@ void OpenGLLinePrimitive::renderLines(ViewportSceneRenderer* renderer)
 		shader = _pickingShader;
 
 	if(!shader->bind())
-		throw Exception(QStringLiteral("Failed to bind OpenGL shader."));
+		renderer->throwException(QStringLiteral("Failed to bind OpenGL shader."));
 
 	OVITO_CHECK_OPENGL(shader->setUniformValue("modelview_projection_matrix",
 			(QMatrix4x4)(renderer->projParams().projectionMatrix * renderer->modelViewTM())));
@@ -196,7 +196,7 @@ void OpenGLLinePrimitive::renderLines(ViewportSceneRenderer* renderer)
 /******************************************************************************
 * Renders the lines using polygons.
 ******************************************************************************/
-void OpenGLLinePrimitive::renderThickLines(ViewportSceneRenderer* renderer)
+void OpenGLLinePrimitive::renderThickLines(OpenGLSceneRenderer* renderer)
 {
 	QOpenGLShaderProgram* shader;
 	if(!renderer->isPicking())
@@ -205,7 +205,7 @@ void OpenGLLinePrimitive::renderThickLines(ViewportSceneRenderer* renderer)
 		shader = _thickLinePickingShader;
 
 	if(!shader->bind())
-		throw Exception(QStringLiteral("Failed to bind OpenGL shader."));
+		renderer->throwException(QStringLiteral("Failed to bind OpenGL shader."));
 
 	OVITO_CHECK_OPENGL(shader->setUniformValue("modelview_matrix", (QMatrix4x4)renderer->modelViewTM()));
 	OVITO_CHECK_OPENGL(shader->setUniformValue("projection_matrix", (QMatrix4x4)renderer->projParams().projectionMatrix));

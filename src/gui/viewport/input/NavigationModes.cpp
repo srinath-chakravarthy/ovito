@@ -19,18 +19,19 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/rendering/ViewportSceneRenderer.h>
+#include <gui/viewport/ViewportWindow.h>
 #include <core/viewport/Viewport.h>
-#include <core/viewport/input/ViewportInputManager.h>
-#include <core/viewport/input/NavigationModes.h>
 #include <core/viewport/ViewportSettings.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/animation/AnimationSettings.h>
-#include <core/rendering/viewport/ViewportSceneRenderer.h>
 #include <core/scene/objects/camera/AbstractCameraObject.h>
 #include <core/scene/SceneRoot.h>
-#include <core/gui/mainwin/MainWindow.h>
 #include <core/dataset/UndoStack.h>
+#include "ViewportInputManager.h"
+#include "NavigationModes.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -63,23 +64,23 @@ void NavigationMode::deactivated(bool temporary)
 /******************************************************************************
 * Handles the mouse down event for the given viewport.
 ******************************************************************************/
-void NavigationMode::mousePressEvent(Viewport* vp, QMouseEvent* event)
+void NavigationMode::mousePressEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	if(event->button() == Qt::RightButton) {
-		ViewportInputMode::mousePressEvent(vp, event);
+		ViewportInputMode::mousePressEvent(vpwin, event);
 		return;
 	}
 
 	if(_viewport == nullptr) {
-		_viewport = vp;
+		_viewport = vpwin->viewport();
 		_startPoint = event->localPos();
-		_oldCameraTM = vp->cameraTransformation();
-		_oldCameraPosition = vp->cameraPosition();
-		_oldCameraDirection = vp->cameraDirection();
-		_oldFieldOfView = vp->fieldOfView();
-		_oldViewMatrix = vp->viewMatrix();
-		_oldInverseViewMatrix = vp->inverseViewMatrix();
-		_currentOrbitCenter = vp->orbitCenter();
+		_oldCameraTM = _viewport->cameraTransformation();
+		_oldCameraPosition = _viewport->cameraPosition();
+		_oldCameraDirection = _viewport->cameraDirection();
+		_oldFieldOfView = _viewport->fieldOfView();
+		_oldViewMatrix = _viewport->projectionParams().viewMatrix;
+		_oldInverseViewMatrix = _viewport->projectionParams().inverseViewMatrix;
+		_currentOrbitCenter = _viewport->orbitCenter();
 		_viewport->dataset()->undoStack().beginCompoundOperation(tr("Modify camera"));
 	}
 }
@@ -87,7 +88,7 @@ void NavigationMode::mousePressEvent(Viewport* vp, QMouseEvent* event)
 /******************************************************************************
 * Handles the mouse up event for the given viewport.
 ******************************************************************************/
-void NavigationMode::mouseReleaseEvent(Viewport* vp, QMouseEvent* event)
+void NavigationMode::mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	if(_viewport) {
 		// Commit view change.
@@ -102,23 +103,23 @@ void NavigationMode::mouseReleaseEvent(Viewport* vp, QMouseEvent* event)
 /******************************************************************************
 * Handles the mouse move event for the given viewport.
 ******************************************************************************/
-void NavigationMode::mouseMoveEvent(Viewport* vp, QMouseEvent* event)
+void NavigationMode::mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
-	if(_viewport == vp) {
+	if(_viewport == vpwin->viewport()) {
 #if 1
 		// Take the current mouse cursor position to make the navigation mode
 		// look more responsive. The cursor position recorded at the time the mouse event was
 		// generates may already be too old.
-		QPointF pos = vp->widget()->mapFromGlobal(QCursor::pos());
+		QPointF pos = vpwin->widget()->mapFromGlobal(QCursor::pos());
 #else
 		QPointF pos = event->localPos();
 #endif
 
-		vp->dataset()->undoStack().resetCurrentCompoundOperation();
-		modifyView(vp, pos - _startPoint);
+		_viewport->dataset()->undoStack().resetCurrentCompoundOperation();
+		modifyView(vpwin, _viewport, pos - _startPoint);
 
 		// Force immediate viewport repaint.
-		vp->dataset()->mainWindow()->processViewportUpdates();
+		MainWindow::fromDataset(_viewport->dataset())->processViewportUpdates();
 	}
 }
 
@@ -163,13 +164,13 @@ Box3 NavigationMode::overlayBoundingBox(Viewport* vp, ViewportSceneRenderer* ren
 /******************************************************************************
 * Computes the new view matrix based on the new mouse position.
 ******************************************************************************/
-void PanMode::modifyView(Viewport* vp, QPointF delta)
+void PanMode::modifyView(ViewportWindow* vpwin, Viewport* vp, QPointF delta)
 {
 	FloatType scaling;
 	if(vp->isPerspectiveProjection())
-		scaling = 10.0f * vp->nonScalingSize(_currentOrbitCenter) / vp->size().height();
+		scaling = FloatType(10) * vp->nonScalingSize(_currentOrbitCenter) / vpwin->viewportWindowSize().height();
 	else
-		scaling = 2.0f * _oldFieldOfView * vp->viewportWindow()->devicePixelRatio() / vp->size().height();
+		scaling = FloatType(2) * _oldFieldOfView * vpwin->devicePixelRatio() / vpwin->viewportWindowSize().height();
 	FloatType deltaX = -scaling * delta.x();
 	FloatType deltaY =  scaling * delta.y();
 	Vector3 displacement = _oldInverseViewMatrix * Vector3(deltaX, deltaY, 0);
@@ -200,7 +201,7 @@ void PanMode::modifyView(Viewport* vp, QPointF delta)
 /******************************************************************************
 * Computes the new view matrix based on the new mouse position.
 ******************************************************************************/
-void ZoomMode::modifyView(Viewport* vp, QPointF delta)
+void ZoomMode::modifyView(ViewportWindow* vpwin, Viewport* vp, QPointF delta)
 {
 	if(vp->isPerspectiveProjection()) {
 		FloatType amount =  -5.0f * sceneSizeFactor(vp) * delta.y();
@@ -290,7 +291,7 @@ void ZoomMode::zoom(Viewport* vp, FloatType steps)
 /******************************************************************************
 * Computes the new field of view based on the new mouse position.
 ******************************************************************************/
-void FOVMode::modifyView(Viewport* vp, QPointF delta)
+void FOVMode::modifyView(ViewportWindow* vpwin, Viewport* vp, QPointF delta)
 {
 	AbstractCameraObject* cameraObj = nullptr;
 	FloatType oldFOV = _oldFieldOfView;
@@ -326,7 +327,7 @@ void FOVMode::modifyView(Viewport* vp, QPointF delta)
 /******************************************************************************
 * Computes the new view matrix based on the new mouse position.
 ******************************************************************************/
-void OrbitMode::modifyView(Viewport* vp, QPointF delta)
+void OrbitMode::modifyView(ViewportWindow* vpwin, Viewport* vp, QPointF delta)
 {
 	if(vp->viewType() < Viewport::VIEW_ORTHO)
 		vp->setViewType(Viewport::VIEW_ORTHO, true);
@@ -341,7 +342,7 @@ void OrbitMode::modifyView(Viewport* vp, QPointF delta)
 		theta = atan2(v.x(), v.y());
 	phi = atan2(sqrt(v.x() * v.x() + v.y() * v.y()), v.z());
 
-	FloatType speed = 4.0f / vp->size().height();
+	FloatType speed = FloatType(4) / vp->windowSize().height();
 	FloatType deltaTheta = speed * delta.x();
 	FloatType deltaPhi = -speed * delta.y();
 
@@ -386,10 +387,11 @@ void OrbitMode::modifyView(Viewport* vp, QPointF delta)
 /******************************************************************************
 * Sets the orbit rotation center to the space location under given mouse coordinates.
 ******************************************************************************/
-bool PickOrbitCenterMode::pickOrbitCenter(Viewport* vp, const QPointF& pos)
+bool PickOrbitCenterMode::pickOrbitCenter(ViewportWindow* vpwin, const QPointF& pos)
 {
 	Point3 p;
-	if(findIntersection(vp, pos, p)) {
+	Viewport* vp = vpwin->viewport();
+	if(findIntersection(vpwin, pos, p)) {
 		vp->dataset()->viewportConfig()->setOrbitCenterMode(ViewportConfiguration::ORBIT_USER_DEFINED);
 		vp->dataset()->viewportConfig()->setUserOrbitCenter(p);
 		return true;
@@ -397,7 +399,7 @@ bool PickOrbitCenterMode::pickOrbitCenter(Viewport* vp, const QPointF& pos)
 	else {
 		vp->dataset()->viewportConfig()->setOrbitCenterMode(ViewportConfiguration::ORBIT_SELECTION_CENTER);
 		vp->dataset()->viewportConfig()->setUserOrbitCenter(Point3::Origin());
-		if(MainWindow* mainWindow = vp->dataset()->mainWindow())
+		if(MainWindow* mainWindow = MainWindow::fromDataset(vp->dataset()))
 			mainWindow->statusBar()->showMessage(tr("No object has been picked. Resetting orbit center to default position."), 1200);
 		return false;
 	}
@@ -406,24 +408,24 @@ bool PickOrbitCenterMode::pickOrbitCenter(Viewport* vp, const QPointF& pos)
 /******************************************************************************
 * Handles the mouse down events for a Viewport.
 ******************************************************************************/
-void PickOrbitCenterMode::mousePressEvent(Viewport* vp, QMouseEvent* event)
+void PickOrbitCenterMode::mousePressEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	if(event->button() == Qt::LeftButton) {
-		if(pickOrbitCenter(vp, event->localPos()))
+		if(pickOrbitCenter(vpwin, event->localPos()))
 			return;
 	}
-	ViewportInputMode::mousePressEvent(vp, event);
+	ViewportInputMode::mousePressEvent(vpwin, event);
 }
 
 /******************************************************************************
 * Is called when the user moves the mouse while the operation is not active.
 ******************************************************************************/
-void PickOrbitCenterMode::mouseMoveEvent(Viewport* vp, QMouseEvent* event)
+void PickOrbitCenterMode::mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
-	ViewportInputMode::mouseMoveEvent(vp, event);
+	ViewportInputMode::mouseMoveEvent(vpwin, event);
 
 	Point3 p;
-	bool isOverObject = findIntersection(vp, event->localPos(), p);
+	bool isOverObject = findIntersection(vpwin, event->localPos(), p);
 
 	if(!isOverObject && _showCursor) {
 		_showCursor = false;
@@ -439,9 +441,9 @@ void PickOrbitCenterMode::mouseMoveEvent(Viewport* vp, QMouseEvent* event)
 * Finds the closest intersection point between a ray originating from the
 * current mouse cursor position and the whole scene.
 ******************************************************************************/
-bool PickOrbitCenterMode::findIntersection(Viewport* vp, const QPointF& mousePos, Point3& intersectionPoint)
+bool PickOrbitCenterMode::findIntersection(ViewportWindow* vpwin, const QPointF& mousePos, Point3& intersectionPoint)
 {
-	ViewportPickResult pickResults = vp->pick(mousePos);
+	ViewportPickResult pickResults = vpwin->pick(mousePos);
 	if(!pickResults.valid)
 		return false;
 

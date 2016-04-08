@@ -26,14 +26,18 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util)
 
 Exception::ExceptionHandler Exception::exceptionHandler = nullptr;
 
-Exception::Exception()
+Exception::Exception(QObject* context) : _context(context)
 {
 	_messages.push_back("An exception has occurred.");
 }
 
-Exception::Exception(const QString& message)
+Exception::Exception(const QString& message, QObject* context) : _context(context)
 {
 	_messages.push_back(message);
+}
+
+Exception::Exception(const QStringList& errorMessages, QObject* context) : _messages(errorMessages), _context(context)
+{
 }
 
 Exception& Exception::appendDetailMessage(const QString& message)

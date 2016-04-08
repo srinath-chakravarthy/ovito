@@ -22,7 +22,7 @@
 #ifndef __OVITO_VIEWPORT_INPUT_MODE_H
 #define __OVITO_VIEWPORT_INPUT_MODE_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(ViewportInput)
 
@@ -33,7 +33,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
  * The ViewportInputManager keeps a stack of ViewportInputMode objects.
  * The topmost handler is the active one and handles all mouse events for the viewports.
  */
-class OVITO_CORE_EXPORT ViewportInputMode : public QObject
+class OVITO_GUI_EXPORT ViewportInputMode : public QObject
 {
 public:
 
@@ -67,7 +67,7 @@ public:
 	virtual InputModeType modeType() { return NormalMode; }
 
 	/// \brief Handles mouse press events for a Viewport.
-	/// \param vp The viewport in which the mouse event occurred.
+	/// \param vpwin The viewport window in which the mouse event occurred.
 	/// \param event The mouse event.
 	///
 	/// The default implementation of this method deactivates the
@@ -75,37 +75,37 @@ public:
 	/// It also activates temporary viewport navigation modes like
 	/// pan, zoom and orbit when the user uses the corresponding
 	/// mouse+key combination.
-	virtual void mousePressEvent(Viewport* vp, QMouseEvent* event);
+	virtual void mousePressEvent(ViewportWindow* vpwin, QMouseEvent* event);
 
 	/// \brief Handles mouse release events for a Viewport.
-	/// \param vp The viewport in which the mouse event occurred.
+	/// \param vpwin The viewport window in which the mouse event occurred.
 	/// \param event The mouse event.
 	///
 	/// The default implementation deactivates any
 	/// temporary viewport navigation mode like pan, zoom and orbit
 	/// when they have been activated by the mousePressEvent() method.
-	virtual void mouseReleaseEvent(Viewport* vp, QMouseEvent* event);
+	virtual void mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event);
 
 	/// \brief Handles mouse move events for a Viewport.
-	/// \param vp The viewport in which the mouse event occurred.
+	/// \param vpwin The viewport window in which the mouse event occurred.
 	/// \param event The mouse event.
 	///
 	/// The default implementation delegates the event to the
 	/// temporary viewport navigation mode like pan, zoom and orbit
 	/// when it has been activated in the mousePressEvent() method.
-	virtual void mouseMoveEvent(Viewport* vp, QMouseEvent* event);
+	virtual void mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event);
 
 	/// \brief Handles mouse wheel events for a Viewport.
-	/// \param vp The viewport in which the mouse event occurred.
+	/// \param vpwin The viewport window in which the mouse event occurred.
 	/// \param event The mouse event.
 	///
 	/// The default implementation zooms in or out according to the wheel rotation.
-	virtual void wheelEvent(Viewport* vp, QWheelEvent* event);
+	virtual void wheelEvent(ViewportWindow* vpwin, QWheelEvent* event);
 
 	/// \brief Handles double click events for a Viewport.
-	/// \param vp The viewport in which the mouse event occurred.
+	/// \param vpwin The viewport window in which the mouse event occurred.
 	/// \param event The mouse event.
-	virtual void mouseDoubleClickEvent(Viewport* vp, QMouseEvent* event);
+	virtual void mouseDoubleClickEvent(ViewportWindow* vpwin, QMouseEvent* event);
 
 	/// \brief Return the mouse cursor shown in the viewport windows
 	///        while this input handler is active.

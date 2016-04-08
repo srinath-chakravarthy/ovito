@@ -22,7 +22,7 @@
 #ifndef __OVITO_VIEWPORT_INPUT_MANAGER_H
 #define __OVITO_VIEWPORT_INPUT_MANAGER_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "ViewportInputMode.h"
 #include "NavigationModes.h"
 #include "XFormModes.h"
@@ -32,7 +32,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /**
  * \brief Manages a stack of viewport input handlers.
  */
-class OVITO_CORE_EXPORT ViewportInputManager : public QObject
+class OVITO_GUI_EXPORT ViewportInputManager : public QObject
 {
 	Q_OBJECT
 

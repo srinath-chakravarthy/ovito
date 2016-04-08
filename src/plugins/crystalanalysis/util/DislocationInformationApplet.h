@@ -23,10 +23,9 @@
 #define __OVITO_DISLOCATION_INFORMATION_APPLET_H
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <core/plugins/utility/UtilityApplet.h>
-#include <core/viewport/input/ViewportInputMode.h>
-#include <core/viewport/input/ViewportInputManager.h>
-#include <plugins/particles/util/ParticlePickingHelper.h>
+#include <gui/plugins/utility/UtilityApplet.h>
+#include <gui/viewport/input/ViewportInputMode.h>
+#include <gui/viewport/input/ViewportInputManager.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -81,10 +80,10 @@ public:
 	virtual InputModeType modeType() override { return ExclusiveMode; }
 
 	/// Handles the mouse up events for a Viewport.
-	virtual void mouseReleaseEvent(Viewport* vp, QMouseEvent* event) override;
+	virtual void mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event) override;
 
 	/// \brief Handles the mouse move event for the given viewport.
-	virtual void mouseMoveEvent(Viewport* vp, QMouseEvent* event) override;
+	virtual void mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event) override;
 
 	/// \brief Lets the input mode render its overlay content in a viewport.
 	virtual void renderOverlay3D(Viewport* vp, ViewportSceneRenderer* renderer) override;
@@ -110,7 +109,7 @@ private:
 	};
 
 	/// Determines the dislocation segment under the mouse cursor.
-	bool pickDislocationSegment(Viewport* vp, const QPoint& pos, PickResult& result) const;
+	bool pickDislocationSegment(ViewportWindow* vpwin, const QPoint& pos, PickResult& result) const;
 
 	/// The applet.
 	DislocationInformationApplet* _applet;

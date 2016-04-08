@@ -63,6 +63,10 @@ public:
 	/// \return The maximized viewport or \c NULL if no one is currently maximized.
 	Viewport* maximizedViewport() { return _maximizedViewport; }
 
+	/// \brief Immediately repaints all viewports that have been scheduled for an update using updateViewports().
+	/// \sa updateViewports()
+	void processViewportUpdates();
+	
 	/// \brief A call to this method suspends redrawing of the viewports.
 	///
 	/// To resume redrawing of viewports call resumeViewportUpdates().
@@ -133,6 +137,19 @@ public Q_SLOTS:
 		for(Viewport* vp : viewports())
 			vp->zoomToSceneExtents();
 	}
+
+	/// \brief This will flag all viewports for redrawing.
+	///
+	/// This function does not cause an immediate repaint of the viewports; instead it schedules a
+	/// paint event for processing when Qt returns to the main event loop. You can call this method as often
+	/// as you want; it will return immediately and will cause only one viewport repaint when Qt returns to the
+	/// main event loop.
+	///
+	/// To update only a single viewport, Viewport::updateViewport() should be used.
+	///
+	/// To redraw all viewports immediately without waiting for the paint event to be processed,
+	/// call processViewportUpdates() subsequently.
+	void updateViewports();
 
 protected:
 

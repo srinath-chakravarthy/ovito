@@ -60,7 +60,7 @@
 /******************************************************************************
 * QT Library
 ******************************************************************************/
-#include <QApplication>
+#include <QCoreApplication>
 #include <QException>
 #include <QStringList>
 #include <QSettings>
@@ -76,6 +76,13 @@
 #include <QMatrix4x4>
 #include <QDateTime>
 #include <QThread>
+#include <QImage>
+#include <QFont>
+#include <QPainter>
+#include <QPen>
+#include <QBrush>
+#include <QCommandLineParser>
+#include <QGuiApplication>
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
 #  error "OVITO requires at least Qt 5.2"

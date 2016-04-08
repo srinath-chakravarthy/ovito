@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/properties/IntegerRadioButtonParameterUI.h>
+#include <gui/GUI.h>
+#include <gui/properties/IntegerRadioButtonParameterUI.h>
 #include <core/animation/controller/Controller.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/dataset/UndoStack.h>
@@ -29,7 +29,7 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
 
 // Gives the class run-time type information.
-IMPLEMENT_OVITO_OBJECT(Core, IntegerRadioButtonParameterUI, PropertyParameterUI);
+IMPLEMENT_OVITO_OBJECT(Gui, IntegerRadioButtonParameterUI, PropertyParameterUI);
 
 /******************************************************************************
 * The constructor.
@@ -107,7 +107,7 @@ void IntegerRadioButtonParameterUI::updateUI()
 				QVariant val = editObject()->property(propertyName());
 				OVITO_ASSERT_MSG(val.isValid() && val.canConvert(QVariant::Int), "IntegerRadioButtonParameterUI::updateUI()", QString("The object class %1 does not define a property with the name %2 that can be cast to integer type.").arg(editObject()->metaObject()->className(), QString(propertyName())).toLocal8Bit().constData());
 				if(!val.isValid() || !val.canConvert(QVariant::Int)) {
-					throw Exception(tr("The object class %1 does not define a property with the name %2 that can be cast to integer type.").arg(editObject()->metaObject()->className(), QString(propertyName())));
+					editObject()->throwException(tr("The object class %1 does not define a property with the name %2 that can be cast to integer type.").arg(editObject()->metaObject()->className(), QString(propertyName())));
 				}
 				id = val.toInt();
 			}

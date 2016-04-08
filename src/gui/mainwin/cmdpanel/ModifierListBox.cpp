@@ -19,7 +19,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/plugins/PluginManager.h>
 #include <core/scene/pipeline/Modifier.h>
 #include <core/scene/pipeline/PipelineObject.h>

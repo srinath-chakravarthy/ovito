@@ -19,13 +19,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/properties/AffineTransformationParameterUI.h>
+#include <gui/GUI.h>
+#include <gui/properties/AffineTransformationParameterUI.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
 
 // Gives the class run-time type information.
-IMPLEMENT_OVITO_OBJECT(Core, AffineTransformationParameterUI, FloatParameterUI);
+IMPLEMENT_OVITO_OBJECT(Gui, AffineTransformationParameterUI, FloatParameterUI);
 
 /******************************************************************************
 * Constructor for a Qt property.
@@ -94,7 +94,7 @@ void AffineTransformationParameterUI::updateUI()
 			val = editObject()->property(propertyName());
 			OVITO_ASSERT_MSG(val.isValid() && (val.canConvert<AffineTransformation>()), "AffineTransformationParameterUI::updateUI()", QString("The object class %1 does not define a property with the name %2 that can be cast to an AffineTransformation type.").arg(editObject()->metaObject()->className(), QString(propertyName())).toLocal8Bit().constData());
 			if(!val.isValid() || !(val.canConvert<AffineTransformation>())) {
-				throw Exception(tr("The object class %1 does not define a property with the name %2 that can be cast to an AffineTransformation type.").arg(editObject()->metaObject()->className(), QString(propertyName())));
+				editObject()->throwException(tr("The object class %1 does not define a property with the name %2 that can be cast to an AffineTransformation type.").arg(editObject()->metaObject()->className(), QString(propertyName())));
 			}
 		}
 		else if(isPropertyFieldUI()) {

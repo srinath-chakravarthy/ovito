@@ -22,7 +22,7 @@
 #ifndef __OVITO_ANIMATION_FRAMES_TOOL_BUTTON_H
 #define __OVITO_ANIMATION_FRAMES_TOOL_BUTTON_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/dataset/DataSetContainer.h>
 
@@ -39,7 +39,7 @@ public:
 	
 	/// Constructs the widget.
 	AnimationFramesToolButton(DataSetContainer& datasetContainer, QWidget* parent = 0) : QToolButton(parent), _datasetContainer(datasetContainer) {
-		setIcon(QIcon(QString(":/core/actions/animation/named_frames.png")));
+		setIcon(QIcon(QString(":/gui/actions/animation/named_frames.png")));
 		setToolTip(tr("Jump to animation frame"));
 		setFocusPolicy(Qt::NoFocus);
 		connect(this, &QToolButton::clicked, this, &AnimationFramesToolButton::onClicked);

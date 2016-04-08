@@ -22,7 +22,7 @@
 #ifndef __OVITO_PYSCRIPT_H
 #define __OVITO_PYSCRIPT_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 
 // Qt defines the 'slots' and 'signals' keyword macros. They conflict with identifiers used in the Python headers.
 #ifdef slots

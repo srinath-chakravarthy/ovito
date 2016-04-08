@@ -22,7 +22,7 @@
 #include <plugins/pyscript/PyScript.h>
 #include <plugins/pyscript/binding/PythonBinding.h>
 #include <core/plugins/PluginManager.h>
-#include <core/gui/app/Application.h>
+#include <core/app/Application.h>
 #include <core/utilities/concurrent/ProgressDisplay.h>
 #include "ScriptEngine.h"
 
@@ -45,8 +45,14 @@ PythonPluginRegistration* PythonPluginRegistration::linkedlist = nullptr;
 ScriptEngine::ScriptEngine(DataSet* dataset, QObject* parent, bool redirectOutputToConsole)
 	: QObject(parent), _dataset(dataset)
 {
-	// Initialize the underlying Python interpreter if it isn't initialized already.
-	initializeInterpreter();
+	try {
+		// Initialize the underlying Python interpreter if it isn't initialized already.
+		initializeInterpreter();
+	}
+	catch(Exception& ex) {
+		ex.setContext(dataset);
+		throw;
+	}
 
 	// Initialize state of the script engine.
 	try {
@@ -61,7 +67,7 @@ ScriptEngine::ScriptEngine(DataSet* dataset, QObject* parent, bool redirectOutpu
 	}
 	catch(const error_already_set&) {
 		PyErr_Print();
-		throw Exception(tr("Failed to initialize Python interpreter. See console output for error details."));
+		dataset->throwException(tr("Failed to initialize Python interpreter. See console output for error details."));
 	}
 
 	// Install default signal handlers for Python script output, which forward the script output to the host application's stdout/stderr.
@@ -222,11 +228,11 @@ void ScriptEngine::initializeInterpreter()
 ******************************************************************************/
 int ScriptEngine::executeCommands(const QString& commands, const QStringList& scriptArguments)
 {
-	if(QThread::currentThread() != QApplication::instance()->thread())
+	if(QThread::currentThread() != QCoreApplication::instance()->thread())
 		throw Exception(tr("Can run Python scripts only from the main thread."));
 
 	if(_mainNamespace.is_none())
-		throw Exception(tr("Python script engine is not initialized."));
+		throw Exception(tr("Python script engine is not initialized."), dataset());
 
 	// Remember the script engine that was active so we can restore it later.
 	ScriptEngine* previousEngine = _activeEngine;
@@ -256,15 +262,16 @@ int ScriptEngine::executeCommands(const QString& commands, const QStringList& sc
 			PyErr_Print();
 		}
 	    _activeEngine = previousEngine;
-		throw Exception(tr("Python interpreter has exited with an error. See interpreter output for details."));
+		throw Exception(tr("Python interpreter has exited with an error. See interpreter output for details."), dataset());
 	}
-	catch(const Exception&) {
+	catch(Exception& ex) {
 	    _activeEngine = previousEngine;
+	    ex.setContext(dataset());
 		throw;
 	}
 	catch(const std::exception& ex) {
 	    _activeEngine = previousEngine;
-		throw Exception(tr("Script execution error: %1").arg(QString::fromLocal8Bit(ex.what())));
+		throw Exception(tr("Script execution error: %1").arg(QString::fromLocal8Bit(ex.what())), dataset());
 	}
 	catch(...) {
 	    _activeEngine = previousEngine;
@@ -278,11 +285,11 @@ int ScriptEngine::executeCommands(const QString& commands, const QStringList& sc
 ******************************************************************************/
 void ScriptEngine::execute(const std::function<void()>& func)
 {
-	if(QThread::currentThread() != QApplication::instance()->thread())
+	if(QThread::currentThread() != QCoreApplication::instance()->thread())
 		throw Exception(tr("Can run Python scripts only from the main thread."));
 
 	if(_mainNamespace.is_none())
-		throw Exception(tr("Python script engine is not initialized."));
+		throw Exception(tr("Python script engine is not initialized."), dataset());
 
 	// Remember the script engine that was active so we can restore it later.
 	ScriptEngine* previousEngine = _activeEngine;
@@ -297,19 +304,20 @@ void ScriptEngine::execute(const std::function<void()>& func)
 			PyErr_Print();
 		}
 	    _activeEngine = previousEngine;
-		throw Exception(tr("Python interpreter has exited with an error. See interpreter output for details."));
+		throw Exception(tr("Python interpreter has exited with an error. See interpreter output for details."), dataset());
 	}
-	catch(const Exception&) {
+	catch(Exception& ex) {
 	    _activeEngine = previousEngine;
+	    ex.setContext(dataset());
 		throw;
 	}
 	catch(const std::exception& ex) {
 	    _activeEngine = previousEngine;
-		throw Exception(tr("Script execution error: %1").arg(QString::fromLocal8Bit(ex.what())));
+		throw Exception(tr("Script execution error: %1").arg(QString::fromLocal8Bit(ex.what())), dataset());
 	}
 	catch(...) {
 	    _activeEngine = previousEngine;
-		throw Exception(tr("Unhandled exception thrown by Python interpreter."));
+		throw Exception(tr("Unhandled exception thrown by Python interpreter."), dataset());
 	}
 }
 
@@ -330,11 +338,11 @@ boost::python::object ScriptEngine::callObject(const boost::python::object& call
 ******************************************************************************/
 int ScriptEngine::executeFile(const QString& filename, const QStringList& scriptArguments)
 {
-	if(QThread::currentThread() != QApplication::instance()->thread())
+	if(QThread::currentThread() != QCoreApplication::instance()->thread())
 		throw Exception(tr("Can run Python scripts only from the main thread."));
 
 	if(_mainNamespace.is_none())
-		throw Exception(tr("Python script engine is not initialized."));
+		throw Exception(tr("Python script engine is not initialized."), dataset());
 
 	// Remember the script engine that was active so we can restore it later.
 	ScriptEngine* previousEngine = _activeEngine;
@@ -363,7 +371,7 @@ int ScriptEngine::executeFile(const QString& filename, const QStringList& script
 #else
 		QFile file(filename);
 		if(!file.open(QIODevice::ReadOnly))
-			throw Exception(tr("Failed to open script file %1: %2").arg(filename, file.errorString()));
+			throw Exception(tr("Failed to open script file %1: %2").arg(filename, file.errorString()), dataset());
 		QByteArray fileData = file.readAll();
 		file.close();
 		PyObject* codeObj = Py_CompileString(fileData.constData(), filename.toUtf8().constData(), Py_file_input);
@@ -386,7 +394,7 @@ int ScriptEngine::executeFile(const QString& filename, const QStringList& script
 		}
 
 		// Prepare C++ exception object.
-	    Exception exception(tr("The Python script '%1' has exited with an error.").arg(filename));
+	    Exception exception(tr("The Python script '%1' has exited with an error.").arg(filename), dataset());
 
 		// Retrieve Python error message and traceback.
 	    if(Application::instance().guiMode()) {
@@ -424,17 +432,18 @@ int ScriptEngine::executeFile(const QString& filename, const QStringList& script
 	    // Raise C++ exception.
 	    throw exception;
 	}
-	catch(const Exception&) {
+	catch(Exception& ex) {
 	    _activeEngine = previousEngine;
+	    ex.setContext(dataset());
 		throw;
 	}
 	catch(const std::exception& ex) {
 	    _activeEngine = previousEngine;
-		throw Exception(tr("Script execution error: %1").arg(QString::fromLocal8Bit(ex.what())));
+		throw Exception(tr("Script execution error: %1").arg(QString::fromLocal8Bit(ex.what())), dataset());
 	}
 	catch(...) {
 	    _activeEngine = previousEngine;
-		throw Exception(tr("Unhandled exception thrown by Python interpreter."));
+		throw Exception(tr("Unhandled exception thrown by Python interpreter."), dataset());
 	}
 }
 

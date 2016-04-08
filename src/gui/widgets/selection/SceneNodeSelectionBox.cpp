@@ -19,7 +19,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/scene/SelectionSet.h>
 #include "SceneNodeSelectionBox.h"

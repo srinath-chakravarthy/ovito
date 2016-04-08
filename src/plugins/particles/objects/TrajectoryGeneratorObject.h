@@ -23,7 +23,7 @@
 #define __OVITO_TRAJECTORY_GENERATOR_OBJECT_H
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/properties/PropertiesEditor.h>
 #include "TrajectoryObject.h"
 
 namespace Ovito { namespace Particles {

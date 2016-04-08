@@ -19,7 +19,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "ImportFileDialog.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -36,7 +36,7 @@ ImportFileDialog::ImportFileDialog(const QVector<OvitoObjectType*>& importerType
 		_filterStrings << QString("%1 (%2)").arg(imp->fileFilterDescription(), imp->fileFilter());
 	}
 	if(_filterStrings.isEmpty())
-		throw Exception(tr("There are no importer plugins installed."));
+		dataset->throwException(tr("There are no importer plugins installed."));
 
 	_filterStrings.prepend(tr("<Auto-detect file format> (*)"));
 

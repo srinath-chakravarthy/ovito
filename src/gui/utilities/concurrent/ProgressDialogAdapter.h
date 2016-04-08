@@ -19,41 +19,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PROGRESS_DISPLAY_H
-#define __OVITO_PROGRESS_DISPLAY_H
+#ifndef __OVITO_PROGRESS_DIALOG_ADAPTER_H
+#define __OVITO_PROGRESS_DIALOG_ADAPTER_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
-
-class AbstractProgressDisplay
-{
-public:
-
-	/// Returns whether the operation has been canceled by the user.
-	virtual bool wasCanceled() = 0;
-
-	/// Cancels the operation.
-	virtual void cancel() = 0;
-
-	/// Sets the status text to be displayed.
-	virtual void setStatusText(const QString& text) = 0;
-
-	/// Return the current status text.
-	virtual QString statusText() = 0;
-
-	/// Returns the highest value represented by the progress bar.
-	virtual int maximum() = 0;
-
-	/// Sets the highest value represented by the progress bar.
-	virtual void setMaximum(int max) = 0;
-
-	/// Returns the value displayed by the progress bar.
-	virtual int value() = 0;
-
-	/// Sets the value displayed by the progress bar.
-	virtual void setValue(int v) = 0;
-};
 
 class ProgressDialogAdapter : public AbstractProgressDisplay
 {
@@ -111,4 +83,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_PROGRESS_DISPLAY_H
+#endif // __OVITO_PROGRESS_DIALOG_ADAPTER_H

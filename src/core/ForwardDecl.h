@@ -34,6 +34,7 @@
 
 namespace Ovito {
 
+	class Application;
 	OVITO_BEGIN_INLINE_NAMESPACE(Util)
 		OVITO_BEGIN_INLINE_NAMESPACE(IO)
 			class ObjectSaveStream;
@@ -42,7 +43,7 @@ namespace Ovito {
 			class CompressedTextWriter;
 			OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 				class VideoEncoder;
-				class SftpDownloadJob;
+				class SftpJob;
 			OVITO_END_INLINE_NAMESPACE
 		OVITO_END_INLINE_NAMESPACE
 		OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
@@ -59,12 +60,16 @@ namespace Ovito {
 		OVITO_END_INLINE_NAMESPACE
 	OVITO_END_INLINE_NAMESPACE
 	OVITO_BEGIN_INLINE_NAMESPACE(Anim)
+		class Controller;
 		class AnimationSettings;
 		class LookAtController;
+		class KeyframeController;
+		class PRSTransformationController;
 	OVITO_END_INLINE_NAMESPACE
 	OVITO_BEGIN_INLINE_NAMESPACE(PluginSystem)
 		class Plugin;
 		class PluginManager;
+		class AutoStartObject;
 		OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 			class NativePlugin;
 		OVITO_END_INLINE_NAMESPACE

@@ -22,7 +22,7 @@
 #ifndef __OVITO_SUBOBJECT_PARAMETER_UI_H
 #define __OVITO_SUBOBJECT_PARAMETER_UI_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "ParameterUI.h"
 #include "PropertiesEditor.h"
 
@@ -32,7 +32,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 * This parameter UI will open up a sub-editor for an object that is
 * referenced by the edit object.
 ******************************************************************************/
-class OVITO_CORE_EXPORT SubObjectParameterUI : public PropertyParameterUI
+class OVITO_GUI_EXPORT SubObjectParameterUI : public PropertyParameterUI
 {
 public:
 

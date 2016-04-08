@@ -27,14 +27,14 @@
 #ifndef __OVITO_SHARED_OPENGL_RESOURCE_H
 #define __OVITO_SHARED_OPENGL_RESOURCE_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 class OpenGLContextInfo;
 class OpenGLContextManager;
 
-class OVITO_CORE_EXPORT OpenGLSharedResource
+class OVITO_GUI_EXPORT OpenGLSharedResource
 {
 public:
 

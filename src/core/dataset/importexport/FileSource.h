@@ -55,7 +55,7 @@ public:
 	/// \param sourceUrl The new source location.
 	/// \param importer The importer object that will parse the input file.
 	/// \return false if the operation has been canceled by the user.
-	bool setSource(QUrl sourceUrl, FileSourceImporter* importer, bool useExactURL = false);
+	bool setSource(QUrl sourceUrl, FileSourceImporter* importer, bool useExactURL);
 
 	/// \brief Returns the source location of the data.
 	const QUrl& sourceUrl() const { return _sourceUrl; }
@@ -102,14 +102,6 @@ public:
 
 	/// Returns the title of this object.
 	virtual QString objectTitle() override;
-
-public Q_SLOTS:
-
-	/// \brief Displays the file selection dialog and lets the user select a new input file.
-	void showFileSelectionDialog(QWidget* parent = nullptr);
-
-	/// \brief Displays the remote file selection dialog and lets the user select a new source URL.
-	void showURLSelectionDialog(QWidget* parent = nullptr);
 
 protected Q_SLOTS:
 

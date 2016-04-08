@@ -28,6 +28,7 @@
 #include <core/scene/ObjectNode.h>
 #include <core/viewport/overlay/ViewportOverlay.h>
 #include "ViewportSettings.h"
+#include "ViewportWindowInterface.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View)
 
@@ -100,7 +101,7 @@ public:
 	Q_INVOKABLE Viewport(DataSet* dataset);
 
 	/// \brief Destructor.
-	~Viewport();
+	virtual ~Viewport();
 
 	/// \brief Computes the projection matrix and other parameters.
 	/// \param time The animation time for which the view is requested.
@@ -109,6 +110,24 @@ public:
 	///                         is used to calculate the near and far z-clipping planes.
 	/// \return The returned structure describes the projection used to render the contents of the viewport.
 	ViewProjectionParameters projectionParameters(TimePoint time, FloatType aspectRatio, const Box3& sceneBoundingBox);
+
+    /// \brief Puts an update request event for this viewport on the event loop.
+    ///
+	/// Calling this method is going to redraw the viewport contents unless the viewport is hidden.
+	/// This function does not cause an immediate repaint; instead it schedules an
+	/// update request event, which is processed when execution returns to the main event loop.
+	///
+	/// To update all viewports at once you should use ViewportConfiguration::updateViewports().
+	void updateViewport();
+
+	/// \brief Immediately redraws the contents of this viewport.
+	void redrawViewport();
+
+	/// \brief If an update request is pending for this viewport, immediately processes it and redraw the viewport.
+	void processUpdateRequest();
+
+	/// \brief Returns whether the rendering of the viewport's contents is currently in progress.
+	bool isRendering() const { return _isRendering; }
 
 	/// \brief Returns the view type of the viewport.
 	/// \return The type of view used in the viewport.
@@ -172,17 +191,8 @@ public:
 		setCameraTransformation(tm);
 	}
 
-	/// \brief Returns the current world to camera transformation matrix.
-	const AffineTransformation& viewMatrix() const { return _projParams.viewMatrix; }
-
-	/// \brief Returns the inverse of current camera to world matrix.
-	const AffineTransformation& inverseViewMatrix() const { return _projParams.inverseViewMatrix; }
-
-	/// \brief Returns the current projection transformation matrix.
-	const Matrix4& projectionMatrix() const { return _projParams.projectionMatrix; }
-
-	/// \brief Returns the inverse of the current projection matrix.
-	const Matrix4& inverseProjectionMatrix() const { return _projParams.inverseProjectionMatrix; }
+	/// Return the current 3D projection used to render the contents of the viewport.
+	const ViewProjectionParameters& projectionParams() const { return _projParams; }
 
 	/// \brief Returns whether the viewport displays a realtime preview of the rendered image.
 	bool renderPreviewMode() const { return _renderPreviewMode; }
@@ -255,6 +265,11 @@ public:
 	/// \return \c true if an intersection has been found; \c false if not.
 	bool computeConstructionPlaneIntersection(const Point2& viewportPosition, Point3& intersectionPoint, FloatType epsilon = FLOATTYPE_EPSILON);
 
+	/// Returns the geometry of the render frame, i.e., the region of the viewport that
+	/// will be visible in a rendered image.
+	/// The returned box is given in viewport coordinates (interval [-1,+1]).
+	Box2 renderFrameRect() const;
+	
 	/// \brief Zooms to the extents of the scene.
 	Q_INVOKABLE void zoomToSceneExtents();
 
@@ -298,6 +313,21 @@ public:
 	void removeOverlay(int index) {
 		_overlays.remove(index);
 	}
+
+	/// \brief Returns the size of the viewport's screen window.
+	QSize windowSize() const {
+		return window() ? window()->viewportWindowSize() : QSize(0,0);
+	}
+
+	/// \brief Returns the GUI window associated with this viewport (may be NULL).
+	ViewportWindowInterface* window() const { return _window; }
+
+	/// \brief Associates this viewport with a GUI window. This is an internal method.
+	void setWindow(ViewportWindowInterface* window) { _window = window; }
+
+	/// Renders the contents of the interactive viewport in a window.
+	/// This is an internal method, which should not be called by user code.
+	void renderInteractive(SceneRenderer* renderer);
 
 protected:
 
@@ -378,6 +408,9 @@ private:
 
 	/// The list of overlay objects owned by this viewport.
 	VectorReferenceField<ViewportOverlay> _overlays;
+
+	/// The GUI window associated with this viewport.
+	ViewportWindowInterface* _window;
 
 private:
 

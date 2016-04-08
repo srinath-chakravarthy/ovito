@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/properties/ColorParameterUI.h>
+#include <gui/GUI.h>
+#include <gui/properties/ColorParameterUI.h>
 #include <core/dataset/UndoStack.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/animation/controller/Controller.h>
@@ -29,7 +29,7 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
 
 // Gives the class run-time type information.
-IMPLEMENT_OVITO_OBJECT(Core, ColorParameterUI, PropertyParameterUI);
+IMPLEMENT_OVITO_OBJECT(Gui, ColorParameterUI, PropertyParameterUI);
 
 /******************************************************************************
 * The constructor.

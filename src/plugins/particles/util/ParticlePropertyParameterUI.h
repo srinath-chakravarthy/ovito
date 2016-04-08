@@ -23,7 +23,7 @@
 #define __OVITO_PARTICLE_PROPERTY_PARAMETER_UI_H
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/ParameterUI.h>
+#include <gui/properties/ParameterUI.h>
 #include "ParticlePropertyComboBox.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util)

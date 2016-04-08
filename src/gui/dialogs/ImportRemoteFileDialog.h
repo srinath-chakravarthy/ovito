@@ -22,7 +22,7 @@
 #ifndef __OVITO_IMPORT_REMOTE_FILE_DIALOG_H
 #define __OVITO_IMPORT_REMOTE_FILE_DIALOG_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/dataset/importexport/FileImporter.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -30,7 +30,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /**
  * This dialog lets the user select a remote file to be imported.
  */
-class OVITO_CORE_EXPORT ImportRemoteFileDialog : public QDialog
+class OVITO_GUI_EXPORT ImportRemoteFileDialog : public QDialog
 {
 	Q_OBJECT
 	

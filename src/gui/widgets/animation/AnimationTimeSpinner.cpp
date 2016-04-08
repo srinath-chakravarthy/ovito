@@ -19,10 +19,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/utilities/units/UnitsManager.h>
-#include <core/gui/mainwin/MainWindow.h>
+#include <gui/mainwin/MainWindow.h>
 #include "AnimationTimeSpinner.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)

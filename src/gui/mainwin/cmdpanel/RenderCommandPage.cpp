@@ -19,10 +19,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/plugins/PluginManager.h>
-#include <core/gui/actions/ActionManager.h>
-#include <core/gui/mainwin/MainWindow.h>
+#include <gui/actions/ActionManager.h>
+#include <gui/mainwin/MainWindow.h>
 #include <core/rendering/RenderSettings.h>
 #include "RenderCommandPage.h"
 

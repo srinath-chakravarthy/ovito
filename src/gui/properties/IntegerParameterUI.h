@@ -22,7 +22,7 @@
 #ifndef __OVITO_INTEGER_PARAMETER_UI_H
 #define __OVITO_INTEGER_PARAMETER_UI_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "NumericalParameterUI.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
@@ -30,7 +30,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /******************************************************************************
 * A parameter UI for integer properties.
 ******************************************************************************/
-class OVITO_CORE_EXPORT IntegerParameterUI : public NumericalParameterUI
+class OVITO_GUI_EXPORT IntegerParameterUI : public NumericalParameterUI
 {
 public:
 

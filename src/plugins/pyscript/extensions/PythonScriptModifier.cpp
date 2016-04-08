@@ -23,10 +23,10 @@
 #include <core/animation/AnimationSettings.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/UndoStack.h>
-#include <core/gui/properties/StringParameterUI.h>
-#include <core/gui/mainwin/MainWindow.h>
-#include <core/gui/actions/ActionManager.h>
 #include <core/utilities/concurrent/TaskManager.h>
+#include <gui/properties/StringParameterUI.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/actions/ActionManager.h>
 #include "PythonScriptModifier.h"
 
 #ifndef signals
@@ -204,7 +204,7 @@ void PythonScriptModifier::runScriptFunction()
 
 				// Check if script function has been set.
 				if(!_modifyScriptFunction || _modifyScriptFunction->is_none())
-					throw Exception(tr("PythonScriptModifier script function has not been set."));
+					throwException(tr("PythonScriptModifier script function has not been set."));
 
 				// Get animation frame at which the modifier is evaluated.
 				int animationFrame = dataset()->animationSettings()->timeToFrame(_computingInterval.start());
@@ -272,7 +272,7 @@ void PythonScriptModifier::runScriptFunction()
 
 				if(_runningTask->isCanceled()) {
 					_outputCache.setStateValidity(TimeInterval::empty());
-					throw Exception(tr("Modifier script execution has been canceled by the user."));
+					throwException(tr("Modifier script execution has been canceled by the user."));
 				}
 
 				// Measure how long the script is running.
@@ -386,12 +386,12 @@ void PythonScriptModifier::compileScript()
 			_modifyScriptFunction = _scriptEngine->mainNamespace()["modify"];
 			if(!PyCallable_Check(_modifyScriptFunction->ptr())) {
 				_modifyScriptFunction = boost::python::object();
-				throw Exception(tr("Invalid Python script. It does not define a callable function modify()."));
+				throwException(tr("Invalid Python script. It does not define a callable function modify()."));
 			}
 		}
 		catch(const boost::python::error_already_set&) {
 			PyErr_Clear();
-			throw Exception(tr("Invalid Python script. It does not define the function modify()."));
+			throwException(tr("Invalid Python script. It does not define the function modify()."));
 		}
 	});
 }

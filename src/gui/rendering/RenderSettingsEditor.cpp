@@ -19,26 +19,27 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/properties/SubObjectParameterUI.h>
-#include <core/gui/properties/ColorParameterUI.h>
-#include <core/gui/properties/IntegerParameterUI.h>
-#include <core/gui/properties/StringParameterUI.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/IntegerRadioButtonParameterUI.h>
-#include <core/gui/properties/BooleanRadioButtonParameterUI.h>
-#include <core/gui/dialogs/SaveImageFileDialog.h>
-#include <core/gui/actions/ActionManager.h>
-#include <core/gui/mainwin/MainWindow.h>
-#include <core/gui/widgets/general/HtmlListWidget.h>
+#include <gui/GUI.h>
+#include <gui/properties/SubObjectParameterUI.h>
+#include <gui/properties/ColorParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
+#include <gui/properties/StringParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/IntegerRadioButtonParameterUI.h>
+#include <gui/properties/BooleanRadioButtonParameterUI.h>
+#include <gui/dialogs/SaveImageFileDialog.h>
+#include <gui/actions/ActionManager.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/widgets/general/HtmlListWidget.h>
 #include <core/rendering/RenderSettings.h>
-#include <core/rendering/RenderSettingsEditor.h>
 #include <core/rendering/SceneRenderer.h>
 #include <core/plugins/PluginManager.h>
+#include "RenderSettingsEditor.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Core, RenderSettingsEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(Gui, RenderSettingsEditor, PropertiesEditor);
+SET_OVITO_OBJECT_EDITOR(RenderSettings, RenderSettingsEditor);
 
 // Predefined output image dimensions.
 static const int imageSizePresets[][2] = {

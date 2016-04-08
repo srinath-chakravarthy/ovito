@@ -19,14 +19,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/properties/CustomParameterUI.h>
+#include <gui/GUI.h>
+#include <gui/properties/CustomParameterUI.h>
 #include <core/dataset/UndoStack.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
 
 // Gives the class run-time type information.
-IMPLEMENT_OVITO_OBJECT(Core, CustomParameterUI, PropertyParameterUI);
+IMPLEMENT_OVITO_OBJECT(Gui, CustomParameterUI, PropertyParameterUI);
 
 /******************************************************************************
 * Constructor for a Qt property.
@@ -87,7 +87,7 @@ void CustomParameterUI::updateUI()
 		if(isQtPropertyUI()) {
 			val = editObject()->property(propertyName());
 			if(!val.isValid())
-				throw Exception(tr("The object class %1 does not define a property with the name %2.").arg(editObject()->metaObject()->className(), QString(propertyName())));
+				editObject()->throwException(tr("The object class %1 does not define a property with the name %2.").arg(editObject()->metaObject()->className(), QString(propertyName())));
 		}
 		else if(isPropertyFieldUI()) {
 			val = editObject()->getPropertyFieldValue(*propertyField());

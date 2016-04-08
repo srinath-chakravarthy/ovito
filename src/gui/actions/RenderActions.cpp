@@ -19,10 +19,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/actions/ActionManager.h>
-#include <core/gui/mainwin/MainWindow.h>
-#include <core/gui/app/Application.h>
+#include <gui/GUI.h>
+#include <gui/actions/ActionManager.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/widgets/rendering/FrameBufferWindow.h>
+#include <gui/utilities/concurrent/ProgressDialogAdapter.h>
 #include <core/rendering/RenderSettings.h>
 #include <core/viewport/ViewportConfiguration.h>
 
@@ -44,10 +45,46 @@ void ActionManager::on_RenderActiveViewport_triggered()
 		// Get viewport to be rendered.
 		Viewport* viewport = _dataset->viewportConfig()->activeViewport();
 		if(!viewport)
-			throw Exception(tr("There is no active viewport to render."));
+			throw Exception(tr("There is no active viewport to render."), _dataset);
+
+		// Get frame buffer and window.
+		FrameBufferWindow* frameBufferWindow = mainWindow()->frameBufferWindow();
+		boost::shared_ptr<FrameBuffer> frameBuffer = frameBufferWindow->frameBuffer();
+
+		// Allocate and resize frame buffer and frame buffer window if necessary.
+		if(!frameBuffer) {
+			frameBuffer.reset(new FrameBuffer(settings->outputImageWidth(), settings->outputImageHeight()));
+			frameBufferWindow->setFrameBuffer(frameBuffer);
+		}
+		if(frameBuffer->size() != QSize(settings->outputImageWidth(), settings->outputImageHeight())) {
+			frameBuffer->setSize(QSize(settings->outputImageWidth(), settings->outputImageHeight()));
+			frameBuffer->clear();
+			frameBufferWindow->resize(frameBufferWindow->sizeHint());
+		}
+
+		// Show and activate frame buffer window.
+		if(frameBufferWindow->isHidden()) {
+			// Center frame buffer window in main window.
+			if(frameBufferWindow->parentWidget()) {
+				QSize s = frameBufferWindow->frameGeometry().size();
+				frameBufferWindow->move(frameBufferWindow->parentWidget()->geometry().center() - QPoint(s.width() / 2, s.height() / 2));
+			}
+			//frameBufferWindow->setWindowTitle(tr("Frame %1").arg(frameNumber));
+			frameBufferWindow->show();
+		}
+		frameBufferWindow->activateWindow();
+
+		// Show progress dialog.
+		QProgressDialog progressDialog(frameBufferWindow);
+		progressDialog.setWindowModality(Qt::WindowModal);
+		progressDialog.setAutoClose(false);
+		progressDialog.setAutoReset(false);
+		progressDialog.setMinimumDuration(0);
+		progressDialog.setValue(0);
+		ProgressDialogAdapter progressDisplay(&progressDialog);
 
 		// Call high-level rendering function, which will take care of the rest.
-		_dataset->renderScene(settings, viewport);
+		_dataset->renderScene(settings, viewport, frameBuffer.get(), &progressDisplay);
 	}
 	catch(const Exception& ex) {
 		ex.logError();

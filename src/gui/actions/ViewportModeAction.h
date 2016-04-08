@@ -22,14 +22,14 @@
 #ifndef __OVITO_VIEWPORT_MODE_ACTION_H
 #define __OVITO_VIEWPORT_MODE_ACTION_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(ViewportInput)
 
 /**
  * An Qt action that activates a ViewportInputMode.
  */
-class OVITO_CORE_EXPORT ViewportModeAction : public QAction
+class OVITO_GUI_EXPORT ViewportModeAction : public QAction
 {
 	Q_OBJECT
 

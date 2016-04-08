@@ -20,13 +20,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <core/gui/actions/ViewportModeAction.h>
-#include <core/gui/mainwin/MainWindow.h>
 #include <core/viewport/Viewport.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/animation/AnimationSettings.h>
-#include <core/rendering/viewport/ViewportSceneRenderer.h>
-#include <core/viewport/input/XFormModes.h>
+#include <gui/rendering/ViewportSceneRenderer.h>
+#include <gui/actions/ViewportModeAction.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/viewport/ViewportWindow.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationDisplay.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
 #include "DislocationInformationApplet.h"
@@ -163,13 +163,13 @@ void DislocationInformationApplet::updateInformationDisplay()
 /******************************************************************************
 * Handles the mouse up events for a Viewport.
 ******************************************************************************/
-void DislocationInformationInputMode::mouseReleaseEvent(Viewport* vp, QMouseEvent* event)
+void DislocationInformationInputMode::mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	if(event->button() == Qt::LeftButton) {
 		if(!event->modifiers().testFlag(Qt::ControlModifier))
 			_pickedDislocations.clear();
 		PickResult pickResult;
-		if(pickDislocationSegment(vp, event->pos(), pickResult)) {
+		if(pickDislocationSegment(vpwin, event->pos(), pickResult)) {
 			// Don't select the same dislocation twice.
 			bool alreadySelected = false;
 			for(auto p = _pickedDislocations.begin(); p != _pickedDislocations.end(); ++p) {
@@ -183,20 +183,20 @@ void DislocationInformationInputMode::mouseReleaseEvent(Viewport* vp, QMouseEven
 				_pickedDislocations.push_back(pickResult);
 		}
 		_applet->updateInformationDisplay();
-		vp->dataset()->viewportConfig()->updateViewports();
+		vpwin->viewport()->dataset()->viewportConfig()->updateViewports();
 	}
-	ViewportInputMode::mouseReleaseEvent(vp, event);
+	ViewportInputMode::mouseReleaseEvent(vpwin, event);
 }
 
 /******************************************************************************
 * Determines the dislocation segment under the mouse cursor.
 ******************************************************************************/
-bool DislocationInformationInputMode::pickDislocationSegment(Viewport* vp, const QPoint& pos, PickResult& result) const
+bool DislocationInformationInputMode::pickDislocationSegment(ViewportWindow* vpwin, const QPoint& pos, PickResult& result) const
 {
 	result.objNode = nullptr;
 	result.displayObj = nullptr;
 
-	ViewportPickResult vpPickResult = vp->pick(pos);
+	ViewportPickResult vpPickResult = vpwin->pick(pos);
 
 	// Check if user has clicked on something.
 	if(vpPickResult.valid) {
@@ -223,16 +223,16 @@ bool DislocationInformationInputMode::pickDislocationSegment(Viewport* vp, const
 /******************************************************************************
 * Handles the mouse move event for the given viewport.
 ******************************************************************************/
-void DislocationInformationInputMode::mouseMoveEvent(Viewport* vp, QMouseEvent* event)
+void DislocationInformationInputMode::mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	// Change mouse cursor while hovering over a dislocation.
 	PickResult pickResult;
-	if(pickDislocationSegment(vp, event->pos(), pickResult))
+	if(pickDislocationSegment(vpwin, event->pos(), pickResult))
 		setCursor(SelectionMode::selectionCursor());
 	else
 		setCursor(QCursor());
 
-	ViewportInputMode::mouseMoveEvent(vp, event);
+	ViewportInputMode::mouseMoveEvent(vpwin, event);
 }
 
 /******************************************************************************

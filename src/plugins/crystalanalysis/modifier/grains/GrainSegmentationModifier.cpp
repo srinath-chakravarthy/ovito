@@ -20,11 +20,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/IntegerParameterUI.h>
-#include <core/gui/properties/VariantComboBoxParameterUI.h>
-#include <core/gui/properties/SubObjectParameterUI.h>
-#include <core/gui/properties/BooleanGroupBoxParameterUI.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
+#include <gui/properties/VariantComboBoxParameterUI.h>
+#include <gui/properties/SubObjectParameterUI.h>
+#include <gui/properties/BooleanGroupBoxParameterUI.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
 #include <plugins/crystalanalysis/objects/patterns/StructurePattern.h>
@@ -196,10 +196,10 @@ PipelineStatus GrainSegmentationModifier::applyComputationResults(TimePoint time
 	StructureIdentificationModifier::applyComputationResults(time, validityInterval);
 
 	if(!_atomClusters)
-		throw Exception(tr("No computation results available."));
+		throwException(tr("No computation results available."));
 
 	if(outputParticleCount() != _atomClusters->size())
-		throw Exception(tr("The number of input particles has changed. The stored results have become invalid."));
+		throwException(tr("The number of input particles has changed. The stored results have become invalid."));
 
 	if(_clusterGraph) {
 		// Output cluster graph.

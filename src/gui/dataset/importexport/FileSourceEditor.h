@@ -22,13 +22,11 @@
 #ifndef __OVITO_FILE_SOURCE_OBJECT_EDITOR_H
 #define __OVITO_FILE_SOURCE_OBJECT_EDITOR_H
 
-#include <core/Core.h>
-#include <core/gui/properties/PropertiesEditor.h>
-#include <core/gui/properties/PropertiesPanel.h>
-#include <core/gui/widgets/general/ElidedTextLabel.h>
-#include <core/gui/widgets/display/StatusWidget.h>
-
-#include "FileSource.h"
+#include <gui/GUI.h>
+#include <gui/properties/PropertiesEditor.h>
+#include <gui/properties/PropertiesPanel.h>
+#include <gui/widgets/general/ElidedTextLabel.h>
+#include <gui/widgets/display/StatusWidget.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 

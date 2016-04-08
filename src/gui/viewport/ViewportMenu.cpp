@@ -19,15 +19,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/scene/SceneRoot.h>
 #include <core/scene/ObjectNode.h>
 #include <core/scene/objects/camera/AbstractCameraObject.h>
 #include <core/scene/objects/camera/CameraObject.h>
 #include <core/dataset/DataSet.h>
 #include <core/animation/AnimationSettings.h>
-#include <core/gui/dialogs/AdjustCameraDialog.h>
-#include <core/gui/mainwin/MainWindow.h>
+#include <gui/dialogs/AdjustCameraDialog.h>
+#include <gui/mainwin/MainWindow.h>
 #include "ViewportMenu.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -35,7 +35,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /******************************************************************************
 * Initializes the menu.
 ******************************************************************************/
-ViewportMenu::ViewportMenu(Viewport* vp) : QMenu(vp->widget()), _viewport(vp)
+ViewportMenu::ViewportMenu(ViewportWindow* vpWindow) : QMenu(vpWindow->widget()), _viewport(vpWindow->viewport()), _vpWindow(vpWindow)
 {
 	QAction* action;
 
@@ -109,7 +109,7 @@ void ViewportMenu::show(const QPoint& pos)
 	QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 
 	// Show context menu.
-	exec(_viewport->widget()->mapToGlobal(pos));
+	exec(_vpWindow->widget()->mapToGlobal(pos));
 }
 
 /******************************************************************************
@@ -183,7 +183,7 @@ void ViewportMenu::onViewType(QAction* action)
 ******************************************************************************/
 void ViewportMenu::onAdjustView()
 {
-	AdjustCameraDialog dialog(_viewport, _viewport->dataset()->mainWindow());
+	AdjustCameraDialog dialog(_viewport, _vpWindow->widget()->window());
 	dialog.exec();
 }
 
@@ -230,11 +230,11 @@ void ViewportMenu::onCreateCamera()
 			cameraNode->setName(scene->makeNameUnique(tr("Camera")));
 
 			// Position camera node to match the current view.
-			AffineTransformation tm = _viewport->inverseViewMatrix();
+			AffineTransformation tm = _viewport->projectionParams().inverseViewMatrix;
 			if(_viewport->isPerspectiveProjection() == false) {
 				// Position camera with parallel projection outside of scene bounding box.
 				tm = tm * AffineTransformation::translation(
-						Vector3(0, 0, -_viewport->_projParams.znear + 0.2f * (_viewport->_projParams.zfar-_viewport->_projParams.znear)));
+						Vector3(0, 0, -_viewport->projectionParams().znear + FloatType(0.2) * (_viewport->projectionParams().zfar -_viewport->projectionParams().znear)));
 			}
 			cameraNode->transformationController()->setTransformationValue(0, tm, true);
 		}

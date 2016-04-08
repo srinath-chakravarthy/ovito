@@ -27,14 +27,14 @@
 #ifndef __OVITO_ELIDED_TEXT_LABEL_H
 #define __OVITO_ELIDED_TEXT_LABEL_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Widgets)
 
 /**
  * \brief A QLabel-like widget that display a line of text, which is shortened if necessary to fit the available space.
  */
-class OVITO_CORE_EXPORT ElidedTextLabel : public QLabel
+class OVITO_GUI_EXPORT ElidedTextLabel : public QLabel
 {
 	Q_OBJECT
 	

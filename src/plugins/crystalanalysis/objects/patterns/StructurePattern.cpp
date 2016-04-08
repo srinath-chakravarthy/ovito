@@ -20,8 +20,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <core/Core.h>
-#include <core/gui/properties/ColorParameterUI.h>
-#include <core/gui/properties/StringParameterUI.h>
+#include <gui/properties/ColorParameterUI.h>
+#include <gui/properties/StringParameterUI.h>
 #include "StructurePattern.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {

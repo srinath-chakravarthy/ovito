@@ -23,10 +23,10 @@
 #include <core/scene/objects/DataObject.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/animation/AnimationSettings.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/BooleanRadioButtonParameterUI.h>
-#include <core/gui/properties/IntegerParameterUI.h>
-#include <core/gui/properties/SubObjectParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/BooleanRadioButtonParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
+#include <gui/properties/SubObjectParameterUI.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include "CalculateDisplacementsModifier.h"
 
@@ -141,7 +141,7 @@ PipelineStatus CalculateDisplacementsModifier::modifyParticles(TimePoint time, T
 {
 	// Get the reference positions of the particles.
 	if(!referenceConfiguration())
-		throw Exception(tr("Cannot calculate displacement vectors. Reference configuration has not been specified."));
+		throwException(tr("Cannot calculate displacement vectors. Reference configuration has not been specified."));
 
 	// What is the reference frame number to use?
 	int referenceFrame;
@@ -167,7 +167,7 @@ PipelineStatus CalculateDisplacementsModifier::modifyParticles(TimePoint time, T
 	if(FileSource* linkedFileObj = dynamic_object_cast<FileSource>(referenceConfiguration())) {
 		if(linkedFileObj->numberOfFrames() > 0) {
 			if(referenceFrame < 0 || referenceFrame >= linkedFileObj->numberOfFrames())
-				throw Exception(tr("Requested reference frame %1 is out of range.").arg(referenceFrame));
+				throwException(tr("Requested reference frame %1 is out of range.").arg(referenceFrame));
 			refState = linkedFileObj->requestFrame(referenceFrame);
 		}
 	}
@@ -178,18 +178,18 @@ PipelineStatus CalculateDisplacementsModifier::modifyParticles(TimePoint time, T
 		return refState.status();
 	if(refState.isEmpty()) {
 		if(refState.status().type() != PipelineStatus::Pending)
-			throw Exception(tr("Reference configuration has not been specified yet or is empty. Please pick a reference simulation file."));
+			throwException(tr("Reference configuration has not been specified yet or is empty. Please pick a reference simulation file."));
 		else
 			return PipelineStatus(PipelineStatus::Pending, tr("Waiting for input data to become ready..."));
 	}
 	// Make sure we really got back the requested reference frame.
 	if(refState.attributes().value(QStringLiteral("Frame"), referenceFrame).toInt() != referenceFrame)
-		throw Exception(tr("Requested reference frame %1 is out of range.").arg(referenceFrame));
+		throwException(tr("Requested reference frame %1 is out of range.").arg(referenceFrame));
 
 	// Get the reference positions.
 	ParticlePropertyObject* refPosProperty = ParticlePropertyObject::findInState(refState, ParticleProperty::PositionProperty);
 	if(!refPosProperty)
-		throw Exception(tr("Reference configuration does not contain any particle positions."));
+		throwException(tr("Reference configuration does not contain any particle positions."));
 
 	// Get the current positions.
 	ParticlePropertyObject* posProperty = expectStandardProperty(ParticleProperty::PositionProperty);
@@ -207,14 +207,14 @@ PipelineStatus CalculateDisplacementsModifier::modifyParticles(TimePoint time, T
 		const int* id_end = id + refIdentifierProperty->size();
 		for(; id != id_end; ++id, ++index) {
 			if(refMap.insert(std::make_pair(*id, index)).second == false)
-				throw Exception(tr("Particles with duplicate identifiers detected in reference configuration."));
+				throwException(tr("Particles with duplicate identifiers detected in reference configuration."));
 		}
 
 		// Check for duplicate identifiers in current configuration.
 		std::vector<size_t> idSet(identifierProperty->constDataInt(), identifierProperty->constDataInt() + identifierProperty->size());
 		std::sort(idSet.begin(), idSet.end());
 		if(std::adjacent_find(idSet.begin(), idSet.end()) != idSet.end())
-			throw Exception(tr("Particles with duplicate identifiers detected in input configuration."));
+			throwException(tr("Particles with duplicate identifiers detected in input configuration."));
 
 		// Build index map.
 		index = 0;
@@ -222,7 +222,7 @@ PipelineStatus CalculateDisplacementsModifier::modifyParticles(TimePoint time, T
 		for(auto& mappedIndex : indexToIndexMap) {
 			auto iter = refMap.find(*id);
 			if(iter == refMap.end())
-				throw Exception(tr("Particle id %1 from current configuration not found in reference configuration.").arg(*id));
+				throwException(tr("Particle id %1 from current configuration not found in reference configuration.").arg(*id));
 			mappedIndex = iter->second;
 			index++;
 			++id;
@@ -232,7 +232,7 @@ PipelineStatus CalculateDisplacementsModifier::modifyParticles(TimePoint time, T
 		// Deformed and reference configuration must contain the same number of particles.
 		if(posProperty->size() != refPosProperty->size()) {
 			if(refState.status().type() != PipelineStatus::Pending)
-				throw Exception(tr("Cannot calculate displacement vectors. Numbers of particles in reference configuration and current configuration do not match."));
+				throwException(tr("Cannot calculate displacement vectors. Numbers of particles in reference configuration and current configuration do not match."));
 			else
 				return PipelineStatus(PipelineStatus::Pending, tr("Waiting for input data to become ready..."));
 		}
@@ -244,7 +244,7 @@ PipelineStatus CalculateDisplacementsModifier::modifyParticles(TimePoint time, T
 	SimulationCellObject* inputCell = expectSimulationCell();
 	SimulationCellObject* refCell = refState.findObject<SimulationCellObject>();
 	if(!refCell)
-		throw Exception(tr("Reference configuration does not contain simulation cell info."));
+		throwException(tr("Reference configuration does not contain simulation cell info."));
 
 #if 0
 	// If enabled, feed particle positions from reference configuration into geometry pipeline.
@@ -283,8 +283,8 @@ PipelineStatus CalculateDisplacementsModifier::modifyParticles(TimePoint time, T
 	AffineTransformation simCellInv;
 	AffineTransformation simCellRefInv;
 	if(eliminateCellDeformation()) {
-		if(fabs(simCell.determinant()) < FLOATTYPE_EPSILON || fabs(simCellRef.determinant()) < FLOATTYPE_EPSILON)
-			throw Exception(tr("Simulation cell is degenerate in either the deformed or the reference configuration."));
+		if(std::abs(simCell.determinant()) < FLOATTYPE_EPSILON || std::abs(simCellRef.determinant()) < FLOATTYPE_EPSILON)
+			throwException(tr("Simulation cell is degenerate in either the deformed or the reference configuration."));
 
 		simCellInv = simCell.inverse();
 		simCellRefInv = simCellRef.inverse();

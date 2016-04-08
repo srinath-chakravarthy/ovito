@@ -19,24 +19,31 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/dataset/DataSetContainer.h>
-#include <core/gui/actions/ActionManager.h>
-#include <core/gui/widgets/animation/AnimationTimeSpinner.h>
-#include <core/gui/widgets/animation/AnimationFramesToolButton.h>
-#include <core/gui/widgets/animation/AnimationTimeSlider.h>
-#include <core/gui/widgets/animation/AnimationTrackBar.h>
-#include <core/gui/widgets/rendering/FrameBufferWindow.h>
-#include <core/gui/widgets/display/CoordinateDisplayWidget.h>
 #include <core/viewport/ViewportConfiguration.h>
-#include <core/viewport/input/ViewportInputManager.h>
-#include <core/rendering/viewport/ViewportSceneRenderer.h>
-#include <core/plugins/autostart/AutoStartObject.h>
+#include <core/viewport/ViewportWindowInterface.h>
+#include <core/app/Application.h>
+#include <gui/actions/ActionManager.h>
+#include <gui/widgets/animation/AnimationTimeSpinner.h>
+#include <gui/widgets/animation/AnimationFramesToolButton.h>
+#include <gui/widgets/animation/AnimationTimeSlider.h>
+#include <gui/widgets/animation/AnimationTrackBar.h>
+#include <gui/widgets/rendering/FrameBufferWindow.h>
+#include <gui/widgets/display/CoordinateDisplayWidget.h>
+#include <gui/viewport/input/ViewportInputManager.h>
+#include <gui/viewport/ViewportWindow.h>
+#include <gui/rendering/ViewportSceneRenderer.h>
+#include <gui/plugins/autostart/GuiAutoStartObject.h>
 #include "MainWindow.h"
 #include "ViewportsPanel.h"
+#include "TaskDisplayWidget.h"
 #include "cmdpanel/CommandPanel.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)
+
+// The global list of all open main windows of the application.
+std::vector<MainWindow*> MainWindow::_windowList;
 
 /******************************************************************************
 * The constructor of the main window class.
@@ -45,6 +52,9 @@ MainWindow::MainWindow() : _datasetContainer(this)
 {
 	setWindowTitle(tr("Ovito (Open Visualization Tool)"));
 	setAttribute(Qt::WA_DeleteOnClose);
+
+	// Register window in global list.
+	_windowList.push_back(this);
 
 	// Setup the layout of docking widgets.
 	setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
@@ -59,9 +69,11 @@ MainWindow::MainWindow() : _datasetContainer(this)
 	// Create actions.
 	_actionManager = new ActionManager(this);
 
-	// Let auto-start objects register their actions.
-	for(const auto& obj : Application::instance().autostartObjects())
-		obj->registerActions(*_actionManager);
+	// Let GUI auto-start objects register their actions.
+	for(const auto& obj : Application::instance().autostartObjects()) {
+		if(auto gui_obj = dynamic_object_cast<GuiAutoStartObject>(obj))
+			gui_obj->registerActions(*_actionManager);
+	}
 
 	// Create the main menu
 	createMainMenu();
@@ -109,6 +121,9 @@ MainWindow::MainWindow() : _datasetContainer(this)
 	_statusBar->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Preferred);
 	setStatusBar(_statusBar);
 	_statusBarLayout->addWidget(_statusBar, 1);
+
+	TaskDisplayWidget* taskDisplay = new TaskDisplayWidget(this);
+	_statusBarLayout->insertWidget(1, taskDisplay);
 
 	_coordinateDisplay = new CoordinateDisplayWidget(datasetContainer(), animationPanel);
 	_statusBarLayout->addWidget(_coordinateDisplay);
@@ -190,6 +205,31 @@ MainWindow::MainWindow() : _datasetContainer(this)
 
 	// Create the frame buffer window.
 	_frameBufferWindow = new FrameBufferWindow(this);
+
+	// Update window title when document path changes.
+	connect(&_datasetContainer, &DataSetContainer::filePathChanged, [this](const QString& filePath) { setWindowFilePath(filePath); });
+	connect(&_datasetContainer, &DataSetContainer::modificationStatusChanged, [this](bool isClean) { setWindowModified(!isClean); });
+}
+
+/******************************************************************************
+* Destructor.
+******************************************************************************/
+MainWindow::~MainWindow()
+{
+	// Unregister from global list.
+	_windowList.erase(std::find(_windowList.begin(), _windowList.end(), this));
+}
+
+/******************************************************************************
+* Returns the main window in which the given dataset is opened.
+******************************************************************************/
+MainWindow* MainWindow::fromDataset(DataSet* dataset)
+{
+	for(MainWindow* win : _windowList) {
+		if(win->datasetContainer().currentSet() == dataset)
+			return win;
+	}
+	return nullptr;
 }
 
 /******************************************************************************
@@ -404,14 +444,12 @@ QOpenGLContext* MainWindow::getOpenGLContext()
 		_glcontext = new QOpenGLContext(this);
 		_glcontext->setFormat(ViewportSceneRenderer::getDefaultSurfaceFormat());
 		if(!_glcontext->create())
-			throw Exception(tr("Failed to create OpenGL context."));
+			throw Exception(tr("Failed to create OpenGL context."), &datasetContainer());
 	}
 	else {
-		if(datasetContainer().currentSet()) {
-			const QVector<Viewport*>& viewports = datasetContainer().currentSet()->viewportConfig()->viewports();
-			if(!viewports.empty() && viewports.front()->viewportWindow())
-				_glcontext = viewports.front()->viewportWindow()->context();
-		}
+		ViewportWindow* vpWindow = viewportsPanel()->findChild<ViewportWindow*>();
+		if(vpWindow)
+			_glcontext = vpWindow->context();
 	}
 
 	return _glcontext;

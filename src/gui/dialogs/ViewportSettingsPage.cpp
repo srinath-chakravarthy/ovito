@@ -19,12 +19,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "ViewportSettingsPage.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Core, ViewportSettingsPage, ApplicationSettingsDialogPage);
+IMPLEMENT_OVITO_OBJECT(Gui, ViewportSettingsPage, ApplicationSettingsDialogPage);
 
 /******************************************************************************
 * Creates the widget that contains the plugin specific setting controls.
@@ -53,13 +53,13 @@ void ViewportSettingsPage::insertSettingsDialogPage(ApplicationSettingsDialog* s
 	_upDirectionGroup->addButton(verticalAxisX, ViewportSettings::X_AXIS);
 	_upDirectionGroup->addButton(verticalAxisY, ViewportSettings::Y_AXIS);
 	_upDirectionGroup->addButton(verticalAxisZ, ViewportSettings::Z_AXIS);
-	verticalAxisX->setIcon(QIcon(":/core/mainwin/settings/vertical_axis_x.png"));
+	verticalAxisX->setIcon(QIcon(":/gui/mainwin/settings/vertical_axis_x.png"));
 	verticalAxisX->setIconSize(verticalAxisX->icon().availableSizes().front());
 	verticalAxisX->setToolTip(tr("X-axis"));
-	verticalAxisY->setIcon(QIcon(":/core/mainwin/settings/vertical_axis_y.png"));
+	verticalAxisY->setIcon(QIcon(":/gui/mainwin/settings/vertical_axis_y.png"));
 	verticalAxisY->setIconSize(verticalAxisY->icon().availableSizes().front());
 	verticalAxisY->setToolTip(tr("Y-axis"));
-	verticalAxisZ->setIcon(QIcon(":/core/mainwin/settings/vertical_axis_z.png"));
+	verticalAxisZ->setIcon(QIcon(":/gui/mainwin/settings/vertical_axis_z.png"));
 	verticalAxisZ->setIconSize(verticalAxisZ->icon().availableSizes().front());
 	verticalAxisZ->setToolTip(tr("Z-axis"));
 	layout2->addWidget(verticalAxisX, 1, 0, 1, 1);

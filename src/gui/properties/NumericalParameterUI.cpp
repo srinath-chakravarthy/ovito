@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/properties/NumericalParameterUI.h>
+#include <gui/GUI.h>
+#include <gui/properties/NumericalParameterUI.h>
 #include <core/dataset/UndoStack.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/viewport/ViewportConfiguration.h>
@@ -30,7 +30,7 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
 
 // Gives the class run-time type information.
-IMPLEMENT_OVITO_OBJECT(Core, NumericalParameterUI, PropertyParameterUI);
+IMPLEMENT_OVITO_OBJECT(Gui, NumericalParameterUI, PropertyParameterUI);
 
 /******************************************************************************
 * Constructor for a Qt property.

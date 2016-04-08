@@ -2,6 +2,8 @@
 
 <qresource prefix="/gui">
 
+	<file>PluginManifest.json</file>
+
 	<file>mainwin/window_icon.png</file>
 	<file>mainwin/window_icon_16.png</file>
 	<file>mainwin/window_icon_32.png</file>

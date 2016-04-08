@@ -22,15 +22,15 @@
 #ifndef __OVITO_COMMAND_PANEL_H
 #define __OVITO_COMMAND_PANEL_H
 
-#include <core/Core.h>
-#include <core/gui/mainwin/MainWindow.h>
+#include <gui/GUI.h>
+#include <gui/mainwin/MainWindow.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
  * The command panel in the main window.
  */
-class OVITO_CORE_EXPORT CommandPanel : public QWidget
+class OVITO_GUI_EXPORT CommandPanel : public QWidget
 {
 	Q_OBJECT
 

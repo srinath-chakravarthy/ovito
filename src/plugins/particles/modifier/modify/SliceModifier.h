@@ -23,9 +23,9 @@
 #define __OVITO_SLICE_MODIFIER_H
 
 #include <plugins/particles/Particles.h>
+#include <gui/viewport/input/ViewportInputMode.h>
+#include <gui/viewport/input/ViewportInputManager.h>
 #include <core/animation/controller/Controller.h>
-#include <core/viewport/input/ViewportInputMode.h>
-#include <core/viewport/input/ViewportInputManager.h>
 #include <plugins/particles/util/ParticlePickingHelper.h>
 #include "../ParticleModifier.h"
 
@@ -265,7 +265,7 @@ public:
 	PickParticlePlaneInputMode(SliceModifierEditor* editor) : ViewportInputMode(editor), _editor(editor) {}
 
 	/// Handles the mouse events for a Viewport.
-	virtual void mouseReleaseEvent(Viewport* vp, QMouseEvent* event) override;
+	virtual void mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event) override;
 
 	/// Lets the input mode render its overlay content in a viewport.
 	virtual void renderOverlay3D(Viewport* vp, ViewportSceneRenderer* renderer) override;

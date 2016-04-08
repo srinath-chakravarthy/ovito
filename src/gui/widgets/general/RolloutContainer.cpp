@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/mainwin/MainWindow.h>
+#include <gui/GUI.h>
+#include <gui/mainwin/MainWindow.h>
 #include "RolloutContainer.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Widgets)

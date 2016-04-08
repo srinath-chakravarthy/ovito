@@ -22,7 +22,7 @@
 #ifndef __OVITO_LOAD_IMAGE_FILE_DIALOG_H
 #define __OVITO_LOAD_IMAGE_FILE_DIALOG_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/rendering/FrameBuffer.h>
 #include "HistoryFileDialog.h"
 
@@ -31,7 +31,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /**
  * \brief This file chooser dialog lets the user select an image file from disk.
  */
-class OVITO_CORE_EXPORT LoadImageFileDialog : public HistoryFileDialog
+class OVITO_GUI_EXPORT LoadImageFileDialog : public HistoryFileDialog
 {
 	Q_OBJECT
 	

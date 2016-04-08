@@ -26,6 +26,8 @@
 #include "FutureWatcher.h"
 
 #include <QWaitCondition>
+#include <QMutex>
+#include <QMutexLocker>
 #include <QElapsedTimer>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)

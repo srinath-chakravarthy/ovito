@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // 
-//  Copyright (2014) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,23 +19,16 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/viewport/Viewport.h>
-#include <core/viewport/input/ViewportInputManager.h>
 #include <core/viewport/overlay/ViewportOverlay.h>
-#include <core/gui/mainwin/MainWindow.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/viewport/ViewportWindow.h>
+#include <gui/viewport/input/ViewportInputManager.h>
+#include <gui/properties/PropertiesEditor.h>
+#include <gui/mainwin/MainWindow.h>
+#include "MoveOverlayInputMode.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View)
-
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, ViewportOverlay, RefTarget);
-
-/******************************************************************************
-* Constructor.
-******************************************************************************/
-ViewportOverlay::ViewportOverlay(DataSet* dataset) : RefTarget(dataset)
-{
-}
 
 /******************************************************************************
 * Constructor.
@@ -43,7 +36,7 @@ ViewportOverlay::ViewportOverlay(DataSet* dataset) : RefTarget(dataset)
 MoveOverlayInputMode::MoveOverlayInputMode(PropertiesEditor* editor) :
 		ViewportInputMode(editor),
 		_editor(editor),
-		_moveCursor(QCursor(QPixmap(QStringLiteral(":/core/cursor/editing/cursor_mode_move.png")))),
+		_moveCursor(QCursor(QPixmap(QStringLiteral(":/gui/cursor/editing/cursor_mode_move.png")))),
 		_forbiddenCursor(Qt::ForbiddenCursor)
 {
 }
@@ -65,15 +58,15 @@ void MoveOverlayInputMode::deactivated(bool temporary)
 /******************************************************************************
 * Handles the mouse down events for a Viewport.
 ******************************************************************************/
-void MoveOverlayInputMode::mousePressEvent(Viewport* vp, QMouseEvent* event)
+void MoveOverlayInputMode::mousePressEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	if(event->button() == Qt::LeftButton) {
 		if(_viewport == nullptr) {
 			ViewportOverlay* overlay = dynamic_object_cast<ViewportOverlay>(_editor->editObject());
-			if(overlay && vp->overlays().contains(overlay)) {
-				_viewport = vp;
+			if(overlay && vpwin->viewport()->overlays().contains(overlay)) {
+				_viewport = vpwin->viewport();
 				_startPoint = event->localPos();
-				vp->dataset()->undoStack().beginCompoundOperation(tr("Move overlay"));
+				_viewport->dataset()->undoStack().beginCompoundOperation(tr("Move overlay"));
 			}
 		}
 		return;
@@ -86,31 +79,31 @@ void MoveOverlayInputMode::mousePressEvent(Viewport* vp, QMouseEvent* event)
 			return;
 		}
 	}
-	ViewportInputMode::mousePressEvent(vp, event);
+	ViewportInputMode::mousePressEvent(vpwin, event);
 }
 
 /******************************************************************************
 * Handles the mouse move events for a Viewport.
 ******************************************************************************/
-void MoveOverlayInputMode::mouseMoveEvent(Viewport* vp, QMouseEvent* event)
+void MoveOverlayInputMode::mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	// Get the viewport overlay being moved.
 	ViewportOverlay* overlay = dynamic_object_cast<ViewportOverlay>(_editor->editObject());
-	if(overlay && vp->overlays().contains(overlay)) {
+	if(overlay && vpwin->viewport()->overlays().contains(overlay)) {
 		setCursor(_moveCursor);
 
-		if(viewport() == vp) {
+		if(viewport() == vpwin->viewport()) {
 			// Take the current mouse cursor position to make the input mode
 			// look more responsive. The cursor position recorded when the mouse event was
 			// generates may be too old.
-			_currentPoint = vp->widget()->mapFromGlobal(QCursor::pos());
+			_currentPoint = vpwin->widget()->mapFromGlobal(QCursor::pos());
 
 			// Reset the overlay's position first before moving it again below.
-			vp->dataset()->undoStack().resetCurrentCompoundOperation();
+			viewport()->dataset()->undoStack().resetCurrentCompoundOperation();
 
 			// Compute the displacement based on the new mouse position.
-			Box2 renderFrameRect = vp->renderFrameRect();
-			QSize vpSize = vp->size();
+			Box2 renderFrameRect = viewport()->renderFrameRect();
+			QSize vpSize = vpwin->viewportWindowSize();
 			Vector2 delta;
 			delta.x() =  (FloatType)(_currentPoint.x() - _startPoint.x()) / vpSize.width() / renderFrameRect.width() * 2;
 			delta.y() = -(FloatType)(_currentPoint.y() - _startPoint.y()) / vpSize.height() / renderFrameRect.height() * 2;
@@ -125,26 +118,26 @@ void MoveOverlayInputMode::mouseMoveEvent(Viewport* vp, QMouseEvent* event)
 			}
 
 			// Force immediate viewport repaints.
-			vp->dataset()->mainWindow()->processViewportUpdates();
+			MainWindow::fromDataset(viewport()->dataset())->processViewportUpdates();
 		}
 	}
 	else {
 		setCursor(_forbiddenCursor);
 	}
-	ViewportInputMode::mouseMoveEvent(vp, event);
+	ViewportInputMode::mouseMoveEvent(vpwin, event);
 }
 
 /******************************************************************************
 * Handles the mouse up events for a Viewport.
 ******************************************************************************/
-void MoveOverlayInputMode::mouseReleaseEvent(Viewport* vp, QMouseEvent* event)
+void MoveOverlayInputMode::mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	if(_viewport) {
 		// Commit change.
 		_viewport->dataset()->undoStack().endCompoundOperation();
 		_viewport = nullptr;
 	}
-	ViewportInputMode::mouseReleaseEvent(vp, event);
+	ViewportInputMode::mouseReleaseEvent(vpwin, event);
 }
 
 OVITO_END_INLINE_NAMESPACE

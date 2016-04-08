@@ -22,7 +22,7 @@
 #ifndef __OVITO_OPENGL_LINE_PRIMITIVE_H
 #define __OVITO_OPENGL_LINE_PRIMITIVE_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/rendering/LinePrimitive.h>
 #include "OpenGLBuffer.h"
 
@@ -31,12 +31,12 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAM
 /**
  * \brief This class is responsible for rendering line primitives using OpenGL.
  */
-class OVITO_CORE_EXPORT OpenGLLinePrimitive : public LinePrimitive
+class OVITO_GUI_EXPORT OpenGLLinePrimitive : public LinePrimitive
 {
 public:
 
 	/// Constructor.
-	OpenGLLinePrimitive(ViewportSceneRenderer* renderer);
+	OpenGLLinePrimitive(OpenGLSceneRenderer* renderer);
 
 	/// \brief Allocates a geometry buffer with the given number of vertices.
 	virtual void setVertexCount(int vertexCount, FloatType lineWidth) override;
@@ -62,10 +62,10 @@ public:
 protected:
 
 	/// \brief Renders the lines using GL_LINES mode.
-	void renderLines(ViewportSceneRenderer* renderer);
+	void renderLines(OpenGLSceneRenderer* renderer);
 
 	/// \brief Renders the lines using polygons.
-	void renderThickLines(ViewportSceneRenderer* renderer);
+	void renderThickLines(OpenGLSceneRenderer* renderer);
 
 private:
 

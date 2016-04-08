@@ -22,7 +22,7 @@
 #ifndef __OVITO_REFTARGET_LIST_PARAMETER_UI_H
 #define __OVITO_REFTARGET_LIST_PARAMETER_UI_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "ParameterUI.h"
 #include "PropertiesEditor.h"
 
@@ -31,7 +31,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /******************************************************************************
 * A list view that shows the RefTarget items contained in a vector reference field.
 ******************************************************************************/
-class OVITO_CORE_EXPORT RefTargetListParameterUI : public ParameterUI
+class OVITO_GUI_EXPORT RefTargetListParameterUI : public ParameterUI
 {
 public:
 

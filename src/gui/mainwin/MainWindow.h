@@ -22,9 +22,8 @@
 #ifndef __OVITO_MAIN_WINDOW_H
 #define __OVITO_MAIN_WINDOW_H
 
-#include <core/Core.h>
-#include <core/gui/app/Application.h>
-#include <core/dataset/DataSetContainer.h>
+#include <gui/GUI.h>
+#include <gui/dataset/GuiDataSetContainer.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)
 
@@ -34,7 +33,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)
  * Note that is is possible to open multiple main windows per
  * application instance to edit multiple datasets simultaneously.
  */
-class OVITO_CORE_EXPORT MainWindow : public QMainWindow
+class OVITO_GUI_EXPORT MainWindow : public QMainWindow
 {
 	Q_OBJECT
 	
@@ -52,6 +51,9 @@ public:
 
 	/// Constructor of the main window class.
 	MainWindow();
+
+	/// Destructor.
+	virtual ~MainWindow();
 
 	/// Returns the main toolbar of the window.
 	QToolBar* mainToolbar() const { return _mainToolbar; }
@@ -75,7 +77,7 @@ public:
 	void processViewportUpdates();
 
 	/// Returns the container that keeps a reference to the current dataset.
-	DataSetContainer& datasetContainer() { return _datasetContainer; }
+	GuiDataSetContainer& datasetContainer() { return _datasetContainer; }
 
 	/// Returns the window's action manager.
 	ActionManager* actionManager() const { return _actionManager; }
@@ -93,7 +95,7 @@ public:
 	QHBoxLayout* statusBarLayout() const { return _statusBarLayout; }
 
 	/// \brief Shows the online manual and opens the given help page.
-	void openHelpTopic(const QString& page);
+	static void openHelpTopic(const QString& page);
 
 	/// Returns the master OpenGL context managed by this window, which is used to render the viewports.
 	/// If sharing of OpenGL contexts between viewports is disabled, then this function returns the GL context
@@ -108,6 +110,9 @@ public:
 
 	/// Sets the file path associated with this window and updates the window's title.
 	void setWindowFilePath(const QString& filePath);
+
+	/// Returns the main window in which the given dataset is opened.
+	static MainWindow* fromDataset(DataSet* dataset);
 
 protected:
 
@@ -143,7 +148,7 @@ private:
 	CommandPanel* _commandPanel;
 
 	/// Container that keeps a reference to the current dataset.
-	DataSetContainer _datasetContainer;
+	GuiDataSetContainer _datasetContainer;
 
 	/// The associated GUI action manager.
 	ActionManager* _actionManager;
@@ -154,7 +159,7 @@ private:
 	/// The container widget for viewports.
 	QWidget* _viewportsPanel;
 
-	/// The widget that numerically displays the transformation.
+	/// The widget that numerically displays the object transformation.
 	CoordinateDisplayWidget* _coordinateDisplay;
 
 	/// The layout manager for the status bar area of the main window.
@@ -162,6 +167,9 @@ private:
 
 	/// The OpenGL context used for rendering the viewports.
 	QPointer<QOpenGLContext> _glcontext;
+
+	/// The global list of all open main windows of the application.
+	static std::vector<MainWindow*> _windowList;
 };
 
 OVITO_END_INLINE_NAMESPACE

@@ -22,14 +22,14 @@
 #ifndef __OVITO_HISTORY_FILE_DIALOG_H
 #define __OVITO_HISTORY_FILE_DIALOG_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Dialogs)
 
 /**
  * \brief The file chooser dialog that saves a history of recently visited directories.
  */
-class OVITO_CORE_EXPORT HistoryFileDialog : public QFileDialog
+class OVITO_GUI_EXPORT HistoryFileDialog : public QFileDialog
 {
 	Q_OBJECT
 	

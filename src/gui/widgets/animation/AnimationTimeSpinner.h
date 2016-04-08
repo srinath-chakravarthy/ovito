@@ -22,15 +22,15 @@
 #ifndef __OVITO_ANIMATION_TIME_SPINNER_H
 #define __OVITO_ANIMATION_TIME_SPINNER_H
 
-#include <core/Core.h>
-#include <core/gui/widgets/general/SpinnerWidget.h>
+#include <gui/GUI.h>
+#include <gui/widgets/general/SpinnerWidget.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
  * A spinner control for the current animation time.
  */
-class OVITO_CORE_EXPORT AnimationTimeSpinner : public SpinnerWidget
+class OVITO_GUI_EXPORT AnimationTimeSpinner : public SpinnerWidget
 {
 	Q_OBJECT
 	

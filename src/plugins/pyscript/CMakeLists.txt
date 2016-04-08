@@ -83,7 +83,7 @@ ELSE()
     # Build the script launcher executable.
     ADD_EXECUTABLE(ovitos launcher/Main.cpp)
     SET_TARGET_PROPERTIES(ovitos PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OVITO_BINARY_DIRECTORY}")
-    TARGET_LINK_LIBRARIES(ovitos Core)
+    TARGET_LINK_LIBRARIES(ovitos Core Gui)
     TARGET_LINK_LIBRARIES(ovitos Qt5::Core Qt5::Gui)
     INSTALL(TARGETS ovitos DESTINATION "${OVITO_RELATIVE_BINARY_DIRECTORY}")
     IF(APPLE)

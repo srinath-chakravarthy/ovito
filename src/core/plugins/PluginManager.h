@@ -52,13 +52,6 @@ public:
 	/// \return The list of all installed plugins.
 	const QVector<Plugin*>& plugins() const { return _plugins; }
 
-	/// \brief Returns the special built-in core plugin.
-	/// \return The core plugin. This is not a real plugin but the core of the
-	///         application which provides several OvitoObject derived classes
-	///         as ordinary plugins do.
-	/// \sa Plugin::isCore()
-	Plugin* corePlugin() { return _corePlugin; }
-
 	/// \brief Returns all installed plugin classes derived from the given type.
 	/// \param superClass Specifies the base class from which all returned classes should be derived.
 	/// \param skipAbstract If \c true only non-abstract classes are returned.
@@ -84,9 +77,6 @@ private:
 
 	/// The list of installed plugins.
 	QVector<Plugin*> _plugins;
-
-	/// The built-in core plugin.
-	Plugin* _corePlugin;
 
 	/// Searches the plugin directories for installed plugins and loads their XML manifests.
 	void registerPlugins();

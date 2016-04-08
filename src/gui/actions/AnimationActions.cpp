@@ -19,10 +19,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/actions/ActionManager.h>
-#include <core/gui/dialogs/AnimationSettingsDialog.h>
-#include <core/gui/mainwin/MainWindow.h>
+#include <gui/GUI.h>
+#include <gui/actions/ActionManager.h>
+#include <gui/dialogs/AnimationSettingsDialog.h>
+#include <gui/mainwin/MainWindow.h>
 #include <core/animation/AnimationSettings.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)

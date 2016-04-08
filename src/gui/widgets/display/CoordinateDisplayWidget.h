@@ -22,8 +22,8 @@
 #ifndef __OVITO_COORDINATE_DISPLAY_WIDGET_H
 #define __OVITO_COORDINATE_DISPLAY_WIDGET_H
 
-#include <core/Core.h>
-#include <core/gui/widgets/general/SpinnerWidget.h>
+#include <gui/GUI.h>
+#include <gui/widgets/general/SpinnerWidget.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -31,7 +31,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
  * The coordinate display widget at the bottom of the main window,
  * which displays the current mouse coordinates and the transform of the selected object.
  */
-class OVITO_CORE_EXPORT CoordinateDisplayWidget : public QFrame
+class OVITO_GUI_EXPORT CoordinateDisplayWidget : public QFrame
 {
 	Q_OBJECT
 	

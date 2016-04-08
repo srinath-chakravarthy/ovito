@@ -19,12 +19,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/dataset/UndoStack.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/plugins/PluginManager.h>
-#include <core/gui/mainwin/MainWindow.h>
+#include <gui/mainwin/MainWindow.h>
 #include "OverlayCommandPage.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -77,13 +77,13 @@ OverlayCommandPage::OverlayCommandPage(MainWindow* mainWindow, QWidget* parent) 
 #endif
 	subLayout->addWidget(editToolbar);
 
-	_deleteOverlayAction = new QAction(QIcon(":/core/actions/modify/delete_modifier.png"), tr("Delete Overlay"), this);
+	_deleteOverlayAction = new QAction(QIcon(":/gui/actions/modify/delete_modifier.png"), tr("Delete Overlay"), this);
 	_deleteOverlayAction->setEnabled(false);
 	connect(_deleteOverlayAction, &QAction::triggered, this, &OverlayCommandPage::onDeleteOverlay);
 	editToolbar->addAction(_deleteOverlayAction);
 
 	editToolbar->addSeparator();
-	QAction* overlayHelpAction = new QAction(QIcon(":/core/mainwin/command_panel/help.png"), tr("Open Online Help"), this);
+	QAction* overlayHelpAction = new QAction(QIcon(":/gui/mainwin/command_panel/help.png"), tr("Open Online Help"), this);
 	connect(overlayHelpAction, &QAction::triggered, [mainWindow] {
 		mainWindow->openHelpTopic("viewport_overlays.html");
 	});

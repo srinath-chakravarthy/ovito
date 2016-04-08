@@ -19,7 +19,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "HistoryFileDialog.h"
 
 #define MAX_DIRECTORY_HISTORY_SIZE	5

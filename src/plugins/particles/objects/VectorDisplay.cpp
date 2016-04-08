@@ -23,10 +23,10 @@
 #include <core/utilities/units/UnitsManager.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include <core/rendering/SceneRenderer.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/VariantComboBoxParameterUI.h>
-#include <core/gui/properties/ColorParameterUI.h>
-#include <core/gui/properties/BooleanParameterUI.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <gui/properties/VariantComboBoxParameterUI.h>
+#include <gui/properties/ColorParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
 
 #include "VectorDisplay.h"
 #include "ParticleTypeProperty.h"

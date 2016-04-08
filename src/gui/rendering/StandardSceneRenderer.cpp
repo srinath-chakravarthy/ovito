@@ -19,19 +19,18 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/viewport/ViewportWindow.h>
+#include <gui/GUI.h>
 #include <core/viewport/Viewport.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/rendering/RenderSettings.h>
-#include <core/gui/app/Application.h>
-#include <core/gui/mainwin/MainWindow.h>
+#include <core/app/Application.h>
+#include <gui/mainwin/MainWindow.h>
 #include "StandardSceneRenderer.h"
 #include "StandardSceneRendererEditor.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, StandardSceneRenderer, ViewportSceneRenderer);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Gui, StandardSceneRenderer, OpenGLSceneRenderer);
 SET_OVITO_OBJECT_EDITOR(StandardSceneRenderer, StandardSceneRendererEditor);
 DEFINE_PROPERTY_FIELD(StandardSceneRenderer, _antialiasingLevel, "AntialiasingLevel");
 SET_PROPERTY_FIELD_LABEL(StandardSceneRenderer, _antialiasingLevel, "Antialiasing level");
@@ -42,11 +41,11 @@ SET_PROPERTY_FIELD_LABEL(StandardSceneRenderer, _antialiasingLevel, "Antialiasin
 bool StandardSceneRenderer::startRender(DataSet* dataset, RenderSettings* settings)
 {
 	if(Application::instance().headlessMode())
-		throw Exception(tr("Cannot use OpenGL renderer when program is running in headless mode. "
+		throwException(tr("Cannot use OpenGL renderer when program is running in headless mode. "
 				"Please use a different rendering engine or start program on a machine where access to "
 				"graphics hardware is possible."));
 
-	if(!ViewportSceneRenderer::startRender(dataset, settings))
+	if(!OpenGLSceneRenderer::startRender(dataset, settings))
 		return false;
 
 	int sampling = std::max(1, antialiasingLevel());
@@ -55,16 +54,17 @@ bool StandardSceneRenderer::startRender(DataSet* dataset, RenderSettings* settin
 	if(Application::instance().guiMode()) {
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
 		// in GUI mode, use the OpenGL context managed by the main window to render to the offscreen buffer.
-		glcontext = renderDataset()->mainWindow()->getOpenGLContext();
+		glcontext = MainWindow::fromDataset(renderDataset())->getOpenGLContext();
 #else
 		// Create a temporary OpenGL context for rendering to an offscreen buffer.
 		_offscreenContext.reset(new QOpenGLContext());
-		_offscreenContext->setFormat(ViewportSceneRenderer::getDefaultSurfaceFormat());
+		_offscreenContext->setFormat(OpenGLSceneRenderer::getDefaultSurfaceFormat());
+		// It should share its resources with the viewport renderer.
 		const QVector<Viewport*>& viewports = renderDataset()->viewportConfig()->viewports();
 		if(!viewports.empty() && viewports.front()->viewportWindow())
-			_offscreenContext->setShareContext(viewports.front()->viewportWindow()->context());
+			_offscreenContext->setShareContext(static_cast<ViewportWindow*>(viewports.front()->window())->context());
 		if(!_offscreenContext->create())
-			throw Exception(tr("Failed to create OpenGL context for rendering."));
+			throwException(tr("Failed to create OpenGL context for rendering."));
 		glcontext = _offscreenContext.data();
 #endif
 	}
@@ -72,9 +72,9 @@ bool StandardSceneRenderer::startRender(DataSet* dataset, RenderSettings* settin
 		// Create new OpenGL context for rendering in console mode.
 		OVITO_ASSERT(QOpenGLContext::currentContext() == nullptr);
 		_offscreenContext.reset(new QOpenGLContext());
-		_offscreenContext->setFormat(ViewportSceneRenderer::getDefaultSurfaceFormat());
+		_offscreenContext->setFormat(OpenGLSceneRenderer::getDefaultSurfaceFormat());
 		if(!_offscreenContext->create())
-			throw Exception(tr("Failed to create OpenGL context for rendering."));
+			throwException(tr("Failed to create OpenGL context for rendering."));
 		glcontext = _offscreenContext.data();
 	}
 
@@ -84,11 +84,11 @@ bool StandardSceneRenderer::startRender(DataSet* dataset, RenderSettings* settin
 	_offscreenSurface->setFormat(glcontext->format());
 	_offscreenSurface->create();
 	if(!_offscreenSurface->isValid())
-		throw Exception(tr("Failed to create offscreen rendering surface."));
+		throwException(tr("Failed to create offscreen rendering surface."));
 
 	// Make the context current.
 	if(!glcontext->makeCurrent(_offscreenSurface.data()))
-		throw Exception(tr("Failed to make OpenGL context current."));
+		throwException(tr("Failed to make OpenGL context current."));
 	OVITO_REPORT_OPENGL_ERRORS();
 
 	// Create OpenGL framebuffer.
@@ -97,12 +97,12 @@ bool StandardSceneRenderer::startRender(DataSet* dataset, RenderSettings* settin
 	framebufferFormat.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
 	_framebufferObject.reset(new QOpenGLFramebufferObject(_framebufferSize.width(), _framebufferSize.height(), framebufferFormat));
 	if(!_framebufferObject->isValid())
-		throw Exception(tr("Failed to create OpenGL framebuffer object for offscreen rendering."));
+		throwException(tr("Failed to create OpenGL framebuffer object for offscreen rendering."));
 	OVITO_REPORT_OPENGL_ERRORS();
 
 	// Bind OpenGL buffer.
 	if(!_framebufferObject->bind())
-		throw Exception(tr("Failed to bind OpenGL framebuffer object for offscreen rendering."));
+		throwException(tr("Failed to bind OpenGL framebuffer object for offscreen rendering."));
 	OVITO_REPORT_OPENGL_ERRORS();
 
 	return true;
@@ -116,14 +116,14 @@ void StandardSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParam
 	// Make GL context current.
 	QOpenGLContext* glcontext;
 	if(!_offscreenContext)
-		glcontext = renderDataset()->mainWindow()->getOpenGLContext();
+		glcontext = MainWindow::fromDataset(renderDataset())->getOpenGLContext();
 	else
 		glcontext = _offscreenContext.data();
 	if(!glcontext->makeCurrent(_offscreenSurface.data()))
-		throw Exception(tr("Failed to make OpenGL context current."));
+		throwException(tr("Failed to make OpenGL context current."));
 	OVITO_REPORT_OPENGL_ERRORS();
 
-	ViewportSceneRenderer::beginFrame(time, params, vp);
+	OpenGLSceneRenderer::beginFrame(time, params, vp);
 
 	// Setup GL viewport.
 	OVITO_CHECK_OPENGL(glViewport(0, 0, _framebufferSize.width(), _framebufferSize.height()));
@@ -139,10 +139,10 @@ void StandardSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParam
 /******************************************************************************
 * Renders the current animation frame.
 ******************************************************************************/
-bool StandardSceneRenderer::renderFrame(FrameBuffer* frameBuffer, AbstractProgressDisplay* progress)
+bool StandardSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress)
 {
 	// Let the base class do the main rendering work.
-	if(!ViewportSceneRenderer::renderFrame(frameBuffer, progress))
+	if(!OpenGLSceneRenderer::renderFrame(frameBuffer, stereoTask, progress))
 		return false;
 
 	// Flush the contents to the FBO before extracting image.
@@ -172,7 +172,7 @@ void StandardSceneRenderer::endRender()
 	_framebufferObject.reset();
 	_offscreenContext.reset();
 	_offscreenSurface.reset();
-	ViewportSceneRenderer::endRender();
+	OpenGLSceneRenderer::endRender();
 }
 
 OVITO_END_INLINE_NAMESPACE

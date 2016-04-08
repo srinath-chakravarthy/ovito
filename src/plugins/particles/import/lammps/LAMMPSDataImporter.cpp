@@ -24,8 +24,8 @@
 #include <core/utilities/concurrent/Future.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/dataset/DataSetContainer.h>
-#include <core/gui/mainwin/MainWindow.h>
-#include <core/gui/app/Application.h>
+#include <core/app/Application.h>
+#include <gui/mainwin/MainWindow.h>
 #include "LAMMPSDataImporter.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
@@ -70,12 +70,12 @@ bool LAMMPSDataImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceL
 * This method is called by the FileSource each time a new source
 * file has been selected by the user.
 ******************************************************************************/
-bool LAMMPSDataImporter::inspectNewFile(FileSource* obj)
+bool LAMMPSDataImporter::inspectNewFile(FileSource* obj, int frameIndex)
 {
-	if(!ParticleImporter::inspectNewFile(obj))
+	if(!ParticleImporter::inspectNewFile(obj, frameIndex))
 		return false;
 
-	if(obj->frames().empty())
+	if(frameIndex < 0 || frameIndex >= obj->frames().size())
 		return false;
 
 	// Don't show any dialogs in console mode.
@@ -83,12 +83,12 @@ bool LAMMPSDataImporter::inspectNewFile(FileSource* obj)
 		return true;
 
 	// Start task that inspects the file to detect the LAMMPS atom style.
-	std::shared_ptr<LAMMPSDataImportTask> inspectionTask = std::make_shared<LAMMPSDataImportTask>(dataset()->container(), obj->frames().front(), true, atomStyle(), true);
+	std::shared_ptr<LAMMPSDataImportTask> inspectionTask = std::make_shared<LAMMPSDataImportTask>(dataset()->container(), obj->frames()[frameIndex], true, atomStyle(), true);
 	if(!dataset()->container()->taskManager().runTask(inspectionTask))
 		return false;
 
 	if(inspectionTask->atomStyle() == AtomStyle_Unknown) {
-		return showAtomStyleDialog(dataset()->mainWindow());
+		return showAtomStyleDialog(MainWindow::fromDataset(dataset()));
 	}
 	else setAtomStyle(inspectionTask->atomStyle());
 

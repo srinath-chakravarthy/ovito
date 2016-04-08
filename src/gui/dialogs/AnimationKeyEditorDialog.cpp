@@ -19,11 +19,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/widgets/general/SpinnerWidget.h>
-#include <core/gui/mainwin/MainWindow.h>
-#include <core/gui/properties/NumericalParameterUI.h>
-#include <core/gui/dialogs/AnimationSettingsDialog.h>
+#include <gui/GUI.h>
+#include <gui/widgets/general/SpinnerWidget.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/properties/NumericalParameterUI.h>
+#include <gui/dialogs/AnimationSettingsDialog.h>
 #include <core/animation/controller/KeyframeController.h>
 #include <core/utilities/units/UnitsManager.h>
 #include "AnimationKeyEditorDialog.h"
@@ -299,14 +299,14 @@ AnimationKeyEditorDialog::AnimationKeyEditorDialog(KeyframeController* ctrl, con
 	QToolBar* toolbar = new QToolBar();
 	toolbar->setOrientation(Qt::Vertical);
 	toolbar->setFloatable(false);
-	_addKeyAction = toolbar->addAction(QIcon(":/core/actions/animation/add_animation_key.png"), tr("Create animation key"));
+	_addKeyAction = toolbar->addAction(QIcon(":/gui/actions/animation/add_animation_key.png"), tr("Create animation key"));
 	connect(_addKeyAction, &QAction::triggered, this, &AnimationKeyEditorDialog::onAddKey);
-	_deleteKeyAction = toolbar->addAction(QIcon(":/core/actions/animation/delete_animation_key.png"), tr("Delete animation key"));
+	_deleteKeyAction = toolbar->addAction(QIcon(":/gui/actions/animation/delete_animation_key.png"), tr("Delete animation key"));
 	_deleteKeyAction->setEnabled(false);
 	connect(_deleteKeyAction, &QAction::triggered, this, &AnimationKeyEditorDialog::onDeleteKey);
 
 	toolbar->addSeparator();
-	QAction* animSettingsAction = toolbar->addAction(QIcon(":/core/actions/animation/animation_settings.png"), tr("Animation settings..."));
+	QAction* animSettingsAction = toolbar->addAction(QIcon(":/gui/actions/animation/animation_settings.png"), tr("Animation settings..."));
 	connect(animSettingsAction, &QAction::triggered, [this]() {
 		AnimationSettingsDialog(this->ctrl()->dataset()->animationSettings(), this).exec();
 	});
@@ -319,9 +319,8 @@ AnimationKeyEditorDialog::AnimationKeyEditorDialog(KeyframeController* ctrl, con
 	connect(buttonBox, &QDialogButtonBox::rejected, this, &AnimationKeyEditorDialog::reject);
 
 	// Implement Help button.
-	MainWindow* mainWindow = ctrl->dataset()->mainWindow();
-	connect(buttonBox, &QDialogButtonBox::helpRequested, [mainWindow]() {
-		mainWindow->openHelpTopic(QStringLiteral("usage.animation.html"));
+	connect(buttonBox, &QDialogButtonBox::helpRequested, []() {
+		MainWindow::openHelpTopic(QStringLiteral("usage.animation.html"));
 	});
 
 	mainLayout->addWidget(buttonBox);

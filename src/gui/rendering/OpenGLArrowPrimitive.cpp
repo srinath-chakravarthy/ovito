@@ -19,16 +19,16 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "OpenGLArrowPrimitive.h"
-#include "ViewportSceneRenderer.h"
+#include "OpenGLSceneRenderer.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-OpenGLArrowPrimitive::OpenGLArrowPrimitive(ViewportSceneRenderer* renderer, ArrowPrimitive::Shape shape, ShadingMode shadingMode, RenderingQuality renderingQuality) :
+OpenGLArrowPrimitive::OpenGLArrowPrimitive(OpenGLSceneRenderer* renderer, ArrowPrimitive::Shape shape, ShadingMode shadingMode, RenderingQuality renderingQuality) :
 	ArrowPrimitive(shape, shadingMode, renderingQuality),
 	_contextGroup(QOpenGLContextGroup::currentContextGroup()),
 	_elementCount(-1), _cylinderSegments(16), _verticesPerElement(0),
@@ -45,59 +45,59 @@ OpenGLArrowPrimitive::OpenGLArrowPrimitive(ViewportSceneRenderer* renderer, Arro
 			if(!_usingGeometryShader) {
 				_shader = renderer->loadShaderProgram(
 						"cylinder_raytraced",
-						":/core/glsl/cylinder/cylinder_raytraced_tri.vs",
-						":/core/glsl/cylinder/cylinder_raytraced.fs");
+						":/gui/glsl/cylinder/cylinder_raytraced_tri.vs",
+						":/gui/glsl/cylinder/cylinder_raytraced.fs");
 				_pickingShader = renderer->loadShaderProgram(
 						"cylinder_raytraced_picking",
-						":/core/glsl/cylinder/picking/cylinder_raytraced_tri.vs",
-						":/core/glsl/cylinder/picking/cylinder_raytraced.fs");
+						":/gui/glsl/cylinder/picking/cylinder_raytraced_tri.vs",
+						":/gui/glsl/cylinder/picking/cylinder_raytraced.fs");
 			}
 			else {
 				_shader = renderer->loadShaderProgram(
 						"cylinder_geomshader_raytraced",
-						":/core/glsl/cylinder/cylinder_raytraced.vs",
-						":/core/glsl/cylinder/cylinder_raytraced.fs",
-						":/core/glsl/cylinder/cylinder_raytraced.gs");
+						":/gui/glsl/cylinder/cylinder_raytraced.vs",
+						":/gui/glsl/cylinder/cylinder_raytraced.fs",
+						":/gui/glsl/cylinder/cylinder_raytraced.gs");
 				_pickingShader = renderer->loadShaderProgram(
 						"cylinder_geomshader_raytraced_picking",
-						":/core/glsl/cylinder/picking/cylinder_raytraced.vs",
-						":/core/glsl/cylinder/picking/cylinder_raytraced.fs",
-						":/core/glsl/cylinder/picking/cylinder_raytraced.gs");
+						":/gui/glsl/cylinder/picking/cylinder_raytraced.vs",
+						":/gui/glsl/cylinder/picking/cylinder_raytraced.fs",
+						":/gui/glsl/cylinder/picking/cylinder_raytraced.gs");
 			}
 		}
 		else {
 			_shader = renderer->loadShaderProgram(
 					"arrow_shaded",
-					":/core/glsl/arrows/shaded.vs",
-					":/core/glsl/arrows/shaded.fs");
+					":/gui/glsl/arrows/shaded.vs",
+					":/gui/glsl/arrows/shaded.fs");
 			_pickingShader = renderer->loadShaderProgram(
 					"arrow_shaded_picking",
-					":/core/glsl/arrows/picking/shaded.vs",
-					":/core/glsl/arrows/picking/shaded.fs");
+					":/gui/glsl/arrows/picking/shaded.vs",
+					":/gui/glsl/arrows/picking/shaded.fs");
 		}
 	}
 	else if(shadingMode == FlatShading) {
 		if(!_usingGeometryShader || shape != CylinderShape) {
 			_shader = renderer->loadShaderProgram(
 					"arrow_flat",
-					":/core/glsl/arrows/flat_tri.vs",
-					":/core/glsl/arrows/flat.fs");
+					":/gui/glsl/arrows/flat_tri.vs",
+					":/gui/glsl/arrows/flat.fs");
 			_pickingShader = renderer->loadShaderProgram(
 					"arrow_flat_picking",
-					":/core/glsl/arrows/picking/flat_tri.vs",
-					":/core/glsl/arrows/picking/flat.fs");
+					":/gui/glsl/arrows/picking/flat_tri.vs",
+					":/gui/glsl/arrows/picking/flat.fs");
 		}
 		else {
 			_shader = renderer->loadShaderProgram(
 					"cylinder_geomshader_flat",
-					":/core/glsl/arrows/flat.vs",
-					":/core/glsl/arrows/flat.fs",
-					":/core/glsl/cylinder/flat.gs");
+					":/gui/glsl/arrows/flat.vs",
+					":/gui/glsl/arrows/flat.fs",
+					":/gui/glsl/cylinder/flat.gs");
 			_pickingShader = renderer->loadShaderProgram(
 					"cylinder_geomshader_flat_picking",
-					":/core/glsl/arrows/picking/flat.vs",
-					":/core/glsl/arrows/picking/flat.fs",
-					":/core/glsl/cylinder/picking/flat.gs");
+					":/gui/glsl/arrows/picking/flat.vs",
+					":/gui/glsl/arrows/picking/flat.fs",
+					":/gui/glsl/cylinder/picking/flat.gs");
 		}
 	}
 
@@ -529,7 +529,7 @@ void OpenGLArrowPrimitive::endSetElements()
 ******************************************************************************/
 bool OpenGLArrowPrimitive::isValid(SceneRenderer* renderer)
 {
-	ViewportSceneRenderer* vpRenderer = dynamic_object_cast<ViewportSceneRenderer>(renderer);
+	OpenGLSceneRenderer* vpRenderer = dynamic_object_cast<OpenGLSceneRenderer>(renderer);
 	if(!vpRenderer) return false;
 	return _elementCount >= 0 && (_contextGroup == vpRenderer->glcontext()->shareGroup());
 }
@@ -544,7 +544,7 @@ void OpenGLArrowPrimitive::render(SceneRenderer* renderer)
 	OVITO_ASSERT(_elementCount >= 0);
 	OVITO_ASSERT(_mappedChunkIndex == -1);
 
-	ViewportSceneRenderer* vpRenderer = dynamic_object_cast<ViewportSceneRenderer>(renderer);
+	OpenGLSceneRenderer* vpRenderer = dynamic_object_cast<OpenGLSceneRenderer>(renderer);
 
 	if(_elementCount <= 0 || !vpRenderer)
 		return;
@@ -566,11 +566,11 @@ void OpenGLArrowPrimitive::render(SceneRenderer* renderer)
 /******************************************************************************
 * Renders the geometry as triangle mesh with normals.
 ******************************************************************************/
-void OpenGLArrowPrimitive::renderWithNormals(ViewportSceneRenderer* renderer)
+void OpenGLArrowPrimitive::renderWithNormals(OpenGLSceneRenderer* renderer)
 {
 	QOpenGLShaderProgram* shader = renderer->isPicking() ? _pickingShader : _shader;
 	if(!shader->bind())
-		throw Exception(QStringLiteral("Failed to bind OpenGL shader."));
+		renderer->throwException(QStringLiteral("Failed to bind OpenGL shader."));
 
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
@@ -625,13 +625,13 @@ void OpenGLArrowPrimitive::renderWithNormals(ViewportSceneRenderer* renderer)
 /******************************************************************************
 * Renders the geometry as with extra information passed to the vertex shader.
 ******************************************************************************/
-void OpenGLArrowPrimitive::renderWithElementInfo(ViewportSceneRenderer* renderer)
+void OpenGLArrowPrimitive::renderWithElementInfo(OpenGLSceneRenderer* renderer)
 {
 	QOpenGLShaderProgram* shader = renderer->isPicking() ? _pickingShader : _shader;
 	if(!shader)
 		return;
 	if(!shader->bind())
-		throw Exception(QStringLiteral("Failed to bind OpenGL shader."));
+		renderer->throwException(QStringLiteral("Failed to bind OpenGL shader."));
 
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);

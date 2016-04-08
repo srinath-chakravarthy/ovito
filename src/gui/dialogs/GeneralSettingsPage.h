@@ -22,15 +22,15 @@
 #ifndef __OVITO_GENERAL_SETTINGS_PAGE_H
 #define __OVITO_GENERAL_SETTINGS_PAGE_H
 
-#include <core/Core.h>
-#include <core/gui/dialogs/ApplicationSettingsDialog.h>
+#include <gui/GUI.h>
+#include <gui/dialogs/ApplicationSettingsDialog.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
  * Page of the application settings dialog, which hosts general program options.
  */
-class OVITO_CORE_EXPORT GeneralSettingsPage : public ApplicationSettingsDialogPage
+class OVITO_GUI_EXPORT GeneralSettingsPage : public ApplicationSettingsDialogPage
 {
 public:
 

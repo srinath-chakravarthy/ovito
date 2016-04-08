@@ -19,11 +19,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/BooleanGroupBoxParameterUI.h>
-#include <core/gui/properties/IntegerParameterUI.h>
-#include <core/gui/properties/FloatParameterUI.h>
+#include <gui/GUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/BooleanGroupBoxParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
+#include <gui/properties/FloatParameterUI.h>
 #include "TachyonRenderer.h"
 #include "TachyonRendererEditor.h"
 

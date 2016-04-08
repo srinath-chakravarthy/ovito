@@ -27,7 +27,7 @@
 #ifndef __OVITO_OPENGL_TEXTURE_H
 #define __OVITO_OPENGL_TEXTURE_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "OpenGLSharedResource.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -35,7 +35,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAM
 /**
  * \brief A wrapper class for OpenGL textures.
  */
-class OVITO_CORE_EXPORT OpenGLTexture : private OpenGLSharedResource
+class OVITO_GUI_EXPORT OpenGLTexture : private OpenGLSharedResource
 {
 public:
 

@@ -22,16 +22,16 @@
 #ifndef __OVITO_UTILITY_APPLET_H
 #define __OVITO_UTILITY_APPLET_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/reference/RefMaker.h>
-#include <core/gui/widgets/general/RolloutContainer.h>
+#include <gui/widgets/general/RolloutContainer.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(PluginSystem)
 
 /**
  * \brief Abstract base class for utility applets.
  */
-class OVITO_CORE_EXPORT UtilityApplet : public RefMaker
+class OVITO_GUI_EXPORT UtilityApplet : public RefMaker
 {
 protected:
 	

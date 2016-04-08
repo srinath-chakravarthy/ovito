@@ -19,15 +19,16 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/viewport/input/ViewportInputMode.h>
+#include <gui/viewport/input/ViewportInputManager.h>
+#include <gui/viewport/ViewportWindow.h>
 #include <core/viewport/ViewportSettings.h>
 #include <core/viewport/ViewportConfiguration.h>
-#include <core/viewport/input/ViewportInputMode.h>
-#include <core/viewport/input/ViewportInputManager.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/dataset/DataSet.h>
 #include <core/dataset/DataSetContainer.h>
-#include <core/gui/mainwin/MainWindow.h>
 #include "ViewportsPanel.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -46,6 +47,16 @@ ViewportsPanel::ViewportsPanel(MainWindow* parent) : QWidget(parent)
 }
 
 /******************************************************************************
+* Returns the widget that is associated with the given viewport.
+******************************************************************************/
+QWidget* ViewportsPanel::viewportWidget(Viewport* vp)
+{
+	ViewportWindow* vpWindow = static_cast<ViewportWindow*>(vp->window());
+	if(!vpWindow) return nullptr;
+	return vpWindow->widget();
+}
+
+/******************************************************************************
 * This is called when a new viewport configuration has been loaded.
 ******************************************************************************/
 void ViewportsPanel::onViewportConfigurationReplaced(ViewportConfiguration* newViewportConfiguration)
@@ -61,9 +72,10 @@ void ViewportsPanel::onViewportConfigurationReplaced(ViewportConfiguration* newV
 
 	if(newViewportConfiguration) {
 
-		// Create widgets for new viewports.
+		// Create windows for the new viewports.
 		for(Viewport* vp : newViewportConfiguration->viewports()) {
-			vp->createWidget(this);
+			OVITO_ASSERT(vp->window() == nullptr);
+			ViewportWindow* viewportWindow = new ViewportWindow(vp, this);
 		}
 
 		// Repaint the viewport borders when another viewport has been activated.
@@ -109,9 +121,8 @@ void ViewportsPanel::onInputModeChanged(ViewportInputMode* oldMode, ViewportInpu
 ******************************************************************************/
 void ViewportsPanel::viewportModeCursorChanged(const QCursor& cursor)
 {
-	if(_viewportConfig) {
-		for(Viewport* vp : _viewportConfig->viewports())
-			vp->setCursor(cursor);
+	for(ViewportWindow* vpwin : findChildren<ViewportWindow*>()) {
+		vpwin->setCursor(cursor);
 	}
 }
 
@@ -125,7 +136,7 @@ void ViewportsPanel::paintEvent(QPaintEvent* event)
 	// Render border around active viewport.
 	Viewport* vp = _viewportConfig->activeViewport();
 	if(!vp) return;
-	QWidget* vpWidget = vp->widget();
+	QWidget* vpWidget = viewportWidget(vp);
 	if(!vpWidget || vpWidget->isHidden()) return;
 
 	QPainter painter(this);
@@ -167,11 +178,12 @@ void ViewportsPanel::layoutViewports()
 	// Count the number of visible windows.
 	int nvisible = 0;
 	for(Viewport* viewport : viewports) {
-		if(!viewport->widget()) continue;
+		QWidget* vpWidget = viewportWidget(viewport);
+		if(!vpWidget) continue;
 		if(maximizedViewport == nullptr || maximizedViewport == viewport)
 			nvisible++;
 		else
-			viewport->widget()->setVisible(false);
+			vpWidget->setVisible(false);
 	}
 	if(nvisible == 0) return;
 
@@ -186,7 +198,7 @@ void ViewportsPanel::layoutViewports()
 	int count = 0;
 	bool needsRepaint = false;
 	for(Viewport* viewport : viewports) {
-		QWidget* vpWidget = viewport->widget();
+		QWidget* vpWidget = viewportWidget(viewport);
 		if(!vpWidget) continue;
 		if(maximizedViewport != nullptr && maximizedViewport != viewport)
 			continue;

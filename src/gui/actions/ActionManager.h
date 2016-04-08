@@ -22,7 +22,7 @@
 #ifndef __OVITO_ACTION_MANAGER_H
 #define __OVITO_ACTION_MANAGER_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/animation/TimeInterval.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)
@@ -134,7 +134,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)
 /**
  * \brief Manages all available user interface actions.
  */
-class OVITO_CORE_EXPORT ActionManager : public QObject
+class OVITO_GUI_EXPORT ActionManager : public QObject
 {
 	Q_OBJECT
 

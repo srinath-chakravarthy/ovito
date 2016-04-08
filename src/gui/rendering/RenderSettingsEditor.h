@@ -22,8 +22,8 @@
 #ifndef __OVITO_RENDER_SETTINGS_EDITOR_H
 #define __OVITO_RENDER_SETTINGS_EDITOR_H
 
-#include <core/Core.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/GUI.h>
+#include <gui/properties/PropertiesEditor.h>
 #include <core/reference/RefTarget.h>
 #include <core/animation/TimeInterval.h>
 

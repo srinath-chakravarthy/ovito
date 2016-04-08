@@ -45,8 +45,7 @@ DEFINE_FLAGS_REFERENCE_FIELD(DataSetContainer, _currentSet, "CurrentSet", DataSe
 /******************************************************************************
 * Initializes the dataset manager.
 ******************************************************************************/
-DataSetContainer::DataSetContainer(MainWindow* mainWindow) : RefMaker(nullptr),
-	_mainWindow(mainWindow), _taskManager()
+DataSetContainer::DataSetContainer() : RefMaker(nullptr), _taskManager()
 {
 	INIT_PROPERTY_FIELD(DataSetContainer::_currentSet);
 }
@@ -70,13 +69,15 @@ void DataSetContainer::referenceReplaced(const PropertyFieldDescriptor& field, R
 		disconnect(_viewportConfigReplacedConnection);
 		disconnect(_animationSettingsReplacedConnection);
 		disconnect(_renderSettingsReplacedConnection);
-		disconnect(_undoStackCleanChangedConnection);
 		disconnect(_filePathChangedConnection);
+		disconnect(_undoStackCleanChangedConnection);
 		if(currentSet()) {
 			_selectionSetReplacedConnection = connect(currentSet(), &DataSet::selectionSetReplaced, this, &DataSetContainer::onSelectionSetReplaced);
 			_viewportConfigReplacedConnection = connect(currentSet(), &DataSet::viewportConfigReplaced, this, &DataSetContainer::viewportConfigReplaced);
 			_animationSettingsReplacedConnection = connect(currentSet(), &DataSet::animationSettingsReplaced, this, &DataSetContainer::animationSettingsReplaced);
 			_renderSettingsReplacedConnection = connect(currentSet(), &DataSet::renderSettingsReplaced, this, &DataSetContainer::renderSettingsReplaced);
+			_filePathChangedConnection = connect(currentSet(), &DataSet::filePathChanged, this, &DataSetContainer::filePathChanged);
+			_undoStackCleanChangedConnection = connect(&currentSet()->undoStack(), &UndoStack::cleanChanged, this, &DataSetContainer::modificationStatusChanged);
 		}
 
 		Q_EMIT dataSetChanged(currentSet());
@@ -85,6 +86,8 @@ void DataSetContainer::referenceReplaced(const PropertyFieldDescriptor& field, R
 			Q_EMIT viewportConfigReplaced(currentSet()->viewportConfig());
 			Q_EMIT animationSettingsReplaced(currentSet()->animationSettings());
 			Q_EMIT renderSettingsReplaced(currentSet()->renderSettings());
+			Q_EMIT filePathChanged(currentSet()->filePath());
+			Q_EMIT modificationStatusChanged(currentSet()->undoStack().isClean());
 			onSelectionSetReplaced(currentSet()->selection());
 			onAnimationSettingsReplaced(currentSet()->animationSettings());
 		}
@@ -94,6 +97,8 @@ void DataSetContainer::referenceReplaced(const PropertyFieldDescriptor& field, R
 			Q_EMIT viewportConfigReplaced(nullptr);
 			Q_EMIT animationSettingsReplaced(nullptr);
 			Q_EMIT renderSettingsReplaced(nullptr);
+			Q_EMIT filePathChanged(QString());
+			Q_EMIT modificationStatusChanged(true);
 		}
 	}
 	RefMaker::referenceReplaced(field, oldTarget, newTarget);
@@ -137,12 +142,6 @@ void DataSetContainer::onAnimationSettingsReplaced(AnimationSettings* newAnimati
 }
 
 
-// Boolean flag which is set by the POSIX signal handler when user
-// presses Ctrl+C to interrupt the program. In console mode, the
-// DataSetContainer::waitUntil() function breaks out of the waiting loop
-// when this flag is set.
-static QAtomicInt _userInterrupt;
-
 /******************************************************************************
 * This function blocks execution until some operation has been completed.
 ******************************************************************************/
@@ -154,23 +153,17 @@ bool DataSetContainer::waitUntil(const std::function<bool()>& callback, const QS
 	if(callback())
 		return true;
 
-	// Suspend viewport updates while waiting.
-	ViewportSuspender viewportSuspender(currentSet());
-
-	// Check if viewports are currently being rendered.
-	// If yes, it's not a good idea to display a progress dialog.
-	bool isRendering = currentSet() ? currentSet()->viewportConfig()->isRendering() : false;
+	// Boolean flag which is set by the POSIX signal handler when user
+	// presses Ctrl+C to interrupt the program. In console mode, the
+	// DataSetContainer::waitUntil() function breaks out of the waiting loop
+	// when this flag is set.
+	static QAtomicInt _userInterrupt;
 
 #ifdef Q_OS_UNIX
 	// Install POSIX signal handler to catch Ctrl+C key press in console mode.
 	auto oldSignalHandler = ::signal(SIGINT, [](int) { _userInterrupt.storeRelease(1); });
 #endif
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-	// Disable viewport repaints while processing events to
-	// avoid recursive calls to repaint().
-//	if(Application::instance().guiMode())
-//		mainWindow()->viewportsPanel()->setUpdatesEnabled(false);
-#endif
+
 	try {
 
 		// Poll callback function until it returns true.
@@ -181,27 +174,17 @@ bool DataSetContainer::waitUntil(const std::function<bool()>& callback, const QS
 #ifdef Q_OS_UNIX
 		::signal(SIGINT, oldSignalHandler);
 #endif
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-		// Resume repainting the viewports.
-//		if(Application::instance().guiMode())
-//			mainWindow()->viewportsPanel()->setUpdatesEnabled(true);
-#endif
 	}
 	catch(...) {
 #ifdef Q_OS_UNIX
 		::signal(SIGINT, oldSignalHandler);
 #endif
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-		// Resume repainting the viewports.
-//		if(Application::instance().guiMode())
-//			mainWindow()->viewportsPanel()->setUpdatesEnabled(true);
-#endif
+		throw;
 	}
 	if(_userInterrupt.load()) {
 		taskManager().cancelAll();
 		return false;
 	}
-
 	return true;
 }
 

@@ -22,7 +22,7 @@
 #ifndef __OVITO_MODIFIER_LIST_BOX_H
 #define __OVITO_MODIFIER_LIST_BOX_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/object/OvitoObjectType.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)

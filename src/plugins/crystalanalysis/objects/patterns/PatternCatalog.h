@@ -23,7 +23,7 @@
 #define __OVITO_CA_PATTERN_CATALOG_H
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <core/gui/properties/RefTargetListParameterUI.h>
+#include <gui/properties/RefTargetListParameterUI.h>
 #include <core/scene/objects/DataObject.h>
 #include "StructurePattern.h"
 

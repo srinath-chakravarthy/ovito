@@ -25,8 +25,6 @@
 #include <core/Core.h>
 #include "PrimitiveBase.h"
 
-#include <QImage>
-
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
 
 /**

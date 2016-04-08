@@ -22,7 +22,7 @@
 #ifndef __OVITO_SCENE_NODES_LIST_MODEL_H
 #define __OVITO_SCENE_NODES_LIST_MODEL_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/reference/RefTargetListener.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -30,7 +30,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /**
  * A Qt model/view system list model that contains all scene nodes in the current scene.
  */
-class OVITO_CORE_EXPORT SceneNodesListModel : public QAbstractListModel
+class OVITO_GUI_EXPORT SceneNodesListModel : public QAbstractListModel
 {
 	Q_OBJECT
 	

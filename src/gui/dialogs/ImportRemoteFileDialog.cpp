@@ -19,7 +19,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/utilities/io/FileManager.h>
 #include "ImportRemoteFileDialog.h"
 
@@ -58,7 +58,7 @@ ImportRemoteFileDialog::ImportRemoteFileDialog(const QVector<OvitoObjectType*>& 
 
 	layout2->addWidget(_urlEdit);
 	QToolButton* clearURLHistoryButton = new QToolButton();
-	clearURLHistoryButton->setIcon(QIcon(":/core/actions/edit/edit_clear.png"));
+	clearURLHistoryButton->setIcon(QIcon(":/gui/actions/edit/edit_clear.png"));
 	clearURLHistoryButton->setToolTip(tr("Clear history"));
 	connect(clearURLHistoryButton, &QToolButton::clicked, [this]() {
 		QString text = _urlEdit->currentText();

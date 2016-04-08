@@ -22,15 +22,15 @@
 #ifndef __OVITO_RENDER_COMMAND_PAGE_H
 #define __OVITO_RENDER_COMMAND_PAGE_H
 
-#include <core/Core.h>
-#include <core/gui/properties/PropertiesPanel.h>
+#include <gui/GUI.h>
+#include <gui/properties/PropertiesPanel.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
  * The command panel page lets user render the scene.
  */
-class OVITO_CORE_EXPORT RenderCommandPage : public QWidget
+class OVITO_GUI_EXPORT RenderCommandPage : public QWidget
 {
 	Q_OBJECT
 

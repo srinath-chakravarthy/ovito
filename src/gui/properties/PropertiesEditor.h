@@ -22,9 +22,9 @@
 #ifndef __OVITO_PROPERTIES_EDITOR_H
 #define __OVITO_PROPERTIES_EDITOR_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/reference/RefTarget.h>
-#include <core/gui/widgets/general/RolloutContainer.h>
+#include <gui/widgets/general/RolloutContainer.h>
 #include "PropertiesPanel.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
@@ -34,7 +34,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
  * 
  * A properties editor for a RefTarget derived object can be created using the PropertiesEditor::create() function.
  */
-class OVITO_CORE_EXPORT PropertiesEditor : public RefMaker
+class OVITO_GUI_EXPORT PropertiesEditor : public RefMaker
 {
 public:
 
@@ -117,10 +117,6 @@ public:
 	void undoableTransaction(const QString& operationLabel, Function&& func) {
 		UndoableTransaction::handleExceptions(dataset()->undoStack(), operationLabel, std::forward<Function>(func));
 	}
-
-	/// \brief Determines whether an editable object is currently being edited in a PropertiesEditor.
-	/// \return \c true if there is an active editor for the RefTarget; \c false otherwise.
-	static bool isObjectBeingEdited(const RefTarget* obj);
 
 public Q_SLOTS:
 

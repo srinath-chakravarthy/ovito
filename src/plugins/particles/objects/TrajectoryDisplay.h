@@ -26,7 +26,7 @@
 #include <core/scene/objects/DisplayObject.h>
 #include <core/scene/objects/WeakVersionedObjectReference.h>
 #include <core/rendering/SceneRenderer.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/properties/PropertiesEditor.h>
 #include "TrajectoryObject.h"
 
 namespace Ovito { namespace Particles {

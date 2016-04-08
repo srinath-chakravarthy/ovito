@@ -20,7 +20,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <core/gui/properties/RefTargetListParameterUI.h>
+#include <gui/properties/RefTargetListParameterUI.h>
 #include "ClusterGraphObject.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {

@@ -22,7 +22,7 @@
 #ifndef __OVITO_STATUS_WIDGET_H
 #define __OVITO_STATUS_WIDGET_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/scene/pipeline/PipelineStatus.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Widgets)
@@ -30,7 +30,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /**
  * \brief A widget that displays information from the PipelineStatus class.
  */
-class OVITO_CORE_EXPORT StatusWidget : public QScrollArea
+class OVITO_GUI_EXPORT StatusWidget : public QScrollArea
 {
 	Q_OBJECT
 	

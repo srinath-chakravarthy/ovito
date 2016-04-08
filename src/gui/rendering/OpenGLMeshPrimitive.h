@@ -22,7 +22,7 @@
 #ifndef __OVITO_OPENGL_MESH_PRIMITIVE_H
 #define __OVITO_OPENGL_MESH_PRIMITIVE_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/rendering/MeshPrimitive.h>
 #include <core/utilities/mesh/TriMesh.h>
 #include "OpenGLBuffer.h"
@@ -32,12 +32,12 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAM
 /**
  * \brief Buffer object that stores a triangle mesh to be rendered in the viewports.
  */
-class OVITO_CORE_EXPORT OpenGLMeshPrimitive : public MeshPrimitive, public std::enable_shared_from_this<OpenGLMeshPrimitive>
+class OVITO_GUI_EXPORT OpenGLMeshPrimitive : public MeshPrimitive, public std::enable_shared_from_this<OpenGLMeshPrimitive>
 {
 public:
 
 	/// Constructor.
-	OpenGLMeshPrimitive(ViewportSceneRenderer* renderer);
+	OpenGLMeshPrimitive(OpenGLSceneRenderer* renderer);
 
 	/// Sets the mesh to be stored in this buffer object.
 	virtual void setMesh(const TriMesh& mesh, const ColorA& meshColor) override;

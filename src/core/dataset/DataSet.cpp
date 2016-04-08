@@ -35,8 +35,6 @@
 	#include <core/utilities/io/video/VideoEncoder.h>
 #endif
 
-#include <QPainter>
-
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, DataSet, RefTarget);
@@ -113,8 +111,8 @@ bool DataSet::referenceEvent(RefTarget* source, ReferenceEvent* event)
 		// Update the viewports whenever something has changed in the current data set.
 		if(source != viewportConfig() && source != animationSettings()) {
 			// Do not automatically update while in the process of jumping to a new animation frame.
-			//if(!animationSettings()->isTimeChanging())
-			//	viewportConfig()->updateViewports();
+			if(!animationSettings()->isTimeChanging())
+				viewportConfig()->updateViewports();
 
 			if(source == sceneRoot() && event->type() == ReferenceEvent::PendingStateChanged) {
 				notifySceneReadyListeners();
@@ -149,10 +147,10 @@ void DataSet::referenceReplaced(const PropertyFieldDescriptor& field, RefTarget*
 	// Install a signal/slot connection that updates the viewports every time the animation time changes.
 	if(field == PROPERTY_FIELD(DataSet::_viewportConfig) || field == PROPERTY_FIELD(DataSet::_animSettings)) {
 		disconnect(_updateViewportOnTimeChangeConnection);
-		//if(animationSettings() && viewportConfig()) {
-		//	_updateViewportOnTimeChangeConnection = connect(animationSettings(), &AnimationSettings::timeChangeComplete, viewportConfig(), &ViewportConfiguration::updateViewports);
-		//	viewportConfig()->updateViewports();
-		//}
+		if(animationSettings() && viewportConfig()) {
+			_updateViewportOnTimeChangeConnection = connect(animationSettings(), &AnimationSettings::timeChangeComplete, viewportConfig(), &ViewportConfiguration::updateViewports);
+			viewportConfig()->updateViewports();
+		}
 	}
 
 	RefTarget::referenceReplaced(field, oldTarget, newTarget);
@@ -259,7 +257,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuf
 
 	// Get the selected scene renderer.
 	SceneRenderer* renderer = settings->renderer();
-	if(!renderer) throw Exception(tr("No renderer has been selected."));
+	if(!renderer) throwException(tr("No rendering engine has been selected."));
 
 	bool wasCanceled = false;
 	try {
@@ -283,7 +281,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuf
 			if(settings->saveToFile() && settings->imageInfo().isMovie()) {
 
 				if(settings->imageFilename().isEmpty())
-					throw Exception(tr("Cannot save rendered images to movie file. Output filename has not been specified."));
+					throwException(tr("Cannot save rendered images to movie file. Output filename has not been specified."));
 
 				videoEncoderPtr.reset(new VideoEncoder());
 				videoEncoder = videoEncoderPtr.data();
@@ -314,7 +312,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuf
 				}
 				numberOfFrames = (numberOfFrames + settings->everyNthFrame() - 1) / settings->everyNthFrame();
 				if(numberOfFrames < 1)
-					throw Exception(tr("Invalid rendering range: Frame %1 to %2").arg(settings->customRangeStart()).arg(settings->customRangeEnd()));
+					throwException(tr("Invalid rendering range: Frame %1 to %2").arg(settings->customRangeStart()).arg(settings->customRangeEnd()));
 				if(progressDisplay)
 					progressDisplay->setMaximum(numberOfFrames);
 
@@ -349,9 +347,11 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuf
 		if(progressDisplay && progressDisplay->wasCanceled())
 			wasCanceled = true;
 	}
-	catch(...) {
+	catch(Exception& ex) {
 		// Shutdown renderer.
 		renderer->endRender();
+		// Provide a context for this error.
+		if(ex.context() == nullptr) ex.setContext(this);
 		throw;
 	}
 
@@ -369,7 +369,7 @@ bool DataSet::renderFrame(TimePoint renderTime, int frameNumber, RenderSettings*
 	if(settings->saveToFile() && !videoEncoder) {
 		imageFilename = settings->imageFilename();
 		if(imageFilename.isEmpty())
-			throw Exception(tr("Cannot save rendered image to file. Output filename has not been specified."));
+			throwException(tr("Cannot save rendered image to file. Output filename has not been specified."));
 
 		if(settings->renderingRangeType() != RenderSettings::CURRENT_FRAME) {
 			// Append frame number to file name if rendering an animation.
@@ -401,7 +401,7 @@ bool DataSet::renderFrame(TimePoint renderTime, int frameNumber, RenderSettings*
 	// Render one frame.
 	frameBuffer->clear();
 	renderer->beginFrame(renderTime, projParams, viewport);
-	if(!renderer->renderFrame(frameBuffer, progressDisplay) || (progressDisplay && progressDisplay->wasCanceled())) {
+	if(!renderer->renderFrame(frameBuffer, SceneRenderer::NonStereoscopic, progressDisplay) || (progressDisplay && progressDisplay->wasCanceled())) {
 		renderer->endFrame();
 		return false;
 	}
@@ -421,7 +421,7 @@ bool DataSet::renderFrame(TimePoint renderTime, int frameNumber, RenderSettings*
 		if(!videoEncoder) {
 			OVITO_ASSERT(!imageFilename.isEmpty());
 			if(!frameBuffer->image().save(imageFilename, settings->imageInfo().format()))
-				throw Exception(tr("Failed to save rendered image to output file '%1'.").arg(imageFilename));
+				throwException(tr("Failed to save rendered image to output file '%1'.").arg(imageFilename));
 		}
 		else {
 #ifdef OVITO_VIDEO_OUTPUT_SUPPORT
@@ -454,7 +454,7 @@ void DataSet::saveToFile(const QString& filePath)
 {
 	QFile fileStream(filePath);
     if(!fileStream.open(QIODevice::WriteOnly))
-		throw Exception(tr("Failed to open output file '%1' for writing.").arg(filePath));
+    	throwException(tr("Failed to open output file '%1' for writing.").arg(filePath));
 
 	QDataStream dataStream(&fileStream);
 	ObjectSaveStream stream(dataStream);
@@ -462,7 +462,7 @@ void DataSet::saveToFile(const QString& filePath)
 	stream.close();
 
 	if(fileStream.error() != QFile::NoError)
-		throw Exception(tr("Failed to write output file '%1'.").arg(filePath));
+		throwException(tr("Failed to write output file '%1'.").arg(filePath));
 	fileStream.close();
 }
 

@@ -22,20 +22,20 @@
 #ifndef __OVITO_STANDARD_SCENE_RENDERER_H
 #define __OVITO_STANDARD_SCENE_RENDERER_H
 
-#include <core/Core.h>
-#include <core/rendering/viewport/ViewportSceneRenderer.h>
+#include <gui/GUI.h>
+#include "OpenGLSceneRenderer.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
 
 /**
  * \brief This is the default scene renderer used for high-quality image output.
  */
-class OVITO_CORE_EXPORT StandardSceneRenderer : public ViewportSceneRenderer
+class OVITO_GUI_EXPORT StandardSceneRenderer : public OpenGLSceneRenderer
 {
 public:
 
 	/// Default constructor.
-	Q_INVOKABLE StandardSceneRenderer(DataSet* dataset) : ViewportSceneRenderer(dataset), _antialiasingLevel(3) {
+	Q_INVOKABLE StandardSceneRenderer(DataSet* dataset) : OpenGLSceneRenderer(dataset), _antialiasingLevel(3) {
 		INIT_PROPERTY_FIELD(StandardSceneRenderer::_antialiasingLevel);
 	}
 
@@ -52,7 +52,7 @@ public:
 	virtual void beginFrame(TimePoint time, const ViewProjectionParameters& params, Viewport* vp) override;
 
 	/// Renders the current animation frame.
-	virtual bool renderFrame(FrameBuffer* frameBuffer, AbstractProgressDisplay* progress) override;
+	virtual bool renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress) override;
 
 	/// Is called after rendering has finished.
 	virtual void endRender() override;
@@ -60,9 +60,6 @@ public:
 	/// Returns whether this renderer is rendering an interactive viewport.
 	/// \return true if rendering a real-time viewport; false if rendering an output image.
 	virtual bool isInteractive() const override { return false; }
-
-	/// Returns the final size of the rendered image in pixels.
-	virtual QSize outputSize() const override { return SceneRenderer::outputSize(); }
 
 public:
 

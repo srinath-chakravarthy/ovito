@@ -20,12 +20,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/actions/ViewportModeAction.h>
-#include <core/gui/mainwin/MainWindow.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/viewport/Viewport.h>
 #include <core/viewport/ViewportConfiguration.h>
-#include <core/rendering/viewport/ViewportSceneRenderer.h>
+#include <gui/rendering/ViewportSceneRenderer.h>
+#include <gui/actions/ViewportModeAction.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/viewport/ViewportWindow.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
 #include "ParticleInformationApplet.h"
@@ -204,11 +205,11 @@ void ParticleInformationApplet::updateInformationDisplay()
 /******************************************************************************
 * Handles the mouse up events for a Viewport.
 ******************************************************************************/
-void ParticleInformationInputMode::mouseReleaseEvent(Viewport* vp, QMouseEvent* event)
+void ParticleInformationInputMode::mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	if(event->button() == Qt::LeftButton) {
 		PickResult pickResult;
-		pickParticle(vp, event->pos(), pickResult);
+		pickParticle(vpwin, event->pos(), pickResult);
 		if(!event->modifiers().testFlag(Qt::ControlModifier))
 			_pickedParticles.clear();
 		if(pickResult.objNode) {
@@ -225,24 +226,24 @@ void ParticleInformationInputMode::mouseReleaseEvent(Viewport* vp, QMouseEvent* 
 				_pickedParticles.push_back(pickResult);
 		}
 		_applet->updateInformationDisplay();
-		vp->dataset()->viewportConfig()->updateViewports();
+		vpwin->viewport()->dataset()->viewportConfig()->updateViewports();
 	}
-	ViewportInputMode::mouseReleaseEvent(vp, event);
+	ViewportInputMode::mouseReleaseEvent(vpwin, event);
 }
 
 /******************************************************************************
 * Handles the mouse move event for the given viewport.
 ******************************************************************************/
-void ParticleInformationInputMode::mouseMoveEvent(Viewport* vp, QMouseEvent* event)
+void ParticleInformationInputMode::mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	// Change mouse cursor while hovering over a particle.
 	PickResult pickResult;
-	if(pickParticle(vp, event->pos(), pickResult))
+	if(pickParticle(vpwin, event->pos(), pickResult))
 		setCursor(SelectionMode::selectionCursor());
 	else
 		setCursor(QCursor());
 
-	ViewportInputMode::mouseMoveEvent(vp, event);
+	ViewportInputMode::mouseMoveEvent(vpwin, event);
 }
 
 /******************************************************************************

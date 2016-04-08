@@ -67,6 +67,14 @@ class OVITO_CORE_EXPORT SceneRenderer : public RefTarget
 {
 public:
 
+	enum StereoRenderingTask {
+		NonStereoscopic,
+		StereoscopicLeft,
+		StereoscopicRight
+	};
+
+public:
+
 	/// Prepares the renderer for rendering and sets the data set to be rendered.
 	virtual bool startRender(DataSet* dataset, RenderSettings* settings) {
 		OVITO_ASSERT_MSG(_renderDataset == nullptr, "SceneRenderer::startRender()", "startRender() called again without calling endRender() first.");
@@ -125,7 +133,7 @@ public:
 
 	/// Renders the current animation frame.
 	/// Returns false if the operation has been canceled by the user.
-	virtual bool renderFrame(FrameBuffer* frameBuffer, AbstractProgressDisplay* progress) = 0;
+	virtual bool renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress) = 0;
 
 	/// This method is called after renderFrame() has been called.
 	virtual void endFrame() {}
@@ -175,6 +183,16 @@ public:
 
 	/// Returns the line rendering width to use in object picking mode.
 	virtual FloatType defaultLinePickingWidth() { return 1; }
+
+	/// \brief Computes the bounding box of the the 3D visual elements
+	///        shown only in the interactive viewports.
+	/// \param time The time at which the bounding box should be computed.
+	/// \return An axis-aligned box in the world coordinate system that contains
+	///         everything to be rendered.
+	///
+	/// The default implementation returns an empty box. This method is only re-implemented
+	/// by the interactive viewport scene renderer.
+	virtual Box3 boundingBoxInteractive(TimePoint time, Viewport* viewport) { return Box3(); }
 
 protected:
 

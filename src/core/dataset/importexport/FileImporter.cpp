@@ -54,16 +54,23 @@ QVector<OvitoObjectType*> FileExporter::availableExporters()
 OORef<FileImporter> FileImporter::autodetectFileFormat(DataSet* dataset, const QUrl& url)
 {
 	if(!url.isValid())
-		throw Exception(tr("Invalid path or URL."));
+		dataset->throwException(tr("Invalid path or URL."));
 
-	// Download file so we can determine its format.
-	DataSetContainer* container = dataset->container();
-	Future<QString> fetchFileFuture = FileManager::instance().fetchUrl(*container, url);
-	if(!container->taskManager().waitForTask(fetchFileFuture))
-		throw Exception(tr("Operation has been canceled by the user."));
+	try {
+		// Download file so we can determine its format.
+		DataSetContainer* container = dataset->container();
+		Future<QString> fetchFileFuture = FileManager::instance().fetchUrl(*container, url);
+		if(!container->taskManager().waitForTask(fetchFileFuture))
+			dataset->throwException(tr("Operation has been canceled by the user."));
 
-	// Detect file format.
-	return autodetectFileFormat(dataset, fetchFileFuture.result(), url.path());
+		// Detect file format.
+		return autodetectFileFormat(dataset, fetchFileFuture.result(), url.path());
+	}
+	catch(Exception& ex) {
+		// Provide a context object for any errors that occur during file inspection.
+		ex.setContext(dataset);
+		throw;
+	}
 }
 
 /******************************************************************************

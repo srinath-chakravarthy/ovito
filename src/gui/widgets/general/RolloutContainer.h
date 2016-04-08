@@ -22,7 +22,7 @@
 #ifndef __OVITO_ROLLOUT_CONTAINER_H
 #define __OVITO_ROLLOUT_CONTAINER_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Widgets)
 
@@ -120,7 +120,7 @@ private:
 * This is part of the implementation of the RolloutContainer and
 * should not be used outside of a RolloutContainer.
 ******************************************************************************/
-class OVITO_CORE_EXPORT Rollout : public QWidget
+class OVITO_GUI_EXPORT Rollout : public QWidget
 {
 	Q_OBJECT
 
@@ -203,7 +203,7 @@ private:
 /******************************************************************************
 * This container manages multiple rollouts.
 ******************************************************************************/
-class OVITO_CORE_EXPORT RolloutContainer : public QScrollArea
+class OVITO_GUI_EXPORT RolloutContainer : public QScrollArea
 {
 	Q_OBJECT
 

@@ -19,20 +19,21 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/app/Application.h>
+#include <gui/GUI.h>
+#include <gui/app/GuiApplication.h>
 
 int main(int argc, char** argv)
 {
 	// Initialize the application.
-	if(!Ovito::Application().instance().initialize(argc, argv))
+	Ovito::GuiApplication app;
+	if(!app.initialize(argc, argv))
 		return 1;
 
 	// Enter event loop.
-	int result = Ovito::Application().instance().runApplication();
+	int result = app.runApplication();
 
 	// Shut application down.
-	Ovito::Application().instance().shutdown();
+	app.shutdown();
 
 	return result;
 }

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/actions/ActionManager.h>
+#include <gui/GUI.h>
+#include <gui/actions/ActionManager.h>
 #include <core/viewport/ViewportConfiguration.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)

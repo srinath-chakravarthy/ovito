@@ -19,15 +19,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/viewport/ViewportWindow.h>
+#include <gui/GUI.h>
+#include <gui/viewport/ViewportWindow.h>
 #include <core/viewport/Viewport.h>
 #include <core/rendering/RenderSettings.h>
 #include "PickingSceneRenderer.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Core, PickingSceneRenderer, ViewportSceneRenderer);
+IMPLEMENT_OVITO_OBJECT(Gui, PickingSceneRenderer, ViewportSceneRenderer);
 
 /******************************************************************************
 * This method is called just before renderFrame() is called.
@@ -35,16 +35,16 @@ IMPLEMENT_OVITO_OBJECT(Core, PickingSceneRenderer, ViewportSceneRenderer);
 void PickingSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParameters& params, Viewport* vp)
 {
 	// Get the viewport's window.
-	ViewportWindow* vpWindow = vp->viewportWindow();
+	ViewportWindow* vpWindow = static_cast<ViewportWindow*>(vp->window());
 	if(!vpWindow)
-		throw Exception(tr("Viewport window has not been created."));
+		throwException(tr("Viewport window has not been created."));
 	if(!vpWindow->isExposed())
-		throw Exception(tr("Viewport window is not exposed."));
+		throwException(tr("Viewport window is not exposed."));
 
 	// Get OpenGL context.
 	QOpenGLContext* context = vpWindow->context();
 	if(!context || !context->isValid())
-		throw Exception(tr("Viewport OpenGL context has not been created."));
+		throwException(tr("Viewport OpenGL context has not been created."));
 
 	// Before making our GL context current, remember the old context that
 	// is currently active so we can restore it when we are done.
@@ -57,21 +57,22 @@ void PickingSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParame
 #else
 	if(!context->makeCurrent(vpWindow->window()->windowHandle()))
 #endif
-		throw Exception(tr("Failed to make OpenGL context current."));
+		throwException(tr("Failed to make OpenGL context current."));
 
 	// Create OpenGL framebuffer.
-	QSize size = vp->size();
+	QSize size = vpWindow->viewportWindowSize();
 	QOpenGLFramebufferObjectFormat framebufferFormat;
 	framebufferFormat.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
 	_framebufferObject.reset(new QOpenGLFramebufferObject(size.width(), size.height(), framebufferFormat));
+
 	// Clear OpenGL error state.
 	while(glGetError() != GL_NO_ERROR);
 	if(!_framebufferObject->isValid())
-		throw Exception(tr("Failed to create OpenGL framebuffer object for offscreen rendering."));
+		throwException(tr("Failed to create OpenGL framebuffer object for offscreen rendering."));
 
 	// Bind OpenGL buffer.
 	if(!_framebufferObject->bind())
-		throw Exception(tr("Failed to bind OpenGL framebuffer object for offscreen rendering."));
+		throwException(tr("Failed to bind OpenGL framebuffer object for offscreen rendering."));
 
 	ViewportSceneRenderer::beginFrame(time, params, vp);
 
@@ -83,13 +84,13 @@ void PickingSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParame
 /******************************************************************************
 * Renders the current animation frame.
 ******************************************************************************/
-bool PickingSceneRenderer::renderFrame(FrameBuffer* frameBuffer, AbstractProgressDisplay* progress)
+bool PickingSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress)
 {
 	// Clear previous object records.
 	reset();
 
 	// Let the base class do the main rendering work.
-	if(!ViewportSceneRenderer::renderFrame(frameBuffer, progress))
+	if(!ViewportSceneRenderer::renderFrame(frameBuffer, stereoTask, progress))
 		return false;
 
 	// Clear OpenGL error state, so we start fresh for the glReadPixels() call below.

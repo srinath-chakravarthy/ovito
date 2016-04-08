@@ -19,7 +19,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include "StatusWidget.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Widgets)
@@ -28,8 +28,8 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 * Constructor.
 ******************************************************************************/
 StatusWidget::StatusWidget(QWidget* parent) : QScrollArea(parent),
-	_statusWarningIcon(":/core/mainwin/status/status_warning.png"),
-	_statusErrorIcon(":/core/mainwin/status/status_error.png")
+	_statusWarningIcon(":/gui/mainwin/status/status_warning.png"),
+	_statusErrorIcon(":/gui/mainwin/status/status_error.png")
 {
 	QWidget* container = new QWidget();
 	QHBoxLayout* layout = new QHBoxLayout(container);

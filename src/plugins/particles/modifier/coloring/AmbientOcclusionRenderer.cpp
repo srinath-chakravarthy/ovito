@@ -20,40 +20,39 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/viewport/ViewportWindow.h>
 #include <core/viewport/Viewport.h>
 #include "AmbientOcclusionRenderer.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Particles, AmbientOcclusionRenderer, ViewportSceneRenderer);
+IMPLEMENT_OVITO_OBJECT(Particles, AmbientOcclusionRenderer, OpenGLSceneRenderer);
 
 /******************************************************************************
 * Prepares the renderer for rendering and sets the data set that is being rendered.
 ******************************************************************************/
 bool AmbientOcclusionRenderer::startRender(DataSet* dataset, RenderSettings* settings)
 {
-	if(!ViewportSceneRenderer::startRender(dataset, settings))
+	if(!OpenGLSceneRenderer::startRender(dataset, settings))
 		return false;
 
 	// Create new OpenGL context for rendering in this background thread.
 	OVITO_ASSERT(QOpenGLContext::currentContext() == nullptr);
 	_offscreenContext.reset(new QOpenGLContext());
-	_offscreenContext->setFormat(ViewportSceneRenderer::getDefaultSurfaceFormat());
+	_offscreenContext->setFormat(OpenGLSceneRenderer::getDefaultSurfaceFormat());
 	if(!_offscreenContext->create())
-		throw Exception(tr("Failed to create OpenGL context."));
+		dataset->throwException(tr("Failed to create OpenGL context."));
 
 	// Check offscreen buffer.
 	if(!_offscreenSurface.isValid())
-		throw Exception(tr("Failed to create offscreen rendering surface."));
+		dataset->throwException(tr("Failed to create offscreen rendering surface."));
 
 	// Make the context current.
 	if(!_offscreenContext->makeCurrent(&_offscreenSurface))
-		throw Exception(tr("Failed to make OpenGL context current."));
+		dataset->throwException(tr("Failed to make OpenGL context current."));
 
 	// Check OpenGL version.
 	if(_offscreenContext->format().majorVersion() < OVITO_OPENGL_MINIMUM_VERSION_MAJOR || (_offscreenContext->format().majorVersion() == OVITO_OPENGL_MINIMUM_VERSION_MAJOR && _offscreenContext->format().minorVersion() < OVITO_OPENGL_MINIMUM_VERSION_MINOR)) {
-		throw Exception(tr(
+		dataset->throwException(tr(
 				"The OpenGL implementation available on this system does not support OpenGL version %4.%5 or newer.\n\n"
 				"Ovito requires modern graphics hardware to accelerate 3d rendering. You current system configuration is not compatible with Ovito.\n\n"
 				"To avoid this error message, please install the newest graphics driver, or upgrade your graphics card.\n\n"
@@ -75,11 +74,11 @@ bool AmbientOcclusionRenderer::startRender(DataSet* dataset, RenderSettings* set
 	framebufferFormat.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
 	_framebufferObject.reset(new QOpenGLFramebufferObject(_resolution, framebufferFormat));
 	if(!_framebufferObject->isValid())
-		throw Exception(tr("Failed to create OpenGL framebuffer object for offscreen rendering."));
+		dataset->throwException(tr("Failed to create OpenGL framebuffer object for offscreen rendering."));
 
 	// Bind OpenGL buffer.
 	if(!_framebufferObject->bind())
-		throw Exception(tr("Failed to bind OpenGL framebuffer object for offscreen rendering."));
+		dataset->throwException(tr("Failed to bind OpenGL framebuffer object for offscreen rendering."));
 
 	return true;
 }
@@ -91,9 +90,9 @@ void AmbientOcclusionRenderer::beginFrame(TimePoint time, const ViewProjectionPa
 {
 	// Make GL context current.
 	if(!_offscreenContext->makeCurrent(&_offscreenSurface))
-		throw Exception(tr("Failed to make OpenGL context current."));
+		vp->throwException(tr("Failed to make OpenGL context current."));
 
-	ViewportSceneRenderer::beginFrame(time, params, vp);
+	OpenGLSceneRenderer::beginFrame(time, params, vp);
 
 	// Setup GL viewport and background color.
 	OVITO_CHECK_OPENGL(glViewport(0, 0, _resolution.width(), _resolution.height()));
@@ -123,7 +122,7 @@ void AmbientOcclusionRenderer::endFrame()
 		_image = _image.rgbSwapped();
 	}
 
-	ViewportSceneRenderer::endFrame();
+	OpenGLSceneRenderer::endFrame();
 }
 
 /******************************************************************************
@@ -133,7 +132,7 @@ void AmbientOcclusionRenderer::endRender()
 {
 	_framebufferObject.reset();
 	_offscreenContext.reset();
-	ViewportSceneRenderer::endRender();
+	OpenGLSceneRenderer::endRender();
 }
 
 OVITO_END_INLINE_NAMESPACE

@@ -19,13 +19,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/GUI.h>
+#include <gui/properties/PropertiesEditor.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
 
 // Gives the class run-time type information.
-IMPLEMENT_OVITO_OBJECT(Core, PropertiesEditor, RefMaker);
+IMPLEMENT_OVITO_OBJECT(Gui, PropertiesEditor, RefMaker);
 DEFINE_FLAGS_REFERENCE_FIELD(PropertiesEditor, _editObject, "EditObject", RefTarget, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_WEAK_REF | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
 
 /******************************************************************************
@@ -46,22 +46,11 @@ OORef<PropertiesEditor> PropertiesEditor::create(RefTarget* obj)
 		}
 	}
 	catch(Exception& ex) {
+		if(ex.context() == nullptr) ex.setContext(obj->dataset());
 		ex.prependGeneralMessage(tr("Could no create editor component for the %1 object.").arg(obj->objectTitle()));
 		ex.showError();
 	}
 	return nullptr;
-}
-
-/******************************************************************************
-* Determines whether this object is currently being edited in a PropertiesEditor.
-******************************************************************************/
-bool PropertiesEditor::isObjectBeingEdited(const RefTarget* obj)
-{
-	for(const RefMaker* m : obj->dependents()) {
-		if(m->getOOType().isDerivedFrom(PropertiesEditor::OOType))
-			return true;
-	}
-	return false;
 }
 
 /******************************************************************************
@@ -147,6 +136,8 @@ void PropertiesEditor::referenceReplaced(const PropertyFieldDescriptor& field, R
 {
 	if(field == PROPERTY_FIELD(PropertiesEditor::_editObject)) {
 		setDataset(editObject() ? editObject()->dataset() : nullptr);
+		if(oldTarget) oldTarget->unsetObjectEditingFlag();
+		if(newTarget) newTarget->setObjectEditingFlag();
 		Q_EMIT contentsReplaced(editObject());
 		Q_EMIT contentsChanged(editObject());
 	}

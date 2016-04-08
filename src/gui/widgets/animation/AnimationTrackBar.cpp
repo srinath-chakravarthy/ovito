@@ -19,12 +19,12 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <gui/GUI.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/scene/SelectionSet.h>
-#include <core/gui/mainwin/MainWindow.h>
+#include <gui/mainwin/MainWindow.h>
 #include "AnimationTrackBar.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)

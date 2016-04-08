@@ -22,8 +22,8 @@
 #ifndef __OVITO_NUMERICAL_PARAMETER_UI_H
 #define __OVITO_NUMERICAL_PARAMETER_UI_H
 
-#include <core/Core.h>
-#include <core/gui/widgets/general/SpinnerWidget.h>
+#include <gui/GUI.h>
+#include <gui/widgets/general/SpinnerWidget.h>
 #include "ParameterUI.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
@@ -32,7 +32,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 * Base class for UI components that allow the user to edit a numerical
 * property of an object via a spinner widget and a text box.
 ******************************************************************************/
-class OVITO_CORE_EXPORT NumericalParameterUI : public PropertyParameterUI
+class OVITO_GUI_EXPORT NumericalParameterUI : public PropertyParameterUI
 {
 public:
 
