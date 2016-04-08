@@ -10,9 +10,9 @@ public:
 
 	virtual std::tuple<QString, QString, QString> shaderFiles() const override {
 		return std::tuple<QString, QString, QString>(
-				":/core/glsl/particles/geometry/cube/cube.vs",
-				":/core/glsl/particles/geometry/cube/cube.fs",
-				":/core/glsl/particles/geometry/cube/cube.gs");
+				":/gui/glsl/particles/geometry/cube/cube.vs",
+				":/gui/glsl/particles/geometry/cube/cube.fs",
+				":/gui/glsl/particles/geometry/cube/cube.gs");
 	}
 
 	virtual void renderContent() override {

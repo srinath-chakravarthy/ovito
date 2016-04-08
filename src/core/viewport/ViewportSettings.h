@@ -24,6 +24,8 @@
 
 #include <core/Core.h>
 
+#include <QFont>
+
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View)
 
 /**

@@ -63,7 +63,7 @@ PipelineStatus FreezePropertyModifier::modifyParticles(TimePoint time, TimeInter
 	// Retrieve the property values stored in the ModifierApplication.
 	SavedParticleProperty* savedProperty = dynamic_object_cast<SavedParticleProperty>(modifierApplication()->modifierData());
 	if(!savedProperty || !savedProperty->property())
-		throw Exception(tr("No stored values available. Please take a new snapshot of the current property values."));
+		throwException(tr("No stored values available. Please take a new snapshot of the current property values."));
 
 	// Make a copy of the stored property values, which will be fed into the modification pipeline.
 	OORef<ParticlePropertyObject> outputProperty = cloneHelper()->cloneObject(savedProperty->property(), false);
@@ -77,7 +77,7 @@ PipelineStatus FreezePropertyModifier::modifyParticles(TimePoint time, TimeInter
 		if(!outputProperty->getOOType().isDerivedFrom(oldProperty->getOOType())
 				|| outputProperty->dataType() != oldProperty->dataType()
 				|| outputProperty->componentCount() != oldProperty->componentCount())
-			throw Exception(tr("Types of source property and output property are not compatible. Cannot restore saved property values."));
+			throwException(tr("Types of source property and output property are not compatible. Cannot restore saved property values."));
 		outputProperty->setType(oldProperty->type());
 	}
 	else {
@@ -102,7 +102,7 @@ PipelineStatus FreezePropertyModifier::modifyParticles(TimePoint time, TimeInter
 			int index = 0;
 			for(int id : savedProperty->identifiers()->constIntRange()) {
 				if(!idmap.insert(std::make_pair(id,index)).second)
-					throw Exception(tr("Detected duplicate particle ID %1 in saved snapshot. Cannot restore saved property values.").arg(id));
+					throwException(tr("Detected duplicate particle ID %1 in saved snapshot. Cannot restore saved property values.").arg(id));
 				index++;
 			}
 
@@ -114,7 +114,7 @@ PipelineStatus FreezePropertyModifier::modifyParticles(TimePoint time, TimeInter
 			for(size_t index = 0; index < outputProperty->size(); index++, ++id, dest += stride) {
 				auto mapEntry = idmap.find(*id);
 				if(mapEntry == idmap.end())
-					throw Exception(tr("Detected new particle ID %1, which didn't exist when the snapshot was taken. Cannot restore saved property values.").arg(*id));
+					throwException(tr("Detected new particle ID %1, which didn't exist when the snapshot was taken. Cannot restore saved property values.").arg(*id));
 				memcpy(dest, src + stride * mapEntry->second, stride);
 			}
 
@@ -124,7 +124,7 @@ PipelineStatus FreezePropertyModifier::modifyParticles(TimePoint time, TimeInter
 
 	// Make sure the number of particles didn't change if no identifiers are present.
 	if(!usingIdentifiers && savedProperty->property()->size() != outputParticleCount())
-		throw Exception(tr("Number of input particles has changed. Cannot restore saved property values. There were %1 particles when the snapshot was taken. Now there are %2.").arg(savedProperty->property()->size()).arg(outputParticleCount()));
+		throwException(tr("Number of input particles has changed. Cannot restore saved property values. There were %1 particles when the snapshot was taken. Now there are %2.").arg(savedProperty->property()->size()).arg(outputParticleCount()));
 
 	// Insert particle property into modification pipeline.
 	output().addObject(outputProperty);

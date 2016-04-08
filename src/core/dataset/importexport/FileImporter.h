@@ -42,10 +42,9 @@ public:
 
 	/// Import modes that control the behavior of the importFile() method.
 	enum ImportMode {
-		AskUser,				///< Let the user decide how to insert the imported data into the scene.
 		AddToScene,				///< Add the imported data as a new object to the scene.
-		ReplaceSelected,		///< Replace existing dataset with newly imported data if possible. Add to scene otherwise.
-								///  In any case, keep all other scene objects as they are.
+		ReplaceSelected,		///< Replace existing input data with newly imported data if possible. Add to scene otherwise.
+								///  In any case, keep all other objects in the scene as they are.
 		ResetScene				///< Clear the contents of the current scene first before importing the data.
 	};
 	Q_ENUMS(ImportMode);
@@ -58,13 +57,17 @@ public:
 	/// \return A string that describes the file format.
 	virtual QString fileFilterDescription() = 0;
 
+	/// \brief Asks the importer if the option to replace the currently selected object
+	///        with the new file is available.
+	virtual bool isReplaceExistingPossible(const QUrl& sourceUrl) { return false; }
+
 	/// \brief Imports a file into the scene.
 	/// \param sourceUrl The location of the file to import.
 	/// \param importMode Controls how the imported data is inserted into the scene.
 	/// \return \c true if the file has been successfully imported.
 	//	        \c false if the operation has been canceled by the user.
 	/// \throw Exception when the import operation has failed.
-	virtual bool importFile(const QUrl& sourceUrl, ImportMode importMode = AskUser) = 0;
+	virtual bool importFile(const QUrl& sourceUrl, ImportMode importMode) = 0;
 
 	/// \brief Checks if the given file has format that can be read by this importer.
 	/// \param input The file that contains the data to check.

@@ -96,7 +96,7 @@ void ObjectSaveStream::close()
 				classes.insert(make_pair(descriptor, (quint32)classes.size()));
 				// Write the runtime type information to the stream.
 				if(descriptor->isSerializable() == false)
-					throw Exception(tr("Failed to save class %1 because it is marked as non-serializable.").arg(descriptor->name()));
+					throw Exception(tr("Failed to save class %1 because it is marked as non-serializable.").arg(descriptor->name()), _dataset);
 				beginChunk(0x201);
 				OvitoObjectType::serializeRTTI(*this, descriptor);
 				endChunk();

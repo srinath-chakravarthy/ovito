@@ -20,11 +20,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/pyscript/PyScript.h>
-#include <core/gui/app/Application.h>
+#include <core/app/Application.h>
 #include "PythonBinding.h"
 
 namespace PyScript {
-
 using namespace boost::python;
 using namespace Ovito;
 

@@ -246,6 +246,15 @@ public:
 	/// Sub-classes can override this method to return a title that depends on the internal state of the object.
 	virtual QString objectTitle();
 
+	/// \brief Flags this object when it is opened in an editor.
+	void setObjectEditingFlag();
+
+	/// \brief Unflags this object when it is no longer opened in an editor.
+	void unsetObjectEditingFlag();
+
+	/// \brief Determines if this object's properties are currently being edited in an editor.
+	bool isObjectBeingEdited() const;
+
 	/// \brief Returns the number of sub-objects that should be displayed in the modifier stack.
 	/// \return The number of sub-objects.
 	///

@@ -20,7 +20,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/IntegerParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
 #include "CentroSymmetryModifier.h"
@@ -58,10 +58,10 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CentroSymmetryModif
 	SimulationCellObject* simCell = expectSimulationCell();
 
 	if(numNeighbors() < 2)
-		throw Exception(tr("The selected number of neighbors to take into account for the centrosymmetry calculation is invalid."));
+		throwException(tr("The selected number of neighbors to take into account for the centrosymmetry calculation is invalid."));
 
 	if(numNeighbors() % 2)
-		throw Exception(tr("The number of neighbors to take into account for the centrosymmetry calculation must be a positive, even integer."));
+		throwException(tr("The number of neighbors to take into account for the centrosymmetry calculation must be a positive, even integer."));
 
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<CentroSymmetryEngine>(validityInterval, posProperty->storage(), simCell->data(), numNeighbors());
@@ -131,10 +131,10 @@ void CentroSymmetryModifier::transferComputationResults(ComputeEngine* engine)
 PipelineStatus CentroSymmetryModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
 {
 	if(!_cspValues)
-		throw Exception(tr("No computation results available."));
+		throwException(tr("No computation results available."));
 
 	if(inputParticleCount() != _cspValues->size())
-		throw Exception(tr("The number of input particles has changed. The stored results have become invalid."));
+		throwException(tr("The number of input particles has changed. The stored results have become invalid."));
 
 	outputStandardProperty(_cspValues.data());
 	return PipelineStatus::Success;

@@ -23,7 +23,7 @@
 #define __OVITO_PYTHON_SCRIPT_MODIFIER_H
 
 #include <plugins/pyscript/PyScript.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/properties/PropertiesEditor.h>
 #include <core/utilities/concurrent/FutureInterface.h>
 #include <core/scene/pipeline/Modifier.h>
 #include <core/scene/objects/CompoundObject.h>

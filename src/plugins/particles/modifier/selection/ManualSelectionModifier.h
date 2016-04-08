@@ -23,7 +23,7 @@
 #define __OVITO_MANUAL_SELECTION_MODIFIER_H
 
 #include <plugins/particles/Particles.h>
-#include <core/viewport/input/ViewportInputMode.h>
+#include <gui/viewport/input/ViewportInputMode.h>
 #include <plugins/particles/util/ParticlePickingHelper.h>
 #include <plugins/particles/util/ParticleSelectionSet.h>
 #include "../ParticleModifier.h"

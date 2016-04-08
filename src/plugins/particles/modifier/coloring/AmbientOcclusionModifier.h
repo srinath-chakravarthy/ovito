@@ -23,8 +23,8 @@
 #define __OVITO_AMBIENT_OCCLUSION_MODIFIER_H
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/RefTargetListParameterUI.h>
-#include <core/rendering/viewport/ViewportSceneRenderer.h>
+#include <gui/properties/RefTargetListParameterUI.h>
+#include <gui/rendering/OpenGLSceneRenderer.h>
 #include <plugins/particles/modifier/AsynchronousParticleModifier.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring)
@@ -50,7 +50,7 @@ public:
 			_boundingBox(boundingBox),
 			_brightness(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, tr("Brightness"), true)),
 			_particleRadii(particleRadii) {
-			_offscreenSurface.setFormat(ViewportSceneRenderer::getDefaultSurfaceFormat());
+			_offscreenSurface.setFormat(OpenGLSceneRenderer::getDefaultSurfaceFormat());
 			_offscreenSurface.create();
 		}
 

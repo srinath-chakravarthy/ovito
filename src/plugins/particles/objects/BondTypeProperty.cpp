@@ -20,7 +20,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/RefTargetListParameterUI.h>
+#include <gui/properties/RefTargetListParameterUI.h>
 #include "BondTypeProperty.h"
 
 namespace Ovito { namespace Particles {

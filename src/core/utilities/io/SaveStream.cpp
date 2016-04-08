@@ -21,7 +21,7 @@
 
 #include <core/Core.h>
 #include <core/utilities/Exception.h>
-#include <core/gui/app/Application.h>
+#include <core/app/Application.h>
 #include "SaveStream.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(IO)

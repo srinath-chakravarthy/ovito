@@ -26,6 +26,8 @@
 #include "FutureInterface.h"
 #include "Future.h"
 
+#include <QRunnable>
+
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
 
 class AsynchronousTask : public FutureInterface<void>, public QRunnable

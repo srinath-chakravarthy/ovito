@@ -28,7 +28,7 @@
 #include <core/rendering/LinePrimitive.h>
 #include <core/rendering/ArrowPrimitive.h>
 #include <core/rendering/ParticlePrimitive.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/properties/PropertiesEditor.h>
 
 #include "SimulationCellObject.h"
 

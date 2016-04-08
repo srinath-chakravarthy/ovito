@@ -21,17 +21,13 @@
 
 #include <core/Core.h>
 #include <core/rendering/SceneRenderer.h>
-#include <core/rendering/standard/StandardSceneRenderer.h>
 #include <core/viewport/Viewport.h>
-#include <core/gui/app/Application.h>
 #include <core/plugins/PluginManager.h>
 #include "RenderSettings.h"
-#include "RenderSettingsEditor.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, RenderSettings, RefTarget);
-SET_OVITO_OBJECT_EDITOR(RenderSettings, RenderSettingsEditor);
 DEFINE_FLAGS_REFERENCE_FIELD(RenderSettings, _renderer, "Renderer", SceneRenderer, PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(RenderSettings, _backgroundColor, "BackgroundColor", Controller, PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(RenderSettings, _outputImageWidth, "OutputImageWidth");
@@ -85,8 +81,16 @@ RenderSettings::RenderSettings(DataSet* dataset) : RefTarget(dataset),
 	setBackgroundColor(Color(1,1,1));
 
 	// Create an instance of the default renderer class.
-	OORef<SceneRenderer> renderer(new StandardSceneRenderer(dataset));
-	setRenderer(renderer);
+	Plugin* guiPlugin = PluginManager::instance().plugin("Gui");
+	OvitoObjectType* rendererClass = nullptr;
+	if(guiPlugin)
+		rendererClass = guiPlugin->findClass("StandardSceneRenderer");
+	if(rendererClass == nullptr) {
+		QVector<OvitoObjectType*> classList = PluginManager::instance().listClasses(SceneRenderer::OOType);
+		if(classList.isEmpty() == false) rendererClass = classList.front();
+	}
+	if(rendererClass)
+		setRenderer(static_object_cast<SceneRenderer>(rendererClass->createInstance(dataset)));
 }
 
 /******************************************************************************

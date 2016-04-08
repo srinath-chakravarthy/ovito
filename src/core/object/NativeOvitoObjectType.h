@@ -84,6 +84,7 @@ private:
 	static NativeOvitoObjectType* _firstInfo;
 
 	friend class NativePlugin;
+	friend class PluginManager;
 	friend class PropertyFieldDescriptor;
 };
 

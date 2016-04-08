@@ -94,7 +94,7 @@ public:
 
 	/// \brief Returns a pointer to the main window in which this dataset is being edited.
 	/// \return The main window, or NULL if this data set is not being edited in any window.
-	MainWindow* mainWindow() const;
+	//MainWindow* mainWindow() const;
 
 	/// \brief Returns the container this dataset belongs to.
 	DataSetContainer* container() const;
@@ -123,11 +123,9 @@ public:
 	/// \param viewport The viewport to render. This determines the camera orientation.
 	/// \param frameBuffer The frame buffer that will receive the rendered image. When rendering an animation
 	///        sequence, the buffer will contain only the last rendered frame when the function returns.
-	/// \param frameBufferWindow An optional pointer to a frame buffer window displaying the output frame buffer.
-	///        The method will update the title and the size of the window while rendering the image.
 	/// \return true on success; false if operation has been canceled by the user.
 	/// \throw Exception on error.
-	bool renderScene(RenderSettings* settings, Viewport* viewport, boost::shared_ptr<FrameBuffer> frameBuffer = boost::shared_ptr<FrameBuffer>(), FrameBufferWindow* frameBufferWindow = nullptr);
+	bool renderScene(RenderSettings* settings, Viewport* viewport, FrameBuffer* frameBuffer, AbstractProgressDisplay* progressDisplay = nullptr);
 
 	/// \brief Checks all scene nodes if their geometry pipeline is fully evaluated at the given animation time.
 	bool isSceneReady(TimePoint time) const;

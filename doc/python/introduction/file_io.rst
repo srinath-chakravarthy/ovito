@@ -167,6 +167,8 @@ Property name                         Components                             Dat
 ``"Dipole Orientation"``              X, Y, Z                                float
 ``"Displacement"``                    X, Y, Z                                float
 ``"Displacement Magnitude"``                                                 float
+``"Elastic Deformation Gradient"``    XX, YX, ZX, XY, YY, ZY, XZ, YZ, ZZ     float
+``"Elastic Strain"``                  XX, YY, ZZ, XY, XZ, YZ                 float
 ``"Force"``                           X, Y, Z                                float
 ``"Kinetic Energy"``                                                         float
 ``"Mass"``                                                                   float
@@ -186,8 +188,7 @@ Property name                         Components                             Dat
 ``"Torque"``                          X, Y, Z                                float
 ``"Total Energy"``                                                           float
 ``"Transparency"``                                                           float
+``"Vector Color"``                    R, G, B                                float
 ``"Velocity"``                        X, Y, Z                                float
 ``"Velocity Magnitude"``                                                     float
 ===================================== ====================================== ==============
-
-

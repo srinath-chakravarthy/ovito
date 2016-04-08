@@ -37,7 +37,7 @@ class OVITO_CORE_EXPORT DataSetContainer : public RefMaker
 public:
 
 	/// \brief Constructor.
-	DataSetContainer(MainWindow* mainWindow = nullptr);
+	DataSetContainer();
 
 	/// \brief Destructor.
 	virtual ~DataSetContainer() {
@@ -53,54 +53,11 @@ public:
 	/// \param set The dataset that should be shown in the main window.
 	void setCurrentSet(DataSet* set) { _currentSet = set; }
 
-	/// Returns the window this dataset container is linked to (may be NULL).
-	MainWindow* mainWindow() const { return _mainWindow; }
-
 	/// \brief Returns the manager of background tasks.
 	/// \return Reference to the task manager, which is part of this dataset manager.
 	///
 	/// Use the task manager to start and control background jobs.
 	TaskManager& taskManager() { return _taskManager; }
-
-	/// \brief Imports a given file into the current dataset.
-	/// \param url The location of the file to import.
-	/// \param importerType The FileImporter type to use. If NULL, the file format will be automatically detected.
-	/// \return true if the file was successfully imported; false if operation has been canceled by the user.
-	/// \throw Exception on error.
-	bool importFile(const QUrl& url, const OvitoObjectType* importerType = nullptr, FileImporter::ImportMode importMode = FileImporter::AskUser);
-
-	/// \brief Creates an empty dataset and makes it the current dataset.
-	/// \return \c true if the operation was completed; \c false if the operation has been canceled by the user.
-	/// \throw Exception on error.
-	bool fileNew();
-
-	/// \brief Loads the given file and makes it the current dataset.
-	/// \return \c true if the file has been successfully loaded; \c false if the operation has been canceled by the user.
-	/// \throw Exception on error.
-	bool fileLoad(const QString& filename);
-
-	/// \brief Save the current dataset.
-	/// \return \c true, if the dataset has been saved; \c false if the operation has been canceled by the user.
-	/// \throw Exception on error.
-	/// 
-	/// If the current dataset has not been assigned a file path, then this method
-	/// displays a file selector dialog by calling fileSaveAs() to let the user select a file path.
-	bool fileSave();
-
-	/// \brief Lets the user select a new destination filename for the current dataset. Then saves the dataset by calling fileSave().
-	/// \param filename If \a filename is an empty string that this method asks the user for a filename. Otherwise
-	///                 the provided filename is used.
-	/// \return \c true, if the dataset has been saved; \c false if the operation has been canceled by the user.
-	/// \throw Exception on error.
-	bool fileSaveAs(const QString& filename = QString());
-
-	/// \brief Asks the user if changes made to the dataset should be saved.
-	/// \return \c false if the operation has been canceled by the user; \c true on success.
-	/// \throw Exception on error.
-	/// 
-	/// If the current dataset has been changed, this method asks the user if changes should be saved.
-	/// If yes, then the dataset is saved by calling fileSave().
-	bool askForSaveChanges();
 
 	/// \brief This function blocks execution until some operation has been completed.
 	///        The function displays a progress dialog to block access to the application main window.
@@ -111,7 +68,7 @@ public:
 	/// \param progressDisplay The progress display/dialog to be used for showing the message.
 	///                       If NULL, the function will create and show its own progress dialog box.
 	/// \return true on success; false if the operation has been canceled by the user.
-	bool waitUntil(const std::function<bool()>& callback, const QString& message, AbstractProgressDisplay* progressDisplay = nullptr);
+	virtual bool waitUntil(const std::function<bool()>& callback, const QString& message, AbstractProgressDisplay* progressDisplay = nullptr);
 
 Q_SIGNALS:
 
@@ -159,6 +116,12 @@ Q_SIGNALS:
 	/// \brief This signal is emitted when the scene becomes ready after the current animation time has changed.
 	void timeChangeComplete();
 
+	/// \brief This signal is emitted whenever the file path of the active dataset changes.
+	void filePathChanged(const QString& filePath);
+
+	/// \brief This signal is emitted whenever the modification status (clean state) of the active dataset changes.
+	void modificationStatusChanged(bool isClean);
+
 protected:
 
 	/// Is called when the value of a reference field of this RefMaker changes.
@@ -174,13 +137,10 @@ protected Q_SLOTS:
 
 private:
 
-	/// The window this dataset container is linked to (may be NULL).
-	MainWindow* _mainWindow;
-
 	/// The current dataset being edited by the user.
     ReferenceField<DataSet> _currentSet;
 
-	/// The container for background tasks.
+	/// The list of running compute tasks.
 	TaskManager _taskManager;
 
 	QMetaObject::Connection _selectionSetReplacedConnection;

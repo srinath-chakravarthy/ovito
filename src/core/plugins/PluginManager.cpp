@@ -32,7 +32,7 @@ PluginManager* PluginManager::_instance = nullptr;
 /******************************************************************************
 * Initializes the plugin manager.
 ******************************************************************************/
-PluginManager::PluginManager() : _corePlugin(nullptr)
+PluginManager::PluginManager()
 {
 	OVITO_ASSERT_MSG(!_instance, "PluginManager constructor", "Multiple instances of this singleton class have been created.");
 }
@@ -59,8 +59,9 @@ Plugin* PluginManager::plugin(const QString& pluginId)
 			return plugin;
 	}
 
-	// In Ovito 2.1, the "Viz" plugin has been renamed to "Particles".
-	// To support loading of old state files in newer versions of Ovito,
+	// For backward compatibility with OVITO 2.1:
+	// The "Viz" plugin has been renamed to "Particles".
+	// To support loading of old state files in newer program versions,
 	// use "Viz" as an alias for the Particles plugin.
 	if(pluginId == QStringLiteral("Viz"))
 		return plugin(QStringLiteral("Particles"));
@@ -105,9 +106,17 @@ QList<QDir> PluginManager::pluginDirs()
 ******************************************************************************/
 void PluginManager::registerPlugins()
 {
-	// Register the built-in classes of the core.
-	_corePlugin = new NativePlugin(QStringLiteral(":/core/Core.json"));
-	registerPlugin(_corePlugin);
+	// Initialize all built-in classes.
+	for(NativeOvitoObjectType* clazz = NativeOvitoObjectType::_firstInfo; clazz != nullptr; clazz = clazz->_next) {
+		Plugin* classPlugin = this->plugin(clazz->pluginId());
+		if(!classPlugin) {
+			classPlugin = new NativePlugin(QStringLiteral(":/%1/PluginManifest.json").arg(QString(clazz->pluginId()).toLower()), true);
+			registerPlugin(classPlugin);
+		}
+		OVITO_ASSERT(clazz->plugin() == nullptr);
+		clazz->initializeClassDescriptor(classPlugin);
+		classPlugin->registerClass(clazz);
+	}
 
 	// Scan the plugin directories for installed plugins.
 	for(QDir pluginDir : pluginDirs()) {
@@ -122,7 +131,7 @@ void PluginManager::registerPlugins()
 		for(const QString& file : pluginDir.entryList()) {
 			QString filePath = pluginDir.absoluteFilePath(file);
 			try {
-				Plugin* plugin = new NativePlugin(filePath);
+				Plugin* plugin = new NativePlugin(filePath, false);
 				registerPlugin(plugin);
 			}
 			catch(Exception& ex) {
@@ -131,9 +140,6 @@ void PluginManager::registerPlugins()
 			}
 		}
 	}
-
-	// Load the core plugin.
-	corePlugin()->loadPlugin();
 
 	// Load all other plugins too.
 	for(Plugin* plugin : plugins()) {

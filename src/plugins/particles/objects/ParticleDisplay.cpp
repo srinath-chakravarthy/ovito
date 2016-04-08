@@ -22,9 +22,9 @@
 #include <plugins/particles/Particles.h>
 #include <core/utilities/units/UnitsManager.h>
 #include <core/rendering/SceneRenderer.h>
-#include <core/rendering/viewport/ViewportSceneRenderer.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/VariantComboBoxParameterUI.h>
+#include <gui/rendering/ViewportSceneRenderer.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <gui/properties/VariantComboBoxParameterUI.h>
 
 #include "ParticleDisplay.h"
 #include "ParticleTypeProperty.h"

@@ -28,7 +28,7 @@
 #include <core/viewport/Viewport.h>
 #include <core/rendering/LinePrimitive.h>
 #include <core/rendering/ParticlePrimitive.h>
-#include <core/rendering/viewport/ViewportSceneRenderer.h>
+#include <gui/rendering/ViewportSceneRenderer.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util)
 
@@ -68,12 +68,12 @@ public:
 protected:
 
 	/// \brief Finds the particle under the mouse cursor.
-	/// \param vp The viewport to perform hit testing in.
+	/// \param vpwin The viewport window to perform hit testing in.
 	/// \param clickPoint The position of the mouse cursor in the viewport.
 	/// \param time The animation at which hit testing is performed.
 	/// \param result The output structure that receives information about the picked particle.
 	/// \return \c true if a particle has been picked; \c false otherwise.
-	bool pickParticle(Viewport* vp, const QPoint& clickPoint, PickResult& result);
+	bool pickParticle(ViewportWindow* vpwin, const QPoint& clickPoint, PickResult& result);
 
 	/// \brief Renders the particle selection overlay in a viewport.
 	/// \param vp The viewport into which the selection marker should be rendered.

@@ -26,12 +26,9 @@
 #include <core/reference/RefTarget.h>
 #include <core/animation/TimeInterval.h>
 #include <core/scene/ObjectNode.h>
-#include <core/rendering/TextPrimitive.h>
-#include <core/rendering/ImagePrimitive.h>
-#include <core/rendering/LinePrimitive.h>
 #include <core/viewport/overlay/ViewportOverlay.h>
 #include "ViewportSettings.h"
-#include "ViewportWindow.h"
+#include "ViewportWindowInterface.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View)
 
@@ -76,27 +73,6 @@ struct ViewProjectionParameters
 	TimeInterval validityInterval;
 };
 
-/******************************************************************************
-* This data structure is returned by the Viewport::pick() method.
-*******************************************************************************/
-struct ViewportPickResult
-{
-	/// Indicates whether an object was picked or not.
-	bool valid;
-
-	/// The coordinates of the hit point in world space.
-	Point3 worldPosition;
-
-	/// The object node that was picked.
-	OORef<ObjectNode> objectNode;
-
-	/// The object-specific information attached to the pick record.
-	OORef<ObjectPickInfo> pickInfo;
-
-	/// The subobject that was picked.
-	quint32 subobjectId;
-};
-
 /**
  * \brief A viewport window that displays the current scene.
  */
@@ -125,35 +101,7 @@ public:
 	Q_INVOKABLE Viewport(DataSet* dataset);
 
 	/// \brief Destructor.
-	~Viewport();
-
-    /// \brief Puts an update request event for this viewport on the event loop.
-    ///
-	/// Calling this method is going to redraw the viewport contents unless the viewport is hidden.
-	/// This function does not cause an immediate repaint; instead it schedules an
-	/// update request event, which is processed when execution returns to the main event loop.
-	///
-	/// To update all viewports at once you should use ViewportManager::updateViewports().
-	void updateViewport();
-
-	/// \brief Immediately redraws the contents of this viewport.
-	void redrawViewport();
-
-	/// \brief If an update request is pending for this viewport, immediately processes it and redraw the viewport.
-	void processUpdateRequest();
-
-	/// Creates the widget that contains the viewport's rendering window.
-	QWidget* createWidget(QWidget* parent);
-
-	/// Returns the widget that contains the viewport's rendering window.
-	QWidget* widget() { return _widget; }
-
-	/// Indicates whether the rendering of the viewport contents is currently in progress.
-	bool isRendering() const { return _isRendering; }
-
-	/// \brief Displays the context menu for the viewport.
-	/// \param pos The position in where the context menu should be displayed.
-	void showViewportMenu(const QPoint& pos = QPoint(0,0));
+	virtual ~Viewport();
 
 	/// \brief Computes the projection matrix and other parameters.
 	/// \param time The animation time for which the view is requested.
@@ -162,6 +110,24 @@ public:
 	///                         is used to calculate the near and far z-clipping planes.
 	/// \return The returned structure describes the projection used to render the contents of the viewport.
 	ViewProjectionParameters projectionParameters(TimePoint time, FloatType aspectRatio, const Box3& sceneBoundingBox);
+
+    /// \brief Puts an update request event for this viewport on the event loop.
+    ///
+	/// Calling this method is going to redraw the viewport contents unless the viewport is hidden.
+	/// This function does not cause an immediate repaint; instead it schedules an
+	/// update request event, which is processed when execution returns to the main event loop.
+	///
+	/// To update all viewports at once you should use ViewportConfiguration::updateViewports().
+	void updateViewport();
+
+	/// \brief Immediately redraws the contents of this viewport.
+	void redrawViewport();
+
+	/// \brief If an update request is pending for this viewport, immediately processes it and redraw the viewport.
+	void processUpdateRequest();
+
+	/// \brief Returns whether the rendering of the viewport's contents is currently in progress.
+	bool isRendering() const { return _isRendering; }
 
 	/// \brief Returns the view type of the viewport.
 	/// \return The type of view used in the viewport.
@@ -225,17 +191,8 @@ public:
 		setCameraTransformation(tm);
 	}
 
-	/// \brief Returns the current world to camera transformation matrix.
-	const AffineTransformation& viewMatrix() const { return _projParams.viewMatrix; }
-
-	/// \brief Returns the inverse of current camera to world matrix.
-	const AffineTransformation& inverseViewMatrix() const { return _projParams.inverseViewMatrix; }
-
-	/// \brief Returns the current projection transformation matrix.
-	const Matrix4& projectionMatrix() const { return _projParams.projectionMatrix; }
-
-	/// \brief Returns the inverse of the current projection matrix.
-	const Matrix4& inverseProjectionMatrix() const { return _projParams.inverseProjectionMatrix; }
+	/// Return the current 3D projection used to render the contents of the viewport.
+	const ViewProjectionParameters& projectionParams() const { return _projParams; }
 
 	/// \brief Returns whether the viewport displays a realtime preview of the rendered image.
 	bool renderPreviewMode() const { return _renderPreviewMode; }
@@ -312,10 +269,7 @@ public:
 	/// will be visible in a rendered image.
 	/// The returned box is given in viewport coordinates (interval [-1,+1]).
 	Box2 renderFrameRect() const;
-
-	/// \brief Determines the object that is visible under the given mouse cursor position.
-	ViewportPickResult pick(const QPointF& pos);
-
+	
 	/// \brief Zooms to the extents of the scene.
 	Q_INVOKABLE void zoomToSceneExtents();
 
@@ -342,24 +296,6 @@ public:
 		return ViewportSettings::getSettings().viewportColor(which);
 	}
 
-	/// If the return value is true, the viewport window receives all mouse events until
-	/// setMouseGrabEnabled(false) is called; other windows get no mouse events at all.
-	bool setMouseGrabEnabled(bool grab);
-
-	/// Sets the cursor shape for this viewport window.
-	/// The mouse cursor will assume this shape when it is over this viewport window,
-	/// unless an override cursor is set.
-	void setCursor(const QCursor& cursor);
-
-	/// Restores the default arrow cursor for this viewport window.
-	void unsetCursor();
-
-	/// Returns the current size of the viewport window.
-	QSize size() const { return _widget ? (_widget->size() * viewportWindow()->devicePixelRatio()) : QSize(); }
-
-	/// Returns a pointer to the internal OpenGL rendering window.
-	ViewportWindow* viewportWindow() const { return _viewportWindow.data(); }
-
 	/// Returns this viewport's list of overlays.
 	const QVector<ViewportOverlay*>& overlays() const { return _overlays; }
 
@@ -377,6 +313,21 @@ public:
 	void removeOverlay(int index) {
 		_overlays.remove(index);
 	}
+
+	/// \brief Returns the size of the viewport's screen window.
+	QSize windowSize() const {
+		return window() ? window()->viewportWindowSize() : QSize(0,0);
+	}
+
+	/// \brief Returns the GUI window associated with this viewport (may be NULL).
+	ViewportWindowInterface* window() const { return _window; }
+
+	/// \brief Associates this viewport with a GUI window. This is an internal method.
+	void setWindow(ViewportWindowInterface* window) { _window = window; }
+
+	/// Renders the contents of the interactive viewport in a window.
+	/// This is an internal method, which should not be called by user code.
+	void renderInteractive(SceneRenderer* renderer);
 
 protected:
 
@@ -400,21 +351,8 @@ protected:
 
 protected:
 
-	/// Renders the contents of the viewport into the surface associated with the given context.
-	void render(QOpenGLContext* context);
-
 	/// Updates the title text of the viewport based on the current view type.
 	void updateViewportTitle();
-
-	/// Renders the viewport caption text.
-	void renderViewportTitle();
-
-	/// Render the axis tripod symbol in the corner of the viewport that indicates
-	/// the coordinate system orientation.
-	void renderOrientationIndicator();
-
-	/// Renders the frame on top of the scene that indicates the visible rendering area.
-	void renderRenderFrame();
 
 	/// Modifies the projection such that the render frame painted over the 3d scene exactly
 	/// matches the true visible area.
@@ -462,46 +400,17 @@ private:
 	/// The title of the viewport.
 	PropertyField<QString> _viewportTitle;
 
-	/// The widget that contains the viewport's rendering window.
-	QPointer<QWidget> _widget;
-
-	/// The internal OpenGL rendering window.
-	QPointer<ViewportWindow> _viewportWindow;
-
-	/// The zone in the upper left corner of the viewport where
-	/// the context menu can be activated by the user.
-	QRect _contextMenuArea;
-
-	/// Indicates that the mouse cursor is currently positioned inside the
-	/// viewport area that activates the viewport context menu.
-	bool _cursorInContextMenuArea;
-
 	/// This flag is true during the rendering phase.
 	bool _isRendering;
 
 	/// Describes the current 3D projection used to render the contents of the viewport.
 	ViewProjectionParameters _projParams;
 
-	/// Counts how often this viewport has been rendered.
-	int _renderDebugCounter;
-
-	/// The rendering buffer maintained to render the viewport's caption text.
-	std::shared_ptr<TextPrimitive> _captionBuffer;
-
-	/// The geometry buffer used to render the viewport's orientation indicator.
-	std::shared_ptr<LinePrimitive> _orientationTripodGeometry;
-
-	/// The rendering buffer used to render the viewport's orientation indicator labels.
-	std::shared_ptr<TextPrimitive> _orientationTripodLabels[3];
-
-	/// This is used to render the render frame around the viewport.
-	std::shared_ptr<ImagePrimitive> _renderFrameOverlay;
-
-	/// This renderer generates an offscreen rendering of the scene that allows picking of objects.
-	OORef<PickingSceneRenderer> _pickingRenderer;
-
 	/// The list of overlay objects owned by this viewport.
 	VectorReferenceField<ViewportOverlay> _overlays;
+
+	/// The GUI window associated with this viewport.
+	ViewportWindowInterface* _window;
 
 private:
 
@@ -521,9 +430,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_showGrid);
 	DECLARE_PROPERTY_FIELD(_stereoscopicMode);
 	DECLARE_VECTOR_REFERENCE_FIELD(_overlays);
-
-	friend class ViewportWindow;
-	friend class ViewportMenu;
 };
 
 OVITO_END_INLINE_NAMESPACE

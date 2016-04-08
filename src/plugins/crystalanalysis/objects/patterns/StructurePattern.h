@@ -23,7 +23,7 @@
 #define __OVITO_CA_STRUCTURE_PATTERN_H
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <core/gui/properties/RefTargetListParameterUI.h>
+#include <gui/properties/RefTargetListParameterUI.h>
 #include <plugins/particles/objects/ParticleType.h>
 #include "BurgersVectorFamily.h"
 

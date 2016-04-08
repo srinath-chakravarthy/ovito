@@ -20,9 +20,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/ColorParameterUI.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/StringParameterUI.h>
+#include <gui/properties/ColorParameterUI.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <gui/properties/StringParameterUI.h>
 
 #include "BondType.h"
 

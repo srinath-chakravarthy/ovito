@@ -1,0 +1,5 @@
+{
+	"plugin-id" : "Gui",
+	"plugin-vendor" : "Alexander Stukowski",
+	"native-library" : "Gui"
+}

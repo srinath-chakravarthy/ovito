@@ -61,7 +61,7 @@ public:
 
 	/// This method is called by the FileSource each time a new source
 	/// file has been selected by the user.
-	virtual bool inspectNewFile(FileSource* obj) override;
+	virtual bool inspectNewFile(FileSource* obj, int frameIndex) override;
 
 protected:
 

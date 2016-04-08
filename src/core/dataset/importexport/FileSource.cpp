@@ -27,18 +27,14 @@
 #include <core/viewport/Viewport.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/scene/ObjectNode.h>
-#include <core/gui/dialogs/ImportFileDialog.h>
-#include <core/gui/dialogs/ImportRemoteFileDialog.h>
 #include <core/dataset/importexport/FileImporter.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/UndoStack.h>
 #include "FileSource.h"
-#include "FileSourceEditor.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, FileSource, CompoundObject);
-SET_OVITO_OBJECT_EDITOR(FileSource, FileSourceEditor);
 DEFINE_FLAGS_REFERENCE_FIELD(FileSource, _importer, "Importer", FileSourceImporter, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_NO_UNDO);
 DEFINE_PROPERTY_FIELD(FileSource, _adjustAnimationIntervalEnabled, "AdjustAnimationIntervalEnabled");
 DEFINE_FLAGS_PROPERTY_FIELD(FileSource, _sourceUrl, "SourceUrl", PROPERTY_FIELD_NO_UNDO);
@@ -79,7 +75,7 @@ bool FileSource::setSource(const QUrl& newSourceUrl, const OvitoObjectType* impo
 {
 	OORef<FileImporter> fileimporter;
 
-	// Create file importer.
+	// Create file importer instance.
 	if(!importerType) {
 
 		// Download file so we can determine its format.
@@ -87,20 +83,24 @@ bool FileSource::setSource(const QUrl& newSourceUrl, const OvitoObjectType* impo
 		if(!dataset()->container()->taskManager().waitForTask(fetchFileFuture))
 			return false;
 
-		// Detect file format.
+		// Inspect file to detect its format.
 		fileimporter = FileImporter::autodetectFileFormat(dataset(), fetchFileFuture.result(), newSourceUrl.path());
 		if(!fileimporter)
-			throw Exception(tr("Could not detect the format of the file to be imported. The format might not be supported."));
+			throwException(tr("Could not detect the format of the file to be imported. The format might not be supported."));
 	}
 	else {
+		// Caller has provided a specific importer type.
 		fileimporter = static_object_cast<FileImporter>(importerType->createInstance(dataset()));
 		if(!fileimporter)
 			return false;
 	}
+
+	// The importer must be a FileSourceImporter.
 	OORef<FileSourceImporter> newImporter = dynamic_object_cast<FileSourceImporter>(fileimporter);
 	if(!newImporter)
-		throw Exception(tr("The selected file type is not compatible."));
+		throwException(tr("The selected file type is not compatible."));
 
+	// Temporarily suppress viewport updates while setting up the newly imported data.
 	ViewportSuspender noVPUpdate(dataset()->viewportConfig());
 
 	// Re-use the old importer if possible.
@@ -197,7 +197,7 @@ bool FileSource::setSource(QUrl sourceUrl, FileSourceImporter* importer, bool us
 
 		// Let the parser inspect the file. The user may still cancel the import
 		// operation at this point.
-		if(!_frames.empty() && importer->inspectNewFile(this) == false)
+		if(!_frames.empty() && importer->inspectNewFile(this, jumpToFrame) == false)
 			return false;
 
 		// Cancel any old load operation in progress.
@@ -388,6 +388,8 @@ void FileSource::loadOperationFinished()
 				newStatus.setText(tr("Loaded frame %1 of %2\n").arg(_loadedFrameIndex+1).arg(frames().count()) + newStatus.text());
 		}
 		catch(Exception& ex) {
+			// Provide a context for this error.
+			ex.setContext(dataset());
 			// Transfer exception message to evaluation status.
 			newStatus = PipelineStatus(PipelineStatus::Error, ex.messages().join(QChar('\n')));
 			ex.showError();
@@ -526,82 +528,6 @@ void FileSource::propertyChanged(const PropertyFieldDescriptor& field)
 		adjustAnimationInterval();
 	}
 	CompoundObject::propertyChanged(field);
-}
-
-/******************************************************************************
-* Displays the file selection dialog and lets the user select a new input file.
-******************************************************************************/
-void FileSource::showFileSelectionDialog(QWidget* parent)
-{
-	try {
-		QUrl newSourceUrl;
-		const OvitoObjectType* importerType;
-
-		// Put code in a block: Need to release dialog before loading new input file.
-		{
-			// Offer only file importer types that are compatible with a FileSource.
-			QVector<OvitoObjectType*> availableTypes;
-			for(OvitoObjectType* type : FileImporter::availableImporters()) {
-				if(type->isDerivedFrom(FileSourceImporter::OOType))
-					availableTypes.push_back(type);
-			}
-
-			// Let the user select a file.
-			ImportFileDialog dialog(availableTypes, dataset(), parent, tr("Pick input file"));
-			if(sourceUrl().isLocalFile())
-				dialog.selectFile(sourceUrl().toLocalFile());
-			if(dialog.exec() != QDialog::Accepted)
-				return;
-
-			newSourceUrl = QUrl::fromLocalFile(dialog.fileToImport());
-			importerType = dialog.selectedFileImporterType();
-		}
-
-		// Set the new input location.
-		setSource(newSourceUrl, importerType);
-	}
-	catch(const Exception& ex) {
-		ex.showError();
-	}
-}
-
-/******************************************************************************
-* Displays the file selection dialog and lets the user select a new input file.
-******************************************************************************/
-void FileSource::showURLSelectionDialog(QWidget* parent)
-{
-	try {
-		QUrl newSourceUrl;
-		const OvitoObjectType* importerType;
-
-		// Put code in a block: Need to release dialog before loading new input file.
-		{
-			// Offer only file importer types that are compatible with a FileSource.
-			QVector<OvitoObjectType*> availableTypes;
-			for(OvitoObjectType* type : FileImporter::availableImporters()) {
-				if(type->isDerivedFrom(FileSourceImporter::OOType))
-					availableTypes.push_back(type);
-			}
-
-			// Let the user select a new URL.
-			ImportRemoteFileDialog dialog(availableTypes, dataset(), parent, tr("Pick source"));
-			QUrl oldUrl = sourceUrl();
-			if(loadedFrameIndex() >= 0 && loadedFrameIndex() < frames().size())
-				oldUrl = frames()[loadedFrameIndex()].sourceFile;
-			dialog.selectFile(oldUrl);
-			if(dialog.exec() != QDialog::Accepted)
-				return;
-
-			newSourceUrl = dialog.fileToImport();
-			importerType = dialog.selectedFileImporterType();
-		}
-
-		// Set the new input location.
-		setSource(newSourceUrl, importerType);
-	}
-	catch(const Exception& ex) {
-		ex.showError();
-	}
 }
 
 OVITO_END_INLINE_NAMESPACE

@@ -21,7 +21,6 @@
 
 #include <core/Core.h>
 #include <core/utilities/concurrent/Future.h>
-#include <core/gui/dialogs/RemoteAuthenticationDialog.h>
 #include <core/dataset/DataSetContainer.h>
 
 #include "FileManager.h"
@@ -51,7 +50,7 @@ Future<QString> FileManager::fetchUrl(DataSetContainer& container, const QUrl& u
 		// But first check if the file exists.
 		QString filePath = url.toLocalFile();
 		if(QFileInfo(url.toLocalFile()).exists() == false)
-			return Future<QString>::createFailed(Exception(tr("File does not exist: %1").arg(filePath)));
+			return Future<QString>::createFailed(Exception(tr("File does not exist: %1").arg(filePath), &container));
 
 		return Future<QString>::createImmediate(filePath, tr("Loading file %1").arg(filePath));
 	}
@@ -80,7 +79,7 @@ Future<QString> FileManager::fetchUrl(DataSetContainer& container, const QUrl& u
 		container.taskManager().registerTask(futureInterface);
 		return future;
 	}
-	else throw Exception(tr("URL scheme not supported. The program supports only the sftp:// scheme and local file paths."));
+	else throw Exception(tr("URL scheme not supported. The program supports only the sftp:// scheme and local file paths."), &container);
 }
 
 /******************************************************************************
@@ -169,6 +168,35 @@ QUrl FileManager::urlFromUserInput(const QString& path)
 	else
 		return QUrl::fromLocalFile(path);
 }
+
+/******************************************************************************
+* Shows a dialog which asks the user for the login credentials.
+******************************************************************************/
+bool FileManager::askUserForCredentials(SftpJob& job)
+{
+#if 0
+	// Ask for new username/password.
+	RemoteAuthenticationDialog dialog(nullptr, tr("Remote authentication"),
+			_url.password().isEmpty() ?
+			tr("<p>Please enter username and password to access the remote machine</p><p><b>%1</b></p>").arg(_url.host()) :in
+			tr("<p>Authentication failed. Please enter the correct username and password to access the remote machine</p><p><b>%1</b></p>").arg(_url.host()));
+
+	dialog.setUsername(_url.userName());
+	dialog.setPassword(_url.password());
+	if(dialog.exec() == QDialog::Accepted) {
+		// Start over with new login information.
+		QObject::disconnect(_connection, 0, this, 0);
+		QSsh::releaseConnection(_connection);
+		_connection = nullptr;
+		_url.setUserName(dialog.username());
+		_url.setPassword(dialog.password());
+		start();
+		return;
+	}
+#endif
+	return false;
+}
+
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

@@ -27,10 +27,10 @@
 
 #include <plugins/vorotop/VoroTopPlugin.h>
 #include <core/utilities/concurrent/ParallelFor.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/BooleanGroupBoxParameterUI.h>
-#include <core/gui/properties/IntegerParameterUI.h>
-#include <core/gui/properties/FloatParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/BooleanGroupBoxParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
+#include <gui/properties/FloatParameterUI.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
 #include "VoroTopModifier.h"
 
@@ -74,7 +74,7 @@ VoroTopModifier::VoroTopModifier(DataSet* dataset) : StructureIdentificationModi
 std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> VoroTopModifier::createEngine(TimePoint time, TimeInterval validityInterval)
 {
 	if(structureTypes().size() != NUM_STRUCTURE_TYPES)
-		throw Exception(tr("The number of structure types has changed. Please remove this modifier from the modification pipeline and insert it again."));
+		throwException(tr("The number of structure types has changed. Please remove this modifier from the modification pipeline and insert it again."));
 
 	// Get the current positions.
 	ParticlePropertyObject* posProperty = expectStandardProperty(ParticleProperty::PositionProperty);

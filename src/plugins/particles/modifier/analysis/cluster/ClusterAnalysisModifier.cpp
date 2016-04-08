@@ -20,7 +20,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/BooleanParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
 #include "ClusterAnalysisModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
@@ -142,10 +142,10 @@ void ClusterAnalysisModifier::transferComputationResults(ComputeEngine* engine)
 PipelineStatus ClusterAnalysisModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
 {
 	if(!_particleClusters)
-		throw Exception(tr("No computation results available."));
+		throwException(tr("No computation results available."));
 
 	if(inputParticleCount() != _particleClusters->size())
-		throw Exception(tr("The number of input particles has changed. The stored results have become invalid."));
+		throwException(tr("The number of input particles has changed. The stored results have become invalid."));
 
 	outputStandardProperty(_particleClusters.data());
 	return PipelineStatus(PipelineStatus::Success, tr("Found %1 clusters").arg(_numClusters));

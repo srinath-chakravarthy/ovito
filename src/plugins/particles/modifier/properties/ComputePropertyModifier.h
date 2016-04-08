@@ -23,7 +23,7 @@
 #define __OVITO_COMPUTE_PROPERTY_MODIFIER_H
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/widgets/general/AutocompleteLineEdit.h>
+#include <gui/widgets/general/AutocompleteLineEdit.h>
 #include <plugins/particles/util/ParticleExpressionEvaluator.h>
 #include "../AsynchronousParticleModifier.h"
 
@@ -54,7 +54,7 @@ public:
 	/// \undoable
 	void setExpression(const QString& expression, int index = 0) {
 		if(index < 0 || index >= expressions().size())
-			throw Exception("Property component index is out of range.");
+			throwException("Property component index is out of range.");
 		QStringList copy = _expressions;
 		copy[index] = expression;
 		_expressions = copy;
@@ -66,7 +66,7 @@ public:
 	/// \undoable
 	const QString& expression(int index = 0) const {
 		if(index < 0 || index >= expressions().size())
-			throw Exception("Property component index is out of range.");
+			throwException("Property component index is out of range.");
 		return expressions()[index];
 	}
 
@@ -122,7 +122,7 @@ public:
 	/// \undoable
 	void setNeighborExpression(const QString& expression, int index = 0) {
 		if(index < 0 || index >= neighborExpressions().size())
-			throw Exception("Property component index is out of range.");
+			throwException("Property component index is out of range.");
 		QStringList copy = _neighborExpressions;
 		copy[index] = expression;
 		_neighborExpressions = copy;
@@ -134,7 +134,7 @@ public:
 	/// \undoable
 	const QString& neighborExpression(int index = 0) const {
 		if(index < 0 || index >= neighborExpressions().size())
-			throw Exception("Property component index is out of range.");
+			throwException("Property component index is out of range.");
 		return neighborExpressions()[index];
 	}
 

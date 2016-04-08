@@ -22,9 +22,9 @@
 #include <plugins/particles/Particles.h>
 #include <core/utilities/units/UnitsManager.h>
 #include <core/rendering/SceneRenderer.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/ColorParameterUI.h>
-#include <core/gui/properties/BooleanParameterUI.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <gui/properties/ColorParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
 
 #include "SimulationCellDisplay.h"
 #include "SimulationCellObject.h"

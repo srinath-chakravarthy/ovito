@@ -257,6 +257,8 @@ BOOST_PYTHON_MODULE(Particles)
 					"``ParticleProperty.Type.Molecule``                      :guilabel:`Molecule Identifier`                     int       \n"
 					"``ParticleProperty.Type.AsphericalShape``               :guilabel:`Aspherical Shape`                        float     \n"
 					"``ParticleProperty.Type.VectorColor``                   :guilabel:`Vector Color`                            float     \n"
+					"``ParticleProperty.Type.ElasticStrainTensor``           :guilabel:`Elastic Strain`                          float     \n"
+					"``ParticleProperty.Type.ElasticDeformationGradient``    :guilabel:`Elastic Deformation Gradient`            float     \n"
 					"======================================================= =================================================== ==========\n"
 					)
 			.add_property("dataType", &ParticlePropertyObject::dataType)
@@ -305,6 +307,8 @@ BOOST_PYTHON_MODULE(Particles)
 			.value("Molecule", ParticleProperty::MoleculeProperty)
 			.value("AsphericalShape", ParticleProperty::AsphericalShapeProperty)
 			.value("VectorColor", ParticleProperty::VectorColorProperty)
+			.value("ElasticStrainTensor", ParticleProperty::ElasticStrainTensorProperty)
+			.value("ElasticDeformationGradient", ParticleProperty::ElasticDeformationGradientProperty)
 		;
 	}
 

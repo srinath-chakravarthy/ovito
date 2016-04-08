@@ -20,9 +20,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/BooleanRadioButtonParameterUI.h>
-#include <core/gui/properties/AffineTransformationParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/BooleanRadioButtonParameterUI.h>
+#include <gui/properties/AffineTransformationParameterUI.h>
 #include <core/scene/pipeline/PipelineObject.h>
 #include <core/animation/AnimationSettings.h>
 #include <plugins/particles/objects/SurfaceMesh.h>
@@ -103,7 +103,7 @@ PipelineStatus AffineTransformationModifier::modifyParticles(TimePoint time, Tim
 	else {
 		AffineTransformation oldCell = expectSimulationCell()->cellMatrix();
 		if(oldCell.determinant() == 0)
-			throw Exception(tr("Input simulation cell is degenerate."));
+			throwException(tr("Input simulation cell is degenerate."));
 		tm = targetCell() * oldCell.inverse();
 		if(applyToSimulationBox())
 			outputSimulationCell()->setCellMatrix(targetCell());

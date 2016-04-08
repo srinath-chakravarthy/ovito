@@ -23,7 +23,6 @@
 #define __OVITO_COORDINATE_TRIPOD_OVERLAY_H
 
 #include <core/Core.h>
-#include <core/gui/properties/PropertiesEditor.h>
 #include "ViewportOverlay.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -258,27 +257,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_axis4Color);
 
 	Q_CLASSINFO("DisplayName", "Coordinate tripod");
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-/**
- * \brief A properties editor for the CoordinateTripodOverlay class.
- */
-class CoordinateTripodOverlayEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE CoordinateTripodOverlayEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-private:
 
 	Q_OBJECT
 	OVITO_OBJECT

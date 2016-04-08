@@ -20,7 +20,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/pyscript/PyScript.h>
-#include <core/gui/app/Application.h>
 #include <core/reference/CloneHelper.h>
 #include <core/dataset/DataSet.h>
 #include <core/dataset/DataSetContainer.h>
@@ -36,9 +35,10 @@
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/rendering/RenderSettings.h>
 #include <core/rendering/FrameBuffer.h>
-#include <core/gui/widgets/rendering/FrameBufferWindow.h>
-#include <core/gui/mainwin/MainWindow.h>
 #include <core/utilities/concurrent/ProgressDisplay.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/widgets/rendering/FrameBufferWindow.h>
+#include <gui/dataset/GuiDataSetContainer.h>
 #include "PythonBinding.h"
 
 namespace PyScript {
@@ -70,7 +70,7 @@ inline bool OvitoObject__ne__(OvitoObject* o, const object& other) {
 }
 
 BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(DataSet_waitUntilSceneIsReady_overloads, waitUntilSceneIsReady, 1, 2);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(DataSet_renderScene_overloads, renderScene, 2, 4);
+BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(DataSet_renderScene_overloads, renderScene, 3, 4);
 
 BOOST_PYTHON_MODULE(PyScriptApp)
 {
@@ -117,7 +117,7 @@ BOOST_PYTHON_MODULE(PyScriptApp)
 				"These are the settings the user can edit in the graphical version of OVITO.")
 		.add_property("selection", make_function(&DataSet::selection, return_value_policy<ovito_object_reference>()))
 		.add_property("container", make_function(&DataSet::container, return_value_policy<ovito_object_reference>()))
-		.add_property("window", make_function(&DataSet::mainWindow, return_value_policy<reference_existing_object>()))
+		.add_property("window", make_function(lambda_address([](DataSet& ds) { return MainWindow::fromDataset(&ds); }), return_value_policy<reference_existing_object>()))
 		.def("clearScene", &DataSet::clearScene)
 		.def("rescaleTime", &DataSet::rescaleTime)
 		.def("waitUntilSceneIsReady", &DataSet::waitUntilSceneIsReady, DataSet_waitUntilSceneIsReady_overloads())
@@ -127,12 +127,14 @@ BOOST_PYTHON_MODULE(PyScriptApp)
 
 	ovito_abstract_class<DataSetContainer, RefMaker>()
 		.add_property("currentSet", make_function(&DataSetContainer::currentSet, return_value_policy<ovito_object_reference>()), &DataSetContainer::setCurrentSet)
-		.def("fileNew", &DataSetContainer::fileNew)
-		.def("fileLoad", &DataSetContainer::fileLoad)
-		.def("fileSave", &DataSetContainer::fileSave)
-		.def("fileSaveAs", &DataSetContainer::fileSaveAs)
-		.def("askForSaveChanges", &DataSetContainer::askForSaveChanges)
-		.add_property("window", make_function(&DataSetContainer::mainWindow, return_value_policy<reference_existing_object>()))
+	;
+
+	ovito_abstract_class<GuiDataSetContainer, DataSetContainer>()
+		.def("fileNew", &GuiDataSetContainer::fileNew)
+		.def("fileLoad", &GuiDataSetContainer::fileLoad)
+		.def("fileSave", &GuiDataSetContainer::fileSave)
+		.def("fileSaveAs", &GuiDataSetContainer::fileSaveAs)
+		.def("askForSaveChanges", &GuiDataSetContainer::askForSaveChanges)
 	;
 
 	class_<CloneHelper>("CloneHelper", init<>())

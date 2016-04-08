@@ -23,7 +23,7 @@
 #include <core/viewport/Viewport.h>
 #include <core/scene/ObjectNode.h>
 #include <core/animation/AnimationSettings.h>
-
+#include <gui/viewport/ViewportWindow.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
 #include <plugins/particles/objects/ParticleDisplay.h>
@@ -34,9 +34,9 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util)
 /******************************************************************************
 * Finds the particle under the mouse cursor.
 ******************************************************************************/
-bool ParticlePickingHelper::pickParticle(Viewport* vp, const QPoint& clickPoint, PickResult& result)
+bool ParticlePickingHelper::pickParticle(ViewportWindow* vpwin, const QPoint& clickPoint, PickResult& result)
 {
-	ViewportPickResult vpPickResult = vp->pick(clickPoint);
+	ViewportPickResult vpPickResult = vpwin->pick(clickPoint);
 	// Check if user has clicked on something.
 	if(vpPickResult.valid) {
 
@@ -51,7 +51,7 @@ bool ParticlePickingHelper::pickParticle(Viewport* vp, const QPoint& clickPoint,
 				result.objNode = vpPickResult.objectNode;
 				result.particleIndex = particleIndex;
 				result.localPos = posProperty->getPoint3(result.particleIndex);
-				result.worldPos = result.objNode->getWorldTransform(vp->dataset()->animationSettings()->time(), iv) * result.localPos;
+				result.worldPos = result.objNode->getWorldTransform(vpwin->viewport()->dataset()->animationSettings()->time(), iv) * result.localPos;
 
 				// Determine particle ID.
 				ParticlePropertyObject* identifierProperty = ParticlePropertyObject::findInState(pickInfo->pipelineState(), ParticleProperty::IdentifierProperty);

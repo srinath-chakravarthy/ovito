@@ -23,7 +23,7 @@
 #define __OVITO_STRUCTURE_IDENTIFICATION_MODIFIER_H
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/RefTargetListParameterUI.h>
+#include <gui/properties/RefTargetListParameterUI.h>
 
 #include <plugins/particles/modifier/AsynchronousParticleModifier.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>

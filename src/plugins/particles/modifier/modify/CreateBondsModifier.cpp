@@ -20,9 +20,9 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/SubObjectParameterUI.h>
-#include <core/gui/properties/IntegerRadioButtonParameterUI.h>
-#include <core/gui/properties/BooleanParameterUI.h>
+#include <gui/properties/SubObjectParameterUI.h>
+#include <gui/properties/IntegerRadioButtonParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include <plugins/particles/util/CutoffNeighborFinder.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
@@ -260,7 +260,7 @@ void CreateBondsModifier::transferComputationResults(ComputeEngine* engine)
 PipelineStatus CreateBondsModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
 {
 	if(!_bonds)
-		throw Exception(tr("No computation results available."));
+		throwException(tr("No computation results available."));
 
 	// Create the output data object.
 	OORef<BondsObject> bondsObj(new BondsObject(dataset(), _bonds.data()));

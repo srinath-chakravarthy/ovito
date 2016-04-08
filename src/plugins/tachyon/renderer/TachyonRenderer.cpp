@@ -107,7 +107,7 @@ bool TachyonRenderer::startRender(DataSet* dataset, RenderSettings* settings)
 /******************************************************************************
 * Renders a single animation frame into the given frame buffer.
 ******************************************************************************/
-bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, AbstractProgressDisplay* progress)
+bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress)
 {
 	if(progress) progress->setStatusText(tr("Preparing scene"));
 

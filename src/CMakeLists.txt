@@ -31,6 +31,12 @@ ADD_SUBDIRECTORY(3rdparty)
 
 ADD_SUBDIRECTORY(core)
 
+##################### Gui library  #######################
+
+IF(OVITO_BUILD_GUI)
+	ADD_SUBDIRECTORY(gui)
+ENDIF()
+
 ####################### Plugins ###########################
 
 ADD_SUBDIRECTORY(plugins)

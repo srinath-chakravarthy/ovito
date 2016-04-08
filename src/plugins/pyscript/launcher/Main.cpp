@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
-#include <core/gui/app/Application.h>
+#include <gui/GUI.h>
+#include <gui/app/GuiApplication.h>
 
 /**
  * This is the main entry point for "ovitos" script launcher program.
@@ -115,14 +115,15 @@ int main(int argc, char** argv)
 
 	// Initialize the application.
 	int newargc = (int)newargv.size();
-	if(!Ovito::Application().instance().initialize(newargc, const_cast<char**>(newargv.data())))
+	Ovito::GuiApplication app;
+	if(!app.initialize(newargc, const_cast<char**>(newargv.data())))
 		return 1;
 
 	// Enter event loop.
-	int result = Ovito::Application().instance().runApplication();
+	int result = app.runApplication();
 
 	// Shut down application.
-	Ovito::Application().instance().shutdown();
+	app.shutdown();
 
 	return result;
 }

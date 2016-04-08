@@ -23,9 +23,9 @@
 #include <plugins/particles/util/CutoffNeighborFinder.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
 #include <plugins/particles/objects/BondsObject.h>
-#include <core/gui/properties/IntegerRadioButtonParameterUI.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/IntegerParameterUI.h>
+#include <gui/properties/IntegerRadioButtonParameterUI.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include "ExpandSelectionModifier.h"
 
@@ -83,11 +83,11 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> ExpandSelectionModi
 	else if(mode() == BondedNeighbors) {
 		BondsObject* bonds = input().findObject<BondsObject>();
 		if(!bonds)
-			throw Exception(tr("Modifier's input does not contain any bonds."));
+			throwException(tr("Modifier's input does not contain any bonds."));
 		return std::make_shared<ExpandSelectionBondedEngine>(validityInterval, posProperty->storage(), inputCell->data(), inputSelection->storage(), numberOfIterations(), bonds->storage());
 	}
 	else {
-		throw Exception(tr("Invalid selection expansion mode."));
+		throwException(tr("Invalid selection expansion mode."));
 	}
 }
 
@@ -197,10 +197,10 @@ void ExpandSelectionModifier::transferComputationResults(ComputeEngine* engine)
 PipelineStatus ExpandSelectionModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
 {
 	if(!_outputSelection)
-		throw Exception(tr("No modifier results available."));
+		throwException(tr("No modifier results available."));
 
 	if(inputParticleCount() != _outputSelection->size())
-		throw Exception(tr("The number of input particles has changed. The stored results have become invalid."));
+		throwException(tr("The number of input particles has changed. The stored results have become invalid."));
 
 	outputStandardProperty(_outputSelection.data());
 

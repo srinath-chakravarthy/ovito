@@ -22,8 +22,6 @@
 #include <core/Core.h>
 #include <core/utilities/concurrent/Future.h>
 #include <core/utilities/io/FileManager.h>
-#include <core/gui/dialogs/RemoteAuthenticationDialog.h>
-#include <core/gui/app/Application.h>
 
 #include "SftpJob.h"
 
@@ -44,7 +42,7 @@ SftpJob::SftpJob(const QUrl& url, const std::shared_ptr<FutureInterfaceBase>& fu
 		_url(url), _connection(nullptr), _futureInterface(futureInterface), _isActive(false)
 {
 	// Run all event handlers of this class in the main thread.
-	moveToThread(QApplication::instance()->thread());
+	moveToThread(QCoreApplication::instance()->thread());
 
 	// Start download process in the main thread.
 	QMetaObject::invokeMethod(this, "start", Qt::AutoConnection);
@@ -158,23 +156,13 @@ void SftpJob::shutdown(bool success)
 void SftpJob::onSshConnectionError(QSsh::SshError error)
 {
 	// If authentication failed, ask the user to re-enter username/password.
-	if(error == QSsh::SshAuthenticationError && Application::instance().guiMode() && !_futureInterface->isCanceled()) {
+	if(error == QSsh::SshAuthenticationError && !_futureInterface->isCanceled()) {
 		OVITO_ASSERT(!_sftpChannel);
-
-		// Ask for new username/password.
-		RemoteAuthenticationDialog dialog(nullptr, tr("Remote authentication"),
-				_url.password().isEmpty() ?
-				tr("<p>Please enter username and password to access the remote machine</p><p><b>%1</b></p>").arg(_url.host()) :
-				tr("<p>Authentication failed. Please enter the correct username and password to access the remote machine</p><p><b>%1</b></p>").arg(_url.host()));
-		dialog.setUsername(_url.userName());
-		dialog.setPassword(_url.password());
-		if(dialog.exec() == QDialog::Accepted) {
+		if(FileManager::instance().askUserForCredentials(*this)) {
 			// Start over with new login information.
 			QObject::disconnect(_connection, 0, this, 0);
 			QSsh::releaseConnection(_connection);
 			_connection = nullptr;
-			_url.setUserName(dialog.username());
-			_url.setPassword(dialog.password());
 			start();
 			return;
 		}

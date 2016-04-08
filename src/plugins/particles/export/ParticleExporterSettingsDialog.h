@@ -23,7 +23,7 @@
 #define __OVITO_PARTICLE_EXPORTER_SETTINGS_DIALOG_H
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/widgets/general/SpinnerWidget.h>
+#include <gui/widgets/general/SpinnerWidget.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include "ParticleExporter.h"
 #include "OutputColumnMapping.h"

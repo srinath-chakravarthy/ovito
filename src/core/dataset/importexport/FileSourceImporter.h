@@ -114,6 +114,10 @@ public:
 
 	///////////////////////////// from FileImporter /////////////////////////////
 
+	/// \brief Asks the importer if the option to replace the currently selected object
+	///        with the new file is available.
+	virtual bool isReplaceExistingPossible(const QUrl& sourceUrl) override;
+
 	/// \brief Imports the given file into the scene.
 	virtual bool importFile(const QUrl& sourceUrl, ImportMode importMode) override;
 
@@ -150,7 +154,7 @@ public:
 	/// file has been selected by the user. The importer class may inspect
 	/// the new file at this point before it is actually loaded.
 	/// Returns false if the operation has been canceled by the user.
-	virtual bool inspectNewFile(FileSource* obj) { return true; }
+	virtual bool inspectNewFile(FileSource* obj, int frameIndex) { return true; }
 
 	/// Creates an asynchronous loader object that loads the data for the given frame from the external file.
 	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame) = 0;

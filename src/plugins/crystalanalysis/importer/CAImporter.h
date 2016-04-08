@@ -25,7 +25,7 @@
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/dataset/importexport/FileSourceImporter.h>
 #include <core/utilities/mesh/HalfEdgeMesh.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/properties/PropertiesEditor.h>
 #include <plugins/particles/import/ParticleFrameLoader.h>
 #include <plugins/crystalanalysis/objects/patterns/StructurePattern.h>
 #include <plugins/crystalanalysis/data/ClusterGraph.h>

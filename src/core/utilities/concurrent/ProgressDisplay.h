@@ -55,58 +55,6 @@ public:
 	virtual void setValue(int v) = 0;
 };
 
-class ProgressDialogAdapter : public AbstractProgressDisplay
-{
-public:
-
-	/// Constructor.
-	ProgressDialogAdapter(QProgressDialog* dialog) : _dialog(dialog) {}
-
-	/// Returns whether the operation has been canceled by the user.
-	virtual bool wasCanceled() override {
-		return _dialog->wasCanceled();
-	}
-
-	/// Cancels the operation.
-	virtual void cancel() override {
-		_dialog->cancel();
-	}
-
-	/// Sets the status text to be displayed.
-	virtual void setStatusText(const QString& text) override {
-		_dialog->setLabelText(text);
-	}
-
-	/// Return the current status text.
-	virtual QString statusText() override {
-		return _dialog->labelText();
-	}
-
-	/// Returns the highest value represented by the progress bar.
-	virtual int maximum() override {
-		return _dialog->maximum();
-	}
-
-	/// Sets the highest value represented by the progress bar.
-	virtual void setMaximum(int max) override {
-		_dialog->setMaximum(max);
-	}
-
-	/// Returns the value displayed by the progress bar.
-	virtual int value() override {
-		return _dialog->value();
-	}
-
-	/// Sets the value displayed by the progress bar.
-	virtual void setValue(int v) override {
-		_dialog->setValue(v);
-	}
-
-private:
-
-	QPointer<QProgressDialog> _dialog;
-};
-
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

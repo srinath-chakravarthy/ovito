@@ -23,7 +23,7 @@
 #define __OVITO_LAMMPS_DATA_IMPORTER_H
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/properties/PropertiesEditor.h>
 #include <plugins/particles/import/ParticleImporter.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
@@ -82,7 +82,7 @@ public:
 
 	/// This method is called by the FileSource each time a new source
 	/// file has been selected by the user.
-	virtual bool inspectNewFile(FileSource* obj) override;
+	virtual bool inspectNewFile(FileSource* obj, int frameIndex) override;
 
 	/// Returns the LAMMPS atom style used in the data file.
 	LAMMPSAtomStyle atomStyle() const { return _atomStyle; }

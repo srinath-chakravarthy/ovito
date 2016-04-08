@@ -22,9 +22,6 @@
 #include <core/Core.h>
 #include <core/viewport/Viewport.h>
 #include <core/scene/ObjectNode.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/BooleanRadioButtonParameterUI.h>
-#include <core/gui/properties/VariantComboBoxParameterUI.h>
 #include <core/rendering/RenderSettings.h>
 #include <core/rendering/SceneRenderer.h>
 #include <core/scene/objects/helpers/TargetObject.h>
@@ -35,7 +32,6 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, AbstractCameraObject, DataObject);
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, CameraObject, AbstractCameraObject);
-SET_OVITO_OBJECT_EDITOR(CameraObject, CameraObjectEditor);
 DEFINE_PROPERTY_FIELD(CameraObject, _isPerspective, "IsPerspective");
 DEFINE_REFERENCE_FIELD(CameraObject, _fov, "FOV", Controller);
 DEFINE_REFERENCE_FIELD(CameraObject, _zoom, "Zoom", Controller);
@@ -47,7 +43,6 @@ SET_PROPERTY_FIELD_UNITS(CameraObject, _zoom, WorldParameterUnit);
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 	IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, CameraDisplayObject, DisplayObject);
-	IMPLEMENT_OVITO_OBJECT(Core, CameraObjectEditor, PropertiesEditor);
 OVITO_END_INLINE_NAMESPACE
 
 /******************************************************************************
@@ -216,59 +211,6 @@ FloatType CameraObject::targetDistance() const
 }
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Constructor that creates the UI controls for the editor.
-******************************************************************************/
-void CameraObjectEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create the rollout.
-	QWidget* rollout = createRollout(tr("Camera"), rolloutParams);
-
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(2);
-
-	QGridLayout* sublayout = new QGridLayout();
-	sublayout->setContentsMargins(0,0,0,0);
-	sublayout->setColumnStretch(2, 1);
-	sublayout->setColumnMinimumWidth(0, 12);
-	layout->addLayout(sublayout);
-
-	// Camera projection parameter.
-	BooleanRadioButtonParameterUI* isPerspectivePUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(CameraObject::_isPerspective));
-	isPerspectivePUI->buttonTrue()->setText(tr("Perspective camera:"));
-	sublayout->addWidget(isPerspectivePUI->buttonTrue(), 0, 0, 1, 3);
-
-	// FOV parameter.
-	FloatParameterUI* fovPUI = new FloatParameterUI(this, PROPERTY_FIELD(CameraObject::_fov));
-	sublayout->addWidget(fovPUI->label(), 1, 1);
-	sublayout->addLayout(fovPUI->createFieldLayout(), 1, 2);
-	fovPUI->setMinValue(1e-3f);
-	fovPUI->setMaxValue(FLOATTYPE_PI - 1e-2f);
-
-	isPerspectivePUI->buttonFalse()->setText(tr("Orthographic camera:"));
-	sublayout->addWidget(isPerspectivePUI->buttonFalse(), 2, 0, 1, 3);
-
-	// Zoom parameter.
-	FloatParameterUI* zoomPUI = new FloatParameterUI(this, PROPERTY_FIELD(CameraObject::_zoom));
-	sublayout->addWidget(zoomPUI->label(), 3, 1);
-	sublayout->addLayout(zoomPUI->createFieldLayout(), 3, 2);
-	zoomPUI->setMinValue(0);
-
-	fovPUI->setEnabled(false);
-	zoomPUI->setEnabled(false);
-	connect(isPerspectivePUI->buttonTrue(), &QRadioButton::toggled, fovPUI, &FloatParameterUI::setEnabled);
-	connect(isPerspectivePUI->buttonFalse(), &QRadioButton::toggled, zoomPUI, &FloatParameterUI::setEnabled);
-
-	// Camera type.
-	layout->addSpacing(10);
-	VariantComboBoxParameterUI* typePUI = new VariantComboBoxParameterUI(this, "isTargetCamera");
-	typePUI->comboBox()->addItem(tr("Free camera"), QVariant::fromValue(false));
-	typePUI->comboBox()->addItem(tr("Target camera"), QVariant::fromValue(true));
-	layout->addWidget(new QLabel(tr("Camera type:")));
-	layout->addWidget(typePUI->comboBox());
-}
 
 /******************************************************************************
 * Computes the bounding box of the object.

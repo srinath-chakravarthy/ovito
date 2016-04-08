@@ -24,8 +24,8 @@
 #define __OVITO_BIN_AND_REDUCE_MODIFIER_H
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/IntegerParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
 #include <plugins/particles/data/ParticleProperty.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include "../../ParticleModifier.h"

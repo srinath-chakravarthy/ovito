@@ -24,7 +24,7 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/scene/pipeline/Modifier.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/properties/PropertiesEditor.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {

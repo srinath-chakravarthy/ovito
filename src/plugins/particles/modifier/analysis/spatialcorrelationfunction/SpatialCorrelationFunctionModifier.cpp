@@ -21,11 +21,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/IntegerParameterUI.h>
-#include <core/gui/properties/IntegerRadioButtonParameterUI.h>
-#include <core/gui/properties/VariantComboBoxParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
+#include <gui/properties/IntegerRadioButtonParameterUI.h>
+#include <gui/properties/VariantComboBoxParameterUI.h>
 #include <core/gui/mainwin/MainWindow.h>
 #include <core/scene/pipeline/PipelineObject.h>
 #include <core/animation/AnimationSettings.h>
@@ -115,14 +115,14 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> SpatialCorrelationF
 {
 	// Get the source property.
 	if(sourceProperty1().isNull() || sourceProperty2().isNull())
-		throw Exception(tr("Select particle properties first."));
+		throwException(tr("Select particle properties first."));
 
     // Get the first property.
     ParticlePropertyObject* property1 = sourceProperty1().findInState(input());
 	if(!property1)
-		throw Exception(tr("The selected particle property with the name '%1' does not exist.").arg(sourceProperty1().name()));
+		throwException(tr("The selected particle property with the name '%1' does not exist.").arg(sourceProperty1().name()));
 	if(sourceProperty1().vectorComponent() >= (int)property1->componentCount())
-		throw Exception(tr("The selected vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(sourceProperty1().name()).arg(property1->componentCount()));
+		throwException(tr("The selected vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(sourceProperty1().name()).arg(property1->componentCount()));
 
 	int vecComponent1 = std::max(0, sourceProperty1().vectorComponent());
 	int vecComponentCount1 = property1->componentCount();
@@ -130,9 +130,9 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> SpatialCorrelationF
     // Get the second property.
     ParticlePropertyObject* property2 = sourceProperty2().findInState(input());
 	if(!property2)
-		throw Exception(tr("The selected particle property with the name '%1' does not exist.").arg(sourceProperty2().name()));
+		throwException(tr("The selected particle property with the name '%1' does not exist.").arg(sourceProperty2().name()));
 	if(sourceProperty2().vectorComponent() >= (int)property2->componentCount())
-		throw Exception(tr("The selected vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(sourceProperty2().name()).arg(property2->componentCount()));
+		throwException(tr("The selected vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(sourceProperty2().name()).arg(property2->componentCount()));
 
 	int vecComponent2 = std::max(0, sourceProperty2().vectorComponent());
 	int vecComponentCount2 = property2->componentCount();
@@ -631,7 +631,7 @@ void SpatialCorrelationFunctionModifierEditor::onSaveData()
 
 		QFile file(fileName);
 		if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
-			throw Exception(tr("Could not open file for writing: %1").arg(file.errorString()));
+			modifier->throwException(tr("Could not open file for writing: %1").arg(file.errorString()));
 
         int numberOfBinsX = std::max(1, modifier->numberOfBinsX());
         int numberOfBinsY = std::max(1, modifier->numberOfBinsY());

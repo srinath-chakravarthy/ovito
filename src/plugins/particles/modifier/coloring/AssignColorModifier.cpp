@@ -21,8 +21,8 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/animation/controller/Controller.h>
-#include <core/gui/properties/ColorParameterUI.h>
-#include <core/gui/properties/BooleanParameterUI.h>
+#include <gui/properties/ColorParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
 #include "AssignColorModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring)

@@ -24,7 +24,7 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/reference/RefTarget.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/properties/PropertiesEditor.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 

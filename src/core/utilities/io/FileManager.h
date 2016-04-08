@@ -61,6 +61,10 @@ public:
 	/// \brief Saves the login name and password for the given host in the credential cache.
 	void cacheCredentials(const QString& host, const QString& username, const QString& password);
 
+	/// \brief Shows a dialog which asks the user for the login credentials.
+	/// \return True on success, false if user has canceled the operation.
+	bool askUserForCredentials(SftpJob& job);
+
 	/// \brief Constructs a URL from a path entered by the user.
 	QUrl urlFromUserInput(const QString& path);
 

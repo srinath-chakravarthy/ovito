@@ -23,7 +23,7 @@
 #define __OVITO_SELECT_EXPRESSION_MODIFIER_H
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/widgets/general/AutocompleteTextEdit.h>
+#include <gui/widgets/general/AutocompleteTextEdit.h>
 #include "../ParticleModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Selection)

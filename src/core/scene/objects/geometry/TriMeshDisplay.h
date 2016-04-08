@@ -28,7 +28,6 @@
 #include <core/rendering/MeshPrimitive.h>
 #include <core/animation/controller/Controller.h>
 #include <core/animation/AnimationSettings.h>
-#include <core/gui/properties/PropertiesEditor.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene) OVITO_BEGIN_INLINE_NAMESPACE(StdObj)
 
@@ -97,29 +96,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_color);
 	DECLARE_REFERENCE_FIELD(_transparency);
 };
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * \brief A properties editor for the TriMeshDisplay class.
- */
-class OVITO_CORE_EXPORT TriMeshDisplayEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE TriMeshDisplayEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

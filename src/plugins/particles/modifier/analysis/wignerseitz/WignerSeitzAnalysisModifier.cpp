@@ -22,10 +22,10 @@
 #include <plugins/particles/Particles.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/animation/AnimationSettings.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/BooleanRadioButtonParameterUI.h>
-#include <core/gui/properties/IntegerParameterUI.h>
-#include <core/gui/properties/SubObjectParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/BooleanRadioButtonParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
+#include <gui/properties/SubObjectParameterUI.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
 #include "WignerSeitzAnalysisModifier.h"
@@ -115,24 +115,24 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> WignerSeitzAnalysis
 	// Get the reference configuration.
 	PipelineFlowState refState = getReferenceState(time);
 	if(refState.isEmpty())
-		throw Exception(tr("Reference configuration has not been specified yet or is empty. Please pick a reference simulation file."));
+		throwException(tr("Reference configuration has not been specified yet or is empty. Please pick a reference simulation file."));
 
 	// Get the reference position property.
 	ParticlePropertyObject* refPosProperty = ParticlePropertyObject::findInState(refState, ParticleProperty::PositionProperty);
 	if(!refPosProperty)
-		throw Exception(tr("The reference configuration does not contain particle positions."));
+		throwException(tr("The reference configuration does not contain particle positions."));
 
 	// Get simulation cells.
 	SimulationCellObject* inputCell = expectSimulationCell();
 	SimulationCellObject* refCell = refState.findObject<SimulationCellObject>();
 	if(!refCell)
-		throw Exception(tr("Reference configuration does not contain simulation cell info."));
+		throwException(tr("Reference configuration does not contain simulation cell info."));
 
 	// Check simulation cell(s).
 	if(inputCell->volume3D() < FLOATTYPE_EPSILON)
-		throw Exception(tr("Simulation cell is degenerate in the deformed configuration."));
+		throwException(tr("Simulation cell is degenerate in the deformed configuration."));
 	if(refCell->volume3D() < FLOATTYPE_EPSILON)
-		throw Exception(tr("Simulation cell is degenerate in the reference configuration."));
+		throwException(tr("Simulation cell is degenerate in the reference configuration."));
 
 	// Get the particle types.
 	ParticleProperty* typeProperty = nullptr;
@@ -160,7 +160,7 @@ PipelineFlowState WignerSeitzAnalysisModifier::getReferenceState(TimePoint time)
 {
 	// Get the reference positions of particles.
 	if(!referenceConfiguration())
-		throw Exception(tr("Cannot perform analysis without a reference configuration."));
+		throwException(tr("Cannot perform analysis without a reference configuration."));
 
 	// What is the reference frame number to use?
 	int referenceFrame;
@@ -183,7 +183,7 @@ PipelineFlowState WignerSeitzAnalysisModifier::getReferenceState(TimePoint time)
 	if(FileSource* linkedFileObj = dynamic_object_cast<FileSource>(referenceConfiguration())) {
 		if(linkedFileObj->numberOfFrames() > 0) {
 			if(referenceFrame < 0 || referenceFrame >= linkedFileObj->numberOfFrames())
-				throw Exception(tr("Requested reference frame %1 is out of range.").arg(referenceFrame));
+				throwException(tr("Requested reference frame %1 is out of range.").arg(referenceFrame));
 			refState = linkedFileObj->requestFrame(referenceFrame);
 		}
 	}
@@ -196,7 +196,7 @@ PipelineFlowState WignerSeitzAnalysisModifier::getReferenceState(TimePoint time)
 		throw PipelineStatus(PipelineStatus::Pending, tr("Waiting for input data to become ready..."));
 	// Make sure we really received the requested reference frame.
 	if(refState.attributes().value(QStringLiteral("Frame"), referenceFrame).toInt() != referenceFrame)
-		throw Exception(tr("Requested reference frame %1 is out of range.").arg(referenceFrame));
+		throwException(tr("Requested reference frame %1 is out of range.").arg(referenceFrame));
 
 	return refState;
 }
@@ -310,7 +310,7 @@ void WignerSeitzAnalysisModifier::transferComputationResults(ComputeEngine* engi
 PipelineStatus WignerSeitzAnalysisModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
 {
 	if(!_occupancyNumbers)
-		throw Exception(tr("No computation results available."));
+		throwException(tr("No computation results available."));
 
 	PipelineFlowState refState = getReferenceState(time);
 
@@ -324,11 +324,11 @@ PipelineStatus WignerSeitzAnalysisModifier::applyComputationResults(TimePoint ti
 
 	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(output(), ParticleProperty::PositionProperty);
 	if(!posProperty)
-		throw Exception(tr("This modifier cannot be evaluated, because the reference configuration does not contain any particles."));
+		throwException(tr("This modifier cannot be evaluated, because the reference configuration does not contain any particles."));
 	_outputParticleCount = posProperty->size();
 
 	if(posProperty->size() != _occupancyNumbers->size())
-		throw Exception(tr("The number of particles in the reference configuration has changed. The stored results have become invalid."));
+		throwException(tr("The number of particles in the reference configuration has changed. The stored results have become invalid."));
 
 	outputCustomProperty(_occupancyNumbers.data());
 

@@ -20,10 +20,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/IntegerParameterUI.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/app/Application.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <core/app/Application.h>
 #include <plugins/particles/objects/ParticleDisplay.h>
 #include "AmbientOcclusionModifier.h"
 #include "AmbientOcclusionRenderer.h"
@@ -63,8 +63,8 @@ AmbientOcclusionModifier::AmbientOcclusionModifier(DataSet* dataset) : Asynchron
 std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> AmbientOcclusionModifier::createEngine(TimePoint time, TimeInterval validityInterval)
 {
 	if(Application::instance().headlessMode())
-		throw Exception(tr("Ambient occlusion modifier requires OpenGL support and cannot be used when program is running in headless mode. "
-						   "Please run program on a machine where access to graphics hardware is possible."));
+		throwException(tr("Ambient occlusion modifier requires OpenGL support and cannot be used when program is running in headless mode. "
+						  "Please run program on a machine where access to graphics hardware is possible."));
 
 	// Get modifier input.
 	ParticlePropertyObject* posProperty = expectStandardProperty(ParticleProperty::PositionProperty);
@@ -210,10 +210,10 @@ void AmbientOcclusionModifier::transferComputationResults(ComputeEngine* engine)
 PipelineStatus AmbientOcclusionModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
 {
 	if(!_brightnessValues)
-		throw Exception(tr("No computation results available."));
+		throwException(tr("No computation results available."));
 
 	if(inputParticleCount() != _brightnessValues->size())
-		throw Exception(tr("The number of input particles has changed. The stored results have become invalid."));
+		throwException(tr("The number of input particles has changed. The stored results have become invalid."));
 
 	// Get effect intensity.
 	FloatType intens = std::min(std::max(intensity(), FloatType(0)), FloatType(1));

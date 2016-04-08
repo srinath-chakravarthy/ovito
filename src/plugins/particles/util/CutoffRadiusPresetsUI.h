@@ -23,7 +23,7 @@
 #define __OVITO_CUTOFF_RADIUS_PRESETS_H
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/ParameterUI.h>
+#include <gui/properties/ParameterUI.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 

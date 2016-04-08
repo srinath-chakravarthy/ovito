@@ -21,26 +21,22 @@
 
 #include <core/Core.h>
 #include <core/viewport/Viewport.h>
-#include <core/viewport/ViewportWindow.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/viewport/ViewportSettings.h>
-#include <core/viewport/picking/PickingSceneRenderer.h>
 #include <core/animation/AnimationSettings.h>
-#include <core/rendering/viewport/ViewportSceneRenderer.h>
 #include <core/rendering/RenderSettings.h>
 #include <core/scene/SelectionSet.h>
 #include <core/scene/SceneRoot.h>
 #include <core/scene/objects/camera/AbstractCameraObject.h>
-#include "ViewportMenu.h"
 
 /// The default field of view in world units used for orthogonal view types when the scene is empty.
-#define DEFAULT_ORTHOGONAL_FIELD_OF_VIEW		200.0f
+#define DEFAULT_ORTHOGONAL_FIELD_OF_VIEW		FloatType(200)
 
 /// The default field of view angle in radians used for perspective view types when the scene is empty.
-#define DEFAULT_PERSPECTIVE_FIELD_OF_VIEW		(35.0f*FLOATTYPE_PI/180.0f)
+#define DEFAULT_PERSPECTIVE_FIELD_OF_VIEW		FloatType(35*FLOATTYPE_PI/180)
 
 /// Controls the margin size between the overlay render frame and the viewport border.
-#define VIEWPORT_RENDER_FRAME_SIZE				0.93f
+#define VIEWPORT_RENDER_FRAME_SIZE				FloatType(0.93)
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View)
 
@@ -62,19 +58,16 @@ DEFINE_VECTOR_REFERENCE_FIELD(Viewport, _overlays, "Overlays", ViewportOverlay);
 * Constructor.
 ******************************************************************************/
 Viewport::Viewport(DataSet* dataset) : RefTarget(dataset),
-		_widget(nullptr), _viewportWindow(nullptr),
 		_viewType(VIEW_NONE),
 		_fieldOfView(100),
 		_renderPreviewMode(false),
 		_isRendering(false),
 		_cameraPosition(Point3::Origin()), _cameraDirection(Vector3::Zero()),
-		_renderDebugCounter(0),
-		_pickingRenderer(new PickingSceneRenderer(dataset)),
 		_cameraTM(AffineTransformation::Identity()),
 		_gridMatrix(AffineTransformation::Identity()),
 		_showGrid(false),
 		_stereoscopicMode(false),
-		_cursorInContextMenuArea(false)
+		_window(nullptr)
 {
 	INIT_PROPERTY_FIELD(Viewport::_viewNode);
 	INIT_PROPERTY_FIELD(Viewport::_viewType);
@@ -93,28 +86,13 @@ Viewport::Viewport(DataSet* dataset) : RefTarget(dataset),
 }
 
 /******************************************************************************
-* Destructor
+* Destructor.
 ******************************************************************************/
 Viewport::~Viewport()
 {
-	if(_widget) _widget->deleteLater();
-}
-
-/******************************************************************************
-* Displays the context menu for this viewport.
-******************************************************************************/
-void Viewport::showViewportMenu(const QPoint& pos)
-{
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-	if(_viewportWindow)
-		_viewportWindow->requestActivate();
-#endif
-
-	// Create the context menu for the viewport.
-	ViewportMenu contextMenu(this);
-
-	// Show menu.
-	contextMenu.show(pos);
+	// Also destroy the associated GUI window of this viewport when the viewport is deleted.
+	if(_window)
+		_window->destroyViewportWindow();
 }
 
 /******************************************************************************
@@ -266,25 +244,25 @@ ViewProjectionParameters Viewport::projectionParameters(TimePoint time, FloatTyp
 	}
 
 	// Transform scene bounding box to camera space.
-	Box3 bb = sceneBoundingBox.transformed(params.viewMatrix).centerScale(1.01f);
+	Box3 bb = sceneBoundingBox.transformed(params.viewMatrix).centerScale(FloatType(1.01));
 
 	// Compute projection matrix.
 	if(params.isPerspective) {
 		if(bb.minc.z() < -FLOATTYPE_EPSILON) {
 			params.zfar = -bb.minc.z();
-			params.znear = std::max(-bb.maxc.z(), params.zfar * 1e-4f);
+			params.znear = std::max(-bb.maxc.z(), params.zfar * FloatType(1e-4));
 		}
 		else {
 			params.zfar = std::max(sceneBoundingBox.size().length(), FloatType(1));
-			params.znear = params.zfar * 1e-4f;
+			params.znear = params.zfar * FloatType(1e-4);
 		}
-		params.zfar = std::max(params.zfar, params.znear * 1.01f);
-		params.projectionMatrix = Matrix4::perspective(params.fieldOfView, 1.0f / params.aspectRatio, params.znear, params.zfar);
+		params.zfar = std::max(params.zfar, params.znear * FloatType(1.01));
+		params.projectionMatrix = Matrix4::perspective(params.fieldOfView, FloatType(1) / params.aspectRatio, params.znear, params.zfar);
 	}
 	else {
 		if(!bb.isEmpty()) {
 			params.znear = -bb.maxc.z();
-			params.zfar  = std::max(-bb.minc.z(), params.znear + 1.0f);
+			params.zfar  = std::max(-bb.minc.z(), params.znear + FloatType(1));
 		}
 		else {
 			params.znear = 1;
@@ -335,12 +313,13 @@ void Viewport::zoomToBox(const Box3& box)
 		return;	// Do not reposition the camera node.
 
 	if(isPerspectiveProjection()) {
-		FloatType dist = box.size().length() * 0.5 / tan(fieldOfView() * 0.5);
+		FloatType dist = box.size().length() * FloatType(0.5) / tan(fieldOfView() * FloatType(0.5));
 		setCameraPosition(box.center() - cameraDirection().resized(dist));
 	}
 	else {
 		// Setup projection.
-		FloatType aspectRatio = (FloatType)size().height() / size().width();
+		QSize vpSize = windowSize();
+		FloatType aspectRatio = (vpSize.width() > 0) ? ((FloatType)vpSize.height() / vpSize.width()) : FloatType(1);
 		if(renderPreviewMode()) {
 			if(RenderSettings* renderSettings = dataset()->renderSettings())
 				aspectRatio = renderSettings->outputImageAspectRatio();
@@ -359,9 +338,9 @@ void Viewport::zoomToBox(const Box3& box)
 		FloatType w = std::max(maxX - minX, FloatType(1e-5));
 		FloatType h = std::max(maxY - minY, FloatType(1e-5));
 		if(aspectRatio > h/w)
-			setFieldOfView(w * aspectRatio * 0.55);
+			setFieldOfView(w * aspectRatio * FloatType(0.55));
 		else
-			setFieldOfView(h * 0.55);
+			setFieldOfView(h * FloatType(0.55));
 		setCameraPosition(box.center());
 	}
 }
@@ -400,8 +379,8 @@ void Viewport::referenceReplaced(const PropertyFieldDescriptor& field, RefTarget
 		if(viewType() == VIEW_SCENENODE && newTarget == nullptr) {
 			// If the camera node has been deleted, switch to Orthographic or Perspective view type.
 			// Keep current camera orientation.
-			setFieldOfView(_projParams.fieldOfView);
-			setCameraTransformation(_projParams.inverseViewMatrix);
+			setFieldOfView(projectionParams().fieldOfView);
+			setCameraTransformation(projectionParams().inverseViewMatrix);
 			setViewType(isPerspectiveProjection() ? VIEW_PERSPECTIVE : VIEW_ORTHO, true);
 		}
 		else if(viewType() != VIEW_SCENENODE && newTarget != nullptr) {
@@ -435,7 +414,6 @@ void Viewport::referenceRemoved(const PropertyFieldDescriptor& field, RefTarget*
 	}
 	RefTarget::referenceRemoved(field, oldTarget, listIndex);
 }
-
 
 /******************************************************************************
 * Loads the class' contents from an input stream.
@@ -509,30 +487,12 @@ void Viewport::updateViewportTitle()
 }
 
 /******************************************************************************
-* Returns the widget that contains the viewport's rendering window.
-******************************************************************************/
-QWidget* Viewport::createWidget(QWidget* parent)
-{
-	OVITO_ASSERT(_widget == nullptr && _viewportWindow == nullptr);
-	if(!_widget) {
-		_viewportWindow = new ViewportWindow(this, parent);
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-		_widget = QWidget::createWindowContainer(_viewportWindow, parent);
-		_widget->setAttribute(Qt::WA_DeleteOnClose);
-#else
-		_widget = _viewportWindow;
-#endif
-	}
-	return _widget;
-}
-
-/******************************************************************************
 * Puts an update request event for this viewport on the event loop.
 ******************************************************************************/
 void Viewport::updateViewport()
 {
-	if(_viewportWindow)
-		_viewportWindow->renderLater();
+	if(_window)
+		_window->renderLater();
 }
 
 /******************************************************************************
@@ -540,8 +500,8 @@ void Viewport::updateViewport()
 ******************************************************************************/
 void Viewport::redrawViewport()
 {
-	if(_viewportWindow)
-		_viewportWindow->renderNow();
+	if(_window)
+		_window->renderNow();
 }
 
 /******************************************************************************
@@ -550,35 +510,29 @@ void Viewport::redrawViewport()
 ******************************************************************************/
 void Viewport::processUpdateRequest()
 {
-	if(_viewportWindow)
-		_viewportWindow->processUpdateRequest();
+	if(_window)
+		_window->processViewportUpdate();
 }
 
 /******************************************************************************
-* Renders the contents of the viewport.
+* Renders the contents of the interactive viewport in a window.
 ******************************************************************************/
-void Viewport::render(QOpenGLContext* context)
+void Viewport::renderInteractive(SceneRenderer* renderer)
 {
 	OVITO_ASSERT_MSG(!isRendering(), "Viewport::render()", "Viewport is already rendering.");
 	OVITO_ASSERT_MSG(!dataset()->viewportConfig()->isRendering(), "Viewport::render()", "Some other viewport is already rendering.");
 
-	// Invalidate picking buffer every time the visible contents of the viewport change.
-	_pickingRenderer->reset();
+	QSize vpSize = windowSize();
+	if(vpSize.isEmpty())
+		return;
 
 	try {
-		QSize vpSize = this->size();
-		if(vpSize.isEmpty())
-			return;
-
 		_isRendering = true;
 		TimePoint time = dataset()->animationSettings()->time();
 		RenderSettings* renderSettings = dataset()->renderSettings();
 		OVITO_ASSERT(renderSettings != nullptr);
-		ViewportSceneRenderer* renderer = dataset()->viewportConfig()->viewportRenderer();
 
-		glViewport(0, 0, vpSize.width(), vpSize.height());
-
-		// Set up the viewport renderer.
+		// Set up the renderer.
 		renderer->startRender(dataset(), renderSettings);
 
 		// Request scene bounding box.
@@ -605,22 +559,22 @@ void Viewport::render(QOpenGLContext* context)
 		if(renderPreviewMode())
 			adjustProjectionForRenderFrame(_projParams);
 
-		if(!_projParams.isPerspective || !stereoscopicMode()) {
+		if(!projectionParams().isPerspective || !stereoscopicMode() || renderer->isPicking()) {
 
 			// Pass final projection parameters to renderer.
-			renderer->setProjParams(_projParams);
+			renderer->setProjParams(projectionParams());
 
 			// Call the viewport renderer to render the scene objects.
-			renderer->renderFrame(nullptr, nullptr);
+			renderer->renderFrame(nullptr, SceneRenderer::NonStereoscopic, nullptr);
 
 		}
 		else {
 
 			// Stereoscopic parameters
-			FloatType eyeSeparation = 16.0;
+			FloatType eyeSeparation = FloatType(16);
 			FloatType convergence = (orbitCenter() - Point3::Origin() - _projParams.inverseViewMatrix.translation()).length();
 			convergence = std::max(convergence, _projParams.znear);
-			ViewProjectionParameters params = _projParams;
+			ViewProjectionParameters params = projectionParams();
 
 			// Setup project of left eye.
 			FloatType top = params.znear * tan(params.fieldOfView / 2);
@@ -637,8 +591,7 @@ void Viewport::render(QOpenGLContext* context)
 			renderer->setProjParams(params);
 
 			// Render image of left eye.
-			glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
-			renderer->renderFrame(nullptr, nullptr);
+			renderer->renderFrame(nullptr, SceneRenderer::StereoscopicLeft, nullptr);
 
 			// Setup project of right eye.
 			left = -c * params.znear / convergence;
@@ -650,240 +603,49 @@ void Viewport::render(QOpenGLContext* context)
 			renderer->setProjParams(params);
 
 			// Render image of right eye.
-			glColorMask(GL_FALSE, GL_TRUE, GL_TRUE, GL_TRUE);
-			renderer->renderFrame(nullptr, nullptr);
-
-			// Restore default OpenGL state.
-			glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+			renderer->renderFrame(nullptr, SceneRenderer::StereoscopicRight, nullptr);
 		}
 
-		if(renderPreviewMode()) {
-			// Render render frame.
-			renderRenderFrame();
-
-			// Paint overlays.
-			if(!overlays().empty()) {
-				// Let overlays paint into QImage buffer, which will then
-				// be painted over the OpenGL frame buffer.
-				QImage overlayBuffer(size(), QImage::Format_ARGB32_Premultiplied);
-				overlayBuffer.fill(0);
-				Box2 renderFrameBox = renderFrameRect();
-				QRect renderFrameRect(
-						(renderFrameBox.minc.x()+1.0f)*overlayBuffer.width()/2,
-						(renderFrameBox.minc.y()+1.0f)*overlayBuffer.height()/2,
-						renderFrameBox.width()*overlayBuffer.width()/2,
-						renderFrameBox.height()*overlayBuffer.height()/2);
-				ViewProjectionParameters renderProjParams = projectionParameters(time, renderSettings->outputImageAspectRatio(), boundingBox);
-				for(ViewportOverlay* overlay : overlays()) {
-					QPainter painter(&overlayBuffer);
-					painter.setWindow(QRect(0, 0, renderSettings->outputImageWidth(), renderSettings->outputImageHeight()));
-					painter.setViewport(renderFrameRect);
-					painter.setRenderHint(QPainter::Antialiasing);
-					overlay->render(this, painter, renderProjParams, renderSettings);
-				}
-				std::shared_ptr<ImagePrimitive> overlayBufferPrim = renderer->createImagePrimitive();
-				overlayBufferPrim->setImage(overlayBuffer);
-				overlayBufferPrim->renderViewport(renderer, Point2(-1,-1), Vector2(2, 2));
+		// Render viewport overlays.
+		if(renderPreviewMode() && !overlays().empty() && !renderer->isPicking()) {
+			// Let overlays paint into QImage buffer, which will then
+			// be painted over the OpenGL frame buffer.
+			QImage overlayBuffer(vpSize, QImage::Format_ARGB32_Premultiplied);
+			overlayBuffer.fill(0);
+			Box2 renderFrameBox = renderFrameRect();
+			QRect renderFrameRect(
+					(renderFrameBox.minc.x() + 1) * overlayBuffer.width() / 2,
+					(renderFrameBox.minc.y() + 1) * overlayBuffer.height() / 2,
+					renderFrameBox.width() * overlayBuffer.width() / 2,
+					renderFrameBox.height() * overlayBuffer.height() / 2);
+			ViewProjectionParameters renderProjParams = projectionParameters(time, renderSettings->outputImageAspectRatio(), boundingBox);
+			for(ViewportOverlay* overlay : overlays()) {
+				QPainter painter(&overlayBuffer);
+				painter.setWindow(QRect(0, 0, renderSettings->outputImageWidth(), renderSettings->outputImageHeight()));
+				painter.setViewport(renderFrameRect);
+				painter.setRenderHint(QPainter::Antialiasing);
+				overlay->render(this, painter, renderProjParams, renderSettings);
 			}
-		}
-		else {
-			// Render orientation tripod.
-			renderOrientationIndicator();
+			std::shared_ptr<ImagePrimitive> overlayBufferPrim = renderer->createImagePrimitive();
+			overlayBufferPrim->setImage(overlayBuffer);
+			overlayBufferPrim->renderViewport(renderer, Point2(-1,-1), Vector2(2, 2));
 		}
 
-		// Render viewport caption.
-		renderViewportTitle();
+		// Let GUI window render its custom overlays on top of the scene.
+		if(!renderer->isPicking()) {
+			window()->renderGui();
+		}
 
-		// Stop rendering.
+		// Finish rendering.
 		renderer->endFrame();
 		renderer->endRender();
 
 		_isRendering = false;
 	}
-	catch(Exception& ex) {
+	catch(...) {
 		_isRendering = false;
-		ex.prependGeneralMessage(tr("An unexpected error occurred while rendering the viewport contents. The program will quit."));
-
-		QString openGLReport;
-		QTextStream stream(&openGLReport, QIODevice::WriteOnly | QIODevice::Text);
-		stream << "OpenGL version: " << context->format().majorVersion() << QStringLiteral(".") << context->format().minorVersion() << endl;
-		stream << "OpenGL profile: " << (context->format().profile() == QSurfaceFormat::CoreProfile ? "core" : (context->format().profile() == QSurfaceFormat::CompatibilityProfile ? "compatibility" : "none")) << endl;
-		stream << "OpenGL vendor: " << QString((const char*)glGetString(GL_VENDOR)) << endl;
-		stream << "OpenGL renderer: " << QString((const char*)glGetString(GL_RENDERER)) << endl;
-		stream << "OpenGL version string: " << QString((const char*)glGetString(GL_VERSION)) << endl;
-		stream << "OpenGL shading language: " << QString((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION)) << endl;
-		stream << "OpenGL shader programs: " << QOpenGLShaderProgram::hasOpenGLShaderPrograms() << endl;
-		stream << "OpenGL geometry shaders: " << QOpenGLShader::hasOpenGLShaders(QOpenGLShader::Geometry, context) << endl;
-		stream << "Using point sprites: " << ViewportWindow::pointSpritesEnabled() << endl;
-		stream << "Using geometry shaders: " << ViewportWindow::geometryShadersEnabled() << endl;
-		stream << "Context sharing: " << ViewportWindow::contextSharingEnabled() << endl;
-		ex.appendDetailMessage(openGLReport);
-
-		dataset()->viewportConfig()->suspendViewportUpdates();
-		QCoreApplication::removePostedEvents(nullptr, 0);
-		ex.showError();
-		QCoreApplication::instance()->quit();
+		throw;
 	}
-}
-
-/******************************************************************************
-* Renders the viewport caption text.
-******************************************************************************/
-void Viewport::renderViewportTitle()
-{
-	// Create a rendering buffer that is responsible for rendering the viewport's caption text.
-	ViewportSceneRenderer* renderer = dataset()->viewportConfig()->viewportRenderer();
-	if(!_captionBuffer || !_captionBuffer->isValid(renderer)) {
-		_captionBuffer = renderer->createTextPrimitive();
-		_captionBuffer->setFont(ViewportSettings::getSettings().viewportFont());
-	}
-
-	if(_cursorInContextMenuArea && !_captionBuffer->font().underline()) {
-		QFont font = _captionBuffer->font();
-		font.setUnderline(true);
-		_captionBuffer->setFont(font);
-	}
-	else if(!_cursorInContextMenuArea && _captionBuffer->font().underline()) {
-		QFont font = _captionBuffer->font();
-		font.setUnderline(false);
-		_captionBuffer->setFont(font);
-	}
-
-	QString str = viewportTitle();
-	if(renderPreviewMode())
-		str += tr(" (preview)");
-#ifdef OVITO_DEBUG
-	str += QString(" [%1]").arg(++_renderDebugCounter);
-#endif
-	_captionBuffer->setText(str);
-	Color textColor = viewportColor(ViewportSettings::COLOR_VIEWPORT_CAPTION);
-	if(renderPreviewMode() && textColor == renderer->renderSettings()->backgroundColor())
-		textColor = Vector3(1,1,1) - (Vector3)textColor;
-	_captionBuffer->setColor(ColorA(textColor));
-
-	QFontMetricsF metrics(_captionBuffer->font());
-	QPointF pos = QPointF(2, 2) * viewportWindow()->devicePixelRatio();
-	_contextMenuArea = QRect(0, 0, std::max(metrics.width(_captionBuffer->text()), 30.0) + pos.x(), metrics.height() + pos.y());
-	_captionBuffer->renderWindow(renderer, Point2(pos.x(), pos.y()), Qt::AlignLeft | Qt::AlignTop);
-}
-
-/******************************************************************************
-* Sets whether mouse grab should be enabled or not for this viewport window.
-******************************************************************************/
-bool Viewport::setMouseGrabEnabled(bool grab)
-{
-	if(_viewportWindow) {
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-		return _viewportWindow->setMouseGrabEnabled(grab);
-#else
-		if(grab) {
-			_viewportWindow->grabMouse();
-			return true;
-		}
-		else {
-			_viewportWindow->releaseMouse();
-			return false;
-		}
-#endif
-	}
-	else return false;
-}
-
-/******************************************************************************
-* Sets the cursor shape for this viewport window.
-******************************************************************************/
-void Viewport::setCursor(const QCursor& cursor)
-{
-	// Changing the cursor leads to program crash on MacOS and Qt <= 5.2.0.
-#if !defined(Q_OS_MACX) || (QT_VERSION >= QT_VERSION_CHECK(5, 2, 1))
-	if(_viewportWindow)
-		_viewportWindow->setCursor(cursor);
-#endif
-}
-
-/******************************************************************************
-* Restores the default arrow cursor for this viewport window.
-******************************************************************************/
-void Viewport::unsetCursor()
-{
-#if !defined(Q_OS_MACX) || (QT_VERSION >= QT_VERSION_CHECK(5, 2, 1))
-	if(_viewportWindow)
-		_viewportWindow->unsetCursor();
-#endif
-}
-
-/******************************************************************************
-* Render the axis tripod symbol in the corner of the viewport that indicates
-* the coordinate system orientation.
-******************************************************************************/
-void Viewport::renderOrientationIndicator()
-{
-	const FloatType tripodSize = 60.0f * viewportWindow()->devicePixelRatio();			// pixels
-	const FloatType tripodArrowSize = 0.17f; 	// percentage of the above value.
-	ViewportSceneRenderer* renderer = dataset()->viewportConfig()->viewportRenderer();
-
-	// Turn off depth-testing.
-	OVITO_CHECK_OPENGL(glDisable(GL_DEPTH_TEST));
-
-	// Setup projection matrix.
-	ViewProjectionParameters projParams = _projParams;
-	FloatType xscale = size().width() / tripodSize;
-	FloatType yscale = size().height() / tripodSize;
-	projParams.projectionMatrix = Matrix4::translation(Vector3(-1.0 + 1.3f/xscale, -1.0 + 1.3f/yscale, 0))
-									* Matrix4::ortho(-xscale, xscale, -yscale, yscale, -2, 2);
-	projParams.inverseProjectionMatrix = projParams.projectionMatrix.inverse();
-	projParams.viewMatrix.setIdentity();
-	projParams.inverseViewMatrix.setIdentity();
-	renderer->setProjParams(projParams);
-	renderer->setWorldTransform(AffineTransformation::Identity());
-
-    static const ColorA axisColors[3] = { ColorA(1, 0, 0), ColorA(0, 1, 0), ColorA(0.4f, 0.4f, 1) };
-	static const QString labels[3] = { QStringLiteral("x"), QStringLiteral("y"), QStringLiteral("z") };
-
-	// Create line buffer.
-	if(!_orientationTripodGeometry || !_orientationTripodGeometry->isValid(renderer)) {
-		_orientationTripodGeometry = renderer->createLinePrimitive();
-		_orientationTripodGeometry->setVertexCount(18);
-		ColorA vertexColors[18];
-		for(int i = 0; i < 18; i++)
-			vertexColors[i] = axisColors[i / 6];
-		_orientationTripodGeometry->setVertexColors(vertexColors);
-	}
-
-	// Render arrows.
-	Point3 vertices[18];
-	for(int axis = 0, index = 0; axis < 3; axis++) {
-		Vector3 dir = _projParams.viewMatrix.column(axis).normalized();
-		vertices[index++] = Point3::Origin();
-		vertices[index++] = Point3::Origin() + dir;
-		vertices[index++] = Point3::Origin() + dir;
-		vertices[index++] = Point3::Origin() + (dir + tripodArrowSize * Vector3(dir.y() - dir.x(), -dir.x() - dir.y(), dir.z()));
-		vertices[index++] = Point3::Origin() + dir;
-		vertices[index++] = Point3::Origin() + (dir + tripodArrowSize * Vector3(-dir.y() - dir.x(), dir.x() - dir.y(), dir.z()));
-	}
-	_orientationTripodGeometry->setVertexPositions(vertices);
-	_orientationTripodGeometry->render(renderer);
-
-	// Render x,y,z labels.
-	for(int axis = 0; axis < 3; axis++) {
-
-		// Create a rendering buffer that is responsible for rendering the text label.
-		if(!_orientationTripodLabels[axis] || !_orientationTripodLabels[axis]->isValid(renderer)) {
-			_orientationTripodLabels[axis] = renderer->createTextPrimitive();
-			_orientationTripodLabels[axis]->setFont(ViewportSettings::getSettings().viewportFont());
-			_orientationTripodLabels[axis]->setColor(axisColors[axis]);
-			_orientationTripodLabels[axis]->setText(labels[axis]);
-		}
-
-		Point3 p = Point3::Origin() + _projParams.viewMatrix.column(axis).resized(1.2f);
-		Point3 ndcPoint = projParams.projectionMatrix * p;
-		Point2 windowPoint(( ndcPoint.x() + 1.0) * size().width()  / 2,
-							(-ndcPoint.y() + 1.0) * size().height() / 2);
-		_orientationTripodLabels[axis]->renderWindow(renderer, windowPoint, Qt::AlignHCenter | Qt::AlignVCenter);
-	}
-
-	// Restore old rendering attributes.
-	OVITO_CHECK_OPENGL(glEnable(GL_DEPTH_TEST));
 }
 
 /******************************************************************************
@@ -892,7 +654,7 @@ void Viewport::renderOrientationIndicator()
 ******************************************************************************/
 void Viewport::adjustProjectionForRenderFrame(ViewProjectionParameters& params)
 {
-	QSize vpSize = size();
+	QSize vpSize = windowSize();
 	RenderSettings* renderSettings = dataset()->renderSettings();
 	if(!renderSettings || vpSize.width() == 0 || vpSize.height() == 0)
 		return;
@@ -902,10 +664,10 @@ void Viewport::adjustProjectionForRenderFrame(ViewProjectionParameters& params)
 
 	if(_projParams.isPerspective) {
 		if(renderAspectRatio < windowAspectRatio)
-			params.fieldOfView = atan(tan(params.fieldOfView*0.5f) / (VIEWPORT_RENDER_FRAME_SIZE / windowAspectRatio * renderAspectRatio))*2.0f;
+			params.fieldOfView = atan(tan(params.fieldOfView/2) / (VIEWPORT_RENDER_FRAME_SIZE / windowAspectRatio * renderAspectRatio))*2;
 		else
-			params.fieldOfView = atan(tan(params.fieldOfView*0.5f) / VIEWPORT_RENDER_FRAME_SIZE)*2.0f;
-		params.projectionMatrix = Matrix4::perspective(params.fieldOfView, 1.0f / params.aspectRatio, params.znear, params.zfar);
+			params.fieldOfView = atan(tan(params.fieldOfView/2) / VIEWPORT_RENDER_FRAME_SIZE)*2;
+		params.projectionMatrix = Matrix4::perspective(params.fieldOfView, FloatType(1) / params.aspectRatio, params.znear, params.zfar);
 	}
 	else {
 		if(renderAspectRatio < windowAspectRatio)
@@ -926,7 +688,7 @@ void Viewport::adjustProjectionForRenderFrame(ViewProjectionParameters& params)
 ******************************************************************************/
 Box2 Viewport::renderFrameRect() const
 {
-	QSize vpSize = size();
+	QSize vpSize = windowSize();
 	RenderSettings* renderSettings = dataset()->renderSettings();
 	if(!renderSettings || vpSize.width() == 0 || vpSize.height() == 0)
 		return Box2(Point2(-1), Point2(+1));
@@ -948,138 +710,28 @@ Box2 Viewport::renderFrameRect() const
 }
 
 /******************************************************************************
-* Renders the frame on top of the scene that indicates the visible rendering area.
-******************************************************************************/
-void Viewport::renderRenderFrame()
-{
-	// Create a rendering buffer that is responsible for rendering the frame.
-	ViewportSceneRenderer* renderer = dataset()->viewportConfig()->viewportRenderer();
-	if(!_renderFrameOverlay || !_renderFrameOverlay->isValid(renderer)) {
-		_renderFrameOverlay = renderer->createImagePrimitive();
-		QImage image(1, 1, QImage::Format_ARGB32_Premultiplied);
-		image.fill(0xA0FFFFFF);
-		_renderFrameOverlay->setImage(image);
-	}
-
-	Box2 rect = renderFrameRect();
-
-	// Render rectangle borders
-	_renderFrameOverlay->renderViewport(renderer, Point2(-1,-1), Vector2(1.0 + rect.minc.x(), 2));
-	_renderFrameOverlay->renderViewport(renderer, Point2(rect.maxc.x(),-1), Vector2(1.0 - rect.maxc.x(), 2));
-	_renderFrameOverlay->renderViewport(renderer, Point2(rect.minc.x(),-1), Vector2(rect.width(), 1.0 + rect.minc.y()));
-	_renderFrameOverlay->renderViewport(renderer, Point2(rect.minc.x(),rect.maxc.y()), Vector2(rect.width(), 1.0 - rect.maxc.y()));
-}
-
-/******************************************************************************
 * Computes the world size of an object that should appear always in the
 * same size on the screen.
 ******************************************************************************/
 FloatType Viewport::nonScalingSize(const Point3& worldPosition)
 {
-	int height = size().height();
-	if(height == 0) return 1.0f;
+	int height = windowSize().height();
+	if(height == 0) return FloatType(1);
 
-	const FloatType baseSize = 60.0f;
+	const FloatType baseSize = FloatType(60);
 
 	if(isPerspectiveProjection()) {
 
-		Point3 p = viewMatrix() * worldPosition;
-        if(std::abs(p.z()) < FLOATTYPE_EPSILON) return 1.0f;
+		Point3 p = projectionParams().viewMatrix * worldPosition;
+        if(std::abs(p.z()) < FLOATTYPE_EPSILON) return FloatType(1);
 
-        Point3 p1 = projectionMatrix() * p;
-		Point3 p2 = projectionMatrix() * (p + Vector3(1,0,0));
+        Point3 p1 = projectionParams().projectionMatrix * p;
+		Point3 p2 = projectionParams().projectionMatrix * (p + Vector3(1,0,0));
 
-		return 0.8f * baseSize / (p1 - p2).length() / (FloatType)height;
+		return FloatType(0.8) * baseSize / (p1 - p2).length() / (FloatType)height;
 	}
 	else {
 		return _projParams.fieldOfView / (FloatType)height * baseSize;
-	}
-}
-
-/******************************************************************************
-* Determines the object that is visible under the given mouse cursor position.
-******************************************************************************/
-ViewportPickResult Viewport::pick(const QPointF& pos)
-{
-	// Cannot perform picking while viewport is not visible or currently rendering.
-	if(!viewportWindow() || !viewportWindow()->isExposed() || isRendering()) {
-		ViewportPickResult result;
-		result.valid = false;
-		return result;
-	}
-	
-	try {
-		if(_pickingRenderer->isRefreshRequired()) {
-
-			// Set up the picking renderer.
-			_pickingRenderer->startRender(dataset(), dataset()->renderSettings());
-
-			try {
-				// Request scene bounding box.
-				TimePoint time = dataset()->animationSettings()->time();
-				Box3 boundingBox = _pickingRenderer->sceneBoundingBox(time);
-
-				// Setup projection.
-				QSize vpSize = size();
-				FloatType aspectRatio = (FloatType)vpSize.height() / vpSize.width();
-				ViewProjectionParameters projParams = projectionParameters(time, aspectRatio, boundingBox);
-
-				// Adjust projection if render frame is shown.
-				if(renderPreviewMode())
-					adjustProjectionForRenderFrame(projParams);
-
-				// Set up the picking renderer.
-				_pickingRenderer->beginFrame(time, projParams, this);
-
-				try {
-					// Add bounding box of interactive elements.
-					boundingBox.addBox(_pickingRenderer->boundingBoxInteractive(time, this));
-
-					// Set up final projection.
-					_projParams = projectionParameters(time, aspectRatio, boundingBox);
-
-					// Adjust projection if render frame is shown.
-					if(renderPreviewMode())
-						adjustProjectionForRenderFrame(_projParams);
-
-					// Pass final projection parameters to renderer.
-					_pickingRenderer->setProjParams(_projParams);
-
-					// Call the viewport renderer to render the scene objects.
-					_pickingRenderer->renderFrame(nullptr, nullptr);
-				}
-				catch(...) {
-					_pickingRenderer->endFrame();
-					throw;
-				}
-
-				// Stop rendering.
-				_pickingRenderer->endFrame();
-			}
-			catch(...) {
-				_pickingRenderer->endRender();
-				throw;
-			}
-			_pickingRenderer->endRender();
-		}
-
-		// Query which object is located at the given window position.
-		ViewportPickResult result;
-		const PickingSceneRenderer::ObjectRecord* objInfo;
-		std::tie(objInfo, result.subobjectId) = _pickingRenderer->objectAtLocation((pos * viewportWindow()->devicePixelRatio()).toPoint());
-		result.valid = (objInfo != nullptr);
-		if(objInfo) {
-			result.objectNode = objInfo->objectNode;
-			result.pickInfo = objInfo->pickInfo;
-			result.worldPosition = _pickingRenderer->worldPositionFromLocation((pos * viewportWindow()->devicePixelRatio()).toPoint());
-		}
-		return result;
-	}
-	catch(const Exception& ex) {
-		ex.showError();
-		ViewportPickResult result;
-		result.valid = false;
-		return result;
 	}
 }
 
@@ -1108,9 +760,10 @@ bool Viewport::snapPoint(const QPointF& screenPoint, Point3& snapPoint, const Af
 ******************************************************************************/
 Ray3 Viewport::screenRay(const QPointF& screenPoint)
 {
+	QSize vpSize = windowSize();
 	return viewportRay(Point2(
-			(FloatType)screenPoint.x() / _widget->width() * 2.0f - 1.0f,
-			1.0f - (FloatType)screenPoint.y() / _widget->height() * 2.0f));
+			(FloatType)screenPoint.x() / vpSize.width() * FloatType(2) - FloatType(1),
+			FloatType(1) - (FloatType)screenPoint.y() / vpSize.height() * FloatType(2)));
 }
 
 /******************************************************************************
@@ -1118,16 +771,16 @@ Ray3 Viewport::screenRay(const QPointF& screenPoint)
 ******************************************************************************/
 Ray3 Viewport::viewportRay(const Point2& viewportPoint)
 {
-	if(_projParams.isPerspective) {
+	if(projectionParams().isPerspective) {
 		Point3 ndc1(viewportPoint.x(), viewportPoint.y(), 1);
 		Point3 ndc2(viewportPoint.x(), viewportPoint.y(), 0);
-		Point3 p1 = _projParams.inverseViewMatrix * (_projParams.inverseProjectionMatrix * ndc1);
-		Point3 p2 = _projParams.inverseViewMatrix * (_projParams.inverseProjectionMatrix * ndc2);
+		Point3 p1 = projectionParams().inverseViewMatrix * (projectionParams().inverseProjectionMatrix * ndc1);
+		Point3 p2 = projectionParams().inverseViewMatrix * (projectionParams().inverseProjectionMatrix * ndc2);
 		return Ray3(Point3::Origin() + _projParams.inverseViewMatrix.translation(), p1 - p2);
 	}
 	else {
 		Point3 ndc(viewportPoint.x(), viewportPoint.y(), -1);
-		return Ray3(_projParams.inverseViewMatrix * (_projParams.inverseProjectionMatrix * ndc), _projParams.inverseViewMatrix * Vector3(0,0,-1));
+		return Ray3(projectionParams().inverseViewMatrix * (projectionParams().inverseProjectionMatrix * ndc), projectionParams().inverseViewMatrix * Vector3(0,0,-1));
 	}
 }
 
@@ -1173,14 +826,13 @@ Point3 Viewport::orbitCenter()
 		if(viewNode() && isPerspectiveProjection()) {
 			// If a free camera node is selected, the current orbit center is at the same location as the camera.
 			// In this case, we should shift the orbit center such that it is in front of the camera.
-			Point3 camPos = Point3::Origin() + inverseViewMatrix().translation();
+			Point3 camPos = Point3::Origin() + projectionParams().inverseViewMatrix.translation();
 			if(currentOrbitCenter.equals(camPos))
-				currentOrbitCenter = camPos - 50.0f * inverseViewMatrix().column(2);
+				currentOrbitCenter = camPos - FloatType(50) * projectionParams().inverseViewMatrix.column(2);
 		}
 		return currentOrbitCenter;
 	}
 }
-
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

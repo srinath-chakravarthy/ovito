@@ -22,8 +22,8 @@
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DataObject.h>
 #include <core/dataset/importexport/FileSource.h>
-#include <core/gui/mainwin/MainWindow.h>
-#include <core/gui/properties/IntegerParameterUI.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/properties/IntegerParameterUI.h>
 #include <qcustomplot.h>
 #include "CoordinationNumberModifier.h"
 
@@ -173,10 +173,10 @@ void CoordinationNumberModifier::transferComputationResults(ComputeEngine* engin
 PipelineStatus CoordinationNumberModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
 {
 	if(!_coordinationNumbers)
-		throw Exception(tr("No computation results available."));
+		throwException(tr("No computation results available."));
 
 	if(inputParticleCount() != _coordinationNumbers->size())
-		throw Exception(tr("The number of input particles has changed. The stored results have become invalid."));
+		throwException(tr("The number of input particles has changed. The stored results have become invalid."));
 
 	outputStandardProperty(_coordinationNumbers.data());
 	return PipelineStatus::Success;
@@ -307,7 +307,7 @@ void CoordinationNumberModifierEditor::onSaveData()
 
 		QFile file(fileName);
 		if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
-			throw Exception(tr("Could not open file for writing: %1").arg(file.errorString()));
+			modifier->throwException(tr("Could not open file for writing: %1").arg(file.errorString()));
 
 		QTextStream stream(&file);
 

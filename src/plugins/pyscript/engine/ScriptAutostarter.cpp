@@ -20,18 +20,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/pyscript/PyScript.h>
-#include <core/gui/app/Application.h>
-#include <core/gui/actions/ActionManager.h>
-#include <core/gui/dialogs/HistoryFileDialog.h>
-#include <core/gui/mainwin/MainWindow.h>
+#include <core/app/Application.h>
 #include <core/dataset/DataSetContainer.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <gui/utilities/concurrent/ProgressDialogAdapter.h>
+#include <gui/actions/ActionManager.h>
+#include <gui/dialogs/HistoryFileDialog.h>
+#include <gui/mainwin/MainWindow.h>
 #include "ScriptAutostarter.h"
 #include "ScriptEngine.h"
 
 namespace PyScript {
 
-IMPLEMENT_OVITO_OBJECT(PyScript, ScriptAutostarter, AutoStartObject);
+IMPLEMENT_OVITO_OBJECT(PyScript, ScriptAutostarter, GuiAutoStartObject);
 
 /******************************************************************************
 * Destructor, which is called at program exit.
@@ -108,7 +108,7 @@ void ScriptAutostarter::applicationStarted()
 	QStringList scriptCommands = Application::instance().cmdLineParser().values("exec");
 	QStringList scriptFiles = Application::instance().cmdLineParser().values("script");
 
-	if(!scriptCommands.empty() || !scriptFiles.empty()) {
+	if((!scriptCommands.empty() || !scriptFiles.empty()) && Application::instance().datasetContainer()) {
 
 		// Get the current dataset.
 		DataSet* dataset = Application::instance().datasetContainer()->currentSet();

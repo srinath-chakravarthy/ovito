@@ -24,7 +24,6 @@
 
 #include <core/Core.h>
 #include <core/viewport/Viewport.h>
-#include <core/rendering/viewport/ViewportSceneRenderer.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View)
 
@@ -67,7 +66,7 @@ public:
 	/// \brief Immediately repaints all viewports that have been scheduled for an update using updateViewports().
 	/// \sa updateViewports()
 	void processViewportUpdates();
-
+	
 	/// \brief A call to this method suspends redrawing of the viewports.
 	///
 	/// To resume redrawing of viewports call resumeViewportUpdates().
@@ -94,9 +93,6 @@ public:
 	///        is currently being updated.
 	/// \return \c true if there is currently a rendering operation going on.
 	bool isRendering() const;
-
-	/// Returns the renderer to be used for rendering the interactive viewports.
-	ViewportSceneRenderer* viewportRenderer();
 
 	/// Changes the way the center of rotation is chosen.
 	void setOrbitCenterMode(OrbitCenterMode mode) { _orbitCenterMode = mode; }
@@ -190,9 +186,6 @@ private:
 
 	/// Indicates that the viewports have been invalidated while updates were suspended.
 	bool _viewportsNeedUpdate;
-
-	/// The renderer for the interactive viewports.
-	OORef<ViewportSceneRenderer> _viewportRenderer;
 
 	/// Controls around which point the viewport camera should orbit.
     PropertyField<OrbitCenterMode, int> _orbitCenterMode;

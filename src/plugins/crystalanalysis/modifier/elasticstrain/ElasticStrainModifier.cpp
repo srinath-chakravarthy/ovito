@@ -20,11 +20,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/BooleanRadioButtonParameterUI.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/VariantComboBoxParameterUI.h>
-#include <core/gui/properties/SubObjectParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/BooleanRadioButtonParameterUI.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <gui/properties/VariantComboBoxParameterUI.h>
+#include <gui/properties/SubObjectParameterUI.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
 #include <plugins/crystalanalysis/objects/patterns/StructurePattern.h>
@@ -164,10 +164,10 @@ PipelineStatus ElasticStrainModifier::applyComputationResults(TimePoint time, Ti
 	StructureIdentificationModifier::applyComputationResults(time, validityInterval);
 
 	if(!_volumetricStrainValues)
-		throw Exception(tr("No computation results available."));
+		throwException(tr("No computation results available."));
 
 	if(outputParticleCount() != _volumetricStrainValues->size())
-		throw Exception(tr("The number of input particles has changed. The stored results have become invalid."));
+		throwException(tr("The number of input particles has changed. The stored results have become invalid."));
 
 	if(_clusterGraph) {
 		// Output cluster graph.

@@ -22,11 +22,11 @@
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/util/ParticlePropertyParameterUI.h>
 #include <plugins/particles/util/CutoffNeighborFinder.h>
-#include <core/gui/properties/BooleanGroupBoxParameterUI.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/StringParameterUI.h>
-#include <core/gui/properties/VariantComboBoxParameterUI.h>
+#include <gui/properties/BooleanGroupBoxParameterUI.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/StringParameterUI.h>
+#include <gui/properties/VariantComboBoxParameterUI.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/scene/pipeline/PipelineObject.h>
 #include <core/utilities/concurrent/ParallelFor.h>
@@ -185,7 +185,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> ComputePropertyModi
 	if(onlySelectedParticles()) {
 		ParticlePropertyObject* selPropertyObj = inputStandardProperty(ParticleProperty::SelectionProperty);
 		if(!selPropertyObj)
-			throw Exception(tr("Compute modifier has been restricted to selected particles, but no particle selection is defined."));
+			throwException(tr("Compute modifier has been restricted to selected particles, but no particle selection is defined."));
 		OVITO_ASSERT(selPropertyObj->size() == inputParticleCount());
 		selProperty = selPropertyObj->storage();
 	}
@@ -199,12 +199,12 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> ComputePropertyModi
 		outp = new ParticleProperty(posProperty->size(), qMetaTypeId<FloatType>(), propertyComponentCount(), 0, outputProperty().name(), onlySelectedParticles());
 	}
 	else {
-		throw Exception(tr("Output property has not been specified."));
+		throwException(tr("Output property has not been specified."));
 	}
 	if(expressions().size() != outp->componentCount())
-		throw Exception(tr("Number of expressions does not match component count of output property."));
+		throwException(tr("Number of expressions does not match component count of output property."));
 	if(neighborModeEnabled() && neighborExpressions().size() != outp->componentCount())
-		throw Exception(tr("Number of neighbor expressions does not match component count of output property."));
+		throwException(tr("Number of neighbor expressions does not match component count of output property."));
 
 	// Initialize output property with original values when computation is restricted to selected particles.
 	if(onlySelectedParticles()) {
@@ -405,10 +405,10 @@ void ComputePropertyModifier::transferComputationResults(ComputeEngine* engine)
 PipelineStatus ComputePropertyModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
 {
 	if(!_computedProperty)
-		throw Exception(tr("No computation results available."));
+		throwException(tr("No computation results available."));
 
 	if(outputParticleCount() != _computedProperty->size())
-		throw Exception(tr("The number of input particles has changed. The stored results have become invalid."));
+		throwException(tr("The number of input particles has changed. The stored results have become invalid."));
 
 	if(_computedProperty->type() == ParticleProperty::UserProperty)
 		outputCustomProperty(_computedProperty.data());

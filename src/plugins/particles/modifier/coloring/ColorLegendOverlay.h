@@ -23,7 +23,7 @@
 #define __OVITO_COLOR_LEGEND_OVERLAY_H
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/properties/PropertiesEditor.h>
 #include <core/viewport/overlay/ViewportOverlay.h>
 #include "ColorCodingModifier.h"
 

@@ -23,9 +23,9 @@
 #define __OVITO_PARTICLE_INFORMATION_APPLET_H
 
 #include <plugins/particles/Particles.h>
-#include <core/plugins/utility/UtilityApplet.h>
-#include <core/viewport/input/ViewportInputMode.h>
-#include <core/viewport/input/ViewportInputManager.h>
+#include <gui/plugins/utility/UtilityApplet.h>
+#include <gui/viewport/input/ViewportInputMode.h>
+#include <gui/viewport/input/ViewportInputManager.h>
 #include <plugins/particles/util/ParticlePickingHelper.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -84,11 +84,11 @@ public:
 	/// Returns the activation behavior of this input mode.
 	virtual InputModeType modeType() override { return ExclusiveMode; }
 
-	/// Handles the mouse up events for a Viewport.
-	virtual void mouseReleaseEvent(Viewport* vp, QMouseEvent* event) override;
+	/// Handles the mouse up events for a viewport.
+	virtual void mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event) override;
 
 	/// \brief Handles the mouse move event for the given viewport.
-	virtual void mouseMoveEvent(Viewport* vp, QMouseEvent* event) override;
+	virtual void mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event) override;
 
 	/// \brief Lets the input mode render its overlay content in a viewport.
 	virtual void renderOverlay3D(Viewport* vp, ViewportSceneRenderer* renderer) override;

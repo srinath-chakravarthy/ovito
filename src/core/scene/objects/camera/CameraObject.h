@@ -26,7 +26,6 @@
 #include <core/scene/objects/camera/AbstractCameraObject.h>
 #include <core/scene/objects/WeakVersionedObjectReference.h>
 #include <core/animation/controller/Controller.h>
-#include <core/gui/properties/PropertiesEditor.h>
 #include <core/scene/objects/DisplayObject.h>
 #include <core/rendering/LinePrimitive.h>
 
@@ -109,27 +108,6 @@ private:
 };
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * A properties editor for the CameraObject class.
- */
-class CameraObjectEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE CameraObjectEditor() {}
-
-protected:
-	
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-	
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
 
 /**
  * \brief A scene display object for camera objects.

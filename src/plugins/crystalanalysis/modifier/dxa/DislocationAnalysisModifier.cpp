@@ -21,10 +21,10 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/objects/SurfaceMesh.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/IntegerParameterUI.h>
-#include <core/gui/properties/VariantComboBoxParameterUI.h>
-#include <core/gui/properties/SubObjectParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
+#include <gui/properties/VariantComboBoxParameterUI.h>
+#include <gui/properties/SubObjectParameterUI.h>
 #include <core/scene/objects/geometry/TriMeshObject.h>
 #include <core/scene/objects/geometry/TriMeshDisplay.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
@@ -280,7 +280,7 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 	StructureIdentificationModifier::applyComputationResults(time, validityInterval);
 
 	if(!_dislocationNetwork)
-		throw Exception(tr("No computation results available."));
+		throwException(tr("No computation results available."));
 
 	// Output defect mesh.
 	OORef<SurfaceMesh> defectMeshObj(new SurfaceMesh(dataset(), _defectMesh.data()));

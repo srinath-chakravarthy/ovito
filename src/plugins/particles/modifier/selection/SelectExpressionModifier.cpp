@@ -25,7 +25,7 @@
 #include <core/viewport/Viewport.h>
 #include <core/scene/ObjectNode.h>
 #include <core/scene/pipeline/PipelineObject.h>
-#include <core/gui/properties/StringParameterUI.h>
+#include <gui/properties/StringParameterUI.h>
 #include "SelectExpressionModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Selection)
@@ -63,7 +63,7 @@ PipelineStatus SelectExpressionModifier::modifyParticles(TimePoint time, TimeInt
 	// Check if expression contain an assignment ('=' operator).
 	// This should be considered an error, because the user is probably referring the comparison operator '=='.
 	if(expression().contains(QRegExp("[^=!><]=(?!=)")))
-		throw Exception("The expression contains the assignment operator '='. Please use the comparison operator '==' instead.");
+		throwException("The expression contains the assignment operator '='. Please use the comparison operator '==' instead.");
 
 	// The number of selected particles.
 	size_t nSelected = 0;

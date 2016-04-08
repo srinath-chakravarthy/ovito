@@ -20,21 +20,21 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/viewport/Viewport.h>
 #include <core/scene/pipeline/PipelineObject.h>
 #include <core/animation/controller/Controller.h>
 #include <core/reference/CloneHelper.h>
-#include <core/gui/mainwin/MainWindow.h>
-#include <core/gui/dialogs/LoadImageFileDialog.h>
-#include <core/gui/properties/FloatParameterUI.h>
-#include <core/gui/properties/Vector3ParameterUI.h>
-#include <core/gui/properties/ColorParameterUI.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/CustomParameterUI.h>
 #include <core/plugins/PluginManager.h>
-#include <core/gui/dialogs/SaveImageFileDialog.h>
 #include <core/rendering/SceneRenderer.h>
+#include <core/viewport/Viewport.h>
 #include <core/viewport/ViewportConfiguration.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/dialogs/LoadImageFileDialog.h>
+#include <gui/properties/FloatParameterUI.h>
+#include <gui/properties/Vector3ParameterUI.h>
+#include <gui/properties/ColorParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/CustomParameterUI.h>
+#include <gui/dialogs/SaveImageFileDialog.h>
 #include <plugins/particles/util/ParticlePropertyParameterUI.h>
 #include "ColorCodingModifier.h"
 
@@ -155,18 +155,18 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 {
 	// Get the source property.
 	if(sourceProperty().isNull())
-		throw Exception(tr("Select a particle property first."));
+		throwException(tr("Select a particle property first."));
 	ParticlePropertyObject* property = sourceProperty().findInState(input());
 	if(!property)
-		throw Exception(tr("The particle property with the name '%1' does not exist.").arg(sourceProperty().name()));
+		throwException(tr("The particle property with the name '%1' does not exist.").arg(sourceProperty().name()));
 	if(sourceProperty().vectorComponent() >= (int)property->componentCount())
-		throw Exception(tr("The vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(sourceProperty().name()).arg(property->componentCount()));
+		throwException(tr("The vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(sourceProperty().name()).arg(property->componentCount()));
 
 	int vecComponent = std::max(0, sourceProperty().vectorComponent());
 	int stride = property->stride() / property->dataTypeSize();
 
 	if(!_colorGradient)
-		throw Exception(tr("No color gradient has been selected."));
+		throwException(tr("No color gradient has been selected."));
 
 	// Get modifier's parameter values.
 	FloatType startValue = 0, endValue = 0;
@@ -246,7 +246,7 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 		}
 	}
 	else
-		throw Exception(tr("The particle property '%1' has an invalid or non-numeric data type.").arg(property->name()));
+		throwException(tr("The particle property '%1' has an invalid or non-numeric data type.").arg(property->name()));
 
 	// Clear particle selection if requested.
 	if(selProperty && !keepSelection())
@@ -339,7 +339,7 @@ void ColorCodingImageGradient::loadImage(const QString& filename)
 {
 	QImage image(filename);
 	if(image.isNull())
-		throw Exception(tr("Could not load image file '%1'.").arg(filename));
+		throwException(tr("Could not load image file '%1'.").arg(filename));
 	setImage(image);
 }
 

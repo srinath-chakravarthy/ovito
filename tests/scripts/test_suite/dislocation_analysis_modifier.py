@@ -13,7 +13,10 @@ print("Parameter defaults:")
 print("  trial_circuit_length: {}".format(modifier.trial_circuit_length))
 print("  circuit_stretchability: {}".format(modifier.circuit_stretchability))
 print("  input_crystal_structure: {}".format(modifier.input_crystal_structure))
+<<<<<<< Updated upstream
 #print("  reconstruct_edge_vectors: {}".format(modifier.reconstruct_edge_vectors))
+=======
+>>>>>>> Stashed changes
 print("  line_smoothing_enabled: {}".format(modifier.line_smoothing_enabled))
 print("  line_coarsening_enabled: {}".format(modifier.line_coarsening_enabled))
 print("  line_smoothing_level: {}".format(modifier.line_smoothing_level))

@@ -23,7 +23,7 @@
 #define __OVITO_CREATE_TRAJECTORY_APPLET_H
 
 #include <plugins/particles/Particles.h>
-#include <core/plugins/utility/UtilityApplet.h>
+#include <gui/plugins/utility/UtilityApplet.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 

@@ -21,18 +21,12 @@
 
 #include <core/Core.h>
 #include <core/rendering/SceneRenderer.h>
-#include <core/gui/properties/ColorParameterUI.h>
-#include <core/gui/properties/FloatParameterUI.h>
 #include <core/scene/objects/geometry/TriMeshObject.h>
 #include "TriMeshDisplay.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene) OVITO_BEGIN_INLINE_NAMESPACE(StdObj)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, TriMeshDisplay, DisplayObject);
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Core, TriMeshDisplayEditor, PropertiesEditor);
-OVITO_END_INLINE_NAMESPACE
-SET_OVITO_OBJECT_EDITOR(TriMeshDisplay, TriMeshDisplayEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(TriMeshDisplay, _color, "Color", PROPERTY_FIELD_MEMORIZE);
 DEFINE_REFERENCE_FIELD(TriMeshDisplay, _transparency, "Transparency", Controller);
 SET_PROPERTY_FIELD_LABEL(TriMeshDisplay, _color, "Display color");
@@ -101,35 +95,6 @@ void TriMeshDisplay::render(TimePoint time, DataObject* dataObject, const Pipeli
 	_buffer->render(renderer);
 	renderer->endPickObject();
 }
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void TriMeshDisplayEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Mesh display"), rolloutParams);
-
-    // Create the rollout contents.
-	QGridLayout* layout = new QGridLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(4);
-	layout->setColumnStretch(1, 1);
-
-	ColorParameterUI* colorUI = new ColorParameterUI(this, PROPERTY_FIELD(TriMeshDisplay::_color));
-	layout->addWidget(colorUI->label(), 0, 0);
-	layout->addWidget(colorUI->colorPicker(), 0, 1);
-
-	FloatParameterUI* transparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(TriMeshDisplay::_transparency));
-	layout->addWidget(new QLabel(tr("Transparency:")), 1, 0);
-	layout->addLayout(transparencyUI->createFieldLayout(), 1, 1);
-	transparencyUI->setMinValue(0);
-	transparencyUI->setMaxValue(1);
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

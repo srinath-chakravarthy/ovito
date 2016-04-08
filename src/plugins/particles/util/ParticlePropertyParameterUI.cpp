@@ -89,7 +89,7 @@ void ParticlePropertyParameterUI::updateUI()
 			QVariant val = editObject()->property(propertyName());
 			OVITO_ASSERT_MSG(val.isValid() && val.canConvert<ParticlePropertyReference>(), "ParticlePropertyParameterUI::updateUI()", QString("The object class %1 does not define a property with the name %2 of type ParticlePropertyReference.").arg(editObject()->metaObject()->className(), QString(propertyName())).toLocal8Bit().constData());
 			if(!val.isValid() || !val.canConvert<ParticlePropertyReference>()) {
-				throw Exception(tr("The object class %1 does not define a property with the name %2 that can be cast to a ParticlePropertyReference.").arg(editObject()->metaObject()->className(), QString(propertyName())));
+				editObject()->throwException(tr("The object class %1 does not define a property with the name %2 that can be cast to a ParticlePropertyReference.").arg(editObject()->metaObject()->className(), QString(propertyName())));
 			}
 			pref = val.value<ParticlePropertyReference>();
 		}

@@ -52,6 +52,14 @@ void RefMaker::aboutToBeDeleted()
 }
 
 /******************************************************************************
+* This helper method throws an Exception with the given message text.
+******************************************************************************/
+void RefMaker::throwException(const QString& msg) const
+{
+	throw Exception(msg, dataset());
+}
+
+/******************************************************************************
 * Returns the value stored in a non-animatable property field of this RefMaker object.
 ******************************************************************************/
 QVariant RefMaker::getPropertyFieldValue(const PropertyFieldDescriptor& field) const
@@ -326,7 +334,7 @@ void RefMaker::loadFromStream(ObjectLoadStream& stream)
 					if(fieldEntry.field->isVector() == false) {
 						OORef<RefTarget> target = stream.loadObject<RefTarget>();
 						if(target && !target->getOOType().isDerivedFrom(*fieldEntry.targetClass)) {
-							throw Exception(tr("Incompatible object stored in reference field %1 of class %2. Expected class %3 but found class %4 in file.")
+							throwException(tr("Incompatible object stored in reference field %1 of class %2. Expected class %3 but found class %4 in file.")
 								.arg(QString(fieldEntry.identifier)).arg(fieldEntry.definingClass->name()).arg(fieldEntry.targetClass->name()).arg(target->getOOType().name()));
 						}
 #if 0
@@ -346,7 +354,7 @@ void RefMaker::loadFromStream(ObjectLoadStream& stream)
 						for(qint32 i=0; i<numEntries; i++) {
 							OORef<RefTarget> target = stream.loadObject<RefTarget>();
 							if(target && !target->getOOType().isDerivedFrom(*fieldEntry.targetClass)) {
-								throw Exception(tr("Incompatible object stored in reference field %1 of class %2. Expected class %3 but found class %4 in file.")
+								throwException(tr("Incompatible object stored in reference field %1 of class %2. Expected class %3 but found class %4 in file.")
 									.arg(QString(fieldEntry.identifier)).arg(fieldEntry.definingClass->name(), fieldEntry.targetClass->name(), target->getOOType().name()));
 							}
 #if 0
@@ -374,7 +382,7 @@ void RefMaker::loadFromStream(ObjectLoadStream& stream)
 				}
 			}
 			else if(chunkId != 0x03) {
-				throw Exception(tr("Expected non-serializable reference field '%1' in object %2").arg(QString(fieldEntry.identifier)).arg(fieldEntry.definingClass->name()));
+				throwException(tr("Expected non-serializable reference field '%1' in object %2").arg(QString(fieldEntry.identifier)).arg(fieldEntry.definingClass->name()));
 			}
 			stream.closeChunk();
 		}

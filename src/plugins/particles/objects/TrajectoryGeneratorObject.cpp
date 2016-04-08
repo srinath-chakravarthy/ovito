@@ -22,16 +22,16 @@
 #include <plugins/particles/Particles.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/scene/ObjectNode.h>
-#include <core/gui/app/Application.h>
-#include <core/gui/mainwin/MainWindow.h>
-#include <core/gui/properties/IntegerParameterUI.h>
-#include <core/gui/properties/StringParameterUI.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/IntegerRadioButtonParameterUI.h>
-#include <core/gui/properties/BooleanRadioButtonParameterUI.h>
-#include <core/gui/widgets/general/ElidedTextLabel.h>
+#include <core/app/Application.h>
 #include <core/viewport/ViewportConfiguration.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/properties/IntegerParameterUI.h>
+#include <gui/properties/StringParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/IntegerRadioButtonParameterUI.h>
+#include <gui/properties/BooleanRadioButtonParameterUI.h>
+#include <gui/widgets/general/ElidedTextLabel.h>
+#include <gui/utilities/concurrent/ProgressDialogAdapter.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include "TrajectoryGeneratorObject.h"
@@ -91,7 +91,7 @@ bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* pr
 	std::unique_ptr<QProgressDialog> localProgressDialog;
 	std::unique_ptr<ProgressDialogAdapter> progressAdapter;
 	if(!progressDisplay && Application::instance().guiMode()) {
-		localProgressDialog.reset(new QProgressDialog(dataset()->mainWindow()));
+		localProgressDialog.reset(new QProgressDialog(MainWindow::fromDataset(dataset())));
 		localProgressDialog->setWindowModality(Qt::WindowModal);
 		localProgressDialog->setAutoClose(false);
 		localProgressDialog->setAutoReset(false);
@@ -105,7 +105,7 @@ bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* pr
 
 	// Get input particles.
 	if(!source())
-		throw Exception(tr("No input particle data object is selected from which trajectory lines can be generated."));
+		throwException(tr("No input particle data object is selected from which trajectory lines can be generated."));
 
 	if(!source()->waitUntilReady(currentTime, tr("Waiting for input particles to become ready."), progressDisplay))
 		return false;
@@ -116,7 +116,7 @@ bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* pr
 	ParticlePropertyObject* identifierProperty = ParticlePropertyObject::findInState(state, ParticleProperty::IdentifierProperty);
 
 	if(!posProperty)
-		throw Exception(tr("The input object contains no particles."));
+		throwException(tr("The input object contains no particles."));
 
 	// Determine set of input particles.
 	std::vector<int> selectedIndices;
@@ -170,12 +170,12 @@ bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* pr
 		const PipelineFlowState& state = source()->evalPipeline(time);
 		ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
 		if(!posProperty)
-			throw Exception(tr("Input particle set is empty at frame %1.").arg(dataset()->animationSettings()->timeToFrame(time)));
+			throwException(tr("Input particle set is empty at frame %1.").arg(dataset()->animationSettings()->timeToFrame(time)));
 
 		if(!selectedIdentifiers.empty()) {
 			ParticlePropertyObject* identifierProperty = ParticlePropertyObject::findInState(state, ParticleProperty::IdentifierProperty);
 			if(!identifierProperty || identifierProperty->size() != posProperty->size())
-				throw Exception(tr("Input particles do not possess identifiers at frame %1.").arg(dataset()->animationSettings()->timeToFrame(time)));
+				throwException(tr("Input particles do not possess identifiers at frame %1.").arg(dataset()->animationSettings()->timeToFrame(time)));
 
 			// Create a mapping from IDs to indices.
 			std::map<int,int> idmap;
@@ -186,14 +186,14 @@ bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* pr
 			for(int id : selectedIdentifiers) {
 				auto entry = idmap.find(id);
 				if(entry == idmap.end())
-					throw Exception(tr("Input particle with ID=%1 does not exist at frame %2.").arg(id).arg(dataset()->animationSettings()->timeToFrame(time)));
+					throwException(tr("Input particle with ID=%1 does not exist at frame %2.").arg(id).arg(dataset()->animationSettings()->timeToFrame(time)));
 				points.push_back(posProperty->getPoint3(entry->second));
 			}
 		}
 		else {
 			for(int index : selectedIndices) {
 				if(index >= posProperty->size())
-					throw Exception(tr("Input particle at index %1 does not exist at frame %2.").arg(index+1).arg(dataset()->animationSettings()->timeToFrame(time)));
+					throwException(tr("Input particle at index %1 does not exist at frame %2.").arg(index+1).arg(dataset()->animationSettings()->timeToFrame(time)));
 				points.push_back(posProperty->getPoint3(index));
 			}
 		}

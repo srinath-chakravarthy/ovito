@@ -23,7 +23,7 @@
 #include <core/utilities/concurrent/Future.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/scene/ObjectNode.h>
-#include <core/gui/properties/BooleanParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationDisplay.h>
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>

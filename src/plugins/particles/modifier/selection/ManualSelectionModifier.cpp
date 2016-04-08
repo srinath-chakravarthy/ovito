@@ -21,13 +21,14 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/pipeline/PipelineObject.h>
-#include <core/gui/actions/ViewportModeAction.h>
-#include <core/gui/mainwin/MainWindow.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/utilities/concurrent/ParallelFor.h>
-#include <core/viewport/input/ViewportInputManager.h>
-#include <core/viewport/input/ViewportInputMode.h>
 #include <core/viewport/ViewportConfiguration.h>
+#include <gui/actions/ViewportModeAction.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/viewport/ViewportWindow.h>
+#include <gui/viewport/input/ViewportInputManager.h>
+#include <gui/viewport/input/ViewportInputMode.h>
 #include <plugins/particles/util/ParticleSelectionSet.h>
 #include "ManualSelectionModifier.h"
 
@@ -48,7 +49,7 @@ PipelineStatus ManualSelectionModifier::modifyParticles(TimePoint time, TimeInte
 	// Retrieve the selection stored in the modifier application.
 	ParticleSelectionSet* selectionSet = getSelectionSet(modifierApplication());
 	if(!selectionSet)
-		throw Exception(tr("No stored selection set available. Please reset the selection state."));
+		throwException(tr("No stored selection set available. Please reset the selection state."));
 
 	return selectionSet->applySelection(
 			outputStandardProperty(ParticleProperty::SelectionProperty),
@@ -113,7 +114,7 @@ void ManualSelectionModifier::toggleParticleSelection(ModifierApplication* modAp
 {
 	ParticleSelectionSet* selectionSet = getSelectionSet(modApp);
 	if(!selectionSet)
-		throw Exception(tr("No stored selection set available. Please reset the selection state."));
+		throwException(tr("No stored selection set available. Please reset the selection state."));
 	selectionSet->toggleParticle(state, particleIndex);
 }
 
@@ -139,10 +140,10 @@ public:
 	SelectParticleInputMode(ManualSelectionModifierEditor* editor) : ViewportInputMode(editor), _editor(editor) {}
 
 	/// Handles the mouse up events for a Viewport.
-	virtual void mouseReleaseEvent(Viewport* vp, QMouseEvent* event) override {
+	virtual void mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event) override {
 		if(event->button() == Qt::LeftButton) {
 			PickResult pickResult;
-			pickParticle(vp, event->pos(), pickResult);
+			pickParticle(vpwin, event->pos(), pickResult);
 			if(pickResult.objNode) {
 				_editor->onParticlePicked(pickResult);
 			}
@@ -150,7 +151,7 @@ public:
 				inputManager()->mainWindow()->statusBar()->showMessage(tr("You did not click on a particle."), 1000);
 			}
 		}
-		ViewportInputMode::mouseReleaseEvent(vp, event);
+		ViewportInputMode::mouseReleaseEvent(vpwin, event);
 	}
 
 	ManualSelectionModifierEditor* _editor;
@@ -168,28 +169,28 @@ public:
 	FenceParticleInputMode(ManualSelectionModifierEditor* editor) : ViewportInputMode(editor), _editor(editor) {}
 
 	/// Handles the mouse down events for a Viewport.
-	virtual void mousePressEvent(Viewport* vp, QMouseEvent* event) override {
+	virtual void mousePressEvent(ViewportWindow* vpwin, QMouseEvent* event) override {
 		_fence.clear();
 		if(event->button() == Qt::LeftButton) {
 			_fence.push_back(Point2(event->localPos().x(), event->localPos().y())
-					* (FloatType)vp->viewportWindow()->devicePixelRatio());
-			vp->updateViewport();
+					* (FloatType)vpwin->devicePixelRatio());
+			vpwin->viewport()->updateViewport();
 		}
-		else ViewportInputMode::mousePressEvent(vp, event);
+		else ViewportInputMode::mousePressEvent(vpwin, event);
 	}
 
 	/// Handles the mouse move events for a Viewport.
-	virtual void mouseMoveEvent(Viewport* vp, QMouseEvent* event) override {
+	virtual void mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event) override {
 		if(!_fence.isEmpty()) {
 			_fence.push_back(Point2(event->localPos().x(), event->localPos().y())
-					* (FloatType)vp->viewportWindow()->devicePixelRatio());
-			vp->updateViewport();
+					* (FloatType)vpwin->devicePixelRatio());
+			vpwin->viewport()->updateViewport();
 		}
-		ViewportInputMode::mouseMoveEvent(vp, event);
+		ViewportInputMode::mouseMoveEvent(vpwin, event);
 	}
 
 	/// Handles the mouse up events for a Viewport.
-	virtual void mouseReleaseEvent(Viewport* vp, QMouseEvent* event) override {
+	virtual void mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event) override {
 		if(!_fence.isEmpty()) {
 			if(_fence.size() >= 3) {
 				ParticleSelectionSet::SelectionMode mode = ParticleSelectionSet::SelectionReplace;
@@ -197,12 +198,12 @@ public:
 					mode = ParticleSelectionSet::SelectionAdd;
 				else if(event->modifiers().testFlag(Qt::AltModifier))
 					mode = ParticleSelectionSet::SelectionSubtract;
-				_editor->onFence(_fence, vp, mode);
+				_editor->onFence(_fence, vpwin->viewport(), mode);
 			}
 			_fence.clear();
-			vp->updateViewport();
+			vpwin->viewport()->updateViewport();
 		}
-		ViewportInputMode::mouseReleaseEvent(vp, event);
+		ViewportInputMode::mouseReleaseEvent(vpwin, event);
 	}
 
 	/// Indicates whether this input mode renders 3d geometry into the viewports.
@@ -390,12 +391,12 @@ void ManualSelectionModifierEditor::onFence(const QVector<Point2>& fence, Viewpo
 				TimeInterval interval;
 				const AffineTransformation& nodeTM = node->getWorldTransform(mod->dataset()->animationSettings()->time(), interval);
 				Matrix4 ndcToScreen = Matrix4::Identity();
-				ndcToScreen(0,0) = 0.5 * viewport->size().width();
-				ndcToScreen(1,1) = 0.5 * viewport->size().height();
+				ndcToScreen(0,0) = 0.5 * viewport->windowSize().width();
+				ndcToScreen(1,1) = 0.5 * viewport->windowSize().height();
 				ndcToScreen(0,3) = ndcToScreen(0,0);
 				ndcToScreen(1,3) = ndcToScreen(1,1);
 				ndcToScreen(1,1) = -ndcToScreen(1,1);	// Vertical flip.
-				Matrix4 tm = ndcToScreen * viewport->projectionMatrix() * (viewport->viewMatrix() * nodeTM);
+				Matrix4 tm = ndcToScreen * viewport->projectionParams().projectionMatrix * (viewport->projectionParams().viewMatrix * nodeTM);
 
 				// Determine which particles are within the closed fence polygon.
 				QBitArray fullSelection(posProperty->size());

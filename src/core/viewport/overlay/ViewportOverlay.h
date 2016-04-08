@@ -25,7 +25,6 @@
 #include <core/Core.h>
 #include <core/reference/RefTarget.h>
 #include <core/scene/pipeline/PipelineStatus.h>
-#include <core/viewport/input/ViewportInputMode.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View)
 
@@ -61,55 +60,6 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
-};
-
-
-/**
- * Viewport mouse input mode, which allows the user to interactively move a viewport overlay
- * using the mouse.
- */
-class OVITO_CORE_EXPORT MoveOverlayInputMode : public ViewportInputMode
-{
-public:
-
-	/// Constructor.
-	MoveOverlayInputMode(PropertiesEditor* editor);
-
-	/// \brief This is called by the system after the input handler is
-	///        no longer the active handler.
-	virtual void deactivated(bool temporary) override;
-
-	/// Handles the mouse down events for a Viewport.
-	virtual void mousePressEvent(Viewport* vp, QMouseEvent* event) override;
-
-	/// Handles the mouse move events for a Viewport.
-	virtual void mouseMoveEvent(Viewport* vp, QMouseEvent* event) override;
-
-	/// Handles the mouse up events for a Viewport.
-	virtual void mouseReleaseEvent(Viewport* vp, QMouseEvent* event) override;
-
-	/// Returns the current viewport we are working in.
-	Viewport* viewport() const { return _viewport; }
-
-private:
-
-	/// The current viewport we are working in.
-	Viewport* _viewport = nullptr;
-
-	/// The properties editor of the viewport overlay being moved.
-	PropertiesEditor* _editor;
-
-	/// Mouse position at first click.
-	QPointF _startPoint;
-
-	/// The current mouse position.
-	QPointF _currentPoint;
-
-	/// The cursor shown when the overlay can be moved.
-	QCursor _moveCursor;
-
-	/// The cursor shown when in the wrong viewport.
-	QCursor _forbiddenCursor;
 };
 
 OVITO_END_INLINE_NAMESPACE

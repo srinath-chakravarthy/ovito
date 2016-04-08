@@ -25,7 +25,7 @@
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DisplayObject.h>
 #include <core/scene/objects/WeakVersionedObjectReference.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/properties/PropertiesEditor.h>
 #include <core/rendering/ArrowPrimitive.h>
 #include "ParticlePropertyObject.h"
 

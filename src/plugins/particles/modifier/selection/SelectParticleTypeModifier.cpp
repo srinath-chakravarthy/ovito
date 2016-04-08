@@ -48,7 +48,7 @@ PipelineStatus SelectParticleTypeModifier::modifyParticles(TimePoint time, TimeI
 	// Get the input type property.
 	ParticleTypeProperty* typeProperty = dynamic_object_cast<ParticleTypeProperty>(sourceProperty().findInState(input()));
 	if(!typeProperty)
-		throw Exception(tr("The source property for this modifier is not present in the input."));
+		throwException(tr("The source property for this modifier is not present in the input."));
 	OVITO_ASSERT(typeProperty->componentCount() == 1);
 	OVITO_ASSERT(typeProperty->dataType() == qMetaTypeId<int>());
 

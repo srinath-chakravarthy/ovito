@@ -20,8 +20,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/IntegerParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/IntegerParameterUI.h>
 #include <plugins/particles/objects/BondsObject.h>
 #include "ShowPeriodicImagesModifier.h"
 

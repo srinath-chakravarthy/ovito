@@ -111,7 +111,7 @@ PipelineStatus AsynchronousParticleModifier::modifyParticles(TimePoint time, Tim
 	if(!_runningEngine || !_runningEngine->validityInterval().contains(time)) {
 		if(!_cacheValidity.contains(time)) {
 			if(input().status().type() != PipelineStatus::Pending)
-				throw Exception(tr("The modifier results have not been computed yet."));
+				throwException(tr("The modifier results have not been computed yet."));
 			else
 				return PipelineStatus(PipelineStatus::Warning, tr("Waiting for input data to become ready..."));
 		}

@@ -47,7 +47,7 @@ PipelineStatus WrapPeriodicImagesModifier::modifyParticles(TimePoint time, TimeI
 
 	AffineTransformation simCell = expectSimulationCell()->cellMatrix();
 	if(std::abs(simCell.determinant()) < FLOATTYPE_EPSILON)
-		 throw Exception(tr("The simulation cell is degenerated."));
+		 throwException(tr("The simulation cell is degenerated."));
 	AffineTransformation inverseSimCell = simCell.inverse();
 
 	expectStandardProperty(ParticleProperty::PositionProperty);

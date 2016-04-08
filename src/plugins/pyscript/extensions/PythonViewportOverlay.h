@@ -23,7 +23,7 @@
 #define __OVITO_PYTHON_VIEWPORT_OVERLAY_H
 
 #include <plugins/pyscript/PyScript.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/properties/PropertiesEditor.h>
 #include <core/viewport/overlay/ViewportOverlay.h>
 #include <plugins/pyscript/engine/ScriptEngine.h>
 

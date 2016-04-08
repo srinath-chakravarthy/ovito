@@ -23,7 +23,7 @@
 #define __OVITO_LAMMPS_TEXT_DUMP_IMPORTER_H
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/properties/PropertiesEditor.h>
 #include <plugins/particles/import/InputColumnMapping.h>
 #include <plugins/particles/import/ParticleImporter.h>
 

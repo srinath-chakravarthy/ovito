@@ -299,6 +299,11 @@ public:
 	/// \brief Changes the dataset this object belongs to.
 	void setDataset(DataSet* dataset) { _dataset = dataset; }
 
+	///////////////////////////// Exceptions & Errors ///////////////////////////////
+
+	/// \brief This helper method throws an Exception with the given message text.
+	void throwException(const QString& msg) const;
+
 protected:
 
 	/// \brief This method is called after the reference counter of this object has reached zero

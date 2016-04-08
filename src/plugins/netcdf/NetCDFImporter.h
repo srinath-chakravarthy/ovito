@@ -23,7 +23,7 @@
 #define __OVITO_NETCDF_IMPORTER_H
 
 #include <core/Core.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/properties/PropertiesEditor.h>
 #include <plugins/particles/import/InputColumnMappingDialog.h>
 #include <plugins/particles/import/ParticleImporter.h>
 

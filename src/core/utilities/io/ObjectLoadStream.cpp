@@ -142,7 +142,7 @@ OORef<OvitoObject> ObjectLoadStream::loadObjectInternal()
 			entry.object = entry.pluginClass->descriptor->createInstance(_dataset);
 			if(entry.pluginClass->descriptor == &DataSet::OOType) {
 				OVITO_ASSERT(_dataset == nullptr);
-				setDataSet(static_object_cast<DataSet>(entry.object.get()));
+				setDataset(static_object_cast<DataSet>(entry.object.get()));
 			}
 			else {
 				OVITO_ASSERT(!entry.pluginClass->descriptor->isDerivedFrom(RefTarget::OOType) || _dataset != nullptr);

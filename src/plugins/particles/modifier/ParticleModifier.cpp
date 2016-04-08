@@ -53,14 +53,14 @@ PipelineStatus ParticleModifier::modifyObject(TimePoint time, ModifierApplicatio
 	try {
 		ParticlePropertyObject* posProperty = inputStandardProperty(ParticleProperty::PositionProperty);
 		if(!posProperty && !this->isApplicableTo(_input))
-			throw Exception(tr("This modifier cannot be evaluated because the input does not contain any particles."));
+			throwException(tr("This modifier cannot be evaluated because the input does not contain any particles."));
 		_outputParticleCount = _inputParticleCount = (posProperty != nullptr) ? posProperty->size() : 0;
 
 		// Verify input, make sure array length of particle properties is consistent.
 		for(DataObject* obj : state.objects()) {
 			if(ParticlePropertyObject* p = dynamic_object_cast<ParticlePropertyObject>(obj)) {
 				if(p->size() != _inputParticleCount)
-					throw Exception(tr("Detected invalid modifier input. Data array size is not the same for all particle properties."));
+					throwException(tr("Detected invalid modifier input. Data array size is not the same for all particle properties."));
 			}
 		}
 
@@ -146,15 +146,15 @@ ParticlePropertyObject* ParticleModifier::expectCustomProperty(const QString& pr
 		ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(o);
 		if(property && property->name() == propertyName) {
 			if(property->dataType() != dataType)
-				throw Exception(tr("The modifier cannot be evaluated because the particle property '%1' does not have the required data type.").arg(property->name()));
+				throwException(tr("The modifier cannot be evaluated because the particle property '%1' does not have the required data type.").arg(property->name()));
 			if(property->componentCount() != componentCount)
-				throw Exception(tr("The modifier cannot be evaluated because the particle property '%1' does not have the required number of components per particle.").arg(property->name()));
+				throwException(tr("The modifier cannot be evaluated because the particle property '%1' does not have the required number of components per particle.").arg(property->name()));
 
 			OVITO_ASSERT(property->size() == _inputParticleCount);
 			return property;
 		}
 	}
-	throw Exception(tr("The modifier cannot be evaluated because the input does not contain the required particle property (name: %1).").arg(propertyName));
+	throwException(tr("The modifier cannot be evaluated because the input does not contain the required particle property (name: %1).").arg(propertyName));
 }
 
 /******************************************************************************
@@ -167,9 +167,9 @@ ParticlePropertyObject* ParticleModifier::expectStandardProperty(ParticlePropert
 	ParticlePropertyObject* property = inputStandardProperty(which);
 	if(!property) {
 		if(which == ParticleProperty::SelectionProperty)
-			throw Exception(tr("No particle selection has been defined. Please select some particles first."));
+			throwException(tr("No particle selection has been defined. Please select some particles first."));
 		else
-			throw Exception(tr("The modifier cannot be evaluated because the input does not contain the required particle property '%1'.").arg(ParticleProperty::standardPropertyName(which)));
+			throwException(tr("The modifier cannot be evaluated because the input does not contain the required particle property '%1'.").arg(ParticleProperty::standardPropertyName(which)));
 	}
 	return property;
 }
@@ -181,7 +181,7 @@ SimulationCellObject* ParticleModifier::expectSimulationCell() const
 {
 	SimulationCellObject* cell = _input.findObject<SimulationCellObject>();
 	if(!cell)
-		throw Exception(tr("The modifier cannot be evaluated because the input does not contain a simulation cell."));
+		throwException(tr("The modifier cannot be evaluated because the input does not contain a simulation cell."));
 	return cell;
 }
 
@@ -192,7 +192,7 @@ BondsObject* ParticleModifier::expectBonds() const
 {
 	BondsObject* bondsObj = _input.findObject<BondsObject>();
 	if(!bondsObj)
-		throw Exception(tr("The modifier cannot be evaluated because the input does not contain any bonds."));
+		throwException(tr("The modifier cannot be evaluated because the input does not contain any bonds."));
 	return bondsObj;
 }
 
@@ -279,11 +279,11 @@ ParticlePropertyObject* ParticleModifier::outputCustomProperty(const QString& na
 		if(property && property->type() == ParticleProperty::UserProperty && property->name() == name) {
 			inputProperty = property;
 			if(property->dataType() != dataType)
-				throw Exception(tr("Existing property '%1' has a different data type.").arg(name));
+				throwException(tr("Existing property '%1' has a different data type.").arg(name));
 			if(property->componentCount() != componentCount)
-				throw Exception(tr("Existing property '%1' has a different number of components.").arg(name));
+				throwException(tr("Existing property '%1' has a different number of components.").arg(name));
 			if(property->stride() != stride)
-				throw Exception(tr("Existing property '%1' has a different stride.").arg(name));
+				throwException(tr("Existing property '%1' has a different stride.").arg(name));
 			break;
 		}
 	}
@@ -333,9 +333,9 @@ ParticlePropertyObject* ParticleModifier::outputCustomProperty(ParticleProperty*
 		if(property && property->type() == ParticleProperty::UserProperty && property->name() == storage->name()) {
 			inputProperty = property;
 			if(property->dataType() != storage->dataType() || property->dataTypeSize() != storage->dataTypeSize())
-				throw Exception(tr("Existing property '%1' has a different data type.").arg(property->name()));
+				throwException(tr("Existing property '%1' has a different data type.").arg(property->name()));
 			if(property->componentCount() != storage->componentCount())
-				throw Exception(tr("Existing property '%1' has a different number of components.").arg(property->name()));
+				throwException(tr("Existing property '%1' has a different number of components.").arg(property->name()));
 			break;
 		}
 	}

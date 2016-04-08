@@ -20,8 +20,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/properties/BooleanParameterUI.h>
-#include <core/gui/properties/IntegerRadioButtonParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/IntegerRadioButtonParameterUI.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
 #include <plugins/particles/util/CutoffNeighborFinder.h>
@@ -99,7 +99,7 @@ bool CommonNeighborAnalysisModifier::loadPropertyFieldFromStream(ObjectLoadStrea
 std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CommonNeighborAnalysisModifier::createEngine(TimePoint time, TimeInterval validityInterval)
 {
 	if(structureTypes().size() != NUM_STRUCTURE_TYPES)
-		throw Exception(tr("The number of structure types has changed. Please remove this modifier from the modification pipeline and insert it again."));
+		throwException(tr("The number of structure types has changed. Please remove this modifier from the modification pipeline and insert it again."));
 
 	// Get modifier input.
 	ParticlePropertyObject* posProperty = expectStandardProperty(ParticleProperty::PositionProperty);
@@ -118,7 +118,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CommonNeighborAnaly
 		// Get input bonds.
 		BondsObject* bondsObj = input().findObject<BondsObject>();
 		if(!bondsObj || !bondsObj->storage())
-			throw Exception(tr("No bonds are defined. Please use the 'Create Bonds' modifier first to generate some bonds between particles."));
+			throwException(tr("No bonds are defined. Please use the 'Create Bonds' modifier first to generate some bonds between particles."));
 
 		return std::make_shared<BondCNAEngine>(validityInterval, posProperty->storage(), simCell->data(), selectionProperty, bondsObj->storage());
 	}

@@ -68,12 +68,12 @@ void UndoStack::push(std::unique_ptr<UndoableOperation> operation)
 		_index++;
 		OVITO_ASSERT(index() == count() - 1);
 		limitUndoStack();
-		indexChanged(index());
-		cleanChanged(false);
-		canUndoChanged(true);
-		undoTextChanged(undoText());
-		canRedoChanged(false);
-		redoTextChanged(QString());
+		Q_EMIT indexChanged(index());
+		Q_EMIT cleanChanged(false);
+		Q_EMIT canUndoChanged(true);
+		Q_EMIT undoTextChanged(undoText());
+		Q_EMIT canRedoChanged(false);
+		Q_EMIT redoTextChanged(QString());
 	}
 	else {
 		_compoundStack.back()->addOperation(std::move(operation));
@@ -157,7 +157,7 @@ void UndoStack::limitUndoStack()
 			UndoSuspender noUndo(*this);
 			_operations.erase(_operations.begin(), _operations.begin() + n);
 			_index -= n;
-			indexChanged(index());
+			Q_EMIT indexChanged(index());
 		}
 	}
 }
@@ -171,12 +171,12 @@ void UndoStack::clear()
 	_compoundStack.clear();
 	_index = -1;
 	_cleanIndex = -1;
-	indexChanged(index());
-	cleanChanged(isClean());
-	canUndoChanged(false);
-	canRedoChanged(false);
-	undoTextChanged(QString());
-	redoTextChanged(QString());
+	Q_EMIT indexChanged(index());
+	Q_EMIT cleanChanged(isClean());
+	Q_EMIT canUndoChanged(false);
+	Q_EMIT canRedoChanged(false);
+	Q_EMIT undoTextChanged(QString());
+	Q_EMIT redoTextChanged(QString());
 }
 
 /******************************************************************************
@@ -186,7 +186,7 @@ void UndoStack::setClean()
 {
 	if(!isClean()) {
 		_cleanIndex = index();
-		cleanChanged(cleanIndex());
+		Q_EMIT cleanChanged(true);
 	}
 }
 
@@ -197,7 +197,8 @@ void UndoStack::setDirty()
 {
 	bool signal = isClean();
 	_cleanIndex = -2;
-	if(signal) cleanChanged(false);
+	if(signal)
+		Q_EMIT cleanChanged(false);
 }
 
 /******************************************************************************
@@ -223,12 +224,12 @@ void UndoStack::undo()
 	_isUndoing = false;
 	resume();
 	_index--;
-	indexChanged(index());
-	cleanChanged(isClean());
-	canUndoChanged(canUndo());
-	undoTextChanged(undoText());
-	canRedoChanged(canRedo());
-	redoTextChanged(redoText());
+	Q_EMIT indexChanged(index());
+	Q_EMIT cleanChanged(isClean());
+	Q_EMIT canUndoChanged(canUndo());
+	Q_EMIT undoTextChanged(undoText());
+	Q_EMIT canRedoChanged(canRedo());
+	Q_EMIT redoTextChanged(redoText());
 }
 
 /******************************************************************************
@@ -254,12 +255,12 @@ void UndoStack::redo()
 	_isRedoing = false;
 	resume();
 	_index++;
-	indexChanged(index());
-	cleanChanged(isClean());
-	canUndoChanged(canUndo());
-	undoTextChanged(undoText());
-	canRedoChanged(canRedo());
-	redoTextChanged(redoText());
+	Q_EMIT indexChanged(index());
+	Q_EMIT cleanChanged(isClean());
+	Q_EMIT canUndoChanged(canUndo());
+	Q_EMIT undoTextChanged(undoText());
+	Q_EMIT canRedoChanged(canRedo());
+	Q_EMIT redoTextChanged(redoText());
 }
 
 /******************************************************************************

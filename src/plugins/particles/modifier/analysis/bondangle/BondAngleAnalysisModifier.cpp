@@ -22,7 +22,7 @@
 #include <plugins/particles/Particles.h>
 #include <core/viewport/Viewport.h>
 #include <core/animation/AnimationSettings.h>
-#include <core/gui/properties/BooleanParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
 
@@ -56,7 +56,7 @@ BondAngleAnalysisModifier::BondAngleAnalysisModifier(DataSet* dataset) : Structu
 std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> BondAngleAnalysisModifier::createEngine(TimePoint time, TimeInterval validityInterval)
 {
 	if(structureTypes().size() != NUM_STRUCTURE_TYPES)
-		throw Exception(tr("The number of structure types has changed. Please remove this modifier from the modification pipeline and insert it again."));
+		throwException(tr("The number of structure types has changed. Please remove this modifier from the modification pipeline and insert it again."));
 
 	// Get modifier input.
 	ParticlePropertyObject* posProperty = expectStandardProperty(ParticleProperty::PositionProperty);

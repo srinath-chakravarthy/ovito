@@ -235,7 +235,7 @@ QString ObjectNode::objectTitle()
 void ObjectNode::applyModifier(Modifier* modifier)
 {
 	if(!dataProvider())
-		throw Exception("Cannot insert modifier into a modification pipeline without a data source.");
+		throwException("Cannot insert modifier into a modification pipeline without a data source.");
 
 	PipelineObject* pipelineObj = dynamic_object_cast<PipelineObject>(dataProvider());
 	if(!pipelineObj) {

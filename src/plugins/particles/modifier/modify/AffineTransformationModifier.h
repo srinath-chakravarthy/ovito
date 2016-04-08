@@ -23,7 +23,7 @@
 #define __OVITO_AFFINE_TRANSFORMATION_MODIFIER_H
 
 #include <plugins/particles/Particles.h>
-#include <core/gui/widgets/general/SpinnerWidget.h>
+#include <gui/widgets/general/SpinnerWidget.h>
 #include "../ParticleModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)

@@ -23,6 +23,9 @@ MACRO(OVITO_STANDARD_PLUGIN target_name)
 	# Link to OVITO's core library.
 	TARGET_LINK_LIBRARIES(${target_name} PUBLIC Core)
 
+	# Link to OVITO's GUI library.
+	TARGET_LINK_LIBRARIES(${target_name} PUBLIC Gui)
+
 	# Link other required libraries.
 	TARGET_LINK_LIBRARIES(${target_name} PRIVATE ${lib_dependencies})
 

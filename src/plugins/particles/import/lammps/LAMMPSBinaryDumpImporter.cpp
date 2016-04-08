@@ -24,9 +24,9 @@
 #include <core/utilities/concurrent/Future.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/importexport/FileSource.h>
-#include <core/gui/mainwin/MainWindow.h>
-#include <core/gui/app/Application.h>
-#include <core/gui/properties/BooleanParameterUI.h>
+#include <core/app/Application.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/properties/BooleanParameterUI.h>
 #include <plugins/particles/import/InputColumnMappingDialog.h>
 #include "LAMMPSBinaryDumpImporter.h"
 
@@ -113,12 +113,12 @@ bool LAMMPSBinaryDumpImporter::checkFileFormat(QFileDevice& input, const QUrl& s
 *  This method is called by the FileSource each time a new source
 * file has been selected by the user.
 ******************************************************************************/
-bool LAMMPSBinaryDumpImporter::inspectNewFile(FileSource* obj)
+bool LAMMPSBinaryDumpImporter::inspectNewFile(FileSource* obj, int frameIndex)
 {
-	if(!ParticleImporter::inspectNewFile(obj))
+	if(!ParticleImporter::inspectNewFile(obj, frameIndex))
 		return false;
 
-	if(obj->frames().empty())
+	if(frameIndex < 0 || frameIndex >= obj->frames().size())
 		return false;
 
 	// Don't show column mapping dialog in console mode.
@@ -126,7 +126,7 @@ bool LAMMPSBinaryDumpImporter::inspectNewFile(FileSource* obj)
 		return true;
 
 	// Start task that inspects the file header to determine the number of data columns.
-	std::shared_ptr<LAMMPSBinaryDumpImportTask> inspectionTask = std::make_shared<LAMMPSBinaryDumpImportTask>(dataset()->container(), obj->frames().front());
+	std::shared_ptr<LAMMPSBinaryDumpImportTask> inspectionTask = std::make_shared<LAMMPSBinaryDumpImportTask>(dataset()->container(), obj->frames()[frameIndex]);
 	if(!dataset()->container()->taskManager().runTask(inspectionTask))
 		return false;
 
@@ -154,7 +154,7 @@ bool LAMMPSBinaryDumpImporter::inspectNewFile(FileSource* obj)
 			mapping.resize(inspectionTask->columnMapping().size());
 		}
 
-		InputColumnMappingDialog dialog(mapping, dataset()->mainWindow());
+		InputColumnMappingDialog dialog(mapping, MainWindow::fromDataset(dataset()));
 		if(dialog.exec() == QDialog::Accepted) {
 			setColumnMapping(dialog.mapping());
 			return true;

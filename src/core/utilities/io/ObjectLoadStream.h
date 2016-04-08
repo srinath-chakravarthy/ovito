@@ -89,10 +89,11 @@ public:
 		return static_object_cast<T>(ptr);
 	}
 
+	/// Returns the dataset to which objects loaded from the stream will be added to.
+	DataSet* dataset() { return _dataset; }
+
 	/// Sets the dataset to which objects loaded from the stream should be added to.
-	void setDataSet(DataSet* dataset) {
-		_dataset = dataset;
-	}
+	void setDataset(DataSet* dataset) { _dataset = dataset; }
 
 private:
 

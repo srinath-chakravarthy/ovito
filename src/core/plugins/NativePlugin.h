@@ -25,6 +25,8 @@
 #include <core/Core.h>
 #include "Plugin.h"
 
+#include <QLibrary>
+
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(PluginSystem) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
@@ -47,7 +49,7 @@ public:
 protected:
 
 	/// \brief Constructor that loads the given manifest file.
-	NativePlugin(const QString& manifestFile);
+	NativePlugin(const QString& manifestFile, bool builtinPlugin);
 
 	/// \brief Loads the plugin's dynamic link library.
 	/// \throw Exception on error.

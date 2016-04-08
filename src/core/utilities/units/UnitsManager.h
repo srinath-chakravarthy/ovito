@@ -83,12 +83,20 @@ public:
 	/// The default implementation does no rounding and simply returns the unmodified value.
 	virtual FloatType roundValue(FloatType value) { return value; }
 
+	/// \brief Returns the DataSet this parameter unit belongs to.
+	DataSet* dataset() const { return _dataset; }
+
 Q_SIGNALS:
 
 	/// \brief This signal is emitted by the parameter unit when the display
 	///        format or conversion factor has changed and the value to string
 	///        conversion has to be re-done.
 	void formatChanged();
+
+private:
+
+	/// The DataSet this parameter unit belongs to.
+	DataSet* _dataset;
 };
 
 /**
@@ -128,14 +136,7 @@ public:
 	/// \return The parsed value in user units.
 	/// \throw Exception when the value could not be parsed.
 	/// \sa formatValue()
-	virtual FloatType parseString(const QString& valueString) override {
-		double value;
-		bool ok;
-		value = valueString.toDouble(&ok);		
-		if(!ok)
-			throw Exception(tr("Invalid floating-point value: %1").arg(valueString));
-		return (FloatType)value;
-	}
+	virtual FloatType parseString(const QString& valueString) override;
 		
 	/// \brief Converts a numeric value to a string.
 	/// \param value The value to be converted. This is in user units.
@@ -199,14 +200,7 @@ public:
 	/// \return The parsed value in user units.
 	/// \throw Exception when the value could not be parsed.
 	/// \sa formatValue()
-	virtual FloatType parseString(const QString& valueString) override {
-		int value;
-		bool ok;
-		value = valueString.toInt(&ok);		
-		if(!ok)
-			throw Exception(tr("Invalid integer value: %1").arg(valueString));
-		return (FloatType)value;
-	}
+	virtual FloatType parseString(const QString& valueString) override;
 		
 	/// \brief Converts a numeric value to a string.
 	/// \param value The value to be converted. This is in user units.

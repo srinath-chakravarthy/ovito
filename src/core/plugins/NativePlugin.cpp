@@ -23,13 +23,15 @@
 #include <core/plugins/NativePlugin.h>
 #include <core/object/NativeOvitoObjectType.h>
 
+#include <QJsonObject>
+
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(PluginSystem) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /******************************************************************************
 * Constructor for the NativePlugin class.
 ******************************************************************************/
-NativePlugin::NativePlugin(const QString& manifestFile) :
-	Plugin(manifestFile), _library(nullptr)
+NativePlugin::NativePlugin(const QString& manifestFile, bool builtinPlugin) :
+	Plugin(manifestFile, builtinPlugin), _library(nullptr)
 {
 	// Get the name of the shared library file.
 	QString libBasename = metadata().object().value(QStringLiteral("native-library")).toString();
@@ -39,7 +41,7 @@ NativePlugin::NativePlugin(const QString& manifestFile) :
 	// Resolve the filename by adding the platform specific suffix/extension
 	// and make the path absolute.
 	QDir baseDir;
-	if(isCore())	// The core library is not in the plugins directory.
+	if(builtinPlugin)	// The core libraries are not in the plugins directory.
 		baseDir = QCoreApplication::applicationDirPath();
 	else
 		baseDir = QFileInfo(manifestFile).dir();
@@ -56,27 +58,27 @@ NativePlugin::NativePlugin(const QString& manifestFile) :
 ******************************************************************************/
 void NativePlugin::loadPluginImpl()
 {
-	NativeOvitoObjectType* linkedListBefore = nullptr;
-	if(isCore() == false) {
-		linkedListBefore = NativeOvitoObjectType::_firstInfo;
+	// Save pointer to original linked list.
+	NativeOvitoObjectType* linkedListBefore = NativeOvitoObjectType::_firstInfo;
 
-		// Load dynamic library.
-		if(_library == nullptr || _library->isLoaded() == false) {
-			if(libraryFilename().isEmpty())
-				throw Exception(QString("The manifest file of the native plugin %1 does not specify the library name.").arg(pluginId()));
-			_library = new QLibrary(libraryFilename(), this);
-			_library->setLoadHints(QLibrary::ExportExternalSymbolsHint);
-			if(!_library->load()) {
-				throw Exception(QString("Failed to load native plugin library.\nLibrary file: %1\nError: %2").arg(libraryFilename(), _library->errorString()));
-			}
+	// Load dynamic library.
+	if(_library == nullptr || _library->isLoaded() == false) {
+		if(libraryFilename().isEmpty())
+			throw Exception(QString("The manifest file of the native plugin %1 does not specify the library name.").arg(pluginId()));
+		_library = new QLibrary(libraryFilename(), this);
+		_library->setLoadHints(QLibrary::ExportExternalSymbolsHint);
+		if(!_library->load()) {
+			throw Exception(QString("Failed to load native plugin library.\nLibrary file: %1\nError: %2").arg(libraryFilename(), _library->errorString()));
 		}
 	}
+
+	// New pointer to extended linked list.
 	NativeOvitoObjectType* linkedListAfter = NativeOvitoObjectType::_firstInfo;
 
 	// Initialize all newly loaded classes and connect them with this plugin.
 	for(NativeOvitoObjectType* clazz = linkedListAfter; clazz != linkedListBefore; clazz = clazz->_next) {
 		if(clazz->pluginId() != pluginId())
-			throw Exception(QString("Plugin ID %1 assigned to class %2 does not match plugin %3 that contains the class.").arg(clazz->pluginId()).arg(clazz->name()).arg(pluginId()));
+			throw Exception(QString("Compile-time plugin ID %1 set for class %2 does not match plugin library %3 containing the class.").arg(clazz->pluginId()).arg(clazz->name()).arg(pluginId()));
 		OVITO_ASSERT(clazz->plugin() == nullptr);
 		clazz->initializeClassDescriptor(this);
 		registerClass(clazz);

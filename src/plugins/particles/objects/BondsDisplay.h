@@ -27,7 +27,7 @@
 #include <core/scene/objects/WeakVersionedObjectReference.h>
 #include <core/rendering/ArrowPrimitive.h>
 #include <core/rendering/SceneRenderer.h>
-#include <core/gui/properties/PropertiesEditor.h>
+#include <gui/properties/PropertiesEditor.h>
 #include "BondsObject.h"
 #include "ParticlePropertyObject.h"
 #include "BondPropertyObject.h"

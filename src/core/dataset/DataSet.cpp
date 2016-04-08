@@ -21,6 +21,7 @@
 
 #include <core/Core.h>
 #include <core/dataset/DataSet.h>
+#include <core/dataset/DataSetContainer.h>
 #include <core/viewport/Viewport.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/animation/AnimationSettings.h>
@@ -29,8 +30,6 @@
 #include <core/rendering/RenderSettings.h>
 #include <core/rendering/FrameBuffer.h>
 #include <core/rendering/SceneRenderer.h>
-#include <core/gui/widgets/rendering/FrameBufferWindow.h>
-#include <core/gui/mainwin/MainWindow.h>
 #include <core/utilities/concurrent/ProgressDisplay.h>
 #ifdef OVITO_VIDEO_OUTPUT_SUPPORT
 	#include <core/utilities/io/video/VideoEncoder.h>
@@ -105,7 +104,7 @@ OORef<ViewportConfiguration> DataSet::createDefaultViewportConfiguration()
 ******************************************************************************/
 bool DataSet::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
-	OVITO_ASSERT_MSG(QThread::currentThread() == QApplication::instance()->thread(), "DataSet::referenceEvent", "Reference events may only be processed in the GUI thread.");
+	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSet::referenceEvent", "Reference events may only be processed in the main thread.");
 
 	if(event->type() == ReferenceEvent::TargetChanged || event->type() == ReferenceEvent::PendingStateChanged) {
 
@@ -172,14 +171,6 @@ DataSetContainer* DataSet::container() const
 }
 
 /******************************************************************************
-* Returns a pointer to the main window in which this dataset is being edited.
-******************************************************************************/
-MainWindow* DataSet::mainWindow() const
-{
-	return container()->mainWindow();
-}
-
-/******************************************************************************
 * Deletes all nodes from the scene.
 ******************************************************************************/
 void DataSet::clearScene()
@@ -207,7 +198,7 @@ void DataSet::rescaleTime(const TimeInterval& oldAnimationInterval, const TimeIn
 ******************************************************************************/
 bool DataSet::isSceneReady(TimePoint time) const
 {
-	OVITO_ASSERT_MSG(QThread::currentThread() == QApplication::instance()->thread(), "DataSet::isSceneReady", "This function may only be called from the GUI thread.");
+	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSet::isSceneReady", "This function may only be called from the main thread.");
 	OVITO_CHECK_OBJECT_POINTER(sceneRoot());
 
 	// Iterate over all object nodes and request an evaluation of their geometry pipeline.
@@ -224,7 +215,7 @@ bool DataSet::isSceneReady(TimePoint time) const
 ******************************************************************************/
 void DataSet::runWhenSceneIsReady(const std::function<void()>& fn)
 {
-	OVITO_ASSERT_MSG(QThread::currentThread() == QApplication::instance()->thread(), "DataSet::runWhenSceneIsReady", "This function may only be called from the GUI thread.");
+	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSet::runWhenSceneIsReady", "This function may only be called from the main thread.");
 	OVITO_CHECK_OBJECT_POINTER(sceneRoot());
 
 	TimePoint time = animationSettings()->time();
@@ -258,63 +249,23 @@ void DataSet::notifySceneReadyListeners()
 * This is the high-level rendering function, which invokes the renderer to generate one or more
 * output images of the scene. All rendering parameters are specified in the RenderSettings object.
 ******************************************************************************/
-bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, boost::shared_ptr<FrameBuffer> frameBuffer, FrameBufferWindow* frameBufferWindow)
+bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuffer* frameBuffer, AbstractProgressDisplay* progressDisplay)
 {
 	OVITO_CHECK_OBJECT_POINTER(settings);
 	OVITO_CHECK_OBJECT_POINTER(viewport);
-
-	// If the caller did not supply a frame buffer, get the default frame buffer for the output image, or create a temporary one if necessary.
-	if(!frameBuffer) {
-		if(Application::instance().guiMode()) {
-			OVITO_ASSERT(mainWindow());
-			frameBufferWindow = mainWindow()->frameBufferWindow();
-			frameBuffer = frameBufferWindow->frameBuffer();
-		}
-		if(!frameBuffer)
-			frameBuffer = boost::make_shared<FrameBuffer>(settings->outputImageWidth(), settings->outputImageHeight());
-	}
+	OVITO_ASSERT(frameBuffer);
 
 	// Get the selected scene renderer.
 	SceneRenderer* renderer = settings->renderer();
-	if(!renderer) throw Exception(tr("No renderer has been selected."));
+	if(!renderer) throwException(tr("No rendering engine has been selected."));
 
 	bool wasCanceled = false;
 	try {
 
-		// Set up the frame buffer for the output image.
-		if(frameBufferWindow && frameBufferWindow->frameBuffer() != frameBuffer) {
-			frameBufferWindow->setFrameBuffer(frameBuffer);
-			frameBufferWindow->resize(frameBufferWindow->sizeHint());
-		}
+		// Resize output frame buffer.
 		if(frameBuffer->size() != QSize(settings->outputImageWidth(), settings->outputImageHeight())) {
 			frameBuffer->setSize(QSize(settings->outputImageWidth(), settings->outputImageHeight()));
 			frameBuffer->clear();
-			if(frameBufferWindow)
-				frameBufferWindow->resize(frameBufferWindow->sizeHint());
-		}
-		if(frameBufferWindow) {
-			if(frameBufferWindow->isHidden()) {
-				// Center frame buffer window in main window.
-				if(frameBufferWindow->parentWidget()) {
-					QSize s = frameBufferWindow->frameGeometry().size();
-					frameBufferWindow->move(frameBufferWindow->parentWidget()->geometry().center() - QPoint(s.width() / 2, s.height() / 2));
-				}
-				frameBufferWindow->show();
-			}
-			frameBufferWindow->activateWindow();
-		}
-
-		// Show progress dialog.
-		std::unique_ptr<QProgressDialog> progressDialog;
-		std::unique_ptr<ProgressDialogAdapter> progressDisplay;
-		if(Application::instance().guiMode()) {
-			progressDialog.reset(new QProgressDialog(frameBufferWindow ? (QWidget*)frameBufferWindow : (QWidget*)mainWindow()));
-			progressDialog->setWindowModality(Qt::WindowModal);
-			progressDialog->setAutoClose(false);
-			progressDialog->setAutoReset(false);
-			progressDialog->setMinimumDuration(0);
-			progressDialog->setValue(0);
-			progressDisplay.reset(new ProgressDialogAdapter(progressDialog.get()));
 		}
 
 		// Don't update viewports while rendering.
@@ -330,7 +281,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, boost::s
 			if(settings->saveToFile() && settings->imageInfo().isMovie()) {
 
 				if(settings->imageFilename().isEmpty())
-					throw Exception(tr("Cannot save rendered images to movie file. Output filename has not been specified."));
+					throwException(tr("Cannot save rendered images to movie file. Output filename has not been specified."));
 
 				videoEncoderPtr.reset(new VideoEncoder());
 				videoEncoder = videoEncoderPtr.data();
@@ -342,9 +293,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, boost::s
 				// Render a single frame.
 				TimePoint renderTime = animationSettings()->time();
 				int frameNumber = animationSettings()->timeToFrame(renderTime);
-				if(frameBufferWindow)
-					frameBufferWindow->setWindowTitle(tr("Frame %1").arg(frameNumber));
-				if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer.get(), videoEncoder, progressDisplay.get()))
+				if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer, videoEncoder, progressDisplay))
 					wasCanceled = true;
 			}
 			else if(settings->renderingRangeType() == RenderSettings::ANIMATION_INTERVAL || settings->renderingRangeType() == RenderSettings::CUSTOM_INTERVAL) {
@@ -363,23 +312,21 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, boost::s
 				}
 				numberOfFrames = (numberOfFrames + settings->everyNthFrame() - 1) / settings->everyNthFrame();
 				if(numberOfFrames < 1)
-					throw Exception(tr("Invalid rendering range: Frame %1 to %2").arg(settings->customRangeStart()).arg(settings->customRangeEnd()));
-				if(progressDialog)
-					progressDialog->setMaximum(numberOfFrames);
+					throwException(tr("Invalid rendering range: Frame %1 to %2").arg(settings->customRangeStart()).arg(settings->customRangeEnd()));
+				if(progressDisplay)
+					progressDisplay->setMaximum(numberOfFrames);
 
 				// Render frames, one by one.
 				for(int frameIndex = 0; frameIndex < numberOfFrames; frameIndex++) {
-					if(progressDialog)
-						progressDialog->setValue(frameIndex);
+					if(progressDisplay)
+						progressDisplay->setValue(frameIndex);
 
 					int frameNumber = firstFrameNumber + frameIndex * settings->everyNthFrame() + settings->fileNumberBase();
-					if(frameBufferWindow)
-						frameBufferWindow->setWindowTitle(tr("Frame %1").arg(animationSettings()->timeToFrame(renderTime)));
-					if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer.get(), videoEncoder, progressDisplay.get())) {
+					if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer, videoEncoder, progressDisplay)) {
 						wasCanceled = true;
 						break;
 					}
-					if(progressDialog && progressDialog->wasCanceled())
+					if(progressDisplay && progressDisplay->wasCanceled())
 						break;
 
 					// Go to next animation frame.
@@ -397,12 +344,14 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, boost::s
 		// Shutdown renderer.
 		renderer->endRender();
 
-		if(progressDialog && progressDialog->wasCanceled())
+		if(progressDisplay && progressDisplay->wasCanceled())
 			wasCanceled = true;
 	}
-	catch(...) {
+	catch(Exception& ex) {
 		// Shutdown renderer.
 		renderer->endRender();
+		// Provide a context for this error.
+		if(ex.context() == nullptr) ex.setContext(this);
 		throw;
 	}
 
@@ -420,7 +369,7 @@ bool DataSet::renderFrame(TimePoint renderTime, int frameNumber, RenderSettings*
 	if(settings->saveToFile() && !videoEncoder) {
 		imageFilename = settings->imageFilename();
 		if(imageFilename.isEmpty())
-			throw Exception(tr("Cannot save rendered image to file. Output filename has not been specified."));
+			throwException(tr("Cannot save rendered image to file. Output filename has not been specified."));
 
 		if(settings->renderingRangeType() != RenderSettings::CURRENT_FRAME) {
 			// Append frame number to file name if rendering an animation.
@@ -452,7 +401,7 @@ bool DataSet::renderFrame(TimePoint renderTime, int frameNumber, RenderSettings*
 	// Render one frame.
 	frameBuffer->clear();
 	renderer->beginFrame(renderTime, projParams, viewport);
-	if(!renderer->renderFrame(frameBuffer, progressDisplay) || (progressDisplay && progressDisplay->wasCanceled())) {
+	if(!renderer->renderFrame(frameBuffer, SceneRenderer::NonStereoscopic, progressDisplay) || (progressDisplay && progressDisplay->wasCanceled())) {
 		renderer->endFrame();
 		return false;
 	}
@@ -472,7 +421,7 @@ bool DataSet::renderFrame(TimePoint renderTime, int frameNumber, RenderSettings*
 		if(!videoEncoder) {
 			OVITO_ASSERT(!imageFilename.isEmpty());
 			if(!frameBuffer->image().save(imageFilename, settings->imageInfo().format()))
-				throw Exception(tr("Failed to save rendered image to output file '%1'.").arg(imageFilename));
+				throwException(tr("Failed to save rendered image to output file '%1'.").arg(imageFilename));
 		}
 		else {
 #ifdef OVITO_VIDEO_OUTPUT_SUPPORT
@@ -505,7 +454,7 @@ void DataSet::saveToFile(const QString& filePath)
 {
 	QFile fileStream(filePath);
     if(!fileStream.open(QIODevice::WriteOnly))
-		throw Exception(tr("Failed to open output file '%1' for writing.").arg(filePath));
+    	throwException(tr("Failed to open output file '%1' for writing.").arg(filePath));
 
 	QDataStream dataStream(&fileStream);
 	ObjectSaveStream stream(dataStream);
@@ -513,7 +462,7 @@ void DataSet::saveToFile(const QString& filePath)
 	stream.close();
 
 	if(fileStream.error() != QFile::NoError)
-		throw Exception(tr("Failed to write output file '%1'.").arg(filePath));
+		throwException(tr("Failed to write output file '%1'.").arg(filePath));
 	fileStream.close();
 }
 
