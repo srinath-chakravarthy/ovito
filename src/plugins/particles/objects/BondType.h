@@ -24,7 +24,6 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/reference/RefTarget.h>
-#include <gui/properties/PropertiesEditor.h>
 
 namespace Ovito { namespace Particles {
 
@@ -108,31 +107,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_color);
 	DECLARE_PROPERTY_FIELD(_radius);
 };
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * \brief A properties editor for the BondType class.
- */
-class BondTypeEditor : public PropertiesEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE BondTypeEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 
 }	// End of namespace
 }	// End of namespace

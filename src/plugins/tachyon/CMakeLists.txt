@@ -21,7 +21,6 @@
 
 SET(SourceFiles
 	renderer/TachyonRenderer.cpp
-	renderer/TachyonRendererEditor.cpp
 )
 
 IF(OVITO_BUILD_PLUGIN_PYSCRIPT)
@@ -31,6 +30,11 @@ ENDIF()
 OVITO_STANDARD_PLUGIN(Tachyon
 	SOURCES ${SourceFiles}
 	LIB_DEPENDENCIES TachyonLib
-	OPTIONAL_PLUGIN_DEPENDENCIES PyScript	
+	OPTIONAL_PLUGIN_DEPENDENCIES PyScript
 	PYTHON_WRAPPERS "${CMAKE_CURRENT_SOURCE_DIR}/resources/python/"
 )
+
+# Build corresponding GUI plugin.
+IF(OVITO_BUILD_GUI)
+	ADD_SUBDIRECTORY(gui)
+ENDIF()

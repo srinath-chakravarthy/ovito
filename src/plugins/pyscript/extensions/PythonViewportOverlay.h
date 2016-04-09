@@ -23,11 +23,8 @@
 #define __OVITO_PYTHON_VIEWPORT_OVERLAY_H
 
 #include <plugins/pyscript/PyScript.h>
-#include <gui/properties/PropertiesEditor.h>
-#include <core/viewport/overlay/ViewportOverlay.h>
 #include <plugins/pyscript/engine/ScriptEngine.h>
-
-class QsciScintilla;
+#include <core/viewport/overlay/ViewportOverlay.h>
 
 namespace PyScript {
 
@@ -111,46 +108,6 @@ private:
 
 	DECLARE_PROPERTY_FIELD(_script);
 };
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * \brief A properties editor for the PythonViewportOverlay class.
- */
-class PythonViewportOverlayEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE PythonViewportOverlayEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-	/// This method is called when a reference target changes.
-	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
-
-protected Q_SLOTS:
-
-	/// Is called when the current edit object has generated a change
-	/// event or if a new object has been loaded into editor.
-	void onContentsChanged(RefTarget* editObject);
-
-	/// Is called when the user presses the 'Apply' button to commit the Python script.
-	void onApplyChanges();
-
-private:
-
-	QsciScintilla* _codeEditor;
-	QsciScintilla* _errorDisplay;
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 
 }	// End of namespace
 

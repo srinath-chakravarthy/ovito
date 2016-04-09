@@ -22,7 +22,7 @@
 #ifndef __OVITO_PARTICLES_H
 #define __OVITO_PARTICLES_H
 
-#include <gui/GUI.h>
+#include <core/Core.h>
 
 #ifdef Particles_EXPORTS		// This is defined by CMake when building the plugin library.
 #  define OVITO_PARTICLES_EXPORT Q_DECL_EXPORT
@@ -100,7 +100,6 @@ namespace Ovito {
 		OVITO_BEGIN_INLINE_NAMESPACE(Util)
 			class NearestNeighborFinder;
 			class CutoffNeighborFinder;
-			class ParticlePropertyComboBox;
 		OVITO_END_INLINE_NAMESPACE
 	}
 }

@@ -179,7 +179,7 @@ ViewportWindow::ViewportWindow(Viewport* owner, QWidget* parentWidget) :
 #endif
 		_viewport(owner), _updateRequested(false),
 		_mainWindow(MainWindow::fromDataset(owner->dataset())),
-		_renderDebugCounter(0)
+		_renderDebugCounter(0), _cursorInContextMenuArea(false)
 {
 	// Associate the viewport with this window.
 	owner->setWindow(this);

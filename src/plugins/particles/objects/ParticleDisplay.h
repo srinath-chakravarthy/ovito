@@ -28,7 +28,6 @@
 #include <core/rendering/ParticlePrimitive.h>
 #include <core/rendering/ArrowPrimitive.h>
 #include <core/rendering/SceneRenderer.h>
-#include <gui/properties/PropertiesEditor.h>
 #include "ParticlePropertyObject.h"
 #include "ParticleTypeProperty.h"
 
@@ -253,29 +252,6 @@ private:
 	Q_OBJECT
 	OVITO_OBJECT
 };
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * \brief A properties editor for the ParticleDisplay class.
- */
-class ParticleDisplayEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE ParticleDisplayEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 
 }	// End of namespace
 }	// End of namespace

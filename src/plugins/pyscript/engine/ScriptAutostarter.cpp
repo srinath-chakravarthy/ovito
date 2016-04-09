@@ -22,16 +22,12 @@
 #include <plugins/pyscript/PyScript.h>
 #include <core/app/Application.h>
 #include <core/dataset/DataSetContainer.h>
-#include <gui/utilities/concurrent/ProgressDialogAdapter.h>
-#include <gui/actions/ActionManager.h>
-#include <gui/dialogs/HistoryFileDialog.h>
-#include <gui/mainwin/MainWindow.h>
 #include "ScriptAutostarter.h"
 #include "ScriptEngine.h"
 
 namespace PyScript {
 
-IMPLEMENT_OVITO_OBJECT(PyScript, ScriptAutostarter, GuiAutoStartObject);
+IMPLEMENT_OVITO_OBJECT(PyScript, ScriptAutostarter, AutoStartObject);
 
 /******************************************************************************
 * Destructor, which is called at program exit.
@@ -56,47 +52,6 @@ void ScriptAutostarter::registerCommandLineOptions(QCommandLineParser& cmdLinePa
 
 	// Register the --exec command line option.
 	cmdLineParser.addOption(QCommandLineOption("exec", tr("Executes a single Python statement."), tr("CMD")));
-}
-
-/******************************************************************************
-* Is called when a new main window is created.
-******************************************************************************/
-void ScriptAutostarter::registerActions(ActionManager& actionManager)
-{
-	// Register an action, which allows the user to run a Python script file.
-	QAction* runScriptFileAction = actionManager.createCommandAction(ACTION_SCRIPTING_RUN_FILE, tr("Run Script File..."));
-	connect(runScriptFileAction, &QAction::triggered, [&actionManager]() {
-		// Let the user select a script file on disk.
-		HistoryFileDialog dlg("ScriptFile", actionManager.mainWindow(), tr("Run Script File"), QString(), tr("Python scripts (*.py)"));
-		if(dlg.exec() != QDialog::Accepted)
-			return;
-		QString scriptFile = dlg.selectedFiles().front();
-		DataSet* dataset = actionManager.mainWindow()->datasetContainer().currentSet();
-
-		// Execute the script file.
-		// Keep undo records so that script actions can be undone.
-		dataset->undoStack().beginCompoundOperation(tr("Script actions"));
-		try {
-			ScriptEngine engine(dataset);
-
-			// Show a progress dialog while script is running.
-			QProgressDialog progressDialog(actionManager.mainWindow());
-			progressDialog.setWindowModality(Qt::WindowModal);
-			progressDialog.setAutoClose(false);
-			progressDialog.setAutoReset(false);
-			progressDialog.setMinimumDuration(0);
-			progressDialog.setValue(0);
-			progressDialog.setLabelText(tr("Running script"));
-			ProgressDialogAdapter progressDisplay(&progressDialog);
-			engine.setProgressDisplay(&progressDisplay);
-
-			engine.executeFile(scriptFile);
-		}
-		catch(const Exception& ex) {
-			ex.showError();
-		}
-		dataset->undoStack().endCompoundOperation();
-	});
 }
 
 /******************************************************************************

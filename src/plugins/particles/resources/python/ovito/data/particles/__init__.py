@@ -629,7 +629,7 @@ def _get_ParticleTypeProperty_type_list(self):
     """ A (mutable) list of :py:class:`ParticleType` instances. 
     
         Note that the particle types may be stored in arbitrary order in this type list. 
-        Each type has a unique integer ID (given by the :py:attr:`ParticleType.id' attribute).
+        Each type has a unique integer ID (given by the :py:attr:`ParticleType.id` attribute).
         The numbers stored in the particle type property array refer to these type IDs.
     """
     class ParticleTypeList(collections.MutableSequence):

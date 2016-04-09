@@ -3,7 +3,7 @@
 MACRO(OVITO_STANDARD_PLUGIN target_name)
 
     # Parse macro parameters
-    SET(options)
+    SET(options GUI_PLUGIN)
     SET(oneValueArgs)
     SET(multiValueArgs SOURCES LIB_DEPENDENCIES PLUGIN_DEPENDENCIES OPTIONAL_PLUGIN_DEPENDENCIES PYTHON_WRAPPERS)
     CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -23,14 +23,17 @@ MACRO(OVITO_STANDARD_PLUGIN target_name)
 	# Link to OVITO's core library.
 	TARGET_LINK_LIBRARIES(${target_name} PUBLIC Core)
 
-	# Link to OVITO's GUI library.
-	TARGET_LINK_LIBRARIES(${target_name} PUBLIC Gui)
+	# Link to OVITO's GUI library when plugin provides a UI.
+	IF(${ARG_GUI_PLUGIN})
+	    TARGET_LINK_LIBRARIES(${target_name} PUBLIC Gui)
+    	TARGET_LINK_LIBRARIES(${target_name} PUBLIC Qt5::Widgets)
+	ENDIF()
 
 	# Link other required libraries.
-	TARGET_LINK_LIBRARIES(${target_name} PRIVATE ${lib_dependencies})
+	TARGET_LINK_LIBRARIES(${target_name} PUBLIC ${lib_dependencies})
 
 	# Link Qt5.
-	TARGET_LINK_LIBRARIES(${target_name} PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Concurrent)
+	TARGET_LINK_LIBRARIES(${target_name} PUBLIC Qt5::Core Qt5::Gui Qt5::Concurrent)
 
 	# Link plugin dependencies.
 	FOREACH(plugin_name ${plugin_dependencies})
@@ -78,12 +81,13 @@ MACRO(OVITO_STANDARD_PLUGIN target_name)
 	FILE(WRITE "${PLUGIN_MANIFEST}" "{\n  \"plugin-id\" : \"${target_name}\",\n")
 	FILE(APPEND "${PLUGIN_MANIFEST}" "  \"plugin-version\" : \"${OVITO_VERSION_STRING}\",\n")
 	FILE(APPEND "${PLUGIN_MANIFEST}" "  \"dependencies\" : [ ")
+	UNSET(delimiter)
 	FOREACH(plugin_name ${plugin_dependencies})
 		FILE(APPEND "${PLUGIN_MANIFEST}" "${delimiter}\"${plugin_name}\"")
 		SET(delimiter ", ")
 	ENDFOREACH()
 	FOREACH(plugin_name ${optional_plugin_dependencies})
-		STRING(TOUPPER "${plugin_name}" uppercase_plugin_name)
+		STRING(TOUPPER "${plugin_name}" uppercase_plugin_name)		
 		IF(OVITO_BUILD_PLUGIN_${uppercase_plugin_name})
 			FILE(APPEND "${PLUGIN_MANIFEST}" "${delimiter}\"${plugin_name}\"")
 			SET(delimiter ", ")

@@ -23,7 +23,7 @@
 #define __OVITO_PYSCRIPT_AUTOSTARTER_OBJECT_H
 
 #include <plugins/pyscript/PyScript.h>
-#include <gui/plugins/autostart/GuiAutoStartObject.h>
+#include <core/plugins/autostart/AutoStartObject.h>
 
 namespace PyScript {
 
@@ -33,7 +33,7 @@ using namespace Ovito;
  * \brief An auto-start object that is automatically invoked on application startup
  *        and that will execute a script files passed on the command line.
  */
-class ScriptAutostarter : public GuiAutoStartObject
+class ScriptAutostarter : public AutoStartObject
 {
 public:
 
@@ -45,9 +45,6 @@ public:
 
 	/// \brief Registers plugin-specific command line options.
 	virtual void registerCommandLineOptions(QCommandLineParser& cmdLineParser) override;
-
-	/// \brief Is called when a new main window is created.
-	virtual void registerActions(ActionManager& actionManager) override;
 
 	/// \brief Is called after the application has been completely initialized.
 	virtual void applicationStarted() override;

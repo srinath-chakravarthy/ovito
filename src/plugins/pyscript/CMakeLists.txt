@@ -65,6 +65,11 @@ ADD_PRECOMPILED_HEADER(PyScript plugins/pyscript/PyScript.h)
 # Install the Python source files that belong to the plugin and which provide the scripting interface.
 INSTALL(DIRECTORY "${OVITO_PLUGINS_DIRECTORY}/python/" DESTINATION "${OVITO_RELATIVE_PLUGINS_DIRECTORY}/python/")
 
+# Build corresponding GUI plugin.
+IF(OVITO_BUILD_GUI)
+	ADD_SUBDIRECTORY(gui)
+ENDIF()
+
 # Install "ovitos" script launcher.
 IF(APPLE)	
     SET(OVITOS_EXECUTABLE "${OVITO_LIBRARY_DIRECTORY}/ovitos")

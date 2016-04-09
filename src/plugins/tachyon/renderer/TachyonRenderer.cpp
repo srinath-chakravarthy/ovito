@@ -25,9 +25,7 @@
 #include <core/reference/CloneHelper.h>
 #include <core/scene/ObjectNode.h>
 #include <core/utilities/concurrent/ProgressDisplay.h>
-
 #include "TachyonRenderer.h"
-#include "TachyonRendererEditor.h"
 
 extern "C" {
 
@@ -55,7 +53,6 @@ inline apivector tvec(const Point3& p) {
 }
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Tachyon, TachyonRenderer, NonInteractiveSceneRenderer);
-SET_OVITO_OBJECT_EDITOR(TachyonRenderer, TachyonRendererEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _antialiasingEnabled, "EnableAntialiasing", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _directLightSourceEnabled, "EnableDirectLightSource", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _shadowsEnabled, "EnableShadows", PROPERTY_FIELD_MEMORIZE);

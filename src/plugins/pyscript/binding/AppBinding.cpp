@@ -36,9 +36,6 @@
 #include <core/rendering/RenderSettings.h>
 #include <core/rendering/FrameBuffer.h>
 #include <core/utilities/concurrent/ProgressDisplay.h>
-#include <gui/mainwin/MainWindow.h>
-#include <gui/widgets/rendering/FrameBufferWindow.h>
-#include <gui/dataset/GuiDataSetContainer.h>
 #include "PythonBinding.h"
 
 namespace PyScript {
@@ -75,10 +72,6 @@ BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(DataSet_renderScene_overloads, renderScen
 BOOST_PYTHON_MODULE(PyScriptApp)
 {
 	docstring_options docoptions(true, false);
-
-	class_<MainWindow, bases<>, MainWindow, boost::noncopyable>("MainWindow", no_init)
-		.add_property("frame_buffer_window", make_function(&MainWindow::frameBufferWindow, return_internal_reference<>()))
-	;
 
 	class_<OvitoObject, OORef<OvitoObject>, boost::noncopyable>("OvitoObject", no_init)
 		.def("__str__", &OvitoObject__str__)
@@ -117,7 +110,6 @@ BOOST_PYTHON_MODULE(PyScriptApp)
 				"These are the settings the user can edit in the graphical version of OVITO.")
 		.add_property("selection", make_function(&DataSet::selection, return_value_policy<ovito_object_reference>()))
 		.add_property("container", make_function(&DataSet::container, return_value_policy<ovito_object_reference>()))
-		.add_property("window", make_function(lambda_address([](DataSet& ds) { return MainWindow::fromDataset(&ds); }), return_value_policy<reference_existing_object>()))
 		.def("clearScene", &DataSet::clearScene)
 		.def("rescaleTime", &DataSet::rescaleTime)
 		.def("waitUntilSceneIsReady", &DataSet::waitUntilSceneIsReady, DataSet_waitUntilSceneIsReady_overloads())
@@ -127,14 +119,6 @@ BOOST_PYTHON_MODULE(PyScriptApp)
 
 	ovito_abstract_class<DataSetContainer, RefMaker>()
 		.add_property("currentSet", make_function(&DataSetContainer::currentSet, return_value_policy<ovito_object_reference>()), &DataSetContainer::setCurrentSet)
-	;
-
-	ovito_abstract_class<GuiDataSetContainer, DataSetContainer>()
-		.def("fileNew", &GuiDataSetContainer::fileNew)
-		.def("fileLoad", &GuiDataSetContainer::fileLoad)
-		.def("fileSave", &GuiDataSetContainer::fileSave)
-		.def("fileSaveAs", &GuiDataSetContainer::fileSaveAs)
-		.def("askForSaveChanges", &GuiDataSetContainer::askForSaveChanges)
 	;
 
 	class_<CloneHelper>("CloneHelper", init<>())

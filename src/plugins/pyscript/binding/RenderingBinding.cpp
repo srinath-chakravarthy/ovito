@@ -28,8 +28,6 @@
 #include <core/rendering/FrameBuffer.h>
 #include <core/scene/objects/DisplayObject.h>
 #include <core/scene/objects/geometry/TriMeshDisplay.h>
-#include <gui/rendering/StandardSceneRenderer.h>
-#include <gui/widgets/rendering/FrameBufferWindow.h>
 #include "PythonBinding.h"
 
 namespace PyScript {
@@ -46,10 +44,6 @@ BOOST_PYTHON_MODULE(PyScriptRendering)
 		.add_property("width", &FrameBuffer::width)
 		.add_property("height", &FrameBuffer::height)
 		.add_property("_image", lambda_address([](const FrameBuffer& fb) { return reinterpret_cast<std::uintptr_t>(&fb.image()); }))
-	;
-
-	class_<FrameBufferWindow, bases<>, FrameBufferWindow, boost::noncopyable>("FrameBufferWindow", no_init)
-		.add_property("frame_buffer", make_function(&FrameBufferWindow::frameBuffer, return_value_policy<copy_const_reference>()))
 	;
 
 	{
@@ -122,19 +116,6 @@ BOOST_PYTHON_MODULE(PyScriptRendering)
 
 	ovito_abstract_class<SceneRenderer, RefTarget>()
 		.add_property("isInteractive", &SceneRenderer::isInteractive)
-	;
-
-	ovito_class<StandardSceneRenderer, SceneRenderer>(
-			"The standard OpenGL-based renderer."
-			"\n\n"
-			"This is the default built-in rendering engine that is also used by OVITO to render the contents of the interactive viewports. "
-			"Since it accelerates the generation of images by using the computer's graphics hardware, it is very fast.",
-			"OpenGLRenderer")
-		.add_property("antialiasing_level", &StandardSceneRenderer::antialiasingLevel, &StandardSceneRenderer::setAntialiasingLevel,
-				"A positive integer controlling the level of supersampling. If 1, no supersampling is performed. For larger values, "
-				"the image in rendered at a higher resolution and then scaled back to the output size to reduce aliasing artifacts."
-				"\n\n"
-				":Default: 3")
 	;
 
 	ovito_abstract_class<NonInteractiveSceneRenderer, SceneRenderer>()

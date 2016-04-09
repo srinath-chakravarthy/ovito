@@ -23,15 +23,12 @@
 #define __OVITO_PYTHON_SCRIPT_MODIFIER_H
 
 #include <plugins/pyscript/PyScript.h>
-#include <gui/properties/PropertiesEditor.h>
 #include <core/utilities/concurrent/FutureInterface.h>
 #include <core/scene/pipeline/Modifier.h>
 #include <core/scene/objects/CompoundObject.h>
 #include <plugins/pyscript/engine/ScriptEngine.h>
 
 #include <boost/optional.hpp>
-
-class QsciScintilla;
 
 namespace PyScript {
 
@@ -176,46 +173,6 @@ private:
 
 	DECLARE_PROPERTY_FIELD(_script);
 };
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * \brief A properties editor for the PythonScriptModifier class.
- */
-class PythonScriptModifierEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE PythonScriptModifierEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-	/// This method is called when a reference target changes.
-	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
-
-protected Q_SLOTS:
-
-	/// Is called when the current edit object has generated a change
-	/// event or if a new object has been loaded into editor.
-	void onContentsChanged(RefTarget* editObject);
-
-	/// Is called when the user presses the 'Apply' button to commit the Python script.
-	void onApplyChanges();
-
-private:
-
-	QsciScintilla* _codeEditor;
-	QsciScintilla* _errorDisplay;
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 
 }	// End of namespace
 

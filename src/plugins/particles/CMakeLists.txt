@@ -103,15 +103,8 @@ SET(SourceFiles
 	export/imd/IMDExporter.cpp
 	util/NearestNeighborFinder.cpp
 	util/CutoffNeighborFinder.cpp
-	util/ParticlePropertyComboBox.cpp
-	util/CutoffRadiusPresetsUI.cpp
-	util/ParticleInformationApplet.cpp
-	util/ParticlePickingHelper.cpp
-	util/ParticlePropertyParameterUI.cpp
 	util/ParticleExpressionEvaluator.cpp
 	util/ParticleSelectionSet.cpp
-	util/CreateTrajectoryApplet.cpp
-	util/ParticleSettingsPage.cpp
 )
 
 IF(OVITO_BUILD_PLUGIN_PYSCRIPT)
@@ -137,15 +130,17 @@ SET(GLUSourceFiles
 	util/polytess/tessmono.c
 )
 
-# Compile resources.
-QT5_ADD_RESOURCES(ResourceFiles resources/particles.qrc)
-
 OVITO_STANDARD_PLUGIN(Particles
-	SOURCES Particles.cpp ${SourceFiles} ${GLUSourceFiles} ${ResourceFiles}
-	LIB_DEPENDENCIES muParser qcustomplot VoroPlusPlus ${OPENGL_gl_LIBRARY}
+	SOURCES Particles.cpp ${SourceFiles} ${GLUSourceFiles}
+	LIB_DEPENDENCIES muParser VoroPlusPlus ${OPENGL_gl_LIBRARY}
 	OPTIONAL_PLUGIN_DEPENDENCIES PyScript
 	PYTHON_WRAPPERS "${CMAKE_CURRENT_SOURCE_DIR}/resources/python/"
 )
 
 # Speed up compilation by using precompiled headers.
 ADD_PRECOMPILED_HEADER(Particles plugins/particles/Particles.h)
+
+# Build corresponding GUI plugin.
+IF(OVITO_BUILD_GUI)
+	ADD_SUBDIRECTORY(gui)
+ENDIF()

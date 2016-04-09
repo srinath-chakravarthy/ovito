@@ -130,31 +130,6 @@ private:
 	DECLARE_VECTOR_REFERENCE_FIELD(_bondTypes);
 };
 
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * \brief A properties editor for the BondTypeProperty class.
- */
-class BondTypePropertyEditor : public PropertiesEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE BondTypePropertyEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
-
 }	// End of namespace
 }	// End of namespace
 

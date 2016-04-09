@@ -20,17 +20,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <gui/properties/RefTargetListParameterUI.h>
 #include "BondTypeProperty.h"
 
 namespace Ovito { namespace Particles {
 
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, BondTypePropertyEditor, PropertiesEditor);
-OVITO_END_INLINE_NAMESPACE
-
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, BondTypeProperty, BondPropertyObject);
-SET_OVITO_OBJECT_EDITOR(BondTypeProperty, BondTypePropertyEditor);
 DEFINE_VECTOR_REFERENCE_FIELD(BondTypeProperty, _bondTypes, "BondTypes", BondType);
 SET_PROPERTY_FIELD_LABEL(BondTypeProperty, _bondTypes, "Bond Types");
 
@@ -94,50 +88,8 @@ FloatType BondTypeProperty::getDefaultBondRadius(BondProperty::Type typeClass, c
 			return v.value<FloatType>();
 	}
 
-	return 0.0f;
+	return 0;
 }
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void BondTypePropertyEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(QString(), rolloutParams);
-
-    // Create the rollout contents.
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(0);
-
-	// Bond types
-
-	// Derive a custom class from the list parameter UI to display the bond type colors.
-	class CustomRefTargetListParameterUI : public RefTargetListParameterUI {
-	public:
-		CustomRefTargetListParameterUI(PropertiesEditor* parentEditor, const PropertyFieldDescriptor& refField, const RolloutInsertionParameters& rolloutParams)
-			: RefTargetListParameterUI(parentEditor, refField, rolloutParams, &BondTypeEditor::OOType) {}
-	protected:
-		virtual QVariant getItemData(RefTarget* target, const QModelIndex& index, int role) override {
-			if(role == Qt::DecorationRole && target != nullptr) {
-				return (QColor)static_object_cast<BondType>(target)->color();
-			}
-			else return RefTargetListParameterUI::getItemData(target, index, role);
-		}
-	};
-
-	QWidget* subEditorContainer = new QWidget(rollout);
-	QVBoxLayout* sublayout = new QVBoxLayout(subEditorContainer);
-	sublayout->setContentsMargins(0,0,0,0);
-	layout->addWidget(subEditorContainer);
-
-	RefTargetListParameterUI* bondTypesListUI = new CustomRefTargetListParameterUI(this, PROPERTY_FIELD(BondTypeProperty::_bondTypes), RolloutInsertionParameters().insertInto(subEditorContainer));
-	layout->insertWidget(0, bondTypesListUI->listWidget());
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 }	// End of namespace
 }	// End of namespace
