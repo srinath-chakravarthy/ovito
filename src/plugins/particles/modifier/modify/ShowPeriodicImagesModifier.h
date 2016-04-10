@@ -134,31 +134,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_uniqueIdentifiers);
 };
 
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * A properties editor for the ShowPeriodicImagesModifier class.
- */
-class ShowPeriodicImagesModifierEditor : public ParticleModifierEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE ShowPeriodicImagesModifierEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
-
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

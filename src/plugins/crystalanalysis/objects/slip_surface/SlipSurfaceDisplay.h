@@ -28,7 +28,6 @@
 #include <core/utilities/mesh/TriMesh.h>
 #include <core/utilities/mesh/HalfEdgeMesh.h>
 #include <core/rendering/MeshPrimitive.h>
-#include <gui/properties/PropertiesEditor.h>
 #include <core/animation/controller/Controller.h>
 #include <plugins/particles/data/SimulationCell.h>
 #include "SlipSurface.h"
@@ -140,25 +139,6 @@ private:
 
 	DECLARE_PROPERTY_FIELD(_smoothShading);
 	DECLARE_REFERENCE_FIELD(_surfaceTransparency);
-};
-
-/**
- * \brief A properties editor for the SlipSurface class.
- */
-class OVITO_CRYSTALANALYSIS_EXPORT SlipSurfaceDisplayEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE SlipSurfaceDisplayEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-	Q_OBJECT
-	OVITO_OBJECT
 };
 
 }	// End of namespace

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,70 +19,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SELECT_EXPRESSION_MODIFIER_H
-#define __OVITO_SELECT_EXPRESSION_MODIFIER_H
+#ifndef __OVITO_SELECT_EXPRESSION_MODIFIER_EDITOR_H
+#define __OVITO_SELECT_EXPRESSION_MODIFIER_EDITOR_H
 
-#include <plugins/particles/Particles.h>
-#include <gui/widgets/general/AutocompleteTextEdit.h>
-#include "../ParticleModifier.h"
+#include <plugins/particles/gui/ParticlesGui.h>
+#include <plugins/particles/gui/modifier/ParticleModifierEditor.h>
 
-namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Selection)
-
-/**
- * \brief Selects particles based on a user-defined Boolean expression.
- */
-class OVITO_PARTICLES_EXPORT SelectExpressionModifier : public ParticleModifier
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE SelectExpressionModifier(DataSet* dataset) : ParticleModifier(dataset) {
-		INIT_PROPERTY_FIELD(SelectExpressionModifier::_expression);
-	}
-
-	/////////////////////////// specific methods ///////////////////////////////
-
-	/// Sets the expression that is used to select particles.
-	void setExpression(const QString& expression) { _expression = expression; }
-
-	/// Returns the expression that is used to select particles.
-	const QString& expression() const { return _expression; }
-
-	/// \brief Returns the list of available input variables.
-	const QStringList& inputVariableNames() const { return _variableNames; }
-
-	/// \brief Returns a human-readable text listing the input variables.
-	const QString& inputVariableTable() const { return _variableTable; }
-
-protected:
-
-	/// \brief This virtual method is called by the system when the modifier has been inserted into a PipelineObject.
-	virtual void initializeModifier(PipelineObject* pipeline, ModifierApplication* modApp) override;
-
-	/// Modifies the particle object.
-	virtual PipelineStatus modifyParticles(TimePoint time, TimeInterval& validityInterval) override;
-
-	/// The expression that is used to select atoms.
-	PropertyField<QString> _expression;
-
-	/// The list of input variables during the last evaluation.
-	QStringList _variableNames;
-
-	/// Human-readable text listing the input variables during the last evaluation.
-	QString _variableTable;
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-
-	Q_CLASSINFO("DisplayName", "Expression select");
-	Q_CLASSINFO("ModifierCategory", "Selection");
-
-	DECLARE_PROPERTY_FIELD(_expression);
-};
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
+namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Selection) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
  * A properties editor for the SelectExpressionModifier class.
@@ -117,10 +60,9 @@ private:
 };
 
 OVITO_END_INLINE_NAMESPACE
-
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_SELECT_EXPRESSION_MODIFIER_H
+#endif // __OVITO_SELECT_EXPRESSION_MODIFIER_EDITOR_H

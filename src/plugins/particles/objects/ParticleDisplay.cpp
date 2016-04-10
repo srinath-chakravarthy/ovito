@@ -600,7 +600,7 @@ void ParticleDisplay::render(TimePoint time, DataObject* dataObject, const Pipel
 /******************************************************************************
 * Render a marker around a particle to highlight it in the viewports.
 ******************************************************************************/
-void ParticleDisplay::highlightParticle(int particleIndex, const PipelineFlowState& flowState, ViewportSceneRenderer* renderer)
+void ParticleDisplay::highlightParticle(int particleIndex, const PipelineFlowState& flowState, SceneRenderer* renderer)
 {
 	// Fetch properties of selected particle which are needed to render the overlay.
 	ParticlePropertyObject* posProperty = nullptr;
@@ -726,6 +726,8 @@ void ParticleDisplay::highlightParticle(int particleIndex, const PipelineFlowSta
 		}
 	}
 
+#if 0
+	// TODO
 	GLint oldDepthFunc;
 	glGetIntegerv(GL_DEPTH_FUNC, &oldDepthFunc);
 	glEnable(GL_DEPTH_TEST);
@@ -751,6 +753,7 @@ void ParticleDisplay::highlightParticle(int particleIndex, const PipelineFlowSta
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_STENCIL_TEST);
 	glDepthFunc(oldDepthFunc);
+#endif
 }
 
 /******************************************************************************

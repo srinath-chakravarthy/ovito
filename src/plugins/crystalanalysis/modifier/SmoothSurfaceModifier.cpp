@@ -21,15 +21,12 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/objects/SurfaceMesh.h>
-#include <gui/properties/IntegerParameterUI.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include "SmoothSurfaceModifier.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, SmoothSurfaceModifier, Modifier);
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, SmoothSurfaceModifierEditor, PropertiesEditor);
-SET_OVITO_OBJECT_EDITOR(SmoothSurfaceModifier, SmoothSurfaceModifierEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(SmoothSurfaceModifier, _smoothingLevel, "SmoothingLevel", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(SmoothSurfaceModifier, _smoothingLevel, "Smoothing level");
 
@@ -73,25 +70,6 @@ PipelineStatus SmoothSurfaceModifier::modifyObject(TimePoint time, ModifierAppli
 		}
 	}
 	return PipelineStatus::Success;
-}
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void SmoothSurfaceModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create the first rollout.
-	QWidget* rollout = createRollout(tr("Smooth surface"), rolloutParams);
-
-    QGridLayout* layout = new QGridLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(6);
-	layout->setColumnStretch(1, 1);
-
-	IntegerParameterUI* smoothingLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(SmoothSurfaceModifier::_smoothingLevel));
-	layout->addWidget(smoothingLevelUI->label(), 0, 0);
-	layout->addLayout(smoothingLevelUI->createFieldLayout(), 0, 1);
-	smoothingLevelUI->setMinValue(0);
 }
 
 }	// End of namespace

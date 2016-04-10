@@ -184,6 +184,10 @@ public:
 	/// Returns the line rendering width to use in object picking mode.
 	virtual FloatType defaultLinePickingWidth() { return 1; }
 
+	/// Temporarily enables/disables the depth test while rendering.
+	/// This method is mainly used with the interactive viewport renderer.
+	virtual void setDepthTestEnabled(bool enabled) {}
+
 	/// \brief Computes the bounding box of the the 3D visual elements
 	///        shown only in the interactive viewports.
 	/// \param time The time at which the bounding box should be computed.

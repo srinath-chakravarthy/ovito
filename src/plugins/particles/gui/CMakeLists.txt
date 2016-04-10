@@ -32,6 +32,7 @@ SET(SourceFiles
 	objects/SurfaceMeshDisplayEditor.cpp
 	objects/TrajectoryDisplayEditor.cpp
 	objects/TrajectoryGeneratorObjectEditor.cpp
+	modifier/ParticleModifierEditor.cpp
 	modifier/coloring/AssignColorModifierEditor.cpp
 	modifier/coloring/ColorCodingModifierEditor.cpp
 	modifier/coloring/ColorLegendOverlayEditor.cpp
@@ -67,6 +68,7 @@ SET(SourceFiles
 	util/ParticlePropertyParameterUI.cpp
 	util/CreateTrajectoryApplet.cpp
 	util/ParticleSettingsPage.cpp
+	export/ParticleExporterSettingsDialog.cpp
 )
 
 # Compile resources.

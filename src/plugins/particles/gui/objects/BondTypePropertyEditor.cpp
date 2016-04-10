@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2015) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,85 +19,16 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <plugins/particles/Particles.h>
+#include <plugins/particles/gui/ParticlesGui.h>
+#include <plugins/particles/objects/BondTypeProperty.h>
 #include <gui/properties/RefTargetListParameterUI.h>
-#include "BondTypeProperty.h"
+#include "BondTypePropertyEditor.h"
+#include "BondTypeEditor.h"
 
-namespace Ovito { namespace Particles {
+namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, BondTypePropertyEditor, PropertiesEditor);
-OVITO_END_INLINE_NAMESPACE
-
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, BondTypeProperty, BondPropertyObject);
+IMPLEMENT_OVITO_OBJECT(ParticlesGui, BondTypePropertyEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(BondTypeProperty, BondTypePropertyEditor);
-DEFINE_VECTOR_REFERENCE_FIELD(BondTypeProperty, _bondTypes, "BondTypes", BondType);
-SET_PROPERTY_FIELD_LABEL(BondTypeProperty, _bondTypes, "Bond Types");
-
-/******************************************************************************
-* Constructor.
-******************************************************************************/
-BondTypeProperty::BondTypeProperty(DataSet* dataset, BondProperty* storage)
-	: BondPropertyObject(dataset, storage)
-{
-	INIT_PROPERTY_FIELD(BondTypeProperty::_bondTypes);
-}
-
-/******************************************************************************
-* Returns the default color for a bond type ID.
-******************************************************************************/
-Color BondTypeProperty::getDefaultBondColorFromId(BondProperty::Type typeClass, int bondTypeId)
-{
-	// Assign initial standard color to new bond types.
-	static const Color defaultTypeColors[] = {
-		Color(1.0f,1.0f,0.0f),
-		Color(0.7f,0.0f,1.0f),
-		Color(0.2f,1.0f,1.0f),
-		Color(1.0f,0.4f,1.0f),
-		Color(0.4f,1.0f,0.4f),
-		Color(1.0f,0.4f,0.4f),
-		Color(0.4f,0.4f,1.0f),
-		Color(1.0f,1.0f,0.7f),
-		Color(0.97f,0.97f,0.97f)
-	};
-	return defaultTypeColors[std::abs(bondTypeId) % (sizeof(defaultTypeColors) / sizeof(defaultTypeColors[0]))];
-}
-
-/******************************************************************************
-* Returns the default color for a bond type name.
-******************************************************************************/
-Color BondTypeProperty::getDefaultBondColor(BondProperty::Type typeClass, const QString& bondTypeName, int bondTypeId, bool userDefaults)
-{
-	if(userDefaults) {
-		QSettings settings;
-		settings.beginGroup("bonds/defaults/color");
-		settings.beginGroup(QString::number((int)typeClass));
-		QVariant v = settings.value(bondTypeName);
-		if(v.isValid() && v.canConvert<Color>())
-			return v.value<Color>();
-	}
-
-	return getDefaultBondColorFromId(typeClass, bondTypeId);
-}
-
-/******************************************************************************
-* Returns the default radius for a bond type name.
-******************************************************************************/
-FloatType BondTypeProperty::getDefaultBondRadius(BondProperty::Type typeClass, const QString& bondTypeName, int bondTypeId, bool userDefaults)
-{
-	if(userDefaults) {
-		QSettings settings;
-		settings.beginGroup("bonds/defaults/radius");
-		settings.beginGroup(QString::number((int)typeClass));
-		QVariant v = settings.value(bondTypeName);
-		if(v.isValid() && v.canConvert<FloatType>())
-			return v.value<FloatType>();
-	}
-
-	return 0.0f;
-}
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /******************************************************************************
 * Sets up the UI widgets of the editor.
@@ -138,6 +69,5 @@ void BondTypePropertyEditor::createUI(const RolloutInsertionParameters& rolloutP
 }
 
 OVITO_END_INLINE_NAMESPACE
-
 }	// End of namespace
 }	// End of namespace

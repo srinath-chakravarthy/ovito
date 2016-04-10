@@ -43,9 +43,6 @@ public:
 	/// \brief Returns the filter description that is displayed in the drop-down box of the file dialog.
 	virtual QString fileFilterDescription() override { return tr("FHI-aims File"); }
 
-	/// \brief Opens the export settings dialog for this exporter service.
-	virtual bool showSettingsDialog(const PipelineFlowState& state, QWidget* parent) override;
-
 protected:
 
 	/// \brief Writes the particles of one animation frame to the current output file.

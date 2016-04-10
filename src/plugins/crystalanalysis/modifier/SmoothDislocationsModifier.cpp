@@ -21,17 +21,12 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/crystalanalysis/data/DislocationNetwork.h>
-#include <gui/properties/IntegerParameterUI.h>
-#include <gui/properties/FloatParameterUI.h>
-#include <gui/properties/BooleanGroupBoxParameterUI.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include "SmoothDislocationsModifier.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, SmoothDislocationsModifier, Modifier);
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, SmoothDislocationsModifierEditor, PropertiesEditor);
-SET_OVITO_OBJECT_EDITOR(SmoothDislocationsModifier, SmoothDislocationsModifierEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(SmoothDislocationsModifier, _smoothingEnabled, "SmoothingEnabled", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(SmoothDislocationsModifier, _smoothingLevel, "SmoothingLevel", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(SmoothDislocationsModifier, _coarseningEnabled, "CoarseningEnabled", PROPERTY_FIELD_MEMORIZE);
@@ -275,42 +270,6 @@ void SmoothDislocationsModifier::smoothDislocationLine(int smoothingLevel, std::
 			}
 		}
 	}
-}
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void SmoothDislocationsModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create the first rollout.
-	QWidget* rollout = createRollout(tr("Smooth dislocations"), rolloutParams);
-
-    QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-
-	BooleanGroupBoxParameterUI* smoothingEnabledUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(SmoothDislocationsModifier::_smoothingEnabled));
-	smoothingEnabledUI->groupBox()->setTitle(tr("Line smoothing"));
-    QGridLayout* sublayout = new QGridLayout(smoothingEnabledUI->childContainer());
-	sublayout->setContentsMargins(4,4,4,4);
-	sublayout->setColumnStretch(1, 1);
-	layout->addWidget(smoothingEnabledUI->groupBox());
-
-	IntegerParameterUI* smoothingLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(SmoothDislocationsModifier::_smoothingLevel));
-	sublayout->addWidget(smoothingLevelUI->label(), 0, 0);
-	sublayout->addLayout(smoothingLevelUI->createFieldLayout(), 0, 1);
-	smoothingLevelUI->setMinValue(0);
-
-	BooleanGroupBoxParameterUI* coarseningEnabledUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(SmoothDislocationsModifier::_coarseningEnabled));
-	coarseningEnabledUI->groupBox()->setTitle(tr("Line coarsening"));
-    sublayout = new QGridLayout(coarseningEnabledUI->childContainer());
-	sublayout->setContentsMargins(4,4,4,4);
-	sublayout->setColumnStretch(1, 1);
-	layout->addWidget(coarseningEnabledUI->groupBox());
-
-	FloatParameterUI* linePointIntervalUI = new FloatParameterUI(this, PROPERTY_FIELD(SmoothDislocationsModifier::_linePointInterval));
-	sublayout->addWidget(linePointIntervalUI->label(), 0, 0);
-	sublayout->addLayout(linePointIntervalUI->createFieldLayout(), 0, 1);
-	linePointIntervalUI->setMinValue(0);
 }
 
 }	// End of namespace

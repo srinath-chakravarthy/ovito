@@ -21,10 +21,6 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/objects/SurfaceMesh.h>
-#include <gui/properties/IntegerParameterUI.h>
-#include <gui/properties/FloatParameterUI.h>
-#include <gui/properties/BooleanParameterUI.h>
-#include <gui/properties/SubObjectParameterUI.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/crystalanalysis/util/DelaunayTessellation.h>
 #include <plugins/crystalanalysis/util/ManifoldConstructionHelper.h>
@@ -33,8 +29,6 @@
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, ConstructSurfaceModifier, AsynchronousParticleModifier);
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, ConstructSurfaceModifierEditor, ParticleModifierEditor);
-SET_OVITO_OBJECT_EDITOR(ConstructSurfaceModifier, ConstructSurfaceModifierEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(ConstructSurfaceModifier, _smoothingLevel, "SmoothingLevel", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(ConstructSurfaceModifier, _probeSphereRadius, "Radius", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(ConstructSurfaceModifier, _surfaceMeshDisplay, "SurfaceMeshDisplay", SurfaceMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
@@ -230,41 +224,6 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 	_surfaceArea *= 0.5f;
 
 	endProgressSubSteps();
-}
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void ConstructSurfaceModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create the rollout.
-	QWidget* rollout = createRollout(tr("Construct surface mesh"), rolloutParams, "particles.modifiers.construct_surface_mesh.html");
-
-    QGridLayout* layout = new QGridLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(6);
-	layout->setColumnStretch(1, 1);
-
-	FloatParameterUI* radiusUI = new FloatParameterUI(this, PROPERTY_FIELD(ConstructSurfaceModifier::_probeSphereRadius));
-	layout->addWidget(radiusUI->label(), 0, 0);
-	layout->addLayout(radiusUI->createFieldLayout(), 0, 1);
-	radiusUI->setMinValue(0);
-
-	IntegerParameterUI* smoothingLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(ConstructSurfaceModifier::_smoothingLevel));
-	layout->addWidget(smoothingLevelUI->label(), 1, 0);
-	layout->addLayout(smoothingLevelUI->createFieldLayout(), 1, 1);
-	smoothingLevelUI->setMinValue(0);
-
-	BooleanParameterUI* onlySelectedUI = new BooleanParameterUI(this, PROPERTY_FIELD(ConstructSurfaceModifier::_onlySelectedParticles));
-	layout->addWidget(onlySelectedUI->checkBox(), 2, 0, 1, 2);
-
-	// Status label.
-	layout->setRowMinimumHeight(3, 10);
-	layout->addWidget(statusLabel(), 4, 0, 1, 2);
-	statusLabel()->setMinimumHeight(100);
-
-	// Open a sub-editor for the mesh display object.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(ConstructSurfaceModifier::_surfaceMeshDisplay), rolloutParams.after(rollout));
 }
 
 }	// End of namespace

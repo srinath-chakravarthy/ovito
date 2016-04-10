@@ -19,12 +19,13 @@
 #
 ###############################################################################
 
-SET(SourceFiles
-    modifier/VoroTopModifier.cpp
+OVITO_STANDARD_PLUGIN(VoroTop
+	SOURCES VoroTopModifier.cpp
+	PLUGIN_DEPENDENCIES Particles
+	PRIVATE_LIB_DEPENDENCIES VoroPlusPlus 
 )
 
-OVITO_STANDARD_PLUGIN(VoroTop
-	SOURCES ${SourceFiles}
-	PLUGIN_DEPENDENCIES Particles
-	LIB_DEPENDENCIES VoroPlusPlus 
-)
+# Build corresponding GUI plugin.
+IF(OVITO_BUILD_GUI)
+	ADD_SUBDIRECTORY(gui)
+ENDIF()

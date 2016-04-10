@@ -32,7 +32,6 @@
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ParticleModifier, Modifier);
-IMPLEMENT_OVITO_OBJECT(Particles, ParticleModifierEditor, PropertiesEditor);
 
 /******************************************************************************
 * This modifies the input object.
@@ -559,43 +558,6 @@ void ParticleModifier::loadFromStream(ObjectLoadStream& stream)
 	stream.expectChunk(0x01);
 	// For future use...
 	stream.closeChunk();
-}
-
-/******************************************************************************
-* This method is called when a reference target changes.
-******************************************************************************/
-bool ParticleModifierEditor::referenceEvent(RefTarget* source, ReferenceEvent* event)
-{
-	if(source == editObject() && event->type() == ReferenceEvent::ObjectStatusChanged) {
-		updateStatusLabel();
-	}
-	return PropertiesEditor::referenceEvent(source, event);
-}
-
-/******************************************************************************
-* Updates the text of the result label.
-******************************************************************************/
-void ParticleModifierEditor::updateStatusLabel()
-{
-	if(!_statusLabel)
-		return;
-
-	if(Modifier* modifier = dynamic_object_cast<Modifier>(editObject()))
-		_statusLabel->setStatus(modifier->status());
-	else
-		_statusLabel->clearStatus();
-}
-
-/******************************************************************************
-* Returns a widget that displays a message sent by the modifier that
-* states the outcome of the modifier evaluation. Derived classes of this
-* editor base class can add the widget to their user interface.
-******************************************************************************/
-StatusWidget* ParticleModifierEditor::statusLabel()
-{
-	if(!_statusLabel)
-		_statusLabel = new StatusWidget();
-	return _statusLabel;
 }
 
 OVITO_END_INLINE_NAMESPACE

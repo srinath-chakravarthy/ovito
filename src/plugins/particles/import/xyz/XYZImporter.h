@@ -23,7 +23,6 @@
 #define __OVITO_XYZ_IMPORTER_H
 
 #include <plugins/particles/Particles.h>
-#include <gui/properties/PropertiesEditor.h>
 #include <plugins/particles/import/InputColumnMapping.h>
 #include <plugins/particles/import/ParticleImporter.h>
 
@@ -64,10 +63,6 @@ public:
 	/// \brief Sets the user-defined mapping between data columns in the input file and
 	///        the internal particle properties.
 	void setColumnMapping(const InputColumnMapping& mapping);
-
-	/// Displays a dialog box that allows the user to edit the custom file column to particle
-	/// property mapping.
-	void showEditColumnMappingDialog(QWidget* parent);
 
 	/// Guesses the mapping of input file columns to internal particle properties.
 	static bool mapVariableToProperty(InputColumnMapping &columnMapping, int column, QString name, int dataType, int vec);
@@ -137,36 +132,6 @@ private:
 	Q_OBJECT
 	OVITO_OBJECT
 };
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * \brief A properties editor for the XYZImporter class.
- */
-class XYZImporterEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE XYZImporterEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-protected Q_SLOTS:
-
-	/// Is called when the user pressed the "Edit column mapping" button.
-	void onEditColumnMapping();
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

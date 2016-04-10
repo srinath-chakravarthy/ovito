@@ -24,26 +24,14 @@
 #include <core/scene/ObjectNode.h>
 #include <core/app/Application.h>
 #include <core/viewport/ViewportConfiguration.h>
-#include <gui/mainwin/MainWindow.h>
-#include <gui/properties/IntegerParameterUI.h>
-#include <gui/properties/StringParameterUI.h>
-#include <gui/properties/BooleanParameterUI.h>
-#include <gui/properties/IntegerRadioButtonParameterUI.h>
-#include <gui/properties/BooleanRadioButtonParameterUI.h>
-#include <gui/widgets/general/ElidedTextLabel.h>
-#include <gui/utilities/concurrent/ProgressDialogAdapter.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include "TrajectoryGeneratorObject.h"
 
 namespace Ovito { namespace Particles {
 
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, TrajectoryGeneratorObjectEditor, PropertiesEditor);
-OVITO_END_INLINE_NAMESPACE
-
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, TrajectoryGeneratorObject, TrajectoryObject);
-SET_OVITO_OBJECT_EDITOR(TrajectoryGeneratorObject, TrajectoryGeneratorObjectEditor);
 DEFINE_FLAGS_REFERENCE_FIELD(TrajectoryGeneratorObject, _source, "ParticleSource", ObjectNode, PROPERTY_FIELD_NEVER_CLONE_TARGET | PROPERTY_FIELD_NO_SUB_ANIM);
 DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, _onlySelectedParticles, "OnlySelectedParticles");
 DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, _useCustomInterval, "UseCustomInterval");
@@ -86,20 +74,6 @@ bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* pr
 {
 	// Suspend viewports while loading simulation frames.
 	ViewportSuspender noVPUpdates(this);
-
-	// Show progress dialog.
-	std::unique_ptr<QProgressDialog> localProgressDialog;
-	std::unique_ptr<ProgressDialogAdapter> progressAdapter;
-	if(!progressDisplay && Application::instance().guiMode()) {
-		localProgressDialog.reset(new QProgressDialog(MainWindow::fromDataset(dataset())));
-		localProgressDialog->setWindowModality(Qt::WindowModal);
-		localProgressDialog->setAutoClose(false);
-		localProgressDialog->setAutoReset(false);
-		localProgressDialog->setMinimumDuration(0);
-		localProgressDialog->setValue(0);
-		progressAdapter.reset(new ProgressDialogAdapter(localProgressDialog.get()));
-		progressDisplay = progressAdapter.get();
-	}
 
 	TimePoint currentTime = dataset()->animationSettings()->time();
 
@@ -228,138 +202,6 @@ bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* pr
 
 	return true;
 }
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void TrajectoryGeneratorObjectEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Generate trajectory"), rolloutParams, "howto.visualize_particle_trajectories.html");
-
-    // Create the rollout contents.
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(6);
-
-	// Particle set
-	{
-		QGroupBox* groupBox = new QGroupBox(tr("Input particles"));
-		layout->addWidget(groupBox);
-
-		QGridLayout* layout2 = new QGridLayout(groupBox);
-		layout2->setContentsMargins(4,4,4,4);
-		layout2->setSpacing(2);
-		layout2->setColumnStretch(1, 1);
-		layout2->setColumnMinimumWidth(0, 15);
-
-		layout2->addWidget(new QLabel(tr("Source:")), 0, 0, 1, 2);
-		QLabel* dataSourceLabel = new ElidedTextLabel();
-		layout2->addWidget(dataSourceLabel, 1, 1);
-
-	    connect(this, &PropertiesEditor::contentsChanged, [dataSourceLabel](RefTarget* editObject) {
-	    	if(TrajectoryGeneratorObject* trajObj = static_object_cast<TrajectoryGeneratorObject>(editObject)) {
-	    		if(trajObj->source()) {
-	    			dataSourceLabel->setText(trajObj->source()->objectTitle());
-	    			return;
-	    		}
-	    	}
-			dataSourceLabel->setText(QString());
-	    });
-
-		layout2->addWidget(new QLabel(tr("Generate trajectories for:")), 2, 0, 1, 2);
-
-		BooleanRadioButtonParameterUI* onlySelectedParticlesUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::_onlySelectedParticles));
-
-		QRadioButton* allParticlesButton = onlySelectedParticlesUI->buttonFalse();
-		allParticlesButton->setText(tr("All particles"));
-		layout2->addWidget(allParticlesButton, 3, 1);
-
-		QRadioButton* selectedParticlesButton = onlySelectedParticlesUI->buttonTrue();
-		selectedParticlesButton->setText(tr("Selected particles"));
-		layout2->addWidget(selectedParticlesButton, 4, 1);
-	}
-
-	// Periodic boundaries
-	{
-		QGroupBox* groupBox = new QGroupBox(tr("Periodic boundary conditions"));
-		layout->addWidget(groupBox);
-
-		QGridLayout* layout2 = new QGridLayout(groupBox);
-		layout2->setContentsMargins(4,4,4,4);
-		layout2->setSpacing(2);
-
-		BooleanParameterUI* unwrapTrajectoriesUI = new BooleanParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::_unwrapTrajectories));
-		layout2->addWidget(unwrapTrajectoriesUI->checkBox(), 0, 0);
-	}
-
-	// Time range
-	{
-		QGroupBox* groupBox = new QGroupBox(tr("Time range"));
-		layout->addWidget(groupBox);
-
-		QVBoxLayout* layout2 = new QVBoxLayout(groupBox);
-		layout2->setContentsMargins(4,4,4,4);
-		layout2->setSpacing(2);
-		QGridLayout* layout2c = new QGridLayout();
-		layout2c->setContentsMargins(0,0,0,0);
-		layout2c->setSpacing(2);
-		layout2->addLayout(layout2c);
-
-		BooleanRadioButtonParameterUI* useCustomIntervalUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::_useCustomInterval));
-
-		QRadioButton* animationIntervalButton = useCustomIntervalUI->buttonFalse();
-		animationIntervalButton->setText(tr("Complete trajectory"));
-		layout2c->addWidget(animationIntervalButton, 0, 0, 1, 5);
-
-		QRadioButton* customIntervalButton = useCustomIntervalUI->buttonTrue();
-		customIntervalButton->setText(tr("Frame interval:"));
-		layout2c->addWidget(customIntervalButton, 1, 0, 1, 5);
-
-		IntegerParameterUI* customRangeStartUI = new IntegerParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::_customIntervalStart));
-		customRangeStartUI->setEnabled(false);
-		layout2c->addLayout(customRangeStartUI->createFieldLayout(), 2, 1);
-		layout2c->addWidget(new QLabel(tr("to")), 2, 2);
-		IntegerParameterUI* customRangeEndUI = new IntegerParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::_customIntervalEnd));
-		customRangeEndUI->setEnabled(false);
-		layout2c->addLayout(customRangeEndUI->createFieldLayout(), 2, 3);
-		layout2c->setColumnMinimumWidth(0, 30);
-		layout2c->setColumnStretch(4, 1);
-		connect(customIntervalButton, &QRadioButton::toggled, customRangeStartUI, &IntegerParameterUI::setEnabled);
-		connect(customIntervalButton, &QRadioButton::toggled, customRangeEndUI, &IntegerParameterUI::setEnabled);
-
-		QGridLayout* layout2a = new QGridLayout();
-		layout2a->setContentsMargins(0,6,0,0);
-		layout2a->setSpacing(2);
-		layout2->addLayout(layout2a);
-		IntegerParameterUI* everyNthFrameUI = new IntegerParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::_everyNthFrame));
-		layout2a->addWidget(everyNthFrameUI->label(), 0, 0);
-		layout2a->addLayout(everyNthFrameUI->createFieldLayout(), 0, 1);
-		everyNthFrameUI->setMinValue(1);
-		layout2a->setColumnStretch(2, 1);
-	}
-
-	QPushButton* createTrajectoryButton = new QPushButton(tr("Regenerate trajectory lines"));
-	layout->addWidget(createTrajectoryButton);
-	connect(createTrajectoryButton, &QPushButton::clicked, this, &TrajectoryGeneratorObjectEditor::onRegenerateTrajectory);
-}
-
-/******************************************************************************
-* Is called when the user clicks the 'Regenerate trajectory' button.
-******************************************************************************/
-void TrajectoryGeneratorObjectEditor::onRegenerateTrajectory()
-{
-	TrajectoryGeneratorObject* trajObj = static_object_cast<TrajectoryGeneratorObject>(editObject());
-	if(!trajObj) return;
-
-	undoableTransaction(tr("Generate trajectory"), [trajObj]() {
-		trajObj->generateTrajectories();
-	});
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 }	// End of namespace
 }	// End of namespace

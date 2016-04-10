@@ -30,18 +30,13 @@
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/app/Application.h>
-#include <gui/mainwin/MainWindow.h>
-#include <gui/properties/BooleanParameterUI.h>
-#include <plugins/particles/import/InputColumnMappingDialog.h>
 #include "XYZImporter.h"
+
+#include <QRegularExpression>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, XYZImporter, ParticleImporter);
-SET_OVITO_OBJECT_EDITOR(XYZImporter, XYZImporterEditor);
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, XYZImporterEditor, PropertiesEditor);
-OVITO_END_INLINE_NAMESPACE
 
 /******************************************************************************
  * Sets the user-defined mapping between data columns in the input file and
@@ -141,6 +136,7 @@ bool XYZImporter::inspectNewFile(FileSource* obj, int frameIndex)
 				column.columnName.clear();
 		}
 
+#if 0
 		InputColumnMappingDialog dialog(mapping, MainWindow::fromDataset(dataset()));
 		if(dialog.exec() == QDialog::Accepted) {
 			setColumnMapping(dialog.mapping());
@@ -151,6 +147,7 @@ bool XYZImporter::inspectNewFile(FileSource* obj, int frameIndex)
 			settings.endGroup();
 			return true;
 		}
+#endif
 		return false;
 	}
 	else _columnMapping.setFileExcerpt(inspectionTask->columnMapping().fileExcerpt());
@@ -604,69 +601,6 @@ OORef<RefTarget> XYZImporter::clone(bool deepCopy, CloneHelper& cloneHelper)
 	clone->_columnMapping = this->_columnMapping;
 	return clone;
 }
-
-/******************************************************************************
- * Displays a dialog box that allows the user to edit the custom file column to particle
- * property mapping.
- *****************************************************************************/
-void XYZImporter::showEditColumnMappingDialog(QWidget* parent)
-{
-	InputColumnMappingDialog dialog(_columnMapping, parent);
-	if(dialog.exec() == QDialog::Accepted) {
-		setColumnMapping(dialog.mapping());
-		// Remember the user-defined mapping for the next time.
-		QSettings settings;
-		settings.beginGroup("viz/importer/xyz/");
-		settings.setValue("columnmapping", _columnMapping.toByteArray());
-		settings.endGroup();
-		requestReload();
-	}
-}
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void XYZImporterEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("XYZ"), rolloutParams);
-
-    // Create the rollout contents.
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(4);
-
-	QGroupBox* animFramesBox = new QGroupBox(tr("Timesteps"), rollout);
-	QVBoxLayout* sublayout = new QVBoxLayout(animFramesBox);
-	sublayout->setContentsMargins(4,4,4,4);
-	layout->addWidget(animFramesBox);
-
-	// Multi-timestep file
-	BooleanParameterUI* multitimestepUI = new BooleanParameterUI(this, PROPERTY_FIELD(ParticleImporter::_isMultiTimestepFile));
-	sublayout->addWidget(multitimestepUI->checkBox());
-
-	QGroupBox* columnMappingBox = new QGroupBox(tr("File columns"), rollout);
-	sublayout = new QVBoxLayout(columnMappingBox);
-	sublayout->setContentsMargins(4,4,4,4);
-	layout->addWidget(columnMappingBox);
-
-	QPushButton* editMappingButton = new QPushButton(tr("Edit column mapping..."));
-	sublayout->addWidget(editMappingButton);
-	connect(editMappingButton, &QPushButton::clicked, this, &XYZImporterEditor::onEditColumnMapping);
-}
-
-/******************************************************************************
-* Is called when the user pressed the "Edit column mapping" button.
-******************************************************************************/
-void XYZImporterEditor::onEditColumnMapping()
-{
-	if(XYZImporter* importer = static_object_cast<XYZImporter>(editObject()))
-		importer->showEditColumnMappingDialog(mainWindow());
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

@@ -66,7 +66,7 @@ void PickingSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParame
 	_framebufferObject.reset(new QOpenGLFramebufferObject(size.width(), size.height(), framebufferFormat));
 
 	// Clear OpenGL error state.
-	while(glGetError() != GL_NO_ERROR);
+	while(context->functions()->glGetError() != GL_NO_ERROR);
 	if(!_framebufferObject->isValid())
 		throwException(tr("Failed to create OpenGL framebuffer object for offscreen rendering."));
 
@@ -77,8 +77,8 @@ void PickingSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParame
 	ViewportSceneRenderer::beginFrame(time, params, vp);
 
 	// Setup GL viewport.
-	OVITO_CHECK_OPENGL(glViewport(0, 0, size.width(), size.height()));
-	OVITO_CHECK_OPENGL(glClearColor(0, 0, 0, 0));
+	setRenderingViewport(0, 0, size.width(), size.height());
+	setClearColor(ColorA(0, 0, 0, 0));
 }
 
 /******************************************************************************
@@ -94,15 +94,15 @@ bool PickingSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRendering
 		return false;
 
 	// Clear OpenGL error state, so we start fresh for the glReadPixels() call below.
-	while(glGetError() != GL_NO_ERROR);
+	while(glfuncs()->glGetError() != GL_NO_ERROR);
 
 	// Fetch rendered image from OpenGL framebuffer.
 	QSize size = _framebufferObject->size();
 	_image = QImage(size, QImage::Format_ARGB32);
 	// Try GL_BGRA pixel format first. If not supported, use GL_RGBA instead and convert back to GL_BGRA.
-	glReadPixels(0, 0, size.width(), size.height(), GL_BGRA, GL_UNSIGNED_BYTE, _image.bits());
-	if(glGetError() != GL_NO_ERROR) {
-		glReadPixels(0, 0, size.width(), size.height(), GL_RGBA, GL_UNSIGNED_BYTE, _image.bits());
+	glfuncs()->glReadPixels(0, 0, size.width(), size.height(), GL_BGRA, GL_UNSIGNED_BYTE, _image.bits());
+	if(glfuncs()->glGetError() != GL_NO_ERROR) {
+		glfuncs()->glReadPixels(0, 0, size.width(), size.height(), GL_RGBA, GL_UNSIGNED_BYTE, _image.bits());
 		_image = _image.rgbSwapped();
 	}
 	OVITO_REPORT_OPENGL_ERRORS();
@@ -112,24 +112,24 @@ bool PickingSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRendering
 	_depthBufferBits = glformat().depthBufferSize();
 	if(_depthBufferBits == 16) {
 		_depthBuffer.reset(new quint8[size.width() * size.height() * sizeof(GLushort)]);
-		OVITO_CHECK_OPENGL(glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, _depthBuffer.get()));
+		OVITO_CHECK_OPENGL(glfuncs()->glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, _depthBuffer.get()));
 	}
 	else if(_depthBufferBits == 24) {
 		_depthBuffer.reset(new quint8[size.width() * size.height() * sizeof(GLuint)]);
-		while(glGetError() != GL_NO_ERROR);
-		glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, _depthBuffer.get());
-		if(glGetError() != GL_NO_ERROR) {
-			OVITO_CHECK_OPENGL(glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_COMPONENT, GL_FLOAT, _depthBuffer.get()));
+		while(glfuncs()->glGetError() != GL_NO_ERROR);
+		glfuncs()->glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, _depthBuffer.get());
+		if(glfuncs()->glGetError() != GL_NO_ERROR) {
+			OVITO_CHECK_OPENGL(glfuncs()->glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_COMPONENT, GL_FLOAT, _depthBuffer.get()));
 			_depthBufferBits = 0;
 		}
 	}
 	else if(_depthBufferBits == 32) {
 		_depthBuffer.reset(new quint8[size.width() * size.height() * sizeof(GLuint)]);
-		OVITO_CHECK_OPENGL(glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, _depthBuffer.get()));
+		OVITO_CHECK_OPENGL(glfuncs()->glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, _depthBuffer.get()));
 	}
 	else {
 		_depthBuffer.reset(new quint8[size.width() * size.height() * sizeof(GLfloat)]);
-		OVITO_CHECK_OPENGL(glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_COMPONENT, GL_FLOAT, _depthBuffer.get()));
+		OVITO_CHECK_OPENGL(glfuncs()->glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_COMPONENT, GL_FLOAT, _depthBuffer.get()));
 		_depthBufferBits = 0;
 	}
 

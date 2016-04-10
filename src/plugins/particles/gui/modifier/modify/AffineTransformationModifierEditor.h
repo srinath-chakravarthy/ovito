@@ -19,120 +19,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_AFFINE_TRANSFORMATION_MODIFIER_H
-#define __OVITO_AFFINE_TRANSFORMATION_MODIFIER_H
+#ifndef __OVITO_AFFINE_TRANSFORMATION_MODIFIER_EDITOR_H
+#define __OVITO_AFFINE_TRANSFORMATION_MODIFIER_EDITOR_H
 
-#include <plugins/particles/Particles.h>
-#include <gui/widgets/general/SpinnerWidget.h>
-#include "../ParticleModifier.h"
+#include <plugins/particles/gui/ParticlesGui.h>
+#include <plugins/particles/gui/modifier/ParticleModifierEditor.h>
 
-namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
-
-/**
- * \brief This modifier applies an arbitrary affine transformation to the
- *        particles and/or the simulation box.
- *
- * The affine transformation is given by a 3x4 matrix.
- */
-class OVITO_PARTICLES_EXPORT AffineTransformationModifier : public ParticleModifier
-{
-public:
-
-	/// \brief Constructor.
-	Q_INVOKABLE AffineTransformationModifier(DataSet* dataset);
-
-	// Property access functions:
-
-	/// Returns the affine transformation matrix.
-	const AffineTransformation& transformation() const { return _transformationTM; }
-
-	/// Sets the affine transformation.
-	void setTransformation(const AffineTransformation& tm) { _transformationTM = tm; }
-
-	/// Returns the target cell matrix matrix for absolute transformation mode.
-	const AffineTransformation& targetCell() const { return _targetCell; }
-
-	/// Sets the target cell matrix for absolute transformation mode.
-	void setTargetCell(const AffineTransformation& cell) { _targetCell = cell; }
-
-	/// Returns true if relative transformation mode is selected; returns false if absolute transformation mode is active.
-	bool relativeMode() const { return _relativeMode; }
-
-	/// Switches between relative and absolute transformation mode.
-	void setRelativeMode(bool relative) { _relativeMode = relative; }
-
-	/// Returns whether the transformation is applied to the particles.
-	bool applyToParticles() const { return _applyToParticles; }
-
-	/// Sets whether the transformation is applied to the particles.
-	void setApplyToParticles(bool apply) { _applyToParticles = apply; }
-
-	/// Returns whether the transformation is applied only to the selected particles.
-	bool selectionOnly() const { return _toSelectionOnly; }
-
-	/// Sets whether the transformation is applied only to the selected particles.
-	void setSelectionOnly(bool onlySelected) { _toSelectionOnly = onlySelected; }
-
-	/// Returns whether the transformation is applied to the simulation box.
-	bool applyToSimulationBox() const { return _applyToSimulationBox; }
-
-	/// Sets whether the transformation is applied to the simulation box.
-	void setApplyToSimulationBox(bool apply) { _applyToSimulationBox = apply; }
-
-	/// Returns whether the transformation is applied to a surface mesh.
-	bool applyToSurfaceMesh() const { return _applyToSurfaceMesh; }
-
-	/// Sets whether the transformation is applied to a surface mesh.
-	void setApplyToSurfaceMesh(bool apply) { _applyToSurfaceMesh = apply; }
-
-protected:
-
-	/// \brief This virtual method is called by the system when the modifier has been inserted into a PipelineObject.
-	virtual void initializeModifier(PipelineObject* pipeline, ModifierApplication* modApp) override;
-
-	/// Modifies the particle object.
-	virtual PipelineStatus modifyParticles(TimePoint time, TimeInterval& validityInterval) override;
-
-	/// This property fields stores the transformation matrix (used in 'relative' mode).
-	PropertyField<AffineTransformation> _transformationTM;
-
-	/// This property fields stores the simulation cell geometry (used in 'absolute' mode).
-	PropertyField<AffineTransformation> _targetCell;
-
-	/// This controls whether the transformation is applied to the particles.
-	PropertyField<bool> _applyToParticles;
-
-	/// This controls whether the transformation is applied only to the selected particles.
-	PropertyField<bool> _toSelectionOnly;
-
-	/// This controls whether the transformation is applied to the simulation box.
-	PropertyField<bool> _applyToSimulationBox;
-
-	/// This controls whether a relative transformation is applied to the simulation box or
-	/// the absolute cell geometry has been specified.
-	PropertyField<bool> _relativeMode;
-
-	/// This controls whether the transformation is applied to surface meshes.
-	PropertyField<bool> _applyToSurfaceMesh;
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-
-	Q_CLASSINFO("DisplayName", "Affine transformation");
-	Q_CLASSINFO("ModifierCategory", "Modification");
-
-	DECLARE_PROPERTY_FIELD(_transformationTM);
-	DECLARE_PROPERTY_FIELD(_applyToParticles);
-	DECLARE_PROPERTY_FIELD(_toSelectionOnly);
-	DECLARE_PROPERTY_FIELD(_applyToSimulationBox);
-	DECLARE_PROPERTY_FIELD(_targetCell);
-	DECLARE_PROPERTY_FIELD(_relativeMode);
-	DECLARE_PROPERTY_FIELD(_applyToSurfaceMesh);
-};
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
+namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
  * A properties editor for the AffineTransformationModifier class.
@@ -181,10 +74,9 @@ private:
 };
 
 OVITO_END_INLINE_NAMESPACE
-
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __AFFINE_TRANSFORMATION_MODIFIER_H
+#endif // __AFFINE_TRANSFORMATION_MODIFIER_EDITOR_H

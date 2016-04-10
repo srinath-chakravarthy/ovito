@@ -20,20 +20,15 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/dataset/importexport/FileSource.h>
-#include <core/animation/AnimationSettings.h>
-#include <gui/properties/BooleanParameterUI.h>
-#include <gui/properties/BooleanRadioButtonParameterUI.h>
-#include <gui/properties/IntegerParameterUI.h>
-#include <gui/properties/SubObjectParameterUI.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
+#include <core/dataset/importexport/FileSource.h>
+#include <core/animation/AnimationSettings.h>
 #include "WignerSeitzAnalysisModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, WignerSeitzAnalysisModifier, AsynchronousParticleModifier);
-SET_OVITO_OBJECT_EDITOR(WignerSeitzAnalysisModifier, WignerSeitzAnalysisModifierEditor);
 DEFINE_REFERENCE_FIELD(WignerSeitzAnalysisModifier, _referenceObject, "Reference Configuration", DataObject);
 DEFINE_FLAGS_PROPERTY_FIELD(WignerSeitzAnalysisModifier, _eliminateCellDeformation, "EliminateCellDeformation", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(WignerSeitzAnalysisModifier, _useReferenceFrameOffset, "UseReferenceFrameOffet");
@@ -46,10 +41,6 @@ SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _useReferenceFrameOffset, 
 SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _referenceFrameNumber, "Reference frame number");
 SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _referenceFrameOffset, "Reference frame offset");
 SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _perTypeOccupancy, "Output per-type occupancies");
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, WignerSeitzAnalysisModifierEditor, ParticleModifierEditor);
-OVITO_END_INLINE_NAMESPACE
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -363,68 +354,6 @@ bool WignerSeitzAnalysisModifier::referenceEvent(RefTarget* source, ReferenceEve
 	}
 	return AsynchronousParticleModifier::referenceEvent(source, event);
 }
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void WignerSeitzAnalysisModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Wigner-Seitz defect analysis"), rolloutParams, "particles.modifiers.wigner_seitz_analysis.html");
-
-    // Create the rollout contents.
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(4);
-
-	BooleanParameterUI* eliminateCellDeformationUI = new BooleanParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::_eliminateCellDeformation));
-	layout->addWidget(eliminateCellDeformationUI->checkBox());
-
-	BooleanParameterUI* perTypeOccupancyUI = new BooleanParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::_perTypeOccupancy));
-	layout->addWidget(perTypeOccupancyUI->checkBox());
-
-	QGroupBox* referenceFrameGroupBox = new QGroupBox(tr("Reference frame"));
-	layout->addWidget(referenceFrameGroupBox);
-
-	QGridLayout* sublayout = new QGridLayout(referenceFrameGroupBox);
-	sublayout->setContentsMargins(4,4,4,4);
-	sublayout->setSpacing(4);
-	sublayout->setColumnStretch(0, 5);
-	sublayout->setColumnStretch(2, 95);
-
-	// Add box for selection between absolute and relative reference frames.
-	BooleanRadioButtonParameterUI* useFrameOffsetUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::_useReferenceFrameOffset));
-	useFrameOffsetUI->buttonTrue()->setText(tr("Relative to current frame"));
-	useFrameOffsetUI->buttonFalse()->setText(tr("Fixed reference configuration"));
-	sublayout->addWidget(useFrameOffsetUI->buttonFalse(), 0, 0, 1, 3);
-
-	IntegerParameterUI* frameNumberUI = new IntegerParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::_referenceFrameNumber));
-	frameNumberUI->label()->setText(tr("Frame number:"));
-	sublayout->addWidget(frameNumberUI->label(), 1, 1, 1, 1);
-	sublayout->addLayout(frameNumberUI->createFieldLayout(), 1, 2, 1, 1);
-	frameNumberUI->setMinValue(0);
-	frameNumberUI->setEnabled(false);
-	connect(useFrameOffsetUI->buttonFalse(), &QRadioButton::toggled, frameNumberUI, &IntegerParameterUI::setEnabled);
-
-	sublayout->addWidget(useFrameOffsetUI->buttonTrue(), 2, 0, 1, 3);
-	IntegerParameterUI* frameOffsetUI = new IntegerParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::_referenceFrameOffset));
-	frameOffsetUI->label()->setText(tr("Frame offset:"));
-	sublayout->addWidget(frameOffsetUI->label(), 3, 1, 1, 1);
-	sublayout->addLayout(frameOffsetUI->createFieldLayout(), 3, 2, 1, 1);
-	frameOffsetUI->setEnabled(false);
-	connect(useFrameOffsetUI->buttonTrue(), &QRadioButton::toggled, frameOffsetUI, &IntegerParameterUI::setEnabled);
-
-	// Status label.
-	layout->addSpacing(6);
-	layout->addWidget(statusLabel());
-
-	// Open a sub-editor for the reference object.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::_referenceObject), RolloutInsertionParameters().setTitle(tr("Reference")));
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

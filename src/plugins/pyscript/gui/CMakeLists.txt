@@ -19,6 +19,8 @@
 #
 ###############################################################################
 
+FIND_PACKAGE(QScintilla REQUIRED)
+
 SET(SourceFiles
     GUIBinding.cpp
 	PythonViewportOverlayEditor.cpp
@@ -29,6 +31,27 @@ SET(SourceFiles
 OVITO_STANDARD_PLUGIN(PyScriptGui
 	SOURCES ${SourceFiles}
 	PLUGIN_DEPENDENCIES PyScript
+	PRIVATE_LIB_DEPENDENCIES ${QScintilla_LIBRARIES}
 	GUI_PLUGIN
 	PYTHON_WRAPPERS "${CMAKE_CURRENT_SOURCE_DIR}/python/"
 )
+
+# Add QScintilla include directory.
+TARGET_INCLUDE_DIRECTORIES(PyScriptGui PRIVATE ${QScintilla_INCLUDE_DIRS})
+
+# Install required libraries. 
+IF(APPLE)
+	# Nothing to do.
+ELSEIF(UNIX)
+	IF(OVITO_MONOLITHIC_BUILD)
+		# Install a copy of the QScintilla2 library.
+		CONFIGURE_FILE("${QScintilla_LIBRARIES}" "${OVITO_LIBRARY_DIRECTORY}" COPYONLY)		
+		GET_FILENAME_COMPONENT(real_qscintilla_lib "${QScintilla_LIBRARIES}" REALPATH)
+		INSTALL(FILES "${QScintilla_LIBRARIES}" "${real_qscintilla_lib}" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/")
+	ENDIF()
+ELSEIF(WIN32)
+	# Install QScintilla DLL.
+	GET_FILENAME_COMPONENT(QSCINTILLA_BASE_NAME "${QScintilla_LIBRARIES}" NAME_WE)
+	GET_FILENAME_COMPONENT(QSCINTILLA_LIB_PATH "${QScintilla_LIBRARIES}" PATH)
+	OVITO_INSTALL_DLL("${QSCINTILLA_LIB_PATH}/${QSCINTILLA_BASE_NAME}.dll")
+ENDIF()

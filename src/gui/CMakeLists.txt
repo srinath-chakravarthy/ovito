@@ -92,14 +92,6 @@ SET(SourceFiles
 	properties/VariantComboBoxParameterUI.cpp
 	properties/Vector3ParameterUI.cpp
 	rendering/ViewportSceneRenderer.cpp
-	rendering/OpenGLLinePrimitive.cpp
-	rendering/OpenGLParticlePrimitive.cpp
-	rendering/OpenGLTextPrimitive.cpp
-	rendering/OpenGLImagePrimitive.cpp
-	rendering/OpenGLArrowPrimitive.cpp
-	rendering/OpenGLMeshPrimitive.cpp
-	rendering/OpenGLSharedResource.cpp
-	rendering/OpenGLSceneRenderer.cpp
 	rendering/StandardSceneRenderer.cpp
 	rendering/StandardSceneRendererEditor.cpp
 	rendering/RenderSettingsEditor.cpp
@@ -126,14 +118,11 @@ ADD_LIBRARY(Gui SHARED GUI.cpp ${SourceFiles} ${ResourceFiles})
 # Set default include directory.
 TARGET_INCLUDE_DIRECTORIES(Gui PUBLIC "$<BUILD_INTERFACE:${OVITO_SOURCE_BASE_DIR}/src>")
 
-# GUI is based on Core.
-TARGET_LINK_LIBRARIES(Gui PUBLIC Core)
-
-# Link to OpenGL library.
-TARGET_LINK_LIBRARIES(Gui PRIVATE ${OPENGL_gl_LIBRARY})
+# GUI is based on Core and the OpenGL rendering library.
+TARGET_LINK_LIBRARIES(Gui PUBLIC Core OpenGLRenderer)
 
 # Link Qt5.
-TARGET_LINK_LIBRARIES(Gui PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets Qt5::OpenGL Qt5::Network)
+TARGET_LINK_LIBRARIES(Gui PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Network)
 
 # Pass version information to source code.
 SET_SOURCE_FILES_PROPERTIES("app/Application.cpp" PROPERTIES COMPILE_DEFINITIONS 

@@ -34,6 +34,11 @@ class OVITO_PARTICLES_EXPORT CentroSymmetryModifier : public AsynchronousParticl
 {
 public:
 
+	/// The maximum number of neighbors that can be taken into account to compute the CSP.
+	enum { MAX_CSP_NEIGHBORS = 32 };
+
+public:
+
 	/// Constructor.
 	Q_INVOKABLE CentroSymmetryModifier(DataSet* dataset);
 
@@ -109,29 +114,6 @@ private:
 
 	DECLARE_PROPERTY_FIELD(_numNeighbors);
 };
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * \brief A properties editor for the CentroSymmetryModifier class.
- */
-class CentroSymmetryModifierEditor : public ParticleModifierEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE CentroSymmetryModifierEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

@@ -90,7 +90,7 @@ ChemicalElement ChemicalElements[] = {
     { ChemicalElement::Rhombohedral, 9.00f, "Sm"}, // Sm
     { ChemicalElement::BodyCenteredCubic, 4.61f, "Eu"}, // Eu
     { ChemicalElement::HexagonalClosePacked, 3.64f, "Gd"}, // Gd
-    { ChemicalElement::HexagonalClosePaOVITO_PARTICLES_GUI_EXPORTcked, 3.60f, "Th"}, // Th
+    { ChemicalElement::HexagonalClosePacked, 3.60f, "Th"}, // Th
     { ChemicalElement::HexagonalClosePacked, 3.59f, "Dy"}, // Dy
     { ChemicalElement::HexagonalClosePacked, 3.58f, "Ho"}, // Ho
     { ChemicalElement::HexagonalClosePacked, 3.56f, "Er"}, // Er

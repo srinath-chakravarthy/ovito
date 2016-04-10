@@ -20,21 +20,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <core/rendering/SceneRenderer.h>
-#include <gui/properties/BooleanParameterUI.h>
-#include <gui/properties/FloatParameterUI.h>
-#include <gui/properties/BooleanGroupBoxParameterUI.h>
-#include <core/utilities/mesh/TriMesh.h>
-#include <core/animation/controller/Controller.h>
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
+#include <core/rendering/SceneRenderer.h>
+#include <core/utilities/mesh/TriMesh.h>
+#include <core/animation/controller/Controller.h>
 #include "SlipSurfaceDisplay.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, SlipSurfaceDisplayEditor, PropertiesEditor);
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, SlipSurfaceDisplay, AsynchronousDisplayObject);
-SET_OVITO_OBJECT_EDITOR(SlipSurfaceDisplay, SlipSurfaceDisplayEditor);
 DEFINE_PROPERTY_FIELD(SlipSurfaceDisplay, _smoothShading, "SmoothShading");
 DEFINE_REFERENCE_FIELD(SlipSurfaceDisplay, _surfaceTransparency, "SurfaceTransparency", Controller);
 SET_PROPERTY_FIELD_LABEL(SlipSurfaceDisplay, _smoothShading, "Smooth shading");
@@ -360,37 +355,6 @@ bool SlipSurfaceDisplay::splitFace(TriMesh& output, int faceIndex, int oldVertex
 	newFace2.setMaterialIndex(face.materialIndex());
 
 	return true;
-}
-
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void SlipSurfaceDisplayEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(QString(), rolloutParams);
-
-    // Create the rollout contents.
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(4);
-
-	QGroupBox* surfaceGroupBox = new QGroupBox(tr("Surface"));
-	QGridLayout* sublayout = new QGridLayout(surfaceGroupBox);
-	sublayout->setContentsMargins(4,4,4,4);
-	sublayout->setSpacing(4);
-	sublayout->setColumnStretch(1, 1);
-	layout->addWidget(surfaceGroupBox);
-
-	FloatParameterUI* surfaceTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(SlipSurfaceDisplay::_surfaceTransparency));
-	sublayout->addWidget(new QLabel(tr("Transparency:")), 0, 0);
-	sublayout->addLayout(surfaceTransparencyUI->createFieldLayout(), 0, 1);
-	surfaceTransparencyUI->setMinValue(0);
-	surfaceTransparencyUI->setMaxValue(1);
-
-	BooleanParameterUI* smoothShadingUI = new BooleanParameterUI(this, PROPERTY_FIELD(SlipSurfaceDisplay::_smoothShading));
-	sublayout->addWidget(smoothShadingUI->checkBox(), 1, 0, 1, 2);
 }
 
 }	// End of namespace

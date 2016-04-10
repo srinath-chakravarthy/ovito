@@ -25,9 +25,7 @@
 #include <core/scene/objects/DataObject.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/app/Application.h>
-#include <gui/mainwin/MainWindow.h>
-#include <gui/utilities/concurrent/ProgressDialogAdapter.h>
-
+#include <core/utilities/concurrent/ProgressDisplay.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include "ParticleExporter.h"
 
@@ -91,7 +89,7 @@ void ParticleExporter::setOutputFilename(const QString& filename)
 /******************************************************************************
 * Exports the scene to the given file.
 ******************************************************************************/
-bool ParticleExporter::exportToFile(const QVector<SceneNode*>& nodes, const QString& filePath, bool noninteractive)
+bool ParticleExporter::exportToFile(const QVector<SceneNode*>& nodes, const QString& filePath, AbstractProgressDisplay* progressDisplay)
 {
 	// Save the output path.
 	setOutputFilename(filePath);
@@ -103,6 +101,7 @@ bool ParticleExporter::exportToFile(const QVector<SceneNode*>& nodes, const QStr
 		setEndFrame(lastFrame);
 	}
 
+#if 0
 	if(Application::instance().guiMode() && !noninteractive) {
 
 		// Get the data to be exported.
@@ -114,9 +113,10 @@ bool ParticleExporter::exportToFile(const QVector<SceneNode*>& nodes, const QStr
 		if(!showSettingsDialog(flowState, MainWindow::fromDataset(dataset())))
 			return false;
 	}
+#endif
 
 	// Perform the actual export operation.
-	return writeOutputFiles(nodes);
+	return writeOutputFiles(nodes, progressDisplay);
 }
 
 /******************************************************************************
@@ -153,25 +153,13 @@ PipelineFlowState ParticleExporter::getParticles(const QVector<SceneNode*>& node
 /******************************************************************************
  * Exports the particles contained in the given scene to the output file(s).
  *****************************************************************************/
-bool ParticleExporter::writeOutputFiles(const QVector<SceneNode*>& nodes)
+bool ParticleExporter::writeOutputFiles(const QVector<SceneNode*>& nodes, AbstractProgressDisplay* progressDisplay)
 {
 	OVITO_ASSERT_MSG(!outputFilename().isEmpty(), "ParticleExporter::writeOutputFiles()", "Output filename has not been set. ParticleExporter::setOutputFilename() must be called first.");
 	OVITO_ASSERT_MSG(startFrame() <= endFrame(), "ParticleExporter::writeOutputFiles()", "Export interval has not been set. ParticleExporter::setStartFrame() and ParticleExporter::setEndFrame() must be called first.");
 
 	if(startFrame() > endFrame())
 		throwException(tr("The animation interval to be exported is empty or has not been set."));
-
-	// Show progress dialog.
-	std::unique_ptr<QProgressDialog> progressDialog;
-	std::unique_ptr<ProgressDialogAdapter> progressDisplay;
-	if(Application::instance().guiMode()) {
-		progressDialog.reset(new QProgressDialog(MainWindow::fromDataset(dataset())));
-		progressDialog->setWindowModality(Qt::WindowModal);
-		progressDialog->setAutoClose(false);
-		progressDialog->setAutoReset(false);
-		progressDialog->setMinimumDuration(0);
-		progressDisplay.reset(new ProgressDialogAdapter(progressDialog.get()));
-	}
 
 	// Compute the number of frames that need to be exported.
 	TimePoint exportTime;
@@ -225,7 +213,7 @@ bool ParticleExporter::writeOutputFiles(const QVector<SceneNode*>& nodes)
 					return false;
 			}
 
-			if(!exportFrame(nodes, frameNumber, exportTime, filename, progressDisplay.get()) && progressDisplay)
+			if(!exportFrame(nodes, frameNumber, exportTime, filename, progressDisplay) && progressDisplay)
 				progressDisplay->cancel();
 
 			if(_exportAnimation && useWildcardFilename())

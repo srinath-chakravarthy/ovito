@@ -108,7 +108,7 @@ public:
 	Box3 particleBoundingBox(ParticlePropertyObject* positionProperty, ParticleTypeProperty* typeProperty, ParticlePropertyObject* radiusProperty, ParticlePropertyObject* shapeProperty, bool includeParticleRadius = true);
 
 	/// \brief Render a marker around a particle to highlight it in the viewports.
-	void highlightParticle(int particleIndex, const PipelineFlowState& flowState, ViewportSceneRenderer* renderer);
+	void highlightParticle(int particleIndex, const PipelineFlowState& flowState, SceneRenderer* renderer);
 
 	/// \brief Compute the (local) bounding box of the marker around a particle used to highlight it in the viewports.
 	Box3 highlightParticleBoundingBox(int particleIndex, const PipelineFlowState& flowState, const AffineTransformation& tm, Viewport* viewport);

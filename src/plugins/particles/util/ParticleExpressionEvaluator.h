@@ -24,6 +24,7 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/pipeline/PipelineFlowState.h>
+
 #include <muParser.h>
 #include <boost/utility.hpp>
 

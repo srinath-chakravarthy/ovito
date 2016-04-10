@@ -25,11 +25,6 @@
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, DeleteParticlesModifier, ParticleModifier);
-SET_OVITO_OBJECT_EDITOR(DeleteParticlesModifier, DeleteParticlesModifierEditor);
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, DeleteParticlesModifierEditor, ParticleModifierEditor);
-OVITO_END_INLINE_NAMESPACE
 
 /******************************************************************************
 * Modifies the particle object.
@@ -65,27 +60,6 @@ PipelineStatus DeleteParticlesModifier::modifyParticles(TimePoint time, TimeInte
 	statusMessage += tr("\n%n particles deleted (%1%)", 0, numRejected).arg(numRejected * 100 / std::max((int)inputParticleCount(), 1));
 	return PipelineStatus(PipelineStatus::Success, statusMessage);
 }
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void DeleteParticlesModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Delete selected particles"), rolloutParams, "particles.modifiers.delete_selected_particles.html");
-
-    // Create the rollout contents.
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(0);
-
-	// Status label.
-	layout->addWidget(statusLabel());
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

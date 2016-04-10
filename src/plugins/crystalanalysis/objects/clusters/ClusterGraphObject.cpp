@@ -20,14 +20,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <gui/properties/RefTargetListParameterUI.h>
 #include "ClusterGraphObject.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, ClusterGraphObject, DataObject);
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, ClusterGraphObjectEditor, PropertiesEditor);
-SET_OVITO_OBJECT_EDITOR(ClusterGraphObject, ClusterGraphObjectEditor);
 
 /******************************************************************************
 * Constructs a cluster graph object.
@@ -35,68 +32,6 @@ SET_OVITO_OBJECT_EDITOR(ClusterGraphObject, ClusterGraphObjectEditor);
 ClusterGraphObject::ClusterGraphObject(DataSet* dataset, ClusterGraph* graph)
 	: DataObjectWithSharedStorage(dataset, graph ? graph : new ClusterGraph())
 {
-}
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void ClusterGraphObjectEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Clusters"), rolloutParams);
-
-    // Create the rollout contents.
-	QVBoxLayout* layout1 = new QVBoxLayout(rollout);
-	layout1->setContentsMargins(4,4,4,4);
-
-#if 0
-	// Derive a custom class from the list parameter UI to
-	// give the items a color.
-	class CustomRefTargetListParameterUI : public RefTargetListParameterUI {
-	public:
-		CustomRefTargetListParameterUI(PropertiesEditor* parentEditor, const PropertyFieldDescriptor& refField)
-			: RefTargetListParameterUI(parentEditor, refField) {}
-	protected:
-		virtual QVariant getItemData(RefTarget* target, const QModelIndex& index, int role) override {
-			if(target != NULL && role == Qt::DisplayRole) {
-				if(index.column() == 0)
-					return static_object_cast<Cluster>(target)->id();
-				else if(index.column() == 1)
-					return static_object_cast<Cluster>(target)->pattern()->name();
-				else
-					return static_object_cast<Cluster>(target)->atomCount();
-			}
-			return QVariant();
-		}
-
-		/// Returns the number of columns for the table view.
-		virtual int tableColumnCount() override { return 3; }
-
-		/// Returns the header data under the given role for the given RefTarget.
-		/// This method is part of the data model used by the list widget and can be overriden
-		/// by sub-classes.
-		virtual QVariant getHorizontalHeaderData(int index, int role) override {
-			if(role != Qt::DisplayRole) return QVariant();
-			if(index == 0)
-				return QVariant(ClusterGraphObjectEditor::tr("Id"));
-			else if(index == 1)
-				return QVariant(ClusterGraphObjectEditor::tr("Structure"));
-			else
-				return QVariant(ClusterGraphObjectEditor::tr("#Atoms"));
-		}
-
-		/// Do not open sub-editor for selected item.
-		virtual void openSubEditor() override {}
-	};
-
-	layout1->addWidget(new QLabel(tr("Clusters:")));
-	RefTargetListParameterUI* clusterListUI = new CustomRefTargetListParameterUI(this, PROPERTY_FIELD(ClusterGraphObject::_clusters));
-	layout1->addWidget(clusterListUI->tableWidget(300));
-	clusterListUI->tableWidget()->setAutoScroll(false);
-	clusterListUI->tableWidget()->setShowGrid(true);
-	clusterListUI->tableWidget()->horizontalHeader()->setVisible(true);
-	clusterListUI->tableWidget()->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-#endif
 }
 
 }	// End of namespace

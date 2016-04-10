@@ -20,22 +20,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <core/rendering/SceneRenderer.h>
-#include <gui/properties/ColorParameterUI.h>
-#include <gui/properties/BooleanParameterUI.h>
-#include <gui/properties/FloatParameterUI.h>
-#include <gui/properties/BooleanGroupBoxParameterUI.h>
-#include <core/utilities/mesh/TriMesh.h>
-#include <core/animation/controller/Controller.h>
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
+#include <core/rendering/SceneRenderer.h>
+#include <core/utilities/mesh/TriMesh.h>
+#include <core/animation/controller/Controller.h>
 #include "PartitionMeshDisplay.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, PartitionMeshDisplayEditor, PropertiesEditor);
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, PartitionMeshDisplay, AsynchronousDisplayObject);
-SET_OVITO_OBJECT_EDITOR(PartitionMeshDisplay, PartitionMeshDisplayEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(PartitionMeshDisplay, _surfaceColor, "SurfaceColor", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(PartitionMeshDisplay, _showCap, "ShowCap", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(PartitionMeshDisplay, _smoothShading, "SmoothShading");
@@ -390,58 +384,6 @@ bool PartitionMeshDisplay::splitFace(TriMesh& output, int faceIndex, int oldVert
 	newFace2.setMaterialIndex(face.materialIndex());
 
 	return true;
-}
-
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void PartitionMeshDisplayEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(QString(), rolloutParams);
-
-    // Create the rollout contents.
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(4);
-
-	QGroupBox* surfaceGroupBox = new QGroupBox(tr("Surface"));
-	QGridLayout* sublayout = new QGridLayout(surfaceGroupBox);
-	sublayout->setContentsMargins(4,4,4,4);
-	sublayout->setSpacing(4);
-	sublayout->setColumnStretch(1, 1);
-	layout->addWidget(surfaceGroupBox);
-
-	ColorParameterUI* surfaceColorUI = new ColorParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_surfaceColor));
-	sublayout->addWidget(surfaceColorUI->label(), 0, 0);
-	sublayout->addWidget(surfaceColorUI->colorPicker(), 0, 1);
-
-	FloatParameterUI* surfaceTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_surfaceTransparency));
-	sublayout->addWidget(new QLabel(tr("Transparency:")), 1, 0);
-	sublayout->addLayout(surfaceTransparencyUI->createFieldLayout(), 1, 1);
-	surfaceTransparencyUI->setMinValue(0);
-	surfaceTransparencyUI->setMaxValue(1);
-
-	BooleanParameterUI* smoothShadingUI = new BooleanParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_smoothShading));
-	sublayout->addWidget(smoothShadingUI->checkBox(), 2, 0, 1, 2);
-
-	BooleanParameterUI* flipOrientationUI = new BooleanParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_flipOrientation));
-	sublayout->addWidget(flipOrientationUI->checkBox(), 3, 0, 1, 2);
-
-	BooleanGroupBoxParameterUI* capGroupUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_showCap));
-	capGroupUI->groupBox()->setTitle(tr("Cap polygons"));
-	sublayout = new QGridLayout(capGroupUI->childContainer());
-	sublayout->setContentsMargins(4,4,4,4);
-	sublayout->setSpacing(4);
-	sublayout->setColumnStretch(1, 1);
-	layout->addWidget(capGroupUI->groupBox());
-
-	FloatParameterUI* capTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_capTransparency));
-	sublayout->addWidget(new QLabel(tr("Transparency:")), 0, 0);
-	sublayout->addLayout(capTransparencyUI->createFieldLayout(), 0, 1);
-	capTransparencyUI->setMinValue(0);
-	capTransparencyUI->setMaxValue(1);
 }
 
 }	// End of namespace

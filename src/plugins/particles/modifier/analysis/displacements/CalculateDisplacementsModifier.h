@@ -136,29 +136,6 @@ private:
 	DECLARE_REFERENCE_FIELD(_vectorDisplay);
 };
 
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * A properties editor for the CalculateDisplacementsModifier class.
- */
-class CalculateDisplacementsModifierEditor : public ParticleModifierEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE CalculateDisplacementsModifierEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
-
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

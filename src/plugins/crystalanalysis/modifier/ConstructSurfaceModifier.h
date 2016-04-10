@@ -176,27 +176,6 @@ private:
 	DECLARE_REFERENCE_FIELD(_surfaceMeshDisplay);
 };
 
-/**
- * Properties editor for the ConstructSurfaceModifier class.
- */
-class OVITO_CRYSTALANALYSIS_EXPORT ConstructSurfaceModifierEditor : public ParticleModifierEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE ConstructSurfaceModifierEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

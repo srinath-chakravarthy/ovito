@@ -302,7 +302,7 @@ public:
 	///////////////////////////// Exceptions & Errors ///////////////////////////////
 
 	/// \brief This helper method throws an Exception with the given message text.
-	void throwException(const QString& msg) const;
+	[[noreturn]] void throwException(const QString& msg) const;
 
 protected:
 

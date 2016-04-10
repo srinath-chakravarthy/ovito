@@ -22,20 +22,17 @@
 #include <plugins/particles/Particles.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/scene/pipeline/PipelineObject.h>
-#include <plugins/particles/util/ParticlePropertyParameterUI.h>
 #include "FreezePropertyModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Properties)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, FreezePropertyModifier, ParticleModifier);
-SET_OVITO_OBJECT_EDITOR(FreezePropertyModifier, FreezePropertyModifierEditor);
 DEFINE_PROPERTY_FIELD(FreezePropertyModifier, _sourceProperty, "SourceProperty");
 DEFINE_PROPERTY_FIELD(FreezePropertyModifier, _destinationProperty, "DestinationProperty");
 SET_PROPERTY_FIELD_LABEL(FreezePropertyModifier, _sourceProperty, "Property");
 SET_PROPERTY_FIELD_LABEL(FreezePropertyModifier, _destinationProperty, "Destination property");
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, FreezePropertyModifierEditor, ParticleModifierEditor);
 	IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SavedParticleProperty, RefTarget);
 	DEFINE_REFERENCE_FIELD(SavedParticleProperty, _property, "Property", ParticlePropertyObject);
 	DEFINE_REFERENCE_FIELD(SavedParticleProperty, _identifiers, "Identifiers", ParticlePropertyObject);
@@ -195,69 +192,6 @@ void SavedParticleProperty::reset(ParticlePropertyObject* property, ParticleProp
 	_identifiers = cloneHelper.cloneObject(identifiers, false);
 	if(_property) _property->setSaveWithScene(true);
 	if(_identifiers) _identifiers->setSaveWithScene(true);
-}
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void FreezePropertyModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	QWidget* rollout = createRollout(tr("Freeze property"), rolloutParams, "particles.modifiers.freeze_property.html");
-
-    // Create the rollout contents.
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(2);
-
-	ParticlePropertyParameterUI* sourcePropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(FreezePropertyModifier::_sourceProperty), false, true);
-	layout->addWidget(new QLabel(tr("Property to freeze:"), rollout));
-	layout->addWidget(sourcePropertyUI->comboBox());
-	connect(sourcePropertyUI, &ParticlePropertyParameterUI::valueEntered, this, &FreezePropertyModifierEditor::onSourcePropertyChanged);
-	layout->addSpacing(8);
-
-	ParticlePropertyParameterUI* destPropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(FreezePropertyModifier::_destinationProperty), false, false);
-	layout->addWidget(new QLabel(tr("Output property:"), rollout));
-	layout->addWidget(destPropertyUI->comboBox());
-	layout->addSpacing(8);
-
-	QPushButton* takeSnapshotBtn = new QPushButton(tr("Take new snapshot"), rollout);
-	connect(takeSnapshotBtn, &QPushButton::clicked, this, &FreezePropertyModifierEditor::takeSnapshot);
-	layout->addWidget(takeSnapshotBtn);
-
-	// Status label.
-	layout->addSpacing(12);
-	layout->addWidget(statusLabel());
-}
-
-/******************************************************************************
-* Takes a new snapshot of the current property values.
-******************************************************************************/
-void FreezePropertyModifierEditor::takeSnapshot()
-{
-	FreezePropertyModifier* mod = static_object_cast<FreezePropertyModifier>(editObject());
-	if(!mod) return;
-
-	undoableTransaction(tr("Take property snapshot"), [mod]() {
-		for(const auto& modInput : mod->getModifierInputs())
-			mod->takePropertySnapshot(modInput.first, modInput.second);
-	});
-}
-
-/******************************************************************************
-* Is called when the user has selected a different source property.
-******************************************************************************/
-void FreezePropertyModifierEditor::onSourcePropertyChanged()
-{
-	FreezePropertyModifier* mod = static_object_cast<FreezePropertyModifier>(editObject());
-	if(!mod) return;
-
-	undoableTransaction(tr("Freeze property"), [mod]() {
-		// When the user selects a different source property, adjust the destination property automatically.
-		mod->setDestinationProperty(mod->sourceProperty());
-		// Also take a current snapshot of the source property values.
-		for(const auto& modInput : mod->getModifierInputs())
-			mod->takePropertySnapshot(modInput.first, modInput.second);
-	});
 }
 
 OVITO_END_INLINE_NAMESPACE

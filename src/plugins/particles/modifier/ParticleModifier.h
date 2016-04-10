@@ -27,9 +27,6 @@
 #include <core/scene/objects/DataObject.h>
 #include <core/reference/CloneHelper.h>
 #include <core/reference/RefTargetListener.h>
-#include <gui/properties/PropertiesEditor.h>
-#include <gui/widgets/display/StatusWidget.h>
-
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 
@@ -187,41 +184,6 @@ protected:
 	PipelineStatus _modifierStatus;
 
 private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-/**
- * \brief Base class for properties editors for ParticleModifier derived classes.
- */
-class OVITO_PARTICLES_EXPORT ParticleModifierEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	ParticleModifierEditor() {
-		connect(this, &ParticleModifierEditor::contentsReplaced, this, &ParticleModifierEditor::updateStatusLabel);
-	}
-
-	/// Returns a widget that displays a message sent by the modifier that
-	/// states the outcome of the modifier evaluation. Derived classes of this
-	/// editor base class can add the widget to their user interface.
-	StatusWidget* statusLabel();
-
-protected:
-
-	/// This method is called when a reference target changes.
-	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
-
-private Q_SLOTS:
-
-	/// Updates the text of the result label.
-	void updateStatusLabel();
-
-private:
-
-	QPointer<StatusWidget> _statusLabel;
 
 	Q_OBJECT
 	OVITO_OBJECT

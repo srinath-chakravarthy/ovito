@@ -5,10 +5,11 @@ MACRO(OVITO_STANDARD_PLUGIN target_name)
     # Parse macro parameters
     SET(options GUI_PLUGIN)
     SET(oneValueArgs)
-    SET(multiValueArgs SOURCES LIB_DEPENDENCIES PLUGIN_DEPENDENCIES OPTIONAL_PLUGIN_DEPENDENCIES PYTHON_WRAPPERS)
+    SET(multiValueArgs SOURCES LIB_DEPENDENCIES PRIVATE_LIB_DEPENDENCIES PLUGIN_DEPENDENCIES OPTIONAL_PLUGIN_DEPENDENCIES PYTHON_WRAPPERS)
     CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 	SET(plugin_sources ${ARG_SOURCES})
 	SET(lib_dependencies ${ARG_LIB_DEPENDENCIES})
+	SET(private_lib_dependencies ${ARG_PRIVATE_LIB_DEPENDENCIES})
 	SET(plugin_dependencies ${ARG_PLUGIN_DEPENDENCIES})
 	SET(optional_plugin_dependencies ${ARG_OPTIONAL_PLUGIN_DEPENDENCIES})
 	SET(python_wrappers ${ARG_PYTHON_WRAPPERS})
@@ -32,15 +33,20 @@ MACRO(OVITO_STANDARD_PLUGIN target_name)
 	# Link other required libraries.
 	TARGET_LINK_LIBRARIES(${target_name} PUBLIC ${lib_dependencies})
 
+	# Link other required libraries.
+	TARGET_LINK_LIBRARIES(${target_name} PRIVATE ${private_lib_dependencies})
+
 	# Link Qt5.
 	TARGET_LINK_LIBRARIES(${target_name} PUBLIC Qt5::Core Qt5::Gui Qt5::Concurrent)
 
 	# Link plugin dependencies.
 	FOREACH(plugin_name ${plugin_dependencies})
     	STRING(TOUPPER "${plugin_name}" uppercase_plugin_name)
-    	IF(NOT OVITO_BUILD_PLUGIN_${uppercase_plugin_name})
-    		MESSAGE(FATAL_ERROR "To build the ${target_name} plugin, the ${plugin_name} plugin has to be enabled too. Please set the OVITO_BUILD_PLUGIN_${uppercase_plugin_name} option to ON.")
-    	ENDIF()
+    	IF(DEFINED OVITO_BUILD_PLUGIN_${uppercase_plugin_name})
+	    	IF(NOT OVITO_BUILD_PLUGIN_${uppercase_plugin_name})
+	    		MESSAGE(FATAL_ERROR "To build the ${target_name} plugin, the ${plugin_name} plugin has to be enabled too. Please set the OVITO_BUILD_PLUGIN_${uppercase_plugin_name} option to ON.")
+	    	ENDIF()
+	    ENDIF()
     	TARGET_LINK_LIBRARIES(${target_name} PUBLIC ${plugin_name})
 	ENDFOREACH()
 

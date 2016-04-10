@@ -20,21 +20,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/utilities/concurrent/ParallelFor.h>
-#include <gui/properties/BooleanParameterUI.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
-
-#include "IdentifyDiamondModifier.h"
 #include <plugins/particles/modifier/analysis/cna/CommonNeighborAnalysisModifier.h>
+#include <core/utilities/concurrent/ParallelFor.h>
+#include "IdentifyDiamondModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, IdentifyDiamondModifier, StructureIdentificationModifier);
-SET_OVITO_OBJECT_EDITOR(IdentifyDiamondModifier, IdentifyDiamondModifierEditor);
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, IdentifyDiamondModifierEditor, ParticleModifierEditor);
-OVITO_END_INLINE_NAMESPACE
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -222,39 +215,6 @@ void IdentifyDiamondModifier::DiamondIdentificationEngine::perform()
 		}
 	}
 }
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void IdentifyDiamondModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Identify diamond structure"), rolloutParams, "particles.modifiers.identify_diamond_structure.html");
-
-    // Create the rollout contents.
-	QVBoxLayout* layout1 = new QVBoxLayout(rollout);
-	layout1->setContentsMargins(4,4,4,4);
-	layout1->setSpacing(6);
-
-	// Use only selected particles.
-	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::_onlySelectedParticles));
-	layout1->addWidget(onlySelectedParticlesUI->checkBox());
-
-	// Status label.
-	layout1->addWidget(statusLabel());
-
-	StructureListParameterUI* structureTypesPUI = new StructureListParameterUI(this);
-	layout1->addSpacing(10);
-	layout1->addWidget(new QLabel(tr("Structure types:")));
-	layout1->addWidget(structureTypesPUI->tableWidget());
-	QLabel* label = new QLabel(tr("<p style=\"font-size: small;\">Double-click to change colors. Defaults can be set in the application settings.</p>"));
-	label->setWordWrap(true);
-	layout1->addWidget(label);
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

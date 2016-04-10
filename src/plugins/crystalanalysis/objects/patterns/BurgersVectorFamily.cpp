@@ -20,8 +20,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <gui/properties/ColorParameterUI.h>
-#include <gui/properties/StringParameterUI.h>
 #include <plugins/crystalanalysis/data/ClusterVector.h>
 #include "BurgersVectorFamily.h"
 #include "StructurePattern.h"
@@ -29,8 +27,6 @@
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, BurgersVectorFamily, RefTarget);
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, BurgersVectorFamilyEditor, PropertiesEditor);
-SET_OVITO_OBJECT_EDITOR(BurgersVectorFamily, BurgersVectorFamilyEditor);
 DEFINE_PROPERTY_FIELD(BurgersVectorFamily, _name, "Name");
 DEFINE_PROPERTY_FIELD(BurgersVectorFamily, _color, "Color");
 DEFINE_PROPERTY_FIELD(BurgersVectorFamily, _burgersVector, "BurgersVector");
@@ -84,31 +80,6 @@ bool BurgersVectorFamily::isMember(const Vector3& v, StructurePattern* latticeSt
 		return sc2.equals(sc1a, CA_LATTICE_VECTOR_EPSILON) || sc2.equals(sc1b, CA_LATTICE_VECTOR_EPSILON);
 	}
 	return false;
-}
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void BurgersVectorFamilyEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Burgers vector family"), rolloutParams);
-
-    // Create the rollout contents.
-	QGridLayout* layout1 = new QGridLayout(rollout);
-	layout1->setContentsMargins(4,4,4,4);
-	layout1->setSpacing(4);
-	layout1->setColumnStretch(1, 1);
-	
-	// Text box for the name of atom type.
-	StringParameterUI* namePUI = new StringParameterUI(this, PROPERTY_FIELD(BurgersVectorFamily::_name));
-	layout1->addWidget(new QLabel(tr("Name:")), 0, 0);
-	layout1->addWidget(namePUI->textBox(), 0, 1);
-	
-	// Color parameter.
-	ColorParameterUI* colorPUI = new ColorParameterUI(this, PROPERTY_FIELD(BurgersVectorFamily::_color));
-	layout1->addWidget(colorPUI->label(), 1, 0);
-	layout1->addWidget(colorPUI->colorPicker(), 1, 1);
 }
 
 }	// End of namespace

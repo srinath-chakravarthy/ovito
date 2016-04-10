@@ -20,24 +20,15 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <gui/properties/IntegerParameterUI.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
 #include "CentroSymmetryModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
-/// The maximum number of neighbors that can be taken into account to compute the CSP.
-enum { MAX_CSP_NEIGHBORS = 32 };
-
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, CentroSymmetryModifier, AsynchronousParticleModifier);
-SET_OVITO_OBJECT_EDITOR(CentroSymmetryModifier, CentroSymmetryModifierEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(CentroSymmetryModifier, _numNeighbors, "NumNeighbors", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(CentroSymmetryModifier, _numNeighbors, "Number of neighbors");
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, CentroSymmetryModifierEditor, ParticleModifierEditor);
-OVITO_END_INLINE_NAMESPACE
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -151,45 +142,6 @@ void CentroSymmetryModifier::propertyChanged(const PropertyFieldDescriptor& fiel
 	if(field == PROPERTY_FIELD(CentroSymmetryModifier::_numNeighbors))
 		invalidateCachedResults();
 }
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void CentroSymmetryModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Centrosymmetry parameter"), rolloutParams, "particles.modifiers.centrosymmetry.html");
-
-    // Create the rollout contents.
-	QVBoxLayout* layout1 = new QVBoxLayout(rollout);
-	layout1->setContentsMargins(4,4,4,4);
-	layout1->setSpacing(4);
-
-	QGridLayout* layout2 = new QGridLayout();
-	layout2->setContentsMargins(0,0,0,0);
-	layout2->setSpacing(4);
-	layout2->setColumnStretch(1, 1);
-	layout1->addLayout(layout2);
-
-	// Num neighbors parameter.
-	IntegerParameterUI* numNeighborsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(CentroSymmetryModifier::_numNeighbors));
-	layout2->addWidget(numNeighborsPUI->label(), 0, 0);
-	layout2->addLayout(numNeighborsPUI->createFieldLayout(), 0, 1);
-	numNeighborsPUI->setMinValue(2);
-	numNeighborsPUI->setMaxValue(MAX_CSP_NEIGHBORS);
-
-	QLabel* infoLabel = new QLabel(tr("This parameter specifies the number of nearest neighbors in the underlying lattice of atoms. For FCC and BCC lattices, set this to 12 and 8 respectively. More generally, it must be a positive, even integer."));
-	infoLabel->setWordWrap(true);
-	layout1->addWidget(infoLabel);
-
-	// Status label.
-	layout1->addSpacing(10);
-	layout1->addWidget(statusLabel());
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

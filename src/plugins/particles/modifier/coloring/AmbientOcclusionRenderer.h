@@ -23,14 +23,17 @@
 #define __OVITO_AMBIENT_OCCLUSION_RENDERER_H
 
 #include <plugins/particles/Particles.h>
-#include <gui/rendering/OpenGLSceneRenderer.h>
+#include <opengl_renderer/OpenGLSceneRenderer.h>
+
+#include <QOffscreenSurface>
+#include <QOpenGLFramebufferObject>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
  * \brief A renderer used to compute ambient occlusion lighting.
  */
-class OVITO_PARTICLES_EXPORT AmbientOcclusionRenderer : public OpenGLSceneRenderer
+class AmbientOcclusionRenderer : public OpenGLSceneRenderer
 {
 public:
 

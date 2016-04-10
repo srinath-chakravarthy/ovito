@@ -23,7 +23,6 @@
 #define __OVITO_CA_STRUCTURE_PATTERN_H
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <gui/properties/RefTargetListParameterUI.h>
 #include <plugins/particles/objects/ParticleType.h>
 #include "BurgersVectorFamily.h"
 
@@ -116,34 +115,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_structureType);
 	DECLARE_PROPERTY_FIELD(_symmetryType);
 	DECLARE_VECTOR_REFERENCE_FIELD(_burgersVectorFamilies);
-};
-
-/**
- * \brief A properties editor for the StructurePattern class.
- */
-class OVITO_CRYSTALANALYSIS_EXPORT StructurePatternEditor : public PropertiesEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE StructurePatternEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-protected Q_SLOTS:
-
-	/// Is called when the user has double-clicked on one of the entries in the list widget.
-	void onDoubleClickBurgersFamily(const QModelIndex& index);
-
-private:
-
-	RefTargetListParameterUI* familiesListUI;
-
-	Q_OBJECT
-	OVITO_OBJECT
 };
 
 }	// End of namespace

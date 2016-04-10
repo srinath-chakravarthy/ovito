@@ -41,26 +41,11 @@ public:
 	/// Returns the title of this object.
 	virtual QString objectTitle() override { return tr("Clusters"); }
 
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-/**
- * \brief A properties editor for the ClusterGraphObject class.
- */
-class OVITO_CRYSTALANALYSIS_EXPORT ClusterGraphObjectEditor : public PropertiesEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE ClusterGraphObjectEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
+	/// \brief Returns whether this object, when returned as an editable sub-object by another object,
+	///        should be displayed in the modification stack.
+	///
+	/// Return false because this object cannot be edited.
+	virtual bool isSubObjectEditable() const override { return false; }
 
 private:
 

@@ -23,7 +23,6 @@
 #define __OVITO_LAMMPS_DATA_IMPORTER_H
 
 #include <plugins/particles/Particles.h>
-#include <gui/properties/PropertiesEditor.h>
 #include <plugins/particles/import/ParticleImporter.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
@@ -89,9 +88,6 @@ public:
 
 	/// Specifies the LAMMPS atom style used in the data file.
 	void setAtomStyle(LAMMPSAtomStyle atomStyle) { _atomStyle = atomStyle; }
-
-	/// Displays a dialog box that allows the user to select the LAMMPS atom style of the data file.
-	bool showAtomStyleDialog(QWidget* parent);
 
 	/// Creates an asynchronous loader object that loads the data for the given frame from the external file.
 	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame) override {

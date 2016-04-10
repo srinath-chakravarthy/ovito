@@ -23,9 +23,9 @@
 #define __OVITO_AMBIENT_OCCLUSION_MODIFIER_H
 
 #include <plugins/particles/Particles.h>
-#include <gui/properties/RefTargetListParameterUI.h>
-#include <gui/rendering/OpenGLSceneRenderer.h>
 #include <plugins/particles/modifier/AsynchronousParticleModifier.h>
+
+#include <QOffscreenSurface>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring)
 
@@ -36,23 +36,15 @@ class OVITO_PARTICLES_EXPORT AmbientOcclusionModifier : public AsynchronousParti
 {
 public:
 
+	enum { MAX_AO_RENDER_BUFFER_RESOLUTION = 4 };
+
 	/// Computes the modifier's results.
 	class AmbientOcclusionEngine : public ComputeEngine
 	{
 	public:
 
 		/// Constructor.
-		AmbientOcclusionEngine(const TimeInterval& validityInterval, int resolution, int samplingCount, ParticleProperty* positions, const Box3& boundingBox, std::vector<FloatType>&& particleRadii) :
-			ComputeEngine(validityInterval),
-			_resolution(resolution),
-			_samplingCount(samplingCount),
-			_positions(positions),
-			_boundingBox(boundingBox),
-			_brightness(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, tr("Brightness"), true)),
-			_particleRadii(particleRadii) {
-			_offscreenSurface.setFormat(OpenGLSceneRenderer::getDefaultSurfaceFormat());
-			_offscreenSurface.create();
-		}
+		AmbientOcclusionEngine(const TimeInterval& validityInterval, int resolution, int samplingCount, ParticleProperty* positions, const Box3& boundingBox, std::vector<FloatType>&& particleRadii);
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;
@@ -137,29 +129,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_samplingCount);
 	DECLARE_PROPERTY_FIELD(_bufferResolution);
 };
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * \brief A properties editor for the AmbientOcclusionModifier class.
- */
-class AmbientOcclusionModifierEditor : public ParticleModifierEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE AmbientOcclusionModifierEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

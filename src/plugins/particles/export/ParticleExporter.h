@@ -23,10 +23,10 @@
 #define __OVITO_PARTICLE_EXPORTER_H
 
 #include <plugins/particles/Particles.h>
+#include <plugins/particles/data/ParticleProperty.h>
 #include <core/scene/pipeline/PipelineFlowState.h>
 #include <core/dataset/importexport/FileExporter.h>
 #include <core/utilities/io/CompressedTextWriter.h>
-#include <plugins/particles/data/ParticleProperty.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export)
 
@@ -45,7 +45,7 @@ public:
 	/////////////////////////// from FileExporter /////////////////////////////
 
 	/// \brief Exports the scene nodes to the given file.
-	virtual bool exportToFile(const QVector<SceneNode*>& nodes, const QString& filePath, bool noninteractive) override;
+	virtual bool exportToFile(const QVector<SceneNode*>& nodes, const QString& filePath, AbstractProgressDisplay* progressDisplay) override;
 
 	/////////////////////////// Specific methods //////////////////////////////
 
@@ -55,6 +55,7 @@ public:
 	/// \brief Returns the path of the output file written by this exporter.
 	const QString& outputFilename() const { return _outputFilename; }
 
+#if 0
 	/// \brief Opens the export settings dialog for this exporter service.
 	///
 	/// \param state The result of the pipeline evaluation. Contains the particle data to be exported.
@@ -65,12 +66,13 @@ public:
 	///
 	/// \note The output file name has to be set via setOutputFile() before this method may be called.
 	virtual bool showSettingsDialog(const PipelineFlowState& state, QWidget* parent) { return true; }
+#endif
 
 	/// \brief Exports the particles to the output file(s).
 	/// \param nodes The selected scene nodes to be exported.
 	/// \throws Exception on error.
 	/// \return \a false when the operation has been canceled by the user; \a true on success.
-	virtual bool writeOutputFiles(const QVector<SceneNode*>& nodes);
+	virtual bool writeOutputFiles(const QVector<SceneNode*>& nodes, AbstractProgressDisplay* progressDisplay);
 
 	/// Returns whether only the current animation frame or an entire animation interval should be exported.
 	bool exportAnimation() const { return _exportAnimation; }
@@ -115,6 +117,7 @@ public:
 
 protected:
 
+#if 0
 	class ProgressInterface {
 	public:
 		ProgressInterface(QProgressDialog* dialog) : _dialog(dialog), _baseValue(dialog ? dialog->value() : 0) {}
@@ -124,6 +127,7 @@ protected:
 		QProgressDialog* _dialog;
 		int _baseValue;
 	};
+#endif
 
 	/// \brief Retrieves the particles to be exported by evaluating the modification pipeline.
 	/// \param nodes The selection of scene nodes to be exported.

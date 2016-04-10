@@ -22,20 +22,11 @@
 #include <plugins/particles/Particles.h>
 #include <core/utilities/units/UnitsManager.h>
 #include <core/rendering/SceneRenderer.h>
-#include <gui/properties/FloatParameterUI.h>
-#include <gui/properties/BooleanParameterUI.h>
-#include <gui/properties/VariantComboBoxParameterUI.h>
-#include <gui/properties/ColorParameterUI.h>
 #include "TrajectoryDisplay.h"
 
 namespace Ovito { namespace Particles {
 
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, TrajectoryDisplayEditor, PropertiesEditor);
-OVITO_END_INLINE_NAMESPACE
-
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, TrajectoryDisplay, DisplayObject);
-SET_OVITO_OBJECT_EDITOR(TrajectoryDisplay, TrajectoryDisplayEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(TrajectoryDisplay, _lineWidth, "LineWidth", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(TrajectoryDisplay, _lineColor, "LineColor", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(TrajectoryDisplay, _shadingMode, "ShadingMode", PROPERTY_FIELD_MEMORIZE);
@@ -147,47 +138,6 @@ void TrajectoryDisplay::render(TimePoint time, DataObject* dataObject, const Pip
 	_cornerBuffer->render(renderer);
 	renderer->endPickObject();
 }
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void TrajectoryDisplayEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Trajectory display"), rolloutParams);
-
-    // Create the rollout contents.
-	QGridLayout* layout = new QGridLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(4);
-	layout->setColumnStretch(1, 1);
-
-	// Shading mode.
-	VariantComboBoxParameterUI* shadingModeUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(TrajectoryDisplay::_shadingMode));
-	shadingModeUI->comboBox()->addItem(tr("Normal"), qVariantFromValue(ArrowPrimitive::NormalShading));
-	shadingModeUI->comboBox()->addItem(tr("Flat"), qVariantFromValue(ArrowPrimitive::FlatShading));
-	layout->addWidget(new QLabel(tr("Shading:")), 0, 0);
-	layout->addWidget(shadingModeUI->comboBox(), 0, 1);
-
-	// Line width.
-	FloatParameterUI* lineWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(TrajectoryDisplay::_lineWidth));
-	layout->addWidget(lineWidthUI->label(), 1, 0);
-	layout->addLayout(lineWidthUI->createFieldLayout(), 1, 1);
-	lineWidthUI->setMinValue(0);
-
-	// Line color.
-	ColorParameterUI* lineColorUI = new ColorParameterUI(this, PROPERTY_FIELD(TrajectoryDisplay::_lineColor));
-	layout->addWidget(lineColorUI->label(), 2, 0);
-	layout->addWidget(lineColorUI->colorPicker(), 2, 1);
-
-	// Up to current time.
-	BooleanParameterUI* showUpToCurrentTimeUI = new BooleanParameterUI(this, PROPERTY_FIELD(TrajectoryDisplay::_showUpToCurrentTime));
-	layout->addWidget(showUpToCurrentTimeUI->checkBox(), 3, 0, 1, 2);
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 }	// End of namespace
 }	// End of namespace

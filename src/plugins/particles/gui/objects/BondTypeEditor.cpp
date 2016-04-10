@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // 
-//  Copyright (2015) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,43 +19,17 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <plugins/particles/Particles.h>
+#include <plugins/particles/gui/ParticlesGui.h>
+#include <plugins/particles/objects/BondType.h>
 #include <gui/properties/ColorParameterUI.h>
 #include <gui/properties/FloatParameterUI.h>
 #include <gui/properties/StringParameterUI.h>
+#include "BondTypeEditor.h"
 
-#include "BondType.h"
+namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-namespace Ovito { namespace Particles {
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, BondTypeEditor, PropertiesEditor);
-OVITO_END_INLINE_NAMESPACE
-
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, BondType, RefTarget);
+IMPLEMENT_OVITO_OBJECT(ParticlesGui, BondTypeEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(BondType, BondTypeEditor);
-DEFINE_PROPERTY_FIELD(BondType, _id, "Identifier");
-DEFINE_PROPERTY_FIELD(BondType, _color, "Color");
-DEFINE_PROPERTY_FIELD(BondType, _radius, "Radius");
-DEFINE_PROPERTY_FIELD(BondType, _name, "Name");
-SET_PROPERTY_FIELD_LABEL(BondType, _id, "Id");
-SET_PROPERTY_FIELD_LABEL(BondType, _color, "Color");
-SET_PROPERTY_FIELD_LABEL(BondType, _radius, "Radius");
-SET_PROPERTY_FIELD_LABEL(BondType, _name, "Name");
-SET_PROPERTY_FIELD_UNITS(BondType, _radius, WorldParameterUnit);
-
-/******************************************************************************
-* Constructs a new BondType.
-******************************************************************************/
-BondType::BondType(DataSet* dataset) : RefTarget(dataset), _color(1,1,1), _radius(0), _id(0)
-{
-	INIT_PROPERTY_FIELD(BondType::_id);
-	INIT_PROPERTY_FIELD(BondType::_color);
-	INIT_PROPERTY_FIELD(BondType::_radius);
-	INIT_PROPERTY_FIELD(BondType::_name);
-}
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /******************************************************************************
 * Sets up the UI widgets of the editor.
@@ -85,6 +59,5 @@ void BondTypeEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 }
 
 OVITO_END_INLINE_NAMESPACE
-
 }	// End of namespace
 }	// End of namespace

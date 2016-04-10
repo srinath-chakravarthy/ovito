@@ -31,6 +31,10 @@ ADD_SUBDIRECTORY(3rdparty)
 
 ADD_SUBDIRECTORY(core)
 
+##################### OpenGL renderer  #######################
+
+ADD_SUBDIRECTORY(opengl_renderer)
+	
 ##################### Gui library  #######################
 
 IF(OVITO_BUILD_GUI)

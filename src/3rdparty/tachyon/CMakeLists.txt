@@ -86,7 +86,9 @@ ENDIF()
 
 # Since we will link this into the Tachyon plugin, we need to use the same setting for the fPIC flag.
 SET_PROPERTY(TARGET TachyonLib PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 # Export this target.
-#INSTALL(TARGETS TachyonLib EXPORT OVITO 
-#    ARCHIVE DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}" 
-#    CONFIGURATIONS "")
+INSTALL(TARGETS TachyonLib EXPORT OVITO 
+    ARCHIVE DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}" 
+    CONFIGURATIONS "")
+

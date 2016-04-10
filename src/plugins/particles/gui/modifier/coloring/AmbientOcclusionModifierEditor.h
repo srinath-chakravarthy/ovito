@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,126 +19,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_AMBIENT_OCCLUSION_MODIFIER_H
-#define __OVITO_AMBIENT_OCCLUSION_MODIFIER_H
+#ifndef __OVITO_AMBIENT_OCCLUSION_MODIFIER_EDITOR_H
+#define __OVITO_AMBIENT_OCCLUSION_MODIFIER_EDITOR_H
 
-#include <plugins/particles/Particles.h>
-#include <gui/properties/RefTargetListParameterUI.h>
-#include <gui/rendering/OpenGLSceneRenderer.h>
-#include <plugins/particles/modifier/AsynchronousParticleModifier.h>
+#include <plugins/particles/gui/ParticlesGui.h>
+#include <plugins/particles/gui/modifier/ParticleModifierEditor.h>
 
-namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring)
-
-/**
- * \brief Calculates ambient occlusion lighting for particles.
- */
-class OVITO_PARTICLES_EXPORT AmbientOcclusionModifier : public AsynchronousParticleModifier
-{
-public:
-
-	/// Computes the modifier's results.
-	class AmbientOcclusionEngine : public ComputeEngine
-	{
-	public:
-
-		/// Constructor.
-		AmbientOcclusionEngine(const TimeInterval& validityInterval, int resolution, int samplingCount, ParticleProperty* positions, const Box3& boundingBox, std::vector<FloatType>&& particleRadii) :
-			ComputeEngine(validityInterval),
-			_resolution(resolution),
-			_samplingCount(samplingCount),
-			_positions(positions),
-			_boundingBox(boundingBox),
-			_brightness(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, tr("Brightness"), true)),
-			_particleRadii(particleRadii) {
-			_offscreenSurface.setFormat(OpenGLSceneRenderer::getDefaultSurfaceFormat());
-			_offscreenSurface.create();
-		}
-
-		/// Computes the modifier's results and stores them in this object for later retrieval.
-		virtual void perform() override;
-
-		/// Returns the property storage that contains the input particle positions.
-		ParticleProperty* positions() const { return _positions.data(); }
-
-		/// Returns the property storage that contains the computed per-particle brightness values.
-		ParticleProperty* brightness() const { return _brightness.data(); }
-
-	private:
-
-		int _resolution;
-		int _samplingCount;
-		QExplicitlySharedDataPointer<ParticleProperty> _positions;
-		QExplicitlySharedDataPointer<ParticleProperty> _brightness;
-		Box3 _boundingBox;
-		std::vector<FloatType> _particleRadii;
-		QOffscreenSurface _offscreenSurface;
-	};
-
-public:
-
-	/// Constructor.
-	Q_INVOKABLE AmbientOcclusionModifier(DataSet* dataset);
-
-	/// Returns the intensity of the shading.
-	FloatType intensity() const { return _intensity; }
-
-	/// Sets the intensity of the shading.
-	void setIntensity(FloatType newIntensity) { _intensity = newIntensity; }
-
-	/// Returns the amount of spherical sampling points used in the shading computation.
-	int samplingCount() const { return _samplingCount; }
-
-	/// Sets the amount of spherical sampling points used in the shading computation.
-	void setSamplingCount(int count) { _samplingCount = count; }
-
-	/// Returns the buffer resolution level.
-	int bufferResolution() const { return _bufferResolution; }
-
-	/// Sets the buffer resolution level.
-	void setBufferResolution(int res) { _bufferResolution = res; }
-
-protected:
-
-	/// Is called when the value of a property of this object has changed.
-	virtual void propertyChanged(const PropertyFieldDescriptor& field) override;
-
-	/// Creates and initializes a computation engine that will compute the modifier's results.
-	virtual std::shared_ptr<ComputeEngine> createEngine(TimePoint time, TimeInterval validityInterval) override;
-
-	/// Unpacks the results of the computation engine and stores them in the modifier.
-	virtual void transferComputationResults(ComputeEngine* engine) override;
-
-	/// Lets the modifier insert the cached computation results into the modification pipeline.
-	virtual PipelineStatus applyComputationResults(TimePoint time, TimeInterval& validityInterval) override;
-
-private:
-
-	/// This stores the cached results of the modifier, i.e. the brightness value of each particle.
-	QExplicitlySharedDataPointer<ParticleProperty> _brightnessValues;
-
-	/// This controls the intensity of the shading effect.
-	PropertyField<FloatType> _intensity;
-
-	/// Controls the quality of the lighting computation.
-	PropertyField<int> _samplingCount;
-
-	/// Controls the resolution of the offscreen rendering buffer.
-	PropertyField<int> _bufferResolution;
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-
-	Q_CLASSINFO("DisplayName", "Ambient occlusion");
-	Q_CLASSINFO("ModifierCategory", "Coloring");
-
-	DECLARE_PROPERTY_FIELD(_intensity);
-	DECLARE_PROPERTY_FIELD(_samplingCount);
-	DECLARE_PROPERTY_FIELD(_bufferResolution);
-};
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
+namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
  * \brief A properties editor for the AmbientOcclusionModifier class.
@@ -160,10 +47,9 @@ protected:
 };
 
 OVITO_END_INLINE_NAMESPACE
-
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_AMBIENT_OCCLUSION_MODIFIER_H
+#endif // __OVITO_AMBIENT_OCCLUSION_MODIFIER_EDITOR_H

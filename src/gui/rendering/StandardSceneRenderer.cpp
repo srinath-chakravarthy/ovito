@@ -25,6 +25,7 @@
 #include <core/rendering/RenderSettings.h>
 #include <core/app/Application.h>
 #include <gui/mainwin/MainWindow.h>
+#include <gui/viewport/ViewportWindow.h>
 #include "StandardSceneRenderer.h"
 #include "StandardSceneRendererEditor.h"
 
@@ -61,7 +62,7 @@ bool StandardSceneRenderer::startRender(DataSet* dataset, RenderSettings* settin
 		_offscreenContext->setFormat(OpenGLSceneRenderer::getDefaultSurfaceFormat());
 		// It should share its resources with the viewport renderer.
 		const QVector<Viewport*>& viewports = renderDataset()->viewportConfig()->viewports();
-		if(!viewports.empty() && viewports.front()->viewportWindow())
+		if(!viewports.empty() && viewports.front()->window())
 			_offscreenContext->setShareContext(static_cast<ViewportWindow*>(viewports.front()->window())->context());
 		if(!_offscreenContext->create())
 			throwException(tr("Failed to create OpenGL context for rendering."));
@@ -89,7 +90,6 @@ bool StandardSceneRenderer::startRender(DataSet* dataset, RenderSettings* settin
 	// Make the context current.
 	if(!glcontext->makeCurrent(_offscreenSurface.data()))
 		throwException(tr("Failed to make OpenGL context current."));
-	OVITO_REPORT_OPENGL_ERRORS();
 
 	// Create OpenGL framebuffer.
 	_framebufferSize = QSize(settings->outputImageWidth() * sampling, settings->outputImageHeight() * sampling);
@@ -98,12 +98,10 @@ bool StandardSceneRenderer::startRender(DataSet* dataset, RenderSettings* settin
 	_framebufferObject.reset(new QOpenGLFramebufferObject(_framebufferSize.width(), _framebufferSize.height(), framebufferFormat));
 	if(!_framebufferObject->isValid())
 		throwException(tr("Failed to create OpenGL framebuffer object for offscreen rendering."));
-	OVITO_REPORT_OPENGL_ERRORS();
 
 	// Bind OpenGL buffer.
 	if(!_framebufferObject->bind())
 		throwException(tr("Failed to bind OpenGL framebuffer object for offscreen rendering."));
-	OVITO_REPORT_OPENGL_ERRORS();
 
 	return true;
 }
@@ -121,19 +119,18 @@ void StandardSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParam
 		glcontext = _offscreenContext.data();
 	if(!glcontext->makeCurrent(_offscreenSurface.data()))
 		throwException(tr("Failed to make OpenGL context current."));
-	OVITO_REPORT_OPENGL_ERRORS();
 
 	OpenGLSceneRenderer::beginFrame(time, params, vp);
 
 	// Setup GL viewport.
-	OVITO_CHECK_OPENGL(glViewport(0, 0, _framebufferSize.width(), _framebufferSize.height()));
+	setRenderingViewport(0, 0, _framebufferSize.width(), _framebufferSize.height());
 
 	// Set rendering background color.
 	if(!renderSettings()->generateAlphaChannel()) {
 		Color backgroundColor = renderSettings()->backgroundColor();
-		glClearColor(backgroundColor.r(), backgroundColor.g(), backgroundColor.b(), 1);
+		setClearColor(ColorA(backgroundColor));
 	}
-	else glClearColor(0, 0, 0, 0);
+	else setClearColor(ColorA(0, 0, 0, 0));
 }
 
 /******************************************************************************

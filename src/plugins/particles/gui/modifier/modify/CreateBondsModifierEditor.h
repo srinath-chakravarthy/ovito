@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2014) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,165 +19,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CREATE_BONDS_MODIFIER_H
-#define __OVITO_CREATE_BONDS_MODIFIER_H
+#ifndef __OVITO_CREATE_BONDS_MODIFIER_EDITOR_H
+#define __OVITO_CREATE_BONDS_MODIFIER_EDITOR_H
 
-#include <plugins/particles/Particles.h>
-#include <plugins/particles/objects/BondsDisplay.h>
-#include <plugins/particles/modifier/AsynchronousParticleModifier.h>
+#include <plugins/particles/gui/ParticlesGui.h>
+#include <plugins/particles/gui/modifier/ParticleModifierEditor.h>
+#include <plugins/particles/modifier/modify/CreateBondsModifier.h>
 
-namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
-
-/**
- * \brief A modifier that creates bonds between pairs of particles based on their distance.
- */
-class OVITO_PARTICLES_EXPORT CreateBondsModifier : public AsynchronousParticleModifier
-{
-public:
-
-	enum CutoffMode {
-		UniformCutoff,		///< A single cutoff radius for all particles.
-		PairCutoff,			///< Individual cutoff radius for each pair of particle types.
-	};
-	Q_ENUMS(CutoffMode);
-
-	/// The container type used to store the pair-wise cutoffs.
-	typedef QMap<QPair<QString,QString>, FloatType> PairCutoffsList;
-
-private:
-
-	/// Engine that determines the bonds between particles.
-	class BondsEngine : public ComputeEngine
-	{
-	public:
-
-		/// Constructor.
-		BondsEngine(const TimeInterval& validityInterval, ParticleProperty* positions, ParticleProperty* particleTypes, const SimulationCell& simCell, CutoffMode cutoffMode,
-				FloatType uniformCutoff, std::vector<std::vector<FloatType>>&& pairCutoffs, ParticleProperty* moleculeIDs) :
-					ComputeEngine(validityInterval),
-					_positions(positions), _particleTypes(particleTypes), _simCell(simCell), _cutoffMode(cutoffMode),
-					_uniformCutoff(uniformCutoff), _pairCutoffs(std::move(pairCutoffs)), _bonds(new BondsStorage()),
-					_moleculeIDs(moleculeIDs) {}
-
-		/// Computes the modifier's results and stores them in this object for later retrieval.
-		virtual void perform() override;
-
-		/// Returns the generated bonds.
-		BondsStorage* bonds() { return _bonds.data(); }
-
-		/// Returns the input particle positions.
-		ParticleProperty* positions() const { return _positions.data(); }
-
-	private:
-
-		CutoffMode _cutoffMode;
-		FloatType _uniformCutoff;
-		std::vector<std::vector<FloatType>> _pairCutoffs;
-		QExplicitlySharedDataPointer<ParticleProperty> _positions;
-		QExplicitlySharedDataPointer<ParticleProperty> _particleTypes;
-		QExplicitlySharedDataPointer<ParticleProperty> _moleculeIDs;
-		QExplicitlySharedDataPointer<BondsStorage> _bonds;
-		SimulationCell _simCell;
-	};
-
-public:
-
-	/// Constructor.
-	Q_INVOKABLE CreateBondsModifier(DataSet* dataset);
-
-	/// Returns the mode of choosing the cutoff radius.
-	CutoffMode cutoffMode() const { return _cutoffMode; }
-
-	/// Sets the mode of choosing the cutoff radius.
-	void setCutoffMode(CutoffMode mode) { _cutoffMode = mode; }
-
-	/// \brief Returns the uniform cutoff radius used to determine which particles are bonded.
-	/// \return The uniform cutoff radius in world units.
-	FloatType uniformCutoff() const { return _uniformCutoff; }
-
-	/// \brief Sets the cutoff radius that is used for generating bonds.
-	/// \param newCutoff The new cutoff radius in world units.
-	void setUniformCutoff(FloatType newCutoff) { _uniformCutoff = newCutoff; }
-
-	/// Returns the cutoff radii for pairs of particle types.
-	const PairCutoffsList& pairCutoffs() const { return _pairCutoffs; }
-
-	/// Sets the cutoff radii for pairs of particle types.
-	void setPairCutoffs(const PairCutoffsList& pairCutoffs);
-
-	/// \brief Returns the display object that is responsible for rendering the bonds.
-	BondsDisplay* bondsDisplay() const { return _bondsDisplay; }
-
-	/// Returns whether bonds will only be created between atoms from the same molecule.
-	bool onlyIntraMoleculeBonds() const { return _onlyIntraMoleculeBonds; }
-
-	/// Sets whether bonds will only be created between atoms from the same molecule.
-	void setOnlyIntraMoleculeBonds(bool enable) { _onlyIntraMoleculeBonds = enable; }
-
-protected:
-
-	/// Saves the class' contents to the given stream.
-	virtual void saveToStream(ObjectSaveStream& stream) override;
-
-	/// Loads the class' contents from the given stream.
-	virtual void loadFromStream(ObjectLoadStream& stream) override;
-
-	/// Creates a copy of this object.
-	virtual OORef<RefTarget> clone(bool deepCopy, CloneHelper& cloneHelper) override;
-
-	/// Handles reference events sent by reference targets of this object.
-	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
-
-	/// Is called when the value of a property of this object has changed.
-	virtual void propertyChanged(const PropertyFieldDescriptor& field) override;
-
-	/// Resets the modifier's result cache.
-	virtual void invalidateCachedResults() override;
-
-	/// Creates a computation engine that will compute the modifier's results.
-	virtual std::shared_ptr<ComputeEngine> createEngine(TimePoint time, TimeInterval validityInterval) override;
-
-	/// Unpacks the results of the computation engine and stores them in the modifier.
-	virtual void transferComputationResults(ComputeEngine* engine) override;
-
-	/// Lets the modifier insert the cached computation results into the modification pipeline.
-	virtual PipelineStatus applyComputationResults(TimePoint time, TimeInterval& validityInterval) override;
-
-private:
-
-	/// The mode of choosing the cutoff radius.
-	PropertyField<CutoffMode, int> _cutoffMode;
-
-	/// The cutoff radius for bond generation.
-	PropertyField<FloatType> _uniformCutoff;
-
-	/// The cutoff radii for pairs of particle types.
-	PairCutoffsList _pairCutoffs;
-
-	/// If true, bonds will only be created between atoms from the same molecule.
-	PropertyField<bool> _onlyIntraMoleculeBonds;
-
-	/// The display object for rendering the bonds.
-	ReferenceField<BondsDisplay> _bondsDisplay;
-
-	/// This stores the cached results of the modifier, i.e. the bonds information.
-	QExplicitlySharedDataPointer<BondsStorage> _bonds;
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-
-	Q_CLASSINFO("DisplayName", "Create bonds");
-	Q_CLASSINFO("ModifierCategory", "Modification");
-
-	DECLARE_PROPERTY_FIELD(_cutoffMode);
-	DECLARE_PROPERTY_FIELD(_uniformCutoff);
-	DECLARE_PROPERTY_FIELD(_onlyIntraMoleculeBonds);
-	DECLARE_REFERENCE_FIELD(_bondsDisplay);
-};
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
+namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
  * \brief A properties editor for the CreateBondsModifier class.
@@ -248,13 +97,9 @@ private:
 };
 
 OVITO_END_INLINE_NAMESPACE
-
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-Q_DECLARE_METATYPE(Ovito::Particles::CreateBondsModifier::CutoffMode);
-Q_DECLARE_TYPEINFO(Ovito::Particles::CreateBondsModifier::CutoffMode, Q_PRIMITIVE_TYPE);
-
-#endif // __OVITO_CREATE_BONDS_MODIFIER_H
+#endif // __OVITO_CREATE_BONDS_MODIFIER_EDITOR_H

@@ -26,6 +26,8 @@
 #include <core/utilities/mesh/TriMesh.h>
 #include "polytess/glu.h"
 
+#include <qopengl.h>
+
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**

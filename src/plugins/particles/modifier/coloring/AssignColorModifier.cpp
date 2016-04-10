@@ -21,22 +21,15 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/animation/controller/Controller.h>
-#include <gui/properties/ColorParameterUI.h>
-#include <gui/properties/BooleanParameterUI.h>
 #include "AssignColorModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, AssignColorModifier, ParticleModifier);
-SET_OVITO_OBJECT_EDITOR(AssignColorModifier, AssignColorModifierEditor);
 DEFINE_FLAGS_REFERENCE_FIELD(AssignColorModifier, _colorCtrl, "Color", Controller, PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(AssignColorModifier, _keepSelection, "KeepSelection");
 SET_PROPERTY_FIELD_LABEL(AssignColorModifier, _colorCtrl, "Color");
 SET_PROPERTY_FIELD_LABEL(AssignColorModifier, _keepSelection, "Keep selection");
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, AssignColorModifierEditor, ParticleModifierEditor);
-OVITO_END_INLINE_NAMESPACE
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -109,34 +102,6 @@ PipelineStatus AssignColorModifier::modifyParticles(TimePoint time, TimeInterval
 
 	return PipelineStatus();
 }
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void AssignColorModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Assign color"), rolloutParams, "particles.modifiers.assign_color.html");
-
-    // Create the rollout contents.
-	QGridLayout* layout = new QGridLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(0);
-	layout->setColumnStretch(1, 1);
-
-	// Color parameter.
-	ColorParameterUI* constColorPUI = new ColorParameterUI(this, PROPERTY_FIELD(AssignColorModifier::_colorCtrl));
-	layout->addWidget(constColorPUI->label(), 0, 0);
-	layout->addWidget(constColorPUI->colorPicker(), 0, 1);
-
-	// Keep selection parameter.
-	BooleanParameterUI* keepSelectionPUI = new BooleanParameterUI(this, PROPERTY_FIELD(AssignColorModifier::_keepSelection));
-	layout->addWidget(keepSelectionPUI->checkBox(), 1, 0, 1, 2);
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

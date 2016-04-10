@@ -24,16 +24,9 @@
 #define __OVITO_BIN_AND_REDUCE_MODIFIER_H
 
 #include <plugins/particles/Particles.h>
-#include <gui/properties/BooleanParameterUI.h>
-#include <gui/properties/IntegerParameterUI.h>
 #include <plugins/particles/data/ParticleProperty.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include "../../ParticleModifier.h"
-
-#ifndef signals
-#define signals Q_SIGNALS
-#endif
-#include <qcustomplot.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
@@ -208,66 +201,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_propertyAxisRangeEnd);
 	DECLARE_PROPERTY_FIELD(_sourceProperty);
 };
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * A properties editor for the BinAndReduceModifier class.
- */
-class BinAndReduceModifierEditor : public ParticleModifierEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE BinAndReduceModifierEditor() : _rangeUpdate(true), _averagesGraph(nullptr), _averagesColorMap(nullptr) {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-	/// This method is called when a reference target changes.
-	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
-
-protected Q_SLOTS:
-
-	/// Plots the data computed by the modifier.
-	void plotData();
-
-    /// Enable/disable the editor for number of y-bins and the first derivative button.
-    void updateWidgets();
-
-	/// Keep y-axis range updated
-	void updatePropertyAxisRange(const QCPRange &newRange);
-
-	/// This is called when the user has clicked the "Save Data" button.
-	void onSaveData();
-
-private:
-
-    /// Widget controlling the number of y-bins.
-    BooleanParameterUI* _firstDerivativePUI;
-
-    /// Widget controlling the number of y-bins.
-    IntegerParameterUI* _numBinsYPUI;
-
-	/// The plot widget to display the average data.
-	QCustomPlot* _averagesPlot;
-
-	/// The graph widget to display the average data.
-	QCPGraph* _averagesGraph;
-
-	/// The color map widget to display the average data on a 2D grid.
-	QCPColorMap* _averagesColorMap;
-
-	/// Update range when plot ranges change?
-	bool _rangeUpdate;
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

@@ -28,8 +28,6 @@
 #include <core/rendering/LinePrimitive.h>
 #include <core/rendering/ArrowPrimitive.h>
 #include <core/rendering/ParticlePrimitive.h>
-#include <gui/properties/PropertiesEditor.h>
-
 #include "SimulationCellObject.h"
 
 namespace Ovito { namespace Particles {
@@ -136,29 +134,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_simulationCellLineWidth);
 	DECLARE_PROPERTY_FIELD(_simulationCellColor);
 };
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * \brief A properties editor for the SimulationCellDisplay class.
- */
-class SimulationCellDisplayEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE SimulationCellDisplayEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 
 }	// End of namespace
 }	// End of namespace

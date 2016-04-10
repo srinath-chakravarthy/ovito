@@ -23,7 +23,6 @@
 #define __OVITO_CA_PATTERN_CATALOG_H
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <gui/properties/RefTargetListParameterUI.h>
 #include <core/scene/objects/DataObject.h>
 #include "StructurePattern.h"
 
@@ -68,34 +67,6 @@ private:
 	OVITO_OBJECT
 
 	DECLARE_VECTOR_REFERENCE_FIELD(_patterns);
-};
-
-/**
- * \brief A properties editor for the PatternCatalog class.
- */
-class OVITO_CRYSTALANALYSIS_EXPORT PatternCatalogEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE PatternCatalogEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-protected Q_SLOTS:
-
-	/// Is called when the user has double-clicked on one of the entries in the list widget.
-	void onDoubleClickPattern(const QModelIndex& index);
-
-private:
-
-	RefTargetListParameterUI* typesListUI;
-
-	Q_OBJECT
-	OVITO_OBJECT
 };
 
 }	// End of namespace

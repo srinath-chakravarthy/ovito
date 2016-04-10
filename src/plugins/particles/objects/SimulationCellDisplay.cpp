@@ -22,21 +22,12 @@
 #include <plugins/particles/Particles.h>
 #include <core/utilities/units/UnitsManager.h>
 #include <core/rendering/SceneRenderer.h>
-#include <gui/properties/FloatParameterUI.h>
-#include <gui/properties/ColorParameterUI.h>
-#include <gui/properties/BooleanParameterUI.h>
-
 #include "SimulationCellDisplay.h"
 #include "SimulationCellObject.h"
 
 namespace Ovito { namespace Particles {
 
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, SimulationCellDisplayEditor, PropertiesEditor);
-OVITO_END_INLINE_NAMESPACE
-
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SimulationCellDisplay, DisplayObject);
-SET_OVITO_OBJECT_EDITOR(SimulationCellDisplay, SimulationCellDisplayEditor);
 DEFINE_PROPERTY_FIELD(SimulationCellDisplay, _renderSimulationCell, "RenderSimulationCell");
 DEFINE_PROPERTY_FIELD(SimulationCellDisplay, _simulationCellLineWidth, "SimulationCellLineWidth");
 DEFINE_FLAGS_PROPERTY_FIELD(SimulationCellDisplay, _simulationCellColor, "SimulationCellRenderingColor", PROPERTY_FIELD_MEMORIZE);
@@ -193,40 +184,6 @@ void SimulationCellDisplay::renderSolid(SimulationCellObject* cell, SceneRendere
 	_cornerGeometry->render(renderer);
 	renderer->endPickObject();
 }
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void SimulationCellDisplayEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(QString(), rolloutParams);
-
-    // Create the rollout contents.
-	QGridLayout* layout = new QGridLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(4);
-	layout->setColumnStretch(1, 1);
-
-	// Render cell
-	BooleanParameterUI* renderCellUI = new BooleanParameterUI(this, PROPERTY_FIELD(SimulationCellDisplay::_renderSimulationCell));
-	layout->addWidget(renderCellUI->checkBox(), 0, 0, 1, 2);
-
-	// Line width
-	FloatParameterUI* scalingFactorUI = new FloatParameterUI(this, PROPERTY_FIELD(SimulationCellDisplay::_simulationCellLineWidth));
-	layout->addWidget(scalingFactorUI->label(), 1, 0);
-	layout->addLayout(scalingFactorUI->createFieldLayout(), 1, 1);
-	scalingFactorUI->setMinValue(0);
-
-	// Line color
-	ColorParameterUI* lineColorUI = new ColorParameterUI(this, PROPERTY_FIELD(SimulationCellDisplay::_simulationCellColor));
-	layout->addWidget(lineColorUI->label(), 2, 0);
-	layout->addWidget(lineColorUI->colorPicker(), 2, 1);
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 }	// End of namespace
 }	// End of namespace

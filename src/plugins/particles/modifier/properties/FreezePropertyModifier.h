@@ -84,35 +84,6 @@ private:
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
- * A properties editor for the FreezePropertyModifier class.
- */
-class FreezePropertyModifierEditor : public ParticleModifierEditor
-{
-public:
-
-	/// Default constructor
-	Q_INVOKABLE FreezePropertyModifierEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-protected Q_SLOTS:
-
-	/// Takes a new snapshot of the current particle property values.
-	void takeSnapshot();
-
-	/// Is called when the user has selected a different source property.
-	void onSourcePropertyChanged();
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-/**
  * Helper class used by the FreezePropertyModifier to store the values of
  * the selected particle property.
  */

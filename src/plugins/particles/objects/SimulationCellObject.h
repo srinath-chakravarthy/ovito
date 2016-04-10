@@ -23,12 +23,8 @@
 #define __OVITO_SIMULATION_CELL_OBJECT_H
 
 #include <plugins/particles/Particles.h>
-#include <core/scene/objects/DataObject.h>
-#include <gui/properties/PropertiesEditor.h>
-#include <gui/properties/FloatParameterUI.h>
-#include <gui/properties/BooleanParameterUI.h>
-#include <gui/properties/Vector3ParameterUI.h>
 #include <plugins/particles/data/SimulationCell.h>
+#include <core/scene/objects/DataObject.h>
 
 namespace Ovito { namespace Particles {
 
@@ -258,56 +254,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_is2D);
 };
 
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * \brief A properties editor for the SimulationCellObject class.
- */
-class SimulationCellEditor : public PropertiesEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE SimulationCellEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-protected Q_SLOTS:
-
-	/// Is called when a spinner's value has changed.
-	void onSizeSpinnerValueChanged(int dim);
-
-	/// Is called when the user begins dragging a spinner interactively.
-	void onSizeSpinnerDragStart(int dim);
-
-	/// Is called when the user stops dragging a spinner interactively.
-	void onSizeSpinnerDragStop(int dim);
-
-	/// Is called when the user aborts dragging a spinner interactively.
-	void onSizeSpinnerDragAbort(int dim);
-
-	/// After the simulation cell size has changed, updates the UI controls.
-	void updateSimulationBoxSize();
-
-private:
-
-	/// After the user has changed a spinner's value, this method changes the
-	/// simulation cell geometry.
-	void changeSimulationBoxSize(int dim);
-
-	SpinnerWidget* simCellSizeSpinners[3];
-	BooleanParameterUI* pbczPUI;
-	Vector3ParameterUI* zvectorPUI[3];
-	Vector3ParameterUI* zoriginPUI;
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 

@@ -20,18 +20,15 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <gui/properties/BooleanParameterUI.h>
-#include <gui/properties/IntegerParameterUI.h>
-#include <gui/properties/FloatParameterUI.h>
-#include <core/app/Application.h>
 #include <plugins/particles/objects/ParticleDisplay.h>
+#include <core/app/Application.h>
+#include <opengl_renderer/OpenGLSceneRenderer.h>
 #include "AmbientOcclusionModifier.h"
 #include "AmbientOcclusionRenderer.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, AmbientOcclusionModifier, AsynchronousParticleModifier);
-SET_OVITO_OBJECT_EDITOR(AmbientOcclusionModifier, AmbientOcclusionModifierEditor);
 DEFINE_PROPERTY_FIELD(AmbientOcclusionModifier, _intensity, "Intensity");
 DEFINE_PROPERTY_FIELD(AmbientOcclusionModifier, _samplingCount, "SamplingCount");
 DEFINE_PROPERTY_FIELD(AmbientOcclusionModifier, _bufferResolution, "BufferResolution");
@@ -39,12 +36,6 @@ SET_PROPERTY_FIELD_LABEL(AmbientOcclusionModifier, _intensity, "Shading intensit
 SET_PROPERTY_FIELD_LABEL(AmbientOcclusionModifier, _samplingCount, "Number of exposure samples");
 SET_PROPERTY_FIELD_LABEL(AmbientOcclusionModifier, _bufferResolution, "Render buffer resolution");
 SET_PROPERTY_FIELD_UNITS(AmbientOcclusionModifier, _intensity, PercentParameterUnit);
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, AmbientOcclusionModifierEditor, ParticleModifierEditor);
-OVITO_END_INLINE_NAMESPACE
-
-enum { MAX_AO_RENDER_BUFFER_RESOLUTION = 4 };
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -87,6 +78,22 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> AmbientOcclusionMod
 	TimeInterval interval;
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<AmbientOcclusionEngine>(validityInterval, resolution, samplingCount(), posProperty->storage(), boundingBox, inputParticleRadii(time, interval));
+}
+
+/******************************************************************************
+* Compute engine constructor.
+******************************************************************************/
+AmbientOcclusionModifier::AmbientOcclusionEngine::AmbientOcclusionEngine(const TimeInterval& validityInterval, int resolution, int samplingCount, ParticleProperty* positions, const Box3& boundingBox, std::vector<FloatType>&& particleRadii) :
+	ComputeEngine(validityInterval),
+	_resolution(resolution),
+	_samplingCount(samplingCount),
+	_positions(positions),
+	_boundingBox(boundingBox),
+	_brightness(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, tr("Brightness"), true)),
+	_particleRadii(particleRadii)
+{
+	_offscreenSurface.setFormat(OpenGLSceneRenderer::getDefaultSurfaceFormat());
+	_offscreenSurface.create();
 }
 
 /******************************************************************************
@@ -252,55 +259,6 @@ void AmbientOcclusionModifier::propertyChanged(const PropertyFieldDescriptor& fi
 		field == PROPERTY_FIELD(AmbientOcclusionModifier::_bufferResolution))
 		invalidateCachedResults();
 }
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void AmbientOcclusionModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Ambient occlusion"), rolloutParams, "particles.modifiers.ambient_occlusion.html");
-
-    // Create the rollout contents.
-	QVBoxLayout* layout1 = new QVBoxLayout(rollout);
-	layout1->setContentsMargins(4,4,4,4);
-	layout1->setSpacing(4);
-
-	QGridLayout* layout2 = new QGridLayout();
-	layout2->setContentsMargins(0,0,0,0);
-	layout2->setSpacing(4);
-	layout2->setColumnStretch(1, 1);
-	layout1->addLayout(layout2);
-
-	// Intensity parameter.
-	FloatParameterUI* intensityPUI = new FloatParameterUI(this, PROPERTY_FIELD(AmbientOcclusionModifier::_intensity));
-	layout2->addWidget(intensityPUI->label(), 0, 0);
-	layout2->addLayout(intensityPUI->createFieldLayout(), 0, 1);
-	intensityPUI->setMinValue(0);
-	intensityPUI->setMaxValue(1);
-
-	// Sampling level parameter.
-	IntegerParameterUI* samplingCountPUI = new IntegerParameterUI(this, PROPERTY_FIELD(AmbientOcclusionModifier::_samplingCount));
-	layout2->addWidget(samplingCountPUI->label(), 1, 0);
-	layout2->addLayout(samplingCountPUI->createFieldLayout(), 1, 1);
-	samplingCountPUI->setMinValue(3);
-	samplingCountPUI->setMaxValue(2000);
-
-	// Buffer resolution parameter.
-	IntegerParameterUI* bufferResPUI = new IntegerParameterUI(this, PROPERTY_FIELD(AmbientOcclusionModifier::_bufferResolution));
-	layout2->addWidget(bufferResPUI->label(), 2, 0);
-	layout2->addLayout(bufferResPUI->createFieldLayout(), 2, 1);
-	bufferResPUI->setMinValue(1);
-	bufferResPUI->setMaxValue(MAX_AO_RENDER_BUFFER_RESOLUTION);
-
-	// Status label.
-	layout1->addSpacing(10);
-	layout1->addWidget(statusLabel());
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

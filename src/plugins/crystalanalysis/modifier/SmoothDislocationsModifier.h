@@ -23,9 +23,8 @@
 #define __OVITO_CA_SMOOTH_DISLOCATIONS_MODIFIER_H
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <core/scene/pipeline/Modifier.h>
-#include <gui/properties/PropertiesEditor.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
+#include <core/scene/pipeline/Modifier.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -104,27 +103,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_smoothingLevel);
 	DECLARE_PROPERTY_FIELD(_coarseningEnabled);
 	DECLARE_PROPERTY_FIELD(_linePointInterval);
-};
-
-/**
- * Properties editor for the SmoothDislocationsModifier class.
- */
-class OVITO_CRYSTALANALYSIS_EXPORT SmoothDislocationsModifierEditor : public PropertiesEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE SmoothDislocationsModifierEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
 };
 
 }	// End of namespace

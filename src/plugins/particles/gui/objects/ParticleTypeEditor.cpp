@@ -19,46 +19,20 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <plugins/particles/Particles.h>
+#include <plugins/particles/gui/ParticlesGui.h>
+#include <plugins/particles/objects/ParticleType.h>
+#include <plugins/particles/objects/ParticleTypeProperty.h>
+#include <plugins/particles/data/ParticleProperty.h>
 #include <gui/properties/ColorParameterUI.h>
 #include <gui/properties/FloatParameterUI.h>
 #include <gui/properties/StringParameterUI.h>
 #include <gui/mainwin/MainWindow.h>
-#include <plugins/particles/data/ParticleProperty.h>
-#include <plugins/particles/objects/ParticleTypeProperty.h>
+#include "ParticleTypeEditor.h"
 
-#include "ParticleType.h"
+namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-namespace Ovito { namespace Particles {
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, ParticleTypeEditor, PropertiesEditor);
-OVITO_END_INLINE_NAMESPACE
-
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ParticleType, RefTarget);
+IMPLEMENT_OVITO_OBJECT(ParticlesGui, ParticleTypeEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(ParticleType, ParticleTypeEditor);
-DEFINE_PROPERTY_FIELD(ParticleType, _id, "Identifier");
-DEFINE_PROPERTY_FIELD(ParticleType, _color, "Color");
-DEFINE_PROPERTY_FIELD(ParticleType, _radius, "Radius");
-DEFINE_PROPERTY_FIELD(ParticleType, _name, "Name");
-SET_PROPERTY_FIELD_LABEL(ParticleType, _id, "Id");
-SET_PROPERTY_FIELD_LABEL(ParticleType, _color, "Color");
-SET_PROPERTY_FIELD_LABEL(ParticleType, _radius, "Radius");
-SET_PROPERTY_FIELD_LABEL(ParticleType, _name, "Name");
-SET_PROPERTY_FIELD_UNITS(ParticleType, _radius, WorldParameterUnit);
-
-/******************************************************************************
-* Constructs a new ParticleType.
-******************************************************************************/
-ParticleType::ParticleType(DataSet* dataset) : RefTarget(dataset), _color(1,1,1), _radius(0), _id(0)
-{
-	INIT_PROPERTY_FIELD(ParticleType::_id);
-	INIT_PROPERTY_FIELD(ParticleType::_color);
-	INIT_PROPERTY_FIELD(ParticleType::_radius);
-	INIT_PROPERTY_FIELD(ParticleType::_name);
-}
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /******************************************************************************
 * Sets up the UI widgets of the editor.
@@ -112,6 +86,5 @@ void ParticleTypeEditor::createUI(const RolloutInsertionParameters& rolloutParam
 }
 
 OVITO_END_INLINE_NAMESPACE
-
 }	// End of namespace
 }	// End of namespace

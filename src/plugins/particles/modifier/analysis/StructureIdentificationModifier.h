@@ -23,8 +23,6 @@
 #define __OVITO_STRUCTURE_IDENTIFICATION_MODIFIER_H
 
 #include <plugins/particles/Particles.h>
-#include <gui/properties/RefTargetListParameterUI.h>
-
 #include <plugins/particles/modifier/AsynchronousParticleModifier.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
 #include <plugins/particles/objects/ParticleType.h>
@@ -131,64 +129,6 @@ private:
 
 	DECLARE_VECTOR_REFERENCE_FIELD(_structureTypes);
 	DECLARE_PROPERTY_FIELD(_onlySelectedParticles);
-};
-
-/**
- * List box that displays the structure types.
- */
-class OVITO_PARTICLES_EXPORT StructureListParameterUI : public RefTargetListParameterUI
-{
-public:
-
-	/// Constructor.
-	StructureListParameterUI(PropertiesEditor* parentEditor);
-
-	/// This method is called when a new editable object has been activated.
-	virtual void resetUI() override {
-		RefTargetListParameterUI::resetUI();
-		// Clear initial selection by default.
-		tableWidget()->selectionModel()->clear();
-	}
-
-protected:
-
-	/// Returns a data item from the list data model.
-	virtual QVariant getItemData(RefTarget* target, const QModelIndex& index, int role) override;
-
-	/// Returns the number of columns for the table view.
-	virtual int tableColumnCount() override { return 5; }
-
-	/// Returns the header data under the given role for the given RefTarget.
-	virtual QVariant getHorizontalHeaderData(int index, int role) override {
-		if(role == Qt::DisplayRole) {
-			if(index == 0)
-				return qVariantFromValue(tr("Color"));
-			else if(index == 1)
-				return qVariantFromValue(tr("Structure"));
-			else if(index == 2)
-				return qVariantFromValue(tr("Count"));
-			else if(index == 3)
-				return qVariantFromValue(tr("Fraction"));
-			else
-				return qVariantFromValue(tr("Id"));
-		}
-		else return RefTargetListParameterUI::getHorizontalHeaderData(index, role);
-	}
-
-	/// Do not open sub-editor for selected structure type.
-	virtual void openSubEditor() override {}
-
-	/// This method is called when a reference target changes.
-	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
-
-protected Q_SLOTS:
-
-	/// Is called when the user has double-clicked on one of the structure types in the list widget.
-	void onDoubleClickStructureType(const QModelIndex& index);
-
-private:
-
-	Q_OBJECT
 };
 
 OVITO_END_INLINE_NAMESPACE

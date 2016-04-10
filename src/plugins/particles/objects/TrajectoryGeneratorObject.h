@@ -23,7 +23,6 @@
 #define __OVITO_TRAJECTORY_GENERATOR_OBJECT_H
 
 #include <plugins/particles/Particles.h>
-#include <gui/properties/PropertiesEditor.h>
 #include "TrajectoryObject.h"
 
 namespace Ovito { namespace Particles {
@@ -121,35 +120,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_unwrapTrajectories);
 };
 
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * \brief A properties editor for the TrajectoryGeneratorObject class.
- */
-class TrajectoryGeneratorObjectEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE TrajectoryGeneratorObjectEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-private Q_SLOTS:
-
-	/// Is called when the user clicks the 'Regenerate trajectory' button.
-	void onRegenerateTrajectory();
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 

@@ -25,13 +25,7 @@
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/ParticleProperty.h>
-#include <plugins/particles/util/ParticlePropertyComboBox.h>
 #include "../../ParticleModifier.h"
-
-#ifndef signals
-#define signals Q_SIGNALS
-#endif
-#include <qcustomplot.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
@@ -205,66 +199,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_xAxisProperty);
 	DECLARE_PROPERTY_FIELD(_yAxisProperty);
 };
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * A properties editor for the ScatterPlotModifier class.
- */
-class ScatterPlotModifierEditor : public ParticleModifierEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE ScatterPlotModifierEditor() : _rangeUpdate(true) {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-	/// This method is called when a reference target changes.
-	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
-
-protected Q_SLOTS:
-
-	/// Replots the scatter plot computed by the modifier.
-	void plotScatterPlot();
-
-	/// Keep x-axis range updated
-	void updateXAxisRange(const QCPRange &newRange);
-
-	/// Keep y-axis range updated
-	void updateYAxisRange(const QCPRange &newRange);
-
-	/// This is called when the user has clicked the "Save Data" button.
-	void onSaveData();
-
-private:
-
-	/// The graph widget to display the scatter plot.
-	QCustomPlot* _scatterPlot;
-
-	/// Marks the selection interval in the scatter plot (x-axis).
-	QCPItemStraightLine* _selectionXAxisRangeStartMarker;
-
-	/// Marks the selection interval in the scatter plot (x-axis).
-	QCPItemStraightLine* _selectionXAxisRangeEndMarker;
-
-	/// Marks the selection interval in the scatter plot (y-axis).
-	QCPItemStraightLine* _selectionYAxisRangeStartMarker;
-
-	/// Marks the selection interval in the scatter plot (y-axis).
-	QCPItemStraightLine* _selectionYAxisRangeEndMarker;
-
-	/// Update range when plot ranges change?
-	bool _rangeUpdate;
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

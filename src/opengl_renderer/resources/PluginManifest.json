@@ -1,0 +1,5 @@
+{
+	"plugin-id" : "OpenGLRenderer",
+	"plugin-vendor" : "Alexander Stukowski",
+	"native-library" : "OpenGLRenderer"
+}

@@ -178,27 +178,6 @@ private:
 	DECLARE_REFERENCE_FIELD(_meshDisplay);
 };
 
-/**
- * Properties editor for the GrainSegmentationModifier class.
- */
-class OVITO_CRYSTALANALYSIS_EXPORT GrainSegmentationModifierEditor : public ParticleModifierEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE GrainSegmentationModifierEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

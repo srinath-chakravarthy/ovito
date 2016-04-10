@@ -25,14 +25,13 @@
 #include <core/dataset/importexport/FileSourceImporter.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/utilities/io/FileManager.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 #include "PythonBinding.h"
 
 namespace PyScript {
 
 using namespace boost::python;
 using namespace Ovito;
-
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(FileExporter_exportToFile_overloads, exportToFile, 2, 3);
 
 BOOST_PYTHON_MODULE(PyScriptFileIO)
 {
@@ -95,7 +94,7 @@ BOOST_PYTHON_MODULE(PyScriptFileIO)
 	ovito_abstract_class<FileExporter, RefTarget>()
 		.add_property("fileFilter", &FileExporter::fileFilter)
 		.add_property("fileFilterDescription", &FileExporter::fileFilterDescription)
-		.def("exportToFile", &FileExporter::exportToFile, FileExporter_exportToFile_overloads())
+		.def("exportToFile", &FileExporter::exportToFile)
 	;
 
 	ovito_class<FileSource, CompoundObject>(

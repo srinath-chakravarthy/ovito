@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,222 +19,19 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <plugins/particles/Particles.h>
+#include <plugins/particles/gui/ParticlesGui.h>
+#include <plugins/particles/modifier/analysis/histogram/HistogramModifier.h>
+#include <plugins/particles/gui/util/ParticlePropertyParameterUI.h>
 #include <gui/properties/IntegerParameterUI.h>
 #include <gui/properties/FloatParameterUI.h>
 #include <gui/properties/BooleanParameterUI.h>
 #include <gui/mainwin/MainWindow.h>
-#include <core/scene/pipeline/PipelineObject.h>
-#include <core/animation/AnimationSettings.h>
-#include <plugins/particles/util/ParticlePropertyParameterUI.h>
-#include "HistogramModifier.h"
+#include "HistogramModifierEditor.h"
 
-namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
+namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, HistogramModifier, ParticleModifier);
+IMPLEMENT_OVITO_OBJECT(ParticlesGui, HistogramModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(HistogramModifier, HistogramModifierEditor);
-DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, _numberOfBins, "NumberOfBins", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(HistogramModifier, _selectInRange, "SelectInRange");
-DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, _selectionRangeStart, "SelectionRangeStart", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, _selectionRangeEnd, "SelectionRangeEnd", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(HistogramModifier, _fixXAxisRange, "FixXAxisRange");
-DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, _xAxisRangeStart, "XAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, _xAxisRangeEnd, "XAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(HistogramModifier, _fixYAxisRange, "FixYAxisRange");
-DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, _yAxisRangeStart, "YAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, _yAxisRangeEnd, "YAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(HistogramModifier, _sourceProperty, "SourceProperty");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _numberOfBins, "Number of histogram bins");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _selectInRange, "Select particles in range");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _selectionRangeStart, "Selection range start");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _selectionRangeEnd, "Selection range end");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _fixXAxisRange, "Fix x-axis range");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _xAxisRangeStart, "X-axis range start");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _xAxisRangeEnd, "X-axis range end");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _fixYAxisRange, "Fix y-axis range");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _yAxisRangeStart, "Y-axis range start");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _yAxisRangeEnd, "Y-axis range end");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _sourceProperty, "Source property");
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, HistogramModifierEditor, ParticleModifierEditor);
-OVITO_END_INLINE_NAMESPACE
-
-/******************************************************************************
-* Constructs the modifier object.
-******************************************************************************/
-HistogramModifier::HistogramModifier(DataSet* dataset) : ParticleModifier(dataset),
-	_numberOfBins(200), _selectInRange(false),
-	_selectionRangeStart(0), _selectionRangeEnd(1),
-	_fixXAxisRange(false), _xAxisRangeStart(0), _xAxisRangeEnd(0),
-	_fixYAxisRange(false), _yAxisRangeStart(0), _yAxisRangeEnd(0)
-{
-	INIT_PROPERTY_FIELD(HistogramModifier::_numberOfBins);
-	INIT_PROPERTY_FIELD(HistogramModifier::_selectInRange);
-	INIT_PROPERTY_FIELD(HistogramModifier::_selectionRangeStart);
-	INIT_PROPERTY_FIELD(HistogramModifier::_selectionRangeEnd);
-	INIT_PROPERTY_FIELD(HistogramModifier::_fixXAxisRange);
-	INIT_PROPERTY_FIELD(HistogramModifier::_xAxisRangeStart);
-	INIT_PROPERTY_FIELD(HistogramModifier::_xAxisRangeEnd);
-	INIT_PROPERTY_FIELD(HistogramModifier::_fixYAxisRange);
-	INIT_PROPERTY_FIELD(HistogramModifier::_yAxisRangeStart);
-	INIT_PROPERTY_FIELD(HistogramModifier::_yAxisRangeEnd);
-	INIT_PROPERTY_FIELD(HistogramModifier::_sourceProperty);
-}
-
-/******************************************************************************
-* This method is called by the system when the modifier has been inserted
-* into a pipeline.
-******************************************************************************/
-void HistogramModifier::initializeModifier(PipelineObject* pipeline, ModifierApplication* modApp)
-{
-	ParticleModifier::initializeModifier(pipeline, modApp);
-
-	// Use the first available particle property from the input state as data source when the modifier is newly created.
-	if(sourceProperty().isNull()) {
-		PipelineFlowState input = pipeline->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
-		ParticlePropertyReference bestProperty;
-		for(DataObject* o : input.objects()) {
-			ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(o);
-			if(property && (property->dataType() == qMetaTypeId<int>() || property->dataType() == qMetaTypeId<FloatType>())) {
-				bestProperty = ParticlePropertyReference(property, (property->componentCount() > 1) ? 0 : -1);
-			}
-		}
-		if(!bestProperty.isNull()) {
-			setSourceProperty(bestProperty);
-		}
-	}
-}
-
-/******************************************************************************
-* This modifies the input object.
-******************************************************************************/
-PipelineStatus HistogramModifier::modifyParticles(TimePoint time, TimeInterval& validityInterval)
-{
-	_histogramData.resize(std::max(1, numberOfBins()));
-	std::fill(_histogramData.begin(), _histogramData.end(), 0);
-
-	// Get the source property.
-	if(sourceProperty().isNull())
-		throwException(tr("Select a particle property first."));
-	ParticlePropertyObject* property = sourceProperty().findInState(input());
-	if(!property)
-		throwException(tr("The selected particle property with the name '%1' does not exist.").arg(sourceProperty().name()));
-	if(sourceProperty().vectorComponent() >= (int)property->componentCount())
-		throwException(tr("The selected vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(sourceProperty().name()).arg(property->componentCount()));
-
-	size_t vecComponent = std::max(0, sourceProperty().vectorComponent());
-	size_t vecComponentCount = property->componentCount();
-
-	ParticlePropertyObject* selProperty = nullptr;
-	FloatType selectionRangeStart = _selectionRangeStart;
-	FloatType selectionRangeEnd = _selectionRangeEnd;
-	size_t numSelected = 0;
-	if(_selectInRange) {
-		selProperty = outputStandardProperty(ParticleProperty::SelectionProperty, true);
-		if(selectionRangeStart > selectionRangeEnd)
-			std::swap(selectionRangeStart, selectionRangeEnd);
-	}
-
-	double intervalStart = _xAxisRangeStart;
-	double intervalEnd = _xAxisRangeEnd;
-
-	if(property->size() > 0) {
-		if(property->dataType() == qMetaTypeId<FloatType>()) {
-			const FloatType* v_begin = property->constDataFloat() + vecComponent;
-			const FloatType* v_end = v_begin + (property->size() * vecComponentCount);
-			if (!_fixXAxisRange) {
-				intervalStart = intervalEnd = *v_begin;
-				for(auto v = v_begin; v != v_end; v += vecComponentCount) {
-					if(*v < intervalStart) intervalStart = *v;
-					if(*v > intervalEnd) intervalEnd = *v;
-				}
-			}
-			if(intervalEnd > intervalStart) {
-				FloatType binSize = (intervalEnd - intervalStart) / _histogramData.size();
-				for(auto v = v_begin; v != v_end; v += vecComponentCount) {
-					if(*v < intervalStart || *v > intervalEnd) continue;
-					int binIndex = (*v - intervalStart) / binSize;
-					_histogramData[std::max(0, std::min(binIndex, _histogramData.size() - 1))]++;
-				}
-			}
-			else {
-				_histogramData[0] = property->size();
-			}
-			if(selProperty) {
-				OVITO_ASSERT(selProperty->size() == property->size());
-				int* s = selProperty->dataInt();
-				int* s_end = s + selProperty->size();
-				for(auto v = v_begin; v != v_end; v += vecComponentCount, ++s) {
-					if(*v >= selectionRangeStart && *v <= selectionRangeEnd) {
-						*s = 1;
-						numSelected++;
-					}
-					else
-						*s = 0;
-				}
-			}
-		}
-		else if(property->dataType() == qMetaTypeId<int>()) {
-			const int* v_begin = property->constDataInt() + vecComponent;
-			const int* v_end = v_begin + (property->size() * vecComponentCount);
-			if (!_fixXAxisRange) {
-				intervalStart = intervalEnd = *v_begin;
-				for(auto v = v_begin; v != v_end; v += vecComponentCount) {
-					if(*v < intervalStart) intervalStart = *v;
-					if(*v > intervalEnd) intervalEnd = *v;
-				}
-			}
-			if(intervalEnd > intervalStart) {
-				FloatType binSize = (intervalEnd - intervalStart) / _histogramData.size();
-				for(auto v = v_begin; v != v_end; v += vecComponentCount) {
-					if(*v < intervalStart || *v > intervalEnd) continue;
-					int binIndex = ((FloatType)*v - intervalStart) / binSize;
-					_histogramData[std::max(0, std::min(binIndex, _histogramData.size() - 1))]++;
-				}
-			}
-			else {
-				_histogramData[0] = property->size();
-			}
-			if(selProperty) {
-				OVITO_ASSERT(selProperty->size() == property->size());
-				int* s = selProperty->dataInt();
-				int* s_end = s + selProperty->size();
-				for(auto v = v_begin; v != v_end; v += vecComponentCount, ++s) {
-					if(*v >= selectionRangeStart && *v <= selectionRangeEnd) {
-						*s = 1;
-						numSelected++;
-					}
-					else
-						*s = 0;
-				}
-			}
-		}
-	}
-	else {
-		intervalStart = intervalEnd = 0;
-	}
-
-	QString statusMessage;
-	if(selProperty) {
-		selProperty->changed();
-		statusMessage += tr("%1 particles selected (%2%)").arg(numSelected).arg((FloatType)numSelected * 100 / std::max(1,(int)selProperty->size()), 0, 'f', 1);
-	}
-
-	_xAxisRangeStart = intervalStart;
-	_xAxisRangeEnd = intervalEnd;
-
-	if (!_fixYAxisRange) {
-		_yAxisRangeStart = 0.0;
-		_yAxisRangeEnd = *std::max_element(_histogramData.begin(), _histogramData.end());
-	}
-
-	notifyDependents(ReferenceEvent::ObjectStatusChanged);
-
-	return PipelineStatus(PipelineStatus::Success, statusMessage);
-}
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /******************************************************************************
 * Sets up the UI widgets of the editor.
@@ -483,7 +280,6 @@ void HistogramModifierEditor::onSaveData()
 }
 
 OVITO_END_INLINE_NAMESPACE
-
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

@@ -25,18 +25,11 @@
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/app/Application.h>
-#include <gui/mainwin/MainWindow.h>
-#include <gui/properties/BooleanParameterUI.h>
-#include <plugins/particles/import/InputColumnMappingDialog.h>
 #include "LAMMPSBinaryDumpImporter.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, LAMMPSBinaryDumpImporter, ParticleImporter);
-SET_OVITO_OBJECT_EDITOR(LAMMPSBinaryDumpImporter, LAMMPSBinaryDumpImporterEditor);
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, LAMMPSBinaryDumpImporterEditor, PropertiesEditor);
-OVITO_END_INLINE_NAMESPACE
 
 struct LAMMPSBinaryDumpHeader
 {
@@ -154,11 +147,14 @@ bool LAMMPSBinaryDumpImporter::inspectNewFile(FileSource* obj, int frameIndex)
 			mapping.resize(inspectionTask->columnMapping().size());
 		}
 
+#if 0
 		InputColumnMappingDialog dialog(mapping, MainWindow::fromDataset(dataset()));
 		if(dialog.exec() == QDialog::Accepted) {
 			setColumnMapping(dialog.mapping());
 			return true;
 		}
+#endif
+
 		return false;
 	}
 	else {
@@ -445,63 +441,6 @@ OORef<RefTarget> LAMMPSBinaryDumpImporter::clone(bool deepCopy, CloneHelper& clo
 	return clone;
 }
 
-/******************************************************************************
- * Displays a dialog box that allows the user to edit the custom file column to particle
- * property mapping.
- *****************************************************************************/
-void LAMMPSBinaryDumpImporter::showEditColumnMappingDialog(QWidget* parent)
-{
-	InputColumnMappingDialog dialog(_columnMapping, parent);
-	if(dialog.exec() == QDialog::Accepted) {
-		setColumnMapping(dialog.mapping());
-		requestReload();
-	}
-}
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void LAMMPSBinaryDumpImporterEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("LAMMPS binary dump"), rolloutParams);
-
-    // Create the rollout contents.
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(4);
-
-	QGroupBox* animFramesBox = new QGroupBox(tr("Timesteps"), rollout);
-	QVBoxLayout* sublayout = new QVBoxLayout(animFramesBox);
-	sublayout->setContentsMargins(4,4,4,4);
-	layout->addWidget(animFramesBox);
-
-	// Multi-timestep file
-	BooleanParameterUI* multitimestepUI = new BooleanParameterUI(this, PROPERTY_FIELD(ParticleImporter::_isMultiTimestepFile));
-	sublayout->addWidget(multitimestepUI->checkBox());
-
-	QGroupBox* columnMappingBox = new QGroupBox(tr("File columns"), rollout);
-	sublayout = new QVBoxLayout(columnMappingBox);
-	sublayout->setContentsMargins(4,4,4,4);
-	layout->addWidget(columnMappingBox);
-
-	QPushButton* editMappingButton = new QPushButton(tr("Edit column mapping..."));
-	sublayout->addWidget(editMappingButton);
-	connect(editMappingButton, &QPushButton::clicked, this, &LAMMPSBinaryDumpImporterEditor::onEditColumnMapping);
-}
-
-/******************************************************************************
-* Is called when the user pressed the "Edit column mapping" button.
-******************************************************************************/
-void LAMMPSBinaryDumpImporterEditor::onEditColumnMapping()
-{
-	if(LAMMPSBinaryDumpImporter* importer = static_object_cast<LAMMPSBinaryDumpImporter>(editObject()))
-		importer->showEditColumnMappingDialog(mainWindow());
-}
-
-OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

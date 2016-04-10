@@ -23,15 +23,14 @@
 #define __OVITO_CRYSTALANALYSIS_IMPORTER_H
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <core/dataset/importexport/FileSourceImporter.h>
-#include <core/utilities/mesh/HalfEdgeMesh.h>
-#include <gui/properties/PropertiesEditor.h>
 #include <plugins/particles/import/ParticleFrameLoader.h>
 #include <plugins/crystalanalysis/objects/patterns/StructurePattern.h>
 #include <plugins/crystalanalysis/data/ClusterGraph.h>
 #include <plugins/crystalanalysis/data/DislocationNetwork.h>
 #include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
 #include <plugins/crystalanalysis/objects/slip_surface/SlipSurface.h>
+#include <core/dataset/importexport/FileSourceImporter.h>
+#include <core/utilities/mesh/HalfEdgeMesh.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -147,27 +146,6 @@ private:
 	OVITO_OBJECT
 
 	DECLARE_PROPERTY_FIELD(_loadParticles);
-};
-
-/**
- * \brief A properties editor for the CAImporter class.
- */
-class CAImporterEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE CAImporterEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
 };
 
 }	// End of namespace

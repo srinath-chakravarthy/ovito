@@ -22,7 +22,6 @@
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/particles/objects/SurfaceMesh.h>
-#include <plugins/particles/export/ParticleExporterSettingsDialog.h>
 #include <plugins/crystalanalysis/objects/patterns/PatternCatalog.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
@@ -33,15 +32,6 @@
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, CAExporter, ParticleExporter);
-
-/******************************************************************************
-* Opens the export settings dialog for this exporter service.
-******************************************************************************/
-bool CAExporter::showSettingsDialog(const PipelineFlowState& state, QWidget* parent)
-{
-	ParticleExporterSettingsDialog dialog(parent, this, state);
-	return (dialog.exec() == QDialog::Accepted);
-}
 
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.

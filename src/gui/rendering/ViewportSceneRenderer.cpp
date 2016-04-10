@@ -34,13 +34,6 @@
 #include <gui/mainwin/ViewportsPanel.h>
 #include <gui/mainwin/MainWindow.h>
 #include "ViewportSceneRenderer.h"
-#include "OpenGLLinePrimitive.h"
-#include "OpenGLParticlePrimitive.h"
-#include "OpenGLTextPrimitive.h"
-#include "OpenGLImagePrimitive.h"
-#include "OpenGLArrowPrimitive.h"
-#include "OpenGLMeshPrimitive.h"
-#include "OpenGLHelpers.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
 
@@ -52,7 +45,6 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Gui, ViewportSceneRenderer, OpenGLSceneRende
 void ViewportSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParameters& params, Viewport* vp)
 {
 	OpenGLSceneRenderer::beginFrame(time, params, vp);
-    OVITO_REPORT_OPENGL_ERRORS();
 
 	// Set viewport background color.
 	Color backgroundColor;
@@ -60,7 +52,7 @@ void ViewportSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParam
 		backgroundColor = Viewport::viewportColor(ViewportSettings::COLOR_VIEWPORT_BKG);
 	else
 		backgroundColor = renderSettings()->backgroundColor();
-	OVITO_CHECK_OPENGL(glClearColor(backgroundColor.r(), backgroundColor.g(), backgroundColor.b(), 1));
+	setClearColor(ColorA(backgroundColor));
 }
 
 /******************************************************************************

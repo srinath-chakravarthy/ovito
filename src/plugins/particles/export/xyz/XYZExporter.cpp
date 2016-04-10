@@ -24,59 +24,10 @@
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <core/utilities/concurrent/ProgressDisplay.h>
 #include "XYZExporter.h"
-#include "../ParticleExporterSettingsDialog.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, XYZExporter, ParticleExporter);
-
-/******************************************************************************
-* Opens the export settings dialog for this exporter service.
-******************************************************************************/
-bool XYZExporter::showSettingsDialog(const PipelineFlowState& state, QWidget* parent)
-{
-	// Load last mapping if no new one has been set already.
-	if(_columnMapping.empty()) {
-		QSettings settings;
-		settings.beginGroup("viz/exporter/xyz/");
-		if(settings.contains("columnmapping")) {
-			try {
-				_columnMapping.fromByteArray(settings.value("columnmapping").toByteArray());
-			}
-			catch(Exception& ex) {
-				ex.prependGeneralMessage(tr("Failed to load last output column mapping from application settings store."));
-				ex.logError();
-			}
-		}
-		setSubFormat((XYZSubFormat)settings.value("subformat", (int)subFormat()).toInt());
-		settings.endGroup();
-	}
-
-	ParticleExporterSettingsDialog dialog(parent, this, state, &_columnMapping);
-
-	QGroupBox* subFormatGroupBox = new QGroupBox(tr("Format style"));
-	dialog.insertWidget(subFormatGroupBox);
-
-	QVBoxLayout* layout = new QVBoxLayout(subFormatGroupBox);
-	QCheckBox* extendedXYZBox = new QCheckBox(tr("Extended XYZ format"));
-	layout->addWidget(extendedXYZBox);
-	extendedXYZBox->setChecked(subFormat() == ExtendedFormat);
-
-	if(dialog.exec() == QDialog::Accepted) {
-
-		setSubFormat(extendedXYZBox->isChecked() ? ExtendedFormat : ParcasFormat);
-
-		// Remember the output column mapping for the next time.
-		QSettings settings;
-		settings.beginGroup("viz/exporter/xyz/");
-		settings.setValue("columnmapping", _columnMapping.toByteArray());
-		settings.setValue("subformat", (int)subFormat());
-		settings.endGroup();
-
-		return true;
-	}
-	return false;
-}
 
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.

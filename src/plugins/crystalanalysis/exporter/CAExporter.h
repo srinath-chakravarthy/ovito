@@ -44,9 +44,6 @@ public:
 	/// \brief Returns the filter description that is displayed in the drop-down box of the file dialog.
 	virtual QString fileFilterDescription() override { return tr("Crystal Analysis File"); }
 
-	/// \brief Opens the export settings dialog for this exporter service.
-	virtual bool showSettingsDialog(const PipelineFlowState& state, QWidget* parent) override;
-
 	/// Returns whether the DXA defect mesh is exported (in addition to the dislocation lines).
 	bool meshExportEnabled() const { return _meshExportEnabled; }
 

@@ -20,7 +20,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-
 #include "BondType.h"
 
 namespace Ovito { namespace Particles {

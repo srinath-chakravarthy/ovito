@@ -23,9 +23,9 @@
 #define __OVITO_SURFACE_MESH_H
 
 #include <plugins/particles/Particles.h>
+#include <plugins/particles/data/SimulationCell.h>
 #include <core/scene/objects/DataObjectWithSharedStorage.h>
 #include <core/utilities/mesh/HalfEdgeMesh.h>
-#include <plugins/particles/data/SimulationCell.h>
 #include <core/utilities/concurrent/FutureInterface.h>
 
 namespace Ovito { namespace Particles {

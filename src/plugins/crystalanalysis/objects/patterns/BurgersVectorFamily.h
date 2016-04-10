@@ -24,7 +24,6 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/reference/RefTarget.h>
-#include <gui/properties/PropertiesEditor.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -86,27 +85,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_name);
 	DECLARE_PROPERTY_FIELD(_color);
 	DECLARE_PROPERTY_FIELD(_burgersVector);
-};
-
-/**
- * \brief A properties editor for the BurgersVectorFamily class.
- */
-class OVITO_CRYSTALANALYSIS_EXPORT BurgersVectorFamilyEditor : public PropertiesEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE BurgersVectorFamilyEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
 };
 
 }	// End of namespace

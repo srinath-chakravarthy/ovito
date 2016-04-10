@@ -25,7 +25,6 @@
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DisplayObject.h>
 #include <core/scene/objects/WeakVersionedObjectReference.h>
-#include <gui/properties/PropertiesEditor.h>
 #include <core/rendering/ArrowPrimitive.h>
 #include "ParticlePropertyObject.h"
 
@@ -184,29 +183,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_shadingMode);
 	DECLARE_PROPERTY_FIELD(_renderingQuality);
 };
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * \brief A properties editor for the VectorDisplay class.
- */
-class VectorDisplayEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE VectorDisplayEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 
 }	// End of namespace
 }	// End of namespace

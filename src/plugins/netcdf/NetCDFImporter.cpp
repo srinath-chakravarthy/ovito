@@ -43,11 +43,6 @@
 #include <core/utilities/concurrent/Future.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/importexport/FileSource.h>
-#include <gui/mainwin/MainWindow.h>
-#include <gui/properties/BooleanParameterUI.h>
-#include <gui/properties/BooleanRadioButtonParameterUI.h>
-#include <plugins/particles/import/InputColumnMappingDialog.h>
-
 #include "NetCDFImporter.h"
 
 #ifdef WIN32
@@ -61,13 +56,8 @@
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(NetCDFPlugin, NetCDFImporter, ParticleImporter);
-SET_OVITO_OBJECT_EDITOR(NetCDFImporter, NetCDFImporterEditor);
 DEFINE_PROPERTY_FIELD(NetCDFImporter, _useCustomColumnMapping, "UseCustomColumnMapping");
 SET_PROPERTY_FIELD_LABEL(NetCDFImporter, _useCustomColumnMapping, "Custom file column mapping");
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(NetCDFPlugin, NetCDFImporterEditor, PropertiesEditor);
-OVITO_END_INLINE_NAMESPACE
 
 // Convert full tensor to Voigt tensor
 template<typename T> void fullToVoigt(size_t particleCount, T *full, T *voigt) {
@@ -755,91 +745,6 @@ OORef<RefTarget> NetCDFImporter::clone(bool deepCopy, CloneHelper& cloneHelper)
 	clone->_customColumnMapping = this->_customColumnMapping;
 	return clone;
 }
-
-/******************************************************************************
- * Displays a dialog box that allows the user to edit the custom file column to particle
- * property mapping.
- *****************************************************************************/
-void NetCDFImporter::showEditColumnMappingDialog(QWidget* parent)
-{
-	// Retrieve column names from current input file.
-	FileSource* obj = nullptr;
-	for(RefMaker* refmaker : dependents()) {
-		obj = dynamic_object_cast<FileSource>(refmaker);
-		if(obj) break;
-	}
-	if(!obj) return;
-
-	// Start task that inspects the file header to determine the number of data columns.
-	std::shared_ptr<NetCDFImportTask> inspectionTask = std::make_shared<NetCDFImportTask>(dataset()->container(), obj->frames().front());
-	try {
-		if(!dataset()->container()->taskManager().runTask(inspectionTask))
-			return;
-	}
-	catch(const Exception& ex) {
-		ex.showError();
-		return;
-	}
-
-	InputColumnMapping mapping;
-	if(_customColumnMapping.empty())
-		mapping = inspectionTask->columnMapping();
-	else {
-		mapping = _customColumnMapping;
-		mapping.resize(inspectionTask->columnMapping().size());
-		for(size_t i = 0; i < mapping.size(); i++)
-			mapping[i].columnName = inspectionTask->columnMapping()[i].columnName;
-	}
-
-	InputColumnMappingDialog dialog(mapping, parent);
-	if(dialog.exec() == QDialog::Accepted) {
-		setCustomColumnMapping(dialog.mapping());
-		setUseCustomColumnMapping(true);
-		requestReload();
-	}
-}
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void NetCDFImporterEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("NetCDF file"), rolloutParams);
-
-    // Create the rollout contents.
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(4);
-
-	QGroupBox* columnMappingBox = new QGroupBox(tr("File columns"), rollout);
-	QVBoxLayout* sublayout = new QVBoxLayout(columnMappingBox);
-	sublayout->setContentsMargins(4,4,4,4);
-	layout->addWidget(columnMappingBox);
-
-	BooleanRadioButtonParameterUI* useCustomMappingUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(NetCDFImporter::_useCustomColumnMapping));
-	useCustomMappingUI->buttonFalse()->setText(tr("Automatic mapping"));
-	sublayout->addWidget(useCustomMappingUI->buttonFalse());
-	useCustomMappingUI->buttonTrue()->setText(tr("User-defined mapping to particle properties"));
-	sublayout->addWidget(useCustomMappingUI->buttonTrue());
-
-	QPushButton* editMappingButton = new QPushButton(tr("Edit column mapping..."));
-	sublayout->addWidget(editMappingButton);
-	connect(editMappingButton, &QPushButton::clicked, this, &NetCDFImporterEditor::onEditColumnMapping);
-}
-
-/******************************************************************************
-* Is called when the user pressed the "Edit column mapping" button.
-******************************************************************************/
-void NetCDFImporterEditor::onEditColumnMapping()
-{
-	if(NetCDFImporter* importer = static_object_cast<NetCDFImporter>(editObject()))
-		importer->showEditColumnMappingDialog(mainWindow());
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

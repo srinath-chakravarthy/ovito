@@ -23,9 +23,9 @@
 #define __OVITO_PARTICLE_IMPORTER_H
 
 #include <plugins/particles/Particles.h>
+#include <plugins/particles/data/ParticleProperty.h>
 #include <core/dataset/importexport/FileSourceImporter.h>
 #include <core/utilities/io/CompressedTextReader.h>
-#include <plugins/particles/data/ParticleProperty.h>
 #include "ParticleFrameLoader.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import)

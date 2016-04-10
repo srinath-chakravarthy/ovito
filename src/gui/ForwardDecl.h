@@ -61,9 +61,30 @@ namespace Ovito {
 			class RolloutContainer;
 			class FrameBufferWindow;
 			class FrameBufferWidget;
+			class AutocompleteTextEdit;
+			class AutocompleteLineEdit;
+			class ElidedTextLabel;
+			class HtmlListWidget;
 		OVITO_END_INLINE_NAMESPACE
 		OVITO_BEGIN_INLINE_NAMESPACE(Params)
 			class PropertiesEditor;
+			class AffineTransformationParameterUI;
+			class BooleanActionParameterUI;
+			class BooleanGroupBoxParameterUI;
+			class BooleanRadioButtonParameterUI;
+			class ColorParameterUI;
+			class CustomParameterUI;
+			class FilenameParameterUI;
+			class FloatParameterUI;
+			class FontParameterUI;
+			class IntegerRadioButtonParameterUI;
+			class IntegerParameterUI;
+			class ParameterUI;
+			class RefTargetListParameterUI;
+			class StringParameterUI;
+			class SubObjectParameterUI;
+			class VariantComboBoxParameterUI;
+			class Vector3ParameterUI;
 		OVITO_END_INLINE_NAMESPACE
 		OVITO_BEGIN_INLINE_NAMESPACE(ViewportInput)
 			class ViewportInputManager;

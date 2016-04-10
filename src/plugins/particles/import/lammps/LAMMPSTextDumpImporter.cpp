@@ -25,21 +25,15 @@
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/app/Application.h>
-#include <gui/properties/BooleanParameterUI.h>
-#include <gui/properties/BooleanRadioButtonParameterUI.h>
-#include <gui/mainwin/MainWindow.h>
-#include <plugins/particles/import/InputColumnMappingDialog.h>
 #include "LAMMPSTextDumpImporter.h"
+
+#include <QRegularExpression>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, LAMMPSTextDumpImporter, ParticleImporter);
-SET_OVITO_OBJECT_EDITOR(LAMMPSTextDumpImporter, LAMMPSTextDumpImporterEditor);
 DEFINE_PROPERTY_FIELD(LAMMPSTextDumpImporter, _useCustomColumnMapping, "UseCustomColumnMaspping");
 SET_PROPERTY_FIELD_LABEL(LAMMPSTextDumpImporter, _useCustomColumnMapping, "Custom file column mapping");
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, LAMMPSTextDumpImporterEditor, PropertiesEditor);
-OVITO_END_INLINE_NAMESPACE
 
 /******************************************************************************
  * Sets the user-defined mapping between data columns in the input file and
@@ -437,99 +431,6 @@ OORef<RefTarget> LAMMPSTextDumpImporter::clone(bool deepCopy, CloneHelper& clone
 	return clone;
 }
 
-/******************************************************************************
- * Displays a dialog box that allows the user to edit the custom file column to particle
- * property mapping.
- *****************************************************************************/
-void LAMMPSTextDumpImporter::showEditColumnMappingDialog(QWidget* parent)
-{
-	// Retrieve column names from current input file.
-	FileSource* obj = nullptr;
-	for(RefMaker* refmaker : dependents()) {
-		obj = dynamic_object_cast<FileSource>(refmaker);
-		if(obj) break;
-	}
-	if(!obj) return;
-
-	// Inspect the file header to determine the number of data columns.
-	std::shared_ptr<LAMMPSTextDumpImportTask> inspectionTask = std::make_shared<LAMMPSTextDumpImportTask>(dataset()->container(), obj->frames().front());
-	try {
-		if(!dataset()->container()->taskManager().runTask(inspectionTask))
-			return;
-	}
-	catch(const Exception& ex) {
-		ex.showError();
-		return;
-	}
-
-	InputColumnMapping mapping;
-	if(_customColumnMapping.empty())
-		mapping = inspectionTask->columnMapping();
-	else {
-		mapping = _customColumnMapping;
-		mapping.resize(inspectionTask->columnMapping().size());
-		for(size_t i = 0; i < mapping.size(); i++)
-			mapping[i].columnName = inspectionTask->columnMapping()[i].columnName;
-	}
-
-	InputColumnMappingDialog dialog(mapping, parent);
-	if(dialog.exec() == QDialog::Accepted) {
-		setCustomColumnMapping(dialog.mapping());
-		setUseCustomColumnMapping(true);
-		requestReload();
-	}
-}
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void LAMMPSTextDumpImporterEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("LAMMPS dump"), rolloutParams);
-
-    // Create the rollout contents.
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(4);
-
-	QGroupBox* animFramesBox = new QGroupBox(tr("Timesteps"), rollout);
-	QVBoxLayout* sublayout = new QVBoxLayout(animFramesBox);
-	sublayout->setContentsMargins(4,4,4,4);
-	layout->addWidget(animFramesBox);
-
-	// Multi-timestep file
-	BooleanParameterUI* multitimestepUI = new BooleanParameterUI(this, PROPERTY_FIELD(ParticleImporter::_isMultiTimestepFile));
-	sublayout->addWidget(multitimestepUI->checkBox());
-
-	QGroupBox* columnMappingBox = new QGroupBox(tr("File columns"), rollout);
-	sublayout = new QVBoxLayout(columnMappingBox);
-	sublayout->setContentsMargins(4,4,4,4);
-	layout->addWidget(columnMappingBox);
-
-	BooleanRadioButtonParameterUI* useCustomMappingUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(LAMMPSTextDumpImporter::_useCustomColumnMapping));
-	useCustomMappingUI->buttonFalse()->setText(tr("Automatic mapping"));
-	sublayout->addWidget(useCustomMappingUI->buttonFalse());
-	useCustomMappingUI->buttonTrue()->setText(tr("User-defined mapping to particle properties"));
-	sublayout->addWidget(useCustomMappingUI->buttonTrue());
-
-	QPushButton* editMappingButton = new QPushButton(tr("Edit column mapping..."));
-	sublayout->addWidget(editMappingButton);
-	connect(editMappingButton, &QPushButton::clicked, this, &LAMMPSTextDumpImporterEditor::onEditColumnMapping);
-}
-
-/******************************************************************************
-* Is called when the user pressed the "Edit column mapping" button.
-******************************************************************************/
-void LAMMPSTextDumpImporterEditor::onEditColumnMapping()
-{
-	if(LAMMPSTextDumpImporter* importer = static_object_cast<LAMMPSTextDumpImporter>(editObject()))
-		importer->showEditColumnMappingDialog(mainWindow());
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

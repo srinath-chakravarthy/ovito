@@ -25,8 +25,9 @@
 #include <core/dataset/importexport/FileSource.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/app/Application.h>
-#include <gui/mainwin/MainWindow.h>
 #include "LAMMPSDataImporter.h"
+
+#include <QRegularExpression>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
@@ -88,48 +89,14 @@ bool LAMMPSDataImporter::inspectNewFile(FileSource* obj, int frameIndex)
 		return false;
 
 	if(inspectionTask->atomStyle() == AtomStyle_Unknown) {
+#if 0
 		return showAtomStyleDialog(MainWindow::fromDataset(dataset()));
+#endif
+		return false;
 	}
-	else setAtomStyle(inspectionTask->atomStyle());
-
-	return true;
-}
-
-/******************************************************************************
-* Displays a dialog box that allows the user to select the LAMMPS atom style of the data file.
-******************************************************************************/
-bool LAMMPSDataImporter::showAtomStyleDialog(QWidget* parent)
-{
-	QMap<QString, LAMMPSAtomStyle> styleList = {
-			{ QStringLiteral("atomic"), AtomStyle_Atomic },
-			{ QStringLiteral("bond"), AtomStyle_Bond },
-			{ QStringLiteral("charge"), AtomStyle_Charge },
-			{ QStringLiteral("dipole"), AtomStyle_Dipole },
-			{ QStringLiteral("molecular"), AtomStyle_Molecular },
-			{ QStringLiteral("full"), AtomStyle_Full },
-			{ QStringLiteral("angle"), AtomStyle_Angle }
-	};
-	QStringList itemList = styleList.keys();
-
-	QSettings settings;
-	settings.beginGroup(LAMMPSDataImporter::OOType.plugin()->pluginId());
-	settings.beginGroup(LAMMPSDataImporter::OOType.name());
-
-	int currentIndex = -1;
-	for(int i = 0; i < itemList.size(); i++)
-		if(atomStyle() == styleList[itemList[i]])
-			currentIndex = i;
-	if(currentIndex == -1)
-		currentIndex = itemList.indexOf(settings.value("DefaultAtomStyle").toString());
-	if(currentIndex == -1)
-		currentIndex = itemList.indexOf("atomic");
-
-	bool ok;
-	QString selectedItem = QInputDialog::getItem(parent, tr("LAMMPS data file"), tr("Select the LAMMPS atom style used by the data file:"), itemList, currentIndex, false, &ok);
-	if(!ok) return false;
-
-	settings.setValue("DefaultAtomStyle", selectedItem);
-	setAtomStyle(styleList[selectedItem]);
+	else {
+		setAtomStyle(inspectionTask->atomStyle());
+	}
 
 	return true;
 }

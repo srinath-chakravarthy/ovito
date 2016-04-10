@@ -26,7 +26,6 @@
 #include <core/scene/objects/DisplayObject.h>
 #include <core/scene/objects/WeakVersionedObjectReference.h>
 #include <core/rendering/SceneRenderer.h>
-#include <gui/properties/PropertiesEditor.h>
 #include "TrajectoryObject.h"
 
 namespace Ovito { namespace Particles {
@@ -127,30 +126,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_showUpToCurrentTime);
 };
 
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * \brief A properties editor for the TrajectoryDisplay class.
- */
-class TrajectoryDisplayEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE TrajectoryDisplayEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 

@@ -59,7 +59,6 @@ SET(SourceFiles
 	modifier/analysis/bondangle/BondAngleAnalysisModifier.cpp
 	modifier/analysis/cna/CommonNeighborAnalysisModifier.cpp
 	modifier/analysis/coordination/CoordinationNumberModifier.cpp
-#	modifier/analysis/spatialcorrelationfunction/SpatialCorrelationFunctionModifier.cpp
 	modifier/analysis/displacements/CalculateDisplacementsModifier.cpp
 	modifier/analysis/centrosymmetry/CentroSymmetryModifier.cpp
 	modifier/analysis/strain/AtomicStrainModifier.cpp
@@ -80,7 +79,6 @@ SET(SourceFiles
 	import/ParticleImporter.cpp
 	import/ParticleFrameLoader.cpp
 	import/InputColumnMapping.cpp
-	import/InputColumnMappingDialog.cpp
 	import/lammps/LAMMPSTextDumpImporter.cpp
 	import/lammps/LAMMPSBinaryDumpImporter.cpp
 	import/lammps/LAMMPSDataImporter.cpp
@@ -93,7 +91,6 @@ SET(SourceFiles
 	import/fhi_aims/FHIAimsImporter.cpp
 	import/fhi_aims/FHIAimsLogFileImporter.cpp
 	export/ParticleExporter.cpp
-	export/ParticleExporterSettingsDialog.cpp
 	export/OutputColumnMapping.cpp
 	export/vasp/POSCARExporter.cpp
 	export/fhi_aims/FHIAimsExporter.cpp
@@ -132,7 +129,8 @@ SET(GLUSourceFiles
 
 OVITO_STANDARD_PLUGIN(Particles
 	SOURCES Particles.cpp ${SourceFiles} ${GLUSourceFiles}
-	LIB_DEPENDENCIES muParser VoroPlusPlus ${OPENGL_gl_LIBRARY}
+	LIB_DEPENDENCIES muParser
+	PRIVATE_LIB_DEPENDENCIES VoroPlusPlus OpenGLRenderer
 	OPTIONAL_PLUGIN_DEPENDENCIES PyScript
 	PYTHON_WRAPPERS "${CMAKE_CURRENT_SOURCE_DIR}/resources/python/"
 )

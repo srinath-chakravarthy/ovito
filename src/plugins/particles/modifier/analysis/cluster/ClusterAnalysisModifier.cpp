@@ -20,22 +20,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <gui/properties/BooleanParameterUI.h>
 #include "ClusterAnalysisModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ClusterAnalysisModifier, AsynchronousParticleModifier);
-SET_OVITO_OBJECT_EDITOR(ClusterAnalysisModifier, ClusterAnalysisModifierEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(ClusterAnalysisModifier, _cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(ClusterAnalysisModifier, _onlySelectedParticles, "OnlySelectedParticles");
 SET_PROPERTY_FIELD_LABEL(ClusterAnalysisModifier, _cutoff, "Cutoff radius");
 SET_PROPERTY_FIELD_LABEL(ClusterAnalysisModifier, _onlySelectedParticles, "Use only selected particles");
 SET_PROPERTY_FIELD_UNITS(ClusterAnalysisModifier, _cutoff, WorldParameterUnit);
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, ClusterAnalysisModifierEditor, ParticleModifierEditor);
-OVITO_END_INLINE_NAMESPACE
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -163,44 +157,6 @@ void ClusterAnalysisModifier::propertyChanged(const PropertyFieldDescriptor& fie
 			field == PROPERTY_FIELD(ClusterAnalysisModifier::_onlySelectedParticles))
 		invalidateCachedResults();
 }
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void ClusterAnalysisModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Cluster analysis"), rolloutParams, "particles.modifiers.cluster_analysis.html");
-
-    // Create the rollout contents.
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(4);
-
-	QGridLayout* gridlayout = new QGridLayout();
-	gridlayout->setContentsMargins(4,4,4,4);
-	gridlayout->setColumnStretch(1, 1);
-
-	// Cutoff parameter.
-	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(ClusterAnalysisModifier::_cutoff));
-	gridlayout->addWidget(cutoffRadiusPUI->label(), 0, 0);
-	gridlayout->addLayout(cutoffRadiusPUI->createFieldLayout(), 0, 1);
-	cutoffRadiusPUI->setMinValue(0);
-
-	// Use only selected particles.
-	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(ClusterAnalysisModifier::_onlySelectedParticles));
-	gridlayout->addWidget(onlySelectedParticlesUI->checkBox(), 1, 0, 1, 2);
-
-	layout->addLayout(gridlayout);
-
-	// Status label.
-	layout->addSpacing(6);
-	layout->addWidget(statusLabel());
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

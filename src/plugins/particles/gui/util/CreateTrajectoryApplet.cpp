@@ -27,6 +27,7 @@
 #include <core/scene/SceneRoot.h>
 #include <gui/widgets/general/SpinnerWidget.h>
 #include <gui/mainwin/MainWindow.h>
+#include <gui/utilities/concurrent/ProgressDialogAdapter.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/TrajectoryGeneratorObject.h>
 #include "CreateTrajectoryApplet.h"
@@ -231,8 +232,17 @@ void CreateTrajectoryApplet::onCreateTrajectory()
 			if(interval.duration() <= 0)
 				dataset->throwException(tr("Loaded simulation sequence consists only of a single frame. No trajectory lines were created."));
 
+			// Show progress dialog.
+			QProgressDialog progressDialog(MainWindow::fromDataset(trajObj->dataset()));
+			progressDialog.setWindowModality(Qt::WindowModal);
+			progressDialog.setAutoClose(false);
+			progressDialog.setAutoReset(false);
+			progressDialog.setMinimumDuration(0);
+			progressDialog.setValue(0);
+			ProgressDialogAdapter progressDisplay(&progressDialog);
+
 			// Generate trajectories.
-			if(!trajObj->generateTrajectories())
+			if(!trajObj->generateTrajectories(&progressDisplay))
 				return;
 
 			// Create scene node.

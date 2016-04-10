@@ -203,7 +203,7 @@ def export_file(node, file, format, **params):
         raise RuntimeError("Operation has been canceled by the user.")
     
     # Export data.
-    if not exporter.exportToFile([node], file, True):
+    if not exporter.exportToFile([node], file, ovito.get_progress_display()):
         raise RuntimeError("Operation has been canceled by the user.")
 
 # This is the table of export formats used by the export_file() function

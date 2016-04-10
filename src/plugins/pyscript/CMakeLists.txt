@@ -21,7 +21,6 @@
 
 SET(Python_ADDITIONAL_VERSIONS "3.4" "3.5" "3.6")
 FIND_PACKAGE(PythonLibs REQUIRED)
-FIND_PACKAGE(QScintilla REQUIRED)
 
 IF(MSVC)
 	# Precompiled headers require more compiler memory.
@@ -46,18 +45,12 @@ SET(SourceFiles
 
 OVITO_STANDARD_PLUGIN(PyScript
 	SOURCES PyScript.cpp ${SourceFiles}
-	LIB_DEPENDENCIES ${PYTHON_LIBRARIES} ${Boost_PYTHON_LIBRARY} ${QScintilla_LIBRARIES}
+	LIB_DEPENDENCIES ${PYTHON_LIBRARIES} ${Boost_PYTHON_LIBRARY}
 	PYTHON_WRAPPERS "${CMAKE_CURRENT_SOURCE_DIR}/python/"
 )
 
 # Add Python include directory.
 TARGET_INCLUDE_DIRECTORIES(PyScript PUBLIC ${PYTHON_INCLUDE_PATH})
-
-# Dependency on Python and Boost.Python library should be transitive.
-TARGET_LINK_LIBRARIES(PyScript PUBLIC ${PYTHON_LIBRARIES} ${Boost_PYTHON_LIBRARY})
-
-# Add QScintilla include directory.
-TARGET_INCLUDE_DIRECTORIES(PyScript PRIVATE ${QScintilla_INCLUDE_DIRS})
 
 # Speed up compilation by using precompiled headers.
 ADD_PRECOMPILED_HEADER(PyScript plugins/pyscript/PyScript.h)
@@ -162,11 +155,6 @@ ELSEIF(UNIX)
 			ENDIF()
 			UNSET(OVITO_PYTHON_DEP CACHE)
 		ENDFOREACH()
-
-		# Install a copy of the QScintilla2 library.
-		CONFIGURE_FILE("${QScintilla_LIBRARIES}" "${OVITO_LIBRARY_DIRECTORY}" COPYONLY)		
-		GET_FILENAME_COMPONENT(real_qscintilla_lib "${QScintilla_LIBRARIES}" REALPATH)
-		INSTALL(FILES "${QScintilla_LIBRARIES}" "${real_qscintilla_lib}" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/")
 	ENDIF()
 ELSEIF(WIN32)
 	# Install standard Python packages. 
@@ -184,11 +172,6 @@ ELSEIF(WIN32)
 
 	# Install Python interpreter dll.
 	OVITO_INSTALL_DLL("${PYTHON_LIBRARY_PATH}/../${PYTHON_LIBRARY_NAME}.dll")
-	
-	# Install QScintilla DLL.
-	GET_FILENAME_COMPONENT(QSCINTILLA_BASE_NAME "${QScintilla_LIBRARIES}" NAME_WE)
-	GET_FILENAME_COMPONENT(QSCINTILLA_LIB_PATH "${QScintilla_LIBRARIES}" PATH)
-	OVITO_INSTALL_DLL("${QSCINTILLA_LIB_PATH}/${QSCINTILLA_BASE_NAME}.dll")
 ENDIF()
 
 # Define tests for the scripting interface.

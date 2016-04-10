@@ -26,6 +26,8 @@
 #include <core/scene/pipeline/PipelineFlowState.h>
 #include <core/reference/RefTarget.h>
 
+#include <QBitArray>
+
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util)
 
 /**

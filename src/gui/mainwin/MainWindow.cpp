@@ -35,6 +35,7 @@
 #include <gui/viewport/ViewportWindow.h>
 #include <gui/rendering/ViewportSceneRenderer.h>
 #include <gui/plugins/autostart/GuiAutoStartObject.h>
+#include <opengl_renderer/OpenGLSceneRenderer.h>
 #include "MainWindow.h"
 #include "ViewportsPanel.h"
 #include "TaskDisplayWidget.h"
@@ -440,7 +441,7 @@ QOpenGLContext* MainWindow::getOpenGLContext()
 	if(_glcontext)
 		return _glcontext;
 
-	if(ViewportWindow::contextSharingEnabled()) {
+	if(OpenGLSceneRenderer::contextSharingEnabled()) {
 		_glcontext = new QOpenGLContext(this);
 		_glcontext->setFormat(ViewportSceneRenderer::getDefaultSurfaceFormat());
 		if(!_glcontext->create())

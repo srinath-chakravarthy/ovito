@@ -89,56 +89,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_selectedParticleTypes);
 };
 
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * A properties editor for the SelectParticleTypeModifier class.
- */
-class SelectParticleTypeModifierEditor : public ParticleModifierEditor
-{
-public:
-
-	/// Default constructor
-	Q_INVOKABLE SelectParticleTypeModifierEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-protected Q_SLOTS:
-
-	/// Updates the contents of the property list combo box.
-	void updatePropertyList();
-
-	/// Updates the contents of the particle type list box.
-	void updateParticleTypeList();
-
-	/// This is called when the user has selected another item in the particle property list.
-	void onPropertySelected(int index);
-
-	/// This is called when the user has selected another particle type.
-	void onParticleTypeSelected(QListWidgetItem* item);
-
-protected:
-
-	/// This method is called when a reference target changes.
-	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
-
-private:
-
-	/// The list of particle type properties.
-	ParticlePropertyComboBox* propertyListBox;
-
-	/// The list of particle types.
-	QListWidget* particleTypesBox;
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
-
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

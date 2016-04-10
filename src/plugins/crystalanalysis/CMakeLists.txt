@@ -60,7 +60,6 @@ SET(SourceFiles
 	modifier/grains/GrainSegmentationEngine.cpp
 	modifier/SliceSurfaceModifier.cpp
 	util/DelaunayTessellation.cpp
-	util/DislocationInformationApplet.cpp
 )
 
 IF(OVITO_BUILD_PLUGIN_PYSCRIPT)
@@ -70,7 +69,7 @@ ENDIF()
 OVITO_STANDARD_PLUGIN(CrystalAnalysis
 	SOURCES ${SourceFiles}
 	PLUGIN_DEPENDENCIES Particles
-	LIB_DEPENDENCIES ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES} ${OPENGL_gl_LIBRARY}
+	PRIVATE_LIB_DEPENDENCIES ${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES} ${OPENGL_gl_LIBRARY}
 	OPTIONAL_PLUGIN_DEPENDENCIES PyScript
 	PYTHON_WRAPPERS "${CMAKE_CURRENT_SOURCE_DIR}/resources/python/"
 )
@@ -104,4 +103,9 @@ ELSEIF(UNIX AND NOT APPLE AND OVITO_MONOLITHIC_BUILD)
 		ENDFOREACH()
 	ENDFOREACH()
 
+ENDIF()
+
+# Build corresponding GUI plugin.
+IF(OVITO_BUILD_GUI)
+	ADD_SUBDIRECTORY(gui)
 ENDIF()

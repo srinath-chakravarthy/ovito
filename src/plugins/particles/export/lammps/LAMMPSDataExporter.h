@@ -44,9 +44,6 @@ public:
 	/// \brief Returns the filter description that is displayed in the drop-down box of the file dialog.
 	virtual QString fileFilterDescription() override { return tr("LAMMPS Data File"); }
 
-	/// \brief Opens the export settings dialog for this exporter service.
-	virtual bool showSettingsDialog(const PipelineFlowState& state, QWidget* parent) override;
-
 	/// Returns the format variant being written by this data file exporter.
 	LAMMPSDataImporter::LAMMPSAtomStyle atomStyle() const { return _atomStyle; }
 

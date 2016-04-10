@@ -20,15 +20,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <gui/properties/BooleanParameterUI.h>
-#include <gui/properties/IntegerParameterUI.h>
 #include <plugins/particles/objects/BondsObject.h>
 #include "ShowPeriodicImagesModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ShowPeriodicImagesModifier, ParticleModifier);
-SET_OVITO_OBJECT_EDITOR(ShowPeriodicImagesModifier, ShowPeriodicImagesModifierEditor);
 DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, _showImageX, "ShowImageX");
 DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, _showImageY, "ShowImageY");
 DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, _showImageZ, "ShowImageZ");
@@ -45,10 +42,6 @@ SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, _numImagesY, "Number of per
 SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, _numImagesZ, "Number of periodic images - Z");
 SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, _adjustBoxSize, "Adjust simulation box size");
 SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, _uniqueIdentifiers, "Assign unique particle IDs");
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, ShowPeriodicImagesModifierEditor, ParticleModifierEditor);
-OVITO_END_INLINE_NAMESPACE
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -214,51 +207,6 @@ PipelineStatus ShowPeriodicImagesModifier::modifyParticles(TimePoint time, TimeI
 
 	return PipelineStatus::Success;
 }
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void ShowPeriodicImagesModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	QWidget* panel = createRollout(tr("Show periodic images"), rolloutParams, "particles.modifiers.show_periodic_images.html");
-
-    // Create the rollout contents.
-	QGridLayout* layout = new QGridLayout(panel);
-	layout->setContentsMargins(4,4,4,4);
-#ifndef Q_OS_MACX
-	layout->setHorizontalSpacing(2);
-	layout->setVerticalSpacing(2);
-#endif
-	layout->setColumnStretch(1, 1);
-
-	BooleanParameterUI* showPeriodicImageXUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_showImageX));
-	layout->addWidget(showPeriodicImageXUI->checkBox(), 0, 0);
-	IntegerParameterUI* numImagesXPUI = new IntegerParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_numImagesX));
-	numImagesXPUI->setMinValue(1);
-	layout->addLayout(numImagesXPUI->createFieldLayout(), 0, 1);
-
-	BooleanParameterUI* showPeriodicImageYUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_showImageY));
-	layout->addWidget(showPeriodicImageYUI->checkBox(), 1, 0);
-	IntegerParameterUI* numImagesYPUI = new IntegerParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_numImagesY));
-	numImagesYPUI->setMinValue(1);
-	layout->addLayout(numImagesYPUI->createFieldLayout(), 1, 1);
-
-	BooleanParameterUI* showPeriodicImageZUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_showImageZ));
-	layout->addWidget(showPeriodicImageZUI->checkBox(), 2, 0);
-	IntegerParameterUI* numImagesZPUI = new IntegerParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_numImagesZ));
-	numImagesZPUI->setMinValue(1);
-	layout->addLayout(numImagesZPUI->createFieldLayout(), 2, 1);
-
-	BooleanParameterUI* adjustBoxSizeUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_adjustBoxSize));
-	layout->addWidget(adjustBoxSizeUI->checkBox(), 3, 0, 1, 2);
-
-	BooleanParameterUI* uniqueIdentifiersUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_uniqueIdentifiers));
-	layout->addWidget(uniqueIdentifiersUI->checkBox(), 4, 0, 1, 2);
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

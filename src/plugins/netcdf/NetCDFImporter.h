@@ -22,10 +22,9 @@
 #ifndef __OVITO_NETCDF_IMPORTER_H
 #define __OVITO_NETCDF_IMPORTER_H
 
-#include <core/Core.h>
-#include <gui/properties/PropertiesEditor.h>
-#include <plugins/particles/import/InputColumnMappingDialog.h>
+#include <plugins/particles/Particles.h>
 #include <plugins/particles/import/ParticleImporter.h>
+#include <plugins/particles/import/InputColumnMapping.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
@@ -71,10 +70,6 @@ public:
 	/// Sets whether the mapping between input file columns and particle
 	/// properties is done automatically or by the user.
 	void setUseCustomColumnMapping(bool useCustomMapping) { _useCustomColumnMapping = useCustomMapping; }
-
-	/// Displays a dialog box that allows the user to edit the custom file column to particle
-	/// property mapping.
-	void showEditColumnMappingDialog(QWidget* parent = nullptr);
 
 	/// Creates an asynchronous loader object that loads the data for the given frame from the external file.
 	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame) override {
@@ -164,35 +159,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_useCustomColumnMapping);
 };
 
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * \brief A properties editor for the NetCDFImporter class.
- */
-class NetCDFImporterEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE NetCDFImporterEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-protected Q_SLOTS:
-
-	/// Is called when the user pressed the "Edit column mapping" button.
-	void onEditColumnMapping();
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

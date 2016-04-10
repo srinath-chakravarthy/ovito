@@ -23,8 +23,6 @@
 #define __OVITO_MANUAL_SELECTION_MODIFIER_H
 
 #include <plugins/particles/Particles.h>
-#include <gui/viewport/input/ViewportInputMode.h>
-#include <plugins/particles/util/ParticlePickingHelper.h>
 #include <plugins/particles/util/ParticleSelectionSet.h>
 #include "../ParticleModifier.h"
 
@@ -77,48 +75,6 @@ private:
 	Q_CLASSINFO("DisplayName", "Manual selection");
 	Q_CLASSINFO("ModifierCategory", "Selection");
 };
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * A properties editor for the ManualSelectionModifier class.
- */
-class ManualSelectionModifierEditor : public ParticleModifierEditor
-{
-public:
-
-	/// Default constructor
-	Q_INVOKABLE ManualSelectionModifierEditor() {}
-
-	/// This is called when the user has selected a particle.
-	void onParticlePicked(const ParticlePickingHelper::PickResult& pickResult);
-
-	/// This is called when the user has drawn a fence around particles.
-	void onFence(const QVector<Point2>& fence, Viewport* viewport, ParticleSelectionSet::SelectionMode mode);
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-protected Q_SLOTS:
-
-	/// Adopts the selection state from the modifier's input.
-	void resetSelection();
-
-	/// Selects all particles
-	void selectAll();
-
-	/// Clears the selection.
-	void clearSelection();
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

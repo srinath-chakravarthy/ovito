@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,64 +19,18 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <plugins/particles/Particles.h>
-#include <core/utilities/units/UnitsManager.h>
+#include <plugins/particles/gui/ParticlesGui.h>
+#include <plugins/particles/objects/SimulationCellObject.h>
 #include <gui/properties/Vector3ParameterUI.h>
 #include <gui/properties/BooleanParameterUI.h>
 #include <gui/properties/BooleanRadioButtonParameterUI.h>
 #include <core/viewport/ViewportConfiguration.h>
+#include "SimulationCellObjectEditor.h"
 
-#include "SimulationCellObject.h"
-#include "SimulationCellDisplay.h"
+namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-namespace Ovito { namespace Particles {
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, SimulationCellEditor, PropertiesEditor);
-OVITO_END_INLINE_NAMESPACE
-
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SimulationCellObject, DataObject);
+IMPLEMENT_OVITO_OBJECT(ParticlesGui, SimulationCellEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(SimulationCellObject, SimulationCellEditor);
-DEFINE_PROPERTY_FIELD(SimulationCellObject, _cellVector1, "CellVector1");
-DEFINE_PROPERTY_FIELD(SimulationCellObject, _cellVector2, "CellVector2");
-DEFINE_PROPERTY_FIELD(SimulationCellObject, _cellVector3, "CellVector3");
-DEFINE_PROPERTY_FIELD(SimulationCellObject, _cellOrigin, "CellTranslation");
-DEFINE_PROPERTY_FIELD(SimulationCellObject, _pbcX, "PeriodicX");
-DEFINE_PROPERTY_FIELD(SimulationCellObject, _pbcY, "PeriodicY");
-DEFINE_PROPERTY_FIELD(SimulationCellObject, _pbcZ, "PeriodicZ");
-DEFINE_PROPERTY_FIELD(SimulationCellObject, _is2D, "Is2D");
-SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _cellVector1, "Cell vector 1");
-SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _cellVector2, "Cell vector 2");
-SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _cellVector3, "Cell vector 3");
-SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _cellOrigin, "Cell origin");
-SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _pbcX, "Periodic boundary conditions (X)");
-SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _pbcY, "Periodic boundary conditions (Y)");
-SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _pbcZ, "Periodic boundary conditions (Z)");
-SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _is2D, "2D");
-SET_PROPERTY_FIELD_UNITS(SimulationCellObject, _cellVector1, WorldParameterUnit);
-SET_PROPERTY_FIELD_UNITS(SimulationCellObject, _cellVector2, WorldParameterUnit);
-SET_PROPERTY_FIELD_UNITS(SimulationCellObject, _cellVector3, WorldParameterUnit);
-SET_PROPERTY_FIELD_UNITS(SimulationCellObject, _cellOrigin, WorldParameterUnit);
-
-/******************************************************************************
-* Creates the storage for the internal parameters.
-******************************************************************************/
-void SimulationCellObject::init(DataSet* dataset)
-{
-	INIT_PROPERTY_FIELD(SimulationCellObject::_cellVector1);
-	INIT_PROPERTY_FIELD(SimulationCellObject::_cellVector2);
-	INIT_PROPERTY_FIELD(SimulationCellObject::_cellVector3);
-	INIT_PROPERTY_FIELD(SimulationCellObject::_cellOrigin);
-	INIT_PROPERTY_FIELD(SimulationCellObject::_pbcX);
-	INIT_PROPERTY_FIELD(SimulationCellObject::_pbcY);
-	INIT_PROPERTY_FIELD(SimulationCellObject::_pbcZ);
-	INIT_PROPERTY_FIELD(SimulationCellObject::_is2D);
-
-	// Attach a display object.
-	addDisplayObject(new SimulationCellDisplay(dataset));
-}
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /******************************************************************************
 * Sets up the UI widgets of the editor.
@@ -332,6 +286,5 @@ void SimulationCellEditor::onSizeSpinnerDragAbort(int dim)
 }
 
 OVITO_END_INLINE_NAMESPACE
-
 }	// End of namespace
 }	// End of namespace

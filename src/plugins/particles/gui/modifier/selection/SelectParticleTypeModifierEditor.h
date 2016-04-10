@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,77 +19,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SELECT_PARTICLE_TYPE_MODIFIER_H
-#define __OVITO_SELECT_PARTICLE_TYPE_MODIFIER_H
+#ifndef __OVITO_SELECT_PARTICLE_TYPE_MODIFIER_EDITOR_H
+#define __OVITO_SELECT_PARTICLE_TYPE_MODIFIER_EDITOR_H
 
-#include <plugins/particles/Particles.h>
-#include "../ParticleModifier.h"
+#include <plugins/particles/gui/ParticlesGui.h>
+#include <plugins/particles/gui/modifier/ParticleModifierEditor.h>
+#include <plugins/particles/gui/util/ParticlePropertyComboBox.h>
 
-namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Selection)
-
-/**
- * \brief Selects particles of one or more types.
- */
-class OVITO_PARTICLES_EXPORT SelectParticleTypeModifier : public ParticleModifier
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE SelectParticleTypeModifier(DataSet* dataset) : ParticleModifier(dataset),
-		_sourceProperty(ParticleProperty::ParticleTypeProperty) {
-		INIT_PROPERTY_FIELD(SelectParticleTypeModifier::_sourceProperty);
-		INIT_PROPERTY_FIELD(SelectParticleTypeModifier::_selectedParticleTypes);
-	}
-
-	/// Loads the user-defined default values of this object's parameter fields from the
-	/// application's settings store.
-	virtual void loadUserDefaults() override;
-
-	/// Returns the particle type property that is used as source for the selection.
-	const ParticlePropertyReference& sourceProperty() const { return _sourceProperty; }
-
-	/// Sets the particle type property that is used as source for the selection.
-	void setSourceProperty(const ParticlePropertyReference& prop) { _sourceProperty = prop; }
-
-	/// Returns the list of particle type identifiers that are selected.
-	const QSet<int>& selectedParticleTypes() const { return _selectedParticleTypes; }
-
-	/// Sets the list of particle type identifiers to select.
-	void setSelectedParticleTypes(const QSet<int>& types) { _selectedParticleTypes = types; }
-
-	/// Sets a single particle type identifier to be selected.
-	void setSelectedParticleType(int type) { setSelectedParticleTypes(QSet<int>{type}); }
-
-protected:
-
-	/// Loads the class' contents from the given stream.
-	virtual void loadFromStream(ObjectLoadStream& stream) override;
-
-	/// This virtual method is called by the system when the modifier has been inserted into a PipelineObject.
-	virtual void initializeModifier(PipelineObject* pipelineObject, ModifierApplication* modApp) override;
-
-	/// Modifies the particle object.
-	virtual PipelineStatus modifyParticles(TimePoint time, TimeInterval& validityInterval) override;
-
-	/// The particle type property that is used as source for the selection.
-	PropertyField<ParticlePropertyReference> _sourceProperty;
-
-	/// The identifiers of the particle types to select.
-	PropertyField<QSet<int>> _selectedParticleTypes;
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-
-	Q_CLASSINFO("DisplayName", "Select particle type");
-	Q_CLASSINFO("ModifierCategory", "Selection");
-
-	DECLARE_PROPERTY_FIELD(_sourceProperty);
-	DECLARE_PROPERTY_FIELD(_selectedParticleTypes);
-};
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
+namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Selection) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
  * A properties editor for the SelectParticleTypeModifier class.
@@ -138,10 +75,9 @@ private:
 };
 
 OVITO_END_INLINE_NAMESPACE
-
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_SELECT_PARTICLE_TYPE_MODIFIER_H
+#endif // __OVITO_SELECT_PARTICLE_TYPE_MODIFIER_EDITOR_H

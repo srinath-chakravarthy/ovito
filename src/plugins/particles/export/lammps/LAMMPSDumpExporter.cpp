@@ -24,7 +24,6 @@
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <core/utilities/concurrent/ProgressDisplay.h>
 #include "LAMMPSDumpExporter.h"
-#include "../ParticleExporterSettingsDialog.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
@@ -35,41 +34,6 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, LAMMPSDumpExporter, ParticleExpor
 ******************************************************************************/
 LAMMPSDumpExporter::LAMMPSDumpExporter(DataSet* dataset) : ParticleExporter(dataset)
 {
-}
-
-/******************************************************************************
-* Opens the export settings dialog for this exporter service.
-******************************************************************************/
-bool LAMMPSDumpExporter::showSettingsDialog(const PipelineFlowState& state, QWidget* parent)
-{
-	// Load last mapping if no new one has been set already.
-	if(_columnMapping.empty()) {
-		QSettings settings;
-		settings.beginGroup("viz/exporter/lammpsdump/");
-		if(settings.contains("columnmapping")) {
-			try {
-				_columnMapping.fromByteArray(settings.value("columnmapping").toByteArray());
-			}
-			catch(Exception& ex) {
-				ex.prependGeneralMessage(tr("Failed to load last output column mapping from application settings store."));
-				ex.logError();
-			}
-		}
-		settings.endGroup();
-	}
-
-	ParticleExporterSettingsDialog dialog(parent, this, state, &_columnMapping);
-	if(dialog.exec() == QDialog::Accepted) {
-
-		// Remember the output column mapping for the next time.
-		QSettings settings;
-		settings.beginGroup("viz/exporter/lammpsdump/");
-		settings.setValue("columnmapping", _columnMapping.toByteArray());
-		settings.endGroup();
-
-		return true;
-	}
-	return false;
 }
 
 /******************************************************************************

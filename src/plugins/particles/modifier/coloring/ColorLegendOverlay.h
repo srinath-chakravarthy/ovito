@@ -23,7 +23,6 @@
 #define __OVITO_COLOR_LEGEND_OVERLAY_H
 
 #include <plugins/particles/Particles.h>
-#include <gui/properties/PropertiesEditor.h>
 #include <core/viewport/overlay/ViewportOverlay.h>
 #include "ColorCodingModifier.h"
 
@@ -141,31 +140,6 @@ private:
 	Q_OBJECT
 	OVITO_OBJECT
 };
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * \brief A properties editor for the ColorLegendOverlay class.
- */
-class ColorLegendOverlayEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE ColorLegendOverlayEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

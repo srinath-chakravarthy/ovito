@@ -23,7 +23,6 @@
 #include <core/utilities/concurrent/Future.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/scene/ObjectNode.h>
-#include <gui/properties/BooleanParameterUI.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationDisplay.h>
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
@@ -43,8 +42,6 @@
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, CAImporter, FileSourceImporter);
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, CAImporterEditor, PropertiesEditor);
-SET_OVITO_OBJECT_EDITOR(CAImporter, CAImporterEditor);
 DEFINE_PROPERTY_FIELD(CAImporter, _loadParticles, "LoadParticles");
 SET_PROPERTY_FIELD_LABEL(CAImporter, _loadParticles, "Load particles");
 
@@ -734,23 +731,6 @@ void CAImporter::prepareSceneNode(ObjectNode* node, FileSource* importObj)
 
 	// Add a modifier to smooth the dislocation lines.
 	node->applyModifier(new SmoothDislocationsModifier(node->dataset()));
-}
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void CAImporterEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Crystal analysis file"), rolloutParams);
-
-    // Create the rollout contents.
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(4);
-
-	BooleanParameterUI* loadParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(CAImporter::_loadParticles));
-	layout->addWidget(loadParticlesUI->checkBox());
 }
 
 }	// End of namespace

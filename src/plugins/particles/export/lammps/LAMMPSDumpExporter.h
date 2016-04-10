@@ -44,9 +44,6 @@ public:
 	/// \brief Returns the filter description that is displayed in the drop-down box of the file dialog.
 	virtual QString fileFilterDescription() override { return tr("LAMMPS Dump File"); }
 
-	/// \brief Opens the export settings dialog for this exporter service.
-	virtual bool showSettingsDialog(const PipelineFlowState& state, QWidget* parent) override;
-
 	/// \brief Returns the mapping of particle properties to output file columns.
 	const OutputColumnMapping& columnMapping() const { return _columnMapping; }
 

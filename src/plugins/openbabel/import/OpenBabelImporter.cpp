@@ -19,7 +19,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <plugins/particles/Particles.h>
 #include <core/utilities/concurrent/Future.h>
 #include <core/dataset/importexport/FileSource.h>
 #include "OpenBabelImporter.h"

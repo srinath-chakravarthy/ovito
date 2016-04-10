@@ -23,7 +23,7 @@
 #define __OVITO_VIEWPORT_SCENE_RENDERER_H
 
 #include <gui/GUI.h>
-#include "OpenGLSceneRenderer.h"
+#include <opengl_renderer/OpenGLSceneRenderer.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
 

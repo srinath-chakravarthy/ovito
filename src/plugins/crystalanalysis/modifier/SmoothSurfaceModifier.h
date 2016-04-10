@@ -25,7 +25,6 @@
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/scene/pipeline/Modifier.h>
 #include <core/utilities/mesh/HalfEdgeMesh.h>
-#include <gui/properties/PropertiesEditor.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -63,27 +62,6 @@ private:
 	Q_CLASSINFO("ModifierCategory", "Crystal analysis");
 
 	DECLARE_PROPERTY_FIELD(_smoothingLevel);
-};
-
-/**
- * Properties editor for the SmoothSurfaceModifier class.
- */
-class OVITO_CRYSTALANALYSIS_EXPORT SmoothSurfaceModifierEditor : public PropertiesEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE SmoothSurfaceModifierEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
 };
 
 }	// End of namespace

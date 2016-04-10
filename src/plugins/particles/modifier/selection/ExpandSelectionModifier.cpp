@@ -23,16 +23,12 @@
 #include <plugins/particles/util/CutoffNeighborFinder.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
 #include <plugins/particles/objects/BondsObject.h>
-#include <gui/properties/IntegerRadioButtonParameterUI.h>
-#include <gui/properties/FloatParameterUI.h>
-#include <gui/properties/IntegerParameterUI.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include "ExpandSelectionModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Selection)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ExpandSelectionModifier, ParticleModifier);
-SET_OVITO_OBJECT_EDITOR(ExpandSelectionModifier, ExpandSelectionModifierEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(ExpandSelectionModifier, _mode, "Mode", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(ExpandSelectionModifier, _cutoffRange, "Cutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(ExpandSelectionModifier, _numNearestNeighbors, "NumNearestNeighbors", PROPERTY_FIELD_MEMORIZE);
@@ -42,10 +38,6 @@ SET_PROPERTY_FIELD_LABEL(ExpandSelectionModifier, _cutoffRange, "Cutoff distance
 SET_PROPERTY_FIELD_LABEL(ExpandSelectionModifier, _numNearestNeighbors, "N");
 SET_PROPERTY_FIELD_LABEL(ExpandSelectionModifier, _numIterations, "Number of iterations");
 SET_PROPERTY_FIELD_UNITS(ExpandSelectionModifier, _cutoffRange, WorldParameterUnit);
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, ExpandSelectionModifierEditor, ParticleModifierEditor);
-OVITO_END_INLINE_NAMESPACE
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -228,79 +220,6 @@ void ExpandSelectionModifier::propertyChanged(const PropertyFieldDescriptor& fie
 			|| field == PROPERTY_FIELD(ExpandSelectionModifier::_numIterations))
 		invalidateCachedResults();
 }
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void ExpandSelectionModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Expand selection"), rolloutParams, "particles.modifiers.expand_selection.html");
-
-    // Create the rollout contents.
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(6);
-
-	QLabel* label = new QLabel(tr("Expand current selection to include particles that are..."));
-	label->setWordWrap(true);
-	layout->addWidget(label);
-
-	IntegerRadioButtonParameterUI* modePUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(ExpandSelectionModifier::_mode));
-	QRadioButton* cutoffModeBtn = modePUI->addRadioButton(ExpandSelectionModifier::CutoffRange, tr("... within the range:"));
-	layout->addSpacing(10);
-	layout->addWidget(cutoffModeBtn);
-
-	// Cutoff parameter.
-	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(ExpandSelectionModifier::_cutoffRange));
-	QHBoxLayout* sublayout = new QHBoxLayout();
-	sublayout->setContentsMargins(0,0,0,0);
-	sublayout->addSpacing(20);
-	sublayout->addWidget(cutoffRadiusPUI->label());
-	sublayout->addLayout(cutoffRadiusPUI->createFieldLayout(), 1);
-	layout->addLayout(sublayout);
-	cutoffRadiusPUI->setMinValue(0);
-	cutoffRadiusPUI->setEnabled(false);
-	connect(cutoffModeBtn, &QRadioButton::toggled, cutoffRadiusPUI, &FloatParameterUI::setEnabled);
-
-	QRadioButton* nearestNeighborsModeBtn = modePUI->addRadioButton(ExpandSelectionModifier::NearestNeighbors, tr("... among the N nearest neighbors:"));
-	layout->addSpacing(10);
-	layout->addWidget(nearestNeighborsModeBtn);
-
-	// Number of nearest neighbors.
-	IntegerParameterUI* numNearestNeighborsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(ExpandSelectionModifier::_numNearestNeighbors));
-	sublayout = new QHBoxLayout();
-	sublayout->setContentsMargins(0,0,0,0);
-	sublayout->addSpacing(20);
-	sublayout->addWidget(numNearestNeighborsPUI->label());
-	sublayout->addLayout(numNearestNeighborsPUI->createFieldLayout(), 1);
-	layout->addLayout(sublayout);
-	numNearestNeighborsPUI->setMinValue(1);
-	numNearestNeighborsPUI->setMaxValue(ExpandSelectionModifier::MAX_NEAREST_NEIGHBORS);
-	numNearestNeighborsPUI->setEnabled(false);
-	connect(nearestNeighborsModeBtn, &QRadioButton::toggled, numNearestNeighborsPUI, &FloatParameterUI::setEnabled);
-
-	QRadioButton* bondModeBtn = modePUI->addRadioButton(ExpandSelectionModifier::BondedNeighbors, tr("... bonded to a selected particle."));
-	layout->addSpacing(10);
-	layout->addWidget(bondModeBtn);
-
-	layout->addSpacing(10);
-	IntegerParameterUI* numIterationsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(ExpandSelectionModifier::_numIterations));
-	sublayout = new QHBoxLayout();
-	sublayout->setContentsMargins(0,0,0,0);
-	sublayout->addWidget(numIterationsPUI->label());
-	sublayout->addLayout(numIterationsPUI->createFieldLayout(), 1);
-	layout->addLayout(sublayout);
-	numIterationsPUI->setMinValue(1);
-
-	// Status label.
-	layout->addSpacing(10);
-	layout->addWidget(statusLabel());
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

@@ -23,18 +23,12 @@
 #include <core/scene/objects/DataObject.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/dataset/importexport/FileSource.h>
-#include <gui/properties/BooleanParameterUI.h>
-#include <gui/properties/BooleanRadioButtonParameterUI.h>
-#include <gui/properties/IntegerParameterUI.h>
-#include <gui/properties/FloatParameterUI.h>
-#include <gui/properties/SubObjectParameterUI.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include "AtomicStrainModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, AtomicStrainModifier, AsynchronousParticleModifier);
-SET_OVITO_OBJECT_EDITOR(AtomicStrainModifier, AtomicStrainModifierEditor);
 DEFINE_FLAGS_REFERENCE_FIELD(AtomicStrainModifier, _referenceObject, "Reference Configuration", DataObject, PROPERTY_FIELD_NO_SUB_ANIM);
 DEFINE_PROPERTY_FIELD(AtomicStrainModifier, _referenceShown, "ShowReferenceConfiguration");
 DEFINE_FLAGS_PROPERTY_FIELD(AtomicStrainModifier, _eliminateCellDeformation, "EliminateCellDeformation", PROPERTY_FIELD_MEMORIZE);
@@ -60,10 +54,6 @@ SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _useReferenceFrameOffset, "Use re
 SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _referenceFrameNumber, "Reference frame number");
 SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _referenceFrameOffset, "Reference frame offset");
 SET_PROPERTY_FIELD_UNITS(AtomicStrainModifier, _cutoff, WorldParameterUnit);
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, AtomicStrainModifierEditor, ParticleModifierEditor);
-OVITO_END_INLINE_NAMESPACE
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -523,107 +513,6 @@ bool AtomicStrainModifier::referenceEvent(RefTarget* source, ReferenceEvent* eve
 	}
 	return AsynchronousParticleModifier::referenceEvent(source, event);
 }
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void AtomicStrainModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Atomic strain"), rolloutParams, "particles.modifiers.atomic_strain.html");
-
-    // Create the rollout contents.
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(4);
-
-	QGridLayout* gridlayout = new QGridLayout();
-	gridlayout->setContentsMargins(4,4,4,4);
-	gridlayout->setColumnStretch(1, 1);
-
-	// Cutoff parameter.
-	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_cutoff));
-	gridlayout->addWidget(cutoffRadiusPUI->label(), 0, 0);
-	gridlayout->addLayout(cutoffRadiusPUI->createFieldLayout(), 0, 1);
-	cutoffRadiusPUI->setMinValue(0);
-
-	layout->addLayout(gridlayout);
-
-	BooleanParameterUI* eliminateCellDeformationUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_eliminateCellDeformation));
-	layout->addWidget(eliminateCellDeformationUI->checkBox());
-
-	BooleanParameterUI* assumeUnwrappedUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_assumeUnwrappedCoordinates));
-	layout->addWidget(assumeUnwrappedUI->checkBox());
-
-#if 0
-	BooleanParameterUI* showReferenceUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_referenceShown));
-	layout->addWidget(showReferenceUI->checkBox());
-#endif
-
-	QCheckBox* calculateShearStrainsBox = new QCheckBox(tr("Output von Mises shear strains"));
-	calculateShearStrainsBox->setEnabled(false);
-	calculateShearStrainsBox->setChecked(true);
-	layout->addWidget(calculateShearStrainsBox);
-
-	QCheckBox* calculateVolumetricStrainsBox = new QCheckBox(tr("Output volumetric strains"));
-	calculateVolumetricStrainsBox->setEnabled(false);
-	calculateVolumetricStrainsBox->setChecked(true);
-	layout->addWidget(calculateVolumetricStrainsBox);
-
-	BooleanParameterUI* calculateDeformationGradientsUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_calculateDeformationGradients));
-	layout->addWidget(calculateDeformationGradientsUI->checkBox());
-
-	BooleanParameterUI* calculateStrainTensorsUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_calculateStrainTensors));
-	layout->addWidget(calculateStrainTensorsUI->checkBox());
-
-	BooleanParameterUI* calculateNonaffineSquaredDisplacementsUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_calculateNonaffineSquaredDisplacements));
-	layout->addWidget(calculateNonaffineSquaredDisplacementsUI->checkBox());
-
-	BooleanParameterUI* selectInvalidParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_selectInvalidParticles));
-	layout->addWidget(selectInvalidParticlesUI->checkBox());
-
-	QGroupBox* referenceFrameGroupBox = new QGroupBox(tr("Reference frame"));
-	layout->addWidget(referenceFrameGroupBox);
-
-	QGridLayout* sublayout = new QGridLayout(referenceFrameGroupBox);
-	sublayout->setContentsMargins(4,4,4,4);
-	sublayout->setSpacing(4);
-	sublayout->setColumnStretch(0, 5);
-	sublayout->setColumnStretch(2, 95);
-
-	// Add box for selection between absolute and relative reference frames.
-	BooleanRadioButtonParameterUI* useFrameOffsetUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_useReferenceFrameOffset));
-	useFrameOffsetUI->buttonTrue()->setText(tr("Relative to current frame"));
-	useFrameOffsetUI->buttonFalse()->setText(tr("Fixed reference configuration"));
-	sublayout->addWidget(useFrameOffsetUI->buttonFalse(), 0, 0, 1, 3);
-
-	IntegerParameterUI* frameNumberUI = new IntegerParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_referenceFrameNumber));
-	frameNumberUI->label()->setText(tr("Frame number:"));
-	sublayout->addWidget(frameNumberUI->label(), 1, 1, 1, 1);
-	sublayout->addLayout(frameNumberUI->createFieldLayout(), 1, 2, 1, 1);
-	frameNumberUI->setMinValue(0);
-	frameNumberUI->setEnabled(false);
-	connect(useFrameOffsetUI->buttonFalse(), &QRadioButton::toggled, frameNumberUI, &IntegerParameterUI::setEnabled);
-
-	sublayout->addWidget(useFrameOffsetUI->buttonTrue(), 2, 0, 1, 3);
-	IntegerParameterUI* frameOffsetUI = new IntegerParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_referenceFrameOffset));
-	frameOffsetUI->label()->setText(tr("Frame offset:"));
-	sublayout->addWidget(frameOffsetUI->label(), 3, 1, 1, 1);
-	sublayout->addLayout(frameOffsetUI->createFieldLayout(), 3, 2, 1, 1);
-	frameOffsetUI->setEnabled(false);
-	connect(useFrameOffsetUI->buttonTrue(), &QRadioButton::toggled, frameOffsetUI, &IntegerParameterUI::setEnabled);
-
-	// Status label.
-	layout->addSpacing(6);
-	layout->addWidget(statusLabel());
-
-	// Open a sub-editor for the reference object.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_referenceObject), RolloutInsertionParameters().setTitle(tr("Reference")));
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

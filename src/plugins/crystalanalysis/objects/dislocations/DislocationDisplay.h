@@ -28,7 +28,6 @@
 #include <core/rendering/ParticlePrimitive.h>
 #include <core/rendering/ArrowPrimitive.h>
 #include <core/rendering/SceneRenderer.h>
-#include <gui/properties/PropertiesEditor.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
 #include <plugins/crystalanalysis/objects/patterns/PatternCatalog.h>
@@ -249,25 +248,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_showBurgersVectors);
 	DECLARE_PROPERTY_FIELD(_showLineDirections);
 	DECLARE_PROPERTY_FIELD(_indicateDislocationCharacter);
-};
-
-/**
- * \brief A properties editor for the DislocationDisplay class.
- */
-class OVITO_CRYSTALANALYSIS_EXPORT DislocationDisplayEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE DislocationDisplayEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-	Q_OBJECT
-	OVITO_OBJECT
 };
 
 }	// End of namespace

@@ -25,20 +25,10 @@
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <core/utilities/concurrent/ProgressDisplay.h>
 #include "POSCARExporter.h"
-#include "../ParticleExporterSettingsDialog.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, POSCARExporter, ParticleExporter);
-
-/******************************************************************************
-* Opens the export settings dialog for this exporter service.
-******************************************************************************/
-bool POSCARExporter::showSettingsDialog(const PipelineFlowState& state, QWidget* parent)
-{
-	ParticleExporterSettingsDialog dialog(parent, this, state);
-	return (dialog.exec() == QDialog::Accepted);
-}
 
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.

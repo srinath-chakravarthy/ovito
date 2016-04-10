@@ -21,10 +21,6 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/rendering/SceneRenderer.h>
-#include <gui/properties/ColorParameterUI.h>
-#include <gui/properties/BooleanParameterUI.h>
-#include <gui/properties/FloatParameterUI.h>
-#include <gui/properties/BooleanGroupBoxParameterUI.h>
 #include <core/utilities/mesh/TriMesh.h>
 #include <core/animation/controller/Controller.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
@@ -34,12 +30,7 @@
 
 namespace Ovito { namespace Particles {
 
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, SurfaceMeshDisplayEditor, PropertiesEditor);
-OVITO_END_INLINE_NAMESPACE
-
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SurfaceMeshDisplay, AsynchronousDisplayObject);
-SET_OVITO_OBJECT_EDITOR(SurfaceMeshDisplay, SurfaceMeshDisplayEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(SurfaceMeshDisplay, _surfaceColor, "SurfaceColor", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(SurfaceMeshDisplay, _capColor, "CapColor", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(SurfaceMeshDisplay, _showCap, "ShowCap", PROPERTY_FIELD_MEMORIZE);
@@ -434,15 +425,15 @@ void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const Simulat
 
 		// Build the outer contour.
 		if(!openContours.empty()) {
-			QBitArray visitedContours(openContours.size());
+			boost::dynamic_bitset<> visitedContours(openContours.size());
 			for(auto c1 = openContours.begin(); c1 != openContours.end(); ++c1) {
-				if(!visitedContours.testBit(c1 - openContours.begin())) {
+				if(!visitedContours.test(c1 - openContours.begin())) {
 					tessellator.beginContour();
 					auto currentContour = c1;
 					do {
 						for(const Point2& p : *currentContour)
 							tessellator.vertex(p);
-						visitedContours.setBit(currentContour - openContours.begin());
+						visitedContours.set(currentContour - openContours.begin());
 
 						FloatType exitSide = 0;
 						if(currentContour->back().x() == 0) exitSide = currentContour->back().y();
@@ -486,7 +477,7 @@ void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const Simulat
 							}
 						}
 					}
-					while(!visitedContours.testBit(currentContour - openContours.begin()));
+					while(!visitedContours.test(currentContour - openContours.begin()));
 					tessellator.endContour();
 				}
 			}
@@ -905,65 +896,6 @@ bool SurfaceMeshDisplay::isCornerInside3DRegion(const HalfEdgeMesh<>& mesh, cons
 
 	return closestNormal.dot(closestVector) > 0;
 }
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void SurfaceMeshDisplayEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(QString(), rolloutParams, "display_objects.surface_mesh.html");
-
-    // Create the rollout contents.
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(4);
-
-	QGroupBox* surfaceGroupBox = new QGroupBox(tr("Surface"));
-	QGridLayout* sublayout = new QGridLayout(surfaceGroupBox);
-	sublayout->setContentsMargins(4,4,4,4);
-	sublayout->setSpacing(4);
-	sublayout->setColumnStretch(1, 1);
-	layout->addWidget(surfaceGroupBox);
-
-	ColorParameterUI* surfaceColorUI = new ColorParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_surfaceColor));
-	sublayout->addWidget(surfaceColorUI->label(), 0, 0);
-	sublayout->addWidget(surfaceColorUI->colorPicker(), 0, 1);
-
-	FloatParameterUI* surfaceTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_surfaceTransparency));
-	sublayout->addWidget(new QLabel(tr("Transparency:")), 1, 0);
-	sublayout->addLayout(surfaceTransparencyUI->createFieldLayout(), 1, 1);
-	surfaceTransparencyUI->setMinValue(0);
-	surfaceTransparencyUI->setMaxValue(1);
-
-	BooleanParameterUI* smoothShadingUI = new BooleanParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_smoothShading));
-	sublayout->addWidget(smoothShadingUI->checkBox(), 2, 0, 1, 2);
-
-	BooleanGroupBoxParameterUI* capGroupUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_showCap));
-	capGroupUI->groupBox()->setTitle(tr("Cap polygons"));
-	sublayout = new QGridLayout(capGroupUI->childContainer());
-	sublayout->setContentsMargins(4,4,4,4);
-	sublayout->setSpacing(4);
-	sublayout->setColumnStretch(1, 1);
-	layout->addWidget(capGroupUI->groupBox());
-
-	ColorParameterUI* capColorUI = new ColorParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_capColor));
-	sublayout->addWidget(capColorUI->label(), 0, 0);
-	sublayout->addWidget(capColorUI->colorPicker(), 0, 1);
-
-	FloatParameterUI* capTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_capTransparency));
-	sublayout->addWidget(new QLabel(tr("Transparency:")), 1, 0);
-	sublayout->addLayout(capTransparencyUI->createFieldLayout(), 1, 1);
-	capTransparencyUI->setMinValue(0);
-	capTransparencyUI->setMaxValue(1);
-
-	BooleanParameterUI* reverseOrientationUI = new BooleanParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_reverseOrientation));
-	sublayout->addWidget(reverseOrientationUI->checkBox(), 2, 0, 1, 2);
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 }	// End of namespace
 }	// End of namespace

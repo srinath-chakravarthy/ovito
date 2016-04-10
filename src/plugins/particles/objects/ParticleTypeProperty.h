@@ -181,31 +181,6 @@ private:
 	DECLARE_VECTOR_REFERENCE_FIELD(_particleTypes);
 };
 
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * \brief A properties editor for the ParticleTypeProperty class.
- */
-class ParticleTypePropertyEditor : public PropertiesEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE ParticleTypePropertyEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
-
 }	// End of namespace
 }	// End of namespace
 

@@ -20,31 +20,22 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <gui/properties/BooleanParameterUI.h>
-#include <gui/properties/IntegerRadioButtonParameterUI.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
 #include <plugins/particles/util/CutoffNeighborFinder.h>
-#include <plugins/particles/util/CutoffRadiusPresetsUI.h>
 #include <plugins/particles/objects/BondsObject.h>
 #include <plugins/particles/objects/BondPropertyObject.h>
 #include <plugins/particles/data/BondProperty.h>
-
 #include "CommonNeighborAnalysisModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, CommonNeighborAnalysisModifier, StructureIdentificationModifier);
-SET_OVITO_OBJECT_EDITOR(CommonNeighborAnalysisModifier, CommonNeighborAnalysisModifierEditor);
 DEFINE_FLAGS_PROPERTY_FIELD(CommonNeighborAnalysisModifier, _cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CommonNeighborAnalysisModifier, _cnaMode, "CNAMode", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(CommonNeighborAnalysisModifier, _cutoff, "Cutoff radius");
 SET_PROPERTY_FIELD_LABEL(CommonNeighborAnalysisModifier, _cnaMode, "Mode");
 SET_PROPERTY_FIELD_UNITS(CommonNeighborAnalysisModifier, _cutoff, WorldParameterUnit);
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, CommonNeighborAnalysisModifierEditor, ParticleModifierEditor);
-OVITO_END_INLINE_NAMESPACE
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -624,68 +615,6 @@ PipelineStatus CommonNeighborAnalysisModifier::applyComputationResults(TimePoint
 	}
 	return StructureIdentificationModifier::applyComputationResults(time, validityInterval);
 }
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void CommonNeighborAnalysisModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Common neighbor analysis"), rolloutParams, "particles.modifiers.common_neighbor_analysis.html");
-
-    // Create the rollout contents.
-	QVBoxLayout* layout1 = new QVBoxLayout(rollout);
-	layout1->setContentsMargins(4,4,4,4);
-	layout1->setSpacing(6);
-
-	IntegerRadioButtonParameterUI* modeUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(CommonNeighborAnalysisModifier::_cnaMode));
-	QRadioButton* bondModeBtn = modeUI->addRadioButton(CommonNeighborAnalysisModifier::BondMode, tr("Bond-based CNA (without cutoff)"));
-	QRadioButton* adaptiveModeBtn = modeUI->addRadioButton(CommonNeighborAnalysisModifier::AdaptiveCutoffMode, tr("Adaptive CNA (variable cutoff)"));
-	QRadioButton* fixedCutoffModeBtn = modeUI->addRadioButton(CommonNeighborAnalysisModifier::FixedCutoffMode, tr("Conventional CNA (fixed cutoff)"));
-	layout1->addWidget(bondModeBtn);
-	layout1->addWidget(adaptiveModeBtn);
-	layout1->addWidget(fixedCutoffModeBtn);
-
-	QGridLayout* gridlayout = new QGridLayout();
-	gridlayout->setContentsMargins(0,0,0,0);
-	gridlayout->setColumnStretch(2, 1);
-	gridlayout->setColumnMinimumWidth(0, 20);
-
-	// Cutoff parameter.
-	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(CommonNeighborAnalysisModifier::_cutoff));
-	gridlayout->addWidget(cutoffRadiusPUI->label(), 0, 1);
-	gridlayout->addLayout(cutoffRadiusPUI->createFieldLayout(), 0, 2);
-	cutoffRadiusPUI->setMinValue(0);
-
-	CutoffRadiusPresetsUI* cutoffPresetsPUI = new CutoffRadiusPresetsUI(this, PROPERTY_FIELD(CommonNeighborAnalysisModifier::_cutoff));
-	gridlayout->addWidget(cutoffPresetsPUI->comboBox(), 1, 1, 1, 2);
-	layout1->addLayout(gridlayout);
-
-	connect(fixedCutoffModeBtn, &QRadioButton::toggled, cutoffRadiusPUI, &FloatParameterUI::setEnabled);
-	connect(fixedCutoffModeBtn, &QRadioButton::toggled, cutoffPresetsPUI, &CutoffRadiusPresetsUI::setEnabled);
-	cutoffRadiusPUI->setEnabled(false);
-	cutoffPresetsPUI->setEnabled(false);
-
-	// Use only selected particles.
-	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::_onlySelectedParticles));
-	layout1->addWidget(onlySelectedParticlesUI->checkBox());
-
-	// Status label.
-	layout1->addSpacing(10);
-	layout1->addWidget(statusLabel());
-
-	StructureListParameterUI* structureTypesPUI = new StructureListParameterUI(this);
-	layout1->addSpacing(10);
-	layout1->addWidget(new QLabel(tr("Structure types:")));
-	layout1->addWidget(structureTypesPUI->tableWidget());
-	QLabel* label = new QLabel(tr("<p style=\"font-size: small;\">Double-click to change colors. Defaults can be set in the application settings.</p>"));
-	label->setWordWrap(true);
-	layout1->addWidget(label);
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

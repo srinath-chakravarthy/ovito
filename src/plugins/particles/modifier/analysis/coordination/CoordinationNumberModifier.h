@@ -27,8 +27,6 @@
 #include <plugins/particles/util/CutoffNeighborFinder.h>
 #include "../../AsynchronousParticleModifier.h"
 
-class QCustomPlot;
-
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
 /**
@@ -140,45 +138,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_cutoff);
 	DECLARE_PROPERTY_FIELD(_numberOfBins);
 };
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * A properties editor for the CoordinationNumberModifier class.
- */
-class CoordinationNumberModifierEditor : public ParticleModifierEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE CoordinationNumberModifierEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-	/// This method is called when a reference target changes.
-	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
-
-protected Q_SLOTS:
-
-	/// Replots the RDF computed by the modifier.
-	void plotRDF();
-
-	/// This is called when the user has clicked the "Save Data" button.
-	void onSaveData();
-
-private:
-
-	/// The graph widget to display the RDF.
-	QCustomPlot* _rdfPlot;
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

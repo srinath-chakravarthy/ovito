@@ -28,7 +28,6 @@
 #include <core/utilities/mesh/TriMesh.h>
 #include <core/utilities/mesh/HalfEdgeMesh.h>
 #include <core/rendering/MeshPrimitive.h>
-#include <gui/properties/PropertiesEditor.h>
 #include <core/animation/controller/Controller.h>
 #include <plugins/particles/data/SimulationCell.h>
 #include "PartitionMesh.h"
@@ -191,25 +190,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_flipOrientation);
 	DECLARE_REFERENCE_FIELD(_surfaceTransparency);
 	DECLARE_REFERENCE_FIELD(_capTransparency);
-};
-
-/**
- * \brief A properties editor for the PartitionMesh class.
- */
-class OVITO_CRYSTALANALYSIS_EXPORT PartitionMeshDisplayEditor : public PropertiesEditor
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE PartitionMeshDisplayEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-	Q_OBJECT
-	OVITO_OBJECT
 };
 
 }	// End of namespace

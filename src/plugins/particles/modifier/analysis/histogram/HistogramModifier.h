@@ -27,11 +27,6 @@
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include "../../ParticleModifier.h"
 
-#ifndef signals
-#define signals Q_SIGNALS
-#endif
-#include <qcustomplot.h>
-
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
 /**
@@ -165,57 +160,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_yAxisRangeEnd);
 	DECLARE_PROPERTY_FIELD(_sourceProperty);
 };
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * A properties editor for the HistogramModifier class.
- */
-class HistogramModifierEditor : public ParticleModifierEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE HistogramModifierEditor() : _rangeUpdate(true) {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-	/// This method is called when a reference target changes.
-	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
-
-protected Q_SLOTS:
-
-	/// Replots the histogram computed by the modifier.
-	void plotHistogram();
-
-	/// Keep x-axis range updated
-	void updateXAxisRange(const QCPRange &newRange);
-
-	/// This is called when the user has clicked the "Save Data" button.
-	void onSaveData();
-
-private:
-
-	/// The graph widget to display the histogram.
-	QCustomPlot* _histogramPlot;
-
-	/// Marks the selection interval in the histogram plot.
-	QCPItemStraightLine* _selectionRangeStartMarker;
-
-	/// Marks the selection interval in the histogram plot.
-	QCPItemStraightLine* _selectionRangeEndMarker;
-
-	/// Update range when plot ranges change?
-	bool _rangeUpdate;
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

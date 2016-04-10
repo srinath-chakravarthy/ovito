@@ -25,7 +25,8 @@
 #include <gui/dialogs/ApplicationSettingsDialog.h>
 #include <gui/dialogs/ImportFileDialog.h>
 #include <gui/dialogs/ImportRemoteFileDialog.h>
-#include <gui/viewport/ViewportWindow.h>
+#include <gui/utilities/concurrent/ProgressDialogAdapter.h>
+#include <opengl_renderer/OpenGLSceneRenderer.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/importexport/FileImporter.h>
 #include <core/dataset/importexport/FileExporter.h>
@@ -112,22 +113,22 @@ void ActionManager::on_HelpOpenGLInfo_triggered()
 	stream << "Qt version: " << QT_VERSION_STR << endl;
 	stream << "Command line: " << QCoreApplication::arguments().join(' ') << endl;
 	stream << "======= OpenGL info =======" << endl;
-	const QSurfaceFormat& format = ViewportWindow::openglSurfaceFormat();
+	const QSurfaceFormat& format = OpenGLSceneRenderer::openglSurfaceFormat();
 	stream << "Version: " << format.majorVersion() << QStringLiteral(".") << format.minorVersion() << endl;
 	stream << "Profile: " << (format.profile() == QSurfaceFormat::CoreProfile ? "core" : (format.profile() == QSurfaceFormat::CompatibilityProfile ? "compatibility" : "none")) << endl;
 	stream << "Alpha: " << format.hasAlpha() << endl;
-	stream << "Vendor: " << ViewportWindow::openGLVendor() << endl;
-	stream << "Renderer: " << ViewportWindow::openGLRenderer() << endl;
-	stream << "Version string: " << ViewportWindow::openGLVersion() << endl;
+	stream << "Vendor: " << OpenGLSceneRenderer::openGLVendor() << endl;
+	stream << "Renderer: " << OpenGLSceneRenderer::openGLRenderer() << endl;
+	stream << "Version string: " << OpenGLSceneRenderer::openGLVersion() << endl;
 	stream << "Swap behavior: " << (format.swapBehavior() == QSurfaceFormat::SingleBuffer ? QStringLiteral("single buffer") : (format.swapBehavior() == QSurfaceFormat::DoubleBuffer ? QStringLiteral("double buffer") : (format.swapBehavior() == QSurfaceFormat::TripleBuffer ? QStringLiteral("triple buffer") : QStringLiteral("other")))) << endl;
 	stream << "Depth buffer size: " << format.depthBufferSize() << endl;
 	stream << "Stencil buffer size: " << format.stencilBufferSize() << endl;
-	stream << "Shading language: " << ViewportWindow::openGLSLVersion() << endl;
-	stream << "Geometry shaders supported: " << (ViewportWindow::geometryShadersSupported() ? "yes" : "no") << endl;
+	stream << "Shading language: " << OpenGLSceneRenderer::openGLSLVersion() << endl;
+	stream << "Geometry shaders supported: " << (OpenGLSceneRenderer::geometryShadersSupported() ? "yes" : "no") << endl;
 	stream << "Using deprecated functions: " << (format.testOption(QSurfaceFormat::DeprecatedFunctions) ? "yes" : "no") << endl;
-	stream << "Using point sprites: " << (ViewportWindow::pointSpritesEnabled() ? "yes" : "no") << endl;
-	stream << "Using geometry shaders: " << (ViewportWindow::geometryShadersEnabled() ? "yes" : "no") << endl;
-	stream << "Context sharing enabled: " << (ViewportWindow::contextSharingEnabled() ? "yes" : "no") << endl;
+	stream << "Using point sprites: " << (OpenGLSceneRenderer::pointSpritesEnabled() ? "yes" : "no") << endl;
+	stream << "Using geometry shaders: " << (OpenGLSceneRenderer::geometryShadersEnabled() ? "yes" : "no") << endl;
+	stream << "Context sharing enabled: " << (OpenGLSceneRenderer::contextSharingEnabled() ? "yes" : "no") << endl;
 	if(!text.isEmpty())
 		textEdit->setPlainText(text);
 	else
@@ -354,7 +355,16 @@ void ActionManager::on_FileExport_triggered()
 		// Load user-defined default settings.
 		exporter->loadUserDefaults();
 
-		exporter->exportToFile(nodes, exportFile, false);
+		// Show progress dialog.
+		QProgressDialog progressDialog(mainWindow());
+		progressDialog.setWindowModality(Qt::WindowModal);
+		progressDialog.setAutoClose(false);
+		progressDialog.setAutoReset(false);
+		progressDialog.setMinimumDuration(0);
+		progressDialog.setValue(0);
+		ProgressDialogAdapter progressDisplay(&progressDialog);
+
+		exporter->exportToFile(nodes, exportFile, &progressDisplay);
 	}
 	catch(const Exception& ex) {
 		ex.showError();

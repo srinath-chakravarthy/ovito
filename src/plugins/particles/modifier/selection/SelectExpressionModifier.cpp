@@ -25,19 +25,13 @@
 #include <core/viewport/Viewport.h>
 #include <core/scene/ObjectNode.h>
 #include <core/scene/pipeline/PipelineObject.h>
-#include <gui/properties/StringParameterUI.h>
 #include "SelectExpressionModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Selection)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SelectExpressionModifier, ParticleModifier);
-SET_OVITO_OBJECT_EDITOR(SelectExpressionModifier, SelectExpressionModifierEditor);
 DEFINE_PROPERTY_FIELD(SelectExpressionModifier, _expression, "Expression");
 SET_PROPERTY_FIELD_LABEL(SelectExpressionModifier, _expression, "Boolean expression");
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, SelectExpressionModifierEditor, ParticleModifierEditor);
-OVITO_END_INLINE_NAMESPACE
 
 /******************************************************************************
 * This modifies the input object.
@@ -113,67 +107,6 @@ void SelectExpressionModifier::initializeModifier(PipelineObject* pipeline, Modi
 	_variableNames = evaluator.inputVariableNames();
 	_variableTable = evaluator.inputVariableTable();
 }
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void SelectExpressionModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
-{
-	QWidget* rollout = createRollout(tr("Expression select"), rolloutParams, "particles.modifiers.expression_select.html");
-
-    // Create the rollout contents.
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(0);
-
-	layout->addWidget(new QLabel(tr("Boolean expression:")));
-	StringParameterUI* expressionUI = new StringParameterUI(this, PROPERTY_FIELD(SelectExpressionModifier::_expression));
-	expressionEdit = new AutocompleteTextEdit();
-	expressionUI->setTextBox(expressionEdit);
-	layout->addWidget(expressionUI->textBox());
-
-	// Status label.
-	layout->addSpacing(12);
-	layout->addWidget(statusLabel());
-
-	QWidget* variablesRollout = createRollout(tr("Variables"), rolloutParams.after(rollout), "particles.modifiers.expression_select.html");
-    QVBoxLayout* variablesLayout = new QVBoxLayout(variablesRollout);
-    variablesLayout->setContentsMargins(4,4,4,4);
-	variableNamesList = new QLabel();
-	variableNamesList->setWordWrap(true);
-	variableNamesList->setTextInteractionFlags(Qt::TextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard | Qt::LinksAccessibleByMouse | Qt::LinksAccessibleByKeyboard));
-	variablesLayout->addWidget(variableNamesList);
-
-	// Update input variables list if another modifier has been loaded into the editor.
-	connect(this, &SelectExpressionModifierEditor::contentsReplaced, this, &SelectExpressionModifierEditor::updateEditorFields);
-}
-
-/******************************************************************************
-* This method is called when a reference target changes.
-******************************************************************************/
-bool SelectExpressionModifierEditor::referenceEvent(RefTarget* source, ReferenceEvent* event)
-{
-	if(source == editObject() && event->type() == ReferenceEvent::TargetChanged) {
-		updateEditorFields();
-	}
-	return ParticleModifierEditor::referenceEvent(source, event);
-}
-
-/******************************************************************************
-* Updates the enabled/disabled status of the editor's controls.
-******************************************************************************/
-void SelectExpressionModifierEditor::updateEditorFields()
-{
-	SelectExpressionModifier* mod = static_object_cast<SelectExpressionModifier>(editObject());
-	if(!mod) return;
-
-	variableNamesList->setText(mod->inputVariableTable() + QStringLiteral("<p></p>"));
-	expressionEdit->setWordList(mod->inputVariableNames());
-}
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

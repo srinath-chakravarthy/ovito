@@ -57,13 +57,11 @@ public:
 	/// \brief Exports a set of scene nodes to a file.
 	/// \param nodes The list of scene nodes to be exported.
 	/// \param filePath The output file path selected by the user.
-	/// \param noninteractive Controls whether the export operation should be performed non-interactively,
-	///                       i.e. without showing any dialogs that require user interaction.
-	///                       This will be \c true when called from a Python script.
+	/// \param progressDisplay Optional callback object which is used by the function to report progress.
 	/// \return \c true if the output file has been successfully written;
 	///         \c false if the export operation has been canceled by the user.
 	/// \throws Util::Exception if the export operation has failed due to an error.
-	virtual bool exportToFile(const QVector<SceneNode*>& nodes, const QString& filePath, bool noninteractive = true) = 0;
+	virtual bool exportToFile(const QVector<SceneNode*>& nodes, const QString& filePath, AbstractProgressDisplay* progressDisplay) = 0;
 
 	/// Returns the list of all available exporter types installed in the system.
 	static QVector<OvitoObjectType*> availableExporters();

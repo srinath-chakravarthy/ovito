@@ -26,6 +26,7 @@
 #include "FHIAimsLogFileImporter.h"
 
 #include <boost/algorithm/string.hpp>
+#include <QRegularExpression>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 

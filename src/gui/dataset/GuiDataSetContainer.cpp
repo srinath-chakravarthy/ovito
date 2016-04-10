@@ -339,6 +339,8 @@ bool GuiDataSetContainer::waitUntil(const std::function<bool()>& callback, const
 				return false;
 			QCoreApplication::processEvents(QEventLoop::WaitForMoreEvents, 50);
 		}
+
+		return !progressDisplay->wasCanceled();
 	}
 	else {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)

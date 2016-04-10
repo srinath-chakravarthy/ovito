@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,209 +19,18 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <plugins/particles/Particles.h>
-#include <core/utilities/units/UnitsManager.h>
-#include <core/utilities/concurrent/ParallelFor.h>
-#include <core/rendering/SceneRenderer.h>
+#include <plugins/particles/gui/ParticlesGui.h>
+#include <plugins/particles/objects/VectorDisplay.h>
 #include <gui/properties/FloatParameterUI.h>
 #include <gui/properties/VariantComboBoxParameterUI.h>
 #include <gui/properties/ColorParameterUI.h>
 #include <gui/properties/BooleanParameterUI.h>
+#include "VectorDisplayEditor.h"
 
-#include "VectorDisplay.h"
-#include "ParticleTypeProperty.h"
+namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-namespace Ovito { namespace Particles {
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_OVITO_OBJECT(Particles, VectorDisplayEditor, PropertiesEditor);
-OVITO_END_INLINE_NAMESPACE
-
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, VectorDisplay, DisplayObject);
+IMPLEMENT_OVITO_OBJECT(ParticlesGui, VectorDisplayEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(VectorDisplay, VectorDisplayEditor);
-DEFINE_PROPERTY_FIELD(VectorDisplay, _reverseArrowDirection, "ReverseArrowDirection");
-DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _arrowPosition, "ArrowPosition", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _arrowColor, "ArrowColor", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _arrowWidth, "ArrowWidth", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _scalingFactor, "ScalingFactor", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _shadingMode, "ShadingMode", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(VectorDisplay, _renderingQuality, "RenderingQuality");
-SET_PROPERTY_FIELD_LABEL(VectorDisplay, _arrowColor, "Arrow color");
-SET_PROPERTY_FIELD_LABEL(VectorDisplay, _arrowWidth, "Arrow width");
-SET_PROPERTY_FIELD_LABEL(VectorDisplay, _scalingFactor, "Scaling factor");
-SET_PROPERTY_FIELD_LABEL(VectorDisplay, _reverseArrowDirection, "Reverse direction");
-SET_PROPERTY_FIELD_LABEL(VectorDisplay, _arrowPosition, "Position");
-SET_PROPERTY_FIELD_LABEL(VectorDisplay, _shadingMode, "Shading mode");
-SET_PROPERTY_FIELD_LABEL(VectorDisplay, _renderingQuality, "RenderingQuality");
-SET_PROPERTY_FIELD_UNITS(VectorDisplay, _arrowWidth, WorldParameterUnit);
-
-/******************************************************************************
-* Constructor.
-******************************************************************************/
-VectorDisplay::VectorDisplay(DataSet* dataset) : DisplayObject(dataset),
-	_reverseArrowDirection(false), _arrowPosition(Base), _arrowColor(1, 1, 0), _arrowWidth(0.5), _scalingFactor(1),
-	_shadingMode(ArrowPrimitive::FlatShading),
-	_renderingQuality(ArrowPrimitive::LowQuality)
-{
-	INIT_PROPERTY_FIELD(VectorDisplay::_arrowColor);
-	INIT_PROPERTY_FIELD(VectorDisplay::_arrowWidth);
-	INIT_PROPERTY_FIELD(VectorDisplay::_scalingFactor);
-	INIT_PROPERTY_FIELD(VectorDisplay::_reverseArrowDirection);
-	INIT_PROPERTY_FIELD(VectorDisplay::_arrowPosition);
-	INIT_PROPERTY_FIELD(VectorDisplay::_shadingMode);
-	INIT_PROPERTY_FIELD(VectorDisplay::_renderingQuality);
-}
-
-/******************************************************************************
-* Computes the bounding box of the object.
-******************************************************************************/
-Box3 VectorDisplay::boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState)
-{
-	ParticlePropertyObject* vectorProperty = dynamic_object_cast<ParticlePropertyObject>(dataObject);
-	ParticlePropertyObject* positionProperty = ParticlePropertyObject::findInState(flowState, ParticleProperty::PositionProperty);
-	if(vectorProperty && (vectorProperty->dataType() != qMetaTypeId<FloatType>() || vectorProperty->componentCount() != 3))
-		vectorProperty = nullptr;
-
-	// Detect if the input data has changed since the last time we computed the bounding box.
-	if(_boundingBoxCacheHelper.updateState(
-			vectorProperty,
-			positionProperty,
-			scalingFactor(), arrowWidth()) || _cachedBoundingBox.isEmpty()) {
-		// Recompute bounding box.
-		_cachedBoundingBox = arrowBoundingBox(vectorProperty, positionProperty);
-	}
-	return _cachedBoundingBox;
-}
-
-/******************************************************************************
-* Computes the bounding box of the arrows.
-******************************************************************************/
-Box3 VectorDisplay::arrowBoundingBox(ParticlePropertyObject* vectorProperty, ParticlePropertyObject* positionProperty)
-{
-	if(!positionProperty || !vectorProperty)
-		return Box3();
-
-	OVITO_ASSERT(positionProperty->type() == ParticleProperty::PositionProperty);
-	OVITO_ASSERT(vectorProperty->dataType() == qMetaTypeId<FloatType>());
-	OVITO_ASSERT(vectorProperty->componentCount() == 3);
-
-	// Compute bounding box of particle positions.
-	Box3 bbox;
-	const Point3* p = positionProperty->constDataPoint3();
-	const Point3* p_end = p + positionProperty->size();
-	for(; p != p_end; ++p)
-		bbox.addPoint(*p);
-
-	// Find largest vector magnitude.
-	FloatType maxMagnitude = 0;
-	const Vector3* v = vectorProperty->constDataVector3();
-	const Vector3* v_end = v + vectorProperty->size();
-	for(; v != v_end; ++v) {
-		FloatType m = v->squaredLength();
-		if(m > maxMagnitude) maxMagnitude = m;
-	}
-
-	// Enlarge the bounding box by the largest vector magnitude + padding.
-	return bbox.padBox((sqrt(maxMagnitude) * std::abs(scalingFactor())) + arrowWidth());
-}
-
-/******************************************************************************
-* Lets the display object render the data object.
-******************************************************************************/
-void VectorDisplay::render(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState, SceneRenderer* renderer, ObjectNode* contextNode)
-{
-	// Get input data.
-	ParticlePropertyObject* vectorProperty = dynamic_object_cast<ParticlePropertyObject>(dataObject);
-	ParticlePropertyObject* positionProperty = ParticlePropertyObject::findInState(flowState, ParticleProperty::PositionProperty);
-	if(vectorProperty && (vectorProperty->dataType() != qMetaTypeId<FloatType>() || vectorProperty->componentCount() != 3))
-		vectorProperty = nullptr;
-	ParticlePropertyObject* vectorColorProperty = ParticlePropertyObject::findInState(flowState, ParticleProperty::VectorColorProperty);
-
-	// Get number of vectors.
-	int vectorCount = (vectorProperty && positionProperty) ? (int)vectorProperty->size() : 0;
-
-	// Do we have to re-create the geometry buffer from scratch?
-	bool recreateBuffer = !_buffer || !_buffer->isValid(renderer);
-
-	// Set shading mode and rendering quality.
-	if(!recreateBuffer) {
-		recreateBuffer |= !(_buffer->setShadingMode(shadingMode()));
-		recreateBuffer |= !(_buffer->setRenderingQuality(renderingQuality()));
-	}
-
-	// Do we have to update contents of the geometry buffer?
-	bool updateContents = _geometryCacheHelper.updateState(
-			vectorProperty,
-			positionProperty,
-			scalingFactor(), arrowWidth(), arrowColor(), reverseArrowDirection(), arrowPosition(),
-			vectorColorProperty)
-			|| recreateBuffer || (_buffer->elementCount() != vectorCount);
-
-	// Re-create the geometry buffer if necessary.
-	if(recreateBuffer)
-		_buffer = renderer->createArrowPrimitive(ArrowPrimitive::ArrowShape, shadingMode(), renderingQuality());
-
-	// Update buffer contents.
-	if(updateContents) {
-		_buffer->startSetElements(vectorCount);
-		if(vectorProperty && positionProperty) {
-			FloatType scalingFac = scalingFactor();
-			if(reverseArrowDirection())
-				scalingFac = -scalingFac;
-			const Point3* p_begin = positionProperty->constDataPoint3();
-			const Vector3* v_begin = vectorProperty->constDataVector3();
-			ColorA color(arrowColor());
-			FloatType width = arrowWidth();
-			ArrowPrimitive* buffer = _buffer.get();
-			for(int index = 0; index < vectorCount; index++) {
-				Vector3 v = v_begin[index] * scalingFac;
-				Point3 base = p_begin[index];
-				if(arrowPosition() == Head)
-					base -= v;
-				else if(arrowPosition() == Center)
-					base -= v * FloatType(0.5);
-				if(vectorColorProperty)
-					color = ColorA(vectorColorProperty->getColor(index));
-				buffer->setElement(index, base, v, color, width);
-			}
-		}
-		_buffer->endSetElements();
-	}
-
-	renderer->beginPickObject(contextNode);
-	_buffer->render(renderer);
-	renderer->endPickObject();
-}
-
-/******************************************************************************
-* Loads the data of this class from an input stream.
-******************************************************************************/
-void VectorDisplay::loadFromStream(ObjectLoadStream& stream)
-{
-	DisplayObject::loadFromStream(stream);
-
-	// This is for backward compatibility with OVITO 2.6.0.
-	if(_flipVectors && reverseArrowDirection()) {
-		setReverseArrowDirection(false);
-		setArrowPosition(Head);
-	}
-}
-
-/******************************************************************************
-* Parses the serialized contents of a property field in a custom way.
-******************************************************************************/
-bool VectorDisplay::loadPropertyFieldFromStream(ObjectLoadStream& stream, const ObjectLoadStream::SerializedPropertyField& serializedField)
-{
-	// This is for backward compatibility with OVITO 2.6.0.
-	if(serializedField.identifier == "FlipVectors" && serializedField.definingClass == &VectorDisplay::OOType) {
-		stream >> _flipVectors;
-		return true;
-	}
-
-	return false;
-}
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /******************************************************************************
 * Sets up the UI widgets of the editor.
@@ -283,6 +92,5 @@ void VectorDisplayEditor::createUI(const RolloutInsertionParameters& rolloutPara
 }
 
 OVITO_END_INLINE_NAMESPACE
-
 }	// End of namespace
 }	// End of namespace

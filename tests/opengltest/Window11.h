@@ -10,8 +10,8 @@ public:
 
 	virtual std::tuple<QString, QString, QString> shaderFiles() const override {
 		return std::tuple<QString, QString, QString>(
-			":/gui/glsl/particles/geometry/sphere/sphere.vs",
-			":/gui/glsl/particles/geometry/sphere/sphere.fs",
+			":/openglrenderer/glsl/particles/geometry/sphere/sphere.vs",
+			":/openglrenderer/glsl/particles/geometry/sphere/sphere.fs",
 			":/gltest/glsl/sphere_vec4.gs");
 	}
 

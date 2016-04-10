@@ -149,34 +149,6 @@ private:
 	DECLARE_REFERENCE_FIELD(_patternCatalog);
 };
 
-/**
- * Properties editor for the ElasticStrainModifier class.
- */
-class OVITO_CRYSTALANALYSIS_EXPORT ElasticStrainModifierEditor : public ParticleModifierEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE ElasticStrainModifierEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-private Q_SLOTS:
-
-	/// Is called each time the parameters of the modifier have changed.
-	void modifierChanged(RefTarget* editObject);
-
-private:
-
-	FloatParameterUI* _caRatioUI;
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

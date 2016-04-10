@@ -19,7 +19,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <plugins/particles/Particles.h>
 #include "CIFImporter.h"
 
 #include <boost/algorithm/string.hpp>

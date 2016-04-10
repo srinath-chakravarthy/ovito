@@ -10,9 +10,9 @@ public:
 
 	virtual std::tuple<QString, QString, QString> shaderFiles() const override {
 		return std::tuple<QString, QString, QString>(
-			":/gui/glsl/particles/imposter/sphere/without_depth.vs",
-			":/gui/glsl/particles/imposter/sphere/without_depth.fs",
-			":/gui/glsl/particles/imposter/sphere/without_depth.gs");
+			":/openglrenderer/glsl/particles/imposter/sphere/without_depth.vs",
+			":/openglrenderer/glsl/particles/imposter/sphere/without_depth.fs",
+			":/openglrenderer/glsl/particles/imposter/sphere/without_depth.gs");
 	}
 
 	virtual void renderContent() override {

@@ -23,7 +23,6 @@
 #define __OVITO_SELECT_EXPRESSION_MODIFIER_H
 
 #include <plugins/particles/Particles.h>
-#include <gui/widgets/general/AutocompleteTextEdit.h>
 #include "../ParticleModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Selection)
@@ -81,42 +80,6 @@ private:
 
 	DECLARE_PROPERTY_FIELD(_expression);
 };
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * A properties editor for the SelectExpressionModifier class.
- */
-class SelectExpressionModifierEditor : public ParticleModifierEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE SelectExpressionModifierEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-	/// This method is called when a reference target changes.
-	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
-
-protected Q_SLOTS:
-
-	/// Updates the enabled/disabled status of the editor's controls.
-	void updateEditorFields();
-
-private:
-
-	QLabel* variableNamesList;
-	AutocompleteTextEdit* expressionEdit;
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

@@ -33,142 +33,6 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-/// The vendor of the OpenGL implementation in use.
-QByteArray ViewportWindow::_openGLVendor;
-
-/// The renderer name of the OpenGL implementation in use.
-QByteArray ViewportWindow::_openGLRenderer;
-
-/// The version string of the OpenGL implementation in use.
-QByteArray ViewportWindow::_openGLVersion;
-
-/// The version of the OpenGL shading language supported by the system.
-QByteArray ViewportWindow::_openGLSLVersion;
-
-/// The current surface format used by the OpenGL implementation.
-QSurfaceFormat ViewportWindow::_openglSurfaceFormat;
-
-/// Indicates whether the OpenGL implementation supports geometry shader programs.
-bool ViewportWindow::_openglSupportsGeomShaders = false;
-
-/******************************************************************************
-* Determines the capabilities of the current OpenGL implementation.
-******************************************************************************/
-void ViewportWindow::determineOpenGLInfo()
-{
-	if(!_openGLVendor.isEmpty())
-		return;		// Already done.
-
-	// Create a temporary GL context and an offscreen surface if necessary.
-	QOpenGLContext tempContext;
-	QOffscreenSurface offscreenSurface;
-	std::unique_ptr<QWindow> window;
-	if(QOpenGLContext::currentContext() == nullptr) {
-		tempContext.setFormat(ViewportSceneRenderer::getDefaultSurfaceFormat());
-		if(!tempContext.create())
-			throw Exception(tr("Failed to create temporary OpenGL context."));
-		if(Application::instance().headlessMode() == false) {
-			// Create a hidden, temporary window to make the GL context current.
-			window.reset(new QWindow());
-			window->setSurfaceType(QSurface::OpenGLSurface);
-			window->setFormat(tempContext.format());
-			window->create();
-			if(!tempContext.makeCurrent(window.get()))
-				throw Exception(tr("Failed to make OpenGL context current. Cannot query OpenGL information."));
-		}
-		else {
-			// Create temporary offscreen buffer to make GL context current.
-			offscreenSurface.setFormat(tempContext.format());
-			offscreenSurface.create();
-			if(!offscreenSurface.isValid())
-				throw Exception(tr("Failed to create temporary offscreen surface. Cannot query OpenGL information."));
-			if(!tempContext.makeCurrent(&offscreenSurface))
-				throw Exception(tr("Failed to make OpenGL context current on offscreen surface. Cannot query OpenGL information."));
-		}
-		OVITO_ASSERT(QOpenGLContext::currentContext() == &tempContext);
-	}
-
-	_openGLVendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
-	_openGLRenderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
-	_openGLVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-	_openGLSLVersion = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
-	_openglSupportsGeomShaders = QOpenGLShader::hasOpenGLShaders(QOpenGLShader::Geometry);
-	_openglSurfaceFormat = QOpenGLContext::currentContext()->format();
-}
-
-/******************************************************************************
-* Returns whether all viewport windows should share one GL context or not.
-******************************************************************************/
-bool ViewportWindow::contextSharingEnabled(bool forceDefaultSetting)
-{
-	if(!forceDefaultSetting) {
-		// The user can override the use of multiple GL contexts.
-		QVariant userSetting = QSettings().value("display/share_opengl_context");
-		if(userSetting.isValid())
-			return userSetting.toBool();
-	}
-
-	determineOpenGLInfo();
-
-#if defined(Q_OS_OSX)
-	// On Mac OS X 10.9 with Intel graphics, using a single context for multiple viewports doesn't work very well.
-	return false;
-#elif defined(Q_OS_LINUX)
-	// On Intel graphics under Linux, sharing a single context doesn't work very well either.
-	if(_openGLVendor.contains("Intel"))
-		return false;
-#endif
-
-	// By default, all viewports of a main window use the same GL context.
-	return true;
-}
-
-/******************************************************************************
-* Determines whether OpenGL point sprites should be used or not.
-******************************************************************************/
-bool ViewportWindow::pointSpritesEnabled(bool forceDefaultSetting)
-{
-	if(!forceDefaultSetting) {
-		// The user can override the use of point sprites.
-		QVariant userSetting = QSettings().value("display/use_point_sprites");
-		if(userSetting.isValid())
-			return userSetting.toBool();
-	}
-
-	determineOpenGLInfo();
-
-#if defined(Q_OS_WIN)
-	// Point sprites don't seem to work well on Intel graphics under Windows.
-	if(_openGLVendor.contains("Intel"))
-		return false;
-#elif defined(Q_OS_OSX)
-	// Point sprites don't seem to work well on ATI graphics under Mac OS X.
-	if(_openGLVendor.contains("ATI"))
-		return false;
-#endif
-
-	// Use point sprites by default.
-	return true;
-}
-
-/******************************************************************************
-* Determines whether OpenGL geometry shader programs should be used or not.
-******************************************************************************/
-bool ViewportWindow::geometryShadersEnabled(bool forceDefaultSetting)
-{
-	if(!forceDefaultSetting) {
-		// The user can override the use of geometry shaders.
-		QVariant userSetting = QSettings().value("display/use_geometry_shaders");
-		if(userSetting.isValid())
-			return userSetting.toBool() && geometryShadersSupported();
-	}
-	if(Application::instance().guiMode())
-		return geometryShadersSupported();
-	else if(QOpenGLContext::currentContext())
-		return QOpenGLShader::hasOpenGLShaders(QOpenGLShader::Geometry);
-	else
-		return false;
-}
 
 /******************************************************************************
 * Constructor.
@@ -211,7 +75,7 @@ ViewportWindow::ViewportWindow(Viewport* owner, QWidget* parentWidget) :
 
 	// Determine OpenGL vendor string so other parts of the code can decide
 	// which OpenGL features are save to use.
-	determineOpenGLInfo();
+	OpenGLSceneRenderer::determineOpenGLInfo();
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
 	// Create a QWidget for this QWindow.
@@ -393,7 +257,7 @@ void ViewportWindow::renderOrientationIndicator()
 	const FloatType tripodArrowSize = FloatType(0.17); 	// percentage of the above value.
 
 	// Turn off depth-testing.
-	OVITO_CHECK_OPENGL(glDisable(GL_DEPTH_TEST));
+	OVITO_CHECK_OPENGL(_viewportRenderer->glfuncs()->glDisable(GL_DEPTH_TEST));
 
 	// Setup projection matrix.
 	ViewProjectionParameters projParams = viewport()->projectionParams();
@@ -453,7 +317,7 @@ void ViewportWindow::renderOrientationIndicator()
 	}
 
 	// Restore old rendering attributes.
-	OVITO_CHECK_OPENGL(glEnable(GL_DEPTH_TEST));
+	OVITO_CHECK_OPENGL(_viewportRenderer->glfuncs()->glEnable(GL_DEPTH_TEST));
 }
 
 /******************************************************************************
@@ -762,7 +626,7 @@ void ViewportWindow::renderNow()
 	QSurfaceFormat format = context()->format();
 	// OpenGL in a VirtualBox machine Windows guest reports "2.1 Chromium 1.9" as version string, which is
 	// not correctly parsed by Qt. We have to workaround this.
-	if(qstrncmp((const char*)glGetString(GL_VERSION), "2.1 ", 4) == 0) {
+	if(qstrncmp((const char*)context()->functions()->glGetString(GL_VERSION), "2.1 ", 4) == 0) {
 		format.setMajorVersion(2);
 		format.setMinorVersion(1);
 	}
@@ -782,11 +646,11 @@ void ViewportWindow::renderNow()
 					"OpenGL renderer: %2\n"
 					"OpenGL version: %3.%4 (%5)\n\n"
 					"Ovito requires at least OpenGL version %6.%7.")
-					.arg(QString((const char*)glGetString(GL_VENDOR)))
-					.arg(QString((const char*)glGetString(GL_RENDERER)))
+					.arg(QString((const char*)context()->functions()->glGetString(GL_VENDOR)))
+					.arg(QString((const char*)context()->functions()->glGetString(GL_RENDERER)))
 					.arg(format.majorVersion())
 					.arg(format.minorVersion())
-					.arg(QString((const char*)glGetString(GL_VERSION)))
+					.arg(QString((const char*)context()->functions()->glGetString(GL_VERSION)))
 					.arg(OVITO_OPENGL_MINIMUM_VERSION_MAJOR)
 					.arg(OVITO_OPENGL_MINIMUM_VERSION_MINOR)
 				);
@@ -807,7 +671,7 @@ void ViewportWindow::renderNow()
 		if(!vpSize.isEmpty()) {
 
 			// Set up OpenGL viewport.
-			glViewport(0, 0, vpSize.width(), vpSize.height());
+			context()->functions()->glViewport(0, 0, vpSize.width(), vpSize.height());
 
 			try {
 				// Let the Viewport class do the actual rendering work.
@@ -821,15 +685,15 @@ void ViewportWindow::renderNow()
 				QTextStream stream(&openGLReport, QIODevice::WriteOnly | QIODevice::Text);
 				stream << "OpenGL version: " << context()->format().majorVersion() << QStringLiteral(".") << context()->format().minorVersion() << endl;
 				stream << "OpenGL profile: " << (context()->format().profile() == QSurfaceFormat::CoreProfile ? "core" : (context()->format().profile() == QSurfaceFormat::CompatibilityProfile ? "compatibility" : "none")) << endl;
-				stream << "OpenGL vendor: " << QString((const char*)glGetString(GL_VENDOR)) << endl;
-				stream << "OpenGL renderer: " << QString((const char*)glGetString(GL_RENDERER)) << endl;
-				stream << "OpenGL version string: " << QString((const char*)glGetString(GL_VERSION)) << endl;
-				stream << "OpenGL shading language: " << QString((const char*)glGetString(GL_SHADING_LANGUAGE_VERSION)) << endl;
+				stream << "OpenGL vendor: " << QString((const char*)context()->functions()->glGetString(GL_VENDOR)) << endl;
+				stream << "OpenGL renderer: " << QString((const char*)context()->functions()->glGetString(GL_RENDERER)) << endl;
+				stream << "OpenGL version string: " << QString((const char*)context()->functions()->glGetString(GL_VERSION)) << endl;
+				stream << "OpenGL shading language: " << QString((const char*)context()->functions()->glGetString(GL_SHADING_LANGUAGE_VERSION)) << endl;
 				stream << "OpenGL shader programs: " << QOpenGLShaderProgram::hasOpenGLShaderPrograms() << endl;
 				stream << "OpenGL geometry shaders: " << QOpenGLShader::hasOpenGLShaders(QOpenGLShader::Geometry, context()) << endl;
-				stream << "Using point sprites: " << pointSpritesEnabled() << endl;
-				stream << "Using geometry shaders: " << geometryShadersEnabled() << endl;
-				stream << "Context sharing: " << contextSharingEnabled() << endl;
+				stream << "Using point sprites: " << OpenGLSceneRenderer::pointSpritesEnabled() << endl;
+				stream << "Using geometry shaders: " << OpenGLSceneRenderer::geometryShadersEnabled() << endl;
+				stream << "Context sharing: " << OpenGLSceneRenderer::contextSharingEnabled() << endl;
 				ex.appendDetailMessage(openGLReport);
 
 				viewport()->dataset()->viewportConfig()->suspendViewportUpdates();
@@ -841,8 +705,8 @@ void ViewportWindow::renderNow()
 	}
 	else {
 		Color backgroundColor = Viewport::viewportColor(ViewportSettings::COLOR_VIEWPORT_BKG);
-		OVITO_CHECK_OPENGL(glClearColor(backgroundColor.r(), backgroundColor.g(), backgroundColor.b(), 1));
-		OVITO_CHECK_OPENGL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
+		context()->functions()->glClearColor(backgroundColor.r(), backgroundColor.g(), backgroundColor.b(), 1);
+		context()->functions()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		_viewport->dataset()->viewportConfig()->updateViewports();
 	}
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)

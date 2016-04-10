@@ -134,33 +134,6 @@ public:
 	/// \param pos The position in where the context menu should be displayed.
 	void showViewportMenu(const QPoint& pos = QPoint(0,0));
 
-	/// Determines whether all viewport windows should share one GL context or not.
-	static bool contextSharingEnabled(bool forceDefaultSetting = false);
-
-	/// Determines whether OpenGL point sprites should be used or not.
-	static bool pointSpritesEnabled(bool forceDefaultSetting = false);
-
-	/// Determines whether OpenGL geometry shader programs should be used or not.
-	static bool geometryShadersEnabled(bool forceDefaultSetting = false);
-
-	/// Determines whether OpenGL geometry shader programs are supported by the hardware.
-	static bool geometryShadersSupported() { return _openglSupportsGeomShaders; }
-
-	/// Returns the vendor name of the OpenGL implementation in use.
-	static const QByteArray& openGLVendor() { return _openGLVendor; }
-
-	/// Returns the renderer name of the OpenGL implementation in use.
-	static const QByteArray& openGLRenderer() { return _openGLRenderer; }
-
-	/// Returns the version string of the OpenGL implementation in use.
-	static const QByteArray& openGLVersion() { return _openGLVersion; }
-
-	/// Returns the version of the OpenGL shading language supported by the system.
-	static const QByteArray& openGLSLVersion() { return _openGLSLVersion; }
-
-	/// Returns the current surface format used by the OpenGL implementation.
-	static const QSurfaceFormat& openglSurfaceFormat() { return _openglSurfaceFormat; }
-
 protected:
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
@@ -200,9 +173,6 @@ protected:
 
 	/// Handles mouse wheel events.
 	virtual void wheelEvent(QWheelEvent* event) override;
-
-	/// Determines the capabilities of the current OpenGL implementation.
-	static void determineOpenGLInfo();
 
 private:
 
@@ -269,24 +239,6 @@ private:
 
 	/// This renderer generates an offscreen rendering of the scene that allows picking of objects.
 	OORef<PickingSceneRenderer> _pickingRenderer;
-
-	/// The vendor of the OpenGL implementation in use.
-	static QByteArray _openGLVendor;
-
-	/// The renderer name of the OpenGL implementation in use.
-	static QByteArray _openGLRenderer;
-
-	/// The version string of the OpenGL implementation in use.
-	static QByteArray _openGLVersion;
-
-	/// The version of the OpenGL shading language supported by the system.
-	static QByteArray _openGLSLVersion;
-
-	/// The current surface format used by the OpenGL implementation.
-	static QSurfaceFormat _openglSurfaceFormat;
-
-	/// Indicates whether the current OpenGL implementation supports geometry shader programs.
-	static bool _openglSupportsGeomShaders;
 
 private:
 

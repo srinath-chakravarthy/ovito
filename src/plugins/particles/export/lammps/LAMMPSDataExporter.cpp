@@ -27,56 +27,10 @@
 #include <plugins/particles/objects/BondTypeProperty.h>
 #include <core/utilities/concurrent/ProgressDisplay.h>
 #include "LAMMPSDataExporter.h"
-#include "../ParticleExporterSettingsDialog.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, LAMMPSDataExporter, ParticleExporter);
-
-/******************************************************************************
-* Opens the export settings dialog for this exporter service.
-******************************************************************************/
-bool LAMMPSDataExporter::showSettingsDialog(const PipelineFlowState& state, QWidget* parent)
-{
-	if(atomStyle() == LAMMPSDataImporter::AtomStyle_Atomic) {
-		QSettings settings;
-		settings.beginGroup("viz/exporter/lammps/data/");
-		setAtomStyle((LAMMPSDataImporter::LAMMPSAtomStyle)settings.value("atom_style", (int)atomStyle()).toInt());
-		settings.endGroup();
-	}
-
-	ParticleExporterSettingsDialog dialog(parent, this, state);
-
-	QGroupBox* dataFormatGroupBox = new QGroupBox(tr("LAMMPS Atom Style"));
-	dialog.insertWidget(dataFormatGroupBox);
-
-	QHBoxLayout* layout = new QHBoxLayout(dataFormatGroupBox);
-	QComboBox* atomStyleBox = new QComboBox();
-	atomStyleBox->addItem("angle", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Angle));
-	atomStyleBox->addItem("atomic", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Atomic));
-	atomStyleBox->addItem("bond", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Bond));
-	atomStyleBox->addItem("charge", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Charge));
-	atomStyleBox->addItem("dipole", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Dipole));
-	atomStyleBox->addItem("full", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Full));
-	atomStyleBox->addItem("molecular", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Molecular));
-	atomStyleBox->setCurrentIndex(atomStyleBox->findData(QVariant::fromValue(atomStyle())));
-	layout->addWidget(atomStyleBox);
-	layout->addStretch(1);
-
-	if(dialog.exec() == QDialog::Accepted) {
-		setAtomStyle(atomStyleBox->itemData(atomStyleBox->currentIndex()).value<LAMMPSDataImporter::LAMMPSAtomStyle>());
-
-		// Remember the selected atom style for the next time.
-		QSettings settings;
-		settings.beginGroup("viz/exporter/lammps/data/");
-		settings.setValue("atom_style", (int)atomStyle());
-		settings.endGroup();
-
-		return true;
-	}
-	return false;
-
-}
 
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2015) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,115 +19,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_TRAJECTORY_DISPLAY_H
-#define __OVITO_TRAJECTORY_DISPLAY_H
+#ifndef __OVITO_TRAJECTORY_DISPLAY_EDITOR_H
+#define __OVITO_TRAJECTORY_DISPLAY_EDITOR_H
 
-#include <plugins/particles/Particles.h>
-#include <core/scene/objects/DisplayObject.h>
-#include <core/scene/objects/WeakVersionedObjectReference.h>
-#include <core/rendering/SceneRenderer.h>
+#include <plugins/particles/gui/ParticlesGui.h>
 #include <gui/properties/PropertiesEditor.h>
-#include "TrajectoryObject.h"
 
-namespace Ovito { namespace Particles {
-
-/**
- * \brief A display object for particle trajectories.
- */
-class OVITO_PARTICLES_EXPORT TrajectoryDisplay : public DisplayObject
-{
-public:
-
-	/// \brief Constructor.
-	Q_INVOKABLE TrajectoryDisplay(DataSet* dataset);
-
-	/// \brief Renders the associated data object.
-	virtual void render(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState, SceneRenderer* renderer, ObjectNode* contextNode) override;
-
-	/// \brief Computes the display bounding box of the data object.
-	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
-
-	/// \brief Returns the display width of trajectory lines.
-	FloatType lineWidth() const { return _lineWidth; }
-
-	/// \brief Sets the display width of trajectory lines.
-	void setLineWidth(FloatType newWidth) { _lineWidth = newWidth; }
-
-	/// \brief Returns the selected shading mode for trajectory lines.
-	ArrowPrimitive::ShadingMode shadingMode() const { return _shadingMode; }
-
-	/// \brief Sets the shading mode for trajectory lines.
-	void setShadingMode(ArrowPrimitive::ShadingMode mode) { _shadingMode = mode; }
-
-	/// Returns the display color for trajectory lines.
-	const Color& lineColor() const { return _lineColor; }
-
-	/// Sets the display color for trajectory lines.
-	void setLineColor(const Color& color) { _lineColor = color; }
-
-	/// Returns the whether the trajectory lines are rendered only up to the current animation time.
-	bool showUpToCurrentTime() const { return _showUpToCurrentTime; }
-
-	/// Sets the whether the trajectory lines are rendered only up to the current animation time.
-	void setShowUpToCurrentTime(bool enable) { _showUpToCurrentTime = enable; }
-
-public:
-
-    Q_PROPERTY(Ovito::ArrowPrimitive::ShadingMode shadingMode READ shadingMode WRITE setShadingMode);
-
-protected:
-
-	/// Controls the display width of trajectory lines.
-	PropertyField<FloatType> _lineWidth;
-
-	/// Controls the color of the trajectory lines.
-	PropertyField<Color, QColor> _lineColor;
-
-	/// Controls the whether the trajectory lines are rendered only up to the current animation time.
-	PropertyField<bool> _showUpToCurrentTime;
-
-	/// Controls the shading mode for lines.
-	PropertyField<ArrowPrimitive::ShadingMode, int> _shadingMode;
-
-	/// The buffered geometry used to render the trajectory lines.
-	std::shared_ptr<ArrowPrimitive> _segmentBuffer;
-
-	/// The buffered geometry used to render the trajectory line corners.
-	std::shared_ptr<ParticlePrimitive> _cornerBuffer;
-
-	/// This helper structure is used to detect any changes in the input data
-	/// that require updating the geometry buffers.
-	SceneObjectCacheHelper<
-		WeakVersionedOORef<TrajectoryObject>,			// The trajectory data object + revision number
-		FloatType,										// Line width
-		Color,											// Line color,
-		TimePoint										// End time
-	> _geometryCacheHelper;
-
-	/// The bounding box that includes all trajectories.
-	Box3 _cachedBoundingBox;
-
-	/// This helper structure is used to detect changes in the input data
-	/// that require recomputing the bounding box.
-	SceneObjectCacheHelper<
-		WeakVersionedOORef<TrajectoryObject>,			// The data object + revision number
-		FloatType										// Line width
-	> _boundingBoxCacheHelper;
-
-private:
-
-	Q_OBJECT
-	OVITO_OBJECT
-
-	Q_CLASSINFO("DisplayName", "Trajectory lines");
-
-	DECLARE_PROPERTY_FIELD(_lineWidth);
-	DECLARE_PROPERTY_FIELD(_lineColor);
-	DECLARE_PROPERTY_FIELD(_shadingMode);
-	DECLARE_PROPERTY_FIELD(_showUpToCurrentTime);
-};
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
+namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
  * \brief A properties editor for the TrajectoryDisplay class.
@@ -154,4 +52,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_TRAJECTORY_DISPLAY_H
+#endif // __OVITO_TRAJECTORY_DISPLAY_EDITOR_H

@@ -20,7 +20,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <gui/GUI.h>
-#include <gui/viewport/ViewportWindow.h>
+#include <opengl_renderer/OpenGLSceneRenderer.h>
 #include "GeneralSettingsPage.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -58,7 +58,7 @@ void GeneralSettingsPage::insertSettingsDialogPage(ApplicationSettingsDialog* se
 	layout2->addWidget(_overrideGLContextSharing, 0, 0);
 	_contextSharingMode = new QComboBox(openglGroupBox);
 	_contextSharingMode->setEnabled(false);
-	if(ViewportWindow::contextSharingEnabled(true)) {
+	if(OpenGLSceneRenderer::contextSharingEnabled(true)) {
 		_contextSharingMode->addItem(tr("Enable sharing (default)"));
 		_contextSharingMode->addItem(tr("Disable sharing"));
 	}
@@ -69,7 +69,7 @@ void GeneralSettingsPage::insertSettingsDialogPage(ApplicationSettingsDialog* se
 	layout2->addWidget(_contextSharingMode, 0, 1);
 	connect(_overrideGLContextSharing, &QCheckBox::toggled, _contextSharingMode, &QComboBox::setEnabled);
 	_overrideGLContextSharing->setChecked(settings.contains("display/share_opengl_context"));
-	_contextSharingMode->setCurrentIndex(ViewportWindow::contextSharingEnabled() ? 0 : 1);
+	_contextSharingMode->setCurrentIndex(OpenGLSceneRenderer::contextSharingEnabled() ? 0 : 1);
 
 	// OpenGL point sprites:
 	_overrideUseOfPointSprites = new QCheckBox(tr("Override usage of point sprites"), openglGroupBox);
@@ -77,7 +77,7 @@ void GeneralSettingsPage::insertSettingsDialogPage(ApplicationSettingsDialog* se
 	layout2->addWidget(_overrideUseOfPointSprites, 1, 0);
 	_pointSpriteMode = new QComboBox(openglGroupBox);
 	_pointSpriteMode->setEnabled(false);
-	if(ViewportWindow::pointSpritesEnabled(true)) {
+	if(OpenGLSceneRenderer::pointSpritesEnabled(true)) {
 		_pointSpriteMode->addItem(tr("Use point sprites (default)"));
 		_pointSpriteMode->addItem(tr("Don't use point sprites"));
 	}
@@ -88,7 +88,7 @@ void GeneralSettingsPage::insertSettingsDialogPage(ApplicationSettingsDialog* se
 	layout2->addWidget(_pointSpriteMode, 1, 1);
 	connect(_overrideUseOfPointSprites, &QCheckBox::toggled, _pointSpriteMode, &QComboBox::setEnabled);
 	_overrideUseOfPointSprites->setChecked(settings.contains("display/use_point_sprites"));
-	_pointSpriteMode->setCurrentIndex(ViewportWindow::pointSpritesEnabled() ? 0 : 1);
+	_pointSpriteMode->setCurrentIndex(OpenGLSceneRenderer::pointSpritesEnabled() ? 0 : 1);
 
 	// OpenGL geometry shaders:
 	_overrideUseOfGeometryShaders = new QCheckBox(tr("Override usage of geometry shaders"), openglGroupBox);
@@ -96,7 +96,7 @@ void GeneralSettingsPage::insertSettingsDialogPage(ApplicationSettingsDialog* se
 	layout2->addWidget(_overrideUseOfGeometryShaders, 2, 0);
 	_geometryShaderMode = new QComboBox(openglGroupBox);
 	_geometryShaderMode->setEnabled(false);
-	if(ViewportWindow::geometryShadersEnabled(true)) {
+	if(OpenGLSceneRenderer::geometryShadersEnabled(true)) {
 		_geometryShaderMode->addItem(tr("Use geometry shaders (default)"));
 		_geometryShaderMode->addItem(tr("Don't use geometry shaders"));
 	}
@@ -107,7 +107,7 @@ void GeneralSettingsPage::insertSettingsDialogPage(ApplicationSettingsDialog* se
 	layout2->addWidget(_geometryShaderMode, 2, 1);
 	connect(_overrideUseOfGeometryShaders, &QCheckBox::toggled, _geometryShaderMode, &QComboBox::setEnabled);
 	_overrideUseOfGeometryShaders->setChecked(settings.contains("display/use_geometry_shaders"));
-	_geometryShaderMode->setCurrentIndex(ViewportWindow::geometryShadersEnabled() ? 0 : 1);
+	_geometryShaderMode->setCurrentIndex(OpenGLSceneRenderer::geometryShadersEnabled() ? 0 : 1);
 
 	layout2->addWidget(new QLabel(tr("<p style=\"font-size: small; color: #686868;\">(Restart required for changes to take effect.)</p>")), 3, 0, 1, 2);
 

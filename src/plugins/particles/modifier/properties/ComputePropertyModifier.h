@@ -23,7 +23,6 @@
 #define __OVITO_COMPUTE_PROPERTY_MODIFIER_H
 
 #include <plugins/particles/Particles.h>
-#include <gui/widgets/general/AutocompleteLineEdit.h>
 #include <plugins/particles/util/ParticleExpressionEvaluator.h>
 #include "../AsynchronousParticleModifier.h"
 
@@ -278,57 +277,6 @@ private:
 	DECLARE_PROPERTY_FIELD(_neighborExpressions);
 	DECLARE_PROPERTY_FIELD(_cutoff);
 };
-
-OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-
-/**
- * A properties editor for the ComputePropertyModifier class.
- */
-class ComputePropertyModifierEditor : public ParticleModifierEditor
-{
-public:
-
-	/// Default constructor.
-	Q_INVOKABLE ComputePropertyModifierEditor() {}
-
-protected:
-
-	/// Creates the user interface controls for the editor.
-	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
-
-	/// This method is called when a reference target changes.
-	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
-
-protected Q_SLOTS:
-
-	/// Is called when the user has typed in an expression.
-	void onExpressionEditingFinished();
-
-	/// Updates the enabled/disabled status of the editor's controls.
-	void updateEditorFields(bool updateExpressions = true);
-
-private:
-
-	QWidget* rollout;
-	QGroupBox* expressionsGroupBox;
-	QList<AutocompleteLineEdit*> expressionBoxes;
-	QList<QLabel*> expressionBoxLabels;
-	QGridLayout* expressionsLayout;
-
-	QGroupBox* neighborExpressionsGroupBox;
-	QList<AutocompleteLineEdit*> neighborExpressionBoxes;
-	QList<QLabel*> neighborExpressionBoxLabels;
-	QGridLayout* neighborExpressionsLayout;
-
-	bool editorUpdatePending;
-
-	QLabel* variableNamesDisplay;
-
-	Q_OBJECT
-	OVITO_OBJECT
-};
-
-OVITO_END_INLINE_NAMESPACE
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
