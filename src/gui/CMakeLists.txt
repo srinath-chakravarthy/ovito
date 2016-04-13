@@ -43,6 +43,7 @@ SET(SourceFiles
 	dialogs/SaveImageFileDialog.cpp
 	dialogs/LoadImageFileDialog.cpp
 	dialogs/RemoteAuthenticationDialog.cpp
+	dialogs/FileExporterSettingsDialog.cpp
 	actions/ActionManager.cpp
 	actions/FileActions.cpp
 	actions/ViewportActions.cpp
@@ -50,6 +51,7 @@ SET(SourceFiles
 	actions/RenderActions.cpp
 	actions/ViewportModeAction.cpp
 	dataset/importexport/FileSourceEditor.cpp
+	dataset/importexport/FileImporterEditor.cpp
 	dataset/GuiDataSetContainer.cpp
 	widgets/general/RolloutContainer.cpp
 	widgets/general/SpinnerWidget.cpp

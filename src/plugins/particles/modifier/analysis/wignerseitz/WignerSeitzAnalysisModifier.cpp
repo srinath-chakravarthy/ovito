@@ -70,32 +70,6 @@ WignerSeitzAnalysisModifier::WignerSeitzAnalysisModifier(DataSet* dataset) : Asy
 }
 
 /******************************************************************************
-* Returns the source URL of the reference configuration.
-******************************************************************************/
-QUrl WignerSeitzAnalysisModifier::referenceSource() const
-{
-	if(FileSource* linkedFileObj = dynamic_object_cast<FileSource>(referenceConfiguration()))
-		return linkedFileObj->sourceUrl();
-	else
-		return QUrl();
-}
-
-/******************************************************************************
-* Sets the source URL of the reference configuration.
-******************************************************************************/
-void WignerSeitzAnalysisModifier::setReferenceSource(const QUrl& sourceUrl, const OvitoObjectType* importerType)
-{
-	if(FileSource* linkedFileObj = dynamic_object_cast<FileSource>(referenceConfiguration())) {
-		linkedFileObj->setSource(sourceUrl, importerType);
-	}
-	else {
-		OORef<FileSource> newObj(new FileSource(dataset()));
-		newObj->setSource(sourceUrl, importerType);
-		setReferenceConfiguration(newObj);
-	}
-}
-
-/******************************************************************************
 * Creates and initializes a computation engine that will compute the modifier's results.
 ******************************************************************************/
 std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> WignerSeitzAnalysisModifier::createEngine(TimePoint time, TimeInterval validityInterval)

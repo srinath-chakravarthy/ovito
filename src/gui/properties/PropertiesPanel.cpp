@@ -29,8 +29,8 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /******************************************************************************
 * Constructs the panel.
 ******************************************************************************/
-PropertiesPanel::PropertiesPanel(QWidget* parent) : 
-	RolloutContainer(parent)
+PropertiesPanel::PropertiesPanel(QWidget* parent, MainWindow* mainWindow) :
+	RolloutContainer(parent), _mainWindow(mainWindow)
 {
 }
 
@@ -68,12 +68,9 @@ void PropertiesPanel::setEditObject(RefTarget* newEditObject)
 	if(newEditObject) {
 		// Open new properties editor.
 		_editor = PropertiesEditor::create(newEditObject);
-		if(editor()) {
-			MainWindow* mainWindow = qobject_cast<MainWindow*>(window());
-			if(mainWindow) {
-				editor()->initialize(this, mainWindow, RolloutInsertionParameters());
-				editor()->setEditObject(newEditObject);
-			}
+		if(editor() && _mainWindow) {
+			editor()->initialize(this, _mainWindow, RolloutInsertionParameters());
+			editor()->setEditObject(newEditObject);
 		}
 	}
 }

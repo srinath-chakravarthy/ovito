@@ -24,7 +24,7 @@
 
 #include <core/Core.h>
 #include <core/rendering/TextPrimitive.h>
-#include "OpenGLTexture.h"
+#include <core/rendering/ImagePrimitive.h>
 #include "OpenGLSceneRenderer.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -42,28 +42,28 @@ public:
 	/// \brief Sets the text to be rendered.
 	virtual void setText(const QString& text) override {
 		if(text != this->text())
-			_needTextureUpdate = true;
+			_needImageUpdate = true;
 		TextPrimitive::setText(text);
 	}
 
 	/// Sets the text font.
 	virtual void setFont(const QFont& font) override {
 		if(font != this->font())
-			_needTextureUpdate = true;
+			_needImageUpdate = true;
 		TextPrimitive::setFont(font);
 	}
 
 	/// Sets the text color.
 	virtual void setColor(const ColorA& color) override {
 		if(color != this->color())
-			_needTextureUpdate = true;
+			_needImageUpdate = true;
 		TextPrimitive::setColor(color);
 	}
 
 	/// Sets the text background color.
 	virtual void setBackgroundColor(const ColorA& color) override {
 		if(color != this->backgroundColor())
-			_needTextureUpdate = true;
+			_needImageUpdate = true;
 		TextPrimitive::setBackgroundColor(color);
 	}
 
@@ -81,23 +81,14 @@ private:
 	/// The GL context group under which the GL vertex buffer has been created.
 	QOpenGLContextGroup* _contextGroup;
 
-	/// The OpenGL shader program used to render the text.
-	QOpenGLShaderProgram* _shader;
-
-	/// The OpenGL vertex buffer that stores the vertex positions.
-	QOpenGLBuffer _vertexBuffer;
-
-	/// The OpenGL texture that is used for rendering the text image.
-	OpenGLTexture _texture;
-
-	/// The texture image.
-	QImage _textureImage;
+	/// The pre-rendered text.
+	std::shared_ptr<ImagePrimitive> _imageBuffer;
 
 	/// The position of the text inside the texture images.
 	QPoint _textOffset;
 
-	/// Indicates that the texture needs to be updated.
-	bool _needTextureUpdate;
+	/// Indicates that the pre-rendered image needs to be updated.
+	bool _needImageUpdate;
 };
 
 OVITO_END_INLINE_NAMESPACE

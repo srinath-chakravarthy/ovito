@@ -41,8 +41,8 @@ public:
 	virtual const char* openBabelFormat() const = 0;
 
 	/// Creates an asynchronous loader object that loads the data for the given frame from the external file.
-	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame) override {
-		return std::make_shared<OpenBabelImportTask>(dataset()->container(), frame, isNewlySelectedFile(), openBabelFormat());
+	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame, bool isNewlySelectedFile) override {
+		return std::make_shared<OpenBabelImportTask>(dataset()->container(), frame, isNewlySelectedFile, openBabelFormat());
 	}
 
 private:

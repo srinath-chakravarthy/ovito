@@ -51,7 +51,7 @@ ViewportWindow::ViewportWindow(Viewport* owner, QWidget* parentWidget) :
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
 	_updatePending = false;
 
-	if(contextSharingEnabled()) {
+	if(OpenGLSceneRenderer::contextSharingEnabled()) {
 		// Get the master OpenGL context, which is managed by the main window.
 		OVITO_CHECK_POINTER(_mainWindow);
 		_context = _mainWindow->getOpenGLContext();
@@ -194,9 +194,9 @@ void ViewportWindow::renderViewportTitle()
 	_captionBuffer->setColor(ColorA(textColor));
 
 	QFontMetricsF metrics(_captionBuffer->font());
-	QPointF pos = QPointF(2, 2) * devicePixelRatio();
+	Point2 pos = Point2(2, 2) * (FloatType)devicePixelRatio();
 	_contextMenuArea = QRect(0, 0, std::max(metrics.width(_captionBuffer->text()), 30.0) + pos.x(), metrics.height() + pos.y());
-	_captionBuffer->renderWindow(_viewportRenderer, Point2(pos.x(), pos.y()), Qt::AlignLeft | Qt::AlignTop);
+	_captionBuffer->renderWindow(_viewportRenderer, pos, Qt::AlignLeft | Qt::AlignTop);
 }
 
 /******************************************************************************
@@ -257,7 +257,7 @@ void ViewportWindow::renderOrientationIndicator()
 	const FloatType tripodArrowSize = FloatType(0.17); 	// percentage of the above value.
 
 	// Turn off depth-testing.
-	OVITO_CHECK_OPENGL(_viewportRenderer->glfuncs()->glDisable(GL_DEPTH_TEST));
+	_viewportRenderer->setDepthTestEnabled(false);
 
 	// Setup projection matrix.
 	ViewProjectionParameters projParams = viewport()->projectionParams();
@@ -317,7 +317,7 @@ void ViewportWindow::renderOrientationIndicator()
 	}
 
 	// Restore old rendering attributes.
-	OVITO_CHECK_OPENGL(_viewportRenderer->glfuncs()->glEnable(GL_DEPTH_TEST));
+	_viewportRenderer->setDepthTestEnabled(true);
 }
 
 /******************************************************************************
@@ -626,7 +626,7 @@ void ViewportWindow::renderNow()
 	QSurfaceFormat format = context()->format();
 	// OpenGL in a VirtualBox machine Windows guest reports "2.1 Chromium 1.9" as version string, which is
 	// not correctly parsed by Qt. We have to workaround this.
-	if(qstrncmp((const char*)context()->functions()->glGetString(GL_VERSION), "2.1 ", 4) == 0) {
+	if(OpenGLSceneRenderer::openGLVersion().startsWith("2.1 ")) {
 		format.setMajorVersion(2);
 		format.setMinorVersion(1);
 	}
@@ -646,11 +646,11 @@ void ViewportWindow::renderNow()
 					"OpenGL renderer: %2\n"
 					"OpenGL version: %3.%4 (%5)\n\n"
 					"Ovito requires at least OpenGL version %6.%7.")
-					.arg(QString((const char*)context()->functions()->glGetString(GL_VENDOR)))
-					.arg(QString((const char*)context()->functions()->glGetString(GL_RENDERER)))
+					.arg(QString(OpenGLSceneRenderer::openGLVendor()))
+					.arg(QString(OpenGLSceneRenderer::openGLRenderer()))
 					.arg(format.majorVersion())
 					.arg(format.minorVersion())
-					.arg(QString((const char*)context()->functions()->glGetString(GL_VERSION)))
+					.arg(QString(OpenGLSceneRenderer::openGLVersion()))
 					.arg(OVITO_OPENGL_MINIMUM_VERSION_MAJOR)
 					.arg(OVITO_OPENGL_MINIMUM_VERSION_MINOR)
 				);
@@ -662,53 +662,60 @@ void ViewportWindow::renderNow()
 	}
 
 	OVITO_REPORT_OPENGL_ERRORS();
+
+	// Invalidate picking buffer every time the visible contents of the viewport change.
+	_pickingRenderer->reset();
+
 	if(!viewport()->dataset()->viewportConfig()->isSuspended()) {
+		try {
+			// Let the Viewport class do the actual rendering work.
+			viewport()->renderInteractive(_viewportRenderer);
+		}
+		catch(Exception& ex) {
+			if(ex.context() == nullptr) ex.setContext(viewport()->dataset());
+			ex.prependGeneralMessage(tr("An unexpected error occurred while rendering the viewport contents. The program will quit."));
 
-		// Invalidate picking buffer every time the visible contents of the viewport change.
-		_pickingRenderer->reset();
+			QString openGLReport;
+			QTextStream stream(&openGLReport, QIODevice::WriteOnly | QIODevice::Text);
+			stream << "OpenGL version: " << context()->format().majorVersion() << QStringLiteral(".") << context()->format().minorVersion() << endl;
+			stream << "OpenGL profile: " << (context()->format().profile() == QSurfaceFormat::CoreProfile ? "core" : (context()->format().profile() == QSurfaceFormat::CompatibilityProfile ? "compatibility" : "none")) << endl;
+			stream << "OpenGL vendor: " << QString(OpenGLSceneRenderer::openGLVendor()) << endl;
+			stream << "OpenGL renderer: " << QString(OpenGLSceneRenderer::openGLRenderer()) << endl;
+			stream << "OpenGL version string: " << QString(OpenGLSceneRenderer::openGLVersion()) << endl;
+			stream << "OpenGL shading language: " << QString(OpenGLSceneRenderer::openGLSLVersion()) << endl;
+			stream << "OpenGL shader programs: " << QOpenGLShaderProgram::hasOpenGLShaderPrograms() << endl;
+			stream << "OpenGL geometry shaders: " << QOpenGLShader::hasOpenGLShaders(QOpenGLShader::Geometry, context()) << endl;
+			stream << "Using point sprites: " << OpenGLSceneRenderer::pointSpritesEnabled() << endl;
+			stream << "Using geometry shaders: " << OpenGLSceneRenderer::geometryShadersEnabled() << endl;
+			stream << "Context sharing: " << OpenGLSceneRenderer::contextSharingEnabled() << endl;
+			ex.appendDetailMessage(openGLReport);
 
-		QSize vpSize = viewportWindowSize();
-		if(!vpSize.isEmpty()) {
-
-			// Set up OpenGL viewport.
-			context()->functions()->glViewport(0, 0, vpSize.width(), vpSize.height());
-
-			try {
-				// Let the Viewport class do the actual rendering work.
-				viewport()->renderInteractive(_viewportRenderer);
-			}
-			catch(Exception& ex) {
-				if(ex.context() == nullptr) ex.setContext(viewport()->dataset());
-				ex.prependGeneralMessage(tr("An unexpected error occurred while rendering the viewport contents. The program will quit."));
-
-				QString openGLReport;
-				QTextStream stream(&openGLReport, QIODevice::WriteOnly | QIODevice::Text);
-				stream << "OpenGL version: " << context()->format().majorVersion() << QStringLiteral(".") << context()->format().minorVersion() << endl;
-				stream << "OpenGL profile: " << (context()->format().profile() == QSurfaceFormat::CoreProfile ? "core" : (context()->format().profile() == QSurfaceFormat::CompatibilityProfile ? "compatibility" : "none")) << endl;
-				stream << "OpenGL vendor: " << QString((const char*)context()->functions()->glGetString(GL_VENDOR)) << endl;
-				stream << "OpenGL renderer: " << QString((const char*)context()->functions()->glGetString(GL_RENDERER)) << endl;
-				stream << "OpenGL version string: " << QString((const char*)context()->functions()->glGetString(GL_VERSION)) << endl;
-				stream << "OpenGL shading language: " << QString((const char*)context()->functions()->glGetString(GL_SHADING_LANGUAGE_VERSION)) << endl;
-				stream << "OpenGL shader programs: " << QOpenGLShaderProgram::hasOpenGLShaderPrograms() << endl;
-				stream << "OpenGL geometry shaders: " << QOpenGLShader::hasOpenGLShaders(QOpenGLShader::Geometry, context()) << endl;
-				stream << "Using point sprites: " << OpenGLSceneRenderer::pointSpritesEnabled() << endl;
-				stream << "Using geometry shaders: " << OpenGLSceneRenderer::geometryShadersEnabled() << endl;
-				stream << "Context sharing: " << OpenGLSceneRenderer::contextSharingEnabled() << endl;
-				ex.appendDetailMessage(openGLReport);
-
-				viewport()->dataset()->viewportConfig()->suspendViewportUpdates();
-				QCoreApplication::removePostedEvents(nullptr, 0);
-				ex.showError();
-				QCoreApplication::instance()->quit();
-			}
+			viewport()->dataset()->viewportConfig()->suspendViewportUpdates();
+			QCoreApplication::removePostedEvents(nullptr, 0);
+			ex.showError();
+			QCoreApplication::instance()->quit();
 		}
 	}
 	else {
+		// When viewport updates are disabled, just clear the frame buffer with the background color.
 		Color backgroundColor = Viewport::viewportColor(ViewportSettings::COLOR_VIEWPORT_BKG);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 3, 0)
 		context()->functions()->glClearColor(backgroundColor.r(), backgroundColor.g(), backgroundColor.b(), 1);
 		context()->functions()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+#else
+		::glClearColor(backgroundColor.r(), backgroundColor.g(), backgroundColor.b(), 1);
+		::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+#endif
+		// Make sure viewport is refreshed once updates are enables again.
 		_viewport->dataset()->viewportConfig()->updateViewports();
 	}
+
+	// If viewport updates are current disables, make sure the viewports will be refreshed
+	// as soon as updates are enabled again.
+	if(viewport()->dataset()->viewportConfig()->isSuspended()) {
+		_viewport->dataset()->viewportConfig()->updateViewports();
+	}
+
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
 	context()->swapBuffers(this);
 #endif

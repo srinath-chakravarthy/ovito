@@ -500,15 +500,15 @@ void OpenGLParticlePrimitive::renderPointSprites(OpenGLSceneRenderer* renderer)
 	OVITO_ASSERT(_positionsBuffers.front().verticesPerElement() == 1);
 
 	// Let the vertex shader compute the point size.
-	OVITO_CHECK_OPENGL(glEnable(GL_VERTEX_PROGRAM_POINT_SIZE));
+	OVITO_CHECK_OPENGL(renderer->glEnable(GL_VERTEX_PROGRAM_POINT_SIZE));
 
 	// Enable point sprites when using the compatibility OpenGL profile.
 	// In the core profile, they are already enabled by default.
 	if(renderer->glformat().profile() != QSurfaceFormat::CoreProfile) {
-		OVITO_CHECK_OPENGL(glEnable(GL_POINT_SPRITE));
+		OVITO_CHECK_OPENGL(renderer->glEnable(GL_POINT_SPRITE));
 
 		// Specify point sprite texture coordinate replacement mode.
-		glTexEnvf(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
+		renderer->glTexEnvf(GL_POINT_SPRITE, GL_COORD_REPLACE, GL_TRUE);
 	}
 
 	if(particleShape() == SphericalShape && shadingMode() == NormalShading && !renderer->isPicking())
@@ -521,7 +521,7 @@ void OpenGLParticlePrimitive::renderPointSprites(OpenGLSceneRenderer* renderer)
 
 	// This is how our point sprite's size will be modified based on the distance from the viewer.
 	GLint viewportCoords[4];
-	glGetIntegerv(GL_VIEWPORT, viewportCoords);
+	renderer->glGetIntegerv(GL_VIEWPORT, viewportCoords);
 	float param = renderer->projParams().projectionMatrix(1,1) * viewportCoords[3];
 
 	if(renderer->isCoreProfile() == false) {
@@ -531,7 +531,7 @@ void OpenGLParticlePrimitive::renderPointSprites(OpenGLSceneRenderer* renderer)
 			distanceAttenuation = std::array<float,3>{{ 0.0f, 0.0f, 1.0f / (param * param) }};
 		else
 			distanceAttenuation = std::array<float,3>{{ 1.0f / param, 0.0f, 0.0f }};
-		OVITO_CHECK_OPENGL(glPointSize(1));
+		OVITO_CHECK_OPENGL(renderer->glPointSize(1));
 		OVITO_CHECK_OPENGL(renderer->glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION, distanceAttenuation.data()));
 	}
 
@@ -540,9 +540,9 @@ void OpenGLParticlePrimitive::renderPointSprites(OpenGLSceneRenderer* renderer)
 	shader->setUniformValue("modelview_matrix", (QMatrix4x4)renderer->modelViewTM());
 
 	if(!renderer->isPicking() && translucentParticles()) {
-		glEnable(GL_BLEND);
-		renderer->glfuncs()->glBlendEquation(GL_FUNC_ADD);
-		renderer->glfuncs()->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+		renderer->glEnable(GL_BLEND);
+		renderer->glBlendEquation(GL_FUNC_ADD);
+		renderer->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 	}
 
 	GLint pickingBaseID = 0;
@@ -569,7 +569,7 @@ void OpenGLParticlePrimitive::renderPointSprites(OpenGLSceneRenderer* renderer)
 			primitiveIndices.create(QOpenGLBuffer::StaticDraw, particleCount());
 			primitiveIndices.fill(determineRenderingOrder(renderer).data());
 			primitiveIndices.oglBuffer().bind();
-			OVITO_CHECK_OPENGL(glDrawElements(GL_POINTS, particleCount(), GL_UNSIGNED_INT, nullptr));
+			OVITO_CHECK_OPENGL(renderer->glDrawElements(GL_POINTS, particleCount(), GL_UNSIGNED_INT, nullptr));
 			primitiveIndices.oglBuffer().release();
 		}
 		else {
@@ -589,12 +589,12 @@ void OpenGLParticlePrimitive::renderPointSprites(OpenGLSceneRenderer* renderer)
 
 	OVITO_CHECK_OPENGL(glDisable(GL_VERTEX_PROGRAM_POINT_SIZE));
 	if(!renderer->isPicking() && translucentParticles()) {
-		glDisable(GL_BLEND);
+		renderer->glDisable(GL_BLEND);
 	}
 
 	// Disable point sprites again.
 	if(renderer->glformat().profile() != QSurfaceFormat::CoreProfile)
-		OVITO_CHECK_OPENGL(glDisable(GL_POINT_SPRITE));
+		OVITO_CHECK_OPENGL(renderer->glDisable(GL_POINT_SPRITE));
 
 	if(particleShape() == SphericalShape && shadingMode() == NormalShading && !renderer->isPicking())
 		deactivateBillboardTexture(renderer);
@@ -615,8 +615,8 @@ void OpenGLParticlePrimitive::renderBoxes(OpenGLSceneRenderer* renderer)
 		renderer->throwException(QStringLiteral("Failed to bind OpenGL shader program."));
 
 	// Need to render only the front facing sides of the cubes.
-	glCullFace(GL_BACK);
-	glEnable(GL_CULL_FACE);
+	renderer->glCullFace(GL_BACK);
+	renderer->glEnable(GL_CULL_FACE);
 
 	if(!_usingGeometryShader) {
 		// This is to draw the cube with a single triangle strip.
@@ -671,14 +671,14 @@ void OpenGLParticlePrimitive::renderBoxes(OpenGLSceneRenderer* renderer)
 	shader->setUniformValue("is_perspective", renderer->projParams().isPerspective);
 
 	GLint viewportCoords[4];
-	glGetIntegerv(GL_VIEWPORT, viewportCoords);
+	renderer->glGetIntegerv(GL_VIEWPORT, viewportCoords);
 	shader->setUniformValue("viewport_origin", (float)viewportCoords[0], (float)viewportCoords[1]);
 	shader->setUniformValue("inverse_viewport_size", 2.0f / (float)viewportCoords[2], 2.0f / (float)viewportCoords[3]);
 
 	if(!renderer->isPicking() && translucentParticles()) {
-		glEnable(GL_BLEND);
-		renderer->glfuncs()->glBlendEquation(GL_FUNC_ADD);
-		renderer->glfuncs()->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+		renderer->glEnable(GL_BLEND);
+		renderer->glBlendEquation(GL_FUNC_ADD);
+		renderer->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 	}
 
 	GLint pickingBaseID = 0;
@@ -712,12 +712,12 @@ void OpenGLParticlePrimitive::renderBoxes(OpenGLSceneRenderer* renderer)
 				primitiveIndices.create(QOpenGLBuffer::StaticDraw, particleCount());
 				primitiveIndices.fill(determineRenderingOrder(renderer).data());
 				primitiveIndices.oglBuffer().bind();
-				OVITO_CHECK_OPENGL(glDrawElements(GL_POINTS, particleCount(), GL_UNSIGNED_INT, nullptr));
+				OVITO_CHECK_OPENGL(renderer->glDrawElements(GL_POINTS, particleCount(), GL_UNSIGNED_INT, nullptr));
 				primitiveIndices.oglBuffer().release();
 			}
 			else {
 				// By default, render particles in arbitrary order.
-				OVITO_CHECK_OPENGL(glDrawArrays(GL_POINTS, 0, chunkSize));
+				OVITO_CHECK_OPENGL(renderer->glDrawArrays(GL_POINTS, 0, chunkSize));
 			}
 		}
 		else {
@@ -765,7 +765,7 @@ void OpenGLParticlePrimitive::renderBoxes(OpenGLSceneRenderer* renderer)
 	}
 
 	if(!renderer->isPicking())
-		glDisable(GL_BLEND);
+		renderer->glDisable(GL_BLEND);
 	else
 		renderer->deactivateVertexIDs(shader);
 
@@ -788,8 +788,8 @@ void OpenGLParticlePrimitive::renderImposters(OpenGLSceneRenderer* renderer)
 		activateBillboardTexture(renderer);
 
 	// Need to render only the front facing sides.
-	glCullFace(GL_BACK);
-	glEnable(GL_CULL_FACE);
+	renderer->glCullFace(GL_BACK);
+	renderer->glEnable(GL_CULL_FACE);
 
 	if(!_usingGeometryShader) {
 		// The texture coordinates of a quad made of two triangles.
@@ -806,9 +806,9 @@ void OpenGLParticlePrimitive::renderImposters(OpenGLSceneRenderer* renderer)
 	shader->setUniformValue("modelviewprojection_matrix", (QMatrix4x4)(renderer->projParams().projectionMatrix * renderer->modelViewTM()));
 
 	if(!renderer->isPicking() && translucentParticles()) {
-		glEnable(GL_BLEND);
-		renderer->glfuncs()->glBlendEquation(GL_FUNC_ADD);
-		renderer->glfuncs()->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+		renderer->glEnable(GL_BLEND);
+		renderer->glBlendEquation(GL_FUNC_ADD);
+		renderer->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 	}
 
 	GLint pickingBaseID = 0;
@@ -841,7 +841,7 @@ void OpenGLParticlePrimitive::renderImposters(OpenGLSceneRenderer* renderer)
 				primitiveIndices.create(QOpenGLBuffer::StaticDraw, particleCount());
 				primitiveIndices.fill(determineRenderingOrder(renderer).data());
 				primitiveIndices.oglBuffer().bind();
-				OVITO_CHECK_OPENGL(glDrawElements(GL_POINTS, particleCount(), GL_UNSIGNED_INT, nullptr));
+				OVITO_CHECK_OPENGL(renderer->glDrawElements(GL_POINTS, particleCount(), GL_UNSIGNED_INT, nullptr));
 				primitiveIndices.oglBuffer().release();
 			}
 			else {
@@ -862,12 +862,12 @@ void OpenGLParticlePrimitive::renderImposters(OpenGLSceneRenderer* renderer)
 					std::iota(p, p + verticesPerElement, indices[i]*verticesPerElement);
 				primitiveIndices.unmap();
 				primitiveIndices.oglBuffer().bind();
-				OVITO_CHECK_OPENGL(glDrawElements(GL_TRIANGLES, particleCount() * verticesPerElement, GL_UNSIGNED_INT, nullptr));
+				OVITO_CHECK_OPENGL(renderer->glDrawElements(GL_TRIANGLES, particleCount() * verticesPerElement, GL_UNSIGNED_INT, nullptr));
 				primitiveIndices.oglBuffer().release();
 			}
 			else {
 				// By default, render particles in arbitrary order.
-				OVITO_CHECK_OPENGL(glDrawArrays(GL_TRIANGLES, 0, chunkSize * verticesPerElement));
+				OVITO_CHECK_OPENGL(renderer->glDrawArrays(GL_TRIANGLES, 0, chunkSize * verticesPerElement));
 			}
 		}
 
@@ -881,7 +881,7 @@ void OpenGLParticlePrimitive::renderImposters(OpenGLSceneRenderer* renderer)
 	shader->release();
 
 	if(!renderer->isPicking() && translucentParticles())
-		glDisable(GL_BLEND);
+		renderer->glDisable(GL_BLEND);
 
 	if(particleShape() == SphericalShape && shadingMode() == NormalShading && !renderer->isPicking())
 		deactivateBillboardTexture(renderer);
@@ -939,7 +939,7 @@ void OpenGLParticlePrimitive::initializeBillboardTexture(OpenGLSceneRenderer* re
 	for(int mipmapLevel = 0; mipmapLevel < BILLBOARD_TEXTURE_LEVELS; mipmapLevel++) {
 		int resolution = (1 << (BILLBOARD_TEXTURE_LEVELS - mipmapLevel - 1));
 
-		OVITO_CHECK_OPENGL(glTexImage2D(GL_TEXTURE_2D, mipmapLevel, GL_RGBA,
+		OVITO_CHECK_OPENGL(renderer->glTexImage2D(GL_TEXTURE_2D, mipmapLevel, GL_RGBA,
 				resolution, resolution, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureImages[mipmapLevel].data()));
 	}
 }
@@ -957,15 +957,15 @@ void OpenGLParticlePrimitive::activateBillboardTexture(OpenGLSceneRenderer* rend
 	// Enable texture mapping when using compatibility OpenGL.
 	// In the core profile, this is already enabled by default.
 	if(renderer->isCoreProfile() == false)
-		OVITO_CHECK_OPENGL(glEnable(GL_TEXTURE_2D));
+		OVITO_CHECK_OPENGL(renderer->glEnable(GL_TEXTURE_2D));
 
 	_billboardTexture.bind();
 
-	OVITO_CHECK_OPENGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST));
-	OVITO_CHECK_OPENGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+	OVITO_CHECK_OPENGL(renderer->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST));
+	OVITO_CHECK_OPENGL(renderer->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
 
 	OVITO_STATIC_ASSERT(BILLBOARD_TEXTURE_LEVELS >= 3);
-	OVITO_CHECK_OPENGL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD, BILLBOARD_TEXTURE_LEVELS - 3));
+	OVITO_CHECK_OPENGL(renderer->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD, BILLBOARD_TEXTURE_LEVELS - 3));
 }
 
 /******************************************************************************
@@ -975,7 +975,7 @@ void OpenGLParticlePrimitive::deactivateBillboardTexture(OpenGLSceneRenderer* re
 {
 	// Disable texture mapping again when not using core profile.
 	if(renderer->isCoreProfile() == false)
-		OVITO_CHECK_OPENGL(glDisable(GL_TEXTURE_2D));
+		OVITO_CHECK_OPENGL(renderer->glDisable(GL_TEXTURE_2D));
 }
 
 /******************************************************************************

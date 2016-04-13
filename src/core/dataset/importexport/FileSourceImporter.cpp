@@ -74,7 +74,7 @@ void FileSourceImporter::requestFramesUpdate()
 						if(obj->loadedFrameIndex() >= 0 && obj->loadedFrameIndex() < obj->frames().size()) {
 							QUrl currentUrl = obj->frames()[obj->loadedFrameIndex()].sourceFile;
 							if(currentUrl != obj->sourceUrl()) {
-								obj->setSource(currentUrl, this, false);
+								obj->setSource(currentUrl, this, true);
 								continue;
 							}
 						}
@@ -117,7 +117,7 @@ bool FileSourceImporter::isReplaceExistingPossible(const QUrl& sourceUrl)
 * Return false if the import has been aborted by the user.
 * Throws an exception when the import has failed.
 ******************************************************************************/
-bool FileSourceImporter::importFile(const QUrl& sourceUrl, ImportMode importMode)
+bool FileSourceImporter::importFile(const QUrl& sourceUrl, ImportMode importMode, bool autodetectFileSequences)
 {
 	OORef<FileSource> existingFileSource;
 	ObjectNode* existingNode = nullptr;
@@ -162,11 +162,12 @@ bool FileSourceImporter::importFile(const QUrl& sourceUrl, ImportMode importMode
 		if(importMode == AddToScene)
 			fileSource->setAdjustAnimationIntervalEnabled(false);
 	}
-	else
+	else {
 		fileSource = existingFileSource;
+	}
 
 	// Set the input location and importer.
-	if(!fileSource->setSource(sourceUrl, this, false)) {
+	if(!fileSource->setSource(sourceUrl, this, autodetectFileSequences)) {
 		return false;
 	}
 
@@ -181,7 +182,7 @@ bool FileSourceImporter::importFile(const QUrl& sourceUrl, ImportMode importMode
 			node = new ObjectNode(dataset());
 			node->setDataProvider(fileSource);
 
-			// Let the import subclass customize the node.
+			// Let the importer subclass customize the node.
 			prepareSceneNode(node, fileSource);
 		}
 
@@ -230,7 +231,7 @@ Future<QVector<FileSourceImporter::Frame>> FileSourceImporter::findWildcardMatch
 	if(pattern.contains('*') == false && pattern.contains('?') == false) {
 
 		// It's not a wildcard pattern. Register just a single frame.
-		frames.push_back({ sourceUrl, 0, 0, fileInfo.lastModified(), fileInfo.fileName() });
+		frames.push_back(Frame(sourceUrl, 0, 0, fileInfo.lastModified(), fileInfo.fileName()));
 
 	}
 	else {
@@ -305,10 +306,10 @@ Future<QVector<FileSourceImporter::Frame>> FileSourceImporter::findWildcardMatch
 				url = QUrl::fromLocalFile(fileInfo.filePath());
 			else
 				url.setPath(fileInfo.filePath());
-			frames.push_back({
+			frames.push_back(Frame(
 				url, 0, 0,
 				isLocalPath ? fileInfo.lastModified() : QDateTime(),
-				iter });
+				iter));
 		}
 	}
 

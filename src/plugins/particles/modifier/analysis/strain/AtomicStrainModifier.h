@@ -47,12 +47,6 @@ public:
 	/// used for calculating the displacement vectors.
 	void setReferenceConfiguration(DataObject* refConf) { _referenceObject = refConf; }
 
-	/// Returns the source URL of the reference configuration.
-	QUrl referenceSource() const;
-
-	/// Sets the source URL of the reference configuration.
-	void setReferenceSource(const QUrl& sourceUrl, const OvitoObjectType* importerType = nullptr);
-
 	/// Returns whether the reference configuration is shown instead of the current configuration.
 	bool referenceShown() const { return _referenceShown; }
 

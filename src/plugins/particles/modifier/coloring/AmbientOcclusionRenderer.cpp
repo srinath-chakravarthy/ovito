@@ -61,9 +61,9 @@ bool AmbientOcclusionRenderer::startRender(DataSet* dataset, RenderSettings* set
 				"OpenGL Renderer: %2\n"
 				"OpenGL Version: %3\n\n"
 				"Ovito requires OpenGL version %4.%5 or higher.")
-				.arg(QString((const char*)_offscreenContext->functions()->glGetString(GL_VENDOR)))
-				.arg(QString((const char*)_offscreenContext->functions()->glGetString(GL_RENDERER)))
-				.arg(QString((const char*)_offscreenContext->functions()->glGetString(GL_VERSION)))
+				.arg(QString(OpenGLSceneRenderer::openGLVendor()))
+				.arg(QString(OpenGLSceneRenderer::openGLRenderer()))
+				.arg(QString(OpenGLSceneRenderer::openGLVersion()))
 				.arg(OVITO_OPENGL_MINIMUM_VERSION_MAJOR)
 				.arg(OVITO_OPENGL_MINIMUM_VERSION_MINOR)
 				);
@@ -100,7 +100,7 @@ void AmbientOcclusionRenderer::beginFrame(TimePoint time, const ViewProjectionPa
 
 	// Clear buffer.
 	clearFrameBuffer();
-	_offscreenContext->functions()->glEnable(GL_DEPTH_TEST);
+	setDepthTestEnabled(true);
 }
 
 /******************************************************************************
@@ -115,10 +115,10 @@ void AmbientOcclusionRenderer::endFrame()
 	QSize size = _framebufferObject->size();
 	if(_image.isNull() || _image.size() != size)
 		_image = QImage(size, QImage::Format_ARGB32);
-	while(_offscreenContext->functions()->glGetError() != GL_NO_ERROR);
-	_offscreenContext->functions()->glReadPixels(0, 0, size.width(), size.height(), GL_BGRA, GL_UNSIGNED_BYTE, _image.bits());
-	if(_offscreenContext->functions()->glGetError() != GL_NO_ERROR) {
-		_offscreenContext->functions()->glReadPixels(0, 0, size.width(), size.height(), GL_RGBA, GL_UNSIGNED_BYTE, _image.bits());
+	while(glGetError() != GL_NO_ERROR);
+	glReadPixels(0, 0, size.width(), size.height(), GL_BGRA, GL_UNSIGNED_BYTE, _image.bits());
+	if(glGetError() != GL_NO_ERROR) {
+		glReadPixels(0, 0, size.width(), size.height(), GL_RGBA, GL_UNSIGNED_BYTE, _image.bits());
 		_image = _image.rgbSwapped();
 	}
 

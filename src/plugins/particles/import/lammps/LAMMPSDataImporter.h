@@ -79,10 +79,6 @@ public:
 	/// Returns the title of this object.
 	virtual QString objectTitle() override { return tr("LAMMPS Data"); }
 
-	/// This method is called by the FileSource each time a new source
-	/// file has been selected by the user.
-	virtual bool inspectNewFile(FileSource* obj, int frameIndex) override;
-
 	/// Returns the LAMMPS atom style used in the data file.
 	LAMMPSAtomStyle atomStyle() const { return _atomStyle; }
 
@@ -90,9 +86,13 @@ public:
 	void setAtomStyle(LAMMPSAtomStyle atomStyle) { _atomStyle = atomStyle; }
 
 	/// Creates an asynchronous loader object that loads the data for the given frame from the external file.
-	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame) override {
-		return std::make_shared<LAMMPSDataImportTask>(dataset()->container(), frame, isNewlySelectedFile(), atomStyle());
+	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame, bool isNewlySelectedFile) override {
+		qDebug() << "Starting parsing file:" << atomStyle() << this;
+		return std::make_shared<LAMMPSDataImportTask>(dataset()->container(), frame, isNewlySelectedFile, atomStyle());
 	}
+
+	/// Inspects the header of the given file and returns the detected LAMMPS atom style.
+	std::pair<LAMMPSAtomStyle,bool> inspectFileHeader(const Frame& frame);
 
 private:
 

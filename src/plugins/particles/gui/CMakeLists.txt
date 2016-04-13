@@ -68,7 +68,14 @@ SET(SourceFiles
 	util/ParticlePropertyParameterUI.cpp
 	util/CreateTrajectoryApplet.cpp
 	util/ParticleSettingsPage.cpp
-	export/ParticleExporterSettingsDialog.cpp
+	import/InputColumnMappingDialog.cpp
+	import/lammps/LAMMPSTextDumpImporterEditor.cpp
+	import/lammps/LAMMPSBinaryDumpImporterEditor.cpp
+	import/lammps/LAMMPSDataImporterEditor.cpp
+	import/xyz/XYZImporterEditor.cpp
+	export/FileColumnParticleExporterEditor.cpp
+	export/lammps/LAMMPSDataExporterEditor.cpp
+	export/xyz/XYZExporterEditor.cpp
 )
 
 # Compile resources.

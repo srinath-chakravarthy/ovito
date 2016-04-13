@@ -116,21 +116,6 @@ void ParticleImporter::propertyChanged(const PropertyFieldDescriptor& field)
 	FileSourceImporter::propertyChanged(field);
 }
 
-/******************************************************************************
-* This method is called by the FileSource each time a new source
-* file has been selected by the user.
-******************************************************************************/
-bool ParticleImporter::inspectNewFile(FileSource* obj, int frameIndex)
-{
-	if(!FileSourceImporter::inspectNewFile(obj, frameIndex))
-		return false;
-
-	// Set flag that this file is new.
-	_isNewFile = true;
-
-	return true;
-}
-
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace

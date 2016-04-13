@@ -65,7 +65,7 @@ public:
 	void setLoadParticles(bool enable) { _loadParticles = enable; }
 
 	/// Creates an asynchronous loader object that loads the data for the given frame from the external file.
-	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame) override {
+	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame, bool isNewlySelectedFile) override {
 		return std::make_shared<CrystalAnalysisFrameLoader>(dataset()->container(), frame, _loadParticles);
 	}
 

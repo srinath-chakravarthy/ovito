@@ -25,12 +25,14 @@
 #include <gui/dialogs/ApplicationSettingsDialog.h>
 #include <gui/dialogs/ImportFileDialog.h>
 #include <gui/dialogs/ImportRemoteFileDialog.h>
+#include <gui/dialogs/FileExporterSettingsDialog.h>
 #include <gui/utilities/concurrent/ProgressDialogAdapter.h>
 #include <opengl_renderer/OpenGLSceneRenderer.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/importexport/FileImporter.h>
 #include <core/dataset/importexport/FileExporter.h>
 #include <core/scene/SelectionSet.h>
+#include <core/animation/AnimationSettings.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)
 
@@ -355,6 +357,33 @@ void ActionManager::on_FileExport_triggered()
 		// Load user-defined default settings.
 		exporter->loadUserDefaults();
 
+		// Pass output filename to exporter.
+		exporter->setOutputFilename(exportFile);
+
+		// Wait until the scene is ready.
+		if(!_dataset->waitUntilSceneIsReady(tr("Waiting for running tasks to complete.")))
+			return;
+
+		// Pass data to be exported to exporter.
+		exporter->setOutputData(nodes);
+
+#if 0
+	 	// Iterate over all scene nodes to find an ObjectNode with a data pipeline.
+		PipelineFlowState state;
+		for(SceneNode* sceneNode : nodes) {
+			ObjectNode* node = dynamic_object_cast<ObjectNode>(sceneNode);
+			if(!node) continue;
+			state = node->evalPipeline(_dataset->animationSettings()->time());
+			if(!state.isEmpty())
+				break;
+		}
+#endif
+
+		// Let the user adjust the settings of the exporter.
+		FileExporterSettingsDialog settingsDialog(mainWindow(), exporter);
+		if(settingsDialog.exec() != QDialog::Accepted)
+			return;
+
 		// Show progress dialog.
 		QProgressDialog progressDialog(mainWindow());
 		progressDialog.setWindowModality(Qt::WindowModal);
@@ -364,7 +393,8 @@ void ActionManager::on_FileExport_triggered()
 		progressDialog.setValue(0);
 		ProgressDialogAdapter progressDisplay(&progressDialog);
 
-		exporter->exportToFile(nodes, exportFile, &progressDisplay);
+		// Let the exporter do its work.
+		exporter->exportNodes(&progressDisplay);
 	}
 	catch(const Exception& ex) {
 		ex.showError();

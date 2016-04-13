@@ -109,3 +109,6 @@ ENDIF()
 IF(OVITO_BUILD_GUI)
 	ADD_SUBDIRECTORY(gui)
 ENDIF()
+
+# Propagate list of plugins to parent scope.
+SET(OVITO_PLUGIN_LIST ${OVITO_PLUGIN_LIST} PARENT_SCOPE)

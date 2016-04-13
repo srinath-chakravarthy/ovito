@@ -42,18 +42,6 @@ SET_PROPERTY_FIELD_LABEL(LAMMPSTextDumpImporter, _useCustomColumnMapping, "Custo
 void LAMMPSTextDumpImporter::setCustomColumnMapping(const InputColumnMapping& mapping)
 {
 	_customColumnMapping = mapping;
-
-#if 0
-	if(Application::instance().guiMode()) {
-		// Remember the mapping for the next time.
-		QSettings settings;
-		settings.beginGroup("atomviz/io/columnmapping/");
-		settings.setValue(pluginClassDescriptor()->name(), mapping.toByteArray());
-		OVITO_ASSERT(settings.contains(pluginClassDescriptor()->name()));
-		settings.endGroup();
-	}
-#endif
-
 	notifyDependents(ReferenceEvent::TargetChanged);
 }
 
@@ -71,6 +59,18 @@ bool LAMMPSTextDumpImporter::checkFileFormat(QFileDevice& input, const QUrl& sou
 		return true;
 
 	return false;
+}
+
+/******************************************************************************
+* Inspects the header of the given file and returns the number of file columns.
+******************************************************************************/
+InputColumnMapping LAMMPSTextDumpImporter::inspectFileHeader(const Frame& frame)
+{
+	// Start task that inspects the file header to determine the number of data columns.
+	std::shared_ptr<LAMMPSTextDumpImportTask> inspectionTask = std::make_shared<LAMMPSTextDumpImportTask>(dataset()->container(), frame);
+	if(!dataset()->container()->taskManager().runTask(inspectionTask))
+		return InputColumnMapping();
+	return inspectionTask->columnMapping();
 }
 
 /******************************************************************************

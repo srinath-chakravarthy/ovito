@@ -92,6 +92,7 @@ namespace Ovito {
 			class ViewportModeAction;
 		OVITO_END_INLINE_NAMESPACE
 		OVITO_BEGIN_INLINE_NAMESPACE(Dialogs)
+			class FileExporterSettingsDialog;
 		OVITO_END_INLINE_NAMESPACE
 		OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 			class CoordinateDisplayWidget;

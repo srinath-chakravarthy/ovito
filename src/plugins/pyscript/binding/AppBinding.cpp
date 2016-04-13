@@ -94,12 +94,13 @@ BOOST_PYTHON_MODULE(PyScriptApp)
 	ovito_abstract_class<DataSet, RefTarget>(
 			"A container object holding all data associated with an OVITO program session. "
 			"It provides access to the scene data, the viewports, the current selection, and the animation settings. "
-			"Basically everything that would get saved in an OVITO file. "
+			"Basically everything that would get saved in an OVITO state file. "
 			"\n\n"
 			"There exists only one global instance of this class, which can be accessed via the :py:data:`ovito.dataset` module-level attribute.")
 		.add_property("scene_nodes", make_function(&DataSet::sceneRoot, return_value_policy<ovito_object_reference>()),
 				"A list-like object containing the :py:class:`~ovito.ObjectNode` instances that are part of the three-dimensional scene. "
-				"Only nodes in this list are visible in the viewports. You can add or remove nodes from this list.")
+				"Only nodes which are in this list are visible in the viewports. You can add or remove nodes from this list either by calling "
+				":py:meth:`ObjectNode.add_to_scene` and :py:meth:`ObjectNode.remove_from_scene` or by using the standard Python ``append()`` and ``del`` statements.")
 		.add_property("filePath", make_function(&DataSet::filePath, return_value_policy<copy_const_reference>()), &DataSet::setFilePath)
 		.add_property("anim", make_function(&DataSet::animationSettings, return_value_policy<ovito_object_reference>()),
 				"An :py:class:`~ovito.anim.AnimationSettings` object, which manages various animation-related settings in OVITO such as the number of frames, the current frame, playback speed etc.")

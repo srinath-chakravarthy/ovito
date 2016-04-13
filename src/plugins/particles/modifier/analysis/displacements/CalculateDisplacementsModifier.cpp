@@ -86,33 +86,6 @@ CalculateDisplacementsModifier::CalculateDisplacementsModifier(DataSet* dataset)
 	_vectorDisplay->setReverseArrowDirection(false);
 	_vectorDisplay->setArrowPosition(VectorDisplay::Head);
 }
-
-/******************************************************************************
-* Returns the source URL of the reference configuration.
-******************************************************************************/
-QUrl CalculateDisplacementsModifier::referenceSource() const
-{
-	if(FileSource* linkedFileObj = dynamic_object_cast<FileSource>(referenceConfiguration()))
-		return linkedFileObj->sourceUrl();
-	else
-		return QUrl();
-}
-
-/******************************************************************************
-* Sets the source URL of the reference configuration.
-******************************************************************************/
-void CalculateDisplacementsModifier::setReferenceSource(const QUrl& sourceUrl, const OvitoObjectType* importerType)
-{
-	if(FileSource* linkedFileObj = dynamic_object_cast<FileSource>(referenceConfiguration())) {
-		linkedFileObj->setSource(sourceUrl, importerType);
-	}
-	else {
-		OORef<FileSource> newObj(new FileSource(dataset()));
-		newObj->setSource(sourceUrl, importerType);
-		setReferenceConfiguration(newObj);
-	}
-}
-
 /******************************************************************************
 * Handles reference events sent by reference targets of this object.
 ******************************************************************************/

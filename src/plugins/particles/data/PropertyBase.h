@@ -61,6 +61,9 @@ public:
 	/// \brief Copy constructor.
 	PropertyBase(const PropertyBase& other);
 
+	/// \brief Destructor.
+	~PropertyBase();
+
 	/// \brief Gets the property's name.
 	/// \return The name of property.
 	const QString& name() const { return _name; }

@@ -521,6 +521,7 @@ void Viewport::renderInteractive(SceneRenderer* renderer)
 {
 	OVITO_ASSERT_MSG(!isRendering(), "Viewport::render()", "Viewport is already rendering.");
 	OVITO_ASSERT_MSG(!dataset()->viewportConfig()->isRendering(), "Viewport::render()", "Some other viewport is already rendering.");
+	OVITO_ASSERT(!dataset()->viewportConfig()->isSuspended());
 
 	QSize vpSize = windowSize();
 	if(vpSize.isEmpty())

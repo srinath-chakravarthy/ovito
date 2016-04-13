@@ -278,7 +278,7 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 		.add_property("loadParticles", &CAImporter::loadParticles, &CAImporter::setLoadParticles)
 	;
 
-	ovito_class<CAExporter, ParticleExporter>()
+	ovito_class<CAExporter, FileExporter>()
 		.add_property("export_mesh", &CAExporter::meshExportEnabled, &CAExporter::setMeshExportEnabled)
 	;
 

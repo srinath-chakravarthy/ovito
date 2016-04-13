@@ -49,9 +49,9 @@ data.add(bonds)
 # Create a node and insert it into the scene.
 node = ObjectNode()
 node.source = data
-dataset.scene_nodes.append(node)
+node.add_to_scene()
 
-# Select the new node and adjust cameras of all viewports to show everything.
+# Select the new node and adjust cameras of all viewports to show it.
 dataset.selected_node = node
 for vp in dataset.viewports:
     vp.zoom_all()

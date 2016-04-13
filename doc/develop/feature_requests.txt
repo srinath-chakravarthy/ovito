@@ -78,5 +78,6 @@ Scripting features:
 
 Documentation:
 
+- CA file format (112080995@njust.edu.cn)
 - Application settings dialog
 

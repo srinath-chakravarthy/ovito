@@ -68,37 +68,16 @@ bool LAMMPSDataImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceL
 }
 
 /******************************************************************************
-* This method is called by the FileSource each time a new source
-* file has been selected by the user.
+* Inspects the header of the given file and returns the detected LAMMPS atom style.
 ******************************************************************************/
-bool LAMMPSDataImporter::inspectNewFile(FileSource* obj, int frameIndex)
+std::pair<LAMMPSDataImporter::LAMMPSAtomStyle,bool> LAMMPSDataImporter::inspectFileHeader(const Frame& frame)
 {
-	if(!ParticleImporter::inspectNewFile(obj, frameIndex))
-		return false;
-
-	if(frameIndex < 0 || frameIndex >= obj->frames().size())
-		return false;
-
-	// Don't show any dialogs in console mode.
-	if(Application::instance().consoleMode())
-		return true;
-
-	// Start task that inspects the file to detect the LAMMPS atom style.
-	std::shared_ptr<LAMMPSDataImportTask> inspectionTask = std::make_shared<LAMMPSDataImportTask>(dataset()->container(), obj->frames()[frameIndex], true, atomStyle(), true);
+	// Start task that inspects the file header to determine the number of data columns.
+	std::shared_ptr<LAMMPSDataImportTask> inspectionTask = std::make_shared<LAMMPSDataImportTask>(dataset()->container(), frame, true, atomStyle(), true);
 	if(!dataset()->container()->taskManager().runTask(inspectionTask))
-		return false;
-
-	if(inspectionTask->atomStyle() == AtomStyle_Unknown) {
-#if 0
-		return showAtomStyleDialog(MainWindow::fromDataset(dataset()));
-#endif
-		return false;
-	}
-	else {
-		setAtomStyle(inspectionTask->atomStyle());
-	}
-
-	return true;
+		return std::make_pair(AtomStyle_Unknown, false);
+	else
+		return std::make_pair(inspectionTask->atomStyle(), true);
 }
 
 /******************************************************************************

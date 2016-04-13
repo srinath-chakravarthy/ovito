@@ -43,7 +43,7 @@ RenderCommandPage::RenderCommandPage(MainWindow* mainWindow, QWidget* parent) : 
 	toolbar->addAction(mainWindow->actionManager()->getAction(ACTION_RENDER_ACTIVE_VIEWPORT));
 
 	// Create the properties panel.
-	propertiesPanel = new PropertiesPanel(this);
+	propertiesPanel = new PropertiesPanel(this, mainWindow);
 	propertiesPanel->setFrameStyle(QFrame::NoFrame | QFrame::Plain);
 	layout->addWidget(propertiesPanel, 1);
 

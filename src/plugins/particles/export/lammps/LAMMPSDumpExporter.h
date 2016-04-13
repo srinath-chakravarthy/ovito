@@ -23,20 +23,19 @@
 #define __OVITO_LAMMPS_DUMP_FILE_EXPORTER_H
 
 #include <plugins/particles/Particles.h>
-#include "../ParticleExporter.h"
-#include "../OutputColumnMapping.h"
+#include "../FileColumnParticleExporter.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
 /**
  * \brief Exporter that writes the particles to a LAMMPS dump file.
  */
-class OVITO_PARTICLES_EXPORT LAMMPSDumpExporter : public ParticleExporter
+class OVITO_PARTICLES_EXPORT LAMMPSDumpExporter : public FileColumnParticleExporter
 {
 public:
 
 	/// \brief Constructs a new instance of this class.
-	Q_INVOKABLE LAMMPSDumpExporter(DataSet* dataset);
+	Q_INVOKABLE LAMMPSDumpExporter(DataSet* dataset) : FileColumnParticleExporter(dataset) {}
 
 	/// \brief Returns the file filter that specifies the files that can be exported by this service.
 	virtual QString fileFilter() override { return QStringLiteral("*"); }
@@ -44,25 +43,12 @@ public:
 	/// \brief Returns the filter description that is displayed in the drop-down box of the file dialog.
 	virtual QString fileFilterDescription() override { return tr("LAMMPS Dump File"); }
 
-	/// \brief Returns the mapping of particle properties to output file columns.
-	const OutputColumnMapping& columnMapping() const { return _columnMapping; }
-
-	/// \brief Sets the mapping of particle properties to output file columns.
-	void setColumnMapping(const OutputColumnMapping& mapping) { _columnMapping = mapping; }
-
-public:
-
-	Q_PROPERTY(Ovito::Particles::OutputColumnMapping columnMapping READ columnMapping WRITE setColumnMapping);
-
 protected:
 
 	/// \brief Writes the particles of one animation frame to the current output file.
-	virtual bool exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) override;
+	virtual bool exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) override;
 
 private:
-
-	/// The mapping particle properties to output file columns.
-	OutputColumnMapping _columnMapping;
 
 	Q_OBJECT
 	OVITO_OBJECT

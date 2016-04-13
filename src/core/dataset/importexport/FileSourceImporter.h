@@ -40,6 +40,13 @@ public:
 	/// \brief This data structure stores source information about an imported animation frame.
 	struct Frame {
 
+		/// Default constructor.
+		Frame() : byteOffset(0), lineNumber(0) {}
+
+		/// Initialization constructor.
+		Frame(const QUrl& url, qint64 offset = 0, int linenum = 0, const QDateTime& modTime = QDateTime(), const QString& name = QString())	:
+			sourceFile(url), byteOffset(offset), lineNumber(linenum), lastModificationTime(modTime), label(name) {}
+
 		/// The source file that contains the data of the animation frame.
 		QUrl sourceFile;
 
@@ -119,7 +126,7 @@ public:
 	virtual bool isReplaceExistingPossible(const QUrl& sourceUrl) override;
 
 	/// \brief Imports the given file into the scene.
-	virtual bool importFile(const QUrl& sourceUrl, ImportMode importMode) override;
+	virtual bool importFile(const QUrl& sourceUrl, ImportMode importMode, bool autodetectFileSequences) override;
 
 	//////////////////////////// Specific methods ////////////////////////////////
 
@@ -150,14 +157,8 @@ public:
 	/// \brief Sends a request to the FileSource owning this importer to refresh the animation frame sequence.
 	void requestFramesUpdate();
 
-	/// This method is called by the FileSource each time a new source
-	/// file has been selected by the user. The importer class may inspect
-	/// the new file at this point before it is actually loaded.
-	/// Returns false if the operation has been canceled by the user.
-	virtual bool inspectNewFile(FileSource* obj, int frameIndex) { return true; }
-
 	/// Creates an asynchronous loader object that loads the data for the given frame from the external file.
-	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame) = 0;
+	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame, bool isNewlySelectedFile) = 0;
 
 protected:
 

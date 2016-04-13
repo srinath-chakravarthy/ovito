@@ -27,21 +27,60 @@
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
 #include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
 #include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/scene/ObjectNode.h>
 #include "CAExporter.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, CAExporter, ParticleExporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, CAExporter, FileExporter);
 
 /******************************************************************************
-* Writes the particles of one animation frame to the current output file.
-******************************************************************************/
-bool CAExporter::exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
+ * This is called once for every output file to be written and before
+ * exportData() is called.
+ ****************************************************************************/
+bool CAExporter::openOutputFile(const QString& filePath, int numberOfFrames)
 {
+	OVITO_ASSERT(!_outputFile.isOpen());
+	OVITO_ASSERT(!_outputStream);
+
+	_outputFile.setFileName(filePath);
+	_outputStream.reset(new CompressedTextWriter(_outputFile));
+
+	return true;
+}
+
+/******************************************************************************
+ * This is called once for every output file written after exportData() has
+ * been called.
+ *****************************************************************************/
+void CAExporter::closeOutputFile(bool exportCompleted)
+{
+	_outputStream.reset();
+	if(_outputFile.isOpen())
+		_outputFile.close();
+
+	if(!exportCompleted)
+		_outputFile.remove();
+}
+
+/******************************************************************************
+* Writes the data of one animation frame to the current output file.
+******************************************************************************/
+bool CAExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
+{
+	ObjectNode* objectNode = dynamic_object_cast<ObjectNode>(sceneNode);
+	if(!objectNode)
+		throwException(tr("The scene node to be exported is not an object node."));
+
+	// Evaluate pipeline of object node.
+	const PipelineFlowState& state = objectNode->evalPipeline(time);
+	if(state.isEmpty())
+		throwException(tr("The object to be exported does not contain any data."));
+
 	// Get simulation cell info.
 	SimulationCellObject* simulationCell = state.findObject<SimulationCellObject>();
 	if(!simulationCell)
-		throw Exception(tr("Dataset to be exported contains no simulation cell. Cannot write CA file."));
+		throwException(tr("Dataset to be exported contains no simulation cell. Cannot write CA file."));
 
 	// Get dislocation lines.
 	DislocationNetworkObject* dislocationObj = state.findObject<DislocationNetworkObject>();
@@ -53,17 +92,17 @@ bool CAExporter::exportParticles(const PipelineFlowState& state, int frameNumber
 	PartitionMesh* partitionMesh = meshExportEnabled() ? state.findObject<PartitionMesh>() : nullptr;
 
 	if(!dislocationObj && !defectMesh && !partitionMesh)
-		throw Exception(tr("Dataset to be exported contains no dislocation lines nor a surface mesh. Cannot write CA file."));
+		throwException(tr("Dataset to be exported contains no dislocation lines nor a surface mesh. Cannot write CA file."));
 
 	// Get cluster graph.
 	ClusterGraphObject* clusterGraph = state.findObject<ClusterGraphObject>();
 	if(dislocationObj && !clusterGraph)
-		throw Exception(tr("Dataset to be exported contains no cluster graph. Cannot write CA file."));
+		throwException(tr("Dataset to be exported contains no cluster graph. Cannot write CA file."));
 
 	// Get pattern catalog.
 	PatternCatalog* patternCatalog = state.findObject<PatternCatalog>();
 	if(dislocationObj && !patternCatalog)
-		throw Exception(tr("Dataset to be exported contains no structure pattern catalog. Cannot write CA file."));
+		throwException(tr("Dataset to be exported contains no structure pattern catalog. Cannot write CA file."));
 
 	// Write file header.
 	textStream() << "CA_FILE_VERSION 6\n";

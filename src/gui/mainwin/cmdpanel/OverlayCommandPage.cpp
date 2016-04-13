@@ -92,7 +92,7 @@ OverlayCommandPage::OverlayCommandPage(MainWindow* mainWindow, QWidget* parent) 
 	layout->addWidget(splitter, 1);
 
 	// Create the properties panel.
-	_propertiesPanel = new PropertiesPanel(nullptr);
+	_propertiesPanel = new PropertiesPanel(nullptr, mainWindow);
 	_propertiesPanel->setFrameStyle(QFrame::NoFrame | QFrame::Plain);
 	splitter->addWidget(_propertiesPanel);
 	splitter->setStretchFactor(1,1);

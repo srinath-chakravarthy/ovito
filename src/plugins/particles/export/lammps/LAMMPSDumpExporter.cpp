@@ -27,24 +27,16 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, LAMMPSDumpExporter, ParticleExporter);
-
-/******************************************************************************
-* Constructs a new instance of this class.
-******************************************************************************/
-LAMMPSDumpExporter::LAMMPSDumpExporter(DataSet* dataset) : ParticleExporter(dataset)
-{
-}
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, LAMMPSDumpExporter, FileColumnParticleExporter);
 
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.
 ******************************************************************************/
-bool LAMMPSDumpExporter::exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
+bool LAMMPSDumpExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
 {
 	// Get particle positions.
+	const PipelineFlowState& state = getParticleData(sceneNode, time);
 	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
-	if(!posProperty)
-		throw Exception(tr("No particle positions available. Cannot write LAMMPS file."));
 
 	// Get simulation cell info.
 	SimulationCellObject* simulationCell = state.findObject<SimulationCellObject>();

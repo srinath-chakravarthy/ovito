@@ -50,35 +50,26 @@ BOOST_PYTHON_MODULE(ParticlesExporter)
 	python_to_container_conversion<OutputColumnMapping>();
 
 	ovito_abstract_class<ParticleExporter, FileExporter>()
-		.add_property("outputFilename", make_function(&ParticleExporter::outputFilename, return_value_policy<copy_const_reference>()), &ParticleExporter::setOutputFilename)
-		.add_property("exportAnimation", &ParticleExporter::exportAnimation, &ParticleExporter::setExportAnimation)
-		.add_property("multiple_frames", &ParticleExporter::exportAnimation, &ParticleExporter::setExportAnimation)
-		.add_property("useWildcardFilename", &ParticleExporter::useWildcardFilename, &ParticleExporter::setUseWildcardFilename)
-		.add_property("wildcardFilename", make_function(&ParticleExporter::wildcardFilename, return_value_policy<copy_const_reference>()), &ParticleExporter::setWildcardFilename)
-		.add_property("startFrame", &ParticleExporter::startFrame, &ParticleExporter::setStartFrame)
-		.add_property("endFrame", &ParticleExporter::endFrame, &ParticleExporter::setEndFrame)
-		.add_property("everyNthFrame", &ParticleExporter::everyNthFrame, &ParticleExporter::setEveryNthFrame)
 	;
 
-	ovito_class<IMDExporter, ParticleExporter>()
-		.add_property("columns", make_function(&IMDExporter::columnMapping, return_value_policy<copy_const_reference>()), &IMDExporter::setColumnMapping)
+	ovito_abstract_class<FileColumnParticleExporter, ParticleExporter>()
+		.add_property("columns", make_function(&FileColumnParticleExporter::columnMapping, return_value_policy<copy_const_reference>()), &FileColumnParticleExporter::setColumnMapping)
+	;
+
+	ovito_class<IMDExporter, FileColumnParticleExporter>()
 	;
 
 	ovito_class<POSCARExporter, ParticleExporter>()
 	;
 
-	{
-		scope s = ovito_class<LAMMPSDataExporter, ParticleExporter>()
-			.add_property("atomStyle", &LAMMPSDataExporter::atomStyle, &LAMMPSDataExporter::setAtomStyle)
-		;
-	}
-
-	ovito_class<LAMMPSDumpExporter, ParticleExporter>()
-		.add_property("columns", make_function(&LAMMPSDumpExporter::columnMapping, return_value_policy<copy_const_reference>()), &LAMMPSDumpExporter::setColumnMapping)
+	ovito_class<LAMMPSDataExporter, ParticleExporter>()
+		.add_property("atomStyle", &LAMMPSDataExporter::atomStyle, &LAMMPSDataExporter::setAtomStyle)
 	;
 
-	ovito_class<XYZExporter, ParticleExporter>()
-		.add_property("columns", make_function(&XYZExporter::columnMapping, return_value_policy<copy_const_reference>()), &XYZExporter::setColumnMapping)
+	ovito_class<LAMMPSDumpExporter, FileColumnParticleExporter>()
+	;
+
+	ovito_class<XYZExporter, FileColumnParticleExporter>()
 		.add_property("subFormat", &XYZExporter::subFormat, &XYZExporter::setSubFormat)
 	;
 

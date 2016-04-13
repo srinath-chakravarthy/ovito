@@ -71,14 +71,17 @@ public:
 	void setUseCustomColumnMapping(bool useCustomMapping) { _useCustomColumnMapping = useCustomMapping; }
 
 	/// Creates an asynchronous loader object that loads the data for the given frame from the external file.
-	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame) override {
-		return std::make_shared<LAMMPSTextDumpImportTask>(dataset()->container(), frame, isNewlySelectedFile(), _useCustomColumnMapping, _customColumnMapping);
+	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame, bool isNewlySelectedFile) override {
+		return std::make_shared<LAMMPSTextDumpImportTask>(dataset()->container(), frame, isNewlySelectedFile, _useCustomColumnMapping, _customColumnMapping);
 	}
 
 	/// Creates an asynchronous loader object that loads the data for the given frame from the external file.
 	static std::shared_ptr<FrameLoader> createFrameLoader(DataSetContainer* container, const Frame& frame, bool isNewFile, bool useCustomColumnMapping, const InputColumnMapping& customColumnMapping) {
 		return std::make_shared<LAMMPSTextDumpImportTask>(container, frame, isNewFile, useCustomColumnMapping, customColumnMapping);
 	}
+
+	/// Inspects the header of the given file and returns the number of file columns.
+	InputColumnMapping inspectFileHeader(const Frame& frame);
 
 public:
 

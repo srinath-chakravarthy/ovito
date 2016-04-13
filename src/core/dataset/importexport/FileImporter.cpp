@@ -24,13 +24,12 @@
 #include <core/utilities/io/FileManager.h>
 #include <core/dataset/DataSet.h>
 #include <core/dataset/DataSetContainer.h>
+#include <core/dataset/importexport/FileSourceImporter.h>
 #include "FileImporter.h"
-#include "moc_FileExporter.cpp"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, FileImporter, RefTarget);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, FileExporter, RefTarget);
 
 /******************************************************************************
 * Return the list of available import services.
@@ -38,14 +37,6 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, FileExporter, RefTarget);
 QVector<OvitoObjectType*> FileImporter::availableImporters()
 {
 	return PluginManager::instance().listClasses(FileImporter::OOType);
-}
-
-/******************************************************************************
-* Return the list of available export services.
-******************************************************************************/
-QVector<OvitoObjectType*> FileExporter::availableExporters()
-{
-	return PluginManager::instance().listClasses(FileExporter::OOType);
 }
 
 /******************************************************************************
@@ -57,14 +48,23 @@ OORef<FileImporter> FileImporter::autodetectFileFormat(DataSet* dataset, const Q
 		dataset->throwException(tr("Invalid path or URL."));
 
 	try {
-		// Download file so we can determine its format.
 		DataSetContainer* container = dataset->container();
-		Future<QString> fetchFileFuture = FileManager::instance().fetchUrl(*container, url);
+
+		// Resolve filename if it contains a wildcard.
+		Future<QVector<FileSourceImporter::Frame>> framesFuture = FileSourceImporter::findWildcardMatches(url, container);
+		if(!container->taskManager().waitForTask(framesFuture))
+			dataset->throwException(tr("Operation has been canceled by the user."));
+		QVector<FileSourceImporter::Frame> frames = framesFuture.result();
+		if(frames.empty())
+			dataset->throwException(tr("There are no files in the directory matching the filename pattern."));
+
+		// Download file so we can determine its format.
+		Future<QString> fetchFileFuture = FileManager::instance().fetchUrl(*container, frames.front().sourceFile);
 		if(!container->taskManager().waitForTask(fetchFileFuture))
 			dataset->throwException(tr("Operation has been canceled by the user."));
 
 		// Detect file format.
-		return autodetectFileFormat(dataset, fetchFileFuture.result(), url.path());
+		return autodetectFileFormat(dataset, fetchFileFuture.result(), frames.front().sourceFile.path());
 	}
 	catch(Exception& ex) {
 		// Provide a context object for any errors that occur during file inspection.

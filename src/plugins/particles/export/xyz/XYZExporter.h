@@ -23,15 +23,14 @@
 #define __OVITO_XYZ_FILE_EXPORTER_H
 
 #include <plugins/particles/Particles.h>
-#include "../ParticleExporter.h"
-#include "../OutputColumnMapping.h"
+#include "../FileColumnParticleExporter.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
 /**
  * \brief Exporter that writes the particles to a LAMMPS data file.
  */
-class OVITO_PARTICLES_EXPORT XYZExporter : public ParticleExporter
+class OVITO_PARTICLES_EXPORT XYZExporter : public FileColumnParticleExporter
 {
 public:
 
@@ -45,7 +44,9 @@ public:
 public:
 
 	/// \brief Constructs a new instance of this class.
-	Q_INVOKABLE XYZExporter(DataSet* dataset) : ParticleExporter(dataset), _subFormat(ExtendedFormat) {}
+	Q_INVOKABLE XYZExporter(DataSet* dataset) : FileColumnParticleExporter(dataset), _subFormat(ExtendedFormat) {
+		INIT_PROPERTY_FIELD(XYZExporter::_subFormat);
+	}
 
 	/// \brief Returns the file filter that specifies the files that can be exported by this service.
 	virtual QString fileFilter() override { return QStringLiteral("*"); }
@@ -53,33 +54,26 @@ public:
 	/// \brief Returns the filter description that is displayed in the drop-down box of the file dialog.
 	virtual QString fileFilterDescription() override { return tr("XYZ File"); }
 
-	/// \brief Returns the mapping of particle properties to output file columns.
-	const OutputColumnMapping& columnMapping() const { return _columnMapping; }
-
-	/// \brief Sets the mapping of particle properties to output file columns.
-	void setColumnMapping(const OutputColumnMapping& mapping) { _columnMapping = mapping; }
-
 	/// Returns the format variant being written by this XYZ file exporter.
 	XYZSubFormat subFormat() const { return _subFormat; }
 
-	/// Sets the kind of XYZ to write.
+	/// Sets the kind of XYZ file to write.
 	void setSubFormat(XYZSubFormat subFormat) { _subFormat = subFormat; }
 
 protected:
 
 	/// \brief Writes the particles of one animation frame to the current output file.
-	virtual bool exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) override;
+	virtual bool exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) override;
 
 private:
 
-	/// The mapping particle properties to output file columns.
-	OutputColumnMapping _columnMapping;
-
-	/// Selects the kind of XYZ to write.
-	XYZSubFormat _subFormat;
+	/// Selects the kind of XYZ file to write.
+	PropertyField<XYZSubFormat, int> _subFormat;
 
 	Q_OBJECT
 	OVITO_OBJECT
+
+	DECLARE_PROPERTY_FIELD(_subFormat);
 };
 
 OVITO_END_INLINE_NAMESPACE

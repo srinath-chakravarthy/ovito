@@ -23,6 +23,7 @@
 #define __OVITO_APPLICATION_SETTINGS_DIALOG_H
 
 #include <gui/GUI.h>
+#include <core/object/OvitoObject.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Dialogs)
 	

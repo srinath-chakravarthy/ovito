@@ -47,12 +47,6 @@ public:
 	/// used for the Wigner-Seitz analysis.
 	void setReferenceConfiguration(DataObject* refConf) { _referenceObject = refConf; }
 
-	/// Returns the source URL of the reference configuration.
-	QUrl referenceSource() const;
-
-	/// Sets the source URL of the reference configuration.
-	void setReferenceSource(const QUrl& sourceUrl, const OvitoObjectType* importerType = nullptr);
-
 	/// Returns true if the homogeneous deformation of the simulation cell is eliminated before performing the analysis.
 	bool eliminateCellDeformation() const { return _eliminateCellDeformation; }
 

@@ -23,7 +23,7 @@
 #define __OVITO_CRYSTALANALYSIS_EXPORTER_H
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <plugins/particles/export/ParticleExporter.h>
+#include <core/dataset/importexport/FileExporter.h>
 #include <core/utilities/io/CompressedTextWriter.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
@@ -31,12 +31,12 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 /**
  * \brief Exporter that exports dislocation lines to a Crystal Analysis Tool (CA) file.
  */
-class OVITO_CRYSTALANALYSIS_EXPORT CAExporter : public ParticleExporter
+class OVITO_CRYSTALANALYSIS_EXPORT CAExporter : public FileExporter
 {
 public:
 
 	/// \brief Constructs a new instance of this class.
-	Q_INVOKABLE CAExporter(DataSet* dataset) : ParticleExporter(dataset), _meshExportEnabled(true) {}
+	Q_INVOKABLE CAExporter(DataSet* dataset) : FileExporter(dataset), _meshExportEnabled(true) {}
 
 	/// \brief Returns the file filter that specifies the files that can be exported by this service.
 	virtual QString fileFilter() override { return QStringLiteral("*"); }
@@ -53,9 +53,27 @@ public:
 protected:
 
 	/// \brief Writes the particles of one animation frame to the current output file.
-	virtual bool exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress) override;
+	virtual bool exportObject(SceneNode* node, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress) override;
+
+	/// \brief This is called once for every output file to be written and before exportData() is called.
+	virtual bool openOutputFile(const QString& filePath, int numberOfFrames) override;
+
+	/// \brief This is called once for every output file written after exportData() has been called.
+	virtual void closeOutputFile(bool exportCompleted) override;
+
+	/// Returns the current file this exporter is writing to.
+	QFile& outputFile() { return _outputFile; }
+
+	/// Returns the text stream used to write into the current output file.
+	CompressedTextWriter& textStream() { return *_outputStream; }
 
 private:
+
+	/// The output file stream.
+	QFile _outputFile;
+
+	/// The stream object used to write into the output file.
+	std::unique_ptr<CompressedTextWriter> _outputStream;
 
 	/// Controls whether the DXA defect mesh is exported (in addition to the dislocation lines).
 	bool _meshExportEnabled;

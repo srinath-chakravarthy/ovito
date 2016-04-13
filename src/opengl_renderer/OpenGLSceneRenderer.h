@@ -27,7 +27,6 @@
 #include "OpenGLHelpers.h"
 
 #include <QOpenGLFunctions>
-#include <QOpenGLFunctions_1_4>
 #include <QOpenGLFunctions_2_0>
 #include <QOpenGLFunctions_3_0>
 #include <QOpenGLFunctions_3_2_Core>
@@ -48,7 +47,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
  * \brief An OpenGL-based scene renderer. This serves as base class for both the interactive renderer used
  *        by the viewports and the standard output renderer.
  */
-class OVITO_OPENGL_RENDERER_EXPORT OpenGLSceneRenderer : public SceneRenderer
+class OVITO_OPENGL_RENDERER_EXPORT OpenGLSceneRenderer : public SceneRenderer, private QOpenGLFunctions
 {
 public:
 
@@ -109,9 +108,6 @@ public:
 	/// Returns the OpenGL context this renderer uses.
 	QOpenGLContext* glcontext() const { return _glcontext; }
 
-	/// Returns a pointer to the OpenGL functions object.
-	QOpenGLFunctions* glfuncs() const { return _glFunctions; }
-
 	/// Returns the surface format of the current OpenGL context.
 	const QSurfaceFormat& glformat() const { return _glformat; }
 
@@ -129,30 +125,6 @@ public:
 
 	/// Loads and compiles an OpenGL shader program.
 	QOpenGLShaderProgram* loadShaderProgram(const QString& id, const QString& vertexShaderFile, const QString& fragmentShaderFile, const QString& geometryShaderFile = QString());
-
-	/// The OpenGL glPointParameterf() function.
-	void glPointParameterf(GLenum pname, GLfloat param) {
-		if(_glFunctions32) _glFunctions32->glPointParameterf(pname, param);
-		else if(_glFunctions30) _glFunctions30->glPointParameterf(pname, param);
-		else if(_glFunctions20) _glFunctions20->glPointParameterf(pname, param);
-		else if(_glFunctions14) _glFunctions14->glPointParameterf(pname, param);
-	}
-
-	/// The OpenGL glPointParameterfv() function.
-	void glPointParameterfv(GLenum pname, const GLfloat* params) {
-		if(_glFunctions32) _glFunctions32->glPointParameterfv(pname, params);
-		else if(_glFunctions30) _glFunctions30->glPointParameterfv(pname, params);
-		else if(_glFunctions20) _glFunctions20->glPointParameterfv(pname, params);
-		else if(_glFunctions14) _glFunctions14->glPointParameterfv(pname, params);
-	}
-
-	/// The OpenGL glMultiDrawArrays() function.
-	void glMultiDrawArrays(GLenum mode, const GLint* first, const GLsizei* count, GLsizei drawcount) {
-		if(_glFunctions32) _glFunctions32->glMultiDrawArrays(mode, first, count, drawcount);
-		else if(_glFunctions30) _glFunctions30->glMultiDrawArrays(mode, first, count, drawcount);
-		else if(_glFunctions20) _glFunctions20->glMultiDrawArrays(mode, first, count, drawcount);
-		else if(_glFunctions14) _glFunctions14->glMultiDrawArrays(mode, first, count, drawcount);
-	}
 
 	/// Make sure vertex IDs are available to use by the OpenGL shader.
 	void activateVertexIDs(QOpenGLShaderProgram* shader, GLint vertexCount, bool alwaysUseVBO = false);
@@ -187,25 +159,19 @@ public:
 	}
 
 	/// Sets the frame buffer background color.
-	void setClearColor(const ColorA& color) {
-		OVITO_CHECK_OPENGL(glfuncs()->glClearColor(color.r(), color.g(), color.b(), color.a()));
-	}
+	void setClearColor(const ColorA& color);
 
-	void setRenderingViewport(int x, int y, int width, int height) {
-		OVITO_CHECK_OPENGL(glfuncs()->glViewport(x, y, width, height));
-	}
+	/// Sets the rendering region in the frame buffer.
+	void setRenderingViewport(int x, int y, int width, int height);
 
-	void clearFrameBuffer(bool clearDepthBuffer = true, bool clearStencilBuffer = true) {
-		OVITO_CHECK_OPENGL(glfuncs()->glClear(GL_COLOR_BUFFER_BIT |
-				(clearDepthBuffer ? GL_DEPTH_BUFFER_BIT : 0) |
-				(clearStencilBuffer ? GL_STENCIL_BUFFER_BIT : 0)));
-	}
+	/// Clears the frame buffer contents.
+	void clearFrameBuffer(bool clearDepthBuffer = true, bool clearStencilBuffer = true);
 
 	/// Temporarily enables/disables the depth test while rendering.
-	virtual void setDepthTestEnabled(bool enabled) override {
-		if(enabled) glfuncs()->glEnable(GL_DEPTH_TEST);
-		else glfuncs()->glDisable(GL_DEPTH_TEST);
-	}
+	virtual void setDepthTestEnabled(bool enabled) override;
+
+	/// Activates the special highlight rendering mode.
+	virtual void setHighlightMode(int pass) override;
 
 	/// Returns the device pixel ratio of the output device we are rendering to.
 	qreal devicePixelRatio() const;
@@ -249,16 +215,65 @@ protected:
 	///       visible in the interactive viewports.
 	virtual void renderInteractiveContent() {}
 
+
+	void renderTexturedScreenQuad();
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 3, 0)
+
+	void glEnable(GLenum cap);
+	void glDisable(GLenum cap);
+	void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices);
+	void glGetIntegerv(GLenum pname, GLint * params);
+	void glCullFace(GLenum mode);
+	void glDrawArrays(GLenum mode, GLint first, GLsizei count);
+	void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid * pixels);
+	void glTexParameteri(GLenum target, GLenum pname, GLint param);
+	GLboolean glIsEnabled(GLenum cap);
+	void glBlendFunc(GLenum sfactor, GLenum dfactor);
+
+#endif
+
+
+	/// The OpenGL glPointParameterf() function.
+	void glPointSize(GLfloat size) {
+		if(_glFunctions32) _glFunctions32->glPointSize(size);
+		else if(_glFunctions30) _glFunctions30->glPointSize(size);
+		else if(_glFunctions20) _glFunctions20->glPointSize(size);
+	}
+
+	/// The OpenGL glPointParameterf() function.
+	void glPointParameterf(GLenum pname, GLfloat param) {
+		if(_glFunctions32) _glFunctions32->glPointParameterf(pname, param);
+		else if(_glFunctions30) _glFunctions30->glPointParameterf(pname, param);
+		else if(_glFunctions20) _glFunctions20->glPointParameterf(pname, param);
+	}
+
+	/// The OpenGL glPointParameterfv() function.
+	void glPointParameterfv(GLenum pname, const GLfloat* params) {
+		if(_glFunctions32) _glFunctions32->glPointParameterfv(pname, params);
+		else if(_glFunctions30) _glFunctions30->glPointParameterfv(pname, params);
+		else if(_glFunctions20) _glFunctions20->glPointParameterfv(pname, params);
+	}
+
+	/// The OpenGL glMultiDrawArrays() function.
+	void glMultiDrawArrays(GLenum mode, const GLint* first, const GLsizei* count, GLsizei drawcount) {
+		if(_glFunctions32) _glFunctions32->glMultiDrawArrays(mode, first, count, drawcount);
+		else if(_glFunctions30) _glFunctions30->glMultiDrawArrays(mode, first, count, drawcount);
+		else if(_glFunctions20) _glFunctions20->glMultiDrawArrays(mode, first, count, drawcount);
+	}
+
+	void glTexEnvf(GLenum target, GLenum pname, GLfloat param) {
+		if(_glFunctions30) _glFunctions30->glTexEnvf(target, pname, param);
+		else if(_glFunctions20) _glFunctions20->glTexEnvf(target, pname, param);
+	}
+
+	/// The OpenGL 2.0 functions object.
+	QOpenGLFunctions_2_0* oldGLFunctions() const { return _glFunctions20; }
+
 private:
 
 	/// The OpenGL context this renderer uses.
 	QOpenGLContext* _glcontext;
-
-	/// The OpenGL functions object.
-	QOpenGLFunctions* _glFunctions;
-
-	/// The OpenGL 1.4 functions object.
-	QOpenGLFunctions_1_4* _glFunctions14;
 
 	/// The OpenGL 2.0 functions object.
 	QOpenGLFunctions_2_0* _glFunctions20;
@@ -323,9 +338,18 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
+
+	friend class OpenGLMeshPrimitive;
+	friend class OpenGLArrowPrimitive;
+	friend class OpenGLImagePrimitive;
+	friend class OpenGLLinePrimitive;
+	friend class OpenGLTextPrimitive;
+	friend class OpenGLParticlePrimitive;
+	template<typename T> friend class OpenGLBuffer;
 };
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
 #endif // __OVITO_OPENGL_SCENE_RENDERER_H
+

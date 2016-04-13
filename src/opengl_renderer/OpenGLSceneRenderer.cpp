@@ -246,14 +246,9 @@ void OpenGLSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParamet
 
 	// Obtain a functions object that allows to call basic OpenGL functions in a platform-independent way.
     OVITO_REPORT_OPENGL_ERRORS();
-	_glFunctions = _glcontext->functions();
+    initializeOpenGLFunctions();
 
-	// Obtain a functions object that allows to call OpenGL 1.4 functions in a platform-independent way.
-	_glFunctions14 = _glcontext->versionFunctions<QOpenGLFunctions_1_4>();
-	if(!_glFunctions14 || !_glFunctions14->initializeOpenGLFunctions())
-		_glFunctions14 = nullptr;
-
-	// Obtain a functions object that allows to call OpenGL 2.0 functions in a platform-independent way.
+    // Obtain a functions object that allows to call OpenGL 2.0 functions in a platform-independent way.
 	_glFunctions20 = _glcontext->versionFunctions<QOpenGLFunctions_2_0>();
 	if(!_glFunctions20 || !_glFunctions20->initializeOpenGLFunctions())
 		_glFunctions20 = nullptr;
@@ -268,7 +263,7 @@ void OpenGLSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParamet
 	if(!_glFunctions32 || !_glFunctions32->initializeOpenGLFunctions())
 		_glFunctions32 = nullptr;
 
-	if(!_glFunctions14 && !_glFunctions20 && !_glFunctions30 && !_glFunctions32)
+	if(!!_glFunctions20 && !_glFunctions30 && !_glFunctions32)
 		throwException(tr("Could not resolve OpenGL functions. Invalid OpenGL context."));
 
 	// Check if this context implements the core profile.
@@ -295,7 +290,13 @@ void OpenGLSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParamet
     OVITO_REPORT_OPENGL_ERRORS();
 
 	// Reset OpenGL state.
-    glfuncs()->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+	// Set up default viewport rectangle.
+    if(vp && vp->window()) {
+    	QSize vpSize = vp->window()->viewportWindowSize();
+    	setRenderingViewport(0, 0, vpSize.width(), vpSize.height());
+    }
 
 	OVITO_REPORT_OPENGL_ERRORS();
 }
@@ -332,9 +333,9 @@ bool OpenGLSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingT
 
 	// Set up poor man's stereosopic rendering using red/green filtering.
 	if(stereoTask == StereoscopicLeft)
-		glfuncs()->glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
+		glColorMask(GL_TRUE, GL_FALSE, GL_FALSE, GL_FALSE);
 	else if(stereoTask == StereoscopicRight)
-		glfuncs()->glColorMask(GL_FALSE, GL_TRUE, GL_TRUE, GL_TRUE);
+		glColorMask(GL_FALSE, GL_TRUE, GL_TRUE, GL_TRUE);
 
 	// Clear background.
 	clearFrameBuffer();
@@ -354,7 +355,7 @@ bool OpenGLSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingT
 	_translucentPrimitives.clear();
 
 	// Restore default OpenGL state.
-	glfuncs()->glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
 	return true;
 }
@@ -586,11 +587,15 @@ void OpenGLSceneRenderer::render2DPolyline(const Point2* points, int count, cons
 		colorBuffer.fillConstant(color);
 		OVITO_CHECK_OPENGL(colorBuffer.bindColors(this, shader, 4));
 	}
-	else {
-		OVITO_STATIC_ASSERT(sizeof(points[0]) == 2*sizeof(GLfloat));
-		OVITO_CHECK_OPENGL(glEnableClientState(GL_VERTEX_ARRAY));
-		OVITO_CHECK_OPENGL(glVertexPointer(2, GL_FLOAT, 0, points));
-		OVITO_CHECK_OPENGL(glColor4(color));
+	else if(oldGLFunctions()) {
+		OVITO_CHECK_OPENGL(oldGLFunctions()->glEnableClientState(GL_VERTEX_ARRAY));
+#ifdef FLOATTYPE_FLOAT
+		OVITO_CHECK_OPENGL(oldGLFunctions()->glVertexPointer(2, GL_FLOAT, 0, points));
+		OVITO_CHECK_OPENGL(oldGLFunctions()->glColor4fv(color.data()));
+#else
+		OVITO_CHECK_OPENGL(oldGLFunctions()->glVertexPointer(2, GL_DOUBLE, 0, points));
+		OVITO_CHECK_OPENGL(oldGLFunctions()->glColor4dv(color.data()));
+#endif
 	}
 
 	OVITO_CHECK_OPENGL(glDrawArrays(closed ? GL_LINE_LOOP : GL_LINE_STRIP, 0, count));
@@ -599,8 +604,8 @@ void OpenGLSceneRenderer::render2DPolyline(const Point2* points, int count, cons
 		vertexBuffer.detach(this, shader, "position");
 		colorBuffer.detachColors(this, shader);
 	}
-	else {
-		OVITO_CHECK_OPENGL(glDisableClientState(GL_VERTEX_ARRAY));
+	else if(oldGLFunctions()) {
+		OVITO_CHECK_OPENGL(oldGLFunctions()->glDisableClientState(GL_VERTEX_ARRAY));
 	}
 	shader->release();
 	if(wasDepthTestEnabled) glEnable(GL_DEPTH_TEST);
@@ -674,6 +679,83 @@ qreal OpenGLSceneRenderer::devicePixelRatio() const
 	else
 		return 1.0;
 }
+
+/******************************************************************************
+* Sets the frame buffer background color.
+******************************************************************************/
+void OpenGLSceneRenderer::setClearColor(const ColorA& color)
+{
+	OVITO_CHECK_OPENGL(glClearColor(color.r(), color.g(), color.b(), color.a()));
+}
+
+/******************************************************************************
+* Sets the rendering region in the frame buffer.
+******************************************************************************/
+void OpenGLSceneRenderer::setRenderingViewport(int x, int y, int width, int height)
+{
+	OVITO_CHECK_OPENGL(glViewport(x, y, width, height));
+}
+
+/******************************************************************************
+* Clears the frame buffer contents.
+******************************************************************************/
+void OpenGLSceneRenderer::clearFrameBuffer(bool clearDepthBuffer, bool clearStencilBuffer)
+{
+	OVITO_CHECK_OPENGL(glClear(GL_COLOR_BUFFER_BIT |
+			(clearDepthBuffer ? GL_DEPTH_BUFFER_BIT : 0) |
+			(clearStencilBuffer ? GL_STENCIL_BUFFER_BIT : 0)));
+}
+
+/******************************************************************************
+* Temporarily enables/disables the depth test while rendering.
+******************************************************************************/
+void OpenGLSceneRenderer::setDepthTestEnabled(bool enabled)
+{
+	if(enabled) glEnable(GL_DEPTH_TEST);
+	else glDisable(GL_DEPTH_TEST);
+}
+
+/******************************************************************************
+* Activates the special highlight rendering mode.
+******************************************************************************/
+void OpenGLSceneRenderer::setHighlightMode(int pass)
+{
+	if(pass == 1) {
+		glEnable(GL_DEPTH_TEST);
+		glClearStencil(0);
+		glClear(GL_STENCIL_BUFFER_BIT);
+		glEnable(GL_STENCIL_TEST);
+		glStencilFunc(GL_ALWAYS, 0x1, 0x1);
+		glStencilMask(0x1);
+		glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+		glDepthFunc(GL_LEQUAL);
+	}
+	else if(pass == 2) {
+		glDisable(GL_DEPTH_TEST);
+		glStencilFunc(GL_NOTEQUAL, 0x1, 0x1);
+		glStencilMask(0x1);
+		glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+	}
+	else {
+		glDepthFunc(GL_LESS);
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_STENCIL_TEST);
+	}
+}
+
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 3, 0)
+void OpenGLSceneRenderer::glEnable(GLenum cap) { ::glEnable(cap); }
+void OpenGLSceneRenderer::glDisable(GLenum cap) { ::glDisable(cap); }
+void OpenGLSceneRenderer::glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices) { ::glDrawElements(mode, count, type, indices); }
+void OpenGLSceneRenderer::glGetIntegerv(GLenum pname, GLint * params) { ::glGetIntegerv(pname, params); }
+void OpenGLSceneRenderer::glCullFace(GLenum mode) { ::glCullFace(mode); }
+void OpenGLSceneRenderer::glDrawArrays(GLenum mode, GLint first, GLsizei count) { ::glDrawArrays(mode, first, count); }
+void OpenGLSceneRenderer::glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid * pixels) { ::glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels); }
+void OpenGLSceneRenderer::glTexParameteri(GLenum target, GLenum pname, GLint param) { ::glTexParameteri(target, pname, param); }
+GLboolean OpenGLSceneRenderer::glIsEnabled(GLenum cap) { return ::glIsEnabled(cap); }
+void OpenGLSceneRenderer::glBlendFunc(GLenum sfactor, GLenum dfactor) { ::glBlendFunc(sfactor, dfactor); }
+#endif
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 

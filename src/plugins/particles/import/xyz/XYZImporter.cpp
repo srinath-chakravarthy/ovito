@@ -31,7 +31,6 @@
 #include <core/dataset/importexport/FileSource.h>
 #include <core/app/Application.h>
 #include "XYZImporter.h"
-
 #include <QRegularExpression>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
@@ -86,73 +85,15 @@ bool XYZImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceLocation
 }
 
 /******************************************************************************
-* This method is called by the FileSource each time a new source
-* file has been selected by the user.
+* Inspects the header of the given file and returns the number of file columns.
 ******************************************************************************/
-bool XYZImporter::inspectNewFile(FileSource* obj, int frameIndex)
+InputColumnMapping XYZImporter::inspectFileHeader(const Frame& frame)
 {
-	if(!ParticleImporter::inspectNewFile(obj, frameIndex))
-		return false;
-
-	if(frameIndex < 0 || frameIndex >= obj->frames().size())
-		return false;
-
-	// Start task that inspects the file header to determine the number of columns.
-	std::shared_ptr<XYZImportTask> inspectionTask = std::make_shared<XYZImportTask>(dataset()->container(), obj->frames()[frameIndex]);
+	// Start task that inspects the file header to determine the number of data columns.
+	std::shared_ptr<XYZImportTask> inspectionTask = std::make_shared<XYZImportTask>(dataset()->container(), frame);
 	if(!dataset()->container()->taskManager().runTask(inspectionTask))
-		return false;
-
-	// If column names were given in the XYZ file, use them rather than popping up a dialog.
-	if(inspectionTask->propertiesAssigned()) {
-		setColumnMapping(inspectionTask->columnMapping());
-		return true;
-	}
-
-	// Don't show column mapping dialog in console mode.
-	if(Application::instance().consoleMode())
-		return true;
-
-	InputColumnMapping mapping(_columnMapping);
-	mapping.resize(inspectionTask->columnMapping().size());
-	mapping.setFileExcerpt(inspectionTask->columnMapping().fileExcerpt());
-	if(_columnMapping.size() != mapping.size()) {
-		if(_columnMapping.empty()) {
-			// Load last mapping from settings store.
-			QSettings settings;
-			settings.beginGroup("viz/importer/xyz/");
-			if(settings.contains("columnmapping")) {
-				try {
-					mapping.fromByteArray(settings.value("columnmapping").toByteArray());
-
-				}
-				catch(Exception& ex) {
-					ex.prependGeneralMessage(tr("Failed to load last used column-to-property mapping from application settings store."));
-					ex.logError();
-				}
-			}
-
-			mapping.resize(inspectionTask->columnMapping().size());
-			for(auto& column : mapping)
-				column.columnName.clear();
-		}
-
-#if 0
-		InputColumnMappingDialog dialog(mapping, MainWindow::fromDataset(dataset()));
-		if(dialog.exec() == QDialog::Accepted) {
-			setColumnMapping(dialog.mapping());
-			// Remember the user-defined mapping for the next time.
-			QSettings settings;
-			settings.beginGroup("viz/importer/xyz/");
-			settings.setValue("columnmapping", _columnMapping.toByteArray());
-			settings.endGroup();
-			return true;
-		}
-#endif
-		return false;
-	}
-	else _columnMapping.setFileExcerpt(inspectionTask->columnMapping().fileExcerpt());
-
-	return true;
+		return InputColumnMapping();
+	return inspectionTask->columnMapping();
 }
 
 /******************************************************************************
@@ -212,6 +153,7 @@ void XYZImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVe
  *****************************************************************************/
 bool XYZImporter::mapVariableToProperty(InputColumnMapping& columnMapping, int column, QString name, int dataType, int vec)
 {
+	if(column <= columnMapping.size()) columnMapping.resize(column+1);
 	columnMapping[column].columnName = name;
 	QString loweredName = name.toLower();
 	if(loweredName == "type" || loweredName == "element" || loweredName == "atom_types" ||loweredName == "species") 
@@ -448,22 +390,10 @@ void XYZImporter::XYZImportTask::parseFile(CompressedTextReader& stream)
 		simulationCell().setPbcFlags(true, true, true);
 	}
 
-	if(_parseFileHeaderOnly) {
-		// Read first atoms line and count number of data columns.
-		fileExcerpt += stream.lineString();
-		QString lineString;
-		for(int i = 0; i < 5 && i < numParticles; i++) {
-			stream.readLine();
-			lineString = stream.lineString();
-			fileExcerpt += lineString;
-		}
-		if(numParticles > 5) fileExcerpt += QStringLiteral("...\n");
-		_columnMapping.resize(lineString.split(ws_re, QString::SkipEmptyParts).size());
-		_columnMapping.setFileExcerpt(fileExcerpt);
-
-		// check for Extended XYZ Properties key and use instead of popping up dialog box
-		// format is described at http://jrkermode.co.uk/quippy/io.html#extendedxyz
-		// example: Properties=species:S:1:pos:R:3 for atomic species (1 column, string property)
+	if(_parseFileHeaderOnly || _columnMapping.empty()) {
+		// Auto-generate column mapping when Extended XYZ Properties key is present.
+		// Format is described at http://jrkermode.co.uk/quippy/io.html#extendedxyz
+		// Example: Properties=species:S:1:pos:R:3 for atomic species (1 column, string property)
 		// and atomic positions (3 columns, real property)
 		if((index = commentLine.indexOf(QStringLiteral("properties="), 0, Qt::CaseInsensitive)) >= 0) {
 			QString propertiesStr = commentLine.mid(index + 11);
@@ -471,7 +401,7 @@ void XYZImporter::XYZImportTask::parseFile(CompressedTextReader& stream)
 			QStringList fields = propertiesStr.split(":");
 
 			int col = 0;
-			for(int i = 0; i < fields.size() / 3; i += 1) {
+			for(int i = 0; i < fields.size() / 3; i++) {
 				QString propName = (fields[3 * i + 0]);
 				QString propTypeStr = (fields[3 * i + 1]).left(1);
 				QByteArray propTypeBA = propTypeStr.toLatin1();
@@ -505,8 +435,21 @@ void XYZImporter::XYZImportTask::parseFile(CompressedTextReader& stream)
 					break;
 				}
 			}
-			_propertiesAssigned = true;
 		}
+	}
+
+	if(_parseFileHeaderOnly) {
+		// Read first atoms line and count number of data columns.
+		fileExcerpt += stream.lineString();
+		QString lineString;
+		for(int i = 0; i < 5 && i < numParticles; i++) {
+			stream.readLine();
+			lineString = stream.lineString();
+			fileExcerpt += lineString;
+		}
+		if(numParticles > 5) fileExcerpt += QStringLiteral("...\n");
+		_columnMapping.resize(lineString.split(ws_re, QString::SkipEmptyParts).size());
+		_columnMapping.setFileExcerpt(fileExcerpt);
 
 		return;
 	}

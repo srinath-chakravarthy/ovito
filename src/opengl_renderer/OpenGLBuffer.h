@@ -191,10 +191,10 @@ public:
 			OVITO_CHECK_OPENGL(shader->enableAttributeArray("position"));
 			OVITO_CHECK_OPENGL(shader->setAttributeBuffer("position", GL_FLOAT, byteOffset, 3, sizeof(T)));
 		}
-		else {
+		else if(renderer->oldGLFunctions()) {
 			// Older OpenGL implementations cannot take vertex coordinates through a custom shader attribute.
-			OVITO_CHECK_OPENGL(glEnableClientState(GL_VERTEX_ARRAY));
-			OVITO_CHECK_OPENGL(glVertexPointer(3, GL_FLOAT, sizeof(T), reinterpret_cast<const GLvoid*>(byteOffset)));
+			OVITO_CHECK_OPENGL(renderer->oldGLFunctions()->glEnableClientState(GL_VERTEX_ARRAY));
+			OVITO_CHECK_OPENGL(renderer->oldGLFunctions()->glVertexPointer(3, GL_FLOAT, sizeof(T), reinterpret_cast<const GLvoid*>(byteOffset)));
 		}
 		_buffer.release();
 	}
@@ -204,8 +204,8 @@ public:
 		if(renderer->glformat().majorVersion() >= 3) {
 			OVITO_CHECK_OPENGL(shader->disableAttributeArray("position"));
 		}
-		else {
-			OVITO_CHECK_OPENGL(glDisableClientState(GL_VERTEX_ARRAY));
+		else if(renderer->oldGLFunctions()) {
+			OVITO_CHECK_OPENGL(renderer->oldGLFunctions()->glDisableClientState(GL_VERTEX_ARRAY));
 		}
 	}
 
@@ -222,10 +222,10 @@ public:
 			OVITO_CHECK_OPENGL(shader->enableAttributeArray("color"));
 			OVITO_CHECK_OPENGL(shader->setAttributeBuffer("color", GL_FLOAT, byteOffset, components, sizeof(T)));
 		}
-		else {
+		else if(renderer->oldGLFunctions()) {
 			// Older OpenGL implementations cannot take vertex colors through a custom shader attribute.
-			OVITO_CHECK_OPENGL(glEnableClientState(GL_COLOR_ARRAY));
-			OVITO_CHECK_OPENGL(glColorPointer(components, GL_FLOAT, sizeof(T), reinterpret_cast<const GLvoid*>(byteOffset)));
+			OVITO_CHECK_OPENGL(renderer->oldGLFunctions()->glEnableClientState(GL_COLOR_ARRAY));
+			OVITO_CHECK_OPENGL(renderer->oldGLFunctions()->glColorPointer(components, GL_FLOAT, sizeof(T), reinterpret_cast<const GLvoid*>(byteOffset)));
 		}
 		_buffer.release();
 	}
@@ -235,8 +235,8 @@ public:
 		if(renderer->glformat().majorVersion() >= 3) {
 			OVITO_CHECK_OPENGL(shader->disableAttributeArray("color"));
 		}
-		else {
-			OVITO_CHECK_OPENGL(glDisableClientState(GL_COLOR_ARRAY));
+		else if(renderer->oldGLFunctions()) {
+			OVITO_CHECK_OPENGL(renderer->oldGLFunctions()->glDisableClientState(GL_COLOR_ARRAY));
 		}
 	}
 
@@ -252,10 +252,10 @@ public:
 			OVITO_CHECK_OPENGL(shader->enableAttributeArray("normal"));
 			OVITO_CHECK_OPENGL(shader->setAttributeBuffer("normal", GL_FLOAT, byteOffset, 3, sizeof(T)));
 		}
-		else {
+		else if(renderer->oldGLFunctions()) {
 			// Older OpenGL implementations cannot take vertex normals through a custom shader attribute.
-			OVITO_CHECK_OPENGL(glEnableClientState(GL_NORMAL_ARRAY));
-			OVITO_CHECK_OPENGL(glNormalPointer(GL_FLOAT, sizeof(T), reinterpret_cast<const GLvoid*>(byteOffset)));
+			OVITO_CHECK_OPENGL(renderer->oldGLFunctions()->glEnableClientState(GL_NORMAL_ARRAY));
+			OVITO_CHECK_OPENGL(renderer->oldGLFunctions()->glNormalPointer(GL_FLOAT, sizeof(T), reinterpret_cast<const GLvoid*>(byteOffset)));
 		}
 		_buffer.release();
 	}
@@ -265,8 +265,8 @@ public:
 		if(renderer->glformat().majorVersion() >= 3) {
 			OVITO_CHECK_OPENGL(shader->disableAttributeArray("normal"));
 		}
-		else {
-			OVITO_CHECK_OPENGL(glDisableClientState(GL_NORMAL_ARRAY));
+		else if(renderer->oldGLFunctions()) {
+			OVITO_CHECK_OPENGL(renderer->oldGLFunctions()->glDisableClientState(GL_NORMAL_ARRAY));
 		}
 	}
 

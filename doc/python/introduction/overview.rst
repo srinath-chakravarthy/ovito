@@ -67,7 +67,7 @@ Loading data and applying modifiers
 ------------------------------------
 
 After the general object model has been described above, it is now time to give some code examples and demonstrate how
-we deal with these things in a script. Typically, we first would like to load a simulation file. This is done
+we deal with these things in a script. Typically, we first like to load a simulation file. This is done
 using the :py:func:`ovito.io.import_file` function::
 
    >>> from ovito.io import *
@@ -76,34 +76,34 @@ using the :py:func:`ovito.io.import_file` function::
 This high-level function does several things: It creates a :py:class:`~ovito.io.FileSource` (which will subsequently load the data 
 from the given file), it creates an :py:class:`~ovito.ObjectNode` instance with an empty modification pipeline, and assigns the 
 :py:class:`~ovito.io.FileSource` to the :py:attr:`~ovito.ObjectNode.source` property of the node. The function finally returns the 
-newly created node to the caller after inserting it into the scene.
+newly created node to the caller.
 
-We can now start to populate the node's modification pipeline with some modifiers::
+We can now start populating the node's modification pipeline with some modifiers::
 
    >>> from ovito.modifiers import *
    >>> node.modifiers.append(SelectExpressionModifier(expression="PotentialEnergy < -3.9"))
    >>> node.modifiers.append(DeleteSelectedParticlesModifier())
 
-Here we have created two modifiers and appended them to the modification pipeline. Note how a modifier's parameters 
+Here we created two modifiers and appended them to the modification pipeline. Note how a modifier's parameters 
 can be initialized in two ways:
 
 .. note::
 
-   When constructing new objects such as modifiers it is possible to initialize object
-   parameters using an arbitrary number of keyword arguments at construction time. Thus ::
+   When constructing a new object (such as a modifier, but also many other OVITO classes) it is possible to directly initialize its
+   properties by passing keyword arguments to the constructor function. Thus ::
    
-       node.modifiers.append(CommonNeighborAnalysisModifier(cutoff = 3.2, mode = CommonNeighborAnalysisModifier.Mode.FixedCutoff))
+       node.modifiers.append(CommonNeighborAnalysisModifier(cutoff = 3.2, only_selected = True))
        
-   is equivalent to::
+   is equivalent to setting the properties after object construction::
 
        modifier = CommonNeighborAnalysisModifier()
        modifier.cutoff = 3.2
-       modifier.mode = CommonNeighborAnalysisModifier.Mode.FixedCutoff
+       modifier.only_selected = True
        node.modifiers.append(modifier)
        
-After the modification pipeline has been populated with the desired modifiers, we can basically do three things:
+After the modification pipeline has been populated with the desired modifiers, we can do at least three different things:
 (i) write the results to a file, (ii) render an image of the data, (iii) or directly work with the pipeline 
-data and read out particle properties, for instance.
+data and read out particle properties and other results.
 
 ------------------------------------
 Exporting data to a file
@@ -117,7 +117,7 @@ for this::
     
 The first argument passed to this high-level function is the node whose pipeline results should be exported.
 Furthermore, the name of the output file and the format are specified by the second and third parameter. 
-Depending on the selected file format, additional keyword parameters such as the list of particle properties to 
+Depending on the selected file format, additional keyword arguments such as the list of particle properties to 
 be exported must be provided.
 
 ------------------------------------
@@ -146,14 +146,20 @@ process (These are the parameters you normally set on the :guilabel:`Render` tab
     >>> settings = RenderSettings()
     >>> settings.filename = "myimage.png"
     >>> settings.size = (800, 600)
-    
-Here we have specified the output filename and the size of the image in pixels. Finally, we can let OVITO render 
-the image::
+   
+Here we have specified the output filename and the size of the image in pixels.
+We also should not forget to add the :py:class:`~ovito.ObjectNode` returned by the :py:func:`~ovito.io.import_file`
+function to the *scene*::
+
+    >>> node.add_to_scene()
+
+Because only object nodes that are part of the scene are visible in the viewports and in rendered images.
+Finally, we can let OVITO render the image::
 
     >>> vp.render(settings)
     
-Note again how we can instead use the more compact notation to initialize the :py:class:`~ovito.vis.Viewport`
-and the :py:class:`~ovito.vis.RenderSettings` by passing the parameter values to the class constructors:: 
+As a final remark, note how we could have used the more compact object initialization method introduced above.
+We can configure the newly created :py:class:`~ovito.vis.Viewport` and :py:class:`~ovito.vis.RenderSettings` by passing the parameter values directly to the class constructors:: 
 
     vp = Viewport(
         type = Viewport.Type.PERSPECTIVE,
@@ -167,16 +173,16 @@ and the :py:class:`~ovito.vis.RenderSettings` by passing the parameter values to
 Accessing computation results
 ------------------------------------
 
-OVITO's scripting interface allows us to directly access the output data leaving the
+OVITO's scripting interface allows you to directly access the output data leaving the
 modification pipeline. But first we have to ask OVITO to compute the results of the modification pipeline::
 
     >>> node.compute()
     
 The node's :py:meth:`~ovito.ObjectNode.compute` method ensures that all modifiers in the pipeline
 have been successfully evaluated. Note that the :py:meth:`~ovito.vis.Viewport.render` and 
-:py:func:`~ovito.io.export_file` functions introduced above implicitly call :py:meth:`~ovito.ObjectNode.compute`
-for us. But now, to gain direct access to the results, we have to explicitly request 
-an evaluation of the modification pipeline.
+:py:func:`~ovito.io.export_file` functions implicitly call :py:meth:`~ovito.ObjectNode.compute`
+for us. But now, in order to directly access the pipeline results in the following, we have to explicitly request 
+an evaluation of the modification pipeline by calling :py:meth:`~ovito.ObjectNode.compute`.
 
 The node caches the results of the last pipeline evaluation in its :py:attr:`~ovito.ObjectNode.output` field::
 
@@ -207,9 +213,11 @@ Similarly, the data of individual :py:class:`particle properties <ovito.data.Par
      [ 42.9917984   63.53770065  36.33330154]
      [ 44.17670059  61.49860001  37.5401001 ]]
 
-Sometimes we might be more interested in the data that *enters* the modification pipeline. 
+See the :py:mod:`ovito.data` module for a list of data object types that may appear in a :py:class:`~ovito.data.DataCollection`.
+
+Sometimes we might be more interested in the data that *enters* the modification pipeline.
 The input data, which was read from the external file, is cached by the :py:class:`~ovito.io.FileSource`,
-which is a :py:class:`~ovito.data.DataCollection` itself::
+which is itself a :py:class:`~ovito.data.DataCollection`::
 
     >>> node.source
     DataCollection(['Simulation cell', 'Particle Identifier', 'Position'])
@@ -256,4 +264,3 @@ we have to access the particle positions property in the :py:class:`~ovito.data.
        
     >>> pos_prop.display.shading = ParticleDisplay.Shading.Flat
     >>> pos_prop.display.radius = 1.4
-

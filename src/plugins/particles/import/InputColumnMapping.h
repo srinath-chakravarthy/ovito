@@ -122,6 +122,13 @@ public:
 		});
 	}
 
+	/// \brief Returns whether at least some of the file columns have names.
+	bool hasFileColumnNames() const {
+		return std::any_of(begin(), end(), [](const InputColumnInfo& column) {
+			return column.columnName.isEmpty() == false;
+		});
+	}
+
 private:
 
 	/// A string with the first few lines of the file, which is meant as a hint for the user to figure out

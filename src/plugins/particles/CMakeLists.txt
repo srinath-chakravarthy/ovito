@@ -91,6 +91,7 @@ SET(SourceFiles
 	import/fhi_aims/FHIAimsImporter.cpp
 	import/fhi_aims/FHIAimsLogFileImporter.cpp
 	export/ParticleExporter.cpp
+	export/FileColumnParticleExporter.cpp
 	export/OutputColumnMapping.cpp
 	export/vasp/POSCARExporter.cpp
 	export/fhi_aims/FHIAimsExporter.cpp
@@ -142,3 +143,6 @@ ADD_PRECOMPILED_HEADER(Particles plugins/particles/Particles.h)
 IF(OVITO_BUILD_GUI)
 	ADD_SUBDIRECTORY(gui)
 ENDIF()
+
+# Propagate list of plugins to parent scope.
+SET(OVITO_PLUGIN_LIST ${OVITO_PLUGIN_LIST} PARENT_SCOPE)

@@ -188,6 +188,10 @@ public:
 	/// This method is mainly used with the interactive viewport renderer.
 	virtual void setDepthTestEnabled(bool enabled) {}
 
+	/// Activates the special highlight rendering mode.
+	/// This method is mainly used with the interactive viewport renderer.
+	virtual void setHighlightMode(int pass) {}
+
 	/// \brief Computes the bounding box of the the 3D visual elements
 	///        shown only in the interactive viewports.
 	/// \param time The time at which the bounding box should be computed.

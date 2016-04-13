@@ -72,8 +72,8 @@ public:
 	void setUseCustomColumnMapping(bool useCustomMapping) { _useCustomColumnMapping = useCustomMapping; }
 
 	/// Creates an asynchronous loader object that loads the data for the given frame from the external file.
-	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame) override {
-		return std::make_shared<NetCDFImportTask>(dataset()->container(), frame, isNewlySelectedFile(), _useCustomColumnMapping, _customColumnMapping);
+	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame, bool isNewlySelectedFile) override {
+		return std::make_shared<NetCDFImportTask>(dataset()->container(), frame, isNewlySelectedFile, _useCustomColumnMapping, _customColumnMapping);
 	}
 
 private:

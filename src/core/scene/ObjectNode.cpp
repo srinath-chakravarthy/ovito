@@ -43,6 +43,13 @@ ObjectNode::ObjectNode(DataSet* dataset) : SceneNode(dataset)
 }
 
 /******************************************************************************
+* Destructor.
+******************************************************************************/
+ObjectNode::~ObjectNode()
+{
+}
+
+/******************************************************************************
 * Evaluates the geometry pipeline of this scene node at the given time.
 ******************************************************************************/
 const PipelineFlowState& ObjectNode::evalPipeline(TimePoint time)

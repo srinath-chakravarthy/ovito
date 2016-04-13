@@ -36,7 +36,9 @@ class OVITO_PARTICLES_EXPORT LAMMPSDataExporter : public ParticleExporter
 public:
 
 	/// \brief Constructs a new instance of this class.
-	Q_INVOKABLE LAMMPSDataExporter(DataSet* dataset) : ParticleExporter(dataset), _atomStyle(LAMMPSDataImporter::AtomStyle_Atomic) {}
+	Q_INVOKABLE LAMMPSDataExporter(DataSet* dataset) : ParticleExporter(dataset), _atomStyle(LAMMPSDataImporter::AtomStyle_Atomic) {
+		INIT_PROPERTY_FIELD(LAMMPSDataExporter::_atomStyle);
+	}
 
 	/// \brief Returns the file filter that specifies the files that can be exported by this service.
 	virtual QString fileFilter() override { return QStringLiteral("*"); }
@@ -53,15 +55,17 @@ public:
 protected:
 
 	/// \brief Writes the particles of one animation frame to the current output file.
-	virtual bool exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) override;
+	virtual bool exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) override;
 
 private:
 
 	/// Selects the kind of data file to write.
-	LAMMPSDataImporter::LAMMPSAtomStyle _atomStyle;
+	PropertyField<LAMMPSDataImporter::LAMMPSAtomStyle, int> _atomStyle;
 
 	Q_OBJECT
 	OVITO_OBJECT
+
+	DECLARE_PROPERTY_FIELD(_atomStyle);
 };
 
 OVITO_END_INLINE_NAMESPACE

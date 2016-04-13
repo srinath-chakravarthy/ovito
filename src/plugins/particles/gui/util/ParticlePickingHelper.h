@@ -86,11 +86,11 @@ protected:
 	/// \param pickRecord Specifies the particle for which the selection marker will be rendered.
 	Box3 selectionMarkerBoundingBox(Viewport* vp, const PickResult& pickRecord);
 
-	/// Used to render the marker for a selected particle.
-	std::shared_ptr<ParticlePrimitive> _highlightBuffer;
+	/// \brief Render a marker around a particle to highlight it in the viewports.
+	void highlightParticle(int particleIndex, const PipelineFlowState& flowState, SceneRenderer* renderer);
 
-	/// Used to render the selected particle itself.
-	std::shared_ptr<ParticlePrimitive> _particleBuffer;
+	/// \brief Compute the (local) bounding box of the marker around a particle used to highlight it in the viewports.
+	Box3 highlightParticleBoundingBox(int particleIndex, const PipelineFlowState& flowState, const AffineTransformation& tm, Viewport* viewport);
 };
 
 OVITO_END_INLINE_NAMESPACE

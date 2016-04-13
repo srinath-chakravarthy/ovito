@@ -726,34 +726,17 @@ void ParticleDisplay::highlightParticle(int particleIndex, const PipelineFlowSta
 		}
 	}
 
-#if 0
-	// TODO
-	GLint oldDepthFunc;
-	glGetIntegerv(GL_DEPTH_FUNC, &oldDepthFunc);
-	glEnable(GL_DEPTH_TEST);
-	glClearStencil(0);
-	glClear(GL_STENCIL_BUFFER_BIT);
-	glEnable(GL_STENCIL_TEST);
-	glStencilFunc(GL_ALWAYS, 0x1, 0x1);
-	glStencilMask(0x1);
-	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-	glDepthFunc(GL_LEQUAL);
+	renderer->setHighlightMode(1);
 	if(particleBuffer)
 		particleBuffer->render(renderer);
 	if(cylinderBuffer)
 		cylinderBuffer->render(renderer);
-	glDisable(GL_DEPTH_TEST);
-	glStencilFunc(GL_NOTEQUAL, 0x1, 0x1);
-	glStencilMask(0x1);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+	renderer->setHighlightMode(2);
 	if(highlightParticleBuffer)
 		highlightParticleBuffer->render(renderer);
 	if(highlightCylinderBuffer)
 		highlightCylinderBuffer->render(renderer);
-	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_STENCIL_TEST);
-	glDepthFunc(oldDepthFunc);
-#endif
+	renderer->setHighlightMode(0);
 }
 
 /******************************************************************************

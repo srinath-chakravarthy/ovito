@@ -23,7 +23,7 @@
 #define __OVITO_FILE_IMPORTER_H
 
 #include <core/Core.h>
-#include <core/object/OvitoObject.h>
+#include <core/reference/RefTarget.h>
 #include <core/dataset/DataSet.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO)
@@ -64,10 +64,11 @@ public:
 	/// \brief Imports a file into the scene.
 	/// \param sourceUrl The location of the file to import.
 	/// \param importMode Controls how the imported data is inserted into the scene.
+	/// \param autodetectFileSequences Enables the automatic detection of file sequences.
 	/// \return \c true if the file has been successfully imported.
 	//	        \c false if the operation has been canceled by the user.
 	/// \throw Exception when the import operation has failed.
-	virtual bool importFile(const QUrl& sourceUrl, ImportMode importMode) = 0;
+	virtual bool importFile(const QUrl& sourceUrl, ImportMode importMode, bool autodetectFileSequences) = 0;
 
 	/// \brief Checks if the given file has format that can be read by this importer.
 	/// \param input The file that contains the data to check.

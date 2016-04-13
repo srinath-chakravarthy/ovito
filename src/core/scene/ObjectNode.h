@@ -39,6 +39,9 @@ public:
 	/// \brief Constructs an object node.
 	Q_INVOKABLE ObjectNode(DataSet* dataset);
 
+	/// \brief Destructor.
+	virtual ~ObjectNode();
+
 	/// \brief Returns this node's data provider, i.e. the object
 	///        that generates the data displayed by this scene node.
 	DataObject* dataProvider() const { return _dataProvider; }

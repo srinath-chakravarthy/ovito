@@ -66,6 +66,13 @@ PropertyBase::PropertyBase(const PropertyBase& other)
 }
 
 /******************************************************************************
+* Denstructor.
+******************************************************************************/
+PropertyBase::~PropertyBase()
+{
+}
+
+/******************************************************************************
 * Saves the class' contents to the given stream.
 ******************************************************************************/
 void PropertyBase::saveToStream(SaveStream& stream, bool onlyMetadata, int type) const

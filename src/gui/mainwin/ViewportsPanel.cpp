@@ -121,8 +121,12 @@ void ViewportsPanel::onInputModeChanged(ViewportInputMode* oldMode, ViewportInpu
 ******************************************************************************/
 void ViewportsPanel::viewportModeCursorChanged(const QCursor& cursor)
 {
-	for(ViewportWindow* vpwin : findChildren<ViewportWindow*>()) {
-		vpwin->setCursor(cursor);
+	if(!_viewportConfig) return;
+
+	for(Viewport* vp : _viewportConfig->viewports()) {
+		if(ViewportWindow* vpWindow = static_cast<ViewportWindow*>(vp->window())) {
+			vpWindow->setCursor(cursor);
+		}
 	}
 }
 

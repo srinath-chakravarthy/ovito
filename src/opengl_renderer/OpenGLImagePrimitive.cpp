@@ -67,8 +67,9 @@ bool OpenGLImagePrimitive::isValid(SceneRenderer* renderer)
 ******************************************************************************/
 void OpenGLImagePrimitive::renderViewport(SceneRenderer* renderer, const Point2& pos, const Vector2& size)
 {
+	OpenGLSceneRenderer* vpRenderer = dynamic_object_cast<OpenGLSceneRenderer>(renderer);
 	GLint vc[4];
-	glGetIntegerv(GL_VIEWPORT, vc);
+	vpRenderer->glGetIntegerv(GL_VIEWPORT, vc);
 
 	Point2 windowPos((pos.x() + 1.0f) * vc[2] / 2, (-(pos.y() + size.y()) + 1.0f) * vc[3] / 2);
 	Vector2 windowSize(size.x() * vc[2] / 2, size.y() * vc[3] / 2);
@@ -95,19 +96,19 @@ void OpenGLImagePrimitive::renderWindow(SceneRenderer* renderer, const Point2& p
 
 	// Enable texturing when using compatibility OpenGL. In the core profile, this is enabled by default.
 	if(vpRenderer->isCoreProfile() == false)
-		glEnable(GL_TEXTURE_2D);
+		vpRenderer->glEnable(GL_TEXTURE_2D);
 
 	if(_needTextureUpdate) {
 		_needTextureUpdate = false;
 
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD, 0);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+		vpRenderer->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		vpRenderer->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		vpRenderer->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LOD, 0);
+		vpRenderer->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
 		// Upload texture data.
 		QImage textureImage = QGLWidget::convertToGLFormat(image());
-		OVITO_CHECK_OPENGL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureImage.width(), textureImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, textureImage.constBits()));
+		OVITO_CHECK_OPENGL(vpRenderer->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureImage.width(), textureImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, textureImage.constBits()));
 	}
 
 	// Transform rectangle to normalized device coordinates.
@@ -123,7 +124,7 @@ void OpenGLImagePrimitive::renderWindow(SceneRenderer* renderer, const Point2& p
 	}
 	QRectF rect2(x, y, w, h);
 	GLint vc[4];
-	glGetIntegerv(GL_VIEWPORT, vc);
+	vpRenderer->glGetIntegerv(GL_VIEWPORT, vc);
 	Point2 corners[4] = {
 			Point2(rect2.left() / vc[2] * 2 - 1, 1 - rect2.bottom() / vc[3] * 2),
 			Point2(rect2.right() / vc[2] * 2 - 1, 1 - rect2.bottom() / vc[3] * 2),
@@ -131,11 +132,11 @@ void OpenGLImagePrimitive::renderWindow(SceneRenderer* renderer, const Point2& p
 			Point2(rect2.right() / vc[2] * 2 - 1, 1 - rect2.top() / vc[3] * 2)
 	};
 
-	bool wasDepthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
-	bool wasBlendEnabled = glIsEnabled(GL_BLEND);
-	glDisable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	bool wasDepthTestEnabled = vpRenderer->glIsEnabled(GL_DEPTH_TEST);
+	bool wasBlendEnabled = vpRenderer->glIsEnabled(GL_BLEND);
+	OVITO_CHECK_OPENGL(vpRenderer->glDisable(GL_DEPTH_TEST));
+	OVITO_CHECK_OPENGL(vpRenderer->glEnable(GL_BLEND));
+	OVITO_CHECK_OPENGL(vpRenderer->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
 	if(!_shader->bind())
 		renderer->throwException(QStringLiteral("Failed to bind OpenGL shader."));
@@ -153,32 +154,32 @@ void OpenGLImagePrimitive::renderWindow(SceneRenderer* renderer, const Point2& p
 		_shader->setAttributeBuffer("vertex_pos", GL_FLOAT, 0, 2);
 		_vertexBuffer.release();
 
-		OVITO_CHECK_OPENGL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
+		OVITO_CHECK_OPENGL(vpRenderer->glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 
 		_shader->disableAttributeArray("vertex_pos");
 	}
-	else {
-		glBegin(GL_TRIANGLE_STRIP);
-		glTexCoord2f(0,0);
-		glVertex2f(corners[0].x(), corners[0].y());
-		glTexCoord2f(1,0);
-		glVertex2f(corners[1].x(), corners[1].y());
-		glTexCoord2f(0,1);
-		glVertex2f(corners[2].x(), corners[2].y());
-		glTexCoord2f(1,1);
-		glVertex2f(corners[3].x(), corners[3].y());
-		glEnd();
+	else if(vpRenderer->oldGLFunctions()) {
+		vpRenderer->oldGLFunctions()->glBegin(GL_TRIANGLE_STRIP);
+		vpRenderer->oldGLFunctions()->glTexCoord2f(0,0);
+		vpRenderer->oldGLFunctions()->glVertex2f(corners[0].x(), corners[0].y());
+		vpRenderer->oldGLFunctions()->glTexCoord2f(1,0);
+		vpRenderer->oldGLFunctions()->glVertex2f(corners[1].x(), corners[1].y());
+		vpRenderer->oldGLFunctions()->glTexCoord2f(0,1);
+		vpRenderer->oldGLFunctions()->glVertex2f(corners[2].x(), corners[2].y());
+		vpRenderer->oldGLFunctions()->glTexCoord2f(1,1);
+		vpRenderer->oldGLFunctions()->glVertex2f(corners[3].x(), corners[3].y());
+		vpRenderer->oldGLFunctions()->glEnd();
 	}
 
 	_shader->release();
 
 	// Restore old state.
-	if(wasDepthTestEnabled) glEnable(GL_DEPTH_TEST);
-	if(!wasBlendEnabled) glDisable(GL_BLEND);
+	if(wasDepthTestEnabled) vpRenderer->glEnable(GL_DEPTH_TEST);
+	if(!wasBlendEnabled) vpRenderer->glDisable(GL_BLEND);
 
 	// Turn off texturing.
 	if(vpRenderer->isCoreProfile() == false)
-		glDisable(GL_TEXTURE_2D);
+		vpRenderer->glDisable(GL_TEXTURE_2D);
 }
 
 OVITO_END_INLINE_NAMESPACE

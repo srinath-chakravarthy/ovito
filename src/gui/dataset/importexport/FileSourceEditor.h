@@ -50,6 +50,9 @@ protected:
 	/// This method is called when a reference target changes.
 	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
 
+	/// Loads a new file into the FileSource.
+	bool importNewFile(FileSource* fileSource, const QUrl& url, const OvitoObjectType* importerType);
+
 protected Q_SLOTS:
 
 	/// Is called when a new object has been loaded into the editor.

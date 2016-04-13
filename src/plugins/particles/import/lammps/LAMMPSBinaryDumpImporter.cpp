@@ -103,64 +103,15 @@ bool LAMMPSBinaryDumpImporter::checkFileFormat(QFileDevice& input, const QUrl& s
 }
 
 /******************************************************************************
-*  This method is called by the FileSource each time a new source
-* file has been selected by the user.
+* Inspects the header of the given file and returns the number of file columns.
 ******************************************************************************/
-bool LAMMPSBinaryDumpImporter::inspectNewFile(FileSource* obj, int frameIndex)
+InputColumnMapping LAMMPSBinaryDumpImporter::inspectFileHeader(const Frame& frame)
 {
-	if(!ParticleImporter::inspectNewFile(obj, frameIndex))
-		return false;
-
-	if(frameIndex < 0 || frameIndex >= obj->frames().size())
-		return false;
-
-	// Don't show column mapping dialog in console mode.
-	if(Application::instance().consoleMode())
-		return true;
-
 	// Start task that inspects the file header to determine the number of data columns.
-	std::shared_ptr<LAMMPSBinaryDumpImportTask> inspectionTask = std::make_shared<LAMMPSBinaryDumpImportTask>(dataset()->container(), obj->frames()[frameIndex]);
+	std::shared_ptr<LAMMPSBinaryDumpImportTask> inspectionTask = std::make_shared<LAMMPSBinaryDumpImportTask>(dataset()->container(), frame);
 	if(!dataset()->container()->taskManager().runTask(inspectionTask))
-		return false;
-
-	InputColumnMapping mapping(_columnMapping);
-	mapping.resize(inspectionTask->columnMapping().size());
-	mapping.setFileExcerpt(inspectionTask->columnMapping().fileExcerpt());
-	if(_columnMapping.size() != mapping.size()) {
-		if(_columnMapping.empty()) {
-			size_t oldCount = 0;
-
-			// Load last mapping from settings store.
-			QSettings settings;
-			settings.beginGroup("viz/importer/lammps_binary_dump/");
-			if(settings.contains("columnmapping")) {
-				try {
-					mapping.fromByteArray(settings.value("columnmapping").toByteArray());
-					oldCount = mapping.size();
-				}
-				catch(Exception& ex) {
-					ex.prependGeneralMessage(tr("Failed to load last used column-to-property mapping from application settings store."));
-					ex.logError();
-				}
-			}
-
-			mapping.resize(inspectionTask->columnMapping().size());
-		}
-
-#if 0
-		InputColumnMappingDialog dialog(mapping, MainWindow::fromDataset(dataset()));
-		if(dialog.exec() == QDialog::Accepted) {
-			setColumnMapping(dialog.mapping());
-			return true;
-		}
-#endif
-
-		return false;
-	}
-	else {
-		_columnMapping.setFileExcerpt(inspectionTask->columnMapping().fileExcerpt());
-		return true;
-	}
+		return InputColumnMapping();
+	return inspectionTask->columnMapping();
 }
 
 /******************************************************************************

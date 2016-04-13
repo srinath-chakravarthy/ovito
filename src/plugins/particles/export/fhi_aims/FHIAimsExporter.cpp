@@ -33,13 +33,12 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, FHIAimsExporter, ParticleExporter
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.
 ******************************************************************************/
-bool FHIAimsExporter::exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
+bool FHIAimsExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
 {
 	// Get particle positions and types.
+	const PipelineFlowState& state = getParticleData(sceneNode, time);
 	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
 	ParticleTypeProperty* particleTypeProperty = dynamic_object_cast<ParticleTypeProperty>(ParticlePropertyObject::findInState(state, ParticleProperty::ParticleTypeProperty));
-	if(!posProperty)
-		throw Exception(tr("No particle positions available. Cannot write FHI-aims file."));
 
 	textStream() << "# FHI-aims file written by OVITO\n";
 

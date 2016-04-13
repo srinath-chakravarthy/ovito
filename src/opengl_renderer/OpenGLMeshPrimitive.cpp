@@ -198,11 +198,11 @@ void OpenGLMeshPrimitive::render(SceneRenderer* renderer)
 	vpRenderer->rebindVAO();
 
 	if(cullFaces()) {
-		glEnable(GL_CULL_FACE);
-		glCullFace(GL_FRONT);
+		vpRenderer->glEnable(GL_CULL_FACE);
+		vpRenderer->glCullFace(GL_FRONT);
 	}
 	else {
-		glDisable(GL_CULL_FACE);
+		vpRenderer->glDisable(GL_CULL_FACE);
 	}
 
 	QOpenGLShaderProgram* shader;
@@ -220,9 +220,9 @@ void OpenGLMeshPrimitive::render(SceneRenderer* renderer)
 	if(!renderer->isPicking()) {
 		shader->setUniformValue("normal_matrix", (QMatrix3x3)(vpRenderer->modelViewTM().linear().inverse().transposed()));
 		if(_hasAlpha) {
-			glEnable(GL_BLEND);
-			vpRenderer->glfuncs()->glBlendEquation(GL_FUNC_ADD);
-			vpRenderer->glfuncs()->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+			vpRenderer->glEnable(GL_BLEND);
+			vpRenderer->glBlendEquation(GL_FUNC_ADD);
+			vpRenderer->glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 		}
 		_vertexBuffer.bindColors(vpRenderer, shader, 4, offsetof(ColoredVertexWithNormal, color));
 		_vertexBuffer.bindNormals(vpRenderer, shader, offsetof(ColoredVertexWithNormal, normal));
@@ -256,19 +256,19 @@ void OpenGLMeshPrimitive::render(SceneRenderer* renderer)
 			std::iota(p, p + 3, indices[i]*3);
 		primitiveIndices.unmap();
 		primitiveIndices.oglBuffer().bind();
-		OVITO_CHECK_OPENGL(glDrawElements(GL_TRIANGLES, _vertexBuffer.elementCount() * _vertexBuffer.verticesPerElement(), GL_UNSIGNED_INT, nullptr));
+		OVITO_CHECK_OPENGL(vpRenderer->glDrawElements(GL_TRIANGLES, _vertexBuffer.elementCount() * _vertexBuffer.verticesPerElement(), GL_UNSIGNED_INT, nullptr));
 		primitiveIndices.oglBuffer().release();
 	}
 	else {
 		// Render faces in arbitrary order.
-		OVITO_CHECK_OPENGL(glDrawArrays(GL_TRIANGLES, 0, _vertexBuffer.elementCount() * _vertexBuffer.verticesPerElement()));
+		OVITO_CHECK_OPENGL(vpRenderer->glDrawArrays(GL_TRIANGLES, 0, _vertexBuffer.elementCount() * _vertexBuffer.verticesPerElement()));
 	}
 
 	_vertexBuffer.detachPositions(vpRenderer, shader);
 	if(!renderer->isPicking()) {
 		_vertexBuffer.detachColors(vpRenderer, shader);
 		_vertexBuffer.detachNormals(vpRenderer, shader);
-		if(_hasAlpha) glDisable(GL_BLEND);
+		if(_hasAlpha) vpRenderer->glDisable(GL_BLEND);
 	}
 	else {
 		vpRenderer->deactivateVertexIDs(_pickingShader);
@@ -279,8 +279,8 @@ void OpenGLMeshPrimitive::render(SceneRenderer* renderer)
 
 	// Restore old state.
 	if(cullFaces()) {
-		glDisable(GL_CULL_FACE);
-		glCullFace(GL_BACK);
+		vpRenderer->glDisable(GL_CULL_FACE);
+		vpRenderer->glCullFace(GL_BACK);
 	}
 }
 

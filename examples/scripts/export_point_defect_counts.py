@@ -22,7 +22,7 @@ fout = open("outputfile.txt", "w")
 
 for frame in range(dataset.anim.first_frame, dataset.anim.last_frame+1):
     dataset.anim.current_frame = frame
-    dataset.selected_node.compute()    
+    dataset.selected_node.compute()
     num_vacancies = ws_mod.vacancy_count
     num_interstitials = ws_mod.interstitial_count
     print(frame, num_vacancies, num_interstitials, file = fout)

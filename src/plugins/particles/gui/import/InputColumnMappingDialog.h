@@ -22,15 +22,15 @@
 #ifndef __OVITO_INPUT_COLUMN_MAPPING_DIALOG_H
 #define __OVITO_INPUT_COLUMN_MAPPING_DIALOG_H
 
-#include <plugins/particles/Particles.h>
-#include "InputColumnMapping.h"
+#include <plugins/particles/gui/ParticlesGui.h>
+#include <plugins/particles/import/InputColumnMapping.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import)
 
 /**
  * \brief Dialog box that lets the user edit an InputColumnMapping.
  */
-class OVITO_PARTICLES_EXPORT InputColumnMappingDialog : public QDialog
+class OVITO_PARTICLES_GUI_EXPORT InputColumnMappingDialog : public QDialog
 {
 	Q_OBJECT
 	

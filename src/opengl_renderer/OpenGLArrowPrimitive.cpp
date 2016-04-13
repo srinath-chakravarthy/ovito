@@ -572,8 +572,8 @@ void OpenGLArrowPrimitive::renderWithNormals(OpenGLSceneRenderer* renderer)
 	if(!shader->bind())
 		renderer->throwException(QStringLiteral("Failed to bind OpenGL shader."));
 
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	renderer->glEnable(GL_CULL_FACE);
+	renderer->glCullFace(GL_BACK);
 
 	shader->setUniformValue("modelview_projection_matrix", (QMatrix4x4)(renderer->projParams().projectionMatrix * renderer->modelViewTM()));
 	if(!renderer->isPicking())
@@ -633,8 +633,8 @@ void OpenGLArrowPrimitive::renderWithElementInfo(OpenGLSceneRenderer* renderer)
 	if(!shader->bind())
 		renderer->throwException(QStringLiteral("Failed to bind OpenGL shader."));
 
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	renderer->glEnable(GL_CULL_FACE);
+	renderer->glCullFace(GL_BACK);
 
 	shader->setUniformValue("modelview_matrix",
 			(QMatrix4x4)renderer->modelViewTM());
@@ -652,7 +652,7 @@ void OpenGLArrowPrimitive::renderWithElementInfo(OpenGLSceneRenderer* renderer)
 	shader->setUniformValue("parallel_view_dir", viewDir.x(), viewDir.y(), viewDir.z());
 
 	GLint viewportCoords[4];
-	glGetIntegerv(GL_VIEWPORT, viewportCoords);
+	renderer->glGetIntegerv(GL_VIEWPORT, viewportCoords);
 	shader->setUniformValue("viewport_origin", (float)viewportCoords[0], (float)viewportCoords[1]);
 	shader->setUniformValue("inverse_viewport_size", 2.0f / (float)viewportCoords[2], 2.0f / (float)viewportCoords[3]);
 
@@ -680,7 +680,7 @@ void OpenGLArrowPrimitive::renderWithElementInfo(OpenGLSceneRenderer* renderer)
 			_verticesWithElementInfo[chunkIndex].bindColors(renderer, shader, 4, offsetof(VertexWithElementInfo, color));
 
 		if(_usingGeometryShader && (shadingMode() == FlatShading || renderingQuality() == HighQuality) && shape() == CylinderShape) {
-			OVITO_CHECK_OPENGL(glDrawArrays(GL_POINTS, 0, chunkSize));
+			OVITO_CHECK_OPENGL(renderer->glDrawArrays(GL_POINTS, 0, chunkSize));
 		}
 		else {
 			int stripPrimitivesPerElement = _stripPrimitiveVertexCounts.size() / _chunkSize;

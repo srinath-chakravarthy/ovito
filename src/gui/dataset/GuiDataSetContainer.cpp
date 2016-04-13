@@ -34,6 +34,7 @@
 #include <core/utilities/concurrent/ProgressDisplay.h>
 #include <gui/mainwin/MainWindow.h>
 #include <gui/utilities/concurrent/ProgressDialogAdapter.h>
+#include <gui/dataset/importexport/FileImporterEditor.h>
 #include "GuiDataSetContainer.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem)
@@ -239,6 +240,18 @@ bool GuiDataSetContainer::importFile(const QUrl& url, const OvitoObjectType* imp
 	// Load user-defined default settings for the importer.
 	importer->loadUserDefaults();
 
+	// Show the optional user interface (which is provided by the corresponding FileImporterEditor class) for the new importer.
+	for(const OvitoObjectType* clazz = &importer->getOOType(); clazz != nullptr; clazz = clazz->superClass()) {
+		const OvitoObjectType* editorClass = PropertiesEditor::registry().getEditorClass(clazz);
+		if(editorClass && editorClass->isDerivedFrom(FileImporterEditor::OOType)) {
+			OORef<FileImporterEditor> editor = dynamic_object_cast<FileImporterEditor>(editorClass->createInstance(nullptr));
+			if(editor) {
+				if(!editor->inspectNewFile(importer, url, mainWindow()))
+					return false;
+			}
+		}
+	}
+
 	// Determine how the file's data should be inserted into the current scene.
 	FileImporter::ImportMode importMode = FileImporter::ResetScene;
 
@@ -295,7 +308,7 @@ bool GuiDataSetContainer::importFile(const QUrl& url, const OvitoObjectType* imp
 		}
 	}
 
-	return importer->importFile(url, importMode);
+	return importer->importFile(url, importMode, true);
 }
 
 /******************************************************************************

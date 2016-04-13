@@ -52,10 +52,6 @@ public:
 	/// Returns the title of this object.
 	virtual QString objectTitle() override { return tr("XYZ File"); }
 
-	/// This method is called by the FileSource each time a new source
-	/// file has been selected by the user.
-	virtual bool inspectNewFile(FileSource* obj, int frameIndex) override;
-
 	/// \brief Returns the user-defined mapping between data columns in the input file and
 	///        the internal particle properties.
 	const InputColumnMapping& columnMapping() const { return _columnMapping; }
@@ -68,9 +64,12 @@ public:
 	static bool mapVariableToProperty(InputColumnMapping &columnMapping, int column, QString name, int dataType, int vec);
 
 	/// Creates an asynchronous loader object that loads the data for the given frame from the external file.
-	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame) override {
-		return std::make_shared<XYZImportTask>(dataset()->container(), frame, isNewlySelectedFile(), _columnMapping);
+	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame, bool isNewlySelectedFile) override {
+		return std::make_shared<XYZImportTask>(dataset()->container(), frame, isNewlySelectedFile, _columnMapping);
 	}
+
+	/// Inspects the header of the given file and returns the number of file columns.
+	InputColumnMapping inspectFileHeader(const Frame& frame);
 
 public:
 
@@ -85,17 +84,14 @@ private:
 
 		/// Normal constructor.
 		XYZImportTask(DataSetContainer* container, const FileSourceImporter::Frame& frame, bool isNewFile, const InputColumnMapping& columnMapping)
-		  : ParticleFrameLoader(container, frame, isNewFile), _parseFileHeaderOnly(false), _columnMapping(columnMapping), _propertiesAssigned(false) {}
+		  : ParticleFrameLoader(container, frame, isNewFile), _parseFileHeaderOnly(false), _columnMapping(columnMapping) {}
 
 		/// Constructor used when reading only the file header information.
 		XYZImportTask(DataSetContainer* container, const FileSourceImporter::Frame& frame)
-		  : ParticleFrameLoader(container, frame, true), _parseFileHeaderOnly(true), _propertiesAssigned(false) {}
+		  : ParticleFrameLoader(container, frame, true), _parseFileHeaderOnly(true) {}
 
 		/// Returns the file column mapping used to load the file.
 		const InputColumnMapping& columnMapping() const { return _columnMapping; }
-
-		/// Returns true if names of columns/properties were read from comment line of XYZ file
-		const bool propertiesAssigned() const { return _propertiesAssigned; }
 
 	protected:
 
@@ -105,7 +101,6 @@ private:
 	private:
 
 		bool _parseFileHeaderOnly;
-		bool _propertiesAssigned;
 		InputColumnMapping _columnMapping;
 	};
 

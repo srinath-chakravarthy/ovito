@@ -29,17 +29,16 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, IMDExporter, ParticleExporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, IMDExporter, FileColumnParticleExporter);
 
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.
 ******************************************************************************/
-bool IMDExporter::exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
+bool IMDExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
 {
 	// Get particle positions.
+	const PipelineFlowState& state = getParticleData(sceneNode, time);
 	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
-	if(!posProperty)
-		throw Exception(tr("No particle positions available. Cannot write IMD file."));
 	ParticleTypeProperty* typeProperty = nullptr;
 	ParticlePropertyObject* identifierProperty = nullptr;
 	ParticlePropertyObject* velocityProperty = nullptr;

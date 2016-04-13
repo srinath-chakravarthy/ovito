@@ -47,15 +47,10 @@ public:
 
 	/// \brief Sets the source location for importing data.
 	/// \param sourceUrl The new source location.
-	/// \param importerType The FileSourceImporter type that will be used to parse the input file (can be \c nullptr to request format auto-detection).
-	/// \return false if the operation has been canceled by the user.
-	bool setSource(const QUrl& sourceUrl, const OvitoObjectType* importerType = nullptr);
-
-	/// \brief Sets the source location for importing data.
-	/// \param sourceUrl The new source location.
 	/// \param importer The importer object that will parse the input file.
+	/// \param autodetectFileSequences Enables the automatic detection of file sequences.
 	/// \return false if the operation has been canceled by the user.
-	bool setSource(QUrl sourceUrl, FileSourceImporter* importer, bool useExactURL);
+	bool setSource(QUrl sourceUrl, FileSourceImporter* importer, bool autodetectFileSequences);
 
 	/// \brief Returns the source location of the data.
 	const QUrl& sourceUrl() const { return _sourceUrl; }
@@ -153,6 +148,10 @@ private:
 
 	/// The index of the animation frame currently being loaded.
 	int _frameBeingLoaded;
+
+	/// Flag indicating that the file being loaded has been newly selected by the user.
+	/// If not, then the file being loaded is just another frame from the existing sequence.
+	bool _isNewFile;
 
 	/// The asynchronous file loading task started by requestFrame().
 	std::shared_ptr<FileSourceImporter::FrameLoader> _activeFrameLoader;

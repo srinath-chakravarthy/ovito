@@ -38,7 +38,7 @@ class OVITO_PARTICLES_EXPORT ParticleImporter : public FileSourceImporter
 public:
 
 	/// \brief Constructs a new instance of this class.
-	ParticleImporter(DataSet* dataset) : FileSourceImporter(dataset), _isMultiTimestepFile(false), _isNewFile(false) {
+	ParticleImporter(DataSet* dataset) : FileSourceImporter(dataset), _isMultiTimestepFile(false) {
 		INIT_PROPERTY_FIELD(ParticleImporter::_isMultiTimestepFile);
 	}
 
@@ -59,10 +59,6 @@ public:
 	/// when the user picks a new input filename.
 	virtual bool autoGenerateWildcardPattern() override { return !isMultiTimestepFile(); }
 
-	/// This method is called by the FileSource each time a new source
-	/// file has been selected by the user.
-	virtual bool inspectNewFile(FileSource* obj, int frameIndex) override;
-
 protected:
 
 	/// \brief Is called when the value of a property of this object has changed.
@@ -71,15 +67,6 @@ protected:
 	/// \brief Scans the given input file to find all contained simulation frames.
 	virtual void scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream);
 
-	/// Indicates whether the file currently being loaded has been newly selected by the user.
-	/// This method should only be called from an implementation of the createImportTask() virtual method.
-	bool isNewlySelectedFile() {
-		if(_isNewFile) {
-			_isNewFile = false;		// Reset flag after read access.
-			return true;			// This is an ugly hack.
-		}
-		return false;
-	}
 
 private:
 
@@ -88,12 +75,6 @@ private:
 
 	/// Indicates that the input file contains multiple timesteps.
 	PropertyField<bool> _isMultiTimestepFile;
-
-	/// Flag indicating that the file currently being loaded has been newly selected by the user.
-	/// If not, then the file being loaded is just another frame from the existing sequence.
-	/// In this case we don't want to overwrite any settings like the periodic boundary flags that
-	/// might have been changed by the user.
-	bool _isNewFile;
 
 	Q_OBJECT
 	OVITO_OBJECT

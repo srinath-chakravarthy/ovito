@@ -129,7 +129,7 @@ def _get_ObjectNode_modifiers(self):
     return ObjectNodeModifierList(self)
 ObjectNode.modifiers = property(_get_ObjectNode_modifiers)
 
-def _ObjectNode_wait(self, signalError = True, msgText = None):
+def _ObjectNode_wait(self, signalError = True, msgText = None, time = None):
     # Blocks script execution until the node's modification pipeline is ready.
     #
     #    :param str msgText: An optional text that will be shown to the user while waiting for the operation to finish.
@@ -137,25 +137,29 @@ def _ObjectNode_wait(self, signalError = True, msgText = None):
     #                        This may be the case if the input file could not be loaded, or if one of the modifiers reported an error.   
     #    :returns: ``True`` if the pipeline evaluation is complete, ``False`` if the operation has been canceled by the user.
     #
-    if not msgText: msgText = "Data pipeline is being evaluated. Waiting for operation for complete." 
-    if not self.waitUntilReady(self.dataset.anim.time, msgText, ovito.get_progress_display()):
+    if not msgText: msgText = "Data pipeline is being evaluated. Waiting for operation for complete."
+    if time is None: time = self.dataset.anim.time 
+    if not self.waitUntilReady(time, msgText, ovito.get_progress_display()):
         return False
     if signalError:
-        state = self.evalPipeline(self.dataset.anim.time)
+        state = self.evalPipeline(time)
         if state.status.type == PipelineStatus.Type.Error:
             raise RuntimeError("Data pipeline evaluation failed with the following error: %s" % state.status.text)
     return True
 ObjectNode.wait = _ObjectNode_wait
 
-def _ObjectNode_compute(self):
+def _ObjectNode_compute(self, frame = None):
     """ Computes and returns the results of the node's modification pipeline.
 
         This method requests an update of the node's modification pipeline and waits until the effect of all modifiers in the 
         node's modification pipeline has been computed. If the modification pipeline is already up to date, i.e., results are already 
         available in the node's pipeline cache, the method returns immediately.
         
-        Even if you are not interested in the final data that leaves the modification pipeline, you should call this method in case you are going to 
-        directly access information provided by individual modifiers in the pipeline. This method will ensure that all modifiers 
+        The optional *frame* parameter lets you control at which animation time the modification pipeline is evaluated. (Animation frames start at 0.) 
+        If it is omitted, the current animation position (:py:attr:`AnimationSettings.current_frame <ovito.anim.AnimationSettings.current_frame>`) is used.
+        
+        Even if you are not interested in the final output of the modification pipeline, you should still call this method in case you are going to 
+        directly access information reported by individual modifiers in the pipeline. This method will ensure that all modifiers 
         have been computed and their output fields are up to date.
 
         This function raises a ``RuntimeError`` when the modification pipeline could not be successfully evaluated for some reason.
@@ -164,9 +168,15 @@ def _ObjectNode_compute(self):
         :returns: A reference to the node's internal :py:class:`~ovito.data.DataCollection` containing the output of the modification pipeline.
                   It is also accessible via the :py:attr:`.output` attribute after calling :py:meth:`.compute`.
     """
-    if not self.wait():
+    if frame is not None:
+        time = self.dataset.anim.frameToTime(frame)
+    else:
+        time = self.dataset.anim.time
+
+    if not self.wait(time = time):
         raise RuntimeError("Operation has been canceled by the user.")
-    state = self.evalPipeline(self.dataset.anim.time)
+    
+    state = self.evalPipeline(time)
     assert(state.status.type != PipelineStatus.Type.Error)
     assert(state.status.type != PipelineStatus.Type.Pending)
     
@@ -198,6 +208,19 @@ def _ObjectNode_remove_from_scene(self):
     if self == self.dataset.selected_node:
         self.dataset.selected_node = None
 ObjectNode.remove_from_scene = _ObjectNode_remove_from_scene
+
+def _ObjectNode_add_to_scene(self):
+    """ Inserts the node into the current scene by appending it to the :py:attr:`ovito.DataSet.scene_nodes` list.
+        The visual representation of the node will appear in the viewports.
+        
+        You can remove the node from the scene again by calling :py:meth:`.remove_from_scene`.
+    """
+    if not self in self.dataset.scene_nodes:
+        self.dataset.scene_nodes.append(self)
+    
+    # Select node
+    self.dataset.selected_node = self
+ObjectNode.add_to_scene = _ObjectNode_add_to_scene
 
 # Give SceneRoot class a list-like interface.
 SceneRoot.__len__ = lambda self: len(self.children)

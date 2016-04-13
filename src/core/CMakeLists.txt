@@ -55,6 +55,7 @@ SET(SourceFiles
 	dataset/DataSetContainer.cpp
 	dataset/UndoStack.cpp
 	dataset/importexport/FileImporter.cpp
+	dataset/importexport/FileExporter.cpp
 	dataset/importexport/FileSourceImporter.cpp
 	dataset/importexport/FileSource.cpp
 	scene/SceneNode.cpp

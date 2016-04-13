@@ -53,7 +53,7 @@ SET_PROPERTY_FIELD_LABEL(FileSource, _playbackStartTime, "Playback start time");
 ******************************************************************************/
 FileSource::FileSource(DataSet* dataset) : CompoundObject(dataset),
 	_adjustAnimationIntervalEnabled(true), _loadedFrameIndex(-1), _frameBeingLoaded(-1),
-	_playbackSpeedNumerator(1), _playbackSpeedDenominator(1), _playbackStartTime(0)
+	_playbackSpeedNumerator(1), _playbackSpeedDenominator(1), _playbackStartTime(0), _isNewFile(false)
 {
 	INIT_PROPERTY_FIELD(FileSource::_importer);
 	INIT_PROPERTY_FIELD(FileSource::_adjustAnimationIntervalEnabled);
@@ -71,55 +71,7 @@ FileSource::FileSource(DataSet* dataset) : CompoundObject(dataset),
 /******************************************************************************
 * Sets the source location for importing data.
 ******************************************************************************/
-bool FileSource::setSource(const QUrl& newSourceUrl, const OvitoObjectType* importerType)
-{
-	OORef<FileImporter> fileimporter;
-
-	// Create file importer instance.
-	if(!importerType) {
-
-		// Download file so we can determine its format.
-		Future<QString> fetchFileFuture = FileManager::instance().fetchUrl(*dataset()->container(), newSourceUrl);
-		if(!dataset()->container()->taskManager().waitForTask(fetchFileFuture))
-			return false;
-
-		// Inspect file to detect its format.
-		fileimporter = FileImporter::autodetectFileFormat(dataset(), fetchFileFuture.result(), newSourceUrl.path());
-		if(!fileimporter)
-			throwException(tr("Could not detect the format of the file to be imported. The format might not be supported."));
-	}
-	else {
-		// Caller has provided a specific importer type.
-		fileimporter = static_object_cast<FileImporter>(importerType->createInstance(dataset()));
-		if(!fileimporter)
-			return false;
-	}
-
-	// The importer must be a FileSourceImporter.
-	OORef<FileSourceImporter> newImporter = dynamic_object_cast<FileSourceImporter>(fileimporter);
-	if(!newImporter)
-		throwException(tr("The selected file type is not compatible."));
-
-	// Temporarily suppress viewport updates while setting up the newly imported data.
-	ViewportSuspender noVPUpdate(dataset()->viewportConfig());
-
-	// Re-use the old importer if possible.
-	if(importer() && importer()->getOOType() == newImporter->getOOType()) {
-		newImporter = importer();
-	}
-	else {
-		// Load user-defined default import settings.
-		newImporter->loadUserDefaults();
-	}
-
-	// Set the new input location.
-	return setSource(newSourceUrl, newImporter, true);
-}
-
-/******************************************************************************
-* Sets the source location for importing data.
-******************************************************************************/
-bool FileSource::setSource(QUrl sourceUrl, FileSourceImporter* importer, bool useExactURL)
+bool FileSource::setSource(QUrl sourceUrl, FileSourceImporter* importer, bool autodetectFileSequences)
 {
 	// Make file path absolute.
 	if(sourceUrl.isLocalFile()) {
@@ -137,7 +89,7 @@ bool FileSource::setSource(QUrl sourceUrl, FileSourceImporter* importer, bool us
 	if(importer) {
 		// If URL is not already a wildcard pattern, generate a default pattern by
 		// replacing last sequence of numbers in the filename with a wildcard character.
-		if(!useExactURL && importer->autoGenerateWildcardPattern() && !originalFilename.contains('*') && !originalFilename.contains('?')) {
+		if(autodetectFileSequences && importer->autoGenerateWildcardPattern() && !originalFilename.contains('*') && !originalFilename.contains('?')) {
 			int startIndex, endIndex;
 			for(endIndex = originalFilename.length() - 1; endIndex >= 0; endIndex--)
 				if(originalFilename.at(endIndex).isNumber()) break;
@@ -165,7 +117,7 @@ bool FileSource::setSource(QUrl sourceUrl, FileSourceImporter* importer, bool us
 		virtual void undo() override {
 			QUrl url = _obj->sourceUrl();
 			OORef<FileSourceImporter> importer = _obj->importer();
-			_obj->setSource(_oldUrl, _oldImporter, true);
+			_obj->setSource(_oldUrl, _oldImporter, false);
 			_oldUrl = url;
 			_oldImporter = importer;
 		}
@@ -180,37 +132,37 @@ bool FileSource::setSource(QUrl sourceUrl, FileSourceImporter* importer, bool us
 	_importer = importer;
 
 	// Scan the input source for animation frames.
-	if(updateFrames()) {
-
-		// Jump to the right frame to show the originally selected file.
-		int jumpToFrame = -1;
-		for(int frameIndex = 0; frameIndex < _frames.size(); frameIndex++) {
-			QFileInfo fileInfo(_frames[frameIndex].sourceFile.path());
-			if(fileInfo.fileName() == originalFilename) {
-				jumpToFrame = frameIndex;
-				break;
-			}
-		}
-
-		// Adjust the animation length number to match the number of frames in the input data source.
-		adjustAnimationInterval(jumpToFrame);
-
-		// Let the parser inspect the file. The user may still cancel the import
-		// operation at this point.
-		if(!_frames.empty() && importer->inspectNewFile(this, jumpToFrame) == false)
-			return false;
-
-		// Cancel any old load operation in progress.
-		cancelLoadOperation();
-
-		transaction.commit();
-		notifyDependents(ReferenceEvent::TitleChanged);
-
-		return true;
+	if(!updateFrames()) {
+		// Transaction has not been committed. We will revert to old state.
+		return false;
 	}
 
-	// Transaction has not been committed. We will revert to old state.
-	return false;
+	// Jump to the right frame to show the originally selected file.
+	int jumpToFrame = -1;
+	for(int frameIndex = 0; frameIndex < _frames.size(); frameIndex++) {
+		QFileInfo fileInfo(_frames[frameIndex].sourceFile.path());
+		if(fileInfo.fileName() == originalFilename) {
+			jumpToFrame = frameIndex;
+			break;
+		}
+	}
+
+	// Adjust the animation length number to match the number of frames in the input data source.
+	adjustAnimationInterval(jumpToFrame);
+
+	// Set flag which indicates that the file being loaded is a newly selected one.
+	_isNewFile = true;
+
+	// Cancel any old load operation in progress.
+	cancelLoadOperation();
+
+	// Trigger a reload of the current frame.
+	_loadedFrameIndex = -1;
+
+	transaction.commit();
+	notifyDependents(ReferenceEvent::TitleChanged);
+
+	return true;
 }
 
 /******************************************************************************
@@ -354,7 +306,8 @@ PipelineFlowState FileSource::requestFrame(int frame)
 			return PipelineFlowState(status(), dataObjects(), interval);
 		}
 		_frameBeingLoaded = frame;
-		_activeFrameLoader = importer()->createFrameLoader(frames()[frame]);
+		_activeFrameLoader = importer()->createFrameLoader(frames()[frame], _isNewFile);
+		_isNewFile = false;
 		_frameLoaderWatcher.setFutureInterface(_activeFrameLoader);
 		dataset()->container()->taskManager().runTaskAsync(_activeFrameLoader);
 		setStatus(PipelineStatus::Pending);

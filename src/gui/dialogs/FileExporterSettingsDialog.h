@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // 
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,31 +19,25 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_EXPORTER_SETTINGS_DIALOG_H
-#define __OVITO_PARTICLE_EXPORTER_SETTINGS_DIALOG_H
+#ifndef __OVITO_FILE_EXPORTER_SETTINGS_DIALOG_H
+#define __OVITO_FILE_EXPORTER_SETTINGS_DIALOG_H
 
-#include <plugins/particles/Particles.h>
-#include <plugins/particles/objects/ParticlePropertyObject.h>
-#include <plugins/particles/export/ParticleExporter.h>
-#include <plugins/particles/export/OutputColumnMapping.h>
-#include <gui/widgets/general/SpinnerWidget.h>
+#include <gui/GUI.h>
+#include <core/dataset/importexport/FileExporter.h>
 
-namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export)
+namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
- * \brief This dialog box lets the user adjust the settings of a ParticleExporter.
+ * \brief This dialog box lets the user adjust the settings of a FileExporter.
  */
-class OVITO_PARTICLES_EXPORT ParticleExporterSettingsDialog : public QDialog
+class FileExporterSettingsDialog : public QDialog
 {
 	Q_OBJECT
 	
 public:
 
 	/// Constructor.
-	ParticleExporterSettingsDialog(QWidget* parent, ParticleExporter* exporter, const PipelineFlowState& state, OutputColumnMapping* columnMapping = nullptr);
-
-	/// Extends the dialog by inserting an additional widget (usually a QGroupBox) into the layout.
-	void insertWidget(QWidget* widget);
+	FileExporterSettingsDialog(MainWindow* parent, FileExporter* exporter);
 
 protected Q_SLOTS:
 
@@ -52,23 +46,18 @@ protected Q_SLOTS:
 
 protected:
 
-	/// Populates the column mapping list box with an entry.
-	void insertPropertyItem(ParticlePropertyReference propRef, const QString& displayName);
-
 	QVBoxLayout* _mainLayout;
-	OORef<ParticleExporter> _exporter;
+	OORef<FileExporter> _exporter;
 	SpinnerWidget* _startTimeSpinner;
 	SpinnerWidget* _endTimeSpinner;
 	SpinnerWidget* _nthFrameSpinner;
 	QLineEdit* _wildcardTextbox;
 	QButtonGroup* _fileGroupButtonGroup;
 	QButtonGroup* _rangeButtonGroup;
-	OutputColumnMapping* _columnMapping;
-	QListWidget* _columnMappingWidget;
 };
 
 OVITO_END_INLINE_NAMESPACE
-}	// End of namespace
+OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_PARTICLE_EXPORTER_SETTINGS_DIALOG_H
+#endif // __OVITO_FILE_EXPORTER_SETTINGS_DIALOG_H

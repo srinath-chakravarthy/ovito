@@ -72,7 +72,7 @@ as object attributes, e.g.::
 To access standard particle properties in this way, the Python attribute name can be derived from the
 particle property name by replacing all letters with their lower-case variants and white-spaces with underscores (e.g. 
 ``particle_properties['Structure Type']`` becomes ``particle_properties.structure_type``). The names of all standard particle
-properties are listed :ref:`here <standard-property-list>`.
+properties are listed :ref:`here <particle-types-list>`.
 
 The per-particle data stored in a :py:class:`~ovito.data.ParticleProperty` can be accessed through
 its :py:attr:`~ovito.data.ParticleProperty.array` attribute, which returns a NumPy array::

@@ -94,7 +94,15 @@ BOOST_PYTHON_MODULE(PyScriptFileIO)
 	ovito_abstract_class<FileExporter, RefTarget>()
 		.add_property("fileFilter", &FileExporter::fileFilter)
 		.add_property("fileFilterDescription", &FileExporter::fileFilterDescription)
-		.def("exportToFile", &FileExporter::exportToFile)
+		.add_property("output_filename", make_function(&FileExporter::outputFilename, return_value_policy<copy_const_reference>()), &FileExporter::setOutputFilename)
+		.add_property("multiple_frames", &FileExporter::exportAnimation, &FileExporter::setExportAnimation)
+		.add_property("use_wildcard_filename", &FileExporter::useWildcardFilename, &FileExporter::setUseWildcardFilename)
+		.add_property("wildcard_filename", make_function(&FileExporter::wildcardFilename, return_value_policy<copy_const_reference>()), &FileExporter::setWildcardFilename)
+		.add_property("start_frame", &FileExporter::startFrame, &FileExporter::setStartFrame)
+		.add_property("end_frame", &FileExporter::endFrame, &FileExporter::setEndFrame)
+		.add_property("every_nth_frame", &FileExporter::everyNthFrame, &FileExporter::setEveryNthFrame)
+		.def("setOutputData", &FileExporter::setOutputData)
+		.def("exportNodes", &FileExporter::exportNodes)
 	;
 
 	ovito_class<FileSource, CompoundObject>(
@@ -102,10 +110,10 @@ BOOST_PYTHON_MODULE(PyScriptFileIO)
 			"This object serves as a data source for modification pipelines and is responsible for reading the input data from one or more external files."
 			"\n\n"
 			"You normally do not create an instance of this class yourself. "
-			"The :py:func:`ovito.io.import_file` function automatically assigns a :py:class:`!FileSource` to the :py:attr:`~ovito.ObjectNode.source` "
+			"The :py:func:`ovito.io.import_file` function does it for you and assigns the file source to the :py:attr:`~ovito.ObjectNode.source` "
 			"attribute of the returned :py:class:`~ovito.ObjectNode`. "
-			"The file source loads data from the external file given by the :py:attr:`.source_path` attribute. The :py:class:`~ovito.ObjectNode` "
-			"then feeds that data into its modification pipeline."
+			"This file source loads data from the external file given by the :py:attr:`.source_path` attribute. The :py:class:`~ovito.ObjectNode` "
+			"then takes this data and feeds it into its modification pipeline."
 			"\n\n"
 			"You typically don't set the :py:attr:`.source_path` attribute directly. "
 			"Instead, use the :py:meth:`FileSource.load` method to load a different input file and hook it into an existing modification pipeline:"
@@ -113,7 +121,7 @@ BOOST_PYTHON_MODULE(PyScriptFileIO)
 			".. literalinclude:: ../example_snippets/file_source_load_method.py\n"
 			"\n"
 			"File sources are also used by certain modifiers to load a reference configuration, e.g. by the :py:class:`~ovito.modifiers.CalculateDisplacementsModifier`, "
-			"whose :py:attr:`~ovito.modifiers.CalculateDisplacementsModifier.reference` attribute contains a :py:class:`!FileSource`.\n"
+			"whose :py:attr:`~ovito.modifiers.CalculateDisplacementsModifier.reference` attribute also contains a :py:class:`!FileSource`.\n"
 			"\n\n"
 			"**Example**"
 			"\n\n"
@@ -124,26 +132,28 @@ BOOST_PYTHON_MODULE(PyScriptFileIO)
 			"\n"
 			"**Data access**"
 			"\n\n"
-		    "The :py:class:`!FileSource` class is derived from :py:class:`~ovito.data.DataCollection`. "
-		    "Thus, the data loaded from the external file can be accessed as contents of the :py:class:`~ovito.data.DataCollection`. "
-			"The stored data represents the outcome of the last successful loading operation and may change every time a new simulation frame is "
-			"loaded (see :py:attr:`.loaded_frame`), or after a call to :py:meth:`.load()`."
+		    "The :py:class:`!FileSource` class is derived from the :py:class:`~ovito.data.DataCollection` base class. "
+		    "This means the file source also stores the data loaded from the external file, and you can access this data through the :py:class:`~ovito.data.DataCollection` interface. "
+			"Note that the cached data represents the outcome of the most recent successful loading operation and may change every time a new simulation frame is "
+			"loaded (see :py:attr:`.loaded_frame`)."
 			"\n\n"
 			".. literalinclude:: ../example_snippets/file_source_data_access.py\n"
 			)
 		.add_property("importer", make_function(&FileSource::importer, return_value_policy<ovito_object_reference>()))
 		.add_property("source_path", make_function(&FileSource::sourceUrl, return_value_policy<copy_const_reference>()))
 		.add_property("num_frames", &FileSource::numberOfFrames,
-				"The number of frames the loaded file or file sequence contains (read-only).")
+				"The total number of frames the imported file or file sequence contains (read-only).")
 		.add_property("loaded_frame", &FileSource::loadedFrameIndex,
-				"The zero-based index of the frame from the input time series that is currently loaded (read-only).")
+				"The zero-based frame index that is currently loaded into memory by the :py:class:`!FileSource` (read-only). "
+				"\n\n"
+				"The content of this frame is accessible through the inherited :py:class:`~ovito.data.DataCollection` interface.")
 		.add_property("adjust_animation_interval", &FileSource::adjustAnimationIntervalEnabled, &FileSource::setAdjustAnimationIntervalEnabled,
 				"A flag that controls whether the animation length in OVITO is automatically adjusted to match the number of frames in the "
 				"loaded file or file sequence."
 				"\n\n"
-				"The current length of the animation in OVITO is stored in the :py:class:`~ovito.anim.AnimationSettings` object. The number of frames in the external file "
+				"The current length of the animation in OVITO is managed by the global :py:class:`~ovito.anim.AnimationSettings` object. The number of frames in the external file "
 				"or file sequence is indicated by the :py:attr:`.num_frames` attribute of this :py:class:`!FileSource`. If :py:attr:`.adjust_animation_interval` "
-				"is ``True``, then animation length will be automatically adjusted to match the number of frames in the file input. "
+				"is ``True``, then the animation length will be automatically adjusted to match the number of frames provided by the :py:class:`!FileSource`. "
 				"\n\n"
 				"In some situations it makes sense to turn this option off, for example, if you import several data files into "
 				"OVITO simultaneously, but their frame counts do not match. "
@@ -154,8 +164,7 @@ BOOST_PYTHON_MODULE(PyScriptFileIO)
 		.def("animationTimeToInputFrame", &FileSource::animationTimeToInputFrame)
 		.def("inputFrameToAnimationTime", &FileSource::inputFrameToAnimationTime)
 		.def("adjustAnimationInterval", &FileSource::adjustAnimationInterval)
-		.def("setSource", (bool (FileSource::*)(const QUrl&, const OvitoObjectType*))&FileSource::setSource)
-		.def("setSource", (bool (FileSource::*)(QUrl, FileSourceImporter*, bool))&FileSource::setSource)
+		.def("setSource", &FileSource::setSource)
 	;
 }
 

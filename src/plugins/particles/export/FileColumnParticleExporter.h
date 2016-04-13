@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,33 +19,26 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_IMD_FILE_EXPORTER_H
-#define __OVITO_IMD_FILE_EXPORTER_H
+#ifndef __OVITO_FILE_COLUMN_PARTICLE_EXPORTER_H
+#define __OVITO_FILE_COLUMN_PARTICLE_EXPORTER_H
 
 #include <plugins/particles/Particles.h>
-#include "../ParticleExporter.h"
-#include "../OutputColumnMapping.h"
+#include "ParticleExporter.h"
+#include "OutputColumnMapping.h"
 
-namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
+namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export)
 
 /**
- * \brief Exporter that writes the particles to an IMD file.
+ * \brief Abstract base class for export services that can export an arbitrary list of particle properties.
  */
-class OVITO_PARTICLES_EXPORT IMDExporter : public ParticleExporter
+class OVITO_PARTICLES_EXPORT FileColumnParticleExporter : public ParticleExporter
 {
-public:
+protected:
 
 	/// \brief Constructs a new instance of this class.
-	Q_INVOKABLE IMDExporter(DataSet* dataset) : ParticleExporter(dataset) {}
+	FileColumnParticleExporter(DataSet* dataset) : ParticleExporter(dataset) {}
 
-	/// \brief Returns the file filter that specifies the files that can be exported by this service.
-	virtual QString fileFilter() override { return QStringLiteral("*"); }
-
-	/// \brief Returns the filter description that is displayed in the drop-down box of the file dialog.
-	virtual QString fileFilterDescription() override { return tr("IMD File"); }
-
-	/// \brief Opens the export settings dialog for this exporter service.
-	virtual bool showSettingsDialog(const PipelineFlowState& state, QWidget* parent) override;
+public:
 
 	/// \brief Returns the mapping of particle properties to output file columns.
 	const OutputColumnMapping& columnMapping() const { return _columnMapping; }
@@ -53,18 +46,17 @@ public:
 	/// \brief Sets the mapping of particle properties to output file columns.
 	void setColumnMapping(const OutputColumnMapping& mapping) { _columnMapping = mapping; }
 
+	/// \brief Loads the user-defined default values of this object's parameter fields from the
+	///        application's settings store.
+	virtual void loadUserDefaults() override;
+
 public:
 
 	Q_PROPERTY(Ovito::Particles::OutputColumnMapping columnMapping READ columnMapping WRITE setColumnMapping);
 
-protected:
-
-	/// \brief Writes the particles of one animation frame to the current output file.
-	virtual bool exportParticles(const PipelineFlowState& state, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) override;
-
 private:
 
-	/// The mapping particle properties to output file columns.
+	/// The mapping of particle properties to output file columns.
 	OutputColumnMapping _columnMapping;
 
 	Q_OBJECT
@@ -72,8 +64,7 @@ private:
 };
 
 OVITO_END_INLINE_NAMESPACE
-OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_IMD_FILE_EXPORTER_H
+#endif // __OVITO_FILE_COLUMN_PARTICLE_EXPORTER_H

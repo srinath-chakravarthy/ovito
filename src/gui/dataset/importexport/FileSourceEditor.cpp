@@ -27,8 +27,12 @@
 #include <gui/properties/SubObjectParameterUI.h>
 #include <gui/dialogs/ImportFileDialog.h>
 #include <gui/dialogs/ImportRemoteFileDialog.h>
+#include <gui/dataset/importexport/FileImporterEditor.h>
+#include <gui/mainwin/MainWindow.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/dataset/importexport/FileSource.h>
+#include <core/utilities/io/FileManager.h>
+#include <core/viewport/ViewportConfiguration.h>
 #include "FileSourceEditor.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -217,7 +221,7 @@ void FileSourceEditor::onPickLocalInputFile()
 		}
 
 		// Set the new input location.
-		obj->setSource(newSourceUrl, importerType);
+		importNewFile(obj, newSourceUrl, importerType);
 	}
 	catch(const Exception& ex) {
 		ex.showError();
@@ -259,11 +263,65 @@ void FileSourceEditor::onPickRemoteInputFile()
 		}
 
 		// Set the new input location.
-		obj->setSource(newSourceUrl, importerType);
+		importNewFile(obj, newSourceUrl, importerType);
 	}
 	catch(const Exception& ex) {
 		ex.showError();
 	}
+}
+
+/******************************************************************************
+* Loads a new file into the FileSource.
+******************************************************************************/
+bool FileSourceEditor::importNewFile(FileSource* fileSource, const QUrl& url, const OvitoObjectType* importerType)
+{
+	OORef<FileImporter> fileimporter;
+
+	// Create file importer instance.
+	if(!importerType) {
+
+		// Download file so we can determine its format.
+		Future<QString> fetchFileFuture = FileManager::instance().fetchUrl(*fileSource->dataset()->container(), url);
+		if(!fileSource->dataset()->container()->taskManager().waitForTask(fetchFileFuture))
+			return false;
+
+		// Inspect file to detect its format.
+		fileimporter = FileImporter::autodetectFileFormat(fileSource->dataset(), fetchFileFuture.result(), url.path());
+		if(!fileimporter)
+			fileSource->throwException(tr("Could not detect the format of the file to be imported. The format might not be supported."));
+	}
+	else {
+		// Caller has provided a specific importer type.
+		fileimporter = static_object_cast<FileImporter>(importerType->createInstance(fileSource->dataset()));
+		if(!fileimporter)
+			return false;
+	}
+
+	// The importer must be a FileSourceImporter.
+	OORef<FileSourceImporter> newImporter = dynamic_object_cast<FileSourceImporter>(fileimporter);
+	if(!newImporter)
+		fileSource->throwException(tr("The selected file type is not compatible."));
+
+	// Temporarily suppress viewport updates while setting up the newly imported data.
+	ViewportSuspender noVPUpdate(fileSource->dataset()->viewportConfig());
+
+	// Load user-defined default import settings.
+	newImporter->loadUserDefaults();
+
+	// Show the optional user interface (which is provided by the corresponding FileImporterEditor class) for the new importer.
+	for(const OvitoObjectType* clazz = &newImporter->getOOType(); clazz != nullptr; clazz = clazz->superClass()) {
+		const OvitoObjectType* editorClass = PropertiesEditor::registry().getEditorClass(clazz);
+		if(editorClass && editorClass->isDerivedFrom(FileImporterEditor::OOType)) {
+			OORef<FileImporterEditor> editor = dynamic_object_cast<FileImporterEditor>(editorClass->createInstance(nullptr));
+			if(editor) {
+				if(!editor->inspectNewFile(newImporter, url, mainWindow()))
+					return false;
+			}
+		}
+	}
+
+	// Set the new input location.
+	return fileSource->setSource(url, newImporter, false);
 }
 
 /******************************************************************************

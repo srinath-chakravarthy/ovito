@@ -179,7 +179,7 @@ void OpenGLLinePrimitive::renderLines(OpenGLSceneRenderer* renderer)
 		renderer->activateVertexIDs(shader, _positionsBuffer.elementCount() * _positionsBuffer.verticesPerElement());
 	}
 
-	OVITO_CHECK_OPENGL(glDrawArrays(GL_LINES, 0, _positionsBuffer.elementCount() * _positionsBuffer.verticesPerElement()));
+	OVITO_CHECK_OPENGL(renderer->glDrawArrays(GL_LINES, 0, _positionsBuffer.elementCount() * _positionsBuffer.verticesPerElement()));
 
 	_positionsBuffer.detachPositions(renderer, shader);
 	if(!renderer->isPicking()) {
@@ -220,7 +220,7 @@ void OpenGLLinePrimitive::renderThickLines(OpenGLSceneRenderer* renderer)
 	}
 
 	GLint viewportCoords[4];
-	glGetIntegerv(GL_VIEWPORT, viewportCoords);
+	renderer->glGetIntegerv(GL_VIEWPORT, viewportCoords);
 	FloatType param = renderer->projParams().projectionMatrix(1,1) * viewportCoords[3];
 	shader->setUniformValue("line_width", 0.5f * _lineWidth / param);
 	shader->setUniformValue("is_perspective", renderer->projParams().isPerspective);
@@ -228,11 +228,11 @@ void OpenGLLinePrimitive::renderThickLines(OpenGLSceneRenderer* renderer)
 
 	if(_useIndexVBO) {
 		_indicesBuffer.oglBuffer().bind();
-		OVITO_CHECK_OPENGL(glDrawElements(GL_TRIANGLES, _indicesBuffer.elementCount(), GL_UNSIGNED_INT, nullptr));
+		OVITO_CHECK_OPENGL(renderer->glDrawElements(GL_TRIANGLES, _indicesBuffer.elementCount(), GL_UNSIGNED_INT, nullptr));
 		_indicesBuffer.oglBuffer().release();
 	}
 	else {
-		OVITO_CHECK_OPENGL(glDrawElements(GL_TRIANGLES, _indicesBufferClient.size(), GL_UNSIGNED_INT, _indicesBufferClient.data()));
+		OVITO_CHECK_OPENGL(renderer->glDrawElements(GL_TRIANGLES, _indicesBufferClient.size(), GL_UNSIGNED_INT, _indicesBufferClient.data()));
 	}
 
 	_positionsBuffer.detachPositions(renderer, shader);
