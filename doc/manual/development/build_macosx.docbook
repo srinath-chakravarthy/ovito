@@ -40,7 +40,6 @@
 	--enable QtGui \
 	--enable QtWidgets \
 	--enable QtNetwork \
-	--enable QtOpenGL \
 	--enable QtSvg \
 	--enable QtMacExtras
 make -j2

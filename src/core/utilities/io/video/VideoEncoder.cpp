@@ -145,9 +145,9 @@ void VideoEncoder::openFile(const QString& filename, int width, int height, int 
 	_codecContext->time_base.num = _videoStream->time_base.num = 1;
 	_codecContext->gop_size = 12;	// Emit one intra frame every twelve frames at most.
 	if(qstrcmp(outputFormat->name, "gif") != 0)
-		_codecContext->pix_fmt = PIX_FMT_YUV420P;
+		_codecContext->pix_fmt = AV_PIX_FMT_YUV420P;
 	else
-		_codecContext->pix_fmt = PIX_FMT_RGB24;
+		_codecContext->pix_fmt = AV_PIX_FMT_RGB24;
 
 	// Some formats want stream headers to be separate.
 	if(_formatContext->oformat->flags & AVFMT_GLOBALHEADER)
@@ -256,7 +256,7 @@ void VideoEncoder::writeFrame(const QImage& image)
 	QImage finalImage = image.convertToFormat(QImage::Format_RGB32);
 
 	// Create conversion context.
-	_imgConvertCtx = sws_getCachedContext(_imgConvertCtx, videoWidth, videoHeight, PIX_FMT_BGRA,
+	_imgConvertCtx = sws_getCachedContext(_imgConvertCtx, videoWidth, videoHeight, AV_PIX_FMT_BGRA,
 			videoWidth, videoHeight, _codecContext->pix_fmt, SWS_BICUBIC, NULL, NULL, NULL);
 	if(!_imgConvertCtx)
 		throw Exception(tr("Cannot initialize SWS conversion context to convert video frame."));

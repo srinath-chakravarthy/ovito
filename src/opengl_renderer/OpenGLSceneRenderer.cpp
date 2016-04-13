@@ -29,7 +29,6 @@
 #include <core/dataset/DataSet.h>
 #include <core/app/Application.h>
 #include <core/rendering/RenderSettings.h>
-#include <gui/viewport/ViewportWindow.h>
 #include "OpenGLSceneRenderer.h"
 #include "OpenGLLinePrimitive.h"
 #include "OpenGLParticlePrimitive.h"
@@ -38,6 +37,11 @@
 #include "OpenGLArrowPrimitive.h"
 #include "OpenGLMeshPrimitive.h"
 #include "OpenGLHelpers.h"
+
+#include <QOffscreenSurface>
+#include <QSurface>
+#include <QWindow>
+#include <QScreen>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
 
@@ -98,10 +102,17 @@ void OpenGLSceneRenderer::determineOpenGLInfo()
 		OVITO_ASSERT(QOpenGLContext::currentContext() == &tempContext);
 	}
 
-	_openGLVendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
-	_openGLRenderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
-	_openGLVersion = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-	_openGLSLVersion = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
+#if QT_VERSION < QT_VERSION_CHECK(5, 3, 0)
+	_openGLVendor = reinterpret_cast<const char*>(::glGetString(GL_VENDOR));
+	_openGLRenderer = reinterpret_cast<const char*>(::glGetString(GL_RENDERER));
+	_openGLVersion = reinterpret_cast<const char*>(::glGetString(GL_VERSION));
+	_openGLSLVersion = reinterpret_cast<const char*>(::glGetString(GL_SHADING_LANGUAGE_VERSION));
+#else
+	_openGLVendor = reinterpret_cast<const char*>(tempContext.functions()->glGetString(GL_VENDOR));
+	_openGLRenderer = reinterpret_cast<const char*>(tempContext.functions()->glGetString(GL_RENDERER));
+	_openGLVersion = reinterpret_cast<const char*>(tempContext.functions()->glGetString(GL_VERSION));
+	_openGLSLVersion = reinterpret_cast<const char*>(tempContext.functions()->glGetString(GL_SHADING_LANGUAGE_VERSION));
+#endif
 	_openglSupportsGeomShaders = QOpenGLShader::hasOpenGLShaders(QOpenGLShader::Geometry);
 	_openglSurfaceFormat = QOpenGLContext::currentContext()->format();
 }
@@ -233,6 +244,10 @@ void OpenGLSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParamet
 	if(!_glcontext)
 		throwException(tr("Cannot render scene: There is no active OpenGL context"));
 
+	// Obtain a functions object that allows to call basic OpenGL functions in a platform-independent way.
+    OVITO_REPORT_OPENGL_ERRORS();
+    initializeOpenGLFunctions();
+
 	// Obtain surface format.
     OVITO_REPORT_OPENGL_ERRORS();
 	_glformat = _glcontext->format();
@@ -243,10 +258,6 @@ void OpenGLSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParamet
 		_glformat.setMajorVersion(2);
 		_glformat.setMinorVersion(1);
 	}
-
-	// Obtain a functions object that allows to call basic OpenGL functions in a platform-independent way.
-    OVITO_REPORT_OPENGL_ERRORS();
-    initializeOpenGLFunctions();
 
     // Obtain a functions object that allows to call OpenGL 2.0 functions in a platform-independent way.
 	_glFunctions20 = _glcontext->versionFunctions<QOpenGLFunctions_2_0>();

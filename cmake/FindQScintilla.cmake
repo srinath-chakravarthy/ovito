@@ -3,7 +3,7 @@
 #  QScintilla_INCLUDE_DIRS - the include directories needed
 #  QScintilla_LIBRARIES - libraries needed
 
-FIND_PATH(QSCINTILLA_INCLUDE_DIR NAMES Qsci/qsciscintilla.h PATH_SUFFIXES qt5)
+FIND_PATH(QSCINTILLA_INCLUDE_DIR NAMES Qsci/qsciscintilla.h PATH_SUFFIXES qt5 qt)
 FIND_LIBRARY(QSCINTILLA_LIBRARY NAMES qsciscintilla qt5scintilla2)
 
 SET(QScintilla_INCLUDE_DIRS ${QSCINTILLA_INCLUDE_DIR})

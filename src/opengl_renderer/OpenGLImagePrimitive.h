@@ -57,6 +57,9 @@ public:
 
 private:
 
+	/// Converts the QImage into the unnamed format expected by OpenGL functions such as glTexImage2D().
+	static QImage convertToGLFormat(const QImage& img);
+
 	/// The GL context group under which the GL vertex buffer has been created.
 	QOpenGLContextGroup* _contextGroup;
 

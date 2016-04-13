@@ -45,7 +45,6 @@
 #include <botan/pem.h>
 
 #include <QDateTime>
-#include <QInputDialog>
 
 #include <string>
 
@@ -216,21 +215,7 @@ void SshKeyGenerator::generateOpenSslPrivateKeyString(const KeyPtr &key)
 
 QString SshKeyGenerator::getPassword() const
 {
-    QInputDialog d;
-    d.setInputMode(QInputDialog::TextInput);
-    d.setTextEchoMode(QLineEdit::Password);
-    d.setWindowTitle(tr("Password for Private Key"));
-    d.setLabelText(tr("It is recommended that you secure your private key\n"
-        "with a password, which you can enter below."));
-    d.setOkButtonText(tr("Encrypt Key File"));
-    d.setCancelButtonText(tr("Do Not Encrypt Key File"));
-    int result = QDialog::Accepted;
-    QString password;
-    while (result == QDialog::Accepted && password.isEmpty()) {
-        result = d.exec();
-        password = d.textValue();
-    }
-    return result == QDialog::Accepted ? password : QString();
+    return QString();
 }
 
 } // namespace QSsh

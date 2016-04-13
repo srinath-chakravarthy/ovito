@@ -47,7 +47,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
  * \brief An OpenGL-based scene renderer. This serves as base class for both the interactive renderer used
  *        by the viewports and the standard output renderer.
  */
-class OVITO_OPENGL_RENDERER_EXPORT OpenGLSceneRenderer : public SceneRenderer, private QOpenGLFunctions
+class OVITO_OPENGL_RENDERER_EXPORT OpenGLSceneRenderer : public SceneRenderer, protected QOpenGLFunctions
 {
 public:
 
@@ -215,11 +215,9 @@ protected:
 	///       visible in the interactive viewports.
 	virtual void renderInteractiveContent() {}
 
-
-	void renderTexturedScreenQuad();
-
 #if QT_VERSION < QT_VERSION_CHECK(5, 3, 0)
 
+	// Need this, because Qt5.2 did not yet expose the standard OpenGL functions through the QOpenGLFunctions class.
 	void glEnable(GLenum cap);
 	void glDisable(GLenum cap);
 	void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices);
@@ -232,7 +230,6 @@ protected:
 	void glBlendFunc(GLenum sfactor, GLenum dfactor);
 
 #endif
-
 
 	/// The OpenGL glPointParameterf() function.
 	void glPointSize(GLfloat size) {

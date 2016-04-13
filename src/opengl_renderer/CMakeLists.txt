@@ -46,7 +46,7 @@ TARGET_LINK_LIBRARIES(OpenGLRenderer PUBLIC Core)
 TARGET_LINK_LIBRARIES(OpenGLRenderer PRIVATE ${OPENGL_gl_LIBRARY})
 
 # Link Qt5.
-TARGET_LINK_LIBRARIES(OpenGLRenderer PUBLIC Qt5::Core Qt5::Gui Qt5::OpenGL)
+TARGET_LINK_LIBRARIES(OpenGLRenderer PUBLIC Qt5::Core Qt5::Gui)
 
 IF(APPLE)
     # Activate @rpath on MacOS.

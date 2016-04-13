@@ -23,7 +23,6 @@
 ADD_LIBRARY(QSsh ${OVITO_DEFAULT_LIBRARY_TYPE}
 	sftpchannel.cpp
 	sftpdefs.cpp
-	sftpfilesystemmodel.cpp
 	sftpincomingpacket.cpp
 	sftpoperation.cpp
 	sftpoutgoingpacket.cpp
@@ -56,7 +55,7 @@ TARGET_COMPILE_DEFINITIONS(QSsh PRIVATE QSSH_LIBRARY)
 TARGET_LINK_LIBRARIES(QSsh PRIVATE Botan)
 
 # Link to Qt5.
-TARGET_LINK_LIBRARIES(QSsh PUBLIC Qt5::Core Qt5::Gui Qt5::Network Qt5::Widgets)
+TARGET_LINK_LIBRARIES(QSsh PUBLIC Qt5::Core Qt5::Network)
 
 # Make header files of this library available to dependent targets.
 TARGET_INCLUDE_DIRECTORIES(QSsh PUBLIC "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>")

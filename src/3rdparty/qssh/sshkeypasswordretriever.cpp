@@ -30,9 +30,6 @@
 #include "sshkeypasswordretriever_p.h"
 
 #include <QString>
-#include <QApplication>
-#include <QInputDialog>
-
 #include <iostream>
 
 namespace QSsh {
@@ -41,22 +38,11 @@ namespace Internal {
 std::string SshKeyPasswordRetriever::get_passphrase(const std::string &, const std::string &,
     UI_Result &result) const
 {
-    const bool hasGui = dynamic_cast<QApplication *>(QApplication::instance());
-    if (hasGui) {
-        bool ok;
-        const QString &password = QInputDialog::getText(0,
-            QCoreApplication::translate("QSsh::Ssh", "Password Required"),
-            QCoreApplication::translate("QSsh::Ssh", "Please enter the password for your private key."),
-            QLineEdit::Password, QString(), &ok);
-        result = ok ? OK : CANCEL_ACTION;
-        return std::string(password.toLocal8Bit().data());
-    } else {
-        result = OK;
-        std::string password;
-        std::cout << "Please enter the password for your private key (set echo off beforehand!): " << std::flush;
-        std::cin >> password;
-        return password;
-    }
+	result = OK;
+	std::string password;
+	std::cout << "Please enter the password for your private key (set echo off beforehand!): " << std::flush;
+	std::cin >> password;
+	return password;
 }
 
 } // namespace Internal
