@@ -281,7 +281,7 @@ struct LinearValueInterpolator<Rotation> {
 		}
 		else if(rot1.angle() != T(0)) {
 			T fDiff = _rot2.angle() - rot1.angle();
-			T fDiffUnit = fDiff/T(2*M_PI);
+			T fDiffUnit = fDiff/T(2*FLOATTYPE_PI);
 			int extraSpins = (int)floor(fDiffUnit + T(0.5));
 			if(extraSpins * fDiffUnit * (fDiffUnit - extraSpins) < 0)
 				extraSpins = -extraSpins;
@@ -303,7 +303,7 @@ struct LinearValueInterpolator<Rotation> {
 			RotationT<T> result = RotationT<T>(slerpExtraSpins(t, q1, q2, extraSpins));
 			if(result.axis().dot(interpolateAxis(t, rot1.axis(), _rot2.axis())) < T(0))
 				result = RotationT<T>(-result.axis(), -result.angle(), false);
-			int nrev = floor((t * _rot2.angle() + (T(1) - t) * rot1.angle() - result.angle())/T(2*M_PI) + T(0.5));
+			int nrev = floor((t * _rot2.angle() + (T(1) - t) * rot1.angle() - result.angle())/T(2*FLOATTYPE_PI) + T(0.5));
 			result.addRevolutions(nrev);
 			return result;
 		}
@@ -347,7 +347,7 @@ struct LinearValueInterpolator<Rotation> {
 			return p;
 		}
 		else {
-			T fPhase = T(M_PI) * (T)iExtraSpins * t;
+			T fPhase = T(FLOATTYPE_PI) * (T)iExtraSpins * t;
 			T fInvSin = T(1) / fSin;
 			T fCoeff0 = sin((T(1) - t) * fAngle - fPhase) * fInvSin;
 			T fCoeff1 = sin(t * fAngle + fPhase) * fInvSin;

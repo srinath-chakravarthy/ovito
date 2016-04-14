@@ -95,7 +95,7 @@ private:
  * This is the templated version of RefTargetListenerBase class.
  */
 template<typename T>
-class OVITO_CORE_EXPORT RefTargetListener : public RefTargetListenerBase
+class RefTargetListener : public RefTargetListenerBase
 {
 public:
 
@@ -116,7 +116,7 @@ public:
  * class that is not derived from RefMaker but still wants to receive notification events
  * from several RefTarget objects.
  */
-class VectorRefTargetListenerBase : public RefMaker
+class OVITO_CORE_EXPORT VectorRefTargetListenerBase : public RefMaker
 {
 public:
 

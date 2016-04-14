@@ -136,7 +136,7 @@ public:
 		}
 		else {
 			if(q.w() < T(-1))
-				_angle = T(M_PI) * T(2);
+				_angle = T(FLOATTYPE_PI) * T(2);
 			else if(q.w() > T(1))
 				_angle = T(0);
 			else
@@ -158,7 +158,7 @@ public:
 			_axis = Vector_3<T>(0,0,1);
 		}
 		else if(cos < T(-1) + T(FLOATTYPE_EPSILON)) {
-			_angle = T(M_PI);
+			_angle = T(FLOATTYPE_PI);
 			_axis = Vector_3<T>(0,0,1);
 		}
 		else {
@@ -279,7 +279,7 @@ public:
 		}
 		else if(rot1.angle() != T(0)) {
 			T fDiff = _rot2.angle() - rot1.angle();
-			T fDiffUnit = fDiff/T(2*M_PI);
+			T fDiffUnit = fDiff/T(2*FLOATTYPE_PI);
 			int extraSpins = (int)floor(fDiffUnit + T(0.5));
 			if(extraSpins * fDiffUnit * (fDiffUnit - extraSpins) < 0)
 				extraSpins = -extraSpins;
@@ -301,7 +301,7 @@ public:
 			RotationT result = RotationT(slerpExtraSpins(t, q1, q2, extraSpins));
 			if(result.axis().dot(interpolateAxis(t, rot1.axis(), _rot2.axis())) < T(0))
 				result = RotationT(-result.axis(), -result.angle(), false);
-			int nrev = floor((t * _rot2.angle() + (T(1) - t) * rot1.angle() - result.angle())/T(2*M_PI) + T(0.5));
+			int nrev = floor((t * _rot2.angle() + (T(1) - t) * rot1.angle() - result.angle())/T(2*FLOATTYPE_PI) + T(0.5));
 			result.addRevolutions(nrev);
 			return result;
 		}
@@ -342,19 +342,19 @@ public:
 		// fashion. To this end, we test all possible combinations of revolutions until
 		// we find the one that yields the original axis-angle rotation. Multiple equivalent decompositions
 		// are ranked, because we prefer Euler decompositions that rotate about a single axis.
-		int maxRevolutions = (int)std::floor(std::abs(angle()) / T(M_PI*2) + T(0.5 + FLOATTYPE_EPSILON));
+		int maxRevolutions = (int)std::floor(std::abs(angle()) / T(FLOATTYPE_PI*2) + T(0.5 + FLOATTYPE_EPSILON));
 		if(maxRevolutions == 0) return euler;
 		Vector_3<T> bestDecomposition = euler;
 		int bestDecompositionRanking = -1;
 		for(int xr = -maxRevolutions; xr <= maxRevolutions; xr++) {
 			Vector_3<T> euler2;
-			euler2.x() = euler.x() + T(M_PI*2) * xr;
+			euler2.x() = euler.x() + T(FLOATTYPE_PI*2) * xr;
 			int maxRevolutionsY = maxRevolutions - std::abs(xr);
 			for(int yr = -maxRevolutionsY; yr <= maxRevolutionsY; yr++) {
-				euler2.y() = euler.y() + T(M_PI*2) * yr;
+				euler2.y() = euler.y() + T(FLOATTYPE_PI*2) * yr;
 				int maxRevolutionsZ = maxRevolutionsY - std::abs(yr);
 				for(int zr = -maxRevolutionsZ; zr <= maxRevolutionsZ; zr++) {
-					euler2.z() = euler.z() + T(M_PI*2) * zr;
+					euler2.z() = euler.z() + T(FLOATTYPE_PI*2) * zr;
 					if(equals(fromEuler(euler2, axisSequence))) {
 						int ranking = int(std::abs(euler2.x()) <= T(FLOATTYPE_EPSILON)) + int(std::abs(euler2.y()) <= T(FLOATTYPE_EPSILON)) + int(std::abs(euler2.z()) <= T(FLOATTYPE_EPSILON));
 						if(ranking > bestDecompositionRanking) {
@@ -374,20 +374,20 @@ public:
 	/// \return The rounded value of \c angle divided by 2*pi.
 	/// \sa setRevolutions()
 	/// \sa addRevolutions()
-	Q_DECL_CONSTEXPR int revolutions() const { return (int)(_angle/T(M_PI*2)); }
+	Q_DECL_CONSTEXPR int revolutions() const { return (int)(_angle/T(FLOATTYPE_PI*2)); }
 
 	/// \brief Sets the number of revolutions.
 	/// \param n The new number of revolutions. This can be negative.
 	/// \sa revolutions()
 	/// \sa addRevolutions()
-	void setRevolutions(int n) { _angle = std::fmod(_angle, T(2*M_PI)) + (T(2*M_PI)*n); }
+	void setRevolutions(int n) { _angle = std::fmod(_angle, T(2*FLOATTYPE_PI)) + (T(2*FLOATTYPE_PI)*n); }
 
 	/// \brief Adds the given number of revolutions.
 	/// \param n The number of revolutions to add to the angle. This can be negative.
 	///
 	/// The rotation angle is increased by \c n*2*pi.
 	/// \sa revolutions()
-	void addRevolutions(int n) { _angle += T(2*M_PI) * n; }
+	void addRevolutions(int n) { _angle += T(2*FLOATTYPE_PI) * n; }
 
 	/// \brief Returns a string representation of this rotation.
 	/// \return A string that contains the components of the rotation structure.
@@ -430,7 +430,7 @@ private:
 			return p;
 		}
 		else {
-			T fPhase = T(M_PI) * (T)iExtraSpins * t;
+			T fPhase = T(FLOATTYPE_PI) * (T)iExtraSpins * t;
 			T fInvSin = T(1) / fSin;
 			T fCoeff0 = sin((T(1) - t) * fAngle - fPhase) * fInvSin;
 			T fCoeff1 = sin(t * fAngle + fPhase) * fInvSin;
@@ -455,9 +455,9 @@ inline RotationT<T> operator*(const RotationT<T>& r1, const RotationT<T>& r2) {
 	RotationT<T> result(q);
 	int rev;
 	if(r1.axis().dot(r2.axis()) >= T(0))
-		rev = (int)floor(((r1.angle()+r2.angle()) / T(M_PI*2)));
+		rev = (int)floor(((r1.angle()+r2.angle()) / T(FLOATTYPE_PI*2)));
 	else
-		rev = (int)floor(((r1.angle()-r2.angle()) / T(M_PI*2)));
+		rev = (int)floor(((r1.angle()-r2.angle()) / T(FLOATTYPE_PI*2)));
 	if((rev & 1) != 0) {
 		result.setAngle(-result.angle());
 		rev++;

@@ -33,7 +33,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /******************************************************************************
 * This data structure is returned by the Viewport::pick() method.
 *******************************************************************************/
-struct ViewportPickResult
+struct OVITO_GUI_EXPORT ViewportPickResult
 {
 	/// Indicates whether an object was picked or not.
 	bool valid;
@@ -55,9 +55,9 @@ struct ViewportPickResult
  * \brief The internal render window/widget used by the Viewport class.
  */
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-class ViewportWindow : public QWindow, public ViewportWindowInterface
+class OVITO_GUI_EXPORT ViewportWindow : public QWindow, public ViewportWindowInterface
 #else
-class ViewportWindow : public QOpenGLWidget, public ViewportWindowInterface
+class OVITO_GUI_EXPORT ViewportWindow : public QOpenGLWidget, public ViewportWindowInterface
 #endif
 {
 public:

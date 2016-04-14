@@ -118,7 +118,7 @@ ENDIF()
 # On Windows, the third-party library DLLs need to be installed in the OVITO directory.
 IF(WIN32)
 	# Gather Qt dynamic link libraries.
-	FOREACH(component IN ITEMS Core Gui Widgets OpenGL Concurrent Network PrintSupport)
+	FOREACH(component IN ITEMS Core Gui Widgets Concurrent Network PrintSupport)
 		GET_TARGET_PROPERTY(dll Qt5::${component} LOCATION_${CMAKE_BUILD_TYPE})
 		OVITO_INSTALL_DLL("${dll}")
 		IF(${component} MATCHES "Core")

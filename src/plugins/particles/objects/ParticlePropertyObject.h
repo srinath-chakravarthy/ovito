@@ -487,7 +487,7 @@ private:
  *
  * \sa ParticleProperty, ParticlePropertyObject
  */
-class ParticlePropertyReference
+class OVITO_PARTICLES_EXPORT ParticlePropertyReference
 {
 public:
 

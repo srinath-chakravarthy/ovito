@@ -196,7 +196,7 @@ void StructureAnalysis::initializeListOfStructures()
 	for(int ni1 = 0; ni1 < 14; ni1++) {
 		_coordinationStructures[COORD_BCC].neighborArray.setNeighborBond(ni1, ni1, false);
 		for(int ni2 = ni1 + 1; ni2 < 14; ni2++) {
-			bool bonded = (bccVec[ni1] - bccVec[ni2]).length() < (1.0+sqrt(2.0))*0.5;
+			bool bonded = (bccVec[ni1] - bccVec[ni2]).length() < (FloatType(1)+sqrt(FloatType(2)))*FloatType(0.5);
 			_coordinationStructures[COORD_BCC].neighborArray.setNeighborBond(ni1, ni2, bonded);
 		}
 		_coordinationStructures[COORD_BCC].cnaSignatures[ni1] = (ni1 < 8) ? 0 : 1;

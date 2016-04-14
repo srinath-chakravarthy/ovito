@@ -274,7 +274,7 @@ void OpenGLSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParamet
 	if(!_glFunctions32 || !_glFunctions32->initializeOpenGLFunctions())
 		_glFunctions32 = nullptr;
 
-	if(!!_glFunctions20 && !_glFunctions30 && !_glFunctions32)
+	if(!_glFunctions20 && !_glFunctions30 && !_glFunctions32)
 		throwException(tr("Could not resolve OpenGL functions. Invalid OpenGL context."));
 
 	// Check if this context implements the core profile.

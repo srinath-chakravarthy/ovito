@@ -19,7 +19,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <plugins/particles/Particles.h>
+#include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/particles/import/xyz/XYZImporter.h>
 #include <plugins/particles/gui/import/InputColumnMappingDialog.h>
 #include <gui/properties/BooleanParameterUI.h>

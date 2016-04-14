@@ -35,7 +35,7 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util)
 /**
  * \brief Utility class that supports the picking of particles in the viewports.
  */
-class OVITO_PARTICLES_EXPORT ParticlePickingHelper
+class OVITO_PARTICLES_GUI_EXPORT ParticlePickingHelper
 {
 public:
 

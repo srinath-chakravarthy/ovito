@@ -264,7 +264,7 @@ AnimationKeyEditorDialog::AnimationKeyEditorDialog(KeyframeController* ctrl, con
 	// Make sure the controller has at least one animation key.
 	if(ctrl->keys().empty()) {
 		try { ctrl->createKey(0); }
-		catch(const Exception& ex) {}
+		catch(const Exception&) {}
 	}
 
 	QVBoxLayout* mainLayout = new QVBoxLayout(this);

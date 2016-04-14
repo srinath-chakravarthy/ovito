@@ -26,12 +26,18 @@
 #include <plugins/particles/import/ParticleImporter.h>
 #include <plugins/particles/import/InputColumnMapping.h>
 
+#ifdef NetCDFPlugin_EXPORTS		// This is defined by CMake when building the plugin library.
+#  define OVITO_NETCDF_EXPORT Q_DECL_EXPORT
+#else
+#  define OVITO_NETCDF_EXPORT Q_DECL_IMPORT
+#endif
+
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
 /**
  * \brief File parser for NetCDF simulation files.
  */
-class NetCDFImporter : public ParticleImporter
+class OVITO_NETCDF_EXPORT NetCDFImporter : public ParticleImporter
 {
 public:
 

@@ -378,9 +378,9 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 		simulationCell().setPbcFlags(pbc);
 		
 		// Express cell vectors va, vb and vc in the X,Y,Z-system
-		a[0] *= M_PI/180.0;
-		a[1] *= M_PI/180.0;
-		a[2] *= M_PI/180.0;
+		a[0] *= FLOATTYPE_PI/180.0f;
+		a[1] *= FLOATTYPE_PI/180.0f;
+		a[2] *= FLOATTYPE_PI/180.0f;
 		Vector3 va(l[0], 0, 0);
 		Vector3 vb(l[1]*cos(a[2]), l[1]*sin(a[2]), 0);
 		double cx = cos(a[1]);

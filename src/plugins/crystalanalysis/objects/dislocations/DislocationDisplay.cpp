@@ -178,7 +178,7 @@ void DislocationDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 						}
 					}
 				}
-				Color lineColor = family ? family->color() : Color(0.8,0.8,0.8);
+				Color lineColor = family ? family->color() : Color(0.8f,0.8f,0.8f);
 				Vector3 normalizedBurgersVector = segment->burgersVector.toSpatialVector();
 				normalizedBurgersVector.normalizeSafely();
 				clipDislocationLine(segment->line, cellData, dislocationObj->cuttingPlanes(), [this, &lineSegmentIndex, &cornerPoints, &cornerColors, lineColor, lineRadius, &subobjToSegmentMap, &dislocationIndex, lineSegmentCount, normalizedBurgersVector](const Point3& v1, const Point3& v2, bool isInitialSegment) mutable {

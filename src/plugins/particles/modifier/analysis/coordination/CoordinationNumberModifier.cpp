@@ -135,7 +135,7 @@ void CoordinationNumberModifier::transferComputationResults(ComputeEngine* engin
 	_rdfX.resize(eng->rdfHistogram().size());
 	if(!eng->cell().is2D()) {
 		double rho = eng->positions()->size() / eng->cell().volume3D();
-		double constant = 4.0/3.0 * M_PI * rho * eng->positions()->size();
+		double constant = 4.0/3.0 * FLOATTYPE_PI * rho * eng->positions()->size();
 		double stepSize = eng->cutoff() / _rdfX.size();
 		for(int i = 0; i < _rdfX.size(); i++) {
 			double r = stepSize * i;
@@ -146,7 +146,7 @@ void CoordinationNumberModifier::transferComputationResults(ComputeEngine* engin
 	}
 	else {
 		double rho = eng->positions()->size() / eng->cell().volume2D();
-		double constant = M_PI * rho * eng->positions()->size();
+		double constant = FLOATTYPE_PI * rho * eng->positions()->size();
 		double stepSize = eng->cutoff() / _rdfX.size();
 		for(int i = 0; i < _rdfX.size(); i++) {
 			double r = stepSize * i;

@@ -53,7 +53,7 @@ std::array<ParticleTypeProperty::PredefinedTypeInfo, ParticleTypeProperty::NUMBE
 	ParticleTypeProperty::PredefinedTypeInfo{ QString("Ge"), Color(102.0f/255.0f, 143.0f/255.0f, 143.0f/255.0f), 1.22f },
 	ParticleTypeProperty::PredefinedTypeInfo{ QString("Kr"), Color(92.0f/255.0f, 184.0f/255.0f, 209.0f/255.0f), 1.98f },
 	ParticleTypeProperty::PredefinedTypeInfo{ QString("Sr"), Color(0.0f, 1.0f, 0.15259f), 2.15f },
-	ParticleTypeProperty::PredefinedTypeInfo{ QString("Y"), Color(0.40259f, 0.59739f, 0.55813), 1.82f },
+	ParticleTypeProperty::PredefinedTypeInfo{ QString("Y"), Color(0.40259f, 0.59739f, 0.55813f), 1.82f },
 	ParticleTypeProperty::PredefinedTypeInfo{ QString("Zr"), Color(0.0f, 1.0f, 0.0f), 1.60f },
 	ParticleTypeProperty::PredefinedTypeInfo{ QString("Nb"), Color(0.29992f, 0.7f, 0.46459f), 1.47f },
 	ParticleTypeProperty::PredefinedTypeInfo{ QString("Pd"), Color(0.0f/255.0f, 105.0f/255.0f, 133.0f/255.0f), 1.37f },

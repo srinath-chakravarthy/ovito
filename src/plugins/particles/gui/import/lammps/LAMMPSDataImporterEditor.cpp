@@ -19,7 +19,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <plugins/particles/Particles.h>
+#include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/particles/import/lammps/LAMMPSDataImporter.h>
 #include "LAMMPSDataImporterEditor.h"
 

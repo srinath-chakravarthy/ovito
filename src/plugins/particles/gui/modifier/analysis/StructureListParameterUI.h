@@ -30,7 +30,7 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) 
 /**
  * List box that displays the structure types.
  */
-class OVITO_PARTICLES_EXPORT StructureListParameterUI : public RefTargetListParameterUI
+class OVITO_PARTICLES_GUI_EXPORT StructureListParameterUI : public RefTargetListParameterUI
 {
 public:
 

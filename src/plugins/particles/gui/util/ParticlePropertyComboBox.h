@@ -30,7 +30,7 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util)
 /**
  * \brief Widget that allows the user to select a particle property from a list.
  */
-class OVITO_PARTICLES_EXPORT ParticlePropertyComboBox : public QComboBox
+class OVITO_PARTICLES_GUI_EXPORT ParticlePropertyComboBox : public QComboBox
 {
 	Q_OBJECT
 

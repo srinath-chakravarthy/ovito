@@ -27,12 +27,18 @@
 #define TACHYON_INTERNAL 1
 #include <tachyon/tachyon.h>
 
+#ifdef Tachyon_EXPORTS		// This is defined by CMake when building the plugin library.
+#  define OVITO_TACHYON_EXPORT Q_DECL_EXPORT
+#else
+#  define OVITO_TACHYON_EXPORT Q_DECL_IMPORT
+#endif
+
 namespace Ovito { namespace Tachyon {
 
 /**
  * \brief A scene renderer that is based on the Tachyon open source ray-tracing engine
  */
-class TachyonRenderer : public NonInteractiveSceneRenderer
+class OVITO_TACHYON_EXPORT TachyonRenderer : public NonInteractiveSceneRenderer
 {
 public:
 

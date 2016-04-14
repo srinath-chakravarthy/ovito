@@ -30,7 +30,7 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 /**
  * \brief A properties editor for the SurfaceMeshDisplay class.
  */
-class OVITO_PARTICLES_EXPORT SurfaceMeshDisplayEditor : public PropertiesEditor
+class SurfaceMeshDisplayEditor : public PropertiesEditor
 {
 public:
 

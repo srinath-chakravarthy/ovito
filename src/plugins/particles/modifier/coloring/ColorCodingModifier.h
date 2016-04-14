@@ -61,7 +61,7 @@ private:
 /**
  * \brief Converts a scalar value to a color using the HSV color system.
  */
-class ColorCodingHSVGradient : public ColorCodingGradient
+class OVITO_PARTICLES_EXPORT ColorCodingHSVGradient : public ColorCodingGradient
 {
 public:
 
@@ -83,7 +83,7 @@ private:
 /**
  * \brief Converts a scalar value to a color using a gray-scale ramp.
  */
-class ColorCodingGrayscaleGradient : public ColorCodingGradient
+class OVITO_PARTICLES_EXPORT ColorCodingGrayscaleGradient : public ColorCodingGradient
 {
 public:
 
@@ -105,7 +105,7 @@ private:
 /**
  * \brief Converts a scalar value to a color.
  */
-class ColorCodingHotGradient : public ColorCodingGradient
+class OVITO_PARTICLES_EXPORT ColorCodingHotGradient : public ColorCodingGradient
 {
 public:
 
@@ -131,7 +131,7 @@ private:
 /**
  * \brief Converts a scalar value to a color.
  */
-class ColorCodingJetGradient : public ColorCodingGradient
+class OVITO_PARTICLES_EXPORT ColorCodingJetGradient : public ColorCodingGradient
 {
 public:
 
@@ -159,7 +159,7 @@ private:
 /**
  * \brief Converts a scalar value to a color.
  */
-class ColorCodingBlueWhiteRedGradient : public ColorCodingGradient
+class OVITO_PARTICLES_EXPORT ColorCodingBlueWhiteRedGradient : public ColorCodingGradient
 {
 public:
 
@@ -186,7 +186,7 @@ private:
 /**
  * \brief Converts a scalar value to a color based on a user-defined image.
  */
-class ColorCodingImageGradient : public ColorCodingGradient
+class OVITO_PARTICLES_EXPORT ColorCodingImageGradient : public ColorCodingGradient
 {
 public:
 
@@ -225,7 +225,7 @@ private:
 /**
  * \brief This modifier assigns a colors to the particles based on the value of a particle property.
  */
-class ColorCodingModifier : public ParticleModifier
+class OVITO_PARTICLES_EXPORT ColorCodingModifier : public ParticleModifier
 {
 public:
 
