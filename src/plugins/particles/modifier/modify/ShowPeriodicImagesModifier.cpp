@@ -21,6 +21,7 @@
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/objects/BondsObject.h>
+#include <plugins/particles/objects/BondPropertyObject.h>
 #include "ShowPeriodicImagesModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
@@ -90,18 +91,17 @@ PipelineStatus ShowPeriodicImagesModifier::modifyParticles(TimePoint time, TimeI
 	_outputParticleCount = newParticleCount;
 	AffineTransformation simCell = expectSimulationCell()->cellMatrix();
 
+	// Replicate particle property values.
 	for(DataObject* outobj : _output.objects()) {
 		OORef<ParticlePropertyObject> originalOutputProperty = dynamic_object_cast<ParticlePropertyObject>(outobj);
 		if(!originalOutputProperty)
 			continue;
-
 		OVITO_ASSERT(originalOutputProperty->size() == oldParticleCount);
 
 		// Create copy.
 		OORef<ParticlePropertyObject> newProperty = cloneHelper()->cloneObject(originalOutputProperty, false);
 		newProperty->resize(newParticleCount, false);
 
-		OVITO_ASSERT(originalOutputProperty->size() == oldParticleCount);
 		size_t destinationIndex = 0;
 
 		for(int imageX = newImages.minc.x(); imageX <= newImages.maxc.x(); imageX++) {
@@ -154,6 +154,8 @@ PipelineStatus ShowPeriodicImagesModifier::modifyParticles(TimePoint time, TimeI
 	}
 
 	// Replicate bonds.
+	size_t oldBondCount = 0;
+	size_t newBondCount = 0;
 	for(DataObject* outobj : _output.objects()) {
 		OORef<BondsObject> originalOutputBonds = dynamic_object_cast<BondsObject>(outobj);
 		if(!originalOutputBonds)
@@ -163,8 +165,9 @@ PipelineStatus ShowPeriodicImagesModifier::modifyParticles(TimePoint time, TimeI
 
 		// Duplicate bonds and adjust particle indices and PBC shift vectors as needed.
 		// Some bonds may no longer cross periodic boundaries.
-		size_t oldBondCount = newBondsObj->storage()->size();
-		newBondsObj->modifiableStorage()->resize(oldBondCount * numCopies);
+		oldBondCount = newBondsObj->storage()->size();
+		newBondCount = oldBondCount * numCopies;
+		newBondsObj->modifiableStorage()->resize(newBondCount);
 		auto outBond = newBondsObj->modifiableStorage()->begin();
 		Point3I image;
 		for(image[0] = newImages.minc.x(); image[0] <= newImages.maxc.x(); image[0]++) {
@@ -199,10 +202,38 @@ PipelineStatus ShowPeriodicImagesModifier::modifyParticles(TimePoint time, TimeI
 				}
 			}
 		}
-
 		newBondsObj->changed();
-		// Replace original property with the modified one.
+
+		// Replace original object with the modified one.
 		_output.replaceObject(originalOutputBonds, newBondsObj);
+	}
+
+	// Replicate bond property values.
+	for(DataObject* outobj : _output.objects()) {
+		OORef<BondPropertyObject> originalOutputProperty = dynamic_object_cast<BondPropertyObject>(outobj);
+		if(!originalOutputProperty || originalOutputProperty->size() != oldBondCount)
+			continue;
+
+		// Create copy.
+		OORef<BondPropertyObject> newProperty = cloneHelper()->cloneObject(originalOutputProperty, false);
+		newProperty->resize(newBondCount, false);
+
+		size_t destinationIndex = 0;
+		for(int imageX = newImages.minc.x(); imageX <= newImages.maxc.x(); imageX++) {
+			for(int imageY = newImages.minc.y(); imageY <= newImages.maxc.y(); imageY++) {
+				for(int imageZ = newImages.minc.z(); imageZ <= newImages.maxc.z(); imageZ++) {
+
+					// Duplicate property data.
+					memcpy((char*)newProperty->data() + (destinationIndex * newProperty->stride()),
+							originalOutputProperty->constData(), newProperty->stride() * oldBondCount);
+
+					destinationIndex += oldBondCount;
+				}
+			}
+		}
+
+		// Replace original property with the modified one.
+		_output.replaceObject(originalOutputProperty, newProperty);
 	}
 
 	return PipelineStatus::Success;

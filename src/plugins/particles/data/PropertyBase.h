@@ -56,7 +56,7 @@ public:
 	/// \param stride The number of bytes per element (pass 0 to use the smallest possible stride).
 	/// \param name The name assigned to the property.
 	/// \param initializeMemory Controls whether the newly allocated memory is initialized with zeros.
-	PropertyBase(size_t particleCount, int dataType, size_t componentCount, size_t stride, const QString& name, bool initializeMemory);
+	PropertyBase(size_t count, int dataType, size_t componentCount, size_t stride, const QString& name, bool initializeMemory);
 
 	/// \brief Copy constructor.
 	PropertyBase(const PropertyBase& other);
@@ -342,135 +342,135 @@ public:
 	}
 
 	/// \brief Returns an integer element at the given index (if this is an integer property).
-	int getInt(size_t particleIndex) const {
-		OVITO_ASSERT(particleIndex < size() && componentCount() == 1);
-		return constDataInt()[particleIndex];
+	int getInt(size_t index) const {
+		OVITO_ASSERT(index < size() && componentCount() == 1);
+		return constDataInt()[index];
 	}
 
 	/// Returns a float element at the given index (if this is a float property).
-	FloatType getFloat(size_t particleIndex) const {
-		OVITO_ASSERT(particleIndex < size() && componentCount() == 1);
-		return constDataFloat()[particleIndex];
+	FloatType getFloat(size_t index) const {
+		OVITO_ASSERT(index < size() && componentCount() == 1);
+		return constDataFloat()[index];
 	}
 
 	/// Returns an integer element at the given index (if this is an integer property).
-	int getIntComponent(size_t particleIndex, size_t componentIndex) const {
-		OVITO_ASSERT(particleIndex < size() && componentIndex < componentCount());
-		return constDataInt()[particleIndex*componentCount() + componentIndex];
+	int getIntComponent(size_t index, size_t componentIndex) const {
+		OVITO_ASSERT(index < size() && componentIndex < componentCount());
+		return constDataInt()[index*componentCount() + componentIndex];
 	}
 
 	/// Returns a float element at the given index (if this is a float property).
-	FloatType getFloatComponent(size_t particleIndex, size_t componentIndex) const {
-		OVITO_ASSERT(particleIndex < size() && componentIndex < componentCount());
-		return constDataFloat()[particleIndex*componentCount() + componentIndex];
+	FloatType getFloatComponent(size_t index, size_t componentIndex) const {
+		OVITO_ASSERT(index < size() && componentIndex < componentCount());
+		return constDataFloat()[index*componentCount() + componentIndex];
 	}
 
 	/// Returns a Vector3 element at the given index (if this is a vector property).
-	const Vector3& getVector3(size_t particleIndex) const {
-		OVITO_ASSERT(particleIndex < size());
-		return constDataVector3()[particleIndex];
+	const Vector3& getVector3(size_t index) const {
+		OVITO_ASSERT(index < size());
+		return constDataVector3()[index];
 	}
 
 	/// Returns a Point3 element at the given index (if this is a point property).
-	const Point3& getPoint3(size_t particleIndex) const {
-		OVITO_ASSERT(particleIndex < size());
-		return constDataPoint3()[particleIndex];
+	const Point3& getPoint3(size_t index) const {
+		OVITO_ASSERT(index < size());
+		return constDataPoint3()[index];
 	}
 
 	/// Returns a Point3I element at the given index (if this is a point property).
-	const Point3I& getPoint3I(size_t particleIndex) const {
-		OVITO_ASSERT(particleIndex < size());
-		return constDataPoint3I()[particleIndex];
+	const Point3I& getPoint3I(size_t index) const {
+		OVITO_ASSERT(index < size());
+		return constDataPoint3I()[index];
 	}
 
 	/// Returns a Color element at the given index (if this is a color property).
-	const Color& getColor(size_t particleIndex) const {
-		OVITO_ASSERT(particleIndex < size());
-		return constDataColor()[particleIndex];
+	const Color& getColor(size_t index) const {
+		OVITO_ASSERT(index < size());
+		return constDataColor()[index];
 	}
 
-	/// Returns a SymmetricTensor2 element stored for the given particle.
-	const SymmetricTensor2& getSymmetricTensor2(size_t particleIndex) const {
-		OVITO_ASSERT(particleIndex < size());
-		return constDataSymmetricTensor2()[particleIndex];
+	/// Returns a SymmetricTensor2 element.
+	const SymmetricTensor2& getSymmetricTensor2(size_t index) const {
+		OVITO_ASSERT(index < size());
+		return constDataSymmetricTensor2()[index];
 	}
 
-	/// Returns a Matrix3 element stored for the given particle.
-	const Matrix3& getMatrix3(size_t particleIndex) const {
-		OVITO_ASSERT(particleIndex < size());
-		return constDataMatrix3()[particleIndex];
+	/// Returns a Matrix3 element.
+	const Matrix3& getMatrix3(size_t index) const {
+		OVITO_ASSERT(index < size());
+		return constDataMatrix3()[index];
 	}
 
-	/// Returns a Quaternion element stored for the given particle.
-	const Quaternion& getQuaternion(size_t particleIndex) const {
-		OVITO_ASSERT(particleIndex < size());
-		return constDataQuaternion()[particleIndex];
-	}
-
-	/// Sets the value of an integer element at the given index (if this is an integer property).
-	void setInt(size_t particleIndex, int newValue) {
-		OVITO_ASSERT(particleIndex < size());
-		dataInt()[particleIndex] = newValue;
-	}
-
-	/// Sets the value of a float element at the given index (if this is a float property).
-	void setFloat(size_t particleIndex, FloatType newValue) {
-		OVITO_ASSERT(particleIndex < size());
-		dataFloat()[particleIndex] = newValue;
+	/// Returns a Quaternion element.
+	const Quaternion& getQuaternion(size_t index) const {
+		OVITO_ASSERT(index < size());
+		return constDataQuaternion()[index];
 	}
 
 	/// Sets the value of an integer element at the given index (if this is an integer property).
-	void setIntComponent(size_t particleIndex, size_t componentIndex, int newValue) {
-		OVITO_ASSERT(particleIndex < size() && componentIndex < componentCount());
-		dataInt()[particleIndex*componentCount() + componentIndex] = newValue;
+	void setInt(size_t index, int newValue) {
+		OVITO_ASSERT(index < size());
+		dataInt()[index] = newValue;
 	}
 
 	/// Sets the value of a float element at the given index (if this is a float property).
-	void setFloatComponent(size_t particleIndex, size_t componentIndex, FloatType newValue) {
-		OVITO_ASSERT(particleIndex < size() && componentIndex < componentCount());
-		dataFloat()[particleIndex*componentCount() + componentIndex] = newValue;
+	void setFloat(size_t index, FloatType newValue) {
+		OVITO_ASSERT(index < size());
+		dataFloat()[index] = newValue;
+	}
+
+	/// Sets the value of an integer element at the given index (if this is an integer property).
+	void setIntComponent(size_t index, size_t componentIndex, int newValue) {
+		OVITO_ASSERT(index < size() && componentIndex < componentCount());
+		dataInt()[index*componentCount() + componentIndex] = newValue;
+	}
+
+	/// Sets the value of a float element at the given index (if this is a float property).
+	void setFloatComponent(size_t index, size_t componentIndex, FloatType newValue) {
+		OVITO_ASSERT(index < size() && componentIndex < componentCount());
+		dataFloat()[index*componentCount() + componentIndex] = newValue;
 	}
 
 	/// Sets the value of a Vector3 element at the given index (if this is a vector property).
-	void setVector3(size_t particleIndex, const Vector3& newValue) {
-		OVITO_ASSERT(particleIndex < size());
-		dataVector3()[particleIndex] = newValue;
+	void setVector3(size_t index, const Vector3& newValue) {
+		OVITO_ASSERT(index < size());
+		dataVector3()[index] = newValue;
 	}
 
 	/// Sets the value of a Point3 element at the given index (if this is a point property).
-	void setPoint3(size_t particleIndex, const Point3& newValue) {
-		OVITO_ASSERT(particleIndex < size());
-		dataPoint3()[particleIndex] = newValue;
+	void setPoint3(size_t index, const Point3& newValue) {
+		OVITO_ASSERT(index < size());
+		dataPoint3()[index] = newValue;
 	}
 
 	/// Sets the value of a Point3I element at the given index (if this is a point property).
-	void setPoint3I(size_t particleIndex, const Point3I& newValue) {
-		OVITO_ASSERT(particleIndex < size());
-		dataPoint3I()[particleIndex] = newValue;
+	void setPoint3I(size_t index, const Point3I& newValue) {
+		OVITO_ASSERT(index < size());
+		dataPoint3I()[index] = newValue;
 	}
 
 	/// Sets the value of a Color element at the given index (if this is a color property).
-	void setColor(size_t particleIndex, const Color& newValue) {
-		OVITO_ASSERT(particleIndex < size());
-		dataColor()[particleIndex] = newValue;
+	void setColor(size_t index, const Color& newValue) {
+		OVITO_ASSERT(index < size());
+		dataColor()[index] = newValue;
 	}
 
-	/// Sets the value of a SymmetricTensor2 element for the given particle.
+	/// Sets the value of a SymmetricTensor2 element.
 	void setSymmetricTensor2(size_t particleIndex, const SymmetricTensor2& newValue) {
 		OVITO_ASSERT(particleIndex < size());
 		dataSymmetricTensor2()[particleIndex] = newValue;
 	}
 
-	/// Sets the value of a Matrix3 element for the given particle.
-	void setMatrix3(size_t particleIndex, const Matrix3& newValue) {
-		OVITO_ASSERT(particleIndex < size());
-		dataMatrix3()[particleIndex] = newValue;
+	/// Sets the value of a Matrix3 element.
+	void setMatrix3(size_t index, const Matrix3& newValue) {
+		OVITO_ASSERT(index < size());
+		dataMatrix3()[index] = newValue;
 	}
 
-	/// Sets the value of a Quaternion element for the given particle.
-	void setQuaternion(size_t particleIndex, const Quaternion& newValue) {
-		OVITO_ASSERT(particleIndex < size());
-		dataQuaternion()[particleIndex] = newValue;
+	/// Sets the value of a Quaternion element.
+	void setQuaternion(size_t index, const Quaternion& newValue) {
+		OVITO_ASSERT(index < size());
+		dataQuaternion()[index] = newValue;
 	}
 
 	/// Copies the contents from the given source into this storage.

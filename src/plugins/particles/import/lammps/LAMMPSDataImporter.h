@@ -87,7 +87,6 @@ public:
 
 	/// Creates an asynchronous loader object that loads the data for the given frame from the external file.
 	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame, bool isNewlySelectedFile) override {
-		qDebug() << "Starting parsing file:" << atomStyle() << this;
 		return std::make_shared<LAMMPSDataImportTask>(dataset()->container(), frame, isNewlySelectedFile, atomStyle());
 	}
 
