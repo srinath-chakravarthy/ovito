@@ -27,6 +27,8 @@
 #include <plugins/particles/data/ParticleProperty.h>
 #include <core/utilities/concurrent/FutureInterface.h>
 
+#if 0
+
 #ifdef __clang__
 	#ifndef CGAL_CFG_ARRAY_MEMBER_INITIALIZATION_BUG
 		#define CGAL_CFG_ARRAY_MEMBER_INITIALIZATION_BUG
@@ -140,6 +142,19 @@ public:
 		return _dt.tds().mirror_facet(DT::Triangulation_data_structure::Facet(cell, facet)).first;
 	}
 
+	static bool isGhost(const CellHandle& cell) {
+		return cell->info().isGhost;
+	}
+
+	static VertexHandle cellVertex(const CellHandle& cell, int localIndex) {
+		return cell->vertex(localIndex);
+	}
+
+	static Point3 vertexPosition(VertexHandle vertex) {
+		return (Point3)vertex->point();
+	}
+
+
 	/// Returns true if the given vertex is the infinite vertex of the tessellation.
 	bool isInfiniteVertex(const VertexHandle& vertex) const {
 		return _dt.is_infinite(vertex);
@@ -202,7 +217,7 @@ public:
 private:
 
 	/// Determines whether the given tetrahedral cell is a ghost cell (or an invalid cell).
-	bool isGhostCell(CellHandle cell) const;
+	bool classifyGhostCell(CellHandle cell) const;
 
 	/// The internal CGAL triangulator object.
 	DT _dt;
@@ -217,5 +232,11 @@ private:
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace
+
+#else
+
+#include "DelaunayTessellation2.h"
+
+#endif
 
 #endif // __OVITO_DELAUNAY_TESSELLATION_H

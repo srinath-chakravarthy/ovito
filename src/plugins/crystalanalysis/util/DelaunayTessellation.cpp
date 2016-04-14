@@ -159,7 +159,7 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 	// Classify tessellation cells as ghost or local cells.
 	_numPrimaryTetrahedra = 0;
 	for(CellIterator cell = begin_cells(); cell != end_cells(); ++cell) {
-		if(isGhostCell(cell)) {
+		if(classifyGhostCell(cell)) {
 			cell->info().isGhost = true;
 			cell->info().index = -1;
 		}
@@ -175,7 +175,7 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 /******************************************************************************
 * Determines whether the given tetrahedral cell is a ghost cell (or an invalid cell).
 ******************************************************************************/
-bool DelaunayTessellation::isGhostCell(CellHandle cell) const
+bool DelaunayTessellation::classifyGhostCell(CellHandle cell) const
 {
 	// Find head vertex with the lowest index.
 	const auto& p0 = cell->vertex(0)->point();
