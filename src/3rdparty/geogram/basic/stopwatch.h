@@ -48,7 +48,6 @@
 
 #include <geogram/basic/common.h>
 #include <geogram/basic/numeric.h>
-#include <geogram/basic/logger.h>
 
 /****************************************************************************/
 
@@ -207,8 +206,7 @@ namespace GEO {
          * construction
          */
         ~Stopwatch() {
-            Logger::out(task_name_)
-                << "Elapsed time: " << W_.elapsed_user_time()
+            std::cerr << "Elapsed time: " << W_.elapsed_user_time()
                 << " s" << std::endl;
         }
 

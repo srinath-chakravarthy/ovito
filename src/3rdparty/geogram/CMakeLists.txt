@@ -6,13 +6,13 @@
 # @param[out] var name of the variable that receives the result list
 # @param[in] folder the name of the folder
 # @param[in] directories list of directories to scan
-#
+ 
 function(aux_source_directories var folder)
     set(sources)
     foreach(dir ${ARGN})
         file(GLOB _sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${dir}/*.[ch]" "${dir}/*.[ch]pp")
         list(APPEND sources ${_sources})
-    endforeach()
+    endforeach() 
     
     if( NOT folder STREQUAL "")
         source_group(${folder} FILES ${sources})
@@ -25,7 +25,6 @@ aux_source_directories(SOURCES "Source Files"            .)
 aux_source_directories(SOURCES "Source Files\\basic"     basic)
 aux_source_directories(SOURCES "Source Files\\numerics"  numerics)
 aux_source_directories(SOURCES "Source Files\\delaunay"  delaunay)
-aux_source_directories(SOURCES "Source Files\\points"    points)
 aux_source_directories(SOURCES "Source Files\\mesh"      mesh)
 aux_source_directories(SOURCES "Source Files\\api"       api)
 

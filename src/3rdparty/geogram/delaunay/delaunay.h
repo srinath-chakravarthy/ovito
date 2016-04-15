@@ -60,8 +60,6 @@
 
 namespace GEO {
 
-    class Mesh;
-
     /************************************************************************/
 
     /**
@@ -209,76 +207,7 @@ namespace GEO {
         index_t nb_vertices() const {
             return nb_vertices_;
         }
-
-        /**
-         * \brief Tests whether constraints are supported
-         *  by this Delaunay.
-         * \retval true if constraints are supported
-         * \retval false otherwise
-         */
-        virtual bool supports_constraints() const;
-
-        /**
-         * \brief Defines the constraints.
-         * \details The triangulation will be constrained
-         *  to pass through the vertices and triangles of
-         *  the mesh. This function should be called
-         *  before set_vertices().
-         * \param[in] mesh the definition of the constraints
-         * \pre constraints_supported()
-         */
-        virtual void set_constraints(const Mesh* mesh) {
-            geo_assert(supports_constraints());
-            constraints_ = mesh;
-        }
-
-        /**
-         * \brief Specifies whether the mesh should be refined.
-         * \details If set, then the mesh elements are improved
-         *  by inserting additional vertices in the mesh.
-         *  It is not taken into account by all implementations.
-         *  This function should be called before set_vertices().
-         * \param[in] x true if the mesh should be refined, false 
-         *  otherwise.
-         */
-        void set_refine(bool x) {
-            refine_ = x;
-        }
-
-        /**
-         * \brief Tests whether mesh refinement is selected.
-         * \retval true if mesh refinement is selected
-         * \retval false otherwise
-         * \see set_refine()
-         */
-        bool get_refine() const {
-            return refine_;
-        }
-
-        /**
-         * \brief Specifies the desired quality for mesh elements
-         *  when refinement is enabled (\see set_refine).
-         * \details
-         *  Only taken into account after set_refine(true) is called.
-         *  It is not taken into account by all implementations.
-         *  This function should be called before set_vertices().
-         * \param[in] quality, typically in [1.0, 2.0], specifies
-         *  the desired quality of mesh elements (1.0 means maximum
-         *  quality, and generates a higher number of elements).
-         */
-        void set_quality(double x) {
-            quality_ = x;
-        }
         
-        /**
-         * \brief Gets the constraints.
-         * \return the constraints or nil if no constraints
-         *  were definied.
-         */
-        const Mesh* constraints() const {
-            return constraints_;
-        }
-
         /**
          * \brief Gets the number of cells.
          * \return the number of cells in this Delaunay
@@ -459,13 +388,6 @@ namespace GEO {
         }
 
         /**
-         * \brief Saves the histogram of vertex degree (can be
-         *  visualized with gnuplot).
-         * \param[out] out an ASCII stream where to output the histogram.
-         */
-        void save_histogram(std::ostream& out) const;
-
-        /**
          * \brief Tests whether neighbors are stored.
          * \details Vertices neighbors (i.e. Delaunay 1-skeleton) can be
          *  stored for faster access (used for instance by
@@ -531,23 +453,6 @@ namespace GEO {
          */
         void set_keeps_infinite(bool x) {
             keep_infinite_ = x;
-        }
-        
-        /**
-         * \brief Tests whether thread-safe mode is active.
-         * \return true if thread-safe mode is active, false otherwise.
-         */
-        bool thread_safe() const {
-            return neighbors_.thread_safe();
-        }
-
-        /**
-         * \brief Specifies whether thread-safe mode should be used.
-         * \param[in] x if true then thread-safe mode will be used, else
-         *  it will not.
-         */
-        void set_thread_safe(bool x) {
-            neighbors_.set_thread_safe(x);
         }
 
         /**
@@ -705,11 +610,6 @@ namespace GEO {
          * (in some implementations)        
          */
         bool do_reorder_; 
-
-        const Mesh* constraints_;
-
-        bool refine_;
-        double quality_;
 
         /**
          * \brief It true, circular incident tet

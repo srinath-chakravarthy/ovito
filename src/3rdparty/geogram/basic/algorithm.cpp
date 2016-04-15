@@ -44,20 +44,11 @@
  */
 
 #include <geogram/basic/algorithm.h>
-#include <geogram/basic/command_line.h>
 
 namespace GEO {
 
     bool uses_parallel_algorithm() {
-        static bool initialized = false;
-        static bool result = false;
-        if(!initialized) {
-            result =
-                CmdLine::get_arg_bool("sys:multithread") &&
-                CmdLine::get_arg_bool("algo:parallel");
-            initialized = true;
-        }
-        return result;
+        return false;
     }
 }
 

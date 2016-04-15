@@ -44,7 +44,6 @@
  */
 
 #include <geogram/numerics/matrix_util.h>
-#include <geogram/basic/process.h>
 
 namespace GEO {
 

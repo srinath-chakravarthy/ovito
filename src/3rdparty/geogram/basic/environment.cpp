@@ -45,7 +45,6 @@
 
 #include <geogram/basic/environment.h>
 #include <geogram/basic/assert.h>
-#include <geogram/basic/logger.h>
 #include <geogram/basic/argused.h>
 #include <algorithm>
 #include <stdlib.h>
@@ -214,11 +213,6 @@ namespace GEO {
     std::string Environment::get_value(const std::string& name) const {
         std::string value;
         bool variable_exists = get_value(name, value);
-        if(!variable_exists) {
-            Logger::err("Environment")
-                << "No such variable: " << name
-                << std::endl;
-        }
         geo_assert(variable_exists);
         return value;
     }

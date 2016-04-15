@@ -49,7 +49,8 @@
 #include <geogram/basic/common.h>
 #include <geogram/basic/numeric.h>
 #include <geogram/basic/assert.h>
-#include <geogram/basic/process.h>
+#include <geogram/basic/memory.h>
+#include <vector>
 
 /**
  * \file geogram/basic/packed_arrays.h
@@ -109,7 +110,7 @@ namespace GEO {
          * \retval false otherwise
          */
         bool thread_safe() const {
-            return thread_safe_;
+            return false;
         }
 
         /**
@@ -183,15 +184,9 @@ namespace GEO {
         void get_array(
             index_t array_index, vector<index_t>& array, bool lock = true
         ) const {
-            if(lock) {
-                lock_array(array_index);
-            }
             array.resize(array_size(array_index));
             if(array.size() != 0) {
                 get_array(array_index, &array[0], false);
-            }
-            if(lock) {
-                unlock_array(array_index);
             }
         }
 
@@ -265,7 +260,7 @@ namespace GEO {
             bool lock = true
         ) {
             if(array.size() == 0) {
-                set_array(array_index, 0, nil, lock);
+                set_array(array_index, 0, nullptr, lock);
             } else {
                 set_array(
                     array_index, index_t(array.size()), &array[0], lock
@@ -305,9 +300,6 @@ namespace GEO {
          * \param[in] array_index the index of the sub-array
          */
         void lock_array(index_t array_index) const {
-            if(thread_safe_) {
-                Z1_spinlocks_.acquire_spinlock(array_index);
-            }
         }
 
         /**
@@ -318,18 +310,7 @@ namespace GEO {
          * \param[in] array_index the index of the sub-array
          */
         void unlock_array(index_t array_index) const {
-            if(thread_safe_) {
-                Z1_spinlocks_.release_spinlock(array_index);
-            }
         }
-
-        /**
-         * \brief Displays array statistics
-         * \details This prints statistics about memory occupation in the
-         * main allocation area plus statistics about extra space allocated in
-         * the overflow area.
-         */
-        void show_stats();
 
     protected:
         /**
@@ -338,7 +319,7 @@ namespace GEO {
          * \retval false otherwise
          */
         bool static_mode() const {
-            return ZV_ == nil;
+            return ZV_ == nullptr;
         }
 
     private:
@@ -354,8 +335,6 @@ namespace GEO {
         index_t Z1_stride_;
         index_t* Z1_;
         index_t** ZV_;
-        bool thread_safe_;
-        mutable Process::SpinLockArray Z1_spinlocks_;
     };
 }
 

@@ -44,24 +44,7 @@
  */
 
 #include <geogram/delaunay/delaunay.h>
-#include <geogram/delaunay/delaunay_nn.h>
 #include <geogram/delaunay/delaunay_3d.h>
-
-#ifdef GEOGRAM_WITH_PDEL
-#include <geogram/delaunay/parallel_delaunay_3d.h>
-#endif
-
-#ifdef GEOGRAM_WITH_TETGEN
-#include <geogram/delaunay/delaunay_tetgen.h>
-#endif
-
-#ifdef GEOGRAM_WITH_TRIANGLE
-#include <geogram/delaunay/delaunay_triangle.h>
-#endif
-
-#include <geogram/basic/logger.h>
-#include <geogram/basic/command_line.h>
-#include <geogram/basic/process.h>
 #include <geogram/basic/geometry_nd.h>
 #include <geogram/basic/algorithm.h>
 
@@ -109,52 +92,8 @@ namespace GEO {
     /************************************************************************/
 
     void Delaunay::initialize() {
-
-#ifdef GEOGRAM_WITH_TETGEN
-        geo_register_Delaunay_creator(DelaunayTetgen, "tetgen");
-#endif
-
-#ifdef GEOGRAM_WITH_TRIANGLE
-        geo_register_Delaunay_creator(DelaunayTriangle, "triangle");
-#endif
-        
         geo_register_Delaunay_creator(Delaunay3d, "BDEL");
-
-#ifdef GEOGRAM_WITH_PDEL
-        geo_register_Delaunay_creator(ParallelDelaunay3d, "PDEL");
-#endif
         geo_register_Delaunay_creator(RegularWeightedDelaunay3d, "BPOW");
-        geo_register_Delaunay_creator(Delaunay_NearestNeighbors, "NN");
-    }
-
-    Delaunay* Delaunay::create(
-        coord_index_t dim, const std::string& name_in
-    ) {
-
-        std::string name = name_in;
-        if(name == "default") {
-            name = CmdLine::get_arg("algo:delaunay");
-        }
-
-        try {
-            Delaunay* d = DelaunayFactory::create_object(name, dim);
-            if(d != nil) {
-                return d;
-            }
-
-            Logger::warn("Delaunay")
-                << "Could not create Delaunay triangulation: " << name
-                << std::endl;
-        }
-        catch(InvalidDimension& ex) {
-            Logger::warn("Delaunay") << ex.what() << std::endl;
-        }
-
-        Logger::warn("Delaunay")
-            << "Falling back to NN mode"
-            << std::endl;
-
-        return new Delaunay_NearestNeighbors(dim);
     }
 
     Delaunay::Delaunay(coord_index_t dimension) {
@@ -167,10 +106,7 @@ namespace GEO {
         is_locked_ = false;
         store_neighbors_ = false;
         default_nb_neighbors_ = 30;
-        constraints_ = nil;
         do_reorder_ = true;
-        refine_ = false;
-        quality_ = 2.0;
         store_cicl_ = false;
         keep_infinite_ = false;
         nb_finite_cells_ = 0;
@@ -185,7 +121,7 @@ namespace GEO {
         nb_vertices_ = nb_vertices;
         vertices_ = vertices;
         if(nb_vertices_ < index_t(dimension()) + 1) {
-            Logger::warn("Delaunay") << "Only "
+            std::cerr << "Only "
                 << nb_vertices
                 << " vertices, may be not enough !"
                 << std::endl;
@@ -216,10 +152,6 @@ namespace GEO {
         }
     }
 
-    bool Delaunay::supports_constraints() const {
-        return false;
-    }
-
     index_t Delaunay::nearest_vertex(const double* p) const {
         // Unefficient implementation (but at least it works).
         // Derived classes are supposed to overload.
@@ -246,10 +178,8 @@ namespace GEO {
                 neighbors_.resize_array(i, default_nb_neighbors_, false);
             }
         }
-        parallel_for(
-            parallel_for_member_callback(this, &Delaunay::store_neighbors_CB),
-            0, nb_vertices(), 1, true
-        );
+        for(index_t i = 0; i < nb_vertices(); i++)
+            store_neighbors_CB(i);
     }
 
     void Delaunay::get_neighbors_internal(
@@ -337,20 +267,6 @@ namespace GEO {
             }
         }
         is_locked_ = false;
-    }
-
-    void Delaunay::save_histogram(std::ostream& out) const {
-        vector<index_t> histogram;
-        for(index_t v = 0; v < nb_vertices(); v++) {
-            index_t N = neighbors_.array_size(v);
-            if(histogram.size() < N) {
-                histogram.resize(N + 1);
-            }
-            histogram[N]++;
-        }
-        for(index_t i = 0; i < histogram.size(); i++) {
-            out << i << " " << histogram[i] << std::endl;
-        }
     }
 
     bool Delaunay::cell_is_infinite(index_t c) const {

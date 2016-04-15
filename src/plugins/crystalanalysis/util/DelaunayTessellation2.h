@@ -50,6 +50,61 @@ public:
 		int index;		// An index assigned to the cell.
 	};
 
+	typedef std::pair<CellHandle, int> Facet;
+
+	class FacetCirculator {
+	public:
+		FacetCirculator(const DelaunayTessellation& tess, CellHandle cell, int s, int t, CellHandle start, int f) :
+			_tess(tess), _s(tess.cellVertex(cell, s)), _t(tess.cellVertex(cell, t)) {
+		    int i = tess._dt->index(start, _s);
+		    int j = tess._dt->index(start, _t);
+
+		    OVITO_ASSERT( f!=i && f!=j );
+
+		    if(f == next_around_edge(i,j))
+		    	_pos = start;
+		    else
+		    	_pos = tess._dt->cell_adjacent(start, f); // other cell with same facet
+		}
+		FacetCirculator& operator--() {
+			_pos = _tess._dt->cell_adjacent(_pos, next_around_edge(_tess._dt->index(_pos, _t), _tess._dt->index(_pos, _s)));
+			return *this;
+		}
+		FacetCirculator operator--(int) {
+			FacetCirculator tmp(*this);
+			--(*this);
+			return tmp;
+		}
+		Facet operator*() const {
+			return Facet(_pos, next_around_edge(_tess._dt->index(_pos, _s), _tess._dt->index(_pos, _t)));
+		}
+		Facet operator->() const {
+			return Facet(_pos, next_around_edge(_tess._dt->index(_pos, _s), _tess._dt->index(_pos, _t)));
+		}
+		bool operator==(const FacetCirculator& ccir) const
+		{
+			return _pos == ccir._pos && _s == ccir._s && _t == ccir._t;
+		}
+		bool operator!=(const FacetCirculator& ccir) const
+		{
+			return ! (*this == ccir);
+		}
+
+	private:
+		const DelaunayTessellation& _tess;
+		VertexHandle _s;
+		VertexHandle _t;
+		CellHandle _pos;
+		static int next_around_edge(int i, int j) {
+			static const int tab_next_around_edge[4][4] = {
+			      {5, 2, 3, 1},
+			      {3, 5, 0, 2},
+			      {1, 3, 5, 0},
+			      {2, 0, 1, 5} };
+			return tab_next_around_edge[i][j];
+		}
+	};
+
 	/// Generates the Delaunay tessellation.
 	bool generateTessellation(const SimulationCell& simCell, const Point3* positions, size_t numPoints, FloatType ghostLayerSize, const int* selectedPoints = nullptr, FutureInterfaceBase* progress = nullptr);
 
@@ -97,8 +152,32 @@ public:
 		return Point3((FloatType)xyz[0], (FloatType)xyz[1], (FloatType)xyz[2]);
 	}
 
+	bool compare_squared_radius_3(CellHandle cell, FloatType alpha) const;
+
 	static int vertexIndex(VertexHandle vertex) {
 		return vertex;
+	}
+
+	Facet mirrorFacet(CellHandle cell, int face) const;
+	Facet mirrorFacet(const Facet& facet) const {
+		return mirrorFacet(facet.first, facet.second);
+	}
+
+	/// Returns the cell vertex for the given triangle vertex of the given cell facet.
+	static inline int cellFacetVertexIndex(int cellFacetIndex, int facetVertexIndex) {
+		static const int tab_vertex_triple_index[4][3] = {
+		 {1, 3, 2},
+		 {0, 2, 3},
+		 {0, 3, 1},
+		 {0, 1, 2}
+		};
+		OVITO_ASSERT(cellFacetIndex >= 0 && cellFacetIndex < 4);
+		OVITO_ASSERT(facetVertexIndex >= 0 && facetVertexIndex < 3);
+		return tab_vertex_triple_index[cellFacetIndex][facetVertexIndex];
+	}
+
+	FacetCirculator incident_facets(CellHandle cell, int i, int j, CellHandle start, int f) const {
+		return FacetCirculator(*this, cell, i, j, start, f);
 	}
 
 	/// Returns the simulation cell geometry.

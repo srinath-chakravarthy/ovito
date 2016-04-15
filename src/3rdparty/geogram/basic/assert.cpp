@@ -44,8 +44,6 @@
  */
 
 #include <geogram/basic/assert.h>
-#include <geogram/basic/logger.h>
-#include <geogram/basic/process.h>
 #include <stdlib.h>
 #include <sstream>
 #include <stdexcept>
@@ -78,9 +76,9 @@ namespace GEO {
 
     void geo_abort() {
         // Avoid assert in assert !!
-        if(aborting) {
-            Process::brute_force_kill();
-        }
+        //if(aborting) {
+        //    Process::brute_force_kill();
+        //}
         aborting = true;
         abort();
     }
@@ -97,7 +95,6 @@ namespace GEO {
         if(assert_mode_ == ASSERT_THROW) {
             throw std::runtime_error(os.str());
         } else {
-            Logger::err("Assert") << os.str() << std::endl;
             std::cerr << os.str() << std::endl;
             geo_abort();
         }
@@ -116,7 +113,7 @@ namespace GEO {
         if(assert_mode_ == ASSERT_THROW) {
             throw std::runtime_error(os.str());
         } else {
-            Logger::err("Assert") << os.str() << std::endl;
+            std::cerr << os.str() << std::endl;
             geo_abort();
         }
     }
@@ -132,7 +129,7 @@ namespace GEO {
         if(assert_mode_ == ASSERT_THROW) {
             throw std::runtime_error(os.str());
         } else {
-            Logger::err("Assert") << os.str() << std::endl;
+            std::cerr << os.str() << std::endl;
             geo_abort();
         }
     }

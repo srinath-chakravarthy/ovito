@@ -44,7 +44,6 @@
  */
 
 #include <geogram/basic/packed_arrays.h>
-#include <geogram/basic/logger.h>
 #include <geogram/basic/string.h>
 
 namespace {
@@ -75,47 +74,6 @@ namespace GEO {
         Z1_stride_ = 0;
         Z1_ = nil;
         ZV_ = nil;
-        thread_safe_ = false;
-    }
-
-    void PackedArrays::show_stats() {
-        index_t nb_items_in_Z1 = 0;
-        index_t nb_items_in_ZV = 0;
-        index_t nb_arrays_in_ZV = 0;
-        index_t nb_items = 0;
-        for(index_t i = 0; i < nb_arrays_; i++) {
-            index_t sz = array_size(i);
-            nb_items += sz;
-            if(sz > Z1_block_size_) {
-                nb_items_in_ZV += (sz - Z1_block_size_);
-                nb_arrays_in_ZV++;
-            }
-            nb_items_in_Z1 += geo_min(sz, Z1_block_size_);
-        }
-
-        Logger::out("PArrays")
-            << "stats (nb_arrays=" << nb_arrays_
-            << ", Z1 block size=" << Z1_block_size_ << ") "
-            << (static_mode() ? "static" : "dynamic")
-            << std::endl;
-
-        index_t Z1_total = nb_arrays_ * Z1_block_size_;
-
-        Logger::out("PArrays")
-            << "Z1 filling:"
-            << percent(nb_items_in_Z1, Z1_total) << std::endl;
-
-        if(!static_mode()) {
-            Logger::out("PArrays")
-                << "arrays in ZV:" << percent(nb_arrays_in_ZV, nb_arrays_)
-                << std::endl;
-            Logger::out("PArrays")
-                << "items  in Z1:" << percent(nb_items_in_Z1, nb_items)
-                << std::endl;
-            Logger::out("PArrays")
-                << "items  in ZV:" << percent(nb_items_in_ZV, nb_items)
-                << std::endl;
-        }
     }
 
     PackedArrays::~PackedArrays() {
@@ -138,12 +96,6 @@ namespace GEO {
     }
 
     void PackedArrays::set_thread_safe(bool x) {
-        thread_safe_ = x;
-        if(x) {
-            Z1_spinlocks_.resize(nb_arrays_);
-        } else {
-            Z1_spinlocks_.clear();
-        }
     }
 
     void PackedArrays::init(
@@ -162,9 +114,6 @@ namespace GEO {
             ZV_ = (index_t**) calloc(
                 nb_arrays_, sizeof(index_t*)
             );
-        }
-        if(thread_safe_) {
-            Z1_spinlocks_.resize(nb_arrays_);
         }
     }
 

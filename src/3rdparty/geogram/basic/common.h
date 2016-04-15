@@ -213,6 +213,10 @@ namespace GEO {
 #  define GEO_ARCH_32
 #endif
 
+#if defined(__clang__)
+#  define GEO_COMPILER_CLANG
+#endif
+
 // =============================== Unsupported =============================
 #else
 

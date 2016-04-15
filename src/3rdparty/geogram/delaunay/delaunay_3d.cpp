@@ -44,13 +44,11 @@
  */
 
 #include <geogram/delaunay/delaunay_3d.h>
-#include <geogram/basic/logger.h>
 #include <geogram/basic/geometry_nd.h>
-#include <geogram/basic/process.h>
-#include <geogram/basic/command_line.h>
 #include <geogram/basic/stopwatch.h>
 #include <geogram/basic/matrix.h>
 #include <geogram/basic/permutation.h>
+#include <geogram/basic/thread_sync.h>
 #include <geogram/mesh/mesh_reorder.h>
 #include <stack>
 
@@ -186,10 +184,10 @@ namespace GEO {
             cell_neigh_stride_ = 4;
         }
         cur_stamp_ = 0;
-        debug_mode_ = CmdLine::get_arg_bool("dbg:delaunay");
-        verbose_debug_mode_ = CmdLine::get_arg_bool("dbg:delaunay_verbose");
+        debug_mode_ = false;
+        verbose_debug_mode_ = false;
         debug_mode_ = (debug_mode_ || verbose_debug_mode_);
-        benchmark_mode_ = CmdLine::get_arg_bool("dbg:delaunay_benchmark");
+        benchmark_mode_ = false;
     }
 
     Delaunay3d::~Delaunay3d() {
@@ -248,7 +246,7 @@ namespace GEO {
         double sorting_time = 0;
         if(benchmark_mode_) {
             sorting_time = W->elapsed_time();
-            Logger::out("DelInternal1") << "BRIO sorting:"
+            std::cerr << "BRIO sorting:"
                                        << sorting_time
                                        << std::endl;
         } 
@@ -256,7 +254,7 @@ namespace GEO {
         // The indices of the vertices of the first tetrahedron.
         index_t v0, v1, v2, v3;
         if(!create_first_tetrahedron(v0, v1, v2, v3)) {
-            Logger::warn("Delaunay3d") << "All the points are coplanar"
+        	std::cerr << "All the Delaunay points are coplanar"
                 << std::endl;
             return;
         }
@@ -275,7 +273,7 @@ namespace GEO {
         }
 
         if(benchmark_mode_) {
-            Logger::out("DelInternal2") << "Core insertion algo:"
+        	std::cerr << "Core insertion algo:"
                                        << W->elapsed_time() - sorting_time
                                        << std::endl;
         }
@@ -390,11 +388,11 @@ namespace GEO {
 
         if(benchmark_mode_) {
             if(keep_infinite_) {
-                Logger::out("DelCompress") 
+            	std::cerr
                     << "Removed " << nb_tets_to_delete 
                     << " tets (free list)" << std::endl;
             } else {
-                Logger::out("DelCompress") 
+            	std::cerr
                     << "Removed " << nb_tets_to_delete 
                     << " tets (free list and infinite)" << std::endl;
             }
@@ -415,7 +413,7 @@ namespace GEO {
         }
 
         // Find a tetrahedron (real or virtual) that contains p
-        index_t t = locate(p, NO_TETRAHEDRON, thread_safe());
+        index_t t = locate(p, NO_TETRAHEDRON, false);
 
         //   If p is outside the convex hull of the inserted points,
         // a special traversal is required (not implemented yet).

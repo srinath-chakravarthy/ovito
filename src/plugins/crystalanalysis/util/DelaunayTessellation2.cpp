@@ -96,19 +96,72 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 	qDebug() << "Number of Geogram vertices:" << _dt->nb_vertices();
 	qDebug() << "Number of Geogram cells:" << _dt->nb_cells();
 	qDebug() << "Number of Geogram finite_cells:" << _dt->nb_finite_cells();
-	qDebug() << "Geogram thread_safe:" << _dt->thread_safe();
-
-	for(size_type i = 0; i < _dt->nb_cells(); i++) {
-		if(_dt->cell_is_infinite(i))
-			qDebug() << "infinite cell";
-		for(size_type v = 0; v < 4; v++) {
-			if(_dt->cell_vertex(i, v) < 0)
-				qDebug() << _dt->cell_vertex(i, v);
-		}
-	}
 
 	return true;
 }
+
+DelaunayTessellation::Facet DelaunayTessellation::mirrorFacet(CellHandle cell, int face) const
+{
+	signed_index_t adjacentCell = _dt->cell_adjacent(cell, face);
+	OVITO_ASSERT(adjacentCell >= 0);
+	return std::pair<DelaunayTessellation::CellHandle, int>(adjacentCell, _dt->adjacent_index(adjacentCell, cell));
+}
+
+bool DelaunayTessellation::compare_squared_radius_3(CellHandle cell, FloatType alpha) const
+{
+	const double* v0 = _dt->vertex_ptr(_dt->cell_vertex(cell, 0));
+	const double* v1 = _dt->vertex_ptr(_dt->cell_vertex(cell, 1));
+	const double* v2 = _dt->vertex_ptr(_dt->cell_vertex(cell, 2));
+	const double* v3 = _dt->vertex_ptr(_dt->cell_vertex(cell, 3));
+	double px = v0[0], py = v0[1], pz = v0[2];
+	double qx = v1[0], qy = v1[1], qz = v1[2];
+	double rx = v2[0], ry = v2[1], rz = v2[2];
+	double sx = v3[0], sy = v3[1], sz = v3[2];
+
+	auto square = [](double d) { return d*d; };
+
+	// Translate p to origin to simplify the expression.
+	double qpx = qx-px;
+	double qpy = qy-py;
+	double qpz = qz-pz;
+	double qp2 = square(qpx) + square(qpy) + square(qpz);
+	double rpx = rx-px;
+	double rpy = ry-py;
+	double rpz = rz-pz;
+	double rp2 = square(rpx) + square(rpy) + square(rpz);
+	double spx = sx-px;
+	double spy = sy-py;
+	double spz = sz-pz;
+	double sp2 = square(spx) + square(spy) + square(spz);
+
+	auto determinant = [](
+	 const RT& a00,  const RT& a01,  const RT& a02,
+	 const RT& a10,  const RT& a11,  const RT& a12,
+	 const RT& a20,  const RT& a21,  const RT& a22)
+	{
+	  const RT m02 = a00*a21 - a20*a01;
+	  const RT m01 = a00*a11 - a10*a01;
+	  const RT m12 = a10*a21 - a20*a11;
+	  const RT m012 = m01*a22 - m02*a12 + m12*a02;
+	  return m012;
+	};
+
+	double num_x = determinant(qpy,qpz,qp2,
+							   rpy,rpz,rp2,
+							   spy,spz,sp2);
+	double num_y = determinant(qpx,qpz,qp2,
+							   rpx,rpz,rp2,
+							   spx,spz,sp2);
+	double num_z = determinant(qpx,qpy,qp2,
+							   rpx,rpy,rp2,
+							   spx,spy,sp2);
+	double den   = determinant(qpx,qpy,qpz,
+							   rpx,rpy,rpz,
+							   spx,spy,spz);
+
+	return (square(num_x) + square(num_y) + square(num_z)) / square(2 * den);
+}
+
 
 }	// End of namespace
 }	// End of namespace

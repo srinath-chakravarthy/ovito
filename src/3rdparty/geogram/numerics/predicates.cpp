@@ -55,8 +55,6 @@
 #include <geogram/numerics/predicates.h>
 #include <geogram/numerics/multi_precision.h>
 #include <geogram/basic/assert.h>
-#include <geogram/basic/logger.h>
-#include <geogram/basic/command_line.h>
 #include <geogram/basic/matrix.h>
 #include <algorithm>
 
@@ -1326,13 +1324,6 @@ namespace {
     void show_stats_plain(
         const std::string& name, index_t cnt1, index_t cnt2
     ) {
-        Logger::out(name)
-            << "Tot:" << cnt1
-            << " Exact:" << cnt2
-            << std::endl;
-        Logger::out(name)
-            << " Exact: " << percent(cnt2, cnt1) << "% "
-            << std::endl;
     }
 
     /**
@@ -1345,14 +1336,6 @@ namespace {
     void show_stats_sos(
         const std::string& name, index_t cnt1, index_t cnt2, index_t cnt3
     ) {
-        Logger::out(name)
-            << "Tot:" << cnt1
-            << " Exact:" << cnt2
-            << " SOS:" << cnt3 << std::endl;
-        Logger::out(name)
-            << " Exact: " << percent(cnt2, cnt1) << "% "
-            << " SOS: " << percent(cnt3, cnt1) << "% "
-            << std::endl;
     }
 
     /**
@@ -1368,7 +1351,6 @@ namespace {
         index_t len
     ) {
         show_stats_sos(name, cnt1, cnt2, cnt3);
-        Logger::out(name) << " Len: " << len << std::endl;
     }
 
     /**
@@ -1383,7 +1365,6 @@ namespace {
         index_t len
     ) {
         show_stats_plain(name, cnt1, cnt2);
-        Logger::out(name) << " Len: " << len << std::endl;
     }
 
     /**
@@ -1404,11 +1385,6 @@ namespace {
         index_t num_len, index_t denom_len, index_t SOS_len
     ) {
         show_stats_sos(name, cnt1, cnt2, cnt3);
-        Logger::out(name)
-            << " Num len: " << num_len
-            << " Denom len: " << denom_len
-            << " SOS len: " << SOS_len
-            << std::endl;
     }
 }
 

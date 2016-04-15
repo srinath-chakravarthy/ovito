@@ -113,13 +113,7 @@ private:
 				return false;
 
 			// Alpha shape criterion: This determines whether the Delaunay tetrahedron is part of the solid region.
-			bool isSolid = _tessellation.isValidCell(cell) &&
-					_tessellation.dt().geom_traits().compare_squared_radius_3_object()(
-							cell->vertex(0)->point(),
-							cell->vertex(1)->point(),
-							cell->vertex(2)->point(),
-							cell->vertex(3)->point(),
-							_alpha) != CGAL::POSITIVE;
+			bool isSolid = _tessellation.isValidCell(cell) && _tessellation.compare_squared_radius_3(cell, _alpha);
 
 			if(!isSolid) {
 				_tessellation.setUserField(cell, 0);
@@ -263,13 +257,14 @@ private:
 		}
 		DelaunayTessellation::FacetCirculator circulator_start = _tessellation.incident_facets(cell, vertexIndex1, vertexIndex2, cell, f);
 		DelaunayTessellation::FacetCirculator circulator = circulator_start;
-		OVITO_ASSERT(circulator->first == cell);
-		OVITO_ASSERT(circulator->second == f);
+		OVITO_ASSERT((*circulator).first == cell);
+		OVITO_ASSERT((*circulator).second == f);
 		--circulator;
 		OVITO_ASSERT(circulator != circulator_start);
+		int region = _tessellation.getUserField(cell);
 		do {
 			// Look for the first cell while going around the edge that belongs to a different region.
-			if(circulator->first->info().userField != cell->info().userField)
+			if(_tessellation.getUserField((*circulator).first) != region)
 				break;
 			--circulator;
 		}
@@ -277,8 +272,8 @@ private:
 		OVITO_ASSERT(circulator != circulator_start);
 
 		// Get the current adjacent cell, which is part of the same region as the first tet.
-		std::pair<DelaunayTessellation::CellHandle,int> mirrorFacet = _tessellation.mirrorFacet(circulator);
-		OVITO_ASSERT(_tessellation.getUserField(mirrorFacet.first) == _tessellation.getUserField(cell));
+		std::pair<DelaunayTessellation::CellHandle,int> mirrorFacet = _tessellation.mirrorFacet(*circulator);
+		OVITO_ASSERT(_tessellation.getUserField(mirrorFacet.first) == region);
 
 		typename HalfEdgeStructureType::Face* adjacentFace = findCellFace(mirrorFacet);
 		if(adjacentFace == nullptr)

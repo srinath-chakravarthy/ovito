@@ -235,6 +235,8 @@ namespace GEO {
                    ? result : 0;
 #elif defined(GEO_COMPILER_MSVC)
             return _aligned_malloc(size, alignment);
+#else
+#error "Compiler not supported."
 #endif
         }
 
@@ -255,6 +257,8 @@ namespace GEO {
             free(p);
 #elif defined(GEO_COMPILER_MSVC)
             _aligned_free(p);
+#else
+#error "Compiler not supported."
 #endif
         }
 

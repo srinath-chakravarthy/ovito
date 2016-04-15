@@ -44,6 +44,7 @@
  */
 
 #include <geogram/basic/common.h>
+#include <geogram/basic/thread_sync.h>
 
 // This makes sure the compiler will not optimize y = a*x+b
 // with fused multiply-add, this would break the exact
@@ -53,7 +54,6 @@
 #endif
 
 #include <geogram/numerics/multi_precision.h>
-#include <geogram/basic/process.h>
 
 namespace {
 

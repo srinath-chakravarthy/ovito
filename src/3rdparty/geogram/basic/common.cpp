@@ -44,11 +44,8 @@
  */
 
 #include <geogram/basic/common.h>
-#include <geogram/basic/process.h>
-#include <geogram/basic/logger.h>
-#include <geogram/basic/progress.h>
-#include <geogram/basic/command_line.h>
 #include <geogram/basic/stopwatch.h>
+#include <geogram/basic/environment.h>
 #include <geogram/numerics/multi_precision.h>
 #include <geogram/numerics/predicates.h>
 #include <geogram/delaunay/delaunay.h>
@@ -73,10 +70,6 @@ namespace GEO {
         env->set_value("version", "0.0");
         env->set_value("release_date", "Jan 2015");
 
-        Logger::initialize();
-        Process::initialize();
-        Progress::initialize();
-        CmdLine::initialize();
         PCK::initialize();
         Delaunay::initialize();
 
@@ -87,20 +80,7 @@ namespace GEO {
     }
 
     void terminate() {
-        if(
-            CmdLine::arg_is_declared("sys:stats") &&
-            CmdLine::get_arg_bool("sys:stats") 
-        ) {
-            Logger::div("System Statistics");
-            PCK::show_stats();
-            Process::show_stats();
-        }
-
         PCK::terminate();
-        Progress::terminate();
-        Process::terminate();
-        CmdLine::terminate();
-        Logger::terminate();
         Environment::terminate();
     }
 }

@@ -44,8 +44,6 @@
 
 #include <geogram/mesh/index.h>
 #include <geogram/basic/permutation.h>
-#include <geogram/basic/process.h>
-#include <geogram/basic/logger.h>
 #include <algorithm>
 
 namespace {
@@ -796,9 +794,15 @@ namespace {
             m0_ = b;
             m8_ = e;
             m4_ = split(m0_, m8_, CMP<0, false, MESH>(M));
-            parallel_for(*this, 0, 2);    // computes m2,m6 in parallel
-            parallel_for(*this, 10, 14);  // computes m1,m3,m5,m7 in parallel
-            parallel_for(*this, 20, 28);  // sorts the 8 subsets in parallel
+            for(int i = 0; i < 2; i++)
+            	(*this)(i);
+            for(int i = 10; i < 14; i++)
+            	(*this)(i);
+            for(int i = 20; i < 28; i++)
+            	(*this)(i);
+            //parallel_for(*this, 0, 2);    // computes m2,m6 in parallel
+            //parallel_for(*this, 10, 14);  // computes m1,m3,m5,m7 in parallel
+            //parallel_for(*this, 20, 28);  // sorts the 8 subsets in parallel
         }
 
         /**
