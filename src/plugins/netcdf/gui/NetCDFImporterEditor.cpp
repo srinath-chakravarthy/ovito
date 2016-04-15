@@ -38,15 +38,47 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <plugins/particles/gui/ParticlesGui.h>
+#include <plugins/particles/gui/import/InputColumnMappingDialog.h>
+#include <plugins/netcdf/NetCDFImporter.h>
 #include <gui/properties/BooleanParameterUI.h>
 #include <gui/properties/BooleanRadioButtonParameterUI.h>
-#include <plugins/netcdf/NetCDFImporter.h>
+#include <gui/mainwin/MainWindow.h>
+#include <core/dataset/importexport/FileSource.h>
 #include "NetCDFImporterEditor.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(NetCDFPluginGui, NetCDFImporterEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(NetCDFPluginGui, NetCDFImporterEditor, FileImporterEditor);
 SET_OVITO_OBJECT_EDITOR(NetCDFImporter, NetCDFImporterEditor);
+
+/******************************************************************************
+ * Displays a dialog box that allows the user to edit the custom file column to particle
+ * property mapping.
+ *****************************************************************************/
+bool NetCDFImporterEditor::showEditColumnMappingDialog(NetCDFImporter* importer, const QUrl& sourceFile, QWidget* parent)
+{
+	InputColumnMapping mapping = importer->inspectFileHeader(FileSourceImporter::Frame(sourceFile));
+	if(mapping.empty()) return false;
+
+	if(!importer->customColumnMapping().empty()) {
+		InputColumnMapping customMapping = importer->customColumnMapping();
+		customMapping.resize(mapping.size());
+		for(size_t i = 0; i < customMapping.size(); i++)
+			customMapping[i].columnName = mapping[i].columnName;
+		mapping = customMapping;
+	}
+
+	InputColumnMappingDialog dialog(mapping, parent);
+	if(dialog.exec() == QDialog::Accepted) {
+		importer->setCustomColumnMapping(dialog.mapping());
+		importer->setUseCustomColumnMapping(true);
+		return true;
+	}
+	else {
+		return false;
+	}
+}
 
 /******************************************************************************
 * Sets up the UI widgets of the editor.
@@ -82,10 +114,28 @@ void NetCDFImporterEditor::createUI(const RolloutInsertionParameters& rolloutPar
 ******************************************************************************/
 void NetCDFImporterEditor::onEditColumnMapping()
 {
-#if 0
-	if(NetCDFImporter* importer = static_object_cast<NetCDFImporter>(editObject()))
-		importer->showEditColumnMappingDialog(mainWindow());
-#endif
+	if(NetCDFImporter* importer = static_object_cast<NetCDFImporter>(editObject())) {
+
+		// Determine URL of current input file.
+		FileSource* fileSource = nullptr;
+		for(RefMaker* refmaker : importer->dependents()) {
+			fileSource = dynamic_object_cast<FileSource>(refmaker);
+			if(fileSource) break;
+		}
+		if(!fileSource || fileSource->frames().empty()) return;
+
+		QUrl sourceUrl;
+		if(fileSource->loadedFrameIndex() >= 0)
+			sourceUrl = fileSource->frames()[fileSource->loadedFrameIndex()].sourceFile;
+		else
+			sourceUrl = fileSource->frames().front().sourceFile;
+
+		UndoableTransaction::handleExceptions(importer->dataset()->undoStack(), tr("Change file column mapping"), [this, &sourceUrl, importer]() {
+			if(showEditColumnMappingDialog(importer, sourceUrl, mainWindow())) {
+				importer->requestReload();
+			}
+		});
+	}
 }
 
 OVITO_END_INLINE_NAMESPACE
