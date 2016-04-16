@@ -49,6 +49,7 @@
 #include <geogram/basic/common.h>
 #include <geogram/basic/numeric.h>
 #include <geogram/basic/memory.h>
+#include <functional>
 
 /**
  * \file geogram/mesh/mesh_reorder.h
@@ -152,9 +153,9 @@ namespace GEO {
      * \param[out] levels if non-nil, indices that correspond to level l are
      *   in the range levels[l] (included) ... levels[l+1] (excluded)
      */
-    void GEOGRAM_API compute_BRIO_order(
+    bool GEOGRAM_API compute_BRIO_order(
         index_t nb_vertices, const double* vertices,
-        vector<index_t>& sorted_indices,
+        vector<index_t>& sorted_indices, const std::function<bool(int,int)>& progressCallback,
         index_t stride = 3,
         index_t threshold = 64,
         double ratio = 0.125,

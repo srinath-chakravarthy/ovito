@@ -889,7 +889,7 @@ namespace {
      * \param[in,out] depth iteration depth
      * \param[out] levels if non-null, bounds of each level
      */
-    void compute_BRIO_order_recursive(
+    bool compute_BRIO_order_recursive(
         index_t nb_vertices, const double* vertices,
         index_t stride,
         vector<index_t>& sorted_indices,
@@ -898,7 +898,8 @@ namespace {
         index_t threshold,
         double ratio,
         index_t& depth,
-        vector<index_t>* levels
+        vector<index_t>* levels,
+		const std::function<bool(int,int)>& progressCallback
     ) {
         geo_debug_assert(e > b);
 
@@ -906,12 +907,12 @@ namespace {
         if(index_t(e - b) > threshold) {
             ++depth;
             m = b + int(double(e - b) * ratio);
-            compute_BRIO_order_recursive(
+            if(!compute_BRIO_order_recursive(
                 nb_vertices, vertices, stride,
                 sorted_indices, b, m,
                 threshold, ratio, depth,
-                levels
-            );
+                levels, progressCallback
+            )) return false;
         }
 
         VertexMesh M(nb_vertices, vertices, stride);
@@ -922,6 +923,8 @@ namespace {
         if(levels != nil) {
             levels->push_back(index_t(e - sorted_indices.begin()));
         }
+
+        return (!progressCallback || progressCallback(0,0));
     }
 }
 
@@ -963,9 +966,9 @@ namespace GEO {
         );
     }
     
-    void compute_BRIO_order(
+    bool compute_BRIO_order(
         index_t nb_vertices, const double* vertices,
-        vector<index_t>& sorted_indices,
+        vector<index_t>& sorted_indices, const std::function<bool(int,int)>& progressCallback,
         index_t stride,
         index_t threshold,
         double ratio,
@@ -981,11 +984,11 @@ namespace GEO {
             sorted_indices[i] = i;
         }
         std::random_shuffle(sorted_indices.begin(), sorted_indices.end());
-        compute_BRIO_order_recursive(
+        return compute_BRIO_order_recursive(
             nb_vertices, vertices, stride,
             sorted_indices,
             sorted_indices.begin(), sorted_indices.end(),
-            threshold, ratio, depth, levels
+            threshold, ratio, depth, levels, progressCallback
         );
     }
 }

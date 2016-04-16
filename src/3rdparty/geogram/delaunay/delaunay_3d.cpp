@@ -193,8 +193,8 @@ namespace GEO {
     Delaunay3d::~Delaunay3d() {
     }
 
-    void Delaunay3d::set_vertices(
-        index_t nb_vertices, const double* vertices
+    bool Delaunay3d::set_vertices(
+        index_t nb_vertices, const double* vertices, const std::function<bool(int,int)>& progressCallback
     ) {
         Stopwatch* W = nil;
         if(benchmark_mode_) {
@@ -235,13 +235,15 @@ namespace GEO {
         //   Sort the vertices spatially. This makes localisation
         // faster.
         if(do_reorder_) {
-            compute_BRIO_order(nb_vertices, vertex_ptr(0), reorder_);
+            compute_BRIO_order(nb_vertices, vertex_ptr(0), reorder_, progressCallback);
         } else {
             reorder_.resize(nb_vertices);
             for(index_t i = 0; i < nb_vertices; ++i) {
                 reorder_[i] = i;
             }
         }
+        if(progressCallback && !progressCallback(0,0))
+        	return false;
 
         double sorting_time = 0;
         if(benchmark_mode_) {
@@ -256,12 +258,14 @@ namespace GEO {
         if(!create_first_tetrahedron(v0, v1, v2, v3)) {
         	std::cerr << "All the Delaunay points are coplanar"
                 << std::endl;
-            return;
+            return true;
         }
 
         index_t hint = NO_TETRAHEDRON;
         // Insert all the vertices incrementally.
         for(index_t i = 0; i < nb_vertices; ++i) {
+            if(progressCallback && !progressCallback(i,nb_vertices))
+            	return false;
             index_t v = reorder_[i];
             // Do not re-insert the first four vertices.
             if(v != v0 && v != v1 && v != v2 && v != v3) {
@@ -402,6 +406,8 @@ namespace GEO {
             nb_tets,
             cell_to_v_store_.data(), cell_to_cell_store_.data()
         );
+
+        return true;
     }
 
     index_t Delaunay3d::nearest_vertex(const double* p) const {

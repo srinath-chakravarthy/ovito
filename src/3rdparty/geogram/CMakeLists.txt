@@ -33,3 +33,8 @@ add_library(geogram STATIC ${SOURCES})
 # Make header files of this library available to dependent targets.
 TARGET_INCLUDE_DIRECTORIES(geogram INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/..")
 SET_PROPERTY(TARGET geogram PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+# Export this target.
+INSTALL(TARGETS geogram EXPORT OVITO 
+    ARCHIVE DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}" 
+    CONFIGURATIONS "")

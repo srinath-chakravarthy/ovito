@@ -50,6 +50,7 @@
 #include <geogram/delaunay/delaunay.h>
 #include <geogram/numerics/predicates.h>
 #include <geogram/basic/geometry.h>
+#include <functional>
 
 /**
  * \file geogram/delaunay/delaunay_3d.h
@@ -123,8 +124,8 @@ namespace GEO {
          */
         Delaunay3d(coord_index_t dimension = 3);
 
-        virtual void set_vertices(
-            index_t nb_vertices, const double* vertices
+        bool set_vertices(
+            index_t nb_vertices, const double* vertices, const std::function<bool(int,int)>& progressCallback
         );
 
         virtual index_t nearest_vertex(const double* p) const;

@@ -75,6 +75,15 @@ public:
 			--(*this);
 			return tmp;
 		}
+		FacetCirculator & operator++() {
+			_pos = _tess._dt->cell_adjacent(_pos, next_around_edge(_tess._dt->index(_pos, _s), _tess._dt->index(_pos, _t)));
+			return *this;
+		}
+		FacetCirculator operator++(int) {
+			FacetCirculator tmp(*this);
+			++(*this);
+			return tmp;
+		}
 		Facet operator*() const {
 			return Facet(_pos, next_around_edge(_tess._dt->index(_pos, _s), _tess._dt->index(_pos, _t)));
 		}

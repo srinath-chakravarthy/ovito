@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -57,7 +57,7 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 
 	_simCell = simCell;
 
-	// Insert the original points first.
+	// Build the list of input points.
 	_particleIndices.clear();
 	_pointData.clear();
 	for(size_t i = 0; i < numPoints; i++, ++positions) {
@@ -147,7 +147,16 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 	_dt = new GEO::Delaunay3d();
 	_dt->set_keeps_infinite(true);
 	_dt->set_reorder(true);
-	_dt->set_vertices(_pointData.size()/3, _pointData.data());
+
+	// Construct Delaunay tessellation.
+	bool result = _dt->set_vertices(_pointData.size()/3, _pointData.data(), [progress](int value, int maxProgress) {
+		if(progress) {
+			if(maxProgress != progress->progressMaximum()) progress->setProgressRange(maxProgress);
+			return progress->setProgressValueIntermittent(value);
+		}
+		else return true;
+	});
+	if(!result) return false;
 
 	// Classify tessellation cells as ghost or local cells.
 	_numPrimaryTetrahedra = 0;
@@ -191,6 +200,9 @@ bool DelaunayTessellation::classifyGhostCell(CellHandle cell) const
 	return isGhostVertex(headVertex);
 }
 
+/******************************************************************************
+* Alpha test routine.
+******************************************************************************/
 bool DelaunayTessellation::compare_squared_radius_3(CellHandle cell, FloatType alpha) const
 {
 	const double* v0 = _dt->vertex_ptr(_dt->cell_vertex(cell, 0));
