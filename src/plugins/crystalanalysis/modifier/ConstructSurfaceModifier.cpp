@@ -181,17 +181,20 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 	beginProgressSubSteps({ 20, 1, 6, 1 });
 
 	// Generate Delaunay tessellation.
+	QTime myTimer;
+	myTimer.start();
 	DelaunayTessellation tessellation;
 	if(!tessellation.generateTessellation(_simCell, positions()->constDataPoint3(), positions()->size(), ghostLayerSize,
 			selection() ? selection()->constDataInt() : nullptr, this))
 		return;
+	qDebug() << "Delaunay time: " << myTimer.elapsed();
 
 	nextProgressSubStep();
 
 	// Determines the region a solid Delaunay cell belongs to.
 	// We use this callback function to compute the total volume of the solid region.
 	auto tetrahedronRegion = [this, &tessellation](DelaunayTessellation::CellHandle cell) {
-		if(tessellation.isGhost(cell) == false) {
+		if(tessellation.isGhostCell(cell) == false) {
 			Point3 p0 = tessellation.vertexPosition(tessellation.cellVertex(cell, 0));
 			Vector3 ad = tessellation.vertexPosition(tessellation.cellVertex(cell, 1)) - p0;
 			Vector3 bd = tessellation.vertexPosition(tessellation.cellVertex(cell, 2)) - p0;

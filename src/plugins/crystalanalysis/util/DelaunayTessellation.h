@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -27,17 +27,7 @@
 #include <plugins/particles/data/ParticleProperty.h>
 #include <core/utilities/concurrent/FutureInterface.h>
 
-#if 0
-
-#ifdef __clang__
-	#ifndef CGAL_CFG_ARRAY_MEMBER_INITIALIZATION_BUG
-		#define CGAL_CFG_ARRAY_MEMBER_INITIALIZATION_BUG
-	#endif
-#endif
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Delaunay_triangulation_3.h>
-#include <CGAL/Triangulation_vertex_base_with_info_3.h>
-#include <CGAL/Triangulation_cell_base_with_info_3.h>
+#include <geogram/delaunay/delaunay_3d.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -48,48 +38,10 @@ class OVITO_CRYSTALANALYSIS_EXPORT DelaunayTessellation
 {
 public:
 
-	typedef CGAL::Exact_predicates_inexact_constructions_kernel BaseKernel;
-
-	/**
-	 * Define an extended Point_3 type for the CGAL library that stores the corresponding atom index in
-	 * addition to the xyz coordinates. This extended Point_3 type is used with the CGAL triangulation class.
-	 */
-	class Point3WithIndex : public BaseKernel::Point_3 {
-	private:
-		typedef BaseKernel Kernel;
-		typedef Kernel::Point_3 Base;
-	public:
-		// Constructors required by CGAL:
-		Point3WithIndex() : Base(), _index(-1), _isGhost(false) {}
-		Point3WithIndex(const CGAL::Origin& o) : Base(o), _index(-1), _isGhost(false) {}
-		Point3WithIndex(int x, int y, int z) : Base(x, y, z), _index(-1), _isGhost(false) {}
-		Point3WithIndex(double x, double y, double z) : Base(x, y, z), _index(-1), _isGhost(false) {}
-
-		// Our added constructors, which take an additional index and a ghost flag.
-		Point3WithIndex(const Point3& p, int index, bool isGhost) : Base(p.x(), p.y(), p.z()), _index(index), _isGhost(isGhost) {}
-		Point3WithIndex(double x, double y, double z, int index, bool isGhost) : Base(x, y, z), _index(index), _isGhost(isGhost) {}
-
-		bool operator==(const Point3WithIndex& other) const { return x() == other.x() && y() == other.y() && z() == other.z(); }
-		bool operator!=(const Point3WithIndex& other) const { return x() != other.x() || y() != other.y() || z() != other.z(); }
-
-		Kernel::Vector_3 operator-(const Point3WithIndex& b) const { return Kernel::Vector_3(x()-b.x(), y()-b.y(), z()-b.z()); }
-		operator Ovito::Point3() const { return Ovito::Point3(x(),y(),z()); }
-		operator Ovito::Point_3<double>() const { return Ovito::Point_3<double>(x(),y(),z()); }
-
-		/// Returns the original index of this point.
-		int index() const { return _index; }
-
-		/// Returns whether this is a ghost point.
-		bool isGhost() const { return _isGhost; }
-
-	private:
-
-		/// The original index of this point.
-		int _index;
-
-		/// Indicates whether this is a ghost point.
-		bool _isGhost;
-	};
+	typedef GEO::index_t size_type;
+	typedef GEO::index_t CellHandle;
+	typedef GEO::index_t VertexHandle;
+	typedef size_type CellIterator;
 
 	/// Data structure attached to each tessellation cell.
 	struct CellInfo {
@@ -98,118 +50,145 @@ public:
 		int index;		// An index assigned to the cell.
 	};
 
-	// A custom CGAL kernel that uses our own Point_3 type.
-	// K_ is the new kernel, and K_Base is the old kernel
-	template < typename K_, typename K_Base >
-	class MyCartesian_base : public K_Base::template Base<K_>::Type
-	{
-		typedef typename K_Base::template Base<K_>::Type   OldK;
+	typedef std::pair<CellHandle, int> Facet;
+
+	class FacetCirculator {
 	public:
-		typedef K_                                Kernel;
-		typedef Point3WithIndex                   Point_3;
-		template < typename Kernel2 >
-		struct Base { typedef MyCartesian_base<Kernel2, K_Base>  Type; };
+		FacetCirculator(const DelaunayTessellation& tess, CellHandle cell, int s, int t, CellHandle start, int f) :
+			_tess(tess), _s(tess.cellVertex(cell, s)), _t(tess.cellVertex(cell, t)) {
+		    int i = tess._dt->index(start, _s);
+		    int j = tess._dt->index(start, _t);
+
+		    OVITO_ASSERT( f!=i && f!=j );
+
+		    if(f == next_around_edge(i,j))
+		    	_pos = start;
+		    else
+		    	_pos = tess._dt->cell_adjacent(start, f); // other cell with same facet
+		}
+		FacetCirculator& operator--() {
+			_pos = _tess._dt->cell_adjacent(_pos, next_around_edge(_tess._dt->index(_pos, _t), _tess._dt->index(_pos, _s)));
+			return *this;
+		}
+		FacetCirculator operator--(int) {
+			FacetCirculator tmp(*this);
+			--(*this);
+			return tmp;
+		}
+		Facet operator*() const {
+			return Facet(_pos, next_around_edge(_tess._dt->index(_pos, _s), _tess._dt->index(_pos, _t)));
+		}
+		Facet operator->() const {
+			return Facet(_pos, next_around_edge(_tess._dt->index(_pos, _s), _tess._dt->index(_pos, _t)));
+		}
+		bool operator==(const FacetCirculator& ccir) const
+		{
+			return _pos == ccir._pos && _s == ccir._s && _t == ccir._t;
+		}
+		bool operator!=(const FacetCirculator& ccir) const
+		{
+			return ! (*this == ccir);
+		}
+
+	private:
+		const DelaunayTessellation& _tess;
+		VertexHandle _s;
+		VertexHandle _t;
+		CellHandle _pos;
+		static int next_around_edge(int i, int j) {
+			static const int tab_next_around_edge[4][4] = {
+			      {5, 2, 3, 1},
+			      {3, 5, 0, 2},
+			      {1, 3, 5, 0},
+			      {2, 0, 1, 5} };
+			return tab_next_around_edge[i][j];
+		}
 	};
-	struct MyKernel : public CGAL::Type_equality_wrapper<
-	                MyCartesian_base<MyKernel, BaseKernel>,
-	                MyKernel>
-	{};
-	typedef CGAL::Filtered_kernel<MyKernel>							K;
-	typedef CGAL::Triangulation_cell_base_with_info_3<CellInfo,K> 	CbDS;
-	typedef CGAL::Triangulation_ds_vertex_base_3<> 					VbDS;
-
-	// Define data types for Delaunay triangulation class.
-	typedef K 														GT;
-	typedef CGAL::Triangulation_data_structure_3<CGAL::Triangulation_vertex_base_3<GT, VbDS>, CbDS> 		TDS;
-	typedef CGAL::Delaunay_triangulation_3<GT, TDS>					DT;
-
-	// Often-used iterator types.
-	typedef DT::Triangulation_data_structure::Cell_iterator 		CellIterator;
-	typedef DT::Triangulation_data_structure::Vertex_iterator 		VertexIterator;
-
-	typedef DT::Triangulation_data_structure::Vertex_handle 		VertexHandle;
-	typedef DT::Triangulation_data_structure::Cell_handle 			CellHandle;
-
-	typedef DT::Triangulation_data_structure::Facet_circulator		FacetCirculator;
-
-public:
 
 	/// Generates the Delaunay tessellation.
 	bool generateTessellation(const SimulationCell& simCell, const Point3* positions, size_t numPoints, FloatType ghostLayerSize, const int* selectedPoints = nullptr, FutureInterfaceBase* progress = nullptr);
 
-	/// Returns the tetrahedron cell on the opposite side of the given cell facet.
-	CellHandle mirrorCell(const CellHandle& cell, int facet) const {
-		return _dt.tds().mirror_facet(DT::Triangulation_data_structure::Facet(cell, facet)).first;
+	/// Returns the total number of tetrahedra in the tessellation.
+	size_type numberOfTetrahedra() const { return _dt->nb_cells(); }
+
+	/// Returns the number of finite cells in the primary image of the simulation cell.
+	size_type numberOfPrimaryTetrahedra() const { return _numPrimaryTetrahedra; }
+
+	CellIterator begin_cells() const { return 0; }
+	CellIterator end_cells() const { return _dt->nb_cells(); }
+
+	void setCellIndex(CellHandle cell, int value) {
+		_cellInfo[cell].index = value;
 	}
 
-	static bool isGhost(const CellHandle& cell) {
-		return cell->info().isGhost;
+	int getCellIndex(CellHandle cell) const {
+		return _cellInfo[cell].index;
 	}
 
-	static VertexHandle cellVertex(const CellHandle& cell, int localIndex) {
-		return cell->vertex(localIndex);
+	void setUserField(CellHandle cell, int value) {
+		_cellInfo[cell].userField = value;
 	}
 
-	static Point3 vertexPosition(VertexHandle vertex) {
-		return (Point3)vertex->point();
-	}
-
-
-	/// Returns true if the given vertex is the infinite vertex of the tessellation.
-	bool isInfiniteVertex(const VertexHandle& vertex) const {
-		return _dt.is_infinite(vertex);
+	int getUserField(CellHandle cell) const {
+		return _cellInfo[cell].userField;
 	}
 
 	/// Returns whether the given tessellation cell connects four physical vertices.
 	/// Returns false if one of the four vertices is the infinite vertex.
-	bool isValidCell(const CellHandle& cell) const {
-		for(int v = 0; v < 4; v++)
-			if(cell->vertex(v)->point().index() == -1) return false;
-		return true;
+	bool isValidCell(CellHandle cell) const {
+		return _dt->cell_is_finite(cell);
 	}
 
-	/// Returns the total number of tetrahedra in the tessellation.
-	DT::size_type numberOfTetrahedra() const { return _dt.number_of_cells(); }
+	bool isGhostCell(CellHandle cell) const {
+		return _cellInfo[cell].isGhost;
+	}
 
-	/// Returns the number of finite cells in the primary image of the simulation cell.
-	DT::size_type numberOfPrimaryTetrahedra() const { return _numPrimaryTetrahedra; }
+	bool isGhostVertex(VertexHandle vertex) const {
+		return vertex >= _primaryVertexCount;
+	}
 
-	CellIterator begin_cells() const { return _dt.cells_begin(); }
-	CellIterator end_cells() const { return _dt.cells_end(); }
-	VertexIterator begin_vertices() const { return _dt.vertices_begin(); }
-	VertexIterator end_vertices() const { return _dt.vertices_end(); }
+	VertexHandle cellVertex(CellHandle cell, size_type localIndex) const {
+		return _dt->cell_vertex(cell, localIndex);
+	}
+
+	Point3 vertexPosition(VertexHandle vertex) const {
+		const double* xyz = _dt->vertex_ptr(vertex);
+		return Point3((FloatType)xyz[0], (FloatType)xyz[1], (FloatType)xyz[2]);
+	}
+
+	bool compare_squared_radius_3(CellHandle cell, FloatType alpha) const;
+
+	int vertexIndex(VertexHandle vertex) const {
+		OVITO_ASSERT(vertex < _particleIndices.size());
+		return _particleIndices[vertex];
+	}
+
+	Facet mirrorFacet(CellHandle cell, int face) const {
+		GEO::signed_index_t adjacentCell = _dt->cell_adjacent(cell, face);
+		OVITO_ASSERT(adjacentCell >= 0);
+		return Facet(adjacentCell, _dt->adjacent_index(adjacentCell, cell));
+	}
+
+	Facet mirrorFacet(const Facet& facet) const {
+		return mirrorFacet(facet.first, facet.second);
+	}
 
 	/// Returns the cell vertex for the given triangle vertex of the given cell facet.
 	static inline int cellFacetVertexIndex(int cellFacetIndex, int facetVertexIndex) {
-		return CGAL::Triangulation_utils_3::vertex_triple_index(cellFacetIndex, facetVertexIndex);
-	}
-
-	FacetCirculator incident_facets(CellHandle cell, int i, int j) const {
-		return _dt.tds().incident_facets(cell, i, j);
+		static const int tab_vertex_triple_index[4][3] = {
+		 {1, 3, 2},
+		 {0, 2, 3},
+		 {0, 3, 1},
+		 {0, 1, 2}
+		};
+		OVITO_ASSERT(cellFacetIndex >= 0 && cellFacetIndex < 4);
+		OVITO_ASSERT(facetVertexIndex >= 0 && facetVertexIndex < 3);
+		return tab_vertex_triple_index[cellFacetIndex][facetVertexIndex];
 	}
 
 	FacetCirculator incident_facets(CellHandle cell, int i, int j, CellHandle start, int f) const {
-		return _dt.tds().incident_facets(cell, i, j, start, f);
+		return FacetCirculator(*this, cell, i, j, start, f);
 	}
-
-	/// Returns the corresponding facet of a cell as seen from an adjacent cell.
-	std::pair<CellHandle,int> mirrorFacet(const FacetCirculator& facet) const {
-		return _dt.tds().mirror_facet(*facet);
-	}
-
-	/// Returns the corresponding facet of a cell as seen from an adjacent cell.
-	std::pair<CellHandle,int> mirrorFacet(const CellHandle& cell, int facet) const {
-		return _dt.tds().mirror_facet(DT::Triangulation_data_structure::Facet(cell, facet));
-	}
-
-	/// Returns a reference to the internal CGAL Delaunay triangulation object.
-	DT& dt() { return _dt; }
-
-	/// Returns a reference to the internal CGAL Delaunay triangulation object.
-	const DT& dt() const { return _dt; }
-
-	/// Writes the tessellation to a VTK file for visualization.
-	void dumpToVTKFile(const QString& filename) const;
 
 	/// Returns the simulation cell geometry.
 	const SimulationCell& simCell() const { return _simCell; }
@@ -219,11 +198,23 @@ private:
 	/// Determines whether the given tetrahedral cell is a ghost cell (or an invalid cell).
 	bool classifyGhostCell(CellHandle cell) const;
 
-	/// The internal CGAL triangulator object.
-	DT _dt;
+	/// The internal Delaunay generator object.
+	GEO::SmartPointer<GEO::Delaunay3d> _dt;
+
+	/// Stores the coordinates of the input points.
+	std::vector<double> _pointData;
+
+	/// Stores per-cell auxiliary data.
+	std::vector<CellInfo> _cellInfo;
+
+	/// Mapping of Delaunay points to input particles.
+	std::vector<int> _particleIndices;
+
+	/// The number of primary (non-ghost) vertices.
+	size_type _primaryVertexCount;
 
 	/// The number of finite cells in the primary image of the simulation cell.
-	DT::size_type _numPrimaryTetrahedra = 0;
+	size_type _numPrimaryTetrahedra = 0;
 
 	/// The simulation cell geometry.
 	SimulationCell _simCell;
@@ -233,10 +224,5 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#else
-
-#include "DelaunayTessellation2.h"
-
-#endif
 
 #endif // __OVITO_DELAUNAY_TESSELLATION_H

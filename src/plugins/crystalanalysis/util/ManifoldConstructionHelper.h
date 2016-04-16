@@ -122,12 +122,12 @@ private:
 				_tessellation.setUserField(cell, determineCellRegion(cell));
 			}
 
-			if(!_tessellation.isGhost(cell)) {
+			if(!_tessellation.isGhostCell(cell)) {
 				if(_spaceFillingRegion == -2) _spaceFillingRegion = _tessellation.getUserField(cell);
 				else if(_spaceFillingRegion != _tessellation.getUserField(cell)) _spaceFillingRegion = -1;
 			}
 
-			if(_tessellation.getUserField(cell) != 0 && !_tessellation.isGhost(cell)) {
+			if(_tessellation.getUserField(cell) != 0 && !_tessellation.isGhostCell(cell)) {
 				_tessellation.setCellIndex(cell, _numSolidCells++);
 			}
 			else {

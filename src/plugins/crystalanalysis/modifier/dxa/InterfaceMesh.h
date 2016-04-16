@@ -78,15 +78,19 @@ class InterfaceMesh : public HalfEdgeMesh<InterfaceMeshEdge, InterfaceMeshFace, 
 public:
 
 	/// Constructor.
-	InterfaceMesh(const ElasticMapping& elasticMapping) :
+	InterfaceMesh(ElasticMapping& elasticMapping) :
 		_elasticMapping(elasticMapping) {}
+
+	/// Returns the mapping from the physical configuration of the system
+	/// to the stress-free imaginary configuration.
+	ElasticMapping& elasticMapping() { return _elasticMapping; }
 
 	/// Returns the mapping from the physical configuration of the system
 	/// to the stress-free imaginary configuration.
 	const ElasticMapping& elasticMapping() const { return _elasticMapping; }
 
 	/// Returns the underlying tessellation of the atomistic system.
-	const DelaunayTessellation& tessellation() const { return elasticMapping().tessellation(); }
+	DelaunayTessellation& tessellation() { return elasticMapping().tessellation(); }
 
 	/// Returns the structure analysis object.
 	const StructureAnalysis& structureAnalysis() const { return elasticMapping().structureAnalysis(); }
@@ -107,7 +111,7 @@ private:
 
 	/// The underlying mapping from the physical configuration of the system
 	/// to the stress-free imaginary configuration.
-	const ElasticMapping& _elasticMapping;
+	ElasticMapping& _elasticMapping;
 
 	/// Indicates that all tessellation cells belong to the good region.
 	bool _isCompletelyGood;

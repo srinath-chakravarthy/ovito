@@ -77,24 +77,6 @@ b2 --prefix=../32bit/boost --user-config=../32bit/user-config.jam address-model=
 b2 --prefix=../64bit/boost --user-config=../64bit/user-config.jam address-model=64 link=shared threading=multi runtime-link=shared toolset=msvc --ignore-mpi --with-system --with-thread --with-python install
 
 **************************************************************************
-Build CGAL library (version 4.5):
-**************************************************************************
---- Install precompiled CGAL library including GMP/MPFR libraries to directory ./CGALprecompiled/
-mkdir CGAL
-cd CGAL
-cmake -G "NMake Makefiles" ^
-   -DWITH_CGAL_Qt3=OFF -DWITH_CGAL_Qt4=OFF -DWITH_CGAL_ImageIO=OFF -DWITH_CGAL_Core=OFF ^
-   -DCMAKE_BUILD_TYPE=Release ^
-   -DBOOST_INCLUDEDIR=%cd:\=/%/../boost/include  ^
-   -DGMP_INCLUDE_DIR=%cd:\=/%/../CGALprecompiled/auxiliary/gmp/include/ ^
-   -DGMP_LIBRARIES=%cd:\=/%/../CGALprecompiled/auxiliary/gmp/lib/libgmp-10.lib ^
-   -DMPFR_INCLUDE_DIR=%cd:\=/%/../CGALprecompiled/auxiliary/gmp/include/ ^
-   -DMPFR_LIBRARIES=%cd:\=/%/../CGALprecompiled/auxiliary/gmp/lib/libmpfr-4.lib ^
-   ../../CGAL-4.5/
-
-nmake
-
-**************************************************************************
 HDF5 (version 1.8.x)
 **************************************************************************
 mkdir hdf5
@@ -180,7 +162,6 @@ cmake -G "NMake Makefiles" ^
    -DCMAKE_INSTALL_PREFIX=../ovito_release_install ^
    -DZLIB_INCLUDE_DIR=%cd:\=/%/../zlib_install/include ^
    -DZLIB_LIBRARY=%cd:\=/%/../zlib_install/lib/zlib.lib ^
-   -DCGAL_DIR=%cd:\=/%/../CGAL ^
    -Dnetcdf_DIR=%cd:\=/%/../netcdf_install/share/cmake ^
    -DBOOST_INCLUDEDIR=%cd:\=/%/../boost/include ^
    -DQSCINTILLA_INCLUDE_DIR=%cd:\=/%/../../QScintilla-gpl-2.9\Qt4Qt5 ^

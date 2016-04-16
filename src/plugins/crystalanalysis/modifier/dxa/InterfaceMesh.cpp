@@ -72,7 +72,7 @@ bool InterfaceMesh::createMesh(FloatType maximumNeighborDistance, ParticleProper
 			if(crystalClusters) {
 				std::array<int,4> clusters;
 				for(int v = 0; v < 4; v++)
-					clusters[v] = crystalClusters->getInt(cell->vertex(v)->point().index());
+					clusters[v] = crystalClusters->getInt(tessellation().vertexIndex(tessellation().cellVertex(cell, v)));
 				std::sort(std::begin(clusters), std::end(clusters));
 				return (*most_common(std::begin(clusters), std::end(clusters)) + 1);
 			}
@@ -87,7 +87,7 @@ bool InterfaceMesh::createMesh(FloatType maximumNeighborDistance, ParticleProper
 	// Transfer cluster vectors from tessellation edges to mesh edges.
 	auto prepareMeshFace = [this](Face* face, const std::array<int,3>& vertexIndices, const std::array<DelaunayTessellation::VertexHandle,3>& vertexHandles, DelaunayTessellation::CellHandle cell) {
 		// Obtain unwrapped vertex positions.
-		Point3 vertexPositions[3] = { vertexHandles[0]->point(), vertexHandles[1]->point(), vertexHandles[2]->point() };
+		Point3 vertexPositions[3] = { tessellation().vertexPosition(vertexHandles[0]), tessellation().vertexPosition(vertexHandles[1]), tessellation().vertexPosition(vertexHandles[2]) };
 
 		Edge* edge = face->edges();
 		for(int i = 0; i < 3; i++, edge = edge->nextFaceEdge()) {

@@ -83,7 +83,7 @@ private:
 public:
 
 	/// Constructor.
-	ElasticMapping(StructureAnalysis& structureAnalysis, const DelaunayTessellation& tessellation) :
+	ElasticMapping(StructureAnalysis& structureAnalysis, DelaunayTessellation& tessellation) :
 		_structureAnalysis(structureAnalysis),
 		_tessellation(tessellation), _clusterGraph(structureAnalysis.clusterGraph()), _edgeCount(0),
 		_edgePool(16384),
@@ -93,6 +93,9 @@ public:
 
 	/// Returns the structure analysis object.
 	const StructureAnalysis& structureAnalysis() const { return _structureAnalysis; }
+
+	/// Returns the underlying tessellation.
+	DelaunayTessellation& tessellation() { return _tessellation; }
 
 	/// Returns the underlying tessellation.
 	const DelaunayTessellation& tessellation() const { return _tessellation; }
@@ -165,7 +168,7 @@ private:
 	StructureAnalysis& _structureAnalysis;
 
 	/// The underlying tessellation of the atomistic system.
-	const DelaunayTessellation& _tessellation;
+	DelaunayTessellation& _tessellation;
 
 	/// The cluster graph.
 	ClusterGraph& _clusterGraph;

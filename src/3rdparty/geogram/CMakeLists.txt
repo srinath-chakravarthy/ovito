@@ -1,4 +1,3 @@
-#!
 # @brief Add sources from directories
 # @details
 # Add the sources from the specified \p directories to variable \p var
@@ -28,13 +27,7 @@ aux_source_directories(SOURCES "Source Files\\delaunay"  delaunay)
 aux_source_directories(SOURCES "Source Files\\mesh"      mesh)
 aux_source_directories(SOURCES "Source Files\\api"       api)
 
-# Copy the default version info to the build directory
-configure_file(basic/version.h.in version.h @ONLY)
-list(APPEND SOURCES version.h)
-set_source_files_properties(version.h PROPERTIES GENERATED true)
-
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
-
 add_library(geogram STATIC ${SOURCES})
 
 # Make header files of this library available to dependent targets.

@@ -37,7 +37,6 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, const Point3* positions, size_t numPoints, FloatType ghostLayerSize, const int* selectedPoints, FutureInterfaceBase* progress)
 {
 	if(progress) progress->setProgressRange(0);
-	std::vector<DT::Point> cgalPoints;
 
 	const double epsilon = 2e-5;
 
@@ -59,7 +58,8 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 	_simCell = simCell;
 
 	// Insert the original points first.
-	cgalPoints.reserve(numPoints);
+	_particleIndices.clear();
+	_pointData.clear();
 	for(size_t i = 0; i < numPoints; i++, ++positions) {
 
 		// Skip points which are not included.
@@ -69,18 +69,15 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 		// Add a small random perturbation to the particle positions to make the Delaunay triangulation more robust
 		// against singular input data, e.g. particles forming an ideal crystal lattice.
 		Point3 wp = simCell.wrapPoint(*positions);
-		double coords[3];
-		coords[0] = (double)wp.x() + displacement(rng);
-		coords[1] = (double)wp.y() + displacement(rng);
-		coords[2] = (double)wp.z() + displacement(rng);
-
-		cgalPoints.push_back(Point3WithIndex(coords[0], coords[1], coords[2], i, false));
+		_pointData.push_back((double)wp.x() + displacement(rng));
+		_pointData.push_back((double)wp.y() + displacement(rng));
+		_pointData.push_back((double)wp.z() + displacement(rng));
+		_particleIndices.push_back((int)i);
 
 		if(progress && progress->isCanceled())
 			return false;
 	}
-
-	int vertexCount = cgalPoints.size();
+	_primaryVertexCount = _particleIndices.size();
 
 	Vector3I stencilCount;
 	FloatType cuts[3][2];
@@ -110,11 +107,15 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 
 				Vector3 shift = simCell.reducedToAbsolute(Vector3(ix,iy,iz));
 				Vector_3<double> shiftd = (Vector_3<double>)shift;
-				for(int vertexIndex = 0; vertexIndex < vertexCount; vertexIndex++) {
+				auto primaryPos = _pointData.cbegin();
+				for(int vertexIndex = 0; vertexIndex < _primaryVertexCount; vertexIndex++) {
 					if(progress && progress->isCanceled())
 						return false;
 
-					Point3 pimage = (Point3)cgalPoints[vertexIndex] + shift;
+					double x = (*primaryPos++) + shiftd.x();
+					double y = (*primaryPos++) + shiftd.y();
+					double z = (*primaryPos++) + shiftd.z();
+					Point3 pimage = Point3(x,y,z);
 					bool isClipped = false;
 					for(size_t dim = 0; dim < 3; dim++) {
 						FloatType d = cellNormals[dim].dot(pimage - Point3::Origin());
@@ -124,48 +125,41 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 						}
 					}
 					if(!isClipped) {
-						cgalPoints.push_back(Point3WithIndex(cgalPoints[vertexIndex].x() + shift.x(),
-								cgalPoints[vertexIndex].y() + shift.y(), cgalPoints[vertexIndex].z() + shift.z(), cgalPoints[vertexIndex].index(), true));
+						_pointData.push_back(x);
+						_pointData.push_back(y);
+						_pointData.push_back(z);
+						_particleIndices.push_back(_particleIndices[vertexIndex]);
 					}
 				}
 			}
 		}
 	}
 
-	if(progress && progress->isCanceled())
-		return false;
-
-	// Disabled the following line, because spatial_sort() seems to produce different results
-	// on different platforms.
-
-	//CGAL::spatial_sort(cgalPoints.begin(), cgalPoints.end(), _dt.geom_traits());
-
-	if(progress) {
-		progress->setProgressRange(cgalPoints.size());
-		if(!progress->setProgressValue(0))
-			return false;
+	// Initialize the Geogram library.
+	static bool isGeogramInitialized = false;
+	if(!isGeogramInitialized) {
+		isGeogramInitialized = true;
+		GEO::initialize();
+		GEO::set_assert_mode(GEO::ASSERT_ABORT);
 	}
 
-	DT::Vertex_handle hint;
-	for(auto p = cgalPoints.begin(); p != cgalPoints.end(); ++p) {
-		hint = _dt.insert(*p, hint);
-
-		if(progress) {
-			if(!progress->setProgressValueIntermittent(p - cgalPoints.begin()))
-				return false;
-		}
-	}
+	// Create the internal Delaunay generator object.
+	_dt = new GEO::Delaunay3d();
+	_dt->set_keeps_infinite(true);
+	_dt->set_reorder(true);
+	_dt->set_vertices(_pointData.size()/3, _pointData.data());
 
 	// Classify tessellation cells as ghost or local cells.
 	_numPrimaryTetrahedra = 0;
+	_cellInfo.resize(_dt->nb_cells());
 	for(CellIterator cell = begin_cells(); cell != end_cells(); ++cell) {
 		if(classifyGhostCell(cell)) {
-			cell->info().isGhost = true;
-			cell->info().index = -1;
+			_cellInfo[cell].isGhost = true;
+			_cellInfo[cell].index = -1;
 		}
 		else {
-			cell->info().isGhost = false;
-			cell->info().index = _numPrimaryTetrahedra++;
+			_cellInfo[cell].isGhost = false;
+			_cellInfo[cell].index = _numPrimaryTetrahedra++;
 		}
 	}
 
@@ -177,78 +171,80 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 ******************************************************************************/
 bool DelaunayTessellation::classifyGhostCell(CellHandle cell) const
 {
-	// Find head vertex with the lowest index.
-	const auto& p0 = cell->vertex(0)->point();
-	int headVertex = p0.index();
-	if(headVertex == -1) {
-		OVITO_ASSERT(!isValidCell(cell));
+	if(!isValidCell(cell))
 		return true;
-	}
-	bool isGhost = p0.isGhost();
+
+	// Find head vertex with the lowest index.
+	VertexHandle headVertex = cellVertex(cell, 0);
+	int headVertexIndex = vertexIndex(headVertex);
+	OVITO_ASSERT(headVertexIndex >= 0);
 	for(int v = 1; v < 4; v++) {
-		const auto& p = cell->vertex(v)->point();
-		if(p.index() == -1) {
-			OVITO_ASSERT(!isValidCell(cell));
-			return true;
-		}
-		if(p.index() < headVertex) {
-			headVertex = p.index();
-			isGhost = p.isGhost();
+		VertexHandle p = cellVertex(cell, v);
+		int vindex = vertexIndex(p);
+		OVITO_ASSERT(vindex >= 0);
+		if(vindex < headVertexIndex) {
+			headVertex = p;
+			headVertexIndex = vindex;
 		}
 	}
 
-	OVITO_ASSERT(isValidCell(cell));
-	return isGhost;
+	return isGhostVertex(headVertex);
 }
 
-/******************************************************************************
-* Writes the tessellation to a VTK file for visualization.
-******************************************************************************/
-void DelaunayTessellation::dumpToVTKFile(const QString& filename) const
+bool DelaunayTessellation::compare_squared_radius_3(CellHandle cell, FloatType alpha) const
 {
-	QFile file(filename);
-	file.open(QIODevice::WriteOnly);
-	QTextStream stream(&file);
+	const double* v0 = _dt->vertex_ptr(_dt->cell_vertex(cell, 0));
+	const double* v1 = _dt->vertex_ptr(_dt->cell_vertex(cell, 1));
+	const double* v2 = _dt->vertex_ptr(_dt->cell_vertex(cell, 2));
+	const double* v3 = _dt->vertex_ptr(_dt->cell_vertex(cell, 3));
+	double px = v0[0], py = v0[1], pz = v0[2];
+	double qx = v1[0], qy = v1[1], qz = v1[2];
+	double rx = v2[0], ry = v2[1], rz = v2[2];
+	double sx = v3[0], sy = v3[1], sz = v3[2];
 
-	// Write VTK output file.
-	stream << "# vtk DataFile Version 3.0" << endl;
-	stream << "# Dislocation output" << endl;
-	stream << "ASCII" << endl;
-	stream << "DATASET UNSTRUCTURED_GRID" << endl;
-	stream << "POINTS " << (_dt.number_of_vertices()) << " double" << endl;
-	std::map<VertexHandle,int> outputVertices;
-	for(auto v = _dt.finite_vertices_begin(); v != _dt.finite_vertices_end(); ++v) {
-		outputVertices.insert(std::make_pair((VertexHandle)v, (int)outputVertices.size()));
-		stream << v->point().x() << " " << v->point().y() << " " << v->point().z() << "\n";
-	}
-	OVITO_ASSERT(outputVertices.size() == _dt.number_of_vertices());
+	auto square = [](double d) { return d*d; };
 
-	int numCells = _dt.number_of_finite_cells();
-	stream << endl << "CELLS " << numCells << " " << (numCells * 5) << endl;
-	for(auto cell = _dt.finite_cells_begin(); cell != _dt.finite_cells_end(); ++cell) {
-		stream << "4";
-		for(int i = 0; i < 4; i++) {
-			stream << " " << outputVertices[cell->vertex(i)];
-		}
-		stream << "\n";
-	}
-	stream << endl << "CELL_TYPES " << numCells << "\n";
-	for(size_t i = 0; i < numCells; i++)
-		stream << "10" << "\n";
+	// Translate p to origin to simplify the expression.
+	double qpx = qx-px;
+	double qpy = qy-py;
+	double qpz = qz-pz;
+	double qp2 = square(qpx) + square(qpy) + square(qpz);
+	double rpx = rx-px;
+	double rpy = ry-py;
+	double rpz = rz-pz;
+	double rp2 = square(rpx) + square(rpy) + square(rpz);
+	double spx = sx-px;
+	double spy = sy-py;
+	double spz = sz-pz;
+	double sp2 = square(spx) + square(spy) + square(spz);
 
-	stream << endl << "CELL_DATA " << numCells << "\n";
-	stream << endl << "SCALARS userfield int" << "\n";
-	stream << "LOOKUP_TABLE default" << "\n";
-	for(auto cell = _dt.finite_cells_begin(); cell != _dt.finite_cells_end(); ++cell) {
-		stream << cell->info().userField << "\n";
-	}
+	auto determinant = [](double a00, double a01, double a02,
+			double a10, double a11, double a12,
+			double a20, double a21, double a22)
+	{
+		double m02 = a00*a21 - a20*a01;
+		double m01 = a00*a11 - a10*a01;
+		double m12 = a10*a21 - a20*a11;
+		double m012 = m01*a22 - m02*a12 + m12*a02;
+		return m012;
+	};
 
-	stream << endl << "SCALARS index int" << "\n";
-	stream << "LOOKUP_TABLE default" << "\n";
-	for(auto cell = _dt.finite_cells_begin(); cell != _dt.finite_cells_end(); ++cell) {
-		stream << cell->info().index << "\n";
-	}
+	double num_x = determinant(qpy,qpz,qp2,
+							   rpy,rpz,rp2,
+							   spy,spz,sp2);
+	double num_y = determinant(qpx,qpz,qp2,
+							   rpx,rpz,rp2,
+							   spx,spz,sp2);
+	double num_z = determinant(qpx,qpy,qp2,
+							   rpx,rpy,rp2,
+							   spx,spy,sp2);
+	double den   = determinant(qpx,qpy,qpz,
+							   rpx,rpy,rpz,
+							   spx,spy,spz);
+
+	return (square(num_x) + square(num_y) + square(num_z)) / square(2 * den) < alpha;
 }
+
 
 }	// End of namespace
 }	// End of namespace

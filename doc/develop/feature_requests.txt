@@ -65,6 +65,7 @@ New I/O functions:
 - Single precision floating-point numbers, which are used for custom particle properties, cannot represent large integer numbers exactly (e.g. 100400). Find a solution to make it work.
 - Load atomic trajectories from LAMMPS dump files and import bond information from a separate LAMMPS data file (suggested by jorge.ramirez@upm.es, HeineDR@corning.com).
 - Add support for more file formats using OpenBabel.
+- Add support for multi-frame files to CA importer.
 
 Performance improvements:
 
@@ -80,4 +81,3 @@ Documentation:
 
 - CA file format (112080995@njust.edu.cn)
 - Application settings dialog
-
