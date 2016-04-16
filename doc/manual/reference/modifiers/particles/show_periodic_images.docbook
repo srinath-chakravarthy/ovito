@@ -16,7 +16,8 @@
        <imagedata fileref="images/modifiers/show_periodic_images_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
   
-  Creates copies of all particles and bonds to visualize multiple images of a periodic system.</para>
+  Creates copies of all particles and bonds to visualize multiple images of a periodic system.
+  </para>
 
   <simplesect>
     <title>Parameters</title>
@@ -26,16 +27,15 @@
         <term>Periodic images (X,Y,Z)</term>
 
         <listitem>
-          <para>Enables the replication of the system in the
-          each spatial direction. You can control how many times the system is
-          copied in each direction.</para>
+          <para>Enables the replication of the system along the three edge vectors of the simulation cell. 
+          You can specify how many times the system is copied in each direction.</para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
         <term>Adjust simulation box size</term>
         <listitem>
-          <para>If activated, the simulation cell size is increased to match the size of the extended system.</para>
+          <para>If activated, the simulation cell size is extended to match the size of the replicated system.</para>
         </listitem>
       </varlistentry>
 
@@ -52,4 +52,10 @@
     </variablelist>
   </simplesect>
   
+    <simplesect>
+    <title>Restrictions</title>
+  <para>Note that the modifier does not assign new molecule IDs to replicated atoms. The copies will
+  have the same molecule ID property as the original atoms.</para>
+  </simplesect>
+    
 </section>
