@@ -34,7 +34,7 @@
       GNU General Public License.</para></listitem>
       <listitem><para><link xlink:href="http://www.unidata.ucar.edu/software/netcdf/">netCDF</link> library by
       University Corporation for Atmospheric Research/Unidata (<link linkend="appendix.license.netcdf">license</link>).</para></listitem>
-      <listitem><para><link xlink:href="http://math.lbl.gov/voro++/">Voro++</link> library by Chris Rycroft, licensed under a modified BSD license.</para></listitem>
+      <listitem><para><link xlink:href="http://math.lbl.gov/voro++/">Voro++</link> library by Chris Rycroft (<link linkend="appendix.license.voroplusplus">license</link>).</para></listitem>
       <listitem><para><link xlink:href="http://www.zlib.net">zlib</link> library</para></listitem>
     </itemizedlist>
   </para>
