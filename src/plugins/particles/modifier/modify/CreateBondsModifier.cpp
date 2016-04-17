@@ -148,26 +148,33 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CreateBondsModifier
 	ParticlePropertyObject* posProperty = expectStandardProperty(ParticleProperty::PositionProperty);
 	SimulationCellObject* simCell = expectSimulationCell();
 
+	// The neighbor list cutoff.
+	FloatType maxCutoff = uniformCutoff();
+
 	// Build table of pair-wise cutoff radii.
 	ParticleTypeProperty* typeProperty = nullptr;
-	std::vector<std::vector<FloatType>> pairCutoffTable;
+	std::vector<std::vector<FloatType>> pairCutoffSquaredTable;
 	if(cutoffMode() == PairCutoff) {
 		typeProperty = dynamic_object_cast<ParticleTypeProperty>(expectStandardProperty(ParticleProperty::ParticleTypeProperty));
 		if(typeProperty) {
+			maxCutoff = 0;
 			for(PairCutoffsList::const_iterator entry = pairCutoffs().begin(); entry != pairCutoffs().end(); ++entry) {
 				FloatType cutoff = entry.value();
-				if(cutoff > 0.0f) {
+				if(cutoff > 0) {
 					ParticleType* ptype1 = typeProperty->particleType(entry.key().first);
 					ParticleType* ptype2 = typeProperty->particleType(entry.key().second);
 					if(ptype1 && ptype2 && ptype1->id() >= 0 && ptype2->id() >= 0) {
-						if((int)pairCutoffTable.size() <= std::max(ptype1->id(), ptype2->id())) pairCutoffTable.resize(std::max(ptype1->id(), ptype2->id()) + 1);
-						if((int)pairCutoffTable[ptype1->id()].size() <= ptype2->id()) pairCutoffTable[ptype1->id()].resize(ptype2->id() + 1, FloatType(0));
-						if((int)pairCutoffTable[ptype2->id()].size() <= ptype1->id()) pairCutoffTable[ptype2->id()].resize(ptype1->id() + 1, FloatType(0));
-						pairCutoffTable[ptype1->id()][ptype2->id()] = cutoff * cutoff;
-						pairCutoffTable[ptype2->id()][ptype1->id()] = cutoff * cutoff;
+						if((int)pairCutoffSquaredTable.size() <= std::max(ptype1->id(), ptype2->id())) pairCutoffSquaredTable.resize(std::max(ptype1->id(), ptype2->id()) + 1);
+						if((int)pairCutoffSquaredTable[ptype1->id()].size() <= ptype2->id()) pairCutoffSquaredTable[ptype1->id()].resize(ptype2->id() + 1, FloatType(0));
+						if((int)pairCutoffSquaredTable[ptype2->id()].size() <= ptype1->id()) pairCutoffSquaredTable[ptype2->id()].resize(ptype1->id() + 1, FloatType(0));
+						pairCutoffSquaredTable[ptype1->id()][ptype2->id()] = cutoff * cutoff;
+						pairCutoffSquaredTable[ptype2->id()][ptype1->id()] = cutoff * cutoff;
+						if(cutoff > maxCutoff) maxCutoff = cutoff;
 					}
 				}
 			}
+			if(maxCutoff <= 0)
+				throwException(tr("At least one positive cutoff must be entered."));
 		}
 	}
 
@@ -177,7 +184,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CreateBondsModifier
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<BondsEngine>(validityInterval, posProperty->storage(),
 			typeProperty ? typeProperty->storage() : nullptr, simCell->data(), cutoffMode(),
-			uniformCutoff(), std::move(pairCutoffTable), moleculeProperty ? moleculeProperty->storage() : nullptr);
+			maxCutoff, std::move(pairCutoffSquaredTable), moleculeProperty ? moleculeProperty->storage() : nullptr);
 }
 
 /******************************************************************************
@@ -187,18 +194,9 @@ void CreateBondsModifier::BondsEngine::perform()
 {
 	setProgressText(tr("Generating bonds"));
 
-	// Determine maximum cutoff.
-	FloatType maxCutoff = _uniformCutoff;
-	if(_particleTypes) {
-		OVITO_ASSERT(_particleTypes->size() == _positions->size());
-		for(const auto& innerList : _pairCutoffs)
-			for(const auto& cutoff : innerList)
-				if(cutoff > maxCutoff) maxCutoff = cutoff;
-	}
-
 	// Prepare the neighbor list.
 	CutoffNeighborFinder neighborFinder;
-	if(!neighborFinder.prepare(maxCutoff, _positions.data(), _simCell, nullptr, this))
+	if(!neighborFinder.prepare(_maxCutoff, _positions.data(), _simCell, nullptr, this))
 		return;
 
 	// Generate (half) bonds.
@@ -223,8 +221,8 @@ void CreateBondsModifier::BondsEngine::perform()
 					continue;
 				int type1 = _particleTypes->getInt(particleIndex);
 				int type2 = _particleTypes->getInt(neighborQuery.current());
-				if(type1 >= 0 && type1 < (int)_pairCutoffs.size() && type2 >= 0 && type2 < (int)_pairCutoffs[type1].size()) {
-					if(neighborQuery.distanceSquared() <= _pairCutoffs[type1][type2])
+				if(type1 >= 0 && type1 < (int)_pairCutoffsSquared.size() && type2 >= 0 && type2 < (int)_pairCutoffsSquared[type1].size()) {
+					if(neighborQuery.distanceSquared() <= _pairCutoffsSquared[type1][type2])
 						_bonds->push_back({ neighborQuery.unwrappedPbcShift(), (unsigned int)particleIndex, (unsigned int)neighborQuery.current() });
 				}
 			}
