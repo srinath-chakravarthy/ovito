@@ -10,13 +10,13 @@
   <title>Exporting data</title>
 
   <para>To export particles to a file (or a series of files), select <menuchoice><guimenu>File</guimenu><guimenuitem>Export File</guimenuitem></menuchoice> from the menu.
-  After choosing an output filename and a file format, the export settings dialog lets you specify the animation frames and the particle properties to be exported.
+  After choosing an output filename and a file format, the export settings dialog lets you specify the animation frames and the particle properties to be exported (depending on the selected file format).
   </para>
   
-  <para>If you pick an output filename that ends with the <filename>.gz</filename> suffix, the file will be automatically compressed by OVITO.</para>
+  <para>If you pick an output filename that ends with a <filename>.gz</filename> suffix, the file will be automatically compressed by OVITO.</para>
   
   <para>
-  Note that OVITO exports the output of the modification pipeline. That means, for instance, if you have deleted some particles using a modifier, OVITO will export
+  Note that OVITO exports the output of the modification pipeline. That means, for instance, if you have deleted some particles, OVITO will export
   only the remaining particles to the output file. The modification pipeline is re-evaluated for every animation frame being exported.
   </para>
   
@@ -43,7 +43,7 @@
             </row>
             <row>
               <entry>XYZ</entry>
-              <entry><para>A simple column-based text format, which is documented <link xlink:href="http://en.wikipedia.org/wiki/XYZ_file_format">here</link>.</para></entry>
+              <entry><para>A simple column-based text format, which is documented <link xlink:href="http://en.wikipedia.org/wiki/XYZ_file_format">here</link> and <link xlink:href="http://libatoms.github.io/QUIP/io.html#module-ase.io.extxyz">here</link>.</para></entry>
             </row>
             <row>
               <entry>POSCAR</entry>
@@ -60,7 +60,7 @@
             <row>
               <entry>Crystal Analysis (CA)</entry>
               <entry><para>A text-based file format used by the <emphasis>Crystal Analysis Tool</emphasis>, which can store dislocation line networks extracted by the 
-              <link linkend="particles.modifiers.dislocation_analysis">Dislocation Analysis</link> modifier.</para></entry>
+              <link linkend="particles.modifiers.dislocation_analysis">Dislocation Analysis</link> modifier. The format is documented <link linkend="particles.modifiers.dislocation_analysis.fileformat">here</link>.</para></entry>
             </row>
           </tbody>
         </tgroup>
