@@ -45,6 +45,9 @@
 
 #include <geogram/basic/stopwatch.h>
 #include <iostream>
+#ifdef GEO_OS_WINDOWS
+#include <Windows.h>
+#endif
 
 namespace GEO {
 

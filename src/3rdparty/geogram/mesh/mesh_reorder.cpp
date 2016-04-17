@@ -45,6 +45,7 @@
 #include <geogram/mesh/index.h>
 #include <geogram/basic/permutation.h>
 #include <algorithm>
+#include <functional>
 
 namespace {
 
