@@ -150,11 +150,11 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 {
 	setProgressText(tr("Constructing surface mesh"));
 
-	if(_radius <= 0.0)
+	if(_radius <= 0)
 		throw Exception(tr("Radius parameter must be positive."));
 
 	double alpha = _radius * _radius;
-	FloatType ghostLayerSize = _radius * 3.0f;
+	FloatType ghostLayerSize = _radius * FloatType(3);
 
 	// Check if combination of radius parameter and simulation cell size is valid.
 	for(size_t dim = 0; dim < 3; dim++) {
@@ -181,22 +181,25 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 	beginProgressSubSteps({ 20, 1, 6, 1 });
 
 	// Generate Delaunay tessellation.
+	QTime myTimer;
+	myTimer.start();
 	DelaunayTessellation tessellation;
 	if(!tessellation.generateTessellation(_simCell, positions()->constDataPoint3(), positions()->size(), ghostLayerSize,
 			selection() ? selection()->constDataInt() : nullptr, this))
 		return;
+	qDebug() << "Delaunay time: " << myTimer.elapsed();
 
 	nextProgressSubStep();
 
 	// Determines the region a solid Delaunay cell belongs to.
 	// We use this callback function to compute the total volume of the solid region.
-	auto tetrahedronRegion = [this](DelaunayTessellation::CellHandle cell) {
-		if(cell->info().isGhost == false) {
-			Point3 p0 = cell->vertex(0)->point();
-			Vector3 ad = (Point3)cell->vertex(1)->point() - p0;
-			Vector3 bd = (Point3)cell->vertex(2)->point() - p0;
-			Vector3 cd = (Point3)cell->vertex(3)->point() - p0;
-			_solidVolume += std::abs(ad.dot(cd.cross(bd))) / 6.0;
+	auto tetrahedronRegion = [this, &tessellation](DelaunayTessellation::CellHandle cell) {
+		if(tessellation.isGhostCell(cell) == false) {
+			Point3 p0 = tessellation.vertexPosition(tessellation.cellVertex(cell, 0));
+			Vector3 ad = tessellation.vertexPosition(tessellation.cellVertex(cell, 1)) - p0;
+			Vector3 bd = tessellation.vertexPosition(tessellation.cellVertex(cell, 2)) - p0;
+			Vector3 cd = tessellation.vertexPosition(tessellation.cellVertex(cell, 3)) - p0;
+			_solidVolume += std::abs(ad.dot(cd.cross(bd))) / FloatType(6);
 		}
 		return 1;
 	};
@@ -221,7 +224,7 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 		Vector3 e2 = _simCell.wrapVector(facet->edges()->prevFaceEdge()->vertex1()->pos() - facet->edges()->vertex2()->pos());
 		_surfaceArea += e1.cross(e2).length();
 	}
-	_surfaceArea *= 0.5f;
+	_surfaceArea *= FloatType(0.5);
 
 	endProgressSubSteps();
 }

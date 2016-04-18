@@ -41,7 +41,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, CAImporter, FileSourceImporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, CAImporter, ParticleImporter);
 DEFINE_PROPERTY_FIELD(CAImporter, _loadParticles, "LoadParticles");
 SET_PROPERTY_FIELD_LABEL(CAImporter, _loadParticles, "Load particles");
 
@@ -53,7 +53,7 @@ void CAImporter::propertyChanged(const PropertyFieldDescriptor& field)
 	if(field == PROPERTY_FIELD(CAImporter::_loadParticles)) {
 		requestReload();
 	}
-	FileSourceImporter::propertyChanged(field);
+	ParticleImporter::propertyChanged(field);
 }
 
 /******************************************************************************
@@ -72,8 +72,54 @@ bool CAImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceLocation)
 		return true;
 
 	return false;
-
 }
+
+/******************************************************************************
+* Scans the given input file to find all contained simulation frames.
+******************************************************************************/
+void CAImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
+{
+	futureInterface.setProgressText(tr("Scanning CA file %1").arg(stream.filename()));
+	futureInterface.setProgressRange(stream.underlyingSize() / 1000);
+
+	QFileInfo fileInfo(stream.device().fileName());
+	QString filename = fileInfo.fileName();
+	QDateTime lastModified = fileInfo.lastModified();
+	int frameNumber = 0;
+	qint64 byteOffset;
+
+	while(!stream.eof()) {
+
+		if(frameNumber == 0) {
+			byteOffset = stream.byteOffset();
+			stream.readLine();
+		}
+		int startLineNumber = stream.lineNumber();
+
+		if(stream.line()[0] == '\0') break;
+		if(!stream.lineStartsWith("CA_FILE_VERSION "))
+			throw Exception(tr("Failed to parse file. This is not a proper file written by the Crystal Analysis Tool or OVITO."));
+
+		// Create a new record for the frame.
+		Frame frame;
+		frame.sourceFile = sourceUrl;
+		frame.byteOffset = byteOffset;
+		frame.lineNumber = startLineNumber;
+		frame.lastModificationTime = lastModified;
+		frame.label = QString("%1 (Frame %2)").arg(filename).arg(frameNumber++);
+		frames.push_back(frame);
+
+		// Seek to end of frame record.
+		while(!stream.eof()) {
+			byteOffset = stream.byteOffset();
+			stream.readLineTrimLeft();
+			if(stream.lineStartsWith("CA_FILE_VERSION ")) break;
+			if((stream.lineNumber() % 4096) == 0)
+				futureInterface.setProgressValue(stream.underlyingByteOffset() / 1000);
+		}
+	}
+}
+
 /******************************************************************************
 * Reads the data from the input file(s).
 ******************************************************************************/
@@ -529,6 +575,10 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 		else if(stream.lineStartsWith("METADATA ")) {
 			// Ignore. This is for future use.
 		}
+		else if(stream.lineStartsWith("CA_FILE_VERSION ")) {
+			// Beginning of next frame.
+			break;
+		}
 		else if(stream.line()[0] != '\0') {
 			throw Exception(tr("Failed to parse file. Invalid keyword in line %1: %2").arg(stream.lineNumber()).arg(stream.lineString()));
 		}
@@ -564,10 +614,10 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 		if(!waitForSubTask(_particleLoadTask))
 			return;
 
-		setStatus(tr("Number of segments: %1\n%2").arg(numDislocationSegments).arg(_particleLoadTask->status().text()));
+		setStatus(tr("Number of dislocations: %1\n%2").arg(numDislocationSegments).arg(_particleLoadTask->status().text()));
 	}
 	else {
-		setStatus(tr("Number of segments: %1").arg(numDislocationSegments));
+		setStatus(tr("Number of dislocations: %1").arg(numDislocationSegments));
 	}
 }
 
@@ -724,7 +774,7 @@ void CAImporter::CrystalAnalysisFrameLoader::handOver(CompoundObject* container)
 ******************************************************************************/
 void CAImporter::prepareSceneNode(ObjectNode* node, FileSource* importObj)
 {
-	FileSourceImporter::prepareSceneNode(node, importObj);
+	ParticleImporter::prepareSceneNode(node, importObj);
 
 	// Add a modifier to smooth the defect surface mesh.
 	node->applyModifier(new SmoothSurfaceModifier(node->dataset()));

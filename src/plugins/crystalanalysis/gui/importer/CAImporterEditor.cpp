@@ -44,6 +44,10 @@ void CAImporterEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 
 	BooleanParameterUI* loadParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(CAImporter::_loadParticles));
 	layout->addWidget(loadParticlesUI->checkBox());
+
+	// Multi-timestep file
+	BooleanParameterUI* multitimestepUI = new BooleanParameterUI(this, PROPERTY_FIELD(ParticleImporter::_isMultiTimestepFile));
+	layout->addWidget(multitimestepUI->checkBox());
 }
 
 }	// End of namespace

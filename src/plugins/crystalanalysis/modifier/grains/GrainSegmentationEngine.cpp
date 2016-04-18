@@ -470,17 +470,17 @@ bool GrainSegmentationEngine::buildPartitionMesh()
 	nextProgressSubStep();
 
 	// Determines the grain a Delaunay cell belongs to.
-	auto tetrahedronRegion = [this](DelaunayTessellation::CellHandle cell) {
+	auto tetrahedronRegion = [this, &tessellation](DelaunayTessellation::CellHandle cell) {
 		std::array<int,4> clusters;
 		for(int v = 0; v < 4; v++)
-			clusters[v] = atomClusters()->getInt(cell->vertex(v)->point().index());
+			clusters[v] = atomClusters()->getInt(tessellation.vertexIndex(tessellation.cellVertex(cell, v)));
 		std::sort(std::begin(clusters), std::end(clusters));
 		return (*most_common(std::begin(clusters), std::end(clusters)) + 1);
 	};
 
 	// Assign triangle faces to grains.
-	auto prepareMeshFace = [this](PartitionMeshData::Face* face, const std::array<int,3>& vertexIndices, const std::array<DelaunayTessellation::VertexHandle,3>& vertexHandles, DelaunayTessellation::CellHandle cell) {
-		face->region = cell->info().userField - 1;
+	auto prepareMeshFace = [this, &tessellation](PartitionMeshData::Face* face, const std::array<int,3>& vertexIndices, const std::array<DelaunayTessellation::VertexHandle,3>& vertexHandles, DelaunayTessellation::CellHandle cell) {
+		face->region = tessellation.getUserField(cell) - 1;
 	};
 
 	// Cross-links adjacent manifolds.

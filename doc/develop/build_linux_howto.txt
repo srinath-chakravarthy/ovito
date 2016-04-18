@@ -160,23 +160,6 @@ echo "using python : 3.4 : /home/stuko/progs/python : /home/stuko/progs/python/i
 ./b2 toolset=gcc-4.8 release link=shared install
 
 **************************************************************************
-Build CGAL library:
-**************************************************************************
-
-export CC=gcc-4.8
-export CXX=g++-4.8
-$HOME/progs/cmake-2.8.12.2/bin/cmake \
-    -DBOOST_ROOT=$HOME/progs/boost \
-    -DBUILD_SHARED_LIBS=ON \
-    -DWITH_CGAL_Qt3=OFF \
-    -DWITH_CGAL_Qt4=OFF \
-    -DWITH_CGAL_ImageIO=OFF \
-    -DWITH_CGAL_Core=OFF \
-    .
-
-make
-
-**************************************************************************
 Build static libav (release 11) on Ubuntu 10.04:
 **************************************************************************
 
@@ -216,7 +199,6 @@ $HOME/progs/cmake-2.8.12.2/bin/cmake \
   -DCMAKE_PREFIX_PATH=$HOME/progs/qt5/ \
   -DQSCINTILLA_INCLUDE_DIR=$HOME/progs/QScintilla-gpl-2.9/Qt4Qt5/ \
   -DQSCINTILLA_LIBRARY=$HOME/progs/QScintilla-gpl-2.9/Qt4Qt5/libqscintilla2.so.12 \
-  -DCGAL_DIR=$HOME/progs/CGAL-4.3 \
   -DLIBAV_INCLUDE_DIR=$HOME/progs/libav/include \
   -DLIBAV_LIBRARY_DIR=$HOME/progs/libav/lib \
   ../source/

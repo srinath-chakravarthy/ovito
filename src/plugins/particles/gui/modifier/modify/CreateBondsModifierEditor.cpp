@@ -130,8 +130,8 @@ QVariant CreateBondsModifierEditor::PairCutoffTableModel::data(const QModelIndex
 		else if(index.column() == 1) return _data[index.row()].second;
 		else if(index.column() == 2) {
 			FloatType cutoffRadius = _modifier->pairCutoffs()[_data[index.row()]];
-			if(cutoffRadius > 0.0f)
-				return cutoffRadius;
+			if(cutoffRadius > 0)
+				return QString("%1").arg(cutoffRadius);
 		}
 	}
 	return QVariant();

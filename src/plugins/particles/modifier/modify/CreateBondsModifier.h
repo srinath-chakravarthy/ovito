@@ -53,10 +53,10 @@ private:
 
 		/// Constructor.
 		BondsEngine(const TimeInterval& validityInterval, ParticleProperty* positions, ParticleProperty* particleTypes, const SimulationCell& simCell, CutoffMode cutoffMode,
-				FloatType uniformCutoff, std::vector<std::vector<FloatType>>&& pairCutoffs, ParticleProperty* moleculeIDs) :
+				FloatType maxCutoff, std::vector<std::vector<FloatType>>&& pairCutoffsSquared, ParticleProperty* moleculeIDs) :
 					ComputeEngine(validityInterval),
 					_positions(positions), _particleTypes(particleTypes), _simCell(simCell), _cutoffMode(cutoffMode),
-					_uniformCutoff(uniformCutoff), _pairCutoffs(std::move(pairCutoffs)), _bonds(new BondsStorage()),
+					_maxCutoff(maxCutoff), _pairCutoffsSquared(std::move(pairCutoffsSquared)), _bonds(new BondsStorage()),
 					_moleculeIDs(moleculeIDs) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
@@ -71,8 +71,8 @@ private:
 	private:
 
 		CutoffMode _cutoffMode;
-		FloatType _uniformCutoff;
-		std::vector<std::vector<FloatType>> _pairCutoffs;
+		FloatType _maxCutoff;
+		std::vector<std::vector<FloatType>> _pairCutoffsSquared;
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
 		QExplicitlySharedDataPointer<ParticleProperty> _particleTypes;
 		QExplicitlySharedDataPointer<ParticleProperty> _moleculeIDs;

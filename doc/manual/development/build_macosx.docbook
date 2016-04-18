@@ -18,7 +18,7 @@
     It's easiest to use <link xlink:href="https://www.macports.org/">MacPorts</link> to install many of the required dependencies.
     After installing MacPorts, run 
 <screen><command>sudo port install netcdf python34 py34-sphinx py34-numpy py34-sip zlib \
-                  boost +python34 +no_static cgal cmake docbook-xml \
+                  boost +python34 +no_static cmake docbook-xml \
                   docbook-xsl doxygen libxslt yasm
 </command></screen>
   </para>

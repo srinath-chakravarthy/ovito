@@ -58,7 +58,7 @@ public:
 public:
 
 	/// Constructor.
-	ManifoldConstructionHelper(const DelaunayTessellation& tessellation, HalfEdgeStructureType& outputMesh, FloatType alpha,
+	ManifoldConstructionHelper(DelaunayTessellation& tessellation, HalfEdgeStructureType& outputMesh, FloatType alpha,
 			ParticleProperty* positions) : _tessellation(tessellation), _mesh(outputMesh), _alpha(alpha), _positions(positions) {}
 
 	/// This is the main function, which constructs the manifold triangle mesh.
@@ -113,31 +113,25 @@ private:
 				return false;
 
 			// Alpha shape criterion: This determines whether the Delaunay tetrahedron is part of the solid region.
-			bool isSolid = _tessellation.isValidCell(cell) &&
-					_tessellation.dt().geom_traits().compare_squared_radius_3_object()(
-							cell->vertex(0)->point(),
-							cell->vertex(1)->point(),
-							cell->vertex(2)->point(),
-							cell->vertex(3)->point(),
-							_alpha) != CGAL::POSITIVE;
+			bool isSolid = _tessellation.isValidCell(cell) && _tessellation.compare_squared_radius_3(cell, _alpha);
 
 			if(!isSolid) {
-				cell->info().userField = 0;
+				_tessellation.setUserField(cell, 0);
 			}
 			else {
-				cell->info().userField = determineCellRegion(cell);
+				_tessellation.setUserField(cell, determineCellRegion(cell));
 			}
 
-			if(!cell->info().isGhost) {
-				if(_spaceFillingRegion == -2) _spaceFillingRegion = cell->info().userField;
-				else if(_spaceFillingRegion != cell->info().userField) _spaceFillingRegion = -1;
+			if(!_tessellation.isGhostCell(cell)) {
+				if(_spaceFillingRegion == -2) _spaceFillingRegion = _tessellation.getUserField(cell);
+				else if(_spaceFillingRegion != _tessellation.getUserField(cell)) _spaceFillingRegion = -1;
 			}
 
-			if(cell->info().userField != 0 && !cell->info().isGhost) {
-				cell->info().index = _numSolidCells++;
+			if(_tessellation.getUserField(cell) != 0 && !_tessellation.isGhostCell(cell)) {
+				_tessellation.setCellIndex(cell, _numSolidCells++);
 			}
 			else {
-				cell->info().index = -1;
+				_tessellation.setCellIndex(cell, -1);
 			}
 		}
 		if(_spaceFillingRegion == -2) _spaceFillingRegion = 0;
@@ -160,17 +154,17 @@ private:
 		for(DelaunayTessellation::CellIterator cell = _tessellation.begin_cells(); cell != _tessellation.end_cells(); ++cell) {
 
 			// Look for solid and local tetrahedra.
-			if(cell->info().index == -1) continue;
-			int solidRegion = cell->info().userField;
+			if(_tessellation.getCellIndex(cell) == -1) continue;
+			int solidRegion = _tessellation.getUserField(cell);
 			OVITO_ASSERT(solidRegion != 0);
 
 			// Update progress indicator.
-			if(progress && !progress->setProgressValueIntermittent(cell->info().index))
+			if(progress && !progress->setProgressValueIntermittent(_tessellation.getCellIndex(cell)))
 				return false;
 
 			Point3 unwrappedVerts[4];
-			for(size_t i = 0; i < 4; i++)
-				unwrappedVerts[i] = cell->vertex(i)->point();
+			for(int i = 0; i < 4; i++)
+				unwrappedVerts[i] = _tessellation.vertexPosition(_tessellation.cellVertex(cell, i));
 
 			// Check validity of tessellation.
 			Vector3 ad = unwrappedVerts[0] - unwrappedVerts[3];
@@ -180,13 +174,13 @@ private:
 				throw Exception("Cannot construct manifold. Simulation cell length is too small for the given probe sphere radius parameter.");
 
 			// Iterate over the four faces of the tetrahedron cell.
-			cell->info().index = -1;
+			_tessellation.setCellIndex(cell, -1);
 			for(int f = 0; f < 4; f++) {
 
 				// Check if the adjacent tetrahedron belongs to a different region.
 				std::pair<DelaunayTessellation::CellHandle,int> mirrorFacet = _tessellation.mirrorFacet(cell, f);
 				DelaunayTessellation::CellHandle adjacentCell = mirrorFacet.first;
-				if(adjacentCell->info().userField == solidRegion) {
+				if(_tessellation.getUserField(adjacentCell) == solidRegion) {
 					continue;
 				}
 
@@ -195,8 +189,8 @@ private:
 				std::array<DelaunayTessellation::VertexHandle,3> vertexHandles;
 				std::array<int,3> vertexIndices;
 				for(int v = 0; v < 3; v++) {
-					vertexHandles[v] = cell->vertex(DelaunayTessellation::cellFacetVertexIndex(f, FlipOrientation ? (2-v) : v));
-					int vertexIndex = vertexIndices[v] = vertexHandles[v]->point().index();
+					vertexHandles[v] = _tessellation.cellVertex(cell, DelaunayTessellation::cellFacetVertexIndex(f, FlipOrientation ? (2-v) : v));
+					int vertexIndex = vertexIndices[v] = _tessellation.vertexIndex(vertexHandles[v]);
 					OVITO_ASSERT(vertexIndex >= 0 && vertexIndex < vertexMap.size());
 					if(vertexMap[vertexIndex] == nullptr)
 						vertexMap[vertexIndex] = _mesh.createVertex(_positions->getPoint3(vertexIndex));
@@ -210,14 +204,14 @@ private:
 				prepareMeshFaceFunc(face, vertexIndices, vertexHandles, cell);
 
 				// Create additional face for exterior region if requested.
-				if(CreateTwoSidedMesh && adjacentCell->info().userField == 0) {
+				if(CreateTwoSidedMesh && _tessellation.getUserField(adjacentCell) == 0) {
 
 					// Build face vertex list.
 					std::reverse(std::begin(vertexHandles), std::end(vertexHandles));
 					std::array<int,3> reverseVertexIndices;
 					for(int v = 0; v < 3; v++) {
-						vertexHandles[v] = adjacentCell->vertex(DelaunayTessellation::cellFacetVertexIndex(mirrorFacet.second, FlipOrientation ? (2-v) : v));
-						int vertexIndex = reverseVertexIndices[v] = vertexHandles[v]->point().index();
+						vertexHandles[v] = _tessellation.cellVertex(adjacentCell, DelaunayTessellation::cellFacetVertexIndex(mirrorFacet.second, FlipOrientation ? (2-v) : v));
+						int vertexIndex = reverseVertexIndices[v] = _tessellation.vertexIndex(vertexHandles[v]);
 						OVITO_ASSERT(vertexIndex >= 0 && vertexIndex < vertexMap.size());
 						OVITO_ASSERT(vertexMap[vertexIndex] != nullptr);
 						facetVertices[v] = vertexMap[vertexIndex];
@@ -239,11 +233,11 @@ private:
 				_faceLookupMap.emplace(vertexIndices, face);
 
 				// Insert into contiguous list of tetrahedron faces.
-				if(cell->info().index == -1) {
-					cell->info().index = _tetrahedraFaceList.size();
+				if(_tessellation.getCellIndex(cell) == -1) {
+					_tessellation.setCellIndex(cell, _tetrahedraFaceList.size());
 					_tetrahedraFaceList.push_back(std::array<typename HalfEdgeStructureType::Face*, 4>({ nullptr, nullptr, nullptr, nullptr }));
 				}
-				_tetrahedraFaceList[cell->info().index][f] = face;
+				_tetrahedraFaceList[_tessellation.getCellIndex(cell)][f] = face;
 			}
 		}
 
@@ -263,13 +257,14 @@ private:
 		}
 		DelaunayTessellation::FacetCirculator circulator_start = _tessellation.incident_facets(cell, vertexIndex1, vertexIndex2, cell, f);
 		DelaunayTessellation::FacetCirculator circulator = circulator_start;
-		OVITO_ASSERT(circulator->first == cell);
-		OVITO_ASSERT(circulator->second == f);
+		OVITO_ASSERT((*circulator).first == cell);
+		OVITO_ASSERT((*circulator).second == f);
 		--circulator;
 		OVITO_ASSERT(circulator != circulator_start);
+		int region = _tessellation.getUserField(cell);
 		do {
 			// Look for the first cell while going around the edge that belongs to a different region.
-			if(circulator->first->info().userField != cell->info().userField)
+			if(_tessellation.getUserField((*circulator).first) != region)
 				break;
 			--circulator;
 		}
@@ -277,8 +272,8 @@ private:
 		OVITO_ASSERT(circulator != circulator_start);
 
 		// Get the current adjacent cell, which is part of the same region as the first tet.
-		std::pair<DelaunayTessellation::CellHandle,int> mirrorFacet = _tessellation.mirrorFacet(circulator);
-		OVITO_ASSERT(mirrorFacet.first->info().userField == cell->info().userField);
+		std::pair<DelaunayTessellation::CellHandle,int> mirrorFacet = _tessellation.mirrorFacet(*circulator);
+		OVITO_ASSERT(_tessellation.getUserField(mirrorFacet.first) == region);
 
 		typename HalfEdgeStructureType::Face* adjacentFace = findCellFace(mirrorFacet);
 		if(adjacentFace == nullptr)
@@ -296,10 +291,10 @@ private:
 		for(DelaunayTessellation::CellIterator cell = _tessellation.begin_cells(); cell != _tessellation.end_cells(); ++cell) {
 
 			// Look for tetrahedra with at least one face.
-			if(cell->info().index == -1) continue;
+			if(_tessellation.getCellIndex(cell) == -1) continue;
 
 			// Update progress indicator.
-			if(progress && !progress->setProgressValueIntermittent(cell->info().index))
+			if(progress && !progress->setProgressValueIntermittent(_tessellation.getCellIndex(cell)))
 				return false;
 
 			for(int f = 0; f < 4; f++) {
@@ -320,7 +315,7 @@ private:
 
 				if(CreateTwoSidedMesh) {
 					std::pair<DelaunayTessellation::CellHandle,int> oppositeFacet = _tessellation.mirrorFacet(cell, f);
-					OVITO_ASSERT(oppositeFacet.first->info().userField != cell->info().userField);
+					OVITO_ASSERT(_tessellation.getUserField(oppositeFacet.first) != _tessellation.getUserField(cell));
 					typename HalfEdgeStructureType::Face* outerFacet = findCellFace(oppositeFacet);
 					OVITO_ASSERT(outerFacet != nullptr);
 
@@ -339,7 +334,7 @@ private:
 						OVITO_ASSERT(found);
 					}
 
-					if(oppositeFacet.first->info().userField == 0) {
+					if(_tessellation.getUserField(oppositeFacet.first) == 0) {
 						// Link within opposite manifold.
 						typename HalfEdgeStructureType::Edge* edge = outerFacet->edges();
 						for(int e = 0; e < 3; e++, edge = edge->nextFaceEdge()) {
@@ -366,15 +361,15 @@ private:
 	{
 		// If the cell is a ghost cell, find the corresponding real cell first.
 		auto cell = facet.first;
-		if(cell->info().index != -1) {
-			OVITO_ASSERT(cell->info().index >= 0 && cell->info().index < _tetrahedraFaceList.size());
-			return _tetrahedraFaceList[cell->info().index][facet.second];
+		if(_tessellation.getCellIndex(cell) != -1) {
+			OVITO_ASSERT(_tessellation.getCellIndex(cell) >= 0 && _tessellation.getCellIndex(cell) < _tetrahedraFaceList.size());
+			return _tetrahedraFaceList[_tessellation.getCellIndex(cell)][facet.second];
 		}
 		else {
 			std::array<int,3> faceVerts;
 			for(size_t i = 0; i < 3; i++) {
 				int vertexIndex = DelaunayTessellation::cellFacetVertexIndex(facet.second, FlipOrientation ? (2-i) : i);
-				faceVerts[i] = cell->vertex(vertexIndex)->point().index();
+				faceVerts[i] = _tessellation.vertexIndex(_tessellation.cellVertex(cell, vertexIndex));
 			}
 			reorderFaceVertices(faceVerts);
 			auto iter = _faceLookupMap.find(faceVerts);
@@ -393,7 +388,7 @@ private:
 private:
 
 	/// The tetrahedral tessellation.
-	const DelaunayTessellation& _tessellation;
+	DelaunayTessellation& _tessellation;
 
 	/// The squared probe sphere radius used to classify tetrahedra as open or solid.
 	FloatType _alpha;

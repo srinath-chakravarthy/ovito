@@ -143,7 +143,7 @@
               <entry>XYZ</entry>
               <entry><para>A simple column-based text format, which is documented <link xlink:href="http://en.wikipedia.org/wiki/XYZ_file_format">here</link>.</para>
 			    <para>The basic XYZ format does not contain simulation cell information. OVITO takes the axis-aligned bounding box of particles as the simulation box in this case.
-			    The program also supports the <link xlink:href="http://jrkermode.co.uk/quippy/io.html#extendedxyz">extended XYZ format</link>, which includes information on the simulation cell,
+			    The program also supports the <link xlink:href="http://libatoms.github.io/QUIP/io.html#module-ase.io.extxyz">extended XYZ format</link>, which includes information on the simulation cell,
 			    boundary conditions, and per-particle fields.</para>
                 </entry>
             </row>
@@ -157,7 +157,7 @@
             </row>
             <row>
               <entry>CFG</entry>
-              <entry><para>File format used by the <link xlink:href="http://li.mit.edu/Archive/Graphics/A/"><emphasis>AtomEye</emphasis> software</link>.</para></entry>
+              <entry><para>File format used by the <link xlink:href="http://li.mit.edu/Archive/Graphics/A/">AtomEye</link> visualization program.</para></entry>
             </row>
             <row>
               <entry>PARCAS</entry>
@@ -169,7 +169,7 @@
             </row>
             <row>
               <entry>PDB</entry>
-              <entry><para>Basic support for Protein Data Bank (PDB) files.</para></entry>
+              <entry><para>Protein Data Bank (PDB) files (experimental support).</para></entry>
             </row>
             <row>
               <entry>FHI-aims</entry>

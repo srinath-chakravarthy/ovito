@@ -3,7 +3,7 @@ Install third-party libraries
 **************************************************************************
 export MACOSX_DEPLOYMENT_TARGET=10.8
 sudo echo "macosx_deployment_target 10.8" >> /opt/local/etc/macports/macports.conf
-sudo port -s install netcdf python34 py34-sphinx py34-numpy py34-sip zlib boost +python34 +no_static cgal 
+sudo port -s install netcdf python34 py34-sphinx py34-numpy py34-sip zlib boost +python34 +no_static
 sudo port install cmake docbook-xml docbook-xsl doxygen libxslt yasm
 
 # Remove unused Python.app bundle from Python framework, because CMake's fixup_bundle() macro cannot fix it.

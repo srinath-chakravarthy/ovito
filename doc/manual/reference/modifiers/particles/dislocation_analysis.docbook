@@ -43,34 +43,40 @@
     
     This analysis modifier identifies all dislocations in a crystal, determines their Burgers vectors, 
     and outputs a line representation of the dislocation defects. The modifier implements the so-called
-    <emphasis>Dislocation Extraction Algorithm</emphasis> (DXA), a unique computational method developed by the author of OVITO.
+    <emphasis>Dislocation Extraction Algorithm</emphasis> (DXA), a computational method developed by the author of OVITO.
     The original DXA method has been described in the paper
     <blockquote><para>
 <literallayout><link xlink:href="http://iopscience.iop.org/0965-0393/18/8/085001/">A. Stukowski and K. Albe.
 Modelling Simul. Mater. Sci. Eng. 18, 085001 (2010)</link></literallayout>
     </para></blockquote>
-    The current implementation in OVITO follows a newer, more general approach, which has been described in 
+    The current implementation in OVITO follows a newer, more general approach, which has been developed in 
     a follow-up paper:
     <blockquote><para>
 <literallayout><link xlink:href="http://dx.doi.org/10.1088/0965-0393/20/8/085007">A. Stukowski, V.V. Bulatov and A. Arsenlis.
 Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
     </para></blockquote>
     Please cite the latter reference when using the <emphasis>Dislocation analysis</emphasis> modifier. A
-    short overview over how the DXA works can be found at the end of this page.
+    short overview on how the DXA works can be found at the end of this page.
   </para>
 
   <para>
     The DXA transforms the original atomistic representation of a dislocated crystal into a line-based representation 
-    of the dislocation network. It determines the true Burgers vector of each dislocation segment 
+    of the dislocation network. It determines the Burgers vector of each dislocation segment 
     and identifies dislocation junctions. The algorithm can recognize partial dislocations and also
-    certain secondary grain boundary dislocations (e.g. twinning dislocations).
+    certain secondary grain boundary dislocations (e.g. twinning dislocations in FCC).
   </para>
   
   <para>
     Note that, even though the implementation of the DXA in OVITO is highly optimized, the algorithm is computationally
     expensive and requires sufficient working memory. <emphasis role="strong">The minimum memory requirement is 1 kilobyte per input atom!</emphasis>
-    Thus, to analyze a dataset containing 1 million atoms, at least 1 GB of free memory must be available. 
-    Otherwise your operating system may start swapping data to disk and become unresponsive.
+    Thus, to analyze a dataset with 1 million atoms at least 1 GB of free memory is required.
+  </para>
+
+  <para>
+    OVITO allows you to save the dislocation lines extracted by the modifier to a so-called <emphasis>Crystal Analysis file</emphasis> (CA file)
+    using the program's <link linkend="usage.export">file export function</link>. This allows you to further process the 
+    dislocation lines outside of OVITO or to reload the dislocation data at a later time without the need to reperform the 
+    computationally expensive analysis. The CA file format is documented <link linkend="particles.modifiers.dislocation_analysis.fileformat">below</link>.
   </para>
 
    <simplesect>
@@ -459,6 +465,140 @@ Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
       along the dislocation segment, it may need to locally expand to sweep over wider sections of the core, e.g. kinks or jogs. To prevent the 
       circuit from sweeping past dislocation junctions or interfaces, a hard limit is imposed on the maximum circuit length (modifier parameter <emphasis>Circuit stretchability</emphasis>).
     </para>
+  </simplesect>
+  
+  <simplesect xml:id="particles.modifiers.dislocation_analysis.fileformat">
+  <title>CA file format</title>
+  <para>
+      The dislocation lines extracted by the analysis modifier can be exported to this simple text-based file format,
+      which is described next.
+  </para>
+  <para>
+      A CA file always begins with the string <code>CA_FILE_VERSION</code> followed by the file format version number.
+      The current version written by OVITO is 6.
+  </para>
+  <para>
+      The body of the file is divided into a sequence of sections, each section starting with an all-uppercase
+      keyword, e.g. <code>STRUCTURE_TYPES</code> or <code>DISLOCATIONS</code>. The order in which sections appear in the file is fixed,
+      but certain sections are optional and may be missing depending on the kinds of data that were exported.
+      When parsing a CA file, sections that are of no interest can be skipped by seeking to the next known keyword, 
+      which always appears at the beginning of a new line.
+  </para>
+  <para>
+      The following sections can appear in a CA file:
+      <variablelist>
+        <varlistentry><term><code>CA_LIB_VERSION</code></term><listitem>
+        <para>Specifies the code version of the Crystal Analysis program that produced the file. Always <code>0.0.0</code> for files written by OVITO.</para></listitem></varlistentry>
+
+        <varlistentry><term><code>STRUCTURE_TYPES</code></term><listitem>
+        <para>The number of lattice structures which will be defined next. OVITO writes a hard-coded list of lattice structures.</para>
+        <variablelist>
+          <varlistentry><term><code>STRUCTURE_TYPE</code></term><listitem>
+          <para>The unique ID of the lattice structure type.</para></listitem></varlistentry>
+
+          <varlistentry><term><code>NAME</code></term><listitem>
+          <para>The human-readable short name of the structure.</para></listitem></varlistentry>
+
+          <varlistentry><term><code>FULL_NAME</code></term><listitem>
+          <para>The human-readable long name of the structure.</para></listitem></varlistentry>
+
+          <varlistentry><term><code>COLOR</code></term><listitem>
+          <para>The RGB color that represents the lattice structure in OVITO.</para></listitem></varlistentry>
+
+          <varlistentry><term><code>TYPE</code></term><listitem>
+          <para>The kind of structure this is. OVITO only knows structures of type <code>LATTICE</code>.</para></listitem></varlistentry>
+
+          <varlistentry><term><code>BURGERS_VECTOR_FAMILIES</code></term><listitem>
+          <para>The number of special dislocation types predefined for this lattice structure, which will be specified next.</para>
+          <variablelist>
+            <varlistentry><term><code>BURGERS_VECTOR_FAMILY</code></term><listitem>
+            <para>The ID of this predefined Burgers vectors family, followed by the human-readable name
+            of the dislocation type, followed by the Burgers vector (in Cartesian lattice coordinates), followed by the RGB color assigned
+            to dislocation lines of this predefined type.</para></listitem></varlistentry>
+          </variablelist>
+          </listitem></varlistentry>
+          
+          <varlistentry><term><code>END_STRUCTURE_TYPE</code></term><listitem>
+          <para>Marks the end of the definition of the current lattice structure type in the file.</para></listitem></varlistentry>
+          
+        </variablelist>
+        </listitem></varlistentry>
+
+        <varlistentry><term><code>SIMULATION_CELL_ORIGIN</code></term><listitem>
+        <para>The Cartesian coordinates of the simulation cell corner.</para></listitem></varlistentry>
+
+        <varlistentry><term><code>SIMULATION_CELL_MATRIX</code></term><listitem>
+        <para>Simulation cell matrix. Columns of this 3x3 matrix are the edge vectors of the simulation box.</para></listitem></varlistentry>
+
+        <varlistentry><term><code>PBC_FLAGS</code></term><listitem>
+        <para>Periodic boundary condition flags for the three spatial directions.</para></listitem></varlistentry>
+
+        <varlistentry><term><code>CLUSTERS</code></term><listitem>
+        <para>The number of crystallite clusters the atomistic solid was divided into by the DXA. What follows is the list of of crystallite clusters.</para>
+        
+        <variablelist>
+          <varlistentry><term><code>CLUSTER</code></term><listitem>
+          <para>The unique ID of the crystallite atom cluster.</para></listitem></varlistentry>
+
+          <varlistentry><term><code>CLUSTER_STRUCTURE</code></term><listitem>
+          <para>The lattice structure type of the crystallite. This is a reference to one of the structures type IDs defined under the <code>STRUCTURE_TYPES</code> section.</para></listitem></varlistentry>
+
+          <varlistentry><term><code>CLUSTER_ORIENTATION</code></term><listitem>
+          <para>A 3x3 transformation matrix that defines the orientation of the crystallite in the simulation coordinate system. 
+          It transforms lattice vectors to the spatial frame and includes the rotation of the crystallite, the lattice constant,
+          and possible elastic strains of the crystal (averaged over all atoms that belong to the crystallite). Given a column vector
+          in the lattice coordinate system, the corresponding spatial vector is obtained by left-multiplying the transformation
+          matrix to the vector.
+          </para></listitem></varlistentry>
+
+          <varlistentry><term><code>CLUSTER_COLOR</code></term><listitem>
+          <para>A color assigned to the crystallite by OVITO.</para></listitem></varlistentry>
+          
+          <varlistentry><term><code>CLUSTER_SIZE</code></term><listitem>
+          <para>The number of atoms that are part of the crystallite.</para></listitem></varlistentry>
+
+          <varlistentry><term><code>END_CLUSTER</code></term><listitem>
+          <para>Marks the end of this cluster definition in the file.</para></listitem></varlistentry>
+          
+        </variablelist>
+        </listitem></varlistentry>
+       
+        <varlistentry><term><code>DISLOCATIONS</code></term><listitem>
+        <para>The number of dislocation lines extracted by the DXA, followed by the definition of each line.
+        Each dislocation line definition consists of the following information:
+        <orderedlist>
+        <listitem><para>The zero-based index of the dislocation.</para></listitem>
+        <listitem><para>The Burgers vector of the dislocation in the local Cartesian lattice coordinate system of the crystallite cluster.</para></listitem>
+        <listitem><para>The ID of the crystallite cluster the dislocation is embedded in. This defines how the local Burgers vector is transformed to the global simulation coordinate system.</para></listitem>
+        <listitem><para>The number of vertices along the line.</para></listitem>
+        <listitem><para>The list of vertex coordinates. For closes loops, the first and the lattice vertex coincide. If the line crosses a periodic boundary of the simulation cell, vertex coordinates are unwrapped.</para></listitem>
+        </orderedlist>
+        </para>
+        </listitem></varlistentry>
+        
+        <varlistentry><term><code>DISLOCATION_JUNCTIONS</code></term><listitem>
+        <para>Defines the connectivity between dislocation lines (i.e. dislocation junctions or nodes). This sections contains two 
+        text lines per dislocation defined in the <code>DISLOCATIONS</code> section. Each of the two lines
+        contains two numbers. The first line defines what the <emphasis>end</emphasis> point (i.e. last vertex) of the dislocation is connected to,
+        the second line specifies the connectivity of the <emphasis>starting</emphasis> point (i.e. first vertex) of the dislocation.
+        The second number in each of the two text lines refers to the zero-based index of another dislocation
+        the current dislocation is connected to. The first number, which can be either 0 or 1, specifies
+        whether it is connected to the end (1) or the beginning (0) of that other dislocation line.</para>
+        <para>
+        This connectivity encoding is used to define dislocation nodes/junctions in terms of circular lists. For example,
+        a node with three dislocation arms A, B, C is defined such that one end point of dislocation A points to
+        an end point of B, which in turn points to an end point of C, which in turn points again back to A.
+        </para>
+        <para>
+        In the output of the DXA algorithm 1-nodes, 2-nodes, and <emphasis>n</emphasis>-nodes (<emphasis>n</emphasis>&gt;2)
+        are possible. A 1-node is a dangling end of a dislocation, which terminates at the surface of a crystal or
+        merges into another kind of defect (e.g. a grain boundary). In this case the circular connectivity list consists only of 
+        one line end, which points to itself. 2-nodes occur for closed dislocation loops or infinite lines that cross a periodic boundary.
+        3-nodes and higher are regular dislocation junctions.
+        </para></listitem></varlistentry>
+        
+      </variablelist>
+  </para>
   </simplesect>
   
 </section>

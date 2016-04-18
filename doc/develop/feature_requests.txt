@@ -11,7 +11,7 @@ Work-flow improvements:
 
 New visualization features:
 
-- Add viewport overlay that shows a text label in the viewport (request by Tobias)
+- Add viewport overlay that shows a text label in the viewport (requested by Tobias)
 - Visualize polyhedra (like Vesta).
 - Particle text labels (joy5142@psu.edu)
 - More particle representations (e.g. open circles).
@@ -80,4 +80,3 @@ Documentation:
 
 - CA file format (112080995@njust.edu.cn)
 - Application settings dialog
-

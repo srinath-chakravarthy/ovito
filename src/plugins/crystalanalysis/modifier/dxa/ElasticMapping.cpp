@@ -41,20 +41,21 @@ bool ElasticMapping::generateTessellationEdges(FutureInterfaceBase& progress)
 	for(DelaunayTessellation::CellIterator cell = tessellation().begin_cells(); cell != tessellation().end_cells(); ++cell) {
 
 		// Skip invalid cells (those not connecting four physical atoms) and ghost cells.
-		if(cell->info().isGhost) continue;
+		if(tessellation().isGhostCell(cell)) continue;
 
 		// Update progress indicator.
-		if(!progress.setProgressValueIntermittent(cell->info().index))
+		if(!progress.setProgressValueIntermittent(tessellation().getCellIndex(cell)))
 			return false;
 
 		// Create edge data structure for each of the six edges of the cell.
 		for(int edgeIndex = 0; edgeIndex < 6; edgeIndex++) {
-			int vertex1 = cell->vertex(edgeVertices[edgeIndex][0])->point().index();
-			int vertex2 = cell->vertex(edgeVertices[edgeIndex][1])->point().index();
+			int vertex1 = tessellation().vertexIndex(tessellation().cellVertex(cell, edgeVertices[edgeIndex][0]));
+			int vertex2 = tessellation().vertexIndex(tessellation().cellVertex(cell, edgeVertices[edgeIndex][1]));
 			if(vertex1 == vertex2)
 				continue;
-			Vector3 v = Point3(cell->vertex(edgeVertices[edgeIndex][0])->point()) - Point3(cell->vertex(edgeVertices[edgeIndex][1])->point());
-			if(structureAnalysis().cell().isWrappedVector(v))
+			Point3 p1 = tessellation().vertexPosition(tessellation().cellVertex(cell, edgeVertices[edgeIndex][0]));
+			Point3 p2 = tessellation().vertexPosition(tessellation().cellVertex(cell, edgeVertices[edgeIndex][1]));
+			if(structureAnalysis().cell().isWrappedVector(p1 - p2))
 				continue;
 			OVITO_ASSERT(vertex1 >= 0 && vertex2 >= 0);
 			TessellationEdge* edge = findEdge(vertex1, vertex2);
@@ -342,8 +343,8 @@ bool ElasticMapping::isElasticMappingCompatible(DelaunayTessellation::CellHandle
 	// Retrieve the cluster vectors assigned to the six edges of the tetrahedron.
 	std::pair<Vector3, ClusterTransition*> edgeVectors[6];
 	for(int edgeIndex = 0; edgeIndex < 6; edgeIndex++) {
-		int vertex1 = cell->vertex(edgeVertices[edgeIndex][0])->point().index();
-		int vertex2 = cell->vertex(edgeVertices[edgeIndex][1])->point().index();
+		int vertex1 = tessellation().vertexIndex(tessellation().cellVertex(cell, edgeVertices[edgeIndex][0]));
+		int vertex2 = tessellation().vertexIndex(tessellation().cellVertex(cell, edgeVertices[edgeIndex][1]));
 		TessellationEdge* tessEdge = findEdge(vertex1, vertex2);
 		if(!tessEdge || !tessEdge->hasClusterVector())
 			return false;
