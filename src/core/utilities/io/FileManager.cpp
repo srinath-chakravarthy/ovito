@@ -22,7 +22,6 @@
 #include <core/Core.h>
 #include <core/utilities/concurrent/Future.h>
 #include <core/dataset/DataSetContainer.h>
-
 #include "FileManager.h"
 #include "SftpJob.h"
 
@@ -172,29 +171,17 @@ QUrl FileManager::urlFromUserInput(const QString& path)
 /******************************************************************************
 * Shows a dialog which asks the user for the login credentials.
 ******************************************************************************/
-bool FileManager::askUserForCredentials(SftpJob& job)
+bool FileManager::askUserForCredentials(QUrl& url)
 {
-#if 0
-	// Ask for new username/password.
-	RemoteAuthenticationDialog dialog(nullptr, tr("Remote authentication"),
-			_url.password().isEmpty() ?
-			tr("<p>Please enter username and password to access the remote machine</p><p><b>%1</b></p>").arg(_url.host()) :in
-			tr("<p>Authentication failed. Please enter the correct username and password to access the remote machine</p><p><b>%1</b></p>").arg(_url.host()));
-
-	dialog.setUsername(_url.userName());
-	dialog.setPassword(_url.password());
-	if(dialog.exec() == QDialog::Accepted) {
-		// Start over with new login information.
-		QObject::disconnect(_connection, 0, this, 0);
-		QSsh::releaseConnection(_connection);
-		_connection = nullptr;
-		_url.setUserName(dialog.username());
-		_url.setPassword(dialog.password());
-		start();
-		return;
-	}
-#endif
-	return false;
+	std::string username;
+	std::string password;
+	std::cout << "Please enter the SSH username for the remote machine '" << qPrintable(url.host()) << "': " << std::flush;
+	std::cin >> username;
+	std::cout << "Please enter the SSH password (set echo off beforehand!): " << std::flush;
+	std::cin >> password;
+	url.setUserName(QString::fromStdString(username));
+	url.setPassword(QString::fromStdString(password));
+	return true;
 }
 
 

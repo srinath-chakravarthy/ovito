@@ -63,7 +63,7 @@ public:
 
 	/// \brief Shows a dialog which asks the user for the login credentials.
 	/// \return True on success, false if user has canceled the operation.
-	bool askUserForCredentials(SftpJob& job);
+	virtual bool askUserForCredentials(QUrl& url);
 
 	/// \brief Constructs a URL from a path entered by the user.
 	QUrl urlFromUserInput(const QString& path);
@@ -95,13 +95,13 @@ private:
 	/// Cache of login/password information for remote machines.
 	QMap<QString, QPair<QString,QString>> _credentialCache;
 
-private:
+protected:
     
 	/// This is a singleton class. No public instances allowed.
 	FileManager();
 
 	/// Create the singleton instance of this class.
-	static void initialize() { _instance = new FileManager(); }
+	static void initialize(FileManager* manager) { _instance = manager; }
 
 	/// Deletes the singleton instance of this class.
 	static void shutdown() { delete _instance; _instance = nullptr; }

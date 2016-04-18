@@ -158,7 +158,7 @@ void SftpJob::onSshConnectionError(QSsh::SshError error)
 	// If authentication failed, ask the user to re-enter username/password.
 	if(error == QSsh::SshAuthenticationError && !_futureInterface->isCanceled()) {
 		OVITO_ASSERT(!_sftpChannel);
-		if(FileManager::instance().askUserForCredentials(*this)) {
+		if(FileManager::instance().askUserForCredentials(_url)) {
 			// Start over with new login information.
 			QObject::disconnect(_connection, 0, this, 0);
 			QSsh::releaseConnection(_connection);

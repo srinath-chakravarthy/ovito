@@ -23,6 +23,7 @@
 #include <gui/mainwin/MainWindow.h>
 #include <gui/dataset/GuiDataSetContainer.h>
 #include <gui/rendering/ViewportSceneRenderer.h>
+#include <gui/utilities/io/GuiFileManager.h>
 #include <core/utilities/io/FileManager.h>
 #include "GuiApplication.h"
 
@@ -93,6 +94,14 @@ void GuiApplication::createQtApplication(int& argc, char** argv)
 	QSurfaceFormat::setDefaultFormat(ViewportSceneRenderer::getDefaultSurfaceFormat());
 #endif
 
+}
+
+/******************************************************************************
+* Creates the global FileManager class instance.
+******************************************************************************/
+FileManager* GuiApplication::createFileManager()
+{
+	return new GuiFileManager();
 }
 
 /******************************************************************************
