@@ -56,7 +56,7 @@ void ManualSelectionModifier::initializeModifier(PipelineObject* pipeline, Modif
 
 	// Take a snapshot of the existing selection state at the time the modifier is created.
 	if(getSelectionSet(modApp, false) == nullptr) {
-		PipelineFlowState input = pipeline->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+		PipelineFlowState input = getModifierInput(modApp);
 		resetSelection(modApp, input);
 	}
 }

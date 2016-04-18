@@ -24,6 +24,7 @@
 #include <plugins/particles/objects/ParticleDisplay.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
 #include <plugins/particles/objects/BondsObject.h>
+#include <plugins/particles/objects/BondsDisplay.h>
 #include <plugins/particles/objects/BondPropertyObject.h>
 #include "ParticleModifier.h"
 
@@ -413,6 +414,7 @@ size_t ParticleModifier::deleteParticles(const boost::dynamic_bitset<>& mask, si
 	OVITO_ASSERT(mask.size() == inputParticleCount());
 	OVITO_ASSERT(mask.count() == deleteCount);
 	OVITO_ASSERT(outputParticleCount() == inputParticleCount());
+	OVITO_ASSERT(outputBondCount() == inputBondCount());
 
 	size_t oldParticleCount = inputParticleCount();
 	size_t newParticleCount = oldParticleCount - deleteCount;
@@ -446,7 +448,7 @@ size_t ParticleModifier::deleteParticles(const boost::dynamic_bitset<>& mask, si
 		pair.second->filterCopy(pair.first, mask);
 	});
 
-	// Delete dangling bonds, i.e. those that are adjacent to deleted particles.
+	// Delete dangling bonds, i.e. those that are incident on a deleted particle.
 	boost::dynamic_bitset<> deletedBondsMask;
 	size_t newBondCount = 0;
 	for(const auto& outobj : _output.objects()) {
@@ -463,9 +465,10 @@ size_t ParticleModifier::deleteParticles(const boost::dynamic_bitset<>& mask, si
 		// Replace original bonds object with the filtered one.
 		_output.replaceObject(originalBondsObject, newBondsObject);
 	}
+	_outputBondCount = newBondCount;
 
-	// Process bond properties.
-	for(const auto& outobj : _output.objects()) {
+	// Update bond properties.
+	for(const auto& outobj : output().objects()) {
 		BondPropertyObject* originalBondPropertyObject = dynamic_object_cast<BondPropertyObject>(outobj);
 		if(!originalBondPropertyObject)
 			continue;
@@ -478,10 +481,73 @@ size_t ParticleModifier::deleteParticles(const boost::dynamic_bitset<>& mask, si
 		newBondPropertyObject->filterCopy(originalBondPropertyObject, deletedBondsMask);
 
 		// Replace original bond property object with the filtered one.
-		_output.replaceObject(originalBondPropertyObject, newBondPropertyObject);
+		output().replaceObject(originalBondPropertyObject, newBondPropertyObject);
 	}
 
 	return newParticleCount;
+}
+
+/******************************************************************************
+* Adds a set of new bonds to the system.
+******************************************************************************/
+BondsObject* ParticleModifier::addBonds(BondsStorage* newBonds, BondsDisplay* bondsDisplay, const std::vector<BondProperty*>& bondProperties)
+{
+	OVITO_ASSERT(newBonds != nullptr);
+	OVITO_ASSERT(bondProperties.empty());	// Bond properties are not yet supported by this method.
+
+	// Check if there is an existing bonds object coming from upstream.
+	OORef<BondsObject> bondsObj = input().findObject<BondsObject>();
+	if(!bondsObj) {
+		// Create a new output data object.
+		bondsObj = new BondsObject(dataset(), newBonds);
+		bondsObj->setDisplayObject(bondsDisplay);
+
+		// Insert output object into the pipeline.
+		output().addObject(bondsObj);
+		return bondsObj;
+	}
+	else {
+		// Duplicate the existing bonds object and insert the newly created bonds into it.
+		OORef<BondsObject> bondsObjCopy = cloneHelper()->cloneObject(bondsObj, false);
+		BondsStorage* bonds = bondsObjCopy->modifiableStorage();
+		OVITO_ASSERT(bonds != nullptr);
+
+		// This is needed to determine which bonds already exist.
+		ParticleBondMap bondMap(*bonds);
+
+		// Add bonds one by one.
+		size_t originalBondCount = bonds->size();
+		for(size_t bondIndex = 0; bondIndex < newBonds->size(); bondIndex++) {
+			// Check if there is already a bond like this.
+			const Bond& bond = (*newBonds)[bondIndex];
+			if(bondMap.findBond(bond) == bondMap.endOfListValue()) {
+				// Create new bond.
+				bonds->push_back(bond);
+				_outputBondCount++;
+			}
+		}
+
+		// Replace original bonds object with the extended one.
+		output().replaceObject(bondsObj, bondsObjCopy);
+
+		// Extend existing bond property arrays.
+		for(const auto& outobj : output().objects()) {
+			BondPropertyObject* originalBondPropertyObject = dynamic_object_cast<BondPropertyObject>(outobj);
+			if(!originalBondPropertyObject || originalBondPropertyObject->size() != originalBondCount)
+				continue;
+
+			// Create a modifiable copy.
+			OORef<BondPropertyObject> newBondPropertyObject = cloneHelper()->cloneObject(originalBondPropertyObject, false);
+
+			// Extend array.
+			newBondPropertyObject->resize(outputBondCount(), true);
+
+			// Replace bond property in pipeline flow state.
+			output().replaceObject(originalBondPropertyObject, newBondPropertyObject);
+		}
+
+		return bondsObjCopy;
+	}
 }
 
 /******************************************************************************

@@ -134,6 +134,9 @@ protected:
 	/// Resets the modifier's result cache.
 	virtual void invalidateCachedResults() override;
 
+	/// This virtual method is called by the system when the modifier has been inserted into a PipelineObject.
+	virtual void initializeModifier(PipelineObject* pipelineObject, ModifierApplication* modApp) override;
+
 	/// Creates a computation engine that will compute the modifier's results.
 	virtual std::shared_ptr<ComputeEngine> createEngine(TimePoint time, TimeInterval validityInterval) override;
 
@@ -160,7 +163,7 @@ private:
 	/// The display object for rendering the bonds.
 	ReferenceField<BondsDisplay> _bondsDisplay;
 
-	/// This stores the cached results of the modifier, i.e. the bonds information.
+	/// This stores the cached results of the modifier, i.e. the list of created bonds.
 	QExplicitlySharedDataPointer<BondsStorage> _bonds;
 
 private:

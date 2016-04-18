@@ -21,7 +21,6 @@
 
 #include <plugins/particles/Particles.h>
 #include <plugins/pyscript/binding/PythonBinding.h>
-#include <core/scene/pipeline/ModifierApplication.h>
 #include <plugins/particles/data/ParticleProperty.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
@@ -58,6 +57,7 @@
 #include <plugins/particles/modifier/analysis/wignerseitz/WignerSeitzAnalysisModifier.h>
 #include <plugins/particles/modifier/analysis/voronoi/VoronoiAnalysisModifier.h>
 #include <plugins/particles/modifier/analysis/diamond/IdentifyDiamondModifier.h>
+#include <core/scene/pipeline/ModifierApplication.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -742,7 +742,6 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 		;
 	}
 
-
 	{
 		scope s = ovito_class<CreateBondsModifier, AsynchronousParticleModifier>(
 				":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
@@ -753,11 +752,11 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					"\n\n"
 					":Default: 3.2\n")
 			.add_property("intra_molecule_only", &CreateBondsModifier::onlyIntraMoleculeBonds, &CreateBondsModifier::setOnlyIntraMoleculeBonds,
-					"If this option is set to true, the modifier will create bonds only between atoms that belong to the same molecule."
+					"If this option is set to true, the modifier will create bonds only between atoms that belong to the same molecule (i.e. which have the same molecule ID assigned to them)."
 					"\n\n"
 					":Default: ``False``\n")
 			.add_property("bonds_display", make_function(&CreateBondsModifier::bondsDisplay, return_value_policy<ovito_object_reference>()),
-					"A :py:class:`~ovito.vis.BondsDisplay` instance controlling the visual appearance of the bonds created by this modifier.")
+					"The :py:class:`~ovito.vis.BondsDisplay` instance controlling the visual appearance of the bonds created by this modifier.")
 		;
 
 		enum_<CreateBondsModifier::CutoffMode>("CutoffMode")

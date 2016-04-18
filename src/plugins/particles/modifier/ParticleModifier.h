@@ -108,6 +108,9 @@ public:
 	/// Returns the number of bonds in the input.
 	size_t inputBondCount() const { return _inputBondCount; }
 
+	/// Returns the number of bonds in the output.
+	size_t outputBondCount() const { return _outputBondCount; }
+
 	/// Returns a vector with the input particles colors.
 	std::vector<Color> inputParticleColors(TimePoint time, TimeInterval& validityInterval);
 
@@ -117,6 +120,9 @@ public:
 	/// Deletes the particles given by the bit-mask.
 	/// Returns the number of remaining particles.
 	size_t deleteParticles(const boost::dynamic_bitset<>& mask, size_t deleteCount);
+
+	/// Adds a set of new bonds to the system.
+	BondsObject* addBonds(BondsStorage* newBonds, BondsDisplay* bondsDisplay, const std::vector<BondProperty*>& bondProperties = std::vector<BondProperty*>());
 
 	/// Returns a reference to the input state.
 	PipelineFlowState& input() { return _input; }

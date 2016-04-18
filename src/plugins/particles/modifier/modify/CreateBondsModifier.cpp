@@ -20,9 +20,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
-#include <core/utilities/concurrent/ParallelFor.h>
 #include <plugins/particles/util/CutoffNeighborFinder.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
+#include <plugins/particles/objects/BondsDisplay.h>
+#include <core/utilities/concurrent/ParallelFor.h>
 #include "CreateBondsModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
@@ -140,6 +141,26 @@ void CreateBondsModifier::invalidateCachedResults()
 }
 
 /******************************************************************************
+* This method is called by the system when the modifier has been inserted
+* into a pipeline.
+******************************************************************************/
+void CreateBondsModifier::initializeModifier(PipelineObject* pipeline, ModifierApplication* modApp)
+{
+	ParticleModifier::initializeModifier(pipeline, modApp);
+
+	// Adopt the upstream BondsDisplay object if there already is one.
+	PipelineFlowState input = getModifierInput(modApp);
+	if(BondsObject* bondsObj = input.findObject<BondsObject>()) {
+		for(DisplayObject* displayObj : bondsObj->displayObjects()) {
+			if(BondsDisplay* bondsDisplay = dynamic_object_cast<BondsDisplay>(displayObj)) {
+				_bondsDisplay = bondsDisplay;
+				break;
+			}
+		}
+	}
+}
+
+/******************************************************************************
 * Creates and initializes a computation engine that will compute the modifier's results.
 ******************************************************************************/
 std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CreateBondsModifier::createEngine(TimePoint time, TimeInterval validityInterval)
@@ -248,15 +269,12 @@ void CreateBondsModifier::transferComputationResults(ComputeEngine* engine)
 ******************************************************************************/
 PipelineStatus CreateBondsModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
 {
+	// Check if the modifier's compute engine has finished executing.
 	if(!_bonds)
 		throwException(tr("No computation results available."));
 
-	// Create the output data object.
-	OORef<BondsObject> bondsObj(new BondsObject(dataset(), _bonds.data()));
-	bondsObj->setDisplayObject(_bondsDisplay);
-
-	// Insert output object into the pipeline.
-	output().addObject(bondsObj);
+	// Add our bonds to the system.
+	addBonds(_bonds.data(), _bondsDisplay);
 
 	// If the number of bonds is unusually high, we better turn off bonds display to prevent the program from freezing.
 	size_t bondsCount = _bonds->size();

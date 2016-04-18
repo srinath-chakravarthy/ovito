@@ -116,8 +116,20 @@ public:
 		return _nextBond[bondIndex];
 	}
 
-	/// Returns the number of bonds, which is used to indicate the end of the per-particle bond list.
+	/// Returns the number of half bonds, which is used to indicate the end of the per-particle bond list.
 	size_t endOfListValue() const { return _nextBond.size(); }
+
+	/// Returns the index of a bond in the bonds list.
+	/// Returns the total half-bond count in case such a bond does not exist.
+	size_t findBond(const Bond& bond) const {
+		size_t bindex;
+		for(bindex = firstBondOfParticle(bond.index1); bindex != endOfListValue(); bindex = nextBondOfParticle(bindex)) {
+			OVITO_ASSERT(_bonds[bindex].index1 == bond.index1);
+			if(_bonds[bindex].index2 == bond.index2 && _bonds[bindex].pbcShift == bond.pbcShift)
+				break;
+		}
+		return bindex;
+	}
 
 private:
 
@@ -126,6 +138,9 @@ private:
 
 	/// Stores the index of the next half-bond of particle in the linked list.
 	std::vector<size_t> _nextBond;
+
+	/// The bonds storage this map has been created for.
+	const BondsStorage& _bonds;
 };
 
 }	// End of namespace

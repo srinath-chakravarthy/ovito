@@ -48,9 +48,9 @@ Modifier::Modifier(DataSet* dataset) : RefTarget(dataset), _isEnabled(true)
 QVector<ModifierApplication*> Modifier::modifierApplications() const
 {
 	QVector<ModifierApplication*> apps;
-	Q_FOREACH(RefMaker* dependent, dependents()) {
+	for(RefMaker* dependent : dependents()) {
         ModifierApplication* modApp = dynamic_object_cast<ModifierApplication>(dependent);
-		if(modApp != NULL && modApp->modifier() == this) 
+		if(modApp != nullptr && modApp->modifier() == this)
 			apps.push_back(modApp);
 	}
 	return apps;	
@@ -66,9 +66,9 @@ QVector<QPair<ModifierApplication*, PipelineFlowState>> Modifier::getModifierInp
 {
 	TimePoint time = dataset()->animationSettings()->time();
 	QVector<QPair<ModifierApplication*, PipelineFlowState>> results;
-	Q_FOREACH(RefMaker* dependent, dependents()) {
+	for(RefMaker* dependent : dependents()) {
         ModifierApplication* modApp = dynamic_object_cast<ModifierApplication>(dependent);
-		if(modApp != NULL && modApp->modifier() == this) {
+		if(modApp != nullptr && modApp->modifier() == this) {
 			if(PipelineObject* pipelineObj = modApp->pipelineObject())
 				results.push_back(qMakePair(modApp, pipelineObj->evaluatePipeline(time, modApp, false)));
 		}
@@ -82,17 +82,23 @@ QVector<QPair<ModifierApplication*, PipelineFlowState>> Modifier::getModifierInp
 * evaluation time and only returning the input object for the first application
 * of this modifier.
 ******************************************************************************/
-PipelineFlowState Modifier::getModifierInput() const 
+PipelineFlowState Modifier::getModifierInput(ModifierApplication* modApp) const
 {
-	Q_FOREACH(RefMaker* dependent, dependents()) {
-        ModifierApplication* modApp = dynamic_object_cast<ModifierApplication>(dependent);
-		if(modApp != NULL && modApp->modifier() == this) {
-			if(PipelineObject* pipelineObj = modApp->pipelineObject()) {
-				return pipelineObj->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+	if(modApp != nullptr && modApp->modifier() == this) {
+		if(PipelineObject* pipelineObj = modApp->pipelineObject()) {
+			return pipelineObj->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+		}
+	}
+	else {
+		for(RefMaker* dependent : dependents()) {
+			ModifierApplication* modApp = dynamic_object_cast<ModifierApplication>(dependent);
+			if(modApp != nullptr && modApp->modifier() == this) {
+				if(PipelineObject* pipelineObj = modApp->pipelineObject()) {
+					return pipelineObj->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+				}
 			}
 		}
 	}
-
 	return PipelineFlowState();
 }
 

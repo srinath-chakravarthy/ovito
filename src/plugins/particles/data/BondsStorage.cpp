@@ -57,7 +57,7 @@ void BondsStorage::loadFromStream(LoadStream& stream)
 * Initializes the helper class.
 ******************************************************************************/
 ParticleBondMap::ParticleBondMap(const BondsStorage& bonds) :
-	_nextBond(bonds.size(), bonds.size())
+	_nextBond(bonds.size(), bonds.size()), _bonds(bonds)
 {
 	size_t bondIndex = bonds.size() - 1;
 	for(auto bond = bonds.crbegin(); bond != bonds.crend(); ++bond, bondIndex--) {

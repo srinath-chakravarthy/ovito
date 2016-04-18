@@ -385,7 +385,7 @@ void SliceModifier::initializeModifier(PipelineObject* pipeline, ModifierApplica
 
 	// Get the input simulation cell to initially place the slicing plane in
 	// the center of the cell.
-	PipelineFlowState input = pipeline->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+	PipelineFlowState input = getModifierInput(modApp);
 	SimulationCellObject* cell = input.findObject<SimulationCellObject>();
 	TimeInterval iv;
 	if(distanceController() && cell && distanceController()->getFloatValue(0, iv) == 0) {

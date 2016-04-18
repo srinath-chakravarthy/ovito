@@ -115,9 +115,10 @@ TimeInterval ColorCodingModifier::modifierValidity(TimePoint time)
 void ColorCodingModifier::initializeModifier(PipelineObject* pipeline, ModifierApplication* modApp)
 {
 	ParticleModifier::initializeModifier(pipeline, modApp);
+
 	if(sourceProperty().isNull()) {
 		// Select the first available particle property from the input.
-		PipelineFlowState input = pipeline->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+		PipelineFlowState input = getModifierInput(modApp);
 		ParticlePropertyReference bestProperty;
 		for(DataObject* o : input.objects()) {
 			ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(o);

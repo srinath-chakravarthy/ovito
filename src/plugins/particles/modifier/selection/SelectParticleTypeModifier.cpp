@@ -89,7 +89,7 @@ void SelectParticleTypeModifier::initializeModifier(PipelineObject* pipeline, Mo
 
 	if(sourceProperty().isNull()) {
 		// Select the first particle type property from the input with more than one particle type.
-		PipelineFlowState input = pipeline->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+		PipelineFlowState input = getModifierInput(modApp);
 		ParticleTypeProperty* bestProperty = nullptr;
 		for(DataObject* o : input.objects()) {
 			ParticleTypeProperty* ptypeProp = dynamic_object_cast<ParticleTypeProperty>(o);

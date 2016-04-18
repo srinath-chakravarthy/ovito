@@ -119,7 +119,7 @@ public:
 	/// of this modifier.
 	///
 	/// This method can be used to work with the input object outside of a normal call to modifyObject().
-	PipelineFlowState getModifierInput() const;
+	PipelineFlowState getModifierInput(ModifierApplication* modApp = nullptr) const;
 
 	/// \brief Returns whether this modifier is currently enabled.
 	/// \return \c true if it is currently enabled, i.e. applied.

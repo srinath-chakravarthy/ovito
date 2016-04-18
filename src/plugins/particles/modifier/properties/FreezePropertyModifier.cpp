@@ -141,7 +141,7 @@ void FreezePropertyModifier::initializeModifier(PipelineObject* pipeline, Modifi
 
 	// Use the first available particle property from the input state as data source when the modifier is newly created.
 	if(sourceProperty().isNull()) {
-		input = pipeline->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+		input = getModifierInput(modApp);
 		for(DataObject* o : input.objects()) {
 			if(ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(o)) {
 				setSourceProperty(ParticlePropertyReference(property));
@@ -154,7 +154,7 @@ void FreezePropertyModifier::initializeModifier(PipelineObject* pipeline, Modifi
 	// Take a snapshot of the property values at the time the modifier is created.
 	if(!sourceProperty().isNull() && dynamic_object_cast<SavedParticleProperty>(modApp->modifierData()) == nullptr) {
 		if(input.isEmpty())
-			input = pipeline->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+			input = getModifierInput(modApp);
 		takePropertySnapshot(modApp, input);
 	}
 }
