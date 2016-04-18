@@ -430,12 +430,31 @@ void FileSource::adjustAnimationInterval(int gotoFrameIndex)
 void FileSource::saveToStream(ObjectSaveStream& stream)
 {
 	CompoundObject::saveToStream(stream);
-	stream.beginChunk(0x01);
+	stream.beginChunk(0x02);
 	stream << _frames;
 	if(saveWithScene())
 		stream << _loadedFrameIndex;
 	else
 		stream << -1;
+
+	// Store the relative path to the external file (in addition to the absolute path, which is automatically saved).
+	QUrl relativePath = sourceUrl();
+	if(relativePath.isLocalFile() && !relativePath.isRelative()) {
+		// Extract relative portion of path (only if both the scene file path and the external file path are absolute).
+		QFileDevice* fileDevice = qobject_cast<QFileDevice*>(stream.dataStream().device());
+		if(fileDevice) {
+			QFileInfo sceneFile(fileDevice->fileName());
+			if(sceneFile.isAbsolute()) {
+				QFileInfo externalFile(relativePath.toLocalFile());
+				// Currently this only works for files in the same directory.
+				if(externalFile.path() == sceneFile.path()) {
+					relativePath = QUrl::fromLocalFile(externalFile.fileName());
+				}
+			}
+		}
+	}
+	stream << relativePath;
+
 	stream.endChunk();
 }
 
@@ -445,9 +464,36 @@ void FileSource::saveToStream(ObjectSaveStream& stream)
 void FileSource::loadFromStream(ObjectLoadStream& stream)
 {
 	CompoundObject::loadFromStream(stream);
-	stream.expectChunk(0x01);
+	int version = stream.expectChunkRange(0x00, 0x02);
 	stream >> _frames;
 	stream >> _loadedFrameIndex;
+	if(version >= 2) {	// For backward compatibility with OVITO 2.6.2
+		QUrl relativePath;
+		stream >> relativePath;
+
+		// If the absolute path no longer exists, replace it with the relative one resolved against
+		// the scene file's path.
+		if(sourceUrl().isLocalFile() && relativePath.isLocalFile()) {
+			QFileInfo relativeFileInfo(relativePath.toLocalFile());
+			if(relativeFileInfo.isAbsolute() == false) {
+				QFileDevice* fileDevice = qobject_cast<QFileDevice*>(stream.dataStream().device());
+				if(fileDevice) {
+					QFileInfo sceneFile(fileDevice->fileName());
+					if(sceneFile.isAbsolute()) {
+						_sourceUrl = QUrl::fromLocalFile(QFileInfo(sceneFile.dir(), relativeFileInfo.filePath()).absoluteFilePath());
+
+						// Also update the paths stored in the frame records.
+						for(FileSourceImporter::Frame& frame : _frames) {
+							if(frame.sourceFile.isLocalFile()) {
+								QFileInfo frameFile(frame.sourceFile.toLocalFile());
+								frame.sourceFile = QUrl::fromLocalFile(QFileInfo(sceneFile.dir(), frameFile.fileName()).absoluteFilePath());
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 	stream.closeChunk();
 }
 

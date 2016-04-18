@@ -50,7 +50,7 @@ Future<QString> FileManager::fetchUrl(DataSetContainer& container, const QUrl& u
 		// But first check if the file exists.
 		QString filePath = url.toLocalFile();
 		if(QFileInfo(url.toLocalFile()).exists() == false)
-			return Future<QString>::createFailed(Exception(tr("File does not exist: %1").arg(filePath), &container));
+			return Future<QString>::createFailed(Exception(tr("File does not exist:\n%1").arg(filePath), &container));
 
 		return Future<QString>::createImmediate(filePath, tr("Loading file %1").arg(filePath));
 	}

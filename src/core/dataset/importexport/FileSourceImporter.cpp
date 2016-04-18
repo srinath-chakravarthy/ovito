@@ -340,5 +340,29 @@ bool FileSourceImporter::matchesWildcardPattern(const QString& pattern, const QS
 	return p == pattern.constEnd() && f == filename.constEnd();
 }
 
+/******************************************************************************
+* Writes an animation frame information record to a binary output stream.
+******************************************************************************/
+SaveStream& operator<<(SaveStream& stream, const FileSourceImporter::Frame& frame)
+{
+	stream.beginChunk(0x02);
+	stream << frame.sourceFile << frame.byteOffset << frame.lineNumber << frame.lastModificationTime << frame.label;
+	stream.endChunk();
+	return stream;
+}
+
+/******************************************************************************
+* Reads an animation frame information record from a binary input stream.
+******************************************************************************/
+LoadStream& operator>>(LoadStream& stream, FileSourceImporter::Frame& frame)
+{
+	int version = stream.expectChunkRange(0, 2);
+	stream >> frame.sourceFile >> frame.byteOffset >> frame.lineNumber >> frame.lastModificationTime;
+	if(version >= 2)	// For backward compatibility with OVITO 2.4.2
+		stream >> frame.label;
+	stream.closeChunk();
+	return stream;
+}
+
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

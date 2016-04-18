@@ -180,25 +180,11 @@ private:
 
 /// \brief Writes an animation frame information record to a binary output stream.
 /// \relates FileSourceImporter::Frame
-inline SaveStream& operator<<(SaveStream& stream, const FileSourceImporter::Frame& frame)
-{
-	stream.beginChunk(0x02);
-	stream << frame.sourceFile << frame.byteOffset << frame.lineNumber << frame.lastModificationTime << frame.label;
-	stream.endChunk();
-	return stream;
-}
+OVITO_CORE_EXPORT SaveStream& operator<<(SaveStream& stream, const FileSourceImporter::Frame& frame);
 
-/// \brief Reads a box from a binary input stream.
+/// \brief Reads an animation frame information record from a binary input stream.
 /// \relates FileSourceImporter::Frame
-inline LoadStream& operator>>(LoadStream& stream, FileSourceImporter::Frame& frame)
-{
-	int version = stream.expectChunkRange(0, 2);
-	stream >> frame.sourceFile >> frame.byteOffset >> frame.lineNumber >> frame.lastModificationTime;
-	if(version >= 2)
-		stream >> frame.label;
-	stream.closeChunk();
-	return stream;
-}
+OVITO_CORE_EXPORT LoadStream& operator>>(LoadStream& stream, FileSourceImporter::Frame& frame);
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

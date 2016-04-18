@@ -105,7 +105,7 @@ void DataObject::loadFromStream(ObjectLoadStream& stream)
 ******************************************************************************/
 bool DataObject::saveWithScene() const
 {
-	// Check if 'save with scene' is disabled for the the parent object.
+	// Check if 'Save with scene' is disabled for any of the parent objects.
 	for(RefMaker* dependent : this->dependents()) {
 		if(DataObject* parent = dynamic_object_cast<DataObject>(dependent)) {
 			if(!parent->saveWithScene())
