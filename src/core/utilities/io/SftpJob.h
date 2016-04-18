@@ -53,6 +53,12 @@ public:
 		OVITO_ASSERT(_connection == nullptr);
 	}
 
+	/// Returns the URL being accessed.
+	const QUrl& url() const { return _url; }
+
+	/// Changes the URL being accessed.
+	void setUrl(const QUrl& url) { _url = url; }
+
 protected:
 
 	/// Opens the SSH connection.

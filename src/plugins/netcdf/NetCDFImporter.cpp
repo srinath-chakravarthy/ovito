@@ -119,6 +119,18 @@ bool NetCDFImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceLocat
 }
 
 /******************************************************************************
+* Inspects the header of the given file and returns the number of file columns.
+******************************************************************************/
+InputColumnMapping NetCDFImporter::inspectFileHeader(const Frame& frame)
+{
+	// Start task that inspects the file header to determine the number of data columns.
+	std::shared_ptr<NetCDFImportTask> inspectionTask = std::make_shared<NetCDFImportTask>(dataset()->container(), frame);
+	if(!dataset()->container()->taskManager().runTask(inspectionTask))
+		return InputColumnMapping();
+	return inspectionTask->columnMapping();
+}
+
+/******************************************************************************
 * Scans the input file for simulation timesteps.
 ******************************************************************************/
 void NetCDFImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)

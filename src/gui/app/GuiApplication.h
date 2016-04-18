@@ -35,8 +35,6 @@ class OVITO_GUI_EXPORT GuiApplication : public Application
 {
 	Q_OBJECT
 
-public:
-
 protected:
 
 	/// Defines the program's command line parameters.
@@ -50,6 +48,9 @@ protected:
 
 	/// Prepares application to start running.
 	virtual bool startupApplication() override;
+
+	/// Creates the global FileManager class instance.
+	virtual FileManager* createFileManager() override;
 
 private:
 

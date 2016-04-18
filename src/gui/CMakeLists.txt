@@ -109,6 +109,7 @@ SET(SourceFiles
 	app/GuiApplication.cpp
 	scene/objects/camera/CameraObjectEditor.cpp
 	scene/objects/geometry/TriMeshDisplayEditor.cpp
+	utilities/io/GuiFileManager.cpp
 )
 
 # Compile resources.

@@ -260,6 +260,7 @@ inline bool parseBool(const char* s, const char* s_end, int& d)
 const char* InputColumnReader::readParticle(size_t particleIndex, const char* s, const char* s_end)
 {
 	OVITO_ASSERT(_properties.size() == _mapping.size());
+	OVITO_ASSERT(s <= s_end);
 
 	int columnIndex = 0;
 	while(columnIndex < _properties.size()) {
@@ -269,7 +270,7 @@ const char* InputColumnReader::readParticle(size_t particleIndex, const char* s,
 		if(s == s_end || *s == '\n') break;
 		const char* token = s;
 		// Go to end of token.
-		while(s != s_end && *s > ' ')
+		while(s != s_end && (*s > ' ' || *s < 0))
 			++s;
 		if(s != token) {
 			parseField(particleIndex, columnIndex, token, s);
@@ -300,7 +301,7 @@ void InputColumnReader::readParticle(size_t particleIndex, const char* s)
 		while(*s == ' ' || *s == '\t')
 			++s;
 		const char* token = s;
-		while(*s > ' ')
+		while(*s > ' ' || *s < 0)
 			++s;
 		if(s != token) {
 			parseField(particleIndex, columnIndex, token, s);

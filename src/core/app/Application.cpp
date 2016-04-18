@@ -200,7 +200,7 @@ bool Application::initialize(int& argc, char** argv)
 		// Initialize global objects in the right order.
 		PluginManager::initialize();
 		ControllerManager::initialize();
-		FileManager::initialize();
+		FileManager::initialize(createFileManager());
 
 		// Load auto-start objects and let them register their custom command line options.
 		for(const OvitoObjectType* clazz : PluginManager::instance().listClasses(AutoStartObject::OOType)) {
@@ -292,6 +292,14 @@ void Application::createQtApplication(int& argc, char** argv)
 		_app.reset(new QCoreApplication(argc, argv));
 #endif
 	}
+}
+
+/******************************************************************************
+* Creates the global FileManager class instance.
+******************************************************************************/
+FileManager* Application::createFileManager()
+{
+	return new FileManager();
 }
 
 /******************************************************************************

@@ -22,15 +22,16 @@
 #ifndef __OVITO_NETCDF_IMPORTER_EDITOR_H
 #define __OVITO_NETCDF_IMPORTER_EDITOR_H
 
-#include <plugins/particles/Particles.h>
-#include <gui/properties/PropertiesEditor.h>
+#include <plugins/particles/gui/ParticlesGui.h>
+#include <plugins/netcdf/NetCDFImporter.h>
+#include <gui/dataset/importexport/FileImporterEditor.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
  * \brief A properties editor for the NetCDFImporter class.
  */
-class NetCDFImporterEditor : public PropertiesEditor
+class NetCDFImporterEditor : public FileImporterEditor
 {
 public:
 
@@ -41,6 +42,9 @@ protected:
 
 	/// Creates the user interface controls for the editor.
 	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
+
+	/// Displays a dialog box that allows the user to edit the custom file column to particle property mapping.
+	bool showEditColumnMappingDialog(NetCDFImporter* importer, const QUrl& sourceFile, QWidget* parent);
 
 protected Q_SLOTS:
 

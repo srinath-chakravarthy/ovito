@@ -82,6 +82,9 @@ public:
 		return std::make_shared<NetCDFImportTask>(dataset()->container(), frame, isNewlySelectedFile, _useCustomColumnMapping, _customColumnMapping);
 	}
 
+	/// Inspects the header of the given file and returns the number of file columns.
+	InputColumnMapping inspectFileHeader(const Frame& frame);
+
 private:
 
 	/// The format-specific task object that is responsible for reading an input file in the background.

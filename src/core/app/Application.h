@@ -135,6 +135,9 @@ protected:
 	/// Prepares application to start running.
 	virtual bool startupApplication() = 0;
 
+	/// Creates the global FileManager class instance.
+	virtual FileManager* createFileManager();
+
 private:
 
 	/// Executes the functions registered with the runOnceLater() function.
