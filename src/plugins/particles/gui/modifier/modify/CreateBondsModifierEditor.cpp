@@ -77,6 +77,16 @@ void CreateBondsModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	BooleanParameterUI* onlyIntraMoleculeBondsUI = new BooleanParameterUI(this, PROPERTY_FIELD(CreateBondsModifier::_onlyIntraMoleculeBonds));
 	layout1->addWidget(onlyIntraMoleculeBondsUI->checkBox());
 
+	// Lower cutoff parameter.
+	gridlayout = new QGridLayout();
+	gridlayout->setContentsMargins(0,0,0,0);
+	gridlayout->setColumnStretch(1, 1);
+	FloatParameterUI* minCutoffPUI = new FloatParameterUI(this, PROPERTY_FIELD(CreateBondsModifier::_minCutoff));
+	minCutoffPUI->setMinValue(0);
+	gridlayout->addWidget(minCutoffPUI->label(), 0, 0);
+	gridlayout->addLayout(minCutoffPUI->createFieldLayout(), 0, 1);
+	layout1->addLayout(gridlayout);
+
 	// Status label.
 	layout1->addSpacing(10);
 	layout1->addWidget(statusLabel());
@@ -125,7 +135,7 @@ void CreateBondsModifierEditor::updatePairCutoffListValues()
 ******************************************************************************/
 QVariant CreateBondsModifierEditor::PairCutoffTableModel::data(const QModelIndex& index, int role) const
 {
-	if(role == Qt::DisplayRole) {
+	if(role == Qt::DisplayRole || role == Qt::EditRole) {
 		if(index.column() == 0) return _data[index.row()].first;
 		else if(index.column() == 1) return _data[index.row()].second;
 		else if(index.column() == 2) {

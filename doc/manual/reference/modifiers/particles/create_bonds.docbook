@@ -64,7 +64,7 @@
       <varlistentry>
         <term>Pair-wise cutoff radii</term>
         <listitem>
-          <para>This mode gives you more control over which particles are connected by bonds. 
+          <para>This mode gives you more control over which particle types get connected by bonds. 
           The table lists all pair-wise combinations of particle types. Enter a cutoff distance into the third
           column to connect pairs of particles of the given types with bonds. </para>
           <para>Note that is mode is only available if the <literal>Particle Type</literal> property is defined for particles.</para>
@@ -74,7 +74,14 @@
         <term>No bonds between different molecules</term>
         <listitem>
           <para>If this option is active, bonds will only be created between particles that belong to the same molecule.
-          This requires that the <literal>Molecule Identifier</literal> property is defined for particles.</para>
+          Two particles belong to the same molecule if their <literal>Molecule Identifier</literal> property values
+          are the same. If the <literal>Molecule Identifier</literal> property is not defined for the particles, this option has no effect.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Lower cutoff</term>
+        <listitem>
+          <para>This parameter allows to set a lower cutoff, i.e. a minimum length, for the bonds to be created.</para>
         </listitem>
       </varlistentry>
     </variablelist>

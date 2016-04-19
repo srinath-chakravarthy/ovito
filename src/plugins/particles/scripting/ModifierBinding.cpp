@@ -748,7 +748,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"Creates bonds between nearby particles. The modifier outputs its computation results as a :py:class:`~ovito.data.Bonds` data object.")
 			.add_property("mode", &CreateBondsModifier::cutoffMode, &CreateBondsModifier::setCutoffMode)
 			.add_property("cutoff", &CreateBondsModifier::uniformCutoff, &CreateBondsModifier::setUniformCutoff,
-					"The cutoff distance for the creation of bonds between particles."
+					"The maximum cutoff distance for the creation of bonds between particles."
 					"\n\n"
 					":Default: 3.2\n")
 			.add_property("intra_molecule_only", &CreateBondsModifier::onlyIntraMoleculeBonds, &CreateBondsModifier::setOnlyIntraMoleculeBonds,
@@ -757,6 +757,10 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					":Default: ``False``\n")
 			.add_property("bonds_display", make_function(&CreateBondsModifier::bondsDisplay, return_value_policy<ovito_object_reference>()),
 					"The :py:class:`~ovito.vis.BondsDisplay` instance controlling the visual appearance of the bonds created by this modifier.")
+			.add_property("lower_cutoff", &CreateBondsModifier::minimumCutoff, &CreateBondsModifier::setMinimumCutoff,
+					"The minimum bond length."
+					"\n\n"
+					":Default: 0\n")
 		;
 
 		enum_<CreateBondsModifier::CutoffMode>("CutoffMode")

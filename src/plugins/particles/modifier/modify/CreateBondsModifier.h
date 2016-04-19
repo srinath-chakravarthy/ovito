@@ -53,10 +53,10 @@ private:
 
 		/// Constructor.
 		BondsEngine(const TimeInterval& validityInterval, ParticleProperty* positions, ParticleProperty* particleTypes, const SimulationCell& simCell, CutoffMode cutoffMode,
-				FloatType maxCutoff, std::vector<std::vector<FloatType>>&& pairCutoffsSquared, ParticleProperty* moleculeIDs) :
+				FloatType maxCutoff, FloatType minCutoff, std::vector<std::vector<FloatType>>&& pairCutoffsSquared, ParticleProperty* moleculeIDs) :
 					ComputeEngine(validityInterval),
 					_positions(positions), _particleTypes(particleTypes), _simCell(simCell), _cutoffMode(cutoffMode),
-					_maxCutoff(maxCutoff), _pairCutoffsSquared(std::move(pairCutoffsSquared)), _bonds(new BondsStorage()),
+					_maxCutoff(maxCutoff), _minCutoff(minCutoff), _pairCutoffsSquared(std::move(pairCutoffsSquared)), _bonds(new BondsStorage()),
 					_moleculeIDs(moleculeIDs) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
@@ -72,6 +72,7 @@ private:
 
 		CutoffMode _cutoffMode;
 		FloatType _maxCutoff;
+		FloatType _minCutoff;
 		std::vector<std::vector<FloatType>> _pairCutoffsSquared;
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
 		QExplicitlySharedDataPointer<ParticleProperty> _particleTypes;
@@ -92,12 +93,18 @@ public:
 	void setCutoffMode(CutoffMode mode) { _cutoffMode = mode; }
 
 	/// \brief Returns the uniform cutoff radius used to determine which particles are bonded.
-	/// \return The uniform cutoff radius in world units.
+	/// \return The uniform cutoff radius.
 	FloatType uniformCutoff() const { return _uniformCutoff; }
 
 	/// \brief Sets the cutoff radius that is used for generating bonds.
-	/// \param newCutoff The new cutoff radius in world units.
+	/// \param newCutoff The new cutoff radius.
 	void setUniformCutoff(FloatType newCutoff) { _uniformCutoff = newCutoff; }
+
+	/// \brief Returns the minimum length of bonds to create.
+	FloatType minimumCutoff() const { return _minCutoff; }
+
+	/// \brief Sets the minimum length of bonds to create.
+	void setMinimumCutoff(FloatType cutoff) { _minCutoff = cutoff; }
 
 	/// Returns the cutoff radii for pairs of particle types.
 	const PairCutoffsList& pairCutoffs() const { return _pairCutoffs; }
@@ -154,6 +161,9 @@ private:
 	/// The cutoff radius for bond generation.
 	PropertyField<FloatType> _uniformCutoff;
 
+	/// The minimum bond length.
+	PropertyField<FloatType> _minCutoff;
+
 	/// The cutoff radii for pairs of particle types.
 	PairCutoffsList _pairCutoffs;
 
@@ -177,6 +187,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_cutoffMode);
 	DECLARE_PROPERTY_FIELD(_uniformCutoff);
 	DECLARE_PROPERTY_FIELD(_onlyIntraMoleculeBonds);
+	DECLARE_PROPERTY_FIELD(_minCutoff);
 	DECLARE_REFERENCE_FIELD(_bondsDisplay);
 };
 

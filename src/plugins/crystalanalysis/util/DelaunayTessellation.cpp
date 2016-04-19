@@ -201,62 +201,49 @@ bool DelaunayTessellation::classifyGhostCell(CellHandle cell) const
 }
 
 /******************************************************************************
-* Alpha test routine.
+* Computes the dterminant of a 3x3 matrix.
 ******************************************************************************/
-bool DelaunayTessellation::compare_squared_radius_3(CellHandle cell, FloatType alpha) const
+static inline double determinant(double a00, double a01, double a02,
+								 double a10, double a11, double a12,
+								 double a20, double a21, double a22)
 {
-	const double* v0 = _dt->vertex_ptr(_dt->cell_vertex(cell, 0));
-	const double* v1 = _dt->vertex_ptr(_dt->cell_vertex(cell, 1));
-	const double* v2 = _dt->vertex_ptr(_dt->cell_vertex(cell, 2));
-	const double* v3 = _dt->vertex_ptr(_dt->cell_vertex(cell, 3));
-	double px = v0[0], py = v0[1], pz = v0[2];
-	double qx = v1[0], qy = v1[1], qz = v1[2];
-	double rx = v2[0], ry = v2[1], rz = v2[2];
-	double sx = v3[0], sy = v3[1], sz = v3[2];
-
-	auto square = [](double d) { return d*d; };
-
-	// Translate p to origin to simplify the expression.
-	double qpx = qx-px;
-	double qpy = qy-py;
-	double qpz = qz-pz;
-	double qp2 = square(qpx) + square(qpy) + square(qpz);
-	double rpx = rx-px;
-	double rpy = ry-py;
-	double rpz = rz-pz;
-	double rp2 = square(rpx) + square(rpy) + square(rpz);
-	double spx = sx-px;
-	double spy = sy-py;
-	double spz = sz-pz;
-	double sp2 = square(spx) + square(spy) + square(spz);
-
-	auto determinant = [](double a00, double a01, double a02,
-			double a10, double a11, double a12,
-			double a20, double a21, double a22)
-	{
-		double m02 = a00*a21 - a20*a01;
-		double m01 = a00*a11 - a10*a01;
-		double m12 = a10*a21 - a20*a11;
-		double m012 = m01*a22 - m02*a12 + m12*a02;
-		return m012;
-	};
-
-	double num_x = determinant(qpy,qpz,qp2,
-							   rpy,rpz,rp2,
-							   spy,spz,sp2);
-	double num_y = determinant(qpx,qpz,qp2,
-							   rpx,rpz,rp2,
-							   spx,spz,sp2);
-	double num_z = determinant(qpx,qpy,qp2,
-							   rpx,rpy,rp2,
-							   spx,spy,sp2);
-	double den   = determinant(qpx,qpy,qpz,
-							   rpx,rpy,rpz,
-							   spx,spy,spz);
-
-	return (square(num_x) + square(num_y) + square(num_z)) / square(2 * den) < alpha;
+	double m02 = a00*a21 - a20*a01;
+	double m01 = a00*a11 - a10*a01;
+	double m12 = a10*a21 - a20*a11;
+	double m012 = m01*a22 - m02*a12 + m12*a02;
+	return m012;
 }
 
+/******************************************************************************
+* Alpha test routine.
+******************************************************************************/
+bool DelaunayTessellation::alphaTest(CellHandle cell, FloatType alpha) const
+{
+	auto v0 = _dt->vertex_ptr(_dt->cell_vertex(cell, 0));
+	auto v1 = _dt->vertex_ptr(_dt->cell_vertex(cell, 1));
+	auto v2 = _dt->vertex_ptr(_dt->cell_vertex(cell, 2));
+	auto v3 = _dt->vertex_ptr(_dt->cell_vertex(cell, 3));
+
+	auto qpx = v1[0]-v0[0];
+	auto qpy = v1[1]-v0[1];
+	auto qpz = v1[2]-v0[2];
+	auto qp2 = qpx*qpx + qpy*qpy + qpz*qpz;
+	auto rpx = v2[0]-v0[0];
+	auto rpy = v2[1]-v0[1];
+	auto rpz = v2[2]-v0[2];
+	auto rp2 = rpx*rpx + rpy*rpy + rpz*rpz;
+	auto spx = v3[0]-v0[0];
+	auto spy = v3[1]-v0[1];
+	auto spz = v3[2]-v0[2];
+	auto sp2 = spx*spx + spy*spy + spz*spz;
+
+	auto num_x = determinant(qpy,qpz,qp2,rpy,rpz,rp2,spy,spz,sp2);
+	auto num_y = determinant(qpx,qpz,qp2,rpx,rpz,rp2,spx,spz,sp2);
+	auto num_z = determinant(qpx,qpy,qp2,rpx,rpy,rp2,spx,spy,sp2);
+	auto den   = determinant(qpx,qpy,qpz,rpx,rpy,rpz,spx,spy,spz);
+
+	return (num_x*num_x + num_y*num_y + num_z*num_z) / (4 * den * den) < alpha;
+}
 
 }	// End of namespace
 }	// End of namespace

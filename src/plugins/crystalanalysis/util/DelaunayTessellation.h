@@ -165,7 +165,7 @@ public:
 		return Point3((FloatType)xyz[0], (FloatType)xyz[1], (FloatType)xyz[2]);
 	}
 
-	bool compare_squared_radius_3(CellHandle cell, FloatType alpha) const;
+	bool alphaTest(CellHandle cell, FloatType alpha) const;
 
 	int vertexIndex(VertexHandle vertex) const {
 		OVITO_ASSERT(vertex < _particleIndices.size());

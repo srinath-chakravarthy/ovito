@@ -58,7 +58,7 @@ ActionManager::ActionManager(MainWindow* mainWindow) : QObject(mainWindow)
 
 	createCommandAction(ACTION_EDIT_UNDO, tr("Undo"), ":/gui/actions/edit/edit_undo.png", tr("Reverse a user action."), QKeySequence::Undo);
 	createCommandAction(ACTION_EDIT_REDO, tr("Redo"), ":/gui/actions/edit/edit_redo.png", tr("Redo the previously undone user action."), QKeySequence::Redo);
-	createCommandAction(ACTION_EDIT_DELETE, tr("Delete"), ":/gui/actions/edit/edit_delete.png", tr("Deletes the selected objects."), QKeySequence::Delete);
+	createCommandAction(ACTION_EDIT_DELETE, tr("Delete"), ":/gui/actions/edit/edit_delete.png", tr("Deletes the selected objects."));
 
 	createCommandAction(ACTION_SETTINGS_DIALOG, tr("&Settings..."));
 

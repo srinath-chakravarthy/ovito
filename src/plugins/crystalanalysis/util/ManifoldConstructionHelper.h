@@ -113,7 +113,7 @@ private:
 				return false;
 
 			// Alpha shape criterion: This determines whether the Delaunay tetrahedron is part of the solid region.
-			bool isSolid = _tessellation.isValidCell(cell) && _tessellation.compare_squared_radius_3(cell, _alpha);
+			bool isSolid = _tessellation.isValidCell(cell) && _tessellation.alphaTest(cell, _alpha);
 
 			if(!isSolid) {
 				_tessellation.setUserField(cell, 0);
