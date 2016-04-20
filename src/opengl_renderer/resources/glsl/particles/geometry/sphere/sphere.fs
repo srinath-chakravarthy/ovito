@@ -51,15 +51,9 @@ void main()
 	// Calculate viewing ray direction in view space
 	vec3 ray_dir;
 	vec3 ray_origin;
-	//float disc_limit = 1.0;
 	if(is_perspective) {
 		ray_dir = normalize(vec3(inverse_projection_matrix * vec4(view_c.x, view_c.y, 1.0, 1.0)));
 		ray_origin = vec3(0.0);
-
-		//float basePointSize = projection_matrix[1][1] / inverse_viewport_size.y;
-		//float pointSizeSq = basePointSize * sqrt(particle_radius_squared_fs) / (particle_view_pos_fs.z * projection_matrix[2][3] + projection_matrix[3][3]);
-		//if(pointSizeSq > 0.0 && pointSizeSq < 4.0)
-		//	disc_limit = max(0.0, pointSizeSq * 0.5 - 1.0);
 	}
 	else {
 		ray_origin = vec3(inverse_projection_matrix * vec4(view_c.x, view_c.y, 0.0, 1.0));
@@ -71,8 +65,13 @@ void main()
 	// Perform ray-sphere intersection test.
 	float b = dot(ray_dir, sphere_dir);
 	float sphere_dir_sq = dot(sphere_dir, sphere_dir);
-	//float disc = mix(particle_radius_squared_fs, b*b - sphere_dir_sq + particle_radius_squared_fs, disc_limit);
-	float disc = b*b - sphere_dir_sq + particle_radius_squared_fs;
+	float x = sphere_dir_sq - b*b;
+	if(is_perspective && x > particle_radius_squared_fs) {
+		// This is more accurate for very small spheres and distant spheres.
+		vec3 delta = ray_dir * sqrt(sphere_dir_sq) - sphere_dir;
+		x = dot(delta, delta);
+	}
+	float disc = particle_radius_squared_fs - x;
 		
 	// Only calculate the intersection closest to the viewer.
 	if(disc < 0.0)
