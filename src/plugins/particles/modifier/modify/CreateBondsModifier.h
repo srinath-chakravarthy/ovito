@@ -112,6 +112,12 @@ public:
 	/// Sets the cutoff radii for pairs of particle types.
 	void setPairCutoffs(const PairCutoffsList& pairCutoffs);
 
+	/// Sets the cutoff radius for a pair of particle types.
+	void setPairCutoff(const QString& typeA, const QString& typeB, FloatType cutoff);
+
+	/// Returns the pair-wise cutoff radius for a pair of particle types.
+	FloatType getPairCutoff(const QString& typeA, const QString& typeB) const;
+
 	/// \brief Returns the display object that is responsible for rendering the bonds.
 	BondsDisplay* bondsDisplay() const { return _bondsDisplay; }
 

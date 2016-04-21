@@ -224,39 +224,20 @@ latex_documents = [
 # If false, no module index is generated.
 #latex_domain_indices = True
 
+def process_docstring(app, what, name, obj, options, lines):
+    # Filter out lines that contain the keyword "SIGNATURE:"
+    # These lines allow the C++ code to specify a custom function signature string for the Python documentation.
+    lines[:] = [line for line in lines if not line.strip().startswith('SIGNATURE:')]
 
-# -- Options for manual page output ---------------------------------------
+def process_signature(app, what, name, obj, options, signature, return_annotation):
+    # Look for keyword "SIGNATURE:" in the docstring.
+    # TIt allows the C++ code to specify a custom function signature string for the Python documentation.
+    if obj.__doc__:
+        for line in obj.__doc__.splitlines():
+            if line.strip().startswith("SIGNATURE:"):
+                return (line[len("SIGNATURE:"):].strip(), return_annotation)
+    return (signature, return_annotation)
 
-# One entry per manual page. List of tuples
-# (source start file, name, description, authors, manual section).
-man_pages = [
-    ('index', 'ovito', u'OVITO Documentation',
-     [u'Alexander Stukowski'], 1)
-]
-
-# If true, show URL addresses after external links.
-#man_show_urls = False
-
-
-# -- Options for Texinfo output -------------------------------------------
-
-# Grouping the document tree into Texinfo files. List of tuples
-# (source start file, target name, title, author,
-#  dir menu entry, description, category)
-texinfo_documents = [
-  ('index', 'OVITO', u'OVITO Documentation',
-   u'Alexander Stukowski', 'OVITO', 'One line description of project.',
-   'Miscellaneous'),
-]
-
-# Documents to append as an appendix to all manuals.
-#texinfo_appendices = []
-
-# If false, no module index is generated.
-#texinfo_domain_indices = True
-
-# How to display URL addresses: 'footnote', 'no', or 'inline'.
-#texinfo_show_urls = 'footnote'
-
-# If true, do not generate a @detailmenu in the "Top" node's menu.
-#texinfo_no_detailmenu = False
+def setup(app):
+    app.connect('autodoc-process-docstring', process_docstring)
+    app.connect('autodoc-process-signature', process_signature)

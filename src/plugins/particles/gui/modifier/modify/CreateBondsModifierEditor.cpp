@@ -139,7 +139,7 @@ QVariant CreateBondsModifierEditor::PairCutoffTableModel::data(const QModelIndex
 		if(index.column() == 0) return _data[index.row()].first;
 		else if(index.column() == 1) return _data[index.row()].second;
 		else if(index.column() == 2) {
-			FloatType cutoffRadius = _modifier->pairCutoffs()[_data[index.row()]];
+			FloatType cutoffRadius = _modifier->getPairCutoff(_data[index.row()].first, _data[index.row()].second);
 			if(cutoffRadius > 0)
 				return QString("%1").arg(cutoffRadius);
 		}
@@ -156,12 +156,9 @@ bool CreateBondsModifierEditor::PairCutoffTableModel::setData(const QModelIndex&
 		bool ok;
 		FloatType cutoff = (FloatType)value.toDouble(&ok);
 		if(!ok) cutoff = 0;
-
-		CreateBondsModifier::PairCutoffsList pairCutoffs = _modifier->pairCutoffs();
-		pairCutoffs[_data[index.row()]] = cutoff;
-
-		UndoableTransaction::handleExceptions(_modifier->dataset()->undoStack(), tr("Change cutoff"), [&pairCutoffs, this]() {
-			_modifier->setPairCutoffs(pairCutoffs);
+		UndoableTransaction::handleExceptions(_modifier->dataset()->undoStack(), tr("Change cutoff"), [this, &index, cutoff]() {
+			auto const p = _data[index.row()];
+			_modifier->setPairCutoff(p.first, p.second, cutoff);
 		});
 		return true;
 	}

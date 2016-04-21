@@ -94,9 +94,9 @@ def _Viewport_render(self, settings = None):
         :returns: A `QImage <http://pyqt.sourceforge.net/Docs/PyQt5/api/qimage.html>`_ object on success, which contains the rendered picture; 
                   ``None`` if the rendering operation has been canceled by the user.
         
-        The rendered image of movie will automatically be saved to disk when the :py:attr:`RenderSettings.filename` attribute has been set to a non-empty string.
-        Alternatively, the returned `QImage <http://pyqt.sourceforge.net/Docs/PyQt5/api/qimage.html>`_ object can be saved explicitly from the script. 
-        You may even paint additional graphics on top of the image before saving it. For example:
+        The rendered image of movie will automatically be saved to disk when the :py:attr:`RenderSettings.filename` attribute contains a non-empty string.
+        Alternatively, you can save the returned `QImage <http://pyqt.sourceforge.net/Docs/PyQt5/api/qimage.html>`_ explicitly using its ``save()`` method. 
+        This gives you the opportunity to paint additional graphics on top of the image before saving it. For example:
         
         .. literalinclude:: ../example_snippets/render_to_image.py
     """

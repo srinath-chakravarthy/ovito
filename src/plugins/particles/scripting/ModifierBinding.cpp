@@ -66,6 +66,8 @@ using namespace PyScript;
 
 BOOST_PYTHON_MODULE(ParticlesModify)
 {
+	docstring_options docoptions(true, false, false);
+
 	ovito_abstract_class<ParticleModifier, Modifier>()
 	;
 
@@ -745,10 +747,21 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	{
 		scope s = ovito_class<CreateBondsModifier, AsynchronousParticleModifier>(
 				":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
-				"Creates bonds between nearby particles. The modifier outputs its computation results as a :py:class:`~ovito.data.Bonds` data object.")
-			.add_property("mode", &CreateBondsModifier::cutoffMode, &CreateBondsModifier::setCutoffMode)
+				"Creates bonds between nearby particles. The modifier outputs its results as a :py:class:`~ovito.data.Bonds` data object, which "
+				"can be accessed through the :py:attr:`DataCollection.bonds <ovito.data.DataCollection.bonds>` attribute of the data collection "
+				"leaving the modification pipeline.")
+			.add_property("mode", &CreateBondsModifier::cutoffMode, &CreateBondsModifier::setCutoffMode,
+					"Selects the mode of operation. Valid modes are:"
+					"\n\n"
+					"  * ``CreateBondsModifier.Mode.Uniform``\n"
+					"  * ``CreateBondsModifier.Mode.Pairwise``\n"
+					"\n\n"
+					"In ``Uniform`` mode one global :py:attr:`.cutoff` is used irrespective of the atom types. "
+					"In ``Pairwise`` mode a separate cutoff distance must be specified for all pairs of atom types between which bonds are to be created. "
+					"\n\n"
+					":Default: ``CreateBondsModifier.Mode.Uniform``\n")
 			.add_property("cutoff", &CreateBondsModifier::uniformCutoff, &CreateBondsModifier::setUniformCutoff,
-					"The maximum cutoff distance for the creation of bonds between particles."
+					"The maximum cutoff distance for the creation of bonds between particles. This parameter is only used if :py:attr:`.mode` is ``Uniform``. "
 					"\n\n"
 					":Default: 3.2\n")
 			.add_property("intra_molecule_only", &CreateBondsModifier::onlyIntraMoleculeBonds, &CreateBondsModifier::setOnlyIntraMoleculeBonds,
@@ -756,16 +769,32 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					"\n\n"
 					":Default: ``False``\n")
 			.add_property("bonds_display", make_function(&CreateBondsModifier::bondsDisplay, return_value_policy<ovito_object_reference>()),
-					"The :py:class:`~ovito.vis.BondsDisplay` instance controlling the visual appearance of the bonds created by this modifier.")
+					"The :py:class:`~ovito.vis.BondsDisplay` object controlling the visual appearance of the bonds created by this modifier.")
 			.add_property("lower_cutoff", &CreateBondsModifier::minimumCutoff, &CreateBondsModifier::setMinimumCutoff,
-					"The minimum bond length."
+					"The minimum bond length. No bonds will be created between atoms whose distance is below this threshold."
 					"\n\n"
-					":Default: 0\n")
+					":Default: 0.0\n")
+			.def("set_pairwise_cutoff", &CreateBondsModifier::setPairCutoff,
+					"SIGNATURE: (type_a, type_b, cutoff)\n"
+					"Sets the pair-wise cutoff distance for a pair of atom types. This information is only used if :py:attr:`.mode` is ``Pairwise``."
+					"\n\n"
+			        ":param str type_a: The name of the first atom type\n"
+			        ":param str type_b: The name of the second atom type (order doesn't matter)\n"
+			        ":param float cutoff: The cutoff distance to be set for the type pair.\n"
+					"\n\n"
+					"If you do not want to create any bonds between a pair of types, set the corresponding cutoff radius to zero (which is the default).")
+			.def("get_pairwise_cutoff", &CreateBondsModifier::getPairCutoff,
+					"SIGNATURE: (type_a, type_b)\n"
+					"Returns the pair-wise cutoff distance set for a pair of atom types."
+					"\n\n"
+			        ":param str type_a: The name of the first atom type\n"
+			        ":param str type_b: The name of the second atom type (order doesn't matter)\n"
+			        ":return: The cutoff distance set for the type pair. Returns zero if no cutoff has been set for the pair.\n")
 		;
 
-		enum_<CreateBondsModifier::CutoffMode>("CutoffMode")
+		enum_<CreateBondsModifier::CutoffMode>("Mode")
 			.value("Uniform", CreateBondsModifier::UniformCutoff)
-			.value("Pair", CreateBondsModifier::PairCutoff)
+			.value("Pairwise", CreateBondsModifier::PairCutoff)
 		;
 	}
 

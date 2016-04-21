@@ -88,6 +88,35 @@ void CreateBondsModifier::setPairCutoffs(const PairCutoffsList& pairCutoffs)
 }
 
 /******************************************************************************
+* Sets the cutoff radius for a pair of particle types.
+******************************************************************************/
+void CreateBondsModifier::setPairCutoff(const QString& typeA, const QString& typeB, FloatType cutoff)
+{
+	PairCutoffsList newList = pairCutoffs();
+	if(cutoff > 0) {
+		newList[qMakePair(typeA, typeB)] = cutoff;
+		newList[qMakePair(typeB, typeA)] = cutoff;
+	}
+	else {
+		newList.remove(qMakePair(typeA, typeB));
+		newList.remove(qMakePair(typeB, typeA));
+	}
+	setPairCutoffs(newList);
+}
+
+/******************************************************************************
+* Returns the pair-wise cutoff radius for a pair of particle types.
+******************************************************************************/
+FloatType CreateBondsModifier::getPairCutoff(const QString& typeA, const QString& typeB) const
+{
+	auto iter = pairCutoffs().find(qMakePair(typeA, typeB));
+	if(iter != pairCutoffs().end()) return iter.value();
+	iter = pairCutoffs().find(qMakePair(typeB, typeA));
+	if(iter != pairCutoffs().end()) return iter.value();
+	return 0;
+}
+
+/******************************************************************************
 * Saves the class' contents to the given stream.
 ******************************************************************************/
 void CreateBondsModifier::saveToStream(ObjectSaveStream& stream)
@@ -200,7 +229,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CreateBondsModifier
 				}
 			}
 			if(maxCutoff <= 0)
-				throwException(tr("At least one positive cutoff must be entered."));
+				throwException(tr("At least one positive bond cutoff must be set for a valid pair of particle types."));
 		}
 	}
 

@@ -29,7 +29,7 @@ using namespace Ovito;
 
 BOOST_PYTHON_MODULE(PyScript)
 {
-	docstring_options docoptions(true, false);
+	docstring_options docoptions(true, false, false);
 
 	// Make Ovito program version number available to script.
 	scope().attr("version") = make_tuple(Application::applicationVersionMajor(), Application::applicationVersionMinor(), Application::applicationVersionRevision());

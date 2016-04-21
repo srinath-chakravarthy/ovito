@@ -102,7 +102,7 @@ dict BondsObject__array_interface__(const BondsObject& p)
 
 BOOST_PYTHON_MODULE(Particles)
 {
-	docstring_options docoptions(true, false);
+	docstring_options docoptions(true, false, false);
 
 	class_<ParticlePropertyReference>("ParticlePropertyReference", init<ParticleProperty::Type, optional<int>>())
 		.def(init<const QString&, optional<int>>())
