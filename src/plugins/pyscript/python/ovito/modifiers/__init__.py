@@ -2,8 +2,8 @@
 This module contains all modifiers of OVITO.
 
 The abstract base class of all modifier types is the :py:class:`Modifier` class.
-Typically you create a modifier instance, set its parameters, and finally insert it into a
-modification pipeline, e.g.::
+Typically you create a modifier instance, set its parameters, and finally insert it into the
+modification pipeline of an :py:class:`~ovito.ObjectNode`, e.g.::
 
     from ovito.modifiers import *
     m = AssignColorModifier()
@@ -39,6 +39,7 @@ Class name                                     User interface name
 :py:class:`HistogramModifier`                  :guilabel:`Histogram`
 :py:class:`IdentifyDiamondModifier`            :guilabel:`Identify diamond structure`
 :py:class:`InvertSelectionModifier`            :guilabel:`Invert selection`
+:py:class:`LoadTrajectoryModifier`             :guilabel:`Load trajectory`
 :py:class:`ManualSelectionModifier`            :guilabel:`Manual selection`
 :py:class:`PythonScriptModifier`               :guilabel:`Python script`
 :py:class:`ScatterPlotModifier`                :guilabel:`Scatter plot`
@@ -51,7 +52,7 @@ Class name                                     User interface name
 :py:class:`WrapPeriodicImagesModifier`         :guilabel:`Wrap at periodic boundaries`
 ============================================== =========================================
 
-*Note that some analysis modifiers are not accssible from Python. In most cases this is because they do things that can be directly achieved using the Numpy python module.*
+*Note that some analysis modifiers are not accessible from Python. That is because they do things that can be achieved equally well using the Numpy python module.*
 
 """
 

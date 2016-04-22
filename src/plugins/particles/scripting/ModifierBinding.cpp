@@ -35,6 +35,7 @@
 #include <plugins/particles/modifier/modify/SliceModifier.h>
 #include <plugins/particles/modifier/modify/AffineTransformationModifier.h>
 #include <plugins/particles/modifier/modify/CreateBondsModifier.h>
+#include <plugins/particles/modifier/modify/LoadTrajectoryModifier.h>
 #include <plugins/particles/modifier/properties/ComputePropertyModifier.h>
 #include <plugins/particles/modifier/properties/FreezePropertyModifier.h>
 #include <plugins/particles/modifier/selection/ClearSelectionModifier.h>
@@ -1138,6 +1139,24 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"the computed Voronoi index vectors will be truncated because there exists at least one Voronoi face having more edges than "
 				"the maximum Voronoi vector length specified by :py:attr:`.edge_count`. In such a case you should consider increasing "
 				":py:attr:`.edge_count` (to at least :py:attr:`.max_face_order`) to not lose information because of truncated index vectors.")
+	;
+
+	ovito_class<LoadTrajectoryModifier, ParticleModifier>(
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
+			"This modifier loads trajectories of particles from a separate simulation file. "
+			"\n\n"
+			"A typical usage scenario for this modifier is when the topology of a molecular system (i.e. the definition of atom types, bonds, etc.) is "
+			"stored separately from the trajectories of atoms. In this case you should load the topology file first using :py:func:`~ovito.io.import_file`. "
+			"Then create and apply the :py:class:`!LoadTrajectoryModifier` to the topology dataset, which loads the trajectory file. "
+			"The modifier will replace the static atom positions from the topology dataset with the time-dependent positions from the trajectory file. "
+			"\n\n"
+			"Example:"
+			"\n\n"
+			".. literalinclude:: ../example_snippets/load_trajectory_modifier.py")
+		.add_property("source", make_function(&LoadTrajectoryModifier::trajectorySource, return_value_policy<ovito_object_reference>()), &LoadTrajectoryModifier::setTrajectorySource,
+				"A :py:class:`~ovito.io.FileSource` that provides the trajectories of particles. "
+				"You can call its :py:meth:`~ovito.io.FileSource.load` function to load a simulation trajectory file "
+				"as shown in the code example above.")
 	;
 }
 
