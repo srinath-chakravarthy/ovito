@@ -91,9 +91,14 @@ dict BondsObject__array_interface__(const BondsObject& p)
 #else
 	ai["typestr"] = str(">u") + str(sizeof(unsigned int));
 #endif
-	const unsigned int* data = nullptr;
-	if(!p.storage()->empty())
+	const unsigned int* data;
+	if(!p.storage()->empty()) {
 		data = &p.storage()->front().index1;
+	}
+	else {
+		static const unsigned int null_data = 0;
+		data = &null_data;
+	}
 	ai["data"] = boost::python::make_tuple(reinterpret_cast<std::intptr_t>(data), true);
 	ai["strides"] = boost::python::make_tuple(sizeof(Bond), sizeof(unsigned int));
 	ai["version"] = 3;
