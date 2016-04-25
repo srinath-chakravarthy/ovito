@@ -64,7 +64,6 @@ void ParticleTypeEditor::createUI(const RolloutInsertionParameters& rolloutParam
 	FloatParameterUI* radiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(ParticleType::_radius));
 	layout1->addWidget(radiusPUI->label(), 2, 0);
 	layout1->addLayout(radiusPUI->createFieldLayout(), 2, 1);
-	radiusPUI->setMinValue(0);
 
 	// "Set as default" button
 	QPushButton* setAsDefaultBtn = new QPushButton(tr("Set as default"));

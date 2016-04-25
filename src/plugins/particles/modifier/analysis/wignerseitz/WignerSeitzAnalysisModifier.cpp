@@ -41,6 +41,7 @@ SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _useReferenceFrameOffset, 
 SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _referenceFrameNumber, "Reference frame number");
 SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _referenceFrameOffset, "Reference frame offset");
 SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _perTypeOccupancy, "Output per-type occupancies");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(WignerSeitzAnalysisModifier, _referenceFrameNumber, IntegerParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.

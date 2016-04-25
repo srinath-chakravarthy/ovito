@@ -53,7 +53,8 @@ SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _selectInvalidParticles, "Select 
 SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _useReferenceFrameOffset, "Use reference frame offset");
 SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _referenceFrameNumber, "Reference frame number");
 SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _referenceFrameOffset, "Reference frame offset");
-SET_PROPERTY_FIELD_UNITS(AtomicStrainModifier, _cutoff, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(AtomicStrainModifier, _cutoff, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(AtomicStrainModifier, _referenceFrameNumber, IntegerParameterUnit, 1);
 
 /******************************************************************************
 * Constructs the modifier object.

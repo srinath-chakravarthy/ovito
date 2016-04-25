@@ -34,7 +34,7 @@ DEFINE_PROPERTY_FIELD(SlipSurfaceDisplay, _smoothShading, "SmoothShading");
 DEFINE_REFERENCE_FIELD(SlipSurfaceDisplay, _surfaceTransparency, "SurfaceTransparency", Controller);
 SET_PROPERTY_FIELD_LABEL(SlipSurfaceDisplay, _smoothShading, "Smooth shading");
 SET_PROPERTY_FIELD_LABEL(SlipSurfaceDisplay, _surfaceTransparency, "Surface transparency");
-SET_PROPERTY_FIELD_UNITS(SlipSurfaceDisplay, _surfaceTransparency, PercentParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(SlipSurfaceDisplay, _surfaceTransparency, PercentParameterUnit, 0, 1);
 
 /******************************************************************************
 * Constructor.

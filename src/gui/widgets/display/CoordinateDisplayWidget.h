@@ -73,6 +73,9 @@ Q_SIGNALS:
 	/// This signal is emitted when the user has changed the value of one of the vector components.
 	void valueEntered(int component, FloatType value);
 
+	/// This signal is emitted when the user presses the "Animate transformation" button.
+	void animatePressed();
+
 protected Q_SLOT:
 
 	/// Is called when a spinner value has been changed by the user.

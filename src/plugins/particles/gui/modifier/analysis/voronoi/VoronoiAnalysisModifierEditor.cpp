@@ -56,7 +56,6 @@ void VoronoiAnalysisModifierEditor::createUI(const RolloutInsertionParameters& r
 	FloatParameterUI* faceThresholdPUI = new FloatParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::_faceThreshold));
 	gridlayout->addWidget(faceThresholdPUI->label(), row, 0);
 	gridlayout->addLayout(faceThresholdPUI->createFieldLayout(), row++, 1);
-	faceThresholdPUI->setMinValue(0);
 
 	// Compute indices.
 	BooleanGroupBoxParameterUI* computeIndicesPUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::_computeIndices));
@@ -70,14 +69,11 @@ void VoronoiAnalysisModifierEditor::createUI(const RolloutInsertionParameters& r
 	IntegerParameterUI* edgeCountPUI = new IntegerParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::_edgeCount));
 	sublayout->addWidget(edgeCountPUI->label(), 0, 0);
 	sublayout->addLayout(edgeCountPUI->createFieldLayout(), 0, 1);
-	edgeCountPUI->setMinValue(3);
-	edgeCountPUI->setMaxValue(18);
 
 	// Edge threshold.
 	FloatParameterUI* edgeThresholdPUI = new FloatParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::_edgeThreshold));
 	sublayout->addWidget(edgeThresholdPUI->label(), 1, 0);
 	sublayout->addLayout(edgeThresholdPUI->createFieldLayout(), 1, 1);
-	edgeThresholdPUI->setMinValue(0);
 
 	// Generate bonds.
 	BooleanParameterUI* computeBondsPUI = new BooleanParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::_computeBonds));

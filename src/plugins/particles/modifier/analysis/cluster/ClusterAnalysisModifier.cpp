@@ -29,7 +29,7 @@ DEFINE_FLAGS_PROPERTY_FIELD(ClusterAnalysisModifier, _cutoff, "Cutoff", PROPERTY
 DEFINE_PROPERTY_FIELD(ClusterAnalysisModifier, _onlySelectedParticles, "OnlySelectedParticles");
 SET_PROPERTY_FIELD_LABEL(ClusterAnalysisModifier, _cutoff, "Cutoff radius");
 SET_PROPERTY_FIELD_LABEL(ClusterAnalysisModifier, _onlySelectedParticles, "Use only selected particles");
-SET_PROPERTY_FIELD_UNITS(ClusterAnalysisModifier, _cutoff, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ClusterAnalysisModifier, _cutoff, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.

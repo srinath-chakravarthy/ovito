@@ -143,7 +143,6 @@ void TrajectoryGeneratorObjectEditor::createUI(const RolloutInsertionParameters&
 		IntegerParameterUI* everyNthFrameUI = new IntegerParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::_everyNthFrame));
 		layout2a->addWidget(everyNthFrameUI->label(), 0, 0);
 		layout2a->addLayout(everyNthFrameUI->createFieldLayout(), 0, 1);
-		everyNthFrameUI->setMinValue(1);
 		layout2a->setColumnStretch(2, 1);
 	}
 

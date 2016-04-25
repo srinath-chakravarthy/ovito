@@ -71,12 +71,10 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	IntegerParameterUI* maxTrialCircuitSizeUI = new IntegerParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_maxTrialCircuitSize));
 	sublayout->addWidget(maxTrialCircuitSizeUI->label(), 0, 0);
 	sublayout->addLayout(maxTrialCircuitSizeUI->createFieldLayout(), 0, 1);
-	maxTrialCircuitSizeUI->setMinValue(3);
 
 	IntegerParameterUI* circuitStretchabilityUI = new IntegerParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_circuitStretchability));
 	sublayout->addWidget(circuitStretchabilityUI->label(), 1, 0);
 	sublayout->addLayout(circuitStretchabilityUI->createFieldLayout(), 1, 1);
-	circuitStretchabilityUI->setMinValue(0);
 
 	QGroupBox* advancedParamsBox = new QGroupBox(tr("Advanced settings"));
 	layout->addWidget(advancedParamsBox);

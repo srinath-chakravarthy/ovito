@@ -45,8 +45,8 @@ SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _smoothShading, "Smooth shading");
 SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _surfaceTransparency, "Surface transparency");
 SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _capTransparency, "Cap transparency");
 SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _reverseOrientation, "Inside out");
-SET_PROPERTY_FIELD_UNITS(SurfaceMeshDisplay, _surfaceTransparency, PercentParameterUnit);
-SET_PROPERTY_FIELD_UNITS(SurfaceMeshDisplay, _capTransparency, PercentParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(SurfaceMeshDisplay, _surfaceTransparency, PercentParameterUnit, 0, 1);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(SurfaceMeshDisplay, _capTransparency, PercentParameterUnit, 0, 1);
 
 /******************************************************************************
 * Constructor.

@@ -46,6 +46,8 @@ SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _fixPropertyAxisRange, "Fix prope
 SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _propertyAxisRangeStart, "Property axis range start");
 SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _propertyAxisRangeEnd, "Property axis range end");
 SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _sourceProperty, "Source property");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(BinAndReduceModifier, _numberOfBinsX, IntegerParameterUnit, 1);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(BinAndReduceModifier, _numberOfBinsY, IntegerParameterUnit, 1);
 
 /******************************************************************************
 * Constructs the modifier object.

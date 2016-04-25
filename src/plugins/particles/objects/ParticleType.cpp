@@ -35,7 +35,7 @@ SET_PROPERTY_FIELD_LABEL(ParticleType, _id, "Id");
 SET_PROPERTY_FIELD_LABEL(ParticleType, _color, "Color");
 SET_PROPERTY_FIELD_LABEL(ParticleType, _radius, "Radius");
 SET_PROPERTY_FIELD_LABEL(ParticleType, _name, "Name");
-SET_PROPERTY_FIELD_UNITS(ParticleType, _radius, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ParticleType, _radius, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructs a new ParticleType.

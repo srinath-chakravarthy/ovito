@@ -48,6 +48,7 @@ SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, _everyNthFrame, "Every Nth f
 SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, _unwrapTrajectories, "Unwrap trajectories");
 SET_PROPERTY_FIELD_UNITS(TrajectoryGeneratorObject, _customIntervalStart, TimeParameterUnit);
 SET_PROPERTY_FIELD_UNITS(TrajectoryGeneratorObject, _customIntervalEnd, TimeParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TrajectoryGeneratorObject, _everyNthFrame, IntegerParameterUnit, 1);
 
 /******************************************************************************
 * Default constructor.

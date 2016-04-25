@@ -54,8 +54,6 @@ void SlipSurfaceDisplayEditor::createUI(const RolloutInsertionParameters& rollou
 	FloatParameterUI* surfaceTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(SlipSurfaceDisplay::_surfaceTransparency));
 	sublayout->addWidget(new QLabel(tr("Transparency:")), 0, 0);
 	sublayout->addLayout(surfaceTransparencyUI->createFieldLayout(), 0, 1);
-	surfaceTransparencyUI->setMinValue(0);
-	surfaceTransparencyUI->setMaxValue(1);
 
 	BooleanParameterUI* smoothShadingUI = new BooleanParameterUI(this, PROPERTY_FIELD(SlipSurfaceDisplay::_smoothShading));
 	sublayout->addWidget(smoothShadingUI->checkBox(), 1, 0, 1, 2);

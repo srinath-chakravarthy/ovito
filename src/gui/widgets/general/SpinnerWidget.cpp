@@ -29,7 +29,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 * Constructs the spinner.
 ******************************************************************************/
 SpinnerWidget::SpinnerWidget(QWidget* parent, QLineEdit* textBox) : QWidget(parent),
-	_textBox(NULL), _value(0), _minValue(FLOATTYPE_MIN), _maxValue(FLOATTYPE_MAX),
+	_textBox(nullptr), _value(0), _minValue(FLOATTYPE_MIN), _maxValue(FLOATTYPE_MAX),
 	_upperBtnPressed(false), _lowerBtnPressed(false), _unit(nullptr)
 {
 	setSizePolicy(QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum, QSizePolicy::SpinBox));

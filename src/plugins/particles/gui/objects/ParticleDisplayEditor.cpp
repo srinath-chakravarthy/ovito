@@ -59,7 +59,6 @@ void ParticleDisplayEditor::createUI(const RolloutInsertionParameters& rolloutPa
 	FloatParameterUI* radiusUI = new FloatParameterUI(this, PROPERTY_FIELD(ParticleDisplay::_defaultParticleRadius));
 	layout->addWidget(radiusUI->label(), 2, 0);
 	layout->addLayout(radiusUI->createFieldLayout(), 2, 1);
-	radiusUI->setMinValue(0);
 
 	// Create a second rollout.
 	rollout = createRollout(tr("Advanced settings"), rolloutParams.after(rollout), "display_objects.particles.html");

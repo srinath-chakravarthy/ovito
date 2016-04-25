@@ -29,6 +29,7 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, CentroSymmetryModifier, AsynchronousParticleModifier);
 DEFINE_FLAGS_PROPERTY_FIELD(CentroSymmetryModifier, _numNeighbors, "NumNeighbors", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(CentroSymmetryModifier, _numNeighbors, "Number of neighbors");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(CentroSymmetryModifier, _numNeighbors, IntegerParameterUnit, 2, CentroSymmetryModifier::MAX_CSP_NEIGHBORS);
 
 /******************************************************************************
 * Constructs the modifier object.

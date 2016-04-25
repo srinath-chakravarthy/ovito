@@ -45,6 +45,7 @@ SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, _useReferenceFrameOffse
 SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, _referenceFrameNumber, "Reference frame number");
 SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, _referenceFrameOffset, "Reference frame offset");
 SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, _vectorDisplay, "Vector display");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CalculateDisplacementsModifier, _referenceFrameNumber, IntegerParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.

@@ -59,8 +59,6 @@ void PartitionMeshDisplayEditor::createUI(const RolloutInsertionParameters& roll
 	FloatParameterUI* surfaceTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_surfaceTransparency));
 	sublayout->addWidget(new QLabel(tr("Transparency:")), 1, 0);
 	sublayout->addLayout(surfaceTransparencyUI->createFieldLayout(), 1, 1);
-	surfaceTransparencyUI->setMinValue(0);
-	surfaceTransparencyUI->setMaxValue(1);
 
 	BooleanParameterUI* smoothShadingUI = new BooleanParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_smoothShading));
 	sublayout->addWidget(smoothShadingUI->checkBox(), 2, 0, 1, 2);
@@ -79,8 +77,6 @@ void PartitionMeshDisplayEditor::createUI(const RolloutInsertionParameters& roll
 	FloatParameterUI* capTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_capTransparency));
 	sublayout->addWidget(new QLabel(tr("Transparency:")), 0, 0);
 	sublayout->addLayout(capTransparencyUI->createFieldLayout(), 0, 1);
-	capTransparencyUI->setMinValue(0);
-	capTransparencyUI->setMaxValue(1);
 }
 
 }	// End of namespace

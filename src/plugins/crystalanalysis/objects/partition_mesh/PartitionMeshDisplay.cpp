@@ -42,8 +42,8 @@ SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _smoothShading, "Smooth shading")
 SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _surfaceTransparency, "Surface transparency");
 SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _capTransparency, "Cap transparency");
 SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _flipOrientation, "Flip surface orientation");
-SET_PROPERTY_FIELD_UNITS(PartitionMeshDisplay, _surfaceTransparency, PercentParameterUnit);
-SET_PROPERTY_FIELD_UNITS(PartitionMeshDisplay, _capTransparency, PercentParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(PartitionMeshDisplay, _surfaceTransparency, PercentParameterUnit, 0, 1);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(PartitionMeshDisplay, _capTransparency, PercentParameterUnit, 0, 1);
 
 /******************************************************************************
 * Constructor.

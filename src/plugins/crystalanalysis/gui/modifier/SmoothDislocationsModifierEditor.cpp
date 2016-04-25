@@ -52,7 +52,6 @@ void SmoothDislocationsModifierEditor::createUI(const RolloutInsertionParameters
 	IntegerParameterUI* smoothingLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(SmoothDislocationsModifier::_smoothingLevel));
 	sublayout->addWidget(smoothingLevelUI->label(), 0, 0);
 	sublayout->addLayout(smoothingLevelUI->createFieldLayout(), 0, 1);
-	smoothingLevelUI->setMinValue(0);
 
 	BooleanGroupBoxParameterUI* coarseningEnabledUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(SmoothDislocationsModifier::_coarseningEnabled));
 	coarseningEnabledUI->groupBox()->setTitle(tr("Line coarsening"));
@@ -64,7 +63,6 @@ void SmoothDislocationsModifierEditor::createUI(const RolloutInsertionParameters
 	FloatParameterUI* linePointIntervalUI = new FloatParameterUI(this, PROPERTY_FIELD(SmoothDislocationsModifier::_linePointInterval));
 	sublayout->addWidget(linePointIntervalUI->label(), 0, 0);
 	sublayout->addLayout(linePointIntervalUI->createFieldLayout(), 0, 1);
-	linePointIntervalUI->setMinValue(0);
 }
 
 }	// End of namespace

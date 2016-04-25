@@ -43,6 +43,9 @@ SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, _numImagesY, "Number of per
 SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, _numImagesZ, "Number of periodic images - Z");
 SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, _adjustBoxSize, "Adjust simulation box size");
 SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, _uniqueIdentifiers, "Assign unique particle IDs");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ShowPeriodicImagesModifier, _numImagesX, IntegerParameterUnit, 1);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ShowPeriodicImagesModifier, _numImagesY, IntegerParameterUnit, 1);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ShowPeriodicImagesModifier, _numImagesZ, IntegerParameterUnit, 1);
 
 /******************************************************************************
 * Constructs the modifier object.

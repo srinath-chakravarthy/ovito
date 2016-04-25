@@ -61,7 +61,6 @@ void ExpandSelectionModifierEditor::createUI(const RolloutInsertionParameters& r
 	sublayout->addWidget(cutoffRadiusPUI->label());
 	sublayout->addLayout(cutoffRadiusPUI->createFieldLayout(), 1);
 	layout->addLayout(sublayout);
-	cutoffRadiusPUI->setMinValue(0);
 	cutoffRadiusPUI->setEnabled(false);
 	connect(cutoffModeBtn, &QRadioButton::toggled, cutoffRadiusPUI, &FloatParameterUI::setEnabled);
 
@@ -77,8 +76,6 @@ void ExpandSelectionModifierEditor::createUI(const RolloutInsertionParameters& r
 	sublayout->addWidget(numNearestNeighborsPUI->label());
 	sublayout->addLayout(numNearestNeighborsPUI->createFieldLayout(), 1);
 	layout->addLayout(sublayout);
-	numNearestNeighborsPUI->setMinValue(1);
-	numNearestNeighborsPUI->setMaxValue(ExpandSelectionModifier::MAX_NEAREST_NEIGHBORS);
 	numNearestNeighborsPUI->setEnabled(false);
 	connect(nearestNeighborsModeBtn, &QRadioButton::toggled, numNearestNeighborsPUI, &FloatParameterUI::setEnabled);
 
@@ -93,7 +90,6 @@ void ExpandSelectionModifierEditor::createUI(const RolloutInsertionParameters& r
 	sublayout->addWidget(numIterationsPUI->label());
 	sublayout->addLayout(numIterationsPUI->createFieldLayout(), 1);
 	layout->addLayout(sublayout);
-	numIterationsPUI->setMinValue(1);
 
 	// Status label.
 	layout->addSpacing(10);

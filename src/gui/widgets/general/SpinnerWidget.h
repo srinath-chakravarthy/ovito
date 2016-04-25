@@ -39,7 +39,7 @@ public:
 	/// \brief Constructs the spinner control.
 	/// \param parent The parent widget for the spinner widget.
 	/// \param textBox The text box to which this spinner should be connected.
-	SpinnerWidget(QWidget* parent = NULL, QLineEdit* textBox = NULL);
+	SpinnerWidget(QWidget* parent = nullptr, QLineEdit* textBox = nullptr);
 
 	/// \brief Returns the text box connect to this spinner.
 	/// \return The text box widget or \c NULL if the spinner has not been connected to a text box.

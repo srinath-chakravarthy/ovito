@@ -49,6 +49,7 @@ SET_PROPERTY_FIELD_LABEL(HistogramModifier, _fixYAxisRange, "Fix y-axis range");
 SET_PROPERTY_FIELD_LABEL(HistogramModifier, _yAxisRangeStart, "Y-axis range start");
 SET_PROPERTY_FIELD_LABEL(HistogramModifier, _yAxisRangeEnd, "Y-axis range end");
 SET_PROPERTY_FIELD_LABEL(HistogramModifier, _sourceProperty, "Source property");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(HistogramModifier, _numberOfBins, IntegerParameterUnit, 1);
 
 /******************************************************************************
 * Constructs the modifier object.

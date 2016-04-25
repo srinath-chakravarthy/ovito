@@ -43,7 +43,8 @@ SET_PROPERTY_FIELD_LABEL(VectorDisplay, _reverseArrowDirection, "Reverse directi
 SET_PROPERTY_FIELD_LABEL(VectorDisplay, _arrowPosition, "Position");
 SET_PROPERTY_FIELD_LABEL(VectorDisplay, _shadingMode, "Shading mode");
 SET_PROPERTY_FIELD_LABEL(VectorDisplay, _renderingQuality, "RenderingQuality");
-SET_PROPERTY_FIELD_UNITS(VectorDisplay, _arrowWidth, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(VectorDisplay, _arrowWidth, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(VectorDisplay, _scalingFactor, FloatParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.

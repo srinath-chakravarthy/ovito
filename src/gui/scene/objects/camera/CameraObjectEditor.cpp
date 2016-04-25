@@ -58,8 +58,6 @@ void CameraObjectEditor::createUI(const RolloutInsertionParameters& rolloutParam
 	FloatParameterUI* fovPUI = new FloatParameterUI(this, PROPERTY_FIELD(CameraObject::_fov));
 	sublayout->addWidget(fovPUI->label(), 1, 1);
 	sublayout->addLayout(fovPUI->createFieldLayout(), 1, 2);
-	fovPUI->setMinValue(1e-3f);
-	fovPUI->setMaxValue(FLOATTYPE_PI - 1e-2f);
 
 	isPerspectivePUI->buttonFalse()->setText(tr("Orthographic camera:"));
 	sublayout->addWidget(isPerspectivePUI->buttonFalse(), 2, 0, 1, 3);
@@ -68,7 +66,6 @@ void CameraObjectEditor::createUI(const RolloutInsertionParameters& rolloutParam
 	FloatParameterUI* zoomPUI = new FloatParameterUI(this, PROPERTY_FIELD(CameraObject::_zoom));
 	sublayout->addWidget(zoomPUI->label(), 3, 1);
 	sublayout->addLayout(zoomPUI->createFieldLayout(), 3, 2);
-	zoomPUI->setMinValue(0);
 
 	fovPUI->setEnabled(false);
 	zoomPUI->setEnabled(false);

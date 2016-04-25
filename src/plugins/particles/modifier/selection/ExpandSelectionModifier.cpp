@@ -37,7 +37,9 @@ SET_PROPERTY_FIELD_LABEL(ExpandSelectionModifier, _mode, "Mode");
 SET_PROPERTY_FIELD_LABEL(ExpandSelectionModifier, _cutoffRange, "Cutoff distance");
 SET_PROPERTY_FIELD_LABEL(ExpandSelectionModifier, _numNearestNeighbors, "N");
 SET_PROPERTY_FIELD_LABEL(ExpandSelectionModifier, _numIterations, "Number of iterations");
-SET_PROPERTY_FIELD_UNITS(ExpandSelectionModifier, _cutoffRange, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ExpandSelectionModifier, _cutoffRange, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(ExpandSelectionModifier, _numNearestNeighbors, IntegerParameterUnit, 1, ExpandSelectionModifier::MAX_NEAREST_NEIGHBORS);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ExpandSelectionModifier, _numIterations, IntegerParameterUnit, 1);
 
 /******************************************************************************
 * Constructs the modifier object.

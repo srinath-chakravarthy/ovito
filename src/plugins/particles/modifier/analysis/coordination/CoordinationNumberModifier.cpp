@@ -29,8 +29,9 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, CoordinationNumberModifier, Async
 DEFINE_FLAGS_PROPERTY_FIELD(CoordinationNumberModifier, _cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CoordinationNumberModifier, _numberOfBins, "NumberOfBins", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(CoordinationNumberModifier, _cutoff, "Cutoff radius");
-SET_PROPERTY_FIELD_UNITS(CoordinationNumberModifier, _cutoff, WorldParameterUnit);
 SET_PROPERTY_FIELD_LABEL(CoordinationNumberModifier, _numberOfBins, "Number of histogram bins");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CoordinationNumberModifier, _cutoff, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CoordinationNumberModifier, _numberOfBins, IntegerParameterUnit, 4);
 
 /******************************************************************************
 * Constructs the modifier object.

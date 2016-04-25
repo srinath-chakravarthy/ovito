@@ -47,8 +47,6 @@ void StandardSceneRendererEditor::createUI(const RolloutInsertionParameters& rol
 	IntegerParameterUI* antialiasingLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(StandardSceneRenderer::_antialiasingLevel));
 	layout->addWidget(antialiasingLevelUI->label(), 0, 0);
 	layout->addLayout(antialiasingLevelUI->createFieldLayout(), 0, 1);
-	antialiasingLevelUI->setMinValue(1);
-	antialiasingLevelUI->setMaxValue(6);	
 }
 
 OVITO_END_INLINE_NAMESPACE

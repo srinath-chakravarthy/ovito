@@ -35,7 +35,9 @@ DEFINE_PROPERTY_FIELD(AmbientOcclusionModifier, _bufferResolution, "BufferResolu
 SET_PROPERTY_FIELD_LABEL(AmbientOcclusionModifier, _intensity, "Shading intensity");
 SET_PROPERTY_FIELD_LABEL(AmbientOcclusionModifier, _samplingCount, "Number of exposure samples");
 SET_PROPERTY_FIELD_LABEL(AmbientOcclusionModifier, _bufferResolution, "Render buffer resolution");
-SET_PROPERTY_FIELD_UNITS(AmbientOcclusionModifier, _intensity, PercentParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(AmbientOcclusionModifier, _intensity, PercentParameterUnit, 0, 1);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(AmbientOcclusionModifier, _samplingCount, IntegerParameterUnit, 3, 2000);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(AmbientOcclusionModifier, _bufferResolution, IntegerParameterUnit, 1, AmbientOcclusionModifier::MAX_AO_RENDER_BUFFER_RESOLUTION);
 
 /******************************************************************************
 * Constructs the modifier object.

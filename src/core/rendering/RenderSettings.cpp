@@ -52,6 +52,9 @@ SET_PROPERTY_FIELD_LABEL(RenderSettings, _customRangeStart, "Range start");
 SET_PROPERTY_FIELD_LABEL(RenderSettings, _customRangeEnd, "Range end");
 SET_PROPERTY_FIELD_LABEL(RenderSettings, _everyNthFrame, "Every Nth frame");
 SET_PROPERTY_FIELD_LABEL(RenderSettings, _fileNumberBase, "File number base");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(RenderSettings, _outputImageWidth, IntegerParameterUnit, 1);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(RenderSettings, _outputImageHeight, IntegerParameterUnit, 1);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(RenderSettings, _everyNthFrame, IntegerParameterUnit, 1);
 
 /******************************************************************************
 * Constructor.

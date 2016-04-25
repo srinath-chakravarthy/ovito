@@ -59,6 +59,9 @@ SET_PROPERTY_FIELD_LABEL(ColorLegendOverlay, _label1, "Label 1");
 SET_PROPERTY_FIELD_LABEL(ColorLegendOverlay, _label2, "Label 2");
 SET_PROPERTY_FIELD_UNITS(ColorLegendOverlay, _offsetX, PercentParameterUnit);
 SET_PROPERTY_FIELD_UNITS(ColorLegendOverlay, _offsetY, PercentParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ColorLegendOverlay, _legendSize, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ColorLegendOverlay, _aspectRatio, FloatParameterUnit, 1);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ColorLegendOverlay, _fontSize, FloatParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.

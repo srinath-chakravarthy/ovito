@@ -89,10 +89,8 @@ void BinAndReduceModifierEditor::createUI(const RolloutInsertionParameters& roll
 	IntegerParameterUI* numBinsXPUI = new IntegerParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::_numberOfBinsX));
 	gridlayout->addWidget(numBinsXPUI->label(), 0, 0);
 	gridlayout->addLayout(numBinsXPUI->createFieldLayout(), 0, 1);
-	numBinsXPUI->setMinValue(1);
 	_numBinsYPUI = new IntegerParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::_numberOfBinsY));
 	gridlayout->addLayout(_numBinsYPUI->createFieldLayout(), 0, 2);
-	_numBinsYPUI->setMinValue(1);
 	_numBinsYPUI->setEnabled(false);
 
 	layout->addLayout(gridlayout);

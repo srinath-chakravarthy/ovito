@@ -64,7 +64,6 @@ void DislocationDisplayEditor::createUI(const RolloutInsertionParameters& rollou
 	FloatParameterUI* lineWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_lineWidth));
 	sublayout->addWidget(lineWidthUI->label(), 1, 0);
 	sublayout->addLayout(lineWidthUI->createFieldLayout(), 1, 1);
-	lineWidthUI->setMinValue(0);
 
 	// Show Burgers vectors.
 	BooleanGroupBoxParameterUI* showBurgersVectorsGroupUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_showBurgersVectors));
@@ -84,7 +83,6 @@ void DislocationDisplayEditor::createUI(const RolloutInsertionParameters& rollou
 	FloatParameterUI* burgersVectorWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_burgersVectorWidth));
 	sublayout->addWidget(new QLabel(tr("Width:")), 1, 0);
 	sublayout->addLayout(burgersVectorWidthUI->createFieldLayout(), 1, 1);
-	burgersVectorWidthUI->setMinValue(0);
 
 	// Arrow color.
 	ColorParameterUI* burgersVectorColorUI = new ColorParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_burgersVectorColor));

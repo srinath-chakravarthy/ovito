@@ -59,6 +59,9 @@ SET_PROPERTY_FIELD_LABEL(CoordinateTripodOverlay, _offsetX, "Offset X");
 SET_PROPERTY_FIELD_LABEL(CoordinateTripodOverlay, _offsetY, "Offset Y");
 SET_PROPERTY_FIELD_UNITS(CoordinateTripodOverlay, _offsetX, PercentParameterUnit);
 SET_PROPERTY_FIELD_UNITS(CoordinateTripodOverlay, _offsetY, PercentParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CoordinateTripodOverlay, _tripodSize, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CoordinateTripodOverlay, _lineWidth, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CoordinateTripodOverlay, _fontSize, FloatParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.

@@ -80,7 +80,6 @@ void SliceModifierEditor::createUI(const RolloutInsertionParameters& rolloutPara
 	FloatParameterUI* widthPUI = new FloatParameterUI(this, PROPERTY_FIELD(SliceModifier::_widthCtrl));
 	gridlayout->addWidget(widthPUI->label(), 4, 0);
 	gridlayout->addLayout(widthPUI->createFieldLayout(), 4, 1);
-	widthPUI->setMinValue(0);
 
 	layout->addLayout(gridlayout);
 	layout->addSpacing(8);

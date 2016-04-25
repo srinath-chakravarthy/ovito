@@ -56,8 +56,6 @@ void TachyonRendererEditor::createUI(const RolloutInsertionParameters& rolloutPa
 	IntegerParameterUI* aaSamplesUI = new IntegerParameterUI(this, PROPERTY_FIELD(TachyonRenderer::_antialiasingSamples));
 	layout->addWidget(aaSamplesUI->label(), 0, 0);
 	layout->addLayout(aaSamplesUI->createFieldLayout(), 0, 1);
-	aaSamplesUI->setMinValue(1);
-	aaSamplesUI->setMaxValue(100);
 
 	BooleanGroupBoxParameterUI* enableDirectLightUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(TachyonRenderer::_directLightSourceEnabled));
 	QGroupBox* lightsGroupBox = enableDirectLightUI->groupBox();
@@ -73,7 +71,6 @@ void TachyonRendererEditor::createUI(const RolloutInsertionParameters& rolloutPa
 	defaultLightIntensityUI->label()->setText(tr("Brightness:"));
 	layout->addWidget(defaultLightIntensityUI->label(), 0, 0);
 	layout->addLayout(defaultLightIntensityUI->createFieldLayout(), 0, 1);
-	defaultLightIntensityUI->setMinValue(0);
 
 	// Shadows.
 	BooleanParameterUI* enableShadowsUI = new BooleanParameterUI(this, PROPERTY_FIELD(TachyonRenderer::_shadowsEnabled));
@@ -94,15 +91,12 @@ void TachyonRendererEditor::createUI(const RolloutInsertionParameters& rolloutPa
 	aoBrightnessUI->label()->setText(tr("Brightness:"));
 	layout->addWidget(aoBrightnessUI->label(), 0, 0);
 	layout->addLayout(aoBrightnessUI->createFieldLayout(), 0, 1);
-	aoBrightnessUI->setMinValue(0);
 
 	// Ambient occlusion samples.
 	IntegerParameterUI* aoSamplesUI = new IntegerParameterUI(this, PROPERTY_FIELD(TachyonRenderer::_ambientOcclusionSamples));
 	aoSamplesUI->label()->setText(tr("Sample count:"));
 	layout->addWidget(aoSamplesUI->label(), 1, 0);
 	layout->addLayout(aoSamplesUI->createFieldLayout(), 1, 1);
-	aoSamplesUI->setMinValue(1);
-	aoSamplesUI->setMaxValue(100);
 
 	// Copyright notice
 	QWidget* copyrightRollout = createRollout(tr("About"), rolloutParams.collapse().after(rollout));

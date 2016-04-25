@@ -75,17 +75,14 @@ void GrainSegmentationModifierEditor::createUI(const RolloutInsertionParameters&
 	FloatParameterUI* misorientationThresholdUI = new FloatParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_misorientationThreshold));
 	sublayout2->addWidget(misorientationThresholdUI->label(), 0, 0);
 	sublayout2->addLayout(misorientationThresholdUI->createFieldLayout(), 0, 1);
-	misorientationThresholdUI->setMinValue(0);
 
 	FloatParameterUI* fluctuationToleranceUI = new FloatParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_fluctuationTolerance));
 	sublayout2->addWidget(fluctuationToleranceUI->label(), 1, 0);
 	sublayout2->addLayout(fluctuationToleranceUI->createFieldLayout(), 1, 1);
-	fluctuationToleranceUI->setMinValue(0);
 
 	IntegerParameterUI* minGrainAtomCountUI = new IntegerParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_minGrainAtomCount));
 	sublayout2->addWidget(minGrainAtomCountUI->label(), 2, 0);
 	sublayout2->addLayout(minGrainAtomCountUI->createFieldLayout(), 2, 1);
-	minGrainAtomCountUI->setMinValue(0);
 
 	BooleanGroupBoxParameterUI* generateMeshUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_outputPartitionMesh));
 	generateMeshUI->groupBox()->setTitle(tr("Generate boundary mesh"));
@@ -97,12 +94,10 @@ void GrainSegmentationModifierEditor::createUI(const RolloutInsertionParameters&
 	FloatParameterUI* radiusUI = new FloatParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_probeSphereRadius));
 	sublayout2->addWidget(radiusUI->label(), 0, 0);
 	sublayout2->addLayout(radiusUI->createFieldLayout(), 0, 1);
-	radiusUI->setMinValue(0);
 
 	IntegerParameterUI* smoothingLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_smoothingLevel));
 	sublayout2->addWidget(smoothingLevelUI->label(), 1, 0);
 	sublayout2->addLayout(smoothingLevelUI->createFieldLayout(), 1, 1);
-	smoothingLevelUI->setMinValue(0);
 
 	// Status label.
 	layout->addWidget(statusLabel());

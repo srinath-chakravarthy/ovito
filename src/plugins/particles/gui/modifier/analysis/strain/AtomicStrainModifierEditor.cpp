@@ -54,7 +54,6 @@ void AtomicStrainModifierEditor::createUI(const RolloutInsertionParameters& roll
 	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_cutoff));
 	gridlayout->addWidget(cutoffRadiusPUI->label(), 0, 0);
 	gridlayout->addLayout(cutoffRadiusPUI->createFieldLayout(), 0, 1);
-	cutoffRadiusPUI->setMinValue(0);
 
 	layout->addLayout(gridlayout);
 
@@ -110,7 +109,6 @@ void AtomicStrainModifierEditor::createUI(const RolloutInsertionParameters& roll
 	frameNumberUI->label()->setText(tr("Frame number:"));
 	sublayout->addWidget(frameNumberUI->label(), 1, 1, 1, 1);
 	sublayout->addLayout(frameNumberUI->createFieldLayout(), 1, 2, 1, 1);
-	frameNumberUI->setMinValue(0);
 	frameNumberUI->setEnabled(false);
 	connect(useFrameOffsetUI->buttonFalse(), &QRadioButton::toggled, frameNumberUI, &IntegerParameterUI::setEnabled);
 

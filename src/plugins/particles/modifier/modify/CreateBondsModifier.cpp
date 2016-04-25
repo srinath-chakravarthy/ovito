@@ -39,8 +39,8 @@ SET_PROPERTY_FIELD_LABEL(CreateBondsModifier, _uniformCutoff, "Cutoff radius");
 SET_PROPERTY_FIELD_LABEL(CreateBondsModifier, _minCutoff, "Lower cutoff");
 SET_PROPERTY_FIELD_LABEL(CreateBondsModifier, _onlyIntraMoleculeBonds, "No bonds between different molecules");
 SET_PROPERTY_FIELD_LABEL(CreateBondsModifier, _bondsDisplay, "Bonds display");
-SET_PROPERTY_FIELD_UNITS(CreateBondsModifier, _uniformCutoff, WorldParameterUnit);
-SET_PROPERTY_FIELD_UNITS(CreateBondsModifier, _minCutoff, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CreateBondsModifier, _uniformCutoff, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CreateBondsModifier, _minCutoff, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.

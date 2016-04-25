@@ -42,7 +42,8 @@ SET_PROPERTY_FIELD_LABEL(ElasticStrainModifier, _calculateStrainTensors, "Output
 SET_PROPERTY_FIELD_LABEL(ElasticStrainModifier, _latticeConstant, "Lattice constant");
 SET_PROPERTY_FIELD_LABEL(ElasticStrainModifier, _caRatio, "c/a ratio");
 SET_PROPERTY_FIELD_LABEL(ElasticStrainModifier, _pushStrainTensorsForward, "Strain tensor in spatial frame (push-forward)");
-SET_PROPERTY_FIELD_UNITS(ElasticStrainModifier, _latticeConstant, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ElasticStrainModifier, _latticeConstant, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ElasticStrainModifier, _caRatio, FloatParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.

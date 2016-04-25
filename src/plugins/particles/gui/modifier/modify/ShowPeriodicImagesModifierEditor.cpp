@@ -49,19 +49,16 @@ void ShowPeriodicImagesModifierEditor::createUI(const RolloutInsertionParameters
 	BooleanParameterUI* showPeriodicImageXUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_showImageX));
 	layout->addWidget(showPeriodicImageXUI->checkBox(), 0, 0);
 	IntegerParameterUI* numImagesXPUI = new IntegerParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_numImagesX));
-	numImagesXPUI->setMinValue(1);
 	layout->addLayout(numImagesXPUI->createFieldLayout(), 0, 1);
 
 	BooleanParameterUI* showPeriodicImageYUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_showImageY));
 	layout->addWidget(showPeriodicImageYUI->checkBox(), 1, 0);
 	IntegerParameterUI* numImagesYPUI = new IntegerParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_numImagesY));
-	numImagesYPUI->setMinValue(1);
 	layout->addLayout(numImagesYPUI->createFieldLayout(), 1, 1);
 
 	BooleanParameterUI* showPeriodicImageZUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_showImageZ));
 	layout->addWidget(showPeriodicImageZUI->checkBox(), 2, 0);
 	IntegerParameterUI* numImagesZPUI = new IntegerParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_numImagesZ));
-	numImagesZPUI->setMinValue(1);
 	layout->addLayout(numImagesZPUI->createFieldLayout(), 2, 1);
 
 	BooleanParameterUI* adjustBoxSizeUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_adjustBoxSize));

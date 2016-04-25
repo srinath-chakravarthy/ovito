@@ -50,6 +50,8 @@ SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _maxTrialCircuitSize, "Tri
 SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _circuitStretchability, "Circuit stretchability");
 SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _outputInterfaceMesh, "Output interface mesh");
 SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _reconstructEdgeVectors, "Reconstruct edge vectors");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(DislocationAnalysisModifier, _maxTrialCircuitSize, IntegerParameterUnit, 3);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(DislocationAnalysisModifier, _circuitStretchability, IntegerParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.

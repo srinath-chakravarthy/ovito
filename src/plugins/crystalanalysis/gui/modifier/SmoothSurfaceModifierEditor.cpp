@@ -45,7 +45,6 @@ void SmoothSurfaceModifierEditor::createUI(const RolloutInsertionParameters& rol
 	IntegerParameterUI* smoothingLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(SmoothSurfaceModifier::_smoothingLevel));
 	layout->addWidget(smoothingLevelUI->label(), 0, 0);
 	layout->addLayout(smoothingLevelUI->createFieldLayout(), 0, 1);
-	smoothingLevelUI->setMinValue(0);
 }
 
 }	// End of namespace

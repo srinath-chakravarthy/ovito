@@ -35,6 +35,8 @@ SET_PROPERTY_FIELD_LABEL(SmoothDislocationsModifier, _smoothingEnabled, "Enable 
 SET_PROPERTY_FIELD_LABEL(SmoothDislocationsModifier, _smoothingLevel, "Smoothing level");
 SET_PROPERTY_FIELD_LABEL(SmoothDislocationsModifier, _coarseningEnabled, "Enable coarsening");
 SET_PROPERTY_FIELD_LABEL(SmoothDislocationsModifier, _linePointInterval, "Point separation");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(SmoothDislocationsModifier, _smoothingLevel, IntegerParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(SmoothDislocationsModifier, _linePointInterval, FloatParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.

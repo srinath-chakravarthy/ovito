@@ -59,6 +59,22 @@ enum PropertyFieldFlag
 Q_DECLARE_FLAGS(PropertyFieldFlags, PropertyFieldFlag);
 Q_DECLARE_OPERATORS_FOR_FLAGS(PropertyFieldFlags);
 
+
+/**
+ * \brief Provides meta information about a numerical parameter field of a class.
+ */
+struct NumericalParameterDescriptor
+{
+	/// The ParameterUnit-derived class which describes the units of the numerical parameter.
+	const QMetaObject* unitType;
+
+	/// The minimum value permitted for the parameter.
+	FloatType minValue;
+
+	/// The maximum value permitted for the parameter.
+	FloatType maxValue;
+};
+
 /**
  * \brief This class describes one member field of a RefMaker that stores a property of the object.
  */
@@ -106,8 +122,8 @@ public:
 		OVITO_ASSERT(_identifier != nullptr);
 		OVITO_ASSERT(vectorStorageAccessFunc != nullptr);
 		OVITO_ASSERT(_flags.testFlag(PROPERTY_FIELD_VECTOR));
-		OVITO_ASSERT(definingClass != NULL);
-		OVITO_ASSERT(targetClass != NULL);
+		OVITO_ASSERT(definingClass != nullptr);
+		OVITO_ASSERT(targetClass != nullptr);
 		// Make sure that there is no other reference field with the same identifier in the defining class.
 		OVITO_ASSERT_MSG(definingClass->findPropertyField(identifier) == nullptr, "PropertyFieldDescriptor", "Property field identifier is not unique.");
 		// Insert into linked list of reference fields stored in the defining class' descriptor.
@@ -147,8 +163,8 @@ public:
 	/// Returns the next property field in the linked list (of the RefMaker derived class defining this property field).
 	const PropertyFieldDescriptor* next() const { return _next; }
 
-	/// Returns the ParameterUnit-derived class assigned to a numerical property or controller field.
-	const QMetaObject* parameterUnitType() const { return _parameterUnitType; }
+	/// Returns a descriptor structure that provides additional info about a numerical parameter. May be NULL.
+	const NumericalParameterDescriptor* numericalParameterInfo() const { return _parameterInfo; }
 
 	/// Returns the flags that control the behavior of the property field.
 	PropertyFieldFlags flags() const { return _flags; }
@@ -205,8 +221,8 @@ protected:
 	/// as label text in the user interface.
 	QString _displayName;
 
-	/// A ParameterUnit-derived class which is assigned to a numerical property or controller.
-	const QMetaObject* _parameterUnitType;
+	/// Provides further information about numerical parameters of objects.
+	const NumericalParameterDescriptor* _parameterInfo;
 
 	friend class RefMaker;
 	friend class RefTarget;

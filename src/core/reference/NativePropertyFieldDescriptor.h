@@ -55,11 +55,13 @@ public:
 	// Internal helper class that is used to specify the units for a controller
 	// property field. Do not use this class directly but use the
 	// SET_PROPERTY_FIELD_UNITS macro instead.
-	struct PropertyFieldUnitsSetter {
-		PropertyFieldUnitsSetter(NativePropertyFieldDescriptor& propfield, const QMetaObject* parameterUnitType) {
-			OVITO_ASSERT(parameterUnitType != nullptr);
-			OVITO_ASSERT(propfield._parameterUnitType == nullptr);
-			propfield._parameterUnitType = parameterUnitType;
+	struct PropertyFieldUnitsSetter : public NumericalParameterDescriptor {
+		PropertyFieldUnitsSetter(NativePropertyFieldDescriptor& propfield, const QMetaObject* parameterUnitType, FloatType minValue = FLOATTYPE_MIN, FloatType maxValue = FLOATTYPE_MAX) {
+			OVITO_ASSERT(propfield._parameterInfo == nullptr);
+			propfield._parameterInfo = this;
+			this->unitType = parameterUnitType;
+			this->minValue = minValue;
+			this->maxValue = maxValue;
 		}
 	};
 
@@ -120,6 +122,12 @@ public:
 
 #define SET_PROPERTY_FIELD_UNITS(RefMakerClass, storageFieldName, ParameterUnitClass)								\
 	static Ovito::NativePropertyFieldDescriptor::PropertyFieldUnitsSetter __unitsSetter##RefMakerClass##storageFieldName(RefMakerClass::storageFieldName##__propFieldInstance, &ParameterUnitClass::staticMetaObject);
+
+#define SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(RefMakerClass, storageFieldName, ParameterUnitClass, minValue)	\
+	static Ovito::NativePropertyFieldDescriptor::PropertyFieldUnitsSetter __unitsSetter##RefMakerClass##storageFieldName(RefMakerClass::storageFieldName##__propFieldInstance, &ParameterUnitClass::staticMetaObject, minValue);
+
+#define SET_PROPERTY_FIELD_UNITS_AND_RANGE(RefMakerClass, storageFieldName, ParameterUnitClass, minValue, maxValue)	\
+	static Ovito::NativePropertyFieldDescriptor::PropertyFieldUnitsSetter __unitsSetter##RefMakerClass##storageFieldName(RefMakerClass::storageFieldName##__propFieldInstance, &ParameterUnitClass::staticMetaObject, minValue, maxValue);
 
 #define SET_PROPERTY_FIELD_LABEL(RefMakerClass, storageFieldName, labelText)										\
 	static Ovito::NativePropertyFieldDescriptor::PropertyFieldDisplayNameSetter __displayNameSetter##RefMakerClass##storageFieldName(RefMakerClass::storageFieldName##__propFieldInstance, labelText);

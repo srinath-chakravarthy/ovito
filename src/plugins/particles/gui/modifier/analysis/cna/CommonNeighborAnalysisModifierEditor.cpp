@@ -63,7 +63,6 @@ void CommonNeighborAnalysisModifierEditor::createUI(const RolloutInsertionParame
 	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(CommonNeighborAnalysisModifier::_cutoff));
 	gridlayout->addWidget(cutoffRadiusPUI->label(), 0, 1);
 	gridlayout->addLayout(cutoffRadiusPUI->createFieldLayout(), 0, 2);
-	cutoffRadiusPUI->setMinValue(0);
 
 	CutoffRadiusPresetsUI* cutoffPresetsPUI = new CutoffRadiusPresetsUI(this, PROPERTY_FIELD(CommonNeighborAnalysisModifier::_cutoff));
 	gridlayout->addWidget(cutoffPresetsPUI->comboBox(), 1, 1, 1, 2);

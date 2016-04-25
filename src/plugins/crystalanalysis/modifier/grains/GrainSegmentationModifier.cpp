@@ -48,9 +48,11 @@ SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _probeSphereRadius, "Probe s
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _meshDisplay, "Surface mesh display");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _onlySelectedParticles, "Use only selected particles");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _outputPartitionMesh, "Generate mesh");
-SET_PROPERTY_FIELD_UNITS(GrainSegmentationModifier, _misorientationThreshold, AngleParameterUnit);
-SET_PROPERTY_FIELD_UNITS(GrainSegmentationModifier, _fluctuationTolerance, AngleParameterUnit);
-SET_PROPERTY_FIELD_UNITS(GrainSegmentationModifier, _probeSphereRadius, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _misorientationThreshold, AngleParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _fluctuationTolerance, AngleParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _probeSphereRadius, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _minGrainAtomCount, IntegerParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _smoothingLevel, IntegerParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.

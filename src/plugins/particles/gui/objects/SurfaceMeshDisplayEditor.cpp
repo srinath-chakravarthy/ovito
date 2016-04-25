@@ -59,8 +59,6 @@ void SurfaceMeshDisplayEditor::createUI(const RolloutInsertionParameters& rollou
 	FloatParameterUI* surfaceTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_surfaceTransparency));
 	sublayout->addWidget(new QLabel(tr("Transparency:")), 1, 0);
 	sublayout->addLayout(surfaceTransparencyUI->createFieldLayout(), 1, 1);
-	surfaceTransparencyUI->setMinValue(0);
-	surfaceTransparencyUI->setMaxValue(1);
 
 	BooleanParameterUI* smoothShadingUI = new BooleanParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_smoothShading));
 	sublayout->addWidget(smoothShadingUI->checkBox(), 2, 0, 1, 2);
@@ -80,8 +78,6 @@ void SurfaceMeshDisplayEditor::createUI(const RolloutInsertionParameters& rollou
 	FloatParameterUI* capTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_capTransparency));
 	sublayout->addWidget(new QLabel(tr("Transparency:")), 1, 0);
 	sublayout->addLayout(capTransparencyUI->createFieldLayout(), 1, 1);
-	capTransparencyUI->setMinValue(0);
-	capTransparencyUI->setMaxValue(1);
 
 	BooleanParameterUI* reverseOrientationUI = new BooleanParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_reverseOrientation));
 	sublayout->addWidget(reverseOrientationUI->checkBox(), 2, 0, 1, 2);

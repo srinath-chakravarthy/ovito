@@ -163,12 +163,10 @@ void ColorLegendOverlayEditor::createUI(const RolloutInsertionParameters& rollou
 	FloatParameterUI* sizePUI = new FloatParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_legendSize));
 	sublayout->addWidget(sizePUI->label(), 0, 0);
 	sublayout->addLayout(sizePUI->createFieldLayout(), 0, 1);
-	sizePUI->setMinValue(0);
 
 	FloatParameterUI* aspectRatioPUI = new FloatParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_aspectRatio));
 	sublayout->addWidget(aspectRatioPUI->label(), 1, 0);
 	sublayout->addLayout(aspectRatioPUI->createFieldLayout(), 1, 1);
-	aspectRatioPUI->setMinValue(1.0);
 
 	QGroupBox* labelBox = new QGroupBox(tr("Labels"));
 	layout->addWidget(labelBox, row++, 0, 1, 2);
@@ -197,7 +195,6 @@ void ColorLegendOverlayEditor::createUI(const RolloutInsertionParameters& rollou
 	FloatParameterUI* fontSizePUI = new FloatParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_fontSize));
 	sublayout->addWidget(new QLabel(tr("Text size/color:")), 4, 0);
 	sublayout->addLayout(fontSizePUI->createFieldLayout(), 4, 1);
-	fontSizePUI->setMinValue(0);
 
 	ColorParameterUI* textColorPUI = new ColorParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_textColor));
 	sublayout->addWidget(textColorPUI->colorPicker(), 4, 2);

@@ -152,6 +152,10 @@ protected Q_SLOT:
 	/// has changed the value of one of the vector components.
 	virtual void onCoordinateValueEntered(int component, FloatType value) {}
 
+	/// This signal handler is called by the coordinate display widget when the user
+	/// has pressed the "Animate" button.
+	virtual void onAnimateTransformationButton() {}
+
 protected:
 
 	/// Mouse position at first click.
@@ -203,6 +207,10 @@ protected:
 	/// has changed the value of one of the vector components.
 	virtual void onCoordinateValueEntered(int component, FloatType value) override;
 
+	/// This signal handler is called by the coordinate display widget when the user
+	/// has pressed the "Animate" button.
+	virtual void onAnimateTransformationButton() override;
+
 private:
 
 	/// The coordinate system to use for translations.
@@ -247,6 +255,10 @@ protected:
 	/// This signal handler is called by the coordinate display widget when the user
 	/// has changed the value of one of the vector components.
 	virtual void onCoordinateValueEntered(int component, FloatType value) override;
+
+	/// This signal handler is called by the coordinate display widget when the user
+	/// has pressed the "Animate" button.
+	virtual void onAnimateTransformationButton() override;
 
 private:
 

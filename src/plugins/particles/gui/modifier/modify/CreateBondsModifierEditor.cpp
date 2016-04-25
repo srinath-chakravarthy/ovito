@@ -57,7 +57,6 @@ void CreateBondsModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(CreateBondsModifier::_uniformCutoff));
 	gridlayout->addWidget(uniformCutoffModeBtn, 0, 0);
 	gridlayout->addLayout(cutoffRadiusPUI->createFieldLayout(), 0, 1);
-	cutoffRadiusPUI->setMinValue(0);
 	cutoffRadiusPUI->setEnabled(false);
 	connect(uniformCutoffModeBtn, &QRadioButton::toggled, cutoffRadiusPUI, &FloatParameterUI::setEnabled);
 
@@ -82,7 +81,6 @@ void CreateBondsModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	gridlayout->setContentsMargins(0,0,0,0);
 	gridlayout->setColumnStretch(1, 1);
 	FloatParameterUI* minCutoffPUI = new FloatParameterUI(this, PROPERTY_FIELD(CreateBondsModifier::_minCutoff));
-	minCutoffPUI->setMinValue(0);
 	gridlayout->addWidget(minCutoffPUI->label(), 0, 0);
 	gridlayout->addLayout(minCutoffPUI->createFieldLayout(), 0, 1);
 	layout1->addLayout(gridlayout);

@@ -35,7 +35,7 @@ SET_PROPERTY_FIELD_LABEL(TrajectoryDisplay, _lineWidth, "Line width");
 SET_PROPERTY_FIELD_LABEL(TrajectoryDisplay, _lineColor, "Line color");
 SET_PROPERTY_FIELD_LABEL(TrajectoryDisplay, _shadingMode, "Shading mode");
 SET_PROPERTY_FIELD_LABEL(TrajectoryDisplay, _showUpToCurrentTime, "Show up to current time only");
-SET_PROPERTY_FIELD_UNITS(TrajectoryDisplay, _lineWidth, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TrajectoryDisplay, _lineWidth, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.

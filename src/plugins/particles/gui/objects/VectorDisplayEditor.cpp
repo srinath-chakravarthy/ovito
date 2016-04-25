@@ -68,13 +68,11 @@ void VectorDisplayEditor::createUI(const RolloutInsertionParameters& rolloutPara
 	FloatParameterUI* scalingFactorUI = new FloatParameterUI(this, PROPERTY_FIELD(VectorDisplay::_scalingFactor));
 	layout->addWidget(scalingFactorUI->label(), row, 0);
 	layout->addLayout(scalingFactorUI->createFieldLayout(), row++, 1);
-	scalingFactorUI->setMinValue(0);
 
 	// Arrow width factor.
 	FloatParameterUI* arrowWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(VectorDisplay::_arrowWidth));
 	layout->addWidget(arrowWidthUI->label(), row, 0);
 	layout->addLayout(arrowWidthUI->createFieldLayout(), row++, 1);
-	arrowWidthUI->setMinValue(0);
 
 	VariantComboBoxParameterUI* arrowPositionUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(VectorDisplay::_arrowPosition));
 	arrowPositionUI->comboBox()->addItem(QIcon(":/particles/icons/arrow_alignment_base.png"), tr("Base"), QVariant::fromValue(VectorDisplay::Base));

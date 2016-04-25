@@ -52,8 +52,6 @@ void CentroSymmetryModifierEditor::createUI(const RolloutInsertionParameters& ro
 	IntegerParameterUI* numNeighborsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(CentroSymmetryModifier::_numNeighbors));
 	layout2->addWidget(numNeighborsPUI->label(), 0, 0);
 	layout2->addLayout(numNeighborsPUI->createFieldLayout(), 0, 1);
-	numNeighborsPUI->setMinValue(2);
-	numNeighborsPUI->setMaxValue(CentroSymmetryModifier::MAX_CSP_NEIGHBORS);
 
 	QLabel* infoLabel = new QLabel(tr("This parameter specifies the number of nearest neighbors in the underlying lattice of atoms. For FCC and BCC lattices, set this to 12 and 8 respectively. More generally, it must be a positive, even integer."));
 	infoLabel->setWordWrap(true);

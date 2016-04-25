@@ -83,6 +83,16 @@ CoordinateDisplayWidget::CoordinateDisplayWidget(DataSetContainer& datasetContai
 	connect(_spinners[0], &SpinnerWidget::spinnerDragAbort, this, &CoordinateDisplayWidget::onSpinnerDragAbort);
 	connect(_spinners[1], &SpinnerWidget::spinnerDragAbort, this, &CoordinateDisplayWidget::onSpinnerDragAbort);
 	connect(_spinners[2], &SpinnerWidget::spinnerDragAbort, this, &CoordinateDisplayWidget::onSpinnerDragAbort);
+
+	QToolButton* animateButton = new QToolButton(this);
+	animateButton->setText(tr("A"));
+	animateButton->setFocusPolicy(Qt::NoFocus);
+	animateButton->setAutoRaise(true);
+	animateButton->setToolButtonStyle(Qt::ToolButtonTextOnly);
+	animateButton->setToolTip(tr("Animate transformation..."));
+	layout->addSpacing(6);
+	layout->addWidget(animateButton);
+	connect(animateButton, &QAbstractButton::clicked, this, &CoordinateDisplayWidget::animatePressed);
 }
 
 /******************************************************************************

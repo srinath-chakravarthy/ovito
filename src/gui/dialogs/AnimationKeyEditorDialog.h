@@ -39,7 +39,7 @@ class AnimationKeyEditorDialog : public QDialog, private UndoableTransaction
 public:
 
 	/// Constructor.
-	AnimationKeyEditorDialog(KeyframeController* ctrl, const PropertyFieldDescriptor* propertyField, PropertyParameterUI* paramUI, QWidget* parentWindow = nullptr);
+	AnimationKeyEditorDialog(KeyframeController* ctrl, const PropertyFieldDescriptor* propertyField, QWidget* parentWindow = nullptr);
 	
 	/// Returns the animation controller being edited.
 	KeyframeController* ctrl() const { return _ctrl.target(); }

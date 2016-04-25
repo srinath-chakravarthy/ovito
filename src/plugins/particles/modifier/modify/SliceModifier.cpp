@@ -50,7 +50,7 @@ SET_PROPERTY_FIELD_LABEL(SliceModifier, _inverse, "Reverse orientation");
 SET_PROPERTY_FIELD_LABEL(SliceModifier, _applyToSelection, "Apply to selection only");
 SET_PROPERTY_FIELD_UNITS(SliceModifier, _normalCtrl, WorldParameterUnit);
 SET_PROPERTY_FIELD_UNITS(SliceModifier, _distanceCtrl, WorldParameterUnit);
-SET_PROPERTY_FIELD_UNITS(SliceModifier, _widthCtrl, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(SliceModifier, _widthCtrl, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.

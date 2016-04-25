@@ -90,7 +90,6 @@ void ComputePropertyModifierEditor::createUI(const RolloutInsertionParameters& r
 	FloatParameterUI* cutoffRadiusUI = new FloatParameterUI(this, PROPERTY_FIELD(ComputePropertyModifier::_cutoff));
 	gridlayout->addWidget(cutoffRadiusUI->label(), 0, 0);
 	gridlayout->addLayout(cutoffRadiusUI->createFieldLayout(), 0, 1);
-	cutoffRadiusUI->setMinValue(0);
 
 	neighborExpressionsGroupBox = new QGroupBox(tr("Neighbor expression"));
 	gridlayout->addWidget(neighborExpressionsGroupBox, 1, 0, 1, 2);

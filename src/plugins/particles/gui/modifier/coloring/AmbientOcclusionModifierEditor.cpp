@@ -54,22 +54,16 @@ void AmbientOcclusionModifierEditor::createUI(const RolloutInsertionParameters& 
 	FloatParameterUI* intensityPUI = new FloatParameterUI(this, PROPERTY_FIELD(AmbientOcclusionModifier::_intensity));
 	layout2->addWidget(intensityPUI->label(), 0, 0);
 	layout2->addLayout(intensityPUI->createFieldLayout(), 0, 1);
-	intensityPUI->setMinValue(0);
-	intensityPUI->setMaxValue(1);
 
 	// Sampling level parameter.
 	IntegerParameterUI* samplingCountPUI = new IntegerParameterUI(this, PROPERTY_FIELD(AmbientOcclusionModifier::_samplingCount));
 	layout2->addWidget(samplingCountPUI->label(), 1, 0);
 	layout2->addLayout(samplingCountPUI->createFieldLayout(), 1, 1);
-	samplingCountPUI->setMinValue(3);
-	samplingCountPUI->setMaxValue(2000);
 
 	// Buffer resolution parameter.
 	IntegerParameterUI* bufferResPUI = new IntegerParameterUI(this, PROPERTY_FIELD(AmbientOcclusionModifier::_bufferResolution));
 	layout2->addWidget(bufferResPUI->label(), 2, 0);
 	layout2->addLayout(bufferResPUI->createFieldLayout(), 2, 1);
-	bufferResPUI->setMinValue(1);
-	bufferResPUI->setMaxValue(AmbientOcclusionModifier::MAX_AO_RENDER_BUFFER_RESOLUTION);
 
 	// Status label.
 	layout1->addSpacing(10);

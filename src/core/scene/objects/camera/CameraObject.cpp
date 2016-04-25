@@ -38,8 +38,8 @@ DEFINE_REFERENCE_FIELD(CameraObject, _zoom, "Zoom", Controller);
 SET_PROPERTY_FIELD_LABEL(CameraObject, _isPerspective, "Perspective projection");
 SET_PROPERTY_FIELD_LABEL(CameraObject, _fov, "FOV angle");
 SET_PROPERTY_FIELD_LABEL(CameraObject, _zoom, "FOV size");
-SET_PROPERTY_FIELD_UNITS(CameraObject, _fov, AngleParameterUnit);
-SET_PROPERTY_FIELD_UNITS(CameraObject, _zoom, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(CameraObject, _fov, AngleParameterUnit, FloatType(1e-3), FLOATTYPE_PI - FloatType(1e-2));
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CameraObject, _zoom, WorldParameterUnit, 0);
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 	IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, CameraDisplayObject, DisplayObject);
@@ -55,7 +55,7 @@ CameraObject::CameraObject(DataSet* dataset) : AbstractCameraObject(dataset), _i
 	INIT_PROPERTY_FIELD(CameraObject::_zoom);
 
 	_fov = ControllerManager::instance().createFloatController(dataset);
-	_fov->setFloatValue(0, FLOATTYPE_PI/4.0);
+	_fov->setFloatValue(0, FLOATTYPE_PI/4);
 	_zoom = ControllerManager::instance().createFloatController(dataset);
 	_zoom->setFloatValue(0, 200);
 
@@ -79,32 +79,32 @@ TimeInterval CameraObject::objectValidity(TimePoint time)
 void CameraObject::projectionParameters(TimePoint time, ViewProjectionParameters& params)
 {
 	// Transform scene bounding box to camera space.
-	Box3 bb = params.boundingBox.transformed(params.viewMatrix).centerScale(1.01f);
+	Box3 bb = params.boundingBox.transformed(params.viewMatrix).centerScale(FloatType(1.01));
 
 	// Compute projection matrix.
 	params.isPerspective = isPerspective();
 	if(params.isPerspective) {
 		if(bb.minc.z() < -FLOATTYPE_EPSILON) {
 			params.zfar = -bb.minc.z();
-			params.znear = std::max(-bb.maxc.z(), params.zfar * 1e-4f);
+			params.znear = std::max(-bb.maxc.z(), params.zfar * FloatType(1e-4));
 		}
 		else {
 			params.zfar = std::max(params.boundingBox.size().length(), FloatType(1));
-			params.znear = params.zfar * 1e-4f;
+			params.znear = params.zfar * FloatType(1e-4);
 		}
-		params.zfar = std::max(params.zfar, params.znear * 1.01f);
+		params.zfar = std::max(params.zfar, params.znear * FloatType(1.01));
 
 		// Get the camera angle.
 		params.fieldOfView = _fov->getFloatValue(time, params.validityInterval);
 		if(params.fieldOfView < FLOATTYPE_EPSILON) params.fieldOfView = FLOATTYPE_EPSILON;
 		if(params.fieldOfView > FLOATTYPE_PI - FLOATTYPE_EPSILON) params.fieldOfView = FLOATTYPE_PI - FLOATTYPE_EPSILON;
 
-		params.projectionMatrix = Matrix4::perspective(params.fieldOfView, 1.0f / params.aspectRatio, params.znear, params.zfar);
+		params.projectionMatrix = Matrix4::perspective(params.fieldOfView, FloatType(1) / params.aspectRatio, params.znear, params.zfar);
 	}
 	else {
 		if(!bb.isEmpty()) {
 			params.znear = -bb.maxc.z();
-			params.zfar  = std::max(-bb.minc.z(), params.znear + 1.0f);
+			params.zfar  = std::max(-bb.minc.z(), params.znear + FloatType(1));
 		}
 		else {
 			params.znear = 1;

@@ -65,7 +65,6 @@ void BondsDisplayEditor::createUI(const RolloutInsertionParameters& rolloutParam
 	FloatParameterUI* bondWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(BondsDisplay::_bondWidth));
 	layout->addWidget(bondWidthUI->label(), 2, 0);
 	layout->addLayout(bondWidthUI->createFieldLayout(), 2, 1);
-	bondWidthUI->setMinValue(0);
 
 	// Bond color.
 	ColorParameterUI* bondColorUI = new ColorParameterUI(this, PROPERTY_FIELD(BondsDisplay::_bondColor));

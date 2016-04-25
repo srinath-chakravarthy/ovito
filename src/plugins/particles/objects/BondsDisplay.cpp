@@ -42,7 +42,7 @@ SET_PROPERTY_FIELD_LABEL(BondsDisplay, _bondColor, "Bond color");
 SET_PROPERTY_FIELD_LABEL(BondsDisplay, _useParticleColors, "Use particle colors");
 SET_PROPERTY_FIELD_LABEL(BondsDisplay, _shadingMode, "Shading mode");
 SET_PROPERTY_FIELD_LABEL(BondsDisplay, _renderingQuality, "RenderingQuality");
-SET_PROPERTY_FIELD_UNITS(BondsDisplay, _bondWidth, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(BondsDisplay, _bondWidth, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.

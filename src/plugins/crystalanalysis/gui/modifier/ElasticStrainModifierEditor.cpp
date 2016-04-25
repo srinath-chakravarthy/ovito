@@ -64,12 +64,10 @@ void ElasticStrainModifierEditor::createUI(const RolloutInsertionParameters& rol
 	FloatParameterUI* latticeConstantUI = new FloatParameterUI(this, PROPERTY_FIELD(ElasticStrainModifier::_latticeConstant));
 	sublayout1->addWidget(latticeConstantUI->label(), 1, 0);
 	sublayout1->addLayout(latticeConstantUI->createFieldLayout(), 1, 1);
-	latticeConstantUI->setMinValue(0);
 
 	_caRatioUI = new FloatParameterUI(this, PROPERTY_FIELD(ElasticStrainModifier::_caRatio));
 	sublayout1->addWidget(_caRatioUI->label(), 2, 0);
 	sublayout1->addLayout(_caRatioUI->createFieldLayout(), 2, 1);
-	_caRatioUI->setMinValue(0);
 
 	QGroupBox* outputParamsBox = new QGroupBox(tr("Output settings"));
 	layout->addWidget(outputParamsBox);

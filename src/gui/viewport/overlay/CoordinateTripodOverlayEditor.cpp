@@ -74,17 +74,14 @@ void CoordinateTripodOverlayEditor::createUI(const RolloutInsertionParameters& r
 	FloatParameterUI* sizePUI = new FloatParameterUI(this, PROPERTY_FIELD(CoordinateTripodOverlay::_tripodSize));
 	layout->addWidget(sizePUI->label(), 4, 0);
 	layout->addLayout(sizePUI->createFieldLayout(), 4, 1);
-	sizePUI->setMinValue(0);
 
 	FloatParameterUI* lineWidthPUI = new FloatParameterUI(this, PROPERTY_FIELD(CoordinateTripodOverlay::_lineWidth));
 	layout->addWidget(lineWidthPUI->label(), 5, 0);
 	layout->addLayout(lineWidthPUI->createFieldLayout(), 5, 1);
-	lineWidthPUI->setMinValue(0);
 
 	FloatParameterUI* fontSizePUI = new FloatParameterUI(this, PROPERTY_FIELD(CoordinateTripodOverlay::_fontSize));
 	layout->addWidget(fontSizePUI->label(), 6, 0);
 	layout->addLayout(fontSizePUI->createFieldLayout(), 6, 1);
-	fontSizePUI->setMinValue(0);
 
 	FontParameterUI* labelFontPUI = new FontParameterUI(this, PROPERTY_FIELD(CoordinateTripodOverlay::_font));
 	layout->addWidget(labelFontPUI->label(), 7, 0);

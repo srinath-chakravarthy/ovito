@@ -57,7 +57,6 @@ void TrajectoryDisplayEditor::createUI(const RolloutInsertionParameters& rollout
 	FloatParameterUI* lineWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(TrajectoryDisplay::_lineWidth));
 	layout->addWidget(lineWidthUI->label(), 1, 0);
 	layout->addLayout(lineWidthUI->createFieldLayout(), 1, 1);
-	lineWidthUI->setMinValue(0);
 
 	// Line color.
 	ColorParameterUI* lineColorUI = new ColorParameterUI(this, PROPERTY_FIELD(TrajectoryDisplay::_lineColor));

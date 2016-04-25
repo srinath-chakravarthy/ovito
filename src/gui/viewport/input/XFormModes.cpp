@@ -23,8 +23,11 @@
 #include <gui/mainwin/MainWindow.h>
 #include <gui/widgets/display/CoordinateDisplayWidget.h>
 #include <gui/viewport/ViewportWindow.h>
+#include <gui/dialogs/AnimationKeyEditorDialog.h>
 #include <core/dataset/UndoStack.h>
 #include <core/animation/AnimationSettings.h>
+#include <core/animation/controller/PRSTransformationController.h>
+#include <core/animation/controller/KeyframeController.h>
 #include <core/scene/SelectionSet.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/viewport/Viewport.h>
@@ -144,11 +147,13 @@ void XFormMode::onSelectionChangeComplete(SelectionSet* selection)
 			updateCoordinateDisplay(coordDisplay);
 			coordDisplay->activate(undoDisplayName());
 			connect(coordDisplay, &CoordinateDisplayWidget::valueEntered, this, &XFormMode::onCoordinateValueEntered, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
+			connect(coordDisplay, &CoordinateDisplayWidget::animatePressed, this, &XFormMode::onAnimateTransformationButton, Qt::ConnectionType(Qt::AutoConnection | Qt::UniqueConnection));
 			return;
 		}
 	}
 	_selectedNode.setTarget(nullptr);
 	disconnect(coordDisplay, &CoordinateDisplayWidget::valueEntered, this, &XFormMode::onCoordinateValueEntered);
+	disconnect(coordDisplay, &CoordinateDisplayWidget::animatePressed, this, &XFormMode::onAnimateTransformationButton);
 	coordDisplay->deactivate();
 }
 
@@ -362,6 +367,24 @@ void MoveMode::onCoordinateValueEntered(int component, FloatType value)
 }
 
 /******************************************************************************
+* This signal handler is called by the coordinate display widget when the user
+* has pressed the "Animate" button.
+******************************************************************************/
+void MoveMode::onAnimateTransformationButton()
+{
+	if(_selectedNode.target()) {
+		PRSTransformationController* prs_ctrl = dynamic_object_cast<PRSTransformationController>(_selectedNode.target()->transformationController());
+		if(prs_ctrl) {
+			KeyframeController* ctrl = dynamic_object_cast<KeyframeController>(prs_ctrl->positionController());
+			if(ctrl) {
+				AnimationKeyEditorDialog dlg(ctrl, &PROPERTY_FIELD(PRSTransformationController::_position), inputManager()->mainWindow());
+				dlg.exec();
+			}
+		}
+	}
+}
+
+/******************************************************************************
 * Is called when the transformation operation begins.
 ******************************************************************************/
 void RotateMode::startXForm()
@@ -460,6 +483,24 @@ void RotateMode::onCoordinateValueEntered(int component, FloatType value)
 			Vector3 euler = coordDisplay->getValues();
 			Rotation rotation = Rotation::fromEuler(Vector3(euler[2], euler[1], euler[0]), Matrix3::szyx);
 			ctrl->setRotationValue(dataset->animationSettings()->time(), rotation, true);
+		}
+	}
+}
+
+/******************************************************************************
+* This signal handler is called by the coordinate display widget when the user
+* has pressed the "Animate" button.
+******************************************************************************/
+void RotateMode::onAnimateTransformationButton()
+{
+	if(_selectedNode.target()) {
+		PRSTransformationController* prs_ctrl = dynamic_object_cast<PRSTransformationController>(_selectedNode.target()->transformationController());
+		if(prs_ctrl) {
+			KeyframeController* ctrl = dynamic_object_cast<KeyframeController>(prs_ctrl->rotationController());
+			if(ctrl) {
+				AnimationKeyEditorDialog dlg(ctrl, &PROPERTY_FIELD(PRSTransformationController::_rotation), inputManager()->mainWindow());
+				dlg.exec();
+			}
 		}
 	}
 }

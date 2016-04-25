@@ -106,7 +106,6 @@ void RenderSettingsEditor::createUI(const RolloutInsertionParameters& rolloutPar
 		IntegerParameterUI* everyNthFrameUI = new IntegerParameterUI(this, PROPERTY_FIELD(RenderSettings::_everyNthFrame));
 		layout2a->addWidget(everyNthFrameUI->label(), 0, 0);
 		layout2a->addLayout(everyNthFrameUI->createFieldLayout(), 0, 1);
-		everyNthFrameUI->setMinValue(1);
 		IntegerParameterUI* fileNumberBaseUI = new IntegerParameterUI(this, PROPERTY_FIELD(RenderSettings::_fileNumberBase));
 		layout2a->addWidget(fileNumberBaseUI->label(), 1, 0);
 		layout2a->addLayout(fileNumberBaseUI->createFieldLayout(), 1, 1);
@@ -132,13 +131,11 @@ void RenderSettingsEditor::createUI(const RolloutInsertionParameters& rolloutPar
 		IntegerParameterUI* imageWidthUI = new IntegerParameterUI(this, PROPERTY_FIELD(RenderSettings::_outputImageWidth));
 		layout2->addWidget(imageWidthUI->label(), 0, 0);
 		layout2->addLayout(imageWidthUI->createFieldLayout(), 0, 1);
-		imageWidthUI->setMinValue(1);
 	
 		// Image height parameter.
 		IntegerParameterUI* imageHeightUI = new IntegerParameterUI(this, PROPERTY_FIELD(RenderSettings::_outputImageHeight));
 		layout2->addWidget(imageHeightUI->label(), 1, 0);
 		layout2->addLayout(imageHeightUI->createFieldLayout(), 1, 1);
-		imageHeightUI->setMinValue(1);
 
 		sizePresetsBox = new QComboBox(groupBox);
 		sizePresetsBox->addItem(tr("Presets..."));

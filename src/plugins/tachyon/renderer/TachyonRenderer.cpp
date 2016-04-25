@@ -69,6 +69,10 @@ SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _defaultLightSourceIntensity, "Direct 
 SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _ambientOcclusionEnabled, "Ambient occlusion");
 SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _ambientOcclusionSamples, "Ambient occlusion samples");
 SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _ambientOcclusionBrightness, "Ambient occlusion brightness");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, _antialiasingSamples, IntegerParameterUnit, 1, 100);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TachyonRenderer, _defaultLightSourceIntensity, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TachyonRenderer, _ambientOcclusionBrightness, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, _ambientOcclusionSamples, IntegerParameterUnit, 1, 100);
 
 /******************************************************************************
 * Default constructor.

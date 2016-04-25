@@ -48,12 +48,10 @@ void ConstructSurfaceModifierEditor::createUI(const RolloutInsertionParameters& 
 	FloatParameterUI* radiusUI = new FloatParameterUI(this, PROPERTY_FIELD(ConstructSurfaceModifier::_probeSphereRadius));
 	layout->addWidget(radiusUI->label(), 0, 0);
 	layout->addLayout(radiusUI->createFieldLayout(), 0, 1);
-	radiusUI->setMinValue(0);
 
 	IntegerParameterUI* smoothingLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(ConstructSurfaceModifier::_smoothingLevel));
 	layout->addWidget(smoothingLevelUI->label(), 1, 0);
 	layout->addLayout(smoothingLevelUI->createFieldLayout(), 1, 1);
-	smoothingLevelUI->setMinValue(0);
 
 	BooleanParameterUI* onlySelectedUI = new BooleanParameterUI(this, PROPERTY_FIELD(ConstructSurfaceModifier::_onlySelectedParticles));
 	layout->addWidget(onlySelectedUI->checkBox(), 2, 0, 1, 2);

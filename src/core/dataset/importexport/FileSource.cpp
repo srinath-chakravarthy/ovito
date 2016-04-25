@@ -47,6 +47,8 @@ SET_PROPERTY_FIELD_LABEL(FileSource, _sourceUrl, "Source location");
 SET_PROPERTY_FIELD_LABEL(FileSource, _playbackSpeedNumerator, "Playback rate numerator");
 SET_PROPERTY_FIELD_LABEL(FileSource, _playbackSpeedDenominator, "Playback rate denominator");
 SET_PROPERTY_FIELD_LABEL(FileSource, _playbackStartTime, "Playback start time");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(FileSource, _playbackSpeedNumerator, IntegerParameterUnit, 1);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(FileSource, _playbackSpeedDenominator, IntegerParameterUnit, 1);
 
 /******************************************************************************
 * Constructs the object.

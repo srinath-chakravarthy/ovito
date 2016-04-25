@@ -48,8 +48,8 @@ NumericalParameterUI::NumericalParameterUI(QObject* parentEditor, const Property
 	PropertyParameterUI(parentEditor, propField), _parameterUnitType(defaultParameterUnitType)
 {
 	// Look up the ParameterUnit type for this parameter.
-	if(propField.parameterUnitType())
-		_parameterUnitType = propField.parameterUnitType();
+	if(propField.numericalParameterInfo() && propField.numericalParameterInfo()->unitType)
+		_parameterUnitType = propField.numericalParameterInfo()->unitType;
 	
 	initUIControls(propField.displayName() + ":");
 }
@@ -68,6 +68,10 @@ void NumericalParameterUI::initUIControls(const QString& labelText)
 	connect(spinner(), &SpinnerWidget::spinnerDragStop, this, &NumericalParameterUI::onSpinnerDragStop);
 	connect(spinner(), &SpinnerWidget::spinnerDragAbort, this, &NumericalParameterUI::onSpinnerDragAbort);
 	spinner()->setTextBox(_textBox);
+	if(propertyField()->numericalParameterInfo() != nullptr) {
+		spinner()->setMinValue(propertyField()->numericalParameterInfo()->minValue);
+		spinner()->setMaxValue(propertyField()->numericalParameterInfo()->maxValue);
+	}
 
 	// Create animate button if parameter is animation (i.e. it's a reference to a Controller object).
 	if(isReferenceFieldUI() && propertyField()->targetClass()->isDerivedFrom(Controller::OOType)) {

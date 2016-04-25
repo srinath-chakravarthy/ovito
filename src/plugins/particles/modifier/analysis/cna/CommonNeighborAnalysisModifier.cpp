@@ -35,7 +35,7 @@ DEFINE_FLAGS_PROPERTY_FIELD(CommonNeighborAnalysisModifier, _cutoff, "Cutoff", P
 DEFINE_FLAGS_PROPERTY_FIELD(CommonNeighborAnalysisModifier, _cnaMode, "CNAMode", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(CommonNeighborAnalysisModifier, _cutoff, "Cutoff radius");
 SET_PROPERTY_FIELD_LABEL(CommonNeighborAnalysisModifier, _cnaMode, "Mode");
-SET_PROPERTY_FIELD_UNITS(CommonNeighborAnalysisModifier, _cutoff, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CommonNeighborAnalysisModifier, _cutoff, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.

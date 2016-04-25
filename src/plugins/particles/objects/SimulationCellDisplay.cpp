@@ -34,7 +34,7 @@ DEFINE_FLAGS_PROPERTY_FIELD(SimulationCellDisplay, _simulationCellColor, "Simula
 SET_PROPERTY_FIELD_LABEL(SimulationCellDisplay, _simulationCellLineWidth, "Line width");
 SET_PROPERTY_FIELD_LABEL(SimulationCellDisplay, _renderSimulationCell, "Render cell");
 SET_PROPERTY_FIELD_LABEL(SimulationCellDisplay, _simulationCellColor, "Line color");
-SET_PROPERTY_FIELD_UNITS(SimulationCellDisplay, _simulationCellLineWidth, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(SimulationCellDisplay, _simulationCellLineWidth, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.

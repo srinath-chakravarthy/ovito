@@ -51,8 +51,6 @@ void TriMeshDisplayEditor::createUI(const RolloutInsertionParameters& rolloutPar
 	FloatParameterUI* transparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(TriMeshDisplay::_transparency));
 	layout->addWidget(new QLabel(tr("Transparency:")), 1, 0);
 	layout->addLayout(transparencyUI->createFieldLayout(), 1, 1);
-	transparencyUI->setMinValue(0);
-	transparencyUI->setMaxValue(1);
 }
 
 OVITO_END_INLINE_NAMESPACE

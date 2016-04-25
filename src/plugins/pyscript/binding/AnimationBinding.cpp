@@ -22,6 +22,8 @@
 #include <plugins/pyscript/PyScript.h>
 #include <core/animation/TimeInterval.h>
 #include <core/animation/AnimationSettings.h>
+#include <core/animation/controller/Controller.h>
+#include <core/animation/controller/PRSTransformationController.h>
 #include "PythonBinding.h"
 
 namespace PyScript {
@@ -104,6 +106,39 @@ BOOST_PYTHON_MODULE(PyScriptAnimation)
 		.def("jumpToPreviousFrame", &AnimationSettings::jumpToPreviousFrame)
 		.def("startAnimationPlayback", &AnimationSettings::startAnimationPlayback)
 		.def("stopAnimationPlayback", &AnimationSettings::stopAnimationPlayback)
+	;
+
+	{
+		scope s = ovito_abstract_class<Controller, RefTarget>()
+			.add_property("type", &Controller::controllerType)
+			.add_property("float_value", &Controller::currentFloatValue)
+			.add_property("int_value", &Controller::currentIntValue)
+			.add_property("vector3_value", &Controller::currentVector3Value)
+			.add_property("color_value", &Controller::currentColorValue)
+			.def("set_float_value", &Controller::setFloatValue)
+			.def("set_int_value", &Controller::setIntValue)
+			.def("set_vector3_value", &Controller::setVector3Value)
+			.def("set_color_value", &Controller::setColorValue)
+			.def("set_position_value", &Controller::setPositionValue)
+			.def("set_rotation_value", &Controller::setRotationValue)
+			.def("set_scaling_value", &Controller::setScalingValue)
+		;
+
+		enum_<Controller::ControllerType>("Type")
+			.value("Float", Controller::ControllerTypeFloat)
+			.value("Int", Controller::ControllerTypeInt)
+			.value("Vector3", Controller::ControllerTypeVector3)
+			.value("Position", Controller::ControllerTypePosition)
+			.value("Rotation", Controller::ControllerTypeRotation)
+			.value("Scaling", Controller::ControllerTypeScaling)
+			.value("Transformation", Controller::ControllerTypeTransformation)
+		;
+	}
+
+	ovito_class<PRSTransformationController, Controller>()
+		.add_property("position", make_function(&PRSTransformationController::positionController, return_value_policy<ovito_object_reference>()), &PRSTransformationController::setPositionController)
+		.add_property("rotation", make_function(&PRSTransformationController::rotationController, return_value_policy<ovito_object_reference>()), &PRSTransformationController::setRotationController)
+		.add_property("scaling", make_function(&PRSTransformationController::scalingController, return_value_policy<ovito_object_reference>()), &PRSTransformationController::setScalingController)
 	;
 }
 

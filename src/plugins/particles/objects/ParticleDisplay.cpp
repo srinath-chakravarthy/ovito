@@ -37,7 +37,7 @@ SET_PROPERTY_FIELD_LABEL(ParticleDisplay, _defaultParticleRadius, "Default parti
 SET_PROPERTY_FIELD_LABEL(ParticleDisplay, _shadingMode, "Shading mode");
 SET_PROPERTY_FIELD_LABEL(ParticleDisplay, _renderingQuality, "Rendering quality");
 SET_PROPERTY_FIELD_LABEL(ParticleDisplay, _particleShape, "Shape");
-SET_PROPERTY_FIELD_UNITS(ParticleDisplay, _defaultParticleRadius, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ParticleDisplay, _defaultParticleRadius, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.

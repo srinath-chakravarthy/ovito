@@ -50,10 +50,9 @@ void SimulationCellDisplayEditor::createUI(const RolloutInsertionParameters& rol
 	layout->addWidget(renderCellUI->checkBox(), 0, 0, 1, 2);
 
 	// Line width
-	FloatParameterUI* scalingFactorUI = new FloatParameterUI(this, PROPERTY_FIELD(SimulationCellDisplay::_simulationCellLineWidth));
-	layout->addWidget(scalingFactorUI->label(), 1, 0);
-	layout->addLayout(scalingFactorUI->createFieldLayout(), 1, 1);
-	scalingFactorUI->setMinValue(0);
+	FloatParameterUI* lineWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(SimulationCellDisplay::_simulationCellLineWidth));
+	layout->addWidget(lineWidthUI->label(), 1, 0);
+	layout->addLayout(lineWidthUI->createFieldLayout(), 1, 1);
 
 	// Line color
 	ColorParameterUI* lineColorUI = new ColorParameterUI(this, PROPERTY_FIELD(SimulationCellDisplay::_simulationCellColor));

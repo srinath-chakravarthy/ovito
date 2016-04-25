@@ -58,7 +58,6 @@ void HistogramModifierEditor::createUI(const RolloutInsertionParameters& rollout
 	IntegerParameterUI* numBinsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(HistogramModifier::_numberOfBins));
 	gridlayout->addWidget(numBinsPUI->label(), 0, 0);
 	gridlayout->addLayout(numBinsPUI->createFieldLayout(), 0, 1);
-	numBinsPUI->setMinValue(1);
 
 	layout->addLayout(gridlayout);
 

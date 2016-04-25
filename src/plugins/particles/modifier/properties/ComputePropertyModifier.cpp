@@ -41,7 +41,7 @@ SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _onlySelectedParticles, "Compu
 SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _neighborModeEnabled, "Include neighbor terms");
 SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _neighborExpressions, "Neighbor expressions");
 SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _cutoff, "Cutoff radius");
-SET_PROPERTY_FIELD_UNITS(ComputePropertyModifier, _cutoff, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ComputePropertyModifier, _cutoff, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructs a new instance of this class.

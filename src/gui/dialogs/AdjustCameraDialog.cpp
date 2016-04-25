@@ -151,9 +151,9 @@ AdjustCameraDialog::AdjustCameraDialog(Viewport* viewport, QWidget* parent) :
 	gridLayout->addWidget(new QLabel(tr("View angle:")), 1, 1);
 	_camFOVAngleSpinner = new SpinnerWidget();
 	_camFOVAngleSpinner->setUnit(_viewport->dataset()->unitsManager().angleUnit());
-	_camFOVAngleSpinner->setMinValue(1e-4f);
-	_camFOVAngleSpinner->setMaxValue(FLOATTYPE_PI - 1e-2f);
-	_camFOVAngleSpinner->setFloatValue(35.0f*FLOATTYPE_PI/180.0f);
+	_camFOVAngleSpinner->setMinValue(FloatType(1e-4));
+	_camFOVAngleSpinner->setMaxValue(FLOATTYPE_PI - FloatType(1e-2));
+	_camFOVAngleSpinner->setFloatValue(FloatType(35)*FLOATTYPE_PI/FloatType(180));
 	_camFOVAngleSpinner->setEnabled(false);
 	connect(_camPerspective, &QRadioButton::toggled, _camFOVAngleSpinner, &SpinnerWidget::setEnabled);
 
@@ -174,8 +174,8 @@ AdjustCameraDialog::AdjustCameraDialog(Viewport* viewport, QWidget* parent) :
 	gridLayout->addWidget(new QLabel(tr("Field of view:")), 3, 1);
 	_camFOVSpinner = new SpinnerWidget();
 	_camFOVSpinner->setUnit(_viewport->dataset()->unitsManager().worldUnit());
-	_camFOVSpinner->setMinValue(1e-4f);
-	_camFOVSpinner->setFloatValue(200.0f);
+	_camFOVSpinner->setMinValue(FloatType(1e-4));
+	_camFOVSpinner->setFloatValue(200);
 	_camFOVSpinner->setEnabled(false);
 	connect(_camParallel, &QRadioButton::toggled, _camFOVSpinner, &SpinnerWidget::setEnabled);
 

@@ -31,7 +31,7 @@ DEFINE_FLAGS_PROPERTY_FIELD(TriMeshDisplay, _color, "Color", PROPERTY_FIELD_MEMO
 DEFINE_REFERENCE_FIELD(TriMeshDisplay, _transparency, "Transparency", Controller);
 SET_PROPERTY_FIELD_LABEL(TriMeshDisplay, _color, "Display color");
 SET_PROPERTY_FIELD_LABEL(TriMeshDisplay, _transparency, "Transparency");
-SET_PROPERTY_FIELD_UNITS(TriMeshDisplay, _transparency, PercentParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(TriMeshDisplay, _transparency, PercentParameterUnit, 0, 1);
 
 /******************************************************************************
 * Constructor.

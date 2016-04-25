@@ -45,8 +45,10 @@ SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _computeBonds, "Generate neigh
 SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _edgeCount, "Maximum edge count");
 SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _edgeThreshold, "Edge length threshold");
 SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _faceThreshold, "Face area threshold");
-SET_PROPERTY_FIELD_UNITS(VoronoiAnalysisModifier, _edgeThreshold, WorldParameterUnit);
 SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _bondsDisplay, "Bonds display");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(VoronoiAnalysisModifier, _edgeThreshold, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(VoronoiAnalysisModifier, _faceThreshold, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(VoronoiAnalysisModifier, _edgeCount, IntegerParameterUnit, 3, 18);
 
 /******************************************************************************
 * Constructs the modifier object.

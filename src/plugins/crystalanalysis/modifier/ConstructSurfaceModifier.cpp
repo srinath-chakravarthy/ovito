@@ -37,7 +37,8 @@ SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, _smoothingLevel, "Smoothing l
 SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, _probeSphereRadius, "Probe sphere radius");
 SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, _surfaceMeshDisplay, "Surface mesh display");
 SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, _onlySelectedParticles, "Use only selected particles");
-SET_PROPERTY_FIELD_UNITS(ConstructSurfaceModifier, _probeSphereRadius, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ConstructSurfaceModifier, _probeSphereRadius, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ConstructSurfaceModifier, _smoothingLevel, IntegerParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.

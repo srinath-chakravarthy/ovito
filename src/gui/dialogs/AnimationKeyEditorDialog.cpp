@@ -32,15 +32,16 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 
 class NumericalItemDelegate : public QStyledItemDelegate
 {
-	SpinnerWidget* _template;
+	ParameterUnit* _units;
+	FloatType _minValue, _maxValue;
 
 public:
 
-	NumericalItemDelegate(QObject* parent = nullptr, SpinnerWidget* templ = nullptr) : QStyledItemDelegate(parent), _template(templ) {}
+	NumericalItemDelegate(QObject* parent, ParameterUnit* units, FloatType minValue, FloatType maxValue) : QStyledItemDelegate(parent), _units(units), _minValue(minValue), _maxValue(maxValue) {}
 
 	virtual QString displayText(const QVariant& value, const QLocale& locale) const override {
-		if(_template && _template->unit())
-			return _template->unit()->formatValue(_template->unit()->nativeToUser(value.value<FloatType>()));
+		if(_units)
+			return _units->formatValue(_units->nativeToUser(value.value<FloatType>()));
 		return value.toString();
 	}
 
@@ -54,11 +55,9 @@ public:
 		layout->addWidget(edit, 1);
 		container->setFocusProxy(edit);
 		SpinnerWidget* spinner = new SpinnerWidget(nullptr, edit);
-		if(_template) {
-			spinner->setUnit(_template->unit());
-			spinner->setMinValue(_template->minValue());
-			spinner->setMaxValue(_template->maxValue());
-		}
+		if(_units) spinner->setUnit(_units);
+		spinner->setMinValue(_minValue);
+		spinner->setMaxValue(_maxValue);
 		layout->addWidget(spinner);
 		connect(spinner, &SpinnerWidget::spinnerValueChanged, [this,container]() {
 			Q_EMIT const_cast<NumericalItemDelegate*>(this)->commitData(container);
@@ -118,9 +117,10 @@ public:
 	/// Returns the number of columns.
 	virtual int columnCount(const QModelIndex& parent = QModelIndex()) const override {
 		if(parent.isValid()) return 0;
-		if(_ctrlType == Controller::ControllerTypeFloat || _ctrlType == Controller::ControllerTypeInt) return 1;
-		if(_ctrlType == Controller::ControllerTypeVector3 || _ctrlType == Controller::ControllerTypePosition) return 3;
-		return 0;
+		else if(_ctrlType == Controller::ControllerTypeFloat || _ctrlType == Controller::ControllerTypeInt) return 1;
+		else if(_ctrlType == Controller::ControllerTypeVector3 || _ctrlType == Controller::ControllerTypePosition) return 3;
+		else if(_ctrlType == Controller::ControllerTypeRotation) return 4;
+		else return 0;
 	}
 
 	/// Returns the data stored.
@@ -136,6 +136,17 @@ public:
 				else if(_ctrlType == Controller::ControllerTypeVector3) {
 					Vector3 v = static_object_cast<Vector3AnimationKey>(key)->value();
 					return QVariant::fromValue(v[index.column()]);
+				}
+				else if(_ctrlType == Controller::ControllerTypePosition) {
+					Vector3 v = static_object_cast<PositionAnimationKey>(key)->value();
+					return QVariant::fromValue(v[index.column()]);
+				}
+				else if(_ctrlType == Controller::ControllerTypeRotation) {
+					Rotation r = static_object_cast<RotationAnimationKey>(key)->value();
+					if(index.column() < 3)
+						return QVariant::fromValue(r.axis()[index.column()]);
+					else
+						return QVariant::fromValue(r.angle());
 				}
 			}
 		}
@@ -164,6 +175,24 @@ public:
 						vec[index.column()] = value.value<FloatType>();
 						return static_object_cast<Vector3AnimationKey>(key)->setValue(vec);
 					}
+					else if(_ctrlType == Controller::ControllerTypePosition) {
+						Vector3 vec = static_object_cast<PositionAnimationKey>(key)->value();
+						vec[index.column()] = value.value<FloatType>();
+						return static_object_cast<PositionAnimationKey>(key)->setValue(vec);
+					}
+					else if(_ctrlType == Controller::ControllerTypeRotation) {
+						Rotation r = static_object_cast<RotationAnimationKey>(key)->value();
+						if(index.column() < 3) {
+							Vector3 axis = r.axis();
+							axis[index.column()] = value.value<FloatType>();
+							axis.normalizeSafely();
+							r.setAxis(axis);
+						}
+						else if(index.column() == 3) {
+							r.setAngle(value.value<FloatType>());
+						}
+						return static_object_cast<RotationAnimationKey>(key)->setValue(r);
+					}
 				}
 				catch(const Exception& ex) {
 					ex.showError();
@@ -183,6 +212,12 @@ public:
 				if(section == 0) return _propertyField->displayName() + QString(" (X)");
 				else if(section == 1) return _propertyField->displayName() + QString(" (Y)");
 				else if(section == 2) return _propertyField->displayName() + QString(" (Z)");
+			}
+			else if(_ctrlType == Controller::ControllerTypeRotation) {
+				if(section == 0) return _propertyField->displayName() + QString(" (Axis X)");
+				else if(section == 1) return _propertyField->displayName() + QString(" (Axis Y)");
+				else if(section == 2) return _propertyField->displayName() + QString(" (Axis Z)");
+				else if(section == 3) return _propertyField->displayName() + QString(" (Angle)");
 			}
 		}
 		else if(orientation == Qt::Vertical && role == Qt::DisplayRole) {
@@ -254,7 +289,7 @@ private:
 /******************************************************************************
 * The constructor of the dialog widget.
 ******************************************************************************/
-AnimationKeyEditorDialog::AnimationKeyEditorDialog(KeyframeController* ctrl, const PropertyFieldDescriptor* propertyField, PropertyParameterUI* paramUI, QWidget* parent) :
+AnimationKeyEditorDialog::AnimationKeyEditorDialog(KeyframeController* ctrl, const PropertyFieldDescriptor* propertyField, QWidget* parent) :
 	QDialog(parent),
 	UndoableTransaction(ctrl->dataset()->undoStack(), tr("Edit animatable parameter"))
 {
@@ -281,13 +316,29 @@ AnimationKeyEditorDialog::AnimationKeyEditorDialog(KeyframeController* ctrl, con
 
 	mainLayout->addStrut(model->columnCount() * 120 + 100);
 
-	SpinnerWidget* templateSpinner = nullptr;
-	if(NumericalParameterUI* numericalParamUI = dynamic_object_cast<NumericalParameterUI>(paramUI))
-		templateSpinner = numericalParamUI->spinner();
+	ParameterUnit* units = nullptr;
+	FloatType minValue = FLOATTYPE_MIN;
+	FloatType maxValue = FLOATTYPE_MAX;
+	if(propertyField->numericalParameterInfo()) {
+		minValue = propertyField->numericalParameterInfo()->minValue;
+		maxValue = propertyField->numericalParameterInfo()->maxValue;
+		if(propertyField->numericalParameterInfo()->unitType != nullptr)
+			units = ctrl->dataset()->unitsManager().getUnit(propertyField->numericalParameterInfo()->unitType);
+	}
 
-	NumericalItemDelegate* numericalDelegate = new NumericalItemDelegate(_tableWidget, templateSpinner);
-	for(int col = 0; col < model->columnCount(); col++)
-		_tableWidget->setItemDelegateForColumn(col, numericalDelegate);
+	if(ctrl->controllerType() != Controller::ControllerTypeRotation) {
+		NumericalItemDelegate* numericalDelegate = new NumericalItemDelegate(_tableWidget, units, minValue, maxValue);
+		for(int col = 0; col < model->columnCount(); col++)
+			_tableWidget->setItemDelegateForColumn(col, numericalDelegate);
+	}
+	else {
+		NumericalItemDelegate* axisDelegate = new NumericalItemDelegate(_tableWidget, ctrl->dataset()->unitsManager().worldUnit(), FLOATTYPE_MIN, FLOATTYPE_MAX);
+		NumericalItemDelegate* angleDelegate = new NumericalItemDelegate(_tableWidget, ctrl->dataset()->unitsManager().angleUnit(), FLOATTYPE_MIN, FLOATTYPE_MAX);
+		_tableWidget->setItemDelegateForColumn(0, axisDelegate);
+		_tableWidget->setItemDelegateForColumn(1, axisDelegate);
+		_tableWidget->setItemDelegateForColumn(2, axisDelegate);
+		_tableWidget->setItemDelegateForColumn(3, angleDelegate);
+	}
 
 	_tableWidget->resizeColumnsToContents();
 

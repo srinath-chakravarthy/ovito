@@ -44,8 +44,8 @@ SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _burgersVectorColor, "Burgers vecto
 SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _showBurgersVectors, "Show Burgers vectors");
 SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _showLineDirections, "Indicate line directions");
 SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _indicateDislocationCharacter, "Indicate character");
-SET_PROPERTY_FIELD_UNITS(DislocationDisplay, _lineWidth, WorldParameterUnit);
-SET_PROPERTY_FIELD_UNITS(DislocationDisplay, _burgersVectorWidth, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(DislocationDisplay, _lineWidth, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(DislocationDisplay, _burgersVectorWidth, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.
