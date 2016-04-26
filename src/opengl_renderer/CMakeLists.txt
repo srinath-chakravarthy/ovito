@@ -26,6 +26,7 @@ SET(SourceFiles
 	OpenGLImagePrimitive.cpp
 	OpenGLArrowPrimitive.cpp
 	OpenGLMeshPrimitive.cpp
+	OpenGLMarkerPrimitive.cpp
 	OpenGLSharedResource.cpp
 	OpenGLSceneRenderer.cpp
 )

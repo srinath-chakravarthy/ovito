@@ -57,6 +57,16 @@ Box3 SceneRenderer::sceneBoundingBox(TimePoint time)
 {
 	OVITO_CHECK_OBJECT_POINTER(renderDataset());
 	Box3 bb = renderDataset()->sceneRoot()->worldBoundingBox(time);
+
+	// Include interactive  viewport content in bounding box.
+	if(isInteractive()) {
+		renderDataset()->sceneRoot()->visitChildren([this, &bb](SceneNode* node) -> bool {
+			std::vector<Point3> trajectory = getNodeTrajectory(node);
+			bb.addPoints(trajectory.data(), trajectory.size());
+			return true;
+		});
+	}
+
 	if(!bb.isEmpty())
 		return bb;
 	else
@@ -91,18 +101,75 @@ void SceneRenderer::renderNode(SceneNode* node)
 
 		// Do not render node if it is the view node of the viewport or
 		// if it is the target of the view node.
-		if(viewport() && viewport()->viewNode()) {
-			if(viewport()->viewNode() == objNode || viewport()->viewNode()->lookatTargetNode() == objNode)
-				return;
+		if(!viewport() || !viewport()->viewNode() || (viewport()->viewNode() != objNode && viewport()->viewNode()->lookatTargetNode() != objNode)) {
+			// Evaluate geometry pipeline of object node and render the results.
+			objNode->render(time(), this);
 		}
+	}
 
-		// Evaluate geometry pipeline of object node and render the results.
-		objNode->render(time(), this);
+	// Render trajectory when node transformation is animated.
+	if(isInteractive() && !isPicking()) {
+		renderNodeTrajectory(node);
 	}
 
 	// Render child nodes.
 	for(SceneNode* child : node->children())
 		renderNode(child);
+}
+
+/******************************************************************************
+* Gets the trajectory of motion of a node.
+******************************************************************************/
+std::vector<Point3> SceneRenderer::getNodeTrajectory(SceneNode* node)
+{
+	std::vector<Point3> vertices;
+	Controller* ctrl = node->transformationController();
+	if(ctrl && ctrl->isAnimated()) {
+		AnimationSettings* animSettings = node->dataset()->animationSettings();
+		int firstFrame = animSettings->firstFrame();
+		int lastFrame = animSettings->lastFrame();
+		OVITO_ASSERT(lastFrame >= firstFrame);
+		vertices.resize(lastFrame - firstFrame + 1);
+		auto v = vertices.begin();
+		for(int frame = firstFrame; frame <= lastFrame; frame++) {
+			TimeInterval iv;
+			const Vector3& pos = node->getWorldTransform(animSettings->frameToTime(frame), iv).translation();
+			*v++ = Point3::Origin() + pos;
+		}
+	}
+	return vertices;
+}
+
+/******************************************************************************
+* Renders the trajectory of motion of a node in the interactive viewports.
+******************************************************************************/
+void SceneRenderer::renderNodeTrajectory(SceneNode* node)
+{
+	std::vector<Point3> trajectory = getNodeTrajectory(node);
+	if(!trajectory.empty()) {
+		setWorldTransform(AffineTransformation::Identity());
+
+		std::shared_ptr<MarkerPrimitive> frameMarkers = createMarkerPrimitive();
+		frameMarkers->setCount(trajectory.size());
+		frameMarkers->setMarkerPositions(trajectory.data());
+		frameMarkers->setMarkerColor(ColorA(1, 1, 1));
+		frameMarkers->render(this);
+
+		std::vector<Point3> lineVertices((trajectory.size()-1) * 2);
+		if(!lineVertices.empty()) {
+			for(size_t index = 0; index < trajectory.size(); index++) {
+				if(index != 0)
+					lineVertices[index*2 - 1] = trajectory[index];
+				if(index != trajectory.size() - 1)
+					lineVertices[index*2] = trajectory[index];
+			}
+			std::shared_ptr<LinePrimitive> trajLine = createLinePrimitive();
+			trajLine->setVertexCount(lineVertices.size());
+			trajLine->setVertexPositions(lineVertices.data());
+			trajLine->setLineColor(ColorA(1.0, 0.8, 0.4));
+			trajLine->render(this);
+		}
+	}
 }
 
 /******************************************************************************

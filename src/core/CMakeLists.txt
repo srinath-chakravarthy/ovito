@@ -92,6 +92,7 @@ SET(SourceFiles
 	rendering/noninteractive/DefaultImagePrimitive.cpp
 	rendering/noninteractive/DefaultArrowPrimitive.cpp
 	rendering/noninteractive/DefaultMeshPrimitive.cpp
+	rendering/noninteractive/DefaultMarkerPrimitive.cpp
 	rendering/RenderSettings.cpp
 	rendering/FrameBuffer.cpp
 	viewport/Viewport.cpp

@@ -89,6 +89,12 @@ public:
 	/// \undoable
 	void setRollController(Controller* ctrl) { _rollCtrl = ctrl; }
 
+	/// \brief Returns whether the value of this controller is changing over time.
+	virtual bool isAnimated() const override {
+		return (rollController() && rollController()->isAnimated())
+				|| (targetNode() && targetNode()->transformationController() && targetNode()->transformationController()->isAnimated());
+	}
+
 private:
 
 	/// The sub-controller for rolling.
@@ -97,7 +103,7 @@ private:
 	/// The target scene node to look at.
 	ReferenceField<SceneNode> _targetNode;
 
-	/// Stores the position of the source node.
+	/// Stores the cached position of the source node.
 	Vector3 _sourcePos;
 
 	/// Stores the validity interval of the saved source position.

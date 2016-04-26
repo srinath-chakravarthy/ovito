@@ -105,6 +105,11 @@
 	<file>glsl/image/image.vs</file>
 	<file>glsl/image/image.fs</file>
 
+	<file>glsl/markers/marker.vs</file>
+	<file>glsl/markers/marker.fs</file>
+	<file>glsl/markers/picking/marker.vs</file>
+	<file>glsl/markers/picking/marker.fs</file>
+
 </qresource>
 
 </RCC>

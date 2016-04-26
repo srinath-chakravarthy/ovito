@@ -247,7 +247,7 @@ FloatType ZoomMode::sceneSizeFactor(Viewport* vp)
 	OVITO_CHECK_OBJECT_POINTER(vp);
 	Box3 sceneBoundingBox = vp->dataset()->sceneRoot()->worldBoundingBox(vp->dataset()->animationSettings()->time());
 	if(!sceneBoundingBox.isEmpty())
-		return sceneBoundingBox.size().length() * 5e-4f;
+		return sceneBoundingBox.size().length() * FloatType(5e-4);
 	else
 		return 0.1f;
 }
@@ -262,7 +262,7 @@ void ZoomMode::zoom(Viewport* vp, FloatType steps)
 			vp->setCameraPosition(vp->cameraPosition() + vp->cameraDirection().resized(sceneSizeFactor(vp) * steps));
 		}
 		else {
-			vp->setFieldOfView(vp->fieldOfView() * exp(-steps * 0.001f));
+			vp->setFieldOfView(vp->fieldOfView() * exp(-steps * FloatType(1e-3)));
 		}
 	}
 	else {
@@ -278,7 +278,7 @@ void ZoomMode::zoom(Viewport* vp, FloatType steps)
 				if(cameraObj) {
 					TimeInterval iv;
 					FloatType oldFOV = cameraObj->fieldOfView(vp->dataset()->animationSettings()->time(), iv);
-					cameraObj->setFieldOfView(vp->dataset()->animationSettings()->time(), oldFOV * exp(-steps * 0.001f));
+					cameraObj->setFieldOfView(vp->dataset()->animationSettings()->time(), oldFOV * exp(-steps * FloatType(1e-3)));
 				}
 			}
 		});
@@ -305,12 +305,12 @@ void FOVMode::modifyView(ViewportWindow* vpwin, Viewport* vp, QPointF delta)
 
 	FloatType newFOV;
 	if(vp->isPerspectiveProjection()) {
-		newFOV = oldFOV + (FloatType)delta.y() * 0.002f;
+		newFOV = oldFOV + (FloatType)delta.y() * FloatType(2e-3);
 		newFOV = std::max(newFOV, (FloatType)(5.0f * FLOATTYPE_PI / 180.0f));
 		newFOV = std::min(newFOV, (FloatType)(170.0f * FLOATTYPE_PI / 180.0f));
 	}
 	else {
-		newFOV = oldFOV * (FloatType)exp(0.006f * delta.y());
+		newFOV = oldFOV * (FloatType)exp(FloatType(6e-3) * delta.y());
 	}
 
 	if(vp->viewNode() == nullptr || vp->viewType() != Viewport::VIEW_SCENENODE) {

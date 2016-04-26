@@ -85,6 +85,9 @@ public:
 			ParticlePrimitive::RenderingQuality renderingQuality, ParticlePrimitive::ParticleShape shape,
 			bool translucentParticles) override;
 
+	/// Requests a new marker geometry buffer from the renderer.
+	virtual std::shared_ptr<MarkerPrimitive> createMarkerPrimitive(MarkerPrimitive::MarkerShape shape) override;
+
 	/// Requests a new text geometry buffer from the renderer.
 	virtual std::shared_ptr<TextPrimitive> createTextPrimitive() override;
 
@@ -342,6 +345,7 @@ private:
 	friend class OpenGLLinePrimitive;
 	friend class OpenGLTextPrimitive;
 	friend class OpenGLParticlePrimitive;
+	friend class OpenGLMarkerPrimitive;
 	template<typename T> friend class OpenGLBuffer;
 };
 

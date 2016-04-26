@@ -37,6 +37,7 @@
 #include "ImagePrimitive.h"
 #include "ArrowPrimitive.h"
 #include "MeshPrimitive.h"
+#include "MarkerPrimitive.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
 
@@ -153,6 +154,9 @@ public:
 			ParticlePrimitive::ParticleShape shape = ParticlePrimitive::SphericalShape,
 			bool translucentParticles = false) = 0;
 
+	/// Requests a new marker geometry buffer from the renderer.
+	virtual std::shared_ptr<MarkerPrimitive> createMarkerPrimitive(MarkerPrimitive::MarkerShape shape = MarkerPrimitive::DotShape) = 0;
+
 	/// Requests a new text geometry buffer from the renderer.
 	virtual std::shared_ptr<TextPrimitive> createTextPrimitive() = 0;
 
@@ -218,6 +222,12 @@ protected:
 
 	/// \brief Renders the visual representation of the modifiers.
 	void renderModifiers(PipelineObject* pipelineObj, ObjectNode* objNode, bool renderOverlay);
+
+	/// \brief Gets the trajectory of motion of a node.
+	std::vector<Point3> getNodeTrajectory(SceneNode* node);
+
+	/// \brief Renders the trajectory of motion of a node in the interactive viewports.
+	void renderNodeTrajectory(SceneNode* node);
 
 	/// \brief Determines the bounding box of the visual representation of the modifiers.
 	void boundingBoxModifiers(PipelineObject* pipelineObj, ObjectNode* objNode, Box3& boundingBox);

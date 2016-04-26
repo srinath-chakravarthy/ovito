@@ -68,6 +68,9 @@ public:
 	/// \brief Returns the value type of the controller.
 	virtual ControllerType controllerType() const = 0;
 
+	/// \brief Returns whether the value of this controller is changing over time.
+	virtual bool isAnimated() const = 0;
+
 	/// \brief Calculates the largest time interval containing the given time during which the
 	///        controller's value does not change.
 	/// \param[in] time The animation time at which the controller's validity interval is requested.

@@ -36,6 +36,7 @@
 #include "OpenGLImagePrimitive.h"
 #include "OpenGLArrowPrimitive.h"
 #include "OpenGLMeshPrimitive.h"
+#include "OpenGLMarkerPrimitive.h"
 #include "OpenGLHelpers.h"
 
 #include <QOffscreenSurface>
@@ -439,6 +440,14 @@ std::shared_ptr<ArrowPrimitive> OpenGLSceneRenderer::createArrowPrimitive(ArrowP
 		ArrowPrimitive::RenderingQuality renderingQuality)
 {
 	return std::make_shared<OpenGLArrowPrimitive>(this, shape, shadingMode, renderingQuality);
+}
+
+/******************************************************************************
+* Requests a new marker geometry buffer from the renderer.
+******************************************************************************/
+std::shared_ptr<MarkerPrimitive> OpenGLSceneRenderer::createMarkerPrimitive(MarkerPrimitive::MarkerShape shape)
+{
+	return std::make_shared<OpenGLMarkerPrimitive>(this, shape);
 }
 
 /******************************************************************************

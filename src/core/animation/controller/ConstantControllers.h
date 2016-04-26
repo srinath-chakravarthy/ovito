@@ -42,6 +42,9 @@ public:
 	/// \brief Returns the value type of the controller.
 	virtual ControllerType controllerType() const override { return ControllerTypeFloat; }
 
+	/// \brief Returns whether the value of this controller is changing over time.
+	virtual bool isAnimated() const override { return false; }
+
 	/// \brief Calculates the largest time interval containing the given time during which the controller's value does not change.
 	virtual TimeInterval validityInterval(TimePoint time) override { return TimeInterval::infinite(); }
 
@@ -76,6 +79,9 @@ public:
 
 	/// \brief Returns the value type of the controller.
 	virtual ControllerType controllerType() const override { return ControllerTypeInt; }
+
+	/// \brief Returns whether the value of this controller is changing over time.
+	virtual bool isAnimated() const override { return false; }
 
 	/// \brief Calculates the largest time interval containing the given time during which the controller's value does not change.
 	virtual TimeInterval validityInterval(TimePoint time) override { return TimeInterval::infinite(); }
@@ -112,6 +118,9 @@ public:
 	/// \brief Returns the value type of the controller.
 	virtual ControllerType controllerType() const override { return ControllerTypeVector3; }
 
+	/// \brief Returns whether the value of this controller is changing over time.
+	virtual bool isAnimated() const override { return false; }
+
 	/// \brief Calculates the largest time interval containing the given time during which the controller's value does not change.
 	virtual TimeInterval validityInterval(TimePoint time) override { return TimeInterval::infinite(); }
 
@@ -146,6 +155,9 @@ public:
 
 	/// \brief Returns the value type of the controller.
 	virtual ControllerType controllerType() const override { return ControllerTypePosition; }
+
+	/// \brief Returns whether the value of this controller is changing over time.
+	virtual bool isAnimated() const override { return false; }
 
 	/// \brief Calculates the largest time interval containing the given time during which the controller's value does not change.
 	virtual TimeInterval validityInterval(TimePoint time) override { return TimeInterval::infinite(); }
@@ -185,6 +197,9 @@ public:
 	/// \brief Returns the value type of the controller.
 	virtual ControllerType controllerType() const override { return ControllerTypeRotation; }
 
+	/// \brief Returns whether the value of this controller is changing over time.
+	virtual bool isAnimated() const override { return false; }
+
 	/// \brief Calculates the largest time interval containing the given time during which the controller's value does not change.
 	virtual TimeInterval validityInterval(TimePoint time) override { return TimeInterval::infinite(); }
 
@@ -222,6 +237,9 @@ public:
 
 	/// \brief Returns the value type of the controller.
 	virtual ControllerType controllerType() const override { return ControllerTypeScaling; }
+
+	/// \brief Returns whether the value of this controller is changing over time.
+	virtual bool isAnimated() const override { return false; }
 
 	/// \brief Calculates the largest time interval containing the given time during which the controller's value does not change.
 	virtual TimeInterval validityInterval(TimePoint time) override { return TimeInterval::infinite(); }

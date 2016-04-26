@@ -42,6 +42,9 @@ public:
 		INIT_PROPERTY_FIELD(KeyframeController::_keys);
 	}
 
+	/// \brief Returns whether the value of this controller is changing over time.
+	virtual bool isAnimated() const override { return keys().size() >= 2; }
+
 	/// Returns the controller's list of animation keys.
 	const QVector<AnimationKey*>& keys() const { return _keys; }
 

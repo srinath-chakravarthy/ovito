@@ -30,6 +30,7 @@
 #include "DefaultParticlePrimitive.h"
 #include "DefaultTextPrimitive.h"
 #include "DefaultMeshPrimitive.h"
+#include "DefaultMarkerPrimitive.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
 
@@ -67,6 +68,11 @@ public:
 			ParticlePrimitive::ParticleShape shape,
 			bool translucentParticles) override {
 		return std::make_shared<DefaultParticlePrimitive>(shadingMode, renderingQuality, shape, translucentParticles);
+	}
+
+	/// Requests a new marker geometry buffer from the renderer.
+	virtual std::shared_ptr<MarkerPrimitive> createMarkerPrimitive(MarkerPrimitive::MarkerShape shape) override {
+		return std::make_shared<DefaultMarkerPrimitive>(shape);
 	}
 
 	/// Requests a new text geometry buffer from the renderer.
