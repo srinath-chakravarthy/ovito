@@ -48,6 +48,7 @@ SET(SourceFiles
 	animation/controller/KeyframeController.cpp
 	animation/controller/LinearInterpolationControllers.cpp
 	animation/controller/SplineInterpolationControllers.cpp
+	animation/controller/TCBInterpolationControllers.cpp
 	animation/controller/AnimationKeys.cpp
 	animation/controller/LookAtController.cpp
 	animation/controller/PRSTransformationController.cpp

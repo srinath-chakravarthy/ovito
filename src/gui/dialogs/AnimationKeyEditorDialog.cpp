@@ -22,6 +22,7 @@
 #include <gui/GUI.h>
 #include <gui/widgets/general/SpinnerWidget.h>
 #include <gui/mainwin/MainWindow.h>
+#include <gui/properties/PropertiesPanel.h>
 #include <gui/properties/NumericalParameterUI.h>
 #include <gui/dialogs/AnimationSettingsDialog.h>
 #include <core/animation/controller/KeyframeController.h>
@@ -289,7 +290,7 @@ private:
 /******************************************************************************
 * The constructor of the dialog widget.
 ******************************************************************************/
-AnimationKeyEditorDialog::AnimationKeyEditorDialog(KeyframeController* ctrl, const PropertyFieldDescriptor* propertyField, QWidget* parent) :
+AnimationKeyEditorDialog::AnimationKeyEditorDialog(KeyframeController* ctrl, const PropertyFieldDescriptor* propertyField, QWidget* parent, MainWindow* mainWindow) :
 	QDialog(parent),
 	UndoableTransaction(ctrl->dataset()->undoStack(), tr("Edit animatable parameter"))
 {
@@ -365,6 +366,9 @@ AnimationKeyEditorDialog::AnimationKeyEditorDialog(KeyframeController* ctrl, con
 	hlayout->addWidget(toolbar);
 	mainLayout->addLayout(hlayout);
 
+	_keyPropPanel = new PropertiesPanel(this, mainWindow);
+	mainLayout->addWidget(_keyPropPanel);
+
 	QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel | QDialogButtonBox::Help, Qt::Horizontal, this);
 	connect(buttonBox, &QDialogButtonBox::accepted, this, &AnimationKeyEditorDialog::onOk);
 	connect(buttonBox, &QDialogButtonBox::rejected, this, &AnimationKeyEditorDialog::reject);
@@ -378,7 +382,16 @@ AnimationKeyEditorDialog::AnimationKeyEditorDialog(KeyframeController* ctrl, con
 
 	connect(_tableWidget->selectionModel(), &QItemSelectionModel::selectionChanged, [this]() {
 		QModelIndexList selection = _tableWidget->selectionModel()->selectedRows();
-		_deleteKeyAction->setEnabled(_model->rowCount() > 1 && selection.empty() == false);
+		if(_model->rowCount() > 1 && selection.empty() == false) {
+			_deleteKeyAction->setEnabled(true);
+			const QModelIndex& index = selection.first();
+			OVITO_ASSERT(index.row() >= 0 && index.row() < this->ctrl()->keys().size());
+			_keyPropPanel->setEditObject(this->ctrl()->keys()[index.row()]);
+		}
+		else {
+			_deleteKeyAction->setEnabled(false);
+			_keyPropPanel->setEditObject(nullptr);
+		}
 	});
 	if(_model->rowCount() >= 0)
 		_tableWidget->selectRow(_model->rowCount() - 1);

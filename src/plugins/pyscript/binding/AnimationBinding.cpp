@@ -24,6 +24,10 @@
 #include <core/animation/AnimationSettings.h>
 #include <core/animation/controller/Controller.h>
 #include <core/animation/controller/PRSTransformationController.h>
+#include <core/animation/controller/LinearInterpolationControllers.h>
+#include <core/animation/controller/SplineInterpolationControllers.h>
+#include <core/animation/controller/TCBInterpolationControllers.h>
+#include <core/animation/controller/LookAtController.h>
 #include "PythonBinding.h"
 
 namespace PyScript {
@@ -139,6 +143,36 @@ BOOST_PYTHON_MODULE(PyScriptAnimation)
 		.add_property("position", make_function(&PRSTransformationController::positionController, return_value_policy<ovito_object_reference>()), &PRSTransformationController::setPositionController)
 		.add_property("rotation", make_function(&PRSTransformationController::rotationController, return_value_policy<ovito_object_reference>()), &PRSTransformationController::setRotationController)
 		.add_property("scaling", make_function(&PRSTransformationController::scalingController, return_value_policy<ovito_object_reference>()), &PRSTransformationController::setScalingController)
+	;
+
+	ovito_abstract_class<KeyframeController, Controller>()
+	;
+
+	ovito_class<LinearFloatController, KeyframeController>()
+	;
+
+	ovito_class<LinearIntegerController, KeyframeController>()
+	;
+
+	ovito_class<LinearVectorController, KeyframeController>()
+	;
+
+	ovito_class<LinearPositionController, KeyframeController>()
+	;
+
+	ovito_class<LinearRotationController, KeyframeController>()
+	;
+
+	ovito_class<LinearScalingController, KeyframeController>()
+	;
+
+	ovito_class<SplinePositionController, KeyframeController>()
+	;
+
+	ovito_class<TCBPositionController, KeyframeController>()
+	;
+
+	ovito_class<LookAtController, Controller>()
 	;
 }
 

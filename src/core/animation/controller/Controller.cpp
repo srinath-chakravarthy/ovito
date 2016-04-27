@@ -24,6 +24,7 @@
 #include <core/animation/controller/ConstantControllers.h>
 #include <core/animation/controller/LinearInterpolationControllers.h>
 #include <core/animation/controller/SplineInterpolationControllers.h>
+#include <core/animation/controller/TCBInterpolationControllers.h>
 #include <core/animation/controller/PRSTransformationController.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/dataset/DataSet.h>
@@ -124,6 +125,7 @@ OORef<Controller> ControllerManager::createVector3Controller(DataSet* dataset)
 ******************************************************************************/
 OORef<Controller> ControllerManager::createPositionController(DataSet* dataset)
 {
+	//return new TCBPositionController(dataset);
 	return new SplinePositionController(dataset);
 }
 

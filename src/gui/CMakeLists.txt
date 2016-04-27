@@ -110,6 +110,7 @@ SET(SourceFiles
 	scene/objects/camera/CameraObjectEditor.cpp
 	scene/objects/geometry/TriMeshDisplayEditor.cpp
 	utilities/io/GuiFileManager.cpp
+	animation/controller/TCBInterpolationControllerEditor.cpp
 )
 
 # Compile resources.

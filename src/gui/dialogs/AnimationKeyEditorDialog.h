@@ -39,7 +39,7 @@ class AnimationKeyEditorDialog : public QDialog, private UndoableTransaction
 public:
 
 	/// Constructor.
-	AnimationKeyEditorDialog(KeyframeController* ctrl, const PropertyFieldDescriptor* propertyField, QWidget* parentWindow = nullptr);
+	AnimationKeyEditorDialog(KeyframeController* ctrl, const PropertyFieldDescriptor* propertyField, QWidget* parent, MainWindow* mainWindow);
 	
 	/// Returns the animation controller being edited.
 	KeyframeController* ctrl() const { return _ctrl.target(); }
@@ -62,6 +62,7 @@ private:
 	QAction* _addKeyAction;
 	QAction* _deleteKeyAction;
 	RefTargetListener<KeyframeController> _ctrl;
+	PropertiesPanel* _keyPropPanel;
 };
 
 OVITO_END_INLINE_NAMESPACE

@@ -122,7 +122,7 @@ private:
  */
 template<typename KeyType>
 struct SplineKeyInterpolator {
-	typename KeyType::value_type operator()(TimePoint time, KeyType* key1, KeyType* key2) const {
+	typename KeyType::value_type operator()(TimePoint time, KeyType* key0, KeyType* key1, KeyType* key2, KeyType* key3) const {
 		OVITO_ASSERT(key2->time() > key1->time());
 		FloatType t = (FloatType)(time - key1->time()) / (key2->time() - key1->time());
 		SplineValueInterpolator<typename KeyType::value_type> valueInterpolator;

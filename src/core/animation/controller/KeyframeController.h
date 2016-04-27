@@ -171,7 +171,11 @@ protected:
 				}
 				else if((*key)->time() > time) {
 					// Interpolate between two keys.
-					result = KeyInterpolator()(time, *(key - 1), *key);
+					result = KeyInterpolator()(time,
+							(key != (keys.begin() + 1)) ? *(key - 2) : nullptr,
+							*(key - 1),
+							*key,
+							(key != (keys.end() - 1)) ? *(key + 1) : nullptr);
 					return;
 				}
 			}

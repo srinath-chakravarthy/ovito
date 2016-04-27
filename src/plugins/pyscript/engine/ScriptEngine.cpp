@@ -102,7 +102,8 @@ void ScriptEngine::initializeInterpreter()
 		// On Windows this pre-registration is also needed, because OVITO plugin dynamic libraries have an .dll extension and the Python interpreter 
 		// can only find modules that have a .pyd extension.
 		for(PythonPluginRegistration* r = PythonPluginRegistration::linkedlist; r != nullptr; r = r->_next) {
-			PyImport_AppendInittab(r->_moduleName, r->_initFunc);
+			// Note: "const_cast" is for backward compatibility with Python 2.6
+			PyImport_AppendInittab(const_cast<char*>(r->_moduleName), r->_initFunc);
 		}
 
 		// Initialize the Python interpreter.
