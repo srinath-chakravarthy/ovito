@@ -92,9 +92,9 @@ private:
 	public:
 
 		/// Constructor.
-		VoroTopAnalysisEngine(const TimeInterval& validityInterval, ParticleProperty* positions, ParticleProperty* selection,
+		VoroTopAnalysisEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const QVector<bool>& typesToIdentify, ParticleProperty* selection,
 							std::vector<FloatType>&& radii, const SimulationCell& simCell) :
-			StructureIdentificationEngine(validityInterval, positions, simCell, selection),
+			StructureIdentificationEngine(validityInterval, positions, simCell, typesToIdentify, selection),
 			_radii(std::move(radii)) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.

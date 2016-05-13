@@ -89,8 +89,14 @@ public:
 	/// \brief Sets the aspherical shape of the particles.
 	virtual void setParticleShapes(const Vector3* shapes) = 0;
 
-	/// \brief Sets the orientation of aspherical particles.
+	/// \brief Sets the aspherical shape of the particles.
 	virtual void setParticleOrientations(const Quaternion* orientations) = 0;
+
+	/// \brief Resets the aspherical shape of the particles.
+	virtual void clearParticleShapes() = 0;
+
+	/// \brief Resets the orientation of particles.
+	virtual void clearParticleOrientations() = 0;
 
 	/// \brief Returns the shading mode for particles.
 	ShadingMode shadingMode() const { return _shadingMode; }

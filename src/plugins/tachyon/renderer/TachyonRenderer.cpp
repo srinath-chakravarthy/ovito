@@ -348,16 +348,16 @@ void TachyonRenderer::renderParticles(const DefaultParticlePrimitive& particleBu
 		for(; p != p_end; ++p, ++c, ++r) {
 			void* tex = getTachyonTexture(c->r(), c->g(), c->b(), c->a());
 			Point3 tp = tm * (*p);
-			rt_box(_rtscene, tex, tvec(tp - Vector3(*r)), tvec(tp + Vector3(*r)));
+			rt_box(_rtscene, tex, rt_vector(tp.x() - *r, tp.y() - *r, -tp.z() - *r), rt_vector(tp.x() + *r, tp.y() + *r, -tp.z() + *r));
 		}
 	}
 	else if(particleBuffer.particleShape() == ParticlePrimitive::BoxShape) {
-		// Rendering noncubic box particles.
+		// Rendering noncubic/rotated box particles.
 		auto shape = particleBuffer.shapes().begin();
 		auto shape_end = particleBuffer.shapes().end();
 		auto orientation = particleBuffer.orientations().cbegin();
 		auto orientation_end = particleBuffer.orientations().cend();
-		for(; p != p_end && shape != shape_end; ++p, ++c, ++shape, ++r) {
+		for(; p != p_end; ++p, ++c, ++r) {
 			void* tex = getTachyonTexture(c->r(), c->g(), c->b(), c->a());
 			Point3 tp = tm * (*p);
 			Quaternion quat(0,0,0,1);
@@ -365,42 +365,44 @@ void TachyonRenderer::renderParticles(const DefaultParticlePrimitive& particleBu
 				quat = *orientation++;
 				// Normalize quaternion.
 				FloatType c = sqrt(quat.dot(quat));
-				if(c == 0)
+				if(c <= FLOATTYPE_EPSILON)
 					quat.setIdentity();
 				else
 					quat /= c;
 			}
-			if(*shape != Vector3::Zero()) {
-				if(quat == Quaternion(0,0,0,1)) {
-					rt_box(_rtscene, tex, tvec(tp - *shape), tvec(tp + *shape));
-				}
-				else {
-					apivector corners[8] = {
-							tvec(tp + quat * Vector3(-shape->x(), -shape->y(), -shape->z())),
-							tvec(tp + quat * Vector3( shape->x(), -shape->y(), -shape->z())),
-							tvec(tp + quat * Vector3( shape->x(),  shape->y(), -shape->z())),
-							tvec(tp + quat * Vector3(-shape->x(),  shape->y(), -shape->z())),
-							tvec(tp + quat * Vector3(-shape->x(), -shape->y(),  shape->z())),
-							tvec(tp + quat * Vector3( shape->x(), -shape->y(),  shape->z())),
-							tvec(tp + quat * Vector3( shape->x(),  shape->y(),  shape->z())),
-							tvec(tp + quat * Vector3(-shape->x(),  shape->y(),  shape->z()))
-					};
-					rt_tri(_rtscene, tex, corners[0], corners[1], corners[2]);
-					rt_tri(_rtscene, tex, corners[0], corners[2], corners[3]);
-					rt_tri(_rtscene, tex, corners[4], corners[6], corners[5]);
-					rt_tri(_rtscene, tex, corners[4], corners[7], corners[6]);
-					rt_tri(_rtscene, tex, corners[0], corners[4], corners[5]);
-					rt_tri(_rtscene, tex, corners[0], corners[5], corners[1]);
-					rt_tri(_rtscene, tex, corners[1], corners[5], corners[6]);
-					rt_tri(_rtscene, tex, corners[1], corners[6], corners[2]);
-					rt_tri(_rtscene, tex, corners[2], corners[6], corners[7]);
-					rt_tri(_rtscene, tex, corners[2], corners[7], corners[3]);
-					rt_tri(_rtscene, tex, corners[3], corners[7], corners[4]);
-					rt_tri(_rtscene, tex, corners[3], corners[4], corners[0]);
-				}
+			Vector3 s(*r);
+			if(shape != shape_end) {
+				s = *shape++;
+				if(s == Vector3::Zero())
+					s = Vector3(*r);
 			}
-			else
-				rt_box(_rtscene, tex, tvec(tp - Vector3(*r)), tvec(tp + Vector3(*r)));
+			if(quat == Quaternion(0,0,0,1)) {
+				rt_box(_rtscene, tex, rt_vector(tp.x() - s.x(), tp.y() - s.y(), -tp.z()-s.z()), rt_vector(tp.x() + s.x(), tp.y() + s.y(), -tp.z()+s.z()));
+			}
+			else {
+				apivector corners[8] = {
+						tvec(tp + quat * Vector3(-s.x(), -s.y(), -s.z())),
+						tvec(tp + quat * Vector3( s.x(), -s.y(), -s.z())),
+						tvec(tp + quat * Vector3( s.x(),  s.y(), -s.z())),
+						tvec(tp + quat * Vector3(-s.x(),  s.y(), -s.z())),
+						tvec(tp + quat * Vector3(-s.x(), -s.y(),  s.z())),
+						tvec(tp + quat * Vector3( s.x(), -s.y(),  s.z())),
+						tvec(tp + quat * Vector3( s.x(),  s.y(),  s.z())),
+						tvec(tp + quat * Vector3(-s.x(),  s.y(),  s.z()))
+				};
+				rt_tri(_rtscene, tex, corners[0], corners[1], corners[2]);
+				rt_tri(_rtscene, tex, corners[0], corners[2], corners[3]);
+				rt_tri(_rtscene, tex, corners[4], corners[6], corners[5]);
+				rt_tri(_rtscene, tex, corners[4], corners[7], corners[6]);
+				rt_tri(_rtscene, tex, corners[0], corners[4], corners[5]);
+				rt_tri(_rtscene, tex, corners[0], corners[5], corners[1]);
+				rt_tri(_rtscene, tex, corners[1], corners[5], corners[6]);
+				rt_tri(_rtscene, tex, corners[1], corners[6], corners[2]);
+				rt_tri(_rtscene, tex, corners[2], corners[6], corners[7]);
+				rt_tri(_rtscene, tex, corners[2], corners[7], corners[3]);
+				rt_tri(_rtscene, tex, corners[3], corners[7], corners[4]);
+				rt_tri(_rtscene, tex, corners[3], corners[4], corners[0]);
+			}
 		}
 	}
 	else if(particleBuffer.particleShape() == ParticlePrimitive::EllipsoidShape) {

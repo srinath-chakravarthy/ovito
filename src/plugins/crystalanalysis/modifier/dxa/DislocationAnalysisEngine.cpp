@@ -40,7 +40,7 @@ DislocationAnalysisEngine::DislocationAnalysisEngine(const TimeInterval& validit
 		bool reconstructEdgeVectors, ParticleProperty* particleSelection,
 		ParticleProperty* crystalClusters,
 		std::vector<Matrix3>&& preferredCrystalOrientations) :
-	StructureIdentificationModifier::StructureIdentificationEngine(validityInterval, positions, simCell, particleSelection),
+	StructureIdentificationModifier::StructureIdentificationEngine(validityInterval, positions, simCell, QVector<bool>(), particleSelection),
 	_structureAnalysis(positions, simCell, (StructureAnalysis::LatticeStructureType)inputCrystalStructure, selection(), structures(), std::move(preferredCrystalOrientations)),
 	_defectMesh(new HalfEdgeMesh<>()),
 	_elasticMapping(_structureAnalysis, _tessellation),

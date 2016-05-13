@@ -159,8 +159,8 @@ private:
 	public:
 
 		/// Constructor.
-		FixedCNAEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, ParticleProperty* selection, FloatType cutoff) :
-			StructureIdentificationEngine(validityInterval, positions, simCell, selection), _cutoff(cutoff) {}
+		FixedCNAEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, const QVector<bool>& typesToIdentify, ParticleProperty* selection, FloatType cutoff) :
+			StructureIdentificationEngine(validityInterval, positions, simCell, typesToIdentify, selection), _cutoff(cutoff) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;
@@ -177,8 +177,8 @@ private:
 	public:
 
 		/// Constructor.
-		AdaptiveCNAEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, ParticleProperty* selection) :
-			StructureIdentificationEngine(validityInterval, positions, simCell, selection) {}
+		AdaptiveCNAEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, const QVector<bool>& typesToIdentify, ParticleProperty* selection) :
+			StructureIdentificationEngine(validityInterval, positions, simCell, typesToIdentify, selection) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;
@@ -190,8 +190,8 @@ private:
 	public:
 
 		/// Constructor.
-		BondCNAEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, ParticleProperty* selection, BondsStorage* bonds) :
-			StructureIdentificationEngine(validityInterval, positions, simCell, selection), _bonds(bonds),
+		BondCNAEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, const QVector<bool>& typesToIdentify, ParticleProperty* selection, BondsStorage* bonds) :
+			StructureIdentificationEngine(validityInterval, positions, simCell, typesToIdentify, selection), _bonds(bonds),
 			_cnaIndices(new BondProperty(bonds->size(), qMetaTypeId<int>(), 3, 0, tr("CNA Indices"), false)) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
@@ -210,10 +210,10 @@ private:
 	};
 
 	/// Determines the coordination structure of a single particle using the common neighbor analysis method.
-	static StructureType determineStructureAdaptive(NearestNeighborFinder& neighList, size_t particleIndex);
+	static StructureType determineStructureAdaptive(NearestNeighborFinder& neighList, size_t particleIndex, const QVector<bool>& typesToIdentify);
 
 	/// Determines the coordination structure of a single particle using the common neighbor analysis method.
-	static StructureType determineStructureFixed(CutoffNeighborFinder& neighList, size_t particleIndex);
+	static StructureType determineStructureFixed(CutoffNeighborFinder& neighList, size_t particleIndex, const QVector<bool>& typesToIdentify);
 
 	/// The cutoff radius used for the conventional CNA.
 	PropertyField<FloatType> _cutoff;

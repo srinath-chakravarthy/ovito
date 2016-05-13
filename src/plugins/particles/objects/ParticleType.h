@@ -78,10 +78,23 @@ public:
 	/// \undoable
 	void setRadius(FloatType newRadius) { _radius = newRadius; }
 
+	/// \brief Returns whether this type is enabled or disabled.
+	/// This controls, e.g., the search for this structure type by structure identification modifiers.
+	bool isEnabled() const { return _enabled; }
+
+	/// \brief Sets whether this type is enabled or disabled.
+	/// This controls, e.g., the search for this structure type by structure identification modifiers.
+	void setEnabled(bool enabled) { _enabled = enabled; }
+
 	// From RefTarget class:
 
 	/// Returns the title of this object.
 	virtual QString objectTitle() override { return name(); }
+
+protected:
+
+	/// Is called when the value of a property of this object has changed.
+	virtual void propertyChanged(const PropertyFieldDescriptor& field) override;
 
 protected:
 
@@ -97,6 +110,10 @@ protected:
 	/// Stores the radius of the particle type.
 	PropertyField<FloatType> _radius;
 
+	/// Stores whether this type is enabled or disabled.
+	/// This controls, e.g., the search for this structure type by structure identification modifiers.
+	PropertyField<bool> _enabled;
+
 private:
 
 	Q_OBJECT
@@ -106,6 +123,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_name);
 	DECLARE_PROPERTY_FIELD(_color);
 	DECLARE_PROPERTY_FIELD(_radius);
+	DECLARE_PROPERTY_FIELD(_enabled);
 };
 
 }	// End of namespace

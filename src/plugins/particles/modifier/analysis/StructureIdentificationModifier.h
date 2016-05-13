@@ -42,9 +42,10 @@ public:
 	public:
 
 		/// Constructor.
-		StructureIdentificationEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, ParticleProperty* selection = nullptr) :
+		StructureIdentificationEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, const QVector<bool>& typesToIdentify, ParticleProperty* selection = nullptr) :
 			ComputeEngine(validityInterval),
 			_positions(positions), _simCell(simCell),
+			_typesToIdentify(typesToIdentify),
 			_selection(selection),
 			_structures(new ParticleProperty(positions->size(), ParticleProperty::StructureTypeProperty, 0, false)) {}
 
@@ -60,12 +61,16 @@ public:
 		/// Returns the simulation cell data.
 		const SimulationCell& cell() const { return _simCell; }
 
+		/// Returns the list of structure types to search for.
+		const QVector<bool>& typesToIdentify() const { return _typesToIdentify; }
+
 	private:
 
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
 		QExplicitlySharedDataPointer<ParticleProperty> _structures;
 		QExplicitlySharedDataPointer<ParticleProperty> _selection;
 		SimulationCell _simCell;
+		QVector<bool> _typesToIdentify;
 	};
 
 public:
@@ -85,6 +90,12 @@ public:
 	/// Sets whether analysis only selected particles are taken into account.
 	void setOnlySelectedParticles(bool onlySelected) { _onlySelectedParticles = onlySelected; }
 
+	/// Returns the cached results of the modifier, i.e. the structures assigned to the particles.
+	ParticleProperty* structureData() const { return _structureData.data(); }
+
+	/// Replaces the cached results of the modifier, i.e. the structures assigned to the particles.
+	void setStructureData(ParticleProperty* structureData) { _structureData = structureData; }
+
 protected:
 
 	/// Saves the class' contents to the given stream.
@@ -96,11 +107,17 @@ protected:
 	/// Is called when the value of a property of this object has changed.
 	virtual void propertyChanged(const PropertyFieldDescriptor& field) override;
 
+	/// Is called when a RefTarget referenced by this object has generated an event.
+	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
+
 	/// Inserts a structure type into the list.
 	void addStructureType(ParticleType* type) { _structureTypes.push_back(type); }
 
 	/// Create an instance of the ParticleType class to represent a structure type.
 	void createStructureType(int id, ParticleTypeProperty::PredefinedStructureType predefType);
+
+	/// Returns a bit flag array which indicates what structure types to search for.
+	QVector<bool> getTypesToIdentify(int numTypes) const;
 
 	/// Unpacks the results of the computation engine and stores them in the modifier.
 	virtual void transferComputationResults(ComputeEngine* engine) override;

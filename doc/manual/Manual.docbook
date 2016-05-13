@@ -49,5 +49,7 @@
   
   <xi:include href="Appendix_License_geogram.docbook"/>
 
+  <xi:include href="Appendix_License_PTM.docbook"/>
+  
   <xi:include href="Appendix_License_voroplusplus.docbook"/>
 </book>

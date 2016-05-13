@@ -66,15 +66,15 @@ private:
 	public:
 
 		/// Constructor.
-		BondAngleAnalysisEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, ParticleProperty* selection) :
-			StructureIdentificationEngine(validityInterval, positions, simCell, selection) {}
+		BondAngleAnalysisEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, const QVector<bool>& typesToIdentify, ParticleProperty* selection) :
+			StructureIdentificationEngine(validityInterval, positions, simCell, typesToIdentify, selection) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;
 	};
 
 	/// Determines the coordination structure of a single particle using the bond-angle analysis method.
-	static StructureType determineStructure(NearestNeighborFinder& neighFinder, size_t particleIndex);
+	static StructureType determineStructure(NearestNeighborFinder& neighFinder, size_t particleIndex, const QVector<bool>& typesToIdentify);
 
 	Q_OBJECT
 	OVITO_OBJECT

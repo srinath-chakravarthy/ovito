@@ -81,7 +81,7 @@ void CommonNeighborAnalysisModifierEditor::createUI(const RolloutInsertionParame
 	layout1->addSpacing(10);
 	layout1->addWidget(statusLabel());
 
-	StructureListParameterUI* structureTypesPUI = new StructureListParameterUI(this);
+	StructureListParameterUI* structureTypesPUI = new StructureListParameterUI(this, true);
 	layout1->addSpacing(10);
 	layout1->addWidget(new QLabel(tr("Structure types:")));
 	layout1->addWidget(structureTypesPUI->tableWidget());

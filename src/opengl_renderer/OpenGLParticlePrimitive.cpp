@@ -331,8 +331,9 @@ void OpenGLParticlePrimitive::setSize(int particleCount)
 		_colorsBuffers[i].create(QOpenGLBuffer::StaticDraw, size, verticesPerParticle);
 		if(particleShape() == BoxShape || particleShape() == EllipsoidShape) {
 			_shapeBuffers[i].create(QOpenGLBuffer::StaticDraw, size, verticesPerParticle);
+			_shapeBuffers[i].fillConstant(Vector3::Zero());
 			_orientationBuffers[i].create(QOpenGLBuffer::StaticDraw, size, verticesPerParticle);
-			_orientationBuffers[i].fillConstant(Quaternion(0,0,0,0));
+			_orientationBuffers[i].fillConstant(Quaternion(0,0,0,1));
 		}
 	}
 }
@@ -445,6 +446,28 @@ void OpenGLParticlePrimitive::setParticleOrientations(const Quaternion* orientat
 			buffer.fill(orientations);
 			orientations += buffer.elementCount();
 		}
+	}
+}
+
+/******************************************************************************
+* Resets the aspherical shape of the particles.
+******************************************************************************/
+void OpenGLParticlePrimitive::clearParticleShapes()
+{
+	OVITO_ASSERT(QOpenGLContextGroup::currentContextGroup() == _contextGroup);
+	for(auto& buffer : _shapeBuffers) {
+		buffer.fillConstant(Vector3::Zero());
+	}
+}
+
+/******************************************************************************
+* Resets the orientation of particles.
+******************************************************************************/
+void OpenGLParticlePrimitive::clearParticleOrientations()
+{
+	OVITO_ASSERT(QOpenGLContextGroup::currentContextGroup() == _contextGroup);
+	for(auto& buffer : _orientationBuffers) {
+		buffer.fillConstant(Quaternion(0,0,0,1));
 	}
 }
 
@@ -574,7 +597,7 @@ void OpenGLParticlePrimitive::renderPointSprites(OpenGLSceneRenderer* renderer)
 		}
 		else {
 			// By default, render particles in arbitrary order.
-			OVITO_CHECK_OPENGL(glDrawArrays(GL_POINTS, 0, chunkSize));
+			OVITO_CHECK_OPENGL(renderer->glDrawArrays(GL_POINTS, 0, chunkSize));
 		}
 
 		_positionsBuffers[chunkIndex].detachPositions(renderer, shader);
@@ -846,7 +869,7 @@ void OpenGLParticlePrimitive::renderImposters(OpenGLSceneRenderer* renderer)
 			}
 			else {
 				// By default, render particles in arbitrary order.
-				OVITO_CHECK_OPENGL(glDrawArrays(GL_POINTS, 0, chunkSize));
+				OVITO_CHECK_OPENGL(renderer->glDrawArrays(GL_POINTS, 0, chunkSize));
 			}
 		}
 		else {

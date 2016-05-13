@@ -46,12 +46,18 @@ Unresolved OpenGL problems:
     Workaround is to explicitly turn off the use point sprites.
 - High-quality particle rendering does not work properly (spheres are cut in half), 
     Ovito 2.6.1 Linux, Mesa DRI Intel(R) Sandybridge Mobile, 3.3 (Core Profile) Mesa 11.1.2  (morten.nagel@helsinki.fi)
+    
+- Program crashes when setting particle radius to an extremely large value:
+   Linux, Intel Graphics, Message: "Matrix4 cannot be inverted: determinant is zero."
+   (francoprud@gmail.com)
 
 Unresolved bugs:
 
+- Fix input problem in interactive Python interpreter on Mac OS (gvizkel@sandia.gov).
 - OVITO crashes under Windows 10 when using the Python script modifier (fsyed2309@mytu.tuskegee.edu). 
 - NearestNeighborFinder doesn't work properly for triclinic cells with small angles.
-- Assertion error at program shut down when Python script references an object
+- Assertion error at program shut down when Python script references an object or the Dataset
+- Construct surface mesh doesn't work for very small length scales (reported by xin.liu@insa-lyon.fr)
 
 New analysis features:
 
@@ -59,6 +65,7 @@ New analysis features:
 - Plotting the value of a certain property of a certain particle versus simulation time. To make this work, all simulation frames need to be kept in memory (requested by Taojun & Mathieu Marciante).
 - Compute polar decomposition of deformation gradient, F=RU (requested by arun.prakash@fau.de).
 - Calculation of type-specific RDF.
+- Let user select the set of atomic structure types to search for (PTM, CNA, etc.).
 
 New I/O functions:
 
@@ -66,6 +73,8 @@ New I/O functions:
 - Single precision floating-point numbers, which are used for custom particle properties, cannot represent large integer numbers exactly (e.g. 100400). Find a solution to make it work.
 - Load atomic trajectories from LAMMPS dump files and import bond information from a separate LAMMPS data file (suggested by jorge.ramirez@upm.es, HeineDR@corning.com).
 - Add support for more file formats using OpenBabel.
+- Output timestep number in header of LAMMPS dump files instead of frame number.
+- General text file export for scalar computation results.
 
 Performance improvements:
 
@@ -76,6 +85,7 @@ Scripting features:
 - Display script output when running a script via the GUI menu.
 - Scripting interface for viewport overlays (requested by lidong.cauc@gmail.com and johannes.moeller@fau.de).
 - Distribute Scipy with Ovito?
+- Make DXA dislocation statistics accessible from Python.
 
 Documentation:
 

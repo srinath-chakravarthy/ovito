@@ -35,7 +35,7 @@ class OVITO_PARTICLES_GUI_EXPORT StructureListParameterUI : public RefTargetList
 public:
 
 	/// Constructor.
-	StructureListParameterUI(PropertiesEditor* parentEditor);
+	StructureListParameterUI(PropertiesEditor* parentEditor, bool showCheckBoxes = false);
 
 	/// This method is called when a new editable object has been activated.
 	virtual void resetUI() override {
@@ -48,6 +48,12 @@ protected:
 
 	/// Returns a data item from the list data model.
 	virtual QVariant getItemData(RefTarget* target, const QModelIndex& index, int role) override;
+
+	/// Returns the model/view item flags for the given entry.
+	virtual Qt::ItemFlags getItemFlags(RefTarget* target, const QModelIndex& index) override;
+
+	/// Sets the role data for the item at index to value.
+	virtual bool setItemData(RefTarget* target, const QModelIndex& index, const QVariant& value, int role) override;
 
 	/// Returns the number of columns for the table view.
 	virtual int tableColumnCount() override { return 5; }
@@ -63,10 +69,10 @@ protected:
 				return qVariantFromValue(tr("Count"));
 			else if(index == 3)
 				return qVariantFromValue(tr("Fraction"));
-			else
+			else if(index == 4)
 				return qVariantFromValue(tr("Id"));
 		}
-		else return RefTargetListParameterUI::getHorizontalHeaderData(index, role);
+		return RefTargetListParameterUI::getHorizontalHeaderData(index, role);
 	}
 
 	/// Do not open sub-editor for selected structure type.
@@ -81,6 +87,9 @@ protected Q_SLOTS:
 	void onDoubleClickStructureType(const QModelIndex& index);
 
 private:
+
+	/// Controls whether a check box is shown next to each structure type.
+	bool _showCheckBoxes;
 
 	Q_OBJECT
 };

@@ -31,21 +31,35 @@ DEFINE_PROPERTY_FIELD(ParticleType, _id, "Identifier");
 DEFINE_PROPERTY_FIELD(ParticleType, _color, "Color");
 DEFINE_PROPERTY_FIELD(ParticleType, _radius, "Radius");
 DEFINE_PROPERTY_FIELD(ParticleType, _name, "Name");
+DEFINE_PROPERTY_FIELD(ParticleType, _enabled, "Enabled");
 SET_PROPERTY_FIELD_LABEL(ParticleType, _id, "Id");
 SET_PROPERTY_FIELD_LABEL(ParticleType, _color, "Color");
 SET_PROPERTY_FIELD_LABEL(ParticleType, _radius, "Radius");
 SET_PROPERTY_FIELD_LABEL(ParticleType, _name, "Name");
+SET_PROPERTY_FIELD_LABEL(ParticleType, _enabled, "Enabled");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ParticleType, _radius, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructs a new ParticleType.
 ******************************************************************************/
-ParticleType::ParticleType(DataSet* dataset) : RefTarget(dataset), _color(1,1,1), _radius(0), _id(0)
+ParticleType::ParticleType(DataSet* dataset) : RefTarget(dataset), _color(1,1,1), _radius(0), _id(0), _enabled(true)
 {
 	INIT_PROPERTY_FIELD(ParticleType::_id);
 	INIT_PROPERTY_FIELD(ParticleType::_color);
 	INIT_PROPERTY_FIELD(ParticleType::_radius);
 	INIT_PROPERTY_FIELD(ParticleType::_name);
+	INIT_PROPERTY_FIELD(ParticleType::_enabled);
+}
+
+/******************************************************************************
+* Is called when the value of a property of this object has changed.
+******************************************************************************/
+void ParticleType::propertyChanged(const PropertyFieldDescriptor& field)
+{
+	RefTarget::propertyChanged(field);
+
+	if(field == PROPERTY_FIELD(ParticleType::_enabled))
+		notifyDependents(ReferenceEvent::TargetEnabledOrDisabled);
 }
 
 }	// End of namespace

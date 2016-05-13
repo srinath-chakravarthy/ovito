@@ -191,6 +191,18 @@ void RefTargetListParameterUI::openSubEditor()
 }
 
 /******************************************************************************
+* Returns a RefTarget from the list.
+******************************************************************************/
+RefTarget* RefTargetListParameterUI::objectAtIndex(int index) const
+{
+	if(index >= _rowToTarget.size()) return nullptr;
+	int targetIndex = _rowToTarget[index];
+	OVITO_ASSERT(targetIndex < _targets.size());
+	OVITO_CHECK_OBJECT_POINTER(_targets[targetIndex]);
+	return _targets[targetIndex];
+}
+
+/******************************************************************************
 * Returns the RefTarget that is currently selected in the UI.
 ******************************************************************************/
 RefTarget* RefTargetListParameterUI::selectedObject() const
@@ -198,11 +210,7 @@ RefTarget* RefTargetListParameterUI::selectedObject() const
 	if(!_viewWidget) return nullptr;
 	QModelIndexList selection = _viewWidget->selectionModel()->selectedRows();
 	if(selection.empty()) return nullptr;
-	if(selection.front().row() >= _rowToTarget.size()) return nullptr;
-	int targetIndex = _rowToTarget[selection.front().row()];
-	OVITO_ASSERT(targetIndex < _targets.size());
-	OVITO_CHECK_OBJECT_POINTER(_targets[targetIndex]);
-	return _targets[targetIndex];
+	return objectAtIndex(selection.front().row());
 }
 
 /******************************************************************************

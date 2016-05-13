@@ -38,7 +38,7 @@ GrainSegmentationEngine::GrainSegmentationEngine(const TimeInterval& validityInt
 		int inputCrystalStructure, FloatType misorientationThreshold,
 		FloatType fluctuationTolerance, int minGrainAtomCount,
 		FloatType probeSphereRadius, int meshSmoothingLevel) :
-	StructureIdentificationModifier::StructureIdentificationEngine(validityInterval, positions, simCell, selection),
+	StructureIdentificationModifier::StructureIdentificationEngine(validityInterval, positions, simCell, QVector<bool>(), selection),
 	_structureAnalysis(positions, simCell, (StructureAnalysis::LatticeStructureType)inputCrystalStructure, selection, structures()),
 	_inputCrystalStructure(inputCrystalStructure),
 	_deformationGradients(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 9, 0, QStringLiteral("Elastic Deformation Gradient"), false)),

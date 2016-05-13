@@ -70,6 +70,12 @@ public:
 	/// \brief Sets the orientation of aspherical particles.
 	virtual void setParticleOrientations(const Quaternion* orientations) override;
 
+	/// \brief Resets the aspherical shape of the particles.
+	virtual void clearParticleShapes() override;
+
+	/// \brief Resets the orientation of particles.
+	virtual void clearParticleOrientations() override;
+
 	/// \brief Returns true if the geometry buffer is filled and can be rendered with the given renderer.
 	virtual bool isValid(SceneRenderer* renderer) override;
 

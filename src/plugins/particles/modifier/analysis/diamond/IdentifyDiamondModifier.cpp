@@ -62,7 +62,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> IdentifyDiamondModi
 		selectionProperty = expectStandardProperty(ParticleProperty::SelectionProperty)->storage();
 
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
-	return std::make_shared<DiamondIdentificationEngine>(validityInterval, posProperty->storage(), simCell->data(), selectionProperty);
+	return std::make_shared<DiamondIdentificationEngine>(validityInterval, posProperty->storage(), simCell->data(), getTypesToIdentify(NUM_STRUCTURE_TYPES), selectionProperty);
 }
 
 /******************************************************************************
@@ -172,8 +172,8 @@ void IdentifyDiamondModifier::DiamondIdentificationEngine::perform()
 			else if(maxChainLength == 2) n422++;
 			else return;
 		}
-		if(n421 == 12) output->setInt(index, CUBIC_DIAMOND);
-		else if(n421 == 6 && n422 == 6) output->setInt(index, HEX_DIAMOND);
+		if(n421 == 12 && typesToIdentify()[CUBIC_DIAMOND]) output->setInt(index, CUBIC_DIAMOND);
+		else if(n421 == 6 && n422 == 6 && typesToIdentify()[HEX_DIAMOND]) output->setInt(index, HEX_DIAMOND);
 	});
 
 	// Mark first neighbors of crystalline atoms.

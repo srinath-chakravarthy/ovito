@@ -28,8 +28,9 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-StructureListParameterUI::StructureListParameterUI(PropertiesEditor* parentEditor)
-	: RefTargetListParameterUI(parentEditor, PROPERTY_FIELD(StructureIdentificationModifier::_structureTypes))
+StructureListParameterUI::StructureListParameterUI(PropertiesEditor* parentEditor, bool showCheckBoxes)
+	: RefTargetListParameterUI(parentEditor, PROPERTY_FIELD(StructureIdentificationModifier::_structureTypes)),
+	  _showCheckBoxes(showCheckBoxes)
 {
 	connect(tableWidget(220), &QTableWidget::doubleClicked, this, &StructureListParameterUI::onDoubleClickStructureType);
 	tableWidget()->setAutoScroll(false);
@@ -70,8 +71,41 @@ QVariant StructureListParameterUI::getItemData(RefTarget* target, const QModelIn
 			if(index.column() == 0)
 				return (QColor)stype->color();
 		}
+		else if(role == Qt::CheckStateRole && _showCheckBoxes) {
+			if(index.column() == 0)
+				return stype->isEnabled() ? Qt::Checked : Qt::Unchecked;
+		}
 	}
 	return QVariant();
+}
+
+/******************************************************************************
+* Returns the model/view item flags for the given entry.
+******************************************************************************/
+Qt::ItemFlags StructureListParameterUI::getItemFlags(RefTarget* target, const QModelIndex& index)
+{
+	if(index.column() == 0 && _showCheckBoxes)
+		return RefTargetListParameterUI::getItemFlags(target, index) | Qt::ItemIsUserCheckable;
+	else
+		return RefTargetListParameterUI::getItemFlags(target, index);
+}
+
+/******************************************************************************
+* Sets the role data for the item at index to value.
+******************************************************************************/
+bool StructureListParameterUI::setItemData(RefTarget* target, const QModelIndex& index, const QVariant& value, int role)
+{
+	if(index.column() == 0 && role == Qt::CheckStateRole) {
+		if(ParticleType* stype = static_object_cast<ParticleType>(objectAtIndex(index.row()))) {
+			bool enabled = (value.toInt() == Qt::Checked);
+			undoableTransaction(tr("Enable/disable structure type"), [stype, enabled]() {
+				stype->setEnabled(enabled);
+			});
+			return true;
+		}
+	}
+
+	return RefTargetListParameterUI::setItemData(target, index, value, role);
 }
 
 /******************************************************************************

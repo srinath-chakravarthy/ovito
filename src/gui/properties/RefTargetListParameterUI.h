@@ -52,6 +52,9 @@ public:
 	/// This returns the table view managed by this ParameterUI.
 	QTableView* tableWidget(int tableWidgetHeight = 92);
 	
+	/// Returns a RefTarget from the list.
+	RefTarget* objectAtIndex(int index) const;
+
 	/// Returns the RefTarget that is currently selected in the UI.
 	RefTarget* selectedObject() const;
 	

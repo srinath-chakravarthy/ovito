@@ -90,6 +90,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> VoroTopModifier::cr
 	return std::make_shared<VoroTopAnalysisEngine>(
 			validityInterval,
 			posProperty->storage(),
+			getTypesToIdentify(NUM_STRUCTURE_TYPES),
 			selectionProperty ? selectionProperty->storage() : nullptr,
 			std::move(radii),
 			inputCell->data());

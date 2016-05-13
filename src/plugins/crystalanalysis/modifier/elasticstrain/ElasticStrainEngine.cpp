@@ -34,7 +34,7 @@ ElasticStrainEngine::ElasticStrainEngine(const TimeInterval& validityInterval,
 		int inputCrystalStructure, std::vector<Matrix3>&& preferredCrystalOrientations,
 		bool calculateDeformationGradients, bool calculateStrainTensors,
 		FloatType latticeConstant, FloatType caRatio, bool pushStrainTensorsForward) :
-	StructureIdentificationModifier::StructureIdentificationEngine(validityInterval, positions, simCell),
+	StructureIdentificationModifier::StructureIdentificationEngine(validityInterval, positions, simCell, QVector<bool>()),
 	_structureAnalysis(positions, simCell, (StructureAnalysis::LatticeStructureType)inputCrystalStructure, selection(), structures(), std::move(preferredCrystalOrientations)),
 	_inputCrystalStructure(inputCrystalStructure),
 	_latticeConstant(latticeConstant),

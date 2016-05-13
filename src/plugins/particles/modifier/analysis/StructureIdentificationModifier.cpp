@@ -66,6 +66,18 @@ void StructureIdentificationModifier::propertyChanged(const PropertyFieldDescrip
 }
 
 /******************************************************************************
+* Is called when a RefTarget referenced by this object has generated an event.
+******************************************************************************/
+bool StructureIdentificationModifier::referenceEvent(RefTarget* source, ReferenceEvent* event)
+{
+	if(event->type() == ReferenceEvent::TargetEnabledOrDisabled) {
+		// Recompute results if a structure type has been enabled or disabled.
+		invalidateCachedResults();
+	}
+	return AsynchronousParticleModifier::referenceEvent(source, event);
+}
+
+/******************************************************************************
 * Saves the class' contents to the given stream.
 ******************************************************************************/
 void StructureIdentificationModifier::saveToStream(ObjectSaveStream& stream)
@@ -88,11 +100,24 @@ void StructureIdentificationModifier::loadFromStream(ObjectLoadStream& stream)
 }
 
 /******************************************************************************
+* Returns a bit flag array which indicates what structure types to search for.
+******************************************************************************/
+QVector<bool> StructureIdentificationModifier::getTypesToIdentify(int numTypes) const
+{
+	QVector<bool> typesToIdentify(numTypes, true);
+	for(ParticleType* type : structureTypes()) {
+		if(type->id() >= 0 && type->id() < numTypes)
+			typesToIdentify[type->id()] = type->isEnabled();
+	}
+	return typesToIdentify;
+}
+
+/******************************************************************************
 * Unpacks the results of the computation engine and stores them in the modifier.
 ******************************************************************************/
 void StructureIdentificationModifier::transferComputationResults(ComputeEngine* engine)
 {
-	_structureData = static_cast<StructureIdentificationEngine*>(engine)->structures();
+	setStructureData(static_cast<StructureIdentificationEngine*>(engine)->structures());
 }
 
 /******************************************************************************
@@ -100,14 +125,14 @@ void StructureIdentificationModifier::transferComputationResults(ComputeEngine* 
 ******************************************************************************/
 PipelineStatus StructureIdentificationModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
 {
-	if(!_structureData)
+	if(!structureData())
 		throwException(tr("No computation results available."));
 
-	if(inputParticleCount() != _structureData->size())
+	if(inputParticleCount() != structureData()->size())
 		throwException(tr("The number of input particles has changed. The stored analysis results have become invalid."));
 
 	// Create output property object.
-	ParticleTypeProperty* structureProperty = static_object_cast<ParticleTypeProperty>(outputStandardProperty(_structureData.data()));
+	ParticleTypeProperty* structureProperty = static_object_cast<ParticleTypeProperty>(outputStandardProperty(structureData()));
 
 	// Insert structure types into output property.
 	structureProperty->setParticleTypes(structureTypes());

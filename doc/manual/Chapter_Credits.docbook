@@ -36,6 +36,8 @@
       University Corporation for Atmospheric Research/Unidata (<link linkend="appendix.license.netcdf">license</link>).</para></listitem>
       <listitem><para><link xlink:href="http://math.lbl.gov/voro++/">Voro++</link> library by Chris Rycroft (<link linkend="appendix.license.voroplusplus">license</link>).</para></listitem>
       <listitem><para><link xlink:href="http://www.zlib.net">zlib</link> library</para></listitem>
+      <listitem><para><link xlink:href="https://github.com/pmla/polyhedral-template-matching">Polyhedral Template Matching library</link> by Peter Mahler Larsen 
+      (<link linkend="appendix.license.ptm">license</link>).</para></listitem>
     </itemizedlist>
   </para>
 

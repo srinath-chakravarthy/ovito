@@ -302,14 +302,14 @@ ParticlePrimitive::RenderingQuality ParticleDisplay::effectiveRenderingQuality(S
 /******************************************************************************
 * Returns the actual particle shape used to render the particles.
 ******************************************************************************/
-ParticlePrimitive::ParticleShape ParticleDisplay::effectiveParticleShape(ParticlePropertyObject* shapeProperty) const
+ParticlePrimitive::ParticleShape ParticleDisplay::effectiveParticleShape(ParticlePropertyObject* shapeProperty, ParticlePropertyObject* orientationProperty) const
 {
 	if(particleShape() == Sphere) {
 		if(shapeProperty != nullptr) return ParticlePrimitive::EllipsoidShape;
 		else return ParticlePrimitive::SphericalShape;
 	}
 	else if(particleShape() == Box) {
-		if(shapeProperty != nullptr) return ParticlePrimitive::BoxShape;
+		if(shapeProperty != nullptr || orientationProperty != nullptr) return ParticlePrimitive::BoxShape;
 		else return ParticlePrimitive::SquareShape;
 	}
 	else if(particleShape() == Circle) {
@@ -342,6 +342,8 @@ void ParticleDisplay::render(TimePoint time, DataObject* dataObject, const Pipel
 		shapeProperty = nullptr;
 		orientationProperty = nullptr;
 	}
+	if(particleShape() == Sphere && shapeProperty == nullptr)
+		orientationProperty = nullptr;
 
 	// Get number of particles.
 	int particleCount = positionProperty ? (int)positionProperty->size() : 0;
@@ -359,7 +361,7 @@ void ParticleDisplay::render(TimePoint time, DataObject* dataObject, const Pipel
 		ParticlePrimitive::RenderingQuality renderQuality = effectiveRenderingQuality(renderer, positionProperty);
 
 		// Determine primitive particle shape and shading mode.
-		ParticlePrimitive::ParticleShape primitiveParticleShape = effectiveParticleShape(shapeProperty);
+		ParticlePrimitive::ParticleShape primitiveParticleShape = effectiveParticleShape(shapeProperty, orientationProperty);
 		ParticlePrimitive::ShadingMode primitiveShadingMode = ParticlePrimitive::NormalShading;
 		if(particleShape() == Circle || particleShape() == Square)
 			primitiveShadingMode = ParticlePrimitive::FlatShading;
@@ -477,12 +479,15 @@ void ParticleDisplay::render(TimePoint time, DataObject* dataObject, const Pipel
 
 		// Update shapes and orientation buffer.
 		if(updateShapes && particleCount) {
-			if(shapeProperty && shapeProperty->size() == particleCount) {
+			if(shapeProperty && shapeProperty->size() == particleCount)
 				_particleBuffer->setParticleShapes(shapeProperty->constDataVector3());
-			}
-			if(orientationProperty && orientationProperty->size() == particleCount) {
+			else
+				_particleBuffer->clearParticleShapes();
+
+			if(orientationProperty && orientationProperty->size() == particleCount)
 				_particleBuffer->setParticleOrientations(orientationProperty->constDataQuaternion());
-			}
+			else
+				_particleBuffer->clearParticleOrientations();
 		}
 
 		if(renderer->isPicking()) {
@@ -654,7 +659,7 @@ void ParticleDisplay::highlightParticle(int particleIndex, const PipelineFlowSta
 	std::shared_ptr<ArrowPrimitive> highlightCylinderBuffer;
 	if(particleShape() != Cylinder && particleShape() != Spherocylinder) {
 		// Determine effective particle shape and shading mode.
-		ParticlePrimitive::ParticleShape primitiveParticleShape = effectiveParticleShape(shapeProperty);
+		ParticlePrimitive::ParticleShape primitiveParticleShape = effectiveParticleShape(shapeProperty, orientationProperty);
 		ParticlePrimitive::ShadingMode primitiveShadingMode = ParticlePrimitive::NormalShading;
 		if(particleShape() == ParticleDisplay::Circle || particleShape() == ParticleDisplay::Square)
 			primitiveShadingMode = ParticlePrimitive::FlatShading;
