@@ -30,7 +30,12 @@ print("Number of FCC atoms: {}".format(modifier.counts[CommonNeighborAnalysisMod
 print("Number of HCP atoms: {}".format(modifier.counts[CommonNeighborAnalysisModifier.Type.HCP]))
 print("Number of BCC atoms: {}".format(modifier.counts[CommonNeighborAnalysisModifier.Type.BCC]))
 
+print("Number of FCC atoms: {}".format(node.output.attributes['CommonNeighborAnalysis.counts.FCC']))
+print("Number of HCP atoms: {}".format(node.output.attributes['CommonNeighborAnalysis.counts.HCP']))
+print("Number of BCC atoms: {}".format(node.output.attributes['CommonNeighborAnalysis.counts.BCC']))
+
 assert(modifier.counts[CommonNeighborAnalysisModifier.Type.FCC] == 128)
+assert(node.output.attributes['CommonNeighborAnalysis.counts.FCC'] == 128)
 assert(node.output.particle_properties.structure_type.array[0] == 1)
 assert(node.output.particle_properties.structure_type.array[0] == CommonNeighborAnalysisModifier.Type.FCC)
 assert((node.output.particle_properties.color.array[0] == (1,0,0)).all())
@@ -47,4 +52,5 @@ print("Number of bonds: ", node.output.number_of_bonds)
 print(node.output)
 print("Number of FCC atoms: {}".format(modifier.counts[CommonNeighborAnalysisModifier.Type.FCC]))
 assert(modifier.counts[CommonNeighborAnalysisModifier.Type.FCC] == 128)
+assert(node.output.attributes['CommonNeighborAnalysis.counts.FCC'] == 128)
 print(node.output.bond_properties['CNA Indices'].array)

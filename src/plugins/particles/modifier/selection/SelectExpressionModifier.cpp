@@ -60,12 +60,11 @@ PipelineStatus SelectExpressionModifier::modifyParticles(TimePoint time, TimeInt
 		throwException("The expression contains the assignment operator '='. Please use the comparison operator '==' instead.");
 
 	// The number of selected particles.
-	size_t nSelected = 0;
+	std::atomic_size_t nselected(0);
 
 	// Get the deep copy of the output selection property.
 	ParticlePropertyObject* selProperty = outputStandardProperty(ParticleProperty::SelectionProperty);
 
-	std::atomic_size_t nselected(0);
 	if(inputParticleCount() != 0) {
 
 		// Shared memory management is not thread-safe. Make sure the deep copy of the data has been
@@ -88,7 +87,9 @@ PipelineStatus SelectExpressionModifier::modifyParticles(TimePoint time, TimeInt
 	if(evaluator.isTimeDependent())
 		validityInterval.intersect(time);
 
-	QString statusMessage = tr("%1 out of %2 particles selected (%3%)").arg(nselected).arg(inputParticleCount()).arg((FloatType)nselected * 100 / std::max(1,(int)inputParticleCount()), 0, 'f', 1);
+	output().attributes().insert(QStringLiteral("SelectExpression.num_selected"), QVariant::fromValue(nselected.load()));
+
+	QString statusMessage = tr("%1 out of %2 particles selected (%3%)").arg(nselected.load()).arg(inputParticleCount()).arg((FloatType)nselected.load() * 100 / std::max(1,(int)inputParticleCount()), 0, 'f', 1);
 	return PipelineStatus(PipelineStatus::Success, statusMessage);
 }
 

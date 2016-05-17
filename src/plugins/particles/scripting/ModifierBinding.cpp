@@ -283,12 +283,12 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	ovito_class<ClearSelectionModifier, ParticleModifier>(
 			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"This modifier clears the particle selection by deleting the ``\"Selection\"`` particle property. "
-			"It has no parameters.")
+			"The modifier has no input parameters.")
 	;
 
 	ovito_class<InvertSelectionModifier, ParticleModifier>(
 			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
-			"This modifier inverts the particle selection. It has no parameters.")
+			"This modifier inverts the particle selection. It has no input parameters.")
 	;
 
 	ovito_class<ManualSelectionModifier, ParticleModifier>()
@@ -337,36 +337,51 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 
 	ovito_class<SelectExpressionModifier, ParticleModifier>(
 			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
-			"This modifier selects particles based on a user-defined Boolean expression."
+			"This modifier selects particles based on a user-defined Boolean expression. "
+			"Those particles will be selected for which the expression yields a non-zero value. "
 			"\n\n"
-			"Example::"
+			"**Modifier outputs:**"
 			"\n\n"
-			"    from ovito.modifiers import SelectExpressionModifier\n"
-			"    \n"
-			"    mod = SelectExpressionModifier(expression = 'PotentialEnergy > 3.6')\n"
-			"    node.modifiers.append(mod)\n"
+			" * ``Selection`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+			"   This particle property is set to 1 for selected particles and 0 for others.\n"
+			" * ``SelectExpression.num_selected`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+			"   The number of particles selected by the modifier.\n"
+			"\n\n"
+			"**Example:**"
+			"\n\n"
+			".. literalinclude:: ../example_snippets/select_expression_modifier.py\n"
+			"   :lines: 6-\n"
 			"\n")
 		.add_property("expression", make_function(&SelectExpressionModifier::expression, return_value_policy<copy_const_reference>()), &SelectExpressionModifier::setExpression,
-				"A string with a Boolean expression. The syntax is documented in OVITO's user manual.")
+				"A string containing the Boolean expression to be evaluated for every particle. "
+				"The expression syntax is documented in `OVITO's user manual <../../particles.modifiers.expression_select.html>`_.")
 	;
 
 	ovito_class<SelectParticleTypeModifier, ParticleModifier>(
 			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
-			"Selects all particles of a certain type (or types)."
+			"Selects all particles of a certain type (or multiple types). "
 			"\n\n"
-			"Example::"
+			"Note that OVITO knows several classes of particle types, e.g. chemical types and "
+			"structural types. Each of which are encoded as integer values by a different particle property. "
+			"The :py:attr:`.property` field of this modifier selects the class of types considered "
+			"by the modifier, and the :py:attr:`.types` field determines which of the defined types get selected. "
 			"\n\n"
-			"    from ovito.modifiers import *\n"
-			"    \n"
-			"    modifier = SelectParticleTypeModifier()\n"
-			"    modifier.property = \"Structure Type\"\n"
-			"    modifier.types = { CommonNeighborAnalysisModifier.Type.FCC,\n"
-			"                       CommonNeighborAnalysisModifier.Type.HCP }\n"
+			"Example:"
+			"\n\n"
+			".. literalinclude:: ../example_snippets/select_particle_type_modifier.py\n"
+			"   :lines: 8-\n"
+			"\n\n"
+			"**Modifier outputs:**"
+			"\n\n"
+			" * ``Selection`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+			"   This particle property is set to 1 for selected particles and 0 for others.\n"
+			" * ``SelectParticleType.num_selected`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+			"   The number of particles selected by the modifier.\n"
 			"\n")
 		.add_property("property", make_function(&SelectParticleTypeModifier::sourceProperty, return_value_policy<copy_const_reference>()), &SelectParticleTypeModifier::setSourceProperty,
-				"The name of the integer particle property to be used as input, which contains the particle types. "
+				"The name of the particle property storing the input particle types. "
 				"This can be a :ref:`standard particle property <particle-types-list>` such as ``\"Particle Type\"`` or ``\"Structure Type\"``, or "
-				"a custom particle property."
+				"a custom integer particle property."
 				"\n\n"
 				":Default: ``\"Particle Type\"``\n")
 		.add_property("types", make_function(&SelectParticleTypeModifier::selectedParticleTypes, return_value_policy<copy_const_reference>()), &SelectParticleTypeModifier::setSelectedParticleTypes,
@@ -377,7 +392,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 
 	ovito_class<SliceModifier, ParticleModifier>(
 			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
-			"Deletes or selects particles based on a plane in three-dimensional space.")
+			"Deletes or selects particles in a region bounded by one or two parallel infinite planes in three-dimensional space.")
 		.add_property("distance", &SliceModifier::distance, &SliceModifier::setDistance,
 				"The distance of the slicing plane from the origin (along its normal vector)."
 				"\n\n"
@@ -555,48 +570,43 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 		scope s = ovito_class<BondAngleAnalysisModifier, StructureIdentificationModifier>(
 				":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 				"Performs the bond-angle analysis described by Ackland & Jones to classify the local "
-				"structure of each particle. "
+				"crystal structure around each particle. "
 				"\n\n"
-				"The modifier stores its results as integer values in the ``\"Structure Type\"`` particle property. "
-				"The following constants are defined: "
+				"The modifier stores the results as integer values in the ``\"Structure Type\"`` particle property. "
+				"The following structure type constants are defined: "
 				"\n\n"
 				"   * ``BondAngleAnalysisModifier.Type.OTHER`` (0)\n"
 				"   * ``BondAngleAnalysisModifier.Type.FCC`` (1)\n"
 				"   * ``BondAngleAnalysisModifier.Type.HCP`` (2)\n"
 				"   * ``BondAngleAnalysisModifier.Type.BCC`` (3)\n"
 				"   * ``BondAngleAnalysisModifier.Type.ICO`` (4)\n"
-				"\n"
-				"For example, to count the number of FCC atoms in a system::"
 				"\n\n"
-				"    from ovito.modifiers import *\n"
-				"    \n"
-				"    modifier = BondAngleAnalysisModifier()\n"
-				"    node.modifiers.append(modifier)\n"
-				"    node.compute()\n"
-				"    print(\"Number of FCC atoms: %i\" % modifier.counts[BondAngleAnalysisModifier.Type.FCC])\n"
-				"\n"
-				"Furthermore, the modifier assigns a color to particles based on their structural types. "
-				"You can change the color of a structural type as shown in the following example::"
+				"**Modifier outputs:**"
 				"\n\n"
-				"    modifier = BondAngleAnalysisModifier()\n"
-				"    node.modifiers.append(modifier)\n"
-				"    \n"
-				"    # Give FCC atoms a blue color:\n"
-				"    modifier.structures[BondAngleAnalysisModifier.Type.FCC].color = (0,0,1)\n"
-				"    \n"
-				"    # Select all disordered atoms:\n"
-				"    node.modifiers.append(SelectParticleTypeModifier(\n"
-				"        property = ParticleProperty.Type.StructureType,\n"
-				"        types = { BondAngleAnalysisModifier.Type.OTHER }\n"
-				"    ))\n"
+				" * ``BondAngleAnalysis.counts.OTHER`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of particles not matching any of the known structure types.\n"
+				" * ``BondAngleAnalysis.counts.FCC`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of FCC particles found.\n"
+				" * ``BondAngleAnalysis.counts.HCP`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of HCP particles found.\n"
+				" * ``BondAngleAnalysis.counts.BCC`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of BCC particles found.\n"
+				" * ``BondAngleAnalysis.counts.ICO`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of icosahedral found.\n"
+				" * ``Structure Type`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+				"   This particle property will contain the per-particle structure type assigned by the modifier.\n"
+				" * ``Color`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+				"   The modifier assigns a color to each particle based on its identified structure type. "
+				"   You can change the color representing a structural type as follows::"
+				"\n\n"
+				"      modifier = BondAngleAnalysisModifier()\n"
+				"      # Give all FCC atoms a blue color:\n"
+				"      modifier.structures[BondAngleAnalysisModifier.Type.FCC].color = (0.0, 0.0, 1.0)\n"
 				"\n")
 			.add_property("structures", make_function(&BondAngleAnalysisModifier::structureTypes, return_internal_reference<>()),
 					"A list of :py:class:`~ovito.data.ParticleType` instances managed by this modifier, one for each structural type. "
 					"You can adjust the color of structural types as shown in the code example above.")
-			.add_property("counts", make_function(&BondAngleAnalysisModifier::structureCounts, return_value_policy<copy_const_reference>()),
-					"A list of integers indicating the number of particles found for each structure type. "
-					"Note that accessing this output field is only possible after the modifier has computed its results. "
-					"Thus, you have to call :py:meth:`ovito.ObjectNode.compute` first to ensure that this information is up to date. ")
+			.add_property("counts", make_function(&BondAngleAnalysisModifier::structureCounts, return_value_policy<copy_const_reference>()))
 		;
 
 		enum_<BondAngleAnalysisModifier::StructureType>("Type")
@@ -623,37 +633,32 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"   * ``CommonNeighborAnalysisModifier.Type.BCC`` (3)\n"
 				"   * ``CommonNeighborAnalysisModifier.Type.ICO`` (4)\n"
 				"\n"
-				"For example, the following code counts the number of FCC atoms in the system::"
+				"**Modifier outputs:**"
 				"\n\n"
-				"    from ovito.modifiers import *\n"
-				"    \n"
-				"    modifier = CommonNeighborAnalysisModifier()\n"
-				"    node.modifiers.append(modifier)\n"
-				"    node.compute()\n"
-				"    print(\"Number of FCC atoms: %i\" % modifier.counts[CommonNeighborAnalysisModifier.Type.FCC])\n"
-				"\n"
-				"Furthermore, the modifier assigns a color to particles based on their structural types. "
-				"You can change the color of a structural type as shown in the following example::"
+				" * ``CommonNeighborAnalysis.counts.OTHER`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of particles not matching any of the known structure types.\n"
+				" * ``CommonNeighborAnalysis.counts.FCC`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of FCC particles found.\n"
+				" * ``CommonNeighborAnalysis.counts.HCP`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of HCP particles found.\n"
+				" * ``CommonNeighborAnalysis.counts.BCC`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of BCC particles found.\n"
+				" * ``CommonNeighborAnalysis.counts.ICO`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of icosahedral particles found.\n"
+				" * ``Structure Type`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+				"   This output particle property contains the per-particle structure types assigned by the modifier.\n"
+				" * ``Color`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+				"   The modifier assigns a color to each particle based on its identified structure type. "
+				"   You can change the color representing a structural type as follows::"
 				"\n\n"
-				"    modifier = CommonNeighborAnalysisModifier()\n"
-				"    node.modifiers.append(modifier)\n"
-				"    \n"
-				"    # Give FCC atoms a blue color:\n"
-				"    modifier.structures[CommonNeighborAnalysisModifier.Type.FCC].color = (0,0,1)\n"
-				"    \n"
-				"    # Select all disordered atoms:\n"
-				"    node.modifiers.append(SelectParticleTypeModifier(\n"
-				"        property = ParticleProperty.Type.StructureType,\n"
-				"        types = { CommonNeighborAnalysisModifier.Type.OTHER }\n"
-				"    ))\n"
+				"      modifier = CommonNeighborAnalysisModifier()\n"
+				"      # Give all FCC atoms a blue color:\n"
+				"      modifier.structures[CommonNeighborAnalysisModifier.Type.FCC].color = (0.0, 0.0, 1.0)\n"
 				"\n")
 			.add_property("structures", make_function(&CommonNeighborAnalysisModifier::structureTypes, return_internal_reference<>()),
 					"A list of :py:class:`~ovito.data.ParticleType` instances managed by this modifier, one for each structural type. "
 					"You can adjust the color of structural types here as shown in the code example above.")
-			.add_property("counts", make_function(&CommonNeighborAnalysisModifier::structureCounts, return_value_policy<copy_const_reference>()),
-					"A list of integers indicating the number of particles found for each structure type. "
-					"Note that accessing this output field is only possible after the modifier has computed its results. "
-					"Thus, you have to call :py:meth:`ovito.ObjectNode.compute` first to ensure that this information is up to date. ")
+			.add_property("counts", make_function(&CommonNeighborAnalysisModifier::structureCounts, return_value_policy<copy_const_reference>()))
 			.add_property("cutoff", &CommonNeighborAnalysisModifier::cutoff, &CommonNeighborAnalysisModifier::setCutoff,
 					"The cutoff radius used for the conventional common neighbor analysis. "
 					"This parameter is only used if :py:attr:`.mode` == ``CommonNeighborAnalysisModifier.Mode.FixedCutoff``."
@@ -701,7 +706,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"This analysis modifier finds atoms that are arranged in a cubic or hexagonal diamond lattice."
 				"\n\n"
 				"The modifier stores its results as integer values in the ``\"Structure Type\"`` particle property. "
-				"The following constants are defined: "
+				"The following structure type constants are defined: "
 				"\n\n"
 				"   * ``IdentifyDiamondModifier.Type.OTHER`` (0)\n"
 				"   * ``IdentifyDiamondModifier.Type.CUBIC_DIAMOND`` (1)\n"
@@ -711,27 +716,40 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"   * ``IdentifyDiamondModifier.Type.HEX_DIAMOND_FIRST_NEIGHBOR`` (5)\n"
 				"   * ``IdentifyDiamondModifier.Type.HEX_DIAMOND_SECOND_NEIGHBOR`` (6)\n"
 				"\n"
-				"For example, to count the number of cubic diamond atoms in a system::"
+				"**Modifier outputs:**"
 				"\n\n"
-				"    from ovito.modifiers import *\n"
-				"    \n"
-				"    modifier = IdentifyDiamondModifier()\n"
-				"    node.modifiers.append(modifier)\n"
-				"    node.compute()\n"
-				"    print(\"Number of cubic diamond atoms:\")\n"
-				"    print(modifier.counts[IdentifyDiamondModifier.Type.CUBIC_DIAMOND])\n"
+				" * ``IdentifyDiamond.counts.OTHER`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of atoms not matching any of the known structure types.\n"
+				" * ``IdentifyDiamond.counts.CUBIC_DIAMOND`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of cubic diamond atoms found.\n"
+				" * ``IdentifyDiamond.counts.CUBIC_DIAMOND_FIRST_NEIGHBOR`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of atoms found that are first neighbors of a cubic diamond atom.\n"
+				" * ``IdentifyDiamond.counts.CUBIC_DIAMOND_SECOND_NEIGHBOR`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of atoms found that are second neighbors of a cubic diamond atom.\n"
+				" * ``IdentifyDiamond.counts.HEX_DIAMOND`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of hexagonal diamond atoms found.\n"
+				" * ``IdentifyDiamond.counts.HEX_DIAMOND_FIRST_NEIGHBOR`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of atoms found that are first neighbors of a hexagonal diamond atom.\n"
+				" * ``IdentifyDiamond.counts.HEX_DIAMOND_SECOND_NEIGHBOR`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of atoms found that are second neighbors of a hexagonal diamond atom.\n"
+				" * ``Structure Type`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+				"   This particle property will contain the per-particle structure type assigned by the modifier.\n"
+				" * ``Color`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+				"   The modifier assigns a color to each atom based on its identified structure type. "
+				"   You can change the color representing a structural type as follows::"
+				"\n\n"
+				"      modifier = BondAngleAnalysisModifier()\n"
+				"      # Give all hexagonal diamond atoms a blue color:\n"
+				"      modifier.structures[IdentifyDiamondModifier.Type.HEX_DIAMOND].color = (0.0, 0.0, 1.0)\n"
 				"\n")
 			.add_property("structures", make_function(&IdentifyDiamondModifier::structureTypes, return_internal_reference<>()),
 					"A list of :py:class:`~ovito.data.ParticleType` instances managed by this modifier, one for each structural type. "
-					"You can adjust the color of structural types here as shown in the code example above.")
-			.add_property("counts", make_function(&IdentifyDiamondModifier::structureCounts, return_value_policy<copy_const_reference>()),
-					"A list of integers indicating the number of particles found for each structure type. "
-					"Note that accessing this output field is only possible after the modifier has computed its results. "
-					"Thus, you have to call :py:meth:`ovito.ObjectNode.compute` first to ensure that this information is up to date. ")
+					"This lets you adjust the colors assigned to structural types.")
 			.add_property("only_selected", &IdentifyDiamondModifier::onlySelectedParticles, &IdentifyDiamondModifier::setOnlySelectedParticles,
 					"Lets the modifier perform the analysis only for selected particles. Particles that are not selected will be treated as if they did not exist."
 					"\n\n"
 					":Default: ``False``\n")
+			.add_property("counts", make_function(&IdentifyDiamondModifier::structureCounts, return_value_policy<copy_const_reference>()))
 		;
 
 		enum_<IdentifyDiamondModifier::StructureType>("Type")
@@ -812,21 +830,31 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 
 	ovito_class<ClusterAnalysisModifier, AsynchronousParticleModifier>(
 			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
-			"Groups particles into clusters."
+			"Groups particles into clusters using a distance cutoff criterion. "
 			"\n\n"
-			"The modifier stores the assigned cluster IDs in the ``\"Cluster\"`` particle property.")
+			"**Modifier outputs:**"
+			"\n\n"
+			" * ``Cluster`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+			"   This output particle property stores the IDs of the clusters the particles have been assigned to. "
+			" * ``ClusterAnalysis.cluster_count`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+			"   The total number of clusters produced by the modifier. Cluster IDs range from 1 to this number.\n"
+			" * ``ClusterAnalysis.largest_size`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+			"   The number of particles belonging to the largest cluster (cluster ID 1). This attribute is only computed by the modifier when :py:attr:`.sort_by_size` is set.\n"
+			"\n")
 		.add_property("cutoff", &ClusterAnalysisModifier::cutoff, &ClusterAnalysisModifier::setCutoff,
-				"The cutoff radius used when forming clusters."
+				"The cutoff distance used by the algorithm to form clusters of connected particles."
 				"\n\n"
 				":Default: 3.2\n")
-		.add_property("count", &ClusterAnalysisModifier::clusterCount,
-				"This output field contains the number of clusters found. "
-				"Note that accessing this value is only possible after the modifier has computed its results. "
-				"Thus, you have to call :py:meth:`ovito.ObjectNode.compute` first to ensure that this information is up to date. ")
 		.add_property("only_selected", &ClusterAnalysisModifier::onlySelectedParticles, &ClusterAnalysisModifier::setOnlySelectedParticles,
-				"Lets the modifier perform the analysis only for selected particles. Particles that are not selected will be assigned cluster ID 0 and treated as if they did not exist."
+				"Lets the modifier perform the analysis only for selected particles. "
+				"Particles that are not selected will be assigned cluster ID 0 and treated as if they did not exist."
 				"\n\n"
 				":Default: ``False``\n")
+		.add_property("sort_by_size", &ClusterAnalysisModifier::sortBySize, &ClusterAnalysisModifier::setSortBySize,
+				"Enables the sorting of clusters by size (in descending order). Cluster 1 will be the largest cluster, cluster 2 the second largest, and so on."
+				"\n\n"
+				":Default: ``False``\n")
+		.add_property("count", &ClusterAnalysisModifier::clusterCount)
 	;
 
 	ovito_class<CoordinationNumberModifier, AsynchronousParticleModifier>(
@@ -1022,7 +1050,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	ovito_class<WignerSeitzAnalysisModifier, AsynchronousParticleModifier>(
 			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Performs the Wigner-Seitz cell analysis to identify point defects in crystals. "
-			"The modifier requires you to load a reference configuration from an external file::"
+			"The modifier requires loading a reference configuration from an external file::"
 			"\n\n"
 			"    from ovito.modifiers import *\n"
 			"    \n"
@@ -1030,11 +1058,17 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 			"    mod.reference.load(\"frame0000.dump\")\n"
 			"    node.modifiers.append(mod)\n"
 			"    node.compute()\n"
-			"    print(\"Number of vacant sites: %i\" % mod.vacancy_count)\n"
+			"    print(\"Number of vacant sites: %i\" % node.output.attributes['WignerSeitz.vacancy_count'])\n"
 			"\n\n"
-			"The modifier stores the computed occupation numbers in the ``\"Occupancy\"`` particle property. "
-			"The number of vacancies and the number of interstitial sites found by the modifier are reported in "
-			"the :py:attr:`.vacancy_count` and :py:attr:`.interstitial_count` output fields.")
+			"**Modifier outputs:**"
+			"\n\n"
+			" * ``Occupancy`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+			"   The computed site occupation numbers, one for each particle in the reference configuration.\n"
+			" * ``WignerSeitz.vacancy_count`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+			"   The total number of vacant sites (having ``Occupancy`` == 0). \n"
+			" * ``WignerSeitz.interstitial_count`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+			"  The total number of of interstitial atoms. This is equal to the sum of occupancy numbers of all non-empty sites minus the number of these sites.\n"
+			"\n")
 		.add_property("reference", make_function(&WignerSeitzAnalysisModifier::referenceConfiguration, return_value_policy<ovito_object_reference>()), &WignerSeitzAnalysisModifier::setReferenceConfiguration,
 				"A :py:class:`~ovito.io.FileSource` that provides the reference positions of particles. "
 				"You can call its :py:meth:`~ovito.io.FileSource.load` function to load a reference simulation file "
@@ -1068,24 +1102,34 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"the property component ``Occupancy.1`` contains the number of particles of type 1 that occupy a site. "
 				"\n\n"
 				":Default: ``False``\n")
-		.add_property("vacancy_count", &WignerSeitzAnalysisModifier::vacancyCount,
-				"After the modifier has performed the analysis, this field contains the number of vacant sites. "
-				"Note that accessing this value is only possible after the modifier has computed its results. "
-				"Thus, you have to call :py:meth:`ovito.ObjectNode.compute` first to ensure that this information is up to date. ")
-		.add_property("interstitial_count", &WignerSeitzAnalysisModifier::interstitialCount,
-				"After the modifier has performed the analysis, this field contains the number of interstitial atoms. "
-				"Note that accessing this value is only possible after the modifier has computed its results. "
-				"Thus, you have to call :py:meth:`ovito.ObjectNode.compute` first to ensure that this information is up to date. ")
+		.add_property("vacancy_count", &WignerSeitzAnalysisModifier::vacancyCount)
+		.add_property("interstitial_count", &WignerSeitzAnalysisModifier::interstitialCount)
 	;
 
 	ovito_class<VoronoiAnalysisModifier, AsynchronousParticleModifier>(
 			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Computes the atomic volumes and coordination numbers using a Voronoi tessellation of the particle system."
 			"\n\n"
-			"The modifier stores the computed per-particle volumes in the ``\"Atomic Volume\"`` particle property and the number of neighbors "
-			"of each particle in the ``\"Coordination\"`` property.")
+			"**Modifier outputs:**"
+			"\n\n"
+			" * ``Atomic Volume`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+			"   Stores the computed Voronoi cell volume of each particle.\n"
+			" * ``Coordination`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+			"   Stores the number of faces of each particle's Voronoi cell.\n"
+			" * ``Voronoi Index`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+			"   Stores the Voronoi indices computed from each particle's Voronoi cell. This property is only generated when :py:attr:`.compute_indices` is set.\n"
+			" * ``Bonds`` (:py:class:`~ovito.data.Bonds`):\n"
+			"   The list of nearest neighbor bonds, one for each Voronoi face. Bonds are only generated when :py:attr:`.generate_bonds` is set.\n"
+			" * ``Voronoi.max_face_order`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+			"   This output attribute reports the maximum number of edges of any face in the computed Voronoi tessellation "
+			"   (ignoring edges and faces that are below the area and length thresholds)."
+			"   Note that, if calculation of Voronoi indices is enabled (:py:attr:`.compute_indices` == true), and :py:attr:`.edge_count` < ``max_face_order``, then "
+			"   the computed Voronoi index vectors will be truncated because there exists at least one Voronoi face having more edges than "
+			"   the maximum Voronoi vector length specified by :py:attr:`.edge_count`. In such a case you should consider increasing "
+			"   :py:attr:`.edge_count` (to at least ``max_face_order``) to not lose information because of truncated index vectors."
+			"\n")
 		.add_property("only_selected", &VoronoiAnalysisModifier::onlySelected, &VoronoiAnalysisModifier::setOnlySelected,
-				"Lets the modifier perform the analysis only for selected particles. Particles that are not selected will be treated as if they did not exist."
+				"Lets the modifier perform the analysis only for selected particles. Particles that are currently not selected will be treated as if they did not exist."
 				"\n\n"
 				":Default: ``False``\n")
 		.add_property("use_radii", &VoronoiAnalysisModifier::useRadii, &VoronoiAnalysisModifier::setUseRadii,
@@ -1121,24 +1165,13 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"Integer parameter controlling the order up to which Voronoi indices are computed by the modifier. "
 				"Any Voronoi face with more edges than this maximum value will not be counted! Computed Voronoi index vectors are truncated at the index specified by :py:attr:`.edge_count`. "
 				"\n\n"
-				"See the :py:attr:`.max_face_order` output property on how to avoid truncated Voronoi index vectors."
+				"See the ``Voronoi.max_face_order`` output attributes described above on how to avoid truncated Voronoi index vectors."
 				"\n\n"
 				"This parameter is ignored if :py:attr:`.compute_indices` is false."
 				"\n\n"
 				":Minimum: 3\n"
 				":Default: 6\n")
-		.add_property("max_face_order", &VoronoiAnalysisModifier::maxFaceOrder,
-				"This is an output value computed by the modifier, which reports the maximum number of edges of any face in the computed Voronoi tessellation "
-				"(ignoring edges and faces that are below the area and length thresholds)."
-				"\n\n"
-				"Note that accessing this property is only possible after the modifier has computed the Voronoi tessellation, i.e. after "
-				"the modification pipeline has been evaluated. "
-				"That means you have to call :py:meth:`ovito.ObjectNode.compute` first to ensure that this information is up to date."
-				"\n\n"
-				"Note that, if calculation of Voronoi indices is enabled (:py:attr:`.compute_indices` == true), and :py:attr:`.edge_count` < :py:attr:`.max_face_order`, then "
-				"the computed Voronoi index vectors will be truncated because there exists at least one Voronoi face having more edges than "
-				"the maximum Voronoi vector length specified by :py:attr:`.edge_count`. In such a case you should consider increasing "
-				":py:attr:`.edge_count` (to at least :py:attr:`.max_face_order`) to not lose information because of truncated index vectors.")
+		.add_property("max_face_order", &VoronoiAnalysisModifier::maxFaceOrder)
 	;
 
 	ovito_class<LoadTrajectoryModifier, ParticleModifier>(

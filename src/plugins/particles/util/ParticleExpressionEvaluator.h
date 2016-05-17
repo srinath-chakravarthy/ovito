@@ -48,7 +48,7 @@ public:
 	void initialize(const QStringList& expressions, const PipelineFlowState& inputState, int animationFrame = 0);
 
 	/// Specifies the expressions to be evaluated for each particle and creates the input variables.
-	void initialize(const QStringList& expressions, const std::vector<ParticleProperty*>& inputProperties, const SimulationCell* simCell, int animationFrame = 0, int simulationTimestep = -1);
+	void initialize(const QStringList& expressions, const std::vector<ParticleProperty*>& inputProperties, const SimulationCell* simCell, const QVariantMap& attributes, int animationFrame = 0);
 
 	/// Initializes the parser object and evaluates the expressions for every particle.
 	void evaluate(const std::function<void(size_t,size_t,double)>& callback, const std::function<bool(size_t)>& filter = std::function<bool(size_t)>());
@@ -181,7 +181,7 @@ public:
 protected:
 
 	/// Initializes the list of input variables from the given input state.
-	void createInputVariables(const std::vector<ParticleProperty*>& inputProperties, const SimulationCell* simCell, int animationFrame, int simulationTimestep);
+	void createInputVariables(const std::vector<ParticleProperty*>& inputProperties, const SimulationCell* simCell, const QVariantMap& attributes, int animationFrame);
 
 	/// Registers an input variable if the name does not exist yet.
 	void addVariable(ExpressionVariable&& v);

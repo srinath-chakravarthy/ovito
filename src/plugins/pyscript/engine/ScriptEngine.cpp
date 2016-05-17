@@ -158,6 +158,34 @@ void ScriptEngine::initializeInterpreter()
 		};
 		converter::registry::push_back(convertible, construct, boost::python::type_id<QString>());
 
+		// Install automatic QVariant to Python conversion.
+		struct QVariant_to_python {
+			static PyObject* convert(const QVariant& v) {
+				switch(static_cast<QMetaType::Type>(v.type())) {
+					case QMetaType::Bool: return incref(object(v.toBool()).ptr());
+					case QMetaType::Int: return incref(object(v.toInt()).ptr());
+					case QMetaType::UInt: return incref(object(v.toUInt()).ptr());
+					case QMetaType::Long: return incref(object(v.value<long>()).ptr());
+					case QMetaType::ULong: return incref(object(v.value<unsigned long>()).ptr());
+					case QMetaType::LongLong: return incref(object(v.toLongLong()).ptr());
+					case QMetaType::ULongLong: return incref(object(v.toULongLong()).ptr());
+					case QMetaType::Double: return incref(object(v.toDouble()).ptr());
+					case QMetaType::Float: return incref(object(v.toFloat()).ptr());
+					case QMetaType::QString: return incref(object(v.toString()).ptr());
+					case QMetaType::QVariantList:
+					{
+						list lst;
+						QVariantList vlist = v.toList();
+						for(int i = 0; i < vlist.size(); i++)
+							lst.append(vlist[i]);
+						return incref(lst.ptr());
+					}
+					default: return incref(object().ptr());
+				}
+			}
+		};
+		to_python_converter<QVariant, QVariant_to_python>();
+
 		object sys_module = import("sys");
 
 		// Install output redirection (don't do this in console mode as it interferes with the interactive interpreter).

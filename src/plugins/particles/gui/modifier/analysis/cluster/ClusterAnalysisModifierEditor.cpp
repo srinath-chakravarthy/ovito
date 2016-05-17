@@ -52,9 +52,13 @@ void ClusterAnalysisModifierEditor::createUI(const RolloutInsertionParameters& r
 	gridlayout->addWidget(cutoffRadiusPUI->label(), 0, 0);
 	gridlayout->addLayout(cutoffRadiusPUI->createFieldLayout(), 0, 1);
 
+	// Sort by size
+	BooleanParameterUI* sortBySizeUI = new BooleanParameterUI(this, PROPERTY_FIELD(ClusterAnalysisModifier::_sortBySize));
+	gridlayout->addWidget(sortBySizeUI->checkBox(), 1, 0, 1, 2);
+
 	// Use only selected particles.
 	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(ClusterAnalysisModifier::_onlySelectedParticles));
-	gridlayout->addWidget(onlySelectedParticlesUI->checkBox(), 1, 0, 1, 2);
+	gridlayout->addWidget(onlySelectedParticlesUI->checkBox(), 2, 0, 1, 2);
 
 	layout->addLayout(gridlayout);
 

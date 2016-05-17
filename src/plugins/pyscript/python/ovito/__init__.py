@@ -242,7 +242,7 @@ def _SceneRoot__delitem__(self, index):
     self.removeChild(self.children[index])
 SceneRoot.__delitem__ = _SceneRoot__delitem__
 def _SceneRoot_append(self, node):
-    if node.parentNode == self:
+    if node.parent_node == self:
         raise RuntimeError("Cannot add the same node more than once to the scene.")
     self.addChild(node)
 SceneRoot.append = _SceneRoot_append
@@ -250,7 +250,7 @@ def _SceneRoot_insert(self, index, node):
     if index < 0: index += len(self)
     if index < 0 or index >= len(self):
         raise IndexError("List index is out of range.")
-    if node.parentNode == self:
+    if node.parent_node == self:
         raise RuntimeError("Cannot insert the same node more than once into the scene.")
     self.insertChild(index, node)
 SceneRoot.insert = _SceneRoot_insert

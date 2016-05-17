@@ -196,15 +196,9 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 		.add_property("attributes", static_cast<dict (*)(CompoundObject&)>([](CompoundObject& obj) {
 				dict a;
 				for(auto entry = obj.attributes().constBegin(); entry != obj.attributes().constEnd(); ++entry) {
-					switch(static_cast<QMetaType::Type>(entry.value().type())) {
-						case QMetaType::Bool: a[entry.key()] = entry.value().toBool(); break;
-						case QMetaType::Int: a[entry.key()] = entry.value().toInt(); break;
-						case QMetaType::UInt: a[entry.key()] = entry.value().toUInt(); break;
-						case QMetaType::Double: a[entry.key()] = entry.value().toDouble(); break;
-						case QMetaType::Float: a[entry.key()] = entry.value().toFloat(); break;
-						case QMetaType::QString: a[entry.key()] = entry.value().toString(); break;
-						default: continue;
-					}
+					object value(entry.value());
+					if(!value.is_none())
+						a[entry.key()] = value;
 				}
 				return a;
 			}),

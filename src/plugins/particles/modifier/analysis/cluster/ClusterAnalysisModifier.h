@@ -51,6 +51,12 @@ public:
 	/// Sets whether analysis only selected particles are taken into account.
 	void setOnlySelectedParticles(bool onlySelected) { _onlySelectedParticles = onlySelected; }
 
+	/// Returns whether cluster IDs are sorted by size.
+	bool sortBySize() const { return _sortBySize; }
+
+	/// Sets whether cluster IDs are sorted by size.
+	void setSortBySize(bool sort) { _sortBySize = sort; }
+
 	/// Returns the number of clusters found during the last successful evaluation of the modifier.
 	size_t clusterCount() const { return _numClusters; }
 
@@ -76,10 +82,12 @@ private:
 	public:
 
 		/// Constructor.
-		ClusterAnalysisEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, FloatType cutoff, ParticleProperty* selection) :
+		ClusterAnalysisEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, FloatType cutoff, bool sortBySize, ParticleProperty* selection) :
 			ComputeEngine(validityInterval),
 			_positions(positions), _simCell(simCell), _cutoff(cutoff),
+			_sortBySize(sortBySize),
 			_selection(selection),
+			_largestClusterSize(0),
 			_particleClusters(new ParticleProperty(positions->size(), ParticleProperty::ClusterProperty, 0, false)) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
@@ -103,11 +111,16 @@ private:
 		/// Returns the number of clusters.
 		size_t numClusters() const { return _numClusters; }
 
+		/// Returns the size of the largest cluster.
+		size_t largestClusterSize() const { return _largestClusterSize; }
+
 	private:
 
 		FloatType _cutoff;
 		SimulationCell _simCell;
+		bool _sortBySize;
 		size_t _numClusters;
+		size_t _largestClusterSize;
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
 		QExplicitlySharedDataPointer<ParticleProperty> _selection;
 		QExplicitlySharedDataPointer<ParticleProperty> _particleClusters;
@@ -122,8 +135,14 @@ private:
 	/// Controls whether analysis should take into account only selected particles.
 	PropertyField<bool> _onlySelectedParticles;
 
+	/// Controls the sorting of cluster IDs by size.
+	PropertyField<bool> _sortBySize;
+
 	/// The number of clusters identified during the last evaluation of the modifier.
 	size_t _numClusters;
+
+	/// The size of the largest cluster.
+	size_t _largestClusterSize;
 
 private:
 
@@ -135,6 +154,7 @@ private:
 
 	DECLARE_PROPERTY_FIELD(_cutoff);
 	DECLARE_PROPERTY_FIELD(_onlySelectedParticles);
+	DECLARE_PROPERTY_FIELD(_sortBySize);
 };
 
 OVITO_END_INLINE_NAMESPACE

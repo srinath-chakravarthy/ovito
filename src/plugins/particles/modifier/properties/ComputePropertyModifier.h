@@ -177,14 +177,14 @@ protected:
 				const SimulationCell& simCell, FloatType cutoff,
 				const QStringList& expressions, const QStringList& neighborExpressions,
 				std::vector<QExplicitlySharedDataPointer<ParticleProperty>>&& inputProperties,
-				int frameNumber, int simulationTimestep) :
+				int frameNumber, const QVariantMap& attributes) :
 			ComputeEngine(validityInterval),
 			_outputProperty(outputProperty),
 			_positions(positions), _simCell(simCell),
 			_selection(selectionProperty),
 			_expressions(expressions), _neighborExpressions(neighborExpressions),
 			_cutoff(cutoff),
-			_frameNumber(frameNumber), _simulationTimestep(simulationTimestep),
+			_frameNumber(frameNumber), _attributes(attributes),
 			_inputProperties(std::move(inputProperties)) {
 			initializeEngine(time);
 		}
@@ -221,7 +221,7 @@ protected:
 		FloatType _cutoff;
 		SimulationCell _simCell;
 		int _frameNumber;
-		int _simulationTimestep;
+		QVariantMap _attributes;
 		QStringList _expressions;
 		QStringList _neighborExpressions;
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;

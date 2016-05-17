@@ -264,7 +264,20 @@ PipelineStatus PolyhedralTemplateMatchingModifier::applyComputationResults(TimeP
 	if(_orientations && _outputOrientation) outputStandardProperty(_orientations.data());
 	if(_deformationGradients && _outputDeformationGradient) outputStandardProperty(_deformationGradients.data());
 
-	return StructureIdentificationModifier::applyComputationResults(time, validityInterval);
+	// Let the base class output the structure type property to the pipeline.
+	PipelineStatus status = StructureIdentificationModifier::applyComputationResults(time, validityInterval);
+
+	// Also output structure type counts, which have been computed by the base class.
+	if(status.type() == PipelineStatus::Success) {
+		output().attributes().insert(QStringLiteral("PolyhedralTemplateMatching.counts.OTHER"), QVariant::fromValue(structureCounts()[OTHER]));
+		output().attributes().insert(QStringLiteral("PolyhedralTemplateMatching.counts.FCC"), QVariant::fromValue(structureCounts()[FCC]));
+		output().attributes().insert(QStringLiteral("PolyhedralTemplateMatching.counts.HCP"), QVariant::fromValue(structureCounts()[HCP]));
+		output().attributes().insert(QStringLiteral("PolyhedralTemplateMatching.counts.BCC"), QVariant::fromValue(structureCounts()[BCC]));
+		output().attributes().insert(QStringLiteral("PolyhedralTemplateMatching.counts.ICO"), QVariant::fromValue(structureCounts()[ICO]));
+		output().attributes().insert(QStringLiteral("PolyhedralTemplateMatching.counts.SC"), QVariant::fromValue(structureCounts()[SC]));
+	}
+
+	return status;
 }
 
 OVITO_END_INLINE_NAMESPACE

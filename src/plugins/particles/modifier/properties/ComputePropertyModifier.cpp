@@ -155,12 +155,6 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> ComputePropertyModi
 	// The current animation frame number.
 	int currentFrame = dataset()->animationSettings()->timeToFrame(time);
 
-	// Get simulation timestep.
-	int simulationTimestep = -1;
-	if(input().attributes().contains(QStringLiteral("Timestep"))) {
-		simulationTimestep = input().attributes().value(QStringLiteral("Timestep")).toInt();
-	}
-
 	// Build list of all input particle properties, which will be passed to the compute engine.
 	std::vector<QExplicitlySharedDataPointer<ParticleProperty>> inputProperties;
 	for(DataObject* obj : input().objects()) {
@@ -231,7 +225,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> ComputePropertyModi
 	return std::make_shared<PropertyComputeEngine>(validityInterval, time, outp.data(), posProperty->storage(),
 			selProperty, inputCell->data(), neighborModeEnabled() ? cutoff() : 0.0f,
 			expressions(), neighborExpressions(),
-			std::move(inputProperties), currentFrame, simulationTimestep);
+			std::move(inputProperties), currentFrame, input().attributes());
 }
 
 /******************************************************************************
@@ -247,7 +241,7 @@ void ComputePropertyModifier::PropertyComputeEngine::initializeEngine(TimePoint 
 		inputProperties.push_back(p.data());
 
 	// Initialize expression evaluators.
-	_evaluator.initialize(_expressions, inputProperties, &cell(), _frameNumber, _simulationTimestep);
+	_evaluator.initialize(_expressions, inputProperties, &cell(), _attributes, _frameNumber);
 	_inputVariableNames = _evaluator.inputVariableNames();
 	_inputVariableTable = _evaluator.inputVariableTable();
 
@@ -256,7 +250,7 @@ void ComputePropertyModifier::PropertyComputeEngine::initializeEngine(TimePoint 
 		_evaluator.registerGlobalParameter("Cutoff", _cutoff);
 		_evaluator.registerGlobalParameter("NumNeighbors", 0);
 		OVITO_ASSERT(_neighborExpressions.size() == outputProperty()->componentCount());
-		_neighborEvaluator.initialize(_neighborExpressions, inputProperties, &cell(), _frameNumber, _simulationTimestep);
+		_neighborEvaluator.initialize(_neighborExpressions, inputProperties, &cell(), _attributes, _frameNumber);
 		_neighborEvaluator.registerGlobalParameter("Cutoff", _cutoff);
 		_neighborEvaluator.registerGlobalParameter("NumNeighbors", 0);
 		_neighborEvaluator.registerGlobalParameter("Distance", 0);

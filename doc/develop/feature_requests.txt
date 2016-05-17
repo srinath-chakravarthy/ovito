@@ -65,7 +65,6 @@ New analysis features:
 - Plotting the value of a certain property of a certain particle versus simulation time. To make this work, all simulation frames need to be kept in memory (requested by Taojun & Mathieu Marciante).
 - Compute polar decomposition of deformation gradient, F=RU (requested by arun.prakash@fau.de).
 - Calculation of type-specific RDF.
-- Let user select the set of atomic structure types to search for (PTM, CNA, etc.).
 
 New I/O functions:
 
@@ -86,6 +85,7 @@ Scripting features:
 - Scripting interface for viewport overlays (requested by lidong.cauc@gmail.com and johannes.moeller@fau.de).
 - Distribute Scipy with Ovito?
 - Make DXA dislocation statistics accessible from Python.
+- Provide access to bond lengths and bond PBC shift vectors
 
 Documentation:
 

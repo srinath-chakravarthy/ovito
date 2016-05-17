@@ -172,6 +172,26 @@ BondAngleAnalysisModifier::StructureType BondAngleAnalysisModifier::determineStr
 	else return OTHER;
 }
 
+/******************************************************************************
+* Lets the modifier insert the cached computation results into the modification pipeline.
+******************************************************************************/
+PipelineStatus BondAngleAnalysisModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
+{
+	// Let the base class output the structure type property to the pipeline.
+	PipelineStatus status = StructureIdentificationModifier::applyComputationResults(time, validityInterval);
+
+	// Also output structure type counts, which have been computed by the base class.
+	if(status.type() == PipelineStatus::Success) {
+		output().attributes().insert(QStringLiteral("BondAngleAnalysis.counts.OTHER"), QVariant::fromValue(structureCounts()[OTHER]));
+		output().attributes().insert(QStringLiteral("BondAngleAnalysis.counts.FCC"), QVariant::fromValue(structureCounts()[FCC]));
+		output().attributes().insert(QStringLiteral("BondAngleAnalysis.counts.HCP"), QVariant::fromValue(structureCounts()[HCP]));
+		output().attributes().insert(QStringLiteral("BondAngleAnalysis.counts.BCC"), QVariant::fromValue(structureCounts()[BCC]));
+		output().attributes().insert(QStringLiteral("BondAngleAnalysis.counts.ICO"), QVariant::fromValue(structureCounts()[ICO]));
+	}
+
+	return status;
+}
+
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

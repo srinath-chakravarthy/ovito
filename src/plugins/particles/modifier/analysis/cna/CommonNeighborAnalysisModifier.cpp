@@ -607,13 +607,27 @@ void CommonNeighborAnalysisModifier::transferComputationResults(ComputeEngine* e
 ******************************************************************************/
 PipelineStatus CommonNeighborAnalysisModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
 {
+	// Output per-bnd CNA indices to pipeline.
 	if(_cnaIndicesData && _cnaIndicesData->size() == inputBondCount()) {
 		// Create output bond property object.
 		OORef<BondPropertyObject> cnaIndicesProperty = BondPropertyObject::createFromStorage(dataset(), _cnaIndicesData.data());
 		// Insert into pipeline.
 		output().addObject(cnaIndicesProperty);
 	}
-	return StructureIdentificationModifier::applyComputationResults(time, validityInterval);
+
+	// Let the base class output the structure type property to the pipeline.
+	PipelineStatus status = StructureIdentificationModifier::applyComputationResults(time, validityInterval);
+
+	// Also output structure type counts, which have been computed by the base class.
+	if(status.type() == PipelineStatus::Success) {
+		output().attributes().insert(QStringLiteral("CommonNeighborAnalysis.counts.OTHER"), QVariant::fromValue(structureCounts()[OTHER]));
+		output().attributes().insert(QStringLiteral("CommonNeighborAnalysis.counts.FCC"), QVariant::fromValue(structureCounts()[FCC]));
+		output().attributes().insert(QStringLiteral("CommonNeighborAnalysis.counts.HCP"), QVariant::fromValue(structureCounts()[HCP]));
+		output().attributes().insert(QStringLiteral("CommonNeighborAnalysis.counts.BCC"), QVariant::fromValue(structureCounts()[BCC]));
+		output().attributes().insert(QStringLiteral("CommonNeighborAnalysis.counts.ICO"), QVariant::fromValue(structureCounts()[ICO]));
+	}
+
+	return status;
 }
 
 OVITO_END_INLINE_NAMESPACE

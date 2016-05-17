@@ -432,6 +432,8 @@ PipelineStatus VoronoiAnalysisModifier::applyComputationResults(TimePoint time, 
 		output().addObject(bondsObj);
 	}
 
+	output().attributes().insert(QStringLiteral("Voronoi.max_face_order"), QVariant::fromValue(_maxFaceOrder));
+
 	if(_voronoiIndices && _maxFaceOrder > _voronoiIndices->componentCount()) {
 		return PipelineStatus(PipelineStatus::Warning,
 				tr("The Voronoi tessellation contains faces with up to %1 edges "

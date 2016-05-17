@@ -298,6 +298,9 @@ PipelineStatus WignerSeitzAnalysisModifier::applyComputationResults(TimePoint ti
 
 	outputCustomProperty(_occupancyNumbers.data());
 
+	output().attributes().insert(QStringLiteral("WignerSeitz.vacancy_count"), QVariant::fromValue(vacancyCount()));
+	output().attributes().insert(QStringLiteral("WignerSeitz.interstitial_count"), QVariant::fromValue(interstitialCount()));
+
 	return PipelineStatus(PipelineStatus::Success, tr("Found %1 vacancies and %2 interstitials").arg(vacancyCount()).arg(interstitialCount()));
 }
 

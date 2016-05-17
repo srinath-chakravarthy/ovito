@@ -27,18 +27,21 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ClusterAnalysisModifier, AsynchronousParticleModifier);
 DEFINE_FLAGS_PROPERTY_FIELD(ClusterAnalysisModifier, _cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(ClusterAnalysisModifier, _onlySelectedParticles, "OnlySelectedParticles");
+DEFINE_PROPERTY_FIELD(ClusterAnalysisModifier, _sortBySize, "SortBySize");
 SET_PROPERTY_FIELD_LABEL(ClusterAnalysisModifier, _cutoff, "Cutoff radius");
 SET_PROPERTY_FIELD_LABEL(ClusterAnalysisModifier, _onlySelectedParticles, "Use only selected particles");
+SET_PROPERTY_FIELD_LABEL(ClusterAnalysisModifier, _sortBySize, "Sort clusters by size");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ClusterAnalysisModifier, _cutoff, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
 ClusterAnalysisModifier::ClusterAnalysisModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
-	_cutoff(3.2), _onlySelectedParticles(false), _numClusters(0)
+	_cutoff(3.2), _onlySelectedParticles(false), _sortBySize(false), _numClusters(0), _largestClusterSize(0)
 {
 	INIT_PROPERTY_FIELD(ClusterAnalysisModifier::_cutoff);
 	INIT_PROPERTY_FIELD(ClusterAnalysisModifier::_onlySelectedParticles);
+	INIT_PROPERTY_FIELD(ClusterAnalysisModifier::_sortBySize);
 }
 
 /******************************************************************************
@@ -46,7 +49,7 @@ ClusterAnalysisModifier::ClusterAnalysisModifier(DataSet* dataset) : Asynchronou
 ******************************************************************************/
 std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> ClusterAnalysisModifier::createEngine(TimePoint time, TimeInterval validityInterval)
 {
-	// Get the current positions.
+	// Get the current particle positions.
 	ParticlePropertyObject* posProperty = expectStandardProperty(ParticleProperty::PositionProperty);
 
 	// Get simulation cell.
@@ -58,7 +61,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> ClusterAnalysisModi
 		selectionProperty = expectStandardProperty(ParticleProperty::SelectionProperty)->storage();
 
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
-	return std::make_shared<ClusterAnalysisEngine>(validityInterval, posProperty->storage(), inputCell->data(), cutoff(), selectionProperty);
+	return std::make_shared<ClusterAnalysisEngine>(validityInterval, posProperty->storage(), inputCell->data(), cutoff(), sortBySize(), selectionProperty);
 }
 
 /******************************************************************************
@@ -117,6 +120,33 @@ void ClusterAnalysisModifier::ClusterAnalysisEngine::perform()
 		}
 		while(toProcess.empty() == false);
 	}
+
+	// Sort clusters by size.
+	if(_sortBySize && _numClusters != 0) {
+
+		// Determine cluster sizes.
+		std::vector<size_t> clusterSizes(_numClusters + 1, 0);
+		for(int id : _particleClusters->constIntRange()) {
+			clusterSizes[id]++;
+		}
+
+		// Sort clusters by size.
+		std::vector<int> mapping(_numClusters + 1);
+		std::iota(mapping.begin(), mapping.end(), 0);
+		std::sort(mapping.begin() + 1, mapping.end(), [&clusterSizes](int a, int b) {
+			return clusterSizes[a] > clusterSizes[b];
+		});
+		_largestClusterSize = clusterSizes[mapping[1]];
+		clusterSizes.clear();
+		clusterSizes.shrink_to_fit();
+
+		// Remap cluster IDs.
+		std::vector<int> inverseMapping(_numClusters + 1);
+		for(size_t i = 0; i <= _numClusters; i++)
+			inverseMapping[mapping[i]] = i;
+		for(int& id : _particleClusters->intRange())
+			id = inverseMapping[id];
+	}
 }
 
 /******************************************************************************
@@ -127,6 +157,7 @@ void ClusterAnalysisModifier::transferComputationResults(ComputeEngine* engine)
 	ClusterAnalysisEngine* eng = static_cast<ClusterAnalysisEngine*>(engine);
 	_particleClusters = eng->particleClusters();
 	_numClusters = eng->numClusters();
+	_largestClusterSize = eng->largestClusterSize();
 }
 
 /******************************************************************************
@@ -142,6 +173,11 @@ PipelineStatus ClusterAnalysisModifier::applyComputationResults(TimePoint time, 
 		throwException(tr("The number of input particles has changed. The stored results have become invalid."));
 
 	outputStandardProperty(_particleClusters.data());
+
+	output().attributes().insert(QStringLiteral("ClusterAnalysis.cluster_count"), QVariant::fromValue(_numClusters));
+	if(sortBySize())
+		output().attributes().insert(QStringLiteral("ClusterAnalysis.largest_size"), QVariant::fromValue(_largestClusterSize));
+
 	return PipelineStatus(PipelineStatus::Success, tr("Found %1 clusters").arg(_numClusters));
 }
 
@@ -154,7 +190,8 @@ void ClusterAnalysisModifier::propertyChanged(const PropertyFieldDescriptor& fie
 
 	// Recompute modifier results when the parameters have been changed.
 	if(field == PROPERTY_FIELD(ClusterAnalysisModifier::_cutoff) ||
-			field == PROPERTY_FIELD(ClusterAnalysisModifier::_onlySelectedParticles))
+			field == PROPERTY_FIELD(ClusterAnalysisModifier::_onlySelectedParticles) ||
+			field == PROPERTY_FIELD(ClusterAnalysisModifier::_sortBySize))
 		invalidateCachedResults();
 }
 

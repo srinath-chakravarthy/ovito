@@ -45,29 +45,23 @@ void ParticleExpressionEvaluator::initialize(const QStringList& expressions, con
 		}
 	}
 
-	// Get simulation timestep.
-	int simulationTimestep = -1;
-	if(inputState.attributes().contains(QStringLiteral("Timestep"))) {
-		simulationTimestep = inputState.attributes().value(QStringLiteral("Timestep")).toInt();
-	}
-
 	// Get simulation cell.
 	SimulationCell simCell;
 	SimulationCellObject* simCellObj = inputState.findObject<SimulationCellObject>();
 	if(simCellObj) simCell = simCellObj->data();
 
 	// Call overloaded function.
-	initialize(expressions, inputProperties, simCellObj ? &simCell : nullptr, animationFrame, simulationTimestep);
+	initialize(expressions, inputProperties, simCellObj ? &simCell : nullptr, inputState.attributes(), animationFrame);
 }
 
 /******************************************************************************
 * Specifies the expressions to be evaluated for each particle and create the
 * list of input variables.
 ******************************************************************************/
-void ParticleExpressionEvaluator::initialize(const QStringList& expressions, const std::vector<ParticleProperty*>& inputProperties, const SimulationCell* simCell, int animationFrame, int simulationTimestep)
+void ParticleExpressionEvaluator::initialize(const QStringList& expressions, const std::vector<ParticleProperty*>& inputProperties, const SimulationCell* simCell, const QVariantMap& attributes, int animationFrame)
 {
 	// Create list of input variables.
-	createInputVariables(inputProperties, simCell, animationFrame, simulationTimestep);
+	createInputVariables(inputProperties, simCell, attributes, animationFrame);
 
 	// Copy expression strings into internal array.
 	_expressions.resize(expressions.size());
@@ -81,7 +75,7 @@ void ParticleExpressionEvaluator::initialize(const QStringList& expressions, con
 /******************************************************************************
 * Initializes the list of input variables from the given input state.
 ******************************************************************************/
-void ParticleExpressionEvaluator::createInputVariables(const std::vector<ParticleProperty*>& inputProperties, const SimulationCell* simCell, int animationFrame, int simulationTimestep)
+void ParticleExpressionEvaluator::createInputVariables(const std::vector<ParticleProperty*>& inputProperties, const SimulationCell* simCell, const QVariantMap& attributes, int animationFrame)
 {
 	_inputVariables.clear();
 	ParticleProperty* posProperty = nullptr;
@@ -159,6 +153,7 @@ void ParticleExpressionEvaluator::createInputVariables(const std::vector<Particl
 	ExpressionVariable pindexVar;
 	pindexVar.name = "ParticleIndex";
 	pindexVar.type = PARTICLE_INDEX;
+	pindexVar.description = tr("zero-based");
 	addVariable(std::move(pindexVar));
 
 	// Create constant variables.
@@ -170,9 +165,12 @@ void ParticleExpressionEvaluator::createInputVariables(const std::vector<Particl
 	// Animation frame
 	registerGlobalParameter("Frame", animationFrame, tr("animation frame number"));
 
-	// Timestep.
-	if(simulationTimestep >= 0) {
-		registerGlobalParameter("Timestep", simulationTimestep, tr("simulation timestep"));
+	// Global attributes.
+	for(auto entry = attributes.constBegin(); entry != attributes.constEnd(); ++entry) {
+		if(entry.value().canConvert<double>())
+			registerGlobalParameter(entry.key(), entry.value().toDouble());
+		else if(entry.value().canConvert<long>())
+			registerGlobalParameter(entry.key(), entry.value().value<long>());
 	}
 
 	if(simCell) {
