@@ -51,6 +51,9 @@ Unresolved OpenGL problems:
    Linux, Intel Graphics, Message: "Matrix4 cannot be inverted: determinant is zero."
    (francoprud@gmail.com)
 
+- Some vector arrows are silently omitted from the OpenGL viewport display (stefan.parviainen@iki.fi)
+    Ovito 2.6.2, Windows, ATI Radeon HD 4600 Series, 3.2.11672 Core Profile Context
+
 Unresolved bugs:
 
 - Fix input problem in interactive Python interpreter on Mac OS (gvizkel@sandia.gov).
@@ -72,7 +75,6 @@ New I/O functions:
 - Single precision floating-point numbers, which are used for custom particle properties, cannot represent large integer numbers exactly (e.g. 100400). Find a solution to make it work.
 - Load atomic trajectories from LAMMPS dump files and import bond information from a separate LAMMPS data file (suggested by jorge.ramirez@upm.es, HeineDR@corning.com).
 - Add support for more file formats using OpenBabel.
-- Output timestep number in header of LAMMPS dump files instead of frame number.
 - General text file export for scalar computation results.
 
 Performance improvements:
