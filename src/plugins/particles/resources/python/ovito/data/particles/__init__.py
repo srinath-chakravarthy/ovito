@@ -292,25 +292,31 @@ def _Bonds_array(self):
     return numpy.asarray(self)
 Particles.Bonds.array = property(_Bonds_array)
 
-def _Bonds_add(self, p1, p2):
+def _Bonds_add(self, p1, p2, pbc_shift = (0,0,0)):
     """ Creates a new half-bond from particle *p1* to particle *p2*. 
     
         To also create a half-bond from *p2* to *p1*, use :py:meth:`.add_full` instead.
 
         :param int p1: Zero-based index of the particle at which the bonds originates.
         :param int p2: Zero-based index of the particle the bonds leads to.
+        :param pbc_shift: A tuple of three integers, which specifies how often each periodic 
+                          boundary of the simulation cell is crossed when following the new bond from *p1* to *p2*. 
+                          This information is needed by OVITO to correctly wrap bonds at periodic boundaries.
     """
-    self.addBond(p1, p2, (0,0,0))
+    self.addBond(p1, p2, pbc_shift)
 Particles.Bonds.add = _Bonds_add
 
-def _Bonds_add_full(self, p1, p2):
-    """ Creates two half-bonds between the particles *p1* and *p2*.
+def _Bonds_add_full(self, p1, p2, pbc_shift = (0,0,0)):
+    """ Creates two half-bonds connecting the particles *p1* and *p2*.
     
         :param int p1: Zero-based index of the first particle.
         :param int p2: Zero-based index of the second particle.
+        :param pbc_shift: A tuple of three integers, which specifies how often each periodic 
+                          boundary of the simulation cell is crossed when following the new bond from *p1* to *p2*. 
+                          This information is needed by OVITO to correctly wrap bonds at periodic boundaries. 
     """
-    self.addBond(p1, p2, (0,0,0))
-    self.addBond(p2, p1, (0,0,0))
+    self.addBond(p1, p2, pbc_shift)
+    self.addBond(p2, p1, (-pbc_shift[0], -pbc_shift[1], -pbc_shift[2]))
 Particles.Bonds.add_full = _Bonds_add_full
 
 # Implement 'pbc' property of SimulationCell class.
@@ -385,7 +391,7 @@ class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
         
         Note that all periodic images of particles within the cutoff radius are visited. Thus, the same particle index may appear multiple times in the neighbor
         list of a central particle. In fact, the central particle may be among its own neighbors in a sufficiently small periodic simulation cell.
-        However, the computed vector (``delta``) and PBC shift (``pbc_shift``) will be unique for each visited image of a neighboring particle.
+        However, the computed vector (``delta``) and PBC shift (``pbc_shift``) taken together will be unique for each visited image of a neighboring particle.
         """
         if index < 0 or index >= self.particle_count:
             raise IndexError("Particle index is out of range.")

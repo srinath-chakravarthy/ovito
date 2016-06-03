@@ -431,6 +431,7 @@ int ScriptEngine::executeFile(const QString& filename, const QStringList& script
 			PyObject* value;
 			PyObject* traceback;
 			PyErr_Fetch(&extype, &value, &traceback);
+			PyErr_NormalizeException(&extype, &value, &traceback);
 			if(extype) {
 				object o_extype(handle<>(borrowed(extype)));
 				object o_value(handle<>(borrowed(value)));

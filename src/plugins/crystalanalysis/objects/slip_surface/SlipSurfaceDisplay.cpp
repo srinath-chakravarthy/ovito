@@ -346,13 +346,14 @@ bool SlipSurfaceDisplay::splitFace(TriMesh& output, int faceIndex, int oldVertex
 	int originalVertices[3] = { face.vertex(0), face.vertex(1), face.vertex(2) };
 	face.setVertices(originalVertices[properEdge], originalVertices[(properEdge+1)%3], newVertexIndices[(properEdge+2)%3][1]);
 
+	int materialIndex = face.materialIndex();
 	output.setFaceCount(output.faceCount() + 2);
 	TriMeshFace& newFace1 = output.face(output.faceCount() - 2);
 	TriMeshFace& newFace2 = output.face(output.faceCount() - 1);
 	newFace1.setVertices(originalVertices[(properEdge+1)%3], newVertexIndices[(properEdge+1)%3][0], newVertexIndices[(properEdge+2)%3][1]);
 	newFace2.setVertices(newVertexIndices[(properEdge+1)%3][1], originalVertices[(properEdge+2)%3], newVertexIndices[(properEdge+2)%3][0]);
-	newFace1.setMaterialIndex(face.materialIndex());
-	newFace2.setMaterialIndex(face.materialIndex());
+	newFace1.setMaterialIndex(materialIndex);
+	newFace2.setMaterialIndex(materialIndex);
 
 	return true;
 }

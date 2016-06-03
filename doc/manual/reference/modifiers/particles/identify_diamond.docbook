@@ -13,15 +13,16 @@
   <para>  
   This analysis modifier finds atoms that are arranged in a cubic or hexagonal diamond lattice. This structure identification method has been described in Appendix A of
     <blockquote><para>
-<literallayout><link xlink:href="http://arxiv.org/abs/1601.06597">E. Maras et al.
+<literallayout><link xlink:href="http://dx.doi.org/10.1016/j.cpc.2016.04.001">E. Maras et al.
 Global transition path search for dislocation formation in Ge on Si(001)
-arXiv:1601.06597 (2016)</link></literallayout>
+Computer Physics Communications (2016), doi:10.1016/j.cpc.2016.04.001</link></literallayout>
     </para></blockquote>
-    Please cite this paper when you use this method in your work.  
+    Please cite this paper when you use this structure identification algorithm for diamond lattices in your work. 
+    A preprint is available <link xlink:href="http://arxiv.org/abs/1601.06597">here</link>.   
   </para>
 
   <para>
-  The algorithm analyzes the local enviroment of each atom up to the second neighbor shell to determine the local structure type.
+  The algorithm analyzes the local enviroment of each atom up to the second neighbor shell to determine the local structural type.
   The results are stored in the <literal>Structure Type</literal> particle property, with the type assigned to each atom encoded as an integer value:
   <informaltable>
         <tgroup cols="3">
