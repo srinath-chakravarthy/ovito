@@ -279,7 +279,7 @@ Particles.BondProperty.marray = property(_BondProperty_marray, _ParticleProperty
 
 # Returns a NumPy array wrapper for bonds list.
 def _Bonds_array(self):
-    """ This attribute returns a NumPy array providing direct access to the bond list.
+    """ This attribute returns a NumPy array providing direct access to the bonds list.
         
         The returned array is two-dimensional and contains pairs of particle indices connected by a bond.
         The array's shape is *N x 2*, where *N* is the number of half bonds. Each pair-wise bond occurs twice
@@ -287,7 +287,6 @@ def _Bonds_array(self):
         Particle indices start at 0.
         
         Note that the returned NumPy array is read-only and provides a view of the internal data. 
-        No copy of the data is made.
     """
     return numpy.asarray(self)
 Particles.Bonds.array = property(_Bonds_array)
@@ -295,7 +294,7 @@ Particles.Bonds.array = property(_Bonds_array)
 def _Bonds_add(self, p1, p2, pbc_shift = (0,0,0)):
     """ Creates a new half-bond from particle *p1* to particle *p2*. 
     
-        To also create a half-bond from *p2* to *p1*, use :py:meth:`.add_full` instead.
+        To also create a reverse half-bond from *p2* to *p1*, use :py:meth:`.add_full` instead.
 
         :param int p1: Zero-based index of the particle at which the bonds originates.
         :param int p2: Zero-based index of the particle the bonds leads to.
@@ -307,7 +306,8 @@ def _Bonds_add(self, p1, p2, pbc_shift = (0,0,0)):
 Particles.Bonds.add = _Bonds_add
 
 def _Bonds_add_full(self, p1, p2, pbc_shift = (0,0,0)):
-    """ Creates two half-bonds connecting the particles *p1* and *p2*.
+    """ Creates two half-bonds between the particles *p1* and *p2*. This is equivalent to 
+        two calls to :py:meth:`.add`.
     
         :param int p1: Zero-based index of the first particle.
         :param int p2: Zero-based index of the second particle.

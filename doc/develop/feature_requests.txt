@@ -76,6 +76,7 @@ New I/O functions:
 - Load atomic trajectories from LAMMPS dump files and import bond information from a separate LAMMPS data file (suggested by jorge.ramirez@upm.es, HeineDR@corning.com).
 - Add support for more file formats using OpenBabel.
 - General text file export for scalar computation results.
+- Add support for VASP XDATCAR files.
 
 Performance improvements:
 

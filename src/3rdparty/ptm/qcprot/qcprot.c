@@ -87,6 +87,9 @@
  *      2016/02/20        modified for use in Polyhedral Template Matching.  InnerProduct function now takes permutation array.
  *  
  ******************************************************************************/
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 #include "qcprot.h"
 #include "quat.h"
 
@@ -260,7 +263,7 @@ int FastCalcRMSDAndRotation(double *q, double *A, double *rmsd, double E0, int l
 	return 1;
 }
 
-void InnerProduct(double *A, int num, const double (*coords1)[3], double (*coords2)[3], int8_t* perm2)
+void InnerProduct(double *A, int num, const double (*coords1)[3], double (*coords2)[3], int8_t* permutation)
 {
 	A[0] = A[1] = A[2] = A[3] = A[4] = A[5] = A[6] = A[7] = A[8] = 0.0;
 
@@ -270,9 +273,9 @@ void InnerProduct(double *A, int num, const double (*coords1)[3], double (*coord
 		double y1 = coords1[i][1];
 		double z1 = coords1[i][2];
 
-		double x2 = coords2[perm2[i]][0];
-		double y2 = coords2[perm2[i]][1];
-		double z2 = coords2[perm2[i]][2];
+		double x2 = coords2[permutation[i]][0];
+		double y2 = coords2[permutation[i]][1];
+		double z2 = coords2[permutation[i]][2];
 
 		A[0] += x1 * x2;
 		A[1] += x1 * y2;

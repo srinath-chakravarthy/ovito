@@ -98,7 +98,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> PolyhedralTemplateM
 	// Initialize PTM library.
 	static bool isPTMInitialized = false;
 	if(!isPTMInitialized) {
-		initialize_PTM();
+		ptm_initialize_global();
 		isPTMInitialized = true;
 	}
 
@@ -122,74 +122,95 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 	// Create output storage.
 	ParticleProperty* output = structures();
 
+	setProgressRange(positions()->size());
+	setProgressValue(0);
+
 	// Perform analysis on each particle.
-	parallelFor(positions()->size(), *this, [this, &neighFinder, output](size_t index) {
+	parallelForChunks(positions()->size(), *this, [this, &neighFinder, output](size_t startIndex, size_t count, FutureInterfaceBase& progress) {
 
-		// Skip particles that are not included in the analysis.
-		if(selection() && !selection()->getInt(index)) {
-			output->setInt(index, OTHER);
-			_rmsd->setFloat(index, 0);
-			return;
-		}
+		// Initialize thread-local storage for PTM routine.
+		ptm_local_handle_t ptm_local_handle = ptm_initialize_local();
 
-		// Find nearest neighbors.
-		NearestNeighborFinder::Query<MAX_NEIGHBORS> neighQuery(neighFinder);
-		neighQuery.findNeighbors(neighFinder.particlePos(index));
-		int numNeighbors = neighQuery.results().size();
-		OVITO_ASSERT(numNeighbors <= MAX_NEIGHBORS);
+		size_t endIndex = startIndex + count;
+		for(size_t index = startIndex; index < endIndex; index++) {
 
-		// Bring neighbor coordinates into a form suitable for the PTM library.
-		double points[(MAX_NEIGHBORS+1) * 3];
-		points[0] = points[1] = points[2] = 0;
-		for(int i = 0; i < numNeighbors; i++) {
-			points[i*3 + 3] = neighQuery.results()[i].delta.x();
-			points[i*3 + 4] = neighQuery.results()[i].delta.y();
-			points[i*3 + 5] = neighQuery.results()[i].delta.z();
-		}
+			// Update progress indicator.
+			if((index % 256) == 0)
+				progress.incrementProgressValue(256);
 
-		// Determine which structures to look for. This depends on how
-		// much neighbors are present.
-		int32_t flags = 0;
-		if(numNeighbors >= 6 && typesToIdentify()[SC]) flags |= PTM_CHECK_SC;
-		if(numNeighbors >= 12) {
-			if(typesToIdentify()[FCC]) flags |= PTM_CHECK_FCC;
-			if(typesToIdentify()[HCP]) flags |= PTM_CHECK_HCP;
-			if(typesToIdentify()[ICO]) flags |= PTM_CHECK_ICO;
-		}
-		if(numNeighbors >= 14 && typesToIdentify()[BCC]) flags |= PTM_CHECK_BCC;
+			// Break out of loop when operation was canceled.
+			if(progress.isCanceled())
+				break;
 
-		// Call PTM library to identify local structure.
-		int32_t type, alloy_type;
-		double scale;
-		double rmsd;
-		double q[4];
-		double F[9], F_res[3];
-		index_PTM(numNeighbors + 1, points, nullptr, flags, false,
-				&type, &alloy_type, &scale, &rmsd, q,
-				_deformationGradients ? F : nullptr,
-				_deformationGradients ? F_res : nullptr,
-				nullptr, nullptr);
+			// Skip particles that are not included in the analysis.
+			if(selection() && !selection()->getInt(index)) {
+				output->setInt(index, OTHER);
+				_rmsd->setFloat(index, 0);
+				continue;
+			}
 
-		// Convert PTM classification to our own scheme and store computed quantities.
-		if(type == PTM_MATCH_NONE) {
-			output->setInt(index, OTHER);
-			_rmsd->setFloat(index, 0);
-		}
-		else {
-			if(type == PTM_MATCH_SC) output->setInt(index, SC);
-			else if(type == PTM_MATCH_FCC) output->setInt(index, FCC);
-			else if(type == PTM_MATCH_HCP) output->setInt(index, HCP);
-			else if(type == PTM_MATCH_ICO) output->setInt(index, ICO);
-			else if(type == PTM_MATCH_BCC) output->setInt(index, BCC);
-			else OVITO_ASSERT(false);
-			_rmsd->setFloat(index, rmsd);
-			if(_scalingFactors) _scalingFactors->setFloat(index, scale);
-			if(_orientations) _orientations->setQuaternion(index, Quaternion((FloatType)q[0], (FloatType)q[1], (FloatType)q[2], (FloatType)q[3]));
-			if(_deformationGradients) {
-				for(size_t j = 0; j < 9; j++)
-					_deformationGradients->setFloatComponent(index, j, (FloatType)F[j]);
+			// Find nearest neighbors.
+			NearestNeighborFinder::Query<MAX_NEIGHBORS> neighQuery(neighFinder);
+			neighQuery.findNeighbors(neighFinder.particlePos(index));
+			int numNeighbors = neighQuery.results().size();
+			OVITO_ASSERT(numNeighbors <= MAX_NEIGHBORS);
+
+			// Bring neighbor coordinates into a form suitable for the PTM library.
+			double points[(MAX_NEIGHBORS+1) * 3];
+			points[0] = points[1] = points[2] = 0;
+			for(int i = 0; i < numNeighbors; i++) {
+				points[i*3 + 3] = neighQuery.results()[i].delta.x();
+				points[i*3 + 4] = neighQuery.results()[i].delta.y();
+				points[i*3 + 5] = neighQuery.results()[i].delta.z();
+			}
+
+			// Determine which structures to look for. This depends on how
+			// much neighbors are present.
+			int32_t flags = 0;
+			if(numNeighbors >= 6 && typesToIdentify()[SC]) flags |= PTM_CHECK_SC;
+			if(numNeighbors >= 12) {
+				if(typesToIdentify()[FCC]) flags |= PTM_CHECK_FCC;
+				if(typesToIdentify()[HCP]) flags |= PTM_CHECK_HCP;
+				if(typesToIdentify()[ICO]) flags |= PTM_CHECK_ICO;
+			}
+			if(numNeighbors >= 14 && typesToIdentify()[BCC]) flags |= PTM_CHECK_BCC;
+
+			// Call PTM library to identify local structure.
+			int32_t type, alloy_type;
+			double scale;
+			double rmsd;
+			double q[4];
+			double F[9], F_res[3];
+			ptm_index(ptm_local_handle, numNeighbors + 1, points, nullptr, flags, true,
+					&type, &alloy_type, &scale, &rmsd, q,
+					_deformationGradients ? F : nullptr,
+					_deformationGradients ? F_res : nullptr,
+					nullptr, nullptr, nullptr, nullptr);
+
+			// Convert PTM classification to our own scheme and store computed quantities.
+			if(type == PTM_MATCH_NONE) {
+				output->setInt(index, OTHER);
+				_rmsd->setFloat(index, 0);
+			}
+			else {
+				if(type == PTM_MATCH_SC) output->setInt(index, SC);
+				else if(type == PTM_MATCH_FCC) output->setInt(index, FCC);
+				else if(type == PTM_MATCH_HCP) output->setInt(index, HCP);
+				else if(type == PTM_MATCH_ICO) output->setInt(index, ICO);
+				else if(type == PTM_MATCH_BCC) output->setInt(index, BCC);
+				else OVITO_ASSERT(false);
+				_rmsd->setFloat(index, rmsd);
+				if(_scalingFactors) _scalingFactors->setFloat(index, scale);
+				if(_orientations) _orientations->setQuaternion(index, Quaternion((FloatType)q[0], (FloatType)q[1], (FloatType)q[2], (FloatType)q[3]));
+				if(_deformationGradients) {
+					for(size_t j = 0; j < 9; j++)
+						_deformationGradients->setFloatComponent(index, j, (FloatType)F[j]);
+				}
 			}
 		}
+
+		// Release thread-local storage of PTM routine.
+		ptm_uninitialize_local(ptm_local_handle);
 	});
 	if(isCanceled() || output->size() == 0)
 		return;
