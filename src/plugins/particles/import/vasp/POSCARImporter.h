@@ -56,6 +56,17 @@ public:
 		return std::make_shared<POSCARImportTask>(dataset()->container(), frame, isNewlySelectedFile);
 	}
 
+protected:
+
+	/// \brief Determines whether the input file should be scanned to discover all contained frames.
+	virtual bool shouldScanFileForTimesteps(const QUrl& sourceUrl) override;
+
+	/// \brief Scans the given input file to find all contained simulation frames.
+	virtual void scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream) override;
+
+	/// \brief Parses the list of atom types from the POSCAR file.
+	static void parseAtomTypeNamesAndCounts(CompressedTextReader& stream, QStringList& atomTypeNames, QVector<int>& atomCounts);
+
 private:
 
 	/// The format-specific task object that is responsible for reading an input file in the background.

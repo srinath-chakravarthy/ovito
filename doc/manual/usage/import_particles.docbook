@@ -148,7 +148,7 @@
                 </entry>
             </row>
             <row>
-              <entry>POSCAR</entry>
+              <entry>POSCAR / XDATCAR</entry>
               <entry><para>File format used by the <emphasis>ab initio</emphasis> simulation package <link xlink:href="http://www.vasp.at/">VASP</link>.</para></entry>
             </row>
             <row>

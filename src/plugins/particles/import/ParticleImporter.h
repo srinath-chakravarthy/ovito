@@ -64,6 +64,11 @@ protected:
 	/// \brief Is called when the value of a property of this object has changed.
 	virtual void propertyChanged(const PropertyFieldDescriptor& field) override;
 
+	/// \brief Determines whether the input file should be scanned to discover all contained frames.
+	virtual bool shouldScanFileForTimesteps(const QUrl& sourceUrl) {
+		return isMultiTimestepFile();
+	}
+
 	/// \brief Scans the given input file to find all contained simulation frames.
 	virtual void scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream);
 

@@ -38,7 +38,7 @@ SET_PROPERTY_FIELD_LABEL(ParticleImporter, _isMultiTimestepFile, "File contains 
 ******************************************************************************/
 Future<QVector<FileSourceImporter::Frame>> ParticleImporter::discoverFrames(const QUrl& sourceUrl)
 {
-	if(isMultiTimestepFile()) {
+	if(shouldScanFileForTimesteps(sourceUrl)) {
 		return dataset()->container()->taskManager().execAsync(
 				std::bind(&ParticleImporter::discoverFramesInFile, this, sourceUrl, std::placeholders::_1));
 	}
@@ -55,7 +55,7 @@ QVector<FileSourceImporter::Frame> ParticleImporter::discoverFramesInFile(const 
 	QVector<FileSourceImporter::Frame> result;
 
 	// Check if filename is a wildcard pattern.
-	// If yes, find all matching files and scan each of them.
+	// If yes, find all matching files and scan each one of them.
 	QFileInfo fileInfo(sourceUrl.path());
 	if(fileInfo.fileName().contains('*') || fileInfo.fileName().contains('?')) {
 		auto findFilesFuture = FileSourceImporter::findWildcardMatches(sourceUrl, dataset()->container());
