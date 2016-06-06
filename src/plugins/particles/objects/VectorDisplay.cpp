@@ -96,18 +96,20 @@ Box3 VectorDisplay::arrowBoundingBox(ParticlePropertyObject* vectorProperty, Par
 	OVITO_ASSERT(vectorProperty->dataType() == qMetaTypeId<FloatType>());
 	OVITO_ASSERT(vectorProperty->componentCount() == 3);
 
-	// Compute bounding box of particle positions.
+	// Compute bounding box of particle positions (only those with non-zero vector).
 	Box3 bbox;
 	const Point3* p = positionProperty->constDataPoint3();
 	const Point3* p_end = p + positionProperty->size();
-	for(; p != p_end; ++p)
-		bbox.addPoint(*p);
+	const Vector3* v = vectorProperty->constDataVector3();
+	for(; p != p_end; ++p, ++v) {
+		if((*v) != Vector3::Zero())
+			bbox.addPoint(*p);
+	}
 
 	// Find largest vector magnitude.
 	FloatType maxMagnitude = 0;
-	const Vector3* v = vectorProperty->constDataVector3();
-	const Vector3* v_end = v + vectorProperty->size();
-	for(; v != v_end; ++v) {
+	const Vector3* v_end = vectorProperty->constDataVector3() + vectorProperty->size();
+	for(v = vectorProperty->constDataVector3(); v != v_end; ++v) {
 		FloatType m = v->squaredLength();
 		if(m > maxMagnitude) maxMagnitude = m;
 	}
@@ -128,9 +130,6 @@ void VectorDisplay::render(TimePoint time, DataObject* dataObject, const Pipelin
 		vectorProperty = nullptr;
 	ParticlePropertyObject* vectorColorProperty = ParticlePropertyObject::findInState(flowState, ParticleProperty::VectorColorProperty);
 
-	// Get number of vectors.
-	int vectorCount = (vectorProperty && positionProperty) ? (int)vectorProperty->size() : 0;
-
 	// Do we have to re-create the geometry buffer from scratch?
 	bool recreateBuffer = !_buffer || !_buffer->isValid(renderer);
 
@@ -146,7 +145,7 @@ void VectorDisplay::render(TimePoint time, DataObject* dataObject, const Pipelin
 			positionProperty,
 			scalingFactor(), arrowWidth(), arrowColor(), reverseArrowDirection(), arrowPosition(),
 			vectorColorProperty)
-			|| recreateBuffer || (_buffer->elementCount() != vectorCount);
+			|| recreateBuffer;
 
 	// Re-create the geometry buffer if necessary.
 	if(recreateBuffer)
@@ -154,27 +153,45 @@ void VectorDisplay::render(TimePoint time, DataObject* dataObject, const Pipelin
 
 	// Update buffer contents.
 	if(updateContents) {
-		_buffer->startSetElements(vectorCount);
+
+		// Determine number of non-zero vectors.
+		int vectorCount = 0;
 		if(vectorProperty && positionProperty) {
+			for(const Vector3& v : vectorProperty->constVector3Range()) {
+				if(v != Vector3::Zero())
+					vectorCount++;
+			}
+		}
+
+		_buffer->startSetElements(vectorCount);
+		if(vectorCount) {
 			FloatType scalingFac = scalingFactor();
 			if(reverseArrowDirection())
 				scalingFac = -scalingFac;
-			const Point3* p_begin = positionProperty->constDataPoint3();
-			const Vector3* v_begin = vectorProperty->constDataVector3();
 			ColorA color(arrowColor());
 			FloatType width = arrowWidth();
 			ArrowPrimitive* buffer = _buffer.get();
-			for(int index = 0; index < vectorCount; index++) {
-				Vector3 v = v_begin[index] * scalingFac;
-				Point3 base = p_begin[index];
-				if(arrowPosition() == Head)
-					base -= v;
-				else if(arrowPosition() == Center)
-					base -= v * FloatType(0.5);
-				if(vectorColorProperty)
-					color = ColorA(vectorColorProperty->getColor(index));
-				buffer->setElement(index, base, v, color, width);
+			const Point3* pos = positionProperty->constDataPoint3();
+			const Color* pcol = vectorColorProperty ? vectorColorProperty->constDataColor() : nullptr;
+			int index = 0;
+			for(const Vector3& vec : vectorProperty->constVector3Range()) {
+				if(vec != Vector3::Zero()) {
+					Vector3 v = vec * scalingFac;
+					Point3 base = *pos;
+					if(arrowPosition() == Head)
+						base -= v;
+					else if(arrowPosition() == Center)
+						base -= v * FloatType(0.5);
+					if(pcol)
+						color = ColorA(*pcol);
+					buffer->setElement(index++, base, v, color, width);
+				}
+				++pos;
+				if(pcol) ++pcol;
 			}
+			OVITO_ASSERT(pos == positionProperty->constDataPoint3() + positionProperty->size());
+			OVITO_ASSERT(!pcol || pcol == vectorColorProperty->constDataColor() + vectorColorProperty->size());
+			OVITO_ASSERT(index == vectorCount);
 		}
 		_buffer->endSetElements();
 	}

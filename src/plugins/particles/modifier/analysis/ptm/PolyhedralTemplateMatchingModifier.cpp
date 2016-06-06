@@ -24,7 +24,7 @@
 #include <core/utilities/concurrent/ParallelFor.h>
 #include "PolyhedralTemplateMatchingModifier.h"
 
-#include <ptm/index_PTM.h>
+#include <ptm/index_ptm.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
