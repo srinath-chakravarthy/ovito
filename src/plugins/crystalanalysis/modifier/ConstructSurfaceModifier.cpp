@@ -139,6 +139,10 @@ PipelineStatus ConstructSurfaceModifier::applyComputationResults(TimePoint time,
 	// Insert output object into the pipeline.
 	output().addObject(meshObj);
 
+	output().attributes().insert(QStringLiteral("ConstructSurfaceMesh.surface_area"), QVariant::fromValue(surfaceArea()));
+	output().attributes().insert(QStringLiteral("ConstructSurfaceMesh.solid_volume"), QVariant::fromValue(solidVolume()));
+	output().attributes().insert(QStringLiteral("ConstructSurfaceMesh.total_volume"), QVariant::fromValue(totalVolume()));
+
 	return PipelineStatus(PipelineStatus::Success, tr("Surface area: %1\nSolid volume: %2\nTotal volume: %3\nSolid volume fraction: %4\nSurface area per solid volume: %5\nSurface area per total volume: %6")
 			.arg(surfaceArea()).arg(solidVolume()).arg(totalVolume())
 			.arg(solidVolume() / totalVolume()).arg(surfaceArea() / solidVolume()).arg(surfaceArea() / totalVolume()));
@@ -182,13 +186,10 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 	beginProgressSubSteps({ 20, 1, 6, 1 });
 
 	// Generate Delaunay tessellation.
-	QTime myTimer;
-	myTimer.start();
 	DelaunayTessellation tessellation;
 	if(!tessellation.generateTessellation(_simCell, positions()->constDataPoint3(), positions()->size(), ghostLayerSize,
 			selection() ? selection()->constDataInt() : nullptr, this))
 		return;
-	qDebug() << "Delaunay time: " << myTimer.elapsed();
 
 	nextProgressSubStep();
 

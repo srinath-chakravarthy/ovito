@@ -264,7 +264,7 @@ PipelineFlowState FileSource::requestFrame(int frame)
 	// Prepare the attribute map that will be passed to the modification pipeline
 	// along with the data objects.
 	QVariantMap attrs = attributes();
-	attrs.insert(QStringLiteral("Frame"), QVariant::fromValue(frame));
+	attrs.insert(QStringLiteral("SourceFrame"), QVariant::fromValue(frame));
 
 	bool oldLoadingTaskWasCanceled = false;
 	if(_frameBeingLoaded != -1) {

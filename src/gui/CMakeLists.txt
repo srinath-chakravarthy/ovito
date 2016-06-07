@@ -52,6 +52,7 @@ SET(SourceFiles
 	actions/ViewportModeAction.cpp
 	dataset/importexport/FileSourceEditor.cpp
 	dataset/importexport/FileImporterEditor.cpp
+	dataset/importexport/AttributeFileExporterEditor.cpp
 	dataset/GuiDataSetContainer.cpp
 	widgets/general/RolloutContainer.cpp
 	widgets/general/SpinnerWidget.cpp

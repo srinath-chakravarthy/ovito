@@ -59,6 +59,7 @@ SET(SourceFiles
 	dataset/importexport/FileExporter.cpp
 	dataset/importexport/FileSourceImporter.cpp
 	dataset/importexport/FileSource.cpp
+	dataset/importexport/AttributeFileExporter.cpp
 	scene/SceneNode.cpp
 	scene/ObjectNode.cpp
 	scene/SceneRoot.cpp

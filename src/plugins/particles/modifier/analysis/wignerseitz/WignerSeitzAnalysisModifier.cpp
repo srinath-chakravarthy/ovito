@@ -131,9 +131,9 @@ PipelineFlowState WignerSeitzAnalysisModifier::getReferenceState(TimePoint time)
 	// What is the reference frame number to use?
 	int referenceFrame;
 	if(useReferenceFrameOffset()) {
-		// Determine the current frame, preferably from the "Frame" attribute stored with the pipeline flow state.
-		// If the "Frame" attribute is not present, infer it from the current animation time.
-		int currentFrame = input().attributes().value(QStringLiteral("Frame"),
+		// Determine the current frame, preferably from the "SourceFrame" attribute stored with the pipeline flow state.
+		// If the "SourceFrame" attribute is not present, infer it from the current animation time.
+		int currentFrame = input().attributes().value(QStringLiteral("SourceFrame"),
 				dataset()->animationSettings()->timeToFrame(time)).toInt();
 
 		// Use frame offset relative to current configuration.
@@ -160,8 +160,9 @@ PipelineFlowState WignerSeitzAnalysisModifier::getReferenceState(TimePoint time)
 		throw refState.status();
 	if(refState.status().type() == PipelineStatus::Pending)
 		throw PipelineStatus(PipelineStatus::Pending, tr("Waiting for input data to become ready..."));
+
 	// Make sure we really received the requested reference frame.
-	if(refState.attributes().value(QStringLiteral("Frame"), referenceFrame).toInt() != referenceFrame)
+	if(refState.attributes().value(QStringLiteral("SourceFrame"), referenceFrame).toInt() != referenceFrame)
 		throwException(tr("Requested reference frame %1 is out of range.").arg(referenceFrame));
 
 	return refState;

@@ -105,8 +105,8 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> AtomicStrainModifie
 	int referenceFrame;
 	if(_useReferenceFrameOffset) {
 		// Determine the current frame, preferably from the attributes stored with the pipeline flow state.
-		// If the "Frame" attribute is not present, infer it from the current animation time.
-		int currentFrame = input().attributes().value(QStringLiteral("Frame"),
+		// If the "SourceFrame" attribute is not present, infer it from the current animation time.
+		int currentFrame = input().attributes().value(QStringLiteral("SourceFrame"),
 				dataset()->animationSettings()->timeToFrame(time)).toInt();
 
 		// Use frame offset relative to current configuration.
@@ -138,8 +138,9 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> AtomicStrainModifie
 		throw PipelineStatus(PipelineStatus::Pending, tr("Waiting for input data to become ready..."));
 	if(refState.isEmpty())
 		throwException(tr("Reference configuration has not been specified yet or is empty. Please pick a reference simulation file."));
+
 	// Make sure we really got back the requested reference frame.
-	if(refState.attributes().value(QStringLiteral("Frame"), referenceFrame).toInt() != referenceFrame)
+	if(refState.attributes().value(QStringLiteral("SourceFrame"), referenceFrame).toInt() != referenceFrame)
 		throwException(tr("Requested reference frame %1 is out of range.").arg(referenceFrame));
 
 	// Get the reference position property.
