@@ -98,10 +98,10 @@ void OpenGLTextPrimitive::renderWindow(SceneRenderer* renderer, const Point2& po
 
 	Point2 alignedPos = pos;
 	Vector2 size = Vector2(_imageBuffer->image().width(), _imageBuffer->image().height()) * (FloatType)vpRenderer->antialiasingLevel();
-	if(alignment & Qt::AlignRight) alignedPos.x() = -size.x();
-	else if(alignment & Qt::AlignHCenter) alignedPos.x() = -size.x() / 2;
-	if(alignment & Qt::AlignBottom) alignedPos.y() = -size.y();
-	else if(alignment & Qt::AlignVCenter) alignedPos.y() = -size.y() / 2;
+	if(alignment & Qt::AlignRight) alignedPos.x() += -size.x();
+	else if(alignment & Qt::AlignHCenter) alignedPos.x() += -size.x() / 2;
+	if(alignment & Qt::AlignBottom) alignedPos.y() += -size.y();
+	else if(alignment & Qt::AlignVCenter) alignedPos.y() += -size.y() / 2;
 	_imageBuffer->renderWindow(renderer, alignedPos, size);
 }
 

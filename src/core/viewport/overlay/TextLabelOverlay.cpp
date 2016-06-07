@@ -1,0 +1,114 @@
+///////////////////////////////////////////////////////////////////////////////
+// 
+//  Copyright (2016) Alexander Stukowski
+//
+//  This file is part of OVITO (Open Visualization Tool).
+//
+//  OVITO is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  OVITO is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#include <core/Core.h>
+#include <core/viewport/Viewport.h>
+#include <core/rendering/RenderSettings.h>
+#include "TextLabelOverlay.h"
+
+namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
+
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, TextLabelOverlay, ViewportOverlay);
+DEFINE_FLAGS_PROPERTY_FIELD(TextLabelOverlay, _alignment, "Alignment", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TextLabelOverlay, _font, "Font", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TextLabelOverlay, _fontSize, "FontSize", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TextLabelOverlay, _offsetX, "OffsetX", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TextLabelOverlay, _offsetY, "OffsetY", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(TextLabelOverlay, _labelText, "LabelText");
+DEFINE_FLAGS_PROPERTY_FIELD(TextLabelOverlay, _textColor, "TextColor", PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _alignment, "Position");
+SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _font, "Font");
+SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _fontSize, "Font size");
+SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _offsetX, "Offset X");
+SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _offsetY, "Offset Y");
+SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _textColor, "Text color");
+SET_PROPERTY_FIELD_UNITS(TextLabelOverlay, _offsetX, PercentParameterUnit);
+SET_PROPERTY_FIELD_UNITS(TextLabelOverlay, _offsetY, PercentParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TextLabelOverlay, _fontSize, FloatParameterUnit, 0);
+
+/******************************************************************************
+* Constructor.
+******************************************************************************/
+TextLabelOverlay::TextLabelOverlay(DataSet* dataset) : ViewportOverlay(dataset),
+		_alignment(Qt::AlignLeft | Qt::AlignTop),
+		_offsetX(0), _offsetY(0),
+		_fontSize(0.4),
+		_labelText("Text label"),
+		_textColor(0,0,1)
+{
+	INIT_PROPERTY_FIELD(TextLabelOverlay::_alignment);
+	INIT_PROPERTY_FIELD(TextLabelOverlay::_offsetX);
+	INIT_PROPERTY_FIELD(TextLabelOverlay::_offsetY);
+	INIT_PROPERTY_FIELD(TextLabelOverlay::_font);
+	INIT_PROPERTY_FIELD(TextLabelOverlay::_fontSize);
+	INIT_PROPERTY_FIELD(TextLabelOverlay::_labelText);
+	INIT_PROPERTY_FIELD(TextLabelOverlay::_textColor);
+}
+
+/******************************************************************************
+* This method asks the overlay to paint its contents over the given viewport.
+******************************************************************************/
+void TextLabelOverlay::render(Viewport* viewport, QPainter& painter, const ViewProjectionParameters& projParams, RenderSettings* renderSettings)
+{
+	FloatType fontSize = this->fontSize() * renderSettings->outputImageHeight();
+	if(fontSize <= 0) return;
+
+	QPointF origin(_offsetX.value() * renderSettings->outputImageWidth(), -_offsetY.value() * renderSettings->outputImageHeight());
+	FloatType margin = fontSize;
+
+#if 0
+	if(_alignment.value() & Qt::AlignLeft) origin.rx() += margin;
+	else if(_alignment.value() & Qt::AlignRight) origin.rx() += renderSettings->outputImageWidth() - margin;
+	else if(_alignment.value() & Qt::AlignHCenter) origin.rx() += 0.5 * renderSettings->outputImageWidth();
+
+	if(_alignment.value() & Qt::AlignTop) origin.ry() += margin;
+	else if(_alignment.value() & Qt::AlignBottom) origin.ry() += renderSettings->outputImageHeight() - margin;
+	else if(_alignment.value() & Qt::AlignVCenter) origin.ry() += 0.5 * renderSettings->outputImageHeight();
+#endif
+
+	QFont font = this->font();
+	font.setPointSizeF(fontSize);
+	painter.setFont(font);
+
+	QString textString = labelText();
+
+	painter.setRenderHint(QPainter::Antialiasing);
+	painter.setRenderHint(QPainter::TextAntialiasing);
+	QPen pen(textColor());
+	painter.setPen(pen);
+
+	//QRectF textRect = painter.boundingRect(QRectF(0,0,0,0), Qt::AlignHCenter | Qt::AlignVCenter | Qt::TextDontClip, textString);
+	//textRect.translate(origin);
+	QRectF textRect(margin, margin, renderSettings->outputImageWidth() - margin*2, renderSettings->outputImageHeight() - margin*2);
+
+	int flags = Qt::TextDontClip;
+	if(_alignment.value() & Qt::AlignLeft) flags |= Qt::AlignLeft;
+	else if(_alignment.value() & Qt::AlignRight) flags |= Qt::AlignRight;
+	else if(_alignment.value() & Qt::AlignHCenter) flags |= Qt::AlignHCenter;
+	if(_alignment.value() & Qt::AlignTop) flags |= Qt::AlignTop;
+	else if(_alignment.value() & Qt::AlignBottom) flags |= Qt::AlignBottom;
+	else if(_alignment.value() & Qt::AlignVCenter) flags |= Qt::AlignVCenter;
+	painter.drawText(textRect.normalized().translated(origin), flags, textString);
+}
+
+OVITO_END_INLINE_NAMESPACE
+OVITO_END_INLINE_NAMESPACE
+}	// End of namespace

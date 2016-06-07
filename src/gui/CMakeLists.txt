@@ -106,6 +106,7 @@ SET(SourceFiles
 	viewport/input/XFormModes.cpp
 	viewport/picking/PickingSceneRenderer.cpp
 	viewport/overlay/CoordinateTripodOverlayEditor.cpp
+	viewport/overlay/TextLabelOverlayEditor.cpp
 	viewport/overlay/MoveOverlayInputMode.cpp
 	app/GuiApplication.cpp
 	scene/objects/camera/CameraObjectEditor.cpp

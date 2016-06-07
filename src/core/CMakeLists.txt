@@ -102,6 +102,7 @@ SET(SourceFiles
 	viewport/ViewportSettings.cpp
 	viewport/overlay/ViewportOverlay.cpp
 	viewport/overlay/CoordinateTripodOverlay.cpp
+	viewport/overlay/TextLabelOverlay.cpp
 )
 
 # Include video encoder interface code.

@@ -84,7 +84,7 @@ private:
 	/// The pre-rendered text.
 	std::shared_ptr<ImagePrimitive> _imageBuffer;
 
-	/// The position of the text inside the texture images.
+	/// The position of the text inside the texture image.
 	QPoint _textOffset;
 
 	/// Indicates that the pre-rendered image needs to be updated.

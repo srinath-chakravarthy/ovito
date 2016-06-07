@@ -311,8 +311,8 @@ void ViewportWindow::renderOrientationIndicator()
 
 		Point3 p = Point3::Origin() + viewport()->projectionParams().viewMatrix.column(axis).resized(1.2f);
 		Point3 ndcPoint = projParams.projectionMatrix * p;
-		Point2 windowPoint(( ndcPoint.x() + 1.0) * size().width()  / 2,
-							(-ndcPoint.y() + 1.0) * size().height() / 2);
+		Point2 windowPoint(( ndcPoint.x() + FloatType(1)) * size().width()  / 2,
+							(-ndcPoint.y() + FloatType(1)) * size().height() / 2);
 		_orientationTripodLabels[axis]->renderWindow(_viewportRenderer, windowPoint, Qt::AlignHCenter | Qt::AlignVCenter);
 	}
 
