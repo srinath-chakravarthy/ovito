@@ -328,8 +328,8 @@ void ViewportWindow::renderRenderFrame()
 	// Create a rendering buffer that is responsible for rendering the frame.
 	if(!_renderFrameOverlay || !_renderFrameOverlay->isValid(_viewportRenderer)) {
 		_renderFrameOverlay = _viewportRenderer->createImagePrimitive();
-		QImage image(1, 1, QImage::Format_ARGB32_Premultiplied);
-		image.fill(0xA0FFFFFF);
+		QImage image(1, 1, QImage::Format_ARGB32);
+		image.fill(0xA0A0A0A0);
 		_renderFrameOverlay->setImage(image);
 	}
 
@@ -347,8 +347,8 @@ void ViewportWindow::renderRenderFrame()
 ******************************************************************************/
 ViewportPickResult ViewportWindow::pick(const QPointF& pos)
 {
-	// Cannot perform picking while viewport is not visible or currently rendering.
-	if(!isExposed() || viewport()->isRendering()) {
+	// Cannot perform picking while viewport is not visible or currently rendering or when updates are disabled.
+	if(!isExposed() || viewport()->isRendering() || viewport()->dataset()->viewportConfig()->isSuspended()) {
 		ViewportPickResult result;
 		result.valid = false;
 		return result;

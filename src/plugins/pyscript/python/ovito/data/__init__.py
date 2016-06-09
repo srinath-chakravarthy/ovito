@@ -78,13 +78,68 @@ DataCollection.__str__ = _DataCollection__str__
 # Mix in base class collections.Mapping:
 DataCollection.__bases__ = DataCollection.__bases__ + (collections.Mapping, )
 
+# Implement the 'attributes' property of the DataCollection class.
+def _DataCollection_attributes(self):
+    """
+    Returns a dictionary object containing additional metadata, which describes the contents of the :py:class:`!DataCollection`.
+
+    If the particle dataset has been loaded from a LAMMPS dump file, for example, which contains the simulation timestep number, this
+    timestep information can be retrieved from the attributes dictionary as follows::
+
+        >>> data_collection = ovito.dataset.selected_node.compute()
+        >>> data_collection.attributes['Timestep']
+        140000
+        
+        For *extended XYZ* files, the attributes dictionary contains all key/value pairs found in the comment line of the input file.
+    """
+    
+    # Helper class used to implement the 'attributes' property of the DataCollection class.
+    class _AttributesView(collections.MutableMapping):
+        
+        def __init__(self, data_collection):
+            self._data_collection = data_collection
+            
+        def __len__(self):
+            return len(self._data_collection.attribute_names)
+        
+        def __getitem__(self, key):
+            if not isinstance(key, str):
+                raise TypeError("Attribute key is not a string.")
+            v = self._data_collection.get_attribute(key)
+            if v is not None:
+                return v
+            raise KeyError("DataCollection contains no attribute named '%s'." % key)
+
+        def __setitem__(self, key, value):
+            if not isinstance(key, str):
+                raise TypeError("Attribute key is not a string.")
+            self._data_collection.set_attribute(key, value)
+
+        def __delitem__(self, key):
+            if not isinstance(key, str):
+                raise TypeError("Attribute key is not a string.")
+            v = self._data_collection.get_attribute(key)
+            if v is None:
+                raise KeyError("DataCollection contains no attribute named '%s'." % key)
+            self._data_collection.set_attribute(key, None)
+
+        def __iter__(self):
+            for aname in self._data_collection.attribute_names:
+                yield aname
+
+        def __repr__(self):
+            return repr(dict(self))
+     
+    return _AttributesView(self)
+DataCollection.attributes = property(_DataCollection_attributes)
+
 # Implement the DataCollection.copy_if_needed() method.
 def _DataCollection_copy_if_needed(self, obj):
     """
         Makes a copy of a data object if it was created upstream in the data pipeline.
 
-        Typically, this method is used in implementations of a modifier function that
-        participates in OVITO's data pipeline system. A modifier receives a collection with
+        Typically, this method is used in the user-defined implementation of a :py:class:`~ovito.modifiers.PythonScriptModifier` that
+        participates in OVITO's data pipeline system. The user-defined modifier function receives a collection with
         input data objects from the system. However, directly modifying these input
         objects is not allowed because they are owned by the upstream part of the data pipeline.
         This is where this method comes into play: It makes a copy of a data object and replaces

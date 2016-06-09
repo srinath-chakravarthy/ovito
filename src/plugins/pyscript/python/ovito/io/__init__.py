@@ -177,18 +177,19 @@ def export_file(node, file, format, **params):
     
         :param node: The object node that provides the data to be exported.
         :type node: :py:class:`~ovito.scene.ObjectNode` 
-        :param str file: The path of the output file.
+        :param str file: The output file path.
         :param str format: The type of file to write:
         
-                            * ``"fhi-aims"`` -- FHI-aims format
+                            * ``"txt"`` -- A text file with global quantities computed by OVITO (see below)
                             * ``"lammps_dump"`` -- LAMMPS text-based dump format
                             * ``"lammps_data"`` -- LAMMPS data format
                             * ``"imd"`` -- IMD format
                             * ``"vasp"`` -- POSCAR format
                             * ``"xyz"`` -- XYZ format
+                            * ``"fhi-aims"`` -- FHI-aims format
                             * ``"ca"`` -- Text-based format for storing dislocation lines (Crystal Analysis Tool)
         
-        The function evaluates the modification pipeline of the given object node before exporting the results to the output file. 
+        The function evaluates the modification pipeline of the given object node to obtain the data to be exported. 
         This means it is not necessary to call :py:meth:`ObjectNode.compute() <ovito.ObjectNode.compute>` before calling
         :py:func:`!export_file` (but it doesn't hurt either).
         
@@ -234,7 +235,22 @@ def export_file(node, file, format, **params):
         
         The following LAMMPS atom styles are currently supported by OVITO:
         ``angle``, ``atomic``, ``body``, ``bond``, ``charge``, ``dipole``, ``full``, ``molecular``.
-                
+        
+        **Global attributes**
+        
+        The *txt* file format allows you to export global quantities computed by OVITO's data pipeline to a text file. 
+        For example, to write out the number of FCC atoms identified by the :py:class:`~ovito.modifiers.CommonNeighborAnalysisModifier`
+        as a function of simulation time one would do the following::
+        
+            export_file(node, "data.txt", "txt", 
+                columns = ["Timestep", "CommonNeighborAnalysis.counts.FCC"], 
+                multiple_frames = True)
+            
+        See the documentation of an analysis modifier to find out which global quantities it 
+        outputs. From a script you can determine which :py:attr:`~ovito.data.DataCollection.attributes` are  available for export as follows::
+        
+            print(node.compute().attributes)
+
     """
 
     # Determine the animation frame to be exported.    
@@ -278,4 +294,4 @@ def export_file(node, file, format, **params):
 # to look up the right exporter class for a file format.
 # Plugins can register their exporter class by inserting a new entry in this dictionary.
 export_file._formatTable = {}
-    
+export_file._formatTable["txt"] = AttributeFileExporter

@@ -9,15 +9,24 @@
          xmlns:ns="http://docbook.org/ns/docbook">
   <title>Exporting data</title>
 
-  <para>To export particles to a file (or a series of files), select <menuchoice><guimenu>File</guimenu><guimenuitem>Export File</guimenuitem></menuchoice> from the menu.
-  After choosing an output filename and a file format, the export settings dialog lets you specify the animation frames and the particle properties to be exported (depending on the selected file format).
+  <para>
+  To export particles, their properties, and other data to a file (or a series of files), select <menuchoice><guimenu>File</guimenu><guimenuitem>Export File</guimenuitem></menuchoice> from the menu.
+  After choosing an output filename and format, the export settings dialog lets you specify the animation frames and the particle properties to be exported 
+  (depending on the selected file format).
   </para>
   
-  <para>If you pick an output filename that ends with a <filename>.gz</filename> suffix, the file will be automatically compressed by OVITO.</para>
+  <para>If you choose an output filename ending with <filename>.gz</filename>, the file will automatically be compressed by OVITO.</para>
   
   <para>
-  Note that OVITO exports the output of the modification pipeline. That means, for instance, if you have deleted some particles, OVITO will export
-  only the remaining particles to the output file. The modification pipeline is re-evaluated for every animation frame being exported.
+  Note that OVITO always exports the results of the modification pipeline. That means, if you have deleted some particles for instance, OVITO will export
+  only the remaining particles to the output file. 
+  </para>
+  
+  <para>
+  OVITO provides various analysis functions that can compute quantities like the surface area of a solid, the density of defects in a crystal, or the number of atoms
+  in a system forming a particluar lattice structure. To export such global quantities, pick the <emphasis>Calculation Results Text File</emphasis> format.
+  OVITO will write a text file with a data table containing the computed quantities that you selected for export. The text file can then be used to plot
+  the data with an external program, for example.
   </para>
   
   <simplesect xml:id="usage.export.formats">
@@ -61,6 +70,10 @@
               <entry>Crystal Analysis (CA)</entry>
               <entry><para>A text-based file format used by the <emphasis>Crystal Analysis Tool</emphasis>, which can store dislocation line networks extracted by the 
               <link linkend="particles.modifiers.dislocation_analysis">Dislocation Analysis</link> modifier. The format is documented <link linkend="particles.modifiers.dislocation_analysis.fileformat">here</link>.</para></entry>
+            </row>
+            <row>
+              <entry>Calculation Results File</entry>
+              <entry><para>A simple tabular text file with scalar quantities computed by OVITO's analysis modifiers.</para></entry>
             </row>
           </tbody>
         </tgroup>

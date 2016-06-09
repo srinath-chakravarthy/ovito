@@ -25,9 +25,11 @@
 #include <gui/properties/FontParameterUI.h>
 #include <gui/properties/FloatParameterUI.h>
 #include <gui/properties/VariantComboBoxParameterUI.h>
+#include <gui/widgets/general/AutocompleteTextEdit.h>
 #include <gui/actions/ViewportModeAction.h>
 #include <gui/viewport/overlay/MoveOverlayInputMode.h>
 #include <core/viewport/overlay/TextLabelOverlay.h>
+#include <core/animation/AnimationSettings.h>
 #include "TextLabelOverlayEditor.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -52,6 +54,8 @@ void TextLabelOverlayEditor::createUI(const RolloutInsertionParameters& rolloutP
 	// Label text.
 	StringParameterUI* labelTextPUI = new StringParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::_labelText));
 	layout->addWidget(new QLabel(tr("Text:")), 0, 0);
+	_textEdit = new AutocompleteTextEdit();
+	labelTextPUI->setTextBox(_textEdit);
 	layout->addWidget(labelTextPUI->textBox(), 0, 1);
 
 	VariantComboBoxParameterUI* alignmentPUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::_alignment));
@@ -90,6 +94,52 @@ void TextLabelOverlayEditor::createUI(const RolloutInsertionParameters& rolloutP
 	ColorParameterUI* textColorPUI = new ColorParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::_textColor));
 	layout->addWidget(new QLabel(tr("Text color:")), 7, 0);
 	layout->addWidget(textColorPUI->colorPicker(), 7, 1);
+
+	QWidget* variablesRollout = createRollout(tr("Variables"), rolloutParams.after(rollout));
+    QVBoxLayout* variablesLayout = new QVBoxLayout(variablesRollout);
+    variablesLayout->setContentsMargins(4,4,4,4);
+    _attributeNamesList = new QLabel();
+    _attributeNamesList->setWordWrap(true);
+    _attributeNamesList->setTextInteractionFlags(Qt::TextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard | Qt::LinksAccessibleByMouse | Qt::LinksAccessibleByKeyboard));
+	variablesLayout->addWidget(_attributeNamesList);
+
+	// Update input variables list if another modifier has been loaded into the editor.
+	connect(this, &TextLabelOverlayEditor::contentsReplaced, this, &TextLabelOverlayEditor::updateEditorFields);
+}
+
+/******************************************************************************
+* This method is called when a reference target changes.
+******************************************************************************/
+bool TextLabelOverlayEditor::referenceEvent(RefTarget* source, ReferenceEvent* event)
+{
+	if(source == editObject() && event->type() == ReferenceEvent::TargetChanged) {
+		updateEditorFields();
+	}
+	return PropertiesEditor::referenceEvent(source, event);
+}
+
+/******************************************************************************
+* Updates the enabled/disabled status of the editor's controls.
+******************************************************************************/
+void TextLabelOverlayEditor::updateEditorFields()
+{
+	TextLabelOverlay* overlay = static_object_cast<TextLabelOverlay>(editObject());
+	if(!overlay) return;
+
+	QString str;
+	QStringList variableNames;
+	if(ObjectNode* node = overlay->sourceNode()) {
+		const PipelineFlowState& flowState = node->evalPipeline(node->dataset()->animationSettings()->time());
+		str.append(tr("<p>Dynamic variables that can be referenced in the label text:</b><ul>"));
+		for(const QString& attrName : flowState.attributes().keys()) {
+			str.append(QStringLiteral("<li>[%1]</li>").arg(attrName));
+			variableNames.push_back(QStringLiteral("[") + attrName + QStringLiteral("]"));
+		}
+		str.append(QStringLiteral("</ul></p><p></p>"));
+	}
+
+	_attributeNamesList->setText(str);
+	_textEdit->setWordList(variableNames);
 }
 
 OVITO_END_INLINE_NAMESPACE

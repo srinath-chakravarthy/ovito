@@ -182,19 +182,22 @@ void OpenGLImagePrimitive::renderWindow(SceneRenderer* renderer, const Point2& p
 
 static inline QRgb qt_gl_convertToGLFormatHelper(QRgb src_pixel, GLenum texture_format)
 {
-    if (texture_format == GL_BGRA) {
-        if (QSysInfo::ByteOrder == QSysInfo::BigEndian) {
+    if(texture_format == GL_BGRA) {
+        if(QSysInfo::ByteOrder == QSysInfo::BigEndian) {
             return ((src_pixel << 24) & 0xff000000)
                    | ((src_pixel >> 24) & 0x000000ff)
                    | ((src_pixel << 8) & 0x00ff0000)
                    | ((src_pixel >> 8) & 0x0000ff00);
-        } else {
+        }
+        else {
             return src_pixel;
         }
-    } else {  // GL_RGBA
-        if (QSysInfo::ByteOrder == QSysInfo::BigEndian) {
+    }
+    else {  // GL_RGBA
+        if(QSysInfo::ByteOrder == QSysInfo::BigEndian) {
             return (src_pixel << 8) | ((src_pixel >> 24) & 0xff);
-        } else {
+        }
+        else {
             return ((src_pixel << 16) & 0xff0000)
                    | ((src_pixel >> 16) & 0xff)
                    | (src_pixel & 0xff00ff00);
@@ -207,7 +210,7 @@ static void convertToGLFormatHelper(QImage &dst, const QImage &img, GLenum textu
     OVITO_ASSERT(dst.depth() == 32);
     OVITO_ASSERT(img.depth() == 32);
 
-    if (dst.size() != img.size()) {
+    if(dst.size() != img.size()) {
         int target_width = dst.width();
         int target_height = dst.height();
         qreal sx = target_width / qreal(img.width());
@@ -235,18 +238,19 @@ static void convertToGLFormatHelper(QImage &dst, const QImage &img, GLenum textu
             dest = (quint32 *)(((uchar *) dest) + dbpl);
             srcy += iy;
         }
-    } else {
+    }
+    else {
         const int width = img.width();
         const int height = img.height();
         const uint *p = (const uint*) img.scanLine(img.height() - 1);
         uint *q = (uint*) dst.scanLine(0);
 
-        if (texture_format == GL_BGRA) {
-            if (QSysInfo::ByteOrder == QSysInfo::BigEndian) {
+        if(texture_format == GL_BGRA) {
+            if(QSysInfo::ByteOrder == QSysInfo::BigEndian) {
                 // mirror + swizzle
-                for (int i=0; i < height; ++i) {
+                for(int i=0; i < height; ++i) {
                     const uint *end = p + width;
-                    while (p < end) {
+                    while(p < end) {
                         *q = ((*p << 24) & 0xff000000)
                              | ((*p >> 24) & 0x000000ff)
                              | ((*p << 8) & 0x00ff0000)
@@ -256,7 +260,8 @@ static void convertToGLFormatHelper(QImage &dst, const QImage &img, GLenum textu
                     }
                     p -= 2 * width;
                 }
-            } else {
+            }
+            else {
                 const uint bytesPerLine = img.bytesPerLine();
                 for (int i=0; i < height; ++i) {
                     memcpy(q, p, bytesPerLine);
@@ -264,21 +269,23 @@ static void convertToGLFormatHelper(QImage &dst, const QImage &img, GLenum textu
                     p -= width;
                 }
             }
-        } else {
-            if (QSysInfo::ByteOrder == QSysInfo::BigEndian) {
-                for (int i=0; i < height; ++i) {
+        }
+        else {
+            if(QSysInfo::ByteOrder == QSysInfo::BigEndian) {
+                for(int i=0; i < height; ++i) {
                     const uint *end = p + width;
-                    while (p < end) {
+                    while(p < end) {
                         *q = (*p << 8) | ((*p >> 24) & 0xff);
                         p++;
                         q++;
                     }
                     p -= 2 * width;
                 }
-            } else {
-                for (int i=0; i < height; ++i) {
+            }
+            else {
+                for(int i=0; i < height; ++i) {
                     const uint *end = p + width;
-                    while (p < end) {
+                    while(p < end) {
                         *q = ((*p << 16) & 0xff0000) | ((*p >> 16) & 0xff) | (*p & 0xff00ff00);
                         p++;
                         q++;

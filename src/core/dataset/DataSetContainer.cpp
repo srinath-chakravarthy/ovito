@@ -147,7 +147,7 @@ void DataSetContainer::onAnimationSettingsReplaced(AnimationSettings* newAnimati
 ******************************************************************************/
 bool DataSetContainer::waitUntil(const std::function<bool()>& callback, const QString& message, AbstractProgressDisplay* progressDisplay)
 {
-	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSetContainer::waitUntilReady()", "This function may only be called from the main thread.");
+	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSetContainer::waitUntil()", "This function may only be called from the main thread.");
 
 	// Check if operation is already completed.
 	if(callback())

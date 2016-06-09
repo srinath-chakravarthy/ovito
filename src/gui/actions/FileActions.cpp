@@ -367,18 +367,6 @@ void ActionManager::on_FileExport_triggered()
 		// Pass data to be exported to exporter.
 		exporter->setOutputData(nodes);
 
-#if 0
-	 	// Iterate over all scene nodes to find an ObjectNode with a data pipeline.
-		PipelineFlowState state;
-		for(SceneNode* sceneNode : nodes) {
-			ObjectNode* node = dynamic_object_cast<ObjectNode>(sceneNode);
-			if(!node) continue;
-			state = node->evalPipeline(_dataset->animationSettings()->time());
-			if(!state.isEmpty())
-				break;
-		}
-#endif
-
 		// Let the user adjust the settings of the exporter.
 		FileExporterSettingsDialog settingsDialog(mainWindow(), exporter);
 		if(settingsDialog.exec() != QDialog::Accepted)

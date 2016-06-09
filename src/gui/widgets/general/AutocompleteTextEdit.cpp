@@ -28,7 +28,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 * Constructor.
 ******************************************************************************/
 AutocompleteTextEdit::AutocompleteTextEdit(QWidget* parent) : QPlainTextEdit(parent),
-		_wordSplitter("(?:(?<![\\w\\.])(?=[\\w\\.])|(?<=[\\w\\.])(?![\\w\\.]))")
+		_wordSplitter("(?:(?<![\\w(\\.|\\[|\\[)])(?=[\\w(\\.|\\[|\\[)])|(?<=[\\w(\\.|\\[|\\[)])(?![\\w(\\.|\\[|\\[)]))")
 {
 	_wordListModel = new QStringListModel(this);
 	_completer = new QCompleter(this);
@@ -65,7 +65,7 @@ void AutocompleteTextEdit::onComplete(const QString& completion)
 ******************************************************************************/
 QStringList AutocompleteTextEdit::getTokenList() const
 {
-	// Split text at word boundaries. Consider '.' a word character.
+	// Split text at word boundaries. Consider '.', '[', and ']' word characters.
 	return toPlainText().split(_wordSplitter);
 }
 

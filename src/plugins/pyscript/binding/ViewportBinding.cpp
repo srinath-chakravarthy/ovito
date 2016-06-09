@@ -24,6 +24,7 @@
 #include <core/viewport/Viewport.h>
 #include <core/viewport/overlay/ViewportOverlay.h>
 #include <core/viewport/overlay/CoordinateTripodOverlay.h>
+#include <core/viewport/overlay/TextLabelOverlay.h>
 #include <core/scene/SceneNode.h>
 #include <plugins/pyscript/extensions/PythonViewportOverlay.h>
 #include "PythonBinding.h"
@@ -171,7 +172,9 @@ BOOST_PYTHON_MODULE(PyScriptViewport)
 			"  Some properties of this class interface have not been exposed and are not accessible from Python yet. "
 			"  Please let the developer know if you would like them to be added.\n")
 		.add_property("alignment", &CoordinateTripodOverlay::alignment, &CoordinateTripodOverlay::setAlignment,
-				"Selects the corner of the viewport where the tripod is displayed. This must be a valid ``Qt::Alignment`` value.")
+				"Selects the corner of the viewport where the tripod is displayed. This must be a valid `Qt.Alignment value <http://doc.qt.io/qt-5/qt.html#AlignmentFlag-enum>`_ value as shown in the example above."
+				"\n\n"
+				":Default: ``PyQt5.QtCore.Qt.AlignLeft ^ PyQt5.QtCore.Qt.AlignBottom``")
 		.add_property("size", &CoordinateTripodOverlay::tripodSize, &CoordinateTripodOverlay::setTripodSize,
 				"The scaling factor that controls the size of the tripod. The size is specified as a fraction of the output image height."
 				"\n\n"
@@ -192,6 +195,51 @@ BOOST_PYTHON_MODULE(PyScriptViewport)
 				"The font size for rendering the text labels of the tripod. The font size is specified in terms of the tripod size."
 				"\n\n"
 				":Default: 0.4\n")
+	;
+
+	ovito_class<TextLabelOverlay, ViewportOverlay>(
+			"Displays a text label in a viewport and in rendered images. "
+			"You can attach an instance of this class to a viewport by adding it to the viewport's "
+			":py:attr:`~ovito.vis.Viewport.overlays` collection:"
+			"\n\n"
+			".. literalinclude:: ../example_snippets/text_label_overlay.py"
+			"\n\n"
+			"Text labels can display dynamically computed values. See the :py:attr:`.text` property for an example.")
+		.add_property("alignment", &TextLabelOverlay::alignment, &TextLabelOverlay::setAlignment,
+				"Selects the corner of the viewport where the text is displayed. This must be a valid `Qt.Alignment value <http://doc.qt.io/qt-5/qt.html#AlignmentFlag-enum>`_ as shown in the example above. "
+				"\n\n"
+				":Default: ``PyQt5.QtCore.Qt.AlignLeft ^ PyQt5.QtCore.Qt.AlignTop``")
+		.add_property("offset_x", &TextLabelOverlay::offsetX, &TextLabelOverlay::setOffsetX,
+				"This parameter allows to displace the label horizontally. The offset is specified as a fraction of the output image width."
+				"\n\n"
+				":Default: 0.0\n")
+		.add_property("offset_y", &TextLabelOverlay::offsetY, &TextLabelOverlay::setOffsetY,
+				"This parameter allows to displace the label vertically. The offset is specified as a fraction of the output image height."
+				"\n\n"
+				":Default: 0.0\n")
+		.add_property("font_size", &TextLabelOverlay::fontSize, &TextLabelOverlay::setFontSize,
+				"The font size, which is specified as a fraction of the output image height."
+				"\n\n"
+				":Default: 0.02\n")
+		.add_property("text", make_function(&TextLabelOverlay::labelText, return_value_policy<copy_const_reference>()), &TextLabelOverlay::setLabelText,
+				"The text string to be rendered."
+				"\n\n"
+				"The string can contain placeholder references to dynamically computed attributes of the form ``[attribute]``, which will be replaced "
+				"by their actual value before rendering the text label. "
+				"Attributes are taken from the pipeline output of the :py:class:`~ovito.ObjectNode` assigned to the overlay's :py:attr:`.source_node` property. "
+				"\n\n"
+				"The following example demonstrates how to insert a text label that displays the number of currently selected particles: "
+				"\n\n"
+				".. literalinclude:: ../example_snippets/text_label_overlay_with_attributes.py"
+				"\n\n"
+				":Default: \"Text label\"")
+		.add_property("source_node", make_function(&TextLabelOverlay::sourceNode, return_value_policy<ovito_object_reference>()), &TextLabelOverlay::setSourceNode,
+				"The :py:class:`~ovito.ObjectNode` whose modification pipeline is queried for dynamic attributes that can be referenced "
+				"in the text string. See the :py:attr:`.text` property for more information. ")
+		.add_property("text_color", make_function(&TextLabelOverlay::textColor, return_value_policy<copy_const_reference>()), &TextLabelOverlay::setTextColor,
+				"The text rendering color."
+				"\n\n"
+				":Default: ``(0.0,0.0,0.5)``\n")
 	;
 
 	ovito_class<PythonViewportOverlay, ViewportOverlay>(

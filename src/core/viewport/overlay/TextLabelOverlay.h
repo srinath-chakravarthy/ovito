@@ -23,6 +23,7 @@
 #define __OVITO_TEXT_LABEL_OVERLAY_H
 
 #include <core/Core.h>
+#include <core/scene/ObjectNode.h>
 #include "ViewportOverlay.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -89,6 +90,12 @@ public:
 	/// Sets the display color of the label.
 	void setTextColor(const Color& c) { _textColor = c; }
 
+	/// Returns the ObjectNode providing global attributes that can be reference in the text.
+	ObjectNode* sourceNode() const { return _sourceNode; }
+
+	/// Sets the ObjectNode providing global attributes that can be reference in the text.
+	void setSourceNode(ObjectNode* node) { _sourceNode = node; }
+
 private:
 
 	/// The corner of the viewport where the label is shown in.
@@ -112,6 +119,9 @@ private:
 	/// The display color of the label.
 	PropertyField<Color, QColor> _textColor;
 
+	/// The ObjectNode providing global attributes that can be reference in the text.
+	ReferenceField<ObjectNode> _sourceNode;
+
 	DECLARE_PROPERTY_FIELD(_alignment);
 	DECLARE_PROPERTY_FIELD(_font);
 	DECLARE_PROPERTY_FIELD(_fontSize);
@@ -119,6 +129,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_offsetY);
 	DECLARE_PROPERTY_FIELD(_labelText);
 	DECLARE_PROPERTY_FIELD(_textColor);
+	DECLARE_REFERENCE_FIELD(_sourceNode);
 
 	Q_CLASSINFO("DisplayName", "Text label");
 

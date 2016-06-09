@@ -1,9 +1,11 @@
+.. _file_io_overview:
+
 ===================================
 File I/O
 ===================================
 
-This section describes how to load simulation data from external files and how to export modified  
-particle data again using a script.
+This section describes how to load simulation data from external files and how to export 
+modified particle data or other results computed by OVITO to a file.
 
 ------------------------------------
 File input
@@ -90,21 +92,25 @@ You can iterate over the frames of a loaded animation sequence in a script loop:
        # Load the input data and apply the modifiers to current frame:
        node.compute(frame)
        # ... access computation results for current animation frame.
+
+
+.. _file_output_overview:
        
 ------------------------------------
 File output
 ------------------------------------
 
-You can write particles to a file using the :py:func:`ovito.io.export_file` function::
+Exporting particles and other computation results to a file typically done using the :py:func:`ovito.io.export_file` function.
+For example, to export the particles that leave the modification pipeline and their properties to a LAMMPS dump file, one would
+write::
 
     >>> export_file(node, "outputfile.dump", "lammps_dump",
     ...    columns = ["Position.X", "Position.Y", "Position.Z", "My Property"])
 
-OVITO will automatically evaluate the node's modification pipeline and export the computed results to the file.
-If the node's modification pipeline contains no modifiers, then the original, unmodified data
-will be exported. 
+OVITO will automatically evaluate the node's modification pipeline before writing the computation results to the file.
+If the node's modification pipeline contains no modifiers, then the original, unmodified data is exported. 
 
 The second function parameter specifies the output filename, and the third parameter selects the 
-output format. For a list of supported file formats, see :py:func:`~ovito.io.export_file` documentation.
+output format. For a list of supported file formats, see the :py:func:`~ovito.io.export_file` documentation.
 Depending on the selected output format, additional keyword arguments must be specified. For instance,
-in the example above the ``columns`` parameter lists the particle properties to be exported.
+in the example above the ``columns`` parameter specifies the particle properties to be exported.

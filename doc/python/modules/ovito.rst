@@ -19,5 +19,5 @@
 
    .. py:data:: version_string
       
-      This module-level attribute contains the OVITO program version (as string).
+      This module-level attribute contains the OVITO program version (as a string).
       

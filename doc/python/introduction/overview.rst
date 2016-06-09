@@ -5,55 +5,55 @@ Overview
 OVITO scripting interface provides full access to most of OVITO's program features. Using Python scripts, you can
 do many things that are already familiar from the graphical user interface (and even a few more):
 
-  * Import data from simulation files
-  * Apply modifiers to the data
-  * Let OVITO compute the results of the modifier pipeline
+  * :ref:`Import data from external files <file_io_overview>`
+  * :ref:`Apply modifiers to a dataset and configure them <modifiers_overview>`
   * Set up a camera and render pictures or movies of the scene
   * Control the visual appearance of particles and other objects
-  * Access per-particle properties and analysis results computed by OVITO
-  * Implement new types of modifiers
-  * Export data to a file
+  * Access per-particle properties and other analysis results computed by OVITO
+  * :ref:`Implement new types of modifiers <writing_custom_modifiers>`
+  * :ref:`Export data to a file <file_output_overview>`
 
 The following sections will introduce the essential concepts and walk you through different parts of OVITO's 
 scripting interface.
 
 ------------------------------------
-OVITO's data flow architecture
+OVITO's data pipeline architecture
 ------------------------------------
 
 If you have worked with OVITO's graphical user interface before, you should already be familiar with 
-its key workflow concept: After loading a simulation file into OVITO and typically set up a sequence of modifiers 
-that act on that input data. The results of this *modification pipeline* are computed by OVITO 
+its key workflow concept: After loading a simulation file into OVITO you typically apply one or more modifiers 
+that act on the input data. The result of this sequence of modifiers (*modification pipeline*) is computed by OVITO 
 and displayed in the interactive viewports.
 
-To make use of this capability from a script, we first need to understand the basics of OVITO's underlying 
+To access this capability from a script, we first need to understand the basics of OVITO's underlying 
 data model. In general, there are two different groups of objects that participate in the described system: 
-Objects that constitute the modification pipeline (e.g. modifiers and a data source) and *data objects*, which 
-enter the modification pipeline, get modified by it, or are newly produced by modifiers (e.g. particle properties). 
-We start by discussing the first group in the next section.
+Objects that constitute the modification pipeline (the modifiers and the data source) and *data objects*, which 
+carry the data that is being processed by the modifier. The data objects enter the modification pipeline, 
+get modified by a modifier, or are newly produced (e.g. computed particle properties). 
+We start by discussing the objects that consitute a modification pipeline.
 
 ------------------------------------
 Data sources, modifiers, and more
 ------------------------------------
 
-It all starts with a *data source*, which is an object
-that provides the input data entering a modification pipeline. OVITO currently knows two types of 
-data sources: The :py:class:`~ovito.io.FileSource` and the :py:class:`~ovito.data.DataCollection`.
-In the following we will discuss the :py:class:`~ovito.io.FileSource` class, because that is the type of data source
-typically used. It is responsible for loading data from an external file and passing it on to the modification pipeline.
+A modification pipeline is fed by a *data source*, which is an object
+that provides or generates the input data entering a modification pipeline. OVITO currently knows two types of 
+data sources: :py:class:`~ovito.io.FileSource` and :py:class:`~ovito.data.DataCollection`.
+The :py:class:`~ovito.io.FileSource` class is the data source typically used. It is responsible for loading data 
+from an external file and passing it on to the modification pipeline.
 
 The data source and the modification pipeline together form an :py:class:`~ovito.ObjectNode`. This class
-orchestrates the data flow from the source into the modification pipeline and stores the pipeline's output in an internal 
-data cache. As we will see later, the :py:class:`~ovito.ObjectNode` is also responsible for displaying the output
-data in the three-dimensional scene. The data source is stored in the node's :py:attr:`~ovito.ObjectNode.source`
-property, while the modification pipeline is accessible through the node's :py:attr:`~ovito.ObjectNode.modifiers`
-property. The pipeline is exposed as a Python list that can be populated with modifiers.
+orchestrates the data flow from the source into the modification pipeline and caches the pipeline's output. 
+As we will see later, the :py:class:`~ovito.ObjectNode` is also responsible for displaying the output
+data in the three-dimensional scene. The data source is stored in the :py:attr:`ObjectNode.source <ovito.ObjectNode.source>`
+property. The modification pipeline is simply a list of :py:class:`~ovito.modifiers.Modifier` objects and is 
+is accessible through the :py:attr:`ObjectNode.modifiers <ovito.ObjectNode.modifiers>` property. 
 
 The :py:class:`~ovito.ObjectNode` is usually placed in the *scene*, i.e. the three-dimensional world that is visible
 through OVITO's viewports. All objects in the scene, and all other information that would get saved along in 
 a :file:`.ovito` file (e.g. current render settings, viewport cameras, etc.), comprise the so-called :py:class:`~ovito.DataSet`. 
-A Python script always runs in the context of exactly one global :py:class:`~ovito.DataSet` instance. This 
-instance can be accessed through the :py:data:`ovito.dataset` module-level attribute. It provides access to the
+A Python script always runs in the context of one global :py:class:`~ovito.DataSet` instance. This 
+instance can be accessed through the :py:data:`ovito.dataset` global variable. The :py:class:`~ovito.DataSet` provides access to the
 list of object nodes in the scene (:py:attr:`dataset.scene_nodes <ovito.DataSet.scene_nodes>`), 
 the current animation settings (:py:attr:`dataset.anim <ovito.DataSet.anim>`), the four 
 viewports in OVITO's main window (:py:attr:`dataset.viewports <ovito.DataSet.viewports>`), and more.
@@ -66,59 +66,58 @@ viewports in OVITO's main window (:py:attr:`dataset.viewports <ovito.DataSet.vie
 Loading data and applying modifiers
 ------------------------------------
 
-After the general object model has been described above, it is now time to give some code examples and demonstrate how
-we deal with these things in a script. Typically, we first like to load a simulation file. This is done
+An :py:class:`~ovito.ObjectNode` is automatically created when you import a data file into OVITO 
 using the :py:func:`ovito.io.import_file` function::
 
    >>> from ovito.io import *
    >>> node = import_file("simulation.dump")
    
-This high-level function does several things: It creates a :py:class:`~ovito.io.FileSource` (which will subsequently load the data 
-from the given file), it creates an :py:class:`~ovito.ObjectNode` instance with an empty modification pipeline, and assigns the 
-:py:class:`~ovito.io.FileSource` to the :py:attr:`~ovito.ObjectNode.source` property of the node. The function finally returns the 
-newly created node to the caller.
+This high-level function creates an :py:class:`~ovito.ObjectNode` with an empty modification pipeline
+and sets up a :py:class:`~ovito.io.FileSource` (which will subsequently load the data 
+from the given file) and assigns it to the :py:attr:`ObjectNode.source <ovito.ObjectNode.source>` property. 
 
-We can now start populating the node's modification pipeline with some modifiers::
+We can now start populating the node's modification pipeline with some modifiers by appending them
+to the :py:attr:`ObjectNode.modifiers <ovito.ObjectNode.modifiers>` list::
 
    >>> from ovito.modifiers import *
    >>> node.modifiers.append(SelectExpressionModifier(expression="PotentialEnergy < -3.9"))
    >>> node.modifiers.append(DeleteSelectedParticlesModifier())
 
-Here we created two modifiers and appended them to the modification pipeline. Note how a modifier's parameters 
-can be initialized in two ways:
+Modifiers are constructed by calling the constructor of the corresponding classes, which are
+all found in the :py:mod:`ovito.modifiers` module. Note how a modifier's parameters can be initialized in two ways:
 
 .. note::
 
-   When constructing a new object (such as a modifier, but also many other OVITO classes) it is possible to directly initialize its
+   When constructing a new object (such as a modifier, but also most other OVITO objects) it is possible to directly initialize its
    properties by passing keyword arguments to the constructor function. Thus ::
    
        node.modifiers.append(CommonNeighborAnalysisModifier(cutoff = 3.2, only_selected = True))
        
-   is equivalent to setting the properties after object construction::
+   is equivalent to setting the properties one by one after constructing the object::
 
        modifier = CommonNeighborAnalysisModifier()
        modifier.cutoff = 3.2
        modifier.only_selected = True
        node.modifiers.append(modifier)
        
-After the modification pipeline has been populated with the desired modifiers, we can do at least three different things:
+After the modification pipeline has been populated with modifiers, we can do three different things:
 (i) write the results to a file, (ii) render an image of the data, (iii) or directly work with the pipeline 
-data and read out particle properties and other results.
+data and read out particle properties and other results. Keep reading.
 
 ------------------------------------
 Exporting data to a file
 ------------------------------------
 
-Exporting the processed data to a file is simple; we use the :py:func:`ovito.io.export_file` function
-for this::
+Exporting the data that has left the modification pipeline to a file is simple; 
+we use the :py:func:`ovito.io.export_file` function for this::
 
     >>> export_file(node, "outputdata.dump", "lammps_dump",
     ...    columns = ["Position.X", "Position.Y", "Position.Z", "Structure Type"])
     
-The first argument passed to this high-level function is the node whose pipeline results should be exported.
-Furthermore, the name of the output file and the format are specified by the second and third parameter. 
+The first argument of this high-level function is the node whose pipeline results should be exported.
+It is followed by the name of the output file and the desired output format. 
 Depending on the selected file format, additional keyword arguments such as the list of particle properties to 
-be exported must be provided.
+be exported must be provided. See the documentation of the :py:func:`~ovito.io.export_file` function for more information. 
 
 ------------------------------------
 Rendering images
@@ -147,18 +146,17 @@ process (These are the parameters you normally set on the :guilabel:`Render` tab
     >>> settings.filename = "myimage.png"
     >>> settings.size = (800, 600)
    
-Here we have specified the output filename and the size of the image in pixels.
-We also should not forget to add the :py:class:`~ovito.ObjectNode` returned by the :py:func:`~ovito.io.import_file`
-function to the *scene*::
+Now we have specified the output filename and the size of the image in pixels.
+We should not forget to also add the :py:class:`~ovito.ObjectNode` to the *scene* by calling::
 
     >>> node.add_to_scene()
 
 Because only object nodes that are part of the scene are visible in the viewports and in rendered images.
-Finally, we can let OVITO render the image::
+Finally, we can let OVITO render an image of the viewport::
 
     >>> vp.render(settings)
     
-As a final remark, note how we could have used the more compact object initialization method introduced above.
+As a final remark, note how we could have used the more compact notation for object initialization introduced above.
 We can configure the newly created :py:class:`~ovito.vis.Viewport` and :py:class:`~ovito.vis.RenderSettings` by passing the parameter values directly to the class constructors:: 
 
     vp = Viewport(
@@ -174,23 +172,24 @@ Accessing computation results
 ------------------------------------
 
 OVITO's scripting interface allows you to directly access the output data leaving the
-modification pipeline. But first we have to ask OVITO to compute the results of the modification pipeline::
+modification pipeline. But before doing so, we first have to ask OVITO to compute the results of the modification pipeline::
 
     >>> node.compute()
     
-The node's :py:meth:`~ovito.ObjectNode.compute` method ensures that all modifiers in the pipeline
+The :py:meth:`~ovito.ObjectNode.compute` method ensures that all modifiers in the pipeline of the node
 have been successfully evaluated. Note that the :py:meth:`~ovito.vis.Viewport.render` and 
 :py:func:`~ovito.io.export_file` functions implicitly call :py:meth:`~ovito.ObjectNode.compute`
-for us. But now, in order to directly access the pipeline results in the following, we have to explicitly request 
-an evaluation of the modification pipeline by calling :py:meth:`~ovito.ObjectNode.compute`.
+for us. But now, since we want to directly access the pipeline results, we have to explicitly request 
+an evaluation of the modification pipeline.
 
-The node caches the results of the last pipeline evaluation in its :py:attr:`~ovito.ObjectNode.output` field::
+The node caches the results of the last pipeline evaluation in the :py:attr:`ObjectNode.output <ovito.ObjectNode.output>` field
+in the form of a :py:class:`~ovito.data.DataCollection`::
 
     >>> node.output
     DataCollection(['Simulation cell', 'Particle Identifier', 'Position', 
                     'Potential Energy', 'Color', 'Structure Type'])
     
-The :py:class:`~ovito.data.DataCollection` contains the *data objects* that were produced
+It contains all the *data objects* that were processed or produced  
 by the modification pipeline. For example, to access the :py:class:`simulation cell <ovito.data.SimulationCell>` we would write::
 
     >>> node.output.cell.matrix
@@ -213,9 +212,9 @@ Similarly, the data of individual :py:class:`particle properties <ovito.data.Par
      [ 42.9917984   63.53770065  36.33330154]
      [ 44.17670059  61.49860001  37.5401001 ]]
 
-See the :py:mod:`ovito.data` module for a list of data object types that may appear in a :py:class:`~ovito.data.DataCollection`.
+See the :py:mod:`ovito.data` module for a list of data object types that may occur in a :py:class:`~ovito.data.DataCollection`.
 
-Sometimes we might be more interested in the data that *enters* the modification pipeline.
+Sometimes we might also be interested in the data that *enters* the modification pipeline.
 The input data, which was read from the external file, is cached by the :py:class:`~ovito.io.FileSource`,
 which is itself a :py:class:`~ovito.data.DataCollection`::
 
@@ -227,33 +226,33 @@ Controlling the visual appearance of objects
 -------------------------------------------------
 
 So far we have only looked at objects that represent data, e.g. particle properties or the simulation cell. 
-How is this data displayed, and how can we control the visual appearance?
+Let's see how this data is displayed and how we can control its visual appearance.
 
-Every data object that can be visualized in OVITO is associated with a matching :py:class:`~ovito.vis.Display`
+Every data object with a visual representation in OVITO is associated with a matching :py:class:`~ovito.vis.Display`
 object. The display object is stored in the data object's :py:attr:`~.ovito.data.DataObject.display` property. For example::
 
     >>> cell = node.source.cell
-    >>> cell                               # This is the data object
+    >>> cell                               # This is the SimulationCell data object
     <SimulationCell at 0x7f9a414c8060>
     
     >>> cell.display                       # This is its attached display object
     <SimulationCellDisplay at 0x7fc3650a1c20>
 
-The py:class:`~ovito.vis.SimulationCellDisplay` instance is responsible for rendering the simulation
-cell and provides parameters that allow us to influence the visual appearance. For example, to change the
+The :py:class:`~ovito.vis.SimulationCellDisplay` is responsible for rendering the simulation
+cell in the viewports and provides parameters that allow us to configure the visual appearance. For example, to change the
 display color of the simulation box::
 
     >>> cell.display.rendering_color = (1.0, 0.0, 1.0)
 
-We can also turn off the display of any object completely by setting the :py:attr:`~ovito.vis.Display.enabled`
+We can also turn off the display of any object entirely by setting the :py:attr:`~ovito.vis.Display.enabled`
 attribute of the display to ``False``::
 
     >>> cell.display.enabled = False 
 
-The particles are rendered by a corresponding :py:class:`~ovito.vis.ParticleDisplay` object. It is always attached to the 
-:py:class:`~ovito.data.ParticleProperty` data object storing the particle positions (the only mandatory particle
+Particles are rendered by a :py:class:`~ovito.vis.ParticleDisplay` object. It is always attached to the 
+:py:class:`~ovito.data.ParticleProperty` object storing the particle positions (which is the only mandatory particle
 property that is always defined). Thus, to change the visual appearance of particles, 
-we have to access the particle positions property in the :py:class:`~ovito.data.DataCollection`::
+we have to access the ``Positions`` particle property in the :py:class:`~ovito.data.DataCollection`::
 
     >>> pos_prop = node.source.particle_properties.position
     >>> pos_prop

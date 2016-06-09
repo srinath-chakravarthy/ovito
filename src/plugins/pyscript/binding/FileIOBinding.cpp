@@ -24,6 +24,7 @@
 #include <core/dataset/importexport/FileExporter.h>
 #include <core/dataset/importexport/FileSourceImporter.h>
 #include <core/dataset/importexport/FileSource.h>
+#include <core/dataset/importexport/AttributeFileExporter.h>
 #include <core/utilities/io/FileManager.h>
 #include <core/utilities/concurrent/ProgressDisplay.h>
 #include "PythonBinding.h"
@@ -103,6 +104,10 @@ BOOST_PYTHON_MODULE(PyScriptFileIO)
 		.add_property("every_nth_frame", &FileExporter::everyNthFrame, &FileExporter::setEveryNthFrame)
 		.def("setOutputData", &FileExporter::setOutputData)
 		.def("exportNodes", &FileExporter::exportNodes)
+	;
+
+	ovito_class<AttributeFileExporter, FileExporter>()
+		.add_property("columns", make_function(&AttributeFileExporter::attributesToExport, return_value_policy<copy_const_reference>()), &AttributeFileExporter::setAttributesToExport)
 	;
 
 	ovito_class<FileSource, CompoundObject>(

@@ -205,6 +205,21 @@ bool FileExporter::exportFrame(int frameNumber, TimePoint time, const QString& f
 	if(!dataset()->waitUntilSceneIsReady(tr("Preparing frame %1 for export...").arg(frameNumber), progressDisplay))
 		return false;
 
+	// Also make sure nodes to be exported are ready, in case they are not part of the scene.
+	for(SceneNode* sceneNode : outputData()) {
+		try {
+			if(ObjectNode* objNode = dynamic_object_cast<ObjectNode>(sceneNode)) {
+				if(!objNode->waitUntilReady(time, tr("Preparing frame %1 for export...").arg(frameNumber), progressDisplay))
+					return false;
+			}
+		}
+		catch(Exception& ex) {
+			// Provide a local context for errors that occurred during export.
+			if(ex.context() == nullptr) ex.setContext(dataset());
+			throw;
+		}
+	}
+
 	if(progressDisplay)
 		progressDisplay->setStatusText(tr("Exporting frame %1 to file '%2'.").arg(frameNumber).arg(filePath));
 

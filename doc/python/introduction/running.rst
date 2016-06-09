@@ -16,9 +16,9 @@ You typically execute a Python script from the terminal using the :program:`ovit
 	ovitos [-o file] [-g] [script.py] [args...]
 	
 The :program:`ovitos` program is located in the :file:`bin/` subdirectory of OVITO for Linux, in the 
-:file:`Ovito.app/Contents/MacOS/` directory of OVITO for MacOS, and in the main program directory 
-on Windows systems. It should not be confused with :program:`ovito`, the main program, which
-provides a graphical user interface.
+:file:`Ovito.app/Contents/MacOS/` directory of OVITO for MacOS, and in the main application directory 
+on Windows systems. It should not be confused with :program:`ovito`, the main program which
+has a graphical user interface.
 
 Let's assume we used a text editor to write a simple Python script file named :file:`hello.py`::
 
@@ -64,3 +64,7 @@ inspect the results of your script and check if everything is correctly set up d
 	All modules that are available in the standard Python interpreter will also be accessible within OVITO. (Note that you still need
 	to execute OVITO scripts with the :program:`ovitos` launcher.) How to build OVITO from source is described `on this page <http://www.ovito.org/manual/development.html>`_.
 	
+In addition to non-interactive scripts that execute program commands and automate tasks, OVITO provides two more uses of the built-in script interpreter:
+You can :ref:`write your own modifier function <writing_custom_modifiers>` using Python, which can then also be used within the graphical program like the 
+standard modifiers. Or you can write a `custom viewport overlay <../../viewport_overlays.python_script.html>`_, which is a script function
+that can draw arbitrary graphical content into an image or movie rendered by OVITO.

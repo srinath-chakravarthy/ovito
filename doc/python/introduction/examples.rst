@@ -4,68 +4,10 @@ Examples
 
 This page provides a collection of example scripts:
 
-   * :ref:`example_outputting_analysis_results`
    * :ref:`example_compute_voronoi_indices`
    * :ref:`example_compute_cna_bond_indices`
    * :ref:`example_creating_particles_programmatically`
 
-
-.. _example_outputting_analysis_results:
-
-----------------------------------
-Export time-dependent analysis results to a text file
-----------------------------------
-
-THE FOLLOWING SECTION IS UNDER CONSTRUCTION.
-
-OVITO provides various analysis functions and algorithms that can extract different kinds of information
-from an atomistic simulation snapshot, e.g. dislocation densities, surface areas, porosity, phase composition, etc.
-While the results of such analyses are directly displayed in the program window for the current simulation frame, one
-often wants to write out the computed quantitities to a text file for each frame of a simulation, e.g. 
-for plotting the calculated quantities as functions of simulation time. 
-Exporting such data can typically be accomplished with the help of a small Python script as described below.
-
-OVITO gives you the choice between two different workflows, which provide different degrees of automation:
-
-    1. Set up the analysis interactively in the program and run the export script within the current program session (semi-automated mode).
-    2. Set up the analysis programmatically and also perform the data export from a script (batch mode).
-
-Both workflows are described in the following.
-
-In the first approach you load the input simulation sequence in OVITO as usual, apply the desired analysis modifiers 
-and adjust the parameters interactively. Once you are happy with the results, you run a Python script
-using the *Scripting* / *Run Script File* function found in the main menu which takes care of stepping through
-the simulation frames one by one and writing the analysis results to a text file. A typical export script looks like this::
-
-    from ovito import *
-    from ovito.data import *
-    from ovito.modifiers import *
-
-    # Open output file for writing:
-    fout = open("data.txt", "w")
-    
-    # Retreive existing analysis modifier from the modification pipeline of 
-    # the selected scene node:
-    modifier = dataset.selected_node.modifiers
-
-    # Loop over all simulation frames:
-    for frame in range(dataset.anim.first_frame, dataset.anim.last_frame + 1):
-
-        # Evaluate data pipeline of the select scene node at the current time:
-        data = dataset.selected_node.compute(frame)
-        
-        # Obtain global quantity computed by the analysis modifier:
-        
-
-        # Obtain output data to be exported from DataCollection:
-        surface_area = 
-        
-        # Write to output file:
-        simulation_timestep = data.attributes['Timestep']
-        print(frame, simulation_timestep, surface_area, file = fout)
-
-    fout.close()
- 
 
 .. _example_compute_voronoi_indices:
 
@@ -139,9 +81,9 @@ Python script:
   
 .. _example_creating_particles_programmatically:
 
-------------------------------------
-Creating particles programmatically
-------------------------------------
+--------------------------------------------------
+Creating particles and bonds programmatically
+--------------------------------------------------
 
 The following script demonstrates how to create particles, a simulation cell, and bonds on the fly
 without loading an external simulation file. This approach can be used to implement custom data importers

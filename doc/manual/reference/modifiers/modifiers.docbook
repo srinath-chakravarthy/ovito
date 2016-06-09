@@ -139,6 +139,10 @@
               <entry>Takes a snapshot of the current state of a particle property and preserves it over time.</entry>
             </row>
             <row>
+              <entry><link linkend="particles.modifiers.load_trajectory">Load trajectory</link></entry>
+              <entry>Loads time-dependent atomic positions from a separate trajectory file.</entry>
+            </row>
+            <row>
               <entry><link linkend="particles.modifiers.python_script">Python script</link></entry>
               <entry>Allows you to write your own modifier type in Python..</entry>
             </row>
@@ -237,6 +241,8 @@
   <xi:include href="particles/identify_diamond.docbook"/>
 
   <xi:include href="particles/invert_selection.docbook"/>
+
+  <xi:include href="particles/load_trajectory.docbook"/>
 
   <xi:include href="particles/manual_selection.docbook"/>
 

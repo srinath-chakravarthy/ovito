@@ -23,4 +23,4 @@ modifier.types = { ovito.modifiers.CommonNeighborAnalysisModifier.Type.FCC,
 node.compute()
 print(numpy.count_nonzero(node.output.selection))
 assert(numpy.count_nonzero(node.output.selection) == 1199)
-assert(node.output.attributes['SelectParticleType/num_selected'] == numpy.count_nonzero(node.output.selection))
+assert(node.output.attributes['SelectParticleType.num_selected'] == numpy.count_nonzero(node.output.selection))

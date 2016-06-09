@@ -193,25 +193,31 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 				"The method will do nothing if the data object to be replaced is not part of the collection. ",
 				(arg("old_obj"), arg("new_obj")))
 		.def("setDataObjects", &CompoundObject::setDataObjects)
-		.add_property("attributes", static_cast<dict (*)(CompoundObject&)>([](CompoundObject& obj) {
-				dict a;
-				for(auto entry = obj.attributes().constBegin(); entry != obj.attributes().constEnd(); ++entry) {
-					object value(entry.value());
-					if(!value.is_none())
-						a[entry.key()] = value;
-				}
-				return a;
-			}),
-			"Returns a dictionary object containing additional metadata, which describes the contents of the :py:class:`!DataCollection`. "
-			"\n\n"
-			"If the particle dataset has been loaded from a LAMMPS dump file, for example, which contains the simulation timestep number, this "
-			"timestep information can be retrieved from the attributes dictionary as follows::"
-			"\n\n"
-			"   >>> data_collection = ovito.dataset.selected_node.compute()\n"
-			"   >>> data_collection.attributes['Timestep']\n"
-			"   140000\n"
-			"\n\n"
-			"For *extended XYZ* files, the attributes dictionary contains all key/value pairs found in the comment line of the input file.\n")
+		.add_property("attribute_names", lambda_address([](CompoundObject& obj) -> QStringList {
+				return obj.attributes().keys();
+			}))
+		.def("get_attribute", lambda_address([](CompoundObject& obj, const QString& attrName) -> object {
+				auto item = obj.attributes().find(attrName);
+				if(item == obj.attributes().end())
+					return object();
+				else
+					return object(item.value());
+			}))
+		.def("set_attribute", lambda_address([](CompoundObject& obj, const QString& attrName, object value) {
+			QVariantMap newAttrs = obj.attributes();
+			if(value.is_none()) {
+				newAttrs.remove(attrName);
+			}
+			else {
+				if(PyLong_Check(value.ptr()))
+					newAttrs.insert(attrName, QVariant::fromValue(PyLong_AsLong(value.ptr())));
+				else if(PyFloat_Check(value.ptr()))
+					newAttrs.insert(attrName, QVariant::fromValue(PyFloat_AsDouble(value.ptr())));
+				else
+					newAttrs.insert(attrName, QVariant::fromValue(extract<QString>(value)()));
+			}
+			obj.setAttributes(newAttrs);
+			}))
 	;
 
 	ovito_abstract_class<Modifier, RefTarget>(

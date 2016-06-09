@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section version="5.0"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd"
+         xml:id="particles.modifiers.load_trajectory"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:ns="http://docbook.org/ns/docbook">
+  <title>Load trajectory</title>
+
+  <para>
+  
+    <informalfigure><screenshot><mediaobject><imageobject>
+       <imagedata fileref="images/modifiers/load_trajectory_panel.png" format="PNG" />
+    </imageobject></mediaobject></screenshot></informalfigure>
+  
+     This modifier is used to load time-dependent atomic positions from a separate molecular dynamics trajectory file.
+  </para>
+
+  <para>Some MD codes work with separate topology and a trajectory files. The former 
+  contain the initial atomic positions and other definitions like atom types, bonds, etc. 
+  which are constant throughout the simulation and which are read in by the MD simulation code. 
+  The MD code writes the computed trajectories to a separate file containing just the time-dependent 
+  coordinates (but no other static information like the bonds).</para>
+  
+  <para>
+  One typical example is the code LAMMPS, which relies on the <code>data</code> input file format 
+  for defining the bonds between atoms and the <code>dump</code> output file format
+  to store the computed trajectories.
+  </para>
+  
+  <para>
+  To load such a pair of topology/trajectory files in OVITO, first import the topology file.
+  Then apply the Load Trajectory modifier to the loaded dataset and select the trajectory file on disk. The modifier
+  will replace the initial atomic positions loaded from the topology file with the time-dependent positions
+  loaded from the trajectory file. The same is done for the simulation cell geometry.
+  </para>
+  
+</section>

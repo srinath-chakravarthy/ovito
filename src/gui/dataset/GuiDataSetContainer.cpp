@@ -316,7 +316,7 @@ bool GuiDataSetContainer::importFile(const QUrl& url, const OvitoObjectType* imp
 ******************************************************************************/
 bool GuiDataSetContainer::waitUntil(const std::function<bool()>& callback, const QString& message, AbstractProgressDisplay* progressDisplay)
 {
-	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "GuiDataSetContainer::waitUntilReady()", "This function may only be called from the main thread.");
+	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "GuiDataSetContainer::waitUntil()", "This function may only be called from the main thread.");
 
 	// Check if operation is already completed.
 	if(callback())
@@ -359,16 +359,18 @@ bool GuiDataSetContainer::waitUntil(const std::function<bool()>& callback, const
 #if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
 		// Disable viewport repaints while processing events to
 		// avoid recursive calls to repaint().
-		if(Application::instance().guiMode())
+		if(Application::instance().guiMode()) {
 			mainWindow()->viewportsPanel()->setUpdatesEnabled(false);
+		}
 #endif
 		try {
 			bool result = DataSetContainer::waitUntil(callback, message, progressDisplay);
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
 			// Resume repainting the viewports.
-			if(Application::instance().guiMode())
+			if(Application::instance().guiMode()) {
 				mainWindow()->viewportsPanel()->setUpdatesEnabled(true);
+			}
 #endif
 
 			return result;

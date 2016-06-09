@@ -42,7 +42,18 @@ protected:
 	/// Creates the user interface controls for the editor.
 	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
 
+	/// This method is called when a reference target changes.
+	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
+
+protected Q_SLOTS:
+
+	/// Updates the enabled/disabled status of the editor's controls.
+	void updateEditorFields();
+
 private:
+
+	QLabel* _attributeNamesList;
+	AutocompleteTextEdit* _textEdit;
 
 	Q_OBJECT
 	OVITO_OBJECT

@@ -1067,7 +1067,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 			" * ``WignerSeitz.vacancy_count`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
 			"   The total number of vacant sites (having ``Occupancy`` == 0). \n"
 			" * ``WignerSeitz.interstitial_count`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
-			"  The total number of of interstitial atoms. This is equal to the sum of occupancy numbers of all non-empty sites minus the number of these sites.\n"
+			"   The total number of of interstitial atoms. This is equal to the sum of occupancy numbers of all non-empty sites minus the number of non-empty sites.\n"
 			"\n")
 		.add_property("reference", make_function(&WignerSeitzAnalysisModifier::referenceConfiguration, return_value_policy<ovito_object_reference>()), &WignerSeitzAnalysisModifier::setReferenceConfiguration,
 				"A :py:class:`~ovito.io.FileSource` that provides the reference positions of particles. "

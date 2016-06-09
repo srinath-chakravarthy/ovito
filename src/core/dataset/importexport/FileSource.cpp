@@ -315,6 +315,7 @@ PipelineFlowState FileSource::requestFrame(int frame)
 		setStatus(PipelineStatus::Pending);
 		if(oldLoadingTaskWasCanceled)
 			notifyDependents(ReferenceEvent::PendingStateChanged);
+
 		// Indicate to the caller that the result is pending.
 		return PipelineFlowState(PipelineStatus::Pending, dataObjects(), interval, attrs);
 	}

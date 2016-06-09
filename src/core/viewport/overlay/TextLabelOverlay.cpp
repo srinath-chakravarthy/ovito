@@ -22,6 +22,7 @@
 #include <core/Core.h>
 #include <core/viewport/Viewport.h>
 #include <core/rendering/RenderSettings.h>
+#include <core/scene/SelectionSet.h>
 #include "TextLabelOverlay.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -34,12 +35,14 @@ DEFINE_FLAGS_PROPERTY_FIELD(TextLabelOverlay, _offsetX, "OffsetX", PROPERTY_FIEL
 DEFINE_FLAGS_PROPERTY_FIELD(TextLabelOverlay, _offsetY, "OffsetY", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(TextLabelOverlay, _labelText, "LabelText");
 DEFINE_FLAGS_PROPERTY_FIELD(TextLabelOverlay, _textColor, "TextColor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(TextLabelOverlay, _sourceNode, "SourceNode", ObjectNode, PROPERTY_FIELD_NO_SUB_ANIM);
 SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _alignment, "Position");
 SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _font, "Font");
 SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _fontSize, "Font size");
 SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _offsetX, "Offset X");
 SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _offsetY, "Offset Y");
 SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _textColor, "Text color");
+SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _sourceNode, "Attributes source");
 SET_PROPERTY_FIELD_UNITS(TextLabelOverlay, _offsetX, PercentParameterUnit);
 SET_PROPERTY_FIELD_UNITS(TextLabelOverlay, _offsetY, PercentParameterUnit);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TextLabelOverlay, _fontSize, FloatParameterUnit, 0);
@@ -50,9 +53,9 @@ SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TextLabelOverlay, _fontSize, FloatParameter
 TextLabelOverlay::TextLabelOverlay(DataSet* dataset) : ViewportOverlay(dataset),
 		_alignment(Qt::AlignLeft | Qt::AlignTop),
 		_offsetX(0), _offsetY(0),
-		_fontSize(0.4),
+		_fontSize(0.02),
 		_labelText("Text label"),
-		_textColor(0,0,1)
+		_textColor(0,0,0.5)
 {
 	INIT_PROPERTY_FIELD(TextLabelOverlay::_alignment);
 	INIT_PROPERTY_FIELD(TextLabelOverlay::_offsetX);
@@ -61,6 +64,10 @@ TextLabelOverlay::TextLabelOverlay(DataSet* dataset) : ViewportOverlay(dataset),
 	INIT_PROPERTY_FIELD(TextLabelOverlay::_fontSize);
 	INIT_PROPERTY_FIELD(TextLabelOverlay::_labelText);
 	INIT_PROPERTY_FIELD(TextLabelOverlay::_textColor);
+	INIT_PROPERTY_FIELD(TextLabelOverlay::_sourceNode);
+
+	// Automatically connect to the selected object node.
+	setSourceNode(dynamic_object_cast<ObjectNode>(dataset->selection()->front()));
 }
 
 /******************************************************************************
@@ -74,29 +81,16 @@ void TextLabelOverlay::render(Viewport* viewport, QPainter& painter, const ViewP
 	QPointF origin(_offsetX.value() * renderSettings->outputImageWidth(), -_offsetY.value() * renderSettings->outputImageHeight());
 	FloatType margin = fontSize;
 
-#if 0
-	if(_alignment.value() & Qt::AlignLeft) origin.rx() += margin;
-	else if(_alignment.value() & Qt::AlignRight) origin.rx() += renderSettings->outputImageWidth() - margin;
-	else if(_alignment.value() & Qt::AlignHCenter) origin.rx() += 0.5 * renderSettings->outputImageWidth();
-
-	if(_alignment.value() & Qt::AlignTop) origin.ry() += margin;
-	else if(_alignment.value() & Qt::AlignBottom) origin.ry() += renderSettings->outputImageHeight() - margin;
-	else if(_alignment.value() & Qt::AlignVCenter) origin.ry() += 0.5 * renderSettings->outputImageHeight();
-#endif
-
-	QFont font = this->font();
-	font.setPointSizeF(fontSize);
-	painter.setFont(font);
-
 	QString textString = labelText();
 
-	painter.setRenderHint(QPainter::Antialiasing);
-	painter.setRenderHint(QPainter::TextAntialiasing);
-	QPen pen(textColor());
-	painter.setPen(pen);
+	// Resolve referenced attributes in text string.
+	if(sourceNode()) {
+		const PipelineFlowState& flowState = sourceNode()->evalPipeline(dataset()->animationSettings()->time());
+		for(auto a = flowState.attributes().cbegin(); a != flowState.attributes().cend(); ++a) {
+			textString.replace(QStringLiteral("[") + a.key() + QStringLiteral("]"), a.value().toString());
+		}
+	}
 
-	//QRectF textRect = painter.boundingRect(QRectF(0,0,0,0), Qt::AlignHCenter | Qt::AlignVCenter | Qt::TextDontClip, textString);
-	//textRect.translate(origin);
 	QRectF textRect(margin, margin, renderSettings->outputImageWidth() - margin*2, renderSettings->outputImageHeight() - margin*2);
 
 	int flags = Qt::TextDontClip;
@@ -106,6 +100,16 @@ void TextLabelOverlay::render(Viewport* viewport, QPainter& painter, const ViewP
 	if(_alignment.value() & Qt::AlignTop) flags |= Qt::AlignTop;
 	else if(_alignment.value() & Qt::AlignBottom) flags |= Qt::AlignBottom;
 	else if(_alignment.value() & Qt::AlignVCenter) flags |= Qt::AlignVCenter;
+
+	painter.setRenderHint(QPainter::Antialiasing);
+	painter.setRenderHint(QPainter::TextAntialiasing);
+	QPen pen(textColor());
+	painter.setPen(pen);
+
+	QFont font = this->font();
+	font.setPointSizeF(fontSize);
+	painter.setFont(font);
+
 	painter.drawText(textRect.normalized().translated(origin), flags, textString);
 }
 

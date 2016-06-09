@@ -16,21 +16,20 @@
 	   of data files, modifiers, and rendering of images and movies.
 	</para>
 	<para>
-	   If you are not familiar with the Python language, you can find several tutorials and books online 
-	   that cover this subject. Note that OVITO supports the Python 3.4 language standard.
+	   Scripts for OVITO are written in the Python programming language. If you are not familiar with Python, 
+	   you can find several tutorials and books online that cover this subject. Note that OVITO is based on the Python 3.x language standard.
 	</para>
 	<para>
-	   The scripting interface is completely documented in a separate 
-	   <link xlink:href="python/index.html">Scripting Reference</link> manual, which can also be accessed
-	   directly from OVITO's help menu.
+	   OVITO's scripting interface is documented in a separate 
+	   <link xlink:href="python/index.html">Scripting Reference</link> manual. You can accessed it directly from OVITO's help menu.
 	</para>
 	<para>
-	   Furthermore, you can use Python to extend OVITO. 
+	   In addition to automating tasks, the scripting interface allows you to extend OVITO. 
 	   For example, the <link linkend="particles.modifiers.python_script">Python script modifier</link>
-	   provides a mechanism to write your own data manipulation function, which gets integrated into
-	   OVITO's modification pipeline system. The <link linkend="viewport_overlays.python_script">
-	   Python script overlay</link> lets you write your own Python function to include arbitrary 2D graphics
-	   in a rendered image or movie, for example to enrich the visualization with additional information 
+	   provides a mechanism for you to write your own data manipulation function and integrate it into
+	   OVITO's modification pipeline system. Furthermore, the <link linkend="viewport_overlays.python_script">
+	   Python script overlay</link> lets you write your own Python function to add arbitrary 2D graphics
+	   to rendered images or movies, for example to enrich the visualization with additional information 
 	   like a <link linkend="howto.scale_bar">scale bar</link>.
 	</para>
 
