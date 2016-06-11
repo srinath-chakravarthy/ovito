@@ -375,7 +375,7 @@ BOOST_PYTHON_MODULE(Particles)
 		.add_property("pbc_z", &SimulationCellObject::pbcZ, &SimulationCellObject::setPbcZ)
 		.add_property("is2D", &SimulationCellObject::is2D, &SimulationCellObject::set2D,
 				"Specifies whether the system is two-dimensional (true) or three-dimensional (false). "
-				"For two-dimensional systems the PBC flag in the third direction (z) is ignored. "
+				"For two-dimensional systems the PBC flag in the third direction (z) and the third cell vector are ignored. "
 				"\n\n"
 				":Default: ``false``\n")
 		.add_property("cellMatrix", &SimulationCellObject::cellMatrix, &SimulationCellObject::setCellMatrix)
@@ -383,6 +383,11 @@ BOOST_PYTHON_MODULE(Particles)
 		.add_property("vector2", make_function(&SimulationCellObject::edgeVector2, return_value_policy<copy_const_reference>()), &SimulationCellObject::setEdgeVector2)
 		.add_property("vector3", make_function(&SimulationCellObject::edgeVector3, return_value_policy<copy_const_reference>()), &SimulationCellObject::setEdgeVector3)
 		.add_property("origin", make_function(&SimulationCellObject::origin, return_value_policy<copy_const_reference>()), &SimulationCellObject::setOrigin)
+		.add_property("volume", &SimulationCellObject::volume3D,
+				"Returns the volume of the three-dimensional simulation cell.\n"
+				"It is the absolute value of the determinant of the cell matrix.")
+		.add_property("volume2D", &SimulationCellObject::volume2D,
+				"Returns the volume of the two-dimensional simulation cell (see :py:attr:`.is2D`).\n")
 	;
 
 	{

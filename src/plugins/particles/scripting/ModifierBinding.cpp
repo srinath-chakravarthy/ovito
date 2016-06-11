@@ -835,12 +835,21 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 			"**Modifier outputs:**"
 			"\n\n"
 			" * ``Cluster`` (:py:class:`~ovito.data.ParticleProperty`):\n"
-			"   This output particle property stores the IDs of the clusters the particles have been assigned to. "
+			"   This output particle property stores the IDs of the clusters the particles have been assigned to.\n"
 			" * ``ClusterAnalysis.cluster_count`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
 			"   The total number of clusters produced by the modifier. Cluster IDs range from 1 to this number.\n"
 			" * ``ClusterAnalysis.largest_size`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
 			"   The number of particles belonging to the largest cluster (cluster ID 1). This attribute is only computed by the modifier when :py:attr:`.sort_by_size` is set.\n"
-			"\n")
+			"\n"
+			"**Example:**"
+			"\n\n"
+			"The following script demonstrates how to apply the `numpy.bincount() <http://docs.scipy.org/doc/numpy/reference/generated/numpy.bincount.html>`_ "
+			"function to the generated ``Cluster`` particle property to determine the size (=number of particles) of each cluster "
+			"found by the modifier. "
+			"\n\n"
+			".. literalinclude:: ../example_snippets/cluster_analysis_modifier.py\n"
+			"\n"
+			)
 		.add_property("cutoff", &ClusterAnalysisModifier::cutoff, &ClusterAnalysisModifier::setCutoff,
 				"The cutoff distance used by the algorithm to form clusters of connected particles."
 				"\n\n"

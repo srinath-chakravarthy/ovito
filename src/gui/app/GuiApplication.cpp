@@ -66,6 +66,7 @@ bool GuiApplication::processCommandLineParameters()
 #elif defined(Q_OS_OSX)
 		// Don't let Qt move the app to the foreground when running in console mode.
 		::setenv("QT_MAC_DISABLE_FOREGROUND_APPLICATION_TRANSFORM", "1", 1);
+		_headlessMode = false;
 #endif
 	}
 

@@ -141,9 +141,8 @@ PipelineStatus ConstructSurfaceModifier::applyComputationResults(TimePoint time,
 
 	output().attributes().insert(QStringLiteral("ConstructSurfaceMesh.surface_area"), QVariant::fromValue(surfaceArea()));
 	output().attributes().insert(QStringLiteral("ConstructSurfaceMesh.solid_volume"), QVariant::fromValue(solidVolume()));
-	output().attributes().insert(QStringLiteral("ConstructSurfaceMesh.total_volume"), QVariant::fromValue(totalVolume()));
 
-	return PipelineStatus(PipelineStatus::Success, tr("Surface area: %1\nSolid volume: %2\nTotal volume: %3\nSolid volume fraction: %4\nSurface area per solid volume: %5\nSurface area per total volume: %6")
+	return PipelineStatus(PipelineStatus::Success, tr("Surface area: %1\nSolid volume: %2\nTotal cell volume: %3\nSolid volume fraction: %4\nSurface area per solid volume: %5\nSurface area per total volume: %6")
 			.arg(surfaceArea()).arg(solidVolume()).arg(totalVolume())
 			.arg(solidVolume() / totalVolume()).arg(surfaceArea() / solidVolume()).arg(surfaceArea() / totalVolume()));
 }

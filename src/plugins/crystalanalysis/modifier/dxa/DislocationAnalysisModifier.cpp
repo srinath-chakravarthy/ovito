@@ -361,6 +361,8 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 		output().addObject(bondsObj);
 	}
 
+	output().attributes().insert(QStringLiteral("DislocationAnalysis.total_line_length"), QVariant::fromValue(totalLineLength));
+
 	if(totalSegmentCount == 0)
 		return PipelineStatus(PipelineStatus::Success, tr("No dislocations found"));
 	else

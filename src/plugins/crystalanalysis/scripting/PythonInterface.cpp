@@ -56,9 +56,19 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 			"\n\n"
 			"The :py:attr:`.radius` parameter controls how many details of the solid shape are resolved during surface construction. "
 			"A larger radius leads to a surface with fewer details, reflecting only coarse features of the surface topology. "
-			"A small radius, on the other hand, will resolve finer surface features and small pores inside a solid, for example. "
+			"A small radius, on the other hand, will resolve finer surface features and small pores in the interior of a solid, for example. "
 			"\n\n"
-			"See `this article <http://dx.doi.org/10.1007/s11837-013-0827-5>`_ for a description of the surface construction algorithm."
+			"See `[A. Stukowski, JOM 66 (2014), 399-407] <http://dx.doi.org/10.1007/s11837-013-0827-5>`_ for a description of the surface construction algorithm."
+			"\n\n"
+			"**Modifier outputs:**"
+			"\n\n"
+			" * :py:attr:`DataCollection.surface <ovito.data.DataCollection.surface>` (:py:class:`~ovito.data.SurfaceMesh`):\n"
+			"   This property of the output data collection provides access to the surface mesh computed by the modifier.\n"
+			"   See the example script below.\n"
+			" * ``ConstructSurfaceMesh.surface_area`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+			"   The area of the surface mesh.\n"
+			" * ``ConstructSurfaceMesh.solid_volume`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+			"   The volume of the solid region bounded by the surface mesh.\n"
 			"\n\n"
 			"Example:\n\n"
 			".. literalinclude:: ../example_snippets/construct_surface_modifier.py"
@@ -73,27 +83,19 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 		.add_property("smoothing_level", &ConstructSurfaceModifier::smoothingLevel, &ConstructSurfaceModifier::setSmoothingLevel,
 				"The number of iterations of the smoothing algorithm applied to the computed surface mesh."
 				"\n\n"
+				"Note that the smoothing level does only affect the computed surface area but not the solid volume. "
+				"That is because the solid volume is computed before smoothing the mesh. (Smoothing is supposed to be "
+				"volume preserving.)"
+				"\n\n"
 				":Default: 8\n")
 		.add_property("only_selected", &ConstructSurfaceModifier::onlySelectedParticles, &ConstructSurfaceModifier::setOnlySelectedParticles,
 				"If ``True``, the modifier acts only on selected particles and ignores other particles; "
 				"if ``False``, the modifier constructs the surface around all particles."
 				"\n\n"
 				":Default: ``False``\n")
-		.add_property("solid_volume", &ConstructSurfaceModifier::solidVolume,
-				"After the modifier has computed the surface, this output field contains the volume of the solid region enclosed "
-				"by the surface."
-				"\n\n"
-				"Note that this value is only available after the modifier has computed its results. "
-				"Thus, you have to call :py:meth:`ovito.ObjectNode.compute` first to ensure that this information is up to date. ")
-		.add_property("total_volume", &ConstructSurfaceModifier::totalVolume,
-				"This output field reports the volume of the input simulation cell, which can be used "
-				"to calculate the solid volume fraction or porosity of a system (in conjunction with the "
-				":py:attr:`.solid_volume` computed by the modifier). ")
-		.add_property("surface_area", &ConstructSurfaceModifier::surfaceArea,
-				"After the modifier has computed the surface, this output field contains the area of the surface."
-				"\n\n"
-				"Note that this value is only available after the modifier has computed its results. "
-				"Thus, you have to call :py:meth:`ovito.ObjectNode.compute` first to ensure that this information is up to date. ")
+		.add_property("solid_volume", &ConstructSurfaceModifier::solidVolume)
+		.add_property("total_volume", &ConstructSurfaceModifier::totalVolume)
+		.add_property("surface_area", &ConstructSurfaceModifier::surfaceArea)
 		.add_property("mesh_display", make_function(&ConstructSurfaceModifier::surfaceMeshDisplay, return_value_policy<ovito_object_reference>()),
 				"The :py:class:`~ovito.vis.SurfaceMeshDisplay` controlling the visual representation of the computed surface.\n")
 	;
@@ -102,12 +104,26 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 		scope s = ovito_class<DislocationAnalysisModifier, StructureIdentificationModifier>(
 				":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 				"This analysis modifier extracts all dislocations in a crystal and converts them to continuous line segments. "
-				"The method behind this is called *Dislocation Extraction Algorithm* (DXA). "
+				"The computational method behind this is called *Dislocation Extraction Algorithm* (DXA) and is described "
+				"in the paper `[MSMSE 20 (2012), 085007] <http://stacks.iop.org/0965-0393/20/085007>`_."
 				"\n\n"
-				"The extracted dislocation lines are returned as a :py:class:`~ovito.data.DislocationNetwork` object, which "
-				"will be present in the output :py:class:`~ovito.data.DataCollection` of the node after the modification pipeline has been evaluated. "
+				"The extracted dislocation lines are output as a :py:class:`~ovito.data.DislocationNetwork` object by the modifier "
+				"and can be accessed through the :py:attr:`DataCollection.dislocations <ovito.data.DataCollection.dislocations>` field "
+				"after the modification pipeline has been evaluated. This is demonstrated in the example script below. "
 				"\n\n"
-				"Usage example:\n\n"
+				"Furthermore, you can use the :py:func:`~ovito.io.export_file` function to write the dislocation lines "
+				"to a so-called CA file. The CA file format is described in the documentation section of the OVITO user manual for the "
+				"Dislocation Analysis modifier."
+				"\n\n"
+				"**Modifier outputs:**"
+				"\n\n"
+				" * :py:attr:`DataCollection.dislocations <ovito.data.DataCollection.dislocations>` (:py:class:`~ovito.data.DislocationNetwork`):\n"
+				"   This property of the output data collection provides access to the dislocation lines found by the modifier.\n"
+				"   See the example script below.\n"
+				" * ``DislocationAnalysis.total_line_length`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The total length of all dislocation lines found by the DXA.\n"
+				"\n\n"
+				"Example:\n\n"
 				".. literalinclude:: ../example_snippets/dislocation_analysis_modifier.py"
 				)
 			.add_property("trial_circuit_length", &DislocationAnalysisModifier::maxTrialCircuitSize, &DislocationAnalysisModifier::setMaxTrialCircuitSize,

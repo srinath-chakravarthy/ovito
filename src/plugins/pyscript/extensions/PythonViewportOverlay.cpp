@@ -127,6 +127,10 @@ void PythonViewportOverlay::render(Viewport* viewport, QPainter& painter, const 
 	_scriptOutput.clear();
 	try {
 
+		// Enable antialiasing for the QPainter by default.
+		painter.setRenderHint(QPainter::Antialiasing);
+		painter.setRenderHint(QPainter::TextAntialiasing);
+
 		ScriptEngine* engine = ScriptEngine::activeEngine();
 		if(!engine) engine = &_scriptEngine;
 
