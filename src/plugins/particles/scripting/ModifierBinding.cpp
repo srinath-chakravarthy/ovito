@@ -38,6 +38,7 @@
 #include <plugins/particles/modifier/modify/LoadTrajectoryModifier.h>
 #include <plugins/particles/modifier/properties/ComputePropertyModifier.h>
 #include <plugins/particles/modifier/properties/FreezePropertyModifier.h>
+#include <plugins/particles/modifier/properties/ComputeBondLengthsModifier.h>
 #include <plugins/particles/modifier/selection/ClearSelectionModifier.h>
 #include <plugins/particles/modifier/selection/InvertSelectionModifier.h>
 #include <plugins/particles/modifier/selection/ManualSelectionModifier.h>
@@ -91,25 +92,33 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 	{
 		scope s = ovito_class<ColorCodingModifier, ParticleModifier>(
 				":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
-				"Colors particles based on the values of an arbitrary particle property."
+				"Colors particles or bonds based on the value of a property."
 				"\n\n"
 				"Usage example::"
 				"\n\n"
 				"    from ovito.modifiers import *\n"
 				"    \n"
 				"    modifier = ColorCodingModifier(\n"
-				"        property = \"Potential Energy\",\n"
+				"        particle_property = \"Potential Energy\",\n"
 				"        gradient = ColorCodingModifier.Hot()\n"
 				"    )\n"
 				"    node.modifiers.append(modifier)\n"
 				"\n"
 				"If, as in the example above, the :py:attr:`.start_value` and :py:attr:`.end_value` parameters are not explicitly set, "
-				"then the modifier automatically adjusts them to the minimum and maximum values of the particle property when the modifier "
+				"then the modifier automatically adjusts them to the minimum and maximum values of the property when the modifier "
 				"is inserted into the modification pipeline.")
-			.add_property("property", make_function(&ColorCodingModifier::sourceProperty, return_value_policy<copy_const_reference>()), &ColorCodingModifier::setSourceProperty,
-					"The name of the input property that should be used to color particles. "
+			.add_property("property", make_function(&ColorCodingModifier::sourceParticleProperty, return_value_policy<copy_const_reference>()), &ColorCodingModifier::setSourceParticleProperty)
+			.add_property("particle_property", make_function(&ColorCodingModifier::sourceParticleProperty, return_value_policy<copy_const_reference>()), &ColorCodingModifier::setSourceParticleProperty,
+					"The name of the input particle property that should be used to color particles. "
 					"This can be one of the :ref:`standard particle properties <particle-types-list>` or a custom particle property. "
-					"When using vector properties the component must be included in the name, e.g. ``\"Velocity.X\"``. ")
+					"When using vector properties the component must be included in the name, e.g. ``\"Velocity.X\"``. "
+					"\n\n"
+					"This field is only used if :py:attr:`.bond_mode` is set to false. ")
+			.add_property("bond_property", make_function(&ColorCodingModifier::sourceBondProperty, return_value_policy<copy_const_reference>()), &ColorCodingModifier::setSourceBondProperty,
+					"The name of the input bond property that should be used to color bonds. "
+					"This can be one of the :ref:`standard bond properties <bond-types-list>` or a custom bond property. "
+					"\n\n"
+					"This field is only used if :py:attr:`.bond_mode` is set to true. ")
 			.add_property("start_value", &ColorCodingModifier::startValue, &ColorCodingModifier::setStartValue,
 					"This parameter defines the value range when mapping the input property to a color.")
 			.add_property("startValueController", make_function(&ColorCodingModifier::startValueController, return_value_policy<ovito_object_reference>()), &ColorCodingModifier::setStartValueController)
@@ -119,7 +128,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 			.add_property("gradient", make_function(&ColorCodingModifier::colorGradient, return_value_policy<ovito_object_reference>()), &ColorCodingModifier::setColorGradient,
 					"The color gradient object, which is responsible for mapping normalized property values to colors. "
 					"Available gradient types are:\n"
-					" * ``ColorCodingModifier.Rainbow()`` (default)\n"
+					" * ``ColorCodingModifier.Rainbow()`` [default]\n"
 					" * ``ColorCodingModifier.Grayscale()``\n"
 					" * ``ColorCodingModifier.Hot()``\n"
 					" * ``ColorCodingModifier.Jet()``\n"
@@ -129,11 +138,18 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					"The last color map constructor expects the path to an image file on disk, "
 					"which will be used to create a custom color gradient from a row of pixels in the image.")
 			.add_property("only_selected", &ColorCodingModifier::colorOnlySelected, &ColorCodingModifier::setColorOnlySelected,
-					"If ``True``, only selected particles will be affected by the modifier and the existing colors "
-					"of unselected particles will be preserved; if ``False``, all particles will be colored."
+					"If ``True``, only selected particles or bonds will be affected by the modifier and the existing colors "
+					"of unselected particles or bonds will be preserved; if ``False``, all particles/bonds will be colored."
 					"\n\n"
 					":Default: ``False``\n")
 			.add_property("keepSelection", &ColorCodingModifier::keepSelection, &ColorCodingModifier::setKeepSelection)
+			.add_property("bond_mode", &ColorCodingModifier::operateOnBonds, &ColorCodingModifier::setOperateOnBonds,
+					"Controls whether the modifier assigns colors to particles or bonds.\n"
+					"\n\n"
+					"If this is set to true, then the bond property selected by :py:attr:`.bond_property` is used to color bonds. "
+					"Otherwise the particle property selected by :py:attr:`.particle_property` is used to color particles."
+					"\n\n"
+					":Default: ``False``\n")
 		;
 
 		ovito_abstract_class<ColorCodingGradient, RefTarget>()
@@ -227,6 +243,18 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"This modifier maps particles located outside the simulation cell back into the box by \"wrapping\" their coordinates "
 			"around at the periodic boundaries of the simulation cell. This modifier has no parameters.")
+	;
+
+	ovito_class<ComputeBondLengthsModifier, ParticleModifier>(
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
+			"Computes the length of every bond in the system and outputs the values as "
+			"a new bond property named ``Length``. "
+			"\n\n"
+			"**Modifier outputs:**"
+			"\n\n"
+			" * ``Length`` (:py:class:`~ovito.data.BondProperty`):\n"
+			"   The output bond property containing the length of each bond.\n"
+			"\n")
 	;
 
 	ovito_class<ComputePropertyModifier, ParticleModifier>(

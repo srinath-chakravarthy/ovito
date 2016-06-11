@@ -170,8 +170,12 @@ void ColorLegendOverlay::render(Viewport* viewport, QPainter& painter, const Vie
 		bottomLabel.sprintf(format.constData(), startValue);
 	else
 		bottomLabel = label2();
-	if(title().isEmpty())
-		titleLabel = modifier()->sourceProperty().nameWithComponent();
+	if(title().isEmpty()) {
+		if(!modifier()->operateOnBonds())
+			titleLabel = modifier()->sourceParticleProperty().nameWithComponent();
+		else
+			titleLabel = modifier()->sourceBondProperty().nameWithComponent();
+	}
 	else
 		titleLabel = title();
 

@@ -22,6 +22,7 @@
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/particles/modifier/coloring/ColorCodingModifier.h>
 #include <plugins/particles/gui/util/ParticlePropertyParameterUI.h>
+#include <plugins/particles/gui/util/BondPropertyParameterUI.h>
 #include <gui/mainwin/MainWindow.h>
 #include <gui/dialogs/LoadImageFileDialog.h>
 #include <gui/properties/FloatParameterUI.h>
@@ -29,6 +30,7 @@
 #include <gui/properties/ColorParameterUI.h>
 #include <gui/properties/BooleanParameterUI.h>
 #include <gui/properties/CustomParameterUI.h>
+#include <gui/properties/BooleanRadioButtonParameterUI.h>
 #include <gui/dialogs/SaveImageFileDialog.h>
 #include <core/plugins/PluginManager.h>
 #include "ColorCodingModifierEditor.h"
@@ -51,12 +53,39 @@ void ColorCodingModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	layout1->setContentsMargins(4,4,4,4);
 	layout1->setSpacing(2);
 
-	ParticlePropertyParameterUI* sourcePropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::_sourceProperty));
-	layout1->addWidget(new QLabel(tr("Property:"), rollout));
-	layout1->addWidget(sourcePropertyUI->comboBox());
+	QHBoxLayout* layout3 = new QHBoxLayout();
+	layout3->setContentsMargins(0,0,0,0);
+	layout3->setSpacing(4);
+	layout3->addWidget(new QLabel(tr("Operate on:")));
+	BooleanRadioButtonParameterUI* operateOnBondsUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::_operateOnBonds));
+	operateOnBondsUI->buttonFalse()->setText(tr("particles"));
+	operateOnBondsUI->buttonTrue()->setText(tr("bonds"));
+	layout3->addWidget(operateOnBondsUI->buttonFalse());
+	layout3->addWidget(operateOnBondsUI->buttonTrue());
+	layout3->addStretch(1);
+	layout1->addLayout(layout3);
+	layout1->addSpacing(4);
+
+	ParticlePropertyParameterUI* sourceParticlePropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::_sourceParticleProperty));
+	BondPropertyParameterUI* sourceBondPropertyUI = new BondPropertyParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::_sourceBondProperty));
+	QLabel* particlePropertyLabel = new QLabel(tr("Particle property:"));
+	layout1->addWidget(particlePropertyLabel);
+	layout1->addWidget(sourceParticlePropertyUI->comboBox());
+	particlePropertyLabel->hide();
+	sourceParticlePropertyUI->comboBox()->hide();
+	QLabel* bondPropertyLabel = new QLabel(tr("Bond property:"));
+	layout1->addWidget(bondPropertyLabel);
+	layout1->addWidget(sourceBondPropertyUI->comboBox());
+	bondPropertyLabel->hide();
+	sourceBondPropertyUI->comboBox()->hide();
+
+	connect(operateOnBondsUI->buttonFalse(), &QRadioButton::toggled, sourceParticlePropertyUI->comboBox(), &QWidget::setVisible);
+	connect(operateOnBondsUI->buttonFalse(), &QRadioButton::toggled, particlePropertyLabel, &QWidget::setVisible);
+	connect(operateOnBondsUI->buttonTrue(), &QRadioButton::toggled, sourceBondPropertyUI->comboBox(), &QWidget::setVisible);
+	connect(operateOnBondsUI->buttonTrue(), &QRadioButton::toggled, bondPropertyLabel, &QWidget::setVisible);
 
 	colorGradientList = new QComboBox(rollout);
-	layout1->addWidget(new QLabel(tr("Color gradient:"), rollout));
+	layout1->addWidget(new QLabel(tr("Color gradient:")));
 	layout1->addWidget(colorGradientList);
 	colorGradientList->setIconSize(QSize(48,16));
 	connect(colorGradientList, (void (QComboBox::*)(int))&QComboBox::activated, this, &ColorCodingModifierEditor::onColorGradientSelected);
@@ -114,7 +143,7 @@ void ColorCodingModifierEditor::createUI(const RolloutInsertionParameters& rollo
 
 	layout1->addSpacing(8);
 
-	// Only selected particles.
+	// Only selected particles/bonds.
 	BooleanParameterUI* onlySelectedPUI = new BooleanParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::_colorOnlySelected));
 	layout1->addWidget(onlySelectedPUI->checkBox());
 
@@ -242,12 +271,10 @@ void ColorCodingModifierEditor::onReverseRange()
 
 	if(mod->startValueController() && mod->endValueController()) {
 		undoableTransaction(tr("Reverse range"), [mod]() {
-
 			// Swap controllers for start and end value.
 			OORef<Controller> oldStartValue = mod->startValueController();
 			mod->setStartValueController(mod->endValueController());
 			mod->setEndValueController(oldStartValue);
-
 		});
 	}
 }

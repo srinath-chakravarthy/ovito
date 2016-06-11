@@ -15,21 +15,21 @@
        <imagedata fileref="images/modifiers/color_coding_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
   
-    This modifier colors particles based on one of their properties. It can be used to visualize
-    per-particle quantities.
+    This modifier colors particles or bonds based on one of their properties. It can be used to visualize
+    per-particle or per-bond quantities.
   </para>
   
   <para>
-    The per-particle values of the selected property are first mapped and clamped to the unit interval [0,1] according to the
+    The input property values are first mapped and clamped to the unit interval [0,1] according to the
     <emphasis>Start value</emphasis> and <emphasis>End value</emphasis>
-    parameters of the modifier. The normalized values are then mapped to a corresponding particle color using the selected 
-    color gradient map.
+    parameters of the modifier. The normalized values are then mapped to a corresponding color using the selected 
+    color gradient map and assigned to the particles or bonds.
   </para>
 
   <para>
     The <guibutton>Adjust range</guibutton> button resets the <emphasis>Start value</emphasis> and
     <emphasis>End value</emphasis> parameters to the minimum and maximum values
-    of the selected particle property. This ensures that no clamping occurs
+    of the selected input property. This ensures that no clamping occurs
     when values are mapped to a color. The <guibutton>Reverse range</guibutton> button
     swaps the <emphasis>Start value</emphasis> and <emphasis>End
     value</emphasis> parameters to effectively reverse the color scale.
@@ -66,10 +66,18 @@
     <title>Parameters</title>
 
     <variablelist>
+
+      <varlistentry>
+        <term>Operate on</term>
+        <listitem>
+          <para>Controls whether the modifier assigns colors to particles or bonds.</para>
+        </listitem>
+      </varlistentry>
+
       <varlistentry>
         <term>Property</term>
         <listitem>
-          <para>The input particle property to be used for color mapping.</para>
+          <para>The input particle or bond property to be used for color mapping.</para>
         </listitem>
       </varlistentry>
 
@@ -83,26 +91,25 @@
       <varlistentry>
         <term>Start &amp; end value</term>
         <listitem>
-          <para>Controls the source range for the linear mapping of particle values to the [0,1] unit interval.</para>
+          <para>Controls the source range for the linear mapping of property values to the [0,1] unit interval.</para>
         </listitem>
       </varlistentry>
       
       <varlistentry>
-        <term>Color only selected particles</term>
+        <term>Color only selected particles/bonds</term>
         <listitem>
-          <para>This option restricts the assignment of colors to selected particles. 
-          The existing colors of unselected particles will be preserved.</para>
+          <para>This option restricts the assignment of colors to selected particles or bonds. 
+          The existing colors of unselected particles or bonds will be preserved.</para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
-        <term>Keep particles selected</term>
+        <term>Keep selection</term>
         <listitem>
-          <para>OVITO uses a red color by default to highlight selected particles.
+          <para>OVITO uses a red color by default to highlight selected particles in the interactive viewports.
   Since this highlighting would mask the actual color assigned by this
   modifier, the modifier clears the current selection by default. 
-  If you need to preserve the selection for further use down the pipeline, you can suppress this behavior
-  by checking this option.</para>
+  If you need to preserve the current selection for further use down the pipeline, activate this option.</para>
         </listitem>
       </varlistentry>
 

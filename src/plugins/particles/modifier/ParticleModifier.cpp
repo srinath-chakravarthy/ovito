@@ -138,6 +138,15 @@ ParticlePropertyObject* ParticleModifier::inputStandardProperty(ParticleProperty
 }
 
 /******************************************************************************
+* Returns a standard bond property from the input state.
+******************************************************************************/
+BondPropertyObject* ParticleModifier::inputStandardBondProperty(BondProperty::Type which) const
+{
+	OVITO_ASSERT(which != BondProperty::UserProperty);
+	return BondPropertyObject::findInState(_input, which);
+}
+
+/******************************************************************************
 * Returns the property with the given identifier from the input object.
 ******************************************************************************/
 ParticlePropertyObject* ParticleModifier::expectCustomProperty(const QString& propertyName, int dataType, size_t componentCount) const
@@ -215,11 +224,12 @@ ParticlePropertyObject* ParticleModifier::outputStandardProperty(ParticlePropert
 			// Make a real copy of the property, which may be modified.
 			outputProperty = cloneHelper()->cloneObject(inputProperty, false);
 			_output.replaceObject(inputProperty, outputProperty);
-		}
-		// Create a new storage buffer to avoid copying the contents of the old one when
-		// a deep copy is made on the first write access.
-		if(!initializeMemory) {
-			outputProperty->setStorage(new ParticleProperty(outputProperty->size(), which, 0, false));
+
+			// Create a new storage buffer to avoid copying the contents of the old one when
+			// a deep copy is made on the first write access.
+			if(!initializeMemory) {
+				outputProperty->setStorage(new ParticleProperty(outputProperty->size(), which, 0, false));
+			}
 		}
 	}
 	else {
@@ -264,6 +274,78 @@ ParticlePropertyObject* ParticleModifier::outputStandardProperty(ParticlePropert
 	}
 
 	OVITO_ASSERT(outputProperty->size() == outputParticleCount());
+	return outputProperty;
+}
+
+/******************************************************************************
+* Creates a standard bond in the modifier's output.
+* If the bond property already exists in the input, its contents are copied to the
+* output property by this method.
+******************************************************************************/
+BondPropertyObject* ParticleModifier::outputStandardBondProperty(BondProperty::Type which, bool initializeMemory)
+{
+	// Check if property already exists in the input.
+	OORef<BondPropertyObject> inputProperty = inputStandardBondProperty(which);
+
+	// Check if property already exists in the output.
+	OORef<BondPropertyObject> outputProperty = BondPropertyObject::findInState(_output, which);
+
+	if(outputProperty) {
+		// Is the existing output property still a shallow copy of the input?
+		if(outputProperty == inputProperty) {
+			// Make a real copy of the property, which may be modified.
+			outputProperty = cloneHelper()->cloneObject(inputProperty, false);
+			_output.replaceObject(inputProperty, outputProperty);
+
+			// Create a new storage buffer to avoid copying the contents of the old one when
+			// a deep copy is made on the first write access.
+			if(!initializeMemory) {
+				outputProperty->setStorage(new BondProperty(outputProperty->size(), which, 0, false));
+			}
+		}
+	}
+	else {
+		// Create a new bond property in the output.
+		outputProperty = BondPropertyObject::createStandardProperty(dataset(), outputBondCount(), which, 0, initializeMemory);
+		_output.addObject(outputProperty);
+	}
+
+	OVITO_ASSERT(outputProperty->size() == outputBondCount());
+	return outputProperty;
+}
+
+/******************************************************************************
+* Creates a standard bond in the modifier's output and sets its content.
+******************************************************************************/
+BondPropertyObject* ParticleModifier::outputStandardBondProperty(BondProperty* storage)
+{
+	OVITO_CHECK_POINTER(storage);
+	OVITO_ASSERT(storage->type() != BondProperty::UserProperty);
+
+	// Check if property already exists in the input.
+	OORef<BondPropertyObject> inputProperty = inputStandardBondProperty(storage->type());
+
+	// Check if property already exists in the output.
+	OORef<BondPropertyObject> outputProperty = BondPropertyObject::findInState(_output, storage->type());
+
+	if(outputProperty) {
+		// Is the existing output property still a shallow copy of the input?
+		if(outputProperty == inputProperty) {
+			// Make a real copy of the property, which may be modified.
+			outputProperty = cloneHelper()->cloneObject(inputProperty, false);
+			_output.replaceObject(inputProperty, outputProperty);
+		}
+		OVITO_ASSERT(storage->size() == outputProperty->size());
+		OVITO_ASSERT(storage->stride() == outputProperty->stride());
+		outputProperty->setStorage(storage);
+	}
+	else {
+		// Create a new bond property in the output.
+		outputProperty = BondPropertyObject::createFromStorage(dataset(), storage);
+		_output.addObject(outputProperty);
+	}
+
+	OVITO_ASSERT(outputProperty->size() == outputBondCount());
 	return outputProperty;
 }
 
@@ -566,6 +648,46 @@ std::vector<Color> ParticleModifier::inputParticleColors(TimePoint time, TimeInt
 				// Query particle colors from display object.
 				particleDisplay->particleColors(colors,
 						inputStandardProperty(ParticleProperty::ColorProperty),
+						dynamic_object_cast<ParticleTypeProperty>(inputStandardProperty(ParticleProperty::ParticleTypeProperty)));
+
+				return colors;
+			}
+		}
+	}
+
+	std::fill(colors.begin(), colors.end(), Color(1,1,1));
+	return colors;
+}
+
+/******************************************************************************
+* Returns a vector with the input bond colors.
+******************************************************************************/
+std::vector<Color> ParticleModifier::inputBondColors(TimePoint time, TimeInterval& validityInterval)
+{
+	std::vector<Color> colors(inputBondCount());
+
+	// Obtain the bond display object.
+	BondsObject* bondObj = input().findObject<BondsObject>();
+	if(bondObj) {
+		for(DisplayObject* displayObj : bondObj->displayObjects()) {
+			if(BondsDisplay* bondsDisplay = dynamic_object_cast<BondsDisplay>(displayObj)) {
+
+				// Obtain the particle display object.
+				ParticleDisplay* particleDisplay = nullptr;
+				if(ParticlePropertyObject* positionProperty = inputStandardProperty(ParticleProperty::PositionProperty)) {
+					for(DisplayObject* displayObj : positionProperty->displayObjects()) {
+						particleDisplay = dynamic_object_cast<ParticleDisplay>(displayObj);
+						if(particleDisplay) break;
+					}
+				}
+
+				// Query bond colors from display object.
+				bondsDisplay->bondColors(colors,
+						inputParticleCount(), bondObj,
+						inputStandardBondProperty(BondProperty::ColorProperty),
+						dynamic_object_cast<BondTypeProperty>(inputStandardBondProperty(BondProperty::BondTypeProperty)),
+						inputStandardBondProperty(BondProperty::SelectionProperty),
+						particleDisplay, inputStandardProperty(ParticleProperty::ColorProperty),
 						dynamic_object_cast<ParticleTypeProperty>(inputStandardProperty(ParticleProperty::ParticleTypeProperty)));
 
 				return colors;

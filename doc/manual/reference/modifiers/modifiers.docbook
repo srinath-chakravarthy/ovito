@@ -111,7 +111,7 @@
             </row>
             <row>
               <entry><link linkend="particles.modifiers.color_coding">Color coding</link></entry>
-              <entry>Colors particles based on a certain particle property.</entry>
+              <entry>Colors particles or bonds based on a property.</entry>
             </row>
 
 		<!-- MODIFICATION -->
@@ -125,6 +125,10 @@
             <row>
               <entry><link linkend="particles.modifiers.create_bonds">Create bonds</link></entry>
               <entry>Creates bonds between particles.</entry>
+            </row>
+            <row>
+              <entry><link linkend="particles.modifiers.compute_bond_lengths">Compute bond lengths</link></entry>
+              <entry>Computes the length of each bond in the system.</entry>
             </row>
             <row>
               <entry><link linkend="particles.modifiers.compute_property">Compute property</link></entry>
@@ -213,6 +217,8 @@
   <xi:include href="particles/color_coding.docbook"/>
 
   <xi:include href="particles/common_neighbor_analysis.docbook"/>
+
+  <xi:include href="particles/compute_bond_lengths.docbook"/>
 
   <xi:include href="particles/compute_property.docbook"/>
 

@@ -68,6 +68,8 @@ SET(SourceFiles
 	util/ParticleInformationApplet.cpp
 	util/ParticlePickingHelper.cpp
 	util/ParticlePropertyParameterUI.cpp
+	util/BondPropertyComboBox.cpp
+	util/BondPropertyParameterUI.cpp
 	util/CreateTrajectoryApplet.cpp
 	util/ParticleSettingsPage.cpp
 	import/InputColumnMappingDialog.cpp

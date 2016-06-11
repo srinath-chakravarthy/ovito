@@ -744,6 +744,7 @@ BOOST_PYTHON_MODULE(Particles)
 					"``BondProperty.Type.BondType``                          :guilabel:`Bond Type`                               int       \n"
 					"``BondProperty.Type.Selection``                         :guilabel:`Selection`                               int       \n"
 					"``BondProperty.Type.Color``                             :guilabel:`Color`                                   float     \n"
+					"``BondProperty.Type.Length``                            :guilabel:`Length`                                  float     \n"
 					"======================================================= =================================================== ==========\n"
 					)
 			.add_property("dataType", &BondPropertyObject::dataType)
@@ -760,6 +761,7 @@ BOOST_PYTHON_MODULE(Particles)
 			.value("BondType", BondProperty::BondTypeProperty)
 			.value("Selection", BondProperty::SelectionProperty)
 			.value("Color", BondProperty::ColorProperty)
+			.value("Length", BondProperty::LengthProperty)
 		;
 	}
 

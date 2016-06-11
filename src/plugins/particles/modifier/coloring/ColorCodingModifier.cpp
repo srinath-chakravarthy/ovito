@@ -37,13 +37,17 @@ DEFINE_REFERENCE_FIELD(ColorCodingModifier, _endValueCtrl, "EndValue", Controlle
 DEFINE_REFERENCE_FIELD(ColorCodingModifier, _colorGradient, "ColorGradient", ColorCodingGradient);
 DEFINE_PROPERTY_FIELD(ColorCodingModifier, _colorOnlySelected, "SelectedOnly");
 DEFINE_PROPERTY_FIELD(ColorCodingModifier, _keepSelection, "KeepSelection");
-DEFINE_PROPERTY_FIELD(ColorCodingModifier, _sourceProperty, "SourceProperty");
+DEFINE_PROPERTY_FIELD(ColorCodingModifier, _sourceParticleProperty, "SourceProperty");
+DEFINE_PROPERTY_FIELD(ColorCodingModifier, _sourceBondProperty, "SourceBondProperty");
+DEFINE_PROPERTY_FIELD(ColorCodingModifier, _operateOnBonds, "OperateOnBonds");
 SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _startValueCtrl, "Start value");
 SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _endValueCtrl, "End value");
 SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _colorGradient, "Color gradient");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _colorOnlySelected, "Color only selected particles");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _keepSelection, "Keep particles selected");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _sourceProperty, "Source property");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _colorOnlySelected, "Color only selected particles/bonds");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _keepSelection, "Keep selection");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _sourceParticleProperty, "Source property");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _sourceBondProperty, "Source property");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _operateOnBonds, "Operate on bonds");
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingGradient, RefTarget);
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingHSVGradient, ColorCodingGradient);
@@ -58,14 +62,16 @@ DEFINE_PROPERTY_FIELD(ColorCodingImageGradient, _image, "Image");
 * Constructs the modifier object.
 ******************************************************************************/
 ColorCodingModifier::ColorCodingModifier(DataSet* dataset) : ParticleModifier(dataset),
-	_colorOnlySelected(false), _keepSelection(false)
+	_colorOnlySelected(false), _keepSelection(false), _operateOnBonds(false)
 {
 	INIT_PROPERTY_FIELD(ColorCodingModifier::_startValueCtrl);
 	INIT_PROPERTY_FIELD(ColorCodingModifier::_endValueCtrl);
 	INIT_PROPERTY_FIELD(ColorCodingModifier::_colorGradient);
 	INIT_PROPERTY_FIELD(ColorCodingModifier::_colorOnlySelected);
 	INIT_PROPERTY_FIELD(ColorCodingModifier::_keepSelection);
-	INIT_PROPERTY_FIELD(ColorCodingModifier::_sourceProperty);
+	INIT_PROPERTY_FIELD(ColorCodingModifier::_sourceParticleProperty);
+	INIT_PROPERTY_FIELD(ColorCodingModifier::_sourceBondProperty);
+	INIT_PROPERTY_FIELD(ColorCodingModifier::_operateOnBonds);
 
 	_colorGradient = new ColorCodingHSVGradient(dataset);
 	_startValueCtrl = ControllerManager::instance().createFloatController(dataset);
@@ -116,8 +122,8 @@ void ColorCodingModifier::initializeModifier(PipelineObject* pipeline, ModifierA
 {
 	ParticleModifier::initializeModifier(pipeline, modApp);
 
-	if(sourceProperty().isNull()) {
-		// Select the first available particle property from the input.
+	// Select the first available particle property from the input by default.
+	if(sourceParticleProperty().isNull()) {
 		PipelineFlowState input = getModifierInput(modApp);
 		ParticlePropertyReference bestProperty;
 		for(DataObject* o : input.objects()) {
@@ -127,7 +133,21 @@ void ColorCodingModifier::initializeModifier(PipelineObject* pipeline, ModifierA
 			}
 		}
 		if(!bestProperty.isNull())
-			setSourceProperty(bestProperty);
+			setSourceParticleProperty(bestProperty);
+	}
+
+	// Select the first available bond property from the input by default.
+	if(sourceBondProperty().isNull()) {
+		PipelineFlowState input = getModifierInput(modApp);
+		BondPropertyReference bestProperty;
+		for(DataObject* o : input.objects()) {
+			BondPropertyObject* property = dynamic_object_cast<BondPropertyObject>(o);
+			if(property && (property->dataType() == qMetaTypeId<int>() || property->dataType() == qMetaTypeId<FloatType>())) {
+				bestProperty = BondPropertyReference(property, (property->componentCount() > 1) ? 0 : -1);
+			}
+		}
+		if(!bestProperty.isNull())
+			setSourceBondProperty(bestProperty);
 	}
 
 	// Automatically adjust value range.
@@ -141,15 +161,58 @@ void ColorCodingModifier::initializeModifier(PipelineObject* pipeline, ModifierA
 PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval& validityInterval)
 {
 	// Get the source property.
-	if(sourceProperty().isNull())
-		throwException(tr("Select a particle property first."));
-	ParticlePropertyObject* property = sourceProperty().findInState(input());
-	if(!property)
-		throwException(tr("The particle property with the name '%1' does not exist.").arg(sourceProperty().name()));
-	if(sourceProperty().vectorComponent() >= (int)property->componentCount())
-		throwException(tr("The vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(sourceProperty().name()).arg(property->componentCount()));
+	PropertyBase* property;
+	PropertyBase* selProperty = nullptr;
+	PropertyBase* colorProperty;
+	DataObject* selectionPropertyObj = nullptr;
+	int vecComponent;
+	if(!operateOnBonds()) {
+		if(sourceParticleProperty().isNull())
+			throwException(tr("Select a particle property first."));
+		ParticlePropertyObject* propertyObj = sourceParticleProperty().findInState(input());
+		if(!propertyObj)
+			throwException(tr("The particle property with the name '%1' does not exist.").arg(sourceParticleProperty().name()));
+		property = propertyObj->storage();
+		if(sourceParticleProperty().vectorComponent() >= (int)property->componentCount())
+			throwException(tr("The vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(sourceParticleProperty().name()).arg(property->componentCount()));
+		vecComponent = std::max(0, sourceParticleProperty().vectorComponent());
 
-	int vecComponent = std::max(0, sourceProperty().vectorComponent());
+		// Get the particle selection property if enabled by the user.
+		if(colorOnlySelected()) {
+			if(ParticlePropertyObject* selPropertyObj = inputStandardProperty(ParticleProperty::SelectionProperty)) {
+				selProperty = selPropertyObj->storage();
+				selectionPropertyObj = selPropertyObj;
+			}
+		}
+
+		// Create the color output property.
+		ParticlePropertyObject* colorPropertyObj = outputStandardProperty(ParticleProperty::ColorProperty);
+		colorProperty = colorPropertyObj->modifiableStorage();
+	}
+	else {
+		if(sourceBondProperty().isNull())
+			throwException(tr("Select a bond property first."));
+		BondPropertyObject* propertyObj = sourceBondProperty().findInState(input());
+		if(!propertyObj)
+			throwException(tr("The bond property with the name '%1' does not exist.").arg(sourceBondProperty().name()));
+		property = propertyObj->storage();
+		if(sourceBondProperty().vectorComponent() >= (int)property->componentCount())
+			throwException(tr("The vector component is out of range. The bond property '%1' contains only %2 values per bond.").arg(sourceBondProperty().name()).arg(property->componentCount()));
+		vecComponent = std::max(0, sourceBondProperty().vectorComponent());
+
+		// Get the bond selection property if enabled by the user.
+		if(colorOnlySelected()) {
+			if(BondPropertyObject* selPropertyObj = inputStandardBondProperty(BondProperty::SelectionProperty)) {
+				selProperty = selPropertyObj->storage();
+				selectionPropertyObj = selPropertyObj;
+			}
+		}
+
+		// Create the color output property.
+		BondPropertyObject* colorPropertyObj = outputStandardBondProperty(BondProperty::ColorProperty);
+		colorProperty = colorPropertyObj->modifiableStorage();
+	}
+
 	int stride = property->stride() / property->dataTypeSize();
 
 	if(!_colorGradient)
@@ -161,21 +224,18 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 	if(_endValueCtrl) endValue = _endValueCtrl->getFloatValue(time, validityInterval);
 
 	// Get the particle selection property if enabled by the user.
-	ParticlePropertyObject* selProperty = nullptr;
 	const int* sel = nullptr;
 	std::vector<Color> existingColors;
-	if(colorOnlySelected()) {
-		selProperty = inputStandardProperty(ParticleProperty::SelectionProperty);
-		if(selProperty) {
-			sel = selProperty->constDataInt();
+	if(selProperty) {
+		sel = selProperty->constDataInt();
+		if(!operateOnBonds())
 			existingColors = inputParticleColors(time, validityInterval);
-		}
+		else
+			existingColors = inputBondColors(time, validityInterval);
+		OVITO_ASSERT(existingColors.size() == property->size());
 	}
 
-	// Create the color output property.
-	ParticlePropertyObject* colorProperty = outputStandardProperty(ParticleProperty::ColorProperty);
 	OVITO_ASSERT(colorProperty->size() == property->size());
-
 	Color* c_begin = colorProperty->dataColor();
 	Color* c_end = c_begin + colorProperty->size();
 	Color* c = c_begin;
@@ -194,8 +254,8 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 			FloatType t;
 			if(startValue == endValue) {
 				if((*v) == startValue) t = 0.5;
-				else if((*v) > startValue) t = 1.0;
-				else t = 0.0;
+				else if((*v) > startValue) t = 1;
+				else t = 0;
 			}
 			else t = ((*v) - startValue) / (endValue - startValue);
 
@@ -220,8 +280,8 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 			FloatType t;
 			if(startValue == endValue) {
 				if((*v) == startValue) t = 0.5;
-				else if((*v) > startValue) t = 1.0;
-				else t = 0.0;
+				else if((*v) > startValue) t = 1;
+				else t = 0;
 			}
 			else t = ((*v) - startValue) / (endValue - startValue);
 
@@ -233,13 +293,18 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 		}
 	}
 	else
-		throwException(tr("The particle property '%1' has an invalid or non-numeric data type.").arg(property->name()));
+		throwException(tr("The property '%1' has an invalid or non-numeric data type.").arg(property->name()));
 
-	// Clear particle selection if requested.
-	if(selProperty && !keepSelection())
-		output().removeObject(selProperty);
+	// Clear selection if requested.
+	if(selectionPropertyObj && !keepSelection()) {
+		output().removeObject(selectionPropertyObj);
+	}
 
-	colorProperty->changed();
+	if(!operateOnBonds())
+		outputStandardProperty(ParticleProperty::ColorProperty)->changed();
+	else
+		outputStandardBondProperty(BondProperty::ColorProperty)->changed();
+
 	return PipelineStatus::Success;
 }
 
@@ -249,17 +314,31 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 ******************************************************************************/
 bool ColorCodingModifier::adjustRange()
 {
-	// Determine the minimum and maximum values of the selected particle property.
+	// Determine the minimum and maximum values of the selected property.
 
-	// Get the value data channel from the input object.
+	// Get the input property.
 	PipelineFlowState inputState = getModifierInput();
-	ParticlePropertyObject* property = sourceProperty().findInState(inputState);
-	if(!property)
-		return false;
+	PropertyBase* property;
+	int vecComponent;
+	if(!operateOnBonds()) {
+		ParticlePropertyObject* propertyObj = sourceParticleProperty().findInState(inputState);
+		if(!propertyObj)
+			return false;
+		property = propertyObj->storage();
+		if(sourceParticleProperty().vectorComponent() >= (int)property->componentCount())
+			return false;
+		vecComponent = std::max(0, sourceParticleProperty().vectorComponent());
+	}
+	else {
+		BondPropertyObject* propertyObj = sourceBondProperty().findInState(inputState);
+		if(!propertyObj)
+			return false;
+		property = propertyObj->storage();
+		if(sourceBondProperty().vectorComponent() >= (int)property->componentCount())
+			return false;
+		vecComponent = std::max(0, sourceBondProperty().vectorComponent());
+	}
 
-	if(sourceProperty().vectorComponent() >= (int)property->componentCount())
-		return false;
-	int vecComponent = std::max(0, sourceProperty().vectorComponent());
 	int stride = property->stride() / property->dataTypeSize();
 
 	// Iterate over all atoms.
@@ -281,7 +360,7 @@ bool ColorCodingModifier::adjustRange()
 			if(*v < minValue) minValue = *v;
 		}
 	}
-	if(minValue == +FLOATTYPE_MAX)
+	if(minValue == FLOATTYPE_MAX)
 		return false;
 
 	if(startValueController())
@@ -311,10 +390,11 @@ void ColorCodingModifier::loadFromStream(ObjectLoadStream& stream)
 	ParticleModifier::loadFromStream(stream);
 
 	int version = stream.expectChunkRange(0, 0x02);
+	// This is for backward compatibility with old OVITO versions.
 	if(version == 0x01) {
 		ParticlePropertyReference pref;
 		stream >> pref;
-		setSourceProperty(pref);
+		setSourceParticleProperty(pref);
 	}
 	stream.closeChunk();
 }

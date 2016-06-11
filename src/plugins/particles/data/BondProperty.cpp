@@ -46,6 +46,11 @@ BondProperty::BondProperty(size_t bondsCount, Type type, size_t componentCount, 
 		_componentCount = 1;
 		_stride = sizeof(int);
 		break;
+	case LengthProperty:
+		_dataType = qMetaTypeId<FloatType>();
+		_componentCount = 1;
+		_stride = sizeof(FloatType);
+		break;
 	case ColorProperty:
 		_dataType = qMetaTypeId<FloatType>();
 		_componentCount = 3;
@@ -100,6 +105,7 @@ QString BondProperty::standardPropertyName(Type which)
 	case BondTypeProperty: return BondPropertyObject::tr("Bond Type");
 	case SelectionProperty: return BondPropertyObject::tr("Selection");
 	case ColorProperty: return BondPropertyObject::tr("Color");
+	case LengthProperty: return BondPropertyObject::tr("Length");
 	default:
 		OVITO_ASSERT_MSG(false, "BondProperty::standardPropertyName", "Invalid standard bond property type");
 		throw Exception(BondPropertyObject::tr("This is not a valid standard bond property type: %1").arg(which));
@@ -129,6 +135,7 @@ int BondProperty::standardPropertyDataType(Type which)
 	case SelectionProperty:
 		return qMetaTypeId<int>();
 	case ColorProperty:
+	case LengthProperty:
 		return qMetaTypeId<FloatType>();
 	default:
 		OVITO_ASSERT_MSG(false, "BondProperty::standardPropertyDataType", "Invalid standard bond property type");
@@ -146,6 +153,7 @@ QMap<QString, BondProperty::Type> BondProperty::standardPropertyList()
 		table.insert(standardPropertyName(BondTypeProperty), BondTypeProperty);
 		table.insert(standardPropertyName(SelectionProperty), SelectionProperty);
 		table.insert(standardPropertyName(ColorProperty), ColorProperty);
+		table.insert(standardPropertyName(LengthProperty), LengthProperty);
 	}
 	return table;
 }
@@ -158,6 +166,7 @@ size_t BondProperty::standardPropertyComponentCount(Type which)
 	switch(which) {
 	case BondTypeProperty:
 	case SelectionProperty:
+	case LengthProperty:
 		return 1;
 	case ColorProperty:
 		return 3;
@@ -178,6 +187,7 @@ QStringList BondProperty::standardPropertyComponentNames(Type which, size_t comp
 	switch(which) {
 	case BondTypeProperty:
 	case SelectionProperty:
+	case LengthProperty:
 		return emptyList;
 	case ColorProperty:
 		return rgbList;

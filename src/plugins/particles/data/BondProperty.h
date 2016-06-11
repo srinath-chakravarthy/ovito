@@ -39,7 +39,8 @@ public:
 		UserProperty = 0,	//< This is reserved for user-defined properties.
 		BondTypeProperty,
 		SelectionProperty,
-		ColorProperty
+		ColorProperty,
+		LengthProperty
 	};
 	Q_ENUMS(Type);
 

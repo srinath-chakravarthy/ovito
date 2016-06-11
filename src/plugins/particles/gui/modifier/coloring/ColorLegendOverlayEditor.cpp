@@ -78,7 +78,10 @@ void ColorLegendOverlayEditor::createUI(const RolloutInsertionParameters& rollou
 						if(PipelineObject* pipeline = dynamic_object_cast<PipelineObject>(obj)) {
 							for(ModifierApplication* modApp : pipeline->modifierApplications()) {
 								if(ColorCodingModifier* mod = dynamic_object_cast<ColorCodingModifier>(modApp->modifier())) {
-									addItem(mod->sourceProperty().nameWithComponent(), QVariant::fromValue(mod));
+									if(!mod->operateOnBonds())
+										addItem(mod->sourceParticleProperty().nameWithComponent(), QVariant::fromValue(mod));
+									else
+										addItem(mod->sourceBondProperty().nameWithComponent(), QVariant::fromValue(mod));
 								}
 							}
 							obj = pipeline->sourceObject();
@@ -102,10 +105,15 @@ void ColorLegendOverlayEditor::createUI(const RolloutInsertionParameters& rollou
 			[modifierComboBox](const QVariant& value) {
 				modifierComboBox->clear();
 				ColorCodingModifier* mod = dynamic_object_cast<ColorCodingModifier>(value.value<ColorCodingModifier*>());
-				if(mod)
-					modifierComboBox->addItem(mod->sourceProperty().nameWithComponent(), QVariant::fromValue(mod));
-				else
+				if(mod) {
+					if(!mod->operateOnBonds())
+						modifierComboBox->addItem(mod->sourceParticleProperty().nameWithComponent(), QVariant::fromValue(mod));
+					else
+						modifierComboBox->addItem(mod->sourceBondProperty().nameWithComponent(), QVariant::fromValue(mod));
+				}
+				else {
 					modifierComboBox->addItem(tr("<none>"));
+				}
 				modifierComboBox->setCurrentIndex(0);
 			},
 			[modifierComboBox]() {

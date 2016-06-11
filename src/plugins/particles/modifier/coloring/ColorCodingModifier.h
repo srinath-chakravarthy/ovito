@@ -24,6 +24,7 @@
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
+#include <plugins/particles/objects/BondPropertyObject.h>
 #include <core/animation/controller/Controller.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/rendering/ImagePrimitive.h>
@@ -223,7 +224,7 @@ private:
 
 
 /**
- * \brief This modifier assigns a colors to the particles based on the value of a particle property.
+ * \brief This modifier assigns a colors to the particles or bonds based on the value of a property.
  */
 class OVITO_PARTICLES_EXPORT ColorCodingModifier : public ParticleModifier
 {
@@ -240,10 +241,16 @@ public:
 	virtual TimeInterval modifierValidity(TimePoint time) override;
 
 	/// Sets the source particle property that is used for coloring of particles.
-	void setSourceProperty(const ParticlePropertyReference& prop) { _sourceProperty = prop; }
+	void setSourceParticleProperty(const ParticlePropertyReference& prop) { _sourceParticleProperty = prop; }
 
 	/// Returns the source particle property that is used for coloring of particles.
-	const ParticlePropertyReference& sourceProperty() const { return _sourceProperty; }
+	const ParticlePropertyReference& sourceParticleProperty() const { return _sourceParticleProperty; }
+
+	/// Sets the source bond property that is used for coloring of bonds.
+	void setSourceBondProperty(const BondPropertyReference& prop) { _sourceBondProperty = prop; }
+
+	/// Returns the source bond property that is used for coloring of bonds.
+	const BondPropertyReference& sourceBondProperty() const { return _sourceBondProperty; }
 
 	/// Returns the range start value.
 	FloatType startValue() const { return _startValueCtrl ? _startValueCtrl->currentFloatValue() : 0; }
@@ -287,6 +294,12 @@ public:
 	/// Sets whether the input particle selection should be preserved by the modifier.
 	void setKeepSelection(bool keepSel) { _keepSelection = keepSel; }
 
+	/// Returns whether the modifier operates on bonds instead of particles.
+	bool operateOnBonds() const { return _operateOnBonds; }
+
+	/// Sets whether the modifier operates on bonds instead of particles.
+	void setOperateOnBonds(bool bondMode) { _operateOnBonds = bondMode; }
+
 public Q_SLOTS:
 
 	/// Sets the start and end value to the minimum and maximum value in the selected data channel.
@@ -316,7 +329,10 @@ protected:
 	ReferenceField<ColorCodingGradient> _colorGradient;
 
 	/// The particle type property that is used as source for the coloring.
-	PropertyField<ParticlePropertyReference> _sourceProperty;
+	PropertyField<ParticlePropertyReference> _sourceParticleProperty;
+
+	/// The bond type property that is used as source for the coloring.
+	PropertyField<BondPropertyReference> _sourceBondProperty;
 
 	/// Controls whether the modifier assigns a color only to selected particles.
 	PropertyField<bool> _colorOnlySelected;
@@ -324,6 +340,9 @@ protected:
 	/// Controls whether the input particle selection is preserved.
 	/// If false, the selection is cleared by the modifier.
 	PropertyField<bool> _keepSelection;
+
+	/// Controls whether the modifier operates on bonds instead of particles.
+	PropertyField<bool> _operateOnBonds;
 
 private:
 
@@ -338,7 +357,9 @@ private:
 	DECLARE_REFERENCE_FIELD(_colorGradient);
 	DECLARE_PROPERTY_FIELD(_colorOnlySelected);
 	DECLARE_PROPERTY_FIELD(_keepSelection);
-	DECLARE_PROPERTY_FIELD(_sourceProperty);
+	DECLARE_PROPERTY_FIELD(_sourceParticleProperty);
+	DECLARE_PROPERTY_FIELD(_sourceBondProperty);
+	DECLARE_PROPERTY_FIELD(_operateOnBonds);
 };
 
 OVITO_END_INLINE_NAMESPACE

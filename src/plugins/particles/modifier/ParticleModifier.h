@@ -28,6 +28,7 @@
 #include <core/reference/CloneHelper.h>
 #include <core/reference/RefTargetListener.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
+#include <plugins/particles/objects/BondPropertyObject.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers)
@@ -56,6 +57,10 @@ public:
 	/// Returns a standard particle property from the input state.
 	/// The returned property may be NULL if it does not exist.
 	ParticlePropertyObject* inputStandardProperty(ParticleProperty::Type which) const;
+
+	/// Returns a standard bond property from the input state.
+	/// The returned property may be NULL if it does not exist.
+	BondPropertyObject* inputStandardBondProperty(BondProperty::Type which) const;
 
 	/// Returns the given standard property from the input object.
 	/// The returned property may not be modified. If the input object does
@@ -93,6 +98,14 @@ public:
 	/// Creates a custom particle property in the modifier's output and sets its content.
 	ParticlePropertyObject* outputCustomProperty(ParticleProperty* storage);
 
+	/// Creates a standard bond property in the modifier's output.
+	/// If the bond property already exists in the input, its contents are copied to the
+	/// output property by this method.
+	BondPropertyObject* outputStandardBondProperty(BondProperty::Type which, bool initializeMemory = false);
+
+	/// Creates a standard bond property in the modifier's output and sets its content.
+	BondPropertyObject* outputStandardBondProperty(BondProperty* storage);
+
 	/// Returns the modifier's output simulation cell.
 	SimulationCellObject* outputSimulationCell();
 
@@ -116,6 +129,9 @@ public:
 
 	/// Returns a vector with the input particles radii.
 	std::vector<FloatType> inputParticleRadii(TimePoint time, TimeInterval& validityInterval);
+
+	/// Returns a vector with the input bond colors.
+	std::vector<Color> inputBondColors(TimePoint time, TimeInterval& validityInterval);
 
 	/// Deletes the particles given by the bit-mask.
 	/// Returns the number of remaining particles.

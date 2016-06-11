@@ -45,6 +45,9 @@ PipelineStatus WrapPeriodicImagesModifier::modifyParticles(TimePoint time, TimeI
 	if(!pbc[0] && !pbc[1] && !pbc[2])
 		return PipelineStatus(PipelineStatus::Warning, tr("The simulation cell has no periodic boundary conditions."));
 
+	if(expectSimulationCell()->is2D())
+		 throwException(tr("In the current program version this modifier only supports three-dimensional simulation cells."));
+
 	AffineTransformation simCell = expectSimulationCell()->cellMatrix();
 	if(std::abs(simCell.determinant()) < FLOATTYPE_EPSILON)
 		 throwException(tr("The simulation cell is degenerated."));

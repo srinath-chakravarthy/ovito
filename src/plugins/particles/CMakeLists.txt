@@ -78,6 +78,7 @@ SET(SourceFiles
 	modifier/selection/ClearSelectionModifier.cpp
 	modifier/properties/ComputePropertyModifier.cpp
 	modifier/properties/FreezePropertyModifier.cpp
+	modifier/properties/ComputeBondLengthsModifier.cpp
 	import/ParticleImporter.cpp
 	import/ParticleFrameLoader.cpp
 	import/InputColumnMapping.cpp
