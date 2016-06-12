@@ -106,7 +106,7 @@ PipelineFlowState PipelineObject::evaluatePipeline(TimePoint time, ModifierAppli
 
 	// Flag that indicates whether the output of the pipeline is considered incomplete.
 	bool isPending = (flowState.status().type() == PipelineStatus::Pending);
-
+	
     // Apply the modifiers one by one.
 	for(int stackIndex = fromHereIndex; stackIndex < upToHereIndex; stackIndex++) {
 
@@ -131,7 +131,7 @@ PipelineFlowState PipelineObject::evaluatePipeline(TimePoint time, ModifierAppli
 			_cachedState.updateRevisionNumbers();
 			_cachedIndex = stackIndex;
 		}
-
+		
 		// Apply modifier.
 		PipelineStatus modifierStatus = mod->modifyObject(time, app, flowState);
 		if(modifierStatus.type() == PipelineStatus::Pending)
@@ -234,6 +234,7 @@ bool PipelineObject::referenceEvent(RefTarget* source, ReferenceEvent* event)
 				modifierChanged(index);
 				// We also consider this a change of the modification pipeline itself.
 				notifyDependents(ReferenceEvent::TargetChanged);
+				notifyDependents(ReferenceEvent::PendingStateChanged);
 			}
 		}
 	}
@@ -258,6 +259,8 @@ void PipelineObject::referenceInserted(const PropertyFieldDescriptor& field, Ref
 
 		// Inform all subsequent modifiers that their input has changed.
 		modifierChanged(listIndex);
+		// A change to the pipeline may potentially result in a change of the pending status.
+		notifyDependents(ReferenceEvent::PendingStateChanged);
 	}
 	DataObject::referenceInserted(field, newTarget, listIndex);
 }
@@ -272,6 +275,8 @@ void PipelineObject::referenceRemoved(const PropertyFieldDescriptor& field, RefT
 		// If a modifier is being removed from the pipeline, then all
 		// modifiers following it need to be informed.
 		modifierChanged(listIndex - 1);
+		// A change to the pipeline may potentially result in a change of the pending status.
+		notifyDependents(ReferenceEvent::PendingStateChanged);
 	}
 	DataObject::referenceRemoved(field, oldTarget, listIndex);
 }

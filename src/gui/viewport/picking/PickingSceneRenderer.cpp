@@ -109,31 +109,30 @@ bool PickingSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRendering
 		glReadPixels(0, 0, size.width(), size.height(), GL_RGBA, GL_UNSIGNED_BYTE, _image.bits());
 		_image = _image.rgbSwapped();
 	}
-	OVITO_REPORT_OPENGL_ERRORS();
 
 	// Also acquire OpenGL depth buffer data.
 	// The depth information is used to compute the XYZ coordinate of the point under the mouse cursor.
 	_depthBufferBits = glformat().depthBufferSize();
 	if(_depthBufferBits == 16) {
 		_depthBuffer.reset(new quint8[size.width() * size.height() * sizeof(GLushort)]);
-		OVITO_CHECK_OPENGL(glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, _depthBuffer.get()));
+		glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, _depthBuffer.get());
 	}
 	else if(_depthBufferBits == 24) {
 		_depthBuffer.reset(new quint8[size.width() * size.height() * sizeof(GLuint)]);
 		while(glGetError() != GL_NO_ERROR);
 		glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, _depthBuffer.get());
 		if(glGetError() != GL_NO_ERROR) {
-			OVITO_CHECK_OPENGL(glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_COMPONENT, GL_FLOAT, _depthBuffer.get()));
+			glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_COMPONENT, GL_FLOAT, _depthBuffer.get());
 			_depthBufferBits = 0;
 		}
 	}
 	else if(_depthBufferBits == 32) {
 		_depthBuffer.reset(new quint8[size.width() * size.height() * sizeof(GLuint)]);
-		OVITO_CHECK_OPENGL(glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, _depthBuffer.get()));
+		glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, _depthBuffer.get());
 	}
 	else {
 		_depthBuffer.reset(new quint8[size.width() * size.height() * sizeof(GLfloat)]);
-		OVITO_CHECK_OPENGL(glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_COMPONENT, GL_FLOAT, _depthBuffer.get()));
+		glReadPixels(0, 0, size.width(), size.height(), GL_DEPTH_COMPONENT, GL_FLOAT, _depthBuffer.get());
 		_depthBufferBits = 0;
 	}
 
@@ -293,9 +292,9 @@ Point3 PickingSceneRenderer::worldPositionFromLocation(const QPoint& pos) const
 	FloatType zvalue = depthAtPixel(pos);
 	if(zvalue != 0) {
 		Point3 ndc(
-				(FloatType)pos.x() / _image.width() * 2.0 - 1.0,
-				1.0 - (FloatType)pos.y() / _image.height() * 2.0,
-				zvalue * 2.0 - 1.0);
+				(FloatType)pos.x() / _image.width() * FloatType(2) - FloatType(1),
+				1.0 - (FloatType)pos.y() / _image.height() * FloatType(2),
+				zvalue * FloatType(2) - FloatType(1));
 		Point3 worldPos = projParams().inverseViewMatrix * (projParams().inverseProjectionMatrix * ndc);
 		return worldPos;
 	}

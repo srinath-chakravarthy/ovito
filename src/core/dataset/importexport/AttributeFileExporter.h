@@ -31,7 +31,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO)
 /**
  * \brief File exporter class that writes out scalar attributes computed by the data pipeline to a text file.
  */
-class AttributeFileExporter : public FileExporter
+class OVITO_CORE_EXPORT AttributeFileExporter : public FileExporter
 {
 public:
 

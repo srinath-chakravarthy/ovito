@@ -108,6 +108,8 @@ SET(SourceFiles
 # Include video encoder interface code.
 IF(LIBAV_FOUND)
 	LIST(APPEND SourceFiles utilities/io/video/VideoEncoder.cpp)
+ELSE()
+	MESSAGE("LibAV video encoding library not found. Will build OVITO without video support.")
 ENDIF()
 
 # Compile resources.

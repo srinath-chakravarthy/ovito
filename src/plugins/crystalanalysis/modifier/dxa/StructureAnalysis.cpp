@@ -204,7 +204,7 @@ void StructureAnalysis::initializeListOfStructures()
 	_coordinationStructures[COORD_BCC].latticeVectors.assign(std::begin(bccVec), std::end(bccVec));
 	_latticeStructures[LATTICE_BCC].latticeVectors.assign(std::begin(bccVec), std::end(bccVec));
 	_latticeStructures[LATTICE_BCC].coordStructure = &_coordinationStructures[COORD_BCC];
-	_latticeStructures[LATTICE_BCC].primitiveCell.column(0) = Vector3(0.1,0.0,0.0);
+	_latticeStructures[LATTICE_BCC].primitiveCell.column(0) = Vector3(1.0,0.0,0.0);
 	_latticeStructures[LATTICE_BCC].primitiveCell.column(1) = Vector3(0.0,1.0,0.0);
 	_latticeStructures[LATTICE_BCC].primitiveCell.column(2) = Vector3(0.5,0.5,0.5);
 	_latticeStructures[LATTICE_BCC].maxNeighbors = 14;

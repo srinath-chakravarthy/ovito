@@ -1,5 +1,5 @@
 **************************************************************************
-Compiler: Microsoft Visual C++ 2013
+Compiler: Microsoft Visual C++ 2015
 **************************************************************************
 
 Typical build directory layout:
@@ -24,9 +24,9 @@ nmake install
 **************************************************************************
 Qt
 **************************************************************************
-Install components (Qt 5.4.1) under C:\Qt\ : 
-   msvc2013 32-bit OpenGL
-   msvc2013 64-bit OpenGL
+Install components (Qt 5.6) under C:\Qt\ : 
+   msvc2015 32-bit
+   msvc2015 64-bit
 
 **************************************************************************
 Python 3.x
@@ -43,13 +43,13 @@ nmake
 nmake install
 
 ----- Install PyQt5 ----
-..\XXbit\Python\python.exe configure.py ^
+..\python\python.exe configure.py ^
    --concatenate ^
    --concatenate-split 10 ^
    --confirm-license ^
    --no-designer-plugin ^
    --no-qml-plugin ^
-   --sip=..\XXbit\Python\sip.exe ^
+   --sip=..\python\sip.exe ^
    --enable QtCore ^
    --enable QtGui ^
    --enable QtWidgets ^
@@ -60,21 +60,30 @@ nmake
 nmake install
 
 **************************************************************************
-Boost libraries (release 1.57):
+Boost libraries (release 1.61):
 **************************************************************************
 
 --- Create file user-config.jam:
 using python 
-	: 3.4
-	: ..\\32bit\\Python\\python.exe 
-	: ..\\32bit\\Python\\include
-	: ..\\32bit\\Python\\libs ;
+	: 3.5
+	: ..\\64bit\\Python\\python.exe 
+	: ..\\64bit\\Python\\include
+	: ..\\64bit\\Python\\libs ;
 
+--- Create file user-config-debug.jam:
+using python 
+	: 3.5
+	: ..\\64bit\\Python\\python_d.exe 
+	: ..\\64bit\\Python\\include
+	: ..\\64bit\\Python\\libs
+	: <python-debugging>on ;
+	
 --- Compile Boost:
 cd 
 bootstrap.bat msvc
 b2 --prefix=../32bit/boost --user-config=../32bit/user-config.jam address-model=32 link=shared threading=multi runtime-link=shared toolset=msvc --ignore-mpi --with-system --with-thread --with-python install
-b2 --prefix=../64bit/boost --user-config=../64bit/user-config.jam address-model=64 link=shared threading=multi runtime-link=shared toolset=msvc --ignore-mpi --with-system --with-thread --with-python install
+b2 --prefix=../64bit/boost --user-config=../64bit/user-config.jam address-model=64 link=shared threading=multi runtime-link=shared toolset=msvc --ignore-mpi --with-system --with-thread --with-python python-debugging=off install
+b2 --prefix=../64bit/boost --user-config=../64bit/user-config-debug.jam address-model=64 link=shared threading=multi runtime-link=shared toolset=msvc --ignore-mpi --with-system --with-thread --with-python python-debugging=on variant=debug install
 
 **************************************************************************
 HDF5 (version 1.8.x)
@@ -94,10 +103,11 @@ cmake -G "NMake Makefiles" ^
 nmake install
 
 **************************************************************************
-NetCDF (version 4.3.x)
+NetCDF (version 4.4.x)
 **************************************************************************
 mkdir netcdf
 cd netcdf
+set HDF5_DIR=%cd:\=/%/../hdf5_install/cmake
 cmake -G "NMake Makefiles" ^
    -DCMAKE_BUILD_TYPE=Release ^
    -DCMAKE_INSTALL_PREFIX=../netcdf_install ^
@@ -113,7 +123,7 @@ cmake -G "NMake Makefiles" ^
    -DHDF5_HL_LIB=%cd:\=/%/../hdf5_install/lib/hdf5_hl.lib ^
    -DZLIB_INCLUDE_DIR=%cd:\=/%/../zlib_install/include ^
    -DZLIB_LIBRARY=%cd:\=/%/../zlib_install/lib/zlib.lib ^
-   ../../netcdf-4.3.2
+   ../../netcdf-4.4.0
 
 nmake install
    
@@ -122,19 +132,22 @@ QScintilla2
 **************************************************************************
 mkdir qscintilla
 cd qscintilla
-qmake ..\..\QScintilla-gpl-2.9\Qt4Qt5\qscintilla.pro
+qmake ..\..\QScintilla-gpl-2.9.2\Qt4Qt5\qscintilla.pro
 nmake
 
 **************************************************************************
 libav
 **************************************************************************
-- Install MSYS (MinGW)
-- Download YASM (32 and 64 bit)
+- Install MSYS2
+- Execute msys2_shell.bat console from MSVC command prompt.
+- Install YASM (MSYS2: "pacman -S yasm")
+- Install make (MSYS2: "pacman -S make")
 git clone git://git.libav.org/libav.git libav
-cd 32bit
+cd 64bit
 mkdir libav
 cd libav
-export PATH="$PWD/../yasm:$PATH"
+export LIB="$LIB;C:/Users/stuko/ovito/64bit/zlib_install/lib"
+export INCLUDE="$INCLUDE;C:/Users/stuko/ovito/64bit/zlib_install/include"
 ../../libav/configure \
    --toolchain=msvc \
    --disable-programs \
@@ -164,9 +177,9 @@ cmake -G "NMake Makefiles" ^
    -DZLIB_LIBRARY=%cd:\=/%/../zlib_install/lib/zlib.lib ^
    -Dnetcdf_DIR=%cd:\=/%/../netcdf_install/share/cmake ^
    -DBOOST_INCLUDEDIR=%cd:\=/%/../boost/include ^
-   -DQSCINTILLA_INCLUDE_DIR=%cd:\=/%/../../QScintilla-gpl-2.9\Qt4Qt5 ^
+   -DQSCINTILLA_INCLUDE_DIR=%cd:\=/%/../../QScintilla-gpl-2.9.2\Qt4Qt5 ^
    -DQSCINTILLA_LIBRARY=%cd:\=/%/../qscintilla/release/qscintilla2.lib ^
-   -DPYTHON_LIBRARY=%cd:\=/%/../Python/libs/python34.lib ^
+   -DPYTHON_LIBRARY=%cd:\=/%/../Python/libs/python35.lib ^
    -DPYTHON_INCLUDE_DIR=%cd:\=/%/../Python/include ^
    -DXSLT_PROCESSOR=../../libxslt-1.1.26.win32/bin/xsltproc.exe ^
    -DSPHINX_PROCESSOR_PATH=%cd:\=/%/../Python/Scripts ^

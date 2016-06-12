@@ -621,7 +621,6 @@ void ViewportWindow::renderNow()
 		return;
 	}
 #endif
-	OVITO_REPORT_OPENGL_ERRORS();
 
 	QSurfaceFormat format = context()->format();
 	// OpenGL in a VirtualBox machine Windows guest reports "2.1 Chromium 1.9" as version string, which is
@@ -660,8 +659,6 @@ void ViewportWindow::renderNow()
 		}
 		return;
 	}
-
-	OVITO_REPORT_OPENGL_ERRORS();
 
 	// Invalidate picking buffer every time the visible contents of the viewport change.
 	_pickingRenderer->reset();
@@ -719,8 +716,6 @@ void ViewportWindow::renderNow()
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
 	context()->swapBuffers(this);
 #endif
-
-	OVITO_REPORT_OPENGL_ERRORS();
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
 	// Restore old GL context.

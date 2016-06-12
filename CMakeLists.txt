@@ -33,7 +33,7 @@ ENDIF()
 IF(WIN32)
 	CMAKE_POLICY(SET CMP0020 NEW) 	# Automatically link to qtmain.lib on Windows.
 
-	IF("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+	IF(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
 		IF(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "18")
 			MESSAGE(FATAL_ERROR "OVITO requires Visual C++ 2013 or newer.")
 		ENDIF()
@@ -97,6 +97,8 @@ IF(MSVC)
 	ADD_COMPILE_OPTIONS("/wd4996")
 	# Suppress warning on conversion from size_t to int, possible loss of data.
 	ADD_COMPILE_OPTIONS("/wd4267")
+	# Compiling Boost.Python template code leads to large object files.
+	ADD_COMPILE_OPTIONS("/bigobj")	
 ENDIF()
 
 IF(UNIX)

@@ -24,7 +24,7 @@ FIND_PACKAGE(PythonLibs REQUIRED)
 
 IF(MSVC)
 	# Precompiled headers require more compiler memory.
-	ADD_DEFINITIONS(-Zm150)
+	ADD_COMPILE_OPTIONS(-Zm150)
 ENDIF()
 
 SET(SourceFiles
@@ -51,6 +51,15 @@ OVITO_STANDARD_PLUGIN(PyScript
 
 # Add Python include directory.
 TARGET_INCLUDE_DIRECTORIES(PyScript PUBLIC ${PYTHON_INCLUDE_PATH})
+
+IF(MSVC)
+	# Boost.Python temporarily disables the _DEBUG macro definition by default when including the Python.h header.
+	# That is something we don't want, because then the release version of the Python library is
+	# automatically linked and Python debugging gets disabled.
+	IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+		TARGET_COMPILE_DEFINITIONS(PyScript PUBLIC BOOST_DEBUG_PYTHON BOOST_LINKING_PYTHON)
+	ENDIF()
+ENDIF()
 
 # Speed up compilation by using precompiled headers.
 ADD_PRECOMPILED_HEADER(PyScript plugins/pyscript/PyScript.h)
@@ -159,6 +168,9 @@ ELSEIF(UNIX)
 ELSEIF(WIN32)
 	# Install standard Python packages. 
 	LIST(GET PYTHON_LIBRARIES 0 PYTHON_FIRST_LIBRARY)
+	IF(PYTHON_FIRST_LIBRARY STREQUAL "optimized")
+		LIST(GET PYTHON_LIBRARIES 1 PYTHON_FIRST_LIBRARY)
+	ENDIF()
 	GET_FILENAME_COMPONENT(PYTHON_LIBRARY_PATH "${PYTHON_FIRST_LIBRARY}" PATH)
 	GET_FILENAME_COMPONENT(PYTHON_LIBRARY_NAME "${PYTHON_FIRST_LIBRARY}" NAME_WE)
 	INSTALL(DIRECTORY "${PYTHON_LIBRARY_PATH}/../Lib" 

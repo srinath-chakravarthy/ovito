@@ -41,7 +41,7 @@ void TaskManager::addTaskInternal(std::shared_ptr<FutureInterfaceBase> futureInt
 	FutureWatcher* watcher = new FutureWatcher(this);
 	connect(watcher, &FutureWatcher::started, this, &TaskManager::taskStartedInternal);
 	connect(watcher, &FutureWatcher::finished, this, &TaskManager::taskFinishedInternal);
-
+	
 	// Activate the watcher.
 	watcher->setFutureInterface(futureInterface);
 }
@@ -63,11 +63,13 @@ void TaskManager::taskStartedInternal()
 void TaskManager::taskFinishedInternal()
 {
 	FutureWatcher* watcher = static_cast<FutureWatcher*>(sender());
+	
 	OVITO_ASSERT(std::find(_runningTaskStack.begin(), _runningTaskStack.end(), watcher) != _runningTaskStack.end());
 	_runningTaskStack.erase(std::find(_runningTaskStack.begin(), _runningTaskStack.end(), watcher));
-	watcher->deleteLater();
 
 	Q_EMIT taskFinished(watcher);
+
+	watcher->deleteLater();	
 }
 
 /******************************************************************************

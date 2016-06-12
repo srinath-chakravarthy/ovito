@@ -166,7 +166,7 @@ void SceneRenderer::renderNodeTrajectory(SceneNode* node)
 			std::shared_ptr<LinePrimitive> trajLine = createLinePrimitive();
 			trajLine->setVertexCount(lineVertices.size());
 			trajLine->setVertexPositions(lineVertices.data());
-			trajLine->setLineColor(ColorA(1.0, 0.8, 0.4));
+			trajLine->setLineColor(ColorA(1.0f, 0.8f, 0.4f));
 			trajLine->render(this);
 		}
 	}

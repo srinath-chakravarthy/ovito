@@ -300,7 +300,7 @@ void MainWindow::createMainMenu()
 	editMenu->addAction(actionManager()->getAction(ACTION_EDIT_DELETE));
 
 	// Build the scripting menu.
-	QAction* runScriptFileAction = actionManager()->getAction(ACTION_SCRIPTING_RUN_FILE);
+	QAction* runScriptFileAction = actionManager()->findAction(ACTION_SCRIPTING_RUN_FILE);
 	if(runScriptFileAction) {
 		QMenu* scriptingMenu = menuBar->addMenu(tr("&Scripting"));
 		scriptingMenu->setObjectName(QStringLiteral("ScriptingMenu"));
