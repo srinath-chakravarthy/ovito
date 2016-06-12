@@ -37,6 +37,7 @@ DEFINE_PROPERTY_FIELD(BinAndReduceModifier, _fixPropertyAxisRange, "FixPropertyA
 DEFINE_FLAGS_PROPERTY_FIELD(BinAndReduceModifier, _propertyAxisRangeStart, "PropertyAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(BinAndReduceModifier, _propertyAxisRangeEnd, "PropertyAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(BinAndReduceModifier, _sourceProperty, "SourceProperty");
+DEFINE_PROPERTY_FIELD(BinAndReduceModifier, _onlySelected, "OnlySelected");
 SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _reductionOperation, "Reduction operation");
 SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _firstDerivative, "Compute first derivative");
 SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _binDirection, "Bin direction");
@@ -46,6 +47,7 @@ SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _fixPropertyAxisRange, "Fix prope
 SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _propertyAxisRangeStart, "Property axis range start");
 SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _propertyAxisRangeEnd, "Property axis range end");
 SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _sourceProperty, "Source property");
+SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _onlySelected, "Use only selected particles");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(BinAndReduceModifier, _numberOfBinsX, IntegerParameterUnit, 1);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(BinAndReduceModifier, _numberOfBinsY, IntegerParameterUnit, 1);
 
@@ -57,7 +59,8 @@ BinAndReduceModifier::BinAndReduceModifier(DataSet* dataset) :
     _binDirection(CELL_VECTOR_3), _numberOfBinsX(200), _numberOfBinsY(200),
     _fixPropertyAxisRange(false), _propertyAxisRangeStart(0), _propertyAxisRangeEnd(0),
 	_xAxisRangeStart(0), _xAxisRangeEnd(0),
-	_yAxisRangeStart(0), _yAxisRangeEnd(0)
+	_yAxisRangeStart(0), _yAxisRangeEnd(0),
+	_onlySelected(false)
 {
 	INIT_PROPERTY_FIELD(BinAndReduceModifier::_reductionOperation);
 	INIT_PROPERTY_FIELD(BinAndReduceModifier::_firstDerivative);
@@ -68,6 +71,7 @@ BinAndReduceModifier::BinAndReduceModifier(DataSet* dataset) :
 	INIT_PROPERTY_FIELD(BinAndReduceModifier::_propertyAxisRangeStart);
 	INIT_PROPERTY_FIELD(BinAndReduceModifier::_propertyAxisRangeEnd);
 	INIT_PROPERTY_FIELD(BinAndReduceModifier::_sourceProperty);
+	INIT_PROPERTY_FIELD(BinAndReduceModifier::_onlySelected);
 }
 
 /******************************************************************************
@@ -101,7 +105,7 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
 {
 	int binDataSizeX = std::max(1, numberOfBinsX());
 	int binDataSizeY = std::max(1, numberOfBinsY());
-    if (is1D()) binDataSizeY = 1;
+    if(is1D()) binDataSizeY = 1;
     size_t binDataSize = binDataSizeX*binDataSizeY;
 	_binData.resize(binDataSize);
 	std::fill(_binData.begin(), _binData.end(), 0.0);
@@ -125,6 +129,13 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
 	size_t vecComponent = std::max(0, sourceProperty().vectorComponent());
 	size_t vecComponentCount = property->componentCount();
 
+	// Get input selection.
+	ParticleProperty* inputSelectionProperty = nullptr;
+	if(onlySelected()) {
+		inputSelectionProperty = expectStandardProperty(ParticleProperty::SelectionProperty)->storage();
+		OVITO_ASSERT(inputSelectionProperty->size() == property->size());
+	}
+
     // Get bottom-left and top-right corner of the simulation cell.
 	SimulationCell cell = expectSimulationCell()->data();
     AffineTransformation reciprocalCell = cell.inverseMatrix();
@@ -134,24 +145,24 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
 
     // Compute the surface normal vector.
     Vector3 normalX, normalY(1, 1, 1);
-    if (_binDirection == CELL_VECTOR_1) {
+    if(_binDirection == CELL_VECTOR_1) {
         normalX = expectSimulationCell()->edgeVector2().cross(expectSimulationCell()->edgeVector3());
     }
-    else if (_binDirection == CELL_VECTOR_2) {
+    else if(_binDirection == CELL_VECTOR_2) {
         normalX = expectSimulationCell()->edgeVector3().cross(expectSimulationCell()->edgeVector1());
     }
-    else if (_binDirection == CELL_VECTOR_3) {
+    else if(_binDirection == CELL_VECTOR_3) {
         normalX = expectSimulationCell()->edgeVector1().cross(expectSimulationCell()->edgeVector2());
     }
-    else if (_binDirection == CELL_VECTORS_1_2) {
+    else if(_binDirection == CELL_VECTORS_1_2) {
         normalX = expectSimulationCell()->edgeVector2().cross(expectSimulationCell()->edgeVector3());
         normalY = expectSimulationCell()->edgeVector3().cross(expectSimulationCell()->edgeVector1());
     }
-    else if (_binDirection == CELL_VECTORS_2_3) {
+    else if(_binDirection == CELL_VECTORS_2_3) {
         normalX = expectSimulationCell()->edgeVector3().cross(expectSimulationCell()->edgeVector1());
         normalY = expectSimulationCell()->edgeVector1().cross(expectSimulationCell()->edgeVector2());
     }
-    else if (_binDirection == CELL_VECTORS_1_3) {
+    else if(_binDirection == CELL_VECTORS_1_3) {
         normalX = expectSimulationCell()->edgeVector2().cross(expectSimulationCell()->edgeVector3());
         normalY = expectSimulationCell()->edgeVector1().cross(expectSimulationCell()->edgeVector2());
     }
@@ -170,8 +181,9 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
 		_yAxisRangeStart = _yAxisRangeEnd = 0;
     }
 
-	// Get the current positions.
+	// Get the particle positions.
 	ParticlePropertyObject* posProperty = expectStandardProperty(ParticleProperty::PositionProperty);
+	OVITO_ASSERT(posProperty->size() == property->size());
 
 	if(property->size() > 0) {
         const Point3* pos = posProperty->constDataPoint3();
@@ -180,29 +192,30 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
 		if(property->dataType() == qMetaTypeId<FloatType>()) {
 			const FloatType* v = property->constDataFloat() + vecComponent;
 			const FloatType* v_end = v + (property->size() * vecComponentCount);
-
-            while (pos != pos_end && v != v_end) {
-                if (!std::isnan(*v)) {
+			const int* sel = inputSelectionProperty ? inputSelectionProperty->constDataInt() : nullptr;
+            for(; v != v_end; v += vecComponentCount, ++pos) {
+				if(sel && !*sel++) continue;
+                if(!std::isnan(*v)) {
                     FloatType fractionalPosX = reciprocalCell.prodrow(*pos, binDirX);
                     FloatType fractionalPosY = reciprocalCell.prodrow(*pos, binDirY);
                     int binIndexX = int( fractionalPosX * binDataSizeX );
                     int binIndexY = int( fractionalPosY * binDataSizeY );
-                    if (pbc[binDirX]) binIndexX = SimulationCell::modulo(binIndexX, binDataSizeX);
-                    if (pbc[binDirY]) binIndexY = SimulationCell::modulo(binIndexY, binDataSizeY);
-                    if (binIndexX >= 0 && binIndexX < binDataSizeX && binIndexY >= 0 && binIndexY < binDataSizeY) {
+                    if(pbc[binDirX]) binIndexX = SimulationCell::modulo(binIndexX, binDataSizeX);
+                    if(pbc[binDirY]) binIndexY = SimulationCell::modulo(binIndexY, binDataSizeY);
+                    if(binIndexX >= 0 && binIndexX < binDataSizeX && binIndexY >= 0 && binIndexY < binDataSizeY) {
                         size_t binIndex = binIndexY*binDataSizeX+binIndexX;
-                        if (_reductionOperation == RED_MEAN || _reductionOperation == RED_SUM || _reductionOperation == RED_SUM_VOL) {
+                        if(_reductionOperation == RED_MEAN || _reductionOperation == RED_SUM || _reductionOperation == RED_SUM_VOL) {
                             _binData[binIndex] += *v;
                         } 
                         else {
-                            if (numberOfParticlesPerBin[binIndex] == 0) {
+                            if(numberOfParticlesPerBin[binIndex] == 0) {
                                 _binData[binIndex] = *v;  
                             }
                             else {
-                                if (_reductionOperation == RED_MAX) {
+                                if(_reductionOperation == RED_MAX) {
                                     _binData[binIndex] = std::max(_binData[binIndex], (double)*v);
                                 }
-                                else if (_reductionOperation == RED_MIN) {
+                                else if(_reductionOperation == RED_MIN) {
                                     _binData[binIndex] = std::min(_binData[binIndex], (double)*v);
                                 }
                             }
@@ -210,57 +223,52 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
                         numberOfParticlesPerBin[binIndex]++;
                     }
                 }
-                
-                pos++;
-                v += vecComponentCount;
             }
 		}
 		else if(property->dataType() == qMetaTypeId<int>()) {
 			const int* v = property->constDataInt() + vecComponent;
 			const int* v_end = v + (property->size() * vecComponentCount);
-
-            while (pos != pos_end && v != v_end) {
+			const int* sel = inputSelectionProperty ? inputSelectionProperty->constDataInt() : nullptr;
+            for(; v != v_end; v += vecComponentCount, ++pos) {
+				if(sel && !*sel++) continue;
                 FloatType fractionalPosX = reciprocalCell.prodrow(*pos, binDirX);
                 FloatType fractionalPosY = reciprocalCell.prodrow(*pos, binDirY);
                 int binIndexX = int( fractionalPosX * binDataSizeX );
                 int binIndexY = int( fractionalPosY * binDataSizeY );
-                if (pbc[binDirX])  binIndexX = SimulationCell::modulo(binIndexX, binDataSizeX);
-                if (pbc[binDirY])  binIndexY = SimulationCell::modulo(binIndexY, binDataSizeY);
-                if (binIndexX >= 0 && binIndexX < binDataSizeX && binIndexY >= 0 && binIndexY < binDataSizeY) {
+                if(pbc[binDirX])  binIndexX = SimulationCell::modulo(binIndexX, binDataSizeX);
+                if(pbc[binDirY])  binIndexY = SimulationCell::modulo(binIndexY, binDataSizeY);
+                if(binIndexX >= 0 && binIndexX < binDataSizeX && binIndexY >= 0 && binIndexY < binDataSizeY) {
                     size_t binIndex = binIndexY*binDataSizeX+binIndexX;
-                    if (_reductionOperation == RED_MEAN || _reductionOperation == RED_SUM || _reductionOperation == RED_SUM) {
+                    if(_reductionOperation == RED_MEAN || _reductionOperation == RED_SUM || _reductionOperation == RED_SUM) {
                         _binData[binIndex] += *v;
                     }
                     else {
-                        if (numberOfParticlesPerBin[binIndex] == 0) {
+                        if(numberOfParticlesPerBin[binIndex] == 0) {
                             _binData[binIndex] = *v;  
                         }
                         else {
-                            if (_reductionOperation == RED_MAX) {
+                            if(_reductionOperation == RED_MAX) {
                                 _binData[binIndex] = std::max(_binData[binIndex], (double)*v);
                             }
-                            else if (_reductionOperation == RED_MIN) {
+                            else if(_reductionOperation == RED_MIN) {
                                 _binData[binIndex] = std::min(_binData[binIndex], (double)*v);
                             }
                         }
                     }
                     numberOfParticlesPerBin[binIndex]++;
                 }
-
-                pos++;
-                v += vecComponentCount;
             }
 		}
 
-        if (_reductionOperation == RED_MEAN) {
+        if(_reductionOperation == RED_MEAN) {
             // Normalize.
             auto a = _binData.begin();
-            for (auto n: numberOfParticlesPerBin) {
+            for(auto n : numberOfParticlesPerBin) {
                 if (n > 0) *a /= n;
                 ++a;
             }
         }
-        else if (_reductionOperation == RED_SUM_VOL) {
+        else if(_reductionOperation == RED_SUM_VOL) {
             // Divide by bin volume.
             double binVolume = cellVolume / (binDataSizeX*binDataSizeY);
             std::for_each(_binData.begin(), _binData.end(), [binVolume](double &x) { x /= binVolume; });
@@ -268,12 +276,12 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
 	}
 
 	// Compute first derivative using finite differences.
-    if (_firstDerivative) {
+    if(_firstDerivative) {
         FloatType binSpacingX = (_xAxisRangeEnd - _xAxisRangeStart) / binDataSizeX;
         if(binDataSizeX > 1 && _xAxisRangeEnd > _xAxisRangeStart) {
         	QVector<double> derivativeData(binDataSize);
-			for (int j = 0; j < binDataSizeY; j++) {
-				for (int i = 0; i < binDataSizeX; i++) {
+			for(int j = 0; j < binDataSizeY; j++) {
+				for(int i = 0; i < binDataSizeX; i++) {
 					int ndx = 2;
 					int i_plus_1 = i+1;
 					int i_minus_1 = i-1;
@@ -295,12 +303,14 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
         else std::fill(_binData.begin(), _binData.end(), 0.0);
     }
 
-	if (!_fixPropertyAxisRange) {
+	if(!_fixPropertyAxisRange) {
 		auto minmax = std::minmax_element(_binData.begin(), _binData.end());
 		_propertyAxisRangeStart = *minmax.first;
 		_propertyAxisRangeEnd = *minmax.second;
 	}
 
+	// Inform the editor component that the stored data has changed
+	// and it should update the display.
 	notifyDependents(ReferenceEvent::ObjectStatusChanged);
 
 	return PipelineStatus(PipelineStatus::Success);

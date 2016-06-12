@@ -96,6 +96,12 @@ public:
 	/// Returns the end value of the y-axis.
 	FloatType yAxisRangeEnd() const { return _yAxisRangeEnd; }
 
+	/// Returns whether analysis takes only selected particles into account.
+	bool onlySelected() const { return _onlySelected; }
+
+	/// Sets whether analysis only selected particles are taken into account.
+	void setOnlySelected(bool onlySelected) { _onlySelected = onlySelected; }
+
 protected:
 
 	/// Modifies the particle object.
@@ -139,6 +145,9 @@ private:
 	/// Controls the end value of the y-axis.
 	PropertyField<FloatType> _yAxisRangeEnd;
 
+	/// Controls whether the modifier should take into account only selected particles.
+	PropertyField<bool> _onlySelected;
+
 	/// Stores the histogram data.
 	QVector<int> _histogramData;
 
@@ -159,6 +168,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_yAxisRangeStart);
 	DECLARE_PROPERTY_FIELD(_yAxisRangeEnd);
 	DECLARE_PROPERTY_FIELD(_sourceProperty);
+	DECLARE_PROPERTY_FIELD(_onlySelected);
 };
 
 OVITO_END_INLINE_NAMESPACE

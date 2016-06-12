@@ -43,6 +43,13 @@
       </varlistentry>
 
       <varlistentry>
+        <term>Use only selected particles</term>
+        <listitem>
+          <para>Restricts the histogram calculation to the subset of particles that are currently selected.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term>Select particles in range</term>
         <listitem>
           <para>If this option is active, the modifier selects all particles whose property value falls

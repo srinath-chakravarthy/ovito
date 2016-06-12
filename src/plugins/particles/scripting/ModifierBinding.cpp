@@ -557,6 +557,11 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					"This attribute sets the number of bins to generate along the second binning axis (only used when working with a two-dimensional grid)."
 					"\n\n"
 					":Default: 200\n")
+			.add_property("only_selected", &BinAndReduceModifier::onlySelected, &BinAndReduceModifier::setOnlySelected,
+					"If ``True``, the computation takes into account only the currently selected particles. "
+					"You can use this to restrict the calculation to a subset of particles. "
+					"\n\n"
+					":Default: ``False``\n")
 			.add_property("_binData", make_function(&BinAndReduceModifier::binData, return_internal_reference<>()))
 			.add_property("_is1D", &BinAndReduceModifier::is1D)
 			.add_property("axis_range_x", lambda_address([](BinAndReduceModifier& modifier) {
@@ -1006,6 +1011,11 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"If :py:attr:`.fix_xrange` is true, then this specifies the upper end of the value range covered by the histogram."
 				"\n\n"
 				":Default: 0.0\n")
+		.add_property("only_selected", &HistogramModifier::onlySelected, &HistogramModifier::setOnlySelected,
+				"If ``True``, the histogram is computed only on the basis of currently selected particles. "
+				"You can use this to restrict histogram calculation to a subset of particles. "
+				"\n\n"
+				":Default: ``False``\n")
 		.add_property("histogramData", make_function(&HistogramModifier::histogramData, return_internal_reference<>()))
 	;
 

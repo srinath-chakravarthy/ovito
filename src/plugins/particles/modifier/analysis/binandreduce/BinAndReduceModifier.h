@@ -112,6 +112,12 @@ public:
 	/// Returns the end value of the plotting y-axis.
 	FloatType propertyAxisRangeEnd() const { return _propertyAxisRangeEnd; }
 
+	/// Returns whether analysis takes only selected particles into account.
+	bool onlySelected() const { return _onlySelected; }
+
+	/// Sets whether analysis only selected particles are taken into account.
+	void setOnlySelected(bool onlySelected) { _onlySelected = onlySelected; }
+
     /// Returns true if binning in a single direction only.
     bool is1D() {
         return bin1D(_binDirection);
@@ -169,6 +175,9 @@ private:
 	/// Controls the end value of the plotting y-axis.
 	PropertyField<FloatType> _propertyAxisRangeEnd;
 
+	/// Controls whether the modifier should take into account only selected particles.
+	PropertyField<bool> _onlySelected;
+
 	/// Stores the start value of the plotting x-axis.
 	FloatType _xAxisRangeStart;
 
@@ -200,6 +209,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_propertyAxisRangeStart);
 	DECLARE_PROPERTY_FIELD(_propertyAxisRangeEnd);
 	DECLARE_PROPERTY_FIELD(_sourceProperty);
+	DECLARE_PROPERTY_FIELD(_onlySelected);
 };
 
 OVITO_END_INLINE_NAMESPACE

@@ -110,6 +110,15 @@ void BinAndReduceModifierEditor::createUI(const RolloutInsertionParameters& roll
 	layout->addWidget(saveDataButton);
 	connect(saveDataButton, &QPushButton::clicked, this, &BinAndReduceModifierEditor::onSaveData);
 
+	// Input.
+	QGroupBox* inputBox = new QGroupBox(tr("Input"), rollout);
+	QVBoxLayout* sublayout = new QVBoxLayout(inputBox);
+	sublayout->setContentsMargins(4,4,4,4);
+	layout->addWidget(inputBox);
+
+	BooleanParameterUI* onlySelectedUI = new BooleanParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::_onlySelected));
+	sublayout->addWidget(onlySelectedUI->checkBox());
+
 	// Axes.
 	QGroupBox* axesBox = new QGroupBox(tr("Plot axes"), rollout);
 	QVBoxLayout* axesSublayout = new QVBoxLayout(axesBox);

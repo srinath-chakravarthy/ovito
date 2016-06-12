@@ -93,9 +93,18 @@ void HistogramModifierEditor::createUI(const RolloutInsertionParameters& rollout
 	layout->addWidget(saveDataButton);
 	connect(saveDataButton, &QPushButton::clicked, this, &HistogramModifierEditor::onSaveData);
 
-	// Selection.
-	QGroupBox* selectionBox = new QGroupBox(tr("Selection"), rollout);
-	QVBoxLayout* sublayout = new QVBoxLayout(selectionBox);
+	// Input.
+	QGroupBox* inputBox = new QGroupBox(tr("Input"), rollout);
+	QVBoxLayout* sublayout = new QVBoxLayout(inputBox);
+	sublayout->setContentsMargins(4,4,4,4);
+	layout->addWidget(inputBox);
+
+	BooleanParameterUI* onlySelectedUI = new BooleanParameterUI(this, PROPERTY_FIELD(HistogramModifier::_onlySelected));
+	sublayout->addWidget(onlySelectedUI->checkBox());
+
+	// Create selection.
+	QGroupBox* selectionBox = new QGroupBox(tr("Create selection"), rollout);
+	sublayout = new QVBoxLayout(selectionBox);
 	sublayout->setContentsMargins(4,4,4,4);
 	layout->addWidget(selectionBox);
 
@@ -269,7 +278,7 @@ void HistogramModifierEditor::onSaveData()
 		FloatType binSize = (modifier->xAxisRangeEnd() - modifier->xAxisRangeStart()) / modifier->histogramData().size();
 		stream << "# " << modifier->sourceProperty().name() << " histogram (bin size: " << binSize << ")" << endl;
 		for(int i = 0; i < modifier->histogramData().size(); i++) {
-			stream << (binSize * (FloatType(i) + 0.5f) + modifier->xAxisRangeStart()) << " " <<
+			stream << (binSize * (FloatType(i) + FloatType(0.5)) + modifier->xAxisRangeStart()) << " " <<
 					modifier->histogramData()[i] << endl;
 		}
 	}
