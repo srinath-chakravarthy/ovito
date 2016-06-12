@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<appendix version="5.0"
+<section version="5.0" role="NotInToc"
           xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd"
           xml:id="appendix.license.muparser" xmlns="http://docbook.org/ns/docbook"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -35,4 +35,4 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   OR OTHER DEALINGS IN THE SOFTWARE.
 </para>
 
-</appendix>
+</section>

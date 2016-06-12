@@ -5,7 +5,7 @@
 <!ENTITY % dbcent PUBLIC "-//OASIS//ENTITIES DocBook Character Entities V4.5//EN" "/usr/share/xml/docbook/schema/dtd/4.5/dbcentx.mod">
 %dbcent;
 ]>
-<appendix version="5.0"
+<section version="5.0" role="NotInToc"
           xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd"
           xml:id="appendix.GFDL" xmlns="http://docbook.org/ns/docbook"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -411,4 +411,4 @@
   Foundation. If the Document does not specify a version number of this
   License, you may choose any version ever published (not as a draft) by the
   Free Software Foundation.</para>
-</appendix>
+</section>

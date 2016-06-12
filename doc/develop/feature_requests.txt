@@ -7,17 +7,17 @@ User interface improvements:
 
 Work-flow improvements:
 
-- Add support for low-dimensional systems.
-- Add a 'Only for selected particles' option to the Histogram and Bin and Reduce modifiers (requrested by eugen.eisfeld@fmq.uni-stuttgart.de).
+- Better support for two-dimensional systems.
 
 New visualization features:
 
 - Add viewport overlay that shows a text label in the viewport (requested by Tobias)
 - Visualize polyhedra (like Vesta).
-- Particle text labels (joy5142@psu.edu)
+- Particle text labels (joy5142@psu.edu) and bond text labels (mickaeltrochet@yahoo.fr)
 - More particle representations (e.g. open circles).
 - Test OpenGL rendering support for more than 12 million particles.
 - Color coding with logarithmic mapping 
+- Text Label overlay: Add more style options like font outline, background color, etc (stefan.parviainen@iki.fi).
 
 Unresolved OpenGL problems:
 
@@ -76,7 +76,6 @@ New I/O functions:
 
 - Export to Blender (Paul Erhart, Filip Sund <filip.sund@fys.uio.no>)
 - Single precision floating-point numbers, which are used for custom particle properties, cannot represent large integer numbers exactly (e.g. 100400). Find a solution to make it work.
-- Load atomic trajectories from LAMMPS dump files and import bond information from a separate LAMMPS data file (suggested by jorge.ramirez@upm.es, HeineDR@corning.com).
 - Add support for more file formats using OpenBabel.
 
 Performance improvements:
@@ -92,4 +91,5 @@ Scripting features:
 
 Documentation:
 
+- Document Text Label viewport overlay. 
 - Application settings dialog

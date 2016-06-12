@@ -1,6 +1,6 @@
 ###############################################################################
 # 
-#  Copyright (2014) Alexander Stukowski
+#  Copyright (2016) Alexander Stukowski
 #
 #  This file is part of OVITO (Open Visualization Tool).
 #
@@ -19,20 +19,16 @@
 #
 ###############################################################################
 
-ADD_SUBDIRECTORY(botan)
-ADD_SUBDIRECTORY(qssh)
-IF(OVITO_BUILD_PLUGIN_PARTICLES)
-    ADD_SUBDIRECTORY(muparser)
-    IF(OVITO_BUILD_GUI) 
-    	ADD_SUBDIRECTORY(qcustomplot)
-    ENDIF()
-    ADD_SUBDIRECTORY(voro++)
-    ADD_SUBDIRECTORY(svdpolar)
-    #ADD_SUBDIRECTORY(ptm)
-ENDIF()
-IF(OVITO_BUILD_PLUGIN_TACHYON)
-	ADD_SUBDIRECTORY(tachyon)
-ENDIF()
-IF(OVITO_BUILD_PLUGIN_CRYSTALANALYSIS)
-	ADD_SUBDIRECTORY(geogram)
-ENDIF()
+# Build library.
+ADD_LIBRARY(SVDPolar STATIC polar_decomposition.c)
+
+# Make header files of this library available to dependent targets.
+TARGET_INCLUDE_DIRECTORIES(SVDPolar INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/..")
+
+# Since we will link this into the Particles plugin, we need to use the same setting for the fPIC flag.
+SET_PROPERTY(TARGET SVDPolar PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+# Export this target.
+INSTALL(TARGETS SVDPolar EXPORT OVITO 
+    ARCHIVE DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}" 
+    CONFIGURATIONS "")

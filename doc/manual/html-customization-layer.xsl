@@ -48,6 +48,8 @@ section   nop
 set       toc
 </xsl:param>
 
+<xsl:template match="section[@role = 'NotInToc']"  mode="toc" />
+
 <xsl:template name="gentext.nav.home">Table of Contents</xsl:template>
 
 <xsl:template match="figure[@role = 'inline']" mode="class.value">

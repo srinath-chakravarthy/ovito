@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<appendix version="5.0"
+<section version="5.0" role="NotInToc"
           xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd"
           xml:id="appendix.license.voroplusplus" xmlns="http://docbook.org/ns/docbook"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -60,4 +60,4 @@ works, incorporate into other computer software, distribute, and sublicense
 such enhancements or derivative works thereof, in binary and source code form.
 </para>
 
-</appendix>
+</section>

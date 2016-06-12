@@ -37,19 +37,4 @@
 
   <xi:include href="Chapter_Credits.docbook"/>
 
-  <xi:include href="Appendix_License_gpl.docbook"/>
-
-  <xi:include href="Appendix_License_fdl.docbook"/>
-
-  <xi:include href="Appendix_License_tachyon.docbook"/>
-
-  <xi:include href="Appendix_License_muparser.docbook"/>
-
-  <xi:include href="Appendix_License_netcdf.docbook"/>
-  
-  <xi:include href="Appendix_License_geogram.docbook"/>
-
-  <xi:include href="Appendix_License_PTM.docbook"/>
-  
-  <xi:include href="Appendix_License_voroplusplus.docbook"/>
 </book>
