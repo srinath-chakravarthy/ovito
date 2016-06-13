@@ -89,6 +89,18 @@ public:
 	/// Sets whether non-affine displacements should be computed and stored.
 	void setCalculateNonaffineSquaredDisplacements(bool enableCalculation) { _calculateNonaffineSquaredDisplacements = enableCalculation; }
 
+	/// Returns whether atomic stretch tensors should be computed and stored.
+	bool calculateStretchTensors() const { return _calculateStretchTensors; }
+
+	/// Sets whether atomic stretch tensors should be computed and stored.
+	void setCalculateStretchTensors(bool enableCalculation) { _calculateStretchTensors = enableCalculation; }
+
+	/// Returns whether atomic rotations should be computed and stored.
+	bool calculateRotations() const { return _calculateRotations; }
+
+	/// Sets whether atomic rotations should be computed and stored.
+	void setCalculateRotations(bool enableCalculation) { _calculateRotations = enableCalculation; }
+
 	/// Returns whether particles, for which the strain tensor could not be computed, are selected.
 	bool selectInvalidParticles() const { return _selectInvalidParticles; }
 
@@ -150,7 +162,7 @@ private:
 				ParticleProperty* identifiers, ParticleProperty* refIdentifiers,
 				FloatType cutoff, bool eliminateCellDeformation, bool assumeUnwrappedCoordinates,
 				bool calculateDeformationGradients, bool calculateStrainTensors,
-				bool calculateNonaffineSquaredDisplacements) :
+				bool calculateNonaffineSquaredDisplacements, bool calculateRotations, bool calculateStretchTensors) :
 			ComputeEngine(validityInterval),
 			_positions(positions), _simCell(simCell),
 			_refPositions(refPositions), _simCellRef(simCellRef),
@@ -162,6 +174,8 @@ private:
 			_deformationGradients(calculateDeformationGradients ? new ParticleProperty(positions->size(), ParticleProperty::DeformationGradientProperty, 0, false) : nullptr),
 			_nonaffineSquaredDisplacements(calculateNonaffineSquaredDisplacements ? new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, tr("Nonaffine Squared Displacement"), false) : nullptr),
 			_invalidParticles(new ParticleProperty(positions->size(), ParticleProperty::SelectionProperty, 0, false)),
+			_rotations(calculateRotations ? new ParticleProperty(positions->size(), ParticleProperty::RotationProperty, 0, false) : nullptr),
+			_stretchTensors(calculateStretchTensors ? new ParticleProperty(positions->size(), ParticleProperty::StretchTensorProperty, 0, false) : nullptr),
 			_currentSimCellInv(simCell.inverseMatrix()),
 			_reducedToAbsolute(eliminateCellDeformation ? simCellRef.matrix() : simCell.matrix()) {}
 
@@ -198,6 +212,12 @@ private:
 		/// Returns the property storage that contains the selection of invalid particles.
 		ParticleProperty* invalidParticles() const { return _invalidParticles.data(); }
 
+		/// Returns the property storage that contains the computed rotations.
+		ParticleProperty* rotations() const { return _rotations.data(); }
+
+		/// Returns the property storage that contains the computed stretch tensors.
+		ParticleProperty* stretchTensors() const { return _stretchTensors.data(); }
+
 		/// Returns the number of invalid particles for which the strain tensor could not be computed.
 		size_t numInvalidParticles() const { return _numInvalidParticles.load(); }
 
@@ -221,6 +241,8 @@ private:
 		QExplicitlySharedDataPointer<ParticleProperty> _deformationGradients;
 		QExplicitlySharedDataPointer<ParticleProperty> _nonaffineSquaredDisplacements;
 		QExplicitlySharedDataPointer<ParticleProperty> _invalidParticles;
+		QExplicitlySharedDataPointer<ParticleProperty> _rotations;
+		QExplicitlySharedDataPointer<ParticleProperty> _stretchTensors;
 		bool _eliminateCellDeformation;
 		bool _assumeUnwrappedCoordinates;
 		QAtomicInt _numInvalidParticles;
@@ -243,6 +265,12 @@ private:
 
 	/// This stores the selection of invalid particles.
 	QExplicitlySharedDataPointer<ParticleProperty> _invalidParticles;
+
+	/// This stores the computed rotations.
+	QExplicitlySharedDataPointer<ParticleProperty> _rotations;
+
+	/// This stores the computed stretch tensors.
+	QExplicitlySharedDataPointer<ParticleProperty> _stretchTensors;
 
 	/// The reference configuration.
 	ReferenceField<DataObject> _referenceObject;
@@ -267,6 +295,12 @@ private:
 
 	/// Controls the whether non-affine displacements should be computed and stored.
 	PropertyField<bool> _calculateNonaffineSquaredDisplacements;
+
+	/// Controls the whether local rotations should be computed and stored.
+	PropertyField<bool> _calculateRotations;
+
+	/// Controls the whether atomic stretch tensors should be computed and stored.
+	PropertyField<bool> _calculateStretchTensors;
 
 	/// Controls the whether particles, for which the strain tensor could not be computed, are selected.
 	PropertyField<bool> _selectInvalidParticles;
@@ -303,6 +337,8 @@ private:
 	DECLARE_PROPERTY_FIELD(_useReferenceFrameOffset);
 	DECLARE_PROPERTY_FIELD(_referenceFrameNumber);
 	DECLARE_PROPERTY_FIELD(_referenceFrameOffset);
+	DECLARE_PROPERTY_FIELD(_calculateRotations);
+	DECLARE_PROPERTY_FIELD(_calculateStretchTensors);
 };
 
 OVITO_END_INLINE_NAMESPACE

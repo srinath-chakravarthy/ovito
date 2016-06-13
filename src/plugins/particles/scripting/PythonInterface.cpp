@@ -264,6 +264,8 @@ BOOST_PYTHON_MODULE(Particles)
 					"``ParticleProperty.Type.VectorColor``                   :guilabel:`Vector Color`                            float      R, G, B\n"
 					"``ParticleProperty.Type.ElasticStrainTensor``           :guilabel:`Elastic Strain`                          float      XX, YY, ZZ, XY, XZ, YZ\n"
 					"``ParticleProperty.Type.ElasticDeformationGradient``    :guilabel:`Elastic Deformation Gradient`            float      XX, YX, ZX, XY, YY, ZY, XZ, YZ, ZZ\n"
+					"``ParticleProperty.Type.Rotation``                      :guilabel:`Rotation`                                float      X, Y, Z, W\n"
+					"``ParticleProperty.Type.StretchTensor``                 :guilabel:`Stretch Tensor`                          float      XX, YY, ZZ, XY, XZ, YZ\n"
 					"======================================================= =================================================== ========== ==================================\n"
 					)
 			.add_property("dataType", &ParticlePropertyObject::dataType)
@@ -314,6 +316,8 @@ BOOST_PYTHON_MODULE(Particles)
 			.value("VectorColor", ParticleProperty::VectorColorProperty)
 			.value("ElasticStrainTensor", ParticleProperty::ElasticStrainTensorProperty)
 			.value("ElasticDeformationGradient", ParticleProperty::ElasticDeformationGradientProperty)
+			.value("Rotation", ParticleProperty::RotationProperty)
+			.value("StretchTensor", ParticleProperty::StretchTensorProperty)
 		;
 	}
 

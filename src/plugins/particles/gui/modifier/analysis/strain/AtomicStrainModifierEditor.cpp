@@ -87,6 +87,12 @@ void AtomicStrainModifierEditor::createUI(const RolloutInsertionParameters& roll
 	BooleanParameterUI* calculateNonaffineSquaredDisplacementsUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_calculateNonaffineSquaredDisplacements));
 	layout->addWidget(calculateNonaffineSquaredDisplacementsUI->checkBox());
 
+	BooleanParameterUI* calculateRotationsUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_calculateRotations));
+	layout->addWidget(calculateRotationsUI->checkBox());
+
+	BooleanParameterUI* calculateStretchTensorsUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_calculateStretchTensors));
+	layout->addWidget(calculateStretchTensorsUI->checkBox());
+
 	BooleanParameterUI* selectInvalidParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_selectInvalidParticles));
 	layout->addWidget(selectInvalidParticlesUI->checkBox());
 

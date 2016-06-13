@@ -1027,18 +1027,42 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 
 	ovito_class<AtomicStrainModifier, AsynchronousParticleModifier>(
 			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
-			"Computes the atomic strain tensors of particles based on a separate reference configuration. "
-			"The modifier requires you to load a reference configuration from an external file::"
+			"Computes the atomic-level deformation with respect to a reference configuration. "
+			"The reference configuration required for the calculation must be explicitly loaded from an external simulation file::"
 			"\n\n"
 			"    from ovito.modifiers import *\n"
 			"    \n"
 			"    modifier = AtomicStrainModifier()\n"
-			"    modifier.reference.load(\"frame0000.dump\")\n"
+			"    modifier.reference.load(\"initial_config.dump\")\n"
 			"\n\n"
-			"The modifier stores the computed per-particle strain tensors in the ``\"Strain Tensor\"`` particle property (only if :py:attr:`.output_strain_tensors` == True). "
-			"The computed deformation gradient tensors are output in the  ``\"Deformation Gradient\"`` particle property (only if :py:attr:`.output_deformation_gradients` == True). "
-			"The von Mises shear strain invariants are stored in the ``\"Shear Strain\"`` property. "
-			"The hydrostatic component of the strain tensors gets stored in the ``\"Volumetric Strain\"`` property. ")
+			"**Modifier outputs:**"
+			"\n\n"
+			" * ``Shear Strain`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+			"   The *von Mises* shear strain invariant of the atomic Green-Lagrangian strain tensor.\n"
+			" * ``Volumetric Strain`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+			"   One third of the trace of the atomic Green-Lagrangian strain tensor.\n"
+			" * ``Strain Tensor`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+			"   The six components of the symmetric Green-Lagrangian strain tensor.\n"
+			"   Output of this property must be explicitly enabled with the :py:attr:`.output_strain_tensors` flag.\n"
+			" * ``Deformation Gradient`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+			"   The nine components of the atomic deformation gradient tensor.\n"
+			"   Output of this property must be explicitly enabled with the :py:attr:`.output_deformation_gradients` flag.\n"
+			" * ``Stretch Tensor`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+			"   The six components of the symmetric right stretch tensor U in the polar decomposition F=RU.\n"
+			"   Output of this property must be explicitly enabled with the :py:attr:`.output_stretch_tensors` flag.\n"
+			" * ``Rotation`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+			"   The atomic microrotation obtained from the polar decomposition F=RU as a quaternion.\n"
+			"   Output of this property must be explicitly enabled with the :py:attr:`.output_rotations` flag.\n"
+			" * ``Nonaffine Squared Displacement`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+			"   The D\\ :sup:`2`\\ :sub:`min` measure of Falk & Langer, which describes the non-affine part of the local deformation.\n"
+			"   Output of this property must be explicitly enabled with the :py:attr:`.output_nonaffine_squared_displacements` flag.\n"
+			" * ``Selection`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+			"   The modifier can select those particles for which a local deformation could not be computed because there were not\n"
+			"   enough neighbors within the :py:attr:`.cutoff` range. Those particles with invalid deformation values can subsequently be removed using the\n"
+			"   :py:class:`DeleteSelectedParticlesModifier`, for example. Selection of invalid particles is controlled by the :py:attr:`.select_invalid_particles` flag.\n"
+			" * ``AtomicStrain.invalid_particle_count`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+			"   The number of particles for which the local strain calculation failed because they had not enough neighbors within the :py:attr:`.cutoff` range.\n"
+			)
 		.add_property("reference", make_function(&AtomicStrainModifier::referenceConfiguration, return_value_policy<ovito_object_reference>()), &AtomicStrainModifier::setReferenceConfiguration,
 				"A :py:class:`~ovito.io.FileSource` that provides the reference positions of particles. "
 				"You can call its :py:meth:`~ovito.io.FileSource.load` function to load a reference simulation file "
@@ -1077,7 +1101,15 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"\n\n"
 				":Default: ``False``\n")
 		.add_property("output_strain_tensors", &AtomicStrainModifier::calculateStrainTensors, &AtomicStrainModifier::setCalculateStrainTensors,
-				"Controls the output of the per-particle strain tensors tensors. If ``False``, the computed strain tensors are not output as a particle property to save memory."
+				"Controls the output of the per-particle strain tensors. If ``False``, the computed strain tensors are not output as a particle property to save memory."
+				"\n\n"
+				":Default: ``False``\n")
+		.add_property("output_stretch_tensors", &AtomicStrainModifier::calculateStretchTensors, &AtomicStrainModifier::setCalculateStretchTensors,
+				"Flag that controls the calculation of the per-particle stretch tensors."
+				"\n\n"
+				":Default: ``False``\n")
+		.add_property("output_rotations", &AtomicStrainModifier::calculateRotations, &AtomicStrainModifier::setCalculateRotations,
+				"Flag that controls the calculation of the per-particle rotations."
 				"\n\n"
 				":Default: ``False``\n")
 		.add_property("output_nonaffine_squared_displacements", &AtomicStrainModifier::calculateNonaffineSquaredDisplacements, &AtomicStrainModifier::setCalculateNonaffineSquaredDisplacements,
@@ -1085,14 +1117,10 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"\n\n"
 				":Default: ``False``\n")
 		.add_property("select_invalid_particles", &AtomicStrainModifier::selectInvalidParticles, &AtomicStrainModifier::setSelectInvalidParticles,
-				"If ``True``, the modifier selects all particle for which the local strain tensor could not be computed (because of an insufficient number of neighbors within the cutoff)."
+				"If ``True``, the modifier selects the particle for which the local strain tensor could not be computed (because of an insufficient number of neighbors within the cutoff)."
 				"\n\n"
 				":Default: ``True``\n")
-		.add_property("invalid_particle_count", &AtomicStrainModifier::invalidParticleCount,
-				"After the modifier has computed the atomic strain tensors this field contains the number of particles "
-				"for which the strain calculation failed. "
-				"Note that accessing this value is only possible after the modifier has computed its results. "
-				"Thus, you have to call :py:meth:`ovito.ObjectNode.compute` first to ensure that this information is up to date. ")
+		.add_property("invalid_particle_count", &AtomicStrainModifier::invalidParticleCount)
 	;
 
 	ovito_class<WignerSeitzAnalysisModifier, AsynchronousParticleModifier>(

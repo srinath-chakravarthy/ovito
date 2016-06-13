@@ -91,6 +91,7 @@ ParticleProperty::ParticleProperty(size_t particleCount, Type type, size_t compo
 	case StressTensorProperty:
 	case StrainTensorProperty:
 	case ElasticStrainTensorProperty:
+	case StretchTensorProperty:
 		_dataType = qMetaTypeId<FloatType>();
 		_componentCount = 6;
 		_stride = _componentCount * sizeof(FloatType);
@@ -103,6 +104,7 @@ ParticleProperty::ParticleProperty(size_t particleCount, Type type, size_t compo
 		_stride = _componentCount * sizeof(FloatType);
 		break;
 	case OrientationProperty:
+	case RotationProperty:
 		_dataType = qMetaTypeId<FloatType>();
 		_componentCount = 4;
 		_stride = _componentCount * sizeof(FloatType);
@@ -195,6 +197,8 @@ QString ParticleProperty::standardPropertyName(Type which)
 	case VectorColorProperty: return ParticlePropertyObject::tr("Vector Color");
 	case ElasticStrainTensorProperty: return ParticlePropertyObject::tr("Elastic Strain");
 	case ElasticDeformationGradientProperty: return ParticlePropertyObject::tr("Elastic Deformation Gradient");
+	case RotationProperty: return ParticlePropertyObject::tr("Rotation");
+	case StretchTensorProperty: return ParticlePropertyObject::tr("Stretch Tensor");
 	default:
 		OVITO_ASSERT_MSG(false, "ParticleProperty::standardPropertyName", "Invalid standard particle property type");
 		throw Exception(ParticlePropertyObject::tr("This is not a valid standard particle property type: %1").arg(which));
@@ -265,6 +269,8 @@ int ParticleProperty::standardPropertyDataType(Type which)
 	case VectorColorProperty:
 	case ElasticStrainTensorProperty:
 	case ElasticDeformationGradientProperty:
+	case RotationProperty:
+	case StretchTensorProperty:
 		return qMetaTypeId<FloatType>();
 	default:
 		OVITO_ASSERT_MSG(false, "ParticleProperty::standardPropertyDataType", "Invalid standard particle property type");
@@ -316,6 +322,8 @@ QMap<QString, ParticleProperty::Type> ParticleProperty::standardPropertyList()
 		table.insert(standardPropertyName(VectorColorProperty), VectorColorProperty);
 		table.insert(standardPropertyName(ElasticStrainTensorProperty), ElasticStrainTensorProperty);
 		table.insert(standardPropertyName(ElasticDeformationGradientProperty), ElasticDeformationGradientProperty);
+		table.insert(standardPropertyName(RotationProperty), RotationProperty);
+		table.insert(standardPropertyName(StretchTensorProperty), StretchTensorProperty);
 	}
 	return table;
 }
@@ -362,11 +370,13 @@ size_t ParticleProperty::standardPropertyComponentCount(Type which)
 	case StressTensorProperty:
 	case StrainTensorProperty:
 	case ElasticStrainTensorProperty:
+	case StretchTensorProperty:
 		return 6;
 	case DeformationGradientProperty:
 	case ElasticDeformationGradientProperty:
 		return 9;
 	case OrientationProperty:
+	case RotationProperty:
 		return 4;
 	default:
 		OVITO_ASSERT_MSG(false, "ParticleProperty::standardPropertyComponentCount", "Invalid standard particle property type");
@@ -425,12 +435,14 @@ QStringList ParticleProperty::standardPropertyComponentNames(Type which, size_t 
 	case StressTensorProperty:
 	case StrainTensorProperty:
 	case ElasticStrainTensorProperty:
+	case StretchTensorProperty:
 		return symmetricTensorList;
 	case DeformationGradientProperty:
 		return matrix3List;
 	case ElasticDeformationGradientProperty:
 		return tensorList;
 	case OrientationProperty:
+	case RotationProperty:
 		return quaternionList;
 	default:
 		OVITO_ASSERT_MSG(false, "ParticleProperty::standardPropertyComponentNames", "Invalid standard particle property type");

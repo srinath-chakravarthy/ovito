@@ -327,7 +327,7 @@ BOOST_PYTHON_MODULE(PyScriptLinearAlgebra)
 	python_to_vector_conversion<Point2>();
 
 	class_<Quaternion>("Quaternion", init<FloatType, FloatType, FloatType, FloatType>())
-		.def(init<const AffineTransformation&>())
+		.def(init<const Matrix3&>())
         .def("__init__", make_constructor(lambda_address([]() { return new Quaternion(Quaternion::Identity()); })))
         .add_property("x", static_cast<FloatType (Quaternion::*)() const>(&Quaternion::x), lambda_address([](Quaternion& q, FloatType x) { q.x() = x; }))
         .add_property("y", static_cast<FloatType (Quaternion::*)() const>(&Quaternion::y), lambda_address([](Quaternion& q, FloatType y) { q.y() = y; }))

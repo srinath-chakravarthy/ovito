@@ -412,8 +412,9 @@ public:
 	}
 
 	/// Returns the upper left 3x3 submatrix of this 3x4 matrix containing only the linear transformation but not the translation.
-	inline Q_DECL_CONSTEXPR Matrix_3<T> linear() const {
-		return Matrix_3<T>((*this)[0], (*this)[1], (*this)[2]);
+	inline Q_DECL_CONSTEXPR const Matrix_3<T>& linear() const {
+		OVITO_STATIC_ASSERT(sizeof(Matrix_3<T>) * 4 / 3 == sizeof(*this));
+		return *reinterpret_cast<const Matrix_3<T>*>(this);
 	}
 
 	////////////////////////////////// Generation ///////////////////////////////////

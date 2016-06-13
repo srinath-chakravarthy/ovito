@@ -69,7 +69,7 @@ template<typename T> class Matrix_3;
  *      q.w() = 0.5f;
  * \endcode
  *
- * \sa RotationT, AffineTransformationT
+ * \sa RotationT, Matrix_3
  */
 template<typename T>
 class QuaternionT : public std::array<T, 4>
@@ -110,11 +110,15 @@ public:
 	explicit QuaternionT(Identity) { this->x() = this->y() = this->z() = T(0); this->w() = T(1); }
 #endif
 
-	/// \brief Initializes the quaternion from rotational part of a transformation matrix.
+	/// \brief Initializes the quaternion from a rotation matrix.
 	/// \param tm A rotation matrix.
 	///
 	/// It is assumed that \a tm is a pure rotation matrix.
-	explicit QuaternionT(const AffineTransformationT<T>& tm);
+	explicit QuaternionT(const Matrix_3<T>& tm);
+
+	/// Casts the quanternion to another component type \a U.
+	template<typename U>
+	Q_DECL_CONSTEXPR explicit operator QuaternionT<U>() const { return QuaternionT<U>(static_cast<U>(x()), static_cast<U>(y()), static_cast<U>(z()), static_cast<U>(w())); }
 
 	/// \brief Sets the quaternion to the identity quaternion.
 	QuaternionT& setIdentity() {
@@ -276,12 +280,12 @@ OVITO_END_INLINE_NAMESPACE
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Math)
 
-// Initializes the quaternion from rotational part of a transformation matrix.
+// Initializes the quaternion from a rotation matrix.
 template<typename T>
-inline QuaternionT<T>::QuaternionT(const AffineTransformationT<T>& tm)
+inline QuaternionT<T>::QuaternionT(const Matrix_3<T>& tm)
 {
 	// Make sure this is a pure rotation matrix.
-    OVITO_ASSERT_MSG(tm.isRotationMatrix(), "Quaternion constructor" , "Quaternion::Quaternion(const AffineTransformation& tm) accepts only pure rotation matrices.");
+    OVITO_ASSERT_MSG(tm.isRotationMatrix(), "Quaternion constructor" , "Quaternion::Quaternion(const Matrix3& tm) accepts only pure rotation matrices.");
 
 	// Algorithm in Ken Shoemake's article in 1987 SIGGRAPH course notes
     // article "Quaternion Calculus and Fast Animation".
@@ -295,13 +299,13 @@ inline QuaternionT<T>::QuaternionT(const AffineTransformationT<T>& tm)
 		z() = (tm(1,0) - tm(0,1)) * root;
 	}
 	else {
-		static const typename AffineTransformationT<T>::size_type next[] = { 1, 2, 0 };
-		typename AffineTransformationT<T>::size_type i = 0;
+		static const typename Matrix_3<T>::size_type next[] = { 1, 2, 0 };
+		typename Matrix_3<T>::size_type i = 0;
 		if(tm(1,1) > tm(0,0)) i = 1;
 		if(tm(2,2) > tm(i,i)) i = 2;
-		typename AffineTransformationT<T>::size_type j = next[i];
-		typename AffineTransformationT<T>::size_type k = next[j];
-		T root = sqrt(tm(i,i) - tm(j,j) - tm(k,k) + 1.0);
+		typename Matrix_3<T>::size_type j = next[i];
+		typename Matrix_3<T>::size_type k = next[j];
+		T root = sqrt(tm(i,i) - tm(j,j) - tm(k,k) + T(1));
 		(*this)[i] = T(0.5) * root;
 		root = T(0.5) / root;
 		w() = (tm(k,j) - tm(j,k)) * root;

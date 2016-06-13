@@ -24,6 +24,7 @@
 #include <core/animation/AnimationSettings.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/utilities/concurrent/ParallelFor.h>
+#include <ptm/polar_decomposition.hpp>
 #include "AtomicStrainModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
@@ -41,6 +42,8 @@ DEFINE_PROPERTY_FIELD(AtomicStrainModifier, _selectInvalidParticles, "SelectInva
 DEFINE_PROPERTY_FIELD(AtomicStrainModifier, _useReferenceFrameOffset, "UseReferenceFrameOffet");
 DEFINE_PROPERTY_FIELD(AtomicStrainModifier, _referenceFrameNumber, "ReferenceFrameNumber");
 DEFINE_FLAGS_PROPERTY_FIELD(AtomicStrainModifier, _referenceFrameOffset, "ReferenceFrameOffset", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(AtomicStrainModifier, _calculateStretchTensors, "CalculateStretchTensors");
+DEFINE_PROPERTY_FIELD(AtomicStrainModifier, _calculateRotations, "CalculateRotations");
 SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _referenceObject, "Reference Configuration");
 SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _referenceShown, "Show reference configuration");
 SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _eliminateCellDeformation, "Eliminate homogeneous cell deformation");
@@ -53,6 +56,8 @@ SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _selectInvalidParticles, "Select 
 SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _useReferenceFrameOffset, "Use reference frame offset");
 SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _referenceFrameNumber, "Reference frame number");
 SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _referenceFrameOffset, "Reference frame offset");
+SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _calculateStretchTensors, "Output stretch tensors");
+SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _calculateRotations, "Output rotations");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(AtomicStrainModifier, _cutoff, WorldParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(AtomicStrainModifier, _referenceFrameNumber, IntegerParameterUnit, 1);
 
@@ -62,6 +67,7 @@ SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(AtomicStrainModifier, _referenceFrameNumber
 AtomicStrainModifier::AtomicStrainModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
 	_referenceShown(false), _eliminateCellDeformation(false), _assumeUnwrappedCoordinates(false),
     _cutoff(3), _calculateDeformationGradients(false), _calculateStrainTensors(false), _calculateNonaffineSquaredDisplacements(false),
+	_calculateStretchTensors(false), _calculateRotations(false),
     _selectInvalidParticles(true),
     _useReferenceFrameOffset(false), _referenceFrameNumber(0), _referenceFrameOffset(-1)
 {
@@ -77,6 +83,8 @@ AtomicStrainModifier::AtomicStrainModifier(DataSet* dataset) : AsynchronousParti
 	INIT_PROPERTY_FIELD(AtomicStrainModifier::_useReferenceFrameOffset);
 	INIT_PROPERTY_FIELD(AtomicStrainModifier::_referenceFrameNumber);
 	INIT_PROPERTY_FIELD(AtomicStrainModifier::_referenceFrameOffset);
+	INIT_PROPERTY_FIELD(AtomicStrainModifier::_calculateStretchTensors);
+	INIT_PROPERTY_FIELD(AtomicStrainModifier::_calculateRotations);
 
 	// Create the file source object, which will be responsible for loading
 	// and storing the reference configuration.
@@ -168,7 +176,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> AtomicStrainModifie
 	return std::make_shared<AtomicStrainEngine>(validityInterval, posProperty->storage(), inputCell->data(), refPosProperty->storage(), refCell->data(),
 			identifierProperty ? identifierProperty->storage() : nullptr, refIdentifierProperty ? refIdentifierProperty->storage() : nullptr,
             cutoff(), eliminateCellDeformation(), assumeUnwrappedCoordinates(), calculateDeformationGradients(), calculateStrainTensors(),
-            calculateNonaffineSquaredDisplacements());
+            calculateNonaffineSquaredDisplacements(), calculateRotations(), calculateStretchTensors());
 }
 
 /******************************************************************************
@@ -339,6 +347,10 @@ bool AtomicStrainModifier::AtomicStrainEngine::computeStrain(size_t particleInde
             _nonaffineSquaredDisplacements->setFloat(particleIndex, 0);
 		_shearStrains->setFloat(particleIndex, 0);
 		_volumetricStrains->setFloat(particleIndex, 0);
+		if(_rotations)
+			_rotations->setQuaternion(particleIndex, Quaternion(0,0,0,0));
+		if(_stretchTensors)
+			_stretchTensors->setSymmetricTensor2(particleIndex, SymmetricTensor2::Zero());
 		return false;
 	}
 
@@ -349,6 +361,19 @@ bool AtomicStrainModifier::AtomicStrainEngine::computeStrain(size_t particleInde
 			for(Matrix_3<double>::size_type row = 0; row < 3; row++) {
 				_deformationGradients->setFloatComponent(particleIndex, col*3+row, (FloatType)F(row,col));
 			}
+		}
+	}
+
+	// Polar decomposition.
+	if(rotations() || stretchTensors()) {
+		Matrix_3<double> R, U;
+		polar_decomposition_3x3(F.elements(), false, R.elements(), U.elements());
+		if(rotations()) {
+			rotations()->setQuaternion(particleIndex, (Quaternion)QuaternionT<double>(R));
+		}
+		if(stretchTensors()) {
+			stretchTensors()->setSymmetricTensor2(particleIndex,
+					SymmetricTensor2(U(0,0), U(1,1), U(2,2), U(0,1), U(0,2), U(1,2)));
 		}
 	}
 
@@ -417,6 +442,8 @@ void AtomicStrainModifier::transferComputationResults(ComputeEngine* engine)
 	_deformationGradients = eng->deformationGradients();
 	_nonaffineSquaredDisplacements = eng->nonaffineSquaredDisplacements();
 	_invalidParticles = eng->invalidParticles();
+	_rotations = eng->rotations();
+	_stretchTensors = eng->stretchTensors();
 	_numInvalidParticles = eng->numInvalidParticles();
 }
 
@@ -450,10 +477,18 @@ PipelineStatus AtomicStrainModifier::applyComputationResults(TimePoint time, Tim
 	if(_shearStrainValues)
 		outputCustomProperty(_shearStrainValues.data());
 
+	if(calculateRotations() && _rotations)
+		outputStandardProperty(_rotations.data());
+
+	if(calculateStretchTensors() && _stretchTensors)
+		outputStandardProperty(_stretchTensors.data());
+
+	output().attributes().insert(QStringLiteral("AtomicStrain.invalid_particle_count"), QVariant::fromValue(_numInvalidParticles));
+
 	if(invalidParticleCount() == 0)
 		return PipelineStatus::Success;
 	else
-		return PipelineStatus(PipelineStatus::Warning, tr("Could not compute compute strain tensor for %1 particles. Increase cutoff radius to include more neighbors.").arg(invalidParticleCount()));
+		return PipelineStatus(PipelineStatus::Warning, tr("Failed to compute local deformation for %1 particles. Increase cutoff radius to include more neighbors.").arg(invalidParticleCount()));
 }
 
 /******************************************************************************
@@ -470,6 +505,8 @@ void AtomicStrainModifier::propertyChanged(const PropertyFieldDescriptor& field)
 			field == PROPERTY_FIELD(AtomicStrainModifier::_calculateDeformationGradients) ||
 			field == PROPERTY_FIELD(AtomicStrainModifier::_calculateStrainTensors) ||
 			field == PROPERTY_FIELD(AtomicStrainModifier::_calculateNonaffineSquaredDisplacements) ||
+			field == PROPERTY_FIELD(AtomicStrainModifier::_calculateRotations) ||
+			field == PROPERTY_FIELD(AtomicStrainModifier::_calculateStretchTensors) ||
 			field == PROPERTY_FIELD(AtomicStrainModifier::_useReferenceFrameOffset) ||
 			field == PROPERTY_FIELD(AtomicStrainModifier::_referenceFrameNumber) ||
 			field == PROPERTY_FIELD(AtomicStrainModifier::_referenceFrameOffset))
