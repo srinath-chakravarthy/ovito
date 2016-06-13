@@ -107,14 +107,13 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 
 				Vector3 shift = simCell.reducedToAbsolute(Vector3(ix,iy,iz));
 				Vector_3<double> shiftd = (Vector_3<double>)shift;
-				auto primaryPos = _pointData.cbegin();
 				for(int vertexIndex = 0; vertexIndex < _primaryVertexCount; vertexIndex++) {
 					if(progress && progress->isCanceled())
 						return false;
 
-					double x = (*primaryPos++) + shiftd.x();
-					double y = (*primaryPos++) + shiftd.y();
-					double z = (*primaryPos++) + shiftd.z();
+					double x = _pointData[vertexIndex*3+0] + shiftd.x();
+					double y = _pointData[vertexIndex*3+1] + shiftd.y();
+					double z = _pointData[vertexIndex*3+2] + shiftd.z();
 					Point3 pimage = Point3(x,y,z);
 					bool isClipped = false;
 					for(size_t dim = 0; dim < 3; dim++) {
