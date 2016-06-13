@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section version="5.0"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd"
+         xml:id="particles.modifiers.polyhedral_template_matching"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:ns="http://docbook.org/ns/docbook">
+  <title>Polyhedral Template Matching</title>
+
+  <para>
+    
+    <informalfigure><screenshot><mediaobject><imageobject>
+      <imagedata fileref="images/modifiers/polyhedral_template_matching_panel.png" format="PNG" />
+    </imageobject></mediaobject></screenshot></informalfigure>
+
+  </para>    
+  <para>
+  The modifier assigns the <literal>Structure Type</literal> property to each particle with
+  the structural type encoded as an integer value:
+  <itemizedlist>
+  
+    <listitem>
+      <para>0 = Other, unknown coordination structure</para>
+    </listitem>
+  
+    <listitem>
+      <para>1 = FCC, face-centered cubic</para>
+    </listitem>
+
+    <listitem>
+      <para>2 = HCP, hexagonal close-packed</para>
+    </listitem>
+
+    <listitem>
+      <para>3 = BCC, body-centered cubic</para>
+    </listitem>
+
+    <listitem>
+      <para>4 = ICO, icosahedral coordination</para>
+    </listitem>
+
+    <listitem>
+      <para>5 = SC, simple cubic</para>
+    </listitem>
+
+  </itemizedlist>
+  </para>
+  
+  <para>
+    In addition to the PTM modifier OVITO provides alternative structure identification tools 
+    like the <link linkend="particles.modifiers.common_neighbor_analysis">Common Neighbor Analysis</link> modifier or the 
+    <link linkend="particles.modifiers.bond_angle_analysis">Bond-Angle Analysis</link> modifier. 
+    Furthermore, the <link linkend="particles.modifiers.identify_diamond_structure">Identify Diamond Structure</link> analysis modifier can be 
+    used for diamond lattice structures.
+  </para>
+
+  <para>
+    Note that this modifier requires access to the complete set of input particles to perform the analysis. It should therefore be placed at the 
+    beginning of the processing pipeline, preceding any modifiers that delete particles.
+  </para>
+  
+  <para>
+    The <emphasis>Use only selected particles</emphasis> option restricts the analysis to the
+    currently selected particles. If this option is checked, unselected particles will be ignored 
+    (as if they did not exist) and will be assigned the structure type "Other".
+    This option can be useful if you want to identify defects in a crystal with a structure
+    not supported by this analysis algorithm but having a sublattice that can be identified by the PTM method.
+    (And you do not want to delete particles belonging to the other sublattice(s) for some reason.)
+  </para>  
+  
+</section>

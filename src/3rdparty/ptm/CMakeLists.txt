@@ -20,25 +20,24 @@
 ###############################################################################
 
 SET(PTM_SOURCE_FILES
-	alloy_types.c
-	canonical.c
-	convex_hull_incremental.c
-	deformation_gradient.c
-	graph_data.c
-	index_ptm.c
-	fundamental_mappings.c
+	alloy_types.cpp
+	canonical.cpp
+	convex_hull_incremental.cpp
+	deformation_gradient.cpp
+	graph_data.cpp
+	index_ptm.cpp
 	neighbour_ordering.cpp
-	normalize_vertices.c
-	reference_templates.c
-	qcprot/qcprot.c
-	qcprot/quat.c
+	normalize_vertices.cpp
+	polar_decomposition.cpp
+	qcprot/qcprot.cpp
+	qcprot/quat.cpp
 )
 
 # Build library.
 ADD_LIBRARY(PolyhedralTemplateMatching STATIC ${PTM_SOURCE_FILES})
 
 # Link to Voro++ library.
-TARGET_LINK_LIBRARIES(PolyhedralTemplateMatching PRIVATE VoroPlusPlus SVDPolar)
+TARGET_LINK_LIBRARIES(PolyhedralTemplateMatching PRIVATE VoroPlusPlus)
 
 # Make header files of this library available to dependent targets.
 TARGET_INCLUDE_DIRECTORIES(PolyhedralTemplateMatching INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/..")

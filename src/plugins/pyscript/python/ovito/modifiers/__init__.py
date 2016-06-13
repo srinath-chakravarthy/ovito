@@ -10,7 +10,7 @@ modification pipeline of an :py:class:`~ovito.ObjectNode`, e.g.::
     m.color = (0.2, 1.0, 0.9)
     node.modifiers.append(m)
     
-The following modifier types are available:
+The following modifier classes are available:
 
 ============================================== =========================================
 Class name                                     User interface name
@@ -42,6 +42,7 @@ Class name                                     User interface name
 :py:class:`InvertSelectionModifier`            :guilabel:`Invert selection`
 :py:class:`LoadTrajectoryModifier`             :guilabel:`Load trajectory`
 :py:class:`ManualSelectionModifier`            :guilabel:`Manual selection`
+:py:class:`PolyhedralTemplateMatchingModifier` :guilabel:`Polyhedral template matching`
 :py:class:`PythonScriptModifier`               :guilabel:`Python script`
 :py:class:`ScatterPlotModifier`                :guilabel:`Scatter plot`
 :py:class:`SelectExpressionModifier`           :guilabel:`Expression select`

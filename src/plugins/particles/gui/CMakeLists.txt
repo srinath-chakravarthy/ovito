@@ -56,7 +56,7 @@ SET(SourceFiles
 	modifier/analysis/cluster/ClusterAnalysisModifierEditor.cpp
 	modifier/analysis/scatterplot/ScatterPlotModifierEditor.cpp
 	modifier/analysis/wignerseitz/WignerSeitzAnalysisModifierEditor.cpp
-	#modifier/analysis/ptm/PolyhedralTemplateMatchingModifierEditor.cpp
+	modifier/analysis/ptm/PolyhedralTemplateMatchingModifierEditor.cpp
 	modifier/selection/ExpandSelectionModifierEditor.cpp
 	modifier/selection/SelectParticleTypeModifierEditor.cpp
 	modifier/selection/SelectExpressionModifierEditor.cpp

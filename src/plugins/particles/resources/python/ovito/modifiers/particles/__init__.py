@@ -42,6 +42,7 @@ ovito.modifiers.VoronoiAnalysisModifier = ParticlesModify.VoronoiAnalysisModifie
 ovito.modifiers.IdentifyDiamondModifier = ParticlesModify.IdentifyDiamondModifier
 ovito.modifiers.LoadTrajectoryModifier = ParticlesModify.LoadTrajectoryModifier
 ovito.modifiers.ComputeBondLengthsModifier = ParticlesModify.ComputeBondLengthsModifier
+ovito.modifiers.PolyhedralTemplateMatchingModifier = ParticlesModify.PolyhedralTemplateMatchingModifier
 
 # Implement the 'rdf' attribute of the CoordinationNumberModifier class.
 def _CoordinationNumberModifier_rdf(self):

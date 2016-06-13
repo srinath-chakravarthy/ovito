@@ -31,12 +31,12 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, PolyhedralTemplateMatchingModifier, StructureIdentificationModifier);
 DEFINE_FLAGS_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _rmsdCutoff, "RMSDCutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputRmsd, "OutputRmsd");
-DEFINE_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputScalingFactor, "OutputScalingFactor");
+DEFINE_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputScaleFactor, "OutputScaleFactor");
 DEFINE_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputOrientation, "OutputOrientation");
 DEFINE_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputDeformationGradient, "OutputDeformationGradient");
 SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _rmsdCutoff, "RMSD cutoff");
 SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputRmsd, "Output RMSD values");
-SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputScalingFactor, "Output scaling factors");
+SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputScaleFactor, "Output scale factors");
 SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputOrientation, "Output orientations");
 SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputDeformationGradient, "Output deformation gradients");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(PolyhedralTemplateMatchingModifier, _rmsdCutoff, FloatParameterUnit, 0);
@@ -45,12 +45,12 @@ SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(PolyhedralTemplateMatchingModifier, _rmsdCu
 * Constructs the modifier object.
 ******************************************************************************/
 PolyhedralTemplateMatchingModifier::PolyhedralTemplateMatchingModifier(DataSet* dataset) : StructureIdentificationModifier(dataset),
-		_rmsdCutoff(0), _rmsdHistogramBinSize(0), _outputRmsd(false), _outputScalingFactor(false),
+		_rmsdCutoff(0), _rmsdHistogramBinSize(0), _outputRmsd(false), _outputScaleFactor(false),
 		_outputOrientation(false), _outputDeformationGradient(false)
 {
 	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_rmsdCutoff);
 	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputRmsd);
-	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputScalingFactor);
+	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputScaleFactor);
 	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputOrientation);
 	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputDeformationGradient);
 
@@ -72,7 +72,7 @@ void PolyhedralTemplateMatchingModifier::propertyChanged(const PropertyFieldDesc
 
 	// Re-perform analysis when settings change.
 	if(field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputRmsd) ||
-		field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputScalingFactor) ||
+		field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputScaleFactor) ||
 		field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputOrientation) ||
 		field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputDeformationGradient))
 		invalidateCachedResults();
@@ -104,7 +104,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> PolyhedralTemplateM
 
 	return std::make_shared<PTMEngine>(validityInterval, posProperty->storage(), simCell->data(),
 			getTypesToIdentify(NUM_STRUCTURE_TYPES), selectionProperty,
-			_outputScalingFactor, _outputOrientation, _outputDeformationGradient);
+			outputScaleFactor(), outputOrientation(), outputDeformationGradient());
 }
 
 /******************************************************************************
@@ -200,7 +200,7 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 				else if(type == PTM_MATCH_BCC) output->setInt(index, BCC);
 				else OVITO_ASSERT(false);
 				_rmsd->setFloat(index, rmsd);
-				if(_scalingFactors) _scalingFactors->setFloat(index, scale);
+				if(_scaleFactors) _scaleFactors->setFloat(index, scale);
 				if(_orientations) _orientations->setQuaternion(index, Quaternion((FloatType)q[0], (FloatType)q[1], (FloatType)q[2], (FloatType)q[3]));
 				if(_deformationGradients) {
 					for(size_t j = 0; j < 9; j++)
@@ -248,7 +248,7 @@ void PolyhedralTemplateMatchingModifier::transferComputationResults(ComputeEngin
 	_rmsd = ptmEngine->_rmsd;
 
 	// Transfer per-particle data.
-	_scalingFactors = ptmEngine->_scalingFactors;
+	_scaleFactors = ptmEngine->_scaleFactors;
 	_orientations = ptmEngine->_orientations;
 	_deformationGradients = ptmEngine->_deformationGradients;
 }
@@ -280,10 +280,10 @@ PipelineStatus PolyhedralTemplateMatchingModifier::applyComputationResults(TimeP
 	}
 
 	// Output per-particle properties.
-	if(_rmsd && _outputRmsd) outputCustomProperty(_rmsd.data());
-	if(_scalingFactors && _outputScalingFactor) outputCustomProperty(_scalingFactors.data());
-	if(_orientations && _outputOrientation) outputStandardProperty(_orientations.data());
-	if(_deformationGradients && _outputDeformationGradient) outputStandardProperty(_deformationGradients.data());
+	if(_rmsd && outputRmsd()) outputCustomProperty(_rmsd.data());
+	if(_scaleFactors && outputScaleFactor()) outputCustomProperty(_scaleFactors.data());
+	if(_orientations && outputOrientation()) outputStandardProperty(_orientations.data());
+	if(_deformationGradients && outputDeformationGradient()) outputStandardProperty(_deformationGradients.data());
 
 	// Let the base class output the structure type property to the pipeline.
 	PipelineStatus status = StructureIdentificationModifier::applyComputationResults(time, validityInterval);

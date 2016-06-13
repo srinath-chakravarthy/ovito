@@ -37,17 +37,18 @@ SET_OVITO_OBJECT_EDITOR(PolyhedralTemplateMatchingModifier, PolyhedralTemplateMa
 void PolyhedralTemplateMatchingModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 {
 	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Polyhedral template matching"), rolloutParams);
+	QWidget* rollout = createRollout(tr("Polyhedral template matching"), rolloutParams, "particles.modifiers.polyhedral_template_matching.html");
 
     // Create the rollout contents.
 	QVBoxLayout* layout1 = new QVBoxLayout(rollout);
 	layout1->setContentsMargins(4,4,4,4);
 	layout1->setSpacing(6);
 
-	QGridLayout* gridlayout = new QGridLayout();
+	QGroupBox* paramsBox = new QGroupBox(tr("Parameters"), rollout);
+	QGridLayout* gridlayout = new QGridLayout(paramsBox);
 	gridlayout->setContentsMargins(4,4,4,4);
 	gridlayout->setColumnStretch(1, 1);
-	layout1->addLayout(gridlayout);
+	layout1->addWidget(paramsBox);
 
 	// RMSD cutoff parameter.
 	FloatParameterUI* rmsdCutoffPUI = new FloatParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_rmsdCutoff));
@@ -56,17 +57,26 @@ void PolyhedralTemplateMatchingModifierEditor::createUI(const RolloutInsertionPa
 
 	// Use only selected particles.
 	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::_onlySelectedParticles));
-	layout1->addWidget(onlySelectedParticlesUI->checkBox());
+	gridlayout->addWidget(onlySelectedParticlesUI->checkBox(), 1, 0, 1, 2);
+
+	QGroupBox* outputBox = new QGroupBox(tr("Output"), rollout);
+	QVBoxLayout* sublayout = new QVBoxLayout(outputBox);
+	sublayout->setContentsMargins(4,4,4,4);
+	layout1->addWidget(outputBox);
 
 	// Output controls.
 	BooleanParameterUI* outputRmsdUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputRmsd));
-	layout1->addWidget(outputRmsdUI->checkBox());
-	BooleanParameterUI* outputScalingFactorUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputScalingFactor));
-	layout1->addWidget(outputScalingFactorUI->checkBox());
+	sublayout->addWidget(outputRmsdUI->checkBox());
+	outputRmsdUI->checkBox()->setText(tr("RMSD value"));
+	BooleanParameterUI* outputScaleFactorUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputScaleFactor));
+	sublayout->addWidget(outputScaleFactorUI->checkBox());
+	outputScaleFactorUI->checkBox()->setText(tr("Scale factor"));
 	BooleanParameterUI* outputOrientationUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputOrientation));
-	layout1->addWidget(outputOrientationUI->checkBox());
+	sublayout->addWidget(outputOrientationUI->checkBox());
+	outputOrientationUI->checkBox()->setText(tr("Lattice orientation"));
 	BooleanParameterUI* outputDeformationGradientUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputDeformationGradient));
-	layout1->addWidget(outputDeformationGradientUI->checkBox());
+	sublayout->addWidget(outputDeformationGradientUI->checkBox());
+	outputDeformationGradientUI->checkBox()->setText(tr("Elastic deformation gradient"));
 
 	StructureListParameterUI* structureTypesPUI = new StructureListParameterUI(this, true);
 	layout1->addSpacing(10);

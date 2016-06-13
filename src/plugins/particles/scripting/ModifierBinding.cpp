@@ -57,6 +57,7 @@
 #include <plugins/particles/modifier/analysis/scatterplot/ScatterPlotModifier.h>
 #include <plugins/particles/modifier/analysis/strain/AtomicStrainModifier.h>
 #include <plugins/particles/modifier/analysis/wignerseitz/WignerSeitzAnalysisModifier.h>
+#include <plugins/particles/modifier/analysis/ptm/PolyhedralTemplateMatchingModifier.h>
 #include <plugins/particles/modifier/analysis/voronoi/VoronoiAnalysisModifier.h>
 #include <plugins/particles/modifier/analysis/diamond/IdentifyDiamondModifier.h>
 #include <core/scene/pipeline/ModifierApplication.h>
@@ -1238,6 +1239,103 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"You can call its :py:meth:`~ovito.io.FileSource.load` function to load a simulation trajectory file "
 				"as shown in the code example above.")
 	;
+
+	{
+		scope s = ovito_class<PolyhedralTemplateMatchingModifier, StructureIdentificationModifier>(
+				":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
+				"Uses the Polyhedral Template Matching (PTM) method to classify the local structural neighborhood "
+				"of each particle. "
+				"\n\n"
+				"The modifier stores its results as integer values in the ``\"Structure Type\"`` particle property. "
+				"The following constants are defined: "
+				"\n\n"
+				"   * ``PolyhedralTemplateMatchingModifier.Type.OTHER`` (0)\n"
+				"   * ``PolyhedralTemplateMatchingModifier.Type.FCC`` (1)\n"
+				"   * ``PolyhedralTemplateMatchingModifier.Type.HCP`` (2)\n"
+				"   * ``PolyhedralTemplateMatchingModifier.Type.BCC`` (3)\n"
+				"   * ``PolyhedralTemplateMatchingModifier.Type.ICO`` (4)\n"
+				"   * ``PolyhedralTemplateMatchingModifier.Type.SC`` (5)\n"
+				"\n"
+				"**Modifier outputs:**"
+				"\n\n"
+				" * ``PolyhedralTemplateMatching.counts.OTHER`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of particles not matching any of the known structure types.\n"
+				" * ``PolyhedralTemplateMatching.counts.FCC`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of FCC particles found.\n"
+				" * ``PolyhedralTemplateMatching.counts.HCP`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of HCP particles found.\n"
+				" * ``PolyhedralTemplateMatching.counts.BCC`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of BCC particles found.\n"
+				" * ``PolyhedralTemplateMatching.counts.ICO`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of icosahedral particles found.\n"
+				" * ``PolyhedralTemplateMatching.counts.SC`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of simple cubic particles found.\n"
+				" * ``Structure Type`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+				"   This output particle property will contain the per-particle structure types assigned by the modifier.\n"
+				" * ``RMSD`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+				"   This particle property will contain the per-particle RMSD values computed by the PTM method.\n"
+				"   The modifier will output this property only if the :py:attr:`.output_rmsd` flag is set.\n"
+				" * ``Scale Factor`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+				"   This particle property will contain the local scale factors computed by the PTM method.\n"
+				"   The modifier will output this property only if the :py:attr:`.output_scale_factor` flag is set.\n"
+				" * ``Orientation`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+				"   This particle property will contain the local lattice orientations computed by the PTM method\n"
+				"   encoded as quaternions.\n"
+				"   The modifier will generate this property only if the :py:attr:`.output_orientation` flag is set.\n"
+				" * ``Elastic Deformation Gradient`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+				"   This particle property will contain the local elastic deformation gradient tensors computed by the PTM method.\n"
+				"   The modifier will output this property only if the :py:attr:`.output_deformation_gradient` flag is set.\n"
+				" * ``Color`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+				"   The modifier assigns a color to each particle based on its identified structure type. "
+				"   You can change the color representing a structural type as follows::"
+				"\n\n"
+				"      modifier = PolyhedralTemplateMatchingModifier()\n"
+				"      # Give all FCC atoms a blue color:\n"
+				"      modifier.structures[PolyhedralTemplateMatchingModifier.Type.FCC].color = (0.0, 0.0, 1.0)\n"
+				"\n")
+			.add_property("structures", make_function(&PolyhedralTemplateMatchingModifier::structureTypes, return_internal_reference<>()),
+					"A list of :py:class:`~ovito.data.ParticleType` instances managed by this modifier, one for each structural type. "
+					"You can adjust the color of structural types here as shown in the code example above.")
+			.add_property("rmsd_cutoff", &PolyhedralTemplateMatchingModifier::rmsdCutoff, &PolyhedralTemplateMatchingModifier::setRmsdCutoff,
+					"The maximum allowed root mean square deviation for positive structure matches. "
+					"If the cutoff is non-zero, template matches that yield a RMSD value above the cutoff are classified as \"Other\". "
+					"This can be used to filter out spurious template matches (false positives). "
+					"\n\n"
+					"If this parameter is zero, no cutoff is applied."
+					"\n\n"
+					":Default: 0.0\n")
+			.add_property("only_selected", &PolyhedralTemplateMatchingModifier::onlySelectedParticles, &PolyhedralTemplateMatchingModifier::setOnlySelectedParticles,
+					"Lets the modifier perform the analysis only on the basis of currently selected particles. Unselected particles will be treated as if they did not exist."
+					"\n\n"
+					":Default: ``False``\n")
+			.add_property("output_rmsd", &PolyhedralTemplateMatchingModifier::outputRmsd, &PolyhedralTemplateMatchingModifier::setOutputRmsd,
+					"Boolean flag that controls whether the modifier outputs the computed per-particle RMSD values to the pipeline."
+					"\n\n"
+					":Default: ``False``\n")
+			.add_property("output_scale_factor", &PolyhedralTemplateMatchingModifier::outputScaleFactor, &PolyhedralTemplateMatchingModifier::setOutputScaleFactor,
+					"Boolean flag that controls whether the modifier outputs the computed per-particle scale factors to the pipeline."
+					"\n\n"
+					":Default: ``False``\n")
+			.add_property("output_orientation", &PolyhedralTemplateMatchingModifier::outputOrientation, &PolyhedralTemplateMatchingModifier::setOutputOrientation,
+					"Boolean flag that controls whether the modifier outputs the computed per-particle lattice orientation to the pipeline."
+					"\n\n"
+					":Default: ``False``\n")
+			.add_property("output_deformation_gradient", &PolyhedralTemplateMatchingModifier::outputDeformationGradient, &PolyhedralTemplateMatchingModifier::setOutputDeformationGradient,
+					"Boolean flag that controls whether the modifier outputs the computed per-particle elastic deformation gradients to the pipeline."
+					"\n\n"
+					":Default: ``False``\n")
+		;
+
+		enum_<PolyhedralTemplateMatchingModifier::StructureType>("Type")
+			.value("OTHER", PolyhedralTemplateMatchingModifier::OTHER)
+			.value("FCC", PolyhedralTemplateMatchingModifier::FCC)
+			.value("HCP", PolyhedralTemplateMatchingModifier::HCP)
+			.value("BCC", PolyhedralTemplateMatchingModifier::BCC)
+			.value("ICO", PolyhedralTemplateMatchingModifier::ICO)
+			.value("SC", PolyhedralTemplateMatchingModifier::SC)
+		;
+	}
+
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(ParticlesModify);

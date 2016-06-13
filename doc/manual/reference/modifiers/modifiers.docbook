@@ -85,6 +85,10 @@
               <entry>Finds atoms that are arranged in a cubic or hexagonal diamond lattice.</entry>
             </row>
             <row>
+              <entry><link linkend="particles.modifiers.polyhedral_template_matching">Polyhedral Template Matching</link></entry>
+              <entry>Identifies the local crystal structure using the PTM method.</entry>
+            </row>
+            <row>
               <entry><link linkend="particles.modifiers.scatter_plot">Scatter plot</link></entry>
               <entry>Generates a scatter plot of two particle properties.</entry>
             </row>
@@ -251,6 +255,8 @@
   <xi:include href="particles/load_trajectory.docbook"/>
 
   <xi:include href="particles/manual_selection.docbook"/>
+
+  <xi:include href="particles/polyhedral_template_matching.docbook"/>
 
   <xi:include href="particles/python_script.docbook"/>
 

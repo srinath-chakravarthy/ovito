@@ -72,6 +72,30 @@ public:
 	/// Returns the bin size of the RMSD histogram.
 	FloatType rmsdHistogramBinSize() const { return _rmsdHistogramBinSize; }
 
+	/// Returns whether per-particle RMSD values are output by the modifier.
+	bool outputRmsd() const { return _outputRmsd; }
+
+	/// Sets whether per-particle RMSD values are output by the modifier.
+	void setOutputRmsd(bool enable) { _outputRmsd = enable; }
+
+	/// Returns whether local scales are output by the modifier.
+	bool outputScaleFactor() const { return _outputScaleFactor; }
+
+	/// Sets whether local scales are output by the modifier.
+	void setOutputScaleFactor(bool enable) { _outputScaleFactor = enable; }
+
+	/// Returns whether local orientations are output by the modifier.
+	bool outputOrientation() const { return _outputOrientation; }
+
+	/// Sets whether local orientations are output by the modifier.
+	void setOutputOrientation(bool enable) { _outputOrientation = enable; }
+
+	/// Returns whether elastic deformation gradients are output by the modifier.
+	bool outputDeformationGradient() const { return _outputDeformationGradient; }
+
+	/// Sets whether elastic deformation gradients are output by the modifier.
+	void setOutputDeformationGradient(bool enable) { _outputDeformationGradient = enable; }
+
 protected:
 
 	/// Is called when the value of a property of this object has changed.
@@ -96,10 +120,10 @@ private:
 		/// Constructor.
 		PTMEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell,
 				const QVector<bool>& typesToIdentify, ParticleProperty* selection,
-				bool outputScalingFactor, bool outputOrientation, bool outputDeformationGradient) :
+				bool outputScaleFactor, bool outputOrientation, bool outputDeformationGradient) :
 			StructureIdentificationEngine(validityInterval, positions, simCell, typesToIdentify, selection),
 			_rmsd(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, tr("RMSD"), false)),
-			_scalingFactors(outputScalingFactor ? new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, tr("Scaling Factor"), true) : nullptr),
+			_scaleFactors(outputScaleFactor ? new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, tr("Scale Factor"), true) : nullptr),
 			_orientations(outputOrientation ? new ParticleProperty(positions->size(), ParticleProperty::OrientationProperty, 0, true) : nullptr),
 			_deformationGradients(outputDeformationGradient ? new ParticleProperty(positions->size(), ParticleProperty::ElasticDeformationGradientProperty, 0, true) : nullptr) {}
 
@@ -107,7 +131,7 @@ private:
 		virtual void perform() override;
 
 		QExplicitlySharedDataPointer<ParticleProperty> _rmsd;
-		QExplicitlySharedDataPointer<ParticleProperty> _scalingFactors;
+		QExplicitlySharedDataPointer<ParticleProperty> _scaleFactors;
 		QExplicitlySharedDataPointer<ParticleProperty> _orientations;
 		QExplicitlySharedDataPointer<ParticleProperty> _deformationGradients;
 		QVector<int> _rmsdHistogramData;
@@ -122,8 +146,8 @@ private:
 	/// The computed per-particle RMSD values.
 	QExplicitlySharedDataPointer<ParticleProperty> _rmsd;
 
-	/// The computed per-particle scaling factors.
-	QExplicitlySharedDataPointer<ParticleProperty> _scalingFactors;
+	/// The computed per-particle scale factors.
+	QExplicitlySharedDataPointer<ParticleProperty> _scaleFactors;
 
 	/// The computed per-particle orientations.
 	QExplicitlySharedDataPointer<ParticleProperty> _orientations;
@@ -137,8 +161,8 @@ private:
 	/// Controls the output of the per-particle RMSD values.
 	PropertyField<bool> _outputRmsd;
 
-	/// Controls the output of local scaling values.
-	PropertyField<bool> _outputScalingFactor;
+	/// Controls the output of local scales.
+	PropertyField<bool> _outputScaleFactor;
 
 	/// Controls the output of local orientations.
 	PropertyField<bool> _outputOrientation;
@@ -160,7 +184,7 @@ private:
 
 	DECLARE_PROPERTY_FIELD(_rmsdCutoff);
 	DECLARE_PROPERTY_FIELD(_outputRmsd);
-	DECLARE_PROPERTY_FIELD(_outputScalingFactor);
+	DECLARE_PROPERTY_FIELD(_outputScaleFactor);
 	DECLARE_PROPERTY_FIELD(_outputOrientation);
 	DECLARE_PROPERTY_FIELD(_outputDeformationGradient);
 };

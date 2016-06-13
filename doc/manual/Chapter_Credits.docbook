@@ -38,8 +38,6 @@
       <listitem><para><link xlink:href="http://www.zlib.net">zlib</link> library</para></listitem>
       <listitem><para><link xlink:href="https://github.com/pmla/polyhedral-template-matching">Polyhedral Template Matching library</link> by Peter Mahler Larsen 
       (<link linkend="appendix.license.ptm">license</link>).</para></listitem>
-      <listitem><para><link xlink:href="http://pages.cs.wisc.edu/~sifakis/project_pages/svd.html">Singular Value Decomposition routine</link> by Eftychios Sifakis 
-      (<link linkend="appendix.license.svdpolar">license</link>).</para></listitem>
       <listitem><para><link xlink:href="http://theobald.brandeis.edu/qcp/">QCP rotation calculation method</link> by Pu Liu and Douglas L. Theobald 
       (<link linkend="appendix.license.qcprot">license</link>).</para></listitem>
     </itemizedlist>
@@ -61,8 +59,6 @@
   <xi:include href="licenses/PTM.docbook"/>
 
   <xi:include href="licenses/qcprot.docbook"/>  
-
-  <xi:include href="licenses/svdpolar.docbook"/>
   
   <xi:include href="licenses/voroplusplus.docbook"/>
   
