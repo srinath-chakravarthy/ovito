@@ -23,6 +23,7 @@
 #include <core/scene/objects/DataObject.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/animation/AnimationSettings.h>
+#include <plugins/particles/objects/BondsObject.h>
 #include "LoadTrajectoryModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
@@ -146,6 +147,38 @@ PipelineStatus LoadTrajectoryModifier::modifyParticles(TimePoint time, TimeInter
 	if(topologyCell && trajectoryCell) {
 		SimulationCellObject* outputCell = outputSimulationCell();
 		outputCell->setCellMatrix(trajectoryCell->cellMatrix());
+		AffineTransformation simCell = trajectoryCell->cellMatrix();
+
+		// Trajectories of atoms may cross periodic boundaries and if atomic positions are
+		// stored in wrapped coordinates, then it becomes necessary to fix bonds using the minimum image convention.
+		std::array<bool, 3> pbc = topologyCell->pbcFlags();
+		if((pbc[0] || pbc[1] || pbc[2]) && std::abs(simCell.determinant()) > FLOATTYPE_EPSILON) {
+			AffineTransformation inverseSimCell = simCell.inverse();
+
+			for(DataObject* obj : output().objects()) {
+				if(BondsObject* bondsObj = dynamic_object_cast<BondsObject>(obj)) {
+					// Is the object still a shallow copy of the input?
+					if(input().contains(bondsObj)) {
+						// If yes, make a real copy of the object, which may be modified.
+						OORef<BondsObject> newObject = cloneHelper()->cloneObject(bondsObj, false);
+						output().replaceObject(bondsObj, newObject);
+						bondsObj = newObject;
+					}
+
+					// Wrap bonds crossing a periodic boundary by resetting their PBC shift vectors.
+					for(Bond& bond : *bondsObj->modifiableStorage()) {
+						const Point3& p1 = outputPosProperty->getPoint3(bond.index1);
+						const Point3& p2 = outputPosProperty->getPoint3(bond.index2);
+						for(size_t dim = 0; dim < 3; dim++) {
+							if(pbc[dim]) {
+								bond.pbcShift[dim] = (int8_t)floor(inverseSimCell.prodrow(p1 - p2, dim) + FloatType(0.5));
+							}
+						}
+					}
+					bondsObj->changed();
+				}
+			}
+		}
 	}
 
 	return trajState.status().type();

@@ -38,4 +38,12 @@
   loaded from the trajectory file. The same is done for the simulation cell geometry.
   </para>
   
+  <para>
+  The modifier tries to fix bonds of particles whose trajectories cross a periodic simulation cell
+  boundary. If the atomic trajectories are stored in wrapped coordinates, then
+  the PBC shift vectors of bonds need to be readjusted to ensure a correct display. The method used by 
+  the modifier is based on the minimum image convention, which prevents bonds from spanning more than half
+  of the simulation box size. 
+  </para>
+
 </section>

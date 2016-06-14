@@ -63,9 +63,9 @@
     <title>Parameters</title>
     <variablelist>
       <varlistentry>
-        <term>Cutoff radius</term>
+        <term>Cutoff distance</term>
         <listitem>
-          <para>The threshold up to which two particles are considered direct neighbors.
+          <para>The distance threshold up to which two particles are considered direct neighbors and assigned to the same cluster.
           </para>
         </listitem>
       </varlistentry>
@@ -75,6 +75,14 @@
           <para>If this option is active, the clustering algorithm is restricted to selected
           particles. Unselected particles will be treated as if they do not exist and will be assigned
           the cluster ID 0. 
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Sort clusters by size</term>
+        <listitem>
+          <para>Enables the sorting of clusters by size (in descending order). Cluster ID 1 will be the largest cluster, 
+          cluster ID 2 the second largest, and so on.
           </para>
         </listitem>
       </varlistentry>
