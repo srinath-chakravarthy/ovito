@@ -1,9 +1,9 @@
 User interface improvements:
 
 - Default directory for image/movie output should be the path of the current data file.
-- Add support for keyboard shortcuts (requested by Fossati, Paul C).
 - Add file export function to Construct Surface Mesh modifier, which allows to export the mesh to a VTK file (requested by konstantin.avchachov@helsinki.fi).
 - Make initial set of viewports configurable by the user (requested by mathias.hoeld@univie.ac.at).  
+- Add support for keyboard shortcuts (requested by Fossati, Paul C).
 
 Work-flow improvements:
 
@@ -18,6 +18,8 @@ New visualization features:
 - Test OpenGL rendering support for more than 12 million particles.
 - Color coding with logarithmic mapping 
 - Text Label overlay: Add more style options like font outline, background color, etc (stefan.parviainen@iki.fi).
+- Thompson Tetrahedra
+- Stereoscopic display (Erik Bitzek)
 
 Unresolved OpenGL problems:
 
@@ -65,12 +67,17 @@ Unresolved bugs:
 - Assertion error at program shut down when Python script references an object or the Dataset
 - Construct surface mesh doesn't work for very small length scales (reported by xin.liu@insa-lyon.fr)
 
+- Include the missing VC runtime DLLs in the Windows package!
+
 New analysis features:
 
 - Create Bonds modifier: Add 'lower bound' parameter such that, when using the modifier several times, bonds with different lengths can be assigned different colors (jerome.dequeker@ed.univ-lille1.fr).
 - Plotting the value of a certain property of a certain particle versus simulation time. To make this work, all simulation frames need to be kept in memory (requested by Taojun & Mathieu Marciante).
 - Compute polar decomposition of deformation gradient, F=RU (requested by arun.prakash@fau.de).
 - Calculation of type-specific RDF.
+- Identification of binary phases and defects (see Christoph Begau's work)
+- Glass ring analysis (see ISAACS, RINGS, Sudheer @ FAU) 
+- Crystal orientation map
 
 New I/O functions:
 
@@ -80,7 +87,7 @@ New I/O functions:
 
 Performance improvements:
 
--
+- Parallelize Voronoi construction (arun.prakash@fau.de)
 
 Scripting features:
 

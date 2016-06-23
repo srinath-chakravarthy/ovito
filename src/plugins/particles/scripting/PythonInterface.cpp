@@ -455,10 +455,20 @@ BOOST_PYTHON_MODULE(Particles)
 	{
 		scope s = ovito_class<ParticleDisplay, DisplayObject>(
 				":Base class: :py:class:`ovito.vis.Display`\n\n"
-				"Controls the visual appearance of particles.")
+				"This object controls the visual appearance of particles."
+				"\n\n"
+				"An instance of this class is attached to the ``Position`` :py:class:`~ovito.data.ParticleProperty` "
+				"and can be accessed via its :py:attr:`~ovito.data.DataObject.display` property. "
+				"\n\n"
+				"For example, the following script demonstrates how to change the display shape of particles to a square:"
+				"\n\n"
+				".. literalinclude:: ../example_snippets/particle_display.py\n")
 			.add_property("radius", &ParticleDisplay::defaultParticleRadius, &ParticleDisplay::setDefaultParticleRadius,
-					"The default display radius of particles. "
-					"This setting only takes effect if no per-particle or per-type radii are defined."
+					"The standard display radius of particles. "
+					"This value is only used if no per-particle or per-type radii have been set. "
+					"A per-type radius can be set via :py:attr:`ovito.data.ParticleType.radius`. "
+					"An individual display radius can be assigned to particles by creating a ``Radius`` "
+					":py:class:`~ovito.data.ParticleProperty`, e.g. using the :py:class:`~ovito.modifiers.ComputePropertyModifier`. "
 					"\n\n"
 					":Default: 1.2\n")
 			.add_property("default_color", &ParticleDisplay::defaultParticleColor)
@@ -466,7 +476,7 @@ BOOST_PYTHON_MODULE(Particles)
 			.add_property("rendering_quality", &ParticleDisplay::renderingQuality, &ParticleDisplay::setRenderingQuality)
 			.add_property("shape", &ParticleDisplay::particleShape, &ParticleDisplay::setParticleShape,
 					"The display shape of particles.\n"
-					"Possible values:"
+					"Possible values are:"
 					"\n\n"
 					"   * ``ParticleDisplay.Shape.Sphere`` (default) \n"
 					"   * ``ParticleDisplay.Shape.Box``\n"
@@ -490,7 +500,15 @@ BOOST_PYTHON_MODULE(Particles)
 	{
 		scope s = ovito_class<VectorDisplay, DisplayObject>(
 				":Base class: :py:class:`ovito.vis.Display`\n\n"
-				"Controls the visual appearance of vectors (arrows).")
+				"Controls the visual appearance of vectors (arrows)."
+				"\n\n"
+				"An instance of this class is attached to particle properties "
+				"like for example the ``Displacement`` property, which represent vector quantities. "
+				"It can be accessed via the :py:attr:`~ovito.data.DataObject.display` property of the :py:class:`~ovito.data.ParticleProperty` class. "
+				"\n\n"
+				"For example, the following script demonstrates how to change the display color of force vectors loaded from an input file:"
+				"\n\n"
+				".. literalinclude:: ../example_snippets/vector_display.py\n")
 			.add_property("shading", &VectorDisplay::shadingMode, &VectorDisplay::setShadingMode,
 					"The shading style used for the arrows.\n"
 					"Possible values:"
@@ -534,9 +552,12 @@ BOOST_PYTHON_MODULE(Particles)
 
 	ovito_class<SimulationCellDisplay, DisplayObject>(
 			":Base class: :py:class:`ovito.vis.Display`\n\n"
-			"Controls the visual appearance of :py:class:`~ovito.data.SimulationCellObject` data objects.")
+			"Controls the visual appearance of :py:class:`~ovito.data.SimulationCell` objects."
+			"The following script demonstrates how to change the line width of the simulation cell:"
+			"\n\n"
+			".. literalinclude:: ../example_snippets/simulation_cell_display.py\n")
 		.add_property("line_width", &SimulationCellDisplay::simulationCellLineWidth, &SimulationCellDisplay::setSimulationCellLineWidth,
-				"The width of the simulation cell line (in natural length units)."
+				"The width of the simulation cell line (in simulation units of length)."
 				"\n\n"
 				":Default: 0.14% of the simulation box diameter\n")
 		.add_property("render_cell", &SimulationCellDisplay::renderSimulationCell, &SimulationCellDisplay::setRenderSimulationCell,

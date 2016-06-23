@@ -90,6 +90,18 @@ public:
 	/// Sets the display color of the label.
 	void setTextColor(const Color& c) { _textColor = c; }
 
+	/// Returns the outline color of the font.
+	const Color& outlineColor() const { return _outlineColor; }
+
+	/// Sets the outline color of the font.
+	void setOutlineColor(const Color& c) { _outlineColor = c; }
+
+	/// Returns whether a text outline is drawn.
+	bool outlineEnabled() const { return _outlineEnabled; }
+
+	/// Sets whether a text outline is drawn.
+	void setOutlineEnabled(bool enable) { _outlineEnabled = enable; }
+
 	/// Returns the ObjectNode providing global attributes that can be reference in the text.
 	ObjectNode* sourceNode() const { return _sourceNode; }
 
@@ -119,6 +131,12 @@ private:
 	/// The display color of the label.
 	PropertyField<Color, QColor> _textColor;
 
+	/// The text outline color.
+	PropertyField<Color, QColor> _outlineColor;
+
+	/// Controls the outlining of the font.
+	PropertyField<bool> _outlineEnabled;
+
 	/// The ObjectNode providing global attributes that can be reference in the text.
 	ReferenceField<ObjectNode> _sourceNode;
 
@@ -129,6 +147,8 @@ private:
 	DECLARE_PROPERTY_FIELD(_offsetY);
 	DECLARE_PROPERTY_FIELD(_labelText);
 	DECLARE_PROPERTY_FIELD(_textColor);
+	DECLARE_PROPERTY_FIELD(_outlineColor);
+	DECLARE_PROPERTY_FIELD(_outlineEnabled);
 	DECLARE_REFERENCE_FIELD(_sourceNode);
 
 	Q_CLASSINFO("DisplayName", "Text label");

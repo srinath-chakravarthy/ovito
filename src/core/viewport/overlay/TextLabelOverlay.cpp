@@ -35,6 +35,8 @@ DEFINE_FLAGS_PROPERTY_FIELD(TextLabelOverlay, _offsetX, "OffsetX", PROPERTY_FIEL
 DEFINE_FLAGS_PROPERTY_FIELD(TextLabelOverlay, _offsetY, "OffsetY", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(TextLabelOverlay, _labelText, "LabelText");
 DEFINE_FLAGS_PROPERTY_FIELD(TextLabelOverlay, _textColor, "TextColor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TextLabelOverlay, _outlineColor, "OutlineColor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TextLabelOverlay, _outlineEnabled, "OutlineEnabled", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(TextLabelOverlay, _sourceNode, "SourceNode", ObjectNode, PROPERTY_FIELD_NO_SUB_ANIM);
 SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _alignment, "Position");
 SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _font, "Font");
@@ -42,6 +44,8 @@ SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _fontSize, "Font size");
 SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _offsetX, "Offset X");
 SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _offsetY, "Offset Y");
 SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _textColor, "Text color");
+SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _outlineColor, "Outline color");
+SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _outlineEnabled, "Enable outline");
 SET_PROPERTY_FIELD_LABEL(TextLabelOverlay, _sourceNode, "Attributes source");
 SET_PROPERTY_FIELD_UNITS(TextLabelOverlay, _offsetX, PercentParameterUnit);
 SET_PROPERTY_FIELD_UNITS(TextLabelOverlay, _offsetY, PercentParameterUnit);
@@ -55,7 +59,9 @@ TextLabelOverlay::TextLabelOverlay(DataSet* dataset) : ViewportOverlay(dataset),
 		_offsetX(0), _offsetY(0),
 		_fontSize(0.02),
 		_labelText("Text label"),
-		_textColor(0,0,0.5)
+		_textColor(0,0,0.5),
+		_outlineColor(1,1,1),
+		_outlineEnabled(false)
 {
 	INIT_PROPERTY_FIELD(TextLabelOverlay::_alignment);
 	INIT_PROPERTY_FIELD(TextLabelOverlay::_offsetX);
@@ -64,6 +70,8 @@ TextLabelOverlay::TextLabelOverlay(DataSet* dataset) : ViewportOverlay(dataset),
 	INIT_PROPERTY_FIELD(TextLabelOverlay::_fontSize);
 	INIT_PROPERTY_FIELD(TextLabelOverlay::_labelText);
 	INIT_PROPERTY_FIELD(TextLabelOverlay::_textColor);
+	INIT_PROPERTY_FIELD(TextLabelOverlay::_outlineColor);
+	INIT_PROPERTY_FIELD(TextLabelOverlay::_outlineEnabled);
 	INIT_PROPERTY_FIELD(TextLabelOverlay::_sourceNode);
 
 	// Automatically connect to the selected object node.
@@ -83,7 +91,7 @@ void TextLabelOverlay::render(Viewport* viewport, QPainter& painter, const ViewP
 
 	QString textString = labelText();
 
-	// Resolve referenced attributes in text string.
+	// Resolve attributes referenced in text string.
 	if(sourceNode()) {
 		const PipelineFlowState& flowState = sourceNode()->evalPipeline(dataset()->animationSettings()->time());
 		for(auto a = flowState.attributes().cbegin(); a != flowState.attributes().cend(); ++a) {
