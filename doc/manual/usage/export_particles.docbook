@@ -23,10 +23,10 @@
   </para>
   
   <para>
-  OVITO provides various analysis functions that can compute quantities like the surface area of a solid, the density of defects in a crystal, or the number of atoms
+  OVITO provides various analysis functions that can compute <emphasis>scalar</emphasis> quantities like the surface area of a solid, the density of defects in a crystal, or the number of atoms
   in a system forming a particluar lattice structure. To export such global quantities, pick the <emphasis>Calculation Results Text File</emphasis> format.
-  OVITO will write a text file with a data table containing the computed quantities that you selected for export. The text file can then be used to plot
-  the data with an external program, for example.
+  OVITO will write a data table with the computed quantities that you selected for export to a simple text file. The text file can then be used for plotting
+  the data with an external tool.
   </para>
   
   <simplesect xml:id="usage.export.formats">

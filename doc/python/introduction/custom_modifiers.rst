@@ -15,8 +15,8 @@ The following sections describe how this is done.
 Inserting a custom modifier into the pipeline
 ----------------------------------------------
 
-Creating a user-defined modifier essentially requires writing a Python function with the following signature, 
-which is responsible for computing the effect of the custom modifier::
+Creating a user-defined modifier requires writing a Python function with the following signature, 
+which will be responsible for computing the effect of the custom modifier::
 
   def modify(frame, input, output):
       ...
@@ -27,7 +27,7 @@ OVITO's graphical user interface or programmatically from Python:
 
   1. Within the graphical user interface, select *Python script* from the modifier drop-down list to insert
      a Python script modifier into the modification pipeline. OVITO provides a text input field
-     which allows you to enter the code for the ``modify()`` function. The 
+     which allows you to enter the definition of the ``modify()`` function. The 
      `corresponding page <../../particles.modifiers.python_script.html>`_ in the OVITO
      user manual provides more information on this procedure and on how you can save a custom script modifier 
      for future use within the graphical program.
@@ -45,22 +45,22 @@ OVITO's graphical user interface or programmatically from Python:
         # Inserting it into the modification pipeline of the node:
         node.modifiers.append(PythonScriptModifier(function = my_modifier))
 
-     Note how our custom modifier function, which can have any name in this case, 
+     Note that the custom modifier function can have any name in this case. It 
      is assigned to the :py:attr:`~ovito.modifiers.PythonScriptModifier.function` attribute of the
-     :py:class:`~ovito.modifiers.PythonScriptModifier` instance, which in turn is inserted into the modification pipeline.
+     :py:class:`~ovito.modifiers.PythonScriptModifier` instance, which in turn must be inserted into the node's modification pipeline.
      
 -----------------------------------
 The modifier function
 -----------------------------------
 
 The custom modifier function defined above is called by OVITO every time the modification pipeline
-is evaluated. It receives the data produced by the upstream part of the pipeline (e.g. the particles
+is evaluated. The function receives the data produced by the upstream part of the pipeline (e.g. the particles
 loaded by a :py:class:`~ovito.io.FileSource` and further processed by other modifiers that 
 precede the custom modifier in the pipeline). Our Python modifier function then has the possibility to modify or extend
-the data as needed. After the user-defined Python function returns, the output flows further down the pipeline, and, eventually, 
-the final results are stored in the :py:attr:`~ovito.ObjectNode.output` cache of the :py:class:`~ovito.ObjectNode` and rendered in the viewports.
+the data as needed. After the user-defined Python function has done its work and returns, the output flows further down the pipeline, and, eventually, 
+the final results are stored in the :py:attr:`~ovito.ObjectNode.output` cache of the :py:class:`~ovito.ObjectNode` and are rendered in the viewports.
 
-Our custom modifier function is invoked by the system with three arguments:
+When our custom modifier function is invoked by the pipeline it gets passed three arguments:
 
   * **frame** (*int*) -- The animation frame number at which the pipeline is evaluated. 
   * **input** (:py:class:`~ovito.data.DataCollection`) -- Contains the input data objects that the modifier receives from upstream.
@@ -70,34 +70,51 @@ The *input* :py:class:`~ovito.data.DataCollection`, and in particular the data o
 They are owned by the upstream part of the modification pipeline and must be accessed in a read-only fashion (e.g. by using the :py:attr:`~ovito.data.ParticleProperty.array`
 attribute instead of :py:attr:`~ovito.data.ParticleProperty.marray` to access per-particle values of a :py:class:`~ovito.data.ParticleProperty`).
 
-When the user-defined modifier function is invoked by the system, the *output* data collection already contains
-all data objects from the *input* collection. Thus, the default behavior is that all objects (e.g. particle properties, simulation cell, etc.) are passed
-through unmodified. 
+On function entry, i.e. when the modifier function is invoked by the system, the *output* data collection already contains
+all data objects also found in the *input* collection. Thus, the default behavior is that all objects (e.g. particle properties, simulation cell, sttributes, etc.) are passed
+through unmodified.
 
 Modifying existing data objects
 -----------------------------------
 
-For performance reasons no copies are made by default, and the *output* collection references the same data objects as the *input* collection.
-This means, before it is safe to modify a data object in the *output* data collection, you have to make a copy first. Otherwise you risk 
-modifying data that is owned by the upstream part of the modification pipeline (e.g. the :py:class:`~ovito.io.FileSource`). An in-place copy of a data object
+For performance reasons no data copies are made by default, and the *output* collection consists of references to the original data objects from the *input* collection.
+This means, before it is safe to modify a data object in the *output* data collection, you have to make a copy first. Otherwise you risk permanently 
+modifying data that is owned by the upstream part of the modification pipeline (e.g. the :py:class:`~ovito.io.FileSource` data cache). An in-place copy of a data object
 is made using the :py:meth:`DataCollection.copy_if_needed() <ovito.data.DataCollection.copy_if_needed>` method. The following example demonstrates the 
 principle:: 
 
    def modify(frame, input, output):
    
-       # Simulation cell is passed through by default:
+       # Original simulation cell is passed through by default.
+       # Output simulation cell is just a reference to the input cell.
        assert(output.cell is input.cell)
        
        # Make a copy of the simulation cell:
        cell = output.copy_if_needed(output.cell)
        
-       # Now we are allowed to modify the copy:
-       cell.pbc = (False, False, False)
-       
-       # The object was copied in place in the output data collection:
+       # copy_if_needed() made a deep copy of the simulation cell object.
+       # Now the the input and output each point to different objects.
        assert(cell is output.cell)
        assert(cell is not input.cell)
        
+       # Now it's safe to modify the object copy:
+       cell.pbc = (False, False, False)
+       
+Output of new attributes
+-----------------------------------
+
+In addition to data objects like the simulation cell or particle property, scalar quantities, which are called *attributes* in OVITO,
+flow down the data pipeline and can be modified or newly added by modifier functions. For example, we can define a new attribute
+on the basis of existing attributes and other information::
+
+   def modify(frame, input, output):
+       output.attributes['dislocation_density'] = 
+           input.attributes['DislocationAnalysis.total_line_length'] / input.cell.volume
+           
+This modifier function generates a new attribute named ``dislocation_density``, which is defined as the ratio of the total dislocation
+line length in a crystal (which is computed by a :py:class:`~ovito.modifiers.DislocationAnalysisModifier` preceding
+our custom modifier in the pipeline) and the simulation box :py:attr:`~ovito.data.SimulationCell.volume`.
+         
 
 Adding new data objects
 -----------------------------------

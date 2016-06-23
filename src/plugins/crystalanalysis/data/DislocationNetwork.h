@@ -209,6 +209,7 @@ struct DislocationSegment
 		burgersVector = -burgersVector;
 		std::swap(nodes[0], nodes[1]);
 		std::reverse(line.begin(), line.end());
+		std::reverse(coreSize.begin(), coreSize.end());
 	}
 
 	/// Computes the location of a point along the segment line.

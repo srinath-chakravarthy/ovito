@@ -4,15 +4,14 @@
 Modifiers
 ===================================
 
-Modifiers are objects that can be inserted into a node's modification pipeline.
+Modifiers are objects that make up a node's modification pipeline.
 They modify, filter, or extend the data that flows down the pipeline from the 
 :py:class:`~ovito.io.FileSource` to the node's output cache, which is an instance of the 
 :py:class:`~ovito.data.DataCollection` class.
 
-You insert a new modifier by creating a new instance of the corresponding modifier class
-(See :py:mod:`ovito.modifiers` module for the list of available modifier classes) and 
-adding it to the node's :py:attr:`~ovito.ObjectNode.modifiers`
-list property::
+You insert a new modifier into a pipeline by first creating a new instance of the corresponding modifier class
+(See :py:mod:`ovito.modifiers` module for the list of available modifier classes) and then 
+adding it to the node's :py:attr:`~ovito.ObjectNode.modifiers` list::
 
    >>> from ovito.modifiers import *
    >>> mod = AssignColorModifier( color=(0.5, 1.0, 0.0) )
@@ -57,16 +56,16 @@ Analysis modifiers
 ---------------------------------
 
 Analysis modifiers perform some computation based on the data they receive from the upstream part of the
-modification pipeline (or the :py:class:`~ovito.io.FileSource`). Typically they produce additional 
-output data (for example a new particle property), which is inserted back into the pipeline 
-where it is accessible to the following modifiers (e.g. a :py:class:`~ovito.modifiers.ColorCodingModifier`).
+modification pipeline (or the :py:class:`~ovito.io.FileSource`). Typically they produce new 
+output data (for example an additional particle property), which is fed back into the pipeline 
+where it will be accessible to the following modifiers (e.g. a :py:class:`~ovito.modifiers.ColorCodingModifier`).
 
-Let us take the :py:class:`~ovito.modifiers.CommonNeighborAnalysisModifier` as an example for an analysis modifier. 
+Let us take the :py:class:`~ovito.modifiers.CommonNeighborAnalysisModifier` as an example for a typical analysis modifier. 
 It takes the particle positions as input and classifies each particle as either FCC, HCP, BCC, or some other
 structural type. This per-particle information computed by the modifier is inserted into the pipeline as a new 
 :py:class:`~ovito.data.ParticleProperty` data object. Since it flows down the pipeline, this particle property
 is accessible by subsequent modifiers and will eventually arrive in the node's output data collection
-where we can access it from the Python script::
+where we can access it from a Python script::
 
     >>> cna = CommonNeighborAnalysis()
     >>> node.modifiers.append(cna)
@@ -77,30 +76,20 @@ where we can access it from the Python script::
 Note that the :py:class:`~ovito.modifiers.CommonNeighborAnalysisModifier` encodes the computed
 structural type of each particle as an integer number (0=OTHER, 1=FCC, ...). 
 
-In addition to this per-particle data, some analysis modifiers generate global status information
-as part of the computation. This information is not inserted into the data pipeline; instead it is 
-cached by the modifier itself and can be directly accessed as an attribute of the modifier class. For instance, 
-the :py:attr:`~ovito.modifiers.CommonNeighborAnalysisModifier.counts` attribute of the :py:class:`~ovito.modifiers.CommonNeighborAnalysisModifier` lists 
-the number of particles found by the modifier for each structural type::
+In addition to this kind of per-particle data, many analysis modifiers generate global information
+as part of their computation. This information, which typically consists of scalar quantities, is inserted into the data 
+pipeline as *attributes*. For instance, the  :py:class:`~ovito.modifiers.CommonNeighborAnalysisModifier` reports
+the total number of particles that match the FCC structure type as an attribute named ``CommonNeighborAnalysis.counts.FCC``::
 
-    >>> for c in enumerate(cna.counts):
-	...     print("Structure type %i: %i particles" % c)
-    Structure type 0: 117317 particles
-    Structure type 1: 1262 particles
-    Structure type 2: 339 particles
-    Structure type 3: 306 particles
-    Structure type 4: 0 particles
-    Structure type 5: 0 particles
+    >>> node.output.attributes['CommonNeighborAnalysis.counts.FCC']
+    1262
     
-Note that the :py:class:`~ovito.modifiers.CommonNeighborAnalysisModifier` class defines a set of integer constants 
-that make it easier to refer to individual structure types, e.g.::
+Note how we could have obtained the same value by explicitly counting the number of particles of FCC type
+ourselves::
 
-    >>> print("Number of FCC atoms:", cna.counts[CommonNeighborAnalysisModifier.Type.FCC])
-    Number of FCC atoms: 1262
-
-.. important::
-
-   The most important thing to remember here is that the modifier caches information from the 
-   last pipeline evaluation. That means you have to call :py:meth:`ObjectNode.compute() <ovito.ObjectNode.compute>` first 
-   before you access these output attributes of a modifier to make ensure that the values are up to date!
- 
+    >>> structure_property = node.output.particle_properties.structure_type.array
+    >>> numpy.count_nonzero(structure_property == CommonNeighborAnalysisModifier.Type.FCC)
+    1262
+    
+Attributes are stored in the :py:attr:`~ovito.data.DataCollection.attributes` dictionary of the :py:class:`~ovito.data.DataCollection`.
+The class documentation of each modifier lists the attributes that it generates.

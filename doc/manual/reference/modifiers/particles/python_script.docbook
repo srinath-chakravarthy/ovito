@@ -16,35 +16,36 @@
        <imagedata fileref="images/modifiers/python_script_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
   
-  The <emphasis>Python script</emphasis> modifier allows you to write custom modifier functions in Python
-  and integrate them into OVITO's modification pipeline framework. In other words, in cases where the 
-  <link linkend="particles.modifiers">set of built-in modifiers</link> of OVITO are not sufficient for your purposes,
+  The <emphasis>Python script</emphasis> modifier allows you to write your own modifier functions 
+  and integrate them into OVITO's data pipeline framework. In other words, in cases where the available 
+  <link linkend="particles.modifiers">built-in modifiers</link> of OVITO are not sufficient for your purposes,
   you can develop new modifiers types which manipulate or analyze particle systems in any way you want.  
   </para>
   
   <para>
-  The panel of the <emphasis>Python script</emphasis> modifier contains an input field
-  where you enter the Python code for the custom modifier function. The modifier function
-  will be run by the system every time OVITO needs to recompute the results of the current modification pipeline.
+  The <emphasis>Python script</emphasis> modifier panel provides an input field
+  where you enter the code of the custom modifier function. This modifier function
+  will be run by the system every time OVITO needs to recompute the results of the modification pipeline.
   </para>
   
   <para>
-  More information on how to write the Python modifier function can be found in 
+  How to write a Python modifier function is described in detail in  
   the <link xlink:href="python/introduction/custom_modifiers.html">Scripting Manual</link>.
   </para>
   
   <para>
   Note that you have to press <guibutton>Commit script</guibutton> after you are done editing
-  the Python code. This will recompile the code and trigger a new evaluation of the modification
+  the Python code in the input field. This will recompile the code and trigger a new evaluation of the modification
   pipeline.
   </para>
   
   <para>
-  The input field at the top of the panel allows you to assign a user-defined name to the
-  script modifier. The name will be shown in the pipeline editor. 
-  Note that it is possible to save the Python script modifier including the current code
-  as a <link linkend="modifier_presets">modifier preset</link>. This preset will then appear as a new entry in the list of available
-  modifiers, which allows you to easily re-use your custom script modifier in future OVITO sessions.
+  Furthermore, the text field at the top of the panel allows you to assign a user-defined name to the
+  script modifier. This name will be shown in the pipeline editor and makes it easier for you to find the custom modifier
+  in the list.
+  Also note that it is possible to save the Python script modifier including the current code
+  as a <link linkend="modifier_presets">modifier preset</link>. This preset will appear as an additional entry in the list of available
+  modifiers, allowing you to easily re-use the custom modifier in future OVITO sessions.
   </para>
   
 </section>
