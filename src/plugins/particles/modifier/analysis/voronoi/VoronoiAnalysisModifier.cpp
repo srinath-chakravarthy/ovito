@@ -248,6 +248,7 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 
 			setProgressRange(count);
 			setProgressValue(0);
+#if 1
 			voro::c_loop_all cl(voroContainer);
 			voro::voronoicell_neighbor v;
 			if(cl.start()) {
@@ -263,8 +264,38 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 			}
 			if(count)
 				throw Exception(tr("Could not compute Voronoi cell for some particles."));
+#else
+			// Perform analysis on each particle.
+			QMutex mutex;
+			parallelForChunks(_positions->size(), *this, [this, &processCell, &voroContainer, &mutex, nx, ny, nz](size_t startIndex, size_t count, FutureInterfaceBase& progress) {
+				size_t endIndex = startIndex + count;
+				voro::voronoicell_neighbor v;
+				voro::c_loop_all cl(voroContainer);
+				voro::voro_compute<voro::container> vc(voroContainer,
+						_simCell.pbcFlags()[0] ? 2*nx+1 : nx,
+						_simCell.pbcFlags()[1] ? 2*ny+1 : ny,
+						_simCell.pbcFlags()[2] ? 2*nz+1 : nz);
+				if(cl.start()) {
+					do {
+						if(cl.pid() < startIndex || cl.pid() >= endIndex)
+							continue;
+						// Update progress indicator.
+						if((cl.pid() % 256) == 0)
+							progress.incrementProgressValue(256);
+						// Break out of loop when operation was canceled.
+						if(progress.isCanceled())
+							break;
+						if(!vc.compute_cell(v,cl.ijk,cl.q,cl.i,cl.j,cl.k))
+							continue;
+						processCell(v, cl.pid(), &mutex);
+					}
+					while(cl.inc());
+				}
+			});
+#endif
 		}
 		else {
+#if 1
 			voro::container_poly voroContainer(ax, bx, ay, by, az, bz, nx, ny, nz,
 					_simCell.pbcFlags()[0], _simCell.pbcFlags()[1], _simCell.pbcFlags()[2], (int)std::ceil(voro::optimal_particles));
 
@@ -282,6 +313,7 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 			if(!count) return;
 			setProgressRange(count);
 			setProgressValue(0);
+
 			voro::c_loop_all cl(voroContainer);
 			voro::voronoicell_neighbor v;
 			if(cl.start()) {
@@ -297,6 +329,47 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 			}
 			if(count)
 				throw Exception(tr("Could not compute Voronoi cell for some particles."));
+#else
+			setProgressRange(_positions->size());
+			setProgressValue(0);
+
+			// Perform analysis on each particle.
+			QMutex mutex;
+			parallelForChunks(_positions->size(), *this, [this, &processCell, &mutex, ax, bx, ay, by, az, bz, nx, ny, nz](size_t startIndex, size_t count, FutureInterfaceBase& progress) {
+
+				voro::container_poly voroContainer(ax, bx, ay, by, az, bz, nx, ny, nz,
+						_simCell.pbcFlags()[0], _simCell.pbcFlags()[1], _simCell.pbcFlags()[2], (int)std::ceil(voro::optimal_particles));
+
+				// Insert particles into Voro++ container.
+				for(size_t index = 0; index < _positions->size(); index++) {
+					// Skip unselected particles (if requested).
+					if(_selection && _selection->getInt(index) == 0)
+						continue;
+					const Point3& p = _positions->getPoint3(index);
+					voroContainer.put(index, p.x(), p.y(), p.z(), _radii[index]);
+				}
+
+				size_t endIndex = startIndex + count;
+				voro::voronoicell_neighbor v;
+				voro::c_loop_all cl(voroContainer);
+				if(cl.start()) {
+					do {
+						if(cl.pid() < startIndex || cl.pid() >= endIndex)
+							continue;
+						// Update progress indicator.
+						if((cl.pid() % 256) == 0)
+							progress.incrementProgressValue(256);
+						// Break out of loop when operation was canceled.
+						if(progress.isCanceled())
+							break;
+						if(!voroContainer.compute_cell(v,cl))
+							continue;
+						processCell(v, cl.pid(), &mutex);
+					}
+					while(cl.inc());
+				}
+			});
+#endif
 		}
 	}
 	else {

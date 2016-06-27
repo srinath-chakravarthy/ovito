@@ -108,6 +108,10 @@ public:
 	/// Sets the ObjectNode providing global attributes that can be reference in the text.
 	void setSourceNode(ObjectNode* node) { _sourceNode = node; }
 
+public:
+
+	Q_PROPERTY(Ovito::ObjectNode* sourceNode READ sourceNode WRITE setSourceNode);
+
 private:
 
 	/// The corner of the viewport where the label is shown in.

@@ -7,7 +7,7 @@ User interface improvements:
 
 Work-flow improvements:
 
-- Better support for two-dimensional systems.
+- Improve support for two-dimensional systems.
 
 New visualization features:
 
@@ -72,7 +72,6 @@ New analysis features:
 
 - Create Bonds modifier: Add 'lower bound' parameter such that, when using the mothod todifier several times, bonds with different lengths can be assigned different colors (jerome.dequeker@ed.univ-lille1.fr).
 - Plotting the value of a certain property of a certain particle versus simulation time. To make this work, all simulation frames need to be kept in memory (requested by Taojun & Mathieu Marciante).
-- Compute polar decomposition of deformation gradient, F=RU (requested by arun.prakash@fau.de).
 - Calculation of type-specific RDF.
 - Identification of binary phases and defects (see Christoph Begau's work)
 - Glass ring analysis (see ISAACS, RINGS, Sudheer @ FAU) 
@@ -92,9 +91,7 @@ Scripting features:
 
 - Display script output when running a script via the GUI menu.
 - Distribute Scipy with Ovito?
-- Provide access to bond lengths and bond PBC shift vectors
 
 Documentation:
 
-- Document Text Label viewport overlay. 
 - Application settings dialog

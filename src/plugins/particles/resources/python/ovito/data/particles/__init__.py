@@ -282,7 +282,7 @@ def _Bonds_array(self):
     """ This attribute returns a NumPy array providing direct access to the bonds list.
         
         The returned array is two-dimensional and contains pairs of particle indices connected by a bond.
-        The array's shape is *N x 2*, where *N* is the number of half bonds. Each pair-wise bond occurs twice
+        The array's shape is *N x 2*, where *N* is the number of half-bonds. Each pair-wise bond occurs twice
         in the array, once for the connection A->B and second time for the connection B->A.
         Particle indices start at 0.
         
@@ -290,6 +290,37 @@ def _Bonds_array(self):
     """
     return numpy.asarray(self)
 Particles.Bonds.array = property(_Bonds_array)
+
+# Returns a NumPy array wrapper for the bond PBC shift vectors.
+def _Bonds_pbc_vectors(self):
+    """ A NumPy array providing read access to the PBC shift vectors of bonds.
+        
+        The returned array's shape is *N x 3*, where *N* is the number of half bonds. It contains the
+        periodic shift vector for each half-bond.
+        
+        A PBC shift vector consists of three integers, which specify how many times (and in which direction)
+        the corresonding half-bond crosses the periodic boundaries of the simulation cell. For example, a shift vector (0,-1,0)
+        would indicate that the half-bond crosses the periodic boundary in the negative Y direction 
+        once. In other words, the particle the half-bond originates from is located
+        close to the lower edge of the simulation cell in the Y direction while the second particle is located 
+        close to the opposite side of the box.
+        
+        The PBC shift vectors are important for visualizing the bonds between particles with wrapped coordinates, 
+        which are located on opposite sides of a periodic cell. When the PBC shift vector of a bond is (0,0,0), OVITO assumes that 
+        both particles connected by the bond are located in the same periodic image and the bond is displayed such that
+        it directly connects the two particles without going through a cell boundary.
+        
+        Furthermore, if the PBC shift vector of a half-bond A->B is (s\ :sub:`x`, s\ :sub:`y`, s\ :sub:`z`), then
+        the shift vector of the reverse half-bond B->A is always (-s\ :sub:`x`, -s\ :sub:`y`, -s\ :sub:`z`).
+    """
+    class DummyClass:
+        pass
+    o = DummyClass()
+    o.__array_interface__ = self._pbc_vectors
+    # Create reference to particle property object to keep it alive.
+    o.__base_property = self
+    return numpy.asarray(o)
+Particles.Bonds.pbc_vectors = property(_Bonds_pbc_vectors)
 
 def _Bonds_add(self, p1, p2, pbc_shift = (0,0,0)):
     """ Creates a new half-bond from particle *p1* to particle *p2*. 
@@ -300,7 +331,8 @@ def _Bonds_add(self, p1, p2, pbc_shift = (0,0,0)):
         :param int p2: Zero-based index of the particle the bonds leads to.
         :param pbc_shift: A tuple of three integers, which specifies how often each periodic 
                           boundary of the simulation cell is crossed when following the new bond from *p1* to *p2*. 
-                          This information is needed by OVITO to correctly wrap bonds at periodic boundaries.
+                          This information is needed by OVITO to correctly wrap bonds at periodic boundaries. 
+                          See :py:attr:`.pbc_vectors` array.
     """
     self.addBond(p1, p2, pbc_shift)
 Particles.Bonds.add = _Bonds_add
@@ -314,6 +346,7 @@ def _Bonds_add_full(self, p1, p2, pbc_shift = (0,0,0)):
         :param pbc_shift: A tuple of three integers, which specifies how often each periodic 
                           boundary of the simulation cell is crossed when following the new bond from *p1* to *p2*. 
                           This information is needed by OVITO to correctly wrap bonds at periodic boundaries. 
+                          See :py:attr:`.pbc_vectors` array.
     """
     self.addBond(p1, p2, pbc_shift)
     self.addBond(p2, p1, (-pbc_shift[0], -pbc_shift[1], -pbc_shift[2]))
@@ -685,15 +718,20 @@ ovito.data.BondTypeProperty.type_list = property(_get_BondTypeProperty_type_list
 
 class Enumerator(Particles.Bonds.ParticleBondMap):
     """
-    Utility class that allows to efficiently iterate over the bonds that are adjacent to a particular particle.
+    Utility class that allows efficiently iterating over the bonds of a particle.
 
-    The class constructor takes the :py:class:`Bonds` object for which it will first build a lookup table.
+    The class constructor takes the :py:class:`Bonds` object containing all the bonds 
+    in the system, for which it will first build a lookup table.
     After the :py:class:`!Enumerator` has been constructed, the half-bonds of a
-    particular particle can be found using the :py:meth:`.bonds_of_particle` method.
+    particular atom can be visited using the :py:meth:`.bonds_of_particle` method.
 
     Warning: Do not modify the underlying :py:class:`Bonds` object while using the :py:class:`!Enumerator`.
     Adding or deleting bonds would render the internal lookup table of the :py:class:`!Enumerator`
     invalid.
+    
+    **Usage example**
+    
+    .. literalinclude:: ../example_snippets/bonds_enumerator.py
     """ 
                    
     def __init__(self, bonds):
@@ -703,6 +741,7 @@ class Enumerator(Particles.Bonds.ParticleBondMap):
     def bonds_of_particle(self, particle_index):
         """
         Returns an iterator that yields the indices of the half-bonds connected to the given particle.
+        The numbers returned by the iterator can be used to index the :py:attr:`Bonds.array`.
         """
         eol = self.endOfListValue
         currentBondIndex = self.firstBondOfParticle(particle_index)

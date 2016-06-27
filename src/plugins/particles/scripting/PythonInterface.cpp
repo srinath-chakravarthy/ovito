@@ -105,6 +105,29 @@ dict BondsObject__array_interface__(const BondsObject& p)
 	return ai;
 }
 
+dict BondsObject__pbc_vectors(const BondsObject& p)
+{
+	dict ai;
+	ai["shape"] = boost::python::make_tuple(p.storage()->size(), 3);
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
+	ai["typestr"] = str("<i") + str(sizeof(int8_t));
+#else
+	ai["typestr"] = str(">i") + str(sizeof(int8_t));
+#endif
+	const int8_t* data;
+	if(!p.storage()->empty()) {
+		data = &p.storage()->front().pbcShift.x();
+	}
+	else {
+		static const int8_t null_data = 0;
+		data = &null_data;
+	}
+	ai["data"] = boost::python::make_tuple(reinterpret_cast<std::intptr_t>(data), true);
+	ai["strides"] = boost::python::make_tuple(sizeof(Bond), sizeof(int8_t));
+	ai["version"] = 3;
+	return ai;
+}
+
 BOOST_PYTHON_MODULE(Particles)
 {
 	docstring_options docoptions(true, false, false);
@@ -418,6 +441,7 @@ BOOST_PYTHON_MODULE(Particles)
 				// Python class name:
 				"Bonds")
 			.add_property("__array_interface__", &BondsObject__array_interface__)
+			.add_property("_pbc_vectors", &BondsObject__pbc_vectors)
 			.def("clear", &BondsObject::clear,
 					"Removes all stored bonds.")
 			.def("addBond", &BondsObject::addBond)

@@ -78,7 +78,7 @@ class voro_base {
 		 * \param[in] (a,b) the input integers.
 		 * \return The value of a div b, consistent for negative
 		 * numbers. */
-		inline int step_div(int a,int b) {return a>=0?a/b:-1+(a+1)/b;}
+		inline int step_div(int a,int b) const {return a>=0?a/b:-1+(a+1)/b;}
 	private:
 		void compute_minimum(double &minr,double &xlo,double &xhi,double &ylo,double &yhi,double &zlo,double &zhi,int ti,int tj,int tk);
 };

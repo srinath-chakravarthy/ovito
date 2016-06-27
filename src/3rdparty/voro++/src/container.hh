@@ -83,7 +83,7 @@ class wall_list {
 		 * \return True if the cell still exists, false if the cell is
 		 * deleted. */
 		template<class c_class>
-		bool apply_walls(c_class &c,double x,double y,double z) {
+		bool apply_walls(c_class &c,double x,double y,double z) const {
 			for(wall **wp=walls;wp<wep;wp++) if(!((*wp)->cut_cell(c,x,y,z))) return false;
 			return true;
 		}
@@ -187,7 +187,7 @@ class container_base : public voro_base, public wall_list {
 		 * removed the cell, true otherwise. */
 		template<class v_cell>
 		inline bool initialize_voronoicell(v_cell &c,int ijk,int q,int ci,int cj,int ck,
-				int &i,int &j,int &k,double &x,double &y,double &z,int &disp) {
+				int &i,int &j,int &k,double &x,double &y,double &z,int &disp) const {
 			double x1,x2,y1,y2,z1,z2,*pp=p[ijk]+ps*q;
 			x=*(pp++);y=*(pp++);z=*pp;
 			if(xperiodic) {x1=-(x2=0.5*(bx-ax));i=nx;} else {x1=ax-x;x2=bx-x;i=ci;}
@@ -222,7 +222,7 @@ class container_base : public voro_base, public wall_list {
 		 * \param[out] (fx,fy,fz) the position relative to the block.
 		 */
 		inline void frac_pos(double x,double y,double z,double ci,double cj,double ck,
-				double &fx,double &fy,double &fz) {
+				double &fx,double &fy,double &fz) const {
 			fx=x-ax-boxx*ci;
 			fy=y-ay-boxy*cj;
 			fz=z-az-boxz*ck;
@@ -240,7 +240,7 @@ class container_base : public voro_base, public wall_list {
 		 * \param[in] disp a block displacement used internally by the
 		 * 		    find_voronoi_cell and compute_cell routines.
 		 * \return The block index. */
-		inline int region_index(int ci,int cj,int ck,int ei,int ej,int ek,double &qx,double &qy,double &qz,int &disp) {
+		inline int region_index(int ci,int cj,int ck,int ei,int ej,int ek,double &qx,double &qy,double &qz,int &disp) const {
 			if(xperiodic) {if(ci+ei<nx) {ei+=nx;qx=-(bx-ax);} else if(ci+ei>=(nx<<1)) {ei-=nx;qx=bx-ax;} else qx=0;}
 			if(yperiodic) {if(cj+ej<ny) {ej+=ny;qy=-(by-ay);} else if(cj+ej>=(ny<<1)) {ej-=ny;qy=by-ay;} else qy=0;}
 			if(zperiodic) {if(ck+ek<nz) {ek+=nz;qz=-(bz-az);} else if(ck+ek>=(nz<<1)) {ek-=nz;qz=bz-az;} else qz=0;}

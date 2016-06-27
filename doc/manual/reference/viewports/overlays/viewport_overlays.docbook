@@ -49,11 +49,16 @@
               <entry><link linkend="viewport_overlays.python_script">Python script</link></entry>
               <entry>Calls your own Python script function to draw arbitrary graphics on top of the rendered image.</entry>
             </row>
+            <row>
+              <entry><link linkend="viewport_overlays.text_label">Text label</link></entry>
+              <entry>Renders a user-defined text, which can contain dynamically computed values.</entry>
+            </row>
           </tbody>
         </tgroup>
       </informaltable>
    </para>
   
   <xi:include href="python_script_overlay.docbook"/>
+  <xi:include href="text_label_overlay.docbook"/>
   
 </section>
