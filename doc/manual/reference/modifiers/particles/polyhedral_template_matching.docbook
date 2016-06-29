@@ -16,7 +16,18 @@
       <imagedata fileref="images/modifiers/polyhedral_template_matching_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
 
-  </para>    
+  This modifier classifies the local structural environment of particles
+  using the <emphasis>Polyhedral Template Matching</emphasis> (PTM) method [<link
+  xlink:href="http://dx.doi.org/10.1088/0965-0393/24/5/055007">P.M. Larsen et al., Modelling Simul. Mater. Sci. Eng. 24, 055007</link>]
+  (<link xlink:href="http://arxiv.org/abs/1603.05143">preprint</link>)
+  and allows identifying the local crystalline structure of simple condensed phases (FCC, BCC, etc.) formed by atoms.
+  </para> 
+  
+  <para>
+  The PTM approach promises greater reliability than e.g. <link linkend="particles.modifiers.common_neighbor_analysis">Common Neighbor Analysis</link> in the 
+  presence of strong thermal fluctuations. Furthermore, it provides a direct calculation of the local (per-atom) lattice constant, orientation, and elastic deformation.
+  </para>
+
   <para>
   The modifier assigns the <literal>Structure Type</literal> property to each particle with
   the structural type encoded as an integer value:
@@ -50,11 +61,11 @@
   </para>
   
   <para>
-    In addition to the PTM modifier OVITO provides alternative structure identification tools 
+    In addition to the PTM, OVITO provides alternative structure identification tools 
     like the <link linkend="particles.modifiers.common_neighbor_analysis">Common Neighbor Analysis</link> modifier or the 
     <link linkend="particles.modifiers.bond_angle_analysis">Bond-Angle Analysis</link> modifier. 
     Furthermore, the <link linkend="particles.modifiers.identify_diamond_structure">Identify Diamond Structure</link> analysis modifier can be 
-    used for diamond lattice structures.
+    used for identifying diamond lattice structures.
   </para>
 
   <para>
@@ -66,9 +77,8 @@
     The <emphasis>Use only selected particles</emphasis> option restricts the analysis to the
     currently selected particles. If this option is checked, unselected particles will be ignored 
     (as if they did not exist) and will be assigned the structure type "Other".
-    This option can be useful if you want to identify defects in a crystal with a structure
-    not supported by this analysis algorithm but having a sublattice that can be identified by the PTM method.
-    (And you do not want to delete particles belonging to the other sublattice(s) for some reason.)
+    This option can be useful if you want to identify defects in a crystal structure
+    not directly supported by this analysis algorithm but which possesses a sublattice that the PTM method can identify.
   </para>  
   
 </section>
