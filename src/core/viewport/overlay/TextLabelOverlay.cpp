@@ -25,6 +25,10 @@
 #include <core/scene/SelectionSet.h>
 #include "TextLabelOverlay.h"
 
+#include <QTextDocument>
+#include <QTextCharFormat>
+#include <QTextCursor>
+
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, TextLabelOverlay, ViewportOverlay);
@@ -118,7 +122,16 @@ void TextLabelOverlay::render(Viewport* viewport, QPainter& painter, const ViewP
 	font.setPointSizeF(fontSize);
 	painter.setFont(font);
 
-	painter.drawText(textRect.normalized().translated(origin), flags, textString);
+	//painter.drawText(textRect.normalized().translated(origin), flags, textString);
+
+	QTextDocument doc(textString);
+	doc.setDefaultFont(font);
+	QTextCharFormat format;
+	format.setTextOutline(QPen(Qt::red, 3, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin)); // Color and width of outline
+	QTextCursor cursor(&doc);
+	cursor.select(QTextCursor::Document);
+	cursor.mergeCharFormat(format);
+	doc.drawContents(&painter);
 }
 
 OVITO_END_INLINE_NAMESPACE

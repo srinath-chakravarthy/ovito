@@ -15,10 +15,11 @@ New visualization features:
 - Particle text labels (joy5142@psu.edu) and bond text labels (mickaeltrochet@yahoo.fr)
 - More particle representations (e.g. open circles).
 - Test OpenGL rendering support for more than 12 million particles.
-- Color coding with logarithmic mapping 
 - Text Label overlay: Add more style options like font outline, background color, etc (stefan.parviainen@iki.fi).
 - Thompson Tetrahedra
 - Stereoscopic display (Erik Bitzek)
+- Wireframe mesh rendering (robin.gibaud@simap.grenoble-inp.fr)
+- Double bonds (SP2) (Jejoon Yeon <jyeon3@ucmerced.edu>)
 
 Unresolved OpenGL problems:
 
