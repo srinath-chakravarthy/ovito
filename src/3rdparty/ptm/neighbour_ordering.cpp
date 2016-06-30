@@ -3,6 +3,7 @@
 #include <cstring>
 #include <cassert>
 #include <algorithm>
+#include <cstdint>
 #include <cell.hh>
 using namespace voro;
 using namespace std;
