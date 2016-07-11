@@ -37,9 +37,9 @@ public:
 
 #ifndef Q_CC_MSVC
 	/// The maximum number of neighbor atoms taken into account for the PTM analysis.
-	static constexpr int MAX_NEIGHBORS = 14;
+	static constexpr int MAX_NEIGHBORS = 18;
 #else
-	enum { MAX_NEIGHBORS = 14 };
+	enum { MAX_NEIGHBORS = 18 };
 #endif
 
 	/// The structure types recognized by the PTM library.
