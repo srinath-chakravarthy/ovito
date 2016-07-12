@@ -96,11 +96,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> PolyhedralTemplateM
 		selectionProperty = expectStandardProperty(ParticleProperty::SelectionProperty)->storage();
 
 	// Initialize PTM library.
-	static bool isPTMInitialized = false;
-	if(!isPTMInitialized) {
-		ptm_initialize_global();
-		isPTMInitialized = true;
-	}
+	ptm_initialize_global();
 
 	return std::make_shared<PTMEngine>(validityInterval, posProperty->storage(), simCell->data(),
 			getTypesToIdentify(NUM_STRUCTURE_TYPES), selectionProperty,
@@ -201,7 +197,7 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 				else OVITO_ASSERT(false);
 				_rmsd->setFloat(index, rmsd);
 				if(_scaleFactors) _scaleFactors->setFloat(index, scale);
-				if(_orientations) _orientations->setQuaternion(index, Quaternion((FloatType)q[0], (FloatType)q[1], (FloatType)q[2], (FloatType)q[3]));
+				if(_orientations) _orientations->setQuaternion(index, Quaternion((FloatType)q[1], (FloatType)q[2], (FloatType)q[3], (FloatType)q[0]));
 				if(_deformationGradients) {
 					for(size_t j = 0; j < 9; j++)
 						_deformationGradients->setFloatComponent(index, j, (FloatType)F[j]);
@@ -219,6 +215,7 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 	_rmsdHistogramData.resize(100);
 	_rmsdHistogramBinSize = *std::max_element(_rmsd->constDataFloat(), _rmsd->constDataFloat() + output->size()) * 1.01f;
 	_rmsdHistogramBinSize /= _rmsdHistogramData.size();
+	if(_rmsdHistogramBinSize <= 0) _rmsdHistogramBinSize = 1;
 
 	// Build RMSD histogram.
 	for(size_t index = 0; index < output->size(); index++) {
@@ -280,10 +277,26 @@ PipelineStatus PolyhedralTemplateMatchingModifier::applyComputationResults(TimeP
 	}
 
 	// Output per-particle properties.
-	if(_rmsd && outputRmsd()) outputCustomProperty(_rmsd.data());
-	if(_scaleFactors && outputScaleFactor()) outputCustomProperty(_scaleFactors.data());
-	if(_orientations && outputOrientation()) outputStandardProperty(_orientations.data());
-	if(_deformationGradients && outputDeformationGradient()) outputStandardProperty(_deformationGradients.data());
+	if(_rmsd && outputRmsd()) {
+		if(outputParticleCount() != _rmsd->size())
+			throwException(tr("The number of input particles has changed. The stored results have become invalid."));
+		outputCustomProperty(_rmsd.data());
+	}
+	if(_scaleFactors && outputScaleFactor()) {
+		if(outputParticleCount() != _scaleFactors->size())
+			throwException(tr("The number of input particles has changed. The stored results have become invalid."));
+		outputCustomProperty(_scaleFactors.data());
+	}
+	if(_orientations && outputOrientation()) {
+		if(outputParticleCount() != _orientations->size())
+			throwException(tr("The number of input particles has changed. The stored results have become invalid."));
+		outputStandardProperty(_orientations.data());
+	}
+	if(_deformationGradients && outputDeformationGradient()) {
+		if(outputParticleCount() != _deformationGradients->size())
+			throwException(tr("The number of input particles has changed. The stored results have become invalid."));
+		outputStandardProperty(_deformationGradients.data());
+	}
 
 	// Let the base class output the structure type property to the pipeline.
 	PipelineStatus status = StructureIdentificationModifier::applyComputationResults(time, validityInterval);

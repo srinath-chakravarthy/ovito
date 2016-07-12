@@ -118,7 +118,7 @@ Box3 ParticleDisplay::particleBoundingBox(ParticlePropertyObject* positionProper
 	}
 
 	// Extend the bounding box by the largest particle radius.
-	return bbox.padBox(std::max(maxAtomRadius, FloatType(0)));
+	return bbox.padBox(std::max(maxAtomRadius * (FloatType)sqrt(3), FloatType(0)));
 }
 
 /******************************************************************************

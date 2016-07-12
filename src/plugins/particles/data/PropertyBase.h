@@ -477,6 +477,9 @@ public:
 	/// Elements for which the bit in the given mask is set are skipped.
 	void filterCopy(const PropertyBase& source, const boost::dynamic_bitset<>& mask);
 
+	/// Copies the contents from the given source into this storage using a mapping.
+	void mappedCopy(const PropertyBase& source, const std::vector<int>& mapping);
+
 protected:
 
 	/// Writes the object to an output stream.

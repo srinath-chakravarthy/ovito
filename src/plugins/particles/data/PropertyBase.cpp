@@ -226,5 +226,67 @@ void PropertyBase::filterCopy(const PropertyBase& source, const boost::dynamic_b
 	}
 }
 
+/******************************************************************************
+* Copies the contents from the given source into this property storage usnig
+* a mapping of indices.
+******************************************************************************/
+void PropertyBase::mappedCopy(const PropertyBase& source, const std::vector<int>& mapping)
+{
+	OVITO_ASSERT(source.size() == mapping.size());
+	OVITO_ASSERT(stride() == source.stride());
+
+	// Optimize copying operation for the most common property types.
+	if(stride() == sizeof(FloatType)) {
+		// Single float
+		const FloatType* src = reinterpret_cast<const FloatType*>(source.constData());
+		FloatType* dst = reinterpret_cast<FloatType*>(data());
+		for(size_t i = 0; i < source.size(); ++i, ++src) {
+			OVITO_ASSERT(mapping[i] >= 0);
+			OVITO_ASSERT(mapping[i] < this->size());
+			dst[mapping[i]] = *src;
+		}
+	}
+	else if(stride() == sizeof(int)) {
+		// Single integer
+		const int* src = reinterpret_cast<const int*>(source.constData());
+		int* dst = reinterpret_cast<int*>(data());
+		for(size_t i = 0; i < source.size(); ++i, ++src) {
+			OVITO_ASSERT(mapping[i] >= 0);
+			OVITO_ASSERT(mapping[i] < this->size());
+			dst[mapping[i]] = *src;
+		}
+	}
+	else if(stride() == sizeof(Point3)) {
+		// Triple float (may actually be four floats when SSE instructions are enabled).
+		const Point3* src = reinterpret_cast<const Point3*>(source.constData());
+		Point3* dst = reinterpret_cast<Point3*>(data());
+		for(size_t i = 0; i < source.size(); ++i, ++src) {
+			OVITO_ASSERT(mapping[i] >= 0);
+			OVITO_ASSERT(mapping[i] < this->size());
+			dst[mapping[i]] = *src;
+		}
+	}
+	else if(stride() == sizeof(Color)) {
+		// Triple float
+		const Color* src = reinterpret_cast<const Color*>(source.constData());
+		Color* dst = reinterpret_cast<Color*>(data());
+		for(size_t i = 0; i < source.size(); ++i, ++src) {
+			OVITO_ASSERT(mapping[i] >= 0);
+			OVITO_ASSERT(mapping[i] < this->size());
+			dst[mapping[i]] = *src;
+		}
+	}
+	else {
+		// General case:
+		const uint8_t* src = source._data.get();
+		uint8_t* dst = _data.get();
+		for(size_t i = 0; i < source.size(); i++, src += stride()) {
+			OVITO_ASSERT(mapping[i] >= 0);
+			OVITO_ASSERT(mapping[i] < this->size());
+			memcpy(dst + stride() * mapping[i], src, stride());
+		}
+	}
+}
+
 }	// End of namespace
 }	// End of namespace

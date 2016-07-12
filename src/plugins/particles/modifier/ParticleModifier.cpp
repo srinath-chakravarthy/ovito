@@ -249,6 +249,7 @@ ParticlePropertyObject* ParticleModifier::outputStandardProperty(ParticlePropert
 {
 	OVITO_CHECK_POINTER(storage);
 	OVITO_ASSERT(storage->type() != ParticleProperty::UserProperty);
+	OVITO_ASSERT(storage->size() == outputParticleCount());
 
 	// Check if property already exists in the input.
 	OORef<ParticlePropertyObject> inputProperty = inputStandardProperty(storage->type());
@@ -321,6 +322,7 @@ BondPropertyObject* ParticleModifier::outputStandardBondProperty(BondProperty* s
 {
 	OVITO_CHECK_POINTER(storage);
 	OVITO_ASSERT(storage->type() != BondProperty::UserProperty);
+	OVITO_ASSERT(storage->size() == outputBondCount());
 
 	// Check if property already exists in the input.
 	OORef<BondPropertyObject> inputProperty = inputStandardBondProperty(storage->type());
@@ -407,6 +409,7 @@ ParticlePropertyObject* ParticleModifier::outputCustomProperty(ParticleProperty*
 {
 	OVITO_CHECK_POINTER(storage);
 	OVITO_ASSERT(storage->type() == ParticleProperty::UserProperty);
+	OVITO_ASSERT(storage->size() == outputParticleCount());
 
 	// Check if property already exists in the input.
 	OORef<ParticlePropertyObject> inputProperty;
@@ -450,6 +453,111 @@ ParticlePropertyObject* ParticleModifier::outputCustomProperty(ParticleProperty*
 	}
 
 	OVITO_ASSERT(outputProperty->size() == outputParticleCount());
+	return outputProperty;
+}
+
+/******************************************************************************
+* Creates a custom bond property in the modifier's output.
+******************************************************************************/
+BondPropertyObject* ParticleModifier::outputCustomBondProperty(const QString& name, int dataType, size_t componentCount, size_t stride, bool initializeMemory)
+{
+	// Check if property already exists in the input.
+	OORef<BondPropertyObject> inputProperty;
+	for(DataObject* o : input().objects()) {
+		BondPropertyObject* property = dynamic_object_cast<BondPropertyObject>(o);
+		if(property && property->type() == BondProperty::UserProperty && property->name() == name) {
+			inputProperty = property;
+			if(property->dataType() != dataType)
+				throwException(tr("Existing bond property '%1' has a different data type.").arg(name));
+			if(property->componentCount() != componentCount)
+				throwException(tr("Existing bond property '%1' has a different number of components.").arg(name));
+			if(property->stride() != stride)
+				throwException(tr("Existing bond property '%1' has a different stride.").arg(name));
+			break;
+		}
+	}
+
+	// Check if property already exists in the output.
+	OORef<BondPropertyObject> outputProperty;
+	for(DataObject* o : output().objects()) {
+		BondPropertyObject* property = dynamic_object_cast<BondPropertyObject>(o);
+		if(property && property->type() == BondProperty::UserProperty && property->name() == name) {
+			outputProperty = property;
+			OVITO_ASSERT(property->dataType() == dataType);
+			OVITO_ASSERT(property->componentCount() == componentCount);
+			break;
+		}
+	}
+
+	if(outputProperty) {
+		// Is the existing output property still a shallow copy of the input?
+		if(outputProperty == inputProperty) {
+			// Make a real copy of the property, which may be modified.
+			outputProperty = cloneHelper()->cloneObject(inputProperty, false);
+			_output.replaceObject(inputProperty, outputProperty);
+		}
+	}
+	else {
+		// Create a new bond property in the output.
+		outputProperty = BondPropertyObject::createUserProperty(dataset(), _outputBondCount, dataType, componentCount, stride, name, initializeMemory);
+		_output.addObject(outputProperty);
+	}
+
+	OVITO_ASSERT(outputProperty->size() == outputBondCount());
+	return outputProperty;
+}
+
+/******************************************************************************
+* Creates a custom bond property in the modifier's output and sets its content.
+******************************************************************************/
+BondPropertyObject* ParticleModifier::outputCustomBondProperty(BondProperty* storage)
+{
+	OVITO_CHECK_POINTER(storage);
+	OVITO_ASSERT(storage->type() == BondProperty::UserProperty);
+	OVITO_ASSERT(storage->size() == outputBondCount());
+
+	// Check if property already exists in the input.
+	OORef<BondPropertyObject> inputProperty;
+	for(DataObject* o : input().objects()) {
+		BondPropertyObject* property = dynamic_object_cast<BondPropertyObject>(o);
+		if(property && property->type() == BondProperty::UserProperty && property->name() == storage->name()) {
+			inputProperty = property;
+			if(property->dataType() != storage->dataType() || property->dataTypeSize() != storage->dataTypeSize())
+				throwException(tr("Existing bond property '%1' has a different data type.").arg(property->name()));
+			if(property->componentCount() != storage->componentCount())
+				throwException(tr("Existing bond property '%1' has a different number of components.").arg(property->name()));
+			break;
+		}
+	}
+
+	// Check if property already exists in the output.
+	OORef<BondPropertyObject> outputProperty;
+	for(DataObject* o : output().objects()) {
+		BondPropertyObject* property = dynamic_object_cast<BondPropertyObject>(o);
+		if(property && property->type() == BondProperty::UserProperty && property->name() == storage->name()) {
+			outputProperty = property;
+			OVITO_ASSERT(property->dataType() == storage->dataType());
+			OVITO_ASSERT(property->componentCount() == storage->componentCount());
+			break;
+		}
+	}
+
+	if(outputProperty) {
+		// Is the existing output property still a shallow copy of the input?
+		if(outputProperty == inputProperty) {
+			// Make a real copy of the property, which may be modified.
+			outputProperty = cloneHelper()->cloneObject(inputProperty, false);
+			_output.replaceObject(inputProperty, outputProperty);
+		}
+		outputProperty->setStorage(storage);
+	}
+	else {
+		// Create a new particle property in the output.
+		outputProperty = BondPropertyObject::createFromStorage(dataset(), storage);
+		_output.addObject(outputProperty);
+	}
+
+	OVITO_ASSERT(outputProperty->size() == outputBondCount());
 	return outputProperty;
 }
 
@@ -575,20 +683,34 @@ size_t ParticleModifier::deleteParticles(const boost::dynamic_bitset<>& mask, si
 BondsObject* ParticleModifier::addBonds(BondsStorage* newBonds, BondsDisplay* bondsDisplay, const std::vector<BondProperty*>& bondProperties)
 {
 	OVITO_ASSERT(newBonds != nullptr);
-	OVITO_ASSERT(bondProperties.empty());	// Bond properties are not yet supported by this method.
 
 	// Check if there is an existing bonds object coming from upstream.
-	OORef<BondsObject> bondsObj = input().findObject<BondsObject>();
+	OORef<BondsObject> bondsObj = output().findObject<BondsObject>();
 	if(!bondsObj) {
+		OVITO_ASSERT(outputBondCount() == 0);
+
 		// Create a new output data object.
 		bondsObj = new BondsObject(dataset(), newBonds);
-		bondsObj->setDisplayObject(bondsDisplay);
+		if(bondsDisplay)
+			bondsObj->setDisplayObject(bondsDisplay);
 
 		// Insert output object into the pipeline.
 		output().addObject(bondsObj);
+		_outputBondCount = newBonds->size();
+
+		// Insert bond properties.
+		for(BondProperty* bprop : bondProperties) {
+			OVITO_ASSERT(bprop->size() == newBonds->size());
+			if(bprop->type() != BondProperty::UserProperty)
+				outputStandardBondProperty(bprop);
+			else
+				outputCustomBondProperty(bprop);
+		}
+
 		return bondsObj;
 	}
 	else {
+
 		// Duplicate the existing bonds object and insert the newly created bonds into it.
 		OORef<BondsObject> bondsObjCopy = cloneHelper()->cloneObject(bondsObj, false);
 		BondsStorage* bonds = bondsObjCopy->modifiableStorage();
@@ -599,13 +721,19 @@ BondsObject* ParticleModifier::addBonds(BondsStorage* newBonds, BondsDisplay* bo
 
 		// Add bonds one by one.
 		size_t originalBondCount = bonds->size();
+		std::vector<int> mapping(newBonds->size());
 		for(size_t bondIndex = 0; bondIndex < newBonds->size(); bondIndex++) {
 			// Check if there is already a bond like this.
 			const Bond& bond = (*newBonds)[bondIndex];
-			if(bondMap.findBond(bond) == bondMap.endOfListValue()) {
+			auto existingBondIndex = bondMap.findBond(bond);
+			if(existingBondIndex == bondMap.endOfListValue()) {
 				// Create new bond.
 				bonds->push_back(bond);
+				mapping[bondIndex] = _outputBondCount;
 				_outputBondCount++;
+			}
+			else {
+				mapping[bondIndex] = existingBondIndex;
 			}
 		}
 
@@ -626,6 +754,25 @@ BondsObject* ParticleModifier::addBonds(BondsStorage* newBonds, BondsDisplay* bo
 
 			// Replace bond property in pipeline flow state.
 			output().replaceObject(originalBondPropertyObject, newBondPropertyObject);
+		}
+
+		// Insert new bond properties.
+		for(BondProperty* bprop : bondProperties) {
+			OVITO_ASSERT(bprop->size() == newBonds->size());
+
+			OORef<BondPropertyObject> propertyObject;
+
+			if(bprop->type() != BondProperty::UserProperty) {
+				propertyObject = BondPropertyObject::findInState(output(), bprop->type());
+				if(!propertyObject)
+					propertyObject = outputStandardBondProperty(bprop->type(), true);
+			}
+			else {
+				propertyObject = outputCustomBondProperty(bprop->name(), bprop->dataType(), bprop->componentCount(), bprop->stride(), true);
+			}
+
+			// Copy bond property data.
+			propertyObject->modifiableStorage()->mappedCopy(*bprop, mapping);
 		}
 
 		return bondsObjCopy;
