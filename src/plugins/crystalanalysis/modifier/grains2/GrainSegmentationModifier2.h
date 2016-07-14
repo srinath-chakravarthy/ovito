@@ -150,6 +150,12 @@ private:
 	/// Controls the output of local orientations.
 	PropertyField<bool> _outputLocalOrientations;
 
+	/// The number of iterations of the smoothing procedure.
+	PropertyField<int> _numOrientationSmoothingIterations;
+
+	/// The weighting parameter used by the smoothing algorithm.
+	PropertyField<FloatType> _orientationSmoothingWeight;
+
 	/// The display object for rendering the mesh.
 	ReferenceField<PartitionMeshDisplay> _meshDisplay;
 
@@ -200,6 +206,8 @@ private:
 	DECLARE_PROPERTY_FIELD(_smoothingLevel);
 	DECLARE_PROPERTY_FIELD(_onlySelectedParticles);
 	DECLARE_PROPERTY_FIELD(_outputLocalOrientations);
+	DECLARE_PROPERTY_FIELD(_numOrientationSmoothingIterations);
+	DECLARE_PROPERTY_FIELD(_orientationSmoothingWeight);
 	DECLARE_REFERENCE_FIELD(_patternCatalog);
 	DECLARE_REFERENCE_FIELD(_meshDisplay);
 	DECLARE_REFERENCE_FIELD(_bondsDisplay);

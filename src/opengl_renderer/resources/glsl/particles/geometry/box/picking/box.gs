@@ -20,7 +20,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 layout(points) in;
-layout(triangle_strip, max_vertices=14) out;
+layout(triangle_strip, max_vertices=24) out;
 
 // Inputs from calling program:
 uniform mat4 projection_matrix;
@@ -56,6 +56,10 @@ void main()
 	else {
 		rot = mat3(1.0);
 	}
+	
+#if 0
+	// This code leads, which generates a single triangle strip for the cube, seems to be 
+	// incompatible with the Intel graphics driver on Linux.
 	
 	particle_color_fs = particle_color_gs[0];
 	gl_Position = modelviewprojection_matrix *
@@ -126,5 +130,123 @@ void main()
 	gl_Position = modelviewprojection_matrix *
 		(gl_in[0].gl_Position + vec4(rot * vec3(-particle_shape_gs[0].x, -particle_shape_gs[0].y, particle_shape_gs[0].z), 0));
 	EmitVertex();
+
+#else
+
+	// Generate 6 triangle strips to be compatible with the Intel graphics driver on Linux.
+
+	vec4 dx = modelviewprojection_matrix * vec4(rot * vec3(2 * particle_shape_gs[0].x, 0, 0), 0);
+	vec4 dy = modelviewprojection_matrix * vec4(rot * vec3(0, 2 * particle_shape_gs[0].y, 0), 0);
+	vec4 dz = modelviewprojection_matrix * vec4(rot * vec3(0, 0, 2 * particle_shape_gs[0].z), 0);
+	vec4 corner = (modelviewprojection_matrix * gl_in[0].gl_Position) - 0.5 * (dx + dy + dz);
+
+	// -X
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dy;
+	EmitVertex();
+
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner;
+	EmitVertex();
+
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dy + dz;
+	EmitVertex();
+
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dz;
+	EmitVertex();
+	EndPrimitive();
+	
+	// +X
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dx;
+	EmitVertex();
+
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dx + dy;
+	EmitVertex();
+
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dx + dz;
+	EmitVertex();
+
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dx + dy + dz;
+	EmitVertex();
+	EndPrimitive();	
+
+	// -Y
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner;
+	EmitVertex();
+
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dx;
+	EmitVertex();
+
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dz;
+	EmitVertex();
+
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dx + dz;
+	EmitVertex();
+	EndPrimitive();
+
+	// +Y
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dy;
+	EmitVertex();
+
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dy + dz;
+	EmitVertex();
+
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dx + dy;
+	EmitVertex();
+
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dy + dx + dz;
+	EmitVertex();
+	EndPrimitive();
+
+	// -Z
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dy;
+	EmitVertex();
+
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dx + dy;
+	EmitVertex();
+
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner;
+	EmitVertex();
+
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dx;
+	EmitVertex();
+	EndPrimitive();
+
+	// +Z
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dz;
+	EmitVertex();
+
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dx + dz;
+	EmitVertex();
+
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dy + dz;
+	EmitVertex();
+
+	particle_color_fs = particle_color_gs[0];
+	gl_Position = corner + dx + dy + dz;
+	EmitVertex();
+	EndPrimitive();
+	
 #endif
 }

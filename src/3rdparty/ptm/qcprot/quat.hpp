@@ -1,6 +1,8 @@
 #ifndef QUAT_HPP
 #define QUAT_HPP
 
+void quat_rot(double* r, double* a, double* b);
+
 int rotate_quaternion_into_cubic_fundamental_zone(double* q);
 int rotate_quaternion_into_icosahedral_fundamental_zone(double* q);
 int rotate_quaternion_into_hcp_fundamental_zone(double* q);

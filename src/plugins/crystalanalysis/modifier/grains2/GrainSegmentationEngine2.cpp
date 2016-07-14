@@ -38,13 +38,15 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 GrainSegmentationEngine2::GrainSegmentationEngine2(const TimeInterval& validityInterval,
 		ParticleProperty* positions, const SimulationCell& simCell,
 		const QVector<bool>& typesToIdentify, ParticleProperty* selection,
-		FloatType rmsdCutoff, FloatType misorientationThreshold,
+		FloatType rmsdCutoff, int numOrientationSmoothingIterations, FloatType orientationSmoothingWeight, FloatType misorientationThreshold,
 		int minGrainAtomCount,
 		FloatType probeSphereRadius, int meshSmoothingLevel) :
 	StructureIdentificationModifier::StructureIdentificationEngine(validityInterval, positions, simCell, typesToIdentify, selection),
 	_atomClusters(new ParticleProperty(positions->size(), ParticleProperty::ClusterProperty, 0, true)),
 	_rmsd(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, GrainSegmentationModifier2::tr("RMSD"), false)),
 	_rmsdCutoff(rmsdCutoff),
+	_numOrientationSmoothingIterations(numOrientationSmoothingIterations),
+	_orientationSmoothingWeight(orientationSmoothingWeight),
 	_orientations(new ParticleProperty(positions->size(), ParticleProperty::OrientationProperty, 0, true)),
 	_misorientationThreshold(misorientationThreshold),
 	_minGrainAtomCount(minGrainAtomCount),
@@ -205,6 +207,59 @@ void GrainSegmentationEngine2::perform()
 			}
 		}
 	}
+
+	QExplicitlySharedDataPointer<ParticleProperty> newOrientations(new ParticleProperty(positions()->size(), ParticleProperty::OrientationProperty, 0, false));
+	for(int iter = 0; iter < _numOrientationSmoothingIterations; iter++) {
+		for(size_t index = 0; index < output->size(); index++) {
+			int structureType = output->getInt(index);
+			if(structureType != OTHER) {
+
+				Quaternion& qavg = newOrientations->dataQuaternion()[index];
+				qavg = Quaternion(0,0,0,0);
+
+				const Quaternion& orient0 = _orientations->getQuaternion(index);
+				double q0[4] = {orient0.w(), orient0.x(), orient0.y(), orient0.z()};
+				double qinv[4] = {q0[0], -q0[1], -q0[2], -q0[3]};
+
+				int nnbr = 0;
+				for(size_t c = 0; c < _neighborLists->componentCount(); c++) {
+					int neighborIndex = _neighborLists->getIntComponent(index, c);
+					if(neighborIndex == -1) break;
+
+					if(output->getInt(neighborIndex) != structureType) continue;
+
+					const Quaternion& orient_nbr = _orientations->getQuaternion(neighborIndex);
+					double qnbr[4] = {orient_nbr.w(), orient_nbr.x(), orient_nbr.y(), orient_nbr.z()};
+					double qrot[4];
+					quat_rot(qinv, qnbr, qrot);
+
+					if (structureType == SC || structureType == FCC || structureType == BCC)
+						rotate_quaternion_into_cubic_fundamental_zone(qrot);
+					else if (structureType == HCP)
+						rotate_quaternion_into_hcp_fundamental_zone(qrot);
+
+					double qclosest[4];
+					quat_rot(q0, qrot, qclosest);
+					qavg.w() += (FloatType)qclosest[0];
+					qavg.x() += (FloatType)qclosest[1];
+					qavg.y() += (FloatType)qclosest[2];
+					qavg.z() += (FloatType)qclosest[3];
+					nnbr++;
+				}
+
+				if(nnbr != 0)
+					qavg.normalize();
+				for(size_t i = 0; i < 4; i++)
+					qavg[i] = orient0[i] + _orientationSmoothingWeight * qavg[i];
+				qavg.normalize();
+			}
+			else {
+				newOrientations->setQuaternion(index, _orientations->getQuaternion(index));
+			}
+		}
+		newOrientations.swap(_orientations);
+	}
+
 
 	// Generate bonds between neighboring lattice atoms.
 	for(size_t index = 0; index < output->size(); index++) {

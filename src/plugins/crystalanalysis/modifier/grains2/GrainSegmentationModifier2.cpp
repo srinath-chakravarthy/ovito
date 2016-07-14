@@ -43,6 +43,8 @@ DEFINE_FLAGS_REFERENCE_FIELD(GrainSegmentationModifier2, _meshDisplay, "MeshDisp
 DEFINE_FLAGS_REFERENCE_FIELD(GrainSegmentationModifier2, _bondsDisplay, "BondsDisplay", BondsDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(GrainSegmentationModifier2, _onlySelectedParticles, "OnlySelectedParticles");
 DEFINE_PROPERTY_FIELD(GrainSegmentationModifier2, _outputPartitionMesh, "OutputPartitionMesh");
+DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier2, _numOrientationSmoothingIterations, "NumOrientationSmoothingIterations", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier2, _orientationSmoothingWeight, "OrientationSmoothingWeight", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier2, _rmsdCutoff, "RMSD cutoff");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier2, _misorientationThreshold, "Misorientation threshold");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier2, _minGrainAtomCount, "Minimum grain size");
@@ -53,11 +55,15 @@ SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier2, _onlySelectedParticles, "Us
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier2, _outputPartitionMesh, "Generate mesh");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier2, _outputLocalOrientations, "Output local orientations");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier2, _bondsDisplay, "Bonds display");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier2, _numOrientationSmoothingIterations, "Number of smoothing iterations");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier2, _orientationSmoothingWeight, "Orientation smoothing weight");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier2, _rmsdCutoff, FloatParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier2, _misorientationThreshold, AngleParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier2, _probeSphereRadius, WorldParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier2, _minGrainAtomCount, IntegerParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier2, _smoothingLevel, IntegerParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier2, _numOrientationSmoothingIterations, IntegerParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier2, _orientationSmoothingWeight, FloatParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -71,7 +77,9 @@ GrainSegmentationModifier2::GrainSegmentationModifier2(DataSet* dataset) : Struc
 		_probeSphereRadius(4),
 		_onlySelectedParticles(false),
 		_outputPartitionMesh(false),
-		_outputLocalOrientations(false)
+		_outputLocalOrientations(false),
+		_numOrientationSmoothingIterations(1),
+		_orientationSmoothingWeight(0.5)
 {
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier2::_rmsdCutoff);
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier2::_misorientationThreshold);
@@ -82,6 +90,8 @@ GrainSegmentationModifier2::GrainSegmentationModifier2(DataSet* dataset) : Struc
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier2::_meshDisplay);
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier2::_onlySelectedParticles);
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier2::_outputLocalOrientations);
+	INIT_PROPERTY_FIELD(GrainSegmentationModifier2::_numOrientationSmoothingIterations);
+	INIT_PROPERTY_FIELD(GrainSegmentationModifier2::_orientationSmoothingWeight);
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier2::_outputPartitionMesh);
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier2::_bondsDisplay);
 
@@ -133,6 +143,8 @@ void GrainSegmentationModifier2::propertyChanged(const PropertyFieldDescriptor& 
 			field == PROPERTY_FIELD(GrainSegmentationModifier2::_probeSphereRadius) ||
 			field == PROPERTY_FIELD(GrainSegmentationModifier2::_onlySelectedParticles) ||
 			field == PROPERTY_FIELD(GrainSegmentationModifier2::_outputLocalOrientations) ||
+			field == PROPERTY_FIELD(GrainSegmentationModifier2::_numOrientationSmoothingIterations) ||
+			field == PROPERTY_FIELD(GrainSegmentationModifier2::_orientationSmoothingWeight) ||
 			field == PROPERTY_FIELD(GrainSegmentationModifier2::_outputPartitionMesh))
 		invalidateCachedResults();
 }
@@ -177,7 +189,8 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> GrainSegmentationMo
 
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<GrainSegmentationEngine2>(validityInterval, posProperty->storage(),
-			simCell->data(), getTypesToIdentify(GrainSegmentationEngine2::NUM_STRUCTURE_TYPES), selectionProperty, rmsdCutoff(), misorientationThreshold(),
+			simCell->data(), getTypesToIdentify(GrainSegmentationEngine2::NUM_STRUCTURE_TYPES), selectionProperty, rmsdCutoff(),
+			_numOrientationSmoothingIterations, _orientationSmoothingWeight, misorientationThreshold(),
 			minGrainAtomCount(), outputPartitionMesh() ? probeSphereRadius() : 0, smoothingLevel());
 }
 

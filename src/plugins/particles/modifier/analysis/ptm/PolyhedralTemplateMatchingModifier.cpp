@@ -31,14 +31,16 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, PolyhedralTemplateMatchingModifier, StructureIdentificationModifier);
 DEFINE_FLAGS_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _rmsdCutoff, "RMSDCutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputRmsd, "OutputRmsd");
-DEFINE_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputScaleFactor, "OutputScaleFactor");
-DEFINE_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputOrientation, "OutputOrientation");
+DEFINE_FLAGS_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputScaleFactor, "OutputScaleFactor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputOrientation, "OutputOrientation", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputDeformationGradient, "OutputDeformationGradient");
+DEFINE_FLAGS_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputAlloyTypes, "OutputAlloyTypes", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _rmsdCutoff, "RMSD cutoff");
 SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputRmsd, "Output RMSD values");
 SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputScaleFactor, "Output scale factors");
 SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputOrientation, "Output orientations");
 SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputDeformationGradient, "Output deformation gradients");
+SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputAlloyTypes, "Output alloy types");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(PolyhedralTemplateMatchingModifier, _rmsdCutoff, FloatParameterUnit, 0);
 
 /******************************************************************************
@@ -46,13 +48,14 @@ SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(PolyhedralTemplateMatchingModifier, _rmsdCu
 ******************************************************************************/
 PolyhedralTemplateMatchingModifier::PolyhedralTemplateMatchingModifier(DataSet* dataset) : StructureIdentificationModifier(dataset),
 		_rmsdCutoff(0), _rmsdHistogramBinSize(0), _outputRmsd(false), _outputScaleFactor(false),
-		_outputOrientation(false), _outputDeformationGradient(false)
+		_outputOrientation(false), _outputDeformationGradient(false), _outputAlloyTypes(false)
 {
 	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_rmsdCutoff);
 	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputRmsd);
 	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputScaleFactor);
 	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputOrientation);
 	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputDeformationGradient);
+	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputAlloyTypes);
 
 	// Define the structure types.
 	createStructureType(OTHER, ParticleTypeProperty::PredefinedStructureType::OTHER);
@@ -74,7 +77,8 @@ void PolyhedralTemplateMatchingModifier::propertyChanged(const PropertyFieldDesc
 	if(field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputRmsd) ||
 		field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputScaleFactor) ||
 		field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputOrientation) ||
-		field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputDeformationGradient))
+		field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputDeformationGradient) ||
+		field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputAlloyTypes))
 		invalidateCachedResults();
 }
 
@@ -95,12 +99,17 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> PolyhedralTemplateM
 	if(onlySelectedParticles())
 		selectionProperty = expectStandardProperty(ParticleProperty::SelectionProperty)->storage();
 
+	// Get particle types.
+	ParticleProperty* typeProperty = nullptr;
+	if(outputAlloyTypes())
+		typeProperty = expectStandardProperty(ParticleProperty::ParticleTypeProperty)->storage();
+
 	// Initialize PTM library.
 	ptm_initialize_global();
 
-	return std::make_shared<PTMEngine>(validityInterval, posProperty->storage(), simCell->data(),
+	return std::make_shared<PTMEngine>(validityInterval, posProperty->storage(), typeProperty, simCell->data(),
 			getTypesToIdentify(NUM_STRUCTURE_TYPES), selectionProperty,
-			outputScaleFactor(), outputOrientation(), outputDeformationGradient());
+			outputScaleFactor(), outputOrientation(), outputDeformationGradient(), outputAlloyTypes());
 }
 
 /******************************************************************************
@@ -153,11 +162,20 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 
 			// Bring neighbor coordinates into a form suitable for the PTM library.
 			double points[(MAX_NEIGHBORS+1) * 3];
+			int32_t atomTypes[MAX_NEIGHBORS+1];
 			points[0] = points[1] = points[2] = 0;
 			for(int i = 0; i < numNeighbors; i++) {
 				points[i*3 + 3] = neighQuery.results()[i].delta.x();
 				points[i*3 + 4] = neighQuery.results()[i].delta.y();
 				points[i*3 + 5] = neighQuery.results()[i].delta.z();
+			}
+
+			// Build list of particle types for alloy structure identification.
+			if(_alloyTypes) {
+				atomTypes[0] = _particleTypes->getInt(index);
+				for(int i = 0; i < numNeighbors; i++) {
+					atomTypes[i + 1] = _particleTypes->getInt(neighQuery.results()[i].index);
+				}
 			}
 
 			// Determine which structures to look for. This depends on how
@@ -172,12 +190,12 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 			if(numNeighbors >= 14 && typesToIdentify()[BCC]) flags |= PTM_CHECK_BCC;
 
 			// Call PTM library to identify local structure.
-			int32_t type, alloy_type;
+			int32_t type, alloy_type = PTM_ALLOY_NONE;
 			double scale;
 			double rmsd;
 			double q[4];
 			double F[9], F_res[3];
-			ptm_index(ptm_local_handle, numNeighbors + 1, points, nullptr, flags, true,
+			ptm_index(ptm_local_handle, numNeighbors + 1, points, _alloyTypes ? atomTypes : nullptr, flags, true,
 					&type, &alloy_type, &scale, &rmsd, q,
 					_deformationGradients ? F : nullptr,
 					_deformationGradients ? F_res : nullptr,
@@ -203,6 +221,8 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 						_deformationGradients->setFloatComponent(index, j, (FloatType)F[j]);
 				}
 			}
+			if(_alloyTypes)
+				_alloyTypes->setInt(index, alloy_type);
 		}
 
 		// Release thread-local storage of PTM routine.
@@ -248,6 +268,7 @@ void PolyhedralTemplateMatchingModifier::transferComputationResults(ComputeEngin
 	_scaleFactors = ptmEngine->_scaleFactors;
 	_orientations = ptmEngine->_orientations;
 	_deformationGradients = ptmEngine->_deformationGradients;
+	_alloyTypes = ptmEngine->_alloyTypes;
 }
 
 /******************************************************************************
@@ -296,6 +317,11 @@ PipelineStatus PolyhedralTemplateMatchingModifier::applyComputationResults(TimeP
 		if(outputParticleCount() != _deformationGradients->size())
 			throwException(tr("The number of input particles has changed. The stored results have become invalid."));
 		outputStandardProperty(_deformationGradients.data());
+	}
+	if(_alloyTypes && outputAlloyTypes()) {
+		if(outputParticleCount() != _alloyTypes->size())
+			throwException(tr("The number of input particles has changed. The stored results have become invalid."));
+		outputCustomProperty(_alloyTypes.data());
 	}
 
 	// Let the base class output the structure type property to the pipeline.

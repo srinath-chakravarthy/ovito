@@ -76,6 +76,14 @@ void GrainSegmentationModifierEditor2::createUI(const RolloutInsertionParameters
 	sublayout2->addWidget(minGrainAtomCountUI->label(), 2, 0);
 	sublayout2->addLayout(minGrainAtomCountUI->createFieldLayout(), 2, 1);
 
+	FloatParameterUI* orientationSmoothingWeightUI = new FloatParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier2::_orientationSmoothingWeight));
+	sublayout2->addWidget(orientationSmoothingWeightUI->label(), 3, 0);
+	sublayout2->addLayout(orientationSmoothingWeightUI->createFieldLayout(), 3, 1);
+
+	IntegerParameterUI* numOrientationSmoothingIterationsUI = new IntegerParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier2::_numOrientationSmoothingIterations));
+	sublayout2->addWidget(numOrientationSmoothingIterationsUI->label(), 4, 0);
+	sublayout2->addLayout(numOrientationSmoothingIterationsUI->createFieldLayout(), 4, 1);
+
 	QGroupBox* outputBox = new QGroupBox(tr("Output"), rollout);
 	QVBoxLayout* sublayout = new QVBoxLayout(outputBox);
 	sublayout->setContentsMargins(4,4,4,4);

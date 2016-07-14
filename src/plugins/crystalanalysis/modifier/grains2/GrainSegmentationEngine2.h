@@ -62,7 +62,7 @@ public:
 	GrainSegmentationEngine2(const TimeInterval& validityInterval,
 			ParticleProperty* positions, const SimulationCell& simCell,
 			const QVector<bool>& typesToIdentify, ParticleProperty* selection,
-			FloatType rmsdCutoff, FloatType misorientationThreshold,
+			FloatType rmsdCutoff, int numOrientationSmoothingIterations, FloatType orientationSmoothingWeight, FloatType misorientationThreshold,
 			int minGrainAtomCount, FloatType probeSphereRadius, int meshSmoothingLevel);
 
 	/// Computes the modifier's results and stores them in this object for later retrieval.
@@ -112,6 +112,12 @@ private:
 
 	/// The computed per-particle lattice orientations.
 	QExplicitlySharedDataPointer<ParticleProperty> _orientations;
+
+	/// The number of iterations of the smoothing procedure.
+	int _numOrientationSmoothingIterations;
+
+	/// The weighting parameter used by the smoothing algorithm.
+	FloatType _orientationSmoothingWeight;
 
 	/// The minimum misorientation angle between adjacent grains.
 	FloatType _misorientationThreshold;
