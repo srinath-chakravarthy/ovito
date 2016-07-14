@@ -77,6 +77,9 @@ void PolyhedralTemplateMatchingModifierEditor::createUI(const RolloutInsertionPa
 	BooleanParameterUI* outputDeformationGradientUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputDeformationGradient));
 	sublayout->addWidget(outputDeformationGradientUI->checkBox());
 	outputDeformationGradientUI->checkBox()->setText(tr("Elastic deformation gradient"));
+	BooleanParameterUI* outputAlloyTypesUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputAlloyTypes));
+	sublayout->addWidget(outputAlloyTypesUI->checkBox());
+	outputAlloyTypesUI->checkBox()->setText(tr("Alloy type"));
 
 	StructureListParameterUI* structureTypesPUI = new StructureListParameterUI(this, true);
 	layout1->addSpacing(10);

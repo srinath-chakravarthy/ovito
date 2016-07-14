@@ -607,7 +607,7 @@ void CommonNeighborAnalysisModifier::transferComputationResults(ComputeEngine* e
 ******************************************************************************/
 PipelineStatus CommonNeighborAnalysisModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
 {
-	// Output per-bnd CNA indices to pipeline.
+	// Output per-bond CNA indices to pipeline.
 	if(_cnaIndicesData && _cnaIndicesData->size() == inputBondCount()) {
 		// Create output bond property object.
 		OORef<BondPropertyObject> cnaIndicesProperty = BondPropertyObject::createFromStorage(dataset(), _cnaIndicesData.data());

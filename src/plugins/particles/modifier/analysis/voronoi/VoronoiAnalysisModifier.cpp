@@ -498,11 +498,8 @@ PipelineStatus VoronoiAnalysisModifier::applyComputationResults(TimePoint time, 
 	}
 
 	if(_bonds) {
-		// Create the output data object for bonds.
-		OORef<BondsObject> bondsObj(new BondsObject(dataset(), _bonds.data()));
-		bondsObj->setDisplayObject(_bondsDisplay);
 		// Insert output object into the pipeline.
-		output().addObject(bondsObj);
+		addBonds(_bonds.data(), bondsDisplay());
 	}
 
 	output().attributes().insert(QStringLiteral("Voronoi.max_face_order"), QVariant::fromValue(_maxFaceOrder));

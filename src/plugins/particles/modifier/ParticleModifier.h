@@ -106,6 +106,14 @@ public:
 	/// Creates a standard bond property in the modifier's output and sets its content.
 	BondPropertyObject* outputStandardBondProperty(BondProperty* storage);
 
+	/// Creates a custom bond property in the modifier's output.
+	/// If the bond property already exists in the input, its contents are copied to the
+	/// output property by this method.
+	BondPropertyObject* outputCustomBondProperty(const QString& name, int dataType, size_t componentCount, size_t stride, bool initializeMemory = false);
+
+	/// Creates a custom bond property in the modifier's output and sets its content.
+	BondPropertyObject* outputCustomBondProperty(BondProperty* storage);
+
 	/// Returns the modifier's output simulation cell.
 	SimulationCellObject* outputSimulationCell();
 
