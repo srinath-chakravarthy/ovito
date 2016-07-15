@@ -25,7 +25,7 @@
   
   <para>
   The PTM approach promises greater reliability than e.g. <link linkend="particles.modifiers.common_neighbor_analysis">Common Neighbor Analysis (CNA)</link> in the 
-  presence of strong thermal fluctuations and strain. Furthermore, it provides a direct calculation of the local (per-atom) lattice constant, orientation, elastic deformation, strain and alloy type.
+  presence of strong thermal fluctuations and strain. Furthermore, it provides a direct calculation of the local (per-atom) orientation, elastic deformation, strain and alloy type.
   </para>
 
   <para>
@@ -76,7 +76,7 @@
       exceeds the threshold are assigned the <emphasis>Other</emphasis> structure type.
       By adjusting the RMSD cutoff, the level of robustness can be adjusted.
       A higher RMSD cutoff will lead to more identifications (and fewer 'defect' atoms), though possibly at the expense of false positives.
-      A lower RMSD cutoff will result in fewer structural identifications (and more 'defect' atoms and greater sensitivity to pertubations of the lattice), 
+      A lower RMSD cutoff will result in fewer structural identifications (and more 'defect' atoms and greater sensitivity to perturbations of the lattice), 
       though possibly at the expense of false negatives. The role of the RMSD cutoff is discussed in section 5.1 of the PTM paper.
     </para>  
     <para>
@@ -89,7 +89,7 @@
     <title>Scale factor</title>
     <para>
       The scale factor computed by the PTM method is the amount by which the atom coordinates are scaled in order to minimize the RMSD between the atom and template coordinates, 
-      after translation and rotation. It is proportial to the local lattice constant (including hydrostatic strain components).
+      after translation and rotation. It is proportional to the local lattice constant (including hydrostatic strain components).
     </para>
   </simplesect>
 
@@ -97,13 +97,13 @@
     <title>Local lattice orientations</title>
     <para>
      The PTM modifier can calculate the local lattice orientation for atoms that match one of the structural types. The computed orientation is stored
-     as a quanternion in the <literal>Orientation</literal> particle  property. 
+     as a quaternion in the <literal>Orientation</literal> particle  property. 
      You can switch the <link linkend="display_objects.particles">particle display shape</link> to <emphasis>Cube/Box</emphasis> to visualize the computed 
      per-particle orientations.
      Lattice orientations are calculated such that they lie in the fundamental zone of the symmetry group for each structural type. 
      This means that two atoms with very similar orientations can have large misorientations if they lie close to the boundaries of the fundamental zone.
      For atoms that do not match any of the known structure types, no local lattice orientation can be computed. They are assigned the
-     invalid quanternion (0,0,0,0). 
+     invalid quaternion (0,0,0,0). 
     </para>
   </simplesect>
 
@@ -188,8 +188,8 @@
     <itemizedlist>
   
     <listitem>
-      <para>The reference templates are now scaled such that the mean distance of the neighbours is 1.  
-      The central atom is no longer included in this calcuation.</para>
+      <para>The reference templates are now scaled such that the mean distance of the neighbors is 1.  
+      The central atom is no longer included in this calculation.</para>
     </listitem>
 
     <listitem>

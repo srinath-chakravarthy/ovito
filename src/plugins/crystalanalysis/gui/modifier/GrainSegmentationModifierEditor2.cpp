@@ -21,6 +21,7 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/crystalanalysis/modifier/grains2/GrainSegmentationModifier2.h>
+#include <plugins/crystalanalysis/modifier/grains2/GrainSegmentationEngine2.h>
 #include <plugins/particles/gui/modifier/analysis/StructureListParameterUI.h>
 #include <gui/properties/FloatParameterUI.h>
 #include <gui/properties/IntegerParameterUI.h>
@@ -53,9 +54,16 @@ void GrainSegmentationModifierEditor2::createUI(const RolloutInsertionParameters
 	sublayout1->setContentsMargins(4,4,4,4);
 	sublayout1->setSpacing(4);
 	sublayout1->setColumnStretch(1,1);
+	VariantComboBoxParameterUI* crystalStructureUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier2::_inputCrystalStructure));
+
+	crystalStructureUI->comboBox()->addItem(tr("Face-centered cubic (FCC)"), QVariant::fromValue((int)GrainSegmentationEngine2::FCC));
+	crystalStructureUI->comboBox()->addItem(tr("Hexagonal close-packed (HCP)"), QVariant::fromValue((int)GrainSegmentationEngine2::HCP));
+	crystalStructureUI->comboBox()->addItem(tr("Body-centered cubic (BCC)"), QVariant::fromValue((int)GrainSegmentationEngine2::BCC));
+	crystalStructureUI->comboBox()->addItem(tr("Simple cubic (SC)"), QVariant::fromValue((int)GrainSegmentationEngine2::SC));
+	sublayout1->addWidget(crystalStructureUI->comboBox(), 0, 0, 1, 2);
 
 	BooleanParameterUI* onlySelectedUI = new BooleanParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier2::_onlySelectedParticles));
-	sublayout1->addWidget(onlySelectedUI->checkBox(), 0, 0, 1, 2);
+	sublayout1->addWidget(onlySelectedUI->checkBox(), 1, 0, 1, 2);
 
 	QGroupBox* paramsBox = new QGroupBox(tr("Parameters"));
 	layout->addWidget(paramsBox);
@@ -113,7 +121,7 @@ void GrainSegmentationModifierEditor2::createUI(const RolloutInsertionParameters
 	layout->addWidget(statusLabel());
 
 	// Structure list.
-	StructureListParameterUI* structureTypesPUI = new StructureListParameterUI(this, true);
+	StructureListParameterUI* structureTypesPUI = new StructureListParameterUI(this);
 	layout->addSpacing(10);
 	layout->addWidget(structureTypesPUI->tableWidget());
 

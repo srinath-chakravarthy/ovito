@@ -28,6 +28,7 @@
 #include <plugins/crystalanalysis/data/ClusterGraph.h>
 #include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
 #include <plugins/crystalanalysis/objects/partition_mesh/PartitionMeshDisplay.h>
+#include "GrainSegmentationEngine2.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -43,6 +44,12 @@ public:
 
 	/// Return the catalog of structure patterns.
 	PatternCatalog* patternCatalog() const { return _patternCatalog; }
+
+	/// Returns the type of crystal to be analyzed.
+	GrainSegmentationEngine2::StructureType inputCrystalStructure() const { return static_cast<GrainSegmentationEngine2::StructureType>(_inputCrystalStructure.value()); }
+
+	/// Sets the type of crystal to be analyzed.
+	void setInputCrystalStructure(GrainSegmentationEngine2::StructureType structureType) { _inputCrystalStructure = structureType; }
 
 	/// \brief Returns the RMSD cutoff.
 	FloatType rmsdCutoff() const { return _rmsdCutoff; }
@@ -126,6 +133,9 @@ protected:
 
 private:
 
+	/// The type of crystal to be analyzed.
+	PropertyField<int> _inputCrystalStructure;
+
 	/// The RMSD cutoff for the PTM.
 	PropertyField<FloatType> _rmsdCutoff;
 
@@ -192,12 +202,19 @@ private:
 	/// The computed disorientation angles between neighboring lattice atoms.
 	QExplicitlySharedDataPointer<BondProperty> _neighborDisorientationAngles;
 
+	/// The distance transform results.
+	QExplicitlySharedDataPointer<ParticleProperty> _defectDistances;
+
+	/// Markers for the local distance transform maxima.
+	QExplicitlySharedDataPointer<ParticleProperty> _defectDistanceMaxima;
+
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Grain segmentation 2");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
 
+	DECLARE_PROPERTY_FIELD(_inputCrystalStructure);
 	DECLARE_PROPERTY_FIELD(_rmsdCutoff);
 	DECLARE_PROPERTY_FIELD(_misorientationThreshold);
 	DECLARE_PROPERTY_FIELD(_minGrainAtomCount);

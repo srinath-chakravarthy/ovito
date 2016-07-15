@@ -30,6 +30,8 @@
 #include <ptm/index_ptm.h>
 #include <ptm/qcprot/quat.hpp>
 
+#include <boost/graph/boykov_kolmogorov_max_flow.hpp>
+
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 /******************************************************************************
@@ -38,13 +40,14 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 GrainSegmentationEngine2::GrainSegmentationEngine2(const TimeInterval& validityInterval,
 		ParticleProperty* positions, const SimulationCell& simCell,
 		const QVector<bool>& typesToIdentify, ParticleProperty* selection,
-		FloatType rmsdCutoff, int numOrientationSmoothingIterations, FloatType orientationSmoothingWeight, FloatType misorientationThreshold,
-		int minGrainAtomCount,
+		int inputCrystalStructure, FloatType rmsdCutoff, int numOrientationSmoothingIterations,
+		FloatType orientationSmoothingWeight, FloatType misorientationThreshold, int minGrainAtomCount,
 		FloatType probeSphereRadius, int meshSmoothingLevel) :
 	StructureIdentificationModifier::StructureIdentificationEngine(validityInterval, positions, simCell, typesToIdentify, selection),
 	_atomClusters(new ParticleProperty(positions->size(), ParticleProperty::ClusterProperty, 0, true)),
 	_rmsd(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, GrainSegmentationModifier2::tr("RMSD"), false)),
 	_rmsdCutoff(rmsdCutoff),
+	_inputCrystalStructure(inputCrystalStructure),
 	_numOrientationSmoothingIterations(numOrientationSmoothingIterations),
 	_orientationSmoothingWeight(orientationSmoothingWeight),
 	_orientations(new ParticleProperty(positions->size(), ParticleProperty::OrientationProperty, 0, true)),
@@ -53,7 +56,9 @@ GrainSegmentationEngine2::GrainSegmentationEngine2(const TimeInterval& validityI
 	_probeSphereRadius(probeSphereRadius),
 	_meshSmoothingLevel(meshSmoothingLevel),
 	_latticeNeighborBonds(new BondsStorage()),
-	_neighborDisorientationAngles(new BondProperty(0, qMetaTypeId<FloatType>(), 1, 0, GrainSegmentationModifier2::tr("Disorientation"), false))
+	_neighborDisorientationAngles(new BondProperty(0, qMetaTypeId<FloatType>(), 1, 0, GrainSegmentationModifier2::tr("Disorientation"), false)),
+	_defectDistances(new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, GrainSegmentationModifier2::tr("Defect distance"), false)),
+	_defectDistanceMaxima(new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, GrainSegmentationModifier2::tr("Distance transform maxima"), true))
 {
 	// Allocate memory for neighbor lists.
 	_neighborLists = new ParticleProperty(positions->size(), qMetaTypeId<int>(), PTM_MAX_NBRS, 0, QStringLiteral("Neighbors"), false);
@@ -208,6 +213,7 @@ void GrainSegmentationEngine2::perform()
 		}
 	}
 
+	// Smoothing
 	QExplicitlySharedDataPointer<ParticleProperty> newOrientations(new ParticleProperty(positions()->size(), ParticleProperty::OrientationProperty, 0, false));
 	for(int iter = 0; iter < _numOrientationSmoothingIterations; iter++) {
 		for(size_t index = 0; index < output->size(); index++) {
@@ -219,7 +225,7 @@ void GrainSegmentationEngine2::perform()
 
 				const Quaternion& orient0 = _orientations->getQuaternion(index);
 				double q0[4] = {orient0.w(), orient0.x(), orient0.y(), orient0.z()};
-				double qinv[4] = {q0[0], -q0[1], -q0[2], -q0[3]};
+				double qinv[4] = {-q0[0], q0[1], q0[2], q0[3]};
 
 				int nnbr = 0;
 				for(size_t c = 0; c < _neighborLists->componentCount(); c++) {
@@ -240,11 +246,14 @@ void GrainSegmentationEngine2::perform()
 
 					double qclosest[4];
 					quat_rot(q0, qrot, qclosest);
-					qavg.w() += (FloatType)qclosest[0];
-					qavg.x() += (FloatType)qclosest[1];
-					qavg.y() += (FloatType)qclosest[2];
-					qavg.z() += (FloatType)qclosest[3];
-					nnbr++;
+					double theta = quat_misorientation(q0, qclosest);
+					if(theta < 10 * M_PI / 180.0) {
+						qavg.w() += (FloatType)qclosest[0];
+						qavg.x() += (FloatType)qclosest[1];
+						qavg.y() += (FloatType)qclosest[2];
+						qavg.z() += (FloatType)qclosest[3];
+						nnbr++;
+					}
 				}
 
 				if(nnbr != 0)
@@ -260,8 +269,10 @@ void GrainSegmentationEngine2::perform()
 		newOrientations.swap(_orientations);
 	}
 
+	// Initialize distance transform calculation.
+	std::fill(defectDistances()->dataInt(), defectDistances()->dataInt() + defectDistances()->size(), std::numeric_limits<int>::max());
 
-	// Generate bonds between neighboring lattice atoms.
+	// Generate bonds (edges) between neighboring lattice atoms.
 	for(size_t index = 0; index < output->size(); index++) {
 		int structureType = output->getInt(index);
 		if(structureType != OTHER) {
@@ -270,7 +281,14 @@ void GrainSegmentationEngine2::perform()
 				if(neighborIndex == -1) break;
 
 				// Only create bonds between likewise neighbors.
-				if(output->getInt(neighborIndex) != structureType) continue;
+				if(output->getInt(neighborIndex) != structureType) {
+
+					// Mark this atom as border atom for the distance transform calculation, because
+					// it has a non-lattice atom as a neighbors.
+					defectDistances()->setInt(index, 1);
+
+					continue;
+				}
 
 				// Determine PBC bond shift using minimum image convention.
 				Vector3 delta = positions()->getPoint3(index) - positions()->getPoint3(neighborIndex);
@@ -286,36 +304,186 @@ void GrainSegmentationEngine2::perform()
 		}
 	}
 
-	// Compute disorientation angles associated with bonds.
+	// Compute disorientation angles of edges.
+	ParticleBondMap bondMap(*_latticeNeighborBonds);
 	_neighborDisorientationAngles->resize(_latticeNeighborBonds->size(), false);
-	size_t bondIndex = 0;
-	for(size_t index = 0; index < output->size(); index++) {
-		int structureType = output->getInt(index);
-		if(structureType != OTHER) {
-			for(size_t c = 0; c < _neighborLists->componentCount(); c++) {
-				int neighborIndex = _neighborLists->getIntComponent(index, c);
-				if(neighborIndex == -1) break;
+	for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
+		int structureType = output->getInt(particleIndex);
+		const Quaternion& qA = _orientations->getQuaternion(particleIndex);
+		for(size_t bondIndex : bondMap.bondsOfParticle(particleIndex)) {
+			const Bond& bond = (*_latticeNeighborBonds)[bondIndex];
+			OVITO_ASSERT(bond.index1 == particleIndex);
+			const Quaternion& qB = _orientations->getQuaternion(bond.index2);
 
-				// Only create bonds between likewise neighbors.
-				if(output->getInt(neighborIndex) != structureType) continue;
+			FloatType angle = 0;
+			double orientA[4] = { qA.w(), qA.x(), qA.y(), qA.z() };
+			double orientB[4] = { qB.w(), qB.x(), qB.y(), qB.z() };
+			if(structureType == SC || structureType == FCC || structureType == BCC)
+				angle = (FloatType)quat_disorientation_cubic(orientA, orientB);
+			else if(structureType == HCP)
+				angle = (FloatType)quat_disorientation_hcp(orientA, orientB);
 
-				const Quaternion& qA = _orientations->getQuaternion(index);
-				const Quaternion& qB = _orientations->getQuaternion(neighborIndex);
+			// Store computed angle.
+			_neighborDisorientationAngles->setFloat(bondIndex, angle);
 
-				double angle = 0;
-				double orientA[4] = { qA.w(), qA.x(), qA.y(), qA.z() };
-				double orientB[4] = { qB.w(), qB.x(), qB.y(), qB.z() };
-				if(structureType == SC || structureType == FCC || structureType == BCC)
-					angle = quat_disorientation_cubic(orientA, orientB);
-				else if(structureType == HCP)
-					angle = quat_disorientation_hcp(orientA, orientB);
-
-				// Store angle.
-				_neighborDisorientationAngles->setFloat(bondIndex++, (FloatType)angle);
+			// Lattice atoms that possess a high disorientation edge are treated like defects
+			// when computing the distance transform.
+			if(angle > _misorientationThreshold) {
+				defectDistances()->setInt(bond.index1, 1);
+				defectDistances()->setInt(bond.index2, 1);
 			}
 		}
 	}
-	OVITO_ASSERT(bondIndex == _latticeNeighborBonds->size());
+
+	// Build list of border atoms.
+	std::vector<size_t> currentIndices, nextIndices;
+	for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
+		if(defectDistances()->getInt(particleIndex) == 1)
+			currentIndices.push_back(particleIndex);
+	}
+	// Distance transform calculation.
+	bool done;
+	do {
+		done = true;
+		for(auto particleIndex : currentIndices) {
+			int distancePlusOne = defectDistances()->getInt(particleIndex) + 1;
+			for(size_t bondIndex : bondMap.bondsOfParticle(particleIndex)) {
+				const Bond& bond = (*_latticeNeighborBonds)[bondIndex];
+				size_t neighborIndex = bond.index2;
+				if(distancePlusOne < defectDistances()->getInt(neighborIndex)) {
+					defectDistances()->setInt(neighborIndex, distancePlusOne);
+					nextIndices.push_back(neighborIndex);
+					done = false;
+				}
+			}
+		}
+		currentIndices.clear();
+		nextIndices.swap(currentIndices);
+	}
+	while(!done);
+
+    // Smoothing of distance transform.
+	std::replace(defectDistances()->dataInt(), defectDistances()->dataInt() + defectDistances()->size(), std::numeric_limits<int>::max(), 0);
+    for(int iter = 0; iter < 6; iter++) {
+    	QExplicitlySharedDataPointer<ParticleProperty> nextDistance(new ParticleProperty(*defectDistances()));
+    	for(const Bond& bond : *_latticeNeighborBonds) {
+			nextDistance->setInt(bond.index1, nextDistance->getInt(bond.index1) + defectDistances()->getInt(bond.index2));
+        }
+		_defectDistances.swap(nextDistance);
+    }
+
+	// Find local maxima of distance transform.
+	int numLocalMaxima = 0;
+	for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
+		if(output->getInt(particleIndex) == OTHER) continue;
+		bool isLocalMaximum = true;
+		for(size_t bondIndex : bondMap.bondsOfParticle(particleIndex)) {
+			const Bond& bond = (*_latticeNeighborBonds)[bondIndex];
+			size_t neighborIndex = bond.index2;
+			if(output->getInt(neighborIndex) != OTHER && defectDistances()->getInt(neighborIndex) > defectDistances()->getInt(particleIndex)) {
+				isLocalMaximum = false;
+				break;
+			}
+		}
+		if(isLocalMaximum)
+			defectDistanceMaxima()->setInt(particleIndex, ++numLocalMaxima);
+	}
+
+	// Split graph into clusters.
+	boost::dynamic_bitset<> visitedParticles(positions()->size());
+	int numClusters = 0;
+	std::deque<size_t> toVisit;
+	for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
+		if(visitedParticles.test(particleIndex)) continue;
+		if(output->getInt(particleIndex) == OTHER) continue;
+		toVisit.push_back(particleIndex);
+		visitedParticles.set(particleIndex);
+		numClusters++;
+		do {
+			size_t currentParticle = toVisit.front();
+			toVisit.pop_front();
+			_atomClusters->setInt(currentParticle, numClusters);
+			for(size_t bondIndex : bondMap.bondsOfParticle(currentParticle)) {
+				const Bond& bond = (*_latticeNeighborBonds)[bondIndex];
+				if(visitedParticles.test(bond.index2)) continue;
+				if(_neighborDisorientationAngles->getFloat(bondIndex) > _misorientationThreshold) continue;
+				visitedParticles.set(bond.index2);
+				toVisit.push_back(bond.index2);
+			}
+		}
+		while(!toVisit.empty());
+	}
+
+	// Calculate average orientation of each cluster.
+	std::vector<QuaternionT<double>> clusterOrientations(numClusters, QuaternionT<double>(0,0,0,0));
+	std::vector<int> firstClusterAtom(numClusters, -1);
+	std::vector<int> clusterSizes(numClusters, 0);
+	for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
+		int clusterId = _atomClusters->getInt(particleIndex);
+		if(clusterId == 0) continue;
+		clusterId--;
+
+		clusterSizes[clusterId]++;
+		if(firstClusterAtom[clusterId] == -1)
+			firstClusterAtom[clusterId] = particleIndex;
+
+		const Quaternion& orient0 = _orientations->getQuaternion(firstClusterAtom[clusterId]);
+		const Quaternion& orient = _orientations->getQuaternion(particleIndex);
+
+		double q0[4] = { orient0.w(), orient0.x(), orient0.y(), orient0.z() };
+		double qinv[4] = {-q0[0], q0[1], q0[2], q0[3]};
+		double qnbr[4] = { orient.w(), orient.x(), orient.y(), orient.z() };
+		double qrot[4];
+		quat_rot(qinv, qnbr, qrot);
+
+		int structureType = output->getInt(particleIndex);
+		if(structureType == SC || structureType == FCC || structureType == BCC)
+			rotate_quaternion_into_cubic_fundamental_zone(qrot);
+		else if(structureType == HCP)
+			rotate_quaternion_into_hcp_fundamental_zone(qrot);
+
+		double qclosest[4];
+		quat_rot(q0, qrot, qclosest);
+
+		QuaternionT<double>& qavg = clusterOrientations[clusterId];
+		qavg.w() += qclosest[0];
+		qavg.x() += qclosest[1];
+		qavg.y() += qclosest[2];
+		qavg.z() += qclosest[3];
+	}
+	for(auto& qavg : clusterOrientations) {
+		OVITO_ASSERT(qavg != QuaternionT<double>(0,0,0,0));
+		qavg.normalize();
+	}
+
+	// Dissolve grains that are too small (i.e. number of atoms below the threshold set by user).
+	std::vector<int> clusterRemapping(numClusters);
+	int newNumClusters = 0;
+	for(int i = 0; i < numClusters; i++) {
+		if(clusterSizes[i] >= _minGrainAtomCount) {
+			clusterSizes[newNumClusters] = clusterSizes[i];
+			clusterOrientations[newNumClusters] = clusterOrientations[i];
+			clusterRemapping[i] = ++newNumClusters;
+		}
+		else {
+			clusterRemapping[i] = 0;
+		}
+	}
+
+	// Compress cluster ID range and relabel atoms.
+	numClusters = newNumClusters;
+	clusterSizes.resize(newNumClusters);
+	clusterOrientations.resize(newNumClusters);
+	for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
+		int clusterId = _atomClusters->getInt(particleIndex);
+		if(clusterId == 0) continue;
+		clusterId = clusterRemapping[clusterId - 1];
+		_atomClusters->setInt(particleIndex, clusterId);
+	}
+
+	// For output, convert edge disorientation angles from radians to degrees.
+	for(FloatType& angle : _neighborDisorientationAngles->floatRange())
+		angle *= FloatType(180) / FLOATTYPE_PI;
 }
 
 /** Find the most common element in the [first, last) range.

@@ -32,6 +32,7 @@
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, GrainSegmentationModifier2, StructureIdentificationModifier);
+DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier2, _inputCrystalStructure, "CrystalStructure", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier2, _rmsdCutoff, "RMSDCutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier2, _misorientationThreshold, "MisorientationThreshold", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier2, _minGrainAtomCount, "MinGrainAtomCount", PROPERTY_FIELD_MEMORIZE);
@@ -45,6 +46,7 @@ DEFINE_PROPERTY_FIELD(GrainSegmentationModifier2, _onlySelectedParticles, "OnlyS
 DEFINE_PROPERTY_FIELD(GrainSegmentationModifier2, _outputPartitionMesh, "OutputPartitionMesh");
 DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier2, _numOrientationSmoothingIterations, "NumOrientationSmoothingIterations", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier2, _orientationSmoothingWeight, "OrientationSmoothingWeight", PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier2, _inputCrystalStructure, "Input crystal structure");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier2, _rmsdCutoff, "RMSD cutoff");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier2, _misorientationThreshold, "Misorientation threshold");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier2, _minGrainAtomCount, "Minimum grain size");
@@ -69,6 +71,7 @@ SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier2, _orientationSmo
 * Constructs the modifier object.
 ******************************************************************************/
 GrainSegmentationModifier2::GrainSegmentationModifier2(DataSet* dataset) : StructureIdentificationModifier(dataset),
+		_inputCrystalStructure(GrainSegmentationEngine2::FCC),
 		_rmsdCutoff(0),
 		_rmsdHistogramBinSize(0),
 		_misorientationThreshold(3.0 * FLOATTYPE_PI / 180.0),
@@ -81,6 +84,7 @@ GrainSegmentationModifier2::GrainSegmentationModifier2(DataSet* dataset) : Struc
 		_numOrientationSmoothingIterations(1),
 		_orientationSmoothingWeight(0.5)
 {
+	INIT_PROPERTY_FIELD(GrainSegmentationModifier2::_inputCrystalStructure);
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier2::_rmsdCutoff);
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier2::_misorientationThreshold);
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier2::_minGrainAtomCount);
@@ -136,7 +140,8 @@ void GrainSegmentationModifier2::propertyChanged(const PropertyFieldDescriptor& 
 	StructureIdentificationModifier::propertyChanged(field);
 
 	// Recompute results when the parameters have changed.
-	if(field == PROPERTY_FIELD(GrainSegmentationModifier2::_rmsdCutoff) ||
+	if(field == PROPERTY_FIELD(GrainSegmentationModifier2::_inputCrystalStructure) ||
+			field == PROPERTY_FIELD(GrainSegmentationModifier2::_rmsdCutoff) ||
 			field == PROPERTY_FIELD(GrainSegmentationModifier2::_misorientationThreshold) ||
 			field == PROPERTY_FIELD(GrainSegmentationModifier2::_minGrainAtomCount) ||
 			field == PROPERTY_FIELD(GrainSegmentationModifier2::_smoothingLevel) ||
@@ -187,9 +192,14 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> GrainSegmentationMo
 	// Initialize PTM library.
 	ptm_initialize_global();
 
+	// Determine the list of structure types the PTM should search for.
+	QVector<bool> typesToIdentify(GrainSegmentationEngine2::NUM_STRUCTURE_TYPES, false);
+	typesToIdentify[inputCrystalStructure()] = true;
+
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<GrainSegmentationEngine2>(validityInterval, posProperty->storage(),
-			simCell->data(), getTypesToIdentify(GrainSegmentationEngine2::NUM_STRUCTURE_TYPES), selectionProperty, rmsdCutoff(),
+			simCell->data(), typesToIdentify, selectionProperty,
+			inputCrystalStructure(), rmsdCutoff(),
 			_numOrientationSmoothingIterations, _orientationSmoothingWeight, misorientationThreshold(),
 			minGrainAtomCount(), outputPartitionMesh() ? probeSphereRadius() : 0, smoothingLevel());
 }
@@ -217,7 +227,9 @@ void GrainSegmentationModifier2::transferComputationResults(ComputeEngine* engin
 		_localOrientations.reset();
 
 	_latticeNeighborBonds = eng->latticeNeighborBonds();
-	_neighborDisorientationAngles= eng->neighborDisorientationAngles();
+	_neighborDisorientationAngles = eng->neighborDisorientationAngles();
+	_defectDistances = eng->defectDistances();
+	_defectDistanceMaxima = eng->defectDistanceMaxima();
 }
 
 /******************************************************************************
@@ -248,6 +260,8 @@ PipelineStatus GrainSegmentationModifier2::applyComputationResults(TimePoint tim
 	// Output particle properties.
 	outputStandardProperty(_atomClusters.data());
 	if(outputLocalOrientations() && _localOrientations) outputStandardProperty(_localOrientations.data());
+	outputCustomProperty(_defectDistances.data());
+	outputCustomProperty(_defectDistanceMaxima.data());
 
 	// Output lattice neighbor bonds.
 	if(_latticeNeighborBonds) {

@@ -62,7 +62,8 @@ public:
 	GrainSegmentationEngine2(const TimeInterval& validityInterval,
 			ParticleProperty* positions, const SimulationCell& simCell,
 			const QVector<bool>& typesToIdentify, ParticleProperty* selection,
-			FloatType rmsdCutoff, int numOrientationSmoothingIterations, FloatType orientationSmoothingWeight, FloatType misorientationThreshold,
+			int inputCrystalStructure, FloatType rmsdCutoff, int numOrientationSmoothingIterations,
+			FloatType orientationSmoothingWeight, FloatType misorientationThreshold,
 			int minGrainAtomCount, FloatType probeSphereRadius, int meshSmoothingLevel);
 
 	/// Computes the modifier's results and stores them in this object for later retrieval.
@@ -95,12 +96,21 @@ public:
 	/// Returns the computed disorientation angles between neighboring lattice atoms.
 	BondProperty* neighborDisorientationAngles() const { return _neighborDisorientationAngles.data(); }
 
+	/// Returns the computed distance transform results.
+	ParticleProperty* defectDistances() const { return _defectDistances.data(); }
+
+	/// Returns the particle property containing the markers for the local distance transform maxima.
+	ParticleProperty* defectDistanceMaxima() const { return _defectDistanceMaxima.data(); }
+
 private:
 
 	/// Builds the triangle mesh for the grain boundaries.
 	bool buildPartitionMesh();
 
 private:
+
+	/// The structural type of the input crystal to be segmented.
+	int _inputCrystalStructure;
 
 	/// The output particle property.
 	QExplicitlySharedDataPointer<ParticleProperty> _atomClusters;
@@ -109,6 +119,12 @@ private:
 	QVector<int> _rmsdHistogramData;
 	FloatType _rmsdHistogramBinSize;
 	QExplicitlySharedDataPointer<ParticleProperty> _rmsd;
+
+	/// The distance transform results.
+	QExplicitlySharedDataPointer<ParticleProperty> _defectDistances;
+
+	/// Markers for the local distance transform maxima.
+	QExplicitlySharedDataPointer<ParticleProperty> _defectDistanceMaxima;
 
 	/// The computed per-particle lattice orientations.
 	QExplicitlySharedDataPointer<ParticleProperty> _orientations;
