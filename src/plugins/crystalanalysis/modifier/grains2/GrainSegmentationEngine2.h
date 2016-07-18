@@ -102,6 +102,10 @@ public:
 	/// Returns the particle property containing the markers for the local distance transform maxima.
 	ParticleProperty* defectDistanceMaxima() const { return _defectDistanceMaxima.data(); }
 
+	ParticleProperty* vertexColors() const { return _vertexColors.data(); }
+	BondProperty* edgeCapacity() const { return _edgeCapacity.data(); }
+	BondProperty* residualEdgeCapacity() const { return _residualEdgeCapacity.data(); }
+
 private:
 
 	/// Builds the triangle mesh for the grain boundaries.
@@ -164,6 +168,10 @@ private:
 
 	/// The computed disorientation angles between neighboring lattice atoms.
 	QExplicitlySharedDataPointer<BondProperty> _neighborDisorientationAngles;
+
+	QExplicitlySharedDataPointer<BondProperty> _edgeCapacity;
+	QExplicitlySharedDataPointer<BondProperty> _residualEdgeCapacity;
+	QExplicitlySharedDataPointer<ParticleProperty> _vertexColors;
 };
 
 }	// End of namespace

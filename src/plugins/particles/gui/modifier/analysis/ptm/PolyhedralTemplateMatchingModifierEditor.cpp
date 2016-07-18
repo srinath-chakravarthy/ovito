@@ -68,9 +68,9 @@ void PolyhedralTemplateMatchingModifierEditor::createUI(const RolloutInsertionPa
 	BooleanParameterUI* outputRmsdUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputRmsd));
 	sublayout->addWidget(outputRmsdUI->checkBox());
 	outputRmsdUI->checkBox()->setText(tr("RMSD value"));
-	BooleanParameterUI* outputScaleFactorUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputScaleFactor));
-	sublayout->addWidget(outputScaleFactorUI->checkBox());
-	outputScaleFactorUI->checkBox()->setText(tr("Scale factor"));
+	BooleanParameterUI* outputInteratomicDistanceUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputInteratomicDistance));
+	sublayout->addWidget(outputInteratomicDistanceUI->checkBox());
+	outputInteratomicDistanceUI->checkBox()->setText(tr("Interatomic distance"));
 	BooleanParameterUI* outputOrientationUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputOrientation));
 	sublayout->addWidget(outputOrientationUI->checkBox());
 	outputOrientationUI->checkBox()->setText(tr("Lattice orientation"));

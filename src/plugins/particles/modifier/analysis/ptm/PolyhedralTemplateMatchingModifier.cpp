@@ -31,13 +31,13 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, PolyhedralTemplateMatchingModifier, StructureIdentificationModifier);
 DEFINE_FLAGS_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _rmsdCutoff, "RMSDCutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputRmsd, "OutputRmsd");
-DEFINE_FLAGS_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputScaleFactor, "OutputScaleFactor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputInteratomicDistance, "OutputInteratomicDistance", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputOrientation, "OutputOrientation", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputDeformationGradient, "OutputDeformationGradient");
 DEFINE_FLAGS_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputAlloyTypes, "OutputAlloyTypes", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _rmsdCutoff, "RMSD cutoff");
 SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputRmsd, "Output RMSD values");
-SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputScaleFactor, "Output scale factors");
+SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputInteratomicDistance, "Output interatomic distance");
 SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputOrientation, "Output orientations");
 SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputDeformationGradient, "Output deformation gradients");
 SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputAlloyTypes, "Output alloy types");
@@ -47,12 +47,12 @@ SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(PolyhedralTemplateMatchingModifier, _rmsdCu
 * Constructs the modifier object.
 ******************************************************************************/
 PolyhedralTemplateMatchingModifier::PolyhedralTemplateMatchingModifier(DataSet* dataset) : StructureIdentificationModifier(dataset),
-		_rmsdCutoff(0), _rmsdHistogramBinSize(0), _outputRmsd(false), _outputScaleFactor(false),
+		_rmsdCutoff(0), _rmsdHistogramBinSize(0), _outputRmsd(false), _outputInteratomicDistance(false),
 		_outputOrientation(false), _outputDeformationGradient(false), _outputAlloyTypes(false)
 {
 	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_rmsdCutoff);
 	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputRmsd);
-	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputScaleFactor);
+	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputInteratomicDistance);
 	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputOrientation);
 	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputDeformationGradient);
 	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputAlloyTypes);
@@ -75,7 +75,7 @@ void PolyhedralTemplateMatchingModifier::propertyChanged(const PropertyFieldDesc
 
 	// Re-perform analysis when settings change.
 	if(field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputRmsd) ||
-		field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputScaleFactor) ||
+		field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputInteratomicDistance) ||
 		field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputOrientation) ||
 		field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputDeformationGradient) ||
 		field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputAlloyTypes))
@@ -109,7 +109,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> PolyhedralTemplateM
 
 	return std::make_shared<PTMEngine>(validityInterval, posProperty->storage(), typeProperty, simCell->data(),
 			getTypesToIdentify(NUM_STRUCTURE_TYPES), selectionProperty,
-			outputScaleFactor(), outputOrientation(), outputDeformationGradient(), outputAlloyTypes());
+			outputInteratomicDistance(), outputOrientation(), outputDeformationGradient(), outputAlloyTypes());
 }
 
 /******************************************************************************
@@ -191,7 +191,7 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 
 			// Call PTM library to identify local structure.
 			int32_t type, alloy_type = PTM_ALLOY_NONE;
-			double scale;
+			double scale, interatomic_distance;
 			double rmsd;
 			double q[4];
 			double F[9], F_res[3];
@@ -199,7 +199,7 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 					&type, &alloy_type, &scale, &rmsd, q,
 					_deformationGradients ? F : nullptr,
 					_deformationGradients ? F_res : nullptr,
-					nullptr, nullptr, nullptr, nullptr);
+					nullptr, nullptr, nullptr, &interatomic_distance, nullptr);
 
 			// Convert PTM classification to our own scheme and store computed quantities.
 			if(type == PTM_MATCH_NONE) {
@@ -214,7 +214,7 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 				else if(type == PTM_MATCH_BCC) output->setInt(index, BCC);
 				else OVITO_ASSERT(false);
 				_rmsd->setFloat(index, rmsd);
-				if(_scaleFactors) _scaleFactors->setFloat(index, scale);
+				if(_interatomicDistances) _interatomicDistances->setFloat(index, interatomic_distance);
 				if(_orientations) _orientations->setQuaternion(index, Quaternion((FloatType)q[1], (FloatType)q[2], (FloatType)q[3], (FloatType)q[0]));
 				if(_deformationGradients) {
 					for(size_t j = 0; j < 9; j++)
@@ -265,7 +265,7 @@ void PolyhedralTemplateMatchingModifier::transferComputationResults(ComputeEngin
 	_rmsd = ptmEngine->_rmsd;
 
 	// Transfer per-particle data.
-	_scaleFactors = ptmEngine->_scaleFactors;
+	_interatomicDistances = ptmEngine->_interatomicDistances;
 	_orientations = ptmEngine->_orientations;
 	_deformationGradients = ptmEngine->_deformationGradients;
 	_alloyTypes = ptmEngine->_alloyTypes;
@@ -303,10 +303,10 @@ PipelineStatus PolyhedralTemplateMatchingModifier::applyComputationResults(TimeP
 			throwException(tr("The number of input particles has changed. The stored results have become invalid."));
 		outputCustomProperty(_rmsd.data());
 	}
-	if(_scaleFactors && outputScaleFactor()) {
-		if(outputParticleCount() != _scaleFactors->size())
+	if(_interatomicDistances && outputInteratomicDistance()) {
+		if(outputParticleCount() != _interatomicDistances->size())
 			throwException(tr("The number of input particles has changed. The stored results have become invalid."));
-		outputCustomProperty(_scaleFactors.data());
+		outputCustomProperty(_interatomicDistances.data());
 	}
 	if(_orientations && outputOrientation()) {
 		if(outputParticleCount() != _orientations->size())

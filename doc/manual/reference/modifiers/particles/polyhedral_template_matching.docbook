@@ -86,15 +86,21 @@
   </simplesect>
 
   <simplesect>
-    <title>Scale factor</title>
+    <title>Interatomic distance</title>
     <para>
-      The scale factor computed by the PTM method is the amount by which the atom coordinates are scaled in order to minimize the RMSD between the atom and template coordinates, 
-      after translation and rotation. It is proportional to the local lattice constant (including hydrostatic strain components).
+      The internal scale factor computed by the PTM method (see the paper) is the amount by which the atom coordinates are scaled in order to minimize the RMSD between the atom and template coordinates, 
+      after translation and rotation. It is proportional to the reciprocal local interatomic distance (including hydrostatic strain components).
+    </para>
+    <para>
+      The PTM modifier provides an option to output the local interatomic distance (or nearest neighbor distance) as a new particle property, which is computed from the internal scale factor for those atoms
+      that match one of the known structure types. 
+      Note that you can compute a local lattice constant (including hydrostatic strain) from the interatomic distance by dividing it by the 
+      factor <literal>sqrt(1/2)</literal> (for FCC,HCP) or <literal>sqrt(3/4)</literal> (for BCC) using, e.g., the <link linkend="particles.modifiers.compute_property">Compute property</link> modifier
     </para>
   </simplesect>
 
   <simplesect>
-    <title>Local lattice orientations</title>
+    <title>Local lattice orientation</title>
     <para>
      The PTM modifier can calculate the local lattice orientation for atoms that match one of the structural types. The computed orientation is stored
      as a quaternion in the <literal>Orientation</literal> particle  property. 

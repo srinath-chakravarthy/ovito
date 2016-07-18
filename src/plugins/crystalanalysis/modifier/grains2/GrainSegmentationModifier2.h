@@ -208,6 +208,10 @@ private:
 	/// Markers for the local distance transform maxima.
 	QExplicitlySharedDataPointer<ParticleProperty> _defectDistanceMaxima;
 
+	QExplicitlySharedDataPointer<ParticleProperty> _vertexColors;
+	QExplicitlySharedDataPointer<BondProperty> _edgeCapacity;
+	QExplicitlySharedDataPointer<BondProperty> _residualEdgeCapacity;
+
 	Q_OBJECT
 	OVITO_OBJECT
 

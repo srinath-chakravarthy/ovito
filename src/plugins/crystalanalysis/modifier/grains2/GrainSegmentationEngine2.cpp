@@ -31,6 +31,83 @@
 #include <ptm/qcprot/quat.hpp>
 
 #include <boost/graph/boykov_kolmogorov_max_flow.hpp>
+#include <boost/property_map/property_map.hpp>
+#include <boost/property_map/function_property_map.hpp>
+#include <boost/iterator/counting_iterator.hpp>
+
+namespace boost {
+	struct BoostGraph {
+		BoostGraph(size_t _vertexCount,
+				const Ovito::Particles::BondsStorage& _bonds,
+				const Ovito::Particles::ParticleBondMap& _bondMap) :
+					vertexCount(_vertexCount), bonds(_bonds), bondMap(_bondMap) {}
+		size_t vertexCount;
+		const Ovito::Particles::ParticleBondMap& bondMap;
+		const Ovito::Particles::BondsStorage& bonds;
+	};
+	struct our_graph_traversal_category :
+	    public virtual edge_list_graph_tag,
+	    public virtual incidence_graph_tag,
+	    public virtual vertex_list_graph_tag { };
+	template<>
+	struct graph_traits<BoostGraph> {
+		typedef size_t vertex_descriptor;
+		typedef size_t edge_descriptor;
+		typedef boost::counting_iterator<vertex_descriptor> vertex_iterator;
+		typedef boost::counting_iterator<edge_descriptor> edge_iterator;
+		typedef directed_tag directed_category;
+		typedef allow_parallel_edge_tag edge_parallel_category;
+		typedef our_graph_traversal_category traversal_category;
+		typedef size_t vertices_size_type;
+		typedef size_t edges_size_type;
+		typedef size_t degree_size_type;
+		typedef Ovito::Particles::ParticleBondMap::bond_index_iterator out_edge_iterator;
+		static vertex_descriptor null_vertex() { return std::numeric_limits<vertex_descriptor>::max(); }
+	};
+	typename graph_traits<BoostGraph>::vertices_size_type
+	num_vertices(const BoostGraph& g) {
+		return g.vertexCount;
+	}
+	std::pair<typename graph_traits<BoostGraph>::vertex_iterator, typename graph_traits<BoostGraph>::vertex_iterator>
+	vertices(const BoostGraph& g) {
+		typedef typename graph_traits<BoostGraph>::vertex_iterator Iter;
+		return std::make_pair(Iter(0), Iter(g.vertexCount));
+	}
+	typename graph_traits<BoostGraph>::edges_size_type
+	num_edges(const BoostGraph& g) {
+		return g.bonds.size();
+	}
+	std::pair<typename graph_traits<BoostGraph>::edge_iterator, typename graph_traits<BoostGraph>::edge_iterator>
+	edges(const BoostGraph& g) {
+		typedef typename graph_traits<BoostGraph>::edge_iterator Iter;
+		return std::make_pair(Iter(0), Iter(g.bonds.size()));
+	}
+	typename graph_traits<BoostGraph>::vertex_descriptor source(
+			typename graph_traits<BoostGraph>::edge_descriptor e,
+			const BoostGraph& g) {
+		return g.bonds[e].index1;
+	}
+	typename graph_traits<BoostGraph>::vertex_descriptor
+	target(
+			typename graph_traits<BoostGraph>::edge_descriptor e,
+			const BoostGraph& g) {
+		return g.bonds[e].index2;
+	}
+	inline std::pair<
+	    typename graph_traits<BoostGraph>::out_edge_iterator,
+	    typename graph_traits<BoostGraph>::out_edge_iterator > out_edges(
+	    		typename graph_traits<BoostGraph>::vertex_descriptor u,
+				const BoostGraph& g) {
+			typedef typename graph_traits<BoostGraph>::out_edge_iterator Iter;
+	    	return std::make_pair(Iter(&g.bondMap, g.bondMap.firstBondOfParticle(u)), Iter(&g.bondMap, g.bondMap.endOfListValue()));
+	}
+	inline typename graph_traits<BoostGraph>::degree_size_type out_degree(
+	    		typename graph_traits<BoostGraph>::vertex_descriptor u,
+				const BoostGraph& g) {
+	    	return boost::size(g.bondMap.bondsOfParticle(u));
+	}
+
+}; // namespace boost
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -58,7 +135,10 @@ GrainSegmentationEngine2::GrainSegmentationEngine2(const TimeInterval& validityI
 	_latticeNeighborBonds(new BondsStorage()),
 	_neighborDisorientationAngles(new BondProperty(0, qMetaTypeId<FloatType>(), 1, 0, GrainSegmentationModifier2::tr("Disorientation"), false)),
 	_defectDistances(new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, GrainSegmentationModifier2::tr("Defect distance"), false)),
-	_defectDistanceMaxima(new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, GrainSegmentationModifier2::tr("Distance transform maxima"), true))
+	_defectDistanceMaxima(new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, GrainSegmentationModifier2::tr("Distance transform maxima"), true)),
+	_vertexColors(new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, GrainSegmentationModifier2::tr("Vertex color"), true)),
+	_edgeCapacity(new BondProperty(0, qMetaTypeId<FloatType>(), 1, 0, GrainSegmentationModifier2::tr("Capacity"), true)),
+	_residualEdgeCapacity(new BondProperty(0, qMetaTypeId<FloatType>(), 1, 0, GrainSegmentationModifier2::tr("Residual capacity"), true))
 {
 	// Allocate memory for neighbor lists.
 	_neighborLists = new ParticleProperty(positions->size(), qMetaTypeId<int>(), PTM_MAX_NBRS, 0, QStringLiteral("Neighbors"), false);
@@ -142,7 +222,7 @@ void GrainSegmentationEngine2::perform()
 			ptm_index(ptm_local_handle, numNeighbors + 1, points, nullptr, flags, true,
 					&type, &alloy_type, &scale, &rmsd, q,
 					nullptr, nullptr,
-					nullptr, nullptr, mapping, nullptr);
+					nullptr, nullptr, mapping, nullptr, nullptr);
 
 			// Convert PTM classification to our own scheme and store computed quantities.
 			if(type == PTM_MATCH_NONE) {
@@ -284,11 +364,15 @@ void GrainSegmentationEngine2::perform()
 				if(output->getInt(neighborIndex) != structureType) {
 
 					// Mark this atom as border atom for the distance transform calculation, because
-					// it has a non-lattice atom as a neighbors.
+					// it has a non-lattice atom as neighbor.
 					defectDistances()->setInt(index, 1);
 
 					continue;
 				}
+
+				// Skip every other half-bond, because we create two half-bonds below.
+				if(positions()->getPoint3(index) > positions()->getPoint3(neighborIndex))
+					continue;
 
 				// Determine PBC bond shift using minimum image convention.
 				Vector3 delta = positions()->getPoint3(index) - positions()->getPoint3(neighborIndex);
@@ -298,41 +382,38 @@ void GrainSegmentationEngine2::perform()
 						pbcShift[dim] = (int8_t)floor(cell().inverseMatrix().prodrow(delta, dim) + FloatType(0.5));
 				}
 
-				// Create half-bond.
+				// Create two half-bonds.
 				_latticeNeighborBonds->push_back(Bond{ pbcShift, (unsigned int)index, (unsigned int)neighborIndex });
+				_latticeNeighborBonds->push_back(Bond{ -pbcShift, (unsigned int)neighborIndex, (unsigned int)index });
 			}
 		}
 	}
 
 	// Compute disorientation angles of edges.
-	ParticleBondMap bondMap(*_latticeNeighborBonds);
 	_neighborDisorientationAngles->resize(_latticeNeighborBonds->size(), false);
-	for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
-		int structureType = output->getInt(particleIndex);
-		const Quaternion& qA = _orientations->getQuaternion(particleIndex);
-		for(size_t bondIndex : bondMap.bondsOfParticle(particleIndex)) {
-			const Bond& bond = (*_latticeNeighborBonds)[bondIndex];
-			OVITO_ASSERT(bond.index1 == particleIndex);
-			const Quaternion& qB = _orientations->getQuaternion(bond.index2);
+	auto disorientationAngleIter = _neighborDisorientationAngles->dataFloat();
+	for(const Bond& bond : *_latticeNeighborBonds) {
+		const Quaternion& qA = _orientations->getQuaternion(bond.index1);
+		const Quaternion& qB = _orientations->getQuaternion(bond.index2);
 
-			FloatType angle = 0;
-			double orientA[4] = { qA.w(), qA.x(), qA.y(), qA.z() };
-			double orientB[4] = { qB.w(), qB.x(), qB.y(), qB.z() };
-			if(structureType == SC || structureType == FCC || structureType == BCC)
-				angle = (FloatType)quat_disorientation_cubic(orientA, orientB);
-			else if(structureType == HCP)
-				angle = (FloatType)quat_disorientation_hcp(orientA, orientB);
+		int structureType = output->getInt(bond.index1);
+		double orientA[4] = { qA.w(), qA.x(), qA.y(), qA.z() };
+		double orientB[4] = { qB.w(), qB.x(), qB.y(), qB.z() };
+		if(structureType == SC || structureType == FCC || structureType == BCC)
+			*disorientationAngleIter = (FloatType)quat_disorientation_cubic(orientA, orientB);
+		else if(structureType == HCP)
+			*disorientationAngleIter = (FloatType)quat_disorientation_hcp(orientA, orientB);
+		else
+			*disorientationAngleIter = FLOATTYPE_MAX;
 
-			// Store computed angle.
-			_neighborDisorientationAngles->setFloat(bondIndex, angle);
-
-			// Lattice atoms that possess a high disorientation edge are treated like defects
-			// when computing the distance transform.
-			if(angle > _misorientationThreshold) {
-				defectDistances()->setInt(bond.index1, 1);
-				defectDistances()->setInt(bond.index2, 1);
-			}
+		// Lattice atoms that possess a high disorientation edge are treated like defects
+		// when computing the distance transform.
+		if(*disorientationAngleIter > _misorientationThreshold) {
+			defectDistances()->setInt(bond.index1, 1);
+			defectDistances()->setInt(bond.index2, 1);
 		}
+
+		++disorientationAngleIter;
 	}
 
 	// Build list of border atoms.
@@ -341,6 +422,10 @@ void GrainSegmentationEngine2::perform()
 		if(defectDistances()->getInt(particleIndex) == 1)
 			currentIndices.push_back(particleIndex);
 	}
+
+	// This is used in the following for fast lookup of bonds incident on an atom.
+	ParticleBondMap bondMap(*_latticeNeighborBonds);
+
 	// Distance transform calculation.
 	bool done;
 	do {
@@ -389,7 +474,44 @@ void GrainSegmentationEngine2::perform()
 			defectDistanceMaxima()->setInt(particleIndex, ++numLocalMaxima);
 	}
 
-	// Split graph into clusters.
+	using namespace boost;
+	BOOST_CONCEPT_ASSERT(( VertexListGraphConcept<BoostGraph> ));
+	BOOST_CONCEPT_ASSERT(( IncidenceGraphConcept<BoostGraph> ));
+	BOOST_CONCEPT_ASSERT(( EdgeListGraphConcept<BoostGraph> ));
+
+	// Compute edge capacities.
+	_edgeCapacity->resize(_latticeNeighborBonds->size(), false);
+	_residualEdgeCapacity->resize(_latticeNeighborBonds->size(), false);
+	for(size_t bondIndex = 0; bondIndex < _latticeNeighborBonds->size(); bondIndex++) {
+		_edgeCapacity->setFloat(bondIndex, _misorientationThreshold - _neighborDisorientationAngles->getFloat(bondIndex));
+    }
+
+	// Determine source and sink vertices.
+	// Use two maxima of distance transform.
+	size_t sourceVertexIndex = std::find(defectDistanceMaxima()->constDataInt(), defectDistanceMaxima()->constDataInt() + defectDistanceMaxima()->size(), 101) - defectDistanceMaxima()->constDataInt();
+	size_t sinkVertexIndex = std::find(defectDistanceMaxima()->constDataInt(), defectDistanceMaxima()->constDataInt() + defectDistanceMaxima()->size(), 108) - defectDistanceMaxima()->constDataInt();
+
+	// Create our Boost graph adapter.
+	BoostGraph graphAdapter(output->size(), *_latticeNeighborBonds, bondMap);
+
+	// Allocate working arrays for Boykov-Kolmogorov algorithm.
+	std::vector<size_t> vertexPredecessorMap(output->size());
+	std::vector<int> vertexDistanceProperty(output->size());
+
+	// Minimim cut/max flow.
+	boykov_kolmogorov_max_flow(
+			graphAdapter,
+			boost::make_iterator_property_map(_edgeCapacity->constDataFloat(), boost::identity_property_map()),
+			boost::make_iterator_property_map(_residualEdgeCapacity->dataFloat(), boost::identity_property_map()),
+			boost::make_function_property_map<size_t>([](size_t edgeIndex) { return (edgeIndex&1) ? (edgeIndex-1) : (edgeIndex+1); }),
+			boost::make_iterator_property_map(vertexPredecessorMap.begin(), boost::identity_property_map()),
+			boost::make_iterator_property_map(_vertexColors->dataInt(), boost::identity_property_map()),
+			boost::make_iterator_property_map(vertexDistanceProperty.begin(), boost::identity_property_map()),
+			boost::identity_property_map(),
+			sourceVertexIndex,
+			sinkVertexIndex);
+
+	// Split graph into components (clusters).
 	boost::dynamic_bitset<> visitedParticles(positions()->size());
 	int numClusters = 0;
 	std::deque<size_t> toVisit;

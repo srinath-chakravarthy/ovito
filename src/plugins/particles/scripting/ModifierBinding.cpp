@@ -1303,9 +1303,9 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				" * ``RMSD`` (:py:class:`~ovito.data.ParticleProperty`):\n"
 				"   This particle property will contain the per-particle RMSD values computed by the PTM method.\n"
 				"   The modifier will output this property only if the :py:attr:`.output_rmsd` flag is set.\n"
-				" * ``Scale Factor`` (:py:class:`~ovito.data.ParticleProperty`):\n"
-				"   This particle property will contain the local scale factors computed by the PTM method.\n"
-				"   The modifier will output this property only if the :py:attr:`.output_scale_factor` flag is set.\n"
+				" * ``Interatomic Distance`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+				"   This particle property will contain the local interatomic distances computed by the PTM method.\n"
+				"   The modifier will output this property only if the :py:attr:`.output_interatomic_distance` flag is set.\n"
 				" * ``Orientation`` (:py:class:`~ovito.data.ParticleProperty`):\n"
 				"   This particle property will contain the local lattice orientations computed by the PTM method\n"
 				"   encoded as quaternions.\n"
@@ -1352,8 +1352,8 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					"Boolean flag that controls whether the modifier outputs the computed per-particle RMSD values to the pipeline."
 					"\n\n"
 					":Default: ``False``\n")
-			.add_property("output_scale_factor", &PolyhedralTemplateMatchingModifier::outputScaleFactor, &PolyhedralTemplateMatchingModifier::setOutputScaleFactor,
-					"Boolean flag that controls whether the modifier outputs the computed per-particle scale factors to the pipeline."
+			.add_property("output_interatomic_distance", &PolyhedralTemplateMatchingModifier::outputInteratomicDistance, &PolyhedralTemplateMatchingModifier::setOutputInteratomicDistance,
+					"Boolean flag that controls whether the modifier outputs the computed per-particle interatomic distance to the pipeline."
 					"\n\n"
 					":Default: ``False``\n")
 			.add_property("output_orientation", &PolyhedralTemplateMatchingModifier::outputOrientation, &PolyhedralTemplateMatchingModifier::setOutputOrientation,

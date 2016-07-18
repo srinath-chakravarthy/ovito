@@ -91,11 +91,11 @@ public:
 	/// Sets whether per-particle RMSD values are output by the modifier.
 	void setOutputRmsd(bool enable) { _outputRmsd = enable; }
 
-	/// Returns whether local scales are output by the modifier.
-	bool outputScaleFactor() const { return _outputScaleFactor; }
+	/// Returns whether local interatomic distances are output by the modifier.
+	bool outputInteratomicDistance() const { return _outputInteratomicDistance; }
 
-	/// Sets whether local scales are output by the modifier.
-	void setOutputScaleFactor(bool enable) { _outputScaleFactor = enable; }
+	/// Sets whether local interatomic distances are output by the modifier.
+	void setOutputInteratomicDistance(bool enable) { _outputInteratomicDistance = enable; }
 
 	/// Returns whether local orientations are output by the modifier.
 	bool outputOrientation() const { return _outputOrientation; }
@@ -139,11 +139,11 @@ private:
 		/// Constructor.
 		PTMEngine(const TimeInterval& validityInterval, ParticleProperty* positions, ParticleProperty* particleTypes, const SimulationCell& simCell,
 				const QVector<bool>& typesToIdentify, ParticleProperty* selection,
-				bool outputScaleFactor, bool outputOrientation, bool outputDeformationGradient, bool outputAlloyTypes) :
+				bool outputInteratomicDistance, bool outputOrientation, bool outputDeformationGradient, bool outputAlloyTypes) :
 			StructureIdentificationEngine(validityInterval, positions, simCell, typesToIdentify, selection),
 			_particleTypes(particleTypes),
 			_rmsd(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, tr("RMSD"), false)),
-			_scaleFactors(outputScaleFactor ? new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, tr("Scale Factor"), true) : nullptr),
+			_interatomicDistances(outputInteratomicDistance ? new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, tr("Interatomic Distance"), true) : nullptr),
 			_orientations(outputOrientation ? new ParticleProperty(positions->size(), ParticleProperty::OrientationProperty, 0, true) : nullptr),
 			_deformationGradients(outputDeformationGradient ? new ParticleProperty(positions->size(), ParticleProperty::ElasticDeformationGradientProperty, 0, true) : nullptr),
 			_alloyTypes(outputAlloyTypes ? new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, tr("Alloy Type"), true) : nullptr) {}
@@ -153,7 +153,7 @@ private:
 
 		QExplicitlySharedDataPointer<ParticleProperty> _particleTypes;
 		QExplicitlySharedDataPointer<ParticleProperty> _rmsd;
-		QExplicitlySharedDataPointer<ParticleProperty> _scaleFactors;
+		QExplicitlySharedDataPointer<ParticleProperty> _interatomicDistances;
 		QExplicitlySharedDataPointer<ParticleProperty> _orientations;
 		QExplicitlySharedDataPointer<ParticleProperty> _deformationGradients;
 		QExplicitlySharedDataPointer<ParticleProperty> _alloyTypes;
@@ -169,8 +169,8 @@ private:
 	/// The computed per-particle RMSD values.
 	QExplicitlySharedDataPointer<ParticleProperty> _rmsd;
 
-	/// The computed per-particle scale factors.
-	QExplicitlySharedDataPointer<ParticleProperty> _scaleFactors;
+	/// The computed per-particle interatomic distance.
+	QExplicitlySharedDataPointer<ParticleProperty> _interatomicDistances;
 
 	/// The computed per-particle orientations.
 	QExplicitlySharedDataPointer<ParticleProperty> _orientations;
@@ -187,8 +187,8 @@ private:
 	/// Controls the output of the per-particle RMSD values.
 	PropertyField<bool> _outputRmsd;
 
-	/// Controls the output of local scales.
-	PropertyField<bool> _outputScaleFactor;
+	/// Controls the output of local interatomic distances.
+	PropertyField<bool> _outputInteratomicDistance;
 
 	/// Controls the output of local orientations.
 	PropertyField<bool> _outputOrientation;
@@ -213,7 +213,7 @@ private:
 
 	DECLARE_PROPERTY_FIELD(_rmsdCutoff);
 	DECLARE_PROPERTY_FIELD(_outputRmsd);
-	DECLARE_PROPERTY_FIELD(_outputScaleFactor);
+	DECLARE_PROPERTY_FIELD(_outputInteratomicDistance);
 	DECLARE_PROPERTY_FIELD(_outputOrientation);
 	DECLARE_PROPERTY_FIELD(_outputDeformationGradient);
 	DECLARE_PROPERTY_FIELD(_outputAlloyTypes);

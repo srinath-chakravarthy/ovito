@@ -69,24 +69,26 @@ public:
 
 	class bond_index_iterator : public boost::iterator_facade<bond_index_iterator, size_t const, boost::forward_traversal_tag, size_t> {
 	public:
+		bond_index_iterator() : _bondMap(nullptr), _currentIndex(0) {}
 		bond_index_iterator(const ParticleBondMap* map, size_t startIndex) :
-			_bondMap(*map), _currentIndex(startIndex) {}
+			_bondMap(map), _currentIndex(startIndex) {}
 	private:
 		size_t _currentIndex;
-		const ParticleBondMap& _bondMap;
+		const ParticleBondMap* _bondMap;
 
 		friend class boost::iterator_core_access;
 
 		void increment() {
-			_currentIndex = _bondMap.nextBondOfParticle(_currentIndex);
+			_currentIndex = _bondMap->nextBondOfParticle(_currentIndex);
 		}
 
 		bool equal(const bond_index_iterator& other) const {
+			OVITO_ASSERT(_bondMap == other._bondMap);
 			return this->_currentIndex == other._currentIndex;
 		}
 
 		size_t dereference() const {
-			OVITO_ASSERT(_currentIndex < _bondMap._nextBond.size());
+			OVITO_ASSERT(_currentIndex < _bondMap->_nextBond.size());
 			return _currentIndex;
 		}
 	};

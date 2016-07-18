@@ -230,6 +230,10 @@ void GrainSegmentationModifier2::transferComputationResults(ComputeEngine* engin
 	_neighborDisorientationAngles = eng->neighborDisorientationAngles();
 	_defectDistances = eng->defectDistances();
 	_defectDistanceMaxima = eng->defectDistanceMaxima();
+
+	_edgeCapacity = eng->edgeCapacity();
+	_residualEdgeCapacity = eng->residualEdgeCapacity();
+	_vertexColors = eng->vertexColors();
 }
 
 /******************************************************************************
@@ -262,12 +266,17 @@ PipelineStatus GrainSegmentationModifier2::applyComputationResults(TimePoint tim
 	if(outputLocalOrientations() && _localOrientations) outputStandardProperty(_localOrientations.data());
 	outputCustomProperty(_defectDistances.data());
 	outputCustomProperty(_defectDistanceMaxima.data());
+	outputCustomProperty(_vertexColors.data());
 
 	// Output lattice neighbor bonds.
 	if(_latticeNeighborBonds) {
 		std::vector<BondProperty*> bondProperties;
 		if(_neighborDisorientationAngles)
 			bondProperties.push_back(_neighborDisorientationAngles.data());
+		if(_edgeCapacity)
+			bondProperties.push_back(_edgeCapacity.data());
+		if(_residualEdgeCapacity)
+			bondProperties.push_back(_residualEdgeCapacity.data());
 		addBonds(_latticeNeighborBonds.data(), bondsDisplay(), bondProperties);
 	}
 
