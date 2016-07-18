@@ -19,18 +19,18 @@
   This modifier classifies the local structural environment of particles
   using the <emphasis>Polyhedral Template Matching</emphasis> (PTM) method [<link
   xlink:href="http://dx.doi.org/10.1088/0965-0393/24/5/055007">P.M. Larsen et al., Modelling Simul. Mater. Sci. Eng. 24, 055007</link>]
-  (<link xlink:href="http://arxiv.org/abs/1603.05143">preprint</link>)
+  (<link xlink:href="http://arxiv.org/abs/1603.05143">preprint available</link>)
   and allows identifying the local crystalline structure of simple condensed phases (FCC, BCC, etc.) formed by atoms.
   </para> 
   
   <para>
-  The PTM approach promises greater reliability than e.g. <link linkend="particles.modifiers.common_neighbor_analysis">Common Neighbor Analysis</link> in the 
-  presence of strong thermal fluctuations. Furthermore, it provides a direct calculation of the local (per-atom) lattice constant, orientation, and elastic deformation.
+  The PTM approach promises greater reliability than e.g. <link linkend="particles.modifiers.common_neighbor_analysis">Common Neighbor Analysis (CNA)</link> in the 
+  presence of strong thermal fluctuations and strain. Furthermore, it provides a direct calculation of the local (per-atom) orientation, elastic deformation, strain and alloy type.
   </para>
 
   <para>
   The modifier assigns the <literal>Structure Type</literal> property to each particle with
-  the structural type encoded as an integer value:
+  the assigned structural type encoded as an integer value:
   <itemizedlist>
   
     <listitem>
@@ -59,7 +59,112 @@
 
   </itemizedlist>
   </para>
+    <para>
+      The structural types to be searched for can be changed by checking/unchecking the tick box for each type.
+    </para>
+
+  <simplesect>
+    <title>Root-Mean-Square Deviation (RMSD)</title>
+    <para>
+      For each input particle, the PTM tries to determine a mapping of the local neighborhood to each active candidate structure.
+      If such a mapping exists, a RMSD value is calculated, which is a measure of the spatial deviation from the ideal structure template (the quality of the match). 
+      The structural type with the lowest RMSD value is finally assigned to the particle.
+      A histogram of the RMSD values for all structures and all particles is shown in the side panel.
+    </para>
+    <para> 
+      The modifier allows to set a global RMSD cutoff, which limits the assignment of structural types to a range of RMSD values. Particles whose RMSD
+      exceeds the threshold are assigned the <emphasis>Other</emphasis> structure type.
+      By adjusting the RMSD cutoff, the level of robustness can be adjusted.
+      A higher RMSD cutoff will lead to more identifications (and fewer 'defect' atoms), though possibly at the expense of false positives.
+      A lower RMSD cutoff will result in fewer structural identifications (and more 'defect' atoms and greater sensitivity to perturbations of the lattice), 
+      though possibly at the expense of false negatives. The role of the RMSD cutoff is discussed in section 5.1 of the PTM paper.
+    </para>  
+    <para>
+      Note that, for the sake of reproducibility, the chosen RMSD cutoff value should typically be reported in a publication if you use 
+      the PTM method to gain quantitative results (e.g. measure crystal defect fractions).
+    </para>
+  </simplesect>
+
+  <simplesect>
+    <title>Interatomic distance</title>
+    <para>
+      The internal scale factor computed by the PTM method (see the paper) is the amount by which the atom coordinates are scaled in order to minimize the RMSD between the atom and template coordinates, 
+      after translation and rotation. It is proportional to the reciprocal local interatomic distance (including hydrostatic strain components).
+    </para>
+    <para>
+      The PTM modifier provides an option to output the local interatomic distance (or nearest neighbor distance) as a new particle property, which is computed from the internal scale factor for those atoms
+      that match one of the known structure types. 
+      Note that you can compute a local lattice constant (including hydrostatic strain) from the interatomic distance by dividing it by the 
+      factor <literal>sqrt(1/2)</literal> (for FCC,HCP) or <literal>sqrt(3/4)</literal> (for BCC) using, e.g., the <link linkend="particles.modifiers.compute_property">Compute property</link> modifier
+    </para>
+  </simplesect>
+
+  <simplesect>
+    <title>Local lattice orientation</title>
+    <para>
+     The PTM modifier can calculate the local lattice orientation for atoms that match one of the structural types. The computed orientation is stored
+     as a quaternion in the <literal>Orientation</literal> particle  property. 
+     You can switch the <link linkend="display_objects.particles">particle display shape</link> to <emphasis>Cube/Box</emphasis> to visualize the computed 
+     per-particle orientations.
+     Lattice orientations are calculated such that they lie in the fundamental zone of the symmetry group for each structural type. 
+     This means that two atoms with very similar orientations can have large misorientations if they lie close to the boundaries of the fundamental zone.
+     For atoms that do not match any of the known structure types, no local lattice orientation can be computed. They are assigned the
+     invalid quaternion (0,0,0,0). 
+    </para>
+  </simplesect>
+
+  <simplesect>
+    <title>Elastic deformation gradient</title>
+    <para>
+      The local elastic deformation gradient is calculated as the affine transformation of the ideal template which minimizes the sum of squared distances 
+      from the actual atomic coordinates. 
+    </para>
+  </simplesect>
+
+  <simplesect>
+    <title>Alloy structures</title>
+    <para>
+      Atom types are generally ignored by the PTM when identifying the <emphasis>structural</emphasis> type (e.g. FCC, BCC, etc.). However, the algorithm can additionally      
+      identify the local <emphasis>alloy</emphasis> type by taking into account the chemical species of atoms (given by the <literal>Particle Type</literal> property, which must be defined).
+      The binary alloy types currently identified by the PTM algorithm are A2 and B2 for BCC, and A1, L1<subscript>0</subscript> and L1<subscript>2</subscript> for FCC.      
+    </para>
+    <para>
+      The local alloy type is output as an additional integer particle property named <literal>Alloy Type</literal>:
+    <itemizedlist>
   
+    <listitem>
+      <para>0 = Other, unknown alloy type</para>
+    </listitem>
+  
+    <listitem>
+      <para>1 = Pure (all neighbors like central atom)</para>
+    </listitem>
+
+    <listitem>
+      <para>2 = L1<subscript>0</subscript></para>
+    </listitem>
+
+    <listitem>
+      <para>3 = L1<subscript>2</subscript> (Cu-type)</para>
+    </listitem>
+
+    <listitem>
+      <para>4 = L1<subscript>2</subscript> (Au-type)</para>
+    </listitem>
+
+    <listitem>
+      <para>5 = B2</para>
+    </listitem>
+    
+  </itemizedlist>
+    The alloy type of a lattice atom is found by comparing the types of its neighbors to its own type. See the paper for details.
+    You can subsequently use the <link linkend="particles.modifiers.expression_select">Expression select</link> modifier to select atoms of a
+    certain alloy type to give them a distinct color, for example.
+    </para>
+  </simplesect>
+
+    <simplesect>
+    <title>Notes</title>  
   <para>
     In addition to the PTM, OVITO provides alternative structure identification tools 
     like the <link linkend="particles.modifiers.common_neighbor_analysis">Common Neighbor Analysis</link> modifier or the 
@@ -77,8 +182,33 @@
     The <emphasis>Use only selected particles</emphasis> option restricts the analysis to the
     currently selected particles. If this option is checked, unselected particles will be ignored 
     (as if they did not exist) and will be assigned the structure type "Other".
-    This option can be useful if you want to identify defects in a crystal structure
-    not directly supported by this analysis algorithm but which possesses a sublattice that the PTM method can identify.
-  </para>  
+    This option can be useful if you want to identify defects in a crystal structure that is
+    not directly supported by the PTM algorithm, but which possesses a known sublattice.
+  </para>
+  </simplesect>  
+
+  <simplesect>
+    <title>Technical notes</title>
+    <para>
+    A few changes have been made to the PTM method since publication of the article:
+    <itemizedlist>
+  
+    <listitem>
+      <para>The reference templates are now scaled such that the mean distance of the neighbors is 1.  
+      The central atom is no longer included in this calculation.</para>
+    </listitem>
+
+    <listitem>
+      <para>The Voronoi cell calculation is now performed using the Voro++ library [<link xlink:href="http://math.lbl.gov/voro++/"></link>].</para>
+    </listitem>
+
+    <listitem>
+      <para>The polar decomposition now uses a fast NR-QCP method instead of the SVD.</para>
+    </listitem>
+  
+  </itemizedlist>
+  </para>
+  
+  </simplesect>
   
 </section>

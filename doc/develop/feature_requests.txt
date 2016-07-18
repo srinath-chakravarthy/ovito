@@ -6,6 +6,7 @@ User interface improvements:
 - Add support for keyboard shortcuts (requested by Fossati, Paul C).
 - Add ticks to the color legend.
 - List of most recently accessed files
+- Histogram plot export (SaeeD PourasaD <saeedpourasad@gmail.com>).
 
 Work-flow improvements:
 

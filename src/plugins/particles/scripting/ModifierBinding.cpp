@@ -1303,9 +1303,9 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				" * ``RMSD`` (:py:class:`~ovito.data.ParticleProperty`):\n"
 				"   This particle property will contain the per-particle RMSD values computed by the PTM method.\n"
 				"   The modifier will output this property only if the :py:attr:`.output_rmsd` flag is set.\n"
-				" * ``Scale Factor`` (:py:class:`~ovito.data.ParticleProperty`):\n"
-				"   This particle property will contain the local scale factors computed by the PTM method.\n"
-				"   The modifier will output this property only if the :py:attr:`.output_scale_factor` flag is set.\n"
+				" * ``Interatomic Distance`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+				"   This particle property will contain the local interatomic distances computed by the PTM method.\n"
+				"   The modifier will output this property only if the :py:attr:`.output_interatomic_distance` flag is set.\n"
 				" * ``Orientation`` (:py:class:`~ovito.data.ParticleProperty`):\n"
 				"   This particle property will contain the local lattice orientations computed by the PTM method\n"
 				"   encoded as quaternions.\n"
@@ -1313,6 +1313,18 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				" * ``Elastic Deformation Gradient`` (:py:class:`~ovito.data.ParticleProperty`):\n"
 				"   This particle property will contain the local elastic deformation gradient tensors computed by the PTM method.\n"
 				"   The modifier will output this property only if the :py:attr:`.output_deformation_gradient` flag is set.\n"
+				" * ``Alloy Type`` (:py:class:`~ovito.data.ParticleProperty`):\n"
+				"   This output particle property contains the alloy type assigned to particles by the modifier.\n"
+				"   (only if the :py:attr:`.output_alloy_types` flag is set).\n"
+				"   The alloy types get stored as integer values in the ``\"Alloy Type\"`` particle property. "
+				"   The following alloy type constants are defined: "
+				"\n\n"
+				"      * ``PolyhedralTemplateMatchingModifier.AlloyType.NONE`` (0)\n"
+				"      * ``PolyhedralTemplateMatchingModifier.AlloyType.PURE`` (1)\n"
+				"      * ``PolyhedralTemplateMatchingModifier.AlloyType.L10`` (2)\n"
+				"      * ``PolyhedralTemplateMatchingModifier.AlloyType.L12_CU`` (3)\n"
+				"      * ``PolyhedralTemplateMatchingModifier.AlloyType.L12_AU`` (4)\n"
+				"      * ``PolyhedralTemplateMatchingModifier.AlloyType.B2`` (5)\n"
 				" * ``Color`` (:py:class:`~ovito.data.ParticleProperty`):\n"
 				"   The modifier assigns a color to each particle based on its identified structure type. "
 				"   You can change the color representing a structural type as follows::"
@@ -1340,8 +1352,8 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					"Boolean flag that controls whether the modifier outputs the computed per-particle RMSD values to the pipeline."
 					"\n\n"
 					":Default: ``False``\n")
-			.add_property("output_scale_factor", &PolyhedralTemplateMatchingModifier::outputScaleFactor, &PolyhedralTemplateMatchingModifier::setOutputScaleFactor,
-					"Boolean flag that controls whether the modifier outputs the computed per-particle scale factors to the pipeline."
+			.add_property("output_interatomic_distance", &PolyhedralTemplateMatchingModifier::outputInteratomicDistance, &PolyhedralTemplateMatchingModifier::setOutputInteratomicDistance,
+					"Boolean flag that controls whether the modifier outputs the computed per-particle interatomic distance to the pipeline."
 					"\n\n"
 					":Default: ``False``\n")
 			.add_property("output_orientation", &PolyhedralTemplateMatchingModifier::outputOrientation, &PolyhedralTemplateMatchingModifier::setOutputOrientation,
@@ -1350,6 +1362,10 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					":Default: ``False``\n")
 			.add_property("output_deformation_gradient", &PolyhedralTemplateMatchingModifier::outputDeformationGradient, &PolyhedralTemplateMatchingModifier::setOutputDeformationGradient,
 					"Boolean flag that controls whether the modifier outputs the computed per-particle elastic deformation gradients to the pipeline."
+					"\n\n"
+					":Default: ``False``\n")
+			.add_property("output_alloy_types", &PolyhedralTemplateMatchingModifier::outputAlloyTypes, &PolyhedralTemplateMatchingModifier::setOutputAlloyTypes,
+					"Boolean flag that controls whether the modifier identifies localalloy types and outputs them to the pipeline."
 					"\n\n"
 					":Default: ``False``\n")
 		;
@@ -1361,6 +1377,15 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 			.value("BCC", PolyhedralTemplateMatchingModifier::BCC)
 			.value("ICO", PolyhedralTemplateMatchingModifier::ICO)
 			.value("SC", PolyhedralTemplateMatchingModifier::SC)
+		;
+
+		enum_<PolyhedralTemplateMatchingModifier::AlloyType>("AlloyType")
+			.value("NONE", PolyhedralTemplateMatchingModifier::ALLOY_NONE)
+			.value("PURE", PolyhedralTemplateMatchingModifier::ALLOY_PURE)
+			.value("L10", PolyhedralTemplateMatchingModifier::ALLOY_L10)
+			.value("L12_CU", PolyhedralTemplateMatchingModifier::ALLOY_L12_CU)
+			.value("L12_AU", PolyhedralTemplateMatchingModifier::ALLOY_L12_AU)
+			.value("B2", PolyhedralTemplateMatchingModifier::ALLOY_B2)
 		;
 	}
 
