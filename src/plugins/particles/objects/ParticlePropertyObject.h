@@ -204,42 +204,42 @@ public:
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	PropertyBase::Range<const int*> constIntRange() const {
+	boost::iterator_range<const int*> constIntRange() const {
 		return storage()->constIntRange();
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	PropertyBase::Range<const FloatType*> constFloatRange() const {
+	boost::iterator_range<const FloatType*> constFloatRange() const {
 		return storage()->constFloatRange();
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	PropertyBase::Range<const Point3*> constPoint3Range() const {
+	boost::iterator_range<const Point3*> constPoint3Range() const {
 		return storage()->constPoint3Range();
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	PropertyBase::Range<const Vector3*> constVector3Range() const {
+	boost::iterator_range<const Vector3*> constVector3Range() const {
 		return storage()->constVector3Range();
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	PropertyBase::Range<const Color*> constColorRange() const {
+	boost::iterator_range<const Color*> constColorRange() const {
 		return storage()->constColorRange();
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	PropertyBase::Range<const Point3I*> constPoint3IRange() const {
+	boost::iterator_range<const Point3I*> constPoint3IRange() const {
 		return storage()->constPoint3IRange();
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	PropertyBase::Range<const SymmetricTensor2*> constSymmetricTensor2Range() const {
+	boost::iterator_range<const SymmetricTensor2*> constSymmetricTensor2Range() const {
 		return storage()->constSymmetricTensor2Range();
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	PropertyBase::Range<const Quaternion*> constQuaternionRange() const {
+	boost::iterator_range<const Quaternion*> constQuaternionRange() const {
 		return storage()->constQuaternionRange();
 	}
 
@@ -297,42 +297,42 @@ public:
 	}
 
 	/// \brief Returns a range of iterators over the elements stored in this object.
-	PropertyBase::Range<int*> intRange() {
+	boost::iterator_range<int*> intRange() {
 		return modifiableStorage()->intRange();
 	}
 
 	/// \brief Returns a range of iterators over the elements stored in this object.
-	PropertyBase::Range<FloatType*> floatRange() {
+	boost::iterator_range<FloatType*> floatRange() {
 		return modifiableStorage()->floatRange();
 	}
 
 	/// \brief Returns a range of iterators over the elements stored in this object.
-	PropertyBase::Range<Point3*> point3Range() {
+	boost::iterator_range<Point3*> point3Range() {
 		return modifiableStorage()->point3Range();
 	}
 
 	/// \brief Returns a range of iterators over the elements stored in this object.
-	PropertyBase::Range<Vector3*> vector3Range() {
+	boost::iterator_range<Vector3*> vector3Range() {
 		return modifiableStorage()->vector3Range();
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	PropertyBase::Range<Color*> colorRange() {
+	boost::iterator_range<Color*> colorRange() {
 		return modifiableStorage()->colorRange();
 	}
 
 	/// \brief Returns a range of iterators over the elements stored in this object.
-	PropertyBase::Range<Point3I*> point3IRange() {
+	boost::iterator_range<Point3I*> point3IRange() {
 		return modifiableStorage()->point3IRange();
 	}
 
 	/// \brief Returns a range of iterators over the elements stored in this object.
-	PropertyBase::Range<SymmetricTensor2*> symmetricTensor2Range() {
+	boost::iterator_range<SymmetricTensor2*> symmetricTensor2Range() {
 		return modifiableStorage()->symmetricTensor2Range();
 	}
 
 	/// \brief Returns a range of iterators over the elements stored in this object.
-	PropertyBase::Range<Quaternion*> quaternionRange() {
+	boost::iterator_range<Quaternion*> quaternionRange() {
 		return modifiableStorage()->quaternionRange();
 	}
 

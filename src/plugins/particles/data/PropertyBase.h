@@ -24,6 +24,8 @@
 
 #include <plugins/particles/Particles.h>
 
+#include <boost/range/iterator_range_core.hpp>
+
 namespace Ovito { namespace Particles {
 
 /**
@@ -31,18 +33,6 @@ namespace Ovito { namespace Particles {
  */
 class OVITO_PARTICLES_EXPORT PropertyBase : public QSharedData
 {
-public:
-
-	/// Define our own iterator range type that can be used to iterate over
-	/// the values stored in a ParticleProperty using C++11 range-based for loops.
-	template<class T>
-	class Range : public std::pair<T,T> {
-	public:
-		Q_DECL_CONSTEXPR Range(T begin, std::size_t size) : std::pair<T,T>(begin, begin + size) {}
-		Q_DECL_CONSTEXPR T begin() const { return this->first; }
-		Q_DECL_CONSTEXPR T end() const { return this->second; }
-	};
-
 public:
 
 	/// \brief Default constructor that creates an empty, uninitialized storage.
@@ -179,50 +169,50 @@ public:
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	Range<const int*> constIntRange() const {
+	boost::iterator_range<const int*> constIntRange() const {
 		OVITO_ASSERT(componentCount() == 1);
-		return Range<const int*>(constDataInt(), size());
+		return boost::make_iterator_range_n(constDataInt(), size());
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	Range<const FloatType*> constFloatRange() const {
+	boost::iterator_range<const FloatType*> constFloatRange() const {
 		OVITO_ASSERT(componentCount() == 1);
-		return Range<const FloatType*>(constDataFloat(), size());
+		return boost::make_iterator_range_n(constDataFloat(), size());
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	Range<const Point3*> constPoint3Range() const {
-		return Range<const Point3*>(constDataPoint3(), size());
+	boost::iterator_range<const Point3*> constPoint3Range() const {
+		return boost::make_iterator_range_n(constDataPoint3(), size());
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	Range<const Vector3*> constVector3Range() const {
-		return Range<const Vector3*>(constDataVector3(), size());
+	boost::iterator_range<const Vector3*> constVector3Range() const {
+		return boost::make_iterator_range_n(constDataVector3(), size());
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	Range<const Color*> constColorRange() const {
-		return Range<const Color*>(constDataColor(), size());
+	boost::iterator_range<const Color*> constColorRange() const {
+		return boost::make_iterator_range_n(constDataColor(), size());
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	Range<const Point3I*> constPoint3IRange() const {
-		return Range<const Point3I*>(constDataPoint3I(), size());
+	boost::iterator_range<const Point3I*> constPoint3IRange() const {
+		return boost::make_iterator_range_n(constDataPoint3I(), size());
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	Range<const SymmetricTensor2*> constSymmetricTensor2Range() const {
-		return Range<const SymmetricTensor2*>(constDataSymmetricTensor2(), size());
+	boost::iterator_range<const SymmetricTensor2*> constSymmetricTensor2Range() const {
+		return boost::make_iterator_range_n(constDataSymmetricTensor2(), size());
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	Range<const Matrix3*> constMatrix3Range() const {
-		return Range<const Matrix3*>(constDataMatrix3(), size());
+	boost::iterator_range<const Matrix3*> constMatrix3Range() const {
+		return boost::make_iterator_range_n(constDataMatrix3(), size());
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	Range<const Quaternion*> constQuaternionRange() const {
-		return Range<const Quaternion*>(constDataQuaternion(), size());
+	boost::iterator_range<const Quaternion*> constQuaternionRange() const {
+		return boost::make_iterator_range_n(constDataQuaternion(), size());
 	}
 
 	/// Returns a read-write pointer to the raw elements in the property storage.
@@ -295,50 +285,50 @@ public:
 	}
 
 	/// \brief Returns a range of iterators over the elements stored in this object.
-	Range<int*> intRange() {
+	boost::iterator_range<int*> intRange() {
 		OVITO_ASSERT(componentCount() == 1);
-		return Range<int*>(dataInt(), size());
+		return boost::make_iterator_range_n(dataInt(), size());
 	}
 
 	/// \brief Returns a range of iterators over the elements stored in this object.
-	Range<FloatType*> floatRange() {
+	boost::iterator_range<FloatType*> floatRange() {
 		OVITO_ASSERT(componentCount() == 1);
-		return Range<FloatType*>(dataFloat(), size());
+		return boost::make_iterator_range_n(dataFloat(), size());
 	}
 
 	/// \brief Returns a range of iterators over the elements stored in this object.
-	Range<Point3*> point3Range() {
-		return Range<Point3*>(dataPoint3(), size());
+	boost::iterator_range<Point3*> point3Range() {
+		return boost::make_iterator_range_n(dataPoint3(), size());
 	}
 
 	/// \brief Returns a range of iterators over the elements stored in this object.
-	Range<Vector3*> vector3Range() {
-		return Range<Vector3*>(dataVector3(), size());
+	boost::iterator_range<Vector3*> vector3Range() {
+		return boost::make_iterator_range_n(dataVector3(), size());
 	}
 
 	/// \brief Returns a range of const iterators over the elements stored in this object.
-	Range<Color*> colorRange() {
-		return Range<Color*>(dataColor(), size());
+	boost::iterator_range<Color*> colorRange() {
+		return boost::make_iterator_range_n(dataColor(), size());
 	}
 
 	/// \brief Returns a range of iterators over the elements stored in this object.
-	Range<Point3I*> point3IRange() {
-		return Range<Point3I*>(dataPoint3I(), size());
+	boost::iterator_range<Point3I*> point3IRange() {
+		return boost::make_iterator_range_n(dataPoint3I(), size());
 	}
 
 	/// \brief Returns a range of iterators over the elements stored in this object.
-	Range<SymmetricTensor2*> symmetricTensor2Range() {
-		return Range<SymmetricTensor2*>(dataSymmetricTensor2(), size());
+	boost::iterator_range<SymmetricTensor2*> symmetricTensor2Range() {
+		return boost::make_iterator_range_n(dataSymmetricTensor2(), size());
 	}
 
 	/// \brief Returns a range of iterators over the elements stored in this object.
-	Range<Matrix3*> matrix3Range() {
-		return Range<Matrix3*>(dataMatrix3(), size());
+	boost::iterator_range<Matrix3*> matrix3Range() {
+		return boost::make_iterator_range_n(dataMatrix3(), size());
 	}
 
 	/// \brief Returns a range of iterators over the elements stored in this object.
-	Range<Quaternion*> quaternionRange() {
-		return Range<Quaternion*>(dataQuaternion(), size());
+	boost::iterator_range<Quaternion*> quaternionRange() {
+		return boost::make_iterator_range_n(dataQuaternion(), size());
 	}
 
 	/// \brief Returns an integer element at the given index (if this is an integer property).
