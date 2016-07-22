@@ -1,8 +1,8 @@
 # This file defines the program version. 
 
 SET(OVITO_VERSION_MAJOR 		"2")
-SET(OVITO_VERSION_MINOR 		"6")
-SET(OVITO_VERSION_REVISION		"2")
+SET(OVITO_VERSION_MINOR 		"7")
+SET(OVITO_VERSION_REVISION		"0")
 SET(OVITO_FILE_FORMAT_VERSION	"20502")
 
 # Extract revision tag name from Git repository.
