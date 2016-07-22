@@ -13,7 +13,7 @@
    height="211.16171"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.4 r9939"
+   inkscape:version="0.91 r13725"
    sodipodi:docname="ObjectNode.svg">
   <sodipodi:namedview
      id="base"
@@ -23,13 +23,13 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.4"
-     inkscape:cx="291.43062"
-     inkscape:cy="140.65045"
+     inkscape:cx="179.28776"
+     inkscape:cy="139.22188"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="1920"
-     inkscape:window-height="1149"
+     inkscape:window-height="1142"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
@@ -294,7 +294,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -462,18 +462,6 @@
          x="191.39575"
          y="431.32928"
          style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:125%;writing-mode:lr-tb;text-anchor:middle;font-family:CMU Sans Serif Demi Condensed;-inkscape-font-specification:CMU Sans Serif Demi Condensed">ObjectNode.source</tspan></text>
-    <text
-       sodipodi:linespacing="125%"
-       id="text4139"
-       y="431.32932"
-       x="277.61075"
-       style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
-       xml:space="preserve"><tspan
-         style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:center;line-height:125%;writing-mode:lr-tb;text-anchor:middle;font-family:CMU Sans Serif Demi Condensed;-inkscape-font-specification:CMU Sans Serif Demi Condensed"
-         y="431.32932"
-         x="277.61075"
-         id="tspan4141"
-         sodipodi:role="line">FileSource.data</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"

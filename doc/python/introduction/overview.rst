@@ -14,7 +14,7 @@ do many things that are already familiar from the graphical user interface (and 
   * :ref:`Export data to a file <file_output_overview>`
 
 The following sections will introduce the essential concepts and walk you through different parts of OVITO's 
-scripting interface.
+scripting framework.
 
 ------------------------------------
 OVITO's data pipeline architecture

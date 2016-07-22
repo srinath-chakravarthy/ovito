@@ -2,7 +2,34 @@
 Running scripts
 ==================================
 
-This section explains how to use OVITO's built-in script interpreter.
+OVITO's scripting interface serves two main purposes: It allows you to automate tasks (i.e. programmatically execute program functions) and to extend the 
+program (e.g. adding new analysis functions). How you write a script and how you execute it depends on the intended purpose.
+The following list gives an overview of the various ways scripts are being used within OVITO:
+
+ 1. **Programmatically execute program functions**: Scripts can invoke program actions like the human user does using the graphical interface.
+    This requires writing a Python script file containing the commands using an external text editor. The script file is executed by choosing
+    *Run Script File* from the *Scripting* menu of OVITO. The script can automatically add modifiers to the current dataset and configure them, for example. 
+    Or it may access the results of the current modification pipeline and write the data to an output file in a custom format.
+ 
+ 2. **Batch-processing**: Batch-processing scripts also contain instructions to invoke program functions. However, they are meant to be run from the command line
+    without any user interaction. A batch-processing script is therefore responsible for performing all necessary actions: loading the simulation data first, 
+    optionally processing it using OVITO's modifier framework,
+    and finally exporting or rendering the results. Batch scripts are run using the :program:`ovitos` script interpreter, which will be introduced
+    in the next section. This allows you to leverage OVITO's file I/O and data analysis functions in a fully automated manner, for example to process
+    a large number of simulation files on a remote computing cluster and perform complex analyses.
+ 
+ 3. **User-defined data modifiers**: OVITO's scripting framework also gives you the possibility to develop new types of modifiers, which can manipulate 
+    or analyze simulation data in ways that are not covered by any of the built-in standard modifiers provided by the program. So-called *Python script modifiers* 
+    (see :ref:`writing_custom_modifiers` section) participate in the data pipeline system of OVITO and behave like the built-in modifiers. A *Python script modifier* essentially consists
+    of a single Python script function named ``modify()``, which you define. It is executed automatically by the system whenever the data pipeline is evaluated.
+    This is in contrast to the command scripts described above, which are executed only once and explicitly by the user. 
+    
+ 4. **User-defined viewport overlays**: A `Python script overlay <../../viewport_overlays.python_script.html>`_ is a user-defined script function that gets called by OVITO every time 
+    a viewport is repainted or an image is rendered. This allows you to amend or enrich images or movies rendered by OVITO with custom graphics or text, e.g., to
+    include additional information like a scale bar.
+    
+Note that a *Python script modifiers* is meant to be used from within the graphical user interface, but under certain circumstances it may also make sense
+to define one from within a non-interactive script (see :py:class:`~ovito.modifiers.PythonScriptModifier` class).
 
 OVITO's Python interpreter
 ----------------------------------

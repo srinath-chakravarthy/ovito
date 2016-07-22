@@ -643,6 +643,156 @@ def _DataCollection_create_user_particle_property(self, name, data_type, num_com
     return prop
 ovito.data.DataCollection.create_user_particle_property = _DataCollection_create_user_particle_property
 
+def _BondProperty_create(prop_type, num_bonds):
+    """
+        Static factory function that creates a new :py:class:`!BondProperty` instance for a standard bond property.
+        To create a new user-defined property, use :py:meth:`.create_user` instead. 
+        
+        Note that this factory function is a low-level method. If you want to add a new 
+        bond property to an existing :py:class:`~ovito.data.DataCollection`, you can do so using the high-level method  
+        :py:meth:`~ovito.data.DataCollection.create_bond_property` instead.
+        
+        :param BondProperty.Type prop_type: The standard bond property to create. See the :py:attr:`.type` attribute for a list of possible values.
+        :param int num_bonds: The number of half-bonds. This determines the size of the allocated data array.
+        :returns: A newly created instance of the :py:class:`!BondProperty` class or one of its sub-classes. 
+        
+    """
+    assert(isinstance(prop_type, ovito.data.BondProperty.Type))
+    assert(prop_type != ovito.data.BondProperty.Type.User)
+    assert(num_bonds >= 0)
+    
+    return ovito.data.BondProperty.createStandardProperty(ovito.dataset, num_bonds, prop_type, 0, True)
+ovito.data.BondProperty.create = staticmethod(_BondProperty_create)
+
+def _BondProperty_create_user(name, data_type, num_bonds, num_components = 1):
+    """
+        Static factory function that creates a new :py:class:`!BondProperty` instance for a user-defined bond property.
+        To create one of the standard properties, use :py:meth:`.create` instead. 
+        
+        Note that this factory function is a low-level method. If you want to add a new user-defined 
+        bond property to an existing :py:class:`~ovito.data.DataCollection`, you can do so using the high-level method 
+        :py:meth:`~ovito.data.DataCollection.create_user_bond_property` instead.
+
+        :param str name: The name of the user-defined bond property to create.
+        :param str data_type: Must be either ``"int"`` or ``"float"``.                
+        :param int num_bonds: The number of half-bonds. This determines the size of the allocated data array.
+        :param int num_components: The number of components when creating a vector property.
+        :returns: A newly created instance of the :py:class:`!BondProperty` class. 
+        
+    """
+    assert(num_bonds >= 0)
+    assert(num_components >= 1)
+    if data_type == "int":
+        data_type = PyQt5.QtCore.QMetaType.type("int")
+    elif data_type == "float":
+        data_type = PyQt5.QtCore.QMetaType.type("FloatType")
+    else:
+        raise RuntimeError("Invalid data type. Only 'int' or 'float' are allowed.")
+        
+    return ovito.data.BondProperty.createUserProperty(ovito.dataset, num_bonds, data_type, num_components, 0, name, True)
+ovito.data.BondProperty.create_user = staticmethod(_BondProperty_create_user)
+
+# Extend DataCollection class by adding the 'create_bond_property()' and 'create_user_bond_property()' methods.
+def _DataCollection_create_bond_property(self, property_type, data = None):
+    """ 
+        Adds a standard bond property to this data collection.
+        
+        If the specified particle property already exists in this data collection, the existing property instance is returned.
+        Otherwise the method creates a new property instance using :py:meth:`BondProperty.create` and adds it to this data collection.
+        
+        The optional parameter *data* allows to directly set or initialize the values of the bond property.
+        
+        :param BondProperty.Type property_type: The standard bond property to create. See the :py:attr:`BondProperty.type` attribute for a list of possible values.
+        :param data: An optional data array (e.g. NumPy array), which contains the per-bond values used to initialize the property.
+                     The size of the array must match the number of half-bonds in this data collection (see :py:attr:`.number_of_half_bonds` attribute).                      
+        :returns: A newly created instance of the :py:class:`ovito.data.BondProperty` class or one of its sub-classes if the property did not exist yet in the data collection.
+                  Otherwise, the existing bond property object is returned.
+        
+    """
+    # Check if property already exists in the data collection.
+    prop = None
+    for obj in self.objects:
+        if isinstance(obj, ovito.data.BondProperty):
+            if obj.type == property_type:
+                prop = obj
+
+    bonds_obj = None
+    for obj in self.objects:
+        if isinstance(obj, ovito.data.Bonds):
+            bonds_obj = obj
+        
+    # First we have to determine the number of bonds.
+    if bonds_obj is None:
+        raise RuntimeError("Cannot add new bond property to data collection, because data collection contains no bonds.")
+    num_bonds = bonds_obj.size
+                
+    if prop is None:
+        # If property does not exists yet, create a new BondProperty instance.
+        prop = ovito.data.BondProperty.create(property_type, num_bonds)
+        self.add(prop)
+    else:
+        # Otherwise, make sure the existing property is a fresh copy so we can safely modify it.
+        prop = self.copy_if_needed(prop)
+        
+    # Initialize property with per-bond data if provided.
+    if data is not None:
+        prop.marray[:] = data
+        prop.changed()
+    
+    return prop
+ovito.data.DataCollection.create_bond_property = _DataCollection_create_bond_property
+
+def _DataCollection_create_user_bond_property(self, name, data_type, num_components=1, data = None):
+    """ 
+        Adds a custom bond property to this data collection.
+        
+        If a bond property with the given name already exists in this data collection, the existing property instance is returned.
+        Otherwise the method creates a new property instance using :py:meth:`BondProperty.create_user` and adds it to this data collection.
+        
+        The optional parameter *data* allows to directly set or initialize the values of the bond property.
+        
+        :param str name: The name of the user-defined bond property to create.
+        :param str data_type: Must be either ``"int"`` or ``"float"``.                
+        :param int num_components: The number of components when creating a vector property.
+        :param data: An optional data array (e.g. NumPy array), which contains the per-bond values used to initialize the bond property.
+                     The size of the array must match the number of half-bonds in this data collection (see :py:attr:`.number_of_half_bonds` attribute).                      
+        :returns: A newly created instance of the :py:class:`~ovito.data.BondProperty` class or one of its sub-classes if the property did not exist yet in the data collection.
+                  Otherwise, the existing bond property object is returned.
+        
+    """
+    # Check if property already exists in the data collection.
+    prop = None
+    for obj in self.values():
+        if isinstance(obj, ovito.data.BondProperty):
+            if obj.name == name:
+                prop = obj
+
+    bonds_obj = None
+    for obj in self.objects:
+        if isinstance(obj, ovito.data.Bonds):
+            bonds_obj = obj
+        
+    # First we have to determine the number of bonds.
+    if bonds_obj is None:
+        raise RuntimeError("Cannot add new bond property to data collection, because data collection contains no bonds.")
+    num_bonds = bonds_obj.size
+                
+    if prop is None:
+        # If property does not exists yet, create a new BondProperty instance.
+        prop = ovito.data.BondProperty.create_user(name, data_type, num_bonds, num_components)
+        self.add(prop)
+    else:
+        # Otherwise, make sure the existing property is a fresh copy so we can safely modify it.
+        prop = self.copy_if_needed(prop)
+        
+    # Initialize property with per-particle data if provided.
+    if data is not None:
+        prop.marray[:] = data
+        prop.changed()
+    
+    return prop
+ovito.data.DataCollection.create_user_bond_property = _DataCollection_create_user_bond_property
+
 # Extend the DataCollection class with a 'number_of_particles' property.
 def _get_DataCollection_number_of_particles(self):
     """ The number of particles stored in the data collection. """
@@ -653,15 +803,40 @@ def _get_DataCollection_number_of_particles(self):
     return 0
 ovito.data.DataCollection.number_of_particles = property(_get_DataCollection_number_of_particles)
 
-# Extend the DataCollection class with a 'number_of_bonds' property.
-def _get_DataCollection_number_of_bonds(self):
-    """ The number of half-bonds stored in the data collection. """
+# Extend the DataCollection class with a 'number_of_half_bonds' property.
+def _get_DataCollection_number_of_half_bonds(self):
+    """ 
+        The number of half-bonds stored in the data collection. 
+    
+        Note that OVITO internally represents each full bond as two half-bonds, A->B and B->A.
+        See also :py:attr:`.number_of_full_bonds`.
+    """
     # The number of bonds is determined by the size of the BondsObject.
     try:
         return self.bonds.size
     except:
         return 0
+ovito.data.DataCollection.number_of_half_bonds = property(_get_DataCollection_number_of_half_bonds)
+
+# Extend the DataCollection class with a 'number_of_bonds' property.
+def _get_DataCollection_number_of_bonds(self):
+    return self.number_of_half_bonds
 ovito.data.DataCollection.number_of_bonds = property(_get_DataCollection_number_of_bonds)
+
+# Extend the DataCollection class with a 'number_of_full_bonds' property.
+def _get_DataCollection_number_of_full_bonds(self):
+    """ 
+        The number of (full) bonds stored in the data collection.
+    
+        Note that OVITO internally represents each full bond as two half-bonds, A->B and B->A.
+        See also :py:attr:`.number_of_half_bonds`.
+    """
+    # The number of bonds is determined by the size of the BondsObject.
+    try:
+        return self.bonds.size//2
+    except:
+        return 0
+ovito.data.DataCollection.number_of_full_bonds = property(_get_DataCollection_number_of_full_bonds)
 
 # Implement the 'type_list' property of the ParticleTypeProperty class, which provides access to particle types. 
 def _get_ParticleTypeProperty_type_list(self):

@@ -801,8 +801,14 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 		scope s = ovito_class<CreateBondsModifier, AsynchronousParticleModifier>(
 				":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 				"Creates bonds between nearby particles. The modifier outputs its results as a :py:class:`~ovito.data.Bonds` data object, which "
-				"can be accessed through the :py:attr:`DataCollection.bonds <ovito.data.DataCollection.bonds>` attribute of the data collection "
-				"leaving the modification pipeline.")
+				"can be accessed through the :py:attr:`DataCollection.bonds <ovito.data.DataCollection.bonds>` attribute of the pipeline output data collection."
+				"\n"
+				"**Modifier outputs:**"
+				"\n\n"
+				" * ``CreateBonds.num_bonds`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
+				"   The number of full bonds created by the modifier.\n"
+				" * :py:attr:`~ovito.data.Bonds` object (:py:attr:`DataCollection.bonds <ovito.data.DataCollection.bonds>`):\n"
+				"   Contains the list of bonds created by the modifier.\n")
 			.add_property("mode", &CreateBondsModifier::cutoffMode, &CreateBondsModifier::setCutoffMode,
 					"Selects the mode of operation. Valid modes are:"
 					"\n\n"

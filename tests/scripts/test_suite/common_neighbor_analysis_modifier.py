@@ -48,7 +48,7 @@ assert(CommonNeighborAnalysisModifier.Type.ICO == 4)
 modifier.mode = CommonNeighborAnalysisModifier.Mode.BondBased
 print(node.output)
 node.compute()
-print("Number of bonds: ", node.output.number_of_bonds)
+print("Number of full bonds: ", node.output.number_of_full_bonds)
 print(node.output)
 print("Number of FCC atoms: {}".format(modifier.counts[CommonNeighborAnalysisModifier.Type.FCC]))
 assert(modifier.counts[CommonNeighborAnalysisModifier.Type.FCC] == 128)

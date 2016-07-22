@@ -316,8 +316,10 @@ PipelineStatus CreateBondsModifier::applyComputationResults(TimePoint time, Time
 	// Add our bonds to the system.
 	addBonds(_bonds.data(), _bondsDisplay);
 
-	// If the number of bonds is unusually high, we better turn off bonds display to prevent the program from freezing.
 	size_t bondsCount = _bonds->size();
+	output().attributes().insert(QStringLiteral("CreateBonds.num_bonds"), QVariant::fromValue(bondsCount / 2));
+
+	// If the number of bonds is unusually high, we better turn off bonds display to prevent the program from freezing.
 	if(bondsCount > 1000000) {
 		bondsDisplay()->setEnabled(false);
 		return PipelineStatus(PipelineStatus::Warning, tr("Created %1 bonds. Automatically disabled display of such a large number of bonds to prevent the program from freezing.").arg(bondsCount));

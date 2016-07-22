@@ -642,7 +642,7 @@ void GrainSegmentationEngine2::perform()
 					}
 				}
 
-				// Start over and rebuild reduced component during next while-loop iteration.
+				// Start over and rebuild connected component during next while-loop iteration.
 				for(auto p : component)
 					_atomClusters->setInt(p, 0);
 			}

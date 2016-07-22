@@ -47,20 +47,18 @@ mkdir build
 cd build
 cmake -DOVITO_BUILD_DOCUMENTATION=ON \
       -DCMAKE_BUILD_TYPE=Release \
-      -DPYTHON_INCLUDE_DIR=/usr/include/python3.4m \
-      -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.4m.so \
-      -DBoost_PYTHON_LIBRARY_RELEASE=/usr/lib/x86_64-linux-gnu/libboost_python-py34.so \
-      -DBoost_PYTHON_LIBRARY_DEBUG=/usr/lib/x86_64-linux-gnu/libboost_python-py34.so \
+      -DPYTHON_INCLUDE_DIR=/usr/include/python3.5m \
+      -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.5m.so \
+      -DBoost_PYTHON_LIBRARY_RELEASE=/usr/lib/x86_64-linux-gnu/libboost_python-py35.so \
+      -DBoost_PYTHON_LIBRARY_DEBUG=/usr/lib/x86_64-linux-gnu/libboost_python-py35.so \
       ..
 </command></screen>
   </para>
   <para>
     If this step fails, or if you want to disable certain components of OVITO, you can now run "<command>ccmake .</command>" to open the 
     <link xlink:href="http://www.cmake.org/">CMake</link> configuration program.
-    The <literal>PYTHON_INCLUDE_DIR</literal>, <literal>PYTHON_LIBRARY</literal>, and <literal>Boost_PYTHON_LIBRARY_RELEASE</literal> settings are needed to 
-    build OVITO against Python 3 instead of version 2. Note that newer versions of Ubuntu Linux come with
-    Python 3.5. Here you have to replace references to the Python version number 3.4 in the command line above
-    with the newer version.
+    Changin the <literal>PYTHON_INCLUDE_DIR</literal>, <literal>PYTHON_LIBRARY</literal>, and <literal>Boost_PYTHON_LIBRARY_RELEASE</literal> settings may be needed to 
+    build OVITO against a different Python version. 
   </para>
   <para>
     Finally, compile OVITO: 

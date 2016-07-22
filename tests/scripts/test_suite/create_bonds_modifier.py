@@ -29,9 +29,10 @@ print("Output:")
 print(node.output.bonds)
 print(node.output.bonds.array)
 print(len(node.output.bonds.array))
-assert(node.output.number_of_bonds == len(node.output.bonds.array))
+assert(node.output.number_of_half_bonds == len(node.output.bonds.array))
 
-assert(node.output.number_of_bonds == 21894)
+assert(node.output.number_of_half_bonds == 21894)
+assert(node.output.number_of_half_bonds == node.output.number_of_full_bonds*2)
 
 bond_enumerator = Bonds.Enumerator(node.output.bonds)
 for bond_index in bond_enumerator.bonds_of_particle(0):
@@ -44,4 +45,4 @@ modifier.mode = CreateBondsModifier.Mode.Pairwise
 modifier.set_pairwise_cutoff("W", "Ti", 3.0)
 assert(modifier.get_pairwise_cutoff("Ti", "W") == 3.0)
 node.compute()
-assert(node.output.number_of_bonds == 16)
+assert(node.output.number_of_half_bonds == 16)

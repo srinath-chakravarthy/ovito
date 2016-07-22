@@ -60,7 +60,11 @@ precede the custom modifier in the pipeline). Our Python modifier function then 
 the data as needed. After the user-defined Python function has done its work and returns, the output flows further down the pipeline, and, eventually, 
 the final results are stored in the :py:attr:`~ovito.ObjectNode.output` cache of the :py:class:`~ovito.ObjectNode` and are rendered in the viewports.
 
-When our custom modifier function is invoked by the pipeline it gets passed three arguments:
+It is important to note that the user-defined modifier function is subject to certain restrictions. Since it is repeatedly called by the pipeline system
+in a callback fashion, it may only manipulate the simulation data that flows through the pipeline and which it receives as an input. It should not manipulate the 
+pipeline itself that it is part of (e.g. adding/removing modifiers) or otherwise change the global program state.
+
+When our custom modifier function is invoked by the pipeline system, it gets passed three arguments:
 
   * **frame** (*int*) -- The animation frame number at which the pipeline is evaluated. 
   * **input** (:py:class:`~ovito.data.DataCollection`) -- Contains the input data objects that the modifier receives from upstream.
@@ -103,21 +107,21 @@ principle::
 Output of new attributes
 -----------------------------------
 
-In addition to data objects like the simulation cell or particle property, scalar quantities, which are called *attributes* in OVITO,
-flow down the data pipeline and can be modified or newly added by modifier functions. For example, we can define a new attribute
-on the basis of existing attributes and other information::
+In addition to data objects like the simulation cell or particle properties, global quantities (i.e. scalar values) flow down the data pipeline too. 
+They are called *attributes* in OVITO and can be read, modified or newly added by our modifier function. For example, we can output a new attribute
+on the basis of an existing attribute in the input::
 
    def modify(frame, input, output):
        output.attributes['dislocation_density'] = 
            input.attributes['DislocationAnalysis.total_line_length'] / input.cell.volume
            
-This modifier function generates a new attribute named ``dislocation_density``, which is defined as the ratio of the total dislocation
-line length in a crystal (which is computed by a :py:class:`~ovito.modifiers.DislocationAnalysisModifier` preceding
+This modifier function generates a new attribute named ``dislocation_density``, which is calculated as the ratio of the dislocation
+line length in a crystal (which, as we assume in this example, is computed by a :py:class:`~ovito.modifiers.DislocationAnalysisModifier` preceding
 our custom modifier in the pipeline) and the simulation box :py:attr:`~ovito.data.SimulationCell.volume`.
          
 
-Adding new data objects
------------------------------------
+Creating new data objects (e.g. particle properties)
+-----------------------------------------------------
 
 The custom modifier function can inject new data objects into the modification pipeline simply by adding
 them to the *output* data collection::
@@ -152,7 +156,7 @@ which is used to create custom particle properties (in contrast to
 Initialization phase
 -----------------------------------
 
-Initialization of parameters and other inputs needed by our custom modifier function should be done outside the function.
+Initialization of parameters and other inputs needed by our custom modifier function should be done outside of the function.
 For example, our modifier may require reference coordinates of particles, which need to be loaded from an external file. 
 One example is the *Displacement vectors* modifier of OVITO, which asks the user to load a reference configuration file with the
 coordinates that should be subtracted from the current particle coordinates. A corresponding implementation of this modifier in Python 
@@ -171,11 +175,9 @@ would look as follows::
                           reference.particle_properties.position.array)
 		
 The script above creates a :py:class:`~ovito.io.FileSource` to load the reference particle positions from an external
-simulation file. Setting :py:attr:`~ovito.io.FileSource.adjust_animation_interval` to false is required to
-prevent OVITO from automatically changing the animation length.
-
-Within the ``modify()`` function we can access the particle coordinates stored in the file source, which is a subclass
-of :py:class:`~ovito.data.DataCollection`.
+data file. Setting :py:attr:`~ovito.io.FileSource.adjust_animation_interval` to false is required to
+prevent OVITO from automatically changing the animation length. Within the actual ``modify()`` function we can then access the particle 
+coordinates loaded by the :py:class:`~ovito.io.FileSource` object.
 
 Asynchronous modifiers and progress reporting
 -----------------------------------------------
