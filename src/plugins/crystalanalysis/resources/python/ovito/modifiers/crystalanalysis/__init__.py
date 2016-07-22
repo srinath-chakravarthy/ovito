@@ -14,9 +14,8 @@ ovito.modifiers.SmoothDislocationsModifier = CrystalAnalysis.SmoothDislocationsM
 ovito.modifiers.SmoothSurfaceModifier = CrystalAnalysis.SmoothSurfaceModifier
 ovito.modifiers.DislocationAnalysisModifier = CrystalAnalysis.DislocationAnalysisModifier
 ovito.modifiers.ElasticStrainModifier = CrystalAnalysis.ElasticStrainModifier
-ovito.modifiers.GrainSegmentationModifier = CrystalAnalysis.GrainSegmentationModifier
-ovito.modifiers.GrainSegmentationModifier2 = CrystalAnalysis.GrainSegmentationModifier2
+#ovito.modifiers.GrainSegmentationModifier = CrystalAnalysis.GrainSegmentationModifier
 
 # Copy enum list.
 ovito.modifiers.ElasticStrainModifier.Lattice = ovito.modifiers.DislocationAnalysisModifier.Lattice
-ovito.modifiers.GrainSegmentationModifier.Lattice = ovito.modifiers.DislocationAnalysisModifier.Lattice
+#ovito.modifiers.GrainSegmentationModifier.Lattice = ovito.modifiers.DislocationAnalysisModifier.Lattice

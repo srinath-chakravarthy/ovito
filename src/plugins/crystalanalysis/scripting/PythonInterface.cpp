@@ -26,8 +26,7 @@
 #include <plugins/crystalanalysis/modifier/dxa/DislocationAnalysisModifier.h>
 #include <plugins/crystalanalysis/modifier/dxa/StructureAnalysis.h>
 #include <plugins/crystalanalysis/modifier/elasticstrain/ElasticStrainModifier.h>
-#include <plugins/crystalanalysis/modifier/grains/GrainSegmentationModifier.h>
-#include <plugins/crystalanalysis/modifier/grains2/GrainSegmentationModifier2.h>
+//#include <plugins/crystalanalysis/modifier/grains/GrainSegmentationModifier.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationDisplay.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
@@ -246,7 +245,7 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 				":Default: sqrt(8/3)\n")
 	;
 
-#if 1
+#if 0
 	ovito_class<GrainSegmentationModifier, StructureIdentificationModifier>()
 		.add_property("input_crystal_structure", &GrainSegmentationModifier::inputCrystalStructure, &GrainSegmentationModifier::setInputCrystalStructure)
 		.add_property("misorientation_threshold", &GrainSegmentationModifier::misorientationThreshold, &GrainSegmentationModifier::setMisorientationThreshold)
@@ -279,53 +278,6 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 				":Default: ``False``\n")
 	;
 #endif
-
-	ovito_class<GrainSegmentationModifier2, StructureIdentificationModifier>(
-			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
-			"This modifier finds grains.")
-		.add_property("misorientation_threshold", &GrainSegmentationModifier2::misorientationThreshold, &GrainSegmentationModifier2::setMisorientationThreshold)
-		.add_property("min_atom_count", &GrainSegmentationModifier2::minGrainAtomCount, &GrainSegmentationModifier2::setMinGrainAtomCount)
-		.add_property("probe_sphere_radius", &GrainSegmentationModifier2::probeSphereRadius, &GrainSegmentationModifier2::setProbeSphereRadius,
-				"The radius of the probe sphere used in the free surface construction algorithm."
-				"\n\n"
-				"A rule of thumb is that the probe sphere radius should be slightly larger than the typical distance between "
-				"nearest neighbor atoms."
-				"\n\n"
-				"This parameter is ignored if :py:attr:`.output_mesh` is false."
-				"\n\n"
-				":Default: 4.0\n")
-		.add_property("smoothing_level", &GrainSegmentationModifier2::smoothingLevel, &GrainSegmentationModifier2::setSmoothingLevel,
-				"The number of iterations of the smoothing algorithm applied to the computed grain boundary mesh. "
-				"\n\n"
-				"This parameter is ignored if :py:attr:`.output_mesh` is false."
-				"\n\n"
-				":Default: 8\n")
-		.add_property("only_selected", &GrainSegmentationModifier2::onlySelectedParticles, &GrainSegmentationModifier2::setOnlySelectedParticles,
-				"This flag tells the modifier to ignore unselected particles."
-				"\n\n"
-				":Default: ``False``\n")
-		.add_property("output_mesh", &GrainSegmentationModifier2::outputPartitionMesh, &GrainSegmentationModifier2::setOutputPartitionMesh,
-				"This flag controls the generation of the grain boundary mesh. "
-				"If true, the modifier will generate a geometric representation of the grain boundary network "
-				"in addition to assigning each input atom to a grain. "
-				"\n\n"
-				":Default: ``False``\n")
-		.add_property("rmsd_cutoff", &GrainSegmentationModifier2::rmsdCutoff, &GrainSegmentationModifier2::setRmsdCutoff,
-				"The maximum allowed root mean square deviation for positive structure matches. "
-				"If the cutoff is non-zero, template matches that yield a RMSD value above the cutoff are classified as \"Other\". "
-				"This can be used to filter out spurious template matches (false positives). "
-				"\n\n"
-				"If this parameter is zero, no cutoff is applied."
-				"\n\n"
-				":Default: 0.0\n")
-		.add_property("structures", make_function(&GrainSegmentationModifier2::structureTypes, return_internal_reference<>()),
-				"A list of :py:class:`~ovito.data.ParticleType` instances managed by this modifier, one for each structural type. "
-				"You can adjust the color of structural types here as shown in the code example above.")
-		.add_property("output_local_orientations", &GrainSegmentationModifier2::outputLocalOrientations, &GrainSegmentationModifier2::setOutputLocalOrientations,
-				"Boolean flag that controls whether the modifier outputs the computed local lattice orientations as a particle property."
-				"\n\n"
-				":Default: ``False``\n")
-	;
 
 	ovito_class<SmoothDislocationsModifier, Modifier>()
 		.add_property("smoothingEnabled", &SmoothDislocationsModifier::smoothingEnabled, &SmoothDislocationsModifier::setSmoothingEnabled)
