@@ -79,7 +79,6 @@ New analysis features:
 - Identification of binary phases and defects (see Christoph Begau's work)
 - Glass ring analysis (see ISAACS, RINGS, Sudheer @ FAU) 
 - Crystal orientation map
-- Extend PTM modifier to output alloy types (1752368188@qq.com)
 
 New I/O functions:
 
