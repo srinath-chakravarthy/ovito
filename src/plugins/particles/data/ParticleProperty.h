@@ -76,7 +76,8 @@ public:
 		ElasticStrainTensorProperty = 37,
 		ElasticDeformationGradientProperty = 38,
 		RotationProperty = 39,
-		StretchTensorProperty = 40
+		StretchTensorProperty = 40,
+		MoleculeTypeProperty = 41
 	};
 	Q_ENUMS(Type);
 

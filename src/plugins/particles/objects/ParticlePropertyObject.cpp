@@ -63,6 +63,7 @@ OORef<ParticlePropertyObject> ParticlePropertyObject::createFromStorage(DataSet*
 	switch(storage->type()) {
 	case ParticleProperty::ParticleTypeProperty:
 	case ParticleProperty::StructureTypeProperty:
+	case ParticleProperty::MoleculeTypeProperty:
 		propertyObj = new ParticleTypeProperty(dataset, storage);
 		break;
 	default:

@@ -666,7 +666,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"   * ``CommonNeighborAnalysisModifier.Type.HCP`` (2)\n"
 				"   * ``CommonNeighborAnalysisModifier.Type.BCC`` (3)\n"
 				"   * ``CommonNeighborAnalysisModifier.Type.ICO`` (4)\n"
-				"\n"
+				"\n\n"
 				"**Modifier outputs:**"
 				"\n\n"
 				" * ``CommonNeighborAnalysis.counts.OTHER`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
@@ -749,7 +749,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				"   * ``IdentifyDiamondModifier.Type.HEX_DIAMOND`` (4)\n"
 				"   * ``IdentifyDiamondModifier.Type.HEX_DIAMOND_FIRST_NEIGHBOR`` (5)\n"
 				"   * ``IdentifyDiamondModifier.Type.HEX_DIAMOND_SECOND_NEIGHBOR`` (6)\n"
-				"\n"
+				"\n\n"
 				"**Modifier outputs:**"
 				"\n\n"
 				" * ``IdentifyDiamond.counts.OTHER`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
@@ -802,7 +802,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 				"Creates bonds between nearby particles. The modifier outputs its results as a :py:class:`~ovito.data.Bonds` data object, which "
 				"can be accessed through the :py:attr:`DataCollection.bonds <ovito.data.DataCollection.bonds>` attribute of the pipeline output data collection."
-				"\n"
+				"\n\n"
 				"**Modifier outputs:**"
 				"\n\n"
 				" * ``CreateBonds.num_bonds`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
@@ -837,8 +837,8 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					"SIGNATURE: (type_a, type_b, cutoff)\n"
 					"Sets the pair-wise cutoff distance for a pair of atom types. This information is only used if :py:attr:`.mode` is ``Pairwise``."
 					"\n\n"
-			        ":param str type_a: The name of the first atom type\n"
-			        ":param str type_b: The name of the second atom type (order doesn't matter)\n"
+			        ":param str type_a: The :py:attr:`~ovito.data.ParticleType.name` of the first atom type\n"
+			        ":param str type_b: The :py:attr:`~ovito.data.ParticleType.name` of the second atom type (order doesn't matter)\n"
 			        ":param float cutoff: The cutoff distance to be set for the type pair.\n"
 					"\n\n"
 					"If you do not want to create any bonds between a pair of types, set the corresponding cutoff radius to zero (which is the default).")
@@ -846,8 +846,8 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					"SIGNATURE: (type_a, type_b)\n"
 					"Returns the pair-wise cutoff distance set for a pair of atom types."
 					"\n\n"
-			        ":param str type_a: The name of the first atom type\n"
-			        ":param str type_b: The name of the second atom type (order doesn't matter)\n"
+			        ":param str type_a: The :py:attr:`~ovito.data.ParticleType.name` of the first atom type\n"
+			        ":param str type_b: The :py:attr:`~ovito.data.ParticleType.name` of the second atom type (order doesn't matter)\n"
 			        ":return: The cutoff distance set for the type pair. Returns zero if no cutoff has been set for the pair.\n")
 		;
 

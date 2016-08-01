@@ -61,6 +61,10 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 	int numAtoms = 0;
 	bool hasSimulationCell = false;
 	while(!stream.eof()) {
+
+		if(isCanceled())
+			return;
+
 		stream.readLine();
 		int lineLength = qstrlen(stream.line());
 		if(lineLength < 3 || lineLength > 83)
@@ -122,8 +126,13 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 	int atomIndex = 0;
 	Point3* p = posProperty->dataPoint3();
 	int* a = typeProperty->dataInt();
-	ParticleProperty* identifierProperty = nullptr;
+	ParticleProperty* particleIdentifierProperty = nullptr;
+	ParticleProperty* moleculeIdentifierProperty = nullptr;
+	ParticleProperty* moleculeTypeProperty = nullptr;
+	ParticleFrameLoader::ParticleTypeList* moleculeTypeList = nullptr;
 	while(!stream.eof() && atomIndex < numAtoms) {
+		if(!setProgressValueIntermittent(atomIndex)) return;
+
 		stream.readLine();
 		int lineLength = qstrlen(stream.line());
 		if(lineLength < 3 || lineLength > 83)
@@ -131,7 +140,7 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 
 		// Parse atom definition.
 		if(stream.lineStartsWith("ATOM  ") || stream.lineStartsWith("HETATM")) {
-			char atomType[3];
+			char atomType[4];
 			int atomTypeLength = 0;
 			for(const char* c = stream.line() + 76; c <= stream.line() + std::min(77, lineLength); ++c)
 				if(*c != ' ') atomType[atomTypeLength++] = *c;
@@ -150,11 +159,35 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 			// Parse atom ID (serial number).
 			unsigned int atomSerialNumber;
 			if(sscanf(stream.line() + 6, "%5u", &atomSerialNumber) == 1) {
-				if(!identifierProperty) {
-					identifierProperty = new ParticleProperty(numAtoms, ParticleProperty::IdentifierProperty, 0, true);
-					addParticleProperty(identifierProperty);
+				if(!particleIdentifierProperty) {
+					particleIdentifierProperty = new ParticleProperty(numAtoms, ParticleProperty::IdentifierProperty, 0, true);
+					addParticleProperty(particleIdentifierProperty);
 				}
-				identifierProperty->setInt(atomIndex, atomSerialNumber);
+				particleIdentifierProperty->setInt(atomIndex, atomSerialNumber);
+			}
+
+			// Parse molecule ID (residue sequence number).
+			unsigned int residueSequenceNumber;
+			if(sscanf(stream.line() + 22, "%4u", &residueSequenceNumber) == 1) {
+				if(!moleculeIdentifierProperty) {
+					moleculeIdentifierProperty = new ParticleProperty(numAtoms, ParticleProperty::MoleculeProperty, 0, true);
+					addParticleProperty(moleculeIdentifierProperty);
+				}
+				moleculeIdentifierProperty->setInt(atomIndex, residueSequenceNumber);
+			}
+
+			// Parse molecule type.
+			char moleculeType[3];
+			int moleculeTypeLength = 0;
+			for(const char* c = stream.line() + 17; c <= stream.line() + std::min(19, lineLength); ++c)
+				if(*c != ' ') moleculeType[moleculeTypeLength++] = *c;
+			if(moleculeTypeLength != 0) {
+				if(!moleculeTypeProperty) {
+					moleculeTypeProperty = new ParticleProperty(numAtoms, ParticleProperty::MoleculeTypeProperty, 0, true);
+					moleculeTypeList = new ParticleFrameLoader::ParticleTypeList();
+					addParticleProperty(moleculeTypeProperty, moleculeTypeList);
+				}
+				moleculeTypeProperty->setInt(atomIndex, moleculeTypeList->addParticleTypeName(moleculeType, moleculeType + moleculeTypeLength));
 			}
 
 			atomIndex++;
@@ -174,14 +207,14 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 		if(stream.lineStartsWith("CONECT")) {
 			// Parse first atom index.
 			unsigned int atomSerialNumber1;
-			if(lineLength <= 11 || sscanf(stream.line() + 6, "%5u", &atomSerialNumber1) != 1 || identifierProperty == nullptr)
+			if(lineLength <= 11 || sscanf(stream.line() + 6, "%5u", &atomSerialNumber1) != 1 || particleIdentifierProperty == nullptr)
 				throw Exception(tr("Invalid CONECT record (line %1): %2").arg(stream.lineNumber()).arg(stream.lineString()));
-			unsigned int atomIndex1 = std::find(identifierProperty->constDataInt(), identifierProperty->constDataInt() + identifierProperty->size(), atomSerialNumber1) - identifierProperty->constDataInt();
+			unsigned int atomIndex1 = std::find(particleIdentifierProperty->constDataInt(), particleIdentifierProperty->constDataInt() + particleIdentifierProperty->size(), atomSerialNumber1) - particleIdentifierProperty->constDataInt();
 			for(int i = 0; i < 10; i++) {
 				unsigned int atomSerialNumber2;
 				if(lineLength >= 16+5*i && sscanf(stream.line() + 11+5*i, "%5u", &atomSerialNumber2) == 1) {
-					unsigned int atomIndex2 = std::find(identifierProperty->constDataInt(), identifierProperty->constDataInt() + identifierProperty->size(), atomSerialNumber2) - identifierProperty->constDataInt();
-					if(atomIndex1 >= identifierProperty->size() || atomIndex2 >= identifierProperty->size())
+					unsigned int atomIndex2 = std::find(particleIdentifierProperty->constDataInt(), particleIdentifierProperty->constDataInt() + particleIdentifierProperty->size(), atomSerialNumber2) - particleIdentifierProperty->constDataInt();
+					if(atomIndex1 >= particleIdentifierProperty->size() || atomIndex2 >= particleIdentifierProperty->size())
 						throw Exception(tr("Nonexistent atom ID encountered in line %1 of PDB file.").arg(stream.lineNumber()));
 					if(!bonds())
 						setBonds(new BondsStorage());

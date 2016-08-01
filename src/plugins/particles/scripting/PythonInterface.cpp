@@ -360,6 +360,7 @@ BOOST_PYTHON_MODULE(Particles)
 					"``ParticleProperty.Type.ElasticDeformationGradient``    :guilabel:`Elastic Deformation Gradient`            float      XX, YX, ZX, XY, YY, ZY, XZ, YZ, ZZ\n"
 					"``ParticleProperty.Type.Rotation``                      :guilabel:`Rotation`                                float      X, Y, Z, W\n"
 					"``ParticleProperty.Type.StretchTensor``                 :guilabel:`Stretch Tensor`                          float      XX, YY, ZZ, XY, XZ, YZ\n"
+					"``ParticleProperty.Type.MoleculeType``                  :guilabel:`Molecule Type`                           int        \n"
 					"======================================================= =================================================== ========== ==================================\n"
 					)
 			.add_property("dataType", &ParticlePropertyObject::dataType)
@@ -412,6 +413,7 @@ BOOST_PYTHON_MODULE(Particles)
 			.value("ElasticDeformationGradient", ParticleProperty::ElasticDeformationGradientProperty)
 			.value("Rotation", ParticleProperty::RotationProperty)
 			.value("StretchTensor", ParticleProperty::StretchTensorProperty)
+			.value("MoleculeType", ParticleProperty::MoleculeTypeProperty)
 		;
 	}
 

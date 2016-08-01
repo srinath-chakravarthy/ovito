@@ -265,10 +265,10 @@ void ParticleFrameLoader::insertParticleTypes(ParticlePropertyObject* propertyOb
 					if(item.color != Color(0,0,0))
 						ptype->setColor(item.color);
 					else
-						ptype->setColor(ParticleTypeProperty::getDefaultParticleColor(ParticleProperty::ParticleTypeProperty, name, ptype->id()));
+						ptype->setColor(ParticleTypeProperty::getDefaultParticleColor(propertyObj->type(), name, ptype->id()));
 
 					if(item.radius == 0)
-						ptype->setRadius(ParticleTypeProperty::getDefaultParticleRadius(ParticleProperty::ParticleTypeProperty, name, ptype->id()));
+						ptype->setRadius(ParticleTypeProperty::getDefaultParticleRadius(propertyObj->type(), name, ptype->id()));
 
 					typeProperty->addParticleType(ptype);
 				}
@@ -317,10 +317,10 @@ void ParticleFrameLoader::insertBondTypes(BondPropertyObject* propertyObj, BondT
 				if(item.color != Color(0,0,0))
 					type->setColor(item.color);
 				else
-					type->setColor(BondTypeProperty::getDefaultBondColor(BondProperty::BondTypeProperty, name, type->id()));
+					type->setColor(BondTypeProperty::getDefaultBondColor(propertyObj->type(), name, type->id()));
 
 				if(item.radius == 0)
-					type->setRadius(BondTypeProperty::getDefaultBondRadius(BondProperty::BondTypeProperty, name, type->id()));
+					type->setRadius(BondTypeProperty::getDefaultBondRadius(propertyObj->type(), name, type->id()));
 
 				typeProperty->addBondType(type);
 			}

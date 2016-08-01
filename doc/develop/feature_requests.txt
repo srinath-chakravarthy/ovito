@@ -7,6 +7,7 @@ User interface improvements:
 - Add ticks to the color legend.
 - List of most recently accessed files
 - Histogram plot export (SaeeD PourasaD <saeedpourasad@gmail.com>).
+- In SSH connection dialog: Ask user if he really want to clear the history list.
 
 Work-flow improvements:
 
@@ -23,6 +24,7 @@ New visualization features:
 - Stereoscopic display (Erik Bitzek)
 - Wireframe mesh rendering (robin.gibaud@simap.grenoble-inp.fr)
 - Double bonds (SP2) (Jejoon Yeon <jyeon3@ucmerced.edu>)
+- Display displacement vector magnitude in status bar when hovering over an arrow (markus mock) 
 
 Unresolved OpenGL problems:
 

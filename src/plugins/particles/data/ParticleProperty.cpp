@@ -47,6 +47,7 @@ ParticleProperty::ParticleProperty(size_t particleCount, Type type, size_t compo
 	case CoordinationProperty:
 	case IdentifierProperty:
 	case MoleculeProperty:
+	case MoleculeTypeProperty:
 		_dataType = qMetaTypeId<int>();
 		_componentCount = 1;
 		_stride = sizeof(int);
@@ -199,6 +200,7 @@ QString ParticleProperty::standardPropertyName(Type which)
 	case ElasticDeformationGradientProperty: return ParticlePropertyObject::tr("Elastic Deformation Gradient");
 	case RotationProperty: return ParticlePropertyObject::tr("Rotation");
 	case StretchTensorProperty: return ParticlePropertyObject::tr("Stretch Tensor");
+	case MoleculeTypeProperty: return ParticlePropertyObject::tr("Molecule Type");
 	default:
 		OVITO_ASSERT_MSG(false, "ParticleProperty::standardPropertyName", "Invalid standard particle property type");
 		throw Exception(ParticlePropertyObject::tr("This is not a valid standard particle property type: %1").arg(which));
@@ -220,6 +222,7 @@ QString ParticleProperty::standardPropertyTitle(Type which)
 	case StructureTypeProperty: return ParticlePropertyObject::tr("Structure types");
 	case IdentifierProperty: return ParticlePropertyObject::tr("Particle identifiers");
 	case VectorColorProperty: return ParticlePropertyObject::tr("Vector colors");
+	case MoleculeTypeProperty: return ParticlePropertyObject::tr("Molecule types");
 	default:
 		return standardPropertyName(which);
 	}
@@ -239,6 +242,7 @@ int ParticleProperty::standardPropertyDataType(Type which)
 	case IdentifierProperty:
 	case PeriodicImageProperty:
 	case MoleculeProperty:
+	case MoleculeTypeProperty:
 		return qMetaTypeId<int>();
 	case PositionProperty:
 	case ColorProperty:
@@ -324,6 +328,7 @@ QMap<QString, ParticleProperty::Type> ParticleProperty::standardPropertyList()
 		table.insert(standardPropertyName(ElasticDeformationGradientProperty), ElasticDeformationGradientProperty);
 		table.insert(standardPropertyName(RotationProperty), RotationProperty);
 		table.insert(standardPropertyName(StretchTensorProperty), StretchTensorProperty);
+		table.insert(standardPropertyName(MoleculeTypeProperty), MoleculeTypeProperty);
 	}
 	return table;
 }
@@ -353,6 +358,7 @@ size_t ParticleProperty::standardPropertyComponentCount(Type which)
 	case DisplacementMagnitudeProperty:
 	case VelocityMagnitudeProperty:
     case MoleculeProperty:
+    case MoleculeTypeProperty:
 		return 1;
 	case PositionProperty:
 	case ColorProperty:
@@ -417,6 +423,7 @@ QStringList ParticleProperty::standardPropertyComponentNames(Type which, size_t 
 	case DisplacementMagnitudeProperty:
 	case VelocityMagnitudeProperty:
     case MoleculeProperty:
+    case MoleculeTypeProperty:
 		return emptyList;
 	case PositionProperty:
 	case DisplacementProperty:

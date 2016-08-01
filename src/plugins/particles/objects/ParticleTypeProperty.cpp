@@ -128,13 +128,18 @@ Color ParticleTypeProperty::getDefaultParticleColor(ParticleProperty::Type typeC
 		}
 		return Color(1,1,1);
 	}
-	else {
+	else if(typeClass == ParticleProperty::ParticleTypeProperty) {
 		for(const PredefinedTypeInfo& predefType : _predefinedParticleTypes) {
 			if(std::get<0>(predefType) == particleTypeName)
 				return std::get<1>(predefType);
 		}
-		return getDefaultParticleColorFromId(typeClass, particleTypeId);
+
+		// Sometime atom type names have additional letters/numbers appended.
+		if(particleTypeName.length() > 1 && particleTypeName.length() <= 3) {
+			return getDefaultParticleColor(typeClass, particleTypeName.left(particleTypeName.length() - 1), particleTypeId, userDefaults);
+		}
 	}
+	return getDefaultParticleColorFromId(typeClass, particleTypeId);
 }
 
 /******************************************************************************
@@ -171,8 +176,14 @@ FloatType ParticleTypeProperty::getDefaultParticleRadius(ParticleProperty::Type 
 			if(std::get<0>(predefType) == particleTypeName)
 				return std::get<2>(predefType);
 		}
+
+		// Sometime atom type names have additional letters/numbers appended.
+		if(particleTypeName.length() > 1 && particleTypeName.length() <= 3) {
+			return getDefaultParticleRadius(typeClass, particleTypeName.left(particleTypeName.length() - 1), particleTypeId, userDefaults);
+		}
 	}
-	return 0.0f;
+
+	return 0;
 }
 
 /******************************************************************************

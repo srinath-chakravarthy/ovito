@@ -40,7 +40,7 @@ class OVITO_CORE_EXPORT ParameterUnit : public QObject
 protected:
 	
 	/// \brief Constructor.
-	ParameterUnit(QObject* parent, DataSet* dataset) : QObject(parent) {}
+	ParameterUnit(QObject* parent, DataSet* dataset) : QObject(parent), _dataset(dataset) {}
     
 public:
 

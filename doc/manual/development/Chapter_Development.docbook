@@ -14,7 +14,9 @@
    	<listitem><para><link linkend="development.build_linux">Compiling OVITO on Linux</link></para></listitem>
    	<listitem><para><link linkend="development.build_windows">Compiling OVITO on Windows</link></para></listitem>
    	<listitem><para><link linkend="development.build_macosx">Compiling OVITO on Mac OS X</link></para></listitem>
+   	<!-- 
    	<listitem><para><link xlink:href="http://ovito.org/apidoc/">OVITO C++ API documentation</link></para></listitem>
+   	 -->
    </itemizedlist>
    </para>
  
