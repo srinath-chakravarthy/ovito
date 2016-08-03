@@ -271,11 +271,11 @@ PipelineStatus GrainSegmentationModifier2::applyComputationResults(TimePoint tim
 	// Output lattice neighbor bonds.
 	if(_latticeNeighborBonds) {
 		std::vector<BondProperty*> bondProperties;
-		if(_neighborDisorientationAngles)
+		if(_neighborDisorientationAngles && _neighborDisorientationAngles->size() == _latticeNeighborBonds->size())
 			bondProperties.push_back(_neighborDisorientationAngles.data());
-		if(_edgeCapacity)
+		if(_edgeCapacity && _edgeCapacity->size() == _latticeNeighborBonds->size())
 			bondProperties.push_back(_edgeCapacity.data());
-		if(_residualEdgeCapacity)
+		if(_residualEdgeCapacity && _residualEdgeCapacity->size() == _latticeNeighborBonds->size())
 			bondProperties.push_back(_residualEdgeCapacity.data());
 		addBonds(_latticeNeighborBonds.data(), bondsDisplay(), bondProperties);
 	}
