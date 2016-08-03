@@ -8,6 +8,7 @@ User interface improvements:
 - List of most recently accessed files
 - Histogram plot export (SaeeD PourasaD <saeedpourasad@gmail.com>).
 - In SSH connection dialog: Ask user if he really want to clear the history list.
+- Find min/max values of a particle property over the entire simulation sequence to adjust the Color Coding modifier (zhumingliang@stu.xjtu.edu.cn). 
 
 Work-flow improvements:
 
