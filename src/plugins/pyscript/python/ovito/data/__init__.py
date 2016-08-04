@@ -385,4 +385,3 @@ def _DataCollection_create_from_ase_atoms(cls, atoms):
     return data
 
 DataCollection.create_from_ase_atoms = classmethod(_DataCollection_create_from_ase_atoms)
-

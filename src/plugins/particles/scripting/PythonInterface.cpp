@@ -419,28 +419,56 @@ BOOST_PYTHON_MODULE(Particles)
 
 	ovito_abstract_class<ParticleTypeProperty, ParticlePropertyObject>(
 			":Base class: :py:class:`ovito.data.ParticleProperty`\n\n"
-			"A specialization of the :py:class:`ParticleProperty` class, which holds a list of :py:class:`ParticleType` instances in addition "
+			"This is a specialization of the :py:class:`ParticleProperty` class, which holds a list of :py:class:`ParticleType` instances in addition "
 			"to the per-particle type values. "
 			"\n\n"
-			"OVITO encodes the types of particles as integer values starting at 1. "
-			"Like for any other particle property, these numeric per-particle types can be accessed through the :py:attr:`~ParticleProperty.array` NumPy array "
-			"of the base class, or modified through the :py:attr:`~ParticleProperty.marray` mutable NumPy interface. "
+			"OVITO encodes the types of particles (chemical and also others) as integer values starting at 1. "
+			"Like for any other particle property, the numeric type of each particle can be accessed as a NumPy array through the :py:attr:`~ParticleProperty.array` attribute "
+			"of the base class, or modified through the mutable :py:attr:`~ParticleProperty.marray` NumPy interface:: "
 			"\n\n"
-			"In addition, the :py:class:`!ParticleTypeProperty` class provides the :py:attr:`type_list` attribute, which lists all defined particle types. "
-			"Each defined :py:attr:`ParticleType` has a unique integer ID (starting at 1), a name (e.g. the chemical symbol) and a display color and radius. "
-			"This list can therefore be used to resolve NUMERIC type IDs to type names. "
-			"The following code demonstrates this. It prints the type name of each atom in a system: "
+		    "    >>> type_property = node.source.particle_properties.particle_type\n"
+			"    >>> print(type_property.array)\n"
+			"    [1 3 2 ..., 2 1 2]\n"
 			"\n\n"
-			".. literalinclude:: ../example_snippets/particle_type_print_names.py\n"
+			"In addition to these per-particle type values, the :py:class:`!ParticleTypeProperty` class keeps the :py:attr:`.type_list`, which "
+			"contains all defined particle types including their names, IDs, display color and radius. "
+			"Each defined type is represented by an :py:attr:`ParticleType` instance and has a unique integer ID, a human-readable name (e.g. the chemical symbol) "
+			"and a display color and radius:: "
 			"\n\n"
-			"The standard particle properties ``Particle Type`` and ``Structure Type`` are both associated with instances of this class. "
-			"Thus, several classifications of particles can co-exist. For example, while the ``Particle Type`` property stores the chemical type of "
-			"atoms (e.g. C, H, Fe, Ni, etc.) and the ``Structure Type`` property stores the structural type computed for each atom (e.g. FCC, BCC, Diamond, etc.). "
-			"For both kinds of types a separate instance of the :py:class:`!ParticleTypeProperty` class is created by OVITO. ")
+			"    >>> for t in type_property.type_list:\n"
+			"    ...     print(t.id, t.name, t.color, t.radius)\n"
+			"    ... \n"
+			"    1 N (0.188 0.313 0.972) 0.74\n"
+			"    2 C (0.564 0.564 0.564) 0.77\n"
+			"    3 O (1 0.050 0.050) 0.74\n"
+			"    4 S (0.97 0.97 0.97) 0.0\n"
+			"\n\n"
+			"Each particle type has a unique numeric ID (typically starting at 1). Note that, in this particular example, types were stored in order of ascending ID in the "
+			":py:attr:`.type_list`. This may not always be the case. To quickly look up the :py:class:`ParticleType` and its name for a given ID, "
+			"the :py:meth:`.get_type_by_id` method is available:: "
+			"\n\n"
+			"    >>> for t in type_property.array:\n"
+			"    ...     print(type_property.get_type_by_id(t).name)\n"
+			"    ... \n"
+			"    N\n"
+			"    O\n"
+			"    C\n"
+			"\n\n"
+			"Conversely, the :py:attr:`ParticleType` and its numeric ID can be looked by name using the :py:meth:`.get_type_by_name` method. "
+			"For example, to count the number of oxygen atoms in a system:"
+			"\n\n"
+			"    >>> O_type_id = type_property.get_type_by_name('O').id\n"
+			"    >>> numpy.count_nonzero(type_property.array == O_type_id)\n"
+			"    957\n"
+			"\n\n"
+			"Note that particles may be associated with multiple kinds of types in OVITO. This includes, for example, the chemical type and the structural type. "
+			"Thus, several type classifications of particles can co-exist, each being represented by a separate instance of the :py:class:`!ParticleTypeProperty` class and a separate :py:attr:`.type_list`. "
+			"For example, while the ``'Particle Type'`` property stores the chemical type of "
+			"atoms (e.g. C, H, Fe, ...), the ``'Structure Type'`` property stores the structural type computed for each atom (e.g. FCC, BCC, ...). ")
 		.def("addParticleType", &ParticleTypeProperty::addParticleType)
 		.def("insertParticleType", &ParticleTypeProperty::insertParticleType)
-		.def("particleType", make_function((ParticleType* (ParticleTypeProperty::*)(int) const)&ParticleTypeProperty::particleType, return_value_policy<ovito_object_reference>()))
-		.def("particleType", make_function((ParticleType* (ParticleTypeProperty::*)(const QString&) const)&ParticleTypeProperty::particleType, return_value_policy<ovito_object_reference>()))
+		.def("_get_type_by_id", make_function((ParticleType* (ParticleTypeProperty::*)(int) const)&ParticleTypeProperty::particleType, return_value_policy<ovito_object_reference>()))
+		.def("_get_type_by_name", make_function((ParticleType* (ParticleTypeProperty::*)(const QString&) const)&ParticleTypeProperty::particleType, return_value_policy<ovito_object_reference>()))
 		.def("removeParticleType", &ParticleTypeProperty::removeParticleType)
 		.def("clearParticleTypes", &ParticleTypeProperty::clearParticleTypes)
 		.add_property("particleTypes", make_function(&ParticleTypeProperty::particleTypes, return_internal_reference<>()))
@@ -458,7 +486,7 @@ BOOST_PYTHON_MODULE(Particles)
 
 	ovito_class<SimulationCellObject, DataObject>(
 			":Base class: :py:class:`ovito.data.DataObject`\n\n"
-			"Stores the geometry and the boundary conditions of the simulation cell."
+			"Stores the shape and the boundary conditions of the simulation cell."
 			"\n\n"
 			"Each instance of this class is associated with a corresponding :py:class:`~ovito.vis.SimulationCellDisplay` "
 			"that controls the visual appearance of the simulation cell. It can be accessed through "
