@@ -7,7 +7,6 @@ User interface improvements:
 - Add ticks to the color legend.
 - List of most recently accessed files
 - Histogram plot export (SaeeD PourasaD <saeedpourasad@gmail.com>).
-- In SSH connection dialog: Ask user if he really want to clear the history list.
 
 Work-flow improvements:
 
