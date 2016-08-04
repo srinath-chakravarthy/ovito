@@ -93,13 +93,31 @@ int main(int argc, char** argv)
 			argc--;
 		}
 		else {
+			if(graphicalMode) {
+				std::cerr << "ERROR: Cannot run interactive Python interpreter in graphical mode. Only non-interactive script execution is allowed." << std::endl;
+				return 1;
+			}
+
 			// If no script file has been specified, activate interactive interpreter mode.
 			newargv.push_back("--exec");
+			newargv.push_back(
+					"import sys\n"
+					"try:\n"
+					"    import dIPython\n"
+					"    print(\"This is OVITO\'s interactive IPython interpreter.\")\n"
+					"    IPython.start_ipython(['--nosep','--no-confirm-exit','--no-banner','-c','import ovito','-i'])\n"
+					"    sys.exit()\n"
+					"except ImportError:\n"
+					"    pass\n"
+					"import ovito\n"
+					"import code\n"
+					"code.interact(banner=\"This is OVITO\'s interactive Python interpreter. "
 #if WIN32
-			newargv.push_back("import code; code.interact(banner=\"This is OVITO\'s interactive Python interpreter. Use quit() or Ctrl-Z to exit.\");");
+					"Use quit() or Ctrl-Z to exit.\")\n"
 #else
-			newargv.push_back("import code; code.interact(banner=\"This is OVITO\'s interactive Python interpreter. Use quit() or Ctrl-D to exit.\");");
+					"Use quit() or Ctrl-D to exit.\")\n"
 #endif
+				);
 		}
 	}
 
