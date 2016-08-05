@@ -33,6 +33,9 @@
 #include <boost/range/algorithm/fill.hpp>
 #include <boost/range/algorithm/replace.hpp>
 #include <boost/range/algorithm/count.hpp>
+#include <boost/range/algorithm_ext/iota.hpp>
+#include <boost/functional/hash.hpp>
+#include <unordered_set>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -54,7 +57,7 @@ GrainSegmentationEngine2::GrainSegmentationEngine2(const TimeInterval& validityI
 	_orientationSmoothingWeight(orientationSmoothingWeight),
 	_orientations(new ParticleProperty(positions->size(), ParticleProperty::OrientationProperty, 0, true)),
 	_misorientationThreshold(misorientationThreshold),
-	_minGrainAtomCount(minGrainAtomCount),
+	_minGrainAtomCount(std::max(minGrainAtomCount, 1)),
 	_probeSphereRadius(probeSphereRadius),
 	_meshSmoothingLevel(meshSmoothingLevel),
 	_latticeNeighborBonds(new BondsStorage()),
@@ -280,6 +283,8 @@ void GrainSegmentationEngine2::perform()
 		newOrientations.swap(_orientations);
 	}
 
+	qDebug() << "misorientationThreshold=" << (_misorientationThreshold / FLOATTYPE_PI * 180);
+
 	// Initialize distance transform calculation.
 	boost::fill(defectDistances()->intRange(), 0);
 
@@ -387,11 +392,22 @@ void GrainSegmentationEngine2::perform()
 			break;
 		lastCount = currentCount;
 	}
+	OVITO_ASSERT(std::is_sorted(distanceSortedAtoms.begin(), distanceSortedAtoms.end(), [this](int a, int b) { return defectDistances()->getInt(a) < defectDistances()->getInt(b); }));
+
+	// This helper function is used below to sort atoms in the priority queue in descending order w.r.t. their distance transform value.
+	auto distanceTransformCompare = [this](size_t a, size_t b) {
+		return defectDistances()->getInt(a) > defectDistances()->getInt(b);
+	};
+
+	setProgressText(GrainSegmentationModifier2::tr("Grain segmentation - clustering"));
+	setProgressValue(0);
+	setProgressRange(distanceSortedAtoms.size());
 
 	// Create clusters by gradually filling up the distance transform basins.
 	int numClusters = 0;
-	std::deque<size_t> currentQueue;
+	std::deque<size_t> queue;
 	for(auto seedAtomIndex = distanceSortedAtoms.rbegin(); seedAtomIndex != distanceSortedAtoms.rend(); ++seedAtomIndex) {
+		if(!incrementProgressValue()) return;
 
 		// First check if atom is a really a seed atom, i.e. it's not already part of a cluster.
 		if(atomClusters()->getInt(*seedAtomIndex) != 0)
@@ -399,11 +415,11 @@ void GrainSegmentationEngine2::perform()
 		int currentDistance = defectDistances()->getInt(*seedAtomIndex);
 
 		// Expand existing clusters up to the current water level.
-		while(!currentQueue.empty()) {
-			size_t currentParticle = currentQueue.front();
+		while(!queue.empty()) {
+			size_t currentParticle = queue.front();
 			if(defectDistances()->getInt(currentParticle) < currentDistance)
 				break;
-			currentQueue.pop_front();
+			queue.pop_front();
 
 			int clusterID = atomClusters()->getInt(currentParticle);
 			for(size_t bondIndex : bondMap.bondsOfParticle(currentParticle)) {
@@ -411,32 +427,35 @@ void GrainSegmentationEngine2::perform()
 				if(atomClusters()->getInt(bond.index2) != 0) continue;
 				if(_neighborDisorientationAngles->getFloat(bondIndex) > _misorientationThreshold) continue;
 
+				// Make neighbor part of the same cluster as the central atom.
 				atomClusters()->setInt(bond.index2, clusterID);
-				if(defectDistances()->getInt(bond.index2) >= currentDistance) {
-					// Put atoms that are below the current water level to the front of the queue.
-					currentQueue.push_front(bond.index2);
-				}
-				else {
-					// Put atoms that are just above the current water level to the end of the queue.
-					currentQueue.push_back(bond.index2);
-				}
+				queue.insert(std::upper_bound(queue.begin(), queue.end(), bond.index2, distanceTransformCompare), bond.index2);
 			}
 		}
 
 		// Start a new cluster, unless atom has already become part of an existing cluster in the meantime.
 		if(atomClusters()->getInt(*seedAtomIndex) == 0) {
-			currentQueue.push_front(*seedAtomIndex);
+			queue.insert(std::upper_bound(queue.begin(), queue.end(), *seedAtomIndex, distanceTransformCompare), *seedAtomIndex);
 			atomClusters()->setInt(*seedAtomIndex, ++numClusters);
 		}
 	}
-	OVITO_ASSERT(currentQueue.size() <= 1);
+	OVITO_ASSERT(queue.size() <= 1);
 	qDebug() << "Initial number of clusters:" << numClusters;
+
+	// Make a copy of the initial cluster assignments for debugging purposes.
+	std::copy(atomClusters()->constDataInt(), atomClusters()->constDataInt() + atomClusters()->size(), vertexColors()->dataInt());
+
+	setProgressText(GrainSegmentationModifier2::tr("Grain segmentation - average cluster orientation"));
+	setProgressValue(0);
+	setProgressRange(output->size());
 
 	// Calculate average orientation of each cluster.
 	std::vector<QuaternionT<double>> clusterOrientations(numClusters, QuaternionT<double>(0,0,0,0));
 	std::vector<int> firstClusterAtom(numClusters, -1);
 	std::vector<int> clusterSizes(numClusters, 0);
 	for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
+		if(!incrementProgressValue()) return;
+
 		int clusterId = _atomClusters->getInt(particleIndex);
 		if(clusterId == 0) continue;
 
@@ -476,10 +495,114 @@ void GrainSegmentationEngine2::perform()
 		qavg.normalize();
 	}
 
-#if 0
-	// Dissolve grains that are too small (i.e. number of atoms below the threshold set by user).
+	// Disjoint sets data structures.
+	std::vector<size_t> ranks(numClusters, 0);
+	std::vector<size_t> parents(numClusters);
+	boost::iota(parents, 0);
+
+	// Disjoint-sets helper functions:
+
+	// A function to find the set of an element i (uses path compression technique).
+	auto findParentCluster = [&parents](int clusterIndex) {
+	    // Find root and make root as parent of i (path compression)
+		int parent = parents[clusterIndex];
+	    while(parent != parents[parent]) {
+	    	parent = parents[parent];
+	    }
+    	parents[clusterIndex] = parent;
+	    return parent;
+	};
+
+	// A function that does union of two sets of x and y (uses union by rank).
+	auto mergeClusters = [&ranks, &parents, &clusterSizes](int x, int y) {
+		BOOST_ASSERT(parents[x] == x);
+		BOOST_ASSERT(parents[y] == y);
+		// Attach smaller rank tree under root of high rank tree (Union by Rank)
+		if(ranks[x] < ranks[y]) {
+			parents[x] = y;
+			clusterSizes[y] += clusterSizes[x];
+		}
+		else if(ranks[x] > ranks[y]) {
+			parents[y] = x;
+			clusterSizes[x] += clusterSizes[y];
+		}
+		else {
+			// If ranks are same, then make one as root and increment its rank by one
+			parents[y] = x;
+			clusterSizes[x] += clusterSizes[y];
+			ranks[x]++;
+		}
+	};
+
+	setProgressText(GrainSegmentationModifier2::tr("Grain segmentation - cluster merging"));
+	setProgressValue(0);
+	setProgressRange(output->size());
+
+	// Merge clusters.
+	std::unordered_set<std::pair<int,int>, boost::hash<std::pair<int,int>>> visitedClusterPairs;
+	for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
+		if(!incrementProgressValue()) return;
+
+		for(size_t bondIndex : bondMap.bondsOfParticle(particleIndex)) {
+			const Bond& bond = (*_latticeNeighborBonds)[bondIndex];
+
+			int clusterIdA = atomClusters()->getInt(bond.index1);
+			int clusterIdB = atomClusters()->getInt(bond.index2);
+
+			// Only need to test for merge if atoms are not in same cluster.
+			// Also no need for double testing.
+			if(clusterIdB <= clusterIdA) continue;
+
+			// Skip high-angle edges.
+			if(_neighborDisorientationAngles->getFloat(bondIndex) > _misorientationThreshold) continue;
+
+			// Check if this cluster pair has been considered before to avoid calculating the disorientation angle more than once.
+			if(visitedClusterPairs.insert(std::make_pair(clusterIdA, clusterIdB)).second == false)
+				continue;
+
+			// Calculate cluster-cluster misorientation angle.
+			int clusterIndexA = clusterIdA - 1;
+			int clusterIndexB = clusterIdB - 1;
+			const QuaternionT<double>& orientA = clusterOrientations[clusterIndexA];
+			const QuaternionT<double>& orientB = clusterOrientations[clusterIndexB];
+
+			double qA[4] = { orientA.w(), orientA.x(), orientA.y(), orientA.z() };
+			double qB[4] = { orientB.w(), orientB.x(), orientB.y(), orientB.z() };
+
+			FloatType disorientation;
+			int structureType = output->getInt(particleIndex);
+			if(structureType == SC || structureType == FCC || structureType == BCC)
+				disorientation = (FloatType)quat_disorientation_cubic(qA, qB);
+			else if(structureType == HCP)
+				disorientation = (FloatType)quat_disorientation_hcp(qA, qB);
+			else
+				continue;
+
+			if(disorientation < _misorientationThreshold) {
+				int x = findParentCluster(clusterIndexA);
+				int y = findParentCluster(clusterIndexB);
+				mergeClusters(x, y);
+			}
+		}
+	}
+
+	// Compress cluster IDs after merging to make them contiguous.
 	std::vector<int> clusterRemapping(numClusters);
 	int newNumClusters = 0;
+	// Assign new IDs to root clusters.
+	for(int i = 0; i < numClusters; i++) {
+		if(findParentCluster(i) == i) {
+			clusterSizes[newNumClusters] = clusterSizes[i];
+			clusterRemapping[i] = ++newNumClusters;
+		}
+	}
+	// Determine new IDs for non-root clusters.
+	for(int i = 0; i < numClusters; i++) {
+		clusterRemapping[i] = clusterRemapping[findParentCluster(i)];
+	}
+
+#if 0
+	OVITO_ASSERT(_minGrainAtomCount > 0);
 	for(int i = 0; i < numClusters; i++) {
 		if(clusterSizes[i] >= _minGrainAtomCount) {
 			clusterSizes[newNumClusters] = clusterSizes[i];
@@ -490,8 +613,9 @@ void GrainSegmentationEngine2::perform()
 			clusterRemapping[i] = 0;
 		}
 	}
+#endif
 
-	// Compress cluster ID range and relabel atoms.
+	// Relabel atoms after cluster IDs have changed.
 	numClusters = newNumClusters;
 	clusterSizes.resize(newNumClusters);
 	clusterOrientations.resize(newNumClusters);
@@ -501,7 +625,7 @@ void GrainSegmentationEngine2::perform()
 		clusterId = clusterRemapping[clusterId - 1];
 		_atomClusters->setInt(particleIndex, clusterId);
 	}
-#endif
+	qDebug() << "Final number of clusters:" << numClusters;
 
 	// For output, convert edge disorientation angles from radians to degrees.
 	for(FloatType& angle : _neighborDisorientationAngles->floatRange())
