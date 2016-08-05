@@ -30,135 +30,9 @@
 #include <ptm/index_ptm.h>
 #include <ptm/qcprot/quat.hpp>
 
-#include <boost/graph/boykov_kolmogorov_max_flow.hpp>
-#include <boost/property_map/property_map.hpp>
-#include <boost/property_map/function_property_map.hpp>
-#include <boost/iterator/counting_iterator.hpp>
-#include <boost/iterator/filter_iterator.hpp>
 #include <boost/range/algorithm/fill.hpp>
 #include <boost/range/algorithm/replace.hpp>
 #include <boost/range/algorithm/count.hpp>
-
-
-#include <random>
-#include <unordered_set>
-
-
-namespace boost {
-#if 1
-	struct BoostGraph {
-		BoostGraph(
-				size_t _vertexCount,
-				const Ovito::Particles::BondsStorage& _bonds,
-				const Ovito::Particles::ParticleBondMap& _bondMap) :
-					vertexCount(_vertexCount), bonds(_bonds), bondMap(_bondMap) {}
-		size_t vertexCount;
-		const Ovito::Particles::ParticleBondMap& bondMap;
-		const Ovito::Particles::BondsStorage& bonds;
-	};
-#else
-	struct BoostGraph {
-		BoostGraph(
-				int _clusterId,
-				const int* _clusterIds,
-				const std::vector<size_t>& _vertexMap,
-				const Ovito::Particles::BondsStorage& _bonds,
-				const Ovito::Particles::ParticleBondMap& _bondMap) :
-					clusterId(_clusterId), clusterIds(_clusterIds),
-					vertexMap(_vertexMap), bonds(_bonds), bondMap(_bondMap) {}
-		int clusterId;
-		const int* clusterIds;
-		const std::vector<size_t>& vertexMap;
-		const Ovito::Particles::ParticleBondMap& bondMap;
-		const Ovito::Particles::BondsStorage& bonds;
-	};
-#endif
-	struct our_graph_traversal_category :
-		public virtual edge_list_graph_tag,
-		public virtual incidence_graph_tag,
-		public virtual vertex_list_graph_tag { };
-#if 0
-	struct OutEdgeFilter {
-		OutEdgeFilter(const BoostGraph* g = nullptr) : _graph(g) {}
-		bool operator()(size_t edge) const {
-			return _graph->clusterIds[_graph->bonds[edge].index2] == _graph->clusterId;
-		}
-		const BoostGraph* _graph;
-	};
-#endif
-	template<>
-	struct graph_traits<BoostGraph> {
-		typedef size_t vertex_descriptor;
-		typedef size_t edge_descriptor;
-		typedef boost::counting_iterator<vertex_descriptor> vertex_iterator;
-		//typedef std::vector<size_t>::const_iterator vertex_iterator;
-		typedef boost::counting_iterator<edge_descriptor> edge_iterator;
-		typedef directed_tag directed_category;
-		typedef allow_parallel_edge_tag edge_parallel_category;
-		typedef our_graph_traversal_category traversal_category;
-		typedef size_t vertices_size_type;
-		typedef size_t edges_size_type;
-		typedef size_t degree_size_type;
-		typedef Ovito::Particles::ParticleBondMap::bond_index_iterator out_edge_iterator;
-		//typedef boost::filter_iterator<OutEdgeFilter, Ovito::Particles::ParticleBondMap::bond_index_iterator> out_edge_iterator;
-		static vertex_descriptor null_vertex() { return std::numeric_limits<vertex_descriptor>::max(); }
-	};
-	typename graph_traits<BoostGraph>::vertices_size_type
-	num_vertices(const BoostGraph& g) {
-		return g.vertexCount;
-		//return g.vertexMap.size();
-	}
-	std::pair<typename graph_traits<BoostGraph>::vertex_iterator, typename graph_traits<BoostGraph>::vertex_iterator>
-	vertices(const BoostGraph& g) {
-		typedef typename graph_traits<BoostGraph>::vertex_iterator Iter;
-		return std::make_pair(Iter(0), Iter(g.vertexCount));
-		//return std::make_pair(g.vertexMap.begin(), g.vertexMap.end());
-	}
-	typename graph_traits<BoostGraph>::edges_size_type
-	num_edges(const BoostGraph& g) {
-		return g.bonds.size();
-	}
-	std::pair<typename graph_traits<BoostGraph>::edge_iterator, typename graph_traits<BoostGraph>::edge_iterator>
-	edges(const BoostGraph& g) {
-		typedef typename graph_traits<BoostGraph>::edge_iterator Iter;
-		return std::make_pair(Iter(0), Iter(g.bonds.size()));
-	}
-	typename graph_traits<BoostGraph>::vertex_descriptor source(
-			typename graph_traits<BoostGraph>::edge_descriptor e,
-			const BoostGraph& g) {
-		return g.bonds[e].index1;
-	}
-	typename graph_traits<BoostGraph>::vertex_descriptor
-	target(
-			typename graph_traits<BoostGraph>::edge_descriptor e,
-			const BoostGraph& g) {
-		return g.bonds[e].index2;
-	}
-	inline std::pair<
-		typename graph_traits<BoostGraph>::out_edge_iterator,
-		typename graph_traits<BoostGraph>::out_edge_iterator > out_edges(
-				typename graph_traits<BoostGraph>::vertex_descriptor u,
-				const BoostGraph& g) {
-			typedef typename graph_traits<BoostGraph>::out_edge_iterator Iter;
-			return std::make_pair(Iter(&g.bondMap, g.bondMap.firstBondOfParticle(u)), Iter(&g.bondMap, g.bondMap.endOfListValue()));
-#if 0
-			return std::make_pair(
-					Iter(OutEdgeFilter(&g),
-							Ovito::Particles::ParticleBondMap::bond_index_iterator(&g.bondMap, g.bondMap.firstBondOfParticle(u)),
-							Ovito::Particles::ParticleBondMap::bond_index_iterator(&g.bondMap, g.bondMap.endOfListValue())),
-					Iter(OutEdgeFilter(&g),
-							Ovito::Particles::ParticleBondMap::bond_index_iterator(&g.bondMap, g.bondMap.endOfListValue()),
-							Ovito::Particles::ParticleBondMap::bond_index_iterator(&g.bondMap, g.bondMap.endOfListValue())));
-#endif
-	}
-	inline typename graph_traits<BoostGraph>::degree_size_type out_degree(
-				typename graph_traits<BoostGraph>::vertex_descriptor u,
-				const BoostGraph& g) {
-			return boost::size(g.bondMap.bondsOfParticle(u));
-			//return boost::size(out_edges(u, g));
-	}
-
-}; // namespace boost
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -185,7 +59,7 @@ GrainSegmentationEngine2::GrainSegmentationEngine2(const TimeInterval& validityI
 	_meshSmoothingLevel(meshSmoothingLevel),
 	_latticeNeighborBonds(new BondsStorage()),
 	_neighborDisorientationAngles(new BondProperty(0, qMetaTypeId<FloatType>(), 1, 0, GrainSegmentationModifier2::tr("Disorientation"), false)),
-	_defectDistances(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, GrainSegmentationModifier2::tr("Defect distance"), false)),
+	_defectDistances(new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, GrainSegmentationModifier2::tr("Defect distance"), false)),
 	_defectDistanceMaxima(new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, GrainSegmentationModifier2::tr("Distance transform maxima"), true)),
 	_vertexColors(new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, GrainSegmentationModifier2::tr("Vertex color"), true)),
 	_edgeCapacity(new BondProperty(0, qMetaTypeId<FloatType>(), 1, 0, GrainSegmentationModifier2::tr("Capacity"), true)),
@@ -407,7 +281,7 @@ void GrainSegmentationEngine2::perform()
 	}
 
 	// Initialize distance transform calculation.
-	boost::fill(defectDistances()->floatRange(), std::numeric_limits<FloatType>::infinity());
+	boost::fill(defectDistances()->intRange(), 0);
 
 	// Generate bonds (edges) between neighboring lattice atoms.
 	setProgressText(GrainSegmentationModifier2::tr("Grain segmentation - edge generation"));
@@ -426,7 +300,7 @@ void GrainSegmentationEngine2::perform()
 
 					// Mark this atom as border atom for the distance transform calculation, because
 					// it has a non-lattice atom as neighbor.
-					defectDistances()->setFloat(index, 1);
+					defectDistances()->setInt(index, 1);
 					continue;
 				}
 
@@ -474,18 +348,11 @@ void GrainSegmentationEngine2::perform()
 		// Lattice atoms that possess a high disorientation edge are treated like defects
 		// when computing the distance transform.
 		if(*disorientationAngleIter > _misorientationThreshold) {
-			defectDistances()->setFloat(bond.index1, 1);
-			defectDistances()->setFloat(bond.index2, 1);
+			defectDistances()->setInt(bond.index1, 1);
+			defectDistances()->setInt(bond.index2, 1);
 		}
 
 		++disorientationAngleIter;
-	}
-
-	// Build list of border atoms.
-	std::vector<size_t> currentIndices, nextIndices;
-	for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
-		if(defectDistances()->getFloat(particleIndex) == 1)
-			currentIndices.push_back(particleIndex);
 	}
 
 	setProgressText(GrainSegmentationModifier2::tr("Grain segmentation - distance transform"));
@@ -494,311 +361,77 @@ void GrainSegmentationEngine2::perform()
 	// This is used in the following for fast lookup of bonds incident on an atom.
 	ParticleBondMap bondMap(*_latticeNeighborBonds);
 
+	// Build initial list of border atoms (distance==1).
+	std::vector<size_t> distanceSortedAtoms;
+	for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
+		if(defectDistances()->getInt(particleIndex) == 1)
+			distanceSortedAtoms.push_back(particleIndex);
+	}
+
 	// Distance transform calculation.
 	bool done;
-	do {
-		done = true;
-		for(auto particleIndex : currentIndices) {
+	size_t lastCount = 0;
+	for(int currentDistance = 2; ; currentDistance++) {
+		size_t currentCount = distanceSortedAtoms.size();
+		for(size_t i = lastCount; i < currentCount; i++) {
 			if(isCanceled()) return;
-			for(size_t bondIndex : bondMap.bondsOfParticle(particleIndex)) {
+			for(size_t bondIndex : bondMap.bondsOfParticle(distanceSortedAtoms[i])) {
 				const Bond& bond = (*_latticeNeighborBonds)[bondIndex];
-				Vector3 delta = positions()->getPoint3(bond.index2) - positions()->getPoint3(bond.index1);
-				delta += cell().matrix() * Vector3(bond.pbcShift);
-				double distancePlusBondLength = defectDistances()->getFloat(bond.index1) + delta.length();
-				if(distancePlusBondLength < defectDistances()->getFloat(bond.index2)) {
-					defectDistances()->setFloat(bond.index2, distancePlusBondLength);
-					nextIndices.push_back(bond.index2);
-					done = false;
+				if(defectDistances()->getInt(bond.index2) == 0) {
+					defectDistances()->setInt(bond.index2, currentDistance);
+					distanceSortedAtoms.push_back(bond.index2);
 				}
 			}
 		}
-		currentIndices.clear();
-		nextIndices.swap(currentIndices);
-	}
-	while(!done);
-
-	// Smoothing of distance transform.
-	boost::replace(defectDistances()->floatRange(), std::numeric_limits<FloatType>::infinity(), FloatType(0));
-	for(int iter = 0; iter < 10; iter++) {
-		if(isCanceled()) return;
-		QExplicitlySharedDataPointer<ParticleProperty> nextDistance(new ParticleProperty(*defectDistances()));
-
-		for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
-
-			double d0 = defectDistances()->getFloat(particleIndex);
-
-			double d1 = 0;
-			int numBonds = 0;
-			for(size_t bondIndex : bondMap.bondsOfParticle(particleIndex)) {
-				const Bond& bond = (*_latticeNeighborBonds)[bondIndex];
-				size_t neighborIndex = bond.index2;
-				d1 += defectDistances()->getFloat(neighborIndex);
-				numBonds++;
-			}
-
-			if (numBonds > 0) d1 /= numBonds;
-			nextDistance->setFloat(particleIndex, (d0 + d1) / 2);
-		}
-
-		_defectDistances.swap(nextDistance);
+		if(distanceSortedAtoms.size() == currentCount)
+			break;
+		lastCount = currentCount;
 	}
 
-	//hack: add small perturbations to distances until no two neighbours have equal values
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_real_distribution<> dis(0, 1E-6);
-	int numFound = 1;
-	while (numFound > 0) {
-		numFound = 0;
-		for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
+	// Create clusters by gradually filling up the distance transform basins.
+	int numClusters = 0;
+	std::deque<size_t> currentQueue;
+	for(auto seedAtomIndex = distanceSortedAtoms.rbegin(); seedAtomIndex != distanceSortedAtoms.rend(); ++seedAtomIndex) {
 
-			for(size_t bondIndex : bondMap.bondsOfParticle(particleIndex)) {
-				const Bond& bond = (*_latticeNeighborBonds)[bondIndex];
-				size_t neighborIndex = bond.index2;
-				if(defectDistances()->getFloat(particleIndex) == defectDistances()->getFloat(neighborIndex)) {
+		// First check if atom is a really a seed atom, i.e. it's not already part of a cluster.
+		if(atomClusters()->getInt(*seedAtomIndex) != 0)
+			continue;
+		int currentDistance = defectDistances()->getInt(*seedAtomIndex);
 
-					double r = 0;
-					while (r == 0) r = dis(gen);
-					defectDistances()->setFloat(particleIndex, defectDistances()->getFloat(particleIndex) + r);
-					numFound++;
-				}
-			}
-		}
-
-		printf("num found: %d\n", numFound);
-	}
-
-	// Find local maxima of distance transform.
-	int numLocalMaxima = 0;
-	std::vector<size_t> localMaxima;
-	for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
-		if(isCanceled()) return;
-		if(output->getInt(particleIndex) == OTHER) continue;
-		bool isLocalMaximum = true;
-		for(size_t bondIndex : bondMap.bondsOfParticle(particleIndex)) {
-			const Bond& bond = (*_latticeNeighborBonds)[bondIndex];
-			if (_neighborDisorientationAngles->getFloat(bondIndex) > _misorientationThreshold) continue;
-
-			size_t neighborIndex = bond.index2;
-			if(defectDistances()->getFloat(neighborIndex) > defectDistances()->getFloat(particleIndex)) {
-				isLocalMaximum = false;
+		// Expand existing clusters up to the current water level.
+		while(!currentQueue.empty()) {
+			size_t currentParticle = currentQueue.front();
+			if(defectDistances()->getInt(currentParticle) < currentDistance)
 				break;
-			}
-		}
+			currentQueue.pop_front();
 
-		if(isLocalMaximum) {
-			localMaxima.push_back(particleIndex);
-			defectDistanceMaxima()->setInt(particleIndex, ++numLocalMaxima);
-		}
-	}
-
-	qDebug() << "Number of local maxima:" << numLocalMaxima;
-
-	//------------------------------------------------------------------------------------------------
-	//    find all clusters and count number of local maxima in them
-	//------------------------------------------------------------------------------------------------
-	int* splitCluster = (int*)calloc(sizeof(int), output->size());
-	int splitIndex = 1;
-	std::vector<size_t> component;
-	std::vector<size_t> componentLocalMaxima;
-	for(auto particleIndex : localMaxima) {
-		if (_atomClusters->getInt(particleIndex) > 0) continue;
-
-		std::deque<size_t> toVisit;
-		toVisit.push_back(particleIndex);
-		int clusterIndex = defectDistanceMaxima()->getInt(particleIndex);
-		_atomClusters->setInt(particleIndex, clusterIndex);
-		componentLocalMaxima.push_back(particleIndex);
-
-		do {
-			size_t currentParticle = toVisit.front();
-			toVisit.pop_front();
-			component.push_back(currentParticle);
-
+			int clusterID = atomClusters()->getInt(currentParticle);
 			for(size_t bondIndex : bondMap.bondsOfParticle(currentParticle)) {
 				const Bond& bond = (*_latticeNeighborBonds)[bondIndex];
-				if (_atomClusters->getInt(bond.index2) != 0) continue;
-				if (_neighborDisorientationAngles->getFloat(bondIndex) > _misorientationThreshold) continue;
+				if(atomClusters()->getInt(bond.index2) != 0) continue;
+				if(_neighborDisorientationAngles->getFloat(bondIndex) > _misorientationThreshold) continue;
 
-				_atomClusters->setInt(bond.index2, clusterIndex);
-				if (defectDistanceMaxima()->getInt(bond.index2) > 0) {
-					componentLocalMaxima.push_back(bond.index2);
+				atomClusters()->setInt(bond.index2, clusterID);
+				if(defectDistances()->getInt(bond.index2) >= currentDistance) {
+					// Put atoms that are below the current water level to the front of the queue.
+					currentQueue.push_front(bond.index2);
 				}
-
-				toVisit.push_back(bond.index2);
-			}
-		}
-		while(!toVisit.empty());
-
-		if (componentLocalMaxima.size() >= 2) {
-
-			for(auto p : component) {
-				splitCluster[p] = splitIndex;
-			}
-
-			splitIndex++;
-
-			//set cluster indices to zero, since we will split the cluster later
-			for(auto p : component) {
-				_atomClusters->setInt(p, 0);
-			}
-		}
-
-#if 0
-		// Normalization of distance transform
-		double maxDistance = -INFINITY;
-		for(auto p : component) {
-			double d = defectDistances()->getFloat(p);
-			maxDistance = std::max(maxDistance, d);
-		}
-
-		for(auto p : component) {
-			double d = defectDistances()->getFloat(p);
-			defectDistances()->setFloat(p, d / maxDistance);
-		}
-#endif
-
-		component.clear();
-		componentLocalMaxima.clear();
-	}
-
-	printf("found superclusters\n");
-
-#if 1
-	//------------------------------------------------------------------------------------------------
-	//    for each cluster with multiple maxima, do an outward sweep from each maximum
-	//    we are finding atoms connected to multiple basins
-	//------------------------------------------------------------------------------------------------
-	bool* multipleAssignment = (bool*)calloc(sizeof(bool), output->size());
-	bool* hit = (bool*)calloc(sizeof(bool), output->size());
-	for(auto particleIndex : localMaxima) {
-		if (splitCluster[particleIndex] == 0) continue;
-
-		std::deque<size_t> toVisit;
-		toVisit.push_back(particleIndex);
-		int clusterIndex = defectDistanceMaxima()->getInt(particleIndex);
-		_atomClusters->setInt(particleIndex, clusterIndex);
-
-		do {
-			size_t currentParticle = toVisit.front();
-			toVisit.pop_front();
-			component.push_back(currentParticle);
-
-			for(size_t bondIndex : bondMap.bondsOfParticle(currentParticle)) {
-				const Bond& bond = (*_latticeNeighborBonds)[bondIndex];
-				if (_atomClusters->getInt(bond.index2) != 0) continue;
-				if (_neighborDisorientationAngles->getFloat(bondIndex) > _misorientationThreshold) continue;
-				if(defectDistances()->getFloat(bond.index2) > defectDistances()->getFloat(bond.index1)) continue;
-
-				_atomClusters->setInt(bond.index2, clusterIndex);
-				toVisit.push_back(bond.index2);
-			}
-		}
-		while(!toVisit.empty());
-
-		for(auto p : component) {
-			if (hit[p]) multipleAssignment[p] = true;
-			hit[p] = true;
-			_atomClusters->setInt(p, 0);
-		}
-
-		component.clear();
-	}
-
-	printf("outward sweep done\n");
-
-	//------------------------------------------------------------------------------------------------
-	//    assign cluster indices to atoms connected to a basin
-	//------------------------------------------------------------------------------------------------
-	for(auto particleIndex : localMaxima) {
-		if (_atomClusters->getInt(particleIndex) > 0) continue;
-
-		std::deque<size_t> toVisit;
-		toVisit.push_back(particleIndex);
-		int clusterIndex = defectDistanceMaxima()->getInt(particleIndex);
-		_atomClusters->setInt(particleIndex, clusterIndex);
-
-		do {
-			size_t currentParticle = toVisit.front();
-			toVisit.pop_front();
-			component.push_back(currentParticle);
-
-			for(size_t bondIndex : bondMap.bondsOfParticle(currentParticle)) {
-				const Bond& bond = (*_latticeNeighborBonds)[bondIndex];
-				if (_atomClusters->getInt(bond.index2) != 0) continue;
-				if (_neighborDisorientationAngles->getFloat(bondIndex) > _misorientationThreshold) continue;
-				if(defectDistances()->getFloat(bond.index2) > defectDistances()->getFloat(bond.index1)) continue;
-
-				_atomClusters->setInt(bond.index2, clusterIndex);
-				toVisit.push_back(bond.index2);
-			}
-		}
-		while(!toVisit.empty());
-		component.clear();
-	}
-
-
-	printf("assigned simple cases\n");
-
-	//------------------------------------------------------------------------------------------------
-	//    now use steepest descent to determine the correct cluster index of multiply assigned atoms
-	//    this could be speeded up if necessary using early termination
-	//    (if we hit a single-assignment atom during steepest descent we can use its cluster index)
-	//------------------------------------------------------------------------------------------------
-	int numAmbiguous = 0;
-	for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
-		vertexColors()->setInt(particleIndex, 0);
-		if (!multipleAssignment[particleIndex]) continue;
-		vertexColors()->setInt(particleIndex, 1);
-		//assert(defectDistanceMaxima()->getInt(particleIndex) > 0);
-		numAmbiguous++;
-
-		size_t currentParticle = particleIndex;
-		double currentHeight = defectDistances()->getFloat(currentParticle);
-
-		while (1) {
-			size_t steepestParticle = -1;
-			double steepestHeight = 0;
-			for(size_t bondIndex : bondMap.bondsOfParticle(currentParticle)) {
-				const Bond& bond = (*_latticeNeighborBonds)[bondIndex];
-				if (_neighborDisorientationAngles->getFloat(bondIndex) > _misorientationThreshold) continue;
-
-				if (defectDistances()->getFloat(bond.index2) > steepestHeight) {
-					steepestHeight = defectDistances()->getFloat(bond.index2);
-					steepestParticle = bond.index2;
+				else {
+					// Put atoms that are just above the current water level to the end of the queue.
+					currentQueue.push_back(bond.index2);
 				}
 			}
+		}
 
-			assert(steepestHeight > currentHeight);
-
-			if (defectDistanceMaxima()->getInt(steepestParticle) > 0) {
-				size_t clusterIndex = _atomClusters->getInt(steepestParticle);
-				_atomClusters->setInt(particleIndex, clusterIndex);
-				break;
-			}
-
-			currentParticle = steepestParticle;
-			currentHeight = steepestHeight;
+		// Start a new cluster, unless atom has already become part of an existing cluster in the meantime.
+		if(atomClusters()->getInt(*seedAtomIndex) == 0) {
+			currentQueue.push_front(*seedAtomIndex);
+			atomClusters()->setInt(*seedAtomIndex, ++numClusters);
 		}
 	}
+	OVITO_ASSERT(currentQueue.size() <= 1);
+	qDebug() << "Initial number of clusters:" << numClusters;
 
-	printf("assigned complex cases\n");
-	printf("\tnumber of ambiguous atoms: %d\n", numAmbiguous);
-#endif
-
-	//------------------------------------------------------------------------------------------------
-	//    set index of all single-maximum clusters to zero
-	//    this is just for visualization purposes, so that we can see if the splitting is correct
-	//------------------------------------------------------------------------------------------------
-	for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
-		if (splitCluster[particleIndex] == 0) {
-			_atomClusters->setInt(particleIndex, 0);
-		}
-	}
-
-	int numClusters = numLocalMaxima;
-
-#if 0
 	// Calculate average orientation of each cluster.
 	std::vector<QuaternionT<double>> clusterOrientations(numClusters, QuaternionT<double>(0,0,0,0));
 	std::vector<int> firstClusterAtom(numClusters, -1);
@@ -806,6 +439,8 @@ void GrainSegmentationEngine2::perform()
 	for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
 		int clusterId = _atomClusters->getInt(particleIndex);
 		if(clusterId == 0) continue;
+
+		// Cluster IDs start at 1. Need to subtract 1 to get cluster index.
 		clusterId--;
 
 		clusterSizes[clusterId]++;
@@ -841,6 +476,7 @@ void GrainSegmentationEngine2::perform()
 		qavg.normalize();
 	}
 
+#if 0
 	// Dissolve grains that are too small (i.e. number of atoms below the threshold set by user).
 	std::vector<int> clusterRemapping(numClusters);
 	int newNumClusters = 0;
