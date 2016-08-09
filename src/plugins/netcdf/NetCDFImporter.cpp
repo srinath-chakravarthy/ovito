@@ -563,7 +563,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 													discoveredParticleNames[name] = true;
 												}
 
-												// Assing a particle type id to each particle name
+												// Assigning a particle type id to each particle name
 												QMap<QString, bool>::const_iterator particleName = discoveredParticleNames.constBegin();
 												QMap<QString, int> particleNameToType;
 												int i = 0;

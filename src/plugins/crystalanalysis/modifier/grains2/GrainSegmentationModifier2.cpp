@@ -62,7 +62,7 @@ SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier2, _orientationSmoothingWeight
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier2, _rmsdCutoff, FloatParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier2, _misorientationThreshold, AngleParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier2, _probeSphereRadius, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier2, _minGrainAtomCount, IntegerParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier2, _minGrainAtomCount, IntegerParameterUnit, 1);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier2, _smoothingLevel, IntegerParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier2, _numOrientationSmoothingIterations, IntegerParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier2, _orientationSmoothingWeight, FloatParameterUnit, 0);

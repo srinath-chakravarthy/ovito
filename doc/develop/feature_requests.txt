@@ -81,6 +81,8 @@ New analysis features:
 - Glass ring analysis (see ISAACS, RINGS, Sudheer @ FAU) 
 - Crystal orientation map
 
+- Implement a stable assignment of lattice orientations in the DXA for single crystals.
+
 New I/O functions:
 
 - Export to Blender (Paul Erhart, Filip Sund <filip.sund@fys.uio.no>)
