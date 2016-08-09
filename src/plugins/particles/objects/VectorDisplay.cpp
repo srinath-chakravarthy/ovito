@@ -24,11 +24,13 @@
 #include <core/utilities/concurrent/ParallelFor.h>
 #include <core/rendering/SceneRenderer.h>
 #include "VectorDisplay.h"
+#include "ParticleDisplay.h"
 #include "ParticleTypeProperty.h"
 
 namespace Ovito { namespace Particles {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, VectorDisplay, DisplayObject);
+IMPLEMENT_OVITO_OBJECT(Particles, VectorPickInfo, ObjectPickInfo);
 DEFINE_PROPERTY_FIELD(VectorDisplay, _reverseArrowDirection, "ReverseArrowDirection");
 DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _arrowPosition, "ArrowPosition", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _arrowColor, "ArrowColor", PROPERTY_FIELD_MEMORIZE);
@@ -196,9 +198,14 @@ void VectorDisplay::render(TimePoint time, DataObject* dataObject, const Pipelin
 		_buffer->endSetElements();
 	}
 
-	renderer->beginPickObject(contextNode);
+	if(renderer->isPicking()) {
+		OORef<VectorPickInfo> pickInfo(new VectorPickInfo(this, flowState, vectorProperty));
+		renderer->beginPickObject(contextNode, pickInfo);
+	}
 	_buffer->render(renderer);
-	renderer->endPickObject();
+	if(renderer->isPicking()) {
+		renderer->endPickObject();
+	}
 }
 
 /******************************************************************************
@@ -228,6 +235,37 @@ bool VectorDisplay::loadPropertyFieldFromStream(ObjectLoadStream& stream, const 
 
 	return false;
 }
+
+/******************************************************************************
+* Given an sub-object ID returned by the Viewport::pick() method, looks up the
+* corresponding particle index.
+******************************************************************************/
+int VectorPickInfo::particleIndexFromSubObjectID(quint32 subobjID) const
+{
+	if(_vectorProperty) {
+		int particleIndex = 0;
+		for(const Vector3& v : _vectorProperty->constVector3Range()) {
+			if(v != Vector3::Zero()) {
+				if(subobjID == 0) return particleIndex;
+				subobjID--;
+			}
+			particleIndex++;
+		}
+	}
+	return -1;
+}
+
+/******************************************************************************
+* Returns a human-readable string describing the picked object,
+* which will be displayed in the status bar by OVITO.
+******************************************************************************/
+QString VectorPickInfo::infoString(ObjectNode* objectNode, quint32 subobjectId)
+{
+	int particleIndex = particleIndexFromSubObjectID(subobjectId);
+	if(particleIndex < 0) return QString();
+	return ParticlePickInfo::particleInfoString(pipelineState(), particleIndex);
+}
+
 
 }	// End of namespace
 }	// End of namespace

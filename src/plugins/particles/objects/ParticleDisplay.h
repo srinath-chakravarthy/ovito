@@ -238,6 +238,9 @@ public:
 	/// corresponding particle index.
 	int particleIndexFromSubObjectID(quint32 subobjID) const;
 
+	/// Builds the info string for a particle to be displayed in the status bar.
+	static QString particleInfoString(const PipelineFlowState& pipelineState, size_t particleIndex);
+
 private:
 
 	/// The pipeline flow state containing the particle properties.

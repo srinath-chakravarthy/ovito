@@ -26,6 +26,7 @@
 #include <core/scene/objects/DisplayObject.h>
 #include <core/scene/objects/WeakVersionedObjectReference.h>
 #include <core/rendering/ArrowPrimitive.h>
+#include <core/rendering/SceneRenderer.h>
 #include "ParticlePropertyObject.h"
 
 namespace Ovito { namespace Particles {
@@ -183,6 +184,44 @@ private:
 	DECLARE_PROPERTY_FIELD(_shadingMode);
 	DECLARE_PROPERTY_FIELD(_renderingQuality);
 };
+
+/**
+ * \brief This information record is attached to the arrows by the VectorDisplay when rendering
+ * them in the viewports. It facilitates the picking of arrows with the mouse.
+ */
+class OVITO_PARTICLES_EXPORT VectorPickInfo : public ObjectPickInfo
+{
+public:
+
+	/// Constructor.
+	VectorPickInfo(VectorDisplay* displayObj, const PipelineFlowState& pipelineState, ParticlePropertyObject* vectorProperty) :
+		_displayObject(displayObj), _pipelineState(pipelineState), _vectorProperty(vectorProperty) {}
+
+	/// The pipeline flow state containing the particle properties.
+	const PipelineFlowState& pipelineState() const { return _pipelineState; }
+
+	/// Returns a human-readable string describing the picked object, which will be displayed in the status bar by OVITO.
+	virtual QString infoString(ObjectNode* objectNode, quint32 subobjectId) override;
+
+	/// Given an sub-object ID returned by the Viewport::pick() method, looks up the
+	/// corresponding particle index.
+	int particleIndexFromSubObjectID(quint32 subobjID) const;
+
+private:
+
+	/// The pipeline flow state containing the particle properties.
+	PipelineFlowState _pipelineState;
+
+	/// The display object that rendered the arrows.
+	OORef<VectorDisplay> _displayObject;
+
+	/// The vector property.
+	OORef<ParticlePropertyObject> _vectorProperty;
+
+	Q_OBJECT
+	OVITO_OBJECT
+};
+
 
 }	// End of namespace
 }	// End of namespace
