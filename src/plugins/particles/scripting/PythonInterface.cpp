@@ -182,15 +182,19 @@ BOOST_PYTHON_MODULE(Particles)
 			bool ok;
 			component = parts[1].toInt(&ok);
 			if(!ok) {
-				if(type == ParticleProperty::UserProperty)
-					throw Exception(QString("Invalid component index for user particle property '%1': %2").arg(parts[0]).arg(parts[1]));
-
-				// Perhaps the component name was used instead of an integer.
-				const QString componentName = parts[1].toUpper();
-				QStringList standardNames = ParticleProperty::standardPropertyComponentNames(type);
-				component = standardNames.indexOf(componentName);
-				if(component < 0)
-					throw Exception(QString("Component name '%1' is not defined for particle property '%2'. Possible components are: %3").arg(parts[1]).arg(parts[0]).arg(standardNames.join(',')));
+				if(type != ParticleProperty::UserProperty) {
+					// Perhaps the standard property's component name was used instead of an integer.
+					const QString componentName = parts[1].toUpper();
+					QStringList standardNames = ParticleProperty::standardPropertyComponentNames(type);
+					component = standardNames.indexOf(componentName);
+					if(component < 0)
+						throw Exception(QString("Component name '%1' is not defined for particle property '%2'. Possible components are: %3").arg(parts[1]).arg(parts[0]).arg(standardNames.join(',')));
+				}
+				else {
+					// Assume user-defined properties cannot be vectors.
+					component = -1;
+					name = parts.join(QChar('.'));
+				}
 			}
 		}
 
@@ -253,15 +257,19 @@ BOOST_PYTHON_MODULE(Particles)
 			bool ok;
 			component = parts[1].toInt(&ok);
 			if(!ok) {
-				if(type == BondProperty::UserProperty)
-					throw Exception(QString("Invalid component index for user bond property '%1': %2").arg(parts[0]).arg(parts[1]));
-
-				// Perhaps the component name was used instead of an integer.
-				const QString componentName = parts[1].toUpper();
-				QStringList standardNames = BondProperty::standardPropertyComponentNames(type);
-				component = standardNames.indexOf(componentName);
-				if(component < 0)
-					throw Exception(QString("Component name '%1' is not defined for bond property '%2'. Possible components are: %3").arg(parts[1]).arg(parts[0]).arg(standardNames.join(',')));
+				if(type != BondProperty::UserProperty) {
+					// Perhaps the component name was used instead of an integer.
+					const QString componentName = parts[1].toUpper();
+					QStringList standardNames = BondProperty::standardPropertyComponentNames(type);
+					component = standardNames.indexOf(componentName);
+					if(component < 0)
+						throw Exception(QString("Component name '%1' is not defined for bond property '%2'. Possible components are: %3").arg(parts[1]).arg(parts[0]).arg(standardNames.join(',')));
+				}
+				else {
+					// Assume user-defined properties cannot be vectors.
+					component = -1;
+					name = parts.join(QChar('.'));
+				}
 			}
 		}
 

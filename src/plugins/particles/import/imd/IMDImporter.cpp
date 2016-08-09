@@ -93,7 +93,7 @@ void IMDImporter::IMDImportTask::parseFile(CompressedTextReader& stream)
 					bool isStandardProperty = false;
 					QMap<QString, ParticleProperty::Type> standardPropertyList = ParticleProperty::standardPropertyList();
 					QRegularExpression specialCharacters(QStringLiteral("[^A-Za-z\\d_]"));
-					Q_FOREACH(ParticleProperty::Type id, standardPropertyList) {
+					for(ParticleProperty::Type id : standardPropertyList) {
 						for(size_t component = 0; component < ParticleProperty::standardPropertyComponentCount(id); component++) {
 							QString columnName = ParticleProperty::standardPropertyName(id);
 							columnName.remove(specialCharacters);
@@ -101,6 +101,7 @@ void IMDImporter::IMDImportTask::parseFile(CompressedTextReader& stream)
 							if(!componentNames.empty()) {
 								QString componentName = componentNames[component];
 								componentName.remove(specialCharacters);
+								columnName += QChar('.');
 								columnName += componentName;
 							}
 							if(columnName == token) {
