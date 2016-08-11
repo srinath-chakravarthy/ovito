@@ -62,7 +62,7 @@ GrainSegmentationEngine2::GrainSegmentationEngine2(const TimeInterval& validityI
 	_meshSmoothingLevel(meshSmoothingLevel),
 	_latticeNeighborBonds(new BondsStorage()),
 	_neighborDisorientationAngles(new BondProperty(0, qMetaTypeId<FloatType>(), 1, 0, GrainSegmentationModifier2::tr("Disorientation"), false)),
-	_defectDistances(new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, GrainSegmentationModifier2::tr("Defect distance"), false)),
+	_defectDistances(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, GrainSegmentationModifier2::tr("Defect distance"), false)),
 	_defectDistanceMaxima(new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, GrainSegmentationModifier2::tr("Distance transform maxima"), true)),
 	_vertexColors(new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, GrainSegmentationModifier2::tr("Vertex color"), true)),
 	_edgeCapacity(new BondProperty(0, qMetaTypeId<FloatType>(), 1, 0, GrainSegmentationModifier2::tr("Capacity"), true)),
@@ -289,7 +289,7 @@ void GrainSegmentationEngine2::perform()
 	endProgressSubSteps();
 
 	// Initialize distance transform calculation.
-	boost::fill(defectDistances()->intRange(), 0);
+	boost::fill(defectDistances()->floatRange(), FloatType(0));
 
 	// Generate bonds (edges) between neighboring lattice atoms.
 	setProgressText(GrainSegmentationModifier2::tr("Grain segmentation - edge generation"));
@@ -308,7 +308,7 @@ void GrainSegmentationEngine2::perform()
 
 					// Mark this atom as border atom for the distance transform calculation, because
 					// it has a non-lattice atom as neighbor.
-					defectDistances()->setInt(index, 1);
+					defectDistances()->setFloat(index, 1);
 					continue;
 				}
 
@@ -354,8 +354,8 @@ void GrainSegmentationEngine2::perform()
 		// Lattice atoms that possess a high disorientation edge are treated like defects
 		// when computing the distance transform.
 		if(disorientationAngle > _misorientationThreshold) {
-			defectDistances()->setInt(bond.index1, 1);
-			defectDistances()->setInt(bond.index2, 1);
+			defectDistances()->setFloat(bond.index1, 1);
+			defectDistances()->setFloat(bond.index2, 1);
 		}
 	});
 
@@ -368,7 +368,7 @@ void GrainSegmentationEngine2::perform()
 	// Build initial list of border atoms (distance==1).
 	std::vector<size_t> distanceSortedAtoms;
 	for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
-		if(defectDistances()->getInt(particleIndex) == 1)
+		if(defectDistances()->getFloat(particleIndex) == 1)
 			distanceSortedAtoms.push_back(particleIndex);
 	}
 
@@ -381,8 +381,8 @@ void GrainSegmentationEngine2::perform()
 			if(isCanceled()) return;
 			for(size_t bondIndex : bondMap.bondsOfParticle(distanceSortedAtoms[i])) {
 				const Bond& bond = (*_latticeNeighborBonds)[bondIndex];
-				if(defectDistances()->getInt(bond.index2) == 0) {
-					defectDistances()->setInt(bond.index2, currentDistance);
+				if(defectDistances()->getFloat(bond.index2) == 0) {
+					defectDistances()->setFloat(bond.index2, currentDistance);
 					distanceSortedAtoms.push_back(bond.index2);
 				}
 			}
@@ -391,11 +391,37 @@ void GrainSegmentationEngine2::perform()
 			break;
 		lastCount = currentCount;
 	}
-	OVITO_ASSERT(std::is_sorted(distanceSortedAtoms.begin(), distanceSortedAtoms.end(), [this](int a, int b) { return defectDistances()->getInt(a) < defectDistances()->getInt(b); }));
+	OVITO_ASSERT(std::is_sorted(distanceSortedAtoms.begin(), distanceSortedAtoms.end(), [this](size_t a, size_t b) { return defectDistances()->getFloat(a) < defectDistances()->getFloat(b); }));
+
+	// Smoothing of distance transform.
+	for(int iter = 0; iter < 4; iter++) {
+		if(isCanceled()) return;
+		QExplicitlySharedDataPointer<ParticleProperty> nextDistance(new ParticleProperty(*defectDistances()));
+
+		for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
+
+			FloatType d0 = defectDistances()->getFloat(particleIndex);
+
+			FloatType d1 = 0;
+			int numBonds = 0;
+			for(size_t bondIndex : bondMap.bondsOfParticle(particleIndex)) {
+				const Bond& bond = (*_latticeNeighborBonds)[bondIndex];
+				d1 += defectDistances()->getFloat(bond.index2);
+				numBonds++;
+			}
+
+			if(numBonds > 0) d1 /= numBonds;
+			nextDistance->setFloat(particleIndex, d0 * FloatType(0.2) + d1 * FloatType(0.8));
+		}
+
+		_defectDistances.swap(nextDistance);
+	}
+
+	std::sort(distanceSortedAtoms.begin(), distanceSortedAtoms.end(), [this](size_t a, size_t b) { return defectDistances()->getFloat(a) < defectDistances()->getFloat(b); });
 
 	// This helper function is used below to sort atoms in the priority queue in descending order w.r.t. their distance transform value.
 	auto distanceTransformCompare = [this](size_t a, size_t b) {
-		return defectDistances()->getInt(a) > defectDistances()->getInt(b);
+		return defectDistances()->getFloat(a) > defectDistances()->getFloat(b);
 	};
 
 	setProgressText(GrainSegmentationModifier2::tr("Grain segmentation - clustering"));
@@ -411,12 +437,12 @@ void GrainSegmentationEngine2::perform()
 		// First check if atom is a really a seed atom, i.e. it's not already part of a cluster.
 		if(atomClusters()->getInt(*seedAtomIndex) != 0)
 			continue;
-		int currentDistance = defectDistances()->getInt(*seedAtomIndex);
+		FloatType currentDistance = defectDistances()->getFloat(*seedAtomIndex);
 
 		// Expand existing clusters up to the current water level.
 		while(!queue.empty()) {
 			size_t currentParticle = queue.front();
-			if(defectDistances()->getInt(currentParticle) < currentDistance)
+			if(defectDistances()->getFloat(currentParticle) < currentDistance)
 				break;
 			queue.pop_front();
 
@@ -459,13 +485,13 @@ void GrainSegmentationEngine2::perform()
 		if(clusterId == 0) continue;
 
 		// Cluster IDs start at 1. Need to subtract 1 to get cluster index.
-		clusterId--;
+		int clusterIndex = clusterId - 1;
 
-		clusterSizes[clusterId]++;
-		if(firstClusterAtom[clusterId] == -1)
-			firstClusterAtom[clusterId] = particleIndex;
+		clusterSizes[clusterIndex]++;
+		if(firstClusterAtom[clusterIndex] == -1)
+			firstClusterAtom[clusterIndex] = particleIndex;
 
-		const Quaternion& orient0 = _orientations->getQuaternion(firstClusterAtom[clusterId]);
+		const Quaternion& orient0 = _orientations->getQuaternion(firstClusterAtom[clusterIndex]);
 		const Quaternion& orient = _orientations->getQuaternion(particleIndex);
 
 		Quaternion qrot = orient0.inverse() * orient;
@@ -478,7 +504,7 @@ void GrainSegmentationEngine2::perform()
 			rotate_quaternion_into_hcp_fundamental_zone(qrot_);
 
 		Quaternion qclosest = orient0 * Quaternion(qrot_[1], qrot_[2], qrot_[3], qrot_[0]);
-		clusterOrientations[clusterId] += qclosest;
+		clusterOrientations[clusterIndex] += qclosest;
 	}
 	for(auto& qavg : clusterOrientations) {
 		OVITO_ASSERT(qavg != Quaternion(0,0,0,0));
@@ -486,8 +512,8 @@ void GrainSegmentationEngine2::perform()
 	}
 
 	// Disjoint sets data structures.
-	std::vector<size_t> ranks(numClusters, 0);
-	std::vector<size_t> parents(numClusters);
+	std::vector<int> ranks(numClusters, 0);
+	std::vector<int> parents(numClusters);
 	boost::iota(parents, 0);
 
 	// Disjoint-sets helper functions:
@@ -505,6 +531,7 @@ void GrainSegmentationEngine2::perform()
 
 	// Union part of Union-Find
 	auto mergeClusters = [&ranks, &parents, &clusterSizes](int a, int b) {
+		OVITO_ASSERT(a != b);
 		OVITO_ASSERT(parents[a] == a);
 		OVITO_ASSERT(parents[b] == b);
 		// Attach smaller rank tree under root of high rank tree (Union by Rank)
@@ -543,6 +570,13 @@ void GrainSegmentationEngine2::perform()
 			// Also no need for double testing.
 			if(clusterIdB <= clusterIdA) continue;
 
+			// Skip further tests if the two clusters have already been merged.
+			int clusterIndexA = clusterIdA - 1;
+			int clusterIndexB = clusterIdB - 1;
+			int parentClusterA = findParentCluster(clusterIndexA);
+			int parentClusterB = findParentCluster(clusterIndexB);
+			if(parentClusterA == parentClusterB) continue;
+
 			// Skip high-angle edges.
 			if(_neighborDisorientationAngles->getFloat(bondIndex) > _misorientationThreshold) continue;
 
@@ -551,8 +585,6 @@ void GrainSegmentationEngine2::perform()
 				continue;
 
 			// Calculate cluster-cluster misorientation angle.
-			int clusterIndexA = clusterIdA - 1;
-			int clusterIndexB = clusterIdB - 1;
 			const Quaternion& orientA = clusterOrientations[clusterIndexA];
 			const Quaternion& orientB = clusterOrientations[clusterIndexB];
 
@@ -572,9 +604,7 @@ void GrainSegmentationEngine2::perform()
 			//	qDebug() << "Misorientation of clusters" << clusterIdA << "and" << clusterIdB << ":" << (disorientation * 180 / FLOATTYPE_PI);
 
 			if(disorientation < _misorientationThreshold) {
-				int a = findParentCluster(clusterIndexA);
-				int b = findParentCluster(clusterIndexB);
-				mergeClusters(a, b);
+				mergeClusters(parentClusterA, parentClusterB);
 			}
 		}
 	}
@@ -585,7 +615,6 @@ void GrainSegmentationEngine2::perform()
 	// Assign new consecutive IDs to root clusters.
 	for(int i = 0; i < numClusters; i++) {
 		if(findParentCluster(i) == i) {
-
 			// If the cluster's size is below the threshold, dissolve the cluster.
 			if(clusterSizes[i] < _minGrainAtomCount) {
 				clusterRemapping[i] = 0;
