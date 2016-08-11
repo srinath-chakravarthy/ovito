@@ -70,6 +70,15 @@ public:
 		return s;
 	}
 
+	/// Reads the next line from the input file which is non-empty.
+	/// \throw Exception if an I/O error has occurred of if there is no more non-empty line to read.
+	const char* readNonEmptyLine() {
+		for(;;) {
+			const char* line = readLineTrimLeft();
+			if(line[0] > ' ') return this->line();
+		}
+	}
+
 	/// Checks whether the end of file has been reached. Do not call readLine() when this returns \c true.
 	bool eof() const {
 		return _stream->atEnd();
