@@ -828,10 +828,18 @@ int ParticlePickInfo::particleIndexFromSubObjectID(quint32 subobjID) const
 ******************************************************************************/
 QString ParticlePickInfo::infoString(ObjectNode* objectNode, quint32 subobjectId)
 {
-	QString str;
 	int particleIndex = particleIndexFromSubObjectID(subobjectId);
-	if(particleIndex < 0) return str;
-	for(DataObject* dataObj : pipelineState().objects()) {
+	if(particleIndex < 0) return QString();
+	return particleInfoString(pipelineState(), particleIndex);
+}
+
+/******************************************************************************
+* Builds the info string for a particle to be displayed in the status bar.
+******************************************************************************/
+QString ParticlePickInfo::particleInfoString(const PipelineFlowState& pipelineState, size_t particleIndex)
+{
+	QString str;
+	for(DataObject* dataObj : pipelineState.objects()) {
 		ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(dataObj);
 		if(!property || property->size() <= particleIndex) continue;
 		if(property->type() == ParticleProperty::SelectionProperty) continue;

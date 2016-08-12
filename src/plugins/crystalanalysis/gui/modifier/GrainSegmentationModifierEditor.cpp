@@ -20,7 +20,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <plugins/crystalanalysis/modifier/grains/GrainSegmentationModifier.h>
 #include <plugins/particles/gui/modifier/analysis/StructureListParameterUI.h>
 #include <gui/properties/FloatParameterUI.h>
 #include <gui/properties/IntegerParameterUI.h>
@@ -28,6 +27,8 @@
 #include <gui/properties/VariantComboBoxParameterUI.h>
 #include <gui/properties/SubObjectParameterUI.h>
 #include <gui/properties/BooleanGroupBoxParameterUI.h>
+#include "../../modifier/grains/GrainSegmentationEngine.h"
+#include "../../modifier/grains/GrainSegmentationModifier.h"
 #include "GrainSegmentationModifierEditor.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
@@ -47,7 +48,7 @@ void GrainSegmentationModifierEditor::createUI(const RolloutInsertionParameters&
 	layout->setContentsMargins(4,4,4,4);
 	layout->setSpacing(6);
 
-	QGroupBox* structureBox = new QGroupBox(tr("Input crystal"));
+	QGroupBox* structureBox = new QGroupBox(tr("Input"));
 	layout->addWidget(structureBox);
 	QGridLayout* sublayout1 = new QGridLayout(structureBox);
 	sublayout1->setContentsMargins(4,4,4,4);
@@ -55,15 +56,16 @@ void GrainSegmentationModifierEditor::createUI(const RolloutInsertionParameters&
 	sublayout1->setColumnStretch(1,1);
 	VariantComboBoxParameterUI* crystalStructureUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_inputCrystalStructure));
 
-	crystalStructureUI->comboBox()->addItem(tr("Face-centered cubic (FCC)"), QVariant::fromValue((int)StructureAnalysis::LATTICE_FCC));
-	crystalStructureUI->comboBox()->addItem(tr("Hexagonal close-packed (HCP)"), QVariant::fromValue((int)StructureAnalysis::LATTICE_HCP));
-	crystalStructureUI->comboBox()->addItem(tr("Body-centered cubic (BCC)"), QVariant::fromValue((int)StructureAnalysis::LATTICE_BCC));
-	crystalStructureUI->comboBox()->addItem(tr("Diamond cubic / Zinc blende"), QVariant::fromValue((int)StructureAnalysis::LATTICE_CUBIC_DIAMOND));
-	crystalStructureUI->comboBox()->addItem(tr("Diamond hexagonal / Wurtzite"), QVariant::fromValue((int)StructureAnalysis::LATTICE_HEX_DIAMOND));
+	crystalStructureUI->comboBox()->addItem(tr("Face-centered cubic (FCC)"), QVariant::fromValue((int)GrainSegmentationEngine::FCC));
+	crystalStructureUI->comboBox()->addItem(tr("Hexagonal close-packed (HCP)"), QVariant::fromValue((int)GrainSegmentationEngine::HCP));
+	crystalStructureUI->comboBox()->addItem(tr("Body-centered cubic (BCC)"), QVariant::fromValue((int)GrainSegmentationEngine::BCC));
+	crystalStructureUI->comboBox()->addItem(tr("Simple cubic (SC)"), QVariant::fromValue((int)GrainSegmentationEngine::SC));
 	sublayout1->addWidget(crystalStructureUI->comboBox(), 0, 0, 1, 2);
 
+#if 0
 	BooleanParameterUI* onlySelectedUI = new BooleanParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_onlySelectedParticles));
 	sublayout1->addWidget(onlySelectedUI->checkBox(), 1, 0, 1, 2);
+#endif
 
 	QGroupBox* paramsBox = new QGroupBox(tr("Parameters"));
 	layout->addWidget(paramsBox);
@@ -76,13 +78,31 @@ void GrainSegmentationModifierEditor::createUI(const RolloutInsertionParameters&
 	sublayout2->addWidget(misorientationThresholdUI->label(), 0, 0);
 	sublayout2->addLayout(misorientationThresholdUI->createFieldLayout(), 0, 1);
 
-	FloatParameterUI* fluctuationToleranceUI = new FloatParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_fluctuationTolerance));
-	sublayout2->addWidget(fluctuationToleranceUI->label(), 1, 0);
-	sublayout2->addLayout(fluctuationToleranceUI->createFieldLayout(), 1, 1);
+	FloatParameterUI* rmsdCutoffUI = new FloatParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_rmsdCutoff));
+	sublayout2->addWidget(rmsdCutoffUI->label(), 1, 0);
+	sublayout2->addLayout(rmsdCutoffUI->createFieldLayout(), 1, 1);
 
 	IntegerParameterUI* minGrainAtomCountUI = new IntegerParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_minGrainAtomCount));
 	sublayout2->addWidget(minGrainAtomCountUI->label(), 2, 0);
 	sublayout2->addLayout(minGrainAtomCountUI->createFieldLayout(), 2, 1);
+
+	FloatParameterUI* orientationSmoothingWeightUI = new FloatParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_orientationSmoothingWeight));
+	sublayout2->addWidget(orientationSmoothingWeightUI->label(), 3, 0);
+	sublayout2->addLayout(orientationSmoothingWeightUI->createFieldLayout(), 3, 1);
+
+	IntegerParameterUI* numOrientationSmoothingIterationsUI = new IntegerParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_numOrientationSmoothingIterations));
+	sublayout2->addWidget(numOrientationSmoothingIterationsUI->label(), 4, 0);
+	sublayout2->addLayout(numOrientationSmoothingIterationsUI->createFieldLayout(), 4, 1);
+
+	QGroupBox* outputBox = new QGroupBox(tr("Output"), rollout);
+	QVBoxLayout* sublayout = new QVBoxLayout(outputBox);
+	sublayout->setContentsMargins(4,4,4,4);
+	layout->addWidget(outputBox);
+
+	// Output controls.
+	BooleanParameterUI* outputOrientationUI = new BooleanParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_outputLocalOrientations));
+	sublayout->addWidget(outputOrientationUI->checkBox());
+	outputOrientationUI->checkBox()->setText(tr("Local lattice orientation"));
 
 	BooleanGroupBoxParameterUI* generateMeshUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_outputPartitionMesh));
 	generateMeshUI->groupBox()->setTitle(tr("Generate boundary mesh"));
@@ -107,8 +127,81 @@ void GrainSegmentationModifierEditor::createUI(const RolloutInsertionParameters&
 	layout->addSpacing(10);
 	layout->addWidget(structureTypesPUI->tableWidget());
 
+	_histogramPlot = new QCustomPlot();
+	_histogramPlot->setMinimumHeight(240);
+	_histogramPlot->setInteraction(QCP::iRangeDrag, true);
+	_histogramPlot->axisRect()->setRangeDrag(Qt::Horizontal);
+	_histogramPlot->setInteraction(QCP::iRangeZoom, true);
+	_histogramPlot->axisRect()->setRangeZoom(Qt::Horizontal);
+	_histogramPlot->xAxis->setLabel(tr("RMSD"));
+	_histogramPlot->yAxis->setLabel(tr("Count"));
+	_histogramPlot->addGraph();
+	_histogramPlot->graph()->setBrush(QBrush(QColor(255, 160, 100)));
+
+	_rmsdCutoffMarker = new QCPItemStraightLine(_histogramPlot);
+	_rmsdCutoffMarker->setVisible(false);
+	QPen markerPen;
+	markerPen.setColor(QColor(255, 40, 30));
+	markerPen.setStyle(Qt::DotLine);
+	markerPen.setWidth(2);
+	_rmsdCutoffMarker->setPen(markerPen);
+	_histogramPlot->addItem(_rmsdCutoffMarker);
+
+	layout->addSpacing(10);
+	layout->addWidget(_histogramPlot);
+	connect(this, &GrainSegmentationModifierEditor::contentsReplaced, this, &GrainSegmentationModifierEditor::plotHistogram);
+
 	// Open a sub-editor for the mesh display object.
 	new SubObjectParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_meshDisplay), rolloutParams.after(rollout));
+}
+
+/******************************************************************************
+* This method is called when a reference target changes.
+******************************************************************************/
+bool GrainSegmentationModifierEditor::referenceEvent(RefTarget* source, ReferenceEvent* event)
+{
+	if(event->sender() == editObject() && (event->type() == ReferenceEvent::ObjectStatusChanged || event->type() == ReferenceEvent::TargetChanged)) {
+		plotHistogram();
+	}
+	return ParticleModifierEditor::referenceEvent(source, event);
+}
+
+/******************************************************************************
+* Replots the histogram computed by the modifier.
+******************************************************************************/
+void GrainSegmentationModifierEditor::plotHistogram()
+{
+	GrainSegmentationModifier* modifier = static_object_cast<GrainSegmentationModifier>(editObject());
+	if(!modifier)
+		return;
+
+	if(modifier->rmsdHistogramData().empty())
+		return;
+
+	QVector<double> xdata(modifier->rmsdHistogramData().size());
+	QVector<double> ydata(modifier->rmsdHistogramData().size());
+	double binSize = modifier->rmsdHistogramBinSize();
+	double maxHistogramData = 0;
+	for(int i = 0; i < xdata.size(); i++) {
+		xdata[i] = binSize * ((double)i + 0.5);
+		ydata[i] = modifier->rmsdHistogramData()[i];
+		maxHistogramData = std::max(maxHistogramData, ydata[i]);
+	}
+	_histogramPlot->graph()->setLineStyle(QCPGraph::lsStepCenter);
+	_histogramPlot->graph()->setData(xdata, ydata);
+
+	if(modifier->rmsdCutoff() > 0) {
+		_rmsdCutoffMarker->setVisible(true);
+		_rmsdCutoffMarker->point1->setCoords(modifier->rmsdCutoff(), 0);
+		_rmsdCutoffMarker->point2->setCoords(modifier->rmsdCutoff(), 1);
+	}
+	else {
+		_rmsdCutoffMarker->setVisible(false);
+	}
+
+	_histogramPlot->xAxis->setRange(0, binSize * xdata.size());
+	_histogramPlot->yAxis->setRange(0, maxHistogramData);
+	_histogramPlot->replot(QCustomPlot::rpQueued);
 }
 
 }	// End of namespace

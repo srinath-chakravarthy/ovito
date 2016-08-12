@@ -48,10 +48,8 @@ SET(SourceFiles
 #	modifier/dxa/PlanarDefectIdentification.cpp
 	modifier/elasticstrain/ElasticStrainModifier.cpp
 	modifier/elasticstrain/ElasticStrainEngine.cpp
-#	modifier/grains/GrainSegmentationModifier.cpp
-#	modifier/grains/GrainSegmentationEngine.cpp
-	modifier/grains2/GrainSegmentationModifier2.cpp
-	modifier/grains2/GrainSegmentationEngine2.cpp
+	modifier/grains/GrainSegmentationModifier.cpp
+	modifier/grains/GrainSegmentationEngine.cpp
 	modifier/SliceSurfaceModifier.cpp
 	util/DelaunayTessellation.cpp
 )

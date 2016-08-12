@@ -844,7 +844,7 @@ def _get_ParticleTypeProperty_type_list(self):
     
         Note that the particle types may be stored in arbitrary order in this type list. 
         Each type has a unique integer ID (given by the :py:attr:`ParticleType.id` attribute).
-        The numbers stored in the particle type property array refer to these type IDs.
+        The numbers stored in the particle type property :py:attr:`~ParticleProperty.array` refer to these type IDs.
     """
     class ParticleTypeList(collections.MutableSequence):
         def __init__(self, owner):
@@ -866,6 +866,29 @@ def _get_ParticleTypeProperty_type_list(self):
             self.__owner.insertParticleType(index, obj)
     return ParticleTypeList(self)
 ovito.data.ParticleTypeProperty.type_list = property(_get_ParticleTypeProperty_type_list)
+
+def _ParticleTypeProperty_get_type_by_id(self, id):
+    """
+    Returns the :py:class:`ParticleType` with the given numeric ID from the :py:attr:`.type_list`. 
+    Raises a ``KeyError`` if the ID does not exist.
+    """
+    t = self._get_type_by_id(int(id))
+    if t is None:
+        raise KeyError("Particle type with ID %i is not defined." % id)
+    return t
+ovito.data.ParticleTypeProperty.get_type_by_id = _ParticleTypeProperty_get_type_by_id
+
+def _ParticleTypeProperty_get_type_by_name(self, name):
+    """
+    Returns the :py:class:`ParticleType` with the given name from the :py:attr:`.type_list`.
+    If multiple type exists with the same name, the first type is returned. 
+    Raises a ``KeyError`` if there is no type with such a name.
+    """
+    t = self._get_type_by_name(name)
+    if t is None:
+        raise KeyError("Particle type with name '%s' is not defined." % name)
+    return t
+ovito.data.ParticleTypeProperty.get_type_by_name = _ParticleTypeProperty_get_type_by_name
 
 # Implement the 'type_list' property of the BondTypeProperty class, which provides access to bond types. 
 def _get_BondTypeProperty_type_list(self):

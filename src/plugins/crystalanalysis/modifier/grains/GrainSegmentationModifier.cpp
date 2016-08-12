@@ -19,64 +19,85 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "GrainSegmentationModifier.h"
+
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
 #include <plugins/crystalanalysis/objects/patterns/StructurePattern.h>
-#include "GrainSegmentationModifier.h"
-#include "GrainSegmentationEngine.h"
+#include <plugins/particles/objects/BondsDisplay.h>
+#include <ptm/index_ptm.h>
+#include "../grains/GrainSegmentationEngine.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, GrainSegmentationModifier, StructureIdentificationModifier);
 DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _inputCrystalStructure, "CrystalStructure", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _rmsdCutoff, "RMSDCutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _misorientationThreshold, "MisorientationThreshold", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _fluctuationTolerance, "FluctuationTolerance", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _minGrainAtomCount, "MinGrainAtomCount", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(GrainSegmentationModifier, _patternCatalog, "PatternCatalog", PatternCatalog, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _smoothingLevel, "SmoothingLevel", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _probeSphereRadius, "Radius", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(GrainSegmentationModifier, _outputLocalOrientations, "OutputLocalOrientations");
 DEFINE_FLAGS_REFERENCE_FIELD(GrainSegmentationModifier, _meshDisplay, "MeshDisplay", PartitionMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(GrainSegmentationModifier, _bondsDisplay, "BondsDisplay", BondsDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(GrainSegmentationModifier, _onlySelectedParticles, "OnlySelectedParticles");
 DEFINE_PROPERTY_FIELD(GrainSegmentationModifier, _outputPartitionMesh, "OutputPartitionMesh");
+DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _numOrientationSmoothingIterations, "NumOrientationSmoothingIterations", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _orientationSmoothingWeight, "OrientationSmoothingWeight", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _inputCrystalStructure, "Input crystal structure");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _rmsdCutoff, "RMSD cutoff");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _misorientationThreshold, "Misorientation threshold");
-SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _fluctuationTolerance, "Tolerance");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _minGrainAtomCount, "Minimum grain size");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _smoothingLevel, "Smoothing level");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _probeSphereRadius, "Probe sphere radius");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _meshDisplay, "Surface mesh display");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _onlySelectedParticles, "Use only selected particles");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _outputPartitionMesh, "Generate mesh");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _outputLocalOrientations, "Output local orientations");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _bondsDisplay, "Bonds display");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _numOrientationSmoothingIterations, "Number of smoothing iterations");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _orientationSmoothingWeight, "Orientation smoothing weight");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _rmsdCutoff, FloatParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _misorientationThreshold, AngleParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _fluctuationTolerance, AngleParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _probeSphereRadius, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _minGrainAtomCount, IntegerParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _minGrainAtomCount, IntegerParameterUnit, 1);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _smoothingLevel, IntegerParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _numOrientationSmoothingIterations, IntegerParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _orientationSmoothingWeight, FloatParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
 GrainSegmentationModifier::GrainSegmentationModifier(DataSet* dataset) : StructureIdentificationModifier(dataset),
-		_inputCrystalStructure(StructureAnalysis::LATTICE_FCC),
-		_misorientationThreshold(3.0 * FLOATTYPE_PI / 180.0),
-		_fluctuationTolerance(2.0 * FLOATTYPE_PI / 180.0),
+		_inputCrystalStructure(GrainSegmentationEngine::FCC),
+		_rmsdCutoff(0.1),
+		_rmsdHistogramBinSize(0),
+		_misorientationThreshold(4.0 * FLOATTYPE_PI / 180.0),
 		_minGrainAtomCount(10),
 		_smoothingLevel(8),
 		_probeSphereRadius(4),
 		_onlySelectedParticles(false),
-		_outputPartitionMesh(false)
+		_outputPartitionMesh(false),
+		_outputLocalOrientations(false),
+		_numOrientationSmoothingIterations(1),
+		_orientationSmoothingWeight(0.5)
 {
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_inputCrystalStructure);
+	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_rmsdCutoff);
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_misorientationThreshold);
-	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_fluctuationTolerance);
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_minGrainAtomCount);
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_patternCatalog);
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_smoothingLevel);
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_probeSphereRadius);
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_meshDisplay);
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_onlySelectedParticles);
+	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_outputLocalOrientations);
+	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_numOrientationSmoothingIterations);
+	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_orientationSmoothingWeight);
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_outputPartitionMesh);
+	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_bondsDisplay);
 
 	// Create the display object.
 	_meshDisplay = new PartitionMeshDisplay(dataset);
@@ -90,11 +111,11 @@ GrainSegmentationModifier::GrainSegmentationModifier(DataSet* dataset) : Structu
 			ParticleTypeProperty::PredefinedStructureType::FCC,
 			ParticleTypeProperty::PredefinedStructureType::HCP,
 			ParticleTypeProperty::PredefinedStructureType::BCC,
-			ParticleTypeProperty::PredefinedStructureType::CUBIC_DIAMOND,
-			ParticleTypeProperty::PredefinedStructureType::HEX_DIAMOND
+			ParticleTypeProperty::PredefinedStructureType::ICO,
+			ParticleTypeProperty::PredefinedStructureType::SC,
 	};
-	OVITO_STATIC_ASSERT(sizeof(predefTypes)/sizeof(predefTypes[0]) == StructureAnalysis::NUM_LATTICE_TYPES);
-	for(int id = 0; id < StructureAnalysis::NUM_LATTICE_TYPES; id++) {
+	OVITO_STATIC_ASSERT(sizeof(predefTypes)/sizeof(predefTypes[0]) == GrainSegmentationEngine::NUM_STRUCTURE_TYPES);
+	for(int id = 0; id < GrainSegmentationEngine::NUM_STRUCTURE_TYPES; id++) {
 		OORef<StructurePattern> stype = _patternCatalog->structureById(id);
 		if(!stype) {
 			stype = new StructurePattern(dataset);
@@ -106,6 +127,10 @@ GrainSegmentationModifier::GrainSegmentationModifier(DataSet* dataset) : Structu
 		stype->setColor(ParticleTypeProperty::getDefaultParticleColor(ParticleProperty::StructureTypeProperty, stype->name(), id));
 		addStructureType(stype);
 	}
+
+	// Create the display object for bonds rendering.
+	_bondsDisplay = new BondsDisplay(dataset);
+	_bondsDisplay->setEnabled(false);
 }
 
 /******************************************************************************
@@ -117,12 +142,15 @@ void GrainSegmentationModifier::propertyChanged(const PropertyFieldDescriptor& f
 
 	// Recompute results when the parameters have changed.
 	if(field == PROPERTY_FIELD(GrainSegmentationModifier::_inputCrystalStructure) ||
+			field == PROPERTY_FIELD(GrainSegmentationModifier::_rmsdCutoff) ||
 			field == PROPERTY_FIELD(GrainSegmentationModifier::_misorientationThreshold) ||
-			field == PROPERTY_FIELD(GrainSegmentationModifier::_fluctuationTolerance) ||
 			field == PROPERTY_FIELD(GrainSegmentationModifier::_minGrainAtomCount) ||
 			field == PROPERTY_FIELD(GrainSegmentationModifier::_smoothingLevel) ||
 			field == PROPERTY_FIELD(GrainSegmentationModifier::_probeSphereRadius) ||
 			field == PROPERTY_FIELD(GrainSegmentationModifier::_onlySelectedParticles) ||
+			field == PROPERTY_FIELD(GrainSegmentationModifier::_outputLocalOrientations) ||
+			field == PROPERTY_FIELD(GrainSegmentationModifier::_numOrientationSmoothingIterations) ||
+			field == PROPERTY_FIELD(GrainSegmentationModifier::_orientationSmoothingWeight) ||
 			field == PROPERTY_FIELD(GrainSegmentationModifier::_outputPartitionMesh))
 		invalidateCachedResults();
 }
@@ -133,7 +161,7 @@ void GrainSegmentationModifier::propertyChanged(const PropertyFieldDescriptor& f
 bool GrainSegmentationModifier::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
 	// Do not propagate messages from the attached display object.
-	if(source == meshDisplay())
+	if(source == meshDisplay() || source == bondsDisplay())
 		return false;
 
 	return StructureIdentificationModifier::referenceEvent(source, event);
@@ -162,10 +190,19 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> GrainSegmentationMo
 	if(onlySelectedParticles())
 		selectionProperty = expectStandardProperty(ParticleProperty::SelectionProperty)->storage();
 
+	// Initialize PTM library.
+	ptm_initialize_global();
+
+	// Determine the list of structure types the PTM should search for.
+	QVector<bool> typesToIdentify(GrainSegmentationEngine::NUM_STRUCTURE_TYPES, false);
+	typesToIdentify[inputCrystalStructure()] = true;
+
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<GrainSegmentationEngine>(validityInterval, posProperty->storage(),
-			simCell->data(), selectionProperty, inputCrystalStructure(), misorientationThreshold(),
-			fluctuationTolerance(), minGrainAtomCount(), outputPartitionMesh() ? probeSphereRadius() : 0, smoothingLevel());
+			simCell->data(), typesToIdentify, selectionProperty,
+			inputCrystalStructure(), rmsdCutoff(),
+			_numOrientationSmoothingIterations, _orientationSmoothingWeight, misorientationThreshold(),
+			minGrainAtomCount(), outputPartitionMesh() ? probeSphereRadius() : 0, smoothingLevel());
 }
 
 /******************************************************************************
@@ -180,6 +217,20 @@ void GrainSegmentationModifier::transferComputationResults(ComputeEngine* engine
 	_clusterGraph = eng->outputClusterGraph();
 	_partitionMesh = eng->mesh();
 	_spaceFillingRegion = eng->spaceFillingGrain();
+
+	// Copy RMDS histogram data.
+	_rmsdHistogramData = eng->rmsdHistogramData();
+	_rmsdHistogramBinSize = eng->rmsdHistogramBinSize();
+
+	if(outputLocalOrientations())
+		_localOrientations = eng->localOrientations();
+	else
+		_localOrientations.reset();
+
+	_latticeNeighborBonds = eng->latticeNeighborBonds();
+	_neighborDisorientationAngles = eng->neighborDisorientationAngles();
+	_defectDistances = eng->defectDistances();
+	_defectDistanceBasins = eng->defectDistanceBasins();
 }
 
 /******************************************************************************
@@ -209,6 +260,17 @@ PipelineStatus GrainSegmentationModifier::applyComputationResults(TimePoint time
 
 	// Output particle properties.
 	outputStandardProperty(_atomClusters.data());
+	if(outputLocalOrientations() && _localOrientations) outputStandardProperty(_localOrientations.data());
+	if(_defectDistances) outputCustomProperty(_defectDistances.data());
+	if(_defectDistanceBasins) outputCustomProperty(_defectDistanceBasins.data());
+
+	// Output lattice neighbor bonds.
+	if(_latticeNeighborBonds) {
+		std::vector<BondProperty*> bondProperties;
+		if(_neighborDisorientationAngles && _neighborDisorientationAngles->size() == _latticeNeighborBonds->size())
+			bondProperties.push_back(_neighborDisorientationAngles.data());
+		addBonds(_latticeNeighborBonds.data(), bondsDisplay(), bondProperties);
+	}
 
 	if(_partitionMesh) {
 		// Create the output data object for the partition mesh.

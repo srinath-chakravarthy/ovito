@@ -25,6 +25,11 @@
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/gui/modifier/ParticleModifierEditor.h>
 
+#ifndef signals
+#define signals Q_SIGNALS
+#endif
+#include <qcustomplot.h>
+
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 /**
@@ -37,12 +42,26 @@ public:
 	/// Default constructor.
 	Q_INVOKABLE GrainSegmentationModifierEditor() {}
 
+protected Q_SLOTS:
+
+	/// Replots the histogram computed by the modifier.
+	void plotHistogram();
+
 protected:
 
 	/// Creates the user interface controls for the editor.
 	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
 
+	/// This method is called when a reference target changes.
+	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
+
 private:
+
+	/// The graph widget to display the histogram.
+	QCustomPlot* _histogramPlot;
+
+	/// Marks the RMSD cutoff in the histogram plot.
+	QCPItemStraightLine* _rmsdCutoffMarker;
 
 	Q_OBJECT
 	OVITO_OBJECT

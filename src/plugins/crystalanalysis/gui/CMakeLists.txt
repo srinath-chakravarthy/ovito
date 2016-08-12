@@ -32,8 +32,7 @@ SET(SourceFiles
 	modifier/ConstructSurfaceModifierEditor.cpp
 	modifier/DislocationAnalysisModifierEditor.cpp
 	modifier/ElasticStrainModifierEditor.cpp
-#	modifier/GrainSegmentationModifierEditor.cpp
-	modifier/GrainSegmentationModifierEditor2.cpp
+	modifier/GrainSegmentationModifierEditor.cpp
 	util/DislocationInformationApplet.cpp
 )
 

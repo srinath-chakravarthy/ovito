@@ -22,6 +22,8 @@
 #include <plugins/particles/Particles.h>
 #include "CFGImporter.h"
 
+#include <boost/algorithm/string.hpp>
+
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, CFGImporter, ParticleImporter);
@@ -48,12 +50,19 @@ bool CFGImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceLocation
 	// Open input file.
 	CompressedTextReader stream(input, sourceLocation.path());
 
-	// Read first line.
-	stream.readLine(20);
+	// Look for the magic string 'Number of particles'.
+	// It must appear within the first 20 lines of the CFG file.
+	for(int i = 0; i < 20 && !stream.eof(); i++) {
+		const char* line = stream.readLineTrimLeft(1024);
 
-	// CFG files start with the string "Number of particles".
-	if(stream.lineStartsWith("Number of particles"))
-		return true;
+		// CFG files start with the string "Number of particles".
+		if(boost::algorithm::starts_with(line, "Number of particles"))
+			return true;
+
+		// Terminate early if line is non-empty and contains anything else than a comment (#).
+		if(line[0] > ' ' && line[0] != '#')
+			return false;
+	}
 
 	return false;
 }

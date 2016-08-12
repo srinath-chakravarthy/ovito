@@ -61,9 +61,13 @@ ImportRemoteFileDialog::ImportRemoteFileDialog(const QVector<OvitoObjectType*>& 
 	clearURLHistoryButton->setIcon(QIcon(":/gui/actions/edit/edit_clear.png"));
 	clearURLHistoryButton->setToolTip(tr("Clear history"));
 	connect(clearURLHistoryButton, &QToolButton::clicked, [this]() {
-		QString text = _urlEdit->currentText();
-		_urlEdit->clear();
-		_urlEdit->setCurrentText(text);
+		if(QMessageBox::question(this, tr("Clear history"),
+		                               tr("Do you really want to clear the history of remote URLs? This cannot be undone."),
+		                               QMessageBox::Yes | QMessageBox::No, QMessageBox::Yes) == QMessageBox::Yes) {
+			QString text = _urlEdit->currentText();
+			_urlEdit->clear();
+			_urlEdit->setCurrentText(text);
+		}
 	});
 	layout2->addWidget(clearURLHistoryButton);
 

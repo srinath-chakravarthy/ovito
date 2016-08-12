@@ -55,6 +55,7 @@ bool IMDExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint 
 	OutputColumnMapping colMapping;
 	OutputColumnMapping filteredMapping;
 	posProperty = nullptr;
+	bool exportIdentifiers = false;
 	for(const ParticlePropertyReference& pref : columnMapping()) {
 		if(pref.type() == ParticleProperty::PositionProperty) {
 			posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
@@ -64,13 +65,9 @@ bool IMDExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint 
 			typeProperty = dynamic_object_cast<ParticleTypeProperty>(ParticlePropertyObject::findInState(state, ParticleProperty::ParticleTypeProperty));
 			if(!typeProperty) throw Exception(tr("Cannot export particle types, because they are not present in the dataset to be exported."));
 		}
-		else if(pref.type() == ParticleProperty::ParticleTypeProperty) {
-			identifierProperty = ParticlePropertyObject::findInState(state, ParticleProperty::IdentifierProperty);
-			if(!identifierProperty) throw Exception(tr("Cannot export particle identifiers, because they are not present in the dataset to be exported."));
-		}
 		else if(pref.type() == ParticleProperty::IdentifierProperty) {
 			identifierProperty = ParticlePropertyObject::findInState(state, ParticleProperty::IdentifierProperty);
-			if(!identifierProperty) throw Exception(tr("Cannot export particle identifiers, because they are not present in the dataset to be exported."));
+			exportIdentifiers = true;
 		}
 		else if(pref.type() == ParticleProperty::VelocityProperty) {
 			velocityProperty = ParticlePropertyObject::findInState(state, ParticleProperty::VelocityProperty);
@@ -85,10 +82,17 @@ bool IMDExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint 
 
 	QVector<QString> columnNames;
 	textStream() << "#F A ";
-	if(identifierProperty) {
-		textStream() << "1 ";
-		colMapping.emplace_back(identifierProperty->type(), identifierProperty->name());
-		columnNames.push_back("number");
+	if(exportIdentifiers) {
+		if(identifierProperty) {
+			textStream() << "1 ";
+			colMapping.emplace_back(identifierProperty->type(), identifierProperty->name());
+			columnNames.push_back("number");
+		}
+		else {
+			textStream() << "1 ";
+			colMapping.emplace_back(ParticleProperty::IdentifierProperty, ParticleProperty::standardPropertyName(ParticleProperty::IdentifierProperty));
+			columnNames.push_back("number");
+		}
 	}
 	else textStream() << "0 ";
 	if(typeProperty) {

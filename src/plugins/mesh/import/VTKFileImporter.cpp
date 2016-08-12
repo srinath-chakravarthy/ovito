@@ -53,7 +53,7 @@ void VTKFileImporter::VTKFileImportTask::parseFile(CompressedTextReader& stream)
 	setProgressText(tr("Reading VTK file %1").arg(frame().sourceFile.toString(QUrl::RemovePassword | QUrl::PreferLocalFile | QUrl::PrettyDecoded)));
 
 	// Read first line.
-	stream.readLine(256);
+	stream.readLine(1024);
 
 	// Check header code in first line.
 	if(!stream.lineStartsWith("# vtk DataFile Version"))
@@ -68,7 +68,7 @@ void VTKFileImporter::VTKFileImportTask::parseFile(CompressedTextReader& stream)
 		throw Exception(tr("Can read only text-based VTK files (ASCII format)."));
 
 	// Read data set type.
-	stream.readLine();
+	stream.readNonEmptyLine();
 	bool isPolyData;
 	if(stream.lineStartsWith("DATASET UNSTRUCTURED_GRID"))
 		isPolyData = false;
@@ -78,12 +78,12 @@ void VTKFileImporter::VTKFileImportTask::parseFile(CompressedTextReader& stream)
 		throw Exception(tr("Can read only read VTK files containing triangle polydata or unstructured grids with triangle cells."));
 
 	// Read point count.
-	stream.readLine();
+	stream.readNonEmptyLine();
 	if(!stream.lineStartsWith("POINTS"))
-		throw Exception(tr("Invalid VTK file. Expected POINTS token in line %1 but found %2").arg(stream.lineNumber()).arg(stream.lineString()));
+		throw Exception(tr("Invalid VTK file. Expected POINTS token in line %1 but found '%2'.").arg(stream.lineNumber()).arg(stream.lineString().trimmed()));
 	int pointCount;
 	if(sscanf(stream.line() + 6, "%i", &pointCount) != 1 || pointCount < 0)
-		throw Exception(tr("Invalid number of points in VTK file (line %2): %1").arg(stream.lineNumber()).arg(stream.lineString()));
+		throw Exception(tr("Invalid number of points in VTK file (line %1): %2").arg(stream.lineNumber()).arg(stream.lineString()));
 
 	// Parse point coordinates.
 	mesh().setVertexCount(pointCount);
@@ -106,23 +106,21 @@ void VTKFileImporter::VTKFileImportTask::parseFile(CompressedTextReader& stream)
 	}
 	mesh().invalidateVertices();
 
-	std::string line;
-	do { line = stream.readLine(); }
-	while(line.find_first_not_of(" \t\n\r") == std::string::npos);
+	stream.readNonEmptyLine();
 	int triangleCount;
 	if(!isPolyData) {
 		// Parse number of cells.
 		if(!stream.lineStartsWith("CELLS"))
-			throw Exception(tr("Invalid VTK file. Expected token CELLS in line %1, but found %2").arg(stream.lineNumber()).arg(stream.lineString()));
+			throw Exception(tr("Invalid VTK file. Expected token CELLS in line %1, but found '%2'.").arg(stream.lineNumber()).arg(stream.lineString().trimmed()));
 		if(sscanf(stream.line() + 5, "%i", &triangleCount) != 1 || triangleCount < 0)
-			throw Exception(tr("Invalid number of cells in VTK file (line %2): %1").arg(stream.lineNumber()).arg(stream.lineString()));
+			throw Exception(tr("Invalid number of cells in VTK file (line %1): %2").arg(stream.lineNumber()).arg(stream.lineString()));
 	}
 	else {
 		// Parse number of polygons.
 		if(!stream.lineStartsWith("POLYGONS"))
-			throw Exception(tr("Invalid VTK file. Expected token POLYGONS in line %1, but found %2").arg(stream.lineNumber()).arg(stream.lineString()));
+			throw Exception(tr("Invalid VTK file. Expected token POLYGONS in line %1, but found '%2'.").arg(stream.lineNumber()).arg(stream.lineString().trimmed()));
 		if(sscanf(stream.line() + 8, "%i", &triangleCount) != 1 || triangleCount < 0)
-			throw Exception(tr("Invalid number of polygons in VTK file (line %2): %1").arg(stream.lineNumber()).arg(stream.lineString()));
+			throw Exception(tr("Invalid number of polygons in VTK file (line %1): %2").arg(stream.lineNumber()).arg(stream.lineString()));
 	}
 	// Parse triangles.
 	mesh().setFaceCount(triangleCount);
@@ -131,7 +129,7 @@ void VTKFileImporter::VTKFileImportTask::parseFile(CompressedTextReader& stream)
 		int vcount = 0, a, b, c, token_count;
 		token_count = sscanf(stream.readLine(), "%i %i %i %i", &vcount, &a, &b, &c);
 		if(vcount != 3)
-			throw Exception(tr("Only triangle cells/polygons are supported in VTK files. Wrong number of vertices in line %1 of VTK file: %2").arg(stream.lineNumber()).arg(stream.lineString()));
+			throw Exception(tr("Only triangle cells/polygons are supported in VTK files. Wrong number of vertices in line %1 of VTK file: %2").arg(stream.lineNumber()).arg(stream.lineString().trimmed()));
 		if(token_count != 4)
 			throw Exception(tr("Invalid triangle in VTK file (line %1): %2").arg(stream.lineNumber()).arg(stream.lineString()));
 		if(a >= pointCount || b >= pointCount || c >= pointCount)
@@ -142,10 +140,9 @@ void VTKFileImporter::VTKFileImportTask::parseFile(CompressedTextReader& stream)
 
 	if(!isPolyData) {
 		// Parse cell types
-		do { line = stream.readLine(); }
-		while(line.find_first_not_of(" \t\n\r") == std::string::npos);
+		stream.readNonEmptyLine();
 		if(!stream.lineStartsWith("CELL_TYPES"))
-			throw Exception(tr("Invalid VTK file. Expected token CELL_TYPES in line %1, but found %2").arg(stream.lineNumber()).arg(stream.lineString()));
+			throw Exception(tr("Invalid VTK file. Expected token CELL_TYPES in line %1, but found '%2'.").arg(stream.lineNumber()).arg(stream.lineString()));
 		for(int i = 0; i < triangleCount; i++) {
 			int t;
 			if(sscanf(stream.readLine(), "%i", &t) != 1 || t != 5)
@@ -154,9 +151,9 @@ void VTKFileImporter::VTKFileImportTask::parseFile(CompressedTextReader& stream)
 
 		// Look for color information.
 		for(; !stream.eof() && !stream.lineStartsWith("CELL_DATA"); )
-			line = stream.readLine();
+			stream.readLine();
 		for(; !stream.eof() && !stream.lineStartsWith("COLOR_SCALARS"); )
-			line = stream.readLine();
+			stream.readLine();
 		if(!stream.eof()) {
 			int componentCount = 0;
 			if(sscanf(stream.line(), "COLOR_SCALARS %*s %i", &componentCount) != 1 || (componentCount != 3 && componentCount != 4))

@@ -7,7 +7,6 @@ User interface improvements:
 - Add ticks to the color legend.
 - List of most recently accessed files
 - Histogram plot export (SaeeD PourasaD <saeedpourasad@gmail.com>).
-- In SSH connection dialog: Ask user if he really want to clear the history list.
 - Find min/max values of a particle property over the entire simulation sequence to adjust the Color Coding modifier (zhumingliang@stu.xjtu.edu.cn). 
 
 Work-flow improvements:
@@ -25,7 +24,6 @@ New visualization features:
 - Stereoscopic display (Erik Bitzek)
 - Wireframe mesh rendering (robin.gibaud@simap.grenoble-inp.fr)
 - Double bonds (SP2) (Jejoon Yeon <jyeon3@ucmerced.edu>)
-- Display displacement vector magnitude in status bar when hovering over an arrow (markus mock) 
 
 Unresolved OpenGL problems:
 
@@ -88,7 +86,6 @@ New I/O functions:
 - Export to Blender (Paul Erhart, Filip Sund <filip.sund@fys.uio.no>)
 - Single precision floating-point numbers, which are used for custom particle properties, cannot represent large integer numbers exactly (e.g. 100400). Find a solution to make it work.
 - Add support for more file formats using OpenBabel.
-- Ignore empty lines in VTK files (carsten.dehning@scai.fraunhofer.de)
 
 Performance improvements:
 

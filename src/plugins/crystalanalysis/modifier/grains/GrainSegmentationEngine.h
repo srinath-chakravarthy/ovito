@@ -24,7 +24,9 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/modifier/analysis/StructureIdentificationModifier.h>
-#include <plugins/crystalanalysis/modifier/dxa/StructureAnalysis.h>
+#include <plugins/particles/data/ParticleProperty.h>
+#include <plugins/particles/data/BondProperty.h>
+#include <plugins/particles/data/BondsStorage.h>
 #include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
@@ -36,25 +38,42 @@ class GrainSegmentationEngine : public StructureIdentificationModifier::Structur
 {
 public:
 
+#ifndef Q_CC_MSVC
+	/// The maximum number of neighbor atoms taken into account for the PTM analysis.
+	static constexpr int MAX_NEIGHBORS = 18;
+#else
+	enum { MAX_NEIGHBORS = 18 };
+#endif
+
+	/// The structure types recognized by the PTM library.
+	enum StructureType {
+		OTHER = 0,				//< Unidentified structure
+		FCC,					//< Face-centered cubic
+		HCP,					//< Hexagonal close-packed
+		BCC,					//< Body-centered cubic
+		ICO,					//< Icosahedral structure
+		SC,						//< Simple cubic structure
+
+		NUM_STRUCTURE_TYPES 	//< This just counts the number of defined structure types.
+	};
+	Q_ENUMS(StructureType);
+
 	/// Constructor.
 	GrainSegmentationEngine(const TimeInterval& validityInterval,
 			ParticleProperty* positions, const SimulationCell& simCell,
-			ParticleProperty* selection,
-			int inputCrystalStructure, FloatType misorientationThreshold,
-			FloatType fluctuationTolerance, int minGrainAtomCount,
-			FloatType probeSphereRadius, int meshSmoothingLevel);
+			const QVector<bool>& typesToIdentify, ParticleProperty* selection,
+			int inputCrystalStructure, FloatType rmsdCutoff, int numOrientationSmoothingIterations,
+			FloatType orientationSmoothingWeight, FloatType misorientationThreshold,
+			int minGrainAtomCount, FloatType probeSphereRadius, int meshSmoothingLevel);
 
 	/// Computes the modifier's results and stores them in this object for later retrieval.
 	virtual void perform() override;
 
 	/// Returns the array of atom cluster IDs.
-	ParticleProperty* atomClusters() const { return _structureAnalysis.atomClusters(); }
+	ParticleProperty* atomClusters() const { return _atomClusters.data(); }
 
 	/// Returns the created cluster graph.
 	ClusterGraph* outputClusterGraph() { return _outputClusterGraph.data(); }
-
-	/// Returns the property storage that contains the computed per-particle deformation gradient tensors.
-	ParticleProperty* deformationGradients() const { return _deformationGradients.data(); }
 
 	/// Returns the generated mesh.
 	PartitionMeshData* mesh() { return _mesh.data(); }
@@ -62,114 +81,56 @@ public:
 	/// Return the ID of the grain that fills the entire simulation (if any).
 	int spaceFillingGrain() const { return _spaceFillingGrain; }
 
+	/// Returns the computed RMSD histogram data.
+	const QVector<int>& rmsdHistogramData() const { return _rmsdHistogramData; }
+
+	/// Returns the bin size of the RMSD histogram.
+	FloatType rmsdHistogramBinSize() const { return _rmsdHistogramBinSize; }
+
+	/// Returns the computed per-particle lattice orientations.
+	ParticleProperty* localOrientations() const { return _orientations.data(); }
+
+	/// Returns the bonds generated between neighboring lattice atoms.
+	BondsStorage* latticeNeighborBonds() const { return _latticeNeighborBonds.data(); }
+
+	/// Returns the computed disorientation angles between neighboring lattice atoms.
+	BondProperty* neighborDisorientationAngles() const { return _neighborDisorientationAngles.data(); }
+
+	/// Returns the computed distance transform values.
+	ParticleProperty* defectDistances() const { return _defectDistances.data(); }
+
+	/// Returns the property storing the distance transform basin each atom has been assigned to.
+	ParticleProperty* defectDistanceBasins() const { return _defectDistanceBasins.data(); }
+
 private:
-
-	/** This internal class stores working data for a grain of the polycrystal. */
-	struct Grain {
-
-		/// Number of atoms that belong to the grain.
-		int atomCount = 1;
-
-		/// Number of atoms that belong to the grain and for which a local orientation tensor was computed.
-		int latticeAtomCount = 0;
-
-		/// The (average) lattice orientation tensor of the grain.
-		Matrix3 orientation;
-
-		/// Cluster that is used to define the grain's lattice orientation.
-		Cluster* cluster = nullptr;
-
-		/// Unique ID assigned to the grain.
-		int id;
-
-		/// This field is used by the disjoint-set forest algorithm using union-by-rank and path compression.
-		size_t rank = 0;
-
-		/// Pointer to the parent grain. This field is used by the disjoint-set algorithm.
-		Grain* parent;
-
-		/// Returns true if this is a root grain in the disjoint set structure.
-		bool isRoot() const { return parent == this; }
-
-		/// Default constructor.
-		Grain() {
-			parent = this;
-		}
-
-		/// Merges another grain into this one.
-		void join(Grain& grainB, const Matrix3& alignmentTM = Matrix3::Zero()) {
-			grainB.parent = this;
-			if(grainB.cluster != nullptr) {
-				OVITO_ASSERT(cluster != nullptr);
-				FloatType weightA = FloatType(latticeAtomCount) / (latticeAtomCount + grainB.latticeAtomCount);
-				FloatType weightB = FloatType(1) - weightA;
-				orientation = weightA * orientation + weightB * (grainB.orientation * alignmentTM);
-			}
-			atomCount += grainB.atomCount;
-			latticeAtomCount += grainB.latticeAtomCount;
-		}
-	};
-
-	/**
-	 * An edge connecting two adjacent grains in the graph of grains.
-	 */
-	struct GrainGraphEdge
-	{
-		/// Identifier of grain 1.
-		int a;
-
-		/// Identifier of grain 2.
-		int b;
-
-		/// Misorientation angle between the two grains.
-		FloatType misorientation;
-
-		/// This comparison operator is used to sort edges.
-		bool operator<(const GrainGraphEdge& other) const { return misorientation < other.misorientation; }
-	};
-
-
-	/// Calculates the misorientation angle between two lattice orientations.
-	FloatType calculateMisorientation(const Grain& grainA, const Grain& grainB, Matrix3* alignmentTM = nullptr);
-
-	/// Computes the angle of rotation from a rotation matrix.
-	static FloatType angleFromMatrix(const Matrix3& tm);
-
-	/// Tests if two grain should be merged and merges them if deemed necessary.
-	bool mergeTest(Grain& grainA, Grain& grainB, bool allowForFluctuations);
-
-	/// Assigns contiguous IDs to all parent grains.
-	size_t assignIdsToGrains();
-
-	/// Returns the parent grain of another grain.
-	Grain& parentGrain(const Grain& grain) const {
-		Grain* parent = grain.parent;
-		while(!parent->isRoot()) parent = parent->parent;
-		return *parent;
-	}
-
-	/// Returns the parent grain of an atom.
-	Grain& parentGrain(int atomIndex) {
-		Grain& parent = parentGrain(_grains[atomIndex]);
-		// Perform path compression:
-		_grains[atomIndex].parent = &parent;
-		return parent;
-	}
 
 	/// Builds the triangle mesh for the grain boundaries.
 	bool buildPartitionMesh();
 
 private:
 
+	/// The structural type of the input crystal to be segmented.
 	int _inputCrystalStructure;
-	StructureAnalysis _structureAnalysis;
-	QExplicitlySharedDataPointer<ParticleProperty> _deformationGradients;
+
+	/// The output particle property.
+	QExplicitlySharedDataPointer<ParticleProperty> _atomClusters;
+
+	FloatType _rmsdCutoff;
+	QVector<int> _rmsdHistogramData;
+	FloatType _rmsdHistogramBinSize;
+	QExplicitlySharedDataPointer<ParticleProperty> _rmsd;
+
+	/// The computed per-particle lattice orientations.
+	QExplicitlySharedDataPointer<ParticleProperty> _orientations;
+
+	/// The number of iterations of the smoothing procedure.
+	int _numOrientationSmoothingIterations;
+
+	/// The weighting parameter used by the smoothing algorithm.
+	FloatType _orientationSmoothingWeight;
 
 	/// The minimum misorientation angle between adjacent grains.
 	FloatType _misorientationThreshold;
-
-	/// Controls the amount of noise allowed inside a grain.
-	FloatType _fluctuationTolerance;
 
 	/// The minimum number of crystalline atoms per grain.
 	int _minGrainAtomCount;
@@ -180,20 +141,29 @@ private:
 	/// The strength of smoothing applied to the constructed partition mesh.
 	int _meshSmoothingLevel;
 
-	/// The working list of grains (contains one element per input atom).
-	std::vector<Grain> _grains;
-
-	/// The final number of grains.
-	int _grainCount;
-
 	/// The grain boundary mesh generated by the engine.
 	QExplicitlySharedDataPointer<PartitionMeshData> _mesh;
 
 	/// Stores the ID of the grain that fills the entire simulation (if any).
 	int _spaceFillingGrain;
 
-	/// The cluster graph generated by this engine, with one cluster per grain.
+	/// The cluster graph generated by this compute engine, with one cluster per grain.
 	QExplicitlySharedDataPointer<ClusterGraph> _outputClusterGraph;
+
+	/// Stores the list of neighbors of each lattice atom.
+	QExplicitlySharedDataPointer<ParticleProperty> _neighborLists;
+
+	/// The bonds generated between neighboring lattice atoms.
+	QExplicitlySharedDataPointer<BondsStorage> _latticeNeighborBonds;
+
+	/// The computed disorientation angles between neighboring lattice atoms.
+	QExplicitlySharedDataPointer<BondProperty> _neighborDisorientationAngles;
+
+	/// The computed distance transform.
+	QExplicitlySharedDataPointer<ParticleProperty> _defectDistances;
+
+	/// The basin to which each atom has been assigned.
+	QExplicitlySharedDataPointer<ParticleProperty> _defectDistanceBasins;
 };
 
 }	// End of namespace
