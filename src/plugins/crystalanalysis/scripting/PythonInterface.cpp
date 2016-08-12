@@ -373,13 +373,21 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 				"See also the :py:attr:`.is_loop` property. ")
 		.add_property("length", &DislocationSegment::calculateLength,
 				"Returns the length of this dislocation segment.")
-		.add_property("true_burgers_vector", make_function(lambda_address([](const DislocationSegment& segment) -> const Vector3& { return segment.burgersVector.localVec(); }), return_internal_reference<>()),
+		.add_property("true_burgers_vector", make_function(lambda_address([](const DislocationSegment& segment) -> const Vector3& {
+					return segment.burgersVector.localVec();
+				}), return_internal_reference<>()),
 				"The Burgers vector of the segment, expressed in the local coordinate system of the crystal. Also known as the True Burgers vector.")
+		.add_property("spatial_burgers_vector", make_function(lambda_address([](const DislocationSegment& segment) -> Vector3 {
+					return segment.burgersVector.toSpatialVector();
+				}), return_value_policy<return_by_value>()),
+				"The Burgers vector of the segment, expressed in the global coordinate system of the simulation. This vector is calculated "
+				"by transforming the true Burgers vector from the local lattice coordinate system to the global simulation coordinate system "
+				"using the average orientation matrix of the crystal cluster the dislocation segment is embedded in.")
 		.def_readonly("_line", &DislocationSegment::line)
 		.add_property("cluster_id", lambda_address([](const DislocationSegment& segment) { return segment.burgersVector.cluster()->id; }),
-				"The unique identifier of the cluster of crystal atoms that contains this dislocation segment. "
+				"The numeric identifier of the crystal cluster of atoms containing this dislocation segment. "
 				"\n\n"
-				"The Burgers vector of the segment is expressed in the local coordinate system of this atomic cluster.")
+				"The true Burgers vector of the segment is expressed in the local coordinate system of this crystal cluster.")
 	;
 
 	class_<std::vector<DislocationSegment*>, boost::noncopyable>("DislocationSegmentList", no_init)

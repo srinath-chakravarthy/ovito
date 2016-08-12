@@ -32,6 +32,6 @@ print(dislocations.segments)
 print("Number of dislocation segments: {}".format(len(dislocations.segments)))
 
 for segment in dislocations.segments:
-    print(segment.id, segment.length, segment.is_loop, segment.is_loop, segment.true_burgers_vector, segment.cluster_id)
+    print(segment.id, segment.length, segment.is_loop, segment.is_loop, segment.true_burgers_vector, segment.spatial_burgers_vector, segment.cluster_id)
     print(segment.points)
     
