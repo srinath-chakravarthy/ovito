@@ -24,8 +24,8 @@
 //  This module implements import of AMBER-style NetCDF trajectory files.
 //  For specification documents see <http://ambermd.org/netcdf/>.
 //
-//  Extensions to this specification are supported through OVITO's manual
-//  column mappings.
+//  Extensions to this specification are supported through OVITO's
+//  file column to particle property mapping.
 //
 //  A LAMMPS dump style for this file format can be found at
 //  <https://github.com/pastewka/lammps-netcdf>.
@@ -60,7 +60,8 @@ DEFINE_PROPERTY_FIELD(NetCDFImporter, _useCustomColumnMapping, "UseCustomColumnM
 SET_PROPERTY_FIELD_LABEL(NetCDFImporter, _useCustomColumnMapping, "Custom file column mapping");
 
 // Convert full tensor to Voigt tensor
-template<typename T> void fullToVoigt(size_t particleCount, T *full, T *voigt) {
+template<typename T>
+void fullToVoigt(size_t particleCount, T *full, T *voigt) {
 	for (size_t i = 0; i < particleCount; i++) {
 		voigt[6*i] = full[9*i];
 		voigt[6*i+1] = full[9*i+4];
@@ -204,14 +205,16 @@ void NetCDFImporter::NetCDFImportTask::openNetCDF(const QString &filename)
 	NCERR( nc_inq_dimid(_ncid, "spatial", &_spatial_dim) );
 	if (nc_inq_dimid(_ncid, "Voigt", &_Voigt_dim) != NC_NOERR)
 		_Voigt_dim = -1;
-	NCERR( nc_inq_dimid(_ncid, "cell_spatial", &_cell_spatial_dim) );
-	NCERR( nc_inq_dimid(_ncid, "cell_angular", &_cell_angular_dim) );
+	//NCERR( nc_inq_dimid(_ncid, "cell_spatial", &_cell_spatial_dim) );
+	//NCERR( nc_inq_dimid(_ncid, "cell_angular", &_cell_angular_dim) );
 
 	// Get some variables
 	if (nc_inq_varid(_ncid, "cell_origin", &_cell_origin_var) != NC_NOERR)
 		_cell_origin_var = -1;
-	NCERR( nc_inq_varid(_ncid, "cell_lengths", &_cell_lengths_var) );
-	NCERR( nc_inq_varid(_ncid, "cell_angles", &_cell_angles_var) );
+	if (nc_inq_varid(_ncid, "cell_lengths", &_cell_lengths_var) != NC_NOERR)
+		_cell_lengths_var = -1;
+	if (nc_inq_varid(_ncid, "cell_angles", &_cell_angles_var) != NC_NOERR)
+		_cell_angles_var = -1;
 	if (nc_inq_varid(_ncid, "shear_dx", &_shear_dx_var) != NC_NOERR)
 		_shear_dx_var = -1;
 }
@@ -369,39 +372,58 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 
 		// Simulation cell. Note that cell_origin is an extension to the AMBER specification.
 		double o[3] = { 0.0, 0.0, 0.0 };
-		double l[3], a[3];
+		double l[3] = { 0.0, 0.0, 0.0 };
+		double a[3] = { 90.0, 90.0, 90.0 };
 		double d[3] = { 0.0, 0.0, 0.0 };
 		size_t startp[4] = { movieFrame, 0, 0, 0 };
 		size_t countp[4] = { 1, 3, 0, 0 };
 		if (_cell_origin_var != -1)
 			NCERR( nc_get_vara_double(_ncid, _cell_origin_var, startp, countp, o) );
-		NCERR( nc_get_vara_double(_ncid, _cell_lengths_var, startp, countp, l) );
-		NCERR( nc_get_vara_double(_ncid, _cell_angles_var, startp, countp, a) );
+		if (_cell_lengths_var != -1)
+			NCERR( nc_get_vara_double(_ncid, _cell_lengths_var, startp, countp, l) );
+		if (_cell_angles_var != -1)
+			NCERR( nc_get_vara_double(_ncid, _cell_angles_var, startp, countp, a) );
 		if (_shear_dx_var != -1)
 			NCERR( nc_get_vara_double(_ncid, _shear_dx_var, startp, countp, d) );
 
 		// Periodic boundary conditions. Non-periodic dimensions have length zero
 		// according to AMBER specification.
 		std::array<bool,3> pbc;
+		bool isCellOrthogonal = true;
 		for (int i = 0; i < 3; i++) {
 			if (std::abs(l[i]) < 1e-12)  pbc[i] = false;
 			else pbc[i] = true;
+			if(std::abs(a[i] - 90.0) > 1e-12 || std::abs(d[i]) > 1e-12)
+				isCellOrthogonal = false;
 		}
 		simulationCell().setPbcFlags(pbc);
-		
-		// Express cell vectors va, vb and vc in the X,Y,Z-system
-		a[0] *= FLOATTYPE_PI/180.0f;
-		a[1] *= FLOATTYPE_PI/180.0f;
-		a[2] *= FLOATTYPE_PI/180.0f;
-		Vector3 va(l[0], 0, 0);
-		Vector3 vb(l[1]*cos(a[2]), l[1]*sin(a[2]), 0);
-		double cx = cos(a[1]);
-		double cy = (cos(a[0]) - cos(a[1])*cos(a[2]))/sin(a[2]);
-		double cz = sqrt(1. - cx*cx - cy*cy);
-		Vector3 vc(l[2]*cx+d[0], l[2]*cy+d[1], l[2]*cz);
 
-		// Set simulation cell.
-		simulationCell().setMatrix(AffineTransformation(va, vb, vc, Vector3(o[0], o[1], o[2])));
+		bool hasSimulationCell = (l[0] != 0 && l[1] != 0 && l[2] != 0);
+		if(hasSimulationCell) {
+			Vector3 va, vb, vc;
+			if(isCellOrthogonal) {
+				va = Vector3(l[0], 0, 0);
+				vb = Vector3(0, l[1], 0);
+				vc = Vector3(0, 0, l[2]);
+			}
+			else {
+				// Express cell vectors va, vb and vc in the X,Y,Z-system
+				a[0] *= M_PI/180.0;
+				a[1] *= M_PI/180.0;
+				a[2] *= M_PI/180.0;
+				va = Vector3(l[0], 0, 0);
+				vb = Vector3(l[1]*cos(a[2]), l[1]*sin(a[2]), 0);
+				if(std::abs(a[2] - 0.5*M_PI) < 1e-12) {
+					vb.x() = 0;
+					vb.y() = l[1];
+				}
+				double cx = cos(a[1]);
+				double cy = (cos(a[0]) - cos(a[1])*cos(a[2]))/sin(a[2]);
+				double cz = sqrt(1. - cx*cx - cy*cy);
+				vc = Vector3(l[2]*cx+d[0], l[2]*cy+d[1], l[2]*cz);
+			}
+			simulationCell().setMatrix(AffineTransformation(va, vb, vc, Vector3(o[0], o[1], o[2])));
+		}
 
 		// Report to user.
 		setProgressRange(columnMapping.size());
@@ -555,55 +577,30 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 												// This is a string particle type, i.e. element names
 												NCERRI( nc_get_vara_text(_ncid, varId, startp, countp, particleNamesData.get()), tr("(While reading variable '%1'.)").arg(columnName) );
 
-												// Collect all distinct particle names
-												QMap<QString, bool> discoveredParticleNames;
 												for (size_t i = 0; i < particleCount; i++) {
-													QString name = QString::fromLocal8Bit(&particleNamesData[strLen*i], strLen);
-													name = name.trimmed();
-													discoveredParticleNames[name] = true;
+													int d = typeList->addParticleTypeName(&particleNamesData[strLen*i], &particleNamesData[strLen*(i+1)]);
+													property->setInt(i, d);
 												}
 
-												// Assing a particle type id to each particle name
-												QMap<QString, bool>::const_iterator particleName = discoveredParticleNames.constBegin();
-												QMap<QString, int> particleNameToType;
-												int i = 0;
-												while (particleName != discoveredParticleNames.constEnd()) {
-													typeList->addParticleTypeId(i, particleName.key());
-													particleNameToType[particleName.key()] = i;
-													i++;
-													particleName++;
-												}
-
-												// Convert particle names to particle ids and set them accordingly
-												int *particleTypes = property->dataInt();
-												for (size_t i = 0; i < particleCount; i++) {
-													QString name = QString::fromLocal8Bit(&particleNamesData[strLen*i], strLen);
-													name = name.trimmed();
-
-													*particleTypes = particleNameToType.value(name);
-													particleTypes++;
-												}
+												// Since we created particle types on the go while reading the particles, the assigned particle type IDs
+												// depend on the storage order of particles in the file. We rather want a well-defined particle type ordering, that's
+												// why we sort them here according to their names.
+												typeList->sortParticleTypesByName(property);
 											}
 										}
 										else {
 											// This is an integer particle type, i.e. atomic numbers or internal element numbers
 											NCERRI( nc_get_vara_int(_ncid, varId, startp, countp, property->dataInt()), tr("(While reading variable '%1'.)").arg(columnName) );
 
-											// Find maximum atom type.
-											int maxType = 0;
-											for (size_t i = 0; i < particleCount; i++)
-												maxType = std::max(property->getInt(i), maxType);
-
-											// Count number of atoms for each type.
-											QVector<int> typeCount(maxType+1, 0);
-											for (size_t i = 0; i < particleCount; i++)
-												typeCount[property->getInt(i)]++;
-
-											for (int i = 0; i <= maxType; i++) {
-												// Only define atom type if really present.
-												if (typeCount[i] > 0)
-													typeList->addParticleTypeId(i);
+											// Create particle types.
+											for(int ptype : property->constIntRange()) {
+												typeList->addParticleTypeId(ptype);
 											}
+
+											// Since we created particle types on the go while reading the particles, the assigned particle type IDs
+											// depend on the storage order of particles in the file. We rather want a well-defined particle type ordering, that's
+											// why we sort them now according to their numeric IDs.
+											typeList->sortParticleTypesById();
 										}
 									}
 									else {
@@ -632,45 +629,6 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 #else
 									NCERRI( nc_get_vara_double(_ncid, varId, startp, countp, property->dataFloat()), tr("(While reading variable '%1'.)").arg(columnName) );
 #endif
-
-									// If this is the particle coordinates, check if we need to update pbcs.
-									if (propertyType == ParticleProperty::PositionProperty) {
-
-										FloatType *r = property->dataFloat();
-										// Do we have any non-periodic dimension?
-										if (!(pbc[0] && pbc[1] && pbc[2])) {
-
-											// Yes. Let's find the bounding box.
-											// FIXME! As implemented, this works for rectangular cells only.
-											FloatType minvals[3], maxvals[3];
-											std::copy(r, r+3, minvals);
-											std::copy(r, r+3, maxvals);
-											for (size_t i = 0; i < particleCount; i++) {
-												for (int k = 0; k < 3; k++) {
-													minvals[k] = std::min(minvals[k], r[3*i+k]);
-													maxvals[k] = std::max(maxvals[k], r[3*i+k]);
-												}
-											}
-
-											// Compute new cell length and origin.
-											for (int k = 0; k < 3; k++) {
-												if (!pbc[k]) {
-													l[k] = maxvals[k]-minvals[k];
-													o[k] = minvals[k];
-												}
-											}
-
-											// Set new cell.
-											Vector3 va(l[0], 0, 0);
-											Vector3 vb(l[1]*cos(a[2]), l[1]*sin(a[2]), 0);
-											Vector3 vc(l[2]*cx+d[0], l[2]*cy+d[1], l[2]*cz);
-
-											// Set simulation cell.
-											simulationCell().setMatrix(AffineTransformation(va, vb, vc, Vector3(o[0], o[1], o[2])));
-
-										}
-
-									}
 								}
 							}
 							else {
@@ -679,6 +637,22 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 						}
 					}
 				}
+			}
+		}
+
+		if(!hasSimulationCell) {
+
+			ParticleProperty* posProperty = particleProperty(ParticleProperty::PositionProperty);
+			if(posProperty && posProperty->size() != 0) {
+				Box3 boundingBox;
+				boundingBox.addPoints(posProperty->constDataPoint3(), posProperty->size());
+
+				// If the input file does not contain simulation cell info, use bounding box of particles as simulation cell.
+				simulationCell().setMatrix(AffineTransformation(
+						Vector3(boundingBox.sizeX(), 0, 0),
+						Vector3(0, boundingBox.sizeY(), 0),
+						Vector3(0, 0, boundingBox.sizeZ()),
+						boundingBox.minc - Point3::Origin()));
 			}
 		}
 

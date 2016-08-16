@@ -467,8 +467,8 @@ void XYZImporter::XYZImportTask::parseFile(CompressedTextReader& stream)
 		throw ex.prependGeneralMessage(tr("Parsing error in line %1 of XYZ file.").arg(stream.lineNumber()));
 	}
 
-	// Since we created particle types on the go while reading the particle, the assigned particle type IDs
-	// depends on the storage order of particles in the file. We rather want a well-defined particle type ordering, that's
+	// Since we created particle types on the go while reading the particles, the assigned particle type IDs
+	// depend on the storage order of particles in the file. We rather want a well-defined particle type ordering, that's
 	// why we sort them now according to their names.
 	columnParser.sortParticleTypes();
 
