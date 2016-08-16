@@ -55,6 +55,8 @@ void main()
 	}
 	else {
 		ray_origin = vec3(inverse_projection_matrix * vec4(view_c.x, view_c.y, 0.0, 1.0));
+		// This is to improve numeric precision of intersection calculation:
+		ray_origin.z = cylinder_view_base.z;
 		ray_dir = vec3(0.0, 0.0, -1.0);
 	}
 
@@ -112,10 +114,10 @@ void main()
 				float afar = dot(far_view_intersection_pnt - cylinder_view_base, cylinder_view_axis) / (cylinder_length*cylinder_length);
 				
 				if(anear < 0 && afar >= 0) {
-					view_intersection_pnt += (anear / (anear - afar) * 2.0 * s) * ray_dir;
+					view_intersection_pnt += (anear / (anear - afar) * 2.0 * s + 1e-6) * ray_dir;
 				}
 				else if(anear > 1.0 && afar < 1.0) {
-					view_intersection_pnt += ((anear - 1.0) / (anear - afar) * 2.0 * s) * ray_dir;
+					view_intersection_pnt += ((anear - 1.0) / (anear - afar) * 2.0 * s + 1e-6) * ray_dir;
 				}
 				else {
 					discard;

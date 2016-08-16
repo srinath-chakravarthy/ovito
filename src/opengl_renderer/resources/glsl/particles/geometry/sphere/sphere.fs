@@ -65,12 +65,8 @@ void main()
 	// Perform ray-sphere intersection test.
 	float b = dot(ray_dir, sphere_dir);
 	float sphere_dir_sq = dot(sphere_dir, sphere_dir);
-	float x = sphere_dir_sq - b*b;
-	if(is_perspective && x > particle_radius_squared_fs) {
-		// This is more accurate for very small spheres and distant spheres.
-		vec3 delta = ray_dir * sqrt(sphere_dir_sq) - sphere_dir;
-		x = dot(delta, delta);
-	}
+	vec3 delta = ray_dir * b - sphere_dir;
+	float x = dot(delta, delta);	
 	float disc = particle_radius_squared_fs - x;
 		
 	// Only calculate the intersection closest to the viewer.

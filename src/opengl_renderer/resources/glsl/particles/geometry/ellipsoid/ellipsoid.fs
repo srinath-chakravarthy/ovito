@@ -56,6 +56,8 @@ void main()
 	}
 	else {
 		ray_origin = vec3(inverse_projection_matrix * vec4(view_c.x, view_c.y, 0.0, 1.0));
+		// This is to improve numeric precision of intersection calculation:
+		ray_origin.z = particle_view_pos_fs.z;
 		ray_dir = vec3(0.0, 0.0, -1.0);
 	}
 	
@@ -117,7 +119,7 @@ void main()
 		tnear = -Cq / Bq;
 	}
 	else {
-		float disc=(Bq*Bq - 4.0 * Aq * Cq);
+		float disc = (Bq*Bq - 4.0 * Aq * Cq);
 		if(disc <= 0.0)
 			discard;
 		disc = sqrt(disc);
