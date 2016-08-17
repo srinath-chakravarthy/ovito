@@ -49,7 +49,7 @@ public:
 		FloatType radius;
 	};
 
-	class ParticleTypeList {
+	class OVITO_PARTICLES_EXPORT ParticleTypeList {
 	public:
 
 		/// Defines a new particle type with the given id.
@@ -130,7 +130,7 @@ public:
 		FloatType radius;
 	};
 
-	class BondTypeList {
+	class OVITO_PARTICLES_EXPORT BondTypeList {
 	public:
 
 		/// Defines a new bond type with the given id.

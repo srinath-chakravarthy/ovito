@@ -45,6 +45,8 @@
 #include <core/dataset/importexport/FileSource.h>
 #include "NetCDFImporter.h"
 
+#include <QtMath>
+
 #ifdef WIN32
 	#define DLL_NETCDF
 #endif
@@ -442,12 +444,12 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 		}
 		else {
 			// Express cell vectors va, vb and vc in the X,Y,Z-system
-			a[0] *= M_PI/180.0;
-			a[1] *= M_PI/180.0;
-			a[2] *= M_PI/180.0;
+			a[0] = qDegreesToRadians(a[0]);
+			a[1] = qDegreesToRadians(a[1]);
+			a[2] = qDegreesToRadians(a[2]);
 			double cosines[3];
 			for(size_t i = 0; i < 3; i++)
-				cosines[i] = (std::abs(a[i] - 0.5*M_PI) > 1e-12) ? cos(a[i]) : 0.0;
+				cosines[i] = (std::abs(a[i] - qRadiansToDegrees(90.0)) > 1e-12) ? cos(a[i]) : 0.0;
 			va = Vector3(l[0], 0, 0);
 			vb = Vector3(l[1]*cosines[2], l[1]*sin(a[2]), 0);
 			double cx = cosines[1];
