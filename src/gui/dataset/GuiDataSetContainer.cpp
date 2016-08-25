@@ -89,7 +89,7 @@ bool GuiDataSetContainer::fileSaveAs(const QString& filename)
 			currentSet()->throwException(tr("Cannot save program state. No filename has been specified."));
 
 		QFileDialog dialog(mainWindow(), tr("Save Program State As"));
-		dialog.setNameFilter(tr("State Files (*.ovito);;All Files (*)"));
+		dialog.setNameFilter(tr("OVITO State Files (*.ovito);;All Files (*)"));
 		dialog.setAcceptMode(QFileDialog::AcceptSave);
 		dialog.setFileMode(QFileDialog::AnyFile);
 		dialog.setConfirmOverwrite(true);
