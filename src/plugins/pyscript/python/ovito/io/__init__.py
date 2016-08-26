@@ -39,7 +39,7 @@ def import_file(location, **params):
         
         **File columns**
         
-        When importing XYZ files or binary LAMMPS dump files, the mapping of file columns 
+        When importing XYZ files or *binary* LAMMPS dump files, the mapping of file columns 
         to OVITO's particle properties must be specified using the ``columns`` keyword parameter::
         
             import_file("file.xyz", columns = 
@@ -47,9 +47,13 @@ def import_file(location, **params):
         
         The length of the list must match the number of columns in the input file. 
         See the list of :ref:`particle properties <particle-types-list>` for standard property names. You can also specify
-        a custom name, in which case a user-defined particle property is created from the corresponding file column.
+        a custom property name, in which case a user-defined particle property with that name is created from the corresponding file column.
         For vector properties, the component must be appended to the property base name as demonstrated for the ``Position`` property in the example above. 
-        To skip a file column during import, specify ``None`` instead of a property name at the corresponding position in the list.
+        To skip a file column during import, specify ``None`` instead of a property name at the corresponding position in the columns list.
+        
+        For *text-based* LAMMPS dump files it is also possible to explicitly specify a file column mapping using the
+        ``columns`` keyword. Overriding the default mapping can be useful, for example, if the file columns containing the particle positions
+        do not have the standard names ``x``, ``y``, and ``z`` (e.g. when reading time-averaged atomic positions computed by LAMMPS). 
         
         **File sequences**
         

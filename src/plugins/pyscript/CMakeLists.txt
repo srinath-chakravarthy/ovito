@@ -76,7 +76,9 @@ ENDIF()
 IF(APPLE)	
     SET(OVITOS_EXECUTABLE "${OVITO_LIBRARY_DIRECTORY}/ovitos")
 	CONFIGURE_FILE("resources/ovitos" "${OVITOS_EXECUTABLE}" COPYONLY)
+	CONFIGURE_FILE("resources/interactive_startup.py" "${OVITO_LIBRARY_DIRECTORY}/" COPYONLY)
 	INSTALL(PROGRAMS "resources/ovitos" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}")
+	INSTALL(PROGRAMS "resources/interactive_startup.py" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}")
 
 	# Create a nested application bundle with a modified Info.plist file
 	# that starts the application without displaying the dock icon.

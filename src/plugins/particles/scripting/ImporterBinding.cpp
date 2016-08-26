@@ -85,6 +85,11 @@ BOOST_PYTHON_MODULE(ParticlesImporter)
 	;
 
 	ovito_class<LAMMPSTextDumpImporter, ParticleImporter>()
+		.add_property("columns", make_function(&LAMMPSTextDumpImporter::customColumnMapping, return_value_policy<copy_const_reference>()),
+				lambda_address([](LAMMPSTextDumpImporter& imp, const InputColumnMapping& mapping) {
+			imp.setCustomColumnMapping(mapping);
+			imp.setUseCustomColumnMapping(true);
+		}))
 		.add_property("customColumnMapping", make_function(&LAMMPSTextDumpImporter::customColumnMapping, return_value_policy<copy_const_reference>()), &LAMMPSTextDumpImporter::setCustomColumnMapping)
 		.add_property("useCustomColumnMapping", &LAMMPSTextDumpImporter::useCustomColumnMapping, &LAMMPSTextDumpImporter::setUseCustomColumnMapping)
 	;
