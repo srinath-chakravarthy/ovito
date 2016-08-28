@@ -104,7 +104,7 @@ int main(int argc, char** argv)
 					"import sys\n"
 					"try:\n"
 					"    import IPython\n"
-					"    print(\"This is OVITO\'s interactive IPython interpreter.\")\n"
+					"    print(\"This is OVITO\'s interactive IPython interpreter. Use quit() or Ctrl-D to exit.\")\n"
 					"    IPython.start_ipython(['--nosep','--no-confirm-exit','--no-banner','-c','import ovito','-i'])\n"
 					"    sys.exit()\n"
 					"except ImportError:\n"
