@@ -140,14 +140,24 @@ void NetCDFImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, 
 {
 	QString filename = QDir::toNativeSeparators(stream.device().fileName());
 
-	// Open the input and read number of frames.
+	// Open the input NetCDF file.
 	int ncid;
+	int root_ncid;
 	NCERR( nc_open(filename.toLocal8Bit().constData(), NC_NOWRITE, &ncid) );
+	root_ncid = ncid;
+
+	// Particle data may be stored in a subgroup named "AMBER" instead of the root group.
+	int amber_ncid;
+	if (nc_inq_ncid(root_ncid, "AMBER", &amber_ncid) == NC_NOERR) {
+		ncid = amber_ncid;
+	}
+
+	// Read number of frames.
 	int frame_dim;
 	NCERR( nc_inq_dimid(ncid, "frame", &frame_dim) );
 	size_t nFrames;
 	NCERR( nc_inq_dimlen(ncid, frame_dim, &nFrames) );
-	NCERR( nc_close(ncid) );
+	NCERR( nc_close(root_ncid) );
 
 	QFileInfo fileInfo(stream.device().fileName());
 	QDateTime lastModified = fileInfo.lastModified();
@@ -171,7 +181,14 @@ void NetCDFImporter::NetCDFImportTask::openNetCDF(const QString &filename)
 
 	// Open the input file for reading.
 	NCERR( nc_open(filename.toLocal8Bit().constData(), NC_NOWRITE, &_ncid) );
+	_root_ncid = _ncid;
 	_ncIsOpen = true;
+
+	// Particle data may be stored in a subgroup named "AMBER" instead of the root group.
+	int amber_ncid;
+	if (nc_inq_ncid(_root_ncid, "AMBER", &amber_ncid) == NC_NOERR) {
+		_ncid = amber_ncid;
+	}
 
 	// Make sure we have the right file conventions
 	size_t len;
@@ -216,14 +233,17 @@ void NetCDFImporter::NetCDFImportTask::openNetCDF(const QString &filename)
 	if (nc_inq_dimid(_ncid, "Voigt", &_Voigt_dim) != NC_NOERR)
 		_Voigt_dim = -1;
 
-	// Extensions used by the SimPARTIX program:
-	if (nc_inq_dimid(_ncid, "sph", &_sph_dim) != NC_NOERR)
-		_sph_dim = -1;
-	if (nc_inq_dimid(_ncid, "dem", &_dem_dim) != NC_NOERR)
-		_dem_dim = -1;
+	// Number of particles.
+	size_t particleCount;
+	NCERR( nc_inq_dimlen(_ncid, _atom_dim, &particleCount) );
 
-	//NCERR( nc_inq_dimid(_ncid, "cell_spatial", &_cell_spatial_dim) );
-	//NCERR( nc_inq_dimid(_ncid, "cell_angular", &_cell_angular_dim) );
+	// Extensions used by the SimPARTIX program.
+	// We only read particle properties from files that either contain SPH or DEM particles but not both.
+	size_t sphParticleCount, demParticleCount;
+	if (nc_inq_dimid(_ncid, "sph", &_sph_dim) != NC_NOERR || nc_inq_dimlen(_ncid, _sph_dim, &sphParticleCount) != NC_NOERR || sphParticleCount != particleCount)
+		_sph_dim = -1;
+	if (nc_inq_dimid(_ncid, "dem", &_dem_dim) != NC_NOERR || nc_inq_dimlen(_ncid, _dem_dim, &demParticleCount) != NC_NOERR || demParticleCount != particleCount)
+		_dem_dim = -1;
 
 	// Get some variables
 	if (nc_inq_varid(_ncid, "cell_origin", &_cell_origin_var) != NC_NOERR)
@@ -242,8 +262,9 @@ void NetCDFImporter::NetCDFImportTask::openNetCDF(const QString &filename)
 void NetCDFImporter::NetCDFImportTask::closeNetCDF()
 {
 	if (_ncIsOpen) {
-		NCERR( nc_close(_ncid) );
+		NCERR( nc_close(_root_ncid) );
 		_ncid = -1;
+		_root_ncid = -1;
 		_ncIsOpen = false;
 	}
 }
@@ -294,7 +315,7 @@ void NetCDFImporter::NetCDFImportTask::detectDims(int movieFrame, int particleCo
         startp[0] = 0;
         countp[0] = particleCount;
         nDimsDetected = 1;
-					
+
         if (nDims > 1 && dimIds[1] == _spatial_dim) {
             // This is a vector property
             startp[1] = 0;

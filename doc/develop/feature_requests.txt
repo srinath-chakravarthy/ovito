@@ -71,6 +71,8 @@ Unresolved bugs:
 - Construct surface mesh doesn't work for very small length scales (reported by xin.liu@insa-lyon.fr)
 
 - Include the missing VC runtime DLLs in the Windows package!
+- Changing the animation frame rate jumps to another frame.
+- Particle trajectory creation doesn't work if new particles are created over time.
 
 New analysis features:
 

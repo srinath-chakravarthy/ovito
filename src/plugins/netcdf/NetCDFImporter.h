@@ -119,6 +119,7 @@ private:
 
 		/// NetCDF ids.
 		int _ncid = -1;
+		int _root_ncid = -1;
 		int _frame_dim, _atom_dim, _spatial_dim, _Voigt_dim, _sph_dim, _dem_dim;
 		//int _cell_spatial_dim, _cell_angular_dim;
 		int _cell_origin_var, _cell_lengths_var, _cell_angles_var;
