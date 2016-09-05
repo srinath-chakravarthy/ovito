@@ -314,9 +314,9 @@ public:
 		_overlays.remove(index);
 	}
 
-	/// \brief Returns the size of the viewport's screen window.
+	/// \brief Returns the size of the viewport's screen window (in device pixels).
 	QSize windowSize() const {
-		return window() ? window()->viewportWindowSize() : QSize(0,0);
+		return window() ? window()->viewportWindowDeviceSize() : QSize(0,0);
 	}
 
 	/// \brief Returns the GUI window associated with this viewport (may be NULL).

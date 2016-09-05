@@ -42,6 +42,9 @@ OpenGLLinePrimitive::OpenGLLinePrimitive(OpenGLSceneRenderer* renderer) :
 	
 	// Use VBO to store glDrawElements() indices only on a real core profile implementation.
 	_useIndexVBO = (renderer->glformat().profile() == QSurfaceFormat::CoreProfile);
+
+	// Standard line width.
+	_lineWidth = renderer->devicePixelRatio();
 }
 
 /******************************************************************************
@@ -55,9 +58,10 @@ void OpenGLLinePrimitive::setVertexCount(int vertexCount, FloatType lineWidth)
 	OVITO_ASSERT(QOpenGLContextGroup::currentContextGroup() == _contextGroup);
 	OVITO_ASSERT(lineWidth >= 0);
 
-	_lineWidth = lineWidth;
+	if(lineWidth != 0)
+		_lineWidth = lineWidth;
 
-	if(lineWidth == 1) {
+	if(_lineWidth == 1) {
 		_positionsBuffer.create(QOpenGLBuffer::StaticDraw, vertexCount);
 		_colorsBuffer.create(QOpenGLBuffer::StaticDraw, vertexCount);
 	}
@@ -222,7 +226,7 @@ void OpenGLLinePrimitive::renderThickLines(OpenGLSceneRenderer* renderer)
 	GLint viewportCoords[4];
 	renderer->glGetIntegerv(GL_VIEWPORT, viewportCoords);
 	FloatType param = renderer->projParams().projectionMatrix(1,1) * viewportCoords[3];
-	shader->setUniformValue("line_width", 0.5f * _lineWidth / param);
+	shader->setUniformValue("line_width", _lineWidth / param);
 	shader->setUniformValue("is_perspective", renderer->projParams().isPerspective);
 	_vectorsBuffer.bind(renderer, shader, "vector", GL_FLOAT, 0, 3, sizeof(Vector3));
 

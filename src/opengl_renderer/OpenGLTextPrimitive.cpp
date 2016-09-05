@@ -58,7 +58,7 @@ void OpenGLTextPrimitive::renderViewport(SceneRenderer* renderer, const Point2& 
 }
 
 /******************************************************************************
-* Renders the text string at the given 2D window (pixel) coordinates.
+* Renders the text string at the given 2D window (device pixel) coordinates.
 ******************************************************************************/
 void OpenGLTextPrimitive::renderWindow(SceneRenderer* renderer, const Point2& pos, int alignment)
 {

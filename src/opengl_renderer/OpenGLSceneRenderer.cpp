@@ -306,7 +306,7 @@ void OpenGLSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParamet
 
 	// Set up default viewport rectangle.
     if(vp && vp->window()) {
-    	QSize vpSize = vp->window()->viewportWindowSize();
+    	QSize vpSize = vp->window()->viewportWindowDeviceSize();
     	setRenderingViewport(0, 0, vpSize.width(), vpSize.height());
     }
 
@@ -686,7 +686,7 @@ void OpenGLSceneRenderer::deactivateVertexIDs(QOpenGLShaderProgram* shader, bool
 ******************************************************************************/
 FloatType OpenGLSceneRenderer::defaultLinePickingWidth()
 {
-	return FloatType(12) * devicePixelRatio();
+	return FloatType(6) * devicePixelRatio();
 }
 
 /******************************************************************************

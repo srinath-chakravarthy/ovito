@@ -35,7 +35,7 @@ class OVITO_CORE_EXPORT LinePrimitive : public PrimitiveBase
 public:
 
 	/// \brief Allocates a geometry buffer with the given number of vertices.
-	virtual void setVertexCount(int vertexCount, FloatType lineWidth = FloatType(1)) = 0;
+	virtual void setVertexCount(int vertexCount, FloatType lineWidth = 0) = 0;
 
 	/// \brief Returns the number of vertices stored in the buffer.
 	virtual int vertexCount() const = 0;

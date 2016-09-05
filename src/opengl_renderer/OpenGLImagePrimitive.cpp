@@ -75,7 +75,7 @@ void OpenGLImagePrimitive::renderViewport(SceneRenderer* renderer, const Point2&
 }
 
 /******************************************************************************
-* Renders the image in a rectangle given in window coordinates.
+* Renders the image in a rectangle given in device pixel coordinates.
 ******************************************************************************/
 void OpenGLImagePrimitive::renderWindow(SceneRenderer* renderer, const Point2& pos, const Vector2& size)
 {

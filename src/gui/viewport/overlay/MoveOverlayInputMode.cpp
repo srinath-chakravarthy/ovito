@@ -103,7 +103,7 @@ void MoveOverlayInputMode::mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* ev
 
 			// Compute the displacement based on the new mouse position.
 			Box2 renderFrameRect = viewport()->renderFrameRect();
-			QSize vpSize = vpwin->viewportWindowSize();
+			QSize vpSize = vpwin->viewportWindowDeviceIndependentSize();
 			Vector2 delta;
 			delta.x() =  (FloatType)(_currentPoint.x() - _startPoint.x()) / vpSize.width() / renderFrameRect.width() * 2;
 			delta.y() = -(FloatType)(_currentPoint.y() - _startPoint.y()) / vpSize.height() / renderFrameRect.height() * 2;

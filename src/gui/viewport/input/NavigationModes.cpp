@@ -168,9 +168,9 @@ void PanMode::modifyView(ViewportWindow* vpwin, Viewport* vp, QPointF delta)
 {
 	FloatType scaling;
 	if(vp->isPerspectiveProjection())
-		scaling = FloatType(10) * vp->nonScalingSize(_currentOrbitCenter) / vpwin->viewportWindowSize().height();
+		scaling = FloatType(10) * vp->nonScalingSize(_currentOrbitCenter) / vpwin->viewportWindowDeviceIndependentSize().height();
 	else
-		scaling = FloatType(2) * _oldFieldOfView * vpwin->devicePixelRatio() / vpwin->viewportWindowSize().height();
+		scaling = FloatType(2) * _oldFieldOfView / vpwin->viewportWindowDeviceIndependentSize().height();
 	FloatType deltaX = -scaling * delta.x();
 	FloatType deltaY =  scaling * delta.y();
 	Vector3 displacement = _oldInverseViewMatrix * Vector3(deltaX, deltaY, 0);
