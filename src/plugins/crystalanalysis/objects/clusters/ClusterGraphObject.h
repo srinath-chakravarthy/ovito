@@ -47,6 +47,12 @@ public:
 	/// Return false because this object cannot be edited.
 	virtual bool isSubObjectEditable() const override { return false; }
 
+	/// Returns the list of nodes in the cluster graph.
+	const std::vector<Cluster*>& clusters() const { return storage()->clusters(); }
+
+	/// Looks up the cluster with the given ID.
+	Cluster* findCluster(int id) const { return storage()->findCluster(id); }
+
 private:
 
 	Q_OBJECT

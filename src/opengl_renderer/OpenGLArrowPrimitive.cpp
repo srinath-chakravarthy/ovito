@@ -231,24 +231,31 @@ void OpenGLArrowPrimitive::setElement(int index, const Point3& pos, const Vector
 	}
 
 	int relativeIndex = index - _mappedChunkIndex * _chunkSize;
+#ifdef FLOATTYPE_FLOAT
 	if(shape() == ArrowShape)
 		createArrowElement(relativeIndex, pos, dir, color, width);
 	else
 		createCylinderElement(relativeIndex, pos, dir, color, width);
+#else
+	if(shape() == ArrowShape)
+		createArrowElement(relativeIndex, (Point_3<float>)pos, (Vector_3<float>)dir, (ColorAT<float>)color, (float)width);
+	else
+		createCylinderElement(relativeIndex, (Point_3<float>)pos, (Vector_3<float>)dir, (ColorAT<float>)color, (float)width);
+#endif
 }
 
 /******************************************************************************
 * Creates the geometry for a single cylinder element.
 ******************************************************************************/
-void OpenGLArrowPrimitive::createCylinderElement(int index, const Point3& pos, const Vector3& dir, const ColorA& color, FloatType width)
+void OpenGLArrowPrimitive::createCylinderElement(int index, const Point_3<float>& pos, const Vector_3<float>& dir, const ColorAT<float>& color, float width)
 {
 	if(_usingGeometryShader && (shadingMode() == FlatShading || renderingQuality() == HighQuality)) {
 		OVITO_ASSERT(_mappedVerticesWithElementInfo);
 		OVITO_ASSERT(_verticesPerElement == 1);
 		VertexWithElementInfo* vertex = _mappedVerticesWithElementInfo + index;
-		vertex->pos = vertex->base = pos;
-		vertex->dir = dir;
-		vertex->color = color;
+		vertex->pos = vertex->base = (Point_3<float>)pos;
+		vertex->dir = (Vector_3<float>)dir;
+		vertex->color = (ColorAT<float>)color;
 		vertex->radius = width;
 		return;
 	}
@@ -322,7 +329,7 @@ void OpenGLArrowPrimitive::createCylinderElement(int index, const Point3& pos, c
 			OVITO_ASSERT(_verticesPerElement == 14);
 			u *= width;
 			v *= width;
-			Point3 corners[8] = {
+			Point_3<float> corners[8] = {
 					v1 - u - v,
 					v1 - u + v,
 					v1 + u - v,
@@ -371,7 +378,7 @@ void OpenGLArrowPrimitive::createCylinderElement(int index, const Point3& pos, c
 /******************************************************************************
 * Creates the geometry for a single arrow element.
 ******************************************************************************/
-void OpenGLArrowPrimitive::createArrowElement(int index, const Point3& pos, const Vector3& dir, const ColorA& color, FloatType width)
+void OpenGLArrowPrimitive::createArrowElement(int index, const Point_3<float>& pos, const Vector_3<float>& dir, const ColorAT<float>& color, float width)
 {
 	const float arrowHeadRadius = width * 2.5f;
 	const float arrowHeadLength = arrowHeadRadius * 1.8f;

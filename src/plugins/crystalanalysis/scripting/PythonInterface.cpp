@@ -398,6 +398,22 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 		.def(array_indexing_suite<std::deque<Point3>>())
 	;
 
+	ovito_class<ClusterGraphObject, DataObject>("ClusterGraph")
+		.add_property("clusters", make_function(&ClusterGraphObject::clusters, return_internal_reference<>()))
+		.def("find_cluster", make_function(&ClusterGraphObject::findCluster, return_internal_reference<>()))
+	;
+
+	class_<Cluster, Cluster*, boost::noncopyable>("Cluster",	no_init)
+		.add_property("id", &Cluster::id,
+				"The unique identifier of this atomic cluster.")
+		.add_property("atom_count", &Cluster::atomCount)
+		.add_property("orientation", &Cluster::orientation)
+	;
+
+	class_<std::vector<Cluster*>, boost::noncopyable>("ClusterList", no_init)
+		.def(array_indexing_suite<std::vector<Cluster*>, return_internal_reference<>>())
+	;
+
 	ovito_class<PartitionMesh, DataObject>()
 	;
 

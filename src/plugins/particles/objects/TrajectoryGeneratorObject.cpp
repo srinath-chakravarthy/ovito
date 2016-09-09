@@ -147,6 +147,9 @@ bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* pr
 		if(!posProperty)
 			throwException(tr("Input particle set is empty at frame %1.").arg(dataset()->animationSettings()->timeToFrame(time)));
 
+		if(!onlySelectedParticles() && posProperty->size() != particleCount)
+			throwException(tr("The current program version cannot create trajectory lines when the number of particles changes over time."));
+
 		if(!selectedIdentifiers.empty()) {
 			ParticlePropertyObject* identifierProperty = ParticlePropertyObject::findInState(state, ParticleProperty::IdentifierProperty);
 			if(!identifierProperty || identifierProperty->size() != posProperty->size())
@@ -161,14 +164,14 @@ bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* pr
 			for(int id : selectedIdentifiers) {
 				auto entry = idmap.find(id);
 				if(entry == idmap.end())
-					throwException(tr("Input particle with ID=%1 does not exist at frame %2.").arg(id).arg(dataset()->animationSettings()->timeToFrame(time)));
+					throwException(tr("Input particle with ID=%1 does not exist at frame %2. This program version cannot create trajectory lines when the number of particles changes over time.").arg(id).arg(dataset()->animationSettings()->timeToFrame(time)));
 				points.push_back(posProperty->getPoint3(entry->second));
 			}
 		}
 		else {
 			for(int index : selectedIndices) {
 				if(index >= posProperty->size())
-					throwException(tr("Input particle at index %1 does not exist at frame %2.").arg(index+1).arg(dataset()->animationSettings()->timeToFrame(time)));
+					throwException(tr("Input particle at index %1 does not exist at frame %2. This program version cannot create trajectory lines when the number of particles changes over time.").arg(index+1).arg(dataset()->animationSettings()->timeToFrame(time)));
 				points.push_back(posProperty->getPoint3(index));
 			}
 		}

@@ -203,14 +203,42 @@ public:
 /// Multiplies the three components of a color \a c with a scalar value \a s.
 /// \relates ColorT
 template<typename T>
-Q_DECL_CONSTEXPR inline ColorT<T> operator*(T s, const ColorT<T>& c) {
+Q_DECL_CONSTEXPR inline ColorT<T> operator*(float s, const ColorT<T>& c) {
+	return ColorT<T>(c.r()*(T)s, c.g()*(T)s, c.b()*(T)s);
+}
+
+/// Multiplies the three components of a color \a c with a scalar value \a s.
+/// \relates ColorT
+template<typename T>
+Q_DECL_CONSTEXPR inline ColorT<T> operator*(double s, const ColorT<T>& c) {
+	return ColorT<T>(c.r()*(T)s, c.g()*(T)s, c.b()*(T)s);
+}
+
+/// Multiplies the three components of a color \a c with a scalar value \a s.
+/// \relates ColorT
+template<typename T>
+Q_DECL_CONSTEXPR inline ColorT<T> operator*(int s, const ColorT<T>& c) {
 	return ColorT<T>(c.r()*s, c.g()*s, c.b()*s);
 }
 
 /// Multiplies the three components of a color \a c with a scalar value \a s.
 /// \relates ColorT
 template<typename T>
-Q_DECL_CONSTEXPR inline ColorT<T> operator*(const ColorT<T>& c, T s) {
+Q_DECL_CONSTEXPR inline ColorT<T> operator*(const ColorT<T>& c, float s) {
+	return ColorT<T>(c.r()*(T)s, c.g()*(T)s, c.b()*(T)s);
+}
+
+/// Multiplies the three components of a color \a c with a scalar value \a s.
+/// \relates ColorT
+template<typename T>
+Q_DECL_CONSTEXPR inline ColorT<T> operator*(const ColorT<T>& c, double s) {
+	return ColorT<T>(c.r()*(T)s, c.g()*(T)s, c.b()*(T)s);
+}
+
+/// Multiplies the three components of a color \a c with a scalar value \a s.
+/// \relates ColorT
+template<typename T>
+Q_DECL_CONSTEXPR inline ColorT<T> operator*(const ColorT<T>& c, int s) {
 	return ColorT<T>(c.r()*s, c.g()*s, c.b()*s);
 }
 
@@ -261,14 +289,31 @@ inline LoadStream& operator>>(LoadStream& stream, ColorT<T>& c) {
 /// \relates ColorT
 template<typename T>
 inline QDataStream& operator<<(QDataStream& stream, const ColorT<T>& c) {
-	return stream << c.r() << c.g() << c.b();
+	// Conversion to single precision is for backward compatibility with OVITO 2.7.1 and earlier,
+	// which always used single precision floating point numbers.
+	// Unfortunately, the QDataStream used by the QSettings class to serialize Color values
+	// does no automatic precision conversion of floating point numbers.
+	return stream << (float)c.r() << (float)c.g() << (float)c.b();
 }
 
 /// Reads a color from a Qt data stream.
 /// \relates ColorT
 template<typename T>
 inline QDataStream& operator>>(QDataStream& stream, ColorT<T>& c) {
+#ifdef FLOATTYPE_FLOAT
 	return stream >> c.r() >> c.g() >> c.b();
+#else
+	// This is for backward compatibility with OVITO 2.7.1 and earlier,
+	// which always used single precision floating point numbers.
+	// Unfortunately, the QDataStream used by the QSettings class to serialize Color values
+	// does no automatic precision conversion of floating point numbers.
+	float r,g,b;
+	stream >> r >> g >> b;
+	c.r() = r;
+	c.g() = g;
+	c.b() = b;
+	return stream;
+#endif
 }
 
 /**
@@ -418,14 +463,42 @@ public:
 /// Multiplies the four components of the color \a c with a scalar value \a s.
 /// \relates ColorAT
 template<typename T>
-Q_DECL_CONSTEXPR inline ColorAT<T> operator*(T s, const ColorAT<T>& c) {
+Q_DECL_CONSTEXPR inline ColorAT<T> operator*(float s, const ColorAT<T>& c) {
+	return ColorAT<T>(c.r()*(T)s, c.g()*(T)s, c.b()*(T)s, c.a()*(T)s);
+}
+
+/// Multiplies the four components of the color \a c with a scalar value \a s.
+/// \relates ColorAT
+template<typename T>
+Q_DECL_CONSTEXPR inline ColorAT<T> operator*(double s, const ColorAT<T>& c) {
+	return ColorAT<T>(c.r()*(T)s, c.g()*(T)s, c.b()*(T)s, c.a()*(T)s);
+}
+
+/// Multiplies the four components of the color \a c with a scalar value \a s.
+/// \relates ColorAT
+template<typename T>
+Q_DECL_CONSTEXPR inline ColorAT<T> operator*(int s, const ColorAT<T>& c) {
 	return ColorAT<T>(c.r()*s, c.g()*s, c.b()*s, c.a()*s);
 }
 
 /// Multiplies the four components of the color \a c with a scalar value \a s.
 /// \relates ColorAT
 template<typename T>
-Q_DECL_CONSTEXPR inline ColorAT<T> operator*(const ColorAT<T>& c, T s) {
+Q_DECL_CONSTEXPR inline ColorAT<T> operator*(const ColorAT<T>& c, float s) {
+	return ColorAT<T>(c.r()*(T)s, c.g()*(T)s, c.b()*(T)s, c.a()*(T)s);
+}
+
+/// Multiplies the four components of the color \a c with a scalar value \a s.
+/// \relates ColorAT
+template<typename T>
+Q_DECL_CONSTEXPR inline ColorAT<T> operator*(const ColorAT<T>& c, double s) {
+	return ColorAT<T>(c.r()*(T)s, c.g()*(T)s, c.b()*(T)s, c.a()*(T)s);
+}
+
+/// Multiplies the four components of the color \a c with a scalar value \a s.
+/// \relates ColorAT
+template<typename T>
+Q_DECL_CONSTEXPR inline ColorAT<T> operator*(const ColorAT<T>& c, int s) {
 	return ColorAT<T>(c.r()*s, c.g()*s, c.b()*s, c.a()*s);
 }
 
@@ -476,14 +549,32 @@ inline LoadStream& operator>>(LoadStream& stream, ColorAT<T>& c) {
 /// \relates ColorAT
 template<typename T>
 inline QDataStream& operator<<(QDataStream& stream, const ColorAT<T>& c) {
-	return stream << c.r() << c.g() << c.b() << c.a();
+	// Conversion to single precision is for backward compatibility with OVITO 2.7.1 and earlier,
+	// which always used single precision floating point numbers.
+	// Unfortunately, the QDataStream used by the QSettings class to serialize Color values
+	// does no automatic precision conversion of floating point numbers.
+	return stream << (float)c.r() << (float)c.g() << (float)c.b() << (float)c.a();
 }
 
 /// Reads a color from a Qt data stream.
 /// \relates ColorAT
 template<typename T>
 inline QDataStream& operator>>(QDataStream& stream, ColorAT<T>& c) {
+#ifdef FLOATTYPE_FLOAT
 	return stream >> c.r() >> c.g() >> c.b() >> c.a();
+#else
+	// This is for backward compatibility with OVITO 2.7.1 and earlier,
+	// which always used single precision floating point numbers.
+	// Unfortunately, the QDataStream used by the QSettings class to serialize Color values
+	// does no automatic precision conversion of floating point numbers.
+	float r,g,b,a;
+	stream >> r >> g >> b >> a;
+	c.r() = r;
+	c.g() = g;
+	c.b() = b;
+	c.a() = a;
+	return stream;
+#endif
 }
 
 /**

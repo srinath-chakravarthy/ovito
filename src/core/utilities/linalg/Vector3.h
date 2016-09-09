@@ -301,14 +301,42 @@ Q_DECL_CONSTEXPR Vector_3<T> operator-(const Vector_3<T>& a, const Vector_3<T>& 
 /// \brief Computes the product of a vector and a scalar value.
 /// \relates Vector_3
 template<typename T>
-Q_DECL_CONSTEXPR Vector_3<T> operator*(const Vector_3<T>& a, T s) {
+Q_DECL_CONSTEXPR Vector_3<T> operator*(const Vector_3<T>& a, float s) {
+	return Vector_3<T>( a.x() * (T)s, a.y() * (T)s, a.z() * (T)s );
+}
+
+/// \brief Computes the product of a vector and a scalar value.
+/// \relates Vector_3
+template<typename T>
+Q_DECL_CONSTEXPR Vector_3<T> operator*(const Vector_3<T>& a, double s) {
+	return Vector_3<T>( a.x() * (T)s, a.y() * (T)s, a.z() * (T)s );
+}
+
+/// \brief Computes the product of a vector and a scalar value.
+/// \relates Vector_3
+template<typename T>
+Q_DECL_CONSTEXPR Vector_3<T> operator*(const Vector_3<T>& a, int s) {
 	return Vector_3<T>( a.x() * s, a.y() * s, a.z() * s );
 }
 
 /// \brief Computes the product of a scalar value and a vector.
 /// \relates Vector_3
 template<typename T>
-Q_DECL_CONSTEXPR Vector_3<T> operator*(T s, const Vector_3<T>& a) {
+Q_DECL_CONSTEXPR Vector_3<T> operator*(float s, const Vector_3<T>& a) {
+	return Vector_3<T>( a.x() * (T)s, a.y() * (T)s, a.z() * (T)s );
+}
+
+/// \brief Computes the product of a scalar value and a vector.
+/// \relates Vector_3
+template<typename T>
+Q_DECL_CONSTEXPR Vector_3<T> operator*(double s, const Vector_3<T>& a) {
+	return Vector_3<T>( a.x() * (T)s, a.y() * (T)s, a.z() * (T)s );
+}
+
+/// \brief Computes the product of a scalar value and a vector.
+/// \relates Vector_3
+template<typename T>
+Q_DECL_CONSTEXPR Vector_3<T> operator*(int s, const Vector_3<T>& a) {
 	return Vector_3<T>( a.x() * s, a.y() * s, a.z() * s );
 }
 

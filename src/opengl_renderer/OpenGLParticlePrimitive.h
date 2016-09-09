@@ -133,19 +133,19 @@ private:
 	int _particleCount;
 
 	/// The internal OpenGL vertex buffer that stores the particle positions.
-	std::vector<OpenGLBuffer<Point3>> _positionsBuffers;
+	std::vector<OpenGLBuffer<Point_3<float>>> _positionsBuffers;
 
 	/// The internal OpenGL vertex buffer that stores the particle radii.
-	std::vector<OpenGLBuffer<FloatType>> _radiiBuffers;
+	std::vector<OpenGLBuffer<float>> _radiiBuffers;
 
 	/// The internal OpenGL vertex buffer that stores the particle colors.
-	std::vector<OpenGLBuffer<ColorA>> _colorsBuffers;
+	std::vector<OpenGLBuffer<ColorAT<float>>> _colorsBuffers;
 
 	/// The internal OpenGL vertex buffer that stores the shape of aspherical particles.
-	std::vector<OpenGLBuffer<Vector3>> _shapeBuffers;
+	std::vector<OpenGLBuffer<Vector_3<float>>> _shapeBuffers;
 
 	/// The internal OpenGL vertex buffer that stores the orientation of aspherical particles.
-	std::vector<OpenGLBuffer<Quaternion>> _orientationBuffers;
+	std::vector<OpenGLBuffer<QuaternionT<float>>> _orientationBuffers;
 
 	/// The GL context group under which the GL vertex buffers have been created.
 	QPointer<QOpenGLContextGroup> _contextGroup;

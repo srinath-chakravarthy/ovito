@@ -921,7 +921,7 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 		.add_property("number_of_bins", &CoordinationNumberModifier::numberOfBins, &CoordinationNumberModifier::setNumberOfBins,
 				"The number of histogram bins to use when computing the RDF."
 				"\n\n"
-				":Default: 500\n")
+				":Default: 200\n")
 		.add_property("rdf_x", make_function(&CoordinationNumberModifier::rdfX, return_internal_reference<>()))
 		.add_property("rdf_y", make_function(&CoordinationNumberModifier::rdfY, return_internal_reference<>()))
 	;

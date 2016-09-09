@@ -90,9 +90,6 @@ void OpenGLMarkerPrimitive::render(SceneRenderer* renderer)
 {
     OVITO_REPORT_OPENGL_ERRORS();
 	OVITO_ASSERT(_contextGroup == QOpenGLContextGroup::currentContextGroup());
-	OVITO_STATIC_ASSERT(sizeof(FloatType) == 4);
-	OVITO_STATIC_ASSERT(sizeof(Color) == 12);
-	OVITO_STATIC_ASSERT(sizeof(ColorA) == 16);
 
 	OpenGLSceneRenderer* vpRenderer = dynamic_object_cast<OpenGLSceneRenderer>(renderer);
 

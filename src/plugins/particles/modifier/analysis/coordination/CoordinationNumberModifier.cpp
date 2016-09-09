@@ -37,7 +37,7 @@ SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CoordinationNumberModifier, _numberOfBins, 
 * Constructs the modifier object.
 ******************************************************************************/
 CoordinationNumberModifier::CoordinationNumberModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
-	_cutoff(3.2), _numberOfBins(500)
+	_cutoff(3.2), _numberOfBins(200)
 {
 	INIT_PROPERTY_FIELD(CoordinationNumberModifier::_cutoff);
 	INIT_PROPERTY_FIELD(CoordinationNumberModifier::_numberOfBins);
@@ -94,7 +94,7 @@ void CoordinationNumberModifier::CoordinationAnalysisEngine::perform()
 			int* coordOutput = _coordinationNumbers->dataInt() + startIndex;
 			for(size_t i = startIndex; i < endIndex; ++coordOutput) {
 
-				*coordOutput = 0;
+				OVITO_ASSERT(*coordOutput == 0);
 				for(CutoffNeighborFinder::Query neighQuery(neighborListBuilder, i); !neighQuery.atEnd(); neighQuery.next()) {
 					(*coordOutput)++;
 					size_t rdfInterval = (size_t)(sqrt(neighQuery.distanceSquared()) / rdfBinSize);
@@ -105,10 +105,9 @@ void CoordinationNumberModifier::CoordinationAnalysisEngine::perform()
 				i++;
 
 				// Update progress indicator.
-				if((i % 1000) == 0) {
-					OVITO_ASSERT(i != 0);
+				if((i % 1000) == 0)
 					incrementProgressValue();
-				}
+				// Abort loop when operation was canceled by the user.
 				if(isCanceled())
 					return;
 			}

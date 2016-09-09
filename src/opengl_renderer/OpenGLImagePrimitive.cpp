@@ -81,7 +81,6 @@ void OpenGLImagePrimitive::renderWindow(SceneRenderer* renderer, const Point2& p
 {
 	OVITO_ASSERT(_contextGroup == QOpenGLContextGroup::currentContextGroup());
 	OVITO_ASSERT(_texture.isCreated());
-	OVITO_STATIC_ASSERT(sizeof(FloatType) == sizeof(GLfloat) && sizeof(Point2) == sizeof(GLfloat)*2);
 	OpenGLSceneRenderer* vpRenderer = dynamic_object_cast<OpenGLSceneRenderer>(renderer);
 
 	if(image().isNull() || !vpRenderer || renderer->isPicking())
@@ -123,11 +122,11 @@ void OpenGLImagePrimitive::renderWindow(SceneRenderer* renderer, const Point2& p
 	QRectF rect2(x, y, w, h);
 	GLint vc[4];
 	vpRenderer->glGetIntegerv(GL_VIEWPORT, vc);
-	Point2 corners[4] = {
-			Point2(rect2.left() / vc[2] * 2 - 1, 1 - rect2.bottom() / vc[3] * 2),
-			Point2(rect2.right() / vc[2] * 2 - 1, 1 - rect2.bottom() / vc[3] * 2),
-			Point2(rect2.left() / vc[2] * 2 - 1, 1 - rect2.top() / vc[3] * 2),
-			Point2(rect2.right() / vc[2] * 2 - 1, 1 - rect2.top() / vc[3] * 2)
+	Point_2<GLfloat> corners[4] = {
+			Point_2<GLfloat>(rect2.left() / vc[2] * 2 - 1, 1 - rect2.bottom() / vc[3] * 2),
+			Point_2<GLfloat>(rect2.right() / vc[2] * 2 - 1, 1 - rect2.bottom() / vc[3] * 2),
+			Point_2<GLfloat>(rect2.left() / vc[2] * 2 - 1, 1 - rect2.top() / vc[3] * 2),
+			Point_2<GLfloat>(rect2.right() / vc[2] * 2 - 1, 1 - rect2.top() / vc[3] * 2)
 	};
 
 	bool wasDepthTestEnabled = vpRenderer->glIsEnabled(GL_DEPTH_TEST);

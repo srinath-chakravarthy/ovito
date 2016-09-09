@@ -46,6 +46,9 @@ INCLUDE(${OVITO_SOURCE_BASE_DIR}/cmake/Version.cmake)
 INCLUDE(${OVITO_SOURCE_BASE_DIR}/cmake/Plugins.cmake)
 INCLUDE(${OVITO_SOURCE_BASE_DIR}/cmake/PrecompiledHeader.cmake)
 
+# Define user option that controls the default floating-point number precision to use.
+OPTION(OVITO_DOUBLE_PRECISION_FP "Use double-precision floating-point numbers." "OFF")
+
 # Define user option that controls the building of OVITO's GUI module.
 OPTION(OVITO_BUILD_GUI "Build the graphical user interface." "ON")
 

@@ -54,7 +54,7 @@ void OpenGLLinePrimitive::setVertexCount(int vertexCount, FloatType lineWidth)
 {
 	OVITO_ASSERT(vertexCount >= 0);
 	OVITO_ASSERT((vertexCount & 1) == 0);
-	OVITO_ASSERT(vertexCount < std::numeric_limits<int>::max() / sizeof(ColorA));
+	OVITO_ASSERT(vertexCount < std::numeric_limits<int>::max() / sizeof(ColorAT<float>));
 	OVITO_ASSERT(QOpenGLContextGroup::currentContextGroup() == _contextGroup);
 	OVITO_ASSERT(lineWidth >= 0);
 
@@ -99,10 +99,10 @@ void OpenGLLinePrimitive::setVertexPositions(const Point3* coordinates)
 	_positionsBuffer.fill(coordinates);
 
 	if(_lineWidth != 1) {
-		Vector3* vectors = _vectorsBuffer.map(QOpenGLBuffer::WriteOnly);
-		Vector3* vectors_end = vectors + _vectorsBuffer.elementCount() * _vectorsBuffer.verticesPerElement();
+		Vector_3<float>* vectors = _vectorsBuffer.map(QOpenGLBuffer::WriteOnly);
+		Vector_3<float>* vectors_end = vectors + _vectorsBuffer.elementCount() * _vectorsBuffer.verticesPerElement();
 		for(; vectors != vectors_end; vectors += 4, coordinates += 2) {
-			vectors[3] = vectors[0] = coordinates[1] - coordinates[0];
+			vectors[3] = vectors[0] = (Vector_3<float>)(coordinates[1] - coordinates[0]);
 			vectors[1] = vectors[2] = -vectors[0];
 		}
 		_vectorsBuffer.unmap();
@@ -143,7 +143,6 @@ bool OpenGLLinePrimitive::isValid(SceneRenderer* renderer)
 void OpenGLLinePrimitive::render(SceneRenderer* renderer)
 {
 	OVITO_ASSERT(_contextGroup == QOpenGLContextGroup::currentContextGroup());
-	OVITO_STATIC_ASSERT(sizeof(FloatType) == 4);
 	OpenGLSceneRenderer* vpRenderer = dynamic_object_cast<OpenGLSceneRenderer>(renderer);
 
 	if(vertexCount() <= 0 || !vpRenderer)
@@ -226,9 +225,10 @@ void OpenGLLinePrimitive::renderThickLines(OpenGLSceneRenderer* renderer)
 	GLint viewportCoords[4];
 	renderer->glGetIntegerv(GL_VIEWPORT, viewportCoords);
 	FloatType param = renderer->projParams().projectionMatrix(1,1) * viewportCoords[3];
-	shader->setUniformValue("line_width", _lineWidth / param);
+	shader->setUniformValue("line_width", GLfloat(_lineWidth / param));
 	shader->setUniformValue("is_perspective", renderer->projParams().isPerspective);
-	_vectorsBuffer.bind(renderer, shader, "vector", GL_FLOAT, 0, 3, sizeof(Vector3));
+
+	_vectorsBuffer.bind(renderer, shader, "vector", GL_FLOAT, 0, 3);
 
 	if(_useIndexVBO) {
 		_indicesBuffer.oglBuffer().bind();

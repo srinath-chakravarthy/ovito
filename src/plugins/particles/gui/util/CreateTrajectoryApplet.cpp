@@ -218,6 +218,9 @@ void CreateTrajectoryApplet::onCreateTrajectory()
 			// Create trajectory object.
 			OORef<TrajectoryGeneratorObject> trajObj = new TrajectoryGeneratorObject(dataset);
 			OVITO_CHECK_OBJECT_POINTER(inputNode);
+			trajObj->loadUserDefaults();
+			for(DisplayObject* displayObj : trajObj->displayObjects())
+				displayObj->loadUserDefaults();
 			trajObj->setSource(inputNode);
 			trajObj->setOnlySelectedParticles(_selectedParticlesButton->isChecked());
 			trajObj->setUseCustomInterval(_customIntervalButton->isChecked());
