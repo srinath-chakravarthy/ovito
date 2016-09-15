@@ -341,14 +341,9 @@ void FileSourceEditor::onReloadAnimation()
 {
 	FileSource* obj = static_object_cast<FileSource>(editObject());
 	OVITO_CHECK_OBJECT_POINTER(obj);
-	try {
+	if(obj) {
 		obj->updateFrames();
 	}
-	catch(const Exception& ex) {
-		ex.showError();
-	}
-	// Adjust the animation length number to match the number of frames in the input data source.
-	obj->adjustAnimationInterval();
 }
 
 /******************************************************************************

@@ -28,9 +28,13 @@ def import_file(location, **params):
         :returns: The :py:class:`~ovito.ObjectNode` that has been created for the imported data.
 
         The function creates and returns a new :py:class:`~ovito.ObjectNode`, which provides access the imported data
-        or allows you to apply modifiers to it. Note that the object node is not automatically added to the three-dimensional scene. 
-        That means it won't appear in the interactive viewports or in rendered images by default. 
-        You can insert it into the scene by calling its :py:meth:`~ovito.ObjectNode.add_to_scene` method.
+        or allows you to apply modifiers to it. 
+        
+        .. note:: 
+        
+           Note that the newly created :py:class:`~ovito.ObjectNode` is not automatically inserted into the three-dimensional scene. 
+           That means it won't appear in the interactive viewports of OVITO or in rendered images.
+           However, you can subsequently insert the node into the scene by calling the :py:meth:`~ovito.ObjectNode.add_to_scene` method on it.
         
         Sometimes it may be desirable to reuse an existing :py:class:`~ovito.ObjectNode`. For example if you have already set up a 
         modification pipeline and just want to replace the input data with a different file. In this case you can
