@@ -11,7 +11,7 @@ system = init.create_lattice(unitcell=lattice.sc(a=2.0), n=5)
 # specify Lennard-Jones interactions between particle pairs
 nl = md.nlist.cell()
 lj = md.pair.lj(r_cut=3.0, nlist=nl)
-lj.pair_coeff.set('A', 'A', epsilon=1.0, sigma=1.0)
+lj.pair_coeff.set('A', 'A', epsilon=1.0, sigma=1.0)	
 
 # integrate with brownian dynamics
 all = group.all();

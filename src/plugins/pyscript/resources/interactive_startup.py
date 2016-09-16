@@ -5,7 +5,7 @@ if __name__ == '__main__':
     try:
         import IPython
         print("This is OVITO's interactive IPython interpreter. Use quit() or Ctrl-D to exit.")
-        IPython.start_ipython(['--nosep','--no-confirm-exit','--no-banner','-c','import ovito','-i'])
+        IPython.start_ipython(['--nosep','--no-confirm-exit','--no-banner','--profile=ovito','-c','import ovito','-i'])
         sys.exit()
     except ImportError:
         pass
