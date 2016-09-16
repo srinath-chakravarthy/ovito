@@ -93,6 +93,8 @@ SET(SourceFiles
 	import/pdb/PDBImporter.cpp
 	import/fhi_aims/FHIAimsImporter.cpp
 	import/fhi_aims/FHIAimsLogFileImporter.cpp
+	import/gsd/GSDImporter.cpp
+	import/gsd/gsd.c
 	export/ParticleExporter.cpp
 	export/FileColumnParticleExporter.cpp
 	export/OutputColumnMapping.cpp
