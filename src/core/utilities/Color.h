@@ -289,10 +289,15 @@ inline LoadStream& operator>>(LoadStream& stream, ColorT<T>& c) {
 /// \relates ColorT
 template<typename T>
 inline QDataStream& operator<<(QDataStream& stream, const ColorT<T>& c) {
-	// Conversion to single precision is for backward compatibility with OVITO 2.7.1 and earlier,
-	// which always used single precision floating point numbers.
-	// Unfortunately, the QDataStream used by the QSettings class to serialize Color values
-	// does no automatic precision conversion of floating point numbers.
+	return stream << c.r() << c.g() << c.b();
+}
+
+// This template specialization is for backward compatibility with OVITO 2.7.1 and earlier,
+// which always used single precision floating point numbers.
+// Unfortunately, the QDataStream used by the QSettings class to serialize values
+// performs no automatic precision conversion of floating point numbers.
+template<>
+inline QDataStream& operator<<(QDataStream& stream, const ColorT<double>& c) {
 	return stream << (float)c.r() << (float)c.g() << (float)c.b();
 }
 
@@ -300,20 +305,20 @@ inline QDataStream& operator<<(QDataStream& stream, const ColorT<T>& c) {
 /// \relates ColorT
 template<typename T>
 inline QDataStream& operator>>(QDataStream& stream, ColorT<T>& c) {
-#ifdef FLOATTYPE_FLOAT
 	return stream >> c.r() >> c.g() >> c.b();
-#else
-	// This is for backward compatibility with OVITO 2.7.1 and earlier,
-	// which always used single precision floating point numbers.
-	// Unfortunately, the QDataStream used by the QSettings class to serialize Color values
-	// does no automatic precision conversion of floating point numbers.
-	float r,g,b;
-	stream >> r >> g >> b;
-	c.r() = r;
-	c.g() = g;
-	c.b() = b;
+}
+
+// This template specialization is for backward compatibility with OVITO 2.7.1 and earlier,
+// which always used single precision floating point numbers.
+// Unfortunately, the QDataStream used by the QSettings class to serialize values
+// performs no automatic precision conversion of floating point numbers.
+template<>
+inline QDataStream& operator>>(QDataStream& stream, ColorT<double>& c) {
+	ColorT<float> floatValue;
+	stream >> floatValue;
+	for(size_t i = 0; i < c.size(); i++)
+		c[i] = floatValue[i];
 	return stream;
-#endif
 }
 
 /**
@@ -549,10 +554,15 @@ inline LoadStream& operator>>(LoadStream& stream, ColorAT<T>& c) {
 /// \relates ColorAT
 template<typename T>
 inline QDataStream& operator<<(QDataStream& stream, const ColorAT<T>& c) {
-	// Conversion to single precision is for backward compatibility with OVITO 2.7.1 and earlier,
-	// which always used single precision floating point numbers.
-	// Unfortunately, the QDataStream used by the QSettings class to serialize Color values
-	// does no automatic precision conversion of floating point numbers.
+	return stream << c.r() << c.g() << c.b() << c.a();
+}
+
+// This template specialization is for backward compatibility with OVITO 2.7.1 and earlier,
+// which always used single precision floating point numbers.
+// Unfortunately, the QDataStream used by the QSettings class to serialize values
+// performs no automatic precision conversion of floating point numbers.
+template<>
+inline QDataStream& operator<<(QDataStream& stream, const ColorAT<double>& c) {
 	return stream << (float)c.r() << (float)c.g() << (float)c.b() << (float)c.a();
 }
 
@@ -560,21 +570,20 @@ inline QDataStream& operator<<(QDataStream& stream, const ColorAT<T>& c) {
 /// \relates ColorAT
 template<typename T>
 inline QDataStream& operator>>(QDataStream& stream, ColorAT<T>& c) {
-#ifdef FLOATTYPE_FLOAT
 	return stream >> c.r() >> c.g() >> c.b() >> c.a();
-#else
-	// This is for backward compatibility with OVITO 2.7.1 and earlier,
-	// which always used single precision floating point numbers.
-	// Unfortunately, the QDataStream used by the QSettings class to serialize Color values
-	// does no automatic precision conversion of floating point numbers.
-	float r,g,b,a;
-	stream >> r >> g >> b >> a;
-	c.r() = r;
-	c.g() = g;
-	c.b() = b;
-	c.a() = a;
+}
+
+// This template specialization is for backward compatibility with OVITO 2.7.1 and earlier,
+// which always used single precision floating point numbers.
+// Unfortunately, the QDataStream used by the QSettings class to serialize values
+// performs no automatic precision conversion of floating point numbers.
+template<>
+inline QDataStream& operator>>(QDataStream& stream, ColorAT<double>& c) {
+	ColorAT<float> floatValue;
+	stream >> floatValue;
+	for(size_t i = 0; i < c.size(); i++)
+		c[i] = floatValue[i];
 	return stream;
-#endif
 }
 
 /**

@@ -112,6 +112,7 @@ void ActionManager::on_HelpOpenGLInfo_triggered()
 	stream << "LSB output: " << lsbOutput << endl;
 #endif
 	stream << "Architecture: " << (QT_POINTER_SIZE*8) << " bit" << endl;
+	stream << "Floating-point size: " << (sizeof(FloatType)*8) << " bit" << endl;
 	stream << "Qt version: " << QT_VERSION_STR << endl;
 	stream << "Command line: " << QCoreApplication::arguments().join(' ') << endl;
 	stream << "======= OpenGL info =======" << endl;

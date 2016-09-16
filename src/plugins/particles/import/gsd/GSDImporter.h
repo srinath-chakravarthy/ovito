@@ -27,6 +27,8 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
+class GSDFile;	// Defined in GSDFile.h
+
 /**
  * \brief File parser for GSD (General Simulation Data) files.
  */
@@ -35,7 +37,9 @@ class OVITO_PARTICLES_EXPORT GSDImporter : public ParticleImporter
 public:
 
 	/// \brief Constructs a new instance of this class.
-	Q_INVOKABLE GSDImporter(DataSet* dataset) : ParticleImporter(dataset) {}
+	Q_INVOKABLE GSDImporter(DataSet* dataset) : ParticleImporter(dataset) {
+		setMultiTimestepFile(true);
+	}
 
 	/// \brief Returns the file filter that specifies the files that can be imported by this service.
 	/// \return A wild-card pattern that specifies the file types that can be handled by this import class.
@@ -43,7 +47,7 @@ public:
 
 	/// \brief Returns the filter description that is displayed in the drop-down box of the file dialog.
 	/// \return A string that describes the file format.
-	virtual QString fileFilterDescription() override { return tr("GSD Files"); }
+	virtual QString fileFilterDescription() override { return tr("GSD/HOOMD Files"); }
 
 	/// \brief Checks if the given file has format that can be read by this importer.
 	virtual bool checkFileFormat(QFileDevice& input, const QUrl& sourceLocation) override;
@@ -55,6 +59,11 @@ public:
 	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame, bool isNewlySelectedFile) override {
 		return std::make_shared<GSDImportTask>(dataset()->container(), frame, isNewlySelectedFile);
 	}
+
+protected:
+
+	/// \brief Scans the given input file to find all contained simulation frames.
+	virtual void scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream) override;
 
 private:
 
@@ -71,6 +80,9 @@ private:
 
 		/// Parses the given input file and stores the data in this container object.
 		virtual void parseFile(CompressedTextReader& stream) override;
+
+		/// Reads the values of a particle property from the GSD file.
+		ParticleProperty* readOptionalParticleProperty(GSDFile& gsd, const char* chunkName, uint64_t frameNumber, uint32_t numParticles, ParticleProperty::Type propertyType);
 	};
 
 	Q_OBJECT

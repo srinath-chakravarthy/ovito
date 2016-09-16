@@ -280,11 +280,30 @@ inline QDataStream& operator<<(QDataStream& stream, const Plane_3<T>& p) {
 	return stream << p.normal << p.dist;
 }
 
+// This template specialization is for backward compatibility with OVITO 2.7.1 and earlier,
+// which always used single precision floating point numbers.
+// Unfortunately, the QDataStream used by the QSettings class to serialize values
+// performs no automatic precision conversion of floating point numbers.
+template<>
+inline QDataStream& operator<<(QDataStream& stream, const Plane_3<double>& p) {
+	return stream << p.normal << (float)p.dist;
+}
+
 /// \brief Reads a plane from a Qt data stream.
 /// \relates Plane_3
 template<typename T>
 inline QDataStream& operator>>(QDataStream& stream, Plane_3<T>& p) {
 	return stream >> p.normal >> p.dist;
+}
+
+/// \brief Reads a plane from a Qt data stream.
+/// \relates Plane_3
+template<>
+inline QDataStream& operator>>(QDataStream& stream, Plane_3<double>& p) {
+	float d;
+	stream >> p.normal >> d;
+	p.dist = d;
+	return stream;
 }
 
 /**
