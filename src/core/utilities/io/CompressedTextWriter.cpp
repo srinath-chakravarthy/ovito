@@ -154,7 +154,7 @@ CompressedTextWriter& CompressedTextWriter::operator<<(FloatType f)
 
 		// Define Boost Karma generator to control floating-point to string conversion.
 		struct floattype_format_policy : karma::real_policies<FloatType> {
-		    static constexpr unsigned precision(FloatType n) { return 10; }
+		    static unsigned int precision(FloatType n) { return 10; }
 		};
 		static const karma::real_generator<FloatType, floattype_format_policy> floattype_generator;
 
@@ -162,7 +162,12 @@ CompressedTextWriter& CompressedTextWriter::operator<<(FloatType f)
 	}
 	else {
 		// Use sprintf() to handle denormalized floating point numbers.
+#if !defined(Q_CC_MSVC) || _MSC_VER >= 1900
 		s += std::snprintf(buffer, sizeof(buffer), "%g", f);
+#else
+		// MSVC 2013 is not fully C++11 standard compliant. Need to use _snprintf() instead.
+		s += _snprintf(buffer, sizeof(buffer), "%g", f);
+#endif
 	}
 
 	OVITO_ASSERT(s - buffer < sizeof(buffer));

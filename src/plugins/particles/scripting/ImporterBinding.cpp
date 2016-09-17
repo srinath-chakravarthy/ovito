@@ -38,6 +38,9 @@
 #include <plugins/particles/import/lammps/LAMMPSDataImporter.h>
 #include <plugins/particles/import/fhi_aims/FHIAimsImporter.h>
 #include <plugins/particles/import/fhi_aims/FHIAimsLogFileImporter.h>
+#ifndef Q_CC_MSVC
+#include <plugins/particles/import/gsd/GSDImporter.h>
+#endif
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -136,6 +139,11 @@ BOOST_PYTHON_MODULE(ParticlesImporter)
 
 	ovito_class<FHIAimsLogFileImporter, ParticleImporter>()
 	;
+
+#ifndef Q_CC_MSVC
+	ovito_class<GSDImporter, ParticleImporter>()
+	;
+#endif
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(ParticlesImporter);
