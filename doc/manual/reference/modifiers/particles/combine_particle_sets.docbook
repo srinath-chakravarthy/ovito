@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section version="5.0"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd"
+         xml:id="particles.modifiers.combine_particle_sets"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:ns="http://docbook.org/ns/docbook">
+  <title>Combine particle sets</title>
+
+  <para>
+  
+    <informalfigure><screenshot><mediaobject><imageobject>
+       <imagedata fileref="images/modifiers/combine_particle_sets_panel.png" format="PNG" />
+    </imageobject></mediaobject></screenshot></informalfigure>
+  
+     This modifier loads a set of particles from a second file and merges them into the current dataset.
+  </para>
+
+  <para>
+    Note: The simulation cell loaded from the second file is ignored. The modifier does not change the 
+    current simulation box. Use e.g. the <link linkend="particles.modifiers.affine_transformation">Affine transformation</link> modifier in case you need to expand the
+    simulation cell to accommodate all particles.
+  </para>
+
+  <para>
+    If both the primary and the secondary data sources contain multiple simulation frames, then the modifier combines 
+    corresponding frames from each source. For the second data source, you may have to 
+    explicitly specify a wildcard filename pattern or check the "File contains time series" option to
+    let OVITO load more than just the first frame of the simulation sequence.    
+  </para>
+
+  <para>
+    The IDs of particles loaded from the second file are overwritten by the modifier to make sure they
+    do not conflict with any of the IDs in the current dataset.
+  </para>
+
+</section>

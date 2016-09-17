@@ -42,6 +42,7 @@ SET(SourceFiles
 	modifier/modify/ShowPeriodicImagesModifierEditor.cpp
 	modifier/modify/CreateBondsModifierEditor.cpp
 	modifier/modify/LoadTrajectoryModifierEditor.cpp
+	modifier/modify/CombineParticleSetsModifierEditor.cpp
 	modifier/analysis/StructureListParameterUI.cpp
 	modifier/analysis/binandreduce/BinAndReduceModifierEditor.cpp
 	modifier/analysis/bondangle/BondAngleAnalysisModifierEditor.cpp

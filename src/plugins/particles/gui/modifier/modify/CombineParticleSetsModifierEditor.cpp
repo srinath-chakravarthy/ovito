@@ -20,22 +20,22 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/gui/ParticlesGui.h>
-#include <plugins/particles/modifier/modify/LoadTrajectoryModifier.h>
+#include <plugins/particles/modifier/modify/CombineParticleSetsModifier.h>
 #include <gui/properties/SubObjectParameterUI.h>
-#include "LoadTrajectoryModifierEditor.h"
+#include "CombineParticleSetsModifierEditor.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, LoadTrajectoryModifierEditor, ParticleModifierEditor);
-SET_OVITO_OBJECT_EDITOR(LoadTrajectoryModifier, LoadTrajectoryModifierEditor);
+IMPLEMENT_OVITO_OBJECT(ParticlesGui, CombineParticleSetsModifierEditor, ParticleModifierEditor);
+SET_OVITO_OBJECT_EDITOR(CombineParticleSetsModifier, CombineParticleSetsModifierEditor);
 
 /******************************************************************************
 * Sets up the UI widgets of the editor.
 ******************************************************************************/
-void LoadTrajectoryModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
+void CombineParticleSetsModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 {
 	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Load Trajectory"), rolloutParams, "particles.modifiers.load_trajectory.html");
+	QWidget* rollout = createRollout(tr("Combine Particle Sets"), rolloutParams, "particles.modifiers.combine_particle_sets.html");
 
     // Create the rollout contents.
 	QVBoxLayout* layout = new QVBoxLayout(rollout);
@@ -47,7 +47,7 @@ void LoadTrajectoryModifierEditor::createUI(const RolloutInsertionParameters& ro
 	layout->addWidget(statusLabel());
 
 	// Open a sub-editor for the source object.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(LoadTrajectoryModifier::_trajectorySource), RolloutInsertionParameters().setTitle(tr("Trajectory Source")));
+	new SubObjectParameterUI(this, PROPERTY_FIELD(CombineParticleSetsModifier::_secondarySource), RolloutInsertionParameters().setTitle(tr("Secondary Source")));
 }
 
 OVITO_END_INLINE_NAMESPACE

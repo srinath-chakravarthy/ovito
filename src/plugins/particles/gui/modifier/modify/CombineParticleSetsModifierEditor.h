@@ -19,39 +19,37 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifndef __OVITO_COMBINE_PARTICLE_SETS_MODIFIER_EDITOR_H
+#define __OVITO_COMBINE_PARTICLE_SETS_MODIFIER_EDITOR_H
+
 #include <plugins/particles/gui/ParticlesGui.h>
-#include <plugins/particles/modifier/modify/LoadTrajectoryModifier.h>
-#include <gui/properties/SubObjectParameterUI.h>
-#include "LoadTrajectoryModifierEditor.h"
+#include <plugins/particles/gui/modifier/ParticleModifierEditor.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, LoadTrajectoryModifierEditor, ParticleModifierEditor);
-SET_OVITO_OBJECT_EDITOR(LoadTrajectoryModifier, LoadTrajectoryModifierEditor);
-
-/******************************************************************************
-* Sets up the UI widgets of the editor.
-******************************************************************************/
-void LoadTrajectoryModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
+/**
+ * A properties editor for the CombineParticleSetsModifier class.
+ */
+class CombineParticleSetsModifierEditor : public ParticleModifierEditor
 {
-	// Create a rollout.
-	QWidget* rollout = createRollout(tr("Load Trajectory"), rolloutParams, "particles.modifiers.load_trajectory.html");
+public:
 
-    // Create the rollout contents.
-	QVBoxLayout* layout = new QVBoxLayout(rollout);
-	layout->setContentsMargins(4,4,4,4);
-	layout->setSpacing(4);
+	/// Default constructor.
+	Q_INVOKABLE CombineParticleSetsModifierEditor() {}
 
-	// Status label.
-	layout->addSpacing(6);
-	layout->addWidget(statusLabel());
+protected:
 
-	// Open a sub-editor for the source object.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(LoadTrajectoryModifier::_trajectorySource), RolloutInsertionParameters().setTitle(tr("Trajectory Source")));
-}
+	/// Creates the user interface controls for the editor.
+	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
+
+	Q_OBJECT
+	OVITO_OBJECT
+};
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
+
+#endif // __OVITO_COMBINE_PARTICLE_SETS_MODIFIER_EDITOR_H

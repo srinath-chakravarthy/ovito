@@ -129,11 +129,11 @@ PipelineStatus CalculateDisplacementsModifier::modifyParticles(TimePoint time, T
 
 	// Get the reference configuration.
 	PipelineFlowState refState;
-	if(FileSource* linkedFileObj = dynamic_object_cast<FileSource>(referenceConfiguration())) {
-		if(linkedFileObj->numberOfFrames() > 0) {
-			if(referenceFrame < 0 || referenceFrame >= linkedFileObj->numberOfFrames())
+	if(FileSource* fileSource = dynamic_object_cast<FileSource>(referenceConfiguration())) {
+		if(fileSource->numberOfFrames() > 0) {
+			if(referenceFrame < 0 || referenceFrame >= fileSource->numberOfFrames())
 				throwException(tr("Requested reference frame %1 is out of range.").arg(referenceFrame));
-			refState = linkedFileObj->requestFrame(referenceFrame);
+			refState = fileSource->requestFrame(referenceFrame);
 		}
 	}
 	else refState = referenceConfiguration()->evaluate(dataset()->animationSettings()->frameToTime(referenceFrame));

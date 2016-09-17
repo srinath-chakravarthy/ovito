@@ -36,6 +36,7 @@
 #include <plugins/particles/modifier/modify/AffineTransformationModifier.h>
 #include <plugins/particles/modifier/modify/CreateBondsModifier.h>
 #include <plugins/particles/modifier/modify/LoadTrajectoryModifier.h>
+#include <plugins/particles/modifier/modify/CombineParticleSetsModifier.h>
 #include <plugins/particles/modifier/properties/ComputePropertyModifier.h>
 #include <plugins/particles/modifier/properties/FreezePropertyModifier.h>
 #include <plugins/particles/modifier/properties/ComputeBondLengthsModifier.h>
@@ -1271,6 +1272,19 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 		.add_property("source", make_function(&LoadTrajectoryModifier::trajectorySource, return_value_policy<ovito_object_reference>()), &LoadTrajectoryModifier::setTrajectorySource,
 				"A :py:class:`~ovito.io.FileSource` that provides the trajectories of particles. "
 				"You can call its :py:meth:`~ovito.io.FileSource.load` function to load a simulation trajectory file "
+				"as shown in the code example above.")
+	;
+
+	ovito_class<CombineParticleSetsModifier, ParticleModifier>(
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
+			"This modifier loads a set of particles from a separate simulation file and merges them into the current dataset. "
+			"\n\n"
+			"Example:"
+			"\n\n"
+			".. literalinclude:: ../example_snippets/combine_particle_sets_modifier.py")
+		.add_property("source", make_function(&CombineParticleSetsModifier::secondaryDataSource, return_value_policy<ovito_object_reference>()), &CombineParticleSetsModifier::setSecondaryDataSource,
+				"A :py:class:`~ovito.io.FileSource` that provides the set of particles to be merged. "
+				"You can call its :py:meth:`~ovito.io.FileSource.load` function to load a data file "
 				"as shown in the code example above.")
 	;
 

@@ -131,6 +131,10 @@
               <entry>Creates bonds between particles.</entry>
             </row>
             <row>
+              <entry><link linkend="particles.modifiers.combine_particle_sets">Combine particle sets</link></entry>
+              <entry>Merges the particles from two separate files into one dataset.</entry>
+            </row>
+            <row>
               <entry><link linkend="particles.modifiers.compute_bond_lengths">Compute bond lengths</link></entry>
               <entry>Computes the length of each bond in the system.</entry>
             </row>
@@ -219,6 +223,8 @@
   <xi:include href="particles/cluster_analysis.docbook"/>
   
   <xi:include href="particles/color_coding.docbook"/>
+
+  <xi:include href="particles/combine_particle_sets.docbook"/>
 
   <xi:include href="particles/common_neighbor_analysis.docbook"/>
 

@@ -61,13 +61,18 @@ PipelineStatus LoadTrajectoryModifier::modifyParticles(TimePoint time, TimeInter
 	// Get the trajectory frame.
 	PipelineFlowState trajState = trajectorySource()->evaluate(time);
 
-	// Make sure the obtained reference configuration is valid and ready to use.
-	if(trajState.status().type() == PipelineStatus::Error)
+	// Make sure the obtained configuration is valid and ready to use.
+	if(trajState.status().type() == PipelineStatus::Error) {
+		if(FileSource* fileSource = dynamic_object_cast<FileSource>(trajectorySource())) {
+			if(fileSource->sourceUrl().isEmpty())
+				throwException(tr("Please pick the input file containing the trajectories."));
+		}
 		return trajState.status();
+	}
 
 	if(trajState.isEmpty()) {
 		if(trajState.status().type() != PipelineStatus::Pending)
-			throwException(tr("Trajectory source has not been specified yet or is empty. Please pick a trajectory file."));
+			throwException(tr("Data source has not been specified yet or is empty. Please pick a trajectory file."));
 		else
 			return PipelineStatus(PipelineStatus::Pending, tr("Waiting for input data to become ready..."));
 	}

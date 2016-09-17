@@ -142,6 +142,7 @@ bool FileSource::setSource(QUrl sourceUrl, FileSourceImporter* importer, bool au
 
 	// Trigger a reload of the current frame.
 	_loadedFrameIndex = -1;
+	_frames.clear();
 
 	// Scan the input source for animation frames.
 	updateFrames();
@@ -287,7 +288,7 @@ PipelineFlowState FileSource::requestFrame(int frame)
 				return PipelineFlowState(PipelineStatus::Pending, dataObjects(), interval, attrs);
 			}
 
-			setStatus(PipelineStatus(PipelineStatus::Error, tr("The source location is empty (no files found).")));
+			setStatus(PipelineStatus(PipelineStatus::Error, tr("The source location is empty or has not been set (no files found).")));
 			_loadedFrameIndex = -1;
 			return PipelineFlowState(status(), dataObjects(), interval);
 		}

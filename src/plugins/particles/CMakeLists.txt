@@ -55,6 +55,7 @@ SET(SourceFiles
 	modifier/modify/WrapPeriodicImagesModifier.cpp
 	modifier/modify/CreateBondsModifier.cpp
 	modifier/modify/LoadTrajectoryModifier.cpp
+	modifier/modify/CombineParticleSetsModifier.cpp
 	modifier/analysis/StructureIdentificationModifier.cpp
 	modifier/analysis/binandreduce/BinAndReduceModifier.cpp
 	modifier/analysis/bondangle/BondAngleAnalysisModifier.cpp
