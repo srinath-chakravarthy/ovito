@@ -130,11 +130,13 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 			.add_property("gradient", make_function(&ColorCodingModifier::colorGradient, return_value_policy<ovito_object_reference>()), &ColorCodingModifier::setColorGradient,
 					"The color gradient object, which is responsible for mapping normalized property values to colors. "
 					"Available gradient types are:\n"
-					" * ``ColorCodingModifier.Rainbow()`` [default]\n"
+					" * ``ColorCodingModifier.BlueWhiteRed()``\n"
 					" * ``ColorCodingModifier.Grayscale()``\n"
 					" * ``ColorCodingModifier.Hot()``\n"
 					" * ``ColorCodingModifier.Jet()``\n"
-					" * ``ColorCodingModifier.BlueWhiteRed()``\n"
+					" * ``ColorCodingModifier.Magma()``\n"
+					" * ``ColorCodingModifier.Rainbow()`` [default]\n"
+					" * ``ColorCodingModifier.Viridis()``\n"
 					" * ``ColorCodingModifier.Custom(\"<image file>\")``\n"
 					"\n"
 					"The last color map constructor expects the path to an image file on disk, "
@@ -167,6 +169,10 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 		ovito_class<ColorCodingJetGradient, ColorCodingGradient>(nullptr, "Jet")
 		;
 		ovito_class<ColorCodingBlueWhiteRedGradient, ColorCodingGradient>(nullptr, "BlueWhiteRed")
+		;
+		ovito_class<ColorCodingViridisGradient, ColorCodingGradient>(nullptr, "Viridis")
+		;
+		ovito_class<ColorCodingMagmaGradient, ColorCodingGradient>(nullptr, "Magma")
 		;
 		ovito_class<ColorCodingImageGradient, ColorCodingGradient>(nullptr, "Image")
 			.def("loadImage", &ColorCodingImageGradient::loadImage)
