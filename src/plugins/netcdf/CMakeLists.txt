@@ -19,7 +19,7 @@
 #
 ###############################################################################
 
-IF(NOT APPLE)
+IF(WIN32 OR (UNIX AND NOT APPLE AND OVITO_MONOLITHIC_BUILD))
 	# Locate the HDF5 library.
 	FIND_PACKAGE(HDF5 COMPONENTS hdf5 REQUIRED NO_MODULE)
 ENDIF()
