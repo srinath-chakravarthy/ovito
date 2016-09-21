@@ -70,13 +70,13 @@ protected:
 private:
 
 	/// The internal OpenGL vertex buffer that stores the vertex positions.
-	OpenGLBuffer<Point3> _positionsBuffer;
+	OpenGLBuffer<Point_3<float>> _positionsBuffer;
 
 	/// The internal OpenGL vertex buffer that stores the vertex colors.
-	OpenGLBuffer<ColorA> _colorsBuffer;
+	OpenGLBuffer<ColorAT<float>> _colorsBuffer;
 
 	/// The internal OpenGL vertex buffer that stores the line segment vectors.
-	OpenGLBuffer<Vector3> _vectorsBuffer;
+	OpenGLBuffer<Vector_3<float>> _vectorsBuffer;
 
 	/// The internal OpenGL vertex buffer that stores the indices for a call to glDrawElements().
 	OpenGLBuffer<GLuint> _indicesBuffer;

@@ -57,7 +57,7 @@ void TrajectoryGeneratorObjectEditor::createUI(const RolloutInsertionParameters&
 
 		QGridLayout* layout2 = new QGridLayout(groupBox);
 		layout2->setContentsMargins(4,4,4,4);
-		layout2->setSpacing(2);
+		layout2->setSpacing(4);
 		layout2->setColumnStretch(1, 1);
 		layout2->setColumnMinimumWidth(0, 15);
 

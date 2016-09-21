@@ -43,12 +43,14 @@ extern "C" {
 namespace Ovito { namespace Tachyon {
 
 // Helper function that converts an OVITO vector to a Tachyon vector.
-inline apivector tvec(const Vector3& v) {
+template<typename T>
+inline apivector tvec(const Vector_3<T>& v) {
 	return rt_vector(v.x(), v.y(), -v.z());
 }
 
 // Helper function that converts an OVITO point to a Tachyon vector.
-inline apivector tvec(const Point3& p) {
+template<typename T>
+inline apivector tvec(const Point_3<T>& p) {
 	return rt_vector(p.x(), p.y(), -p.z());
 }
 
@@ -127,7 +129,7 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 	TimeInterval iv;
 	Color backgroundColor;
 	renderSettings()->backgroundColorController()->getColorValue(time(), backgroundColor, iv);
-	colora bgcolor = { backgroundColor.r(), backgroundColor.g(), backgroundColor.b(), 1.0 };
+	colora bgcolor = { (float)backgroundColor.r(), (float)backgroundColor.g(), (float)backgroundColor.b(), 1.0f };
 	if(renderSettings()->generateAlphaChannel())
 		bgcolor.a = 0;
 	rt_background(_rtscene, bgcolor);
@@ -530,8 +532,8 @@ void TachyonRenderer::renderMesh(const DefaultMeshPrimitive& meshBuffer)
 		return;
 	std::vector<ColoredVertexWithNormal> renderVertices(renderVertexCount);
 
-	const AffineTransformation tm = modelTM();
-	const Matrix3 normalTM = modelTM().linear().inverse().transposed();
+	const AffineTransformationT<float> tm = (AffineTransformationT<float>)modelTM();
+	const Matrix_3<float> normalTM = tm.linear().inverse().transposed();
 	quint32 allMask = 0;
 
 	// Compute face normals.
@@ -541,7 +543,7 @@ void TachyonRenderer::renderMesh(const DefaultMeshPrimitive& meshBuffer)
 		const Point3& p0 = mesh.vertex(face->vertex(0));
 		Vector3 d1 = mesh.vertex(face->vertex(1)) - p0;
 		Vector3 d2 = mesh.vertex(face->vertex(2)) - p0;
-		*faceNormal = normalTM * d2.cross(d1);
+		*faceNormal = normalTM * (Vector_3<float>)d2.cross(d1);
 		if(*faceNormal != Vector_3<float>::Zero()) {
 			faceNormal->normalize();
 			allMask |= face->smoothingGroups();
@@ -560,14 +562,14 @@ void TachyonRenderer::renderMesh(const DefaultMeshPrimitive& meshBuffer)
 				rv->normal = Vector_3<float>::Zero();
 			else
 				rv->normal = *faceNormal;
-			rv->pos = tm * mesh.vertex(face->vertex(v));
+			rv->pos = tm * (Point_3<float>)mesh.vertex(face->vertex(v));
 
 			if(mesh.hasVertexColors())
 				rv->color = ColorAT<float>(mesh.vertexColor(face->vertex(v)));
 			else if(mesh.hasFaceColors())
 				rv->color = ColorAT<float>(mesh.faceColor(face - mesh.faces().constBegin()));
 			else if(face->materialIndex() < meshBuffer.materialColors().size() && face->materialIndex() >= 0)
-				rv->color = meshBuffer.materialColors()[face->materialIndex()];
+				rv->color = ColorAT<float>(meshBuffer.materialColors()[face->materialIndex()]);
 			else
 				rv->color = defaultVertexColor;
 		}
@@ -651,9 +653,9 @@ void* TachyonRenderer::getTachyonTexture(FloatType r, FloatType g, FloatType b, 
 {
 	apitexture tex;
 	memset(&tex, 0, sizeof(tex));
-	tex.ambient  = FloatType(0.3);
-	tex.diffuse  = FloatType(0.8);
-	tex.specular = FloatType(0.0);
+	tex.ambient  = flt(0.3);
+	tex.diffuse  = flt(0.8);
+	tex.specular = flt(0.0);
 	tex.opacity  = alpha;
 	tex.col.r = r;
 	tex.col.g = g;

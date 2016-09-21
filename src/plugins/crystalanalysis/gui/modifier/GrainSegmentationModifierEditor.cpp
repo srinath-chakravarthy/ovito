@@ -48,7 +48,7 @@ void GrainSegmentationModifierEditor::createUI(const RolloutInsertionParameters&
 	layout->setContentsMargins(4,4,4,4);
 	layout->setSpacing(6);
 
-	QGroupBox* structureBox = new QGroupBox(tr("Input"));
+	QGroupBox* structureBox = new QGroupBox(tr("Input crystal structure"));
 	layout->addWidget(structureBox);
 	QGridLayout* sublayout1 = new QGridLayout(structureBox);
 	sublayout1->setContentsMargins(4,4,4,4);
@@ -86,13 +86,20 @@ void GrainSegmentationModifierEditor::createUI(const RolloutInsertionParameters&
 	sublayout2->addWidget(minGrainAtomCountUI->label(), 2, 0);
 	sublayout2->addLayout(minGrainAtomCountUI->createFieldLayout(), 2, 1);
 
-	FloatParameterUI* orientationSmoothingWeightUI = new FloatParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_orientationSmoothingWeight));
-	sublayout2->addWidget(orientationSmoothingWeightUI->label(), 3, 0);
-	sublayout2->addLayout(orientationSmoothingWeightUI->createFieldLayout(), 3, 1);
+	paramsBox = new QGroupBox(tr("Advanced parameters"));
+	layout->addWidget(paramsBox);
+	sublayout2 = new QGridLayout(paramsBox);
+	sublayout2->setContentsMargins(4,4,4,4);
+	sublayout2->setSpacing(4);
+	sublayout2->setColumnStretch(1, 1);
 
 	IntegerParameterUI* numOrientationSmoothingIterationsUI = new IntegerParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_numOrientationSmoothingIterations));
-	sublayout2->addWidget(numOrientationSmoothingIterationsUI->label(), 4, 0);
-	sublayout2->addLayout(numOrientationSmoothingIterationsUI->createFieldLayout(), 4, 1);
+	sublayout2->addWidget(numOrientationSmoothingIterationsUI->label(), 0, 0);
+	sublayout2->addLayout(numOrientationSmoothingIterationsUI->createFieldLayout(), 0, 1);
+
+	FloatParameterUI* orientationSmoothingWeightUI = new FloatParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_orientationSmoothingWeight));
+	sublayout2->addWidget(orientationSmoothingWeightUI->label(), 1, 0);
+	sublayout2->addLayout(orientationSmoothingWeightUI->createFieldLayout(), 1, 1);
 
 	QGroupBox* outputBox = new QGroupBox(tr("Output"), rollout);
 	QVBoxLayout* sublayout = new QVBoxLayout(outputBox);

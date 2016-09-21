@@ -15,7 +15,7 @@
   <para>This manual has been written by Alexander Stukowski and is licensed under the terms of the <link
   linkend="appendix.GFDL">GNU Free Documentation License</link>.</para>
 
-  <para>The following third-party libraries have been used in OVITO:
+  <para>The following third-party codes and libraries have been used to develop OVITO:
     <itemizedlist>
       <listitem><para><link xlink:href="http://www.qt.io/developers/">Qt</link> and <link xlink:href="http://www.qt.io/ide/">Qt Creator</link>, licensed under the
       GNU General Public License.</para></listitem>
@@ -40,6 +40,8 @@
       (<link linkend="appendix.license.ptm">license</link>).</para></listitem>
       <listitem><para><link xlink:href="http://theobald.brandeis.edu/qcp/">QCP rotation calculation method</link> by Pu Liu and Douglas L. Theobald 
       (<link linkend="appendix.license.qcprot">license</link>).</para></listitem>
+      <listitem><para><link xlink:href="http://gsd.readthedocs.io/">GSD (General Simulation Data)</link> I/O routines 
+      (<link linkend="appendix.license.gsd">license</link>).</para></listitem>
     </itemizedlist>
   </para>
 
@@ -55,6 +57,8 @@
   <xi:include href="licenses/netcdf.docbook"/>
   
   <xi:include href="licenses/geogram.docbook"/>
+
+  <xi:include href="licenses/GSD.docbook"/>  
 
   <xi:include href="licenses/PTM.docbook"/>
 

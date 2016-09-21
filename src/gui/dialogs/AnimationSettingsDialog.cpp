@@ -149,6 +149,8 @@ void AnimationSettingsDialog::onFramesPerSecondChanged(int index)
 {
 	qint64 newTicksPerFrame = fpsBox->itemData(index).toInt();
 	OVITO_ASSERT(newTicksPerFrame != 0);
+
+	int currentFrame = _animSettings->currentFrame();
 	
 	// Change the animation speed.
 	qint64 oldTicksPerFrame = _animSettings->ticksPerFrame();
@@ -163,6 +165,9 @@ void AnimationSettingsDialog::onFramesPerSecondChanged(int index)
 
 	_animSettings->dataset()->rescaleTime(oldInterval, newInterval);
 	
+	// Update animation time to remain at the current frame.
+	_animSettings->setCurrentFrame(currentFrame);
+
 	// Update dialog controls to reflect new values.
 	updateValues();
 }

@@ -103,9 +103,9 @@ int main(int argc, char** argv)
 			newargv.push_back(
 					"import sys\n"
 					"try:\n"
-					"    import dIPython\n"
-					"    print(\"This is OVITO\'s interactive IPython interpreter.\")\n"
-					"    IPython.start_ipython(['--nosep','--no-confirm-exit','--no-banner','-c','import ovito','-i'])\n"
+					"    import IPython\n"
+					"    print(\"This is OVITO\'s interactive IPython interpreter. Use quit() or Ctrl-D to exit.\")\n"
+					"    IPython.start_ipython(['--nosep','--no-confirm-exit','--no-banner','--profile=ovito','-c','import ovito','-i'])\n"
 					"    sys.exit()\n"
 					"except ImportError:\n"
 					"    pass\n"

@@ -65,10 +65,10 @@ public:
 private:
 
 	/// \brief Creates the geometry for a single cylinder element.
-	void createCylinderElement(int index, const Point3& pos, const Vector3& dir, const ColorA& color, FloatType width);
+	void createCylinderElement(int index, const Point_3<float>& pos, const Vector_3<float>& dir, const ColorAT<float>& color, float width);
 
 	/// \brief Creates the geometry for a single arrow element.
-	void createArrowElement(int index, const Point3& pos, const Vector3& dir, const ColorA& color, FloatType width);
+	void createArrowElement(int index, const Point_3<float>& pos, const Vector_3<float>& dir, const ColorAT<float>& color, float width);
 
 	/// Renders the geometry as triangle mesh with normals.
 	void renderWithNormals(OpenGLSceneRenderer* renderer);

@@ -53,7 +53,7 @@ if [ $# -ge 1 ]
 then
   SCRIPT_FILE="--script \"$1\""
 else
-  INTERACTIVE="--exec \"import code; code.interact(banner='This is OVITO\'s interactive Python interpreter. Use quit() or Ctrl-D to exit.');\""
+  INTERACTIVE="--script \"${DIR}/interactive_startup.py\""
 fi
 
 shift

@@ -78,7 +78,7 @@ void OpenGLMeshPrimitive::setMesh(const TriMesh& mesh, const ColorA& meshColor)
 		const Point3& p0 = mesh.vertex(face->vertex(0));
 		Vector3 d1 = mesh.vertex(face->vertex(1)) - p0;
 		Vector3 d2 = mesh.vertex(face->vertex(2)) - p0;
-		*faceNormal = d1.cross(d2);
+		*faceNormal = (Vector_3<float>)d1.cross(d2);
 		if(*faceNormal != Vector_3<float>::Zero()) {
 			faceNormal->normalize();
 			allMask |= face->smoothingGroups();
@@ -88,7 +88,7 @@ void OpenGLMeshPrimitive::setMesh(const TriMesh& mesh, const ColorA& meshColor)
 	// Initialize render vertices.
 	ColoredVertexWithNormal* rv = renderVertices;
 	faceNormal = faceNormals.begin();
-	ColorAT<float> defaultVertexColor = meshColor;
+	ColorAT<float> defaultVertexColor = (ColorAT<float>)meshColor;
 	for(auto face = mesh.faces().constBegin(); face != mesh.faces().constEnd(); ++face, ++faceNormal) {
 
 		// Initialize render vertices for this face.
@@ -97,17 +97,17 @@ void OpenGLMeshPrimitive::setMesh(const TriMesh& mesh, const ColorA& meshColor)
 				rv->normal = Vector_3<float>::Zero();
 			else
 				rv->normal = *faceNormal;
-			rv->pos = mesh.vertex(face->vertex(v));
+			rv->pos = (Point_3<float>)mesh.vertex(face->vertex(v));
 			if(mesh.hasVertexColors()) {
-				rv->color = mesh.vertexColor(face->vertex(v));
+				rv->color = (ColorAT<float>)mesh.vertexColor(face->vertex(v));
 				_hasAlpha |= (rv->color.a() != 1);
 			}
 			else if(mesh.hasFaceColors()) {
-				rv->color = mesh.faceColor(face - mesh.faces().constBegin());
+				rv->color = (ColorAT<float>)mesh.faceColor(face - mesh.faces().constBegin());
 				_hasAlpha |= (rv->color.a() != 1);
 			}
 			else if(face->materialIndex() < materialColors().size() && face->materialIndex() >= 0) {
-				rv->color = materialColors()[face->materialIndex()];
+				rv->color = (ColorAT<float>)materialColors()[face->materialIndex()];
 			}
 			else {
 				rv->color = defaultVertexColor;

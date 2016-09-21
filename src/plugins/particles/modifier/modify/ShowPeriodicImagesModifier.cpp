@@ -95,7 +95,7 @@ PipelineStatus ShowPeriodicImagesModifier::modifyParticles(TimePoint time, TimeI
 	AffineTransformation simCell = expectSimulationCell()->cellMatrix();
 
 	// Replicate particle property values.
-	for(DataObject* outobj : _output.objects()) {
+	for(DataObject* outobj : output().objects()) {
 		OORef<ParticlePropertyObject> originalOutputProperty = dynamic_object_cast<ParticlePropertyObject>(outobj);
 		if(!originalOutputProperty)
 			continue;
@@ -142,7 +142,7 @@ PipelineStatus ShowPeriodicImagesModifier::modifyParticles(TimePoint time, TimeI
 		}
 
 		// Replace original property with the modified one.
-		_output.replaceObject(originalOutputProperty, newProperty);
+		output().replaceObject(originalOutputProperty, newProperty);
 	}
 
 	// Extend simulation box if requested.
@@ -159,7 +159,7 @@ PipelineStatus ShowPeriodicImagesModifier::modifyParticles(TimePoint time, TimeI
 	// Replicate bonds.
 	size_t oldBondCount = 0;
 	size_t newBondCount = 0;
-	for(DataObject* outobj : _output.objects()) {
+	for(DataObject* outobj : output().objects()) {
 		OORef<BondsObject> originalOutputBonds = dynamic_object_cast<BondsObject>(outobj);
 		if(!originalOutputBonds)
 			continue;
@@ -208,11 +208,11 @@ PipelineStatus ShowPeriodicImagesModifier::modifyParticles(TimePoint time, TimeI
 		newBondsObj->changed();
 
 		// Replace original object with the modified one.
-		_output.replaceObject(originalOutputBonds, newBondsObj);
+		output().replaceObject(originalOutputBonds, newBondsObj);
 	}
 
 	// Replicate bond property values.
-	for(DataObject* outobj : _output.objects()) {
+	for(DataObject* outobj : output().objects()) {
 		OORef<BondPropertyObject> originalOutputProperty = dynamic_object_cast<BondPropertyObject>(outobj);
 		if(!originalOutputProperty || originalOutputProperty->size() != oldBondCount)
 			continue;
@@ -236,7 +236,7 @@ PipelineStatus ShowPeriodicImagesModifier::modifyParticles(TimePoint time, TimeI
 		}
 
 		// Replace original property with the modified one.
-		_output.replaceObject(originalOutputProperty, newProperty);
+		output().replaceObject(originalOutputProperty, newProperty);
 	}
 
 	return PipelineStatus::Success;

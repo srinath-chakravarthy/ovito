@@ -10,10 +10,10 @@ modification pipeline of an :py:class:`~ovito.ObjectNode`, e.g.::
     m.color = (0.2, 1.0, 0.9)
     node.modifiers.append(m)
     
-The following modifier classes are available:
+The following modifier types are available:
 
 ============================================== =========================================
-Class name                                     User interface name
+Python class name                              User interface name
 ============================================== =========================================
 :py:class:`AffineTransformationModifier`       :guilabel:`Affine transformation`
 :py:class:`AmbientOcclusionModifier`           :guilabel:`Ambient occlusion`
@@ -26,12 +26,13 @@ Class name                                     User interface name
 :py:class:`ClearSelectionModifier`             :guilabel:`Clear selection`
 :py:class:`ClusterAnalysisModifier`            :guilabel:`Cluster analysis`
 :py:class:`ColorCodingModifier`                :guilabel:`Color coding`
+:py:class:`CombineParticleSetsModifier`        :guilabel:`Combine particle sets`
 :py:class:`CommonNeighborAnalysisModifier`     :guilabel:`Common neighbor analysis`
+:py:class:`ComputeBondLengthsModifier`         :guilabel:`Compute bond lengths`
+:py:class:`ComputePropertyModifier`            :guilabel:`Compute property`
 :py:class:`ConstructSurfaceModifier`           :guilabel:`Construct surface mesh`
 :py:class:`CoordinationNumberModifier`         :guilabel:`Coordination analysis`
 :py:class:`CreateBondsModifier`                :guilabel:`Create bonds`
-:py:class:`ComputeBondLengthsModifier`         :guilabel:`Compute bond lengths`
-:py:class:`ComputePropertyModifier`            :guilabel:`Compute property`
 :py:class:`DeleteSelectedParticlesModifier`    :guilabel:`Delete selected particles`
 :py:class:`DislocationAnalysisModifier`        :guilabel:`Dislocation analysis (DXA)`
 :py:class:`ElasticStrainModifier`              :guilabel:`Elastic strain calculation`

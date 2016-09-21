@@ -183,6 +183,11 @@
               <entry>FHI-aims</entry>
               <entry><para>Geometry and log-file formats used by the <emphasis>ab initio</emphasis> simulation package <link xlink:href="https://aimsclub.fhi-berlin.mpg.de/index.php">FHI-aims</link>.</para></entry>
             </row>
+            <row>
+              <entry>GSD/HOOMD</entry>
+              <entry><para>Binary format for molecular dynamics data used by the <link xlink:href="http://glotzerlab.engin.umich.edu/hoomd-blue/">HOOMD-blue code</link>. See <link xlink:href="http://gsd.readthedocs.io">GSD (General Simulation Data) format</link>. 
+			  Support for this format is not available in the Windows version of OVITO.</para></entry>
+            </row>
           </tbody>
         </tgroup>
       </informaltable>  

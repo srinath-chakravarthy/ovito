@@ -62,10 +62,10 @@ private:
 	int _markerCount;
 
 	/// The internal OpenGL vertex buffer that stores the marker positions.
-	OpenGLBuffer<Point3> _positionBuffer;
+	OpenGLBuffer<Point_3<float>> _positionBuffer;
 
 	/// The internal OpenGL vertex buffer that stores the marker colors.
-	OpenGLBuffer<ColorA> _colorBuffer;
+	OpenGLBuffer<ColorAT<float>> _colorBuffer;
 
 	/// The GL context group under which the GL vertex buffers have been created.
 	QPointer<QOpenGLContextGroup> _contextGroup;

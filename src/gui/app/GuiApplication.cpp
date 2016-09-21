@@ -67,6 +67,9 @@ bool GuiApplication::processCommandLineParameters()
 		// Don't let Qt move the app to the foreground when running in console mode.
 		::setenv("QT_MAC_DISABLE_FOREGROUND_APPLICATION_TRANSFORM", "1", 1);
 		_headlessMode = false;
+#elif defined(Q_OS_WIN)
+		// On Windows, there is always an OpenGL implementation available for background rendering.
+		_headlessMode = false;
 #endif
 	}
 

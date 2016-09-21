@@ -306,7 +306,7 @@ void OpenGLSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParamet
 
 	// Set up default viewport rectangle.
     if(vp && vp->window()) {
-    	QSize vpSize = vp->window()->viewportWindowSize();
+    	QSize vpSize = vp->window()->viewportWindowDeviceSize();
     	setRenderingViewport(0, 0, vpSize.width(), vpSize.height());
     }
 
@@ -597,8 +597,8 @@ void OpenGLSceneRenderer::render2DPolyline(const Point2* points, int count, cons
 	tm.ortho(vc[0], vc[0] + vc[2], vc[1] + vc[3], vc[1], -1, 1);
 	OVITO_CHECK_OPENGL(shader->setUniformValue("modelview_projection_matrix", tm));
 
-	OpenGLBuffer<Point2> vertexBuffer;
-	OpenGLBuffer<ColorA> colorBuffer;
+	OpenGLBuffer<Point_2<float>> vertexBuffer;
+	OpenGLBuffer<ColorAT<float>> colorBuffer;
 	if(glformat().majorVersion() >= 3) {
 		vertexBuffer.create(QOpenGLBuffer::StaticDraw, count);
 		vertexBuffer.fill(points);
@@ -686,7 +686,7 @@ void OpenGLSceneRenderer::deactivateVertexIDs(QOpenGLShaderProgram* shader, bool
 ******************************************************************************/
 FloatType OpenGLSceneRenderer::defaultLinePickingWidth()
 {
-	return FloatType(12) * devicePixelRatio();
+	return FloatType(6) * devicePixelRatio();
 }
 
 /******************************************************************************

@@ -716,10 +716,14 @@ Box2 Viewport::renderFrameRect() const
 ******************************************************************************/
 FloatType Viewport::nonScalingSize(const Point3& worldPosition)
 {
-	int height = windowSize().height();
-	if(height == 0) return FloatType(1);
+	if(!window()) return 1;
 
-	const FloatType baseSize = FloatType(60);
+	// Get window size in device-independent pixels.
+	int height = window()->viewportWindowDeviceIndependentSize().height();
+
+	if(height == 0) return 1;
+
+	const FloatType baseSize = 60;
 
 	if(isPerspectiveProjection()) {
 

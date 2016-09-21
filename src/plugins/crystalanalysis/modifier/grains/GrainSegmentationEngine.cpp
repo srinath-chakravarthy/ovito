@@ -708,7 +708,6 @@ void GrainSegmentationEngine::perform()
 	for(int grain = 0; grain < numClusters; grain++) {
 		Cluster* cluster = _outputClusterGraph->createCluster(_inputCrystalStructure, grain + 1);
 		cluster->atomCount = clusterSizes[grain];
-		//cluster->orientation = grain.orientation;
 		cluster->color = grainColorList[grain % (sizeof(grainColorList)/sizeof(grainColorList[0]))];
 	}
 

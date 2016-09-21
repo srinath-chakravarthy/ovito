@@ -60,7 +60,7 @@ void PickingSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParame
 		throwException(tr("Failed to make OpenGL context current."));
 
 	// Create OpenGL framebuffer.
-	QSize size = vpWindow->viewportWindowSize();
+	QSize size = vpWindow->viewportWindowDeviceSize();
 	QOpenGLFramebufferObjectFormat framebufferFormat;
 	framebufferFormat.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
 	_framebufferObject.reset(new QOpenGLFramebufferObject(size.width(), size.height(), framebufferFormat));

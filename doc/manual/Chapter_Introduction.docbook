@@ -38,7 +38,7 @@
 
       <listitem>
         <para><link linkend="usage.import">Input</link> and <link linkend="usage.export">output</link> of various file formats used by 
-        MD simulation codes, including LAMMPS, XYZ, CFG, IMD, POSCAR, NetCDF, PDB, and FHI-aims.</para>
+        MD simulation codes, including LAMMPS, XYZ, CFG, IMD, POSCAR, NetCDF, PDB, FHI-aims, and GSD/HOOMD.</para>
       </listitem>
 
       <listitem>

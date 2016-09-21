@@ -44,8 +44,11 @@ public:
 	/// processes it and redraw the window contents.
 	virtual void processViewportUpdate() = 0;
 
-	/// Returns the current size of the viewport window.
-	virtual QSize viewportWindowSize() = 0;
+	/// Returns the current size of the viewport window (in device pixels).
+	virtual QSize viewportWindowDeviceSize() = 0;
+
+	/// Returns the current size of the viewport window (in device-independent pixels).
+	virtual QSize viewportWindowDeviceIndependentSize() = 0;
 
 	/// Lets the viewport window delete itself.
 	/// This is called by the Viewport class destructor.

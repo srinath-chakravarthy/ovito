@@ -76,7 +76,9 @@ ENDIF()
 IF(APPLE)	
     SET(OVITOS_EXECUTABLE "${OVITO_LIBRARY_DIRECTORY}/ovitos")
 	CONFIGURE_FILE("resources/ovitos" "${OVITOS_EXECUTABLE}" COPYONLY)
+	CONFIGURE_FILE("resources/interactive_startup.py" "${OVITO_LIBRARY_DIRECTORY}/" COPYONLY)
 	INSTALL(PROGRAMS "resources/ovitos" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}")
+	INSTALL(PROGRAMS "resources/interactive_startup.py" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}")
 
 	# Create a nested application bundle with a modified Info.plist file
 	# that starts the application without displaying the dock icon.
@@ -149,7 +151,7 @@ ELSEIF(UNIX)
 		INSTALL(FILES "${PYTHON_LIBRARIES}" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/")
 
 		# Also install copies of shared libraries that are required by Python modules.
-		SET(OVITO_PYTHON_DEPENDENCIES libssl.so libcrypto.so liblapack.so.3gf libblas.so.3gf libquadmath.so.0 libgfortran.so.3 libncurses.so)
+		SET(OVITO_PYTHON_DEPENDENCIES libssl.so libcrypto.so liblapack.so.3gf libblas.so.3gf libquadmath.so.0 libgfortran.so.3 libncurses.so libsqlite3.so.0)
 		FOREACH(PYTHON_DEPENDENCY ${OVITO_PYTHON_DEPENDENCIES})
 			FIND_LIBRARY(OVITO_PYTHON_DEP NAMES ${PYTHON_DEPENDENCY} PATHS /usr/lib NO_DEFAULT_PATH)
 			IF(NOT OVITO_PYTHON_DEP)

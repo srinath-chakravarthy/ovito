@@ -33,7 +33,7 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, GrainSegmentationModifier, StructureIdentificationModifier);
 DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _inputCrystalStructure, "CrystalStructure", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _rmsdCutoff, "RMSDCutoff", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(GrainSegmentationModifier, _rmsdCutoff, "RMSDCutoff");
 DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _misorientationThreshold, "MisorientationThreshold", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _minGrainAtomCount, "MinGrainAtomCount", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(GrainSegmentationModifier, _patternCatalog, "PatternCatalog", PatternCatalog, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
@@ -48,8 +48,8 @@ DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _numOrientationSmoothingI
 DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _orientationSmoothingWeight, "OrientationSmoothingWeight", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _inputCrystalStructure, "Input crystal structure");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _rmsdCutoff, "RMSD cutoff");
-SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _misorientationThreshold, "Misorientation threshold");
-SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _minGrainAtomCount, "Minimum grain size");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _misorientationThreshold, "Misorientation angle threshold");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _minGrainAtomCount, "Minimum grain size (# of atoms)");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _smoothingLevel, "Smoothing level");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _probeSphereRadius, "Probe sphere radius");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _meshDisplay, "Surface mesh display");
@@ -57,7 +57,7 @@ SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _onlySelectedParticles, "Use
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _outputPartitionMesh, "Generate mesh");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _outputLocalOrientations, "Output local orientations");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _bondsDisplay, "Bonds display");
-SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _numOrientationSmoothingIterations, "Number of smoothing iterations");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _numOrientationSmoothingIterations, "Orientation smoothing iterations");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _orientationSmoothingWeight, "Orientation smoothing weight");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _rmsdCutoff, FloatParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _misorientationThreshold, AngleParameterUnit, 0);
@@ -81,7 +81,7 @@ GrainSegmentationModifier::GrainSegmentationModifier(DataSet* dataset) : Structu
 		_onlySelectedParticles(false),
 		_outputPartitionMesh(false),
 		_outputLocalOrientations(false),
-		_numOrientationSmoothingIterations(1),
+		_numOrientationSmoothingIterations(4),
 		_orientationSmoothingWeight(0.5)
 {
 	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_inputCrystalStructure);
@@ -227,10 +227,12 @@ void GrainSegmentationModifier::transferComputationResults(ComputeEngine* engine
 	else
 		_localOrientations.reset();
 
+#ifdef OVITO_DEBUG
 	_latticeNeighborBonds = eng->latticeNeighborBonds();
 	_neighborDisorientationAngles = eng->neighborDisorientationAngles();
 	_defectDistances = eng->defectDistances();
 	_defectDistanceBasins = eng->defectDistanceBasins();
+#endif
 }
 
 /******************************************************************************
@@ -282,7 +284,7 @@ PipelineStatus GrainSegmentationModifier::applyComputationResults(TimePoint time
 		output().addObject(meshObj);
 	}
 
-	return PipelineStatus::Success;
+	return PipelineStatus(PipelineStatus::Success, tr("Found %1 grains").arg(_clusterGraph ? (_clusterGraph->clusters().size() - 1) : 0));
 }
 
 }	// End of namespace

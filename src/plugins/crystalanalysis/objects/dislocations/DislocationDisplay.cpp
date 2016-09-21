@@ -82,18 +82,18 @@ Box3 DislocationDisplay::boundingBox(TimePoint time, DataObject* dataObject, Obj
 			burgersVectorWidth()) || _cachedBoundingBox.isEmpty()) {
 		// Recompute bounding box.
 		Box3 bb = Box3(Point3(0,0,0), Point3(1,1,1)).transformed(cellObject->cellMatrix());
-		FloatType padding = std::max(lineWidth(), 0.0f);
+		FloatType padding = std::max(lineWidth(), FloatType(0));
 		if(showBurgersVectors()) {
-			padding = std::max(padding, burgersVectorWidth() * 2.0f);
+			padding = std::max(padding, burgersVectorWidth() * FloatType(2));
 			if(OORef<DislocationNetworkObject> dislocationObj = dataObject->convertTo<DislocationNetworkObject>(time)) {
 				for(DislocationSegment* segment : dislocationObj->segments()) {
-					Point3 center = cell.wrapPoint(segment->getPointOnLine(0.5f));
+					Point3 center = cell.wrapPoint(segment->getPointOnLine(FloatType(0.5)));
 					Vector3 dir = burgersVectorScaling() * segment->burgersVector.toSpatialVector();
 					bb.addPoint(center + dir);
 				}
 			}
 		}
-		_cachedBoundingBox = bb.padBox(padding * 0.5f);
+		_cachedBoundingBox = bb.padBox(padding * FloatType(0.5));
 	}
 	return _cachedBoundingBox;
 }
@@ -420,7 +420,7 @@ void DislocationDisplay::clipDislocationLine(const std::deque<Point3>& line, con
 ******************************************************************************/
 static bool isInteger(FloatType v, int& intPart)
 {
-	static const FloatType epsilon = 1e-2f;
+	static const FloatType epsilon = FloatType(1e-2);
 	FloatType ip;
 	FloatType frac = std::modf(v, &ip);
 	if(frac >= -epsilon && frac <= epsilon) intPart = (int)ip;

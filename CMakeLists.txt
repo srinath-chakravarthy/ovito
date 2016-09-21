@@ -46,6 +46,9 @@ INCLUDE(${OVITO_SOURCE_BASE_DIR}/cmake/Version.cmake)
 INCLUDE(${OVITO_SOURCE_BASE_DIR}/cmake/Plugins.cmake)
 INCLUDE(${OVITO_SOURCE_BASE_DIR}/cmake/PrecompiledHeader.cmake)
 
+# Define user option that controls the default floating-point number precision to use.
+OPTION(OVITO_DOUBLE_PRECISION_FP "Use double-precision floating-point numbers." "OFF")
+
 # Define user option that controls the building of OVITO's GUI module.
 OPTION(OVITO_BUILD_GUI "Build the graphical user interface." "ON")
 
@@ -179,6 +182,28 @@ MACRO(OVITO_INSTALL_DLL dll)
 		MESSAGE(FATAL_ERROR "Failed to copy DLL into build directory: ${dll}")
 	ENDIF()
 	INSTALL(FILES "${dll}" DESTINATION "${OVITO_RELATIVE_BINARY_DIRECTORY}")
+ENDMACRO()
+
+# This macro installs a required third-party shared library in the OVITO directory
+# so that it can be distributed together with the program.
+MACRO(OVITO_INSTALL_SHARED_LIB shared_lib)
+	# Strip version number from shared lib filename.
+	GET_FILENAME_COMPONENT(shared_lib_ext "${shared_lib}" EXT)
+	STRING(REPLACE ${shared_lib_ext} ".so" shared_lib_new "${shared_lib}")
+	FILE(GLOB lib_versions "${shared_lib_new}*")
+	FOREACH(lib_version ${lib_versions})
+		IF(IS_SYMLINK ${lib_version})
+			GET_FILENAME_COMPONENT(symlink_target "${lib_version}" REALPATH)
+			GET_FILENAME_COMPONENT(symlink_target_name "${symlink_target}" NAME)
+			GET_FILENAME_COMPONENT(lib_version_name "${lib_version}" NAME)
+			MESSAGE("Installing symlink ${lib_version} to shared library ${symlink_target}")
+			EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E create_symlink ${symlink_target_name} "${OVITO_LIBRARY_DIRECTORY}/${lib_version_name}")
+		ELSE()
+			MESSAGE("Installing shared library ${lib_version}")
+			CONFIGURE_FILE("${lib_version}" "${OVITO_LIBRARY_DIRECTORY}" COPYONLY)
+		ENDIF()
+		INSTALL(FILES "${lib_version}" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/")
+	ENDFOREACH()
 ENDMACRO()
 
 # Tell CMake to run Qt moc whenever necessary.

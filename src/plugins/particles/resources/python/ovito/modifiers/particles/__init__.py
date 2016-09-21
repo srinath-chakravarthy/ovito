@@ -41,6 +41,7 @@ ovito.modifiers.WignerSeitzAnalysisModifier = ParticlesModify.WignerSeitzAnalysi
 ovito.modifiers.VoronoiAnalysisModifier = ParticlesModify.VoronoiAnalysisModifier
 ovito.modifiers.IdentifyDiamondModifier = ParticlesModify.IdentifyDiamondModifier
 ovito.modifiers.LoadTrajectoryModifier = ParticlesModify.LoadTrajectoryModifier
+ovito.modifiers.CombineParticleSetsModifier = ParticlesModify.CombineParticleSetsModifier
 ovito.modifiers.ComputeBondLengthsModifier = ParticlesModify.ComputeBondLengthsModifier
 ovito.modifiers.PolyhedralTemplateMatchingModifier = ParticlesModify.PolyhedralTemplateMatchingModifier
 

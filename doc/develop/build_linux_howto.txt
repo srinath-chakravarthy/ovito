@@ -76,6 +76,15 @@ $HOME/progs/qt5/bin/qmake qscintilla.pro
 make
 
 **************************************************************************
+Build sqlite3:
+**************************************************************************
+export CC=gcc-4.8
+export CXX=g++-4.8
+./configure
+make 
+sudo make install
+
+**************************************************************************
 Build Python (version 3.4.x):
 **************************************************************************
 
@@ -105,10 +114,15 @@ LD_LIBRARY_PATH=$PWD/../lib ./easy_install sphinx
 **************************************************************************
 Build NumPy:
 **************************************************************************
-
 export CC=gcc-4.8
 export CXX=g++-4.8
 LD_LIBRARY_PATH=$HOME/progs/python/lib $HOME/progs/python/bin/python3 setup.py install
+
+**************************************************************************
+Install IPython:
+**************************************************************************
+cd $HOME/progs/python/bin
+LD_LIBRARY_PATH=$HOME/progs/python/lib ./pip3 install ipython
 
 **************************************************************************
 Build SIP:
@@ -182,6 +196,41 @@ export CXX=g++-4.8
 make install
 
 **************************************************************************
+Build HDF5:
+**************************************************************************
+
+$HOME/progs/cmake-3.6.2-Linux-x86_64/bin/cmake \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_INSTALL_PREFIX=../hdf5 \
+	-DBUILD_SHARED_LIBS=ON \
+	-DHDF5_ENABLE_Z_LIB_SUPPORT=ON \
+	-DHDF5_BUILD_HL_LIB=ON \
+	../hdf5-1.8.17
+
+make install
+
+**************************************************************************
+Build NetCDF:
+**************************************************************************
+
+$HOME/progs/cmake-3.6.2-Linux-x86_64/bin/cmake \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_INSTALL_PREFIX=../netcdf \
+	-DENABLE_DAP=OFF \
+	-DENABLE_EXAMPLES=OFF \
+	-DENABLE_TESTS=OFF \
+	-DBUILD_TESTING=OFF \
+	-DBUILD_UTILITIES=OFF \
+	-DENABLE_HDF4=OFF \
+	-DUSE_HDF5=ON \
+	-DHDF5_INCLUDE_DIR=$HOME/progs/hdf5/include/ \
+	-DHDF5_LIB=$HOME/progs/hdf5/lib/libhdf5.so \
+	-DHDF5_HL_LIB=$HOME/progs/hdf5/lib/libhdf5_hl.so \
+	../netcdf-4.4.1/
+
+make install
+
+**************************************************************************
 Set the following flags in the CMake configuration to build all features:
 **************************************************************************
 
@@ -193,6 +242,8 @@ $HOME/progs/cmake-2.8.12.2/bin/cmake \
   -DCMAKE_INSTALL_PREFIX=../release_install \
   -DOVITO_MONOLITHIC_BUILD=ON \
   -DBOOST_ROOT=$HOME/progs/boost \
+  -DHDF5_DIR=$HOME/progs/hdf5/share/cmake \
+  -Dnetcdf_DIR=$HOME/progs/netcdf/lib/cmake/netCDF \
   -DPYTHON_LIBRARY=$HOME/progs/python/lib/libpython3.4m.so.1.0 \
   -DPYTHON_INCLUDE_DIR=$HOME/progs/python/include/python3.4m \
   -DSPHINX_PROCESSOR_PATH=$HOME/progs/python/bin \

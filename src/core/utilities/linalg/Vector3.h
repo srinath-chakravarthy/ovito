@@ -301,14 +301,42 @@ Q_DECL_CONSTEXPR Vector_3<T> operator-(const Vector_3<T>& a, const Vector_3<T>& 
 /// \brief Computes the product of a vector and a scalar value.
 /// \relates Vector_3
 template<typename T>
-Q_DECL_CONSTEXPR Vector_3<T> operator*(const Vector_3<T>& a, T s) {
+Q_DECL_CONSTEXPR Vector_3<T> operator*(const Vector_3<T>& a, float s) {
+	return Vector_3<T>( a.x() * (T)s, a.y() * (T)s, a.z() * (T)s );
+}
+
+/// \brief Computes the product of a vector and a scalar value.
+/// \relates Vector_3
+template<typename T>
+Q_DECL_CONSTEXPR Vector_3<T> operator*(const Vector_3<T>& a, double s) {
+	return Vector_3<T>( a.x() * (T)s, a.y() * (T)s, a.z() * (T)s );
+}
+
+/// \brief Computes the product of a vector and a scalar value.
+/// \relates Vector_3
+template<typename T>
+Q_DECL_CONSTEXPR Vector_3<T> operator*(const Vector_3<T>& a, int s) {
 	return Vector_3<T>( a.x() * s, a.y() * s, a.z() * s );
 }
 
 /// \brief Computes the product of a scalar value and a vector.
 /// \relates Vector_3
 template<typename T>
-Q_DECL_CONSTEXPR Vector_3<T> operator*(T s, const Vector_3<T>& a) {
+Q_DECL_CONSTEXPR Vector_3<T> operator*(float s, const Vector_3<T>& a) {
+	return Vector_3<T>( a.x() * (T)s, a.y() * (T)s, a.z() * (T)s );
+}
+
+/// \brief Computes the product of a scalar value and a vector.
+/// \relates Vector_3
+template<typename T>
+Q_DECL_CONSTEXPR Vector_3<T> operator*(double s, const Vector_3<T>& a) {
+	return Vector_3<T>( a.x() * (T)s, a.y() * (T)s, a.z() * (T)s );
+}
+
+/// \brief Computes the product of a scalar value and a vector.
+/// \relates Vector_3
+template<typename T>
+Q_DECL_CONSTEXPR Vector_3<T> operator*(int s, const Vector_3<T>& a) {
 	return Vector_3<T>( a.x() * s, a.y() * s, a.z() * s );
 }
 
@@ -355,11 +383,33 @@ inline QDataStream& operator<<(QDataStream& stream, const Vector_3<T>& v) {
 	return stream << v.x() << v.y() << v.z();
 }
 
+// This template specialization is for backward compatibility with OVITO 2.7.1 and earlier,
+// which always used single precision floating point numbers.
+// Unfortunately, the QDataStream used by the QSettings class to serialize values
+// performs no automatic precision conversion of floating point numbers.
+template<>
+inline QDataStream& operator<<(QDataStream& stream, const Vector_3<double>& v) {
+	return stream << (float)v.x() << (float)v.y() << (float)v.z();
+}
+
 /// \brief Reads a vector from a Qt data stream.
 /// \relates Vector_3
 template<typename T>
 inline QDataStream& operator>>(QDataStream& stream, Vector_3<T>& v) {
 	return stream >> v.x() >> v.y() >> v.z();
+}
+
+// This template specialization is for backward compatibility with OVITO 2.7.1 and earlier,
+// which always used single precision floating point numbers.
+// Unfortunately, the QDataStream used by the QSettings class to serialize values
+// performs no automatic precision conversion of floating point numbers.
+template<>
+inline QDataStream& operator>>(QDataStream& stream, Vector_3<double>& v) {
+	Vector_3<float> floatValue;
+	stream >> floatValue;
+	for(size_t i = 0; i < v.size(); i++)
+		v[i] = floatValue[i];
+	return stream;
 }
 
 /**

@@ -120,12 +120,16 @@ bool CutoffNeighborFinder::prepare(FloatType cutoffRadius, ParticleProperty* pos
 
 	for(int stencilRadius = 0; stencilRadius < 100; stencilRadius++) {
 		size_t oldCount = stencil.size();
+		if(oldCount > 100*100)
+			throw Exception("Neighbor cutoff radius is too large compared to the simulation cell size.");
 		int stencilRadiusX = simCell.pbcFlags()[0] ? stencilRadius : std::min(stencilRadius, binDim[0] - 1);
 		int stencilRadiusY = simCell.pbcFlags()[1] ? stencilRadius : std::min(stencilRadius, binDim[1] - 1);
 		int stencilRadiusZ = simCell.pbcFlags()[2] ? stencilRadius : std::min(stencilRadius, binDim[2] - 1);
 		for(int ix = -stencilRadiusX; ix <= stencilRadiusX; ix++) {
 			for(int iy = -stencilRadiusY; iy <= stencilRadiusY; iy++) {
 				for(int iz = -stencilRadiusZ; iz <= stencilRadiusZ; iz++) {
+					if(progress && progress->isCanceled())
+						return false;
 					if(std::abs(ix) < stencilRadius && std::abs(iy) < stencilRadius && std::abs(iz) < stencilRadius)
 						continue;
 					FloatType shortestDistance = FLOATTYPE_MAX;

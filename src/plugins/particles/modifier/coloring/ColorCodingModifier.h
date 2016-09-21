@@ -31,6 +31,7 @@
 #include <core/rendering/TextPrimitive.h>
 #include <core/viewport/Viewport.h>
 #include "../ParticleModifier.h"
+#include "ColormapsData.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring)
 
@@ -118,8 +119,8 @@ public:
 	/// \return The color that visualizes the given scalar value.
 	virtual Color valueToColor(FloatType t) override {
 		// Interpolation black->red->yellow->white.
-		OVITO_ASSERT(t >= 0.0f && t <= 1.0f);
-		return Color(std::min(t / 0.375f, FloatType(1)), std::max(FloatType(0), std::min((t-0.375f)/0.375f, FloatType(1))), std::max(FloatType(0), t*4.0f - 3.0f));
+		OVITO_ASSERT(t >= 0 && t <= 1);
+		return Color(std::min(t / FloatType(0.375), FloatType(1)), std::max(FloatType(0), std::min((t-FloatType(0.375))/FloatType(0.375), FloatType(1))), std::max(FloatType(0), t*4 - FloatType(3)));
 	}
 
 private:
@@ -143,11 +144,11 @@ public:
 	/// \param t A value between 0 and 1.
 	/// \return The color that visualizes the given scalar value.
 	virtual Color valueToColor(FloatType t) override {
-	    if(t < 0.125f) return Color(0, 0, 0.5f + 0.5f * t / 0.125f);
-	    else if(t < 0.125f + 0.25f) return Color(0, (t - 0.125f) / 0.25f, 1);
-	    else if(t < 0.125f + 0.25f + 0.25f) return Color((t - 0.375f) / 0.25f, 1, 1.0f - (t - 0.375f) / 0.25f);
-	    else if(t < 0.125f + 0.25f + 0.25f + 0.25f) return Color(1, 1.0f - (t - 0.625f) / 0.25f, 0);
-	    else return Color(1.0f - 0.5f * (t - 0.875f) / 0.125f, 0, 0);
+	    if(t < FloatType(0.125)) return Color(0, 0, FloatType(0.5) + FloatType(0.5) * t / FloatType(0.125));
+	    else if(t < FloatType(0.125) + FloatType(0.25)) return Color(0, (t - FloatType(0.125)) / FloatType(0.25), 1);
+	    else if(t < FloatType(0.125) + FloatType(0.25) + FloatType(0.25)) return Color((t - FloatType(0.375)) / FloatType(0.25), 1, FloatType(1) - (t - FloatType(0.375)) / FloatType(0.25));
+	    else if(t < FloatType(0.125) + FloatType(0.25) + FloatType(0.25) + FloatType(0.25)) return Color(1, FloatType(1) - (t - FloatType(0.625)) / FloatType(0.25), 0);
+	    else return Color(FloatType(1) - FloatType(0.5) * (t - FloatType(0.875)) / FloatType(0.125), 0, 0);
 	}
 
 private:
@@ -182,6 +183,56 @@ private:
 	Q_OBJECT
 	OVITO_OBJECT
 	Q_CLASSINFO("DisplayName", "Blue-White-Red");
+};
+
+/**
+ * \brief Converts a scalar value to a color.
+ */
+class OVITO_PARTICLES_EXPORT ColorCodingViridisGradient : public ColorCodingGradient
+{
+public:
+
+	/// Constructor.
+	Q_INVOKABLE ColorCodingViridisGradient(DataSet* dataset) : ColorCodingGradient(dataset) {}
+
+	/// \brief Converts a scalar value to a color value.
+	/// \param t A value between 0 and 1.
+	/// \return The color that visualizes the given scalar value.
+	virtual Color valueToColor(FloatType t) override {
+		int index = t * (sizeof(colormap_viridis_data)/sizeof(colormap_viridis_data[0]) - 1);
+		return Color(colormap_viridis_data[index][0], colormap_viridis_data[index][1], colormap_viridis_data[index][2]);
+	}
+
+private:
+
+	Q_OBJECT
+	OVITO_OBJECT
+	Q_CLASSINFO("DisplayName", "Viridis");
+};
+
+/**
+ * \brief Converts a scalar value to a color.
+ */
+class OVITO_PARTICLES_EXPORT ColorCodingMagmaGradient : public ColorCodingGradient
+{
+public:
+
+	/// Constructor.
+	Q_INVOKABLE ColorCodingMagmaGradient(DataSet* dataset) : ColorCodingGradient(dataset) {}
+
+	/// \brief Converts a scalar value to a color value.
+	/// \param t A value between 0 and 1.
+	/// \return The color that visualizes the given scalar value.
+	virtual Color valueToColor(FloatType t) override {
+		int index = t * (sizeof(colormap_magma_data)/sizeof(colormap_magma_data[0]) - 1);
+		return Color(colormap_magma_data[index][0], colormap_magma_data[index][1], colormap_magma_data[index][2]);
+	}
+
+private:
+
+	Q_OBJECT
+	OVITO_OBJECT
+	Q_CLASSINFO("DisplayName", "Magma");
 };
 
 /**

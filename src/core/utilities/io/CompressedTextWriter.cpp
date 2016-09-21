@@ -142,17 +142,34 @@ CompressedTextWriter& CompressedTextWriter::operator<<(size_t i)
 ******************************************************************************/
 CompressedTextWriter& CompressedTextWriter::operator<<(FloatType f)
 {
-	using namespace boost::spirit;
-
-	// Define Boost Karma generator to control floating-point to string conversion.
-	struct floattype_format_policy : karma::real_policies<FloatType> {
-	    static unsigned precision(FloatType n) { return 10; }
-	};
-	static const karma::real_generator<FloatType, floattype_format_policy> floattype_generator;
-
 	char buffer[32];
 	char *s = buffer;
-	karma::generate(s, floattype_generator, f);
+
+	// Workaround for Boost bug #5983 (https://svn.boost.org/trac/boost/ticket/5983)
+	// Karma cannot format subnormal floating point numbers.
+	// Have to switch to a slower formatting method (sprintf) in this case.
+	if(std::fpclassify(f) != FP_SUBNORMAL) {
+
+		using namespace boost::spirit;
+
+		// Define Boost Karma generator to control floating-point to string conversion.
+		struct floattype_format_policy : karma::real_policies<FloatType> {
+		    static unsigned int precision(FloatType n) { return 10; }
+		};
+		static const karma::real_generator<FloatType, floattype_format_policy> floattype_generator;
+
+		karma::generate(s, floattype_generator, f);
+	}
+	else {
+		// Use sprintf() to handle denormalized floating point numbers.
+#if !defined(Q_CC_MSVC) || _MSC_VER >= 1900
+		s += std::snprintf(buffer, sizeof(buffer), "%g", f);
+#else
+		// MSVC 2013 is not fully C++11 standard compliant. Need to use _snprintf() instead.
+		s += _snprintf(buffer, sizeof(buffer), "%g", f);
+#endif
+	}
+
 	OVITO_ASSERT(s - buffer < sizeof(buffer));
 	if(_stream->write(buffer, s - buffer) == -1)
 		reportWriteError();

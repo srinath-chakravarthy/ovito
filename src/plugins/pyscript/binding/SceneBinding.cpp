@@ -26,6 +26,7 @@
 #include <core/scene/SelectionSet.h>
 #include <core/scene/objects/DataObject.h>
 #include <core/scene/objects/CompoundObject.h>
+#include <core/scene/objects/geometry/TriMeshObject.h>
 #include <core/scene/pipeline/Modifier.h>
 #include <core/scene/pipeline/ModifierApplication.h>
 #include <core/scene/pipeline/PipelineObject.h>
@@ -358,6 +359,10 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 				"\n\n"
 				":Default: ``None``\n")
 	;
+
+	ovito_class<TriMeshObject, DataObject>()
+	;
+
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScriptScene);

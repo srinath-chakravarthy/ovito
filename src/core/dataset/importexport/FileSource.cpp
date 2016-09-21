@@ -65,6 +65,7 @@ FileSource::FileSource(DataSet* dataset) : CompoundObject(dataset),
 	INIT_PROPERTY_FIELD(FileSource::_playbackStartTime);
 
 	connect(&_frameLoaderWatcher, &FutureWatcher::finished, this, &FileSource::loadOperationFinished);
+	connect(&_frameDiscoveryWatcher, &FutureWatcher::finished, this, &FileSource::frameDiscoveryFinished);
 
 	// Do not save a copy of the linked external data in state file by default.
 	setSaveWithScene(false);
@@ -86,19 +87,19 @@ bool FileSource::setSource(QUrl sourceUrl, FileSourceImporter* importer, bool au
 		return true;
 
 	QFileInfo fileInfo(sourceUrl.path());
-	QString originalFilename = fileInfo.fileName();
+	_originallySelectedFilename = fileInfo.fileName();
 
 	if(importer) {
 		// If URL is not already a wildcard pattern, generate a default pattern by
 		// replacing last sequence of numbers in the filename with a wildcard character.
-		if(autodetectFileSequences && importer->autoGenerateWildcardPattern() && !originalFilename.contains('*') && !originalFilename.contains('?')) {
+		if(autodetectFileSequences && importer->autoGenerateWildcardPattern() && !_originallySelectedFilename.contains('*') && !_originallySelectedFilename.contains('?')) {
 			int startIndex, endIndex;
-			for(endIndex = originalFilename.length() - 1; endIndex >= 0; endIndex--)
-				if(originalFilename.at(endIndex).isNumber()) break;
+			for(endIndex = _originallySelectedFilename.length() - 1; endIndex >= 0; endIndex--)
+				if(_originallySelectedFilename.at(endIndex).isNumber()) break;
 			if(endIndex >= 0) {
 				for(startIndex = endIndex-1; startIndex >= 0; startIndex--)
-					if(!originalFilename.at(startIndex).isNumber()) break;
-				QString wildcardPattern = originalFilename.left(startIndex+1) + '*' + originalFilename.mid(endIndex+1);
+					if(!_originallySelectedFilename.at(startIndex).isNumber()) break;
+				QString wildcardPattern = _originallySelectedFilename.left(startIndex+1) + '*' + _originallySelectedFilename.mid(endIndex+1);
 				fileInfo.setFile(fileInfo.dir(), wildcardPattern);
 				sourceUrl.setPath(fileInfo.filePath());
 				OVITO_ASSERT(sourceUrl.isValid());
@@ -133,35 +134,21 @@ bool FileSource::setSource(QUrl sourceUrl, FileSourceImporter* importer, bool au
 	_sourceUrl = sourceUrl;
 	_importer = importer;
 
-	// Scan the input source for animation frames.
-	if(!updateFrames()) {
-		// Transaction has not been committed. We will revert to old state.
-		return false;
-	}
-
-	// Jump to the right frame to show the originally selected file.
-	int jumpToFrame = -1;
-	for(int frameIndex = 0; frameIndex < _frames.size(); frameIndex++) {
-		QFileInfo fileInfo(_frames[frameIndex].sourceFile.path());
-		if(fileInfo.fileName() == originalFilename) {
-			jumpToFrame = frameIndex;
-			break;
-		}
-	}
-
-	// Adjust the animation length number to match the number of frames in the input data source.
-	adjustAnimationInterval(jumpToFrame);
+	// Cancel any old load operation in progress.
+	cancelLoadOperation();
 
 	// Set flag which indicates that the file being loaded is a newly selected one.
 	_isNewFile = true;
 
-	// Cancel any old load operation in progress.
-	cancelLoadOperation();
-
 	// Trigger a reload of the current frame.
 	_loadedFrameIndex = -1;
+	_frames.clear();
+
+	// Scan the input source for animation frames.
+	updateFrames();
 
 	transaction.commit();
+
 	notifyDependents(ReferenceEvent::TitleChanged);
 
 	return true;
@@ -170,30 +157,20 @@ bool FileSource::setSource(QUrl sourceUrl, FileSourceImporter* importer, bool au
 /******************************************************************************
 * Scans the input source for animation frames and updates the internal list of frames.
 ******************************************************************************/
-bool FileSource::updateFrames()
+void FileSource::updateFrames()
 {
+	// Stop any running frame discovery task.
+	_frameDiscoveryWatcher.cancel();
+
 	if(!importer()) {
 		_frames.clear();
 		_loadedFrameIndex = -1;
-		return false;
+		notifyDependents(ReferenceEvent::TargetChanged);
+		return;
 	}
 
-	Future<QVector<FileSourceImporter::Frame>> framesFuture = importer()->discoverFrames(sourceUrl());
-	if(!dataset()->container()->taskManager().waitForTask(framesFuture))
-		return false;
-
-	QVector<FileSourceImporter::Frame> newFrames = framesFuture.result();
-
-	// Reload current frame if file has changed.
-	if(_loadedFrameIndex >= 0) {
-		if(_loadedFrameIndex >= newFrames.size() || _loadedFrameIndex >= _frames.size() || newFrames[_loadedFrameIndex] != _frames[_loadedFrameIndex])
-			_loadedFrameIndex = -1;
-	}
-
-	_frames = newFrames;
-	notifyDependents(ReferenceEvent::TargetChanged);
-
-	return true;
+	_frameDiscoveryFuture = importer()->discoverFrames(sourceUrl());
+	_frameDiscoveryWatcher.setFuture(_frameDiscoveryFuture);
 }
 
 /******************************************************************************
@@ -252,7 +229,7 @@ PipelineFlowState FileSource::requestFrame(int frame)
 {
 	// Handle out-of-range cases.
 	if(frame < 0) frame = 0;
-	if(frame >= numberOfFrames()) frame = numberOfFrames() - 1;
+	else if(frame >= numberOfFrames()) frame = numberOfFrames() - 1;
 
 	// Determine validity interval of the returned state.
 	TimeInterval interval = TimeInterval::infinite();
@@ -303,7 +280,15 @@ PipelineFlowState FileSource::requestFrame(int frame)
 		if(frame < 0 || frame >= numberOfFrames() || !importer()) {
 			if(oldLoadingTaskWasCanceled)
 				notifyDependents(ReferenceEvent::PendingStateChanged);
-			setStatus(PipelineStatus(PipelineStatus::Error, tr("The source location is empty (no files found).")));
+
+			// Check if we are still discovering the input frames.
+			if(_frameDiscoveryFuture.isValid() && numberOfFrames() == 0) {
+				// Indicate to the caller that the result is pending.
+				setStatus(PipelineStatus::Pending);
+				return PipelineFlowState(PipelineStatus::Pending, dataObjects(), interval, attrs);
+			}
+
+			setStatus(PipelineStatus(PipelineStatus::Error, tr("The source location is empty or has not been set (no files found).")));
 			_loadedFrameIndex = -1;
 			return PipelineFlowState(status(), dataObjects(), interval);
 		}
@@ -365,6 +350,53 @@ void FileSource::loadOperationFinished()
 	// Notify dependents that the evaluation request was completed.
 	notifyDependents(ReferenceEvent::PendingStateChanged);
 	notifyDependents(ReferenceEvent::TitleChanged);
+}
+
+/******************************************************************************
+* This is called when the background frame discovery task has finished.
+******************************************************************************/
+void FileSource::frameDiscoveryFinished()
+{
+	if(_frameDiscoveryFuture.isValid() && !_frameDiscoveryFuture.isCanceled()) {
+		try {
+			QVector<FileSourceImporter::Frame> newFrames = _frameDiscoveryFuture.result();
+
+			// Reload current frame if file has changed.
+			if(_loadedFrameIndex >= 0) {
+				if(_loadedFrameIndex >= newFrames.size() || _loadedFrameIndex >= _frames.size() || newFrames[_loadedFrameIndex] != _frames[_loadedFrameIndex])
+					_loadedFrameIndex = -1;
+			}
+
+			_frames = newFrames;
+		}
+		catch(Exception& ex) {
+			// Provide a context for this error.
+			ex.setContext(dataset());
+			ex.showError();
+		}
+
+		// Jump to the right frame to show the originally selected file.
+		int jumpToFrame = -1;
+		if(_isNewFile) {
+			for(int frameIndex = 0; frameIndex < _frames.size(); frameIndex++) {
+				QFileInfo fileInfo(_frames[frameIndex].sourceFile.path());
+				if(fileInfo.fileName() == _originallySelectedFilename) {
+					jumpToFrame = frameIndex;
+					break;
+				}
+			}
+		}
+
+		// Adjust the animation length number to match the number of frames in the input data source.
+		adjustAnimationInterval(jumpToFrame);
+	}
+
+	// Reset everything.
+	_frameDiscoveryWatcher.unsetFuture();
+	_frameDiscoveryFuture.reset();
+
+	// Notify dependents that the evaluation request was completed.
+	notifyDependents(ReferenceEvent::TargetChanged);
 }
 
 /******************************************************************************

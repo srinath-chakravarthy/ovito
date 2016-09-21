@@ -328,11 +328,33 @@ inline QDataStream& operator<<(QDataStream& stream, const Vector_4<T>& v) {
 	return stream << v.x() << v.y() << v.z() << v.w();
 }
 
+// This template specialization is for backward compatibility with OVITO 2.7.1 and earlier,
+// which always used single precision floating point numbers.
+// Unfortunately, the QDataStream used by the QSettings class to serialize values
+// performs no automatic precision conversion of floating point numbers.
+template<>
+inline QDataStream& operator<<(QDataStream& stream, const Vector_4<double>& v) {
+	return stream << (float)v.x() << (float)v.y() << (float)v.z() << (float)v.w();
+}
+
 /// \brief Reads a vector from a Qt data stream.
 /// \relates Vector_4
 template<typename T>
 inline QDataStream& operator>>(QDataStream& stream, Vector_4<T>& v) {
 	return stream >> v.x() >> v.y() >> v.z() >> v.w();
+}
+
+// This template specialization is for backward compatibility with OVITO 2.7.1 and earlier,
+// which always used single precision floating point numbers.
+// Unfortunately, the QDataStream used by the QSettings class to serialize values
+// performs no automatic precision conversion of floating point numbers.
+template<>
+inline QDataStream& operator>>(QDataStream& stream, Vector_4<double>& v) {
+	Vector_4<float> floatValue;
+	stream >> floatValue;
+	for(size_t i = 0; i < v.size(); i++)
+		v[i] = floatValue[i];
+	return stream;
 }
 
 /**

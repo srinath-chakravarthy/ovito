@@ -395,9 +395,9 @@ void InputColumnReader::sortParticleTypes()
 {
 	for(const TargetPropertyRecord& p : _properties) {
 		if(p.property && p.typeList != nullptr) {
-			// Since we created particle types on the go while reading the particle, the assigned particle type IDs
-			// depends on the storage order of particles in the file. We rather want a well-defined particle type ordering, that's
-			// why we sort them now according to their names.
+			// Since we created particle types on the go while reading the particles, the assigned particle type IDs
+			// depend on the storage order of particles in the file. We rather want a well-defined particle type ordering, that's
+			// why we sort them here according to their names or numeric IDs.
 			if(p.numericParticleTypes)
 				p.typeList->sortParticleTypesById();
 			else

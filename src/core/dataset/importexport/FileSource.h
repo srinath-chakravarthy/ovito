@@ -63,7 +63,7 @@ public:
 	virtual PipelineStatus status() const override { return _importStatus; }
 
 	/// \brief Scans the input source for animation frames and updates the internal list of frames.
-	Q_INVOKABLE bool updateFrames();
+	Q_INVOKABLE void updateFrames();
 
 	/// \brief Returns the number of animation frames that can be loaded from the data source.
 	int numberOfFrames() const { return _frames.size(); }
@@ -102,6 +102,9 @@ protected Q_SLOTS:
 
 	/// \brief This is called when the background loading operation has finished.
 	void loadOperationFinished();
+
+	/// \brief This is called when the background frame discovery task has finished.
+	void frameDiscoveryFinished();
 
 protected:
 
@@ -153,11 +156,20 @@ private:
 	/// If not, then the file being loaded is just another frame from the existing sequence.
 	bool _isNewFile;
 
+	/// The file that was originally selected by the user when importing the input file.
+	QString _originallySelectedFilename;
+
 	/// The asynchronous file loading task started by requestFrame().
 	std::shared_ptr<FileSourceImporter::FrameLoader> _activeFrameLoader;
 
 	/// The watcher object that is used to monitor the background operation.
 	FutureWatcher _frameLoaderWatcher;
+
+	/// The active Future that provides the discovered input frames.
+	Future<QVector<FileSourceImporter::Frame>> _frameDiscoveryFuture;
+
+	/// The watcher object that is used to monitor the background operation.
+	FutureWatcher _frameDiscoveryWatcher;
 
 	/// The status returned by the parser during its last call.
 	PipelineStatus _importStatus;

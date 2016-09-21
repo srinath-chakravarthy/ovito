@@ -39,6 +39,8 @@ class OpenGLBuffer
 {
 public:
 
+	typedef T value_type;
+
 	/// Constructor.
 	OpenGLBuffer(QOpenGLBuffer::Type type = QOpenGLBuffer::VertexBuffer) : _elementCount(0), _verticesPerElement(0), _buffer(type) {}
 
@@ -113,14 +115,15 @@ public:
 	}
 
 	/// Fills the vertex buffer with the given data.
-	void fill(const T* data) {
+	template<typename U>
+	void fill(const U* data) {
 		OVITO_ASSERT(isCreated());
 		OVITO_ASSERT(_elementCount >= 0);
 		OVITO_ASSERT(_verticesPerElement >= 1);
 
 		if(!_buffer.bind())
 			throw Exception(QStringLiteral("Failed to bind OpenGL vertex buffer."));
-		if(_verticesPerElement == 1) {
+		if(_verticesPerElement == 1 && std::is_same<T,U>::value) {
 			_buffer.write(0, data, _elementCount * sizeof(T));
 		}
 		else {
@@ -129,10 +132,10 @@ public:
 				OVITO_CHECK_POINTER(bufferData);
 				if(!bufferData)
 					throw Exception(QStringLiteral("Failed to map OpenGL vertex buffer to memory."));
-				const T* endData = data + _elementCount;
+				const U* endData = data + _elementCount;
 				for(; data != endData; ++data) {
 					for(int i = 0; i < _verticesPerElement; i++, ++bufferData) {
-						*bufferData = *data;
+						*bufferData = (T)*data;
 					}
 				}
 				_buffer.unmap();
@@ -143,7 +146,8 @@ public:
 	}
 
 	/// Fills the buffer with a constant value.
-	void fillConstant(T value) {
+	template<typename U>
+	void fillConstant(U value) {
 		OVITO_ASSERT(isCreated());
 		OVITO_ASSERT(_elementCount >= 0);
 		OVITO_ASSERT(_verticesPerElement >= 1);
@@ -155,7 +159,7 @@ public:
 			OVITO_CHECK_POINTER(bufferData);
 			if(!bufferData)
 				throw Exception(QStringLiteral("Failed to map OpenGL vertex buffer to memory."));
-			std::fill(bufferData, bufferData + _elementCount * _verticesPerElement, value);
+			std::fill(bufferData, bufferData + _elementCount * _verticesPerElement, (T)value);
 			_buffer.unmap();
 		}
 		_buffer.release();
@@ -169,6 +173,7 @@ public:
 		OVITO_ASSERT(type != GL_INT || (sizeof(T) == sizeof(GLint)*tupleSize && stride == 0) || sizeof(T) == stride);
 		if(!_buffer.bind())
 			throw Exception(QStringLiteral("Failed to bind OpenGL vertex buffer."));
+		if(stride == 0) stride = sizeof(T);
 		OVITO_CHECK_OPENGL(shader->enableAttributeArray(attributeName));
 		OVITO_CHECK_OPENGL(shader->setAttributeBuffer(attributeName, type, offset, tupleSize, stride));
 		_buffer.release();

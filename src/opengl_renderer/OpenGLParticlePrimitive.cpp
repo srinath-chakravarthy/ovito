@@ -306,7 +306,7 @@ void OpenGLParticlePrimitive::setSize(int particleCount)
 	else OVITO_ASSERT(false);
 
 	// Determine the VBO chunk size.
-	int bytesPerVertex = sizeof(ColorA);
+	int bytesPerVertex = sizeof(ColorAT<float>);
 	_chunkSize = std::min(_maxVBOSize / verticesPerParticle / bytesPerVertex, particleCount);
 
 	// Cannot use chunked VBOs when rendering semi-transparent particles,
@@ -331,9 +331,9 @@ void OpenGLParticlePrimitive::setSize(int particleCount)
 		_colorsBuffers[i].create(QOpenGLBuffer::StaticDraw, size, verticesPerParticle);
 		if(particleShape() == BoxShape || particleShape() == EllipsoidShape) {
 			_shapeBuffers[i].create(QOpenGLBuffer::StaticDraw, size, verticesPerParticle);
-			_shapeBuffers[i].fillConstant(Vector3::Zero());
+			_shapeBuffers[i].fillConstant(Vector_3<float>::Zero());
 			_orientationBuffers[i].create(QOpenGLBuffer::StaticDraw, size, verticesPerParticle);
-			_orientationBuffers[i].fillConstant(Quaternion(0,0,0,1));
+			_orientationBuffers[i].fillConstant(QuaternionT<float>(0,0,0,1));
 		}
 	}
 }
@@ -400,11 +400,14 @@ void OpenGLParticlePrimitive::setParticleColors(const Color* colors)
 	OVITO_ASSERT(QOpenGLContextGroup::currentContextGroup() == _contextGroup);
 	// Need to convert array from Color to ColorA.
 	for(auto& buffer : _colorsBuffers) {
-		ColorA* dest = buffer.map(QOpenGLBuffer::WriteOnly);
+		ColorAT<float>* dest = buffer.map(QOpenGLBuffer::WriteOnly);
 		const Color* end_colors = colors + buffer.elementCount();
 		for(; colors != end_colors; ++colors) {
 			for(int i = 0; i < buffer.verticesPerElement(); i++, ++dest) {
-				*dest = *colors;
+				dest->r() = (float)colors->r();
+				dest->g() = (float)colors->g();
+				dest->b() = (float)colors->b();
+				dest->a() = 1;
 			}
 		}
 		buffer.unmap();
@@ -456,7 +459,7 @@ void OpenGLParticlePrimitive::clearParticleShapes()
 {
 	OVITO_ASSERT(QOpenGLContextGroup::currentContextGroup() == _contextGroup);
 	for(auto& buffer : _shapeBuffers) {
-		buffer.fillConstant(Vector3::Zero());
+		buffer.fillConstant(Vector_3<float>::Zero());
 	}
 }
 
@@ -467,7 +470,7 @@ void OpenGLParticlePrimitive::clearParticleOrientations()
 {
 	OVITO_ASSERT(QOpenGLContextGroup::currentContextGroup() == _contextGroup);
 	for(auto& buffer : _orientationBuffers) {
-		buffer.fillConstant(Quaternion(0,0,0,1));
+		buffer.fillConstant(QuaternionT<float>(0,0,0,1));
 	}
 }
 
@@ -488,9 +491,6 @@ void OpenGLParticlePrimitive::render(SceneRenderer* renderer)
 {
     OVITO_REPORT_OPENGL_ERRORS();
 	OVITO_ASSERT(_contextGroup == QOpenGLContextGroup::currentContextGroup());
-	OVITO_STATIC_ASSERT(sizeof(FloatType) == 4);
-	OVITO_STATIC_ASSERT(sizeof(Color) == 12);
-	OVITO_STATIC_ASSERT(sizeof(ColorA) == 16);
 
 	OpenGLSceneRenderer* vpRenderer = dynamic_object_cast<OpenGLSceneRenderer>(renderer);
 

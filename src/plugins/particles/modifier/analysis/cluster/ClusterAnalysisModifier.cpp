@@ -83,6 +83,7 @@ void ClusterAnalysisModifier::ClusterAnalysisEngine::perform()
 	std::fill(_particleClusters->dataInt(), _particleClusters->dataInt() + _particleClusters->size(), -1);
 	_numClusters = 0;
 
+	std::deque<int> toProcess;
 	for(size_t seedParticleIndex = 0; seedParticleIndex < particleCount; seedParticleIndex++) {
 
 		// Skip unselected particles that are not included in the analysis.
@@ -100,7 +101,7 @@ void ClusterAnalysisModifier::ClusterAnalysisEngine::perform()
 		_particleClusters->setInt(seedParticleIndex, cluster);
 
 		// Now recursively iterate over all neighbors of the seed particle and add them to the cluster too.
-		std::deque<int> toProcess;
+		OVITO_ASSERT(toProcess.empty());
 		toProcess.push_back(seedParticleIndex);
 
 		do {

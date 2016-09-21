@@ -253,21 +253,21 @@ void ViewportWindow::unsetCursor()
 ******************************************************************************/
 void ViewportWindow::renderOrientationIndicator()
 {
-	const FloatType tripodSize = FloatType(60) * devicePixelRatio();			// pixels
+	const FloatType tripodSize = FloatType(80);			// device-independent pixels
 	const FloatType tripodArrowSize = FloatType(0.17); 	// percentage of the above value.
 
 	// Turn off depth-testing.
 	_viewportRenderer->setDepthTestEnabled(false);
 
 	// Setup projection matrix.
+	const FloatType tripodPixelSize = tripodSize * _viewportRenderer->devicePixelRatio();
+	_viewportRenderer->setRenderingViewport(0, 0, tripodPixelSize, tripodPixelSize);
 	ViewProjectionParameters projParams = viewport()->projectionParams();
-	FloatType xscale = size().width() / tripodSize;
-	FloatType yscale = size().height() / tripodSize;
-	projParams.projectionMatrix = Matrix4::translation(Vector3(-1.0 + 1.3f/xscale, -1.0 + 1.3f/yscale, 0))
-									* Matrix4::ortho(-xscale, xscale, -yscale, yscale, -2, 2);
+	projParams.projectionMatrix = Matrix4::ortho(-1.4f, 1.4f, -1.4f, 1.4f, -2, 2);
 	projParams.inverseProjectionMatrix = projParams.projectionMatrix.inverse();
 	projParams.viewMatrix.setIdentity();
 	projParams.inverseViewMatrix.setIdentity();
+	projParams.isPerspective = false;
 	_viewportRenderer->setProjParams(projParams);
 	_viewportRenderer->setWorldTransform(AffineTransformation::Identity());
 
@@ -311,13 +311,14 @@ void ViewportWindow::renderOrientationIndicator()
 
 		Point3 p = Point3::Origin() + viewport()->projectionParams().viewMatrix.column(axis).resized(1.2f);
 		Point3 ndcPoint = projParams.projectionMatrix * p;
-		Point2 windowPoint(( ndcPoint.x() + FloatType(1)) * size().width()  / 2,
-							(-ndcPoint.y() + FloatType(1)) * size().height() / 2);
+		Point2 windowPoint(( ndcPoint.x() + FloatType(1)) * tripodPixelSize / 2,
+							(-ndcPoint.y() + FloatType(1)) * tripodPixelSize / 2);
 		_orientationTripodLabels[axis]->renderWindow(_viewportRenderer, windowPoint, Qt::AlignHCenter | Qt::AlignVCenter);
 	}
 
 	// Restore old rendering attributes.
 	_viewportRenderer->setDepthTestEnabled(true);
+	_viewportRenderer->setRenderingViewport(0, 0, viewportWindowDeviceSize().width(), viewportWindowDeviceSize().height());
 }
 
 /******************************************************************************
@@ -336,10 +337,10 @@ void ViewportWindow::renderRenderFrame()
 	Box2 rect = viewport()->renderFrameRect();
 
 	// Render rectangle borders
-	_renderFrameOverlay->renderViewport(_viewportRenderer, Point2(-1,-1), Vector2(1.0 + rect.minc.x(), 2));
-	_renderFrameOverlay->renderViewport(_viewportRenderer, Point2(rect.maxc.x(),-1), Vector2(1.0 - rect.maxc.x(), 2));
-	_renderFrameOverlay->renderViewport(_viewportRenderer, Point2(rect.minc.x(),-1), Vector2(rect.width(), 1.0 + rect.minc.y()));
-	_renderFrameOverlay->renderViewport(_viewportRenderer, Point2(rect.minc.x(),rect.maxc.y()), Vector2(rect.width(), 1.0 - rect.maxc.y()));
+	_renderFrameOverlay->renderViewport(_viewportRenderer, Point2(-1,-1), Vector2(FloatType(1) + rect.minc.x(), 2));
+	_renderFrameOverlay->renderViewport(_viewportRenderer, Point2(rect.maxc.x(),-1), Vector2(FloatType(1) - rect.maxc.x(), 2));
+	_renderFrameOverlay->renderViewport(_viewportRenderer, Point2(rect.minc.x(),-1), Vector2(rect.width(), FloatType(1) + rect.minc.y()));
+	_renderFrameOverlay->renderViewport(_viewportRenderer, Point2(rect.minc.x(),rect.maxc.y()), Vector2(rect.width(), FloatType(1) - rect.maxc.y()));
 }
 
 /******************************************************************************

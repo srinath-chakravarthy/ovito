@@ -43,10 +43,9 @@ void FileSourceImporter::requestReload(int frame)
 {
 	// Retrieve the FileSource that owns this importer by looking it up in the list of dependents.
 	for(RefMaker* refmaker : dependents()) {
-		FileSource* obj = dynamic_object_cast<FileSource>(refmaker);
-		if(obj) {
+		if(FileSource* fileSource = dynamic_object_cast<FileSource>(refmaker)) {
 			try {
-				obj->refreshFromSource(frame);
+				fileSource->refreshFromSource(frame);
 			}
 			catch(const Exception& ex) {
 				ex.showError();
@@ -63,18 +62,17 @@ void FileSourceImporter::requestFramesUpdate()
 {
 	// Retrieve the FileSource that owns this importer by looking it up in the list of dependents.
 	for(RefMaker* refmaker : dependents()) {
-		FileSource* obj = dynamic_object_cast<FileSource>(refmaker);
-		if(obj) {
+		if(FileSource* fileSource = dynamic_object_cast<FileSource>(refmaker)) {
 			try {
 				// If wildcard pattern search has been disabled, replace
-				// wildcard pattern URL with an actual filename first.
+				// wildcard pattern URL with an actual filename.
 				if(!autoGenerateWildcardPattern()) {
-					QFileInfo fileInfo(obj->sourceUrl().path());
+					QFileInfo fileInfo(fileSource->sourceUrl().path());
 					if(fileInfo.fileName().contains('*') || fileInfo.fileName().contains('?')) {
-						if(obj->loadedFrameIndex() >= 0 && obj->loadedFrameIndex() < obj->frames().size()) {
-							QUrl currentUrl = obj->frames()[obj->loadedFrameIndex()].sourceFile;
-							if(currentUrl != obj->sourceUrl()) {
-								obj->setSource(currentUrl, this, true);
+						if(fileSource->loadedFrameIndex() >= 0 && fileSource->loadedFrameIndex() < fileSource->frames().size()) {
+							QUrl currentUrl = fileSource->frames()[fileSource->loadedFrameIndex()].sourceFile;
+							if(currentUrl != fileSource->sourceUrl()) {
+								fileSource->setSource(currentUrl, this, true);
 								continue;
 							}
 						}
@@ -82,14 +80,11 @@ void FileSourceImporter::requestFramesUpdate()
 				}
 
 				// Scan input source for animation frames.
-				obj->updateFrames();
+				fileSource->updateFrames();
 			}
 			catch(const Exception& ex) {
 				ex.showError();
 			}
-
-			// Adjust the animation length number to match the number of frames in the input data source.
-			obj->adjustAnimationInterval();
 		}
 	}
 }
@@ -193,18 +188,6 @@ bool FileSourceImporter::importFile(const QUrl& sourceUrl, ImportMode importMode
 
 	// Select import node.
 	dataset()->selection()->setNode(node);
-
-	// Jump to the right frame to show the originally selected file.
-	int jumpToFrame = -1;
-	for(int frameIndex = 0; frameIndex < fileSource->frames().size(); frameIndex++) {
-		if(fileSource->frames()[frameIndex].sourceFile == sourceUrl) {
-			jumpToFrame = frameIndex;
-			break;
-		}
-	}
-
-	// Adjust the animation length number to match the number of frames in the input data source.
-	fileSource->adjustAnimationInterval(jumpToFrame);
 
 	if(importMode != ReplaceSelected) {
 		// Adjust views to completely show the newly imported object.

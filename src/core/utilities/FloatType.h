@@ -29,25 +29,39 @@
 
 namespace Ovito {
 
-/// The default floating-point type used by OVITO.
-using FloatType = float;
+#ifdef FLOATTYPE_FLOAT
 
-#define FLOATTYPE_FLOAT		// This tells the code that we're using 32-bit floating-point numbers.
+	/// The default floating-point type used by OVITO.
+	using FloatType = float;
 
-/// A small epsilon, which is used in OVITO to test if a number is (almost) zero.
-#define FLOATTYPE_EPSILON	Ovito::FloatType(1e-6)
+	/// A small epsilon, which is used in OVITO to test if a number is (almost) zero.
+	#define FLOATTYPE_EPSILON	Ovito::FloatType(1e-6)
+
+	/// The format specifier to be passed to the sscanf() function to parse floating-point numbers of type Ovito::FloatType.
+	#define FLOATTYPE_SCANF_STRING 		"%g"
+
+#else
+
+	/// The default floating-point type used by OVITO.
+	using FloatType = double;
+
+	/// A small epsilon, which is used in OVITO to test if a number is (almost) zero.
+	#define FLOATTYPE_EPSILON	Ovito::FloatType(1e-12)
+
+	/// The format specifier to be passed to the sscanf() function to parse floating-point numbers of type Ovito::FloatType.
+	#define FLOATTYPE_SCANF_STRING 		"%lg"
+
+#endif
 
 /// The maximum value for floating-point variables of type Ovito::FloatType.
-#define FLOATTYPE_MAX	(std::numeric_limits<FloatType>::max())
+#define FLOATTYPE_MAX	(std::numeric_limits<Ovito::FloatType>::max())
 
 /// The lowest value for floating-point variables of type Ovito::FloatType.
-#define FLOATTYPE_MIN	(std::numeric_limits<FloatType>::lowest())
+#define FLOATTYPE_MIN	(std::numeric_limits<Ovito::FloatType>::lowest())
 
 /// The constant PI.
 #define FLOATTYPE_PI	Ovito::FloatType(3.14159265358979323846)
 
-/// The format specifier to be passed to the sscanf() function to parse floating-point numbers of type Ovito::FloatType.
-#define FLOATTYPE_SCANF_STRING 		"%g"
 
 }	// End of namespace
 

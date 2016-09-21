@@ -55,6 +55,7 @@ SET(SourceFiles
 	modifier/modify/WrapPeriodicImagesModifier.cpp
 	modifier/modify/CreateBondsModifier.cpp
 	modifier/modify/LoadTrajectoryModifier.cpp
+	modifier/modify/CombineParticleSetsModifier.cpp
 	modifier/analysis/StructureIdentificationModifier.cpp
 	modifier/analysis/binandreduce/BinAndReduceModifier.cpp
 	modifier/analysis/bondangle/BondAngleAnalysisModifier.cpp
@@ -70,6 +71,7 @@ SET(SourceFiles
 	modifier/analysis/scatterplot/ScatterPlotModifier.cpp
 	modifier/analysis/wignerseitz/WignerSeitzAnalysisModifier.cpp
 	modifier/analysis/ptm/PolyhedralTemplateMatchingModifier.cpp
+	modifier/analysis/structural_clustering/StructuralClusteringModifier.cpp
 	modifier/selection/ExpandSelectionModifier.cpp
 	modifier/selection/InvertSelectionModifier.cpp
 	modifier/selection/SelectParticleTypeModifier.cpp
@@ -108,6 +110,13 @@ SET(SourceFiles
 	util/ParticleSelectionSet.cpp
 )
 
+IF(NOT WIN32)
+	LIST(APPEND SourceFiles 
+		import/gsd/GSDImporter.cpp
+		import/gsd/gsd.c
+	)
+ENDIF()
+
 IF(OVITO_BUILD_PLUGIN_PYSCRIPT)
 	LIST(APPEND SourceFiles 
 		scripting/PythonInterface.cpp
@@ -134,7 +143,7 @@ SET(GLUSourceFiles
 OVITO_STANDARD_PLUGIN(Particles
 	SOURCES Particles.cpp ${SourceFiles} ${GLUSourceFiles}
 	LIB_DEPENDENCIES muParser
-	PRIVATE_LIB_DEPENDENCIES VoroPlusPlus OpenGLRenderer PolyhedralTemplateMatching
+	PRIVATE_LIB_DEPENDENCIES VoroPlusPlus OpenGLRenderer PolyhedralTemplateMatching CombinatoriallyOptimalPointRegistration
 	OPTIONAL_PLUGIN_DEPENDENCIES PyScript
 	PYTHON_WRAPPERS "${CMAKE_CURRENT_SOURCE_DIR}/resources/python/"
 )

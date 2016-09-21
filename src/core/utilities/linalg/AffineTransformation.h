@@ -182,6 +182,15 @@ public:
 		{ (*this)[0] = tm.column(0); (*this)[1] = tm.column(1); (*this)[2] = tm.column(2); (*this)[3] = typename Vector_3<T>::Zero(); } 
 #endif
 
+	/// \brief Casts the matrix to a matrix with another data type.
+	template<typename U>
+	Q_DECL_CONSTEXPR explicit operator AffineTransformationT<U>() const {
+		return AffineTransformationT<U>(
+				static_cast<U>((*this)(0,0)), static_cast<U>((*this)(0,1)), static_cast<U>((*this)(0,2)), static_cast<U>((*this)(0,3)),
+				static_cast<U>((*this)(1,0)), static_cast<U>((*this)(1,1)), static_cast<U>((*this)(1,2)), static_cast<U>((*this)(1,3)),
+				static_cast<U>((*this)(2,0)), static_cast<U>((*this)(2,1)), static_cast<U>((*this)(2,2)), static_cast<U>((*this)(2,3)));
+	}
+
 	/// \brief Returns the number of rows of this matrix.
 	static Q_DECL_CONSTEXPR size_type row_count() { return 3; }
 
@@ -343,7 +352,7 @@ public:
 	/// \return \c false if the matrix is not invertible because it is singular; \c true if the inverse has been calculated
 	///         and was stored in \a result.
 	/// \sa determinant()
-	bool inverse(AffineTransformationT& result, T epsilon = T(FLOATTYPE_EPSILON)) const {
+	bool inverse(AffineTransformationT& result, T epsilon = T(1e-16)) const {
 		T det = determinant();
 		if(std::abs(det) <= epsilon) return false;
 		result = AffineTransformationT(

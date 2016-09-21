@@ -517,12 +517,35 @@ inline QDataStream& operator<<(QDataStream& stream, const RotationT<T>& r) {
 	return stream << r.axis() << r.angle();
 }
 
+// This template specialization is for backward compatibility with OVITO 2.7.1 and earlier,
+// which always used single precision floating point numbers.
+// Unfortunately, the QDataStream used by the QSettings class to serialize values
+// performs no automatic precision conversion of floating point numbers.
+template<>
+inline QDataStream& operator<<(QDataStream& stream, const RotationT<double>& r) {
+	return stream << r.axis() << (float)r.angle();
+}
+
 /// \brief Reads a rotation from a Qt data stream.
 /// \relates RotationT
 template<typename T>
 inline QDataStream& operator>>(QDataStream& stream, RotationT<T>& r) {
 	Vector_3<T> axis;
 	T angle;
+	stream >> axis >> angle;
+	r.setAxis(axis);
+	r.setAngle(angle);
+	return stream;
+}
+
+// This template specialization is for backward compatibility with OVITO 2.7.1 and earlier,
+// which always used single precision floating point numbers.
+// Unfortunately, the QDataStream used by the QSettings class to serialize values
+// performs no automatic precision conversion of floating point numbers.
+template<>
+inline QDataStream& operator>>(QDataStream& stream, RotationT<double>& r) {
+	Vector_3<double> axis;
+	float angle;
 	stream >> axis >> angle;
 	r.setAxis(axis);
 	r.setAngle(angle);
