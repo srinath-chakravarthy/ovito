@@ -1,6 +1,6 @@
 ###############################################################################
 # 
-#  Copyright (2014) Alexander Stukowski
+#  Copyright (2016) Alexander Stukowski
 #
 #  This file is part of OVITO (Open Visualization Tool).
 #
@@ -19,20 +19,22 @@
 #
 ###############################################################################
 
-ADD_SUBDIRECTORY(botan)
-ADD_SUBDIRECTORY(qssh)
-IF(OVITO_BUILD_PLUGIN_PARTICLES)
-    ADD_SUBDIRECTORY(muparser)
-    IF(OVITO_BUILD_GUI) 
-    	ADD_SUBDIRECTORY(qcustomplot)
-    ENDIF()
-    ADD_SUBDIRECTORY(voro++)
-    ADD_SUBDIRECTORY(ptm)
-    ADD_SUBDIRECTORY(copr)
-ENDIF()
-IF(OVITO_BUILD_PLUGIN_TACHYON)
-	ADD_SUBDIRECTORY(tachyon)
-ENDIF()
-IF(OVITO_BUILD_PLUGIN_CRYSTALANALYSIS)
-	ADD_SUBDIRECTORY(geogram)
-ENDIF()
+SET(COPR_SOURCE_FILES
+	index_copr.cpp
+	qcprot/qcprot.cpp
+	qcprot/quat.cpp
+)
+
+# Build library.
+ADD_LIBRARY(CombinatoriallyOptimalPointRegistration STATIC ${COPR_SOURCE_FILES})
+
+# Make header files of this library available to dependent targets.
+TARGET_INCLUDE_DIRECTORIES(CombinatoriallyOptimalPointRegistration INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/..")
+
+# Since we will link this into the Particles plugin, we need to use the same setting for the fPIC flag.
+SET_PROPERTY(TARGET CombinatoriallyOptimalPointRegistration PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+# Export this target.
+INSTALL(TARGETS CombinatoriallyOptimalPointRegistration EXPORT OVITO 
+    ARCHIVE DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}" 
+    CONFIGURATIONS "")
