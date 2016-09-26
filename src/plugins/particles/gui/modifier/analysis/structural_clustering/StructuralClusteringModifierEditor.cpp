@@ -47,20 +47,15 @@ void StructuralClusteringModifierEditor::createUI(const RolloutInsertionParamete
 	gridlayout->setContentsMargins(4,4,4,4);
 	gridlayout->setColumnStretch(1, 1);
 
-	// Num neighbors parameter.
-	IntegerParameterUI* numNeighborsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(StructuralClusteringModifier::_numNeighbors));
-	gridlayout->addWidget(numNeighborsPUI->label(), 0, 0);
-	gridlayout->addLayout(numNeighborsPUI->createFieldLayout(), 0, 1);
-
-	// Cutoff parameter.
-	FloatParameterUI* distanceCutoffPUI = new FloatParameterUI(this, PROPERTY_FIELD(StructuralClusteringModifier::_cutoff));
-	gridlayout->addWidget(distanceCutoffPUI->label(), 1, 0);
-	gridlayout->addLayout(distanceCutoffPUI->createFieldLayout(), 1, 1);
+	// Voronoi face threshold parameter.
+	FloatParameterUI* faceThresholdPUI = new FloatParameterUI(this, PROPERTY_FIELD(StructuralClusteringModifier::_faceThreshold));
+	gridlayout->addWidget(faceThresholdPUI->label(), 0, 0);
+	gridlayout->addLayout(faceThresholdPUI->createFieldLayout(), 0, 1);
 
 	// RMSD threshold parameter.
 	FloatParameterUI* rmsdThresholdPUI = new FloatParameterUI(this, PROPERTY_FIELD(StructuralClusteringModifier::_rmsdThreshold));
-	gridlayout->addWidget(rmsdThresholdPUI->label(), 2, 0);
-	gridlayout->addLayout(rmsdThresholdPUI->createFieldLayout(), 2, 1);
+	gridlayout->addWidget(rmsdThresholdPUI->label(), 1, 0);
+	gridlayout->addLayout(rmsdThresholdPUI->createFieldLayout(), 1, 1);
 
 	layout->addLayout(gridlayout);
 
