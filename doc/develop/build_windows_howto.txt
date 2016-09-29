@@ -1,8 +1,9 @@
 **************************************************************************
-Compiler: Microsoft Visual C++ 2015
+Compiler: 
+    Microsoft Visual C++ 2013/2015
 **************************************************************************
 
-Typical build directory layout:
+Typical layour for the build directory:
 
 ovito/
   32bit/                (Build directory for 32-bit dependencies)
@@ -43,7 +44,7 @@ nmake
 nmake install
 
 ----- Install PyQt5 ----
-..\python\python.exe configure.py ^
+..\XXbit\python\python.exe configure.py ^
    --concatenate ^
    --concatenate-split 10 ^
    --confirm-license ^
