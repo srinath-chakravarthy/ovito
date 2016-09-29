@@ -62,6 +62,8 @@ Unresolved OpenGL problems:
 
 - Some vector arrows are silently omitted from the OpenGL viewport display (stefan.parviainen@iki.fi)
     Ovito 2.6.2, Windows, ATI Radeon HD 4600 Series, 3.2.11672 Core Profile Context
+    
+- Ovito crashes as soons as file selection dialog is shown (Ovito 2.7.1, Windows 64-bit)
 
 Unresolved bugs:
 
@@ -87,7 +89,6 @@ New I/O functions:
 - Export to Blender (Paul Erhart, Filip Sund <filip.sund@fys.uio.no>)
 - Single precision floating-point numbers, which are used for custom particle properties, cannot represent large integer numbers exactly (e.g. 100400). Find a solution to make it work.
 - Add support for more file formats using OpenBabel.
-- Merging of datasets into one (Joseph Wallace <josey.wallace@gmail.com>).
 - Add support for GSD file format and other HOOMD formats (Martin Dulle <Martin.Dulle@uni-bayreuth.de>)
 
 Performance improvements:

@@ -38,7 +38,6 @@ Python class name                              User interface name
 :py:class:`ElasticStrainModifier`              :guilabel:`Elastic strain calculation`
 :py:class:`ExpandSelectionModifier`            :guilabel:`Expand selection`
 :py:class:`FreezePropertyModifier`             :guilabel:`Freeze property`
-:py:class:`GrainSegmentationModifier2`         :guilabel:`Grain segmentation 2`
 :py:class:`HistogramModifier`                  :guilabel:`Histogram`
 :py:class:`IdentifyDiamondModifier`            :guilabel:`Identify diamond structure`
 :py:class:`InvertSelectionModifier`            :guilabel:`Invert selection`

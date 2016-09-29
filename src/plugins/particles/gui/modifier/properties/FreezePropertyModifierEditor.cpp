@@ -22,6 +22,7 @@
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/particles/modifier/properties/FreezePropertyModifier.h>
 #include <plugins/particles/gui/util/ParticlePropertyParameterUI.h>
+#include <core/animation/AnimationSettings.h>
 #include "FreezePropertyModifierEditor.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Properties) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -70,8 +71,7 @@ void FreezePropertyModifierEditor::takeSnapshot()
 	if(!mod) return;
 
 	undoableTransaction(tr("Take property snapshot"), [mod]() {
-		for(const auto& modInput : mod->getModifierInputs())
-			mod->takePropertySnapshot(modInput.first, modInput.second);
+		mod->takePropertySnapshot(mod->dataset()->animationSettings()->time(), true);
 	});
 }
 
@@ -87,8 +87,7 @@ void FreezePropertyModifierEditor::onSourcePropertyChanged()
 		// When the user selects a different source property, adjust the destination property automatically.
 		mod->setDestinationProperty(mod->sourceProperty());
 		// Also take a current snapshot of the source property values.
-		for(const auto& modInput : mod->getModifierInputs())
-			mod->takePropertySnapshot(modInput.first, modInput.second);
+		mod->takePropertySnapshot(mod->dataset()->animationSettings()->time(), true);
 	});
 }
 

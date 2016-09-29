@@ -230,7 +230,12 @@ BOOST_PYTHON_MODULE(PyScriptScene)
 				":Default: ``True``\n")
 		.add_property("status", &Modifier::status)
 		.def("modifierValidity", &Modifier::modifierValidity)
-		.def("modifierApplications", &Modifier::modifierApplications)
+		.add_property("modifier_applications", lambda_address([](Modifier& mod) -> list {
+				list l;
+				for(ModifierApplication* modApp : mod.modifierApplications())
+					l.append(ptr(modApp));
+				return l;
+			}))
 		.def("isApplicableTo", &Modifier::isApplicableTo)
 	;
 

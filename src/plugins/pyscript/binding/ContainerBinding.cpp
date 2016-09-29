@@ -69,6 +69,8 @@ BOOST_PYTHON_MODULE(PyScriptContainers)
 	class_<QVector<ModifierApplication*>, boost::noncopyable>("QVectorModifierApplication", no_init)
 		.def(QVector_OO_readonly_indexing_suite<ModifierApplication>())
 	;
+	python_to_container_conversion<QVector<ModifierApplication*>>();
+
 	class_<QVector<ViewportOverlay*>, boost::noncopyable>("QVectorViewportOverlay", no_init)
 		.def(QVector_OO_readonly_indexing_suite<ViewportOverlay>())
 	;

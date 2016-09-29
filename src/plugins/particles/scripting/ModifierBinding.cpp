@@ -310,10 +310,23 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 				":Default: 3.0\n")
 	;
 
-	ovito_class<FreezePropertyModifier, ParticleModifier>()
-		.add_property("source_property", make_function(&FreezePropertyModifier::sourceProperty, return_value_policy<copy_const_reference>()), &FreezePropertyModifier::setSourceProperty)
-		.add_property("destination_property", make_function(&FreezePropertyModifier::destinationProperty, return_value_policy<copy_const_reference>()), &FreezePropertyModifier::setDestinationProperty)
-		.def("take_snapshot", &FreezePropertyModifier::takePropertySnapshot)
+	ovito_class<FreezePropertyModifier, ParticleModifier>(
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
+			"This modifier can store a static copy of a particle property and inject it back into the pipeline (optionally under a different name than the original property). "
+			"Since the snapshot of the current particle property values is taken by the modifier at a particular animation time, "
+			"the :py:class:`!FreezePropertyModifier` allows to *freeze* the property and overwrite any dynamically changing property values with the stored static copy. "
+			"\n\n"
+			"**Example:**"
+			"\n\n"
+			".. literalinclude:: ../example_snippets/freeze_property_modifier.py\n"
+			"\n")
+		.add_property("source_property", make_function(&FreezePropertyModifier::sourceProperty, return_value_policy<copy_const_reference>()), &FreezePropertyModifier::setSourceProperty,
+				"The name of the input particle property that should be copied by the modifier. "
+				"It can be one of the :ref:`standard particle properties <particle-types-list>` or a custom particle property. ")
+		.add_property("destination_property", make_function(&FreezePropertyModifier::destinationProperty, return_value_policy<copy_const_reference>()), &FreezePropertyModifier::setDestinationProperty,
+				"The name of the output particle property that should be written to by the modifier. "
+				"It can be one of the :ref:`standard particle properties <particle-types-list>` or a custom particle property. ")
+		.def("_take_snapshot", static_cast<void (FreezePropertyModifier::*)(TimePoint,bool)>(&FreezePropertyModifier::takePropertySnapshot))
 	;
 
 	ovito_class<ClearSelectionModifier, ParticleModifier>(

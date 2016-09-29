@@ -52,8 +52,11 @@ public:
 	/// Returns the particle property to which the stored values will be written
 	const ParticlePropertyReference& destinationProperty() const { return _destinationProperty; }
 
-	/// Takes a snapshot of the source property.
+	/// Takes a snapshot of the source property for a specific ModifierApplication.
 	void takePropertySnapshot(ModifierApplication* modApp, const PipelineFlowState& state);
+
+	/// Takes a snapshot of the source property for all ModifierApplications.
+	void takePropertySnapshot(TimePoint time, bool waitUntilReady);
 
 protected:
 
