@@ -83,7 +83,7 @@ ModifierListBox::ModifierListBox(QWidget* parent, ModificationListModel* modific
 	// Sort modifier sub-lists alphabetically.
 	for(auto& category : _modifierCategories) {
 		std::sort(category.modifierClasses.begin(), category.modifierClasses.end(), [](const OvitoObjectType* a, const OvitoObjectType* b) {
-			return QString::compare(a->name(), b->name(), Qt::CaseInsensitive) < 0;
+			return QString::compare(a->displayName(), b->displayName(), Qt::CaseInsensitive) < 0;
 		} );
 	}
 
