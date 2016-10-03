@@ -19,7 +19,7 @@ using namespace std;
 //todo: change voronoi code to return errors rather than exiting
 static int calculate_voronoi_face_areas(int num_points, const double (*_points)[3], double* normsq, double max_norm, voronoicell_neighbor* v, vector<int>& nbr_indices, vector<int>& face_vertices, vector<double>& vertices)
 {
-	const double k = 1000 * max_norm;
+	const double k = 1 * max_norm;
 	v->init(-k,k,-k,k,-k,k);
 
 	for (int i=1;i<num_points;i++)
@@ -111,48 +111,50 @@ int calculate_coordination(void* _voronoi_handle, int num_points, const double (
 	}
 
 	int num_faces = voronoi_handle->number_of_faces();
+
 #ifdef DEBUG
-	printf("num_faces=%d\n", num_faces);
+	printf("number of voronoi faces: %d\n", num_faces);
 #endif
 
 	bool is_voronoi_neighbour[MAX_POINTS] = {false};
 	double solid_angles[MAX_POINTS] = {0};
 	size_t c = 0;
+	int current_face = 0;
 	for (int current_face = 0;current_face<num_faces;current_face++)
 	{
-		int point_index = nbr_indices[current_face];
-		if (point_index <= 0)
-			continue;
-
-		is_voronoi_neighbour[point_index] = true;
-
-		double solid_angle = 0;
 		int num = face_vertices[c++];
-		int u = face_vertices[c];
-		int v = face_vertices[c+1];
-		for (int i=2;i<num;i++)
-		{
-			int w = face_vertices[c+i];
-			double omega = calculate_solid_angle(&vertices[u*3], &vertices[v*3], &vertices[w*3]);
-			solid_angle += omega;
 
-			v = w;
+		int point_index = nbr_indices[current_face];
+		if (point_index > 0)
+		{
+			is_voronoi_neighbour[point_index] = true;
+
+			double solid_angle = 0;
+			int u = face_vertices[c];
+			int v = face_vertices[c+1];
+			for (int i=2;i<num;i++)
+			{
+				int w = face_vertices[c+i];
+				double omega = calculate_solid_angle(&vertices[u*3], &vertices[v*3], &vertices[w*3]);
+				solid_angle += omega;
+
+				v = w;
+			}
+
+			solid_angles[point_index] = solid_angle;
+#ifdef DEBUG
+			printf("%d\t%f\t%f\n", point_index, solid_angle, solid_angle / (4 * M_PI));
+#endif
 		}
 
-		solid_angles[point_index] = solid_angle;
 		c += num;
-
-#ifdef DEBUG
-		printf("%d\t%f\t%f\n", point_index, solid_angle, solid_angle / (4 * M_PI));
-#endif
 	}
 
 	assert(c == face_vertices.size());
 
 	double solid_angle_threshold = threshold * 4 * M_PI;
-	for (int i=0;i<num_points;i++) {
+	for (int i=0;i<num_points;i++)
 		is_neighbour[i] = is_voronoi_neighbour[i] && solid_angles[i] > solid_angle_threshold;
-	}
 
 	return ret;
 }

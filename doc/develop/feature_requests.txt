@@ -102,4 +102,5 @@ Scripting features:
 
 Documentation:
 
+- Document and test Python interface of FreezePropertyModifier.
 - Application settings dialog

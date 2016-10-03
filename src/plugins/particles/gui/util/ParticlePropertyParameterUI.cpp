@@ -63,6 +63,18 @@ ParticlePropertyParameterUI::~ParticlePropertyParameterUI()
 }
 
 /******************************************************************************
+* This method is called when a reference target changes.
+******************************************************************************/
+bool ParticlePropertyParameterUI::referenceEvent(RefTarget* source, ReferenceEvent* event)
+{
+	if(source == editObject() && event->type() == ReferenceEvent::ModifierInputChanged) {
+		// The modifier's input from the pipeline has changed -> update value shown in UI.
+		updateUI();
+	}
+	return PropertyParameterUI::referenceEvent(source, event);
+}
+
+/******************************************************************************
 * This method is called when a new editable object has been assigned to the properties owner this
 * parameter UI belongs to. 
 ******************************************************************************/

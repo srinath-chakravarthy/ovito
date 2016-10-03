@@ -167,7 +167,9 @@ protected:
 	/// next time the modification pipeline is evaluated.
 	///
 	/// The default implementation does nothing.
-	virtual void upstreamPipelineChanged(ModifierApplication* modApp) {}
+	virtual void upstreamPipelineChanged(ModifierApplication* modApp) {
+		notifyDependents(ReferenceEvent::ModifierInputChanged);
+	}
 
 private:
 

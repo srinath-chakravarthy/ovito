@@ -79,6 +79,11 @@ public Q_SLOTS:
 	
 protected:
 
+	/// This method is called when a reference target changes.
+	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
+
+protected:
+
 	/// The combo box of the UI component.
 	QPointer<ParticlePropertyComboBox> _comboBox;
 
