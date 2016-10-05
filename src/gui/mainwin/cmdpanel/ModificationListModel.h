@@ -112,6 +112,9 @@ public:
     /// Inserts the given modifiers into the modification pipeline of the selected scene nodes.
 	void applyModifiers(const QVector<OORef<Modifier>>& modifiers);
 
+	/// Sets the item in the modification list that should be selected on the next list update.
+	void setNextToSelectObject(RefTarget* obj) { _nextToSelectObject = obj; }
+
 Q_SIGNALS:
 
 	/// This signal is emitted if a new list item has been selected, or if the currently
