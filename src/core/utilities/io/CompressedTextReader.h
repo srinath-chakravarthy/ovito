@@ -96,7 +96,7 @@ public:
 	}
 
 	/// Returns the last line read via readLine() as a Qt string.
-	QString lineString() const { return QString::fromLocal8Bit(_line.data()); }
+	QString lineString() const { return QString::fromUtf8(_line.data()); }
 
 	/// Returns the current line number.
 	int lineNumber() const { return _lineNumber; }

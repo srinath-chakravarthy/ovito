@@ -158,7 +158,7 @@ void ColorLegendOverlay::render(Viewport* viewport, QPainter& painter, const Vie
 	FloatType startValue = modifier()->startValue();
 	FloatType endValue = modifier()->endValue();
 
-	QByteArray format = valueFormatString().toLatin1();
+	QByteArray format = valueFormatString().toUtf8();
 	if(format.contains("%s")) format.clear();
 
 	QString titleLabel, topLabel, bottomLabel;
