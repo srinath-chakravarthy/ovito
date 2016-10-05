@@ -72,14 +72,34 @@ IF(OVITO_BUILD_GUI)
 	ADD_SUBDIRECTORY(gui)
 ENDIF()
 
-# Install "ovitos" script launcher.
-IF(APPLE)	
-    SET(OVITOS_EXECUTABLE "${OVITO_LIBRARY_DIRECTORY}/ovitos")
+# Build the script launcher executable.
+ADD_EXECUTABLE(ovitos launcher/Main.cpp)
+TARGET_LINK_LIBRARIES(ovitos Core Gui)
+TARGET_LINK_LIBRARIES(ovitos Qt5::Core Qt5::Gui)
+IF(APPLE)
+	SET_TARGET_PROPERTIES(ovitos PROPERTIES OUTPUT_NAME "ovitos.exe")
+	SET_TARGET_PROPERTIES(ovitos PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OVITO_LIBRARY_DIRECTORY}")
+	INSTALL(TARGETS ovitos DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}")
+	
+	# Install the launcher script.
+	SET(OVITOS_EXECUTABLE "${OVITO_LIBRARY_DIRECTORY}/ovitos")
 	CONFIGURE_FILE("resources/ovitos" "${OVITOS_EXECUTABLE}" COPYONLY)
-	CONFIGURE_FILE("resources/interactive_startup.py" "${OVITO_LIBRARY_DIRECTORY}/" COPYONLY)
 	INSTALL(PROGRAMS "resources/ovitos" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}")
-	INSTALL(PROGRAMS "resources/interactive_startup.py" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}")
+ELSE()
+	SET_TARGET_PROPERTIES(ovitos PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OVITO_BINARY_DIRECTORY}")
+	INSTALL(TARGETS ovitos DESTINATION "${OVITO_RELATIVE_BINARY_DIRECTORY}")
+	GET_PROPERTY(OVITOS_EXECUTABLE TARGET ovitos PROPERTY LOCATION)
+ENDIF()
+IF(APPLE)
+    SET_TARGET_PROPERTIES(ovitos PROPERTIES MACOSX_RPATH TRUE)
+    SET_TARGET_PROPERTIES(ovitos PROPERTIES INSTALL_RPATH "@executable_path/")
+ELSEIF(UNIX)
+    SET_TARGET_PROPERTIES(ovitos PROPERTIES INSTALL_RPATH "$ORIGIN/../lib/ovito/")
+ENDIF()
+# Build the script launcher together with PyScript plugin.
+ADD_DEPENDENCIES(PyScript ovitos)
 
+IF(APPLE)
 	# Create a nested application bundle with a modified Info.plist file
 	# that starts the application without displaying the dock icon.
 	EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${OVITO_BINARY_DIRECTORY}/${MACOSX_BUNDLE_NAME}.app/Contents/MacOS/Ovito.App/Contents")
@@ -88,22 +108,6 @@ IF(APPLE)
 	EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E create_symlink "../../../Frameworks" "${OVITO_BINARY_DIRECTORY}/${MACOSX_BUNDLE_NAME}.app/Contents/MacOS/Ovito.App/Contents/Frameworks")
 	CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/src/main/resources/Info.plist" "${OVITO_BINARY_DIRECTORY}/${MACOSX_BUNDLE_NAME}.app/Contents/MacOS/Ovito.App/Contents/Info.plist")
 	EXECUTE_PROCESS(COMMAND defaults write "${OVITO_BINARY_DIRECTORY}/${MACOSX_BUNDLE_NAME}.app/Contents/MacOS/Ovito.App/Contents/Info" LSUIElement 1)
-ELSE()
-    # Build the script launcher executable.
-    ADD_EXECUTABLE(ovitos launcher/Main.cpp)
-    SET_TARGET_PROPERTIES(ovitos PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OVITO_BINARY_DIRECTORY}")
-    TARGET_LINK_LIBRARIES(ovitos Core Gui)
-    TARGET_LINK_LIBRARIES(ovitos Qt5::Core Qt5::Gui)
-    INSTALL(TARGETS ovitos DESTINATION "${OVITO_RELATIVE_BINARY_DIRECTORY}")
-    IF(APPLE)
-        SET_TARGET_PROPERTIES(ovitos PROPERTIES MACOSX_RPATH TRUE)
-        SET_TARGET_PROPERTIES(ovitos PROPERTIES INSTALL_RPATH "@executable_path/")
-    ELSEIF(UNIX)
-        SET_TARGET_PROPERTIES(ovitos PROPERTIES INSTALL_RPATH "$ORIGIN/../lib/ovito/")
-    ENDIF()
-    GET_PROPERTY(OVITOS_EXECUTABLE TARGET ovitos PROPERTY LOCATION)
-    # Build the script launcher together with PyScript plugin.
-    ADD_DEPENDENCIES(PyScript ovitos)
 ENDIF()
 
 # Install standard Python packages. 
@@ -119,6 +123,7 @@ IF(APPLE)
 		PATTERN "test" EXCLUDE
 		PATTERN "*.exe" EXCLUDE
 		PATTERN "sphinx" EXCLUDE
+		PATTERN "Pygments*" EXCLUDE
 		PATTERN "PyQt4" EXCLUDE)
 		
 	# Install Python header files.

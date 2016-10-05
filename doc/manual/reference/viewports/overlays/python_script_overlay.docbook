@@ -115,7 +115,8 @@ def render(painter, **args):
 			x = mod.histogram[:,0]
 			y = mod.histogram[:,1]
 			break
-	assert(x != None and y != None)
+	if not 'x' in locals():
+		raise RuntimeError('Histogram modifier not found.')
 	
 	# Get size of rendered viewport image in pixels.
 	viewport_width = painter.window().width()
