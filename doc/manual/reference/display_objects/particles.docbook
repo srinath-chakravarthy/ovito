@@ -85,7 +85,7 @@
 		      <varlistentry>
 		        <term>Automatic</term>
 		        <listitem><para>OVITO automatically switches between the three quality levels above depending on the number of particles to render in the interactive viewports. For
-		        less than 2,000 particles, the high-quality method is used. For more than 100,000 particles, the lowest quality mode is used. Irrespective of the
+		        less than 4,000 particles, the high-quality method is used. For more than 400,000 particles, the lowest quality mode is used. Irrespective of the
 		        particle number, high-quality mode is always used to produce a final output image.</para></listitem>
 		      </varlistentry>
 		    </variablelist>

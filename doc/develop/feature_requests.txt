@@ -24,6 +24,7 @@ New visualization features:
 - Stereoscopic display (Erik Bitzek)
 - Wireframe mesh rendering (robin.gibaud@simap.grenoble-inp.fr)
 - Double bonds (SP2) (Jejoon Yeon <jyeon3@ucmerced.edu>)
+- Extend Color Coding modifier to support the coloring of vectors (stefan.parviainen@iki.fi).
 
 Unresolved OpenGL problems:
 
@@ -64,6 +65,7 @@ Unresolved OpenGL problems:
     Ovito 2.6.2, Windows, ATI Radeon HD 4600 Series, 3.2.11672 Core Profile Context
     
 - Ovito crashes as soons as file selection dialog is shown (Ovito 2.7.1, Windows 64-bit)
+    Solution is to uninstall Dell backup and Recovery software (https://bugreports.qt.io/browse/QTBUG-41416).
 
 Unresolved bugs:
 
@@ -83,6 +85,7 @@ New analysis features:
 - Identification of binary phases and defects (see Christoph Begau's work)
 - Glass ring analysis (see ISAACS, RINGS, Sudheer @ FAU) 
 - Crystal orientation map
+- Extend Create Bonds modifier to make it possible to create different bond types depending on atom pair types (Yan CHEN <1358179191@qq.com>).
 
 New I/O functions:
 

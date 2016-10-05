@@ -289,9 +289,9 @@ ParticlePrimitive::RenderingQuality ParticleDisplay::effectiveRenderingQuality(S
 	if(renderQuality == ParticlePrimitive::AutoQuality) {
 		if(!positionProperty) return ParticlePrimitive::HighQuality;
 		size_t particleCount = positionProperty->size();
-		if(particleCount < 2000 || renderer->isInteractive() == false)
+		if(particleCount < 4000 || renderer->isInteractive() == false)
 			renderQuality = ParticlePrimitive::HighQuality;
-		else if(particleCount < 100000)
+		else if(particleCount < 400000)
 			renderQuality = ParticlePrimitive::MediumQuality;
 		else
 			renderQuality = ParticlePrimitive::LowQuality;
@@ -648,7 +648,7 @@ void ParticleDisplay::highlightParticle(int particleIndex, const PipelineFlowSta
 	// Determine the display color of selected particle.
 	ColorA color = particleColor(particleIndex, colorProperty, typeProperty, selectionProperty, transparencyProperty);
 	ColorA highlightColor = selectionParticleColor();
-	color = color * 0.5f + highlightColor * 0.5f;
+	color = color * FloatType(0.5) + highlightColor * FloatType(0.5);
 
 	// Determine rendering quality used to render the particles.
 	ParticlePrimitive::RenderingQuality renderQuality = effectiveRenderingQuality(renderer, posProperty);
@@ -679,10 +679,10 @@ void ParticleDisplay::highlightParticle(int particleIndex, const PipelineFlowSta
 		highlightParticleBuffer->setSize(1);
 		highlightParticleBuffer->setParticleColor(highlightColor);
 		highlightParticleBuffer->setParticlePositions(&pos);
-		highlightParticleBuffer->setParticleRadius(radius + renderer->viewport()->nonScalingSize(renderer->worldTransform() * pos) * 1e-1f);
+		highlightParticleBuffer->setParticleRadius(radius + renderer->viewport()->nonScalingSize(renderer->worldTransform() * pos) * FloatType(1e-1));
 		if(shapeProperty) {
 			Vector3 shape = shapeProperty->getVector3(particleIndex);
-			shape += Vector3(renderer->viewport()->nonScalingSize(renderer->worldTransform() * pos) * 1e-1f);
+			shape += Vector3(renderer->viewport()->nonScalingSize(renderer->worldTransform() * pos) * FloatType(1e-1));
 			highlightParticleBuffer->setParticleShapes(&shape);
 		}
 		if(orientationProperty)
@@ -709,7 +709,7 @@ void ParticleDisplay::highlightParticle(int particleIndex, const PipelineFlowSta
 		cylinderBuffer->startSetElements(1);
 		cylinderBuffer->setElement(0, p, dir, (ColorA)color, radius);
 		cylinderBuffer->endSetElements();
-		FloatType padding = renderer->viewport()->nonScalingSize(renderer->worldTransform() * pos) * 1e-1f;
+		FloatType padding = renderer->viewport()->nonScalingSize(renderer->worldTransform() * pos) * FloatType(1e-1);
 		highlightCylinderBuffer->startSetElements(1);
 		highlightCylinderBuffer->setElement(0, p, dir, highlightColor, radius + padding);
 		highlightCylinderBuffer->endSetElements();
