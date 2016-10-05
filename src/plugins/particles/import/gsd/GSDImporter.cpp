@@ -161,6 +161,70 @@ void GSDImporter::GSDImportTask::parseFile(CompressedTextReader& stream)
 		// Left-shift all quaternion components by one: (W,X,Y,Z) -> (X,Y,Z,W).
 		std::for_each(orientationProperty->dataQuaternion(), orientationProperty->dataQuaternion() + orientationProperty->size(), [](Quaternion& q) { std::rotate(q.begin(), q.begin() + 1, q.end()); });
 	}
+
+	// Parse number of bonds.
+	uint32_t numBonds = gsd.readOptionalScalar<uint32_t>("bonds/N", frameNumber, 0);
+	if(numBonds != 0) {
+		// Read bond list.
+		std::vector<int> bondList(numBonds * 2);
+		gsd.readIntArray("bonds/group", frameNumber, bondList.data(), numBonds, 2);
+
+		// Convert to OVITO format.
+		setBonds(new BondsStorage());
+		bonds()->reserve(numBonds * 2);
+		for(auto b = bondList.cbegin(); b != bondList.cend(); ) {
+			unsigned int atomIndex1 = *b++;
+			unsigned int atomIndex2 = *b++;
+			if(atomIndex1 >= numParticles || atomIndex2 >= numParticles)
+				throw Exception(tr("Nonexistent atom tag in bond list in GSD file."));
+
+			// Use minimum image convention to determine PBC shift vector of the bond.
+			Vector3 delta = simulationCell().absoluteToReduced(posProperty->getPoint3(atomIndex2) - posProperty->getPoint3(atomIndex1));
+			Vector_3<int8_t> shift = Vector_3<int8_t>::Zero();
+			for(size_t dim = 0; dim < 3; dim++) {
+				if(simulationCell().pbcFlags()[dim])
+					shift[dim] -= (int8_t)floor(delta[dim] + FloatType(0.5));
+			}
+
+			// Create two half-bonds.
+			bonds()->push_back({  shift, atomIndex1, atomIndex2 });
+			bonds()->push_back({ -shift, atomIndex2, atomIndex1 });
+		}
+
+		// Read bond types.
+		if(gsd.hasChunk("bonds/types", frameNumber)) {
+
+			// Parse list of bond type names.
+			QStringList bondTypeNames = gsd.readStringTable("bonds/types", frameNumber);
+			if(bondTypeNames.empty())
+				bondTypeNames.push_back(QStringLiteral("A"));
+
+			// Create bond types.
+			BondProperty* bondTypeProperty = new BondProperty(numBonds * 2, BondProperty::BondTypeProperty, 0, false);
+			ParticleFrameLoader::BondTypeList* bondTypeList = new ParticleFrameLoader::BondTypeList();
+			addBondProperty(bondTypeProperty, bondTypeList);
+			for(int i = 0; i < bondTypeNames.size(); i++)
+				bondTypeList->addBondTypeId(i, bondTypeNames[i]);
+
+			// Read bond types.
+			if(gsd.hasChunk("bonds/typeid", frameNumber)) {
+				gsd.readIntArray("bonds/typeid", frameNumber, bondTypeProperty->dataInt(), numBonds);
+				// Duplicate data for half-bonds.
+				for(size_t i = numBonds; i-- != 0; ) {
+					bondTypeProperty->setInt(i*2+1, bondTypeProperty->getInt(i));
+					bondTypeProperty->setInt(i*2+0, bondTypeProperty->getInt(i));
+				}
+			}
+			else {
+				std::fill(bondTypeProperty->dataInt(), bondTypeProperty->dataInt() + bondTypeProperty->size(), 0);
+			}
+		}
+	}
+
+	QString statusString = tr("Number of particles: %1").arg(numParticles);
+	if(numBonds != 0)
+		statusString += tr("\nNumber of bonds: %1").arg(numBonds);
+	setStatus(statusString);
 }
 
 /******************************************************************************

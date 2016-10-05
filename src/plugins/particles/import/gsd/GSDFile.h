@@ -171,7 +171,7 @@ public:
 #endif
 	}
 
-	void readIntArray(const char* chunkName, uint64_t frame, int* buffer, size_t numElements) {
+	void readIntArray(const char* chunkName, uint64_t frame, int* buffer, size_t numElements, size_t intsPerElement = 1) {
 		auto chunk = ::gsd_find_chunk(&_handle, frame, chunkName);
 		if(!chunk)
 			throw Exception(GSDImporter::tr("GSD file I/O error: Chunk '%1' does not exist at frame %2.").arg(chunkName).arg(frame));
@@ -179,8 +179,8 @@ public:
 			throw Exception(GSDImporter::tr("GSD file I/O error: Data type of chunk '%1' is not GSD_TYPE_INT32 but %2.").arg(chunkName).arg(chunk->type));
 		if(chunk->N != numElements)
 			throw Exception(GSDImporter::tr("GSD file I/O error: Number of elements in chunk '%1' does not match expected value.").arg(chunkName));
-		if(chunk->M != 1)
-			throw Exception(GSDImporter::tr("GSD file I/O error: Size of second dimension in chunk '%1' is not 1.").arg(chunkName));
+		if(chunk->M != intsPerElement)
+			throw Exception(GSDImporter::tr("GSD file I/O error: Size of second dimension in chunk '%1' is not %2.").arg(chunkName).arg(intsPerElement));
 		switch(::gsd_read_chunk(&_handle, buffer, chunk)) {
 			case 0: break; // Success
 			case -1: throw Exception(GSDImporter::tr("GSD file I/O error."));
