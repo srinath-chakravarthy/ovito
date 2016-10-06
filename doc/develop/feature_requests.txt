@@ -76,6 +76,7 @@ Unresolved bugs:
 
 - Include the missing VC runtime DLLs in the Windows package!
 - Particle trajectory creation doesn't work if new particles are created over time.
+- WebM video export not working on Windows (stefan.parviainen@iki.fi). 
 
 New analysis features:
 

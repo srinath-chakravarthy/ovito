@@ -734,7 +734,7 @@ InputColumnInfo NetCDFImporter::mapVariableToColumn(const QString& name, int dat
 	InputColumnInfo column;
 	column.columnName = name;
 	QString loweredName = name.toLower();
-	if(loweredName == "coordinates") column.mapStandardColumn(ParticleProperty::PositionProperty, 0);
+	if(loweredName == "coordinates" || loweredName == "unwrapped_coordinates") column.mapStandardColumn(ParticleProperty::PositionProperty, 0);
 	else if(loweredName == "velocities") column.mapStandardColumn(ParticleProperty::VelocityProperty, 0);
 	else if(loweredName == "id" || loweredName == "identifier") column.mapStandardColumn(ParticleProperty::IdentifierProperty);
 	else if(loweredName == "type" || loweredName == "element" || loweredName == "atom_types" || loweredName == "species") column.mapStandardColumn(ParticleProperty::ParticleTypeProperty);
