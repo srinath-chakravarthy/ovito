@@ -50,6 +50,8 @@ BOOST_PYTHON_MODULE(PyScriptGUI)
 
 	class_<FrameBufferWindow, bases<>, FrameBufferWindow, boost::noncopyable>("FrameBufferWindow", no_init)
 		.add_property("frame_buffer", make_function(&FrameBufferWindow::frameBuffer, return_value_policy<copy_const_reference>()))
+		.def("create_frame_buffer", make_function(&FrameBufferWindow::createFrameBuffer, return_value_policy<copy_const_reference>()))
+		.def("show_and_activate", &FrameBufferWindow::showAndActivateWindow)
 	;
 
 	ovito_class<StandardSceneRenderer, SceneRenderer>(

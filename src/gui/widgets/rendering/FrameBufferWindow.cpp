@@ -67,6 +67,39 @@ FrameBufferWindow::FrameBufferWindow(QWidget* parent) :
 }
 
 /******************************************************************************
+* Creates a frame buffer of the requested size and adjusts the size of the window.
+******************************************************************************/
+const boost::shared_ptr<FrameBuffer>& FrameBufferWindow::createFrameBuffer(int w, int h)
+{
+	// Allocate and resize frame buffer and frame buffer window if necessary.
+	if(!frameBuffer()) {
+		setFrameBuffer(boost::make_shared<FrameBuffer>(w, h));
+	}
+	if(frameBuffer()->size() != QSize(w, h)) {
+		frameBuffer()->setSize(QSize(w, h));
+		frameBuffer()->clear();
+		resize(sizeHint());
+	}
+	return frameBuffer();
+}
+
+/******************************************************************************
+* Shows and activates the frame buffer window.
+******************************************************************************/
+void FrameBufferWindow::showAndActivateWindow()
+{
+	if(isHidden()) {
+		// Center frame buffer window in main window.
+		if(parentWidget()) {
+			QSize s = frameGeometry().size();
+			move(parentWidget()->geometry().center() - QPoint(s.width() / 2, s.height() / 2));
+		}
+		show();
+	}
+	activateWindow();
+}
+
+/******************************************************************************
 * This opens the file dialog and lets the suer save the current contents of the frame buffer
 * to an image file.
 ******************************************************************************/
