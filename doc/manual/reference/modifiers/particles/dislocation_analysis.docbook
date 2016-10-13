@@ -490,6 +490,9 @@ Modelling Simul. Mater. Sci. Eng. 20, 085007 (2012)</link></literallayout>
         <varlistentry><term><code>CA_LIB_VERSION</code></term><listitem>
         <para>Specifies the code version of the Crystal Analysis program that produced the file. Always <code>0.0.0</code> for files written by OVITO.</para></listitem></varlistentry>
 
+        <varlistentry><term><code>METADATA</code></term><listitem>
+        <para>An optional line of additional information, e.g. the simulation timestep at which the dislocations have been extracted.</para></listitem></varlistentry>
+
         <varlistentry><term><code>STRUCTURE_TYPES</code></term><listitem>
         <para>The number of lattice structures which will be defined next. OVITO writes a hard-coded list of lattice structures.</para>
         <variablelist>
