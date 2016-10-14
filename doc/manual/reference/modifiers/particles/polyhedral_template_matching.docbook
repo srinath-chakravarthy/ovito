@@ -80,6 +80,7 @@
       though possibly at the expense of false negatives. The role of the RMSD cutoff is discussed in section 5.1 of the PTM paper.
     </para>  
     <para>
+      A resonable value for the RMSD cutoff parameter is 0.1, which works well for identifying defects in crystalline solids.
       Note that, for the sake of reproducibility, the chosen RMSD cutoff value should typically be reported in a publication if you use 
       the PTM method to gain quantitative results (e.g. measure crystal defect fractions).
     </para>
