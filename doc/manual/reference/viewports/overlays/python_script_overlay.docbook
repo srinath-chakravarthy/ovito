@@ -153,7 +153,7 @@ def render(painter, **args):
 
     <para>
     The following script demonstrates how to highlight a particle in the rendered image using a circle and an arrow pointing
-    at the particle. To this end, the script projects the 3d coordinates of the particle to screen space where the overlay is painted.
+    at the particle. To this end, the script projects the 3d coordinates of the particle to 2d screen space where the overlay is painted.
     </para>
     <para>
     <informalfigure><screenshot><mediaobject><imageobject>
@@ -171,6 +171,8 @@ def project_point(xyz, painter, args):
 	proj_tm = args['proj_tm'] # 4x4 matrix
 	world_pos = np.append(xyz, 1) # Convert to 4-vector.
 	view_pos = np.dot(view_tm, world_pos) # Transform to view space.	
+	# Check if point is behind the viewer. If yes, stop here.
+	if args['is_perspective'] and view_pos[2] >= 0.0: return None
 	# Project to screen space:
 	screen_pos = np.dot(proj_tm, np.append(view_pos, 1)) 
 	screen_pos[0:3] /= screen_pos[3]
@@ -201,7 +203,8 @@ def render(painter, **args):
 	positions = node.compute().particle_properties.position.array
 	
 	# Project center point of first particle.
-	x,y = project(positions[0], painter, args)
+	xy = project_point(positions[0], painter, args)
+	if xy is None: return
 	
 	# Get particle display radius.
 	radius = node.source.particle_properties.position.display.radius
@@ -214,7 +217,7 @@ def render(painter, **args):
 	pen.setWidth(3)
 	pen.setColor(QColor(0,0,255))
 	painter.setPen(pen)	
-	painter.drawEllipse(QPointF(x, y), screen_radius, screen_radius)
+	painter.drawEllipse(QPointF(xy[0], xy[1]), screen_radius, screen_radius)
 	
 	# Draw an arrow pointing at the particle.
 	arrow_shape = QPolygonF()
@@ -227,7 +230,7 @@ def render(painter, **args):
 	arrow_shape.append(QPointF(10,-10))
 	painter.setPen(QPen())
 	painter.setBrush(QBrush(QColor(255,0,0)))
-	painter.translate(QPointF(x,y))
+	painter.translate(QPointF(xy[0], xy[1]))
 	painter.rotate(-45.0)
 	painter.translate(QPointF(screen_radius,0))
 	painter.scale(2,2)
