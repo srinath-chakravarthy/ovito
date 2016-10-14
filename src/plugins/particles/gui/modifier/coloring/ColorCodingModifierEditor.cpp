@@ -30,7 +30,7 @@
 #include <gui/properties/ColorParameterUI.h>
 #include <gui/properties/BooleanParameterUI.h>
 #include <gui/properties/CustomParameterUI.h>
-#include <gui/properties/BooleanRadioButtonParameterUI.h>
+#include <gui/properties/IntegerRadioButtonParameterUI.h>
 #include <gui/dialogs/SaveImageFileDialog.h>
 #include <core/plugins/PluginManager.h>
 #include "ColorCodingModifierEditor.h"
@@ -57,11 +57,13 @@ void ColorCodingModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	layout3->setContentsMargins(0,0,0,0);
 	layout3->setSpacing(4);
 	layout3->addWidget(new QLabel(tr("Operate on:")));
-	BooleanRadioButtonParameterUI* operateOnBondsUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::_operateOnBonds));
-	operateOnBondsUI->buttonFalse()->setText(tr("particles"));
-	operateOnBondsUI->buttonTrue()->setText(tr("bonds"));
-	layout3->addWidget(operateOnBondsUI->buttonFalse());
-	layout3->addWidget(operateOnBondsUI->buttonTrue());
+	IntegerRadioButtonParameterUI* modeUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::_colorApplicationMode));
+	QRadioButton* particlesModeBtn = modeUI->addRadioButton(ColorCodingModifier::Particles, tr("particles"));
+	QRadioButton* bondsModeBtn = modeUI->addRadioButton(ColorCodingModifier::Bonds, tr("bonds"));
+	QRadioButton* vectorsModeBtn = modeUI->addRadioButton(ColorCodingModifier::Vectors, tr("vectors"));
+	layout3->addWidget(particlesModeBtn);
+	layout3->addWidget(bondsModeBtn);
+	layout3->addWidget(vectorsModeBtn);
 	layout3->addStretch(1);
 	layout1->addLayout(layout3);
 	layout1->addSpacing(4);
@@ -79,10 +81,11 @@ void ColorCodingModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	bondPropertyLabel->hide();
 	sourceBondPropertyUI->comboBox()->hide();
 
-	connect(operateOnBondsUI->buttonFalse(), &QRadioButton::toggled, sourceParticlePropertyUI->comboBox(), &QWidget::setVisible);
-	connect(operateOnBondsUI->buttonFalse(), &QRadioButton::toggled, particlePropertyLabel, &QWidget::setVisible);
-	connect(operateOnBondsUI->buttonTrue(), &QRadioButton::toggled, sourceBondPropertyUI->comboBox(), &QWidget::setVisible);
-	connect(operateOnBondsUI->buttonTrue(), &QRadioButton::toggled, bondPropertyLabel, &QWidget::setVisible);
+	bondsModeBtn->setChecked(true);
+	connect(bondsModeBtn, &QRadioButton::toggled, sourceParticlePropertyUI->comboBox(), &QWidget::setHidden);
+	connect(bondsModeBtn, &QRadioButton::toggled, particlePropertyLabel, &QWidget::setHidden);
+	connect(bondsModeBtn, &QRadioButton::toggled, sourceBondPropertyUI->comboBox(), &QWidget::setVisible);
+	connect(bondsModeBtn, &QRadioButton::toggled, bondPropertyLabel, &QWidget::setVisible);
 
 	colorGradientList = new QComboBox(rollout);
 	layout1->addWidget(new QLabel(tr("Color gradient:")));

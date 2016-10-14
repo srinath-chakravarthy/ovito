@@ -78,7 +78,7 @@ void ColorLegendOverlayEditor::createUI(const RolloutInsertionParameters& rollou
 						if(PipelineObject* pipeline = dynamic_object_cast<PipelineObject>(obj)) {
 							for(ModifierApplication* modApp : pipeline->modifierApplications()) {
 								if(ColorCodingModifier* mod = dynamic_object_cast<ColorCodingModifier>(modApp->modifier())) {
-									if(!mod->operateOnBonds())
+									if(mod->colorApplicationMode() != ColorCodingModifier::Bonds)
 										addItem(mod->sourceParticleProperty().nameWithComponent(), QVariant::fromValue(mod));
 									else
 										addItem(mod->sourceBondProperty().nameWithComponent(), QVariant::fromValue(mod));
@@ -106,7 +106,7 @@ void ColorLegendOverlayEditor::createUI(const RolloutInsertionParameters& rollou
 				modifierComboBox->clear();
 				ColorCodingModifier* mod = dynamic_object_cast<ColorCodingModifier>(value.value<ColorCodingModifier*>());
 				if(mod) {
-					if(!mod->operateOnBonds())
+					if(mod->colorApplicationMode() != ColorCodingModifier::Bonds)
 						modifierComboBox->addItem(mod->sourceParticleProperty().nameWithComponent(), QVariant::fromValue(mod));
 					else
 						modifierComboBox->addItem(mod->sourceBondProperty().nameWithComponent(), QVariant::fromValue(mod));

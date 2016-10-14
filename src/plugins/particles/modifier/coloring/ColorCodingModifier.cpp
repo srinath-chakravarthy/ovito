@@ -39,7 +39,7 @@ DEFINE_PROPERTY_FIELD(ColorCodingModifier, _colorOnlySelected, "SelectedOnly");
 DEFINE_PROPERTY_FIELD(ColorCodingModifier, _keepSelection, "KeepSelection");
 DEFINE_PROPERTY_FIELD(ColorCodingModifier, _sourceParticleProperty, "SourceProperty");
 DEFINE_PROPERTY_FIELD(ColorCodingModifier, _sourceBondProperty, "SourceBondProperty");
-DEFINE_PROPERTY_FIELD(ColorCodingModifier, _operateOnBonds, "OperateOnBonds");
+DEFINE_PROPERTY_FIELD(ColorCodingModifier, _colorApplicationMode, "ColorApplicationMode");
 SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _startValueCtrl, "Start value");
 SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _endValueCtrl, "End value");
 SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _colorGradient, "Color gradient");
@@ -47,7 +47,7 @@ SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _colorOnlySelected, "Color only se
 SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _keepSelection, "Keep selection");
 SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _sourceParticleProperty, "Source property");
 SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _sourceBondProperty, "Source property");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _operateOnBonds, "Operate on bonds");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _colorApplicationMode, "Target");
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingGradient, RefTarget);
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingHSVGradient, ColorCodingGradient);
@@ -64,7 +64,7 @@ DEFINE_PROPERTY_FIELD(ColorCodingImageGradient, _image, "Image");
 * Constructs the modifier object.
 ******************************************************************************/
 ColorCodingModifier::ColorCodingModifier(DataSet* dataset) : ParticleModifier(dataset),
-	_colorOnlySelected(false), _keepSelection(false), _operateOnBonds(false)
+	_colorOnlySelected(false), _keepSelection(false), _colorApplicationMode(Particles)
 {
 	INIT_PROPERTY_FIELD(ColorCodingModifier::_startValueCtrl);
 	INIT_PROPERTY_FIELD(ColorCodingModifier::_endValueCtrl);
@@ -73,7 +73,7 @@ ColorCodingModifier::ColorCodingModifier(DataSet* dataset) : ParticleModifier(da
 	INIT_PROPERTY_FIELD(ColorCodingModifier::_keepSelection);
 	INIT_PROPERTY_FIELD(ColorCodingModifier::_sourceParticleProperty);
 	INIT_PROPERTY_FIELD(ColorCodingModifier::_sourceBondProperty);
-	INIT_PROPERTY_FIELD(ColorCodingModifier::_operateOnBonds);
+	INIT_PROPERTY_FIELD(ColorCodingModifier::_colorApplicationMode);
 
 	_colorGradient = new ColorCodingHSVGradient(dataset);
 	_startValueCtrl = ControllerManager::instance().createFloatController(dataset);
@@ -168,7 +168,7 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 	PropertyBase* colorProperty;
 	DataObject* selectionPropertyObj = nullptr;
 	int vecComponent;
-	if(!operateOnBonds()) {
+	if(colorApplicationMode() != ColorCodingModifier::Bonds) {
 		if(sourceParticleProperty().isNull())
 			throwException(tr("Select a particle property first."));
 		ParticlePropertyObject* propertyObj = sourceParticleProperty().findInState(input());
@@ -188,7 +188,11 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 		}
 
 		// Create the color output property.
-		ParticlePropertyObject* colorPropertyObj = outputStandardProperty(ParticleProperty::ColorProperty);
+		ParticlePropertyObject* colorPropertyObj;
+		if(colorApplicationMode() == Particles)
+			colorPropertyObj = outputStandardProperty(ParticleProperty::ColorProperty);
+		else
+			colorPropertyObj = outputStandardProperty(ParticleProperty::VectorColorProperty);
 		colorProperty = colorPropertyObj->modifiableStorage();
 	}
 	else {
@@ -230,7 +234,7 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 	std::vector<Color> existingColors;
 	if(selProperty) {
 		sel = selProperty->constDataInt();
-		if(!operateOnBonds())
+		if(colorApplicationMode() != ColorCodingModifier::Bonds)
 			existingColors = inputParticleColors(time, validityInterval);
 		else
 			existingColors = inputBondColors(time, validityInterval);
@@ -302,9 +306,11 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 		output().removeObject(selectionPropertyObj);
 	}
 
-	if(!operateOnBonds())
+	if(colorApplicationMode() == ColorCodingModifier::Particles)
 		outputStandardProperty(ParticleProperty::ColorProperty)->changed();
-	else
+	else if(colorApplicationMode() == ColorCodingModifier::Vectors)
+		outputStandardProperty(ParticleProperty::VectorColorProperty)->changed();
+	else if(colorApplicationMode() == ColorCodingModifier::Bonds)
 		outputStandardBondProperty(BondProperty::ColorProperty)->changed();
 
 	return PipelineStatus::Success;
@@ -322,7 +328,7 @@ bool ColorCodingModifier::adjustRange()
 	PipelineFlowState inputState = getModifierInput();
 	PropertyBase* property;
 	int vecComponent;
-	if(!operateOnBonds()) {
+	if(colorApplicationMode() != ColorCodingModifier::Bonds) {
 		ParticlePropertyObject* propertyObj = sourceParticleProperty().findInState(inputState);
 		if(!propertyObj)
 			return false;
@@ -399,6 +405,23 @@ void ColorCodingModifier::loadFromStream(ObjectLoadStream& stream)
 		setSourceParticleProperty(pref);
 	}
 	stream.closeChunk();
+}
+
+/******************************************************************************
+* Parses the serialized contents of a property field in a custom way.
+******************************************************************************/
+bool ColorCodingModifier::loadPropertyFieldFromStream(ObjectLoadStream& stream, const ObjectLoadStream::SerializedPropertyField& serializedField)
+{
+	// This is for backward compatibility with OVITO 2.7.1.
+	if(serializedField.identifier == "OperateOnBonds" && serializedField.definingClass == &ColorCodingModifier::OOType) {
+		bool operateOnBonds;
+		stream >> operateOnBonds;
+		if(operateOnBonds)
+			setColorApplicationMode(Bonds);
+		return true;
+	}
+
+	return ParticleModifier::loadPropertyFieldFromStream(stream, serializedField);
 }
 
 /******************************************************************************

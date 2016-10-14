@@ -15,8 +15,8 @@
        <imagedata fileref="images/modifiers/color_coding_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
   
-    This modifier colors particles or bonds based on one of their properties. It can be used to visualize
-    per-particle or per-bond quantities.
+    This modifier colors particles, bonds, or vector arrows based on one of their properties. It can be used to visualize
+    per-particle or per-bond scalar quantities.
   </para>
   
   <para>
@@ -70,7 +70,7 @@
       <varlistentry>
         <term>Operate on</term>
         <listitem>
-          <para>Controls whether the modifier assigns colors to particles or bonds.</para>
+          <para>Controls whether the modifier assigns colors to particles, bonds or vector arrows.</para>
         </listitem>
       </varlistentry>
 

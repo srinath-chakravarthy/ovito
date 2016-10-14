@@ -281,6 +281,16 @@ class OVITO_PARTICLES_EXPORT ColorCodingModifier : public ParticleModifier
 {
 public:
 
+	/// The modes supported by the color coding modifier.
+	enum ColorApplicationMode {
+		Particles,	//< Colors are assigned to particles
+		Bonds,		//< Colors are assigned to bonds
+		Vectors		//< Colors are assigned to vector arrows
+	};
+	Q_ENUMS(ColorApplicationMode);
+
+public:
+
 	/// Constructor.
 	Q_INVOKABLE ColorCodingModifier(DataSet* dataset);
 
@@ -345,11 +355,11 @@ public:
 	/// Sets whether the input particle selection should be preserved by the modifier.
 	void setKeepSelection(bool keepSel) { _keepSelection = keepSel; }
 
-	/// Returns whether the modifier operates on bonds instead of particles.
-	bool operateOnBonds() const { return _operateOnBonds; }
+	/// Returns what is being assigned colors by the modifier.
+	ColorApplicationMode colorApplicationMode() const { return _colorApplicationMode; }
 
-	/// Sets whether the modifier operates on bonds instead of particles.
-	void setOperateOnBonds(bool bondMode) { _operateOnBonds = bondMode; }
+	/// Sets what is being assigned colors by the modifier.
+	void setColorApplicationMode(ColorApplicationMode mode) { _colorApplicationMode = mode; }
 
 public Q_SLOTS:
 
@@ -363,6 +373,9 @@ protected:
 
 	/// Loads the class' contents from the given stream.
 	virtual void loadFromStream(ObjectLoadStream& stream) override;
+
+	/// Parses the serialized contents of a property field in a custom way.
+	virtual bool loadPropertyFieldFromStream(ObjectLoadStream& stream, const ObjectLoadStream::SerializedPropertyField& serializedField) override;
 
 	/// This virtual method is called by the system when the modifier has been inserted into a PipelineObject.
 	virtual void initializeModifier(PipelineObject* pipelineObject, ModifierApplication* modApp) override;
@@ -392,8 +405,8 @@ protected:
 	/// If false, the selection is cleared by the modifier.
 	PropertyField<bool> _keepSelection;
 
-	/// Controls whether the modifier operates on bonds instead of particles.
-	PropertyField<bool> _operateOnBonds;
+	/// Controls what is being assigned colors by the modifier.
+	PropertyField<ColorApplicationMode, int> _colorApplicationMode;
 
 private:
 
@@ -410,12 +423,15 @@ private:
 	DECLARE_PROPERTY_FIELD(_keepSelection);
 	DECLARE_PROPERTY_FIELD(_sourceParticleProperty);
 	DECLARE_PROPERTY_FIELD(_sourceBondProperty);
-	DECLARE_PROPERTY_FIELD(_operateOnBonds);
+	DECLARE_PROPERTY_FIELD(_colorApplicationMode);
 };
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
+
+Q_DECLARE_METATYPE(Ovito::Particles::ColorCodingModifier::ColorApplicationMode);
+Q_DECLARE_TYPEINFO(Ovito::Particles::ColorCodingModifier::ColorApplicationMode, Q_PRIMITIVE_TYPE);
 
 #endif // __OVITO_COLOR_CODING_MODIFIER_H
