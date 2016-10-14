@@ -60,6 +60,10 @@ nmake install
 nmake
 nmake install
 
+---- Install matplotlib ----
+..\XXbit\python\python.exe -m pip install -U pip setuptools
+..\XXbit\python\python.exe -m pip install matplotlib
+
 **************************************************************************
 Boost libraries (release 1.61):
 **************************************************************************
