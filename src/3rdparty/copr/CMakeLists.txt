@@ -21,12 +21,16 @@
 
 SET(COPR_SOURCE_FILES
 	index_copr.cpp
+	coordination.cpp
 	qcprot/qcprot.cpp
 	qcprot/quat.cpp
 )
 
 # Build library.
 ADD_LIBRARY(CombinatoriallyOptimalPointRegistration STATIC ${COPR_SOURCE_FILES})
+
+# Link to Voro++ library.
+TARGET_LINK_LIBRARIES(CombinatoriallyOptimalPointRegistration PRIVATE VoroPlusPlus)
 
 # Make header files of this library available to dependent targets.
 TARGET_INCLUDE_DIRECTORIES(CombinatoriallyOptimalPointRegistration INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/..")

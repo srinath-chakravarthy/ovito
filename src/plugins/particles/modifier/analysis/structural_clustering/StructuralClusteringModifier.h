@@ -38,17 +38,11 @@ public:
 	/// Constructor.
 	Q_INVOKABLE StructuralClusteringModifier(DataSet* dataset);
 
-	/// Returns the number of neighbors that will be taken into account.
-	int numNeighbors() const { return _numNeighbors; }
+	/// Returns the threshold for Voronoi faces.
+	FloatType faceThreshold() const { return _faceThreshold; }
 
-	/// Sets the number of neighbors to take into account.
-	void setNumNeighbors(int n) { _numNeighbors = n; }
-
-	/// Returns the cutoff radius used to build the neighbor lists for the analysis.
-	FloatType cutoff() const { return _cutoff; }
-
-	/// Sets the cutoff radius used to build the neighbor lists for the analysis.
-	void setCutoff(FloatType newCutoff) { _cutoff = newCutoff; }
+	/// Sets the threshold for Voronoi faces.
+	void setFaceThreshold(FloatType t) { _faceThreshold = t; }
 
 	/// Returns how similar two structures need to be.
 	FloatType rmsdThreshold() const { return _rmsdThreshold; }
@@ -78,13 +72,13 @@ private:
 	public:
 
 		/// Constructor.
-		StructuralClusteringEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, int numNeighbors, FloatType cutoff, FloatType rmsdThreshold) :
+		StructuralClusteringEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, FloatType faceThreshold, FloatType rmsdThreshold) :
 			ComputeEngine(validityInterval),
 			_positions(positions), _simCell(simCell),
-			_cutoff(cutoff),
+			_faceThreshold(faceThreshold),
 			_rmsdThreshold(rmsdThreshold),
-			_maxNeighbors(numNeighbors),
-			_particleClusters(new ParticleProperty(positions->size(), ParticleProperty::ClusterProperty, 0, false)) {}
+			_particleClusters(new ParticleProperty(positions->size(), ParticleProperty::ClusterProperty, 0, false)),
+			_coordinationNumbers(new ParticleProperty(positions->size(), ParticleProperty::CoordinationProperty, 0, false)) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;
@@ -101,22 +95,22 @@ private:
 		/// Returns the number of clusters.
 		size_t numClusters() const { return _numClusters; }
 
+		/// Returns the property storage that contains the computed coordination numbers.
+		ParticleProperty* coordinationNumbers() const { return _coordinationNumbers.data(); }
+
 	private:
 
-		FloatType _cutoff;
+		FloatType _faceThreshold;
 		FloatType _rmsdThreshold;
-		int _maxNeighbors;
 		SimulationCell _simCell;
 		size_t _numClusters;
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
 		QExplicitlySharedDataPointer<ParticleProperty> _particleClusters;
+		QExplicitlySharedDataPointer<ParticleProperty> _coordinationNumbers;
 	};
 
-	/// The number of neighbors to take into account.
-	PropertyField<int> _numNeighbors;
-
-	/// Controls the cutoff radius for the neighbor lists.
-	PropertyField<FloatType> _cutoff;
+	/// Controls the threshold for Voronoi faces
+	PropertyField<FloatType> _faceThreshold;
 
 	/// Controls how similar two structures need to be.
 	PropertyField<FloatType> _rmsdThreshold;
@@ -127,6 +121,9 @@ private:
 	/// The number of clusters identified during the last evaluation of the modifier.
 	size_t _numClusters;
 
+	/// This stores the cached results of the modifier.
+	QExplicitlySharedDataPointer<ParticleProperty> _coordinationNumbers;
+
 private:
 
 	Q_OBJECT
@@ -135,7 +132,7 @@ private:
 	Q_CLASSINFO("DisplayName", "Structural clustering");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
 
-	DECLARE_PROPERTY_FIELD(_cutoff);
+	DECLARE_PROPERTY_FIELD(_faceThreshold);
 	DECLARE_PROPERTY_FIELD(_numNeighbors);
 	DECLARE_PROPERTY_FIELD(_rmsdThreshold);
 };

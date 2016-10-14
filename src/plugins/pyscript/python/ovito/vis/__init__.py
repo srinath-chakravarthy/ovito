@@ -106,14 +106,16 @@ def _Viewport_render(self, settings = None):
     elif isinstance(settings, dict):
         settings = RenderSettings(settings)
     if ovito.gui_mode:
-        if not self.dataset.renderScene(settings, self):
-            return None
-        return self.dataset.window.frame_buffer_window.frame_buffer.image
+        # Use the frame buffer of the GUI window for rendering.
+        fb_window = self.dataset.container.window.frame_buffer_window
+        fb = fb_window.create_frame_buffer(settings.outputImageWidth, settings.outputImageHeight)
+        fb_window.show_and_activate()
     else:
+        # Create a temporary off-screen frame buffer.
         fb = FrameBuffer(settings.size[0], settings.size[1])
-        if not self.dataset.renderScene(settings, self, fb):
-            return None
-        return fb.image
+    if not self.dataset.renderScene(settings, self, fb, ovito.get_progress_display()):
+        return None
+    return fb.image
 Viewport.render = _Viewport_render
 
 

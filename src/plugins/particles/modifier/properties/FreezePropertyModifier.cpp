@@ -160,7 +160,7 @@ void FreezePropertyModifier::initializeModifier(PipelineObject* pipeline, Modifi
 }
 
 /******************************************************************************
-* Takes a snapshot of the source property.
+* Takes a snapshot of the source property for a specific ModifierApplication.
 ******************************************************************************/
 void FreezePropertyModifier::takePropertySnapshot(ModifierApplication* modApp, const PipelineFlowState& state)
 {
@@ -176,6 +176,22 @@ void FreezePropertyModifier::takePropertySnapshot(ModifierApplication* modApp, c
 		}
 	}
 	modApp->setModifierData(nullptr);
+}
+
+/******************************************************************************
+* Takes a snapshot of the source property for all ModifierApplications.
+******************************************************************************/
+void FreezePropertyModifier::takePropertySnapshot(TimePoint time, bool waitUntilReady)
+{
+	for(ModifierApplication* modApp : modifierApplications()) {
+		if(PipelineObject* pipelineObj = modApp->pipelineObject()) {
+			if(waitUntilReady) {
+				pipelineObj->waitUntilReady(time, tr("Waiting for pipeline evaluation to complete."));
+			}
+			PipelineFlowState state = pipelineObj->evaluatePipeline(time, modApp, false);
+			takePropertySnapshot(modApp, state);
+		}
+	}
 }
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)

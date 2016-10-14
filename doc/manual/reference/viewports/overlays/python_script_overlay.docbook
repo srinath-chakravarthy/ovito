@@ -44,15 +44,15 @@
   </para>
     
   <simplesect>
-    <title>Example</title>
+    <title>Example: Scale bar</title>
 
-    <para>
-    <informalfigure><screenshot><mediaobject><imageobject>
-       <imagedata fileref="images/viewport_overlays/python_script_scale_bar_example.png" format="PNG" />
-    </imageobject></mediaobject></screenshot></informalfigure>
+    <para>    
     The following script renders a scale bar into the viewport (with a fixed length of 4 nm, as shown in the example picture). You can copy/paste the source code into the
     script input field and adjust the parameters in the code as needed.</para>
-    <para><programlisting>from PyQt5.QtCore import *
+    <para><informalfigure><screenshot><mediaobject><imageobject>
+       <imagedata fileref="images/viewport_overlays/python_script_scale_bar_example.png" format="PNG" />
+    </imageobject></mediaobject></screenshot></informalfigure>
+    <programlisting>from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 
 # Parameters:
@@ -83,6 +83,158 @@ def render(painter, **args):
 	painter.setFont(font)
 	painter.setPen(QPen(label_color))
 	painter.drawText(rect, Qt.AlignCenter, label_text)
+    </programlisting></para>
+  </simplesect>
+
+  <simplesect>
+    <title>Example: Data plot</title>
+
+    <para>
+    The following script demonstrates how to use the <link xlink:href="http://matplotlib.org">Matplotlib</link> Python module to render a histogram
+    on top the three-dimensional visualization. The histogram data is dynamically computed by a <link linkend="particles.modifiers.histogram">Histogram</link>
+    analysis modifier in the modification pipeline in this example.
+    </para>
+    <para>
+    <informalfigure><screenshot><mediaobject><imageobject>
+       <imagedata fileref="images/viewport_overlays/python_script_plot_example.png" format="PNG" scale="70" />
+    </imageobject></mediaobject></screenshot></informalfigure>
+    <programlisting>import matplotlib
+import matplotlib.pyplot as plt
+import PyQt5.QtGui
+from ovito.modifiers import *
+
+# Activate 'agg' backend for off-screen plotting.
+matplotlib.use('Agg')
+
+def render(painter, **args):
+
+	# Find the existing HistogramModifier in the pipeline 
+	# and get its histogram data.
+	for mod in ovito.dataset.selected_node.modifiers:
+		if isinstance(mod, HistogramModifier):
+			x = mod.histogram[:,0]
+			y = mod.histogram[:,1]
+			break
+	if not 'x' in locals():
+		raise RuntimeError('Histogram modifier not found.')
+	
+	# Get size of rendered viewport image in pixels.
+	viewport_width = painter.window().width()
+	viewport_height = painter.window().height()
+	
+	#  Compute plot size in inches (DPI determines label size)
+	dpi = 80
+	plot_width = 0.5 * viewport_width / dpi
+	plot_height = 0.5 * viewport_height / dpi
+	
+	# Create figure
+	fig, ax = plt.subplots(figsize=(plot_width,plot_height), dpi=dpi)
+	fig.patch.set_alpha(0.5)
+	plt.title('Coordination')
+	
+	# Plot histogram data
+	ax.bar(x, y)
+	plt.tight_layout()
+	
+	# Render figure to an in-memory buffer.
+	buf = fig.canvas.print_to_buffer()
+	
+	# Create a QImage from the memory buffer
+	res_x, res_y = buf[1]
+	img = PyQt5.QtGui.QImage(buf[0], res_x, res_y, PyQt5.QtGui.QImage.Format_RGBA8888)
+	
+	# Paint QImage onto rendered viewport 
+	painter.drawImage(0,0,img)	
+    </programlisting></para>
+  </simplesect>
+
+  <simplesect>
+    <title>Example: Viewport projection</title>
+
+    <para>
+    The following script demonstrates how to highlight a particle in the rendered image using a circle and an arrow pointing
+    at the particle. To this end, the script projects the 3d coordinates of the particle to 2d screen space where the overlay is painted.
+    </para>
+    <para>
+    <informalfigure><screenshot><mediaobject><imageobject>
+       <imagedata fileref="images/viewport_overlays/python_script_highlight_example.png" format="PNG" scale="65" />
+    </imageobject></mediaobject></screenshot></informalfigure>
+    <programlisting>import ovito
+import numpy as np
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+
+# This helper function projects a point from 3d space to 
+# 2d window coordinates.
+def project_point(xyz, painter, args):
+	view_tm = args['view_tm'] # 3x4 matrix
+	proj_tm = args['proj_tm'] # 4x4 matrix
+	world_pos = np.append(xyz, 1) # Convert to 4-vector.
+	view_pos = np.dot(view_tm, world_pos) # Transform to view space.	
+	# Check if point is behind the viewer. If yes, stop here.
+	if args['is_perspective'] and view_pos[2] >= 0.0: return None
+	# Project to screen space:
+	screen_pos = np.dot(proj_tm, np.append(view_pos, 1)) 
+	screen_pos[0:3] /= screen_pos[3]
+	win_rect = painter.window()
+	x = win_rect.left() + win_rect.width() * (screen_pos[0] + 1) / 2
+	y = win_rect.bottom() - win_rect.height() * (screen_pos[1] + 1) / 2 + 1
+	return (x,y)	
+
+# This helper function projects a distance or radius from 3d space to 
+# 2d window coordinates.
+def project_radius(xyz, r, painter, args):
+	if args['is_perspective']:
+		world_pos = np.append(xyz, 1) # Convert to 4-vector.
+		vp = np.append(np.dot(args['view_tm'], world_pos), 1) # Transform to view space.	
+		p1 = np.dot(args['proj_tm'], vp) # Project to screen space.
+		p1[0:3] /= p1[3]
+		vp += [0,r,0,0]
+		p2 = np.dot(args['proj_tm'], vp) # Project to screen space.
+		p2[0:3] /= p2[3]
+		return np.linalg.norm(p2-p1) * painter.window().height() / 2
+	else:
+		return r / args['fov'] * painter.window().height() / 2
+
+def render(painter, **args):
+	
+	# Access current particle positions.
+	node = ovito.dataset.selected_node
+	positions = node.compute().particle_properties.position.array
+	
+	# Project center point of first particle.
+	xy = project_point(positions[0], painter, args)
+	if xy is None: return
+	
+	# Get particle display radius.
+	radius = node.source.particle_properties.position.display.radius
+
+	# Calculate screen-space size of particle in pixels.
+	screen_radius = project_radius(positions[0], radius, painter, args)
+
+	# Draw a dashed circle around the particle.
+	pen = QPen(Qt.DashLine)
+	pen.setWidth(3)
+	pen.setColor(QColor(0,0,255))
+	painter.setPen(pen)	
+	painter.drawEllipse(QPointF(xy[0], xy[1]), screen_radius, screen_radius)
+	
+	# Draw an arrow pointing at the particle.
+	arrow_shape = QPolygonF()
+	arrow_shape.append(QPointF(0,0))
+	arrow_shape.append(QPointF(10,10))
+	arrow_shape.append(QPointF(10,5))
+	arrow_shape.append(QPointF(40,5))
+	arrow_shape.append(QPointF(40,-5))
+	arrow_shape.append(QPointF(10,-5))
+	arrow_shape.append(QPointF(10,-10))
+	painter.setPen(QPen())
+	painter.setBrush(QBrush(QColor(255,0,0)))
+	painter.translate(QPointF(xy[0], xy[1]))
+	painter.rotate(-45.0)
+	painter.translate(QPointF(screen_radius,0))
+	painter.scale(2,2)
+	painter.drawPolygon(arrow_shape)
     </programlisting></para>
   </simplesect>
     

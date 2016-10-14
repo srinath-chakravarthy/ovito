@@ -45,17 +45,19 @@
   </para>
   
   <para>
-    A cluster is defined as a set of connected particles, each of which is within the cutoff distance from one or more 
-    other particles from the same cluster. Conversely, two particles will not belong to the same cluster, if 
-    there is no continuous path on the neighbor network leading from the first particle to the second.
+    A cluster is defined as a set of connected particles, each of which is within the cutoff distance of one or more 
+    other particles from the same cluster. Thus, any two particles from the same cluster are connected by a 
+    continuous path consisting only of steps which are shorter than the given cutoff distance.    
+    Conversely, two particles will not belong to the same cluster if 
+    there is no continuous path on the neighbor network leading from one particle to the other.
   </para>
   <para>
-    If a particle has no neighbors at all within the cutoff distance, then it forms a 1-particle cluster.
+    If a particle possesses no neighbors within the cutoff distance, then it will form a 1-particle cluster.
   </para>
 
   <para>
-     The modifier writes its results to the <literal>Cluster</literal> particle property, which stores the
-     cluster each particle is assigned to. Cluster IDs range from 1 to <emphasis>N</emphasis>, where <emphasis>N</emphasis> 
+     The modifier outputs its results to the <literal>Cluster</literal> particle property, which stores the
+     cluster each particle has been assigned to. Cluster IDs range from 1 to <emphasis>N</emphasis>, where <emphasis>N</emphasis> 
      is the number of clusters found by the modifier.
   </para>
 
@@ -88,4 +90,63 @@
       </varlistentry>
     </variablelist>
   </simplesect>
+  
+  <simplesect>
+    <title>Exporting the output of the clustering algorithm</title>
+    <variablelist>
+      <varlistentry>
+        <term>Number of clusters</term>
+        <listitem>
+          <para>To export the total number of clusters to a text file (possibly as a function of simulation time), use OVITO's
+          standard <link linkend="usage.export">file export function</link>. Choose the output file format <emphasis>Calculation Results Text File</emphasis>
+          and select the <code>ClusterAnalysis.cluster_count</code> attribute for export. 
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Particles of each cluster</term>
+        <listitem>
+          <para>To export the list of particles belonging to each invidual cluster, also use OVITO's
+          standard <link linkend="usage.export">file export function</link>. Choose e.g. <emphasis>XYZ</emphasis> as the output file format
+          and select the <code>Cluster</code> property for export. This will produce a text file containing the
+          cluster ID assigned to each particle.
+          </para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Cluster sizes</term>
+        <listitem>
+          <para>Computing and exporting the size of each cluster (i.e. the number of particles) requires a simple Python script.
+          The following example script can be executed using the <menuchoice><guimenu>Scripting</guimenu><guimenuitem>Run Script File</guimenuitem></menuchoice>
+          menu function after manually applying the <emphasis>Cluster Analysis</emphasis> modifier:</para>
+    <para><programlisting>from ovito import *
+import numpy
+
+output_filepath = "cluster_sizes.txt"
+output = dataset.selected_node.compute()
+cluster_sizes = numpy.bincount(output.particle_properties['Cluster'].array)
+numpy.savetxt(output_filepath, cluster_sizes)
+    </programlisting></para>
+    <para>
+      Please  copy/paste the above script to a text editor and save it as <code>.py</code> file. Don't forget to adjust the output file path as needed. The script makes use
+      of the <link xlink:href="http://docs.scipy.org/doc/numpy/reference/generated/numpy.bincount.html#numpy.bincount"><code>bincount()</code></link> Numpy function to count the 
+      number of particles belonging to each cluster. Note that the array returned by this function includes cluster ID 0, which is not assigned by the modifier
+      and therefore typically has size zero. For more information on OVITO's scripting interface, see <link linkend="usage.scripting">this page</link>.
+    </para>
+    <para>
+      It is possible to perform the file export for every frame in a simulation sequence by adding a <code>for</code>-loop to the script:</para>
+<para><programlisting>from ovito import *
+import numpy
+
+for frame in range(dataset.anim.last_frame + 1):
+    output_filepath = "cluster_sizes.%i.txt" % frame
+    output = dataset.selected_node.compute(frame)
+    cluster_sizes = numpy.bincount(output.particle_properties['Cluster'].array)
+    numpy.savetxt(output_filepath, cluster_sizes)
+    </programlisting></para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </simplesect>
+  
 </section>

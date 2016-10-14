@@ -95,6 +95,8 @@ SET(SourceFiles
 	import/pdb/PDBImporter.cpp
 	import/fhi_aims/FHIAimsImporter.cpp
 	import/fhi_aims/FHIAimsLogFileImporter.cpp
+	import/gsd/GSDImporter.cpp
+	import/gsd/gsd.c
 	export/ParticleExporter.cpp
 	export/FileColumnParticleExporter.cpp
 	export/OutputColumnMapping.cpp
@@ -109,13 +111,6 @@ SET(SourceFiles
 	util/ParticleExpressionEvaluator.cpp
 	util/ParticleSelectionSet.cpp
 )
-
-IF(NOT WIN32)
-	LIST(APPEND SourceFiles 
-		import/gsd/GSDImporter.cpp
-		import/gsd/gsd.c
-	)
-ENDIF()
 
 IF(OVITO_BUILD_PLUGIN_PYSCRIPT)
 	LIST(APPEND SourceFiles 

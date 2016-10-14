@@ -49,30 +49,12 @@ void ActionManager::on_RenderActiveViewport_triggered()
 
 		// Get frame buffer and window.
 		FrameBufferWindow* frameBufferWindow = mainWindow()->frameBufferWindow();
-		boost::shared_ptr<FrameBuffer> frameBuffer = frameBufferWindow->frameBuffer();
 
 		// Allocate and resize frame buffer and frame buffer window if necessary.
-		if(!frameBuffer) {
-			frameBuffer.reset(new FrameBuffer(settings->outputImageWidth(), settings->outputImageHeight()));
-			frameBufferWindow->setFrameBuffer(frameBuffer);
-		}
-		if(frameBuffer->size() != QSize(settings->outputImageWidth(), settings->outputImageHeight())) {
-			frameBuffer->setSize(QSize(settings->outputImageWidth(), settings->outputImageHeight()));
-			frameBuffer->clear();
-			frameBufferWindow->resize(frameBufferWindow->sizeHint());
-		}
+		boost::shared_ptr<FrameBuffer> frameBuffer = frameBufferWindow->createFrameBuffer(settings->outputImageWidth(), settings->outputImageHeight());
 
 		// Show and activate frame buffer window.
-		if(frameBufferWindow->isHidden()) {
-			// Center frame buffer window in main window.
-			if(frameBufferWindow->parentWidget()) {
-				QSize s = frameBufferWindow->frameGeometry().size();
-				frameBufferWindow->move(frameBufferWindow->parentWidget()->geometry().center() - QPoint(s.width() / 2, s.height() / 2));
-			}
-			//frameBufferWindow->setWindowTitle(tr("Frame %1").arg(frameNumber));
-			frameBufferWindow->show();
-		}
-		frameBufferWindow->activateWindow();
+		frameBufferWindow->showAndActivateWindow();
 
 		// Show progress dialog.
 		QProgressDialog progressDialog(frameBufferWindow);

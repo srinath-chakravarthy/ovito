@@ -103,3 +103,26 @@ def _ColorCodingModifier_Custom(filename):
     gradient.loadImage(filename)
     return gradient
 ovito.modifiers.ColorCodingModifier.Custom = staticmethod(_ColorCodingModifier_Custom)
+
+def _FreezePropertyModifier_take_snapshot(self, frame = None):
+    """
+    Evaluates the modification pipeline up to this modifier and makes a copy of the current
+    values of the :py:attr:`.source_property`.
+    
+    :param int frame: The animation frame at which to take the snapshot. If ``none``, the 
+                       current animation frame is used (see :py:attr:`ovito.anim.AnimationSettings.current_frame`).
+                       
+    Note that :py:meth:`!take_snapshot` must be called *after* the modifier has been inserted into an 
+    :py:class:`~ovito.ObjectNode`'s modification pipeline.
+    """
+    
+    # Make sure modifier has been inserted into a modification pipeline.
+    if len(self.modifier_applications) == 0:
+        raise RuntimeError("take_snapshot() must be called after the FreezePropertyModifier has been inserted into the pipeline.")
+    
+    if frame is not None:
+        time = self.dataset.anim.frameToTime(frame)
+    else:
+        time = self.dataset.anim.time
+    self._take_snapshot(time, True)
+ovito.modifiers.FreezePropertyModifier.take_snapshot = _FreezePropertyModifier_take_snapshot

@@ -233,7 +233,7 @@ bool VectorDisplay::loadPropertyFieldFromStream(ObjectLoadStream& stream, const 
 		return true;
 	}
 
-	return false;
+	return DisplayObject::loadPropertyFieldFromStream(stream, serializedField);
 }
 
 /******************************************************************************

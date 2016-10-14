@@ -806,7 +806,7 @@ bool Viewport::computeConstructionPlaneIntersection(const Point2& viewportPositi
 	// Compute intersection point.
 	FloatType t = gridPlane.intersectionT(ray, epsilon);
     if(t == std::numeric_limits<FloatType>::max()) return false;
-	if(isPerspectiveProjection() && t <= 0.0f) return false;
+	if(isPerspectiveProjection() && t <= 0) return false;
 
 	intersectionPoint = ray.point(t);
 	intersectionPoint.z() = 0;

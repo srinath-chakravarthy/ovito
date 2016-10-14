@@ -164,6 +164,10 @@ struct Cluster
 	/// atom group in the simulation coordinate system.
 	Matrix3 orientation = Matrix3::Identity();
 
+	/// An additional symmetry transformation applied to the orientation of this cluster to align it
+	/// with one of the preferred crystal orientation as much as possible.
+	int symmetryTransformation = 0;
+
 	/// The center of mass of the cluster. This is computed from the atoms
 	/// that are part of the cluster.
 	Point3 centerOfMass = Point3::Origin();

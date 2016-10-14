@@ -68,9 +68,9 @@ void fullToVoigt(size_t particleCount, T *full, T *voigt) {
 		voigt[6*i] = full[9*i];
 		voigt[6*i+1] = full[9*i+4];
 		voigt[6*i+2] = full[9*i+8];
-		voigt[6*i+3] = 0.5*(full[9*i+5]+full[9*i+7]);
-		voigt[6*i+4] = 0.5*(full[9*i+2]+full[9*i+6]);
-		voigt[6*i+5] = 0.5*(full[9*i+1]+full[9*i+3]);
+		voigt[6*i+3] = (full[9*i+5]+full[9*i+7])/2;
+		voigt[6*i+4] = (full[9*i+2]+full[9*i+6])/2;
+		voigt[6*i+5] = (full[9*i+1]+full[9*i+3])/2;
     }
 }
 
@@ -272,19 +272,19 @@ void NetCDFImporter::NetCDFImportTask::closeNetCDF()
 /******************************************************************************
 * Close the current NetCDF file.
 ******************************************************************************/
-void NetCDFImporter::NetCDFImportTask::detectDims(int movieFrame, int particleCount, int nDims, int *dimIds, int &nDimsDetected, int &componentCount, int &nativeComponentCount, size_t *startp, size_t *countp)
+void NetCDFImporter::NetCDFImportTask::detectDims(int movieFrame, int particleCount, int nDims, int* dimIds, int& nDimsDetected, int& componentCount, int& nativeComponentCount, size_t* startp, size_t* countp)
 {
     // This is a per frame property
     startp[0] = movieFrame;
     countp[0] = 1;
 
-    if (nDims > 1 && (dimIds[1] == _atom_dim || dimIds[1] == _sph_dim || dimIds[1] == _dem_dim)) {
+    if(nDims > 1 && (dimIds[1] == _atom_dim || dimIds[1] == _sph_dim || dimIds[1] == _dem_dim)) {
         // This is a per atom property
         startp[1] = 0;
         countp[1] = particleCount;
         nDimsDetected = 2;
 
-        if (nDims > 2 && dimIds[2] == _spatial_dim) {
+        if(nDims > 2 && dimIds[2] == _spatial_dim) {
             // This is a vector property
             startp[2] = 0;
             countp[2] = 3;
@@ -292,7 +292,7 @@ void NetCDFImporter::NetCDFImportTask::detectDims(int movieFrame, int particleCo
             nativeComponentCount = 3;
             nDimsDetected = 3;
 
-            if (nDims > 3 && dimIds[2] == _spatial_dim) {
+            if(nDims > 3 && dimIds[2] == _spatial_dim) {
                 // This is a tensor property
                 startp[3] = 0;
                 countp[3] = 3;
@@ -301,7 +301,7 @@ void NetCDFImporter::NetCDFImportTask::detectDims(int movieFrame, int particleCo
                 nDimsDetected = 4;
             }
         }
-        else if (nDims == 3 && dimIds[2] == _Voigt_dim) {
+        else if(nDims == 3 && dimIds[2] == _Voigt_dim) {
             // This is a tensor property, in Voigt notation
             startp[2] = 0;
             countp[2] = 6;
@@ -310,13 +310,13 @@ void NetCDFImporter::NetCDFImportTask::detectDims(int movieFrame, int particleCo
             nDimsDetected = 3;
         }
     }
-    else if (nDims > 0 && (dimIds[0] == _atom_dim ||  dimIds[0] == _sph_dim ||  dimIds[0] == _dem_dim)) {
+    else if(nDims > 0 && (dimIds[0] == _atom_dim ||  dimIds[0] == _sph_dim ||  dimIds[0] == _dem_dim)) {
         // This is a per atom property, but global (per-file, not per frame)
         startp[0] = 0;
         countp[0] = particleCount;
         nDimsDetected = 1;
 
-        if (nDims > 1 && dimIds[1] == _spatial_dim) {
+        if(nDims > 1 && dimIds[1] == _spatial_dim) {
             // This is a vector property
             startp[1] = 0;
             countp[1] = 3;
@@ -324,7 +324,7 @@ void NetCDFImporter::NetCDFImportTask::detectDims(int movieFrame, int particleCo
             nativeComponentCount = 3;
             nDimsDetected = 2;
 
-            if (nDims > 2 && dimIds[2] == _spatial_dim) {
+            if(nDims > 2 && dimIds[2] == _spatial_dim) {
                 // This is a tensor property
                 startp[2] = 0;
                 countp[2] = 3;
@@ -333,7 +333,7 @@ void NetCDFImporter::NetCDFImportTask::detectDims(int movieFrame, int particleCo
                 nDimsDetected = 3;
             }
         }
-        else if (nDims == 2 && dimIds[1] == _Voigt_dim) {
+        else if(nDims == 2 && dimIds[1] == _Voigt_dim) {
             // This is a tensor property, in Voigt notation
             startp[1] = 0;
             countp[1] = 6;
@@ -481,7 +481,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 		simulationCell().setMatrix(AffineTransformation(va, vb, vc, Vector3(o[0], o[1], o[2])));
 
 		// Report to user.
-		setProgressRange(columnMapping.size());
+		beginProgressSubSteps(columnMapping.size());
 
 		// Now iterate over all variables and see if we have to reduce particleCount
 		// We use the only float properties for this because at least one must be present (coordinates)
@@ -519,12 +519,14 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 		}
 
 		// Now iterate over all variables and load the appropriate frame
-		for (const InputColumnInfo& column : columnMapping) {
+		for(const InputColumnInfo& column : columnMapping) {
 			if(isCanceled()) {
 				closeNetCDF();
 				return;
 			}
-			incrementProgressValue();
+
+			if(&column != &columnMapping.front())
+				nextProgressSubStep();
 
 			ParticleProperty* property = nullptr;
 
@@ -532,8 +534,8 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 			QString columnName = column.columnName;
 			QString propertyName = column.property.name();
 
-			if (dataType != QMetaType::Void) {
-				if (dataType != qMetaTypeId<int>() && dataType != qMetaTypeId<FloatType>())
+			if(dataType != QMetaType::Void) {
+				if(dataType != qMetaTypeId<int>() && dataType != qMetaTypeId<FloatType>())
 					throw Exception(tr("Invalid custom particle property (data type %1) for input file column '%2' of NetCDF file.").arg(dataType).arg(columnName));
 
 				// Retrieve NetCDF meta-information.
@@ -548,11 +550,11 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 				countp[2] = 1;
 
 				int nDimsDetected = -1, componentCount = 1, nativeComponentCount = 1;
-				if (nDims > 0) {
+				if(nDims > 0) {
 					detectDims(movieFrame, particleCount, nDims, dimIds, nDimsDetected, componentCount, nativeComponentCount, startp, countp);
 
 					// Skip all fields that don't have the expected format.
-					if (nDimsDetected != -1 && (nDimsDetected == nDims || type == NC_CHAR)) {
+					if(nDimsDetected != -1 && (nDimsDetected == nDims || type == NC_CHAR)) {
 						// Find property to load this information into.
 						ParticleProperty::Type propertyType = column.property.type();
 
@@ -599,15 +601,15 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 						OVITO_ASSERT(property != nullptr);
 						property->setName(propertyName);
 
-						if (property->componentCount() != componentCount) {
+						if(property->componentCount() != componentCount) {
 							qDebug() << "Warning: Skipping field '" << columnName << "' of NetCDF file because internal and NetCDF component counts do not match.";
 						}
 						else {
 							// Type mangling.
-							if (property->dataType() == qMetaTypeId<int>()) {
+							if(property->dataType() == qMetaTypeId<int>()) {
 								// This is integer data.
 
-								if (componentCount == 6 && nativeComponentCount == 9 && type != NC_CHAR) {
+								if(componentCount == 6 && nativeComponentCount == 9 && type != NC_CHAR) {
 									// Convert this property to Voigt notation.
 									std::unique_ptr<int[]> data(new int[9*particleCount]);
 									NCERRI( nc_get_vara_int(_ncid, varId, startp, countp, data.get()), tr("(While reading variable '%1'.)").arg(columnName));
@@ -615,8 +617,8 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 								}
 								else {
 									// Create particles types if this is the particle type property.
-									if (propertyType == ParticleProperty::ParticleTypeProperty && typeList != nullptr) {
-										if (type == NC_CHAR) {
+									if(propertyType == ParticleProperty::ParticleTypeProperty && typeList != nullptr) {
+										if(type == NC_CHAR) {
 											// We can only read this if there is an additional dimension
 											if (nDims == nDimsDetected+1) {
 												std::vector<int> dimids(nDims);
@@ -659,32 +661,56 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 										}
 									}
 									else {
-										if (type != NC_CHAR) {
-											NCERRI( nc_get_vara_int(_ncid, varId, startp, countp, property->dataInt()), tr("(While reading variable '%1'.)").arg(columnName) );
+										if(type != NC_CHAR) {
+											size_t totalCount = countp[1];
+											countp[1] = 1000000;
+											setProgressRange(totalCount / countp[1] + 1);
+											for(size_t chunk = 0; chunk < totalCount; chunk += countp[1], startp[1] += countp[1]) {
+												countp[1] = std::min(countp[1], totalCount - startp[1]);
+												OVITO_ASSERT(countp[1] >= 1);
+												NCERRI( nc_get_vara_int(_ncid, varId, startp, countp, property->dataInt() + property->componentCount()*startp[1]), tr("(While reading variable '%1'.)").arg(columnName) );
+												if(!incrementProgressValue()) {
+													closeNetCDF();
+													return;
+												}
+											}
 										}
 									}
 								}
 							}
-							else if (property->dataType() == qMetaTypeId<FloatType>()) {
+							else if(property->dataType() == qMetaTypeId<FloatType>()) {
 								// This is floating point data.
 
-								if (componentCount == 6 && nativeComponentCount == 9) {
+								FloatType* dest = property->dataFloat();
+								std::unique_ptr<FloatType[]> buffer;
+
+								if(componentCount == 6 && nativeComponentCount == 9) {
 									// Convert this property to Voigt notation.
-									std::unique_ptr<FloatType[]> data(new FloatType[9*particleCount]);
-#ifdef FLOATTYPE_FLOAT
-									NCERRI( nc_get_vara_float(_ncid, varId, startp, countp, data.get()), tr("(While reading variable '%1'.)").arg(columnName) );
-#else
-									NCERRI( nc_get_vara_double(_ncid, varId, startp, countp, data.get()), tr("(While reading variable '%1'.)").arg(columnName) );
-#endif
-									fullToVoigt(particleCount, data.get(), property->dataFloat());
+									buffer.reset(new FloatType[9*particleCount]);
+									dest = buffer.get();
 								}
-								else {
+
+								size_t totalCount = countp[1];
+								countp[1] = 1000000;
+								setProgressRange(totalCount / countp[1] + 1);
+								for(size_t chunk = 0; chunk < totalCount; chunk += countp[1], startp[1] += countp[1]) {
+									countp[1] = std::min(countp[1], totalCount - startp[1]);
+									OVITO_ASSERT(countp[1] >= 1);
 #ifdef FLOATTYPE_FLOAT
-									NCERRI( nc_get_vara_float(_ncid, varId, startp, countp, property->dataFloat()), tr("(While reading variable '%1'.)").arg(columnName) );
+									NCERRI( nc_get_vara_float(_ncid, varId, startp, countp, dest + property->componentCount()*startp[1]), tr("(While reading variable '%1'.)").arg(columnName) );
 #else
-									NCERRI( nc_get_vara_double(_ncid, varId, startp, countp, property->dataFloat()), tr("(While reading variable '%1'.)").arg(columnName) );
+									NCERRI( nc_get_vara_double(_ncid, varId, startp, countp, dest + property->componentCount()*startp[1]), tr("(While reading variable '%1'.)").arg(columnName) );
 #endif
+									if(!incrementProgressValue()) {
+										closeNetCDF();
+										return;
+									}
 								}
+
+								// Convert this property to Voigt notation.
+								if(buffer)
+									fullToVoigt(particleCount, buffer.get(), property->dataFloat());
+
 							}
 							else {
 								qDebug() << "Warning: Skipping field '" << columnName << "' of NetCDF file because it has an unrecognized data type.";
@@ -694,6 +720,8 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 				}
 			}
 		}
+
+		endProgressSubSteps();
 
 		// If the input file does not contain simulation cell size, use bounding box of particles as simulation cell.
 		if(!pbc[0] || !pbc[1] || !pbc[2]) {
@@ -734,7 +762,7 @@ InputColumnInfo NetCDFImporter::mapVariableToColumn(const QString& name, int dat
 	InputColumnInfo column;
 	column.columnName = name;
 	QString loweredName = name.toLower();
-	if(loweredName == "coordinates") column.mapStandardColumn(ParticleProperty::PositionProperty, 0);
+	if(loweredName == "coordinates" || loweredName == "unwrapped_coordinates") column.mapStandardColumn(ParticleProperty::PositionProperty, 0);
 	else if(loweredName == "velocities") column.mapStandardColumn(ParticleProperty::VelocityProperty, 0);
 	else if(loweredName == "id" || loweredName == "identifier") column.mapStandardColumn(ParticleProperty::IdentifierProperty);
 	else if(loweredName == "type" || loweredName == "element" || loweredName == "atom_types" || loweredName == "species") column.mapStandardColumn(ParticleProperty::ParticleTypeProperty);

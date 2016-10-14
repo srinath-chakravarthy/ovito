@@ -110,7 +110,7 @@ BOOST_PYTHON_MODULE(PyScriptApp)
 				"The global :py:class:`~ovito.vis.RenderSettings` object, which stores the current settings for rendering pictures and movies. "
 				"These are the settings the user can edit in the graphical version of OVITO.")
 		.add_property("selection", make_function(&DataSet::selection, return_value_policy<ovito_object_reference>()))
-		.add_property("container", make_function(&DataSet::container, return_value_policy<ovito_object_reference>()))
+		.add_property("container", make_function(&DataSet::container, return_value_policy<reference_existing_object>()))
 		.def("clearScene", &DataSet::clearScene)
 		.def("rescaleTime", &DataSet::rescaleTime)
 		.def("waitUntilSceneIsReady", &DataSet::waitUntilSceneIsReady, DataSet_waitUntilSceneIsReady_overloads())

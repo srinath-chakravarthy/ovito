@@ -404,7 +404,7 @@ void XYZImporter::XYZImportTask::parseFile(CompressedTextReader& stream)
 			for(int i = 0; i < fields.size() / 3; i++) {
 				QString propName = (fields[3 * i + 0]);
 				QString propTypeStr = (fields[3 * i + 1]).left(1);
-				QByteArray propTypeBA = propTypeStr.toLatin1();
+				QByteArray propTypeBA = propTypeStr.toUtf8();
 				char propType = propTypeBA.data()[0];
 				int nCols = (int)fields[3 * i + 2].toInt();
 				switch(propType) {

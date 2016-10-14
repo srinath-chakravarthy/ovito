@@ -88,6 +88,7 @@ void SftpJob::start()
 	}
 	connectionParams.port = _url.port(22);
 	connectionParams.authenticationType = QSsh::SshConnectionParameters::AuthenticationTypeTryAllPasswordBasedMethods;
+	connectionParams.options &= ~QSsh::SshEnableStrictConformanceChecks;
 	connectionParams.timeout = 10;
 
 	_futureInterface->setProgressText(tr("Connecting to remote server %1").arg(_url.host()));

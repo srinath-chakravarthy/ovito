@@ -25,12 +25,6 @@
 #include <core/scene/SelectionSet.h>
 #include "TextLabelOverlay.h"
 
-#if 0
-#include <QTextDocument>
-#include <QTextCharFormat>
-#include <QTextCursor>
-#endif
-
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, TextLabelOverlay, ViewportOverlay);
@@ -107,35 +101,31 @@ void TextLabelOverlay::render(Viewport* viewport, QPainter& painter, const ViewP
 
 	QRectF textRect(margin, margin, renderSettings->outputImageWidth() - margin*2, renderSettings->outputImageHeight() - margin*2);
 
-	int flags = Qt::TextDontClip;
-	if(_alignment.value() & Qt::AlignLeft) flags |= Qt::AlignLeft;
-	else if(_alignment.value() & Qt::AlignRight) flags |= Qt::AlignRight;
-	else if(_alignment.value() & Qt::AlignHCenter) flags |= Qt::AlignHCenter;
-	if(_alignment.value() & Qt::AlignTop) flags |= Qt::AlignTop;
-	else if(_alignment.value() & Qt::AlignBottom) flags |= Qt::AlignBottom;
-	else if(_alignment.value() & Qt::AlignVCenter) flags |= Qt::AlignVCenter;
-
 	painter.setRenderHint(QPainter::Antialiasing);
 	painter.setRenderHint(QPainter::TextAntialiasing);
-	QPen pen(textColor());
-	painter.setPen(pen);
 
 	QFont font = this->font();
 	font.setPointSizeF(fontSize);
 	painter.setFont(font);
 
-	painter.drawText(textRect.normalized().translated(origin), flags, textString);
+	QPainterPath textPath = QPainterPath();
+	textPath.addText(origin, font, textString);
+	QRectF textBounds = textPath.boundingRect();
 
-#if 0
-	QTextDocument doc(textString);
-	doc.setDefaultFont(font);
-	QTextCharFormat format;
-	format.setTextOutline(QPen(Qt::red, 3, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin)); // Color and width of outline
-	QTextCursor cursor(&doc);
-	cursor.select(QTextCursor::Document);
-	cursor.mergeCharFormat(format);
-	doc.drawContents(&painter);
-#endif
+	if(_alignment.value() & Qt::AlignLeft) textPath.translate(textRect.left(), 0);
+	else if(_alignment.value() & Qt::AlignRight) textPath.translate(textRect.right() - textBounds.width(), 0);
+	else if(_alignment.value() & Qt::AlignHCenter) textPath.translate(textRect.left() + textRect.width()/2.0 - textBounds.width()/2.0, 0);
+	if(_alignment.value() & Qt::AlignTop) textPath.translate(0, textRect.top() + textBounds.height());
+	else if(_alignment.value() & Qt::AlignBottom) textPath.translate(0, textRect.bottom());
+	else if(_alignment.value() & Qt::AlignVCenter) textPath.translate(0, textRect.top() + textRect.height()/2.0 + textBounds.height()/2.0);
+
+	if(outlineEnabled()) {
+		// Always render the outline pen 3 pixels wide, irrespective of frame buffer resolution.
+		qreal outlineWidth = 3.0 / painter.combinedTransform().m11();
+		painter.setPen(QPen(QBrush(outlineColor()), outlineWidth));
+		painter.drawPath(textPath);
+	}
+	painter.fillPath(textPath, QBrush(textColor()));
 }
 
 OVITO_END_INLINE_NAMESPACE

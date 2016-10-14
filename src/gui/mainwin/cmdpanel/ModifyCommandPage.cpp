@@ -76,6 +76,7 @@ ModifyCommandPage::ModifyCommandPage(MainWindow* mainWindow, QWidget* parent) : 
 	_modificationListWidget->setDragDropMode(QAbstractItemView::InternalMove);
 	_modificationListWidget->setDragEnabled(true);
 	_modificationListWidget->setAcceptDrops(true);
+	_modificationListWidget->setDragDropOverwriteMode(false);
 	_modificationListWidget->setDropIndicatorShown(true);
 	_modificationListWidget->setModel(_modificationListModel);
 	_modificationListWidget->setSelectionModel(_modificationListModel->selectionModel());
@@ -287,10 +288,20 @@ void ModifyCommandPage::onDeleteModifier()
 	Modifier* modifier = dynamic_object_cast<Modifier>(selectedItem->object());
 	if(!modifier) return;
 
-	UndoableTransaction::handleExceptions(_datasetContainer.currentSet()->undoStack(), tr("Delete modifier"), [selectedItem, modifier]() {
+	UndoableTransaction::handleExceptions(_datasetContainer.currentSet()->undoStack(), tr("Delete modifier"), [selectedItem, modifier, this]() {
+
+		// Move selection to the modifier following the one to be deleted in the list box.
+		for(int i = 0; i < _modificationListModel->rowCount() - 1; i++) {
+			if(_modificationListModel->item(i) == selectedItem) {
+				ModificationListItem* nextItem = _modificationListModel->item(i+1);
+				if(dynamic_object_cast<Modifier>(nextItem->object()))
+					_modificationListModel->setNextToSelectObject(nextItem->object());
+				break;
+			}
+		}
 
 		// Remove each ModifierApplication from the corresponding PipelineObject.
-		Q_FOREACH(ModifierApplication* modApp, selectedItem->modifierApplications()) {
+		for(ModifierApplication* modApp : selectedItem->modifierApplications()) {
 			OVITO_ASSERT(modApp->modifier() == modifier);
 			OVITO_CHECK_OBJECT_POINTER(modApp->pipelineObject());
 			modApp->pipelineObject()->removeModifier(modApp);
