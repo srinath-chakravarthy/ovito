@@ -45,6 +45,8 @@ DEFINE_FLAGS_PROPERTY_FIELD(ColorLegendOverlay, _aspectRatio, "AspectRatio", PRO
 DEFINE_PROPERTY_FIELD(ColorLegendOverlay, _valueFormatString, "ValueFormatString");
 DEFINE_FLAGS_REFERENCE_FIELD(ColorLegendOverlay, _modifier, "Modifier", ColorCodingModifier, PROPERTY_FIELD_NO_SUB_ANIM);
 DEFINE_FLAGS_PROPERTY_FIELD(ColorLegendOverlay, _textColor, "TextColor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(ColorLegendOverlay, _outlineColor, "OutlineColor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(ColorLegendOverlay, _outlineEnabled, "OutlineEnabled", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(ColorLegendOverlay, _alignment, "Position");
 SET_PROPERTY_FIELD_LABEL(ColorLegendOverlay, _orientation, "Orientation");
 SET_PROPERTY_FIELD_LABEL(ColorLegendOverlay, _legendSize, "Size factor");
@@ -54,6 +56,8 @@ SET_PROPERTY_FIELD_LABEL(ColorLegendOverlay, _offsetX, "Offset X");
 SET_PROPERTY_FIELD_LABEL(ColorLegendOverlay, _offsetY, "Offset Y");
 SET_PROPERTY_FIELD_LABEL(ColorLegendOverlay, _aspectRatio, "Aspect ratio");
 SET_PROPERTY_FIELD_LABEL(ColorLegendOverlay, _textColor, "Font color");
+SET_PROPERTY_FIELD_LABEL(ColorLegendOverlay, _outlineColor, "Outline color");
+SET_PROPERTY_FIELD_LABEL(ColorLegendOverlay, _outlineEnabled, "Enable outline");
 SET_PROPERTY_FIELD_LABEL(ColorLegendOverlay, _title, "Title");
 SET_PROPERTY_FIELD_LABEL(ColorLegendOverlay, _label1, "Label 1");
 SET_PROPERTY_FIELD_LABEL(ColorLegendOverlay, _label2, "Label 2");
@@ -70,7 +74,9 @@ ColorLegendOverlay::ColorLegendOverlay(DataSet* dataset) : ViewportOverlay(datas
 		_alignment(Qt::AlignHCenter | Qt::AlignBottom), _orientation(Qt::Horizontal),
 		_legendSize(0.3), _offsetX(0), _offsetY(0),
 		_fontSize(0.1), _valueFormatString("%g"), _aspectRatio(8.0),
-		_textColor(0,0,0)
+		_textColor(0,0,0),
+		_outlineColor(1,1,1),
+		_outlineEnabled(false)
 {
 	INIT_PROPERTY_FIELD(ColorLegendOverlay::_alignment);
 	INIT_PROPERTY_FIELD(ColorLegendOverlay::_orientation);
@@ -86,6 +92,8 @@ ColorLegendOverlay::ColorLegendOverlay(DataSet* dataset) : ViewportOverlay(datas
 	INIT_PROPERTY_FIELD(ColorLegendOverlay::_valueFormatString);
 	INIT_PROPERTY_FIELD(ColorLegendOverlay::_modifier);
 	INIT_PROPERTY_FIELD(ColorLegendOverlay::_textColor);
+	INIT_PROPERTY_FIELD(ColorLegendOverlay::_outlineColor);
+	INIT_PROPERTY_FIELD(ColorLegendOverlay::_outlineEnabled);
 
 	// Find a ColorCodingModifiers in the scene that we can connect to.
 	dataset->sceneRoot()->visitObjectNodes([this](ObjectNode* node) {
@@ -152,7 +160,10 @@ void ColorLegendOverlay::render(Viewport* viewport, QPainter& painter, const Vie
 	qreal fontSize = legendSize * std::max(0.0, (double)_fontSize.value());
 	if(fontSize == 0) return;
 	QFont font = _font.value();
-	painter.setPen((QColor)_textColor.value());
+
+	// Always render the outline pen 3 pixels wide, irrespective of frame buffer resolution.
+	qreal outlineWidth = 3.0 / painter.combinedTransform().m11();
+	painter.setPen(QPen(QBrush(outlineColor()), outlineWidth));
 
 	// Get modifier's parameters.
 	FloatType startValue = modifier()->startValue();
@@ -183,37 +194,71 @@ void ColorLegendOverlay::render(Viewport* viewport, QPainter& painter, const Vie
 	painter.setFont(font);
 
 	qreal textMargin = 0.2 * legendSize / std::max(FloatType(0.01), _aspectRatio.value());
+
+
+	bool drawOutline = (bool)_outlineEnabled.value();
+
+	// Create text at QPainterPaths so that we can easily draw an outline around the text
+	QPainterPath titlePath = QPainterPath();
+	titlePath.addText(origin, font, titleLabel);
+
+	// QPainterPath::addText uses the baseline as point where text is drawn. Compensate for this.
+	titlePath.translate(0,-QFontMetrics(font).descent());
+
+	QRectF titleBounds = titlePath.boundingRect();
+
+	// Move the text path to the correct place based on colorbar direction and position
 	if(!vertical || (_alignment.value() & Qt::AlignHCenter)) {
-		painter.drawText(QRectF(origin.x() + 0.5 * colorBarWidth, origin.y() - 0.5 * textMargin, 0, 0), Qt::AlignHCenter | Qt::AlignBottom | Qt::TextDontClip | Qt::TextSingleLine, titleLabel);
+		// Q: Why factor 0.5 ?
+		titlePath.translate(0.5*colorBarWidth - titleBounds.width()/2.0, -0.5*textMargin);
 	}
 	else {
 		if(_alignment.value() & Qt::AlignLeft)
-			painter.drawText(QRectF(origin.x(), origin.y() - textMargin, 0, 0), Qt::AlignLeft | Qt::AlignBottom | Qt::TextDontClip | Qt::TextSingleLine, titleLabel);
+			titlePath.translate(0, -textMargin);
 		else if(_alignment.value() & Qt::AlignRight)
-			painter.drawText(QRectF(origin.x() + colorBarWidth, origin.y() - textMargin, 0, 0), Qt::AlignRight | Qt::AlignBottom | Qt::TextDontClip | Qt::TextSingleLine, titleLabel);
+			titlePath.translate(-titleBounds.width(), -textMargin);
 	}
+
+	if(drawOutline) painter.drawPath(titlePath);
+	painter.fillPath(titlePath, (QColor)_textColor.value());
 
 	font.setPointSizeF(fontSize * 0.8);
 	painter.setFont(font);
 
+	QPainterPath topPath = QPainterPath();
+	QPainterPath bottomPath = QPainterPath();
+
+	topPath.addText(origin, font, topLabel);
+	bottomPath.addText(origin, font, bottomLabel);
+
+	QRectF bottomBounds = bottomPath.boundingRect();
+	QRectF topBounds = topPath.boundingRect();
+
 	if(!vertical) {
-		painter.drawText(QRectF(origin.x() - textMargin, origin.y() + 0.5 * colorBarHeight, 0, 0), Qt::AlignRight | Qt::AlignVCenter | Qt::TextDontClip | Qt::TextSingleLine, bottomLabel);
-		painter.drawText(QRectF(origin.x() + colorBarWidth + textMargin, origin.y() + 0.5 * colorBarHeight, 0, 0), Qt::AlignLeft | Qt::AlignVCenter | Qt::TextDontClip | Qt::TextSingleLine, topLabel);
+		bottomPath.translate(-textMargin - bottomBounds.width(), 0.5*colorBarHeight + bottomBounds.height()/2.0);
+		topPath.translate(colorBarWidth + textMargin, 0.5*colorBarHeight + topBounds.height()/2.0);
 	}
 	else {
+		topPath.translate(0, topBounds.height());
 		if(_alignment.value() & Qt::AlignLeft) {
-			painter.drawText(QRectF(origin.x() + colorBarWidth + textMargin, origin.y(), 0, 0), Qt::AlignLeft | Qt::AlignTop | Qt::TextDontClip | Qt::TextSingleLine, topLabel);
-			painter.drawText(QRectF(origin.x() + colorBarWidth + textMargin, origin.y() + colorBarHeight, 0, 0), Qt::AlignLeft | Qt::AlignBottom | Qt::TextDontClip | Qt::TextSingleLine, bottomLabel);
+			topPath.translate(colorBarWidth + textMargin, 0);
+			bottomPath.translate(colorBarWidth + textMargin, colorBarHeight);
 		}
 		else if(_alignment.value() & Qt::AlignRight) {
-			painter.drawText(QRectF(origin.x() - textMargin, origin.y(), 0, 0), Qt::AlignRight | Qt::AlignTop | Qt::TextDontClip | Qt::TextSingleLine, topLabel);
-			painter.drawText(QRectF(origin.x() - textMargin, origin.y() + colorBarHeight, 0, 0), Qt::AlignRight | Qt::AlignBottom | Qt::TextDontClip | Qt::TextSingleLine, bottomLabel);
+			topPath.translate(-textMargin -topBounds.width(), 0);
+			bottomPath.translate(-textMargin - bottomBounds.width(), colorBarHeight);
 		}
-		else if(_alignment.value() & Qt::AlignHCenter) {
-			painter.drawText(QRectF(origin.x() + colorBarWidth + textMargin, origin.y(), 0, 0), Qt::AlignLeft | Qt::AlignTop | Qt::TextDontClip | Qt::TextSingleLine, topLabel);
-			painter.drawText(QRectF(origin.x() + colorBarWidth + textMargin, origin.y() + colorBarHeight, 0, 0), Qt::AlignLeft | Qt::AlignBottom | Qt::TextDontClip | Qt::TextSingleLine, bottomLabel);
+		else if(_alignment.value() & Qt::AlignHCenter) { // Q: Same as Qt:AlignLeft case on purpose?
+			topPath.translate(colorBarWidth + textMargin, 0);
+			bottomPath.translate(colorBarWidth + textMargin, colorBarHeight);
 		}
 	}
+
+	if(drawOutline) painter.drawPath(topPath);
+	painter.fillPath(topPath, (QColor)_textColor.value());
+
+	if(drawOutline) painter.drawPath(bottomPath);
+	painter.fillPath(bottomPath, (QColor)_textColor.value());
 }
 
 OVITO_END_INLINE_NAMESPACE

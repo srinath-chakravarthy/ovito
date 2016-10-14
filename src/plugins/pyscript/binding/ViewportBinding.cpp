@@ -240,6 +240,14 @@ BOOST_PYTHON_MODULE(PyScriptViewport)
 				"The text rendering color."
 				"\n\n"
 				":Default: ``(0.0,0.0,0.5)``\n")
+		.add_property("outline_color", make_function(&TextLabelOverlay::outlineColor, return_value_policy<copy_const_reference>()), &TextLabelOverlay::setOutlineColor,
+				"The text outline color. This is only used if :py:attr:`.outline_enabled` is set."
+				"\n\n"
+				":Default: ``(1.0,1.0,1.0)``\n")
+		.add_property("outline_enabled", &TextLabelOverlay::outlineEnabled, &TextLabelOverlay::setOutlineEnabled,
+				"Enables the painting of a font outline to make the text easier to read."
+				"\n\n"
+				":Default: ``False``\n")
 	;
 
 	ovito_class<PythonViewportOverlay, ViewportOverlay>(

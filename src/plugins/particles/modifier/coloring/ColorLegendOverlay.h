@@ -65,6 +65,24 @@ public:
 	/// Returns the user-defined text to be used for the second numeric label.
 	const QString& label2() const { return _label2; }
 
+	/// Returns the display color of the labels.
+	const Color& textColor() const { return _textColor; }
+
+	/// Sets the display color of the labels.
+	void setTextColor(const Color& c) { _textColor = c; }
+
+	/// Returns the outline color of the font.
+	const Color& outlineColor() const { return _outlineColor; }
+
+	/// Sets the outline color of the font.
+	void setOutlineColor(const Color& c) { _outlineColor = c; }
+
+	/// Returns whether a text outline is drawn.
+	bool outlineEnabled() const { return _outlineEnabled; }
+
+	/// Sets whether a text outline is drawn.
+	void setOutlineEnabled(bool enable) { _outlineEnabled = enable; }
+
 	/// Moves the position of the overlay in the viewport by the given amount,
 	/// which is specified as a fraction of the viewport render size.
 	virtual void moveOverlayInViewport(const Vector2& delta) override {
@@ -120,6 +138,12 @@ private:
 	/// Controls the text color.
 	PropertyField<Color, QColor> _textColor;
 
+	/// The text outline color.
+	PropertyField<Color, QColor> _outlineColor;
+
+	/// Controls the outlining of the font.
+	PropertyField<bool> _outlineEnabled;
+
 	DECLARE_PROPERTY_FIELD(_alignment);
 	DECLARE_PROPERTY_FIELD(_orientation);
 	DECLARE_PROPERTY_FIELD(_aspectRatio);
@@ -133,6 +157,8 @@ private:
 	DECLARE_PROPERTY_FIELD(_label2);
 	DECLARE_PROPERTY_FIELD(_valueFormatString);
 	DECLARE_PROPERTY_FIELD(_textColor);
+	DECLARE_PROPERTY_FIELD(_outlineColor);
+	DECLARE_PROPERTY_FIELD(_outlineEnabled);
 	DECLARE_REFERENCE_FIELD(_modifier);
 
 	Q_CLASSINFO("DisplayName", "Color legend");

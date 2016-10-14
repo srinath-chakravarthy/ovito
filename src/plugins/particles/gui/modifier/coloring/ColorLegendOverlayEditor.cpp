@@ -21,7 +21,7 @@
 
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/particles/modifier/coloring/ColorLegendOverlay.h>
-#include <gui/properties/BooleanGroupBoxParameterUI.h>
+#include <gui/properties/BooleanParameterUI.h>
 #include <gui/properties/StringParameterUI.h>
 #include <gui/properties/ColorParameterUI.h>
 #include <gui/properties/FontParameterUI.h>
@@ -207,9 +207,15 @@ void ColorLegendOverlayEditor::createUI(const RolloutInsertionParameters& rollou
 	ColorParameterUI* textColorPUI = new ColorParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_textColor));
 	sublayout->addWidget(textColorPUI->colorPicker(), 4, 2);
 
+	BooleanParameterUI* outlineEnabledPUI = new BooleanParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_outlineEnabled));
+	sublayout->addWidget(outlineEnabledPUI->checkBox(), 5, 1);
+
+	ColorParameterUI* outlineColorPUI = new ColorParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_outlineColor));
+	sublayout->addWidget(outlineColorPUI->colorPicker(), 5, 2);
+
 	FontParameterUI* labelFontPUI = new FontParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_font));
-	sublayout->addWidget(labelFontPUI->label(), 5, 0);
-	sublayout->addWidget(labelFontPUI->fontPicker(), 5, 1, 1, 2);
+	sublayout->addWidget(labelFontPUI->label(), 6, 0);
+	sublayout->addWidget(labelFontPUI->fontPicker(), 6, 1, 1, 2);
 }
 
 OVITO_END_INLINE_NAMESPACE
