@@ -267,7 +267,7 @@ public:
 		return *reinterpret_cast<RefTargetType*>(_pointer);
 	}
 
-	/// Returns true if the internal pointer is non-NULL.
+	/// Returns true if the internal pointer is non-null.
 	operator bool() const { return _pointer != nullptr; }
 };
 
@@ -428,7 +428,12 @@ public:
 
 	/// Replaces a reference in the vector.
 	/// This method removes the reference at index i and inserts the new reference at the same index.
-	void set(int i, RefTargetType* object) { remove(i); insert(i, object); }
+	void set(int i, RefTargetType* object) {
+		if(targets()[i] != object) {
+			remove(i);
+			insert(i, object);
+		}
+	}
 
 	/// Returns an STL-style iterator pointing to the first item in the vector.
 	const_iterator begin() const { return targets().begin(); }
@@ -456,22 +461,28 @@ public:
 			Clazz* obj = dynamic_object_cast<Clazz>(*i);
 			if(obj) return obj;
 		}
-		return NULL;
+		return nullptr;
 	}
 
 	/// Copies the references of another vector reference field.
 	VectorReferenceField& operator=(const VectorReferenceField& other) {
-		clear();
-		for(const_iterator o = other.begin(); o != other.end(); ++o)
-			push_back(*o);
+		for(int i = 0; i < other.size() && i < this->size(); i++)
+			set(i, other[i]);
+		for(int i = this->size(); i < other.size(); i++)
+			push_back(other[i]);
+		for(int i = this->size() - 1; i >= other.size(); i--)
+			remove(i);
 		return *this;
 	}
 
 	/// Assigns the given list of targets to this vector reference field.
 	VectorReferenceField& operator=(const RefTargetVector& other) {
-		clear();
-		for(const_iterator o = other.begin(); o != other.end(); ++o)
-			push_back(*o);
+		for(int i = 0; i < other.size() && i < this->size(); i++)
+			set(i, other[i]);
+		for(int i = this->size(); i < other.size(); i++)
+			push_back(other[i]);
+		for(int i = this->size() - 1; i >= other.size(); i--)
+			remove(i);
 		return *this;
 	}
 

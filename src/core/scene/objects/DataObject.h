@@ -138,6 +138,15 @@ public:
 		_displayObjects.push_back(displayObj);
 	}
 
+	/// \brief Attaches one or more display objects to this scene object that will be responsible for rendering the
+	///        data object.
+	void setDisplayObjects(const QVector<DisplayObject*>& displayObjs) {
+		_displayObjects = displayObjs;
+	}
+
+	/// \brief Removes a display object from this scene object.
+	void removeDisplayObject(int index) { _displayObjects.remove(index); }
+
 	/// \brief Returns whether the internal data is saved along with the scene.
 	/// \return \c true if the data is stored in the state file; \c false if the data can be restored from an external file or recomputed.
 	bool saveWithScene() const;

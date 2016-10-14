@@ -261,6 +261,9 @@ protected:
 	/// This stores the cached results of the modifier.
 	QExplicitlySharedDataPointer<ParticleProperty> _computedProperty;
 
+	/// The cached display objects that are attached to the output particle property.
+	VectorReferenceField<DisplayObject> _cachedDisplayObjects;
+
 private:
 
 	Q_OBJECT
@@ -276,6 +279,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_neighborModeEnabled);
 	DECLARE_PROPERTY_FIELD(_neighborExpressions);
 	DECLARE_PROPERTY_FIELD(_cutoff);
+	DECLARE_VECTOR_REFERENCE_FIELD(_cachedDisplayObjects);
 };
 
 OVITO_END_INLINE_NAMESPACE

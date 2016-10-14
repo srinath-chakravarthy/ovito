@@ -35,6 +35,7 @@ DEFINE_PROPERTY_FIELD(ComputePropertyModifier, _onlySelectedParticles, "OnlySele
 DEFINE_PROPERTY_FIELD(ComputePropertyModifier, _neighborModeEnabled, "NeighborModeEnabled");
 DEFINE_PROPERTY_FIELD(ComputePropertyModifier, _neighborExpressions, "NeighborExpressions");
 DEFINE_FLAGS_PROPERTY_FIELD(ComputePropertyModifier, _cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(ComputePropertyModifier, _cachedDisplayObjects, "CachedDisplayObjects", DisplayObject, PROPERTY_FIELD_NEVER_CLONE_TARGET|PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_NO_UNDO|PROPERTY_FIELD_NO_SUB_ANIM);
 SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _expressions, "Expressions");
 SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _outputProperty, "Output property");
 SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _onlySelectedParticles, "Compute only for selected particles");
@@ -56,6 +57,7 @@ ComputePropertyModifier::ComputePropertyModifier(DataSet* dataset) : Asynchronou
 	INIT_PROPERTY_FIELD(ComputePropertyModifier::_neighborModeEnabled);
 	INIT_PROPERTY_FIELD(ComputePropertyModifier::_cutoff);
 	INIT_PROPERTY_FIELD(ComputePropertyModifier::_neighborExpressions);
+	INIT_PROPERTY_FIELD(ComputePropertyModifier::_cachedDisplayObjects);
 }
 
 /******************************************************************************
@@ -393,10 +395,26 @@ PipelineStatus ComputePropertyModifier::applyComputationResults(TimePoint time, 
 	if(outputParticleCount() != _computedProperty->size())
 		throwException(tr("The number of input particles has changed. The stored results have become invalid."));
 
+	ParticlePropertyObject* outputPropertyObj;
 	if(_computedProperty->type() == ParticleProperty::UserProperty)
-		outputCustomProperty(_computedProperty.data());
+		outputPropertyObj = outputCustomProperty(_computedProperty.data());
 	else
-		outputStandardProperty(_computedProperty.data());
+		outputPropertyObj = outputStandardProperty(_computedProperty.data());
+
+	// Replace display objects of output property with cached ones and cache any new display objects.
+	// This is required to prevent losing the output property's display settings
+	// each time the modifier is re-evaluated or when serializing the modifier.
+	if(outputPropertyObj) {
+		QVector<DisplayObject*> currentDisplayObjs = outputPropertyObj->displayObjects();
+		// Replace with cached display objects if they are of the same class type.
+		for(int i = 0; i < currentDisplayObjs.size() && i < _cachedDisplayObjects.size(); i++) {
+			if(currentDisplayObjs[i]->getOOType() == _cachedDisplayObjects[i]->getOOType()) {
+				currentDisplayObjs[i] = _cachedDisplayObjects[i];
+			}
+		}
+		outputPropertyObj->setDisplayObjects(currentDisplayObjs);
+		_cachedDisplayObjects = currentDisplayObjs;
+	}
 
 	return PipelineStatus::Success;
 }
