@@ -40,7 +40,7 @@ bool PDBImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceLocation
 	// Read the first N lines.
 	for(int i = 0; i < 20 && !stream.eof(); i++) {
 		stream.readLine(86);
-		if(qstrlen(stream.line()) > 83)
+		if(qstrlen(stream.line()) > 83 && !stream.lineStartsWith("TITLE "))
 			return false;
 		if(qstrlen(stream.line()) >= 7 && stream.line()[6] != ' ')
 			return false;
@@ -67,7 +67,7 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 
 		stream.readLine();
 		int lineLength = qstrlen(stream.line());
-		if(lineLength < 3 || lineLength > 83)
+		if(lineLength < 3 || (lineLength > 83 && !stream.lineStartsWith("TITLE ")))
 			throw Exception(tr("Invalid line length detected in Protein Data Bank (PDB) file at line %1").arg(stream.lineNumber()));
 
 		// Parse simulation cell.
@@ -83,17 +83,17 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 				cell(2,2) = c;
 			}
 			else if(alpha == 90 && beta == 90) {
-				gamma *= FLOATTYPE_PI / 180.0f;
+				gamma *= FLOATTYPE_PI / 180;
 				cell(0,0) = a;
 				cell(0,1) = b * cos(gamma);
 				cell(1,1) = b * sin(gamma);
 				cell(2,2) = c;
 			}
 			else {
-				alpha *= FLOATTYPE_PI / 180.0f;
-				beta *= FLOATTYPE_PI / 180.0f;
-				gamma *= FLOATTYPE_PI / 180.0f;
-				FloatType v = a*b*c*sqrt(1.0f - cos(alpha)*cos(alpha) - cos(beta)*cos(beta) - cos(gamma)*cos(gamma) + 2.0f * cos(alpha) * cos(beta) * cos(gamma));
+				alpha *= FLOATTYPE_PI / 180;
+				beta *= FLOATTYPE_PI / 180;
+				gamma *= FLOATTYPE_PI / 180;
+				FloatType v = a*b*c*sqrt(1.0 - cos(alpha)*cos(alpha) - cos(beta)*cos(beta) - cos(gamma)*cos(gamma) + 2.0 * cos(alpha) * cos(beta) * cos(gamma));
 				cell(0,0) = a;
 				cell(0,1) = b * cos(gamma);
 				cell(1,1) = b * sin(gamma);
@@ -135,7 +135,7 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 
 		stream.readLine();
 		int lineLength = qstrlen(stream.line());
-		if(lineLength < 3 || lineLength > 83)
+		if(lineLength < 3 || (lineLength > 83 && !stream.lineStartsWith("TITLE ")))
 			throw Exception(tr("Invalid line length detected in Protein Data Bank (PDB) file at line %1").arg(stream.lineNumber()));
 
 		// Parse atom definition.
@@ -200,7 +200,7 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 	while(!stream.eof()) {
 		stream.readLine();
 		int lineLength = qstrlen(stream.line());
-		if(lineLength < 3 || lineLength > 83)
+		if(lineLength < 3 || (lineLength > 83 && !stream.lineStartsWith("TITLE ")))
 			throw Exception(tr("Invalid line length detected in Protein Data Bank (PDB) file at line %1").arg(stream.lineNumber()));
 
 		// Parse bonds.
