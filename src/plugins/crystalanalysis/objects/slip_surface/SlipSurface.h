@@ -67,7 +67,19 @@ public:
 		notifyDependents(ReferenceEvent::TargetChanged);
 	}
 
+	/// Fairs the mesh stored in this object.
+	void smoothMesh(const SimulationCell& cell, int numIterations, FutureInterfaceBase* progress = nullptr, FloatType k_PB = 0.1f, FloatType lambda = 0.5f) {
+		smoothMesh(*modifiableStorage(), cell, numIterations, progress, k_PB, lambda);
+		changed();
+	}
+
+	/// Fairs a mesh.
+	static void smoothMesh(SlipSurfaceData& mesh, const SimulationCell& cell, int numIterations, FutureInterfaceBase* progress = nullptr, FloatType k_PB = 0.1f, FloatType lambda = 0.5f);
+
 protected:
+
+	/// Performs one iteration of the smoothing algorithm.
+	static void smoothMeshIteration(SlipSurfaceData& mesh, FloatType prefactor, const SimulationCell& cell);
 
 	/// Creates a copy of this object.
 	virtual OORef<RefTarget> clone(bool deepCopy, CloneHelper& cloneHelper) override;
