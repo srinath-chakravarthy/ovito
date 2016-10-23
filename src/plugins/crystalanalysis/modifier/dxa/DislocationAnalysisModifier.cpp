@@ -39,6 +39,7 @@ DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _maxTrialCircuitSize, "MaxTri
 DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _circuitStretchability, "CircuitStretchability");
 DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _outputInterfaceMesh, "OutputInterfaceMesh");
 DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _reconstructEdgeVectors, "ReconstructEdgeVectors");
+DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _onlyPerfectDislocations, "OnlyPerfectDislocations");
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _patternCatalog, "PatternCatalog", PatternCatalog, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _dislocationDisplay, "DislocationDisplay", DislocationDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _defectMeshDisplay, "DefectMeshDisplay", SurfaceMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
@@ -50,6 +51,7 @@ SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _maxTrialCircuitSize, "Tri
 SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _circuitStretchability, "Circuit stretchability");
 SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _outputInterfaceMesh, "Output interface mesh");
 SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _reconstructEdgeVectors, "Reconstruct edge vectors");
+SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _onlyPerfectDislocations, "Generate perfect dislocations");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(DislocationAnalysisModifier, _maxTrialCircuitSize, IntegerParameterUnit, 3);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(DislocationAnalysisModifier, _circuitStretchability, IntegerParameterUnit, 0);
 
@@ -58,13 +60,14 @@ SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(DislocationAnalysisModifier, _circuitStretc
 ******************************************************************************/
 DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : StructureIdentificationModifier(dataset),
 		_inputCrystalStructure(StructureAnalysis::LATTICE_FCC), _maxTrialCircuitSize(14), _circuitStretchability(9), _outputInterfaceMesh(false),
-		_reconstructEdgeVectors(false)
+		_reconstructEdgeVectors(false), _onlyPerfectDislocations(false)
 {
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_inputCrystalStructure);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_maxTrialCircuitSize);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_circuitStretchability);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_outputInterfaceMesh);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_reconstructEdgeVectors);
+	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_onlyPerfectDislocations);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_patternCatalog);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_dislocationDisplay);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_defectMeshDisplay);
@@ -175,7 +178,8 @@ void DislocationAnalysisModifier::propertyChanged(const PropertyFieldDescriptor&
 			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_maxTrialCircuitSize)
 			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_circuitStretchability)
 			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_outputInterfaceMesh)
-			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_reconstructEdgeVectors))
+			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_reconstructEdgeVectors)
+			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_onlyPerfectDislocations))
 		invalidateCachedResults();
 }
 
@@ -235,7 +239,8 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> DislocationAnalysis
 	return std::make_shared<DislocationAnalysisEngine>(validityInterval, posProperty->storage(),
 			simCell->data(), inputCrystalStructure(), maxTrialCircuitSize(), circuitStretchability(),
 			reconstructEdgeVectors(), selectionProperty,
-			clusterProperty ? clusterProperty->storage() : nullptr, std::move(preferredCrystalOrientations));
+			clusterProperty ? clusterProperty->storage() : nullptr, std::move(preferredCrystalOrientations),
+			onlyPerfectDislocations());
 }
 
 /******************************************************************************

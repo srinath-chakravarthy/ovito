@@ -173,6 +173,12 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 					"Specifies the number of iterations of the surface smoothing algorithm to perform when post-processing the extracted defect mesh."
 					"\n\n"
 					":Default: 8\n")
+			.add_property("only_perfect_dislocations", &DislocationAnalysisModifier::onlyPerfectDislocations, &DislocationAnalysisModifier::setOnlyPerfectDislocations,
+					"This flag controls whether the algorithm should extract only perfect dislocations (and no partial dislocations, which is normally done for FCC/HCP and diamond lattices). "
+					"Make sure you set the :py:attr:`.circuit_stretchability` parameter to a high value when activating this option, because "
+					"large Burgers circuits are needed to identify dissociated dislocations with a wide core. "
+					"\n\n"
+					":Default: False\n")
 		;
 
 		enum_<StructureAnalysis::LatticeStructureType>("Lattice")

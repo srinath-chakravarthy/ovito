@@ -81,7 +81,6 @@ void ColorCodingModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	bondPropertyLabel->hide();
 	sourceBondPropertyUI->comboBox()->hide();
 
-	bondsModeBtn->setChecked(true);
 	connect(bondsModeBtn, &QRadioButton::toggled, sourceParticlePropertyUI->comboBox(), &QWidget::setHidden);
 	connect(bondsModeBtn, &QRadioButton::toggled, particlePropertyLabel, &QWidget::setHidden);
 	connect(bondsModeBtn, &QRadioButton::toggled, sourceBondPropertyUI->comboBox(), &QWidget::setVisible);

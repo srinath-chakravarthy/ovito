@@ -42,6 +42,9 @@ public:
 	/// \param redirectOutputToConsole Controls whether the Python script output should be forwarded to the terminal.
 	ScriptEngine(DataSet* dataset, QObject* parent = nullptr, bool redirectOutputToConsole = true);
 
+	/// \brief Destructor
+	virtual ~ScriptEngine();
+
 	/// \brief Returns the dataset that provides the context for the script.
 	DataSet* dataset() const { return _dataset; }
 

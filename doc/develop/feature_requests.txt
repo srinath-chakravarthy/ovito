@@ -24,6 +24,7 @@ New visualization features:
 - Stereoscopic display (Erik Bitzek)
 - Wireframe mesh rendering (robin.gibaud@simap.grenoble-inp.fr)
 - Double bonds (SP2) (Jejoon Yeon <jyeon3@ucmerced.edu>)
+- Depth of field rendering with the Tachyon renderer (adehgha@ncsu.edu).
 
 Unresolved OpenGL problems:
 

@@ -48,7 +48,8 @@ public:
 			int inputCrystalStructure, int maxTrialCircuitSize, int maxCircuitElongation,
 			bool reconstructEdgeVectors, ParticleProperty* particleSelection,
 			ParticleProperty* crystalClusters,
-			std::vector<Matrix3>&& preferredCrystalOrientations);
+			std::vector<Matrix3>&& preferredCrystalOrientations,
+			bool onlyPerfectDislocations);
 
 	/// Computes the modifier's results and stores them in this object for later retrieval.
 	virtual void perform() override;
@@ -89,6 +90,7 @@ private:
 
 	int _inputCrystalStructure;
 	bool _reconstructEdgeVectors;
+	bool _onlyPerfectDislocations;
 	QExplicitlySharedDataPointer<HalfEdgeMesh<>> _defectMesh;
 	QExplicitlySharedDataPointer<ParticleProperty> _crystalClusters;
 	StructureAnalysis _structureAnalysis;

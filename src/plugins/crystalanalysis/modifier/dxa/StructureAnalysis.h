@@ -99,7 +99,8 @@ public:
 			LatticeStructureType inputCrystalType,
 			ParticleProperty* particleSelection,
 			ParticleProperty* outputStructures,
-			std::vector<Matrix3>&& preferredCrystalOrientations = std::vector<Matrix3>());
+			std::vector<Matrix3>&& preferredCrystalOrientations = std::vector<Matrix3>(),
+			bool identifyPlanarDefects = true);
 
 	/// Identifies the atomic structures.
 	bool identifyStructures(FutureInterfaceBase& progress);
@@ -211,6 +212,7 @@ private:
 private:
 
 	LatticeStructureType _inputCrystalType;
+	bool _identifyPlanarDefects;
 	QExplicitlySharedDataPointer<ParticleProperty> _positions;
 	QExplicitlySharedDataPointer<ParticleProperty> _structureTypes;
 	QExplicitlySharedDataPointer<ParticleProperty> _neighborLists;

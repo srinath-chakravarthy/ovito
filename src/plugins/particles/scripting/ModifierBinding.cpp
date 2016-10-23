@@ -148,12 +148,12 @@ BOOST_PYTHON_MODULE(ParticlesModify)
 					":Default: ``False``\n")
 			.add_property("keepSelection", &ColorCodingModifier::keepSelection, &ColorCodingModifier::setKeepSelection)
 			.add_property("assign_to", &ColorCodingModifier::colorApplicationMode, &ColorCodingModifier::setColorApplicationMode,
-					"Determines what the modifier assigns the colors to.\n"
+					"Determines what the modifier assigns the colors to. "
 					"This must be one of the following constants:\n"
 					" * ``ColorCodingModifier.AssignmentMode.Particles``\n"
 					" * ``ColorCodingModifier.AssignmentMode.Bonds``\n"
 					" * ``ColorCodingModifier.AssignmentMode.Vectors``\n"
-					"\n\n"
+					"\n"
 					"If this attribute is set to ``Bonds``, then the bond property selected by :py:attr:`.bond_property` is used to color bonds. "
 					"Otherwise the particle property selected by :py:attr:`.particle_property` is used to color particles or vectors. "
 					"\n\n"

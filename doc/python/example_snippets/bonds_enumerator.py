@@ -8,10 +8,11 @@ node = import_file('bonds.data.gz', atom_style = 'bond')
 bonds_enum = Bonds.Enumerator(node.source.bonds)
 
 # Loop over atoms.
+bonds_array = node.source.bonds.array
 for particle_index in range(node.source.number_of_particles):
     # Loop over half-bonds of current atom.
     for bond_index in bonds_enum.bonds_of_particle(particle_index):
-        atomA = node.source.bonds.array[bond_index][0]
-        atomB = node.source.bonds.array[bond_index][1]
+        atomA = bonds_array[bond_index][0]
+        atomB = bonds_array[bond_index][1]
         assert(atomA == particle_index)
         print("Atom %i has a bond to atom %i" % (atomA, atomB))

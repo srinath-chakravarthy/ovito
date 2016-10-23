@@ -78,6 +78,20 @@ ScriptEngine::ScriptEngine(DataSet* dataset, QObject* parent, bool redirectOutpu
 }
 
 /******************************************************************************
+* Destructor.
+******************************************************************************/
+ScriptEngine::~ScriptEngine()
+{
+	try {
+		// Explicitly release all objects created by Python scripts.
+		_mainNamespace.clear();
+	}
+	catch(const error_already_set&) {
+		PyErr_Print();
+	}
+}
+
+/******************************************************************************
 * Initializes the Python interpreter and sets up the global namespace.
 ******************************************************************************/
 void ScriptEngine::initializeInterpreter()
@@ -410,6 +424,7 @@ int ScriptEngine::executeFile(const QString& filename, const QStringList& script
 		if(!result) throw_error_already_set();
 		Py_DECREF(result);
 #endif
+
 	    _activeEngine = previousEngine;
 	    return 0;
 	}
@@ -433,18 +448,23 @@ int ScriptEngine::executeFile(const QString& filename, const QStringList& script
 			PyErr_Fetch(&extype, &value, &traceback);
 			PyErr_NormalizeException(&extype, &value, &traceback);
 			if(extype) {
-				object o_extype(handle<>(borrowed(extype)));
-				object o_value(handle<>(borrowed(value)));
-				object o_traceback(handle<>(borrowed(traceback)));
-				object mod_traceback = import("traceback");
+				object o_extype(handle<>(allow_null(borrowed(extype))));
+				object o_value(handle<>(allow_null(borrowed(value))));
 				try {
-					bool chain = PyObject_IsInstance(value, extype) == 1;
-					object lines = mod_traceback.attr("format_exception")(o_extype, o_value, o_traceback, object(), chain);
+					if(traceback) {
+						object o_traceback(handle<>(allow_null(borrowed(traceback))));
+						object mod_traceback = import("traceback");
+						bool chain = PyObject_IsInstance(value, extype) == 1;
+						object lines = mod_traceback.attr("format_exception")(o_extype, o_value, o_traceback, object(), chain);
 
-					QString tracebackString;
-					for(int i = 0; i < len(lines); ++i)
-						tracebackString += extract<QString>(lines[i])();
-					exception.appendDetailMessage(tracebackString);
+						QString tracebackString;
+						for(int i = 0; i < len(lines); ++i)
+							tracebackString += extract<QString>(lines[i])();
+						exception.appendDetailMessage(tracebackString);
+					}
+					else {
+						exception.appendDetailMessage(extract<QString>(str(o_value)));
+					}
 				}
 				catch(const error_already_set&) {
 					PyErr_Print();

@@ -295,23 +295,23 @@ Particles.Bonds.array = property(_Bonds_array)
 def _Bonds_pbc_vectors(self):
     """ A NumPy array providing read access to the PBC shift vectors of bonds.
         
-        The returned array's shape is *N x 3*, where *N* is the number of half bonds. It contains the
+        The returned array's shape is *N x 3*, where *N* is the number of half-bonds. It contains the
         periodic shift vector for each half-bond.
         
         A PBC shift vector consists of three integers, which specify how many times (and in which direction)
         the corresonding half-bond crosses the periodic boundaries of the simulation cell. For example, a shift vector (0,-1,0)
-        would indicate that the half-bond crosses the periodic boundary in the negative Y direction 
-        once. In other words, the particle the half-bond originates from is located
+        indicates that the half-bond crosses the periodic boundary in the negative Y direction 
+        once. In other words, the particle where the half-bond originates from is located
         close to the lower edge of the simulation cell in the Y direction while the second particle is located 
         close to the opposite side of the box.
         
         The PBC shift vectors are important for visualizing the bonds between particles with wrapped coordinates, 
         which are located on opposite sides of a periodic cell. When the PBC shift vector of a bond is (0,0,0), OVITO assumes that 
-        both particles connected by the bond are located in the same periodic image and the bond is displayed such that
+        both particles connected by the bond are located in the same periodic image and the bond is rendered such that
         it directly connects the two particles without going through a cell boundary.
         
-        Furthermore, if the PBC shift vector of a half-bond A->B is (s\ :sub:`x`, s\ :sub:`y`, s\ :sub:`z`), then
-        the shift vector of the reverse half-bond B->A is always (-s\ :sub:`x`, -s\ :sub:`y`, -s\ :sub:`z`).
+        Note that, if the PBC shift vector of a half-bond A->B is (n\ :sub:`x`, n\ :sub:`y`, n\ :sub:`z`), then
+        the shift vector of the reverse half-bond B->A is always (-n\ :sub:`x`, -n\ :sub:`y`, -n\ :sub:`z`).
     """
     class DummyClass:
         pass
@@ -429,7 +429,7 @@ class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
         if index < 0 or index >= self.particle_count:
             raise IndexError("Particle index is out of range.")
         # Construct the C++ neighbor query. 
-        query = Particles.CutoffNeighborFinder.Query(self, index)
+        query = Particles.CutoffNeighborFinder.Query(self, int(index))
         # Iterate over neighbors.
         while not query.atEnd:
             yield query
@@ -490,7 +490,7 @@ class NearestNeighborFinder(Particles.NearestNeighborFinder):
             raise IndexError("Particle index is out of range.")
         # Construct the C++ neighbor query. 
         query = Particles.NearestNeighborFinder.Query(self)
-        query.findNeighbors(index)
+        query.findNeighbors(int(index))
         # Iterate over neighbors.
         for i in range(query.count):
             yield query[i]
