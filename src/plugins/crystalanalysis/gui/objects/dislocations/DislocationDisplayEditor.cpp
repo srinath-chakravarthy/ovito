@@ -26,6 +26,7 @@
 #include <gui/properties/ColorParameterUI.h>
 #include <gui/properties/BooleanGroupBoxParameterUI.h>
 #include <gui/properties/BooleanParameterUI.h>
+#include <gui/properties/IntegerRadioButtonParameterUI.h>
 #include "DislocationDisplayEditor.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
@@ -65,6 +66,10 @@ void DislocationDisplayEditor::createUI(const RolloutInsertionParameters& rollou
 	sublayout->addWidget(lineWidthUI->label(), 1, 0);
 	sublayout->addLayout(lineWidthUI->createFieldLayout(), 1, 1);
 
+	// Show line directions.
+	BooleanParameterUI* showLineDirectionsUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_showLineDirections));
+	sublayout->addWidget(showLineDirectionsUI->checkBox(), 2, 0, 1, 2);
+
 	// Show Burgers vectors.
 	BooleanGroupBoxParameterUI* showBurgersVectorsGroupUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_showBurgersVectors));
 	showBurgersVectorsGroupUI->groupBox()->setTitle(tr("Burgers vectors"));
@@ -89,18 +94,19 @@ void DislocationDisplayEditor::createUI(const RolloutInsertionParameters& rollou
 	sublayout->addWidget(new QLabel(tr("Color:")), 2, 0);
 	sublayout->addWidget(burgersVectorColorUI->colorPicker(), 2, 1);
 
-	// Show line directions.
-	BooleanParameterUI* showLineDirectionsUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_showLineDirections));
-	layout->addWidget(showLineDirectionsUI->checkBox());
+	// Coloring mode.
+	QGroupBox* coloringGroupBox = new QGroupBox(tr("Color lines by"));
+	sublayout = new QGridLayout(coloringGroupBox);
+	sublayout->setContentsMargins(4,4,4,4);
+	sublayout->setSpacing(4);
+	sublayout->setColumnStretch(1, 1);
+	layout->addWidget(coloringGroupBox);
 
-	// Indicate dislocation character.
-	sublayout = new QGridLayout();
-	sublayout->setContentsMargins(0,0,0,0);
-	sublayout->setSpacing(0);
-	BooleanParameterUI* indicateDislocationCharacterUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_indicateDislocationCharacter));
-	sublayout->addWidget(indicateDislocationCharacterUI->checkBox(), 0, 0);
-	sublayout->addWidget(new QLabel(tr("<p> (<font color=\"#FF0000\">screw</font>/<font color=\"#00DD00\">edge</font>)</p>")), 0, 1);
-	layout->addLayout(sublayout);
+	IntegerRadioButtonParameterUI* coloringModeUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_lineColoringMode));
+	sublayout->addWidget(coloringModeUI->addRadioButton(DislocationDisplay::ColorByDislocationType, tr("Dislocation type")), 0, 0, 1, 2);
+	sublayout->addWidget(coloringModeUI->addRadioButton(DislocationDisplay::ColorByBurgersVector, tr("Burgers vector")), 1, 0, 1, 2);
+	sublayout->addWidget(coloringModeUI->addRadioButton(DislocationDisplay::ColorByCharacter, tr("Local character")), 2, 0);
+	sublayout->addWidget(new QLabel(tr("<p> (<font color=\"#FF0000\">screw</font>/<font color=\"#0000FF\">edge</font>)</p>")), 2, 1);
 }
 
 }	// End of namespace

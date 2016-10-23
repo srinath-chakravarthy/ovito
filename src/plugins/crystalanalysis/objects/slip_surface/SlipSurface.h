@@ -37,7 +37,20 @@ struct SlipSurfaceFace
 	ClusterVector slipVector = Vector3::Zero();
 };
 
-using SlipSurfaceData = HalfEdgeMesh<EmptyHalfEdgeMeshStruct, SlipSurfaceFace, EmptyHalfEdgeMeshStruct>;
+class SlipSurfaceData : public HalfEdgeMesh<EmptyHalfEdgeMeshStruct, SlipSurfaceFace, EmptyHalfEdgeMeshStruct>
+{
+public:
+
+	/// Default constructor.
+	SlipSurfaceData() {}
+
+	/// Copy constructor.
+	SlipSurfaceData(const SlipSurfaceData& other) : HalfEdgeMesh<EmptyHalfEdgeMeshStruct, SlipSurfaceFace, EmptyHalfEdgeMeshStruct>(other) {
+		OVITO_ASSERT(faces().size() == other.faces().size());
+		for(size_t f = 0; f < faces().size(); f++)
+			faces()[f]->slipVector = other.faces()[f]->slipVector;
+	}
+};
 
 /**
  * \brief A triangle mesh representing the slipped surfaces in a deformed crystal.

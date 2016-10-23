@@ -21,6 +21,7 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
+#include <plugins/crystalanalysis/objects/patterns/PatternCatalog.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <core/rendering/SceneRenderer.h>
 #include <core/utilities/mesh/TriMesh.h>
@@ -40,7 +41,7 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(SlipSurfaceDisplay, _surfaceTransparency, Per
 * Constructor.
 ******************************************************************************/
 SlipSurfaceDisplay::SlipSurfaceDisplay(DataSet* dataset) : AsynchronousDisplayObject(dataset),
-	_smoothShading(false), _trimeshUpdate(true)
+	_smoothShading(true), _trimeshUpdate(true)
 {
 	INIT_PROPERTY_FIELD(SlipSurfaceDisplay::_smoothShading);
 	INIT_PROPERTY_FIELD(SlipSurfaceDisplay::_surfaceTransparency);
@@ -75,8 +76,27 @@ std::shared_ptr<AsynchronousTask> SlipSurfaceDisplay::createEngine(TimePoint tim
 	if(cellObject && slipSurfaceObj) {
 		// Check if the input has changed.
 		if(_preparationCacheHelper.updateState(dataObject, cellObject->data())) {
+
+			// Get the cluster graph.
+			ClusterGraphObject* clusterGraphObject = flowState.findObject<ClusterGraphObject>();
+
+			// Build lookup map of lattice structure names.
+			QStringList structureNames;
+			if(PatternCatalog* patternCatalog = flowState.findObject<PatternCatalog>()) {
+				for(StructurePattern* pattern : patternCatalog->patterns()) {
+					if(pattern->id() < 0) continue;
+					while(pattern->id() >= structureNames.size()) structureNames.append(QString());
+					structureNames[pattern->id()] = pattern->shortName();
+				}
+			}
+
 			// Create compute engine.
-			return std::make_shared<PrepareMeshEngine>(slipSurfaceObj->storage(), cellObject->data(), slipSurfaceObj->cuttingPlanes());
+			return std::make_shared<PrepareMeshEngine>(
+					slipSurfaceObj->storage(),
+					clusterGraphObject ? clusterGraphObject->storage() : nullptr,
+					cellObject->data(),
+					structureNames,
+					slipSurfaceObj->cuttingPlanes());
 		}
 	}
 	else {
@@ -94,7 +114,7 @@ void SlipSurfaceDisplay::PrepareMeshEngine::perform()
 {
 	setProgressText(tr("Preparing slip surface for display"));
 
-	if(!buildMesh(*_inputMesh, _simCell, _cuttingPlanes, _surfaceMesh, this))
+	if(!buildMesh(*_inputMesh, _simCell, _cuttingPlanes, _structureNames, _surfaceMesh, _materialColors, this))
 		throw Exception(tr("Failed to generate non-periodic version of slip surface for display. Simulation cell might be too small."));
 
 	if(isCanceled())
@@ -108,6 +128,12 @@ void SlipSurfaceDisplay::transferComputationResults(AsynchronousTask* engine)
 {
 	if(engine) {
 		_surfaceMesh = static_cast<PrepareMeshEngine*>(engine)->surfaceMesh();
+		_materialColors = std::move(static_cast<PrepareMeshEngine*>(engine)->materialColors());
+		for(ColorA& c : _materialColors) {
+			c.r() = std::min(c.r() + FloatType(0.3), FloatType(1));
+			c.g() = std::min(c.g() + FloatType(0.3), FloatType(1));
+			c.b() = std::min(c.b() + FloatType(0.3), FloatType(1));
+		}
 		_trimeshUpdate = true;
 	}
 	else {
@@ -128,20 +154,17 @@ void SlipSurfaceDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 		_trimeshUpdate = true;
 	}
 
-	// Get the cluster graph.
-	ClusterGraphObject* clusterGraph = flowState.findObject<ClusterGraphObject>();
-
 	// Get the rendering colors for the surface.
-	FloatType transp_surface = 0;
+	FloatType surface_alpha = 1;
 	TimeInterval iv;
-	if(_surfaceTransparency) transp_surface = _surfaceTransparency->getFloatValue(time, iv);
-	ColorA color_surface(1, 1, 1, 1.0f - transp_surface);
+	if(_surfaceTransparency) surface_alpha = FloatType(1) - _surfaceTransparency->getFloatValue(time, iv);
+	ColorA color_surface(1, 1, 1, surface_alpha);
 
 	// Do we have to re-create the render primitives from scratch?
 	bool recreateSurfaceBuffer = !_surfaceBuffer || !_surfaceBuffer->isValid(renderer);
 
 	// Do we have to update the render primitives?
-	bool updateContents = _geometryCacheHelper.updateState(transp_surface, smoothShading(), clusterGraph)
+	bool updateContents = _geometryCacheHelper.updateState(surface_alpha, smoothShading())
 					|| recreateSurfaceBuffer || _trimeshUpdate;
 
 	// Re-create the render primitives if necessary.
@@ -157,24 +180,9 @@ void SlipSurfaceDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 			face.setSmoothingGroups(smoothingGroup);
 		}
 
-#if 0
-		// Define surface colors for the regions by taking them from the cluster graph.
-		int maxClusterId = 0;
-		if(clusterGraph) {
-			for(Cluster* cluster : clusterGraph->storage()->clusters())
-				if(cluster->id > maxClusterId)
-					maxClusterId = cluster->id;
-		}
-		std::vector<ColorA> materialColors(maxClusterId + 1, color_surface);
-		materialColors[0] = color_surface;
-		if(clusterGraph) {
-			for(Cluster* cluster : clusterGraph->storage()->clusters()) {
-				if(cluster->id != 0)
-					materialColors[cluster->id] = ColorA(cluster->color, 1.0f - transp_surface);
-			}
-		}
-		_surfaceBuffer->setMaterialColors(std::move(materialColors));
-#endif
+		for(ColorA& c : _materialColors)
+			c.a() = surface_alpha;
+		_surfaceBuffer->setMaterialColors(_materialColors);
 
 		_surfaceBuffer->setMesh(_surfaceMesh, color_surface);
 
@@ -191,22 +199,32 @@ void SlipSurfaceDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 /******************************************************************************
 * Generates the final triangle mesh, which will be rendered.
 ******************************************************************************/
-bool SlipSurfaceDisplay::buildMesh(const SlipSurfaceData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress)
+bool SlipSurfaceDisplay::buildMesh(const SlipSurfaceData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, const QStringList& structureNames, TriMesh& output, std::vector<ColorA>& materialColors, FutureInterfaceBase* progress)
 {
 	// Convert half-edge mesh to triangle mesh.
 	input.convertToTriMesh(output);
 
-#if 0
 	// Color faces according to slip vector.
 	auto fout = output.faces().begin();
 	for(SlipSurfaceData::Face* face : input.faces()) {
+		int materialIndex = 0;
+		if(Cluster* cluster = face->slipVector.cluster()) {
+			if(cluster->structure < structureNames.size() && structureNames[cluster->structure].isEmpty() == false) {
+				ColorA c = StructurePattern::getBurgersVectorColor(structureNames[cluster->structure], face->slipVector.localVec());
+				auto iter = std::find(materialColors.begin(), materialColors.end(), c);
+				if(iter == materialColors.end()) {
+					materialIndex = materialColors.size();
+					materialColors.push_back(c);
+				}
+				else materialIndex = iter - materialColors.begin();
+			}
+		}
 		for(SlipSurfaceData::Edge* edge = face->edges()->nextFaceEdge()->nextFaceEdge(); edge != face->edges(); edge = edge->nextFaceEdge()) {
-			fout->setMaterialIndex(face->region);
+			fout->setMaterialIndex(materialIndex);
 			++fout;
 		}
 	}
 	OVITO_ASSERT(fout == output.faces().end());
-#endif
 
 	// Check for early abortion.
 	if(progress && progress->isCanceled())
@@ -290,14 +308,14 @@ bool SlipSurfaceDisplay::splitFace(TriMesh& output, int faceIndex, int oldVertex
 	OVITO_ASSERT(z[2] - z[1] == -(z[1] - z[2]));
 	OVITO_ASSERT(z[0] - z[2] == -(z[2] - z[0]));
 
-	if(std::abs(zd[0]) < 0.5f && std::abs(zd[1]) < 0.5f && std::abs(zd[2]) < 0.5f)
+	if(std::abs(zd[0]) < FloatType(0.5) && std::abs(zd[1]) < FloatType(0.5) && std::abs(zd[2]) < FloatType(0.5))
 		return true;	// Face is not crossing the periodic boundary.
 
 	// Create four new vertices (or use existing ones created during splitting of adjacent faces).
 	int properEdge = -1;
 	int newVertexIndices[3][2];
 	for(int i = 0; i < 3; i++) {
-		if(std::abs(zd[i]) < 0.5f) {
+		if(std::abs(zd[i]) < FloatType(0.5)) {
 			if(properEdge != -1)
 				return false;		// The simulation box may be too small or invalid.
 			properEdge = i;
@@ -306,7 +324,7 @@ bool SlipSurfaceDisplay::splitFace(TriMesh& output, int faceIndex, int oldVertex
 		int vi1 = face.vertex(i);
 		int vi2 = face.vertex((i+1)%3);
 		int oi1, oi2;
-		if(zd[i] <= -0.5f) {
+		if(zd[i] <= FloatType(-0.5)) {
 			std::swap(vi1, vi2);
 			oi1 = 1; oi2 = 0;
 		}
@@ -329,14 +347,14 @@ bool SlipSurfaceDisplay::splitFace(TriMesh& output, int faceIndex, int oldVertex
 			if(delta[dim] != 0)
 				t = output.vertex(vi1)[dim] / (-delta[dim]);
 			else
-				t = 0.5f;
+				t = FloatType(0.5);
 			OVITO_ASSERT(std::isfinite(t));
 			Point3 p = delta * t + output.vertex(vi1);
 			newVertexIndices[i][oi1] = oldVertexCount + (int)newVertices.size();
 			newVertexIndices[i][oi2] = oldVertexCount + (int)newVertices.size() + 1;
 			newVertexLookupMap.insert(std::make_pair(std::pair<int,int>(vi1, vi2), std::pair<int,int>(newVertexIndices[i][oi1], newVertexIndices[i][oi2])));
 			newVertices.push_back(p);
-			p[dim] += 1.0f;
+			p[dim] += FloatType(1.0);
 			newVertices.push_back(p);
 		}
 	}

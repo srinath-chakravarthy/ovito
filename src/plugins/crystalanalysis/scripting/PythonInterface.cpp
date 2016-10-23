@@ -304,42 +304,54 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 		.add_property("export_mesh", &CAExporter::meshExportEnabled, &CAExporter::setMeshExportEnabled)
 	;
 
-	ovito_class<DislocationDisplay, DisplayObject>(
-			":Base class: :py:class:`ovito.vis.Display`\n\n"
-			"Controls the visual appearance of dislocation lines extracted by a :py:class:`~ovito.modifier.DislocationAnalysisModifier`. "
-			"An instance of this class is attached to every :py:class:`~ovito.data.DislocationNetwork` data object. ")
-		.add_property("shading", &DislocationDisplay::shadingMode, &DislocationDisplay::setShadingMode,
-				"The shading style used for the lines.\n"
-				"Possible values:"
-				"\n\n"
-				"   * ``DislocationDisplay.Shading.Normal`` (default) \n"
-				"   * ``DislocationDisplay.Shading.Flat``\n"
-				"\n")
-		.add_property("burgers_vector_width", &DislocationDisplay::burgersVectorWidth, &DislocationDisplay::setBurgersVectorWidth,
-				"Specifies the width of Burgers vector arrows (in length units)."
-				"\n\n"
-				":Default: 0.6\n")
-		.add_property("burgers_vector_width", &DislocationDisplay::burgersVectorScaling, &DislocationDisplay::setBurgersVectorScaling,
-				"The scaling factor applied to displayed Burgers vectors. This can be used to exaggerate the arrow size."
-				"\n\n"
-				":Default: 1.0\n")
-		.add_property("burgers_vector_color", make_function(&DislocationDisplay::burgersVectorColor, return_value_policy<copy_const_reference>()), &DislocationDisplay::setBurgersVectorColor,
-				"The color of Burgers vector arrows."
-				"\n\n"
-				":Default: ``(0.7, 0.7, 0.7)``\n")
-		.add_property("show_burgers_vectors", &DislocationDisplay::showBurgersVectors, &DislocationDisplay::setShowBurgersVectors,
-				"Boolean flag that enables the display of Burgers vector arrows."
-				"\n\n"
-				":Default: ``False``\n")
-		.add_property("show_line_directions", &DislocationDisplay::showLineDirections, &DislocationDisplay::setShowLineDirections,
-				"Boolean flag that enables the visualization of line directions."
-				"\n\n"
-				":Default: ``False``\n")
-		.add_property("indicate_character", &DislocationDisplay::indicateDislocationCharacter, &DislocationDisplay::setIndicateDislocationCharacter,
-				"Activates the coloring of dislocation lines based on the local screw/edge character."
-				"\n\n"
-				":Default: ``False``\n")
-	;
+	{
+		scope s = ovito_class<DislocationDisplay, DisplayObject>(
+				":Base class: :py:class:`ovito.vis.Display`\n\n"
+				"Controls the visual appearance of dislocation lines extracted by a :py:class:`~ovito.modifier.DislocationAnalysisModifier`. "
+				"An instance of this class is attached to every :py:class:`~ovito.data.DislocationNetwork` data object. ")
+			.add_property("shading", &DislocationDisplay::shadingMode, &DislocationDisplay::setShadingMode,
+					"The shading style used for the lines.\n"
+					"Possible values:"
+					"\n\n"
+					"   * ``DislocationDisplay.Shading.Normal`` (default) \n"
+					"   * ``DislocationDisplay.Shading.Flat``\n"
+					"\n")
+			.add_property("burgers_vector_width", &DislocationDisplay::burgersVectorWidth, &DislocationDisplay::setBurgersVectorWidth,
+					"Specifies the width of Burgers vector arrows (in length units)."
+					"\n\n"
+					":Default: 0.6\n")
+			.add_property("burgers_vector_width", &DislocationDisplay::burgersVectorScaling, &DislocationDisplay::setBurgersVectorScaling,
+					"The scaling factor applied to displayed Burgers vectors. This can be used to exaggerate the arrow size."
+					"\n\n"
+					":Default: 1.0\n")
+			.add_property("burgers_vector_color", make_function(&DislocationDisplay::burgersVectorColor, return_value_policy<copy_const_reference>()), &DislocationDisplay::setBurgersVectorColor,
+					"The color of Burgers vector arrows."
+					"\n\n"
+					":Default: ``(0.7, 0.7, 0.7)``\n")
+			.add_property("show_burgers_vectors", &DislocationDisplay::showBurgersVectors, &DislocationDisplay::setShowBurgersVectors,
+					"Boolean flag that enables the display of Burgers vector arrows."
+					"\n\n"
+					":Default: ``False``\n")
+			.add_property("show_line_directions", &DislocationDisplay::showLineDirections, &DislocationDisplay::setShowLineDirections,
+					"Boolean flag that enables the visualization of line directions."
+					"\n\n"
+					":Default: ``False``\n")
+			.add_property("indicate_character", &DislocationDisplay::lineColoringMode, &DislocationDisplay::setLineColoringMode,
+					"Controls how the display color of dislocation lines is chosen."
+					"Possible values:"
+					"\n\n"
+					"   * ``DislocationDisplay.ColoringMode.ByDislocationType`` (default) \n"
+					"   * ``DislocationDisplay.ColoringMode.ByBurgersVector``\n"
+					"   * ``DislocationDisplay.ColoringMode.ByCharacter``\n"
+					"\n")
+		;
+
+		enum_<DislocationDisplay::LineColoringMode>("ColoringMode")
+			.value("ByDislocationType", DislocationDisplay::ColorByDislocationType)
+			.value("ByBurgersVector", DislocationDisplay::ColorByBurgersVector)
+			.value("ByCharacter", DislocationDisplay::ColorByCharacter)
+		;
+	}
 
 	ovito_class<DislocationNetworkObject, DataObject>(
 			":Base class: :py:class:`ovito.data.DataObject`\n\n"
