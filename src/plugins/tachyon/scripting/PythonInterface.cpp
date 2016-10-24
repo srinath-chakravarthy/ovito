@@ -71,6 +71,18 @@ BOOST_PYTHON_MODULE(Tachyon)
 				"A higher sample count leads to a more even shading, but requires more computation time."
 				"\n\n"
 				"Default: 12")
+		.add_property("depth_of_field", &TachyonRenderer::depthOfFieldEnabled, &TachyonRenderer::setDepthOfFieldEnabled,
+				"This flag enables depth-of-field rendering."
+				"\n\n"
+				"Default: ``False``")
+		.add_property("focal_length", &TachyonRenderer::dofFocalLength, &TachyonRenderer::setDofFocalLength,
+				"Controls the focal length of the camera, which is used for depth-of-field rendering."
+				"\n\n"
+				"Default: 40.0")
+		.add_property("aperture", &TachyonRenderer::dofAperture, &TachyonRenderer::setDofAperture,
+				"Controls the aperture of the camera, which is used for depth-of-field rendering."
+				"\n\n"
+				"Default: 0.01")
 	;
 }
 

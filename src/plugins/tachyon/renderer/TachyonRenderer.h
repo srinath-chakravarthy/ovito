@@ -123,6 +123,24 @@ public:
 	/// Sets the number of AO samples to compute.
 	void setAmbientOcclusionSamples(int sampleCount) { _ambientOcclusionSamples = sampleCount; }
 
+	/// Returns whether depth-of-field rendering is enabled.
+	bool depthOfFieldEnabled() const { return _depthOfFieldEnabled; }
+
+	/// Enables/disables depth-of-field rendering.
+	void setDepthOfFieldEnabled(bool enabled) { _depthOfFieldEnabled = enabled; }
+
+	/// Returns the camera's focal length, which is used for depth-of-field rendering.
+	FloatType dofFocalLength() const { return _dofFocalLength; }
+
+	/// Sets the camera's focal length, which is used for depth-of-field rendering.
+	void setDofFocalLength(FloatType length) { _dofFocalLength = length; }
+
+	/// Returns the camera's aperture, which is used for depth-of-field rendering.
+	FloatType dofAperture() const { return _dofAperture; }
+
+	/// Sets the camera's aperture, which is used for depth-of-field rendering.
+	void setDofAperture(FloatType aperture) { _dofAperture = aperture; }
+
 private:
 
 	/// Creates a texture with the given color.
@@ -154,6 +172,15 @@ private:
 	/// Controls the brightness of the sky light source used for ambient occlusion.
 	PropertyField<FloatType> _ambientOcclusionBrightness;
 
+	/// Enables depth-of-field rendering.
+	PropertyField<bool> _depthOfFieldEnabled;
+
+	/// Controls the camera's focal length, which is used for depth-of-field rendering.
+	PropertyField<FloatType> _dofFocalLength;
+
+	/// Controls the camera's aperture, which is used for depth-of-field rendering.
+	PropertyField<FloatType> _dofAperture;
+
 	/// The Tachyon internal scene handle.
 	SceneHandle _rtscene;
 
@@ -176,6 +203,9 @@ private:
 	DECLARE_PROPERTY_FIELD(_ambientOcclusionEnabled);
 	DECLARE_PROPERTY_FIELD(_ambientOcclusionSamples);
 	DECLARE_PROPERTY_FIELD(_ambientOcclusionBrightness);
+	DECLARE_PROPERTY_FIELD(_depthOfFieldEnabled);
+	DECLARE_PROPERTY_FIELD(_dofFocalLength);
+	DECLARE_PROPERTY_FIELD(_dofAperture);
 };
 
 }	// End of namespace
