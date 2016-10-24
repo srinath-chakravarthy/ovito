@@ -873,6 +873,7 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 		// Compute matrix, which transforms vectors from lattice space to simulation coordinates.
 		cluster->orientation = Matrix3(orientationW * orientationV.inverse());
 
+#if 1
 		if(latticeStructureType == _inputCrystalType && !_preferredCrystalOrientations.empty()) {
 			// Determine the symmetry permutation that leads to the best cluster orientation.
 			// The best cluster orientation is the one that forms the smallest angle with one of the
@@ -896,6 +897,7 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 				}
 			}
 		}
+#endif
 	}
 
 	// Reorient atoms to align clusters with global coordinate system.
@@ -908,7 +910,7 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 		const LatticeStructure& latticeStructure = _latticeStructures[cluster->structure];
 		int oldSymmetryPermutation = _atomSymmetryPermutations->getInt(atomIndex);
 		int newSymmetryPermutation = latticeStructure.permutations[oldSymmetryPermutation].inverseProduct[cluster->symmetryTransformation];
-		_atomSymmetryPermutations->setInt(atomIndex, oldSymmetryPermutation);
+		_atomSymmetryPermutations->setInt(atomIndex, newSymmetryPermutation);
 	}
 
 	//qDebug() << "Number of clusters:" << (clusterGraph().clusters().size() - 1);
