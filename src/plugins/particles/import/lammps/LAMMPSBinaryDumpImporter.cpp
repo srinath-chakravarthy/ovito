@@ -65,6 +65,8 @@ struct LAMMPSBinaryDumpHeader
 		else {
 			qint64 val;
 			input.read(reinterpret_cast<char*>(&val), sizeof(val));
+			if(val > (qint64)std::numeric_limits<int>::max())
+				return -1;
 			return val;
 		}
 	}
@@ -183,10 +185,10 @@ bool LAMMPSBinaryDumpHeader::parse(QIODevice& input)
 		input.seek(headerPos);
 
 		ntimestep = readBigInt(input);
-		if(ntimestep < 0 || ntimestep > 200000000) continue;
+		if(ntimestep < 0) continue;
 
 		natoms = readBigInt(input);
-		if(natoms < 0 || natoms > 200000000) continue;
+		if(natoms < 0) continue;
 
 		qint64 startPos = input.pos();
 
@@ -215,7 +217,7 @@ bool LAMMPSBinaryDumpHeader::parse(QIODevice& input)
 			if(bbox[i][0] > bbox[i][1])
 				isValid = false;
 			for(int j = 0; j < 2; j++) {
-				if(!std::isfinite(bbox[i][j]) || bbox[i][j] < -1e10 || bbox[i][j] > 1e10)
+				if(!std::isfinite(bbox[i][j]) || bbox[i][j] < -1e9 || bbox[i][j] > 1e9)
 					isValid = false;
 			}
 		}
