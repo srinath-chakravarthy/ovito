@@ -55,6 +55,9 @@ Application::Application() : _exitCode(0), _consoleMode(true), _headlessMode(tru
 	// Set global application pointer.
 	OVITO_ASSERT(_instance == nullptr);	// Only allowed to create one Application class instance.
 	_instance = this;
+
+	// Use all procesor cores by default.
+	_idealThreadCount = std::max(1, QThread::idealThreadCount());
 }
 
 /******************************************************************************
@@ -185,9 +188,15 @@ bool Application::initialize(int& argc, char** argv)
 		return true;
 	}
 
-	// Interpret the command line arguments.
-	if(!processCommandLineParameters()) {
-		return true;
+	try {
+		// Interpret the command line arguments.
+		if(!processCommandLineParameters()) {
+			return true;
+		}
+	}
+	catch(const Exception& ex) {
+		ex.showError();
+		return false;
 	}
 
 	// Create Qt application object.
@@ -250,6 +259,7 @@ void Application::registerCommandLineParameters(QCommandLineParser& parser)
 {
 	parser.addOption(QCommandLineOption(QStringList{{"h", "help"}}, tr("Shows this list of program options and exits.")));
 	parser.addOption(QCommandLineOption(QStringList{{"v", "version"}}, tr("Prints the program version and exits.")));
+	parser.addOption(QCommandLineOption(QStringList{{"nthreads"}}, tr("Sets the number of parallel threads to use for computations."), QStringLiteral("N")));
 }
 
 /******************************************************************************
@@ -261,6 +271,15 @@ bool Application::processCommandLineParameters()
 	if(cmdLineParser().isSet("version")) {
 		std::cout << qPrintable(QCoreApplication::applicationName()) << " " << qPrintable(QCoreApplication::applicationVersion()) << std::endl;
 		return false;
+	}
+
+	// User can overwrite the number of parallel threads to use.
+	if(cmdLineParser().isSet("nthreads")) {
+		bool ok;
+		int nthreads = cmdLineParser().value("nthreads").toInt(&ok);
+		if(!ok || nthreads <= 0)
+			throw Exception(tr("Invalid thread count specified on command line."));
+		setIdealThreadCount(nthreads);
 	}
 
 	return true;

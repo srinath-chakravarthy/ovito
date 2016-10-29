@@ -66,9 +66,18 @@ int main(int argc, char** argv)
 			execMode = true;
 			break;
 		}
+		else if(strcmp(*argv, "-nt") == 0) {
+			if(argc >= 2) {
+				newargv.push_back("--nthreads");
+				newargv.push_back(argv[1]);
+			}
+			argv += 2;
+			argc -= 2;
+			break;
+		}
 		else if(strcmp(*argv, "-h") == 0 || strcmp(*argv, "--help") == 0) {
 			std::cout << "OVITO Script Interpreter" << std::endl << std::endl;
-			std::cout << "Usage: ovitos [-o FILE] [-g] [-v] [-c command | -m module-name | script-file] [arguments]" << std::endl;
+			std::cout << "Usage: ovitos [-g|--gui] [-v|--version] [-nt <NumThreads>] [-o FILE] [-c command | -m module-name | script-file] [arguments]" << std::endl;
 			return 0;
 		}
 		else if(strcmp(*argv, "-v") == 0 || strcmp(*argv, "--version") == 0) {
