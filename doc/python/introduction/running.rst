@@ -82,7 +82,7 @@ The :command:`-g` command line option switches from console mode to graphical mo
 and you can follow your script's actions as they are being executed. This is useful, for instance, if you want to visually 
 inspect the results of your script during the development phase.
 
-Integrating OVITO into the system Python interpreter
+Using third-party Python modules from OVITO scripts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It is not possible to run scripts written for OVITO with a standard Python interpreter (usually named :program:`python`). 
