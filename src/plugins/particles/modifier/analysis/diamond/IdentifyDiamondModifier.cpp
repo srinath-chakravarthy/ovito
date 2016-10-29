@@ -228,11 +228,11 @@ PipelineStatus IdentifyDiamondModifier::applyComputationResults(TimePoint time, 
 	if(status.type() == PipelineStatus::Success) {
 		output().attributes().insert(QStringLiteral("IdentifyDiamond.counts.OTHER"), QVariant::fromValue(structureCounts()[OTHER]));
 		output().attributes().insert(QStringLiteral("IdentifyDiamond.counts.CUBIC_DIAMOND"), QVariant::fromValue(structureCounts()[CUBIC_DIAMOND]));
-		output().attributes().insert(QStringLiteral("IdentifyDiamond.counts.CUBIC_DIAMOND_FIRST_NEIGHBOR"), QVariant::fromValue(structureCounts()[CUBIC_DIAMOND_FIRST_NEIGHBOR]));
-		output().attributes().insert(QStringLiteral("IdentifyDiamond.counts.CUBIC_DIAMOND_SECOND_NEIGHBOR"), QVariant::fromValue(structureCounts()[CUBIC_DIAMOND_SECOND_NEIGHBOR]));
+		output().attributes().insert(QStringLiteral("IdentifyDiamond.counts.CUBIC_DIAMOND_FIRST_NEIGHBOR"), QVariant::fromValue(structureCounts()[CUBIC_DIAMOND_FIRST_NEIGH]));
+		output().attributes().insert(QStringLiteral("IdentifyDiamond.counts.CUBIC_DIAMOND_SECOND_NEIGHBOR"), QVariant::fromValue(structureCounts()[CUBIC_DIAMOND_SECOND_NEIGH]));
 		output().attributes().insert(QStringLiteral("IdentifyDiamond.counts.HEX_DIAMOND"), QVariant::fromValue(structureCounts()[HEX_DIAMOND]));
-		output().attributes().insert(QStringLiteral("IdentifyDiamond.counts.HEX_DIAMOND_FIRST_NEIGHBOR"), QVariant::fromValue(structureCounts()[HEX_DIAMOND_FIRST_NEIGHBOR]));
-		output().attributes().insert(QStringLiteral("IdentifyDiamond.counts.HEX_DIAMOND_SECOND_NEIGHBOR"), QVariant::fromValue(structureCounts()[HEX_DIAMOND_SECOND_NEIGHBOR]));
+		output().attributes().insert(QStringLiteral("IdentifyDiamond.counts.HEX_DIAMOND_FIRST_NEIGHBOR"), QVariant::fromValue(structureCounts()[HEX_DIAMOND_FIRST_NEIGH]));
+		output().attributes().insert(QStringLiteral("IdentifyDiamond.counts.HEX_DIAMOND_SECOND_NEIGHBOR"), QVariant::fromValue(structureCounts()[HEX_DIAMOND_SECOND_NEIGH]));
 	}
 
 	return status;

@@ -90,7 +90,7 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, _ambientOcclusionSamples, In
 TachyonRenderer::TachyonRenderer(DataSet* dataset) : NonInteractiveSceneRenderer(dataset),
 		_antialiasingEnabled(true), _directLightSourceEnabled(true), _shadowsEnabled(true),
 	  _antialiasingSamples(12), _ambientOcclusionEnabled(true), _ambientOcclusionSamples(12),
-	  _defaultLightSourceIntensity(0.90f), _ambientOcclusionBrightness(0.80f), _depthOfFieldEnabled(true),
+	  _defaultLightSourceIntensity(0.90f), _ambientOcclusionBrightness(0.80f), _depthOfFieldEnabled(false),
 	  _dofFocalLength(40), _dofAperture(1e-2f)
 {
 	INIT_PROPERTY_FIELD(TachyonRenderer::_antialiasingEnabled);
