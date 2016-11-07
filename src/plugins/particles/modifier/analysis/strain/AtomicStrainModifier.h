@@ -175,9 +175,7 @@ private:
 			_nonaffineSquaredDisplacements(calculateNonaffineSquaredDisplacements ? new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, tr("Nonaffine Squared Displacement"), false) : nullptr),
 			_invalidParticles(new ParticleProperty(positions->size(), ParticleProperty::SelectionProperty, 0, false)),
 			_rotations(calculateRotations ? new ParticleProperty(positions->size(), ParticleProperty::RotationProperty, 0, false) : nullptr),
-			_stretchTensors(calculateStretchTensors ? new ParticleProperty(positions->size(), ParticleProperty::StretchTensorProperty, 0, false) : nullptr),
-			_currentSimCellInv(simCell.inverseMatrix()),
-			_reducedToAbsolute(eliminateCellDeformation ? simCellRef.matrix() : simCell.matrix()) {}
+			_stretchTensors(calculateStretchTensors ? new ParticleProperty(positions->size(), ParticleProperty::StretchTensorProperty, 0, false) : nullptr) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;
