@@ -89,7 +89,7 @@ QT5_ADD_RESOURCES(ResourceFiles resources/particles_gui.qrc)
 
 OVITO_STANDARD_PLUGIN(ParticlesGui
 	SOURCES ParticlesGui.cpp ${SourceFiles} ${ResourceFiles}
-	LIB_DEPENDENCIES qcustomplot 
+	PRIVATE_LIB_DEPENDENCIES qcustomplot 
 	PLUGIN_DEPENDENCIES Particles
 	GUI_PLUGIN
 )
