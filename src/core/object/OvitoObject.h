@@ -90,6 +90,13 @@ public:
 	bool __isObjectAlive() const { return _magicAliveCode == 0x87ABCDEF; }
 #endif
 
+	/// The type descriptor that every OvitoObject-derived class has.
+	static const NativeOvitoObjectType OOType;
+
+	/// Returns the type descriptor that every OvitoObject-derived class has.
+	/// This default implementation is overriden by subclasses to return their type descriptor instead.
+	virtual const OvitoObjectType& getOOType() const { return OOType; }
+
 protected:
 
 	/// \brief This method is called after the reference counter of this object has reached zero
@@ -173,7 +180,6 @@ private:
 #endif
 
 	Q_OBJECT
-	OVITO_OBJECT
 
 	// Give OORef smart pointer access to the internal reference count.
 	template<class T> friend class OORef;

@@ -163,10 +163,10 @@ public:
 	virtual TimeInterval validityInterval(TimePoint time) override { return TimeInterval::infinite(); }
 
 	/// \brief Gets the controller's value at a certain animation time.
-	virtual void getPositionValue(TimePoint time, Vector3& result, TimeInterval& validityInterval) { result = _value; }
+	virtual void getPositionValue(TimePoint time, Vector3& result, TimeInterval& validityInterval) override { result = _value; }
 
 	/// \brief Sets a position controller's value at the given animation time.
-	virtual void setPositionValue(TimePoint time, const Vector3& newValue, bool isAbsolute) {
+	virtual void setPositionValue(TimePoint time, const Vector3& newValue, bool isAbsolute) override {
 		if(isAbsolute) _value = newValue;
 		else _value = newValue + _value.value();
 	}
@@ -204,10 +204,10 @@ public:
 	virtual TimeInterval validityInterval(TimePoint time) override { return TimeInterval::infinite(); }
 
 	/// \brief Gets the controller's value at a certain animation time.
-	virtual void getRotationValue(TimePoint time, Rotation& result, TimeInterval& validityInterval) { result = _value; }
+	virtual void getRotationValue(TimePoint time, Rotation& result, TimeInterval& validityInterval) override { result = _value; }
 
 	/// \brief Sets a rotation controller's value at the given animation time.
-	virtual void setRotationValue(TimePoint time, const Rotation& newValue, bool isAbsolute) {
+	virtual void setRotationValue(TimePoint time, const Rotation& newValue, bool isAbsolute) override {
 		if(isAbsolute) _value = newValue;
 		else _value = newValue * _value.value();
 	}
@@ -245,10 +245,10 @@ public:
 	virtual TimeInterval validityInterval(TimePoint time) override { return TimeInterval::infinite(); }
 
 	/// \brief Gets the controller's value at a certain animation time.
-	virtual void getScalingValue(TimePoint time, Scaling& result, TimeInterval& validityInterval) { result = _value; }
+	virtual void getScalingValue(TimePoint time, Scaling& result, TimeInterval& validityInterval) override { result = _value; }
 
 	/// \brief Sets a scaling controller's value at the given animation time.
-	virtual void setScalingValue(TimePoint time, const Scaling& newValue, bool isAbsolute) {
+	virtual void setScalingValue(TimePoint time, const Scaling& newValue, bool isAbsolute) override {
 		if(isAbsolute) _value = newValue;
 		else _value = newValue * _value.value();
 	}
