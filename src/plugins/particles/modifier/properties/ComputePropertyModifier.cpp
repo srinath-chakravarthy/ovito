@@ -402,7 +402,7 @@ PipelineStatus ComputePropertyModifier::applyComputationResults(TimePoint time, 
 		outputPropertyObj = outputStandardProperty(_computedProperty.data());
 
 	// Replace display objects of output property with cached ones and cache any new display objects.
-	// This is required to prevent losing the output property's display settings
+	// This is required to avoid losing the output property's display settings
 	// each time the modifier is re-evaluated or when serializing the modifier.
 	if(outputPropertyObj) {
 		QVector<DisplayObject*> currentDisplayObjs = outputPropertyObj->displayObjects();

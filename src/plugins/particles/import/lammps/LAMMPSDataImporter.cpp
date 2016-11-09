@@ -28,7 +28,6 @@
 #include "LAMMPSDataImporter.h"
 
 #include <QRegularExpression>
-#include <unordered_map>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 

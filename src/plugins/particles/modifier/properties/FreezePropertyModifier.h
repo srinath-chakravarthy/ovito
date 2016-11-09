@@ -74,6 +74,9 @@ private:
 	/// The particle property to which the stored values should be written
 	PropertyField<ParticlePropertyReference> _destinationProperty;
 
+	/// The cached display objects that are attached to the output particle property.
+	VectorReferenceField<DisplayObject> _cachedDisplayObjects;
+
 	Q_OBJECT
 	OVITO_OBJECT
 
@@ -82,6 +85,7 @@ private:
 
 	DECLARE_PROPERTY_FIELD(_sourceProperty);
 	DECLARE_PROPERTY_FIELD(_destinationProperty);
+	DECLARE_VECTOR_REFERENCE_FIELD(_cachedDisplayObjects);
 };
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)

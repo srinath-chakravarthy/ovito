@@ -28,7 +28,6 @@
 #include <core/utilities/concurrent/FutureInterface.h>
 #include <plugins/crystalanalysis/util/DelaunayTessellation.h>
 
-#include <unordered_map>
 #include <boost/functional/hash.hpp>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
