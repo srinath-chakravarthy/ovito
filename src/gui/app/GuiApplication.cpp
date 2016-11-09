@@ -86,6 +86,11 @@ void GuiApplication::createQtApplication(int& argc, char** argv)
 	}
 	else {
 		_app.reset(new QApplication(argc, argv));
+
+#if defined(Q_OS_LINUX)
+		// Enforce Fusion UI style on Linux.
+		QApplication::setStyle("Fusion");
+#endif
 	}
 
 	// Install GUI exception handler.

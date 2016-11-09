@@ -186,7 +186,7 @@ ENDMACRO()
 
 # This macro installs a required third-party shared library in the OVITO directory
 # so that it can be distributed together with the program.
-MACRO(OVITO_INSTALL_SHARED_LIB shared_lib)
+MACRO(OVITO_INSTALL_SHARED_LIB shared_lib destination_dir)
 	# Strip version number from shared lib filename.
 	GET_FILENAME_COMPONENT(shared_lib_ext "${shared_lib}" EXT)
 	STRING(REPLACE ${shared_lib_ext} ".so" shared_lib_new "${shared_lib}")
@@ -197,12 +197,12 @@ MACRO(OVITO_INSTALL_SHARED_LIB shared_lib)
 			GET_FILENAME_COMPONENT(symlink_target_name "${symlink_target}" NAME)
 			GET_FILENAME_COMPONENT(lib_version_name "${lib_version}" NAME)
 			MESSAGE("Installing symlink ${lib_version} to shared library ${symlink_target}")
-			EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E create_symlink ${symlink_target_name} "${OVITO_LIBRARY_DIRECTORY}/${lib_version_name}")
+			EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E create_symlink ${symlink_target_name} "${${PROJECT_NAME}_BINARY_DIR}/${destination_dir}/${lib_version_name}")
 		ELSE()
 			MESSAGE("Installing shared library ${lib_version}")
-			CONFIGURE_FILE("${lib_version}" "${OVITO_LIBRARY_DIRECTORY}" COPYONLY)
+			CONFIGURE_FILE("${lib_version}" "${${PROJECT_NAME}_BINARY_DIR}/${destination_dir}" COPYONLY)
 		ENDIF()
-		INSTALL(FILES "${lib_version}" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/")
+		INSTALL(FILES "${lib_version}" DESTINATION "${destination_dir}/")
 	ENDFOREACH()
 ENDMACRO()
 
@@ -220,6 +220,7 @@ IF(OVITO_BUILD_GUI)
 		FIND_PACKAGE(Qt5${component} REQUIRED)
 	ENDFOREACH()
 	IF(UNIX AND NOT APPLE AND CMAKE_COMPILER_IS_GNUCXX)
+		# This is an indirect dependency:
 		FIND_PACKAGE(Qt5DBus REQUIRED)
 	ENDIF()
 ENDIF()

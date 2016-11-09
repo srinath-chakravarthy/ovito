@@ -70,7 +70,7 @@ ENDIF()
 
 IF(UNIX AND NOT APPLE AND OVITO_MONOLITHIC_BUILD)
 	# Install copies of the Qt libraries.
-	FOREACH(component IN ITEMS Core Gui Widgets Concurrent Network PrintSupport DBus)
+	FOREACH(component IN ITEMS Core Gui Widgets Concurrent Network PrintSupport)
 		GET_TARGET_PROPERTY(lib Qt5::${component} LOCATION)
 		GET_TARGET_PROPERTY(lib_soname Qt5::${component} IMPORTED_SONAME_RELEASE)
 		CONFIGURE_FILE("${lib}" "${OVITO_LIBRARY_DIRECTORY}" COPYONLY)		
@@ -90,10 +90,15 @@ IF(UNIX AND NOT APPLE AND OVITO_MONOLITHIC_BUILD)
 	# Install Qt plugins.
 	INSTALL(DIRECTORY "${QtBinaryPath}/../plugins/platforms" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins_qt/")
 	INSTALL(DIRECTORY "${QtBinaryPath}/../plugins/bearer" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins_qt/")
-	INSTALL(DIRECTORY "${QtBinaryPath}/../plugins/imageformats" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins_qt/")
+	INSTALL(DIRECTORY "${QtBinaryPath}/../plugins/imageformats" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins_qt/" PATTERN "libqsvg.so" EXCLUDE)
 	IF(Qt5Core_VERSION VERSION_LESS "5.4")
-    	INSTALL(DIRECTORY "${QtBinaryPath}/../plugins/accessible" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins_qt/")
-    ENDIF()
+		INSTALL(DIRECTORY "${QtBinaryPath}/../plugins/accessible" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins_qt/")
+	ENDIF()
+	IF(NOT Qt5Core_VERSION VERSION_LESS "5.6")
+		INSTALL(DIRECTORY "${QtBinaryPath}/../plugins/xcbglintegrations" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins_qt/")
+		OVITO_INSTALL_SHARED_LIB("${QtBinaryPath}/libQt5DBus.so" "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/lib")
+		OVITO_INSTALL_SHARED_LIB("${QtBinaryPath}/libQt5XcbQpa.so" "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/lib")
+	ENDIF()
 
 	# Make the executable look in lib/ovito/ directory for shared libraries.
 	SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib/ovito")
