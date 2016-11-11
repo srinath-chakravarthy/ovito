@@ -198,6 +198,9 @@ bool Application::initialize(int& argc, char** argv)
 		ex.showError();
 		return false;
 	}
+	
+	// Always use desktop OpenGL implementation (avoid ANGLE on Windows).
+	QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
 
 	// Create Qt application object.
 	createQtApplication(argc, argv);
