@@ -17,9 +17,9 @@
     Apple's Clang compiler that is shipped with Xcode.
     It's easiest to use <link xlink:href="https://www.macports.org/">MacPorts</link> to install many of the required dependencies.
     After installing MacPorts, run 
-<screen><command>sudo port install netcdf python34 py34-sphinx py34-numpy py34-sip zlib \
-                  boost +python34 +no_static cmake docbook-xml \
-                  docbook-xsl doxygen libxslt yasm
+<screen><command>sudo port install netcdf python35 py35-sphinx py35-numpy py35-sip zlib \
+                  boost +no_static cmake docbook-xml \
+                  doxygen libxslt yasm
 </command></screen>
   </para>
   <para>
@@ -28,13 +28,13 @@
   <para>
     Download and install <link xlink:href="http://www.riverbankcomputing.com/software/pyqt/download5">PyQt5</link>. 
     Adjust the path to Qt's <command>qmake</command> below as needed:
-<screen><command>/opt/local/bin/python3.4 configure.py \
-	--qmake $HOME/Qt/5.4/clang_64/bin/qmake \
+<screen><command>/opt/local/bin/python3.5 configure.py \
+	--qmake $HOME/Qt/5.7/clang_64/bin/qmake \
 	--confirm-license \
 	--no-designer-plugin \
 	--no-qml-plugin \
 	--assume-shared \
-	--sip=/opt/local/bin/sip-3.4 \
+	--sip=/opt/local/bin/sip-3.5 \
 	--concatenate \
 	--enable QtCore \
 	--enable QtGui \
@@ -49,8 +49,8 @@ sudo make install
   <para>
     Download and install <link xlink:href="http://www.riverbankcomputing.com/software/qscintilla/download">QScintilla2</link>. Adjust the path to <command>qmake</command> below as needed:
 <screen><command>
-cd QScintilla-gpl-2.8.4/Qt4Qt5/
-$HOME/Qt/5.4/clang_64/bin/qmake qscintilla.pro
+cd QScintilla_gpl-2.9.3/Qt4Qt5/
+$HOME/Qt/5.7/clang_64/bin/qmake qscintilla.pro
 make -j2
 install_name_tool -id $PWD/libqscintilla2.dylib libqscintilla2.dylib
 </command></screen>
@@ -79,7 +79,7 @@ The compiled libraries will be installed under <filename>$HOME/libavstatic/</fil
     <title>Downloading the source code</title>
     <para>
     To download OVITO's source code into a new subdirectory named <filename>ovito</filename>, run: 
-<screen><command>git clone git://git.code.sf.net/p/ovito/git ovito</command></screen>
+<screen><command>git clone --recursive git://git.code.sf.net/p/ovito/git ovito</command></screen>
   </para>
   </simplesect>
 
@@ -94,14 +94,14 @@ cd build
 cmake -DOVITO_BUILD_DOCUMENTATION=ON \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_INSTALL_PREFIX=../install \
-      -DCMAKE_PREFIX_PATH=$HOME/Qt/5.4/clang_64/ \
-      -DPYTHON_INCLUDE_DIR=/opt/local/Library/Frameworks/Python.framework/Versions/3.4/include/python3.4m \
-      -DPYTHON_LIBRARY=/opt/local/Library/Frameworks/Python.framework/Versions/3.4/lib/libpython3.4.dylib \
+      -DCMAKE_PREFIX_PATH=$HOME/Qt/5.7/clang_64/ \
+      -DPYTHON_INCLUDE_DIR=/opt/local/Library/Frameworks/Python.framework/Versions/3.5/include/python3.5m \
+      -DPYTHON_LIBRARY=/opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/libpython3.5.dylib \
       -DLIBAV_INCLUDE_DIR=$HOME/libavstatic/include \
       -DLIBAV_LIBRARY_DIR=$HOME/libavstatic/lib \
-      -DSPHINX_PROCESSOR=/opt/local/bin/sphinx-build-3.4 \
-      -DQSCINTILLA_INCLUDE_DIR=$HOME/QScintilla-gpl-2.8.4/Qt4Qt5 \
-      -DQSCINTILLA_LIBRARY=$HOME/QScintilla-gpl-2.8.4/Qt4Qt5/libqscintilla2.dylib \
+      -DSPHINX_PROCESSOR=/opt/local/bin/sphinx-build-3.5 \
+      -DQSCINTILLA_INCLUDE_DIR=$HOME/QScintilla_gpl-2.9.3/Qt4Qt5 \
+      -DQSCINTILLA_LIBRARY=$HOME/QScintilla_gpl-2.9.3/Qt4Qt5/libqscintilla2.dylib \
       ..
 </command></screen>
   </para>

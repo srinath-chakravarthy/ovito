@@ -46,7 +46,7 @@ public:
 		return value.toString();
 	}
 
-	virtual QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const {
+	virtual QWidget* createEditor(QWidget* parent, const QStyleOptionViewItem& option, const QModelIndex& index) const override {
 		QWidget* container = new QWidget(parent);
 		QHBoxLayout* layout = new QHBoxLayout(container);
 		layout->setSpacing(0);
@@ -75,7 +75,7 @@ public:
 			spinner->setFloatValue(data.toInt());
 	}
 
-	virtual void setModelData(QWidget* editor, QAbstractItemModel* model, const QModelIndex& index) const {
+	virtual void setModelData(QWidget* editor, QAbstractItemModel* model, const QModelIndex& index) const override {
 		SpinnerWidget* spinner = editor->findChild<SpinnerWidget*>();
 		QVariant data = index.data(Qt::EditRole);
 		if(data.userType() == qMetaTypeId<FloatType>())

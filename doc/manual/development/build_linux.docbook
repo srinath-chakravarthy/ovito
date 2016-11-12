@@ -22,7 +22,7 @@
 <screen><command>sudo apt-get install build-essential git cmake-curses-gui qt5-default libboost-dev libqt5scintilla2-dev \
                      libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavresample-dev \
                      libavutil-dev libswscale-dev libnetcdf-dev libhdf5-dev libhdf5-serial-dev \
-                     libbotan1.10-dev libmuparser-dev python3-dev libboost-python-dev \
+                     libbotan1.10-dev libmuparser-dev python3-dev \
                      python3-sphinx python3-numpy python3-sip python3-pyqt5 \
                      xsltproc docbook-xml docbook-xsl docbook-xsl-doc-html doxygen
 </command></screen>
@@ -33,7 +33,7 @@
     <title>Downloading the source code</title>
     <para>
     Then download OVITO's source code into a new subdirectory named <filename>ovito/</filename>: 
-<screen><command>git clone git://git.code.sf.net/p/ovito/git ovito</command></screen>
+<screen><command>git clone --recursive git://git.code.sf.net/p/ovito/git ovito</command></screen>
   </para>
   </simplesect>
 
@@ -49,15 +49,13 @@ cmake -DOVITO_BUILD_DOCUMENTATION=ON \
       -DCMAKE_BUILD_TYPE=Release \
       -DPYTHON_INCLUDE_DIR=/usr/include/python3.5m \
       -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.5m.so \
-      -DBoost_PYTHON_LIBRARY_RELEASE=/usr/lib/x86_64-linux-gnu/libboost_python-py35.so \
-      -DBoost_PYTHON_LIBRARY_DEBUG=/usr/lib/x86_64-linux-gnu/libboost_python-py35.so \
       ..
 </command></screen>
   </para>
   <para>
     If this step fails, or if you want to disable certain components of OVITO, you can now run "<command>ccmake .</command>" to open the 
     <link xlink:href="http://www.cmake.org/">CMake</link> configuration program.
-    Changin the <literal>PYTHON_INCLUDE_DIR</literal>, <literal>PYTHON_LIBRARY</literal>, and <literal>Boost_PYTHON_LIBRARY_RELEASE</literal> settings may be needed to 
+    Changin the <literal>PYTHON_INCLUDE_DIR</literal> and <literal>PYTHON_LIBRARY</literal> settings may be needed to 
     build OVITO against a different Python version. 
   </para>
   <para>

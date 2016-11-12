@@ -25,16 +25,20 @@
 
 namespace Mesh {
 
-using namespace boost::python;
 using namespace Ovito;
 using namespace PyScript;
 
-BOOST_PYTHON_MODULE(Mesh)
+PYBIND11_PLUGIN(Mesh)
 {
-	docstring_options docoptions(true, false);
+	py::docstring_options docstrings;
+	docstrings.disable_signatures();
 
-	ovito_class<VTKFileImporter, FileSourceImporter>()
+	py::module m("Mesh");
+
+	ovito_class<VTKFileImporter, FileSourceImporter>{m}
 	;
+
+	return m.ptr();
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(Mesh);

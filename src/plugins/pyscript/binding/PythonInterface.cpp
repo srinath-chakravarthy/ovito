@@ -24,20 +24,25 @@
 #include "PythonBinding.h"
 
 namespace PyScript {
-using namespace boost::python;
+
 using namespace Ovito;
 
-BOOST_PYTHON_MODULE(PyScript)
+PYBIND11_PLUGIN(PyScript)
 {
-	docstring_options docoptions(true, false, false);
+	py::docstring_options docstrings;
+	docstrings.disable_signatures();
+
+	py::module m("PyScript");
 
 	// Make Ovito program version number available to script.
-	scope().attr("version") = make_tuple(Application::applicationVersionMajor(), Application::applicationVersionMinor(), Application::applicationVersionRevision());
-	scope().attr("version_string") = str(QCoreApplication::applicationVersion());
+	m.attr("version") = py::make_tuple(Application::applicationVersionMajor(), Application::applicationVersionMinor(), Application::applicationVersionRevision());
+	m.attr("version_string") = py::cast(QCoreApplication::applicationVersion());
 
 	// Make environment information available to the script.
-	scope().attr("gui_mode") = Application::instance().guiMode();
-	scope().attr("headless_mode") = Application::instance().headlessMode();
+	m.attr("gui_mode") = py::cast(Application::instance().guiMode());
+	m.attr("headless_mode") = py::cast(Application::instance().headlessMode());
+
+	return m.ptr();
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScript);

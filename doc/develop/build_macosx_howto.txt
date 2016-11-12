@@ -10,7 +10,7 @@ sudo port install cmake docbook-xml docbook-xsl doxygen libxslt yasm
 sudo mv /opt/local/Library/Frameworks/Python.framework/Versions/3.5/Resources/Python.app /opt/local/Library/Frameworks/Python.framework/Versions/
 
 **************************************************************************
-Install Qt libraries, version 5.4.1
+Install Qt libraries, version 5.7
 **************************************************************************
 
 **************************************************************************
@@ -22,7 +22,7 @@ Build PyQt5
 	--no-designer-plugin \
 	--no-qml-plugin \
 	--assume-shared \
-	--qmake $HOME/Qt/5.4/clang_64/bin/qmake \
+	--qmake $HOME/progs/Qt/5.7/clang_64/bin/qmake \
 	--sip=/opt/local/bin/sip-3.5 \
 	--concatenate \
 	--enable QtCore \
@@ -36,6 +36,14 @@ make -j2
 sudo make install
 
 **************************************************************************
+Build QScintilla2
+**************************************************************************
+cd QScintilla-gpl-2.9.3/Qt4Qt5/
+$HOME/progs/Qt/5.7/clang_64/bin/qmake qscintilla.pro
+make
+install_name_tool -id $PWD/libqscintilla2.12.dylib libqscintilla2.12.dylib
+
+**************************************************************************
 Build static libav library:
 **************************************************************************
 
@@ -47,8 +55,9 @@ export MACOSX_DEPLOYMENT_TARGET=10.8
 	--disable-debug \
 	--disable-doc \
 	--disable-filters \
-	--enable-gpl \
-	--prefix=$HOME/Documents/progs/libavstatic
+	--disable-static \
+	--enable-shared \
+	--prefix=$HOME/progs/libav
 make -j3 install
 
 **************************************************************************
@@ -59,12 +68,12 @@ export MACOSX_DEPLOYMENT_TARGET=10.8
 cmake -DOVITO_BUILD_DOCUMENTATION=ON \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_INSTALL_PREFIX=../release_install \
-      -DCMAKE_PREFIX_PATH=$HOME/Qt/5.4/clang_64/ \
+      -DCMAKE_PREFIX_PATH=$HOME/progs/Qt/5.7/clang_64/ \
       -DPYTHON_INCLUDE_DIR=/opt/local/Library/Frameworks/Python.framework/Versions/3.5/include/python3.5m \
       -DPYTHON_LIBRARY=/opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/libpython3.5.dylib \
-      -DLIBAV_INCLUDE_DIR=$HOME/Documents/progs/libavstatic/include \
-      -DLIBAV_LIBRARY_DIR=$HOME/Documents/progs/libavstatic/lib \
+      -DLIBAV_INCLUDE_DIR=$HOME/progs/libav/include \
+      -DLIBAV_LIBRARY_DIR=$HOME/progs/libav/lib \
       -DSPHINX_PROCESSOR=/opt/local/bin/sphinx-build-3.5 \
-      -DQSCINTILLA_INCLUDE_DIR=$HOME/Documents/progs/QScintilla-gpl-2.8.4/Qt4Qt5 \
-      -DQSCINTILLA_LIBRARY=$HOME/Documents/progs/QScintilla-gpl-2.8.4/Qt4Qt5/libqscintilla2.dylib \
+      -DQSCINTILLA_INCLUDE_DIR=$HOME/progs/QScintilla_gpl-2.9.3/Qt4Qt5 \
+      -DQSCINTILLA_LIBRARY=$HOME/progs/QScintilla_gpl-2.9.3/Qt4Qt5/libqscintilla2.dylib \
       ../..

@@ -54,9 +54,7 @@ def _CoordinationNumberModifier_rdf(self):
     Note that accessing this array is only possible after the modifier has computed its results. 
     Thus, you have to call :py:meth:`ovito.ObjectNode.compute` first to ensure that this information is up to date, see the example above.
     """
-    rdfx = numpy.asarray(self.rdf_x)
-    rdfy = numpy.asarray(self.rdf_y)
-    return numpy.transpose((rdfx,rdfy))
+    return numpy.transpose((self.rdf_x,self.rdf_y))
 ovito.modifiers.CoordinationNumberModifier.rdf = property(_CoordinationNumberModifier_rdf)
 
 # Implement the 'histogram' attribute of the HistogramModifier class.
@@ -69,40 +67,15 @@ def _HistogramModifier_histogram(self):
     Note that accessing this array is only possible after the modifier has computed its results. 
     Thus, you have to call :py:meth:`ovito.ObjectNode.compute` first to ensure that the histogram was generated.
     """
-    # Get counts
-    ydata = numpy.asarray(self.histogramData)
+    # Get bin counts
+    ydata = self._histogram_data
+    if len(ydata) != self.bin_count:
+        raise RuntimeError("The modifier has not computed its results yet.")
     # Compute bin center positions
     binsize = (self.xrange_end - self.xrange_start) / len(ydata)
     xdata = numpy.linspace(self.xrange_start + binsize * 0.5, self.xrange_end + binsize * 0.5, len(ydata), endpoint = False)
     return numpy.transpose((xdata,ydata))
 ovito.modifiers.HistogramModifier.histogram = property(_HistogramModifier_histogram)
-
-# Implement the 'bin_data' attribute of the BinAndReduceModifier class.
-def _BinAndReduceModifier_bin_data(self):
-    """
-    Returns a NumPy array containing the reduced bin values computed by the modifier.    
-    Depending on the selected binning :py:attr:`.direction` the returned array is either
-    one or two-dimensional. In the two-dimensional case the outer index of the returned array
-    runs over the bins along the second binning axis.
-    
-    Note that accessing this array is only possible after the modifier has computed its results. 
-    Thus, you have to call :py:meth:`ovito.ObjectNode.compute` first to ensure that the binning and reduction operation was performed.
-    """
-    data = numpy.asarray(self._binData)
-    if self._is1D:
-        assert(self.bin_count_x == len(data))
-        return data
-    else:
-        assert(self.bin_count_y * self.bin_count_x == len(data))
-        return numpy.reshape(data, (self.bin_count_y, self.bin_count_x))
-ovito.modifiers.BinAndReduceModifier.bin_data = property(_BinAndReduceModifier_bin_data)
-
-# Implement the ColorCodingModifier custom color map constructor.
-def _ColorCodingModifier_Custom(filename):
-    gradient = ovito.modifiers.ColorCodingModifier.Image()
-    gradient.loadImage(filename)
-    return gradient
-ovito.modifiers.ColorCodingModifier.Custom = staticmethod(_ColorCodingModifier_Custom)
 
 def _FreezePropertyModifier_take_snapshot(self, frame = None):
     """

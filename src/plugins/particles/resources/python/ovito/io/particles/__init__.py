@@ -16,10 +16,20 @@ ovito.io.export_file._formatTable["fhi-aims"] = FHIAimsExporter
 
 # Implement the 'atom_style' property of LAMMPSDataImporter.
 def _get_LAMMPSDataImporter_atom_style(self):
-    return str(self.atomStyle)
+    return str(self._atom_style)
 def _set_LAMMPSDataImporter_atom_style(self, style):
-    self.atomStyle = LAMMPSDataImporter.LAMMPSAtomStyle.__dict__[str(style)]
+    if str(style) not in LAMMPSDataImporter.LAMMPSAtomStyle.__dict__:
+        raise KeyError("'%s' is not a valid LAMMPS atom style supported by OVITO. Must be one of %s." % 
+            (style, [s for s in dir(LAMMPSDataImporter.LAMMPSAtomStyle) if not s.startswith('_')])) 
+    self._atom_style = LAMMPSDataImporter.LAMMPSAtomStyle.__dict__[str(style)]
 LAMMPSDataImporter.atom_style = property(_get_LAMMPSDataImporter_atom_style, _set_LAMMPSDataImporter_atom_style)
 
 # Implement the 'atom_style' property of LAMMPSDataExporter.
-LAMMPSDataExporter.atom_style = property(_get_LAMMPSDataImporter_atom_style, _set_LAMMPSDataImporter_atom_style)
+def _get_LAMMPSDataExporter_atom_style(self):
+    return str(self._atom_style)
+def _set_LAMMPSDataExporter_atom_style(self, style):
+    if str(style) not in LAMMPSDataImporter.LAMMPSAtomStyle.__dict__:
+        raise KeyError("'%s' is not a valid LAMMPS atom style supported by OVITO. Must be one of %s." % 
+            (style, [s for s in dir(LAMMPSDataImporter.LAMMPSAtomStyle) if not s.startswith('_')])) 
+    self._atom_style = LAMMPSDataImporter.LAMMPSAtomStyle.__dict__[str(style)]
+LAMMPSDataExporter.atom_style = property(_get_LAMMPSDataExporter_atom_style, _set_LAMMPSDataExporter_atom_style)

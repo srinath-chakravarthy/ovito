@@ -99,7 +99,7 @@ void CoordinationNumberModifier::CoordinationAnalysisEngine::perform()
 				for(CutoffNeighborFinder::Query neighQuery(neighborListBuilder, i); !neighQuery.atEnd(); neighQuery.next()) {
 					(*coordOutput)++;
 					size_t rdfInterval = (size_t)(sqrt(neighQuery.distanceSquared()) / rdfBinSize);
-					OVITO_ASSERT(rdfInterval < threadLocalRDF.size());
+					rdfInterval = std::min(rdfInterval, threadLocalRDF.size() - 1);
 					threadLocalRDF[rdfInterval]++;
 				}
 

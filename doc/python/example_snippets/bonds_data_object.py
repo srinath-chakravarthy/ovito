@@ -1,6 +1,7 @@
 from ovito.io import import_file
 from ovito.modifiers import CreateBondsModifier
 from ovito.vis import BondsDisplay
+import numpy
 
 # Load a set of atoms and create bonds between pairs of atoms
 # that are within a given cutoff distance of each other

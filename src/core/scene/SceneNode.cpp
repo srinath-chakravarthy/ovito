@@ -266,7 +266,7 @@ void SceneNode::referenceRemoved(const PropertyFieldDescriptor& field, RefTarget
 /******************************************************************************
 * Adds a child scene node to this node.
 ******************************************************************************/
-void SceneNode::insertChild(int index, SceneNode* newChild)
+void SceneNode::insertChildNode(int index, SceneNode* newChild)
 {
 	OVITO_CHECK_OBJECT_POINTER(newChild);
 
@@ -277,13 +277,15 @@ void SceneNode::insertChild(int index, SceneNode* newChild)
 	}
 
 	// Remove new child from old parent node first.
-	if(newChild->parentNode())
-		newChild->parentNode()->removeChild(newChild);
+	if(newChild->parentNode()) {
+		auto oldIndex = newChild->parentNode()->children().indexOf(newChild);
+		newChild->parentNode()->removeChildNode(oldIndex);
+	}
 	OVITO_ASSERT(newChild->parentNode() == nullptr);
 
 	// Insert into children array of this parent.
 	_children.insert(index, newChild);
-	// This parent should be automatically filled into the child's parent pointer.
+	// This node should have been automatically set as the child's parent by referenceInserted().
 	OVITO_ASSERT(newChild->parentNode() == this);
 
 	// Adjust transformation to preserve world position.
@@ -297,17 +299,16 @@ void SceneNode::insertChild(int index, SceneNode* newChild)
 /******************************************************************************
 * Removes a child node from this parent node.
 ******************************************************************************/
-void SceneNode::removeChild(SceneNode* child)
+void SceneNode::removeChildNode(int index)
 {
-	OVITO_CHECK_OBJECT_POINTER(child);
-	OVITO_ASSERT_MSG(child->parentNode() == this, "SceneNode::removeChild()", "The given node is not a child of this parent node.");
-
-	int index = _children.indexOf(child);
-	OVITO_ASSERT(index != -1);
+	OVITO_ASSERT(index >= 0 && index < children().size());
+	
+	SceneNode* child = children()[index];
+	OVITO_ASSERT_MSG(child->parentNode() == this, "SceneNode::removeChildNode()", "The node to be removed is not a child of this parent node.");
 
 	// Remove child node from array.
 	_children.remove(index);
-	OVITO_ASSERT(_children.contains(child) == false);
+	OVITO_ASSERT(children().contains(child) == false);
 	OVITO_ASSERT(child->parentNode() == nullptr);
 
 	// Update child node.
@@ -388,7 +389,7 @@ OORef<RefTarget> SceneNode::clone(bool deepCopy, CloneHelper& cloneHelper)
 
 		// Insert the cloned target into the same scene as out target.
 		if(lookatTargetNode()->parentNode() && !clone->lookatTargetNode()->parentNode()) {
-			lookatTargetNode()->parentNode()->addChild(clone->lookatTargetNode());
+			lookatTargetNode()->parentNode()->addChildNode(clone->lookatTargetNode());
 		}
 
 		// Set new target for look-at controller.

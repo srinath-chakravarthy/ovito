@@ -25,117 +25,110 @@
 #include <core/dataset/DataSetContainer.h>
 #include <core/scene/SceneNode.h>
 #include <core/scene/ObjectNode.h>
-#include <core/scene/objects/DataObject.h>
-#include <core/scene/pipeline/Modifier.h>
-#include <core/scene/pipeline/ModifierApplication.h>
-#include <core/scene/objects/DisplayObject.h>
 #include <core/scene/SceneRoot.h>
 #include <core/scene/SelectionSet.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/rendering/RenderSettings.h>
-#include <core/rendering/FrameBuffer.h>
 #include <core/utilities/concurrent/ProgressDisplay.h>
 #include "PythonBinding.h"
 
 namespace PyScript {
 
-using namespace boost::python;
 using namespace Ovito;
 
-// Implementation of the __str__ method for OvitoObject derived classes.
-inline object OvitoObject__str__(const object& pyobj) {
-	OvitoObject* o = extract<OvitoObject*>(pyobj);
-	return "<%s at 0x%x>" % make_tuple(pyobj.attr("__class__").attr("__name__"), (std::intptr_t)o);
-}
-
-// Implementation of the __repr__ method for OvitoObject derived classes.
-inline object OvitoObject__repr__(const object& pyobj) {
-	return "%s()" % pyobj.attr("__class__").attr("__name__");
-}
-
-// Implementation of the __eq__ method for OvitoObject derived classes.
-inline bool OvitoObject__eq__(OvitoObject* o, const object& other) {
-	extract<OvitoObject*> other_oo(other);
-	if(!other_oo.check()) return false;
-	return o == other_oo();
-}
-
-// Implementation of the __ne__ method for OvitoObject derived classes.
-inline bool OvitoObject__ne__(OvitoObject* o, const object& other) {
-	return !OvitoObject__eq__(o, other);
-}
-
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(DataSet_waitUntilSceneIsReady_overloads, waitUntilSceneIsReady, 1, 2);
-BOOST_PYTHON_MEMBER_FUNCTION_OVERLOADS(DataSet_renderScene_overloads, renderScene, 3, 4);
-
-BOOST_PYTHON_MODULE(PyScriptApp)
+PYBIND11_PLUGIN(PyScriptApp)
 {
-	docstring_options docoptions(true, false);
+	py::docstring_options docstrings;
+	docstrings.disable_signatures();
 
-	class_<OvitoObject, OORef<OvitoObject>, boost::noncopyable>("OvitoObject", no_init)
-		.def("__str__", &OvitoObject__str__)
-		.def("__repr__", &OvitoObject__repr__)
-		.def("__eq__", &OvitoObject__eq__)
-		.def("__ne__", &OvitoObject__ne__)
+	py::module m("PyScriptApp");
+
+	py::class_<OvitoObject, OORef<OvitoObject>>(m, "OvitoObject")
+		.def("__str__", [](py::object& pyobj) {
+			return py::str("<{} at 0x{:x}>").format(pyobj.attr("__class__").attr("__name__"), (std::intptr_t)pyobj.cast<OvitoObject*>());
+		})
+		.def("__repr__", [](py::object& pyobj) {
+			return py::str("{}()").format(pyobj.attr("__class__").attr("__name__"));
+		})
+		.def("__eq__", [](OvitoObject* o, py::object& other) {
+			try { return o == other.cast<OvitoObject*>(); }
+			catch(const py::cast_error&) { return false; }
+		})
+		.def("__ne__", [](OvitoObject* o, py::object& other) {
+			try { return o != other.cast<OvitoObject*>(); }
+			catch(const py::cast_error&) { return true; }
+		})
 	;
 
-	ovito_abstract_class<RefMaker, OvitoObject>()
-		.add_property("dataset", make_function(&RefMaker::dataset, return_value_policy<ovito_object_reference>()))
+	ovito_abstract_class<RefMaker, OvitoObject>{m}
+		.def_property_readonly("dataset", &RefMaker::dataset)
 	;
 
-	ovito_abstract_class<RefTarget, RefMaker>()
-		.def("isReferencedBy", &RefTarget::isReferencedBy)
-		.def("deleteReferenceObject", &RefTarget::deleteReferenceObject)
-		.add_property("objectTitle", &RefTarget::objectTitle)
-		.add_property("num_dependents", lambda_address([](RefTarget& t) { return t.dependents().size(); }))
+	ovito_abstract_class<RefTarget, RefMaker>{m}
+		//.def("isReferencedBy", &RefTarget::isReferencedBy)
+		//.def("deleteReferenceObject", &RefTarget::deleteReferenceObject)
+
+		// This is used by DataCollection.copy_if_needed():
+		.def_property_readonly("num_dependents", [](RefTarget& t) { return t.dependents().size(); })
+		// This is used by DataCollection.__getitem__():
+		.def_property_readonly("object_title", &RefTarget::objectTitle)
 	;
 
-	ovito_abstract_class<DataSet, RefTarget>(
+	ovito_abstract_class<DataSet, RefTarget>(m,
 			"A container object holding all data associated with an OVITO program session. "
 			"It provides access to the scene data, the viewports, the current selection, and the animation settings. "
 			"Basically everything that would get saved in an OVITO state file. "
 			"\n\n"
 			"There exists only one global instance of this class, which can be accessed via the :py:data:`ovito.dataset` module-level attribute.")
-		.add_property("scene_nodes", make_function(&DataSet::sceneRoot, return_value_policy<ovito_object_reference>()),
-				"A list-like object containing the :py:class:`~ovito.ObjectNode` instances that are part of the three-dimensional scene. "
-				"Only nodes which are in this list are visible in the viewports. You can add or remove nodes from this list either by calling "
-				":py:meth:`ObjectNode.add_to_scene` and :py:meth:`ObjectNode.remove_from_scene` or by using the standard Python ``append()`` and ``del`` statements.")
-		.add_property("filePath", make_function(&DataSet::filePath, return_value_policy<copy_const_reference>()), &DataSet::setFilePath)
-		.add_property("anim", make_function(&DataSet::animationSettings, return_value_policy<ovito_object_reference>()),
+		.def_property_readonly("scene_root", &DataSet::sceneRoot)
+		.def_property_readonly("anim", &DataSet::animationSettings,
 				"An :py:class:`~ovito.anim.AnimationSettings` object, which manages various animation-related settings in OVITO such as the number of frames, the current frame, playback speed etc.")
-		.add_property("viewports", make_function(&DataSet::viewportConfig, return_value_policy<ovito_object_reference>()),
+		.def_property_readonly("viewports", &DataSet::viewportConfig,
 				"A :py:class:`~ovito.vis.ViewportConfiguration` object managing the viewports in OVITO's main window.")
-		.add_property("render_settings", make_function(&DataSet::renderSettings, return_value_policy<ovito_object_reference>()),
+		.def_property_readonly("render_settings", &DataSet::renderSettings,
 				"The global :py:class:`~ovito.vis.RenderSettings` object, which stores the current settings for rendering pictures and movies. "
 				"These are the settings the user can edit in the graphical version of OVITO.")
-		.add_property("selection", make_function(&DataSet::selection, return_value_policy<ovito_object_reference>()))
-		.add_property("container", make_function(&DataSet::container, return_value_policy<reference_existing_object>()))
-		.def("clearScene", &DataSet::clearScene)
-		.def("rescaleTime", &DataSet::rescaleTime)
-		.def("waitUntilSceneIsReady", &DataSet::waitUntilSceneIsReady, DataSet_waitUntilSceneIsReady_overloads())
-		.def("renderScene", &DataSet::renderScene, DataSet_renderScene_overloads())
-		.def("saveToFile", &DataSet::saveToFile)
+		.def("save", &DataSet::saveToFile,
+			"save(filename)"
+			"\n\n"
+		    "Saves the dataset including the viewports, all nodes in the scene, modification pipelines, and other settings to an OVITO file. "
+    		"This function works like the *Save State As* function in OVITO's file menu."
+			"\n\n"
+			":param str filename: The path of the file to be written\n",
+			py::arg("filename"))
+		// This is needed for the DataSet.selected_node attribute:
+		.def_property_readonly("selection", &DataSet::selection)
+		// This is needed by Viewport.render():
+		.def("render_scene", &DataSet::renderScene)
+		//.def_property_readonly("container", &DataSet::container)
+		//.def("clearScene", &DataSet::clearScene)
+		//.def("rescaleTime", &DataSet::rescaleTime)
+		//.def("waitUntilSceneIsReady", &DataSet::waitUntilSceneIsReady)
+		//.def_property("filePath", &DataSet::filePath, &DataSet::setFilePath)
 	;
 
-	ovito_abstract_class<DataSetContainer, RefMaker>()
-		.add_property("currentSet", make_function(&DataSetContainer::currentSet, return_value_policy<ovito_object_reference>()), &DataSetContainer::setCurrentSet)
+	ovito_abstract_class<DataSetContainer, RefMaker>{m}
+		//.def_property("currentSet", &DataSetContainer::currentSet, &DataSetContainer::setCurrentSet)
 	;
 
-	class_<CloneHelper>("CloneHelper", init<>())
+	py::class_<CloneHelper>(m, "CloneHelper")
 		.def("clone", static_cast<OORef<RefTarget> (CloneHelper::*)(RefTarget*, bool)>(&CloneHelper::cloneObject<RefTarget>))
 	;
 
-	class_<AbstractProgressDisplay, boost::noncopyable>("AbstractProgressDisplay", no_init)
-		.add_property("canceled", &AbstractProgressDisplay::wasCanceled)
+	py::class_<AbstractProgressDisplay>(m, "AbstractProgressDisplay")
+		.def_property_readonly("canceled", &AbstractProgressDisplay::wasCanceled)
 	;
 
 	// Let scripts access the current progress display.
-	def("get_progress_display", make_function(lambda_address([]() -> AbstractProgressDisplay* {
+	m.def("get_progress_display", []() -> AbstractProgressDisplay* {
 		if(ScriptEngine::activeEngine())
 			return ScriptEngine::activeEngine()->progressDisplay();
-		return nullptr;
-	}), return_value_policy<reference_existing_object>()));
+		else
+			return nullptr;
+	}, py::return_value_policy::reference);
+
+	return m.ptr();
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScriptApp);

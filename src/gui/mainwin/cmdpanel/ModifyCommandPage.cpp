@@ -304,7 +304,8 @@ void ModifyCommandPage::onDeleteModifier()
 		for(ModifierApplication* modApp : selectedItem->modifierApplications()) {
 			OVITO_ASSERT(modApp->modifier() == modifier);
 			OVITO_CHECK_OBJECT_POINTER(modApp->pipelineObject());
-			modApp->pipelineObject()->removeModifier(modApp);
+			int index = modApp->pipelineObject()->modifierApplications().indexOf(modApp);
+			modApp->pipelineObject()->removeModifierApplication(index);
 		}
 
 		// Delete modifier.
@@ -363,9 +364,9 @@ void ModifyCommandPage::onModifierMoveUp()
 		// Determine old position in stack.
 		int index = pipelineObj->modifierApplications().indexOf(modApp);
 		// Remove ModifierApplication from the PipelineObject.
-		pipelineObj->removeModifier(modApp);
+		pipelineObj->removeModifierApplication(index);
 		// Re-insert ModifierApplication into the PipelineObject.
-		pipelineObj->insertModifierApplication(modApp, index+1);
+		pipelineObj->insertModifierApplication(index + 1, modApp);
 	});
 }
 
@@ -394,9 +395,9 @@ void ModifyCommandPage::onModifierMoveDown()
 		// Determine old position in stack.
 		int index = pipelineObj->modifierApplications().indexOf(modApp);
 		// Remove ModifierApplication from the PipelineObject.
-		pipelineObj->removeModifier(modApp);
+		pipelineObj->removeModifierApplication(index);
 		// Re-insert ModifierApplication into the PipelineObject.
-		pipelineObj->insertModifierApplication(modApp, index-1);
+		pipelineObj->insertModifierApplication(index - 1, modApp);
 	});
 }
 

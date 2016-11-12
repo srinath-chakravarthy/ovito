@@ -30,11 +30,3 @@ def _DataCollection_dislocations(self):
     raise AttributeError("This DataCollection contains no dislocations.")
 ovito.data.DataCollection.dislocations = property(_DataCollection_dislocations)
 
-# Implement the 'points' property of the DislocationSegment class.
-def _DislocationSegment_points(self):
-    """ The list of space points that define the shape of this dislocation segment. 
-        This is a *N* x 3 Numpy array, where *N* is the number of points along the
-        segment. For closed loops, the first and the last point coincide.
-    """
-    return numpy.asarray(self._line)
-CrystalAnalysis.DislocationSegment.points = property(_DislocationSegment_points)

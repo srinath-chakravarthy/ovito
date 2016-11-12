@@ -50,6 +50,9 @@ public:
 	///             with the RefTarget base class.
 	Q_INVOKABLE DataSet(DataSet* self = nullptr);
 
+	/// \brief Destructor.
+	virtual ~DataSet();
+
 	/// \brief Returns a reference to the viewport configuration associated with this dataset.
 	/// \return The internal object managing the viewports.
 	ViewportConfiguration* viewportConfig() const { return _viewportConfig; }

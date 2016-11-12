@@ -28,8 +28,6 @@
 
 namespace PyScript {
 
-using namespace boost::python;
-
 /// Flag that indicates whether the global Python interpreter has been initialized.
 bool ScriptEngine::_isInterpreterInitialized = false;
 
@@ -59,15 +57,23 @@ ScriptEngine::ScriptEngine(DataSet* dataset, QObject* parent, bool redirectOutpu
 		// Import the main module and get a reference to the main namespace.
 		// Make a local copy of the global main namespace for this engine.
 		// The original namespace dictionary is not touched.
-		object main_module = import("__main__");
-		_mainNamespace = extract<dict>(main_module.attr("__dict__"))().copy();
+		py::object main_module = py::module::import("__main__");
+		_mainNamespace = main_module.attr("__dict__").attr("copy")();
 
 		// Add a reference to the current dataset to the namespace.
-		import("ovito").attr("dataset") = ptr(dataset);
+        PyObject* mod = PyImport_ImportModule("ovito");
+        if(!mod) throw py::error_already_set();
+		py::module ovito_module(mod, false);
+        py::setattr(ovito_module, "dataset", py::cast(dataset));
 	}
-	catch(const error_already_set&) {
-		PyErr_Print();
-		dataset->throwException(tr("Failed to initialize Python interpreter. See console output for error details."));
+	catch(py::error_already_set& ex) {
+		ex.restore();
+		if(PyErr_Occurred())
+			PyErr_Print();
+		throw Exception(tr("Failed to initialize Python interpreter."), dataset);
+	}
+	catch(const std::exception& ex) {
+		throw Exception(tr("Failed to initialize Python interpreter. %1").arg(ex.what()), dataset);
 	}
 
 	// Install default signal handlers for Python script output, which forward the script output to the host application's stdout/stderr.
@@ -86,7 +92,8 @@ ScriptEngine::~ScriptEngine()
 		// Explicitly release all objects created by Python scripts.
 		_mainNamespace.clear();
 	}
-	catch(const error_already_set&) {
+	catch(py::error_already_set& ex) {
+		ex.restore();
 		PyErr_Print();
 	}
 }
@@ -96,6 +103,7 @@ ScriptEngine::~ScriptEngine()
 ******************************************************************************/
 void ScriptEngine::initializeInterpreter()
 {
+	// This is a one-time global initialization. 
 	if(_isInterpreterInitialized)
 		return;	// Interpreter is already initialized.
 
@@ -123,144 +131,57 @@ void ScriptEngine::initializeInterpreter()
 		// Initialize the Python interpreter.
 		Py_Initialize();
 
-		// Install automatic QString to Python string conversion.
-		struct QString_to_python_str {
-			static PyObject* convert(const QString& s) {
-#if PY_MAJOR_VERSION >= 3
-				return PyUnicode_FromString(s.toUtf8().constData());
-#else
-				return incref(object(s.toLatin1().constData()).ptr());
-#endif
-			}
-		};
-		to_python_converter<QString, QString_to_python_str>();
-
-		// Install automatic Python string to QString conversion.
-		auto convertible = [](PyObject* obj_ptr) -> void* {
-#if PY_MAJOR_VERSION >= 3
-			if(!PyUnicode_Check(obj_ptr)) return nullptr;
-#else
-			if(!PyString_Check(obj_ptr) && !PyUnicode_Check(obj_ptr)) return nullptr;
-#endif
-			return obj_ptr;
-		};
-		auto construct = [](PyObject* obj_ptr, boost::python::converter::rvalue_from_python_stage1_data* data) {
-			void* storage = ((boost::python::converter::rvalue_from_python_storage<QString>*)data)->storage.bytes;
-#if PY_MAJOR_VERSION < 3
-			if(PyString_Check(obj_ptr)) {
-				const char* value = PyString_AsString(obj_ptr);
-				if(!value) throw_error_already_set();
-				new (storage) QString(value);
-				data->convertible = storage;
-			}
-			else
-#endif
-				if(PyUnicode_Check(obj_ptr)) {
-				const Py_UNICODE* value = PyUnicode_AS_UNICODE(obj_ptr);
-				if(!value) throw_error_already_set();
-				if(sizeof(Py_UNICODE) == sizeof(wchar_t))
-					new (storage) QString(QString::fromWCharArray(reinterpret_cast<const wchar_t*>(value)));
-				else if(sizeof(Py_UNICODE) == sizeof(uint))
-					new (storage) QString(QString::fromUcs4(reinterpret_cast<const uint*>(value)));
-				else if(sizeof(Py_UNICODE) == sizeof(QChar))
-					new (storage) QString(reinterpret_cast<const QChar*>(value));
-				else {
-					qFatal("The Unicode character size used by Python has an unsupported size: %i", (int)sizeof(Py_UNICODE));
-				}
-				data->convertible = storage;
-			}
-		};
-		converter::registry::push_back(convertible, construct, boost::python::type_id<QString>());
-
-		// Install automatic QVariant to Python conversion.
-		struct QVariant_to_python {
-			static PyObject* convert(const QVariant& v) {
-				switch(static_cast<QMetaType::Type>(v.type())) {
-					case QMetaType::Bool: return incref(object(v.toBool()).ptr());
-					case QMetaType::Int: return incref(object(v.toInt()).ptr());
-					case QMetaType::UInt: return incref(object(v.toUInt()).ptr());
-					case QMetaType::Long: return incref(object(v.value<long>()).ptr());
-					case QMetaType::ULong: return incref(object(v.value<unsigned long>()).ptr());
-					case QMetaType::LongLong: return incref(object(v.toLongLong()).ptr());
-					case QMetaType::ULongLong: return incref(object(v.toULongLong()).ptr());
-					case QMetaType::Double: return incref(object(v.toDouble()).ptr());
-					case QMetaType::Float: return incref(object(v.toFloat()).ptr());
-					case QMetaType::QString: return incref(object(v.toString()).ptr());
-					case QMetaType::QVariantList:
-					{
-						list lst;
-						QVariantList vlist = v.toList();
-						for(int i = 0; i < vlist.size(); i++)
-							lst.append(vlist[i]);
-						return incref(lst.ptr());
-					}
-					default: return incref(object().ptr());
-				}
-			}
-		};
-		to_python_converter<QVariant, QVariant_to_python>();
-
-		object sys_module = import("sys");
+		py::object sys_module = py::module::import("sys");
 
 		// Install output redirection (don't do this in console mode as it interferes with the interactive interpreter).
 		if(Application::instance().guiMode()) {
 			// Register the output redirector class.
-			class_<InterpreterStdOutputRedirector, std::auto_ptr<InterpreterStdOutputRedirector>, boost::noncopyable>("__StdOutStreamRedirectorHelper", no_init)
+			py::class_<InterpreterStdOutputRedirector>(sys_module, "__StdOutStreamRedirectorHelper")
 					.def("write", &InterpreterStdOutputRedirector::write)
 					.def("flush", &InterpreterStdOutputRedirector::flush);
-			class_<InterpreterStdErrorRedirector, std::auto_ptr<InterpreterStdErrorRedirector>, boost::noncopyable>("__StdErrStreamRedirectorHelper", no_init)
+			py::class_<InterpreterStdErrorRedirector>(sys_module, "__StdErrStreamRedirectorHelper")
 					.def("write", &InterpreterStdErrorRedirector::write)
 					.def("flush", &InterpreterStdErrorRedirector::flush);
 			// Replace stdout and stderr streams.
-			sys_module.attr("stdout") = ptr(new InterpreterStdOutputRedirector());
-			sys_module.attr("stderr") = ptr(new InterpreterStdErrorRedirector());
+			sys_module.attr("stdout") = py::cast(new InterpreterStdOutputRedirector(), py::return_value_policy::take_ownership);
+			sys_module.attr("stderr") = py::cast(new InterpreterStdErrorRedirector(), py::return_value_policy::take_ownership);
 		}
 
 		// Install Ovito to Python exception translator.
-		auto toPythonExceptionTranslator = [](const Exception& ex) {
-			PyErr_SetString(PyExc_RuntimeError, ex.messages().join(QChar('\n')).toLocal8Bit().constData());
-		};
-		register_exception_translator<Exception>(toPythonExceptionTranslator);
+		py::register_exception_translator([](std::exception_ptr p) {
+			try {
+				if(p) std::rethrow_exception(p);
+			}
+			catch(const Exception& ex) {
+				PyErr_SetString(PyExc_RuntimeError, ex.messages().join(QChar('\n')).toUtf8().constData());
+			}
+		});
 
 		// Prepend directories containing OVITO's Python modules to sys.path.
-		list sys_path = extract<list>(sys_module.attr("path"));
-		
-#if 0
-		qDebug() << "sys.path:";
-		qDebug() <<  extract<QString>(str(sys_path));
-		qDebug() << "Py_GetPrefix():";
-		qDebug() << QString::fromWCharArray(Py_GetPrefix());
-		qDebug() << "Py_GetExecPrefix():";
-		qDebug() << QString::fromWCharArray(Py_GetExecPrefix());
-		qDebug() << "Py_GetPath():";
-		qDebug() << QString::fromWCharArray(Py_GetPath());
-		qDebug() << "Py_GetProgramName():";
-		qDebug() << QString::fromWCharArray(Py_GetProgramName());
-		qDebug() << "Py_GetProgramFullPath():";
-		qDebug() << QString::fromWCharArray(Py_GetProgramFullPath());
-#endif
-		
+		py::list sys_path = sys_module.attr("path").cast<py::list>();
+
 		for(const QDir& pluginDir : PluginManager::instance().pluginDirs()) {
-#ifndef Q_OS_WIN
-			sys_path.insert(0, QDir::toNativeSeparators(pluginDir.absolutePath() + "/python"));
-#else
-			object path2(QDir::toNativeSeparators(pluginDir.absolutePath() + "/python"));
-			PyList_Insert(sys_path.ptr(), 0, path2.ptr());
-#endif
+			py::object path = py::cast(QDir::toNativeSeparators(pluginDir.absolutePath() + "/python"));
+			PyList_Insert(sys_path.ptr(), 0, path.ptr());
 		}
 
 		// Prepend current directory to sys.path.
-		sys_path.insert(0, str());
+		sys_path.attr("insert")(0, "");
 	}
 	catch(const Exception&) {
 		throw;
 	}
-	catch(const error_already_set&) {
-		PyErr_Print();
-		throw Exception(tr("Python interpreter has exited with an error."));
+	catch(py::error_already_set& ex) {
+		ex.restore();
+		if(PyErr_Occurred())
+			PyErr_Print();
+		throw Exception(tr("Failed to initialize Python interpreter. %1").arg(ex.what()), dataset());
+	}
+	catch(const std::exception& ex) {
+		throw Exception(tr("Failed to initialize Python interpreter: %1").arg(ex.what()), dataset());
 	}
 	catch(...) {
-		throw Exception(tr("Unhandled exception thrown by Python interpreter."));
+		throw Exception(tr("Unhandled exception thrown by Python interpreter."), dataset());
 	}
 
 	_isInterpreterInitialized = true;
@@ -283,29 +204,29 @@ int ScriptEngine::executeCommands(const QString& commands, const QStringList& sc
 
 	try {
 		// Pass command line parameters to the script.
-		list argList;
-		argList.append("-c");
+		py::list argList;
+		argList.append(py::cast("-c"));
 		for(const QString& a : scriptArguments)
-			argList.append(a);
-		import("sys").attr("argv") = argList;
+			argList.append(py::cast(a));
+		py::module::import("sys").attr("argv") = argList;
 
-		_mainNamespace["__file__"] = object();
-		exec(str(commands), _mainNamespace, _mainNamespace);
-	    _activeEngine = previousEngine;
+		_mainNamespace["__file__"] = py::none();
+		py::eval<py::eval_statements>(py::cast(commands), _mainNamespace, _mainNamespace);
+		_activeEngine = previousEngine;
 		return 0;
 	}
-	catch(const error_already_set&) {
+	catch(py::error_already_set& ex) {
+		ex.restore();
 		if(PyErr_Occurred()) {
 			// Handle call to sys.exit()
 			if(PyErr_ExceptionMatches(PyExc_SystemExit)) {
 				_activeEngine = previousEngine;
 				return handleSystemExit();
 			}
-
 			PyErr_Print();
 		}
 	    _activeEngine = previousEngine;
-		throw Exception(tr("Python interpreter has exited with an error. See interpreter output for details."), dataset());
+		throw Exception(tr("Script execution error: %1").arg(ex.what()), dataset());
 	}
 	catch(Exception& ex) {
 	    _activeEngine = previousEngine;
@@ -314,11 +235,11 @@ int ScriptEngine::executeCommands(const QString& commands, const QStringList& sc
 	}
 	catch(const std::exception& ex) {
 	    _activeEngine = previousEngine;
-		throw Exception(tr("Script execution error: %1").arg(QString::fromLocal8Bit(ex.what())), dataset());
+		throw Exception(tr("Script execution error: %1").arg(ex.what()), dataset());
 	}
 	catch(...) {
 	    _activeEngine = previousEngine;
-		throw Exception(tr("Unhandled exception thrown by Python interpreter."));
+		throw Exception(tr("Unhandled exception thrown by Python interpreter."), dataset());
 	}
 }
 
@@ -342,10 +263,10 @@ void ScriptEngine::execute(const std::function<void()>& func)
 		func();
 	    _activeEngine = previousEngine;
 	}
-	catch(const error_already_set&) {
-		if(PyErr_Occurred()) {
+	catch(py::error_already_set& ex) {
+		ex.restore();
+		if(PyErr_Occurred())
 			PyErr_Print();
-		}
 	    _activeEngine = previousEngine;
 		throw Exception(tr("Python interpreter has exited with an error. See interpreter output for details."), dataset());
 	}
@@ -367,11 +288,11 @@ void ScriptEngine::execute(const std::function<void()>& func)
 /******************************************************************************
 * Calls a callable Python object (typically a function).
 ******************************************************************************/
-boost::python::object ScriptEngine::callObject(const boost::python::object& callable, const boost::python::tuple& arguments, const boost::python::dict& kwargs)
+py::object ScriptEngine::callObject(const py::object& callable, const py::tuple& arguments, const py::dict& kwargs)
 {
-	boost::python::object result;
+	py::object result;
 	execute([&result, &callable, &arguments, &kwargs]() {
-		result = callable(boost::python::detail::args_proxy(arguments), boost::python::detail::kwds_proxy(kwargs));
+		result = callable(*arguments, **kwargs);
 	});
 	return result;
 }
@@ -393,43 +314,21 @@ int ScriptEngine::executeFile(const QString& filename, const QStringList& script
 
 	try {
 		// Pass command line parameters to the script.
-		list argList;
-		argList.append(filename);
+		py::list argList;
+		argList.append(py::cast(filename));
 		for(const QString& a : scriptArguments)
-			argList.append(a);
-		import("sys").attr("argv") = argList;
+			argList.append(py::cast(a));
+		py::module::import("sys").attr("argv") = argList;
 
-		str nativeFilename(QDir::toNativeSeparators(filename));
+		py::str nativeFilename(py::cast(QDir::toNativeSeparators(filename)));
 		_mainNamespace["__file__"] = nativeFilename;
-
-		// The FILE structure for different C libraries can be different and incompatible.
-		// Under Windows (at least), it is possible for dynamically linked extensions to actually
-		// use different libraries, so care should be taken that FILE* parameters are only passed
-		// to these functions if it is certain that they were created by the same library that the
-		// Python runtime is using.
-		// In case of an incompatible runtime, we need to read the entire file into memory
-		// first before passing it to Python.
-#if PY_MAJOR_VERSION < 3
-		exec_file(nativeFilename, _mainNamespace, _mainNamespace);
-#else
-		QFile file(filename);
-		if(!file.open(QIODevice::ReadOnly))
-			throw Exception(tr("Failed to open script file %1: %2").arg(filename, file.errorString()), dataset());
-		QByteArray fileData = file.readAll();
-		file.close();
-		PyObject* codeObj = Py_CompileString(fileData.constData(), filename.toUtf8().constData(), Py_file_input);
-		if(!codeObj) throw_error_already_set();
-		PyObject* result = PyEval_EvalCode(codeObj, _mainNamespace.ptr(), _mainNamespace.ptr());
-		Py_DECREF(codeObj);
-		if(!result) throw_error_already_set();
-		Py_DECREF(result);
-#endif
+		py::eval_file(nativeFilename, _mainNamespace, _mainNamespace);
 
 	    _activeEngine = previousEngine;
 	    return 0;
 	}
-	catch(const error_already_set&) {
-		OVITO_ASSERT(PyErr_Occurred());
+	catch(py::error_already_set& ex) {		
+		ex.restore();
 
 		// Handle calls to sys.exit()
 		if(PyErr_ExceptionMatches(PyExc_SystemExit)) {
@@ -448,25 +347,27 @@ int ScriptEngine::executeFile(const QString& filename, const QStringList& script
 			PyErr_Fetch(&extype, &value, &traceback);
 			PyErr_NormalizeException(&extype, &value, &traceback);
 			if(extype) {
-				object o_extype(handle<>(allow_null(borrowed(extype))));
-				object o_value(handle<>(allow_null(borrowed(value))));
+				py::object o_extype(extype, true);
+				py::object o_value(value, true);
 				try {
 					if(traceback) {
-						object o_traceback(handle<>(allow_null(borrowed(traceback))));
-						object mod_traceback = import("traceback");
+						py::object o_traceback(traceback, true);
+						py::object mod_traceback = py::module::import("traceback");
 						bool chain = PyObject_IsInstance(value, extype) == 1;
-						object lines = mod_traceback.attr("format_exception")(o_extype, o_value, o_traceback, object(), chain);
-
-						QString tracebackString;
-						for(int i = 0; i < len(lines); ++i)
-							tracebackString += extract<QString>(lines[i])();
-						exception.appendDetailMessage(tracebackString);
+						py::sequence lines(mod_traceback.attr("format_exception")(o_extype, o_value, o_traceback, py::none(), chain));
+						if(lines.check()) {
+							QString tracebackString;
+							for(int i = 0; i < py::len(lines); ++i)
+								tracebackString += lines[i].cast<QString>();
+							exception.appendDetailMessage(tracebackString);
+						}
 					}
 					else {
-						exception.appendDetailMessage(extract<QString>(str(o_value)));
+						exception.appendDetailMessage(o_value.str().cast<QString>());
 					}
 				}
-				catch(const error_already_set&) {
+				catch( py::error_already_set& ex) {
+					ex.restore();
 					PyErr_Print();
 				}
 			}
@@ -536,11 +437,10 @@ int ScriptEngine::handleSystemExit()
 		exitcode = (int)PyInt_AsLong(value);
 #endif
 	else {
-		PyObject *s = PyObject_Str(value);
+		py::str s(PyObject_Str(value), false);
 		QString errorMsg;
-		if(s)
-			errorMsg = extract<QString>(s) + QChar('\n');
-		Py_XDECREF(s);
+		if(s.check())
+			errorMsg = s.cast<QString>() + QChar('\n');
 		if(!errorMsg.isEmpty())
 			Q_EMIT scriptError(errorMsg);
 		exitcode = 1;

@@ -28,47 +28,50 @@
 
 namespace PyScript {
 
-using namespace boost::python;
 using namespace Ovito;
 
-BOOST_PYTHON_MODULE(PyScriptGUI)
+PYBIND11_PLUGIN(PyScriptGUI)
 {
-	docstring_options docoptions(true, false);
+	py::docstring_options docstrings;
+	docstrings.disable_signatures();
 
-	class_<MainWindow, bases<>, MainWindow, boost::noncopyable>("MainWindow", no_init)
-		.add_property("frame_buffer_window", make_function(&MainWindow::frameBufferWindow, return_internal_reference<>()))
+	py::module m("PyScriptGUI");
+
+	py::class_<MainWindow>(m, "MainWindow")
+		.def_property_readonly("frame_buffer_window", &MainWindow::frameBufferWindow)
 	;
 
-	ovito_abstract_class<GuiDataSetContainer, DataSetContainer>()
+	ovito_abstract_class<GuiDataSetContainer, DataSetContainer>(m)
 		.def("fileNew", &GuiDataSetContainer::fileNew)
 		.def("fileLoad", &GuiDataSetContainer::fileLoad)
 		.def("fileSave", &GuiDataSetContainer::fileSave)
 		.def("fileSaveAs", &GuiDataSetContainer::fileSaveAs)
 		.def("askForSaveChanges", &GuiDataSetContainer::askForSaveChanges)
-		.add_property("window", make_function(&GuiDataSetContainer::mainWindow, return_value_policy<reference_existing_object>()))
+		.def_property_readonly("window", &GuiDataSetContainer::mainWindow)
 	;
 
-	class_<FrameBufferWindow, bases<>, FrameBufferWindow, boost::noncopyable>("FrameBufferWindow", no_init)
-		.add_property("frame_buffer", make_function(&FrameBufferWindow::frameBuffer, return_value_policy<copy_const_reference>()))
-		.def("create_frame_buffer", make_function(&FrameBufferWindow::createFrameBuffer, return_value_policy<copy_const_reference>()))
+	py::class_<FrameBufferWindow>(m, "FrameBufferWindow")
+		.def_property_readonly("frame_buffer", &FrameBufferWindow::frameBuffer)
+		.def("create_frame_buffer", &FrameBufferWindow::createFrameBuffer)
 		.def("show_and_activate", &FrameBufferWindow::showAndActivateWindow)
 	;
 
-	ovito_class<StandardSceneRenderer, SceneRenderer>(
+	ovito_class<StandardSceneRenderer, SceneRenderer>(m,
 			"The standard OpenGL-based renderer."
 			"\n\n"
 			"This is the default built-in rendering engine that is also used by OVITO to render the contents of the interactive viewports. "
 			"Since it accelerates the generation of images by using the computer's graphics hardware, it is very fast.",
 			"OpenGLRenderer")
-		.add_property("antialiasing_level", &StandardSceneRenderer::antialiasingLevel, &StandardSceneRenderer::setAntialiasingLevel,
+		.def_property("antialiasing_level", &StandardSceneRenderer::antialiasingLevel, &StandardSceneRenderer::setAntialiasingLevel,
 				"A positive integer controlling the level of supersampling. If 1, no supersampling is performed. For larger values, "
 				"the image in rendered at a higher resolution and then scaled back to the output size to reduce aliasing artifacts."
 				"\n\n"
 				":Default: 3")
 	;
+
+	return m.ptr();
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScriptGUI);
-
 
 };

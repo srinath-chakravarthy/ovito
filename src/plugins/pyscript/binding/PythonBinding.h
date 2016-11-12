@@ -24,14 +24,297 @@
 
 #include <plugins/pyscript/PyScript.h>
 #include <plugins/pyscript/engine/ScriptEngine.h>
+#include <core/utilities/io/FileManager.h>
 
-#include <boost/python/raw_function.hpp>
-#include <boost/python/stl_iterator.hpp>
+PYBIND11_DECLARE_HOLDER_TYPE(T, Ovito::OORef<T>);
+
+namespace pybind11 { namespace detail {
+
+	/// Automatic Python string <--> QString conversion
+    template<> struct type_caster<QString> {
+    public:
+        PYBIND11_TYPE_CASTER(QString, _("QString"));
+
+        bool load(handle src, bool) {
+            if(!src) return false;
+            object temp;
+            handle load_src = src;
+			if(PyUnicode_Check(load_src.ptr())) {
+                temp = object(PyUnicode_AsUTF8String(load_src.ptr()), false);
+                if (!temp) { PyErr_Clear(); return false; }  // UnicodeEncodeError
+                load_src = temp;
+            }
+            char *buffer;
+            ssize_t length;
+            int err = PYBIND11_BYTES_AS_STRING_AND_SIZE(load_src.ptr(), &buffer, &length);
+            if (err == -1) { PyErr_Clear(); return false; }  // TypeError
+            value = QString::fromUtf8(buffer, (int)length);
+            return true;
+        }
+
+        static handle cast(const QString& src, return_value_policy /* policy */, handle /* parent */) {
+#if PY_VERSION_HEX >= 0x03030000	// Python 3.3
+			OVITO_STATIC_ASSERT(sizeof(QChar) == 2);
+			return PyUnicode_FromKindAndData(PyUnicode_2BYTE_KIND, src.constData(), src.length());
+#else
+        	QByteArray a = src.toUtf8();
+        	return PyUnicode_FromStringAndSize(a.data(), (ssize_t)a.length());
+#endif
+        }
+    };
+
+	/// Automatic Python string <--> QUrl conversion
+    template<> struct type_caster<QUrl> {
+    public:
+        PYBIND11_TYPE_CASTER(QUrl, _("QUrl"));
+
+        bool load(handle src, bool) {
+			if(!src) return false;
+			try {
+				QString str = src.cast<QString>();
+				value = Ovito::FileManager::instance().urlFromUserInput(str);
+				return true;
+			}
+			catch(const cast_error&) {}
+			return false;
+        }
+
+        static handle cast(const QUrl& src, return_value_policy /* policy */, handle /* parent */) {
+        	QByteArray a = src.toString().toUtf8();
+        	return PyUnicode_FromStringAndSize(a.data(), (ssize_t)a.length());
+        }
+    };	
+
+	/// Automatic Python <--> QVariant conversion
+    template<> struct type_caster<QVariant> {
+    public:
+        bool load(handle src, bool) {
+			return false;
+        }
+
+        static handle cast(const QVariant& src, return_value_policy /* policy */, handle /* parent */) {
+			switch(static_cast<QMetaType::Type>(src.type())) {
+				case QMetaType::Bool: return pybind11::cast(src.toBool()).release();
+				case QMetaType::Int: return pybind11::cast(src.toInt()).release();
+				case QMetaType::UInt: return pybind11::cast(src.toUInt()).release();
+				case QMetaType::Long: return pybind11::cast(src.value<long>()).release();
+				case QMetaType::ULong: return pybind11::cast(src.value<unsigned long>()).release();
+				case QMetaType::LongLong: return pybind11::cast(src.toLongLong()).release();
+				case QMetaType::ULongLong: return pybind11::cast(src.toULongLong()).release();
+				case QMetaType::Double: return pybind11::cast(src.toDouble()).release();
+				case QMetaType::Float: return pybind11::cast(src.toFloat()).release();
+				case QMetaType::QString: return pybind11::cast(src.toString()).release();
+				case QMetaType::QVariantList:
+				{
+					list lst;
+					QVariantList vlist = src.toList();
+					for(int i = 0; i < vlist.size(); i++)
+						lst.append(pybind11::cast(vlist[i]));
+					return lst.release();
+				}
+				default: return pybind11::none();
+			}
+        }
+
+		PYBIND11_TYPE_CASTER(QVariant, _("QVariant"));
+    };	
+
+	/// Automatic Python <--> QStringList conversion
+    template<> struct type_caster<QStringList> {
+    public:
+		PYBIND11_TYPE_CASTER(QStringList, _("QStringList"));
+		
+        bool load(handle src, bool) {
+			if(!src) return false;
+			sequence seq(src, true);
+			if(seq.check()) {
+            	for(size_t i = 0; i < seq.size(); i++)
+					value.push_back(seq[i].cast<QString>());
+				return true;
+			}
+			return false;
+        }
+
+        static handle cast(const QStringList& src, return_value_policy /* policy */, handle /* parent */) {
+			list lst;
+			for(const QString& s : src)
+				lst.append(pybind11::cast(s));
+			return lst.release();
+        }
+    };
+
+	/// Automatic Python <--> Vector3 conversion
+    template<typename T> struct type_caster<Ovito::Vector_3<T>> {
+    public:
+        bool load(handle src, bool) {
+			if(!src) return false;
+			sequence seq(src, true);
+        	if(seq.check()) {
+            	if(seq.size() != value.size())
+                	throw value_error("Expected sequence of length 3.");
+				for(size_t i = 0; i < value.size(); i++)
+					value[i] = seq[i].cast<T>();
+				return true;
+			}
+			return false;
+        }
+
+        static handle cast(const Ovito::Vector_3<T>& src, return_value_policy /* policy */, handle /* parent */) {
+			return pybind11::make_tuple(src[0], src[1], src[2]).release();
+        }
+
+		PYBIND11_TYPE_CASTER(Ovito::Vector_3<T>, _("Vector3<") + make_caster<T>::name() + _(">"));
+    };	
+
+	/// Automatic Python <--> Color conversion
+    template<typename T> struct type_caster<Ovito::ColorT<T>> {
+    public:
+        bool load(handle src, bool) {
+			if(!src) return false;
+			sequence seq(src, true);
+        	if(seq.check()) {
+            	if(seq.size() != value.size())
+                	throw value_error("Expected sequence of length 3.");
+				for(size_t i = 0; i < value.size(); i++)
+					value[i] = seq[i].cast<T>();
+				return true;
+			}
+			return false;
+        }
+
+        static handle cast(const Ovito::ColorT<T>& src, return_value_policy /* policy */, handle /* parent */) {
+			return pybind11::make_tuple(src[0], src[1], src[2]).release();
+        }
+
+		PYBIND11_TYPE_CASTER(Ovito::ColorT<T>, _("Color<") + make_caster<T>::name() + _(">"));
+    };	
+
+	/// Automatic Python <--> ColorA conversion
+    template<typename T> struct type_caster<Ovito::ColorAT<T>> {
+    public:
+        bool load(handle src, bool) {
+			if(!src) return false;
+			sequence seq(src, true);
+        	if(seq.check()) {
+            	if(seq.size() != value.size())
+                	throw value_error("Expected sequence of length 4.");
+				for(size_t i = 0; i < value.size(); i++)
+					value[i] = seq[i].cast<T>();
+				return true;
+			}
+			return false;
+        }
+
+        static handle cast(const Ovito::ColorT<T>& src, return_value_policy /* policy */, handle /* parent */) {
+			return pybind11::make_tuple(src[0], src[1], src[2], src[3]).release();
+        }
+
+		PYBIND11_TYPE_CASTER(Ovito::ColorAT<T>, _("ColorA<") + make_caster<T>::name() + _(">"));
+    };
+
+	/// Automatic Python <--> AffineTransformation conversion
+    template<typename T> struct type_caster<Ovito::AffineTransformationT<T>> {
+    public:
+        bool load(handle src, bool) {
+			if(!src) return false;
+			sequence seq1(src, true);
+        	if(seq1.check()) {
+            	if(seq1.size() != value.row_count())
+                	throw value_error("Expected sequence of length 3.");
+				for(size_t i = 0; i < value.row_count(); i++) {
+					sequence seq2(seq1[i], true);
+					if(!seq2.check() || seq2.size() != value.col_count())
+						throw value_error("Expected nested sequence of length 4.");
+					for(size_t j = 0; j < value.col_count(); j++) {
+						value(i,j) = seq2[j].cast<T>();
+					}
+				}
+				return true;
+			}
+			return false;
+        }
+
+        static handle cast(const Ovito::AffineTransformationT<T>& src, return_value_policy /* policy */, handle /* parent */) {
+			return pybind11::array_t<T>({ src.row_count(), src.col_count() }, 
+				{ sizeof(T), sizeof(typename Ovito::AffineTransformationT<T>::column_type) }, 
+				src.elements()).release();
+        }
+
+		PYBIND11_TYPE_CASTER(Ovito::AffineTransformationT<T>, _("AffineTransformation<") + make_caster<T>::name() + _(">"));
+    };	
+
+	/// Automatic Python <--> Matrix3 conversion
+    template<typename T> struct type_caster<Ovito::Matrix_3<T>> {
+    public:
+        bool load(handle src, bool) {
+			if(!src) return false;
+			sequence seq1(src, true);
+        	if(seq1.check()) {
+            	if(seq1.size() != value.row_count())
+                	throw value_error("Expected sequence of length 3.");
+				for(size_t i = 0; i < value.row_count(); i++) {
+					sequence seq2(seq1[i], true);
+					if(!seq2.check() || seq2.size() != value.col_count())
+						throw value_error("Expected nested sequence of length 3.");
+					for(size_t j = 0; j < value.col_count(); j++) {
+						value(i,j) = seq2[j].cast<T>();
+					}
+				}
+				return true;
+			}
+			return false;
+        }
+
+        static handle cast(const Ovito::Matrix_3<T>& src, return_value_policy /* policy */, handle /* parent */) {
+			return pybind11::array_t<T>({ src.row_count(), src.col_count() }, 
+				{ sizeof(T), sizeof(typename Ovito::Matrix_3<T>::column_type) }, 
+				src.elements()).release();
+        }
+
+		PYBIND11_TYPE_CASTER(Ovito::Matrix_3<T>, _("Matrix3<") + make_caster<T>::name() + _(">"));
+    };
+
+	/// Automatic Python <--> Matrix4 conversion
+    template<typename T> struct type_caster<Ovito::Matrix_4<T>> {
+    public:
+        bool load(handle src, bool) {
+			if(!src) return false;
+			sequence seq1(src, true);
+        	if(seq1.check()) {
+            	if(seq1.size() != value.row_count())
+                	throw value_error("Expected sequence of length 4.");
+				for(size_t i = 0; i < value.row_count(); i++) {
+					sequence seq2(seq1[i], true);
+					if(!seq2.check() || seq2.size() != value.col_count())
+						throw value_error("Expected nested sequence of length 4.");
+					for(size_t j = 0; j < value.col_count(); j++) {
+						value(i,j) = seq2[j].cast<T>();
+					}
+				}
+				return true;
+			}
+			return false;
+        }
+
+        static handle cast(const Ovito::Matrix_4<T>& src, return_value_policy /* policy */, handle /* parent */) {
+			return pybind11::array_t<T>({ src.row_count(), src.col_count() }, 
+				{ sizeof(T), sizeof(typename Ovito::Matrix_4<T>::column_type) }, 
+				src.elements()).release();
+        }
+
+		PYBIND11_TYPE_CASTER(Ovito::Matrix_4<T>, _("Matrix4<") + make_caster<T>::name() + _(">"));
+    };		
+
+	// Automatic QSet<int> conversion.
+	template<> struct type_caster<QSet<int>> : set_caster<QSet<int>, int> {};
+
+	
+}} // namespace pybind11::detail
 
 namespace PyScript {
 
-using namespace boost::python;
 using namespace Ovito;
+namespace py = pybind11;
 
 /// \brief Adds the initXXX() function of a plugin to an internal list so that the scripting engine can discover and register all internal modules.
 /// Use the OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE macro to create an instance of this structure on application startup.
@@ -68,331 +351,429 @@ struct OVITO_PYSCRIPT_EXPORT PythonPluginRegistration
 		static PyScript::PythonPluginRegistration __pyscript_unused_variable##pluginName(#pluginName, init##pluginName);
 #endif
 
-// A model of the Boost.Python ResultConverterGenerator concept which wraps
-// a raw pointer to an OvitoObject derived class in a OORef<> smart pointer.
-struct ovito_object_reference
-{
-	struct make_ooref_holder {
-		template <class T>
-		static PyObject* execute(T* p) {
-			typedef objects::pointer_holder<OORef<T>, T> holder_t;
-			OORef<T> ptr(const_cast<T*>(p));
-			return objects::make_ptr_instance<T, holder_t>::execute(ptr);
-		}
-	};
-	template <class T> struct apply {
-        typedef to_python_indirect<T, make_ooref_holder> type;
-    };
-};
-
 /// Defines a Python class for an abstract OvitoObject-derived C++ class.
 template<class OvitoObjectClass, class BaseClass>
-class ovito_abstract_class : public class_<OvitoObjectClass, bases<BaseClass>, OORef<OvitoObjectClass>, boost::noncopyable>
+class ovito_abstract_class : public py::class_<OvitoObjectClass, BaseClass, OORef<OvitoObjectClass>>
 {
 public:
 	/// Constructor.
-	ovito_abstract_class(const char* docstring = nullptr, const char* pythonClassName = nullptr)
-		: class_<OvitoObjectClass, bases<BaseClass>, OORef<OvitoObjectClass>, boost::noncopyable>(pythonClassName ? pythonClassName : OvitoObjectClass::OOType.className(), docstring, no_init) {}
+	ovito_abstract_class(py::handle scope, const char* docstring = nullptr, const char* pythonClassName = nullptr)
+		: py::class_<OvitoObjectClass, BaseClass, OORef<OvitoObjectClass>>(scope, pythonClassName ? pythonClassName : OvitoObjectClass::OOType.className(), docstring) {}
 };
 
 /// Defines a Python class for an OvitoObject-derived C++ class.
 template<class OvitoObjectClass, class BaseClass>
-class ovito_class : public class_<OvitoObjectClass, bases<BaseClass>, OORef<OvitoObjectClass>, boost::noncopyable>
+class ovito_class : public py::class_<OvitoObjectClass, BaseClass, OORef<OvitoObjectClass>>
 {
 public:
 
 	/// Constructor.
-	ovito_class(const char* docstring = nullptr, const char* pythonClassName = nullptr) : class_<OvitoObjectClass, bases<BaseClass>, OORef<OvitoObjectClass>, boost::noncopyable>(pythonClassName ? pythonClassName : OvitoObjectClass::OOType.className(), docstring, no_init) {
+	ovito_class(py::handle scope, const char* docstring = nullptr, const char* pythonClassName = nullptr) 
+		: py::class_<OvitoObjectClass, BaseClass, OORef<OvitoObjectClass>>(scope, pythonClassName ? pythonClassName : OvitoObjectClass::OOType.className(), docstring) {
 		// Define a constructor that takes a variable number of keyword arguments, which are used to initialize
 		// properties of the newly created object.
-		this->def("__init__", raw_constructor(&construct_instance_with_params));
+		this->def("__init__", [](py::args args, py::kwargs kwargs) {			
+			OvitoObjectClass& instance = args[0].cast<OvitoObjectClass&>();
+			constructInstance(instance);
+			initializeParameters(py::cast(instance), args, kwargs);
+		});
+	}
+
+	/// Constructor.
+	ovito_class(py::handle scope, const char* docstring, const char* pythonClassName, py::dynamic_attr dyn_attr)
+		: py::class_<OvitoObjectClass, BaseClass, OORef<OvitoObjectClass>>(scope, pythonClassName ? pythonClassName : OvitoObjectClass::OOType.className(), docstring, dyn_attr) {
+		// Define a constructor that takes a variable number of keyword arguments, which are used to initialize
+		// properties of the newly created object.
+		this->def("__init__", [](py::args args, py::kwargs kwargs) {			
+			OvitoObjectClass& instance = args[0].cast<OvitoObjectClass&>();
+			constructInstance(instance);
+			initializeParameters(py::cast(instance), args, kwargs);
+		});
 	}
 
 private:
 
-	template <class F>
-	struct raw_constructor_dispatcher {
-		raw_constructor_dispatcher(F f) : f(make_constructor(f)) {}
-		PyObject* operator()(PyObject* args, PyObject* keywords) {
-			boost::python::detail::borrowed_reference_t* ra = boost::python::detail::borrowed_reference(args);
-			object a(ra);
-			return incref(object(f(
-					  object(a[0])
-					, object(a.slice(1, len(a)))
-					, keywords ? dict(boost::python::detail::borrowed_reference(keywords)) : dict()
-			)).ptr());
-		}
-	private:
-		object f;
-	};
-
-	template <class F>
-	object raw_constructor(F f, std::size_t min_args = 0) {
-		return boost::python::detail::make_raw_function(
-			boost::python::objects::py_function(
-				raw_constructor_dispatcher<F>(f)
-				, boost::mpl::vector2<void, object>()
-				, min_args + 1
-				, (std::numeric_limits<unsigned>::max)()
-			)
-		);
-	}
-
-	/// This constructs a new instance of the OvitoObject class and initializes
-	/// its properties using the values stored in a dictionary.
-	static OORef<OvitoObjectClass> construct_instance_with_params(const tuple& args, const dict& kwargs) {
-		if(len(args) != 0) {
-			if(len(args) > 1 || !extract<dict>(args[0]).check())
-				throw Exception("Constructor function accepts only keyword arguments.");
-		}
-		// Construct the C++ object instance.
+	/// Constructs the object instance in place and passes the current DataSet to the C++ constructor.
+	static void constructInstance(OvitoObjectClass& instance) {
 		ScriptEngine* engine = ScriptEngine::activeEngine();
 		if(!engine) throw Exception("Invalid interpreter state. There is no active script engine.");
 		DataSet* dataset = engine->dataset();
-		if(!dataset) throw Exception("Invalid interpreter state. There is no active dataset.");
-		OORef<OvitoObjectClass> obj(new OvitoObjectClass(dataset));
-		// Create a Python wrapper for the object so we can set its attributes.
-		object pyobj(obj);
+		if(!dataset) throw Exception("Invalid interpreter state. There is no active dataset.");			
+		new (&instance) OvitoObjectClass(dataset);
+	}
+
+	/// Initalizes the properties of the new object using the values stored in a dictionary.
+	static void initializeParameters(py::object pyobj, const py::args& args, const py::kwargs& kwargs) {
+		if(py::len(args) > 1) {
+			if(py::len(args) > 2 || !PyDict_Check(args[1].ptr()))
+				throw Exception("Constructor function accepts only keyword arguments.");
+		}
 		// Set attributes based on keyword arguments.
-		applyParameters(pyobj, kwargs);
+		if(kwargs.check())
+			applyParameters(pyobj, kwargs);
 		// The caller may alternatively provide a dictionary with attributes.
-		if(len(args) == 1)
-			applyParameters(pyobj, extract<dict>(args[0]));
-		return obj;
+		if(py::len(args) == 2) {
+			applyParameters(pyobj, args[1].cast<py::dict>());
+		}
 	}
 
 	// Sets attributes of the given object as specified in the dictionary.
-	static void applyParameters(object& obj, const dict& params) {
-		PyObject *key, *value;
-		Py_ssize_t pos = 0;
+	static void applyParameters(py::object& pyobj, const py::dict& params) {
 		// Iterate over the keys of the dictionary and set attributes of the
 		// newly created object.
-		while(PyDict_Next(params.ptr(), &pos, &key, &value)) {
+		for(auto item : params) {
 			// Check if the attribute exists. Otherwise raise error.
-			if(!PyObject_HasAttr(obj.ptr(), key)) {
-				const char* keystr = extract<char const*>(object(handle<>(borrowed(key))));
-				PyErr_Format(PyExc_AttributeError, "Error in constructor. Object type %s does not have an attribute named '%s'.",
-						OvitoObjectClass::OOType.className(), keystr);
-				throw_error_already_set();
+			if(!py::hasattr(pyobj, item.first)) {
+				PyErr_SetObject(PyExc_AttributeError, 
+					py::str("Object type {} does not have an attribute named '{}'.").format(OvitoObjectClass::OOType.className(), item.first).ptr());
+				throw py::error_already_set();
 			}
 			// Set attribute value.
-			obj.attr(object(handle<>(borrowed(key)))) = handle<>(borrowed(value));
+			py::setattr(pyobj, item.first, item.second);
 		}
 	}
 };
 
-/// Base indexing suite for vector-like containers.
-template<class Container, class DerivedClass, typename value_type = typename Container::value_type>
-class base_indexing_suite : public def_visitor<DerivedClass>
-{
-public:
-    typedef value_type data_type;
-    typedef value_type key_type;
-    typedef typename Container::size_type index_type;
-    typedef typename Container::size_type size_type;
-    typedef typename Container::difference_type difference_type;
+template<typename Vector, typename holder_type = std::unique_ptr<Vector>, typename... Args>
+pybind11::class_<Vector, holder_type> bind_vector_readonly(pybind11::module &m, const char* name, Args&&... args) {
+    using T = typename Vector::value_type;
+    using SizeType = typename Vector::size_type;
+    using DiffType = typename Vector::difference_type;
+    using ItType   = typename Vector::iterator;
+    using Class_ = pybind11::class_<Vector, holder_type>;
 
-    template<class Class>
-    void visit(Class& cl) const {
-        cl
-            .def("__len__", &get_size)
-            .def("__delitem__", &delete_item)
-            .def("__contains__", &contains)
-        ;
-    }
+    Class_ cl(m, name, std::forward<Args>(args)...);
 
-    static size_type get_size(const Container& container) { return container.size(); }
-	static void delete_item(Container& container, PyObject* i) {
-		PyErr_SetString(PyExc_NotImplementedError, "This sequence type does not allow deleting elements.");
-		throw_error_already_set();
-	}
-	static bool contains(const Container& container, const key_type& key) { return std::find(container.begin(), container.end(), key) != container.end(); }
+    // Register comparison-related operators and functions (if possible)
+    pybind11::detail::vector_if_equal_operator<Vector, Class_>(cl);
 
-	static index_type convert_index(Container& container, PyObject* i_) {
-		extract<long> i(i_);
-		if(i.check()) {
-			long index = i();
-			if(index < 0)
-				index += (long)container.size();
-            if(index >= (long)container.size() || index < 0) {
-				PyErr_SetString(PyExc_IndexError, "Index out of range");
-				throw_error_already_set();
-			}
-			return static_cast<index_type>(index);
-		}
+    cl.def("__bool__",
+        [](const Vector &v) -> bool {
+            return !v.empty();
+        },
+        "Check whether the list is nonempty"
+    );
 
-		PyErr_SetString(PyExc_TypeError, "Invalid index type");
-		throw_error_already_set();
-		return index_type();
-	}
-};
-
-/// Indexing suite for QVector<T*> containers, where T is an OvitoObject derived class.
-/// This indexing suite exposes only read-only methods which do not modify the QVector container.
-template<class T, typename Container = QVector<T*>>
-class QVector_OO_readonly_indexing_suite : public base_indexing_suite<Container, QVector_OO_readonly_indexing_suite<T,Container>, T*>
-{
-public:
-	typedef base_indexing_suite<Container, QVector_OO_readonly_indexing_suite<T,Container>, T*> base_class;
-    typedef typename std::conditional<std::is_pointer<typename Container::value_type>::value,
-    			return_value_policy<ovito_object_reference>,
-    			return_value_policy<copy_non_const_reference>
-    			>::type iterator_return_policy;
-    typedef boost::python::iterator<Container, iterator_return_policy> def_iterator;
-
-    template<class Class>
-    void visit(Class& cl) const {
-    	base_class::visit(cl);
-        cl
-        	.def("__setitem__", &set_item)
-        	.def("__getitem__", make_function(&get_item, return_value_policy<ovito_object_reference>()))
-        	.def("__iter__", def_iterator())
-        ;
-    }
-
-    static T* get_item(back_reference<Container&> container, PyObject* i) {
-        if(PySlice_Check(i)) {
-        	PyErr_SetString(PyExc_NotImplementedError, "This sequence type does not support slicing.");
-        	throw_error_already_set();
+    cl.def("__getitem__",
+        [](const Vector &v, SizeType i) -> T {
+            if (i >= v.size())
+                throw pybind11::index_error();
+            return v[i];
         }
-        return container.get()[base_class::convert_index(container.get(), i)];
-    }
+    );
 
-    static void set_item(Container& container, PyObject* i, PyObject* v) {
-		PyErr_SetString(PyExc_NotImplementedError, "This sequence type is read-only.");
-		throw_error_already_set();
-	}
-};
+    cl.def("__len__", &Vector::size);
 
-/// Indexing suite for std::array<T> containers, where T is a value type.
-template<class ArrayType, class CallPolicies = return_value_policy<return_by_value>>
-class array_indexing_suite : public base_indexing_suite<ArrayType, array_indexing_suite<ArrayType>>
-{
-public:
-	typedef base_indexing_suite<ArrayType, array_indexing_suite<ArrayType>> base_class;
+    cl.def("__iter__",
+           [](Vector &v) {
+               return pybind11::make_iterator<
+                   pybind11::return_value_policy::reference_internal, ItType, ItType, T>(
+                   v.begin(), v.end());
+           },
+           pybind11::keep_alive<0, 1>() /* Essential: keep list alive while iterator exists */
+    );
 
-	template<class Class>
-    void visit(Class& cl) const {
-		base_class::visit(cl);
-        cl
-            .def("__setitem__", &set_item)
-            .def("__getitem__", make_function(&get_item, CallPolicies()))
-            .def("__iter__", boost::python::iterator<ArrayType, CallPolicies>())
-        ;
-    }
+    /// Slicing protocol
+    cl.def("__getitem__",
+        [](const Vector &v, pybind11::slice slice) -> Vector * {
+            size_t start, stop, step, slicelength;
 
-    static typename ArrayType::value_type get_item(back_reference<ArrayType&> container, PyObject* i) {
-        if(PySlice_Check(i)) {
-        	PyErr_SetString(PyExc_NotImplementedError, "This sequence type does not support slicing.");
-        	throw_error_already_set();
-        }
-        return container.get()[base_class::convert_index(container.get(), i)];
-    }
+            if (!slice.compute(v.size(), &start, &stop, &step, &slicelength))
+                throw pybind11::error_already_set();
 
-	static void set_item(ArrayType& container, PyObject* i, PyObject* v) {
-		if(PySlice_Check(i)) {
-			PyErr_SetString(PyExc_NotImplementedError, "This sequence type does not support slicing.");
-			throw_error_already_set();
-		}
-		extract<typename ArrayType::value_type> ex(v);
-		if(!ex.check()) {
-			PyErr_SetString(PyExc_TypeError, "Invalid type in array assignment.");
-			throw_error_already_set();
-		}
-        container[base_class::convert_index(container, i)] = ex();
-	}
-};
+            Vector *seq = new Vector();
+            seq->reserve((size_t) slicelength);
 
-// Automatic Python sequence to C++ container conversion.
-template<typename Container>
-struct python_to_container_conversion
-{
-	python_to_container_conversion() {
-		converter::registry::push_back(&convertible, &construct, type_id<Container>());
-	}
+            for (size_t i=0; i<slicelength; ++i) {
+                seq->push_back(v[start]);
+                start += step;
+            }
+            return seq;
+        },
+        pybind11::arg("s"),
+        "Retrieve list elements using a slice object"
+    );
 
-	static void* convertible(PyObject* obj_ptr) {
-		// Check if Python object is iterable (and is not a string).
-		if(PyObject_HasAttrString(obj_ptr, "__iter__") && ! PyUnicode_Check(obj_ptr) && !PyBytes_Check(obj_ptr)) return obj_ptr;
-		return nullptr;
-	}
+    return cl;
+}
 
-	static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data) {
-		stl_input_iterator<typename Container::value_type> begin(object(handle<>(borrowed(obj_ptr))));
-		stl_input_iterator<typename Container::value_type> end;
-		void* storage = ((converter::rvalue_from_python_storage<Container>*)data)->storage.bytes;
-		new (storage) Container();
-		data->convertible = storage;
-		Container& c = *reinterpret_cast<Container*>(storage);
-		for(; begin != end; ++begin)
-			c.push_back(*begin);
-	}
-};
-
-// Automatic Python sequence to C++ set container conversion.
-template<typename Container>
-struct python_to_set_conversion
-{
-	python_to_set_conversion() {
-		converter::registry::push_back(&convertible, &construct, type_id<Container>());
-	}
-
-	static void* convertible(PyObject* obj_ptr) {
-		// Check if Python object is iterable (and is not a string).
-		if(PyObject_HasAttrString(obj_ptr, "__iter__") && ! PyUnicode_Check(obj_ptr) && !PyBytes_Check(obj_ptr)) return obj_ptr;
-		return nullptr;
-	}
-
-	static void construct(PyObject* obj_ptr, converter::rvalue_from_python_stage1_data* data) {
-		stl_input_iterator<typename Container::value_type> begin(object(handle<>(borrowed(obj_ptr))));
-		stl_input_iterator<typename Container::value_type> end;
-		void* storage = ((converter::rvalue_from_python_storage<Container>*)data)->storage.bytes;
-		new (storage) Container();
-		data->convertible = storage;
-		Container& c = *reinterpret_cast<Container*>(storage);
-		for(; begin != end; ++begin)
-			c.insert(*begin);
-	}
-};
-
-
-/*
- * The following code defines a helper template function lambda_address() that
- * can be used to convert a C++ lambda function without captures to a plain C function
- * pointer.
- * The purpose of this helper function is to avoid writing explicit casts when passing
- * lambda functions to Boost.Python. An alternative approach is to use the 
- * plus operator trick
- * 
- *    +[](...) { ... }
- *
- * to convert a lambda to a function pointer. But this trick does not work with the 
- * MSVC 13 compiler.
- */
 namespace detail {
 
-	template <typename T>
-	struct identity { using type = T; };
-
-	template <typename...>
-	using void_t = void;
-
-	template <typename F>
-	struct call_operator;
-
-	template <typename C, typename R, typename... A>
-	struct call_operator<R(C::*)(A...)> : identity<R(A...)> {};
-
-	template <typename C, typename R, typename... A>
-	struct call_operator<R(C::*)(A...) const> : identity<R(A...)> {};
-
-	template <typename F>
-	using call_operator_t = typename call_operator<F>::type;
+template<
+	typename ParentClass, 
+	typename ElementClass, 
+	typename GetListClass,
+	const QVector<ElementClass*>& (GetListClass::*get_list)() const>
+class SubobjectListWrapper
+{
+public:
+	SubobjectListWrapper(ParentClass& parent) : _parent(parent) {}
+	const QVector<ElementClass*>& getVector() const { return (_parent.*get_list)(); }
+	ParentClass& parent() { return _parent; }
+private:
+	ParentClass& _parent;
 };
+    
+template<
+	typename ParentClass, 
+	typename ElementClass, 
+	typename GetListClass = ParentClass,
+	const QVector<ElementClass*>& (GetListClass::*get_list)() const, 
+	typename... options, 
+	typename... Extra>
+py::class_<SubobjectListWrapper<ParentClass, ElementClass, GetListClass, get_list>> register_subobject_list_wrapper(py::class_<ParentClass,options...>& parentClass, const char* pyPropertyName, const char* wrapperObjectName, const Extra& ...extra) 
+{
+	using WrapperClass = SubobjectListWrapper<ParentClass, ElementClass, GetListClass, get_list>;
+	py::class_<WrapperClass> pyWrapperClass(parentClass, wrapperObjectName);
+	pyWrapperClass.def("__bool__", [](const WrapperClass& wrapper) {
+				return !wrapper.getVector().empty();
+			});
+	pyWrapperClass.def("__len__", [](const WrapperClass& wrapper) {
+				return wrapper.getVector().size();
+			});
+	pyWrapperClass.def("__getitem__", [](const WrapperClass& wrapper, int index) {
+				if(index < 0) index += wrapper.getVector().size();
+				if(index < 0 || index >= wrapper.getVector().size()) throw py::index_error();
+				return wrapper.getVector()[index]; 
+			});
+	pyWrapperClass.def("__iter__", [](const WrapperClass& wrapper) {
+				using IterType = typename QVector<ElementClass*>::const_iterator;
+				return py::make_iterator<
+					py::return_value_policy::reference_internal, IterType, IterType, ElementClass*>(
+					wrapper.getVector().begin(), wrapper.getVector().end());
+			}, 
+			py::keep_alive<0, 1>());
+	pyWrapperClass.def("__getitem__", [](const WrapperClass& wrapper, py::slice slice) {
+				size_t start, stop, step, slicelength;
 
-template<typename L>
-auto lambda_address(L&& lambda) -> detail::call_operator_t<decltype(&L::operator())>*
-{ return lambda; }	
+				if(!slice.compute(wrapper.getVector().size(), &start, &stop, &step, &slicelength))
+					throw py::error_already_set();
+
+				py::list seq;
+				for(size_t i = 0; i < slicelength; ++i) {
+					seq.append(py::cast(wrapper.getVector()[start]));
+					start += step;
+				}
+				return seq;
+        	}, 
+			py::arg("s"), "Retrieve list elements using a slice object");
+	pyWrapperClass.def("index", [](const WrapperClass& wrapper, py::object& item) {				
+				int index = wrapper.getVector().indexOf(item.cast<ElementClass*>());
+				if(index < 0) throw py::value_error("Item does not exist in list");
+				return index;
+			});
+	return pyWrapperClass;
+}
+
+template<
+	typename ParentClass, 
+	typename ElementClass, 
+	typename GetListClass = ParentClass,
+	const QVector<ElementClass*>& (GetListClass::*get_list)() const, 
+	void (GetListClass::*insert_element)(int, ElementClass*),
+	void (GetListClass::*remove_element)(int),
+	typename... options, 
+	typename... Extra>
+py::class_<SubobjectListWrapper<ParentClass, ElementClass, GetListClass, get_list>> register_mutable_subobject_list_wrapper(py::class_<ParentClass,options...>& parentClass, const char* pyPropertyName, const char* wrapperObjectName, const Extra& ...extra) 
+{
+	using WrapperClass = SubobjectListWrapper<ParentClass, ElementClass, GetListClass, get_list>;
+	auto pyWrapperClass = register_subobject_list_wrapper<ParentClass, ElementClass, GetListClass, get_list>(parentClass, pyPropertyName, wrapperObjectName, extra...);
+
+	pyWrapperClass.def("append", [](WrapperClass& wrapper, ElementClass* element) {
+				if(!element) throw py::value_error("Cannot insert 'None' elements into this collection.");
+				int index = wrapper.getVector().size();
+				(wrapper.parent().*insert_element)(index, element);
+			});
+	pyWrapperClass.def("insert", [](WrapperClass& wrapper, int index, ElementClass* element) {
+				if(!element) throw py::value_error("Cannot insert 'None' elements into this collection.");
+				if(index < 0) index += wrapper.getVector().size();
+				if(index < 0 || index >= wrapper.getVector().size()) throw py::index_error();
+				(wrapper.parent().*insert_element)(index, element);
+			});
+	pyWrapperClass.def("__setitem__", [](WrapperClass& wrapper, int index, ElementClass* element) {
+				if(!element) throw py::value_error("Cannot insert 'None' elements into this collection.");
+				if(index < 0) index += wrapper.getVector().size();
+				if(index < 0 || index >= wrapper.getVector().size()) throw py::index_error();
+				(wrapper.parent().*remove_element)(index);
+				(wrapper.parent().*insert_element)(index, element);
+			});
+	pyWrapperClass.def("__delitem__", [](WrapperClass& wrapper, int index) {
+				if(index < 0) index += wrapper.getVector().size();
+				if(index < 0 || index >= wrapper.getVector().size()) throw py::index_error();
+				(wrapper.parent().*remove_element)(index);
+			});
+    pyWrapperClass.def("__delitem__", [](WrapperClass& wrapper, py::slice slice) {
+            size_t start, stop, step, slicelength;
+            
+			if(!slice.compute(wrapper.getVector().size(), &start, &stop, &step, &slicelength))
+                throw py::error_already_set();
+
+			for(size_t i = 0; i < slicelength; ++i) {
+				(wrapper.parent().*remove_element)(start);
+				start += step - 1;
+			}
+        },
+        "Delete list elements using a slice object"
+    );			
+	
+	return pyWrapperClass;
+}
+
+};	// End of namespace detail
+
+template<
+	typename ParentClass, 
+	typename ElementClass, 
+	typename GetListClass = ParentClass,
+	const QVector<ElementClass*>& (GetListClass::*get_list)() const, 
+	typename... options, 
+	typename... Extra>
+py::class_<detail::SubobjectListWrapper<ParentClass, ElementClass, GetListClass, get_list>> expose_subobject_list(py::class_<ParentClass,options...>& parentClass, const char* pyPropertyName, const char* wrapperObjectName, const Extra& ...extra) 
+{
+	using WrapperClass = detail::SubobjectListWrapper<ParentClass, ElementClass, GetListClass, get_list>;
+	auto pyWrapperClass = detail::register_subobject_list_wrapper<ParentClass, ElementClass, GetListClass, get_list>(parentClass, pyPropertyName, wrapperObjectName, extra...);
+
+	parentClass.def_property_readonly(pyPropertyName, py::cpp_function(
+		[](ParentClass& parent) {
+			return WrapperClass(parent);
+		}, py::keep_alive<0,1>()), extra...);
+
+	return pyWrapperClass;
+}
+
+template<
+	typename ParentClass, 
+	typename ElementClass, 
+	typename GetListClass = ParentClass,
+	const QVector<ElementClass*>& (GetListClass::*get_list)() const, 
+	void (GetListClass::*insert_element)(int, ElementClass*),
+	void (GetListClass::*remove_element)(int),
+	typename... options, 
+	typename... Extra>
+py::class_<detail::SubobjectListWrapper<ParentClass, ElementClass, GetListClass, get_list>> expose_mutable_subobject_list(py::class_<ParentClass,options...>& parentClass, const char* pyPropertyName, const char* wrapperObjectName, const Extra& ...extra) 
+{
+	using WrapperClass = detail::SubobjectListWrapper<ParentClass, ElementClass, GetListClass, get_list>;
+	auto pyWrapperClass = detail::register_mutable_subobject_list_wrapper<ParentClass, ElementClass, GetListClass, get_list, insert_element, remove_element>(parentClass, pyPropertyName, wrapperObjectName, extra...);
+
+	parentClass.def_property(pyPropertyName, py::cpp_function(
+		// getter
+		[](ParentClass& parent) {	
+			return WrapperClass(parent);
+		}, py::keep_alive<0,1>()), 
+		// setter
+		[](ParentClass& parent, py::object& obj) {
+			py::sequence seq(obj);
+			if(!seq.check()) 
+				throw py::value_error("Can only assign a sequence.");
+			const auto& vec = (parent.*get_list)();
+			// First, clear the existing list.
+			while(vec.size() != 0)
+				(parent.*remove_element)(vec.size() - 1);
+			// Then insert elements from assigned sequence.
+			for(size_t i = 0; i < seq.size(); i++) {
+				ElementClass* el = seq[i].cast<ElementClass*>();
+				if(!el) throw py::value_error("Cannot insert 'None' elements into this collection.");
+				(parent.*insert_element)(vec.size(), el);
+			}
+		},
+		extra...);
+	
+	return pyWrapperClass;
+}
+
+template<typename ParentClass, typename VectorClass, const VectorClass& (ParentClass::*getter_func)() const>
+py::cpp_function VectorGetter() 
+{
+	return py::cpp_function([](py::object& obj) {
+		const VectorClass& v = (obj.cast<ParentClass&>().*getter_func)();
+		py::array_t<typename VectorClass::value_type> array({ v.size() }, 
+				{ sizeof(typename VectorClass::value_type) }, 
+				v.data(), obj);
+		// Mark array as read-only.
+		reinterpret_cast<py::detail::PyArray_Proxy*>(array.ptr())->flags &= ~py::detail::npy_api::NPY_ARRAY_WRITEABLE_;
+		return array;
+	});
+}
+
+template<typename ParentClass, typename VectorClass, VectorClass (ParentClass::*getter_func)() const>
+py::cpp_function VectorGetter() 
+{
+	return py::cpp_function([](py::object& obj) {
+		VectorClass v = (obj.cast<ParentClass&>().*getter_func)();
+		py::array_t<typename VectorClass::value_type> array({ v.size() }, 
+				{ sizeof(typename VectorClass::value_type) }, 
+				v.data());
+		// Mark array as read-only.
+		reinterpret_cast<py::detail::PyArray_Proxy*>(array.ptr())->flags &= ~py::detail::npy_api::NPY_ARRAY_WRITEABLE_;
+		return array;
+	});
+}
+
+template<typename ParentClass, typename VectorClass, void (ParentClass::*setter_func)(const VectorClass&)>
+py::cpp_function VectorSetter() 
+{
+	return py::cpp_function([](py::object& obj, py::array_t<typename VectorClass::value_type> array) {
+		if(array.ndim() != 1)
+			throw py::value_error("Array must be one-dimensional.");
+		const VectorClass* v = reinterpret_cast<const VectorClass*>(array.data());
+		if(array.shape(0) != v->size()) {
+			std::ostringstream str;
+			str << "Tried to assign an array of length " << array.shape(0) << ", "
+				<< "but expected an array of length " << v->size() << ".";
+			throw py::value_error(str.str());
+		}
+		if(array.strides(0) != sizeof(typename VectorClass::value_type))
+			throw py::value_error("Array stride is not acceptable. Must be a compact array.");
+		(obj.cast<ParentClass&>().*setter_func)(*v);
+	});
+}
+
+template<typename ParentClass, typename MatrixClass, const MatrixClass& (ParentClass::*getter_func)() const>
+py::cpp_function MatrixGetter() 
+{
+	return py::cpp_function([](py::object& obj) {
+		const MatrixClass& tm = (obj.cast<ParentClass&>().*getter_func)();
+		py::array_t<typename MatrixClass::element_type> array({ tm.row_count(), tm.col_count() }, 
+				{ sizeof(typename MatrixClass::element_type), sizeof(typename MatrixClass::column_type) }, 
+				tm.elements(), obj);
+		// Mark array as read-only.
+		reinterpret_cast<py::detail::PyArray_Proxy*>(array.ptr())->flags &= ~py::detail::npy_api::NPY_ARRAY_WRITEABLE_;
+		return array;
+	});
+}
+
+template<typename ParentClass, typename MatrixClass, MatrixClass (ParentClass::*getter_func)() const>
+py::cpp_function MatrixGetterCopy()
+{
+	return py::cpp_function([](py::object& obj) {
+		const MatrixClass tm = (obj.cast<ParentClass&>().*getter_func)();
+		py::array_t<typename MatrixClass::element_type> array({ tm.row_count(), tm.col_count() }, 
+				{ sizeof(typename MatrixClass::element_type), sizeof(typename MatrixClass::column_type) }, 
+				tm.elements());
+		// Mark array as read-only.
+		reinterpret_cast<py::detail::PyArray_Proxy*>(array.ptr())->flags &= ~py::detail::npy_api::NPY_ARRAY_WRITEABLE_;
+		return array;
+	});
+}
+
+template<typename ParentClass, typename MatrixClass, void (ParentClass::*setter_func)(const MatrixClass&)>
+py::cpp_function MatrixSetter() 
+{
+	return py::cpp_function([](py::object& obj, py::array_t<typename MatrixClass::element_type, py::array::f_style | py::array::forcecast> array) {
+		if(array.ndim() != 2)
+			throw py::value_error("Array must be two-dimensional.");
+		const MatrixClass* tm = reinterpret_cast<const MatrixClass*>(array.data());
+		if(array.shape(0) != tm->row_count() || array.shape(1) != tm->col_count()) {
+			std::ostringstream str;
+			str << "Tried to assign a " << array.shape(0) << "x" << array.shape(1) << " array, "
+				<< "but expected a " << tm->row_count() << "x" << tm->col_count() << " matrix.";
+			throw py::value_error(str.str());
+		}
+		if(array.strides(0) != sizeof(typename MatrixClass::element_type) || array.strides(1) != sizeof(typename MatrixClass::column_type))
+			throw py::value_error("Array stride is not acceptable. Must be a compact array.");
+		(obj.cast<ParentClass&>().*setter_func)(*tm);
+	});
+}
 
 };	// End of namespace
 

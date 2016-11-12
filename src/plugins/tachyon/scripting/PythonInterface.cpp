@@ -25,65 +25,69 @@
 
 namespace Ovito { namespace Tachyon { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-using namespace boost::python;
 using namespace Ovito;
 using namespace PyScript;
 
-BOOST_PYTHON_MODULE(Tachyon)
+PYBIND11_PLUGIN(Tachyon)
 {
-	docstring_options docoptions(true, false);
+	py::docstring_options docstrings;
+	docstrings.disable_signatures();
 
-	ovito_class<TachyonRenderer, NonInteractiveSceneRenderer>(
+	py::module m("Tachyon");
+
+	ovito_class<TachyonRenderer, NonInteractiveSceneRenderer>(m,
 			"This is the software-based raytracing renderer of OVITO."
 			"\n\n"
 			"It can render scenes with ambient occlusion lighting and semi-transparent objects.")
-		.add_property("antialiasing", &TachyonRenderer::antialiasingEnabled, &TachyonRenderer::setAntialiasingEnabled,
+		.def_property("antialiasing", &TachyonRenderer::antialiasingEnabled, &TachyonRenderer::setAntialiasingEnabled,
 				"Enables supersampling to reduce aliasing effects."
 				"\n\n"
 				"Default: ``True``")
-		.add_property("antialiasing_samples", &TachyonRenderer::antialiasingSamples, &TachyonRenderer::setAntialiasingSamples,
+		.def_property("antialiasing_samples", &TachyonRenderer::antialiasingSamples, &TachyonRenderer::setAntialiasingSamples,
 				"The number of supersampling rays to generate per pixel to reduce aliasing effects."
 				"\n\n"
 				"Default: 12")
-		.add_property("direct_light", &TachyonRenderer::directLightSourceEnabled, &TachyonRenderer::setDirectLightSourceEnabled,
+		.def_property("direct_light", &TachyonRenderer::directLightSourceEnabled, &TachyonRenderer::setDirectLightSourceEnabled,
 				"Enables the parallel light source, which is positioned at an angle behind the camera."
 				"\n\n"
 				"Default: ``True``")
-		.add_property("direct_light_intensity", &TachyonRenderer::defaultLightSourceIntensity, &TachyonRenderer::setDefaultLightSourceIntensity,
+		.def_property("direct_light_intensity", &TachyonRenderer::defaultLightSourceIntensity, &TachyonRenderer::setDefaultLightSourceIntensity,
 				"Controls the brightness of the directional light source."
 				"\n\n"
 				"Default: 0.9")
-		.add_property("shadows", &TachyonRenderer::shadowsEnabled, &TachyonRenderer::setShadowsEnabled,
+		.def_property("shadows", &TachyonRenderer::shadowsEnabled, &TachyonRenderer::setShadowsEnabled,
 				"Enables cast shadows for the directional light source."
 				"\n\n"
 				"Default: ``True``")
-		.add_property("ambient_occlusion", &TachyonRenderer::ambientOcclusionEnabled, &TachyonRenderer::setAmbientOcclusionEnabled,
+		.def_property("ambient_occlusion", &TachyonRenderer::ambientOcclusionEnabled, &TachyonRenderer::setAmbientOcclusionEnabled,
 				"Enables ambient occlusion shading. Enabling this lighting technique mimics some of the effects that occur "
 				"under conditions of omnidirectional diffuse illumination, e.g. outdoors on an overcast day."
 				"\n\n"
 				"Default: ``True``")
-		.add_property("ambient_occlusion_brightness", &TachyonRenderer::ambientOcclusionBrightness, &TachyonRenderer::setAmbientOcclusionBrightness,
+		.def_property("ambient_occlusion_brightness", &TachyonRenderer::ambientOcclusionBrightness, &TachyonRenderer::setAmbientOcclusionBrightness,
 				"Controls the brightness of the sky light source used for ambient occlusion."
 				"\n\n"
 				"Default: 0.8")
-		.add_property("ambient_occlusion_samples", &TachyonRenderer::ambientOcclusionSamples, &TachyonRenderer::setAmbientOcclusionSamples,
+		.def_property("ambient_occlusion_samples", &TachyonRenderer::ambientOcclusionSamples, &TachyonRenderer::setAmbientOcclusionSamples,
 				"Ambient occlusion is implemented using a Monte Carlo technique. This parameters controls the number of samples to compute. "
 				"A higher sample count leads to a more even shading, but requires more computation time."
 				"\n\n"
 				"Default: 12")
-		.add_property("depth_of_field", &TachyonRenderer::depthOfFieldEnabled, &TachyonRenderer::setDepthOfFieldEnabled,
+		.def_property("depth_of_field", &TachyonRenderer::depthOfFieldEnabled, &TachyonRenderer::setDepthOfFieldEnabled,
 				"This flag enables depth-of-field rendering."
 				"\n\n"
 				"Default: ``False``")
-		.add_property("focal_length", &TachyonRenderer::dofFocalLength, &TachyonRenderer::setDofFocalLength,
+		.def_property("focal_length", &TachyonRenderer::dofFocalLength, &TachyonRenderer::setDofFocalLength,
 				"Controls the focal length of the camera, which is used for depth-of-field rendering."
 				"\n\n"
 				"Default: 40.0")
-		.add_property("aperture", &TachyonRenderer::dofAperture, &TachyonRenderer::setDofAperture,
+		.def_property("aperture", &TachyonRenderer::dofAperture, &TachyonRenderer::setDofAperture,
 				"Controls the aperture of the camera, which is used for depth-of-field rendering."
 				"\n\n"
 				"Default: 0.01")
 	;
+
+	return m.ptr();
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(Tachyon);

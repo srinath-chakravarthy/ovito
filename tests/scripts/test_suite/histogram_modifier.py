@@ -28,10 +28,6 @@ modifier.property = "Position.X"
 node.compute()
 
 print("Output:")
-data = numpy.asarray(modifier.histogramData)
-print(data)
-assert(len(modifier.histogramData) == modifier.bin_count)
-assert(len(data) == modifier.bin_count)
 
 histogram = modifier.histogram
 print(histogram)

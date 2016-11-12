@@ -69,11 +69,11 @@ FrameBufferWindow::FrameBufferWindow(QWidget* parent) :
 /******************************************************************************
 * Creates a frame buffer of the requested size and adjusts the size of the window.
 ******************************************************************************/
-const boost::shared_ptr<FrameBuffer>& FrameBufferWindow::createFrameBuffer(int w, int h)
+const std::shared_ptr<FrameBuffer>& FrameBufferWindow::createFrameBuffer(int w, int h)
 {
 	// Allocate and resize frame buffer and frame buffer window if necessary.
 	if(!frameBuffer()) {
-		setFrameBuffer(boost::make_shared<FrameBuffer>(w, h));
+		setFrameBuffer(std::make_shared<FrameBuffer>(w, h));
 	}
 	if(frameBuffer()->size() != QSize(w, h)) {
 		frameBuffer()->setSize(QSize(w, h));

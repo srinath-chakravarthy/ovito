@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section version="5.0" role="NotInToc"
+          xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd"
+          xml:id="appendix.license.pybind11" xmlns="http://docbook.org/ns/docbook"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:xs="http://www.w3.org/2001/XMLSchema"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+          xmlns:ns="http://docbook.org/ns/docbook">
+  <title>pybind11 code license</title>
+
+<para>
+Copyright (c) 2016 Wenzel Jakob (wenzel.jakob@epfl.ch), All rights reserved.
+</para>
+<para>
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+<orderedlist>
+<listitem><para>Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.</para></listitem>
+<listitem><para>Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.</para></listitem>
+<listitem><para>Neither the name of the copyright holder nor the names of its contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.</para></listitem>
+</orderedlist>
+</para>
+<para>
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+</para>
+<para>
+You are under no obligation whatsoever to provide any bug fixes, patches, or
+upgrades to the features, functionality or performance of the source code
+("Enhancements") to anyone; however, if you choose to make your Enhancements
+available either publicly, or directly to the author of this software, without
+imposing a separate written license agreement for such Enhancements, then you
+hereby grant the following license: a non-exclusive, royalty-free perpetual
+license to install, use, modify, prepare derivative works, incorporate into
+other computer software, distribute, and sublicense such enhancements or
+derivative works thereof, in binary and source code form.
+</para>
+</section>

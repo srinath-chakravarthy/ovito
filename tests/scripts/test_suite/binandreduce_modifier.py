@@ -5,6 +5,9 @@ import numpy
 
 node = import_file("../../files/NetCDF/sheared_aSi.nc")
 
+import ovito.modifiers
+ovito.modifiers.BinAndReduceModifier(property = "Position.X")
+
 modifier = BinAndReduceModifier()
 node.modifiers.append(modifier)
 

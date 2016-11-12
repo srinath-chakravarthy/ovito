@@ -10,30 +10,27 @@
   <title>Credits and license</title>
 
   <para>The program has been written by Alexander Stukowski and other contributors and is licensed under the terms of the <link
-  linkend="appendix.GPL">GNU General Public License</link>.</para>
+  linkend="appendix.GPL">GNU General Public License (v3)</link>.</para>
 
   <para>This manual has been written by Alexander Stukowski and is licensed under the terms of the <link
   linkend="appendix.GFDL">GNU Free Documentation License</link>.</para>
 
-  <para>The following third-party codes and libraries have been used to develop OVITO:
+  <para>The following third-party codes and libraries are used as part of OVITO:
     <itemizedlist>
-      <listitem><para><link xlink:href="http://www.qt.io/developers/">Qt</link> and <link xlink:href="http://www.qt.io/ide/">Qt Creator</link>, licensed under the
-      GNU General Public License.</para></listitem>
-      <listitem><para><link xlink:href="http://www.qcustomplot.com">QCustomPlot</link> by Emanuel Eichhammer, licensed under the
-      GNU General Public License.</para></listitem>
-      <listitem><para><link xlink:href="http://www.boost.org">Boost</link> library</para></listitem>
-      <listitem><para><link xlink:href="http://www.python.org">Python</link></para></listitem>
-      <listitem><para><link xlink:href="http://alice.loria.fr/index.php/software/4-library/75-geogram.html">Geogram library</link>, by Bruno Levy, INRIA - ALICE 
+      <listitem><para><link xlink:href="http://www.qt.io/developers/">Qt</link> and <link xlink:href="http://www.qt.io/ide/">Qt Creator</link> (GNU General Public License v3).</para></listitem>
+      <listitem><para><link xlink:href="http://www.qcustomplot.com">QCustomPlot</link> by Emanuel Eichhammer (GNU General Public License v3).</para></listitem>
+      <listitem><para><link xlink:href="http://www.boost.org">Boost</link> library (<link linkend="appendix.license.boost">license</link>)</para></listitem>
+      <listitem><para><link xlink:href="http://www.python.org">Python</link> (PSF license)</para></listitem>
+      <listitem><para><link xlink:href="http://alice.loria.fr/index.php/software/4-library/75-geogram.html">Geogram library</link> by Bruno Levy, INRIA - ALICE 
       (<link linkend="appendix.license.geogram">license</link>).</para></listitem>
       <listitem><para><link xlink:href="http://jedi.ks.uiuc.edu/~johns/raytracer/">Tachyon Parallel / Multiprocessor Ray Tracing System</link>
       by John E. Stone (<link linkend="appendix.license.tachyon">license</link>).</para></listitem>
       <listitem><para><link xlink:href="http://muparser.beltoforion.de">muParser</link>
       by Ingo Berg (<link linkend="appendix.license.muparser">license</link>).</para></listitem>
-      <listitem><para><link xlink:href="http://botan.randombit.net">Botan</link> library, licensed under the BSD-2 license.</para></listitem>
-      <listitem><para><link xlink:href="http://libav.org">Libav</link> library, licensed under the
-      GNU General Public License.</para></listitem>
-      <listitem><para><link xlink:href="http://www.unidata.ucar.edu/software/netcdf/">netCDF</link> library by
-      University Corporation for Atmospheric Research/Unidata (<link linkend="appendix.license.netcdf">license</link>).</para></listitem>
+      <listitem><para><link xlink:href="http://botan.randombit.net">Botan</link> library (BSD-2 license).</para></listitem>
+      <listitem><para><link xlink:href="http://libav.org">Libav</link> library (GNU General Public License v2).</para></listitem>
+      <listitem><para><link xlink:href="http://www.unidata.ucar.edu/software/netcdf/">netCDF</link> library (<link linkend="appendix.license.netcdf">license</link>).</para></listitem>
+      <listitem><para><link xlink:href="https://support.hdfgroup.org/HDF5/">HDF5</link> library (<link linkend="appendix.license.hdf5">license</link>).</para></listitem>
       <listitem><para><link xlink:href="http://math.lbl.gov/voro++/">Voro++</link> library by Chris Rycroft (<link linkend="appendix.license.voroplusplus">license</link>).</para></listitem>
       <listitem><para><link xlink:href="http://www.zlib.net">zlib</link> library</para></listitem>
       <listitem><para><link xlink:href="https://github.com/pmla/polyhedral-template-matching">Polyhedral Template Matching library</link> by Peter Mahler Larsen 
@@ -42,6 +39,18 @@
       (<link linkend="appendix.license.qcprot">license</link>).</para></listitem>
       <listitem><para><link xlink:href="http://gsd.readthedocs.io/">GSD (General Simulation Data)</link> I/O routines 
       (<link linkend="appendix.license.gsd">license</link>).</para></listitem>
+      <listitem><para><link xlink:href="http://pybind11.readthedocs.io/">pybind11</link> library 
+      (<link linkend="appendix.license.pybind11">license</link>).</para></listitem>
+      <listitem><para><link xlink:href="http://pyqt.sourceforge.net/Docs/PyQt5/">PyQt5</link> library 
+      (GNU General Public License v3).</para></listitem>
+      <listitem><para><link xlink:href="http://pyqt.sourceforge.net/Docs/QScintilla2/">QScintilla2</link> library 
+      (GNU General Public License v3).</para></listitem>
+      <listitem><para><link xlink:href="http://www.scintilla.org/">Scintilla</link> 
+      (<link linkend="appendix.license.scintilla">license</link>).</para></listitem>
+      <listitem><para><link xlink:href="http://www.numpy.org/">Numpy</link> 
+      (<link linkend="appendix.license.numpy">license</link>).</para></listitem>
+      <listitem><para><link xlink:href="http://www.numpy.org/">Matplotlib</link> 
+      (<link xlink:href="http://matplotlib.org/users/license.html">license</link>).</para></listitem>
     </itemizedlist>
   </para>
 
@@ -56,14 +65,24 @@
 
   <xi:include href="licenses/netcdf.docbook"/>
   
+  <xi:include href="licenses/hdf5.docbook"/>
+
+  <xi:include href="licenses/numpy.docbook"/>
+
   <xi:include href="licenses/geogram.docbook"/>
 
   <xi:include href="licenses/GSD.docbook"/>  
 
   <xi:include href="licenses/PTM.docbook"/>
 
+  <xi:include href="licenses/pybind11.docbook"/>
+
   <xi:include href="licenses/qcprot.docbook"/>  
   
   <xi:include href="licenses/voroplusplus.docbook"/>
+
+  <xi:include href="licenses/boost.docbook"/>
+
+  <xi:include href="licenses/scintilla.docbook"/>
   
 </chapter>

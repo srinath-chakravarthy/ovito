@@ -170,7 +170,7 @@ void CameraObject::setIsTargetCamera(bool enable)
 				OORef<ObjectNode> targetNode = new ObjectNode(dataset());
 				targetNode->setDataProvider(targetObj);
 				targetNode->setName(tr("%1.target").arg(node->name()));
-				parentNode->addChild(targetNode);
+				parentNode->addChildNode(targetNode);
 				// Position the new target to match the current orientation of the camera.
 				TimeInterval iv;
 				const AffineTransformation& cameraTM = node->getWorldTransform(dataset()->animationSettings()->time(), iv);

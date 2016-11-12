@@ -251,7 +251,7 @@ void ObjectNode::applyModifier(Modifier* modifier)
 		setDataProvider(p);
 		pipelineObj = p;
 	}
-	pipelineObj->insertModifier(modifier, pipelineObj->modifierApplications().size());
+	pipelineObj->insertModifier(pipelineObj->modifierApplications().size(), modifier);
 }
 
 /******************************************************************************

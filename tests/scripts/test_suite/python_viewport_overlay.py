@@ -22,7 +22,7 @@ assert(vp.overlays[0] == new_overlay)
 assert(new_overlay.output == "")
 
 overlay2 = ovito.vis.PythonViewportOverlay()
-overlay2.script = "jhgjhg"
+overlay2.script = "This is not a valid Python script."
 vp.overlays.append(overlay2)
 
 assert(len(vp.overlays) == 2)

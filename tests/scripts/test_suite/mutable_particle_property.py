@@ -9,7 +9,7 @@ modifier = CommonNeighborAnalysisModifier()
 node.modifiers.append(modifier)
 node.compute()
 
-print("Number of FCC atoms: {}".format(modifier.counts[CommonNeighborAnalysisModifier.Type.FCC]))
+print("Number of FCC atoms: {}".format(node.output.attributes['CommonNeighborAnalysis.counts.FCC']))
 
 print(node.source.position.array)
 print(node.source.position.marray)

@@ -9,8 +9,6 @@ file_source = node.source
 
 print(file_source.source_path)
 print(file_source)
-print(file_source.data)
-assert(isinstance(file_source.data, DataCollection))
 assert(isinstance(file_source, DataCollection))
 assert(file_source.loaded_frame == 0)
 assert(file_source.num_frames == True)

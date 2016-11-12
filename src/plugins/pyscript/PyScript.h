@@ -24,7 +24,7 @@
 
 #include <core/Core.h>
 
-// Qt defines the 'slots' and 'signals' keyword macros. They conflict with identifiers used in the Python headers.
+// Qt defines the 'slots' and 'signals' keyword macros. They are in conflict with identifiers used in the Python headers.
 #ifdef slots
 	#undef slots
 #endif
@@ -32,7 +32,13 @@
 	#undef signals
 #endif
 
-#include <boost/python.hpp>
+// Include pybind11, which is located in our 3rd party source directory.
+#include <3rdparty/pybind11/pybind11.h>
+#include <3rdparty/pybind11/eval.h>
+#include <3rdparty/pybind11/operators.h>
+#include <3rdparty/pybind11/stl_bind.h>
+#include <3rdparty/pybind11/stl.h>
+#include <3rdparty/pybind11/numpy.h>
 
 #ifdef PyScript_EXPORTS		// This is defined by CMake when building the plugin library.
 #  define OVITO_PYSCRIPT_EXPORT Q_DECL_EXPORT

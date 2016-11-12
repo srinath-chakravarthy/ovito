@@ -68,6 +68,13 @@ DataSet::DataSet(DataSet* self) : RefTarget(this), _unitsManager(this)
 }
 
 /******************************************************************************
+* Destructor.
+******************************************************************************/
+DataSet::~DataSet()
+{
+}
+
+/******************************************************************************
 * Returns a viewport configuration that is used as template for new scenes.
 ******************************************************************************/
 OORef<ViewportConfiguration> DataSet::createDefaultViewportConfiguration()

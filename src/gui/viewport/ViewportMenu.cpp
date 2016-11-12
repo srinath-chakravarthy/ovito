@@ -240,7 +240,7 @@ void ViewportMenu::onCreateCamera()
 		}
 
 		// Insert node into scene.
-		scene->addChild(cameraNode);
+		scene->addChildNode(cameraNode);
 
 		// Set new camera as view node for current viewport.
 		_viewport->setViewType(Viewport::VIEW_SCENENODE);

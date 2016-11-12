@@ -40,6 +40,10 @@ IF(WIN32)
 	ENDIF()
 ENDIF()
 
+# This is to enable target debugging within Visual Studio Code. 
+# It is ignored oustide of Visual Studio Code/CMake tools. 
+INCLUDE(CMakeToolsHelpers OPTIONAL)
+
 SET(OVITO_SOURCE_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}")
 LIST(APPEND CMAKE_MODULE_PATH ${OVITO_SOURCE_BASE_DIR}/cmake)
 INCLUDE(${OVITO_SOURCE_BASE_DIR}/cmake/Version.cmake)
@@ -60,7 +64,6 @@ OPTION(OVITO_BUILD_PLUGIN_CRYSTALANALYSIS "Build the CrystalAnalysis plugin." "O
 OPTION(OVITO_BUILD_PLUGIN_PYSCRIPT "Build the Python scripting plugin." "ON")
 OPTION(OVITO_BUILD_PLUGIN_NETCDFPLUGIN "Build the NetCDF plugin." "ON")
 OPTION(OVITO_BUILD_PLUGIN_OPENBABELPLUGIN "Build the OpenBabel plugin (experimental)." "OFF")
-OPTION(OVITO_BUILD_PLUGIN_VOROTOP "Build the VoroTop plugin (experimental)." "OFF")
 
 # This is a global list of plugin targets that will be built.
 # It will get populated by the OVITO_PLUGIN macro.
@@ -100,7 +103,7 @@ IF(MSVC)
 	ADD_COMPILE_OPTIONS("/wd4996")
 	# Suppress warning on conversion from size_t to int, possible loss of data.
 	ADD_COMPILE_OPTIONS("/wd4267")
-	# Compiling Boost.Python template code leads to large object files.
+	# Compiling template code leads to large object files.
 	ADD_COMPILE_OPTIONS("/bigobj")	
 ENDIF()
 
@@ -237,10 +240,7 @@ ENDIF()
 FIND_PACKAGE(ZLIB REQUIRED)
 
 # Find the Boost library.
-IF(OVITO_BUILD_PLUGIN_PYSCRIPT)
-	LIST(APPEND Boost_REQUIRED_COMPONENTS python)
-ENDIF()
-FIND_PACKAGE(Boost COMPONENTS ${Boost_REQUIRED_COMPONENTS} REQUIRED)
+FIND_PACKAGE(Boost REQUIRED)
 IF(NOT Boost_FOUND)
 	MESSAGE(FATAL_ERROR "The Boost library could not be found on your system. ${Boost_ERROR_REASON}")
 ENDIF()

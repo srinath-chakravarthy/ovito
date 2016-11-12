@@ -42,10 +42,24 @@ SelectionSet::SelectionSet(DataSet* dataset) : RefTarget(dataset), _selectionCha
 void SelectionSet::push_back(SceneNode* node)
 {
 	OVITO_CHECK_OBJECT_POINTER(node);
-	if(contains(node)) return;
+	if(contains(node))
+		throw Exception(tr("Node is already in the selection set."));
 			
 	// Insert into children array.
 	_selection.push_back(node);
+}
+
+/******************************************************************************
+* Inserts a scene node into this selection set. 
+******************************************************************************/
+void SelectionSet::insert(int index, SceneNode* node)
+{
+	OVITO_CHECK_OBJECT_POINTER(node);
+	if(contains(node))
+		throw Exception(tr("Node is already in the selection set."));
+
+	// Insert into children array.
+	_selection.insert(index, node);
 }
 
 /******************************************************************************
@@ -88,7 +102,7 @@ void SelectionSet::remove(SceneNode* node)
 {
 	int index = _selection.indexOf(node);
 	if(index == -1) return;	
-	_selection.remove(index);
+	removeByIndex(index);
 	OVITO_ASSERT(!contains(node));
 }
 

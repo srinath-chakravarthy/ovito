@@ -93,6 +93,7 @@ void PythonScriptModifierEditor::createUI(const RolloutInsertionParameters& roll
 	_errorDisplay->setFont(font);
 	_errorDisplay->setReadOnly(true);
 	_errorDisplay->setMarginWidth(1, 0);
+	_errorDisplay->setPaper(Qt::white);
 	layout->addWidget(_errorDisplay, row++, 0);
 
 	connect(this, &PropertiesEditor::contentsChanged, this, &PythonScriptModifierEditor::onContentsChanged);

@@ -22,19 +22,24 @@
 #include <plugins/pyscript/PyScript.h>
 #include <plugins/pyscript/binding/PythonBinding.h>
 #include <plugins/openbabel/import/CIFImporter.h>
+#include <plugins/particles/scripting/PythonBinding.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-using namespace boost::python;
 using namespace PyScript;
 
-BOOST_PYTHON_MODULE(OpenBabelPlugin)
+PYBIND11_PLUGIN(OpenBabelPlugin)
 {
-	docstring_options docoptions(true, false);
+	py::docstring_options docstrings;
+	docstrings.disable_signatures();
 
-	ovito_abstract_class<OpenBabelImporter, ParticleImporter>();
+	py::module m("OpenBabelPlugin");
 
-	ovito_class<CIFImporter, OpenBabelImporter>();
+	ovito_abstract_class<OpenBabelImporter, ParticleImporter>{m};
+
+	ovito_class<CIFImporter, OpenBabelImporter>{m};
+
+	return m.ptr();
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(OpenBabelPlugin);

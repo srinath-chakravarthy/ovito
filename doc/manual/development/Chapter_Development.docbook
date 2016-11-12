@@ -54,13 +54,13 @@
     <tgroup cols="3"><thead><row><entry>Library</entry><entry>Requirement</entry><entry>Notes</entry></row></thead>
     <tbody>
 		<row><entry><link xlink:href="http://www.qt.io/developers/">Qt5</link></entry><entry>required</entry>
-		<entry>Used for OVITO's graphical user interface (version 5.2 or higher required)</entry></row>
+		<entry>Used for OVITO's graphical user interface (version 5.2 or newer)</entry></row>
 		<row><entry><link xlink:href="http://www.zlib.net/">zlib</link></entry><entry>required</entry>
 		<entry>Required for reading and writing compressed files.</entry></row>
 		<row><entry><link xlink:href="http://www.boost.org/">Boost</link></entry><entry>required</entry>
 		<entry>OVITO uses some utility classes from this C++ library.</entry></row>
-		<row><entry><link xlink:href="http://www.boost.org/">Boost.Python</link></entry><entry>optional</entry>
-		<entry>Required by OVITO's Python script engine (<literal>PyScript</literal> plugin). Is part of the Boost library.</entry></row>
+		<row><entry><link xlink:href="https://github.com/pybind/pybind11">pybind11</link></entry><entry>included</entry>
+		<entry>Required by OVITO's Python script engine (<literal>PyScript</literal> plugin).</entry></row>
 		<row><entry><link xlink:href="http://libav.org/">Libav</link></entry><entry>optional</entry>
 		<entry>Audio and video processing libraries used by OVITO to write movie files.</entry></row>
 		<row><entry><link xlink:href="http://www.unidata.ucar.edu/software/netcdf/">libnetcdf</link></entry><entry>optional</entry>

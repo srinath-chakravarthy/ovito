@@ -36,8 +36,6 @@ SET(SourceFiles
 	binding/SceneBinding.cpp
 	binding/FileIOBinding.cpp
 	binding/RenderingBinding.cpp
-	binding/LinearAlgebraBinding.cpp
-	binding/ContainerBinding.cpp
 	binding/AppBinding.cpp
 	extensions/PythonViewportOverlay.cpp
 	extensions/PythonScriptModifier.cpp
@@ -45,21 +43,12 @@ SET(SourceFiles
 
 OVITO_STANDARD_PLUGIN(PyScript
 	SOURCES PyScript.cpp ${SourceFiles}
-	LIB_DEPENDENCIES ${PYTHON_LIBRARIES} ${Boost_PYTHON_LIBRARY}
+	LIB_DEPENDENCIES ${PYTHON_LIBRARIES} 
 	PYTHON_WRAPPERS "${CMAKE_CURRENT_SOURCE_DIR}/python/"
 )
 
 # Add Python include directory.
 TARGET_INCLUDE_DIRECTORIES(PyScript PUBLIC ${PYTHON_INCLUDE_PATH})
-
-IF(MSVC)
-	# Boost.Python temporarily disables the _DEBUG macro definition by default when including the Python.h header.
-	# That is something we don't want, because then the release version of the Python library is
-	# automatically linked and Python debugging gets disabled.
-	IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-		TARGET_COMPILE_DEFINITIONS(PyScript PUBLIC BOOST_DEBUG_PYTHON BOOST_LINKING_PYTHON)
-	ENDIF()
-ENDIF()
 
 # Speed up compilation by using precompiled headers.
 ADD_PRECOMPILED_HEADER(PyScript plugins/pyscript/PyScript.h)
