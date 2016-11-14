@@ -209,6 +209,7 @@ void DislocationAnalysisModifier::invalidateCachedResults()
 	_unassignedEdges.reset();
 	_segmentCounts.clear();
 	_dislocationLengths.clear();
+	_dislocationStructurePatterns.clear();
 	_planarDefects.reset();
 }
 
@@ -266,6 +267,7 @@ void DislocationAnalysisModifier::transferComputationResults(ComputeEngine* engi
 	_unassignedEdges = eng->elasticMapping().unassignedEdges();
 	_segmentCounts.clear();
 	_dislocationLengths.clear();
+	_dislocationStructurePatterns.clear();
 
 #if 0
 	_planarDefects = eng->planarDefectIdentification().planarDefects();
@@ -312,9 +314,19 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 		smoothDislocationsModifier()->smoothDislocationLines(dislocationsObj);
 	output().addObject(dislocationsObj);
 
-	// Classify, count and measure length of dislocation segments.
 	_segmentCounts.clear();
 	_dislocationLengths.clear();
+	_dislocationStructurePatterns.clear();
+
+	StructurePattern* defaultPattern = _patternCatalog->structureById(inputCrystalStructure());
+	if(defaultPattern) {
+		for(BurgersVectorFamily* family : defaultPattern->burgersVectorFamilies()) {
+			_dislocationLengths[family] = 0;
+			_dislocationStructurePatterns[family] = defaultPattern;
+		}
+	}
+	
+	// Classify, count and measure length of dislocation segments.
 	FloatType totalLineLength = 0;
 	int totalSegmentCount = 0;
 	for(DislocationSegment* segment : dislocationsObj->storage()->segments()) {
@@ -335,6 +347,7 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 		}
 		_segmentCounts[family]++;
 		_dislocationLengths[family] += len;
+		_dislocationStructurePatterns[family] = pattern;
 	}
 
 	// Output pattern catalog.
@@ -367,7 +380,28 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 	}
 
 	output().attributes().insert(QStringLiteral("DislocationAnalysis.total_line_length"), QVariant::fromValue(totalLineLength));
-
+	output().attributes().insert(QStringLiteral("DislocationAnalysis.counts.OTHER"), QVariant::fromValue(structureCounts()[StructureAnalysis::LATTICE_OTHER]));
+	output().attributes().insert(QStringLiteral("DislocationAnalysis.counts.FCC"), QVariant::fromValue(structureCounts()[StructureAnalysis::LATTICE_FCC]));
+	output().attributes().insert(QStringLiteral("DislocationAnalysis.counts.HCP"), QVariant::fromValue(structureCounts()[StructureAnalysis::LATTICE_HCP]));
+	output().attributes().insert(QStringLiteral("DislocationAnalysis.counts.BCC"), QVariant::fromValue(structureCounts()[StructureAnalysis::LATTICE_BCC]));
+	output().attributes().insert(QStringLiteral("DislocationAnalysis.counts.CubicDiamond"), QVariant::fromValue(structureCounts()[StructureAnalysis::LATTICE_CUBIC_DIAMOND]));
+	output().attributes().insert(QStringLiteral("DislocationAnalysis.counts.HexagonalDiamond"), QVariant::fromValue(structureCounts()[StructureAnalysis::LATTICE_HEX_DIAMOND]));
+	for(const auto& dlen : _dislocationLengths) {
+		StructurePattern* pattern = _dislocationStructurePatterns[dlen.first];
+		QString bstr;
+		if(dlen.first->burgersVector() != Vector3::Zero()) {
+			bstr = DislocationDisplay::formatBurgersVector(dlen.first->burgersVector(), pattern);
+			bstr.remove(QChar(' '));
+			bstr.replace(QChar('['), QChar('<'));
+			bstr.replace(QChar(']'), QChar('>'));
+		}
+		else bstr = "other";
+		output().attributes().insert(QStringLiteral("DislocationAnalysis.length.%1")
+			.arg(bstr), 
+			QVariant::fromValue(dlen.second));
+	}
+	output().attributes().insert(QStringLiteral("DislocationAnalysis.cell_volume"), QVariant::fromValue(_simCell.volume3D()));
+	
 	if(totalSegmentCount == 0)
 		return PipelineStatus(PipelineStatus::Success, tr("No dislocations found"));
 	else

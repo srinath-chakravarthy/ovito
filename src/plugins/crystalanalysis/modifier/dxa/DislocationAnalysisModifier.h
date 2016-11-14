@@ -230,6 +230,9 @@ private:
 	/// The total length of segments found per dislocation type.
 	std::map<BurgersVectorFamily*,FloatType> _dislocationLengths;
 
+	/// The structure pattern each dislocation type belongs to.
+	std::map<BurgersVectorFamily*,StructurePattern*> _dislocationStructurePatterns;
+
 	Q_OBJECT
 	OVITO_OBJECT
 
