@@ -190,6 +190,7 @@ ENDMACRO()
 # This macro installs a required third-party shared library in the OVITO directory
 # so that it can be distributed together with the program.
 MACRO(OVITO_INSTALL_SHARED_LIB shared_lib destination_dir)
+	FILE(MAKE_DIRECTORY "${${PROJECT_NAME}_BINARY_DIR}/${destination_dir}")
 	# Strip version number from shared lib filename.
 	GET_FILENAME_COMPONENT(shared_lib_ext "${shared_lib}" EXT)
 	STRING(REPLACE ${shared_lib_ext} ".so" shared_lib_new "${shared_lib}")
@@ -203,7 +204,7 @@ MACRO(OVITO_INSTALL_SHARED_LIB shared_lib destination_dir)
 			EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E create_symlink ${symlink_target_name} "${${PROJECT_NAME}_BINARY_DIR}/${destination_dir}/${lib_version_name}")
 		ELSE()
 			MESSAGE("Installing shared library ${lib_version}")
-			CONFIGURE_FILE("${lib_version}" "${${PROJECT_NAME}_BINARY_DIR}/${destination_dir}" COPYONLY)
+			CONFIGURE_FILE("${lib_version}" "${${PROJECT_NAME}_BINARY_DIR}/${destination_dir}/" COPYONLY)
 		ENDIF()
 		INSTALL(FILES "${lib_version}" DESTINATION "${destination_dir}/")
 	ENDFOREACH()

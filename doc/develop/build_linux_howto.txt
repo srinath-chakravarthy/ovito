@@ -1,6 +1,6 @@
 **************************************************************************
 Note: This file contains instructions how to build the statically linked 
-version of OVITO on a Ubuntu 14.04 Linux system. 
+version of OVITO on a Ubuntu 10.04 Linux system. 
 This procedure is used to create the official distribution on the website. 
 
 Building a dynamically linked executable on a local system is simpler 
@@ -8,31 +8,41 @@ and is described in OVITO's user manual.
 **************************************************************************
 
 **************************************************************************
-Install essential tools and dependencies on Ubuntu 14.04 for 
+Install essential tools and dependencies on Ubuntu 10.04 for 
 building the static executable:
 **************************************************************************
 
-sudo apt-get install build-essential perl python git libfreetype6-dev libfontconfig-dev \
-                     libx11-xcb-dev libpcre3-dev libxi-dev \
-                     libsm-dev libice-dev libnetcdf-dev libhdf5-serial-dev \
-                     libglu1-mesa-dev libxrender-dev xsltproc docbook-xml \
-                     python-sphinx libssl-dev liblapack3gf ncurses-dev libssl-dev
+sudo apt-get install \
+   libfreetype6-dev \
+   libfontconfig-dev \
+   libx11-xcb-dev \
+   libpcre3-dev \
+   libxi-dev \
+   libsm-dev \
+   libice-dev \
+   libglu1-mesa-dev \
+   libxrender-dev \
+   xsltproc \
+   docbook-xml \
+   libssl-dev \
+   liblapack3gf \
+   ncurses-dev \
+   libssl-dev \
+   libreadline-dev
 
 **************************************************************************
-Install GNU g++ 6.0 compiler on Ubuntu 14.04
+Install GNU g++ 5 compiler on Ubuntu 10.04
 **************************************************************************
 
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 sudo apt-get update
-sudo apt-get install gcc-6 g++-6
+sudo apt-get install gcc-5 g++-5
 sudo update-alternatives --remove-all gcc 
 sudo update-alternatives --remove-all g++
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 20
-sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 20
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 20
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 20
 sudo update-alternatives --config gcc
 sudo update-alternatives --config g++
-export CC=gcc-6
-export CXX=g++-6
 
 **************************************************************************
 Build Qt libraries (version 5.7):
@@ -41,22 +51,49 @@ Build Qt libraries (version 5.7):
 ./configure \
 	-opensource \
 	-confirm-license \
+	-shared \
 	-no-qml-debug \
 	-nomake examples \
 	-qt-libpng \
 	-qt-libjpeg \
 	-qt-pcre \
 	-qt-xcb \
-	-qt-xkbcommon \
+	-qt-xkbcommon-x11 \
 	-no-nis \
 	-no-cups \
 	-no-glib \
 	-no-xinput2 \
-	-fontconfig \
-	-skip qtconnectivity -skip qtmultimedia -skip qt3d -skip qtcanvas3d -skip qtcharts -skip qtxmlpatterns -skip qtlocation \
-	-skip qtsensors -skip qtdeclarative -skip qtdoc -skip qtquickcontrols -skip qtquickcontrols2 \
-	-skip qtserialport -skip qtgraphicaleffects -skip qttranslations -skip qtwebchannel -skip qtactiveqt -skip qtdatavis3d \
-	-skip qtgamepad -skip qtscript -skip qtserialbus -skip qtvirtualkeyboard -skip qtwayland -skip qtwebengine -skip qtwebsockets -skip qtwebview \
+	-no-alsa \
+	-no-pulseaudio \
+	-pch \
+	-no-eglfs \
+	-no-linuxfb \
+	-skip qtconnectivity \
+	-skip qtmultimedia \
+	-skip qt3d \
+	-skip qtcanvas3d \
+	-skip qtcharts \
+	-skip qtxmlpatterns \
+	-skip qtlocation \
+	-skip qtsensors \
+	-skip qtdeclarative \
+	-skip qtdoc \
+	-skip qtquickcontrols \
+	-skip qtquickcontrols2 \
+	-skip qtserialport \
+	-skip qtgraphicaleffects \
+	-skip qttranslations \
+	-skip qtwebchannel \
+	-skip qtactiveqt \
+	-skip qtdatavis3d \
+	-skip qtgamepad \
+	-skip qtscript \
+	-skip qtserialbus \
+	-skip qtvirtualkeyboard \
+	-skip qtwayland \
+	-skip qtwebengine \
+	-skip qtwebsockets \
+	-skip qtwebview \
 	-prefix $HOME/progs/qt5
 
 make
@@ -65,7 +102,7 @@ make install
 **************************************************************************
 QScintilla2
 *************************************************************************
-cd QScintilla-gpl-2.9.3/Qt4Qt5/
+cd QScintilla_gpl-2.9.3/Qt4Qt5/
 $HOME/progs/qt5/bin/qmake qscintilla.pro
 make
 
@@ -210,8 +247,6 @@ $HOME/progs/cmake-3.6.3-Linux-x86_64/bin/cmake \
 	-DUSE_HDF5=ON \
 	-DHDF5_DIR=$HOME/progs/hdf5/share/cmake \
 	-DHDF5_INCLUDE_DIR=$HOME/progs/hdf5/include/ \
-	-DHDF5_LIB=$HOME/progs/hdf5/lib/libhdf5.so \
-	-DHDF5_HL_LIB=$HOME/progs/hdf5/lib/libhdf5_hl.so \
 	../netcdf-4.4.1/
 
 make install
