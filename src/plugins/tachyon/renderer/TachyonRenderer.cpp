@@ -362,17 +362,21 @@ void TachyonRenderer::renderParticles(const DefaultParticlePrimitive& particleBu
 	if(particleBuffer.particleShape() == ParticlePrimitive::SphericalShape) {
 		// Rendering spherical particles.
 		for(; p != p_end; ++p, ++c, ++r) {
-			void* tex = getTachyonTexture(c->r(), c->g(), c->b(), c->a());
-			Point3 tp = tm * (*p);
-			rt_sphere(_rtscene, tex, tvec(tp), *r);
+			if(c->a() > 0) {
+				void* tex = getTachyonTexture(c->r(), c->g(), c->b(), c->a());
+				Point3 tp = tm * (*p);
+				rt_sphere(_rtscene, tex, tvec(tp), *r);
+			}
 		}
 	}
 	else if(particleBuffer.particleShape() == ParticlePrimitive::SquareShape) {
 		// Rendering cubic particles.
 		for(; p != p_end; ++p, ++c, ++r) {
-			void* tex = getTachyonTexture(c->r(), c->g(), c->b(), c->a());
-			Point3 tp = tm * (*p);
-			rt_box(_rtscene, tex, rt_vector(tp.x() - *r, tp.y() - *r, -tp.z() - *r), rt_vector(tp.x() + *r, tp.y() + *r, -tp.z() + *r));
+			if(c->a() > 0) {
+				void* tex = getTachyonTexture(c->r(), c->g(), c->b(), c->a());
+				Point3 tp = tm * (*p);
+				rt_box(_rtscene, tex, rt_vector(tp.x() - *r, tp.y() - *r, -tp.z() - *r), rt_vector(tp.x() + *r, tp.y() + *r, -tp.z() + *r));
+			}
 		}
 	}
 	else if(particleBuffer.particleShape() == ParticlePrimitive::BoxShape) {
@@ -382,6 +386,7 @@ void TachyonRenderer::renderParticles(const DefaultParticlePrimitive& particleBu
 		auto orientation = particleBuffer.orientations().cbegin();
 		auto orientation_end = particleBuffer.orientations().cend();
 		for(; p != p_end; ++p, ++c, ++r) {
+			if(c->a() <= 0) continue;
 			void* tex = getTachyonTexture(c->r(), c->g(), c->b(), c->a());
 			Point3 tp = tm * (*p);
 			Quaternion quat(0,0,0,1);
@@ -437,6 +442,7 @@ void TachyonRenderer::renderParticles(const DefaultParticlePrimitive& particleBu
 		auto orientation = particleBuffer.orientations().cbegin();
 		auto orientation_end = particleBuffer.orientations().cend();
 		for(; p != p_end && shape != shape_end; ++p, ++c, ++shape, ++r) {
+			if(c->a() <= 0) continue;
 			void* tex = getTachyonTexture(c->r(), c->g(), c->b(), c->a());
 			Point3 tp = tm * (*p);
 			Quaternion quat(0,0,0,1);
