@@ -70,8 +70,8 @@ using namespace PyScript;
 
 PYBIND11_PLUGIN(ParticlesModify)
 {
-	py::docstring_options docstrings;
-	docstrings.disable_signatures();
+	py::options options;
+	options.disable_function_signatures();
 
 	py::module m("ParticlesModify");
 	

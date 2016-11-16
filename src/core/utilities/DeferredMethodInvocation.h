@@ -32,6 +32,9 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util)
  *
  * The DeferredMethodInvocation class can be used to compress rapid update signals
  * into a single call to a widget's repaint method.
+ *
+ * Two class template parameters must be specified: The QObject derived class to which 
+ * the member function to be called belong and the member function pointer.
  */
 template<typename ObjectClass, void (ObjectClass::*method)()>
 class DeferredMethodInvocation 
@@ -39,6 +42,9 @@ class DeferredMethodInvocation
 public:
 
 	void operator()(ObjectClass* obj) {
+		// A custom event class that can be put into the application's event queue.
+		// It calls the user function from its destructor after the event has been
+		// fetched from the queue. 
 		struct Event : public QEvent {
 			DeferredMethodInvocation* owner;
 			ObjectClass* object;
@@ -48,6 +54,8 @@ public:
 				(object->*method)();
 			}
 		};
+		// Unless another call is already underway, post an event to the event queue
+		// to invoke the user function.
 		if(!_callPending) {
 			_callPending = true;
 			QCoreApplication::postEvent(obj, new Event(this, obj));

@@ -35,8 +35,8 @@ using namespace Ovito;
 
 PYBIND11_PLUGIN(PyScriptFileIO)
 {
-	py::docstring_options docstrings;
-	docstrings.disable_signatures();
+	py::options options;
+	options.disable_function_signatures();
 
 	py::module m("PyScriptFileIO");
 

@@ -143,8 +143,8 @@ py::dict BondsObject__pbc_vectors(const BondsObject& p)
 
 PYBIND11_PLUGIN(Particles)
 {
-	py::docstring_options docstrings;
-	docstrings.disable_signatures();
+	py::options options;
+	options.disable_function_signatures();
 
 	py::module m("Particles");
 

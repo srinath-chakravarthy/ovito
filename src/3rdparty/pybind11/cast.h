@@ -127,6 +127,23 @@ PYBIND11_NOINLINE inline std::string error_string() {
     if (scope.value)
         errorString += (std::string) handle(scope.value).str();
 
+    PyErr_NormalizeException(&scope.type, &scope.value, &scope.trace);
+
+    if (scope.trace) {
+        PyFrameObject *frame = ((PyTracebackObject *) scope.trace)->tb_frame;
+        if (frame) {
+            errorString += "\n\nAt:\n";
+            while (frame) {
+                int lineno = PyFrame_GetLineNumber(frame);
+                errorString +=
+                    "  " + handle(frame->f_code->co_filename).cast<std::string>() +
+                    "(" + std::to_string(lineno) + "): " +
+                    handle(frame->f_code->co_name).cast<std::string>() + "\n";
+                frame = frame->f_back;
+            }
+        }
+    }
+
     return errorString;
 }
 
@@ -329,6 +346,18 @@ using cast_op_type = typename std::conditional<std::is_pointer<typename std::rem
     typename std::add_pointer<intrinsic_t<T>>::type,
     typename std::add_lvalue_reference<intrinsic_t<T>>::type>::type;
 
+// std::is_copy_constructible isn't quite enough: it lets std::vector<T> (and similar) through when
+// T is non-copyable, but code containing such a copy constructor fails to actually compile.
+template <typename T, typename SFINAE = void> struct is_copy_constructible : std::is_copy_constructible<T> {};
+
+// Specialization for types that appear to be copy constructible but also look like stl containers
+// (we specifically check for: has `value_type` and `reference` with `reference = value_type&`): if
+// so, copy constructability depends on whether the value_type is copy constructible.
+template <typename Container> struct is_copy_constructible<Container, enable_if_t<
+        std::is_copy_constructible<Container>::value &&
+        std::is_same<typename Container::value_type &, typename Container::reference>::value
+    >> : std::is_copy_constructible<typename Container::value_type> {};
+
 /// Generic type caster for objects stored on the heap
 template <typename type> class type_caster_base : public type_caster_generic {
     using itype = intrinsic_t<type>;
@@ -366,20 +395,21 @@ protected:
 #if !defined(_MSC_VER)
     /* Only enabled when the types are {copy,move}-constructible *and* when the type
        does not have a private operator new implementaton. */
-    template <typename T = type> static auto make_copy_constructor(const T *value) -> decltype(new T(*value), Constructor(nullptr)) {
+    template <typename T = type, typename = enable_if_t<is_copy_constructible<T>::value>> static auto make_copy_constructor(const T *value) -> decltype(new T(*value), Constructor(nullptr)) {
         return [](const void *arg) -> void * { return new T(*((const T *) arg)); }; }
     template <typename T = type> static auto make_move_constructor(const T *value) -> decltype(new T(std::move(*((T *) value))), Constructor(nullptr)) {
         return [](const void *arg) -> void * { return (void *) new T(std::move(*((T *) arg))); }; }
 #else
     /* Visual Studio 2015's SFINAE implementation doesn't yet handle the above robustly in all situations.
        Use a workaround that only tests for constructibility for now. */
-    template <typename T = type, typename = enable_if_t<std::is_copy_constructible<T>::value>>
+    template <typename T = type, typename = enable_if_t<is_copy_constructible<T>::value>>
     static Constructor make_copy_constructor(const T *value) {
         return [](const void *arg) -> void * { return new T(*((const T *)arg)); }; }
     template <typename T = type, typename = enable_if_t<std::is_move_constructible<T>::value>>
     static Constructor make_move_constructor(const T *value) {
         return [](const void *arg) -> void * { return (void *) new T(std::move(*((T *)arg))); }; }
 #endif
+
     static Constructor make_copy_constructor(...) { return nullptr; }
     static Constructor make_move_constructor(...) { return nullptr; }
 };
@@ -482,14 +512,16 @@ public:
     PYBIND11_TYPE_CASTER(T, _<std::is_integral<T>::value>("int", "float"));
 };
 
-template <> class type_caster<void_type> {
+template<typename T> struct void_caster {
 public:
     bool load(handle, bool) { return false; }
-    static handle cast(void_type, return_value_policy /* policy */, handle /* parent */) {
+    static handle cast(T, return_value_policy /* policy */, handle /* parent */) {
         return none().inc_ref();
     }
-    PYBIND11_TYPE_CASTER(void_type, _("None"));
+    PYBIND11_TYPE_CASTER(T, _("None"));
 };
+
+template <> class type_caster<void_type> : public void_caster<void_type> {};
 
 template <> class type_caster<void> : public type_caster<void_type> {
 public:
