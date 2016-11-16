@@ -25,7 +25,10 @@
 #include <gui/properties/IntegerParameterUI.h>
 #include <gui/properties/FloatParameterUI.h>
 #include "CoordinationNumberModifierEditor.h"
-#include <qcustomplot.h>
+
+#include <3rdparty/qwt/qwt_plot.h>
+#include <3rdparty/qwt/qwt_plot_curve.h>
+#include <3rdparty/qwt/qwt_plot_grid.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -61,16 +64,18 @@ void CoordinationNumberModifierEditor::createUI(const RolloutInsertionParameters
 
 	layout->addLayout(gridlayout);
 
-	_rdfPlot = new QCustomPlot();
-	_rdfPlot->setMinimumHeight(180);
-	_rdfPlot->xAxis->setLabel("Pair separation distance");
-	_rdfPlot->yAxis->setLabel("g(r)");
-	_rdfPlot->addGraph();
+	_rdfPlot = new QwtPlot();
+	_rdfPlot->setMinimumHeight(200);
+	_rdfPlot->setMaximumHeight(200);
+	_rdfPlot->setCanvasBackground(Qt::white);
+	_rdfPlot->setAxisTitle(QwtPlot::xBottom, tr("Pair separation distance"));
+	_rdfPlot->setAxisTitle(QwtPlot::yLeft, tr("g(r)"));
 
 	layout->addWidget(new QLabel(tr("Radial distribution function:")));
 	layout->addWidget(_rdfPlot);
 	connect(this, &CoordinationNumberModifierEditor::contentsReplaced, this, &CoordinationNumberModifierEditor::plotRDF);
 
+	layout->addSpacing(12);
 	QPushButton* saveDataButton = new QPushButton(tr("Export data to text file"));
 	layout->addWidget(saveDataButton);
 	connect(saveDataButton, &QPushButton::clicked, this, &CoordinationNumberModifierEditor::onSaveData);
@@ -86,7 +91,7 @@ void CoordinationNumberModifierEditor::createUI(const RolloutInsertionParameters
 bool CoordinationNumberModifierEditor::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
 	if(event->sender() == editObject() && event->type() == ReferenceEvent::ObjectStatusChanged) {
-		plotRDF();
+		plotRDFLater(this);
 	}
 	return ParticleModifierEditor::referenceEvent(source, event);
 }
@@ -103,20 +108,29 @@ void CoordinationNumberModifierEditor::plotRDF()
 	if(modifier->rdfX().empty())
 		return;
 
-	_rdfPlot->graph()->setData(modifier->rdfX(), modifier->rdfY());
-	_rdfPlot->graph()->rescaleAxes();
+	if(!_plotCurve) {
+		_plotCurve = new QwtPlotCurve();
+	    _plotCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+		_plotCurve->setBrush(Qt::lightGray);
+		_plotCurve->attach(_rdfPlot);
+		QwtPlotGrid* plotGrid = new QwtPlotGrid();
+		plotGrid->setPen(Qt::gray, 0, Qt::DotLine);
+		plotGrid->attach(_rdfPlot);
+	}
+    _plotCurve->setSamples(modifier->rdfX().data(), modifier->rdfY().data(), modifier->rdfX().size());
 
 	// Determine lower X bound where the histogram is non-zero.
-	double maxx = modifier->rdfX().back();
+	_rdfPlot->setAxisAutoScale(QwtPlot::xBottom);
+	double maxx = modifier->cutoff();
 	for(int i = 0; i < modifier->rdfX().size(); i++) {
 		if(modifier->rdfY()[i] != 0) {
 			double minx = std::floor(modifier->rdfX()[i] * 9.0 / maxx) / 10.0 * maxx;
-			_rdfPlot->xAxis->setRange(minx, maxx);
+			_rdfPlot->setAxisScale(QwtPlot::xBottom, minx, maxx);
 			break;
 		}
 	}
 
-	_rdfPlot->replot(QCustomPlot::rpQueued);
+	_rdfPlot->replot();
 }
 
 /******************************************************************************

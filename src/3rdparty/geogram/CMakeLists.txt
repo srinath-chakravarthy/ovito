@@ -27,8 +27,8 @@ aux_source_directories(SOURCES "Source Files\\delaunay"  delaunay)
 aux_source_directories(SOURCES "Source Files\\mesh"      mesh)
 aux_source_directories(SOURCES "Source Files\\api"       api)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
-add_library(geogram STATIC ${SOURCES})
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR}/..)
+ADD_LIBRARY(geogram STATIC ${SOURCES})
 
 # Make header files of this library available to dependent targets.
 TARGET_INCLUDE_DIRECTORIES(geogram INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/..")

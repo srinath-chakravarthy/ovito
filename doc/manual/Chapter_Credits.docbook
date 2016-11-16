@@ -18,7 +18,7 @@
   <para>The following third-party codes and libraries are used as part of OVITO:
     <itemizedlist>
       <listitem><para><link xlink:href="http://www.qt.io/developers/">Qt</link> and <link xlink:href="http://www.qt.io/ide/">Qt Creator</link> (GNU General Public License v3).</para></listitem>
-      <listitem><para><link xlink:href="http://www.qcustomplot.com">QCustomPlot</link> by Emanuel Eichhammer (GNU General Public License v3).</para></listitem>
+      <listitem><para><link xlink:href="http://sourceforge.net/projects/qwt/">Qwt</link> (<link linkend="appendix.license.qwt">license</link>).</para></listitem>
       <listitem><para><link xlink:href="http://www.boost.org">Boost</link> library (<link linkend="appendix.license.boost">license</link>)</para></listitem>
       <listitem><para><link xlink:href="http://www.python.org">Python</link> (PSF license)</para></listitem>
       <listitem><para><link xlink:href="http://alice.loria.fr/index.php/software/4-library/75-geogram.html">Geogram library</link> by Bruno Levy, INRIA - ALICE 
@@ -84,5 +84,7 @@
   <xi:include href="licenses/boost.docbook"/>
 
   <xi:include href="licenses/scintilla.docbook"/>
+
+  <xi:include href="licenses/qwt.docbook"/>
   
 </chapter>

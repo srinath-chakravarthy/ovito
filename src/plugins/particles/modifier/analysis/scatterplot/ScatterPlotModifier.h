@@ -1,7 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (2013) Alexander Stukowski
-//  Copyright (2014) Lars Pastewka
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -51,14 +50,14 @@ public:
 	/// Returns the source particle property for which the scatter plot is computed.
 	const ParticlePropertyReference& yAxisProperty() const { return _yAxisProperty; }
 
-	/// Return the number of particle type ids.
-	int numberOfParticleTypeIds() const { return _xData.size(); }
+	/// Returns the stored scatter plot data.
+	const QVector<QPointF>& xyData() const { return _xyData; }
 
-	/// Returns the stored scatter plot data (x-axis).
-	const QVector<double>& xData(int particleTypeId) const { return _xData[particleTypeId]; }
+	/// Returns the stored point type data.
+	const QVector<int>& typeData() const { return _typeData; }
 
-	/// Returns the stored scatter plot data (y-axis).
-	const QVector<double>& yData(int particleTypeId) const { return _yData[particleTypeId]; }
+	/// Returns the map from particle types to colors.
+	const std::map<int, Color>& colorMap() const { return _colorMap; }
 
 	/// Returns whether particles within the specified range should be selected (x-axis).
 	bool selectXAxisInRange() const { return _selectXAxisInRange; }
@@ -114,12 +113,6 @@ public:
 	/// Returns the end value of the y-axis.
 	FloatType yAxisRangeEnd() const { return _yAxisRangeEnd; }
 
-	/// Check if particle id has a color assigned.
-	bool hasColor(int i) const { return _colorMap.find(i) != _colorMap.end(); }
-
-	/// Return the map from particle id to color.
-	const Color &color(int i) const { return _colorMap.at(i); }
-
 protected:
 
 	/// Modifies the particle object.
@@ -172,10 +165,13 @@ private:
 	/// Controls the end value of the y-axis.
 	PropertyField<FloatType> _yAxisRangeEnd;
 
-	/// Stores the scatter plot data for each particle type separately.
-	QVector<QVector<double>> _xData, _yData;
+	/// Stores the scatter plot data.
+	QVector<QPointF> _xyData;
 
-	/// Map from particle type ID to color.
+	/// Stores the point type data.
+	QVector<int> _typeData;
+
+	/// Maps particle types to colors.
 	std::map<int, Color> _colorMap;
 
 	Q_OBJECT

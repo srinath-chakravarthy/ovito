@@ -24,11 +24,11 @@
 
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/particles/gui/modifier/ParticleModifierEditor.h>
+#include <core/utilities/DeferredMethodInvocation.h>
 
-#ifndef signals
-#define signals Q_SIGNALS
-#endif
-#include <qcustomplot.h>
+class QwtPlot;
+class QwtPlotCurve;
+class QwtPlotZoneItem;
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -40,7 +40,7 @@ class HistogramModifierEditor : public ParticleModifierEditor
 public:
 
 	/// Default constructor.
-	Q_INVOKABLE HistogramModifierEditor() : _rangeUpdate(true) {}
+	Q_INVOKABLE HistogramModifierEditor() {}
 
 protected:
 
@@ -55,25 +55,22 @@ protected Q_SLOTS:
 	/// Replots the histogram computed by the modifier.
 	void plotHistogram();
 
-	/// Keep x-axis range updated
-	void updateXAxisRange(const QCPRange &newRange);
-
 	/// This is called when the user has clicked the "Save Data" button.
 	void onSaveData();
 
 private:
 
 	/// The graph widget to display the histogram.
-	QCustomPlot* _histogramPlot;
+	QwtPlot* _histogramPlot;
 
-	/// Marks the selection interval in the histogram plot.
-	QCPItemStraightLine* _selectionRangeStartMarker;
+	/// The plot item for the histogram.
+    QwtPlotCurve* _plotCurve = nullptr;
 
-	/// Marks the selection interval in the histogram plot.
-	QCPItemStraightLine* _selectionRangeEndMarker;
+	/// The plot item for indicating the seletion range.
+	QwtPlotZoneItem* _selectionRange = nullptr;
 
-	/// Update range when plot ranges change?
-	bool _rangeUpdate;
+	/// For deferred invocation of the plot repaint function.
+	DeferredMethodInvocation<HistogramModifierEditor, &HistogramModifierEditor::plotHistogram> plotHistogramLater;
 
 	Q_OBJECT
 	OVITO_OBJECT

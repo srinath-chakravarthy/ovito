@@ -69,8 +69,8 @@
 		<entry>Text editing widget required by the <literal>PyScript</literal> plugin.</entry></row>
 		<row><entry><link xlink:href="http://muparser.beltoforion.de/">muparser</link></entry><entry>included</entry>
 		<entry>A math expression parser library. OVITO's source distribution contains a copy of this library, which will be used if not found on the system.</entry></row>
-		<row><entry><link xlink:href="http://www.qcustomplot.com/">QCustomPlot</link></entry><entry>included</entry>
-		<entry>For plotting and data visualization. OVITO's source distribution contains a copy of this library, which will be used if not found on the system.</entry></row>
+		<row><entry><link xlink:href="http://sourceforge.net/projects/qwt/">Qwt</link></entry><entry>included</entry>
+		<entry>For plotting and data visualization.</entry></row>
 		<row><entry><link xlink:href="http://botan.randombit.net/">Botan</link></entry><entry>included</entry>
 		<entry>A crypto library used by OVITO's built-in SSH client. OVITO's source distribution contains a copy of this library, which will be used if not found on the system.</entry></row>
 		<row><entry><link xlink:href="https://github.com/qtproject/qt-creator/tree/master/src/libs/ssh">QtCreator SSH library</link></entry><entry>included</entry>

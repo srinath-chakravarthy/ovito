@@ -24,8 +24,10 @@
 
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/particles/gui/modifier/ParticleModifierEditor.h>
+#include <core/utilities/DeferredMethodInvocation.h>
 
-class QCustomPlot;
+class QwtPlot;
+class QwtPlotCurve;
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -57,8 +59,14 @@ protected Q_SLOTS:
 
 private:
 
-	/// The graph widget to display the RDF.
-	QCustomPlot* _rdfPlot;
+	/// The plotting widget for displaying the computed RDF.
+	QwtPlot* _rdfPlot;
+
+	/// The plot item for the RDF.
+    QwtPlotCurve* _plotCurve = nullptr;
+
+	/// For deferred invocation of the plot repaint function.
+	DeferredMethodInvocation<CoordinationNumberModifierEditor, &CoordinationNumberModifierEditor::plotRDF> plotRDFLater;
 
 	Q_OBJECT
 	OVITO_OBJECT
