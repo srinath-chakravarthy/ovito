@@ -28,6 +28,7 @@ CMAKE_POLICY(SET CMP0023 OLD)
 IF(NOT CMAKE_VERSION VERSION_LESS "3")
 	CMAKE_POLICY(SET CMP0026 OLD)	# Suppress warning when reading the LOCATION target property.
 	CMAKE_POLICY(SET CMP0043 OLD)	# Suppress warning because COMPILE_DEFINITIONS_* target property is used.
+	CMAKE_POLICY(SET CMP0045 OLD)	# Don't warn about non-existing targets in GET_TARGET_PROPERTY().
 ENDIF()
 
 IF(WIN32)

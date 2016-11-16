@@ -1,6 +1,6 @@
 **************************************************************************
 Compiler: 
-    Microsoft Visual C++ 2013/2015
+    Microsoft Visual C++ 2015
 **************************************************************************
 
 Typical layour for the build directory:
@@ -25,7 +25,7 @@ nmake install
 **************************************************************************
 Qt
 **************************************************************************
-Install components (Qt 5.6) under C:\Qt\ : 
+Install the following components (Qt 5.7) in C:\Qt\ : 
    msvc2015 32-bit
    msvc2015 64-bit
 
@@ -44,19 +44,16 @@ nmake
 nmake install
 
 ----- Install PyQt5 ----
-..\XXbit\python\python.exe configure.py ^
+..\64bit\python\python.exe configure.py ^
    --concatenate ^
    --concatenate-split 10 ^
    --confirm-license ^
    --no-designer-plugin ^
    --no-qml-plugin ^
-   --sip=..\python\sip.exe ^
+   --sip=..\64bit\python\sip.exe ^
    --enable QtCore ^
    --enable QtGui ^
-   --enable QtWidgets ^
-   --enable QtNetwork ^
-   --enable QtOpenGL ^
-   --enable QtSvg
+   --enable QtWidgets
 nmake
 nmake install
 
@@ -65,30 +62,9 @@ nmake install
 ..\XXbit\python\python.exe -m pip install matplotlib
 
 **************************************************************************
-Boost libraries (release 1.61):
+Boost libraries (release 1.62):
 **************************************************************************
-
---- Create file user-config.jam:
-using python 
-	: 3.5
-	: ..\\64bit\\Python\\python.exe 
-	: ..\\64bit\\Python\\include
-	: ..\\64bit\\Python\\libs ;
-
---- Create file user-config-debug.jam:
-using python 
-	: 3.5
-	: ..\\64bit\\Python\\python_d.exe 
-	: ..\\64bit\\Python\\include
-	: ..\\64bit\\Python\\libs
-	: <python-debugging>on ;
-	
---- Compile Boost:
-cd 
-bootstrap.bat msvc
-b2 --prefix=../32bit/boost --user-config=../32bit/user-config.jam address-model=32 link=shared threading=multi runtime-link=shared toolset=msvc --ignore-mpi --with-system --with-thread --with-python install
-b2 --prefix=../64bit/boost --user-config=../64bit/user-config.jam address-model=64 link=shared threading=multi runtime-link=shared toolset=msvc --ignore-mpi --with-system --with-thread --with-python python-debugging=off install
-b2 --prefix=../64bit/boost --user-config=../64bit/user-config-debug.jam address-model=64 link=shared threading=multi runtime-link=shared toolset=msvc --ignore-mpi --with-system --with-thread --with-python python-debugging=on variant=debug install
+No installation needed, simply extract archive.
 
 **************************************************************************
 HDF5 (version 1.8.x)
@@ -137,7 +113,7 @@ QScintilla2
 **************************************************************************
 mkdir qscintilla
 cd qscintilla
-qmake ..\..\QScintilla-gpl-2.9.2\Qt4Qt5\qscintilla.pro
+qmake ..\..\QScintilla_gpl-2.9.3\Qt4Qt5\qscintilla.pro
 nmake
 
 **************************************************************************
@@ -181,10 +157,11 @@ cmake -G "NMake Makefiles" ^
    -DZLIB_INCLUDE_DIR=%cd:\=/%/../zlib_install/include ^
    -DZLIB_LIBRARY=%cd:\=/%/../zlib_install/lib/zlib.lib ^
    -Dnetcdf_DIR=%cd:\=/%/../netcdf_install/share/cmake ^
-   -DBOOST_INCLUDEDIR=%cd:\=/%/../boost/include ^
-   -DQSCINTILLA_INCLUDE_DIR=%cd:\=/%/../../QScintilla-gpl-2.9.2\Qt4Qt5 ^
+   -DHDF5_DIR=%cd:\=/%/../hdf5_install/cmake/hdf5 ^
+   -DBOOST_INCLUDEDIR=%cd:\=/%/../../boost_1_62_0 ^
+   -DQSCINTILLA_INCLUDE_DIR=%cd:\=/%/../../QScintilla_gpl-2.9.3\Qt4Qt5 ^
    -DQSCINTILLA_LIBRARY=%cd:\=/%/../qscintilla/release/qscintilla2.lib ^
-   -DPYTHON_LIBRARY=%cd:\=/%/../Python/libs/python35.lib ^
+   -DPYTHON_LIBRARY=%cd:\=/%/../Python/libs/python34.lib ^
    -DPYTHON_INCLUDE_DIR=%cd:\=/%/../Python/include ^
    -DXSLT_PROCESSOR=../../libxslt-1.1.26.win32/bin/xsltproc.exe ^
    -DSPHINX_PROCESSOR_PATH=%cd:\=/%/../Python/Scripts ^
