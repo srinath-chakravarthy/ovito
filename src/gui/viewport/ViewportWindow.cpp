@@ -402,9 +402,7 @@ bool ViewportWindow::event(QEvent* event)
 ******************************************************************************/
 void ViewportWindow::exposeEvent(QExposeEvent*)
 {
-	if(isExposed()) {
-		renderNow();
-	}
+	renderNow();
 }
 
 /******************************************************************************
@@ -412,9 +410,7 @@ void ViewportWindow::exposeEvent(QExposeEvent*)
 ******************************************************************************/
 void ViewportWindow::resizeEvent(QResizeEvent*)
 {
-	if(isExposed()) {
-		renderNow();
-	}
+	renderNow();
 }
 
 #else
@@ -434,6 +430,15 @@ void ViewportWindow::paintGL()
 	OVITO_ASSERT_MSG(!_viewport->isRendering(), "ViewportWindow::paintGL()", "Recursive viewport repaint detected.");
 	OVITO_ASSERT_MSG(!_viewport->dataset()->viewportConfig()->isRendering(), "ViewportWindow::paintGL()", "Recursive viewport repaint detected.");
 	renderNow();
+}
+
+/******************************************************************************
+* Handles the show events.
+******************************************************************************/
+void ViewportWindow::showEvent(QShowEvent* event)
+{
+	if(!event->spontaneous())
+		update();
 }
 
 #endif

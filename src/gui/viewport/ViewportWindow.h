@@ -166,6 +166,9 @@ protected:
 	
 	/// Is called when the mouse cursor leaves the widget.
 	virtual void leaveEvent(QEvent* event) override;
+
+	/// Is called when the viewport becomes visible.
+	virtual void showEvent(QShowEvent* event) override;
 #endif
 
 	/// Handles double click events.
