@@ -1,52 +1,56 @@
 **************************************************************************
-Install third-party libraries
+Install third-party tools
 **************************************************************************
 export MACOSX_DEPLOYMENT_TARGET=10.8
-sudo echo "macosx_deployment_target 10.8" >> /opt/local/etc/macports/macports.conf
-sudo port -s install netcdf python35 +readline py35-sphinx py35-numpy py35-sip py35-ipython py35-pip py35-matplotlib zlib boost +python35 +no_static
-sudo port install cmake docbook-xml docbook-xsl doxygen libxslt yasm
-
-# Remove unused Python.app bundle from Python framework, because CMake's fixup_bundle() macro cannot fix it.
-sudo mv /opt/local/Library/Frameworks/Python.framework/Versions/3.5/Resources/Python.app /opt/local/Library/Frameworks/Python.framework/Versions/
+sudo port install cmake docbook-xml doxygen libxslt boost yasm
 
 **************************************************************************
 Install Qt libraries, version 5.7
 **************************************************************************
 
 **************************************************************************
-Build PyQt5
+Download and build SIP
 **************************************************************************
+python3 configure.py
+make -j4 install
 
-/opt/local/bin/python3.5 configure.py \
+**************************************************************************
+Download and build PyQt5
+**************************************************************************
+python3 configure.py \
 	--confirm-license \
 	--no-designer-plugin \
 	--no-qml-plugin \
 	--assume-shared \
 	--qmake $HOME/progs/Qt/5.7/clang_64/bin/qmake \
-	--sip=/opt/local/bin/sip-3.5 \
+	--sip=/Library/Frameworks/Python.framework/Versions/3.5/bin/sip \
 	--concatenate \
 	--enable QtCore \
 	--enable QtGui \
 	--enable QtWidgets \
-	--enable QtNetwork \
-	--enable QtOpenGL \
-	--enable QtSvg \
 	--enable QtMacExtras
 make -j2
-sudo make install
+make install
 
 **************************************************************************
-Build QScintilla2
+Install Sphinx, Numpy, Matplotlib, IPython
 **************************************************************************
-cd QScintilla-gpl-2.9.3/Qt4Qt5/
+pip3 install sphinx
+pip3 install numpy
+pip3 install matplotlib
+pip3 install ipython
+
+**************************************************************************
+Download and build QScintilla2
+**************************************************************************
+cd QScintilla_gpl-2.9.3/Qt4Qt5/
 $HOME/progs/Qt/5.7/clang_64/bin/qmake qscintilla.pro
-make
+make -j4
 install_name_tool -id $PWD/libqscintilla2.12.dylib libqscintilla2.12.dylib
 
 **************************************************************************
-Build static libav library:
+Build static Libav:
 **************************************************************************
-
 cd libav-11.1
 export MACOSX_DEPLOYMENT_TARGET=10.8
 ./configure \
@@ -61,19 +65,64 @@ export MACOSX_DEPLOYMENT_TARGET=10.8
 make -j3 install
 
 **************************************************************************
+Download and build HDF5:
+**************************************************************************
+mkdir hdf5_build
+cd hdf5_build
+cmake \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_INSTALL_PREFIX=../hdf5 \
+	-DBUILD_SHARED_LIBS=ON \
+	-DHDF5_ENABLE_Z_LIB_SUPPORT=ON \
+	-DHDF5_BUILD_HL_LIB=ON \
+	-DHDF5_BUILD_EXAMPLES=OFF \
+	-DHDF5_BUILD_TOOLS=ON \
+	-DHDF5_BUILD_WITH_INSTALL_NAME=ON \
+	-DBUILD_TESTING=OFF \
+	../hdf5-1.8.18
+make -j4 install
+
+**************************************************************************
+Download and build NetCDF:
+**************************************************************************
+mkdir netcdf_build
+cd netcdf_build
+cmake \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DCMAKE_INSTALL_PREFIX=../netcdf \
+	-DENABLE_DAP=OFF \
+	-DENABLE_EXAMPLES=OFF \
+	-DENABLE_TESTS=OFF \
+	-DBUILD_TESTING=OFF \
+	-DBUILD_UTILITIES=OFF \
+	-DENABLE_HDF4=OFF \
+	-DUSE_HDF5=ON \
+	-DHDF5_ROOT=$HOME/progs/hdf5 \
+	../netcdf-4.4.1/
+make -j4 install
+cd ../netcdf/lib
+install_name_tool -id $PWD/libnetcdf.dylib libnetcdf.dylib
+
+**************************************************************************
+Remove unused Python.app bundle from Python framework, because 
+CMake's fixup_bundle() macro cannot fix it.
+**************************************************************************
+sudo mv /Library/Frameworks/Python.framework/Versions/3.5/Resources/Python.app /Library/Frameworks/Python.framework/Versions/
+
+**************************************************************************
 Build OVITO:
 **************************************************************************
-
 export MACOSX_DEPLOYMENT_TARGET=10.8
 cmake -DOVITO_BUILD_DOCUMENTATION=ON \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_INSTALL_PREFIX=../release_install \
       -DCMAKE_PREFIX_PATH=$HOME/progs/Qt/5.7/clang_64/ \
-      -DPYTHON_INCLUDE_DIR=/opt/local/Library/Frameworks/Python.framework/Versions/3.5/include/python3.5m \
-      -DPYTHON_LIBRARY=/opt/local/Library/Frameworks/Python.framework/Versions/3.5/lib/libpython3.5.dylib \
+      -DPYTHON_INCLUDE_DIR=/Library/Frameworks/Python.framework/Versions/3.5/include/python3.5m \
+      -DPYTHON_LIBRARY=/Library/Frameworks/Python.framework/Versions/3.5/lib/libpython3.5.dylib \
       -DLIBAV_INCLUDE_DIR=$HOME/progs/libav/include \
       -DLIBAV_LIBRARY_DIR=$HOME/progs/libav/lib \
-      -DSPHINX_PROCESSOR=/opt/local/bin/sphinx-build-3.5 \
+      -DSPHINX_PROCESSOR=/Library/Frameworks/Python.framework/Versions/3.5/bin/sphinx-build \
       -DQSCINTILLA_INCLUDE_DIR=$HOME/progs/QScintilla_gpl-2.9.3/Qt4Qt5 \
       -DQSCINTILLA_LIBRARY=$HOME/progs/QScintilla_gpl-2.9.3/Qt4Qt5/libqscintilla2.dylib \
+	  -DnetCDF_DIR=$HOME/progs/netcdf/lib/cmake/netCDF \
       ../..

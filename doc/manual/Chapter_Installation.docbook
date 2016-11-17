@@ -9,7 +9,7 @@
          xmlns:ns="http://docbook.org/ns/docbook">
   <title>Installation</title>
 
-    <para>Binary program packages for Linux, Windows, and Mac OS X 
+    <para>Binary program packages for Linux, Windows, and macOS
     can be downloaded from <link xlink:href="http://www.ovito.org/">http://www.ovito.org/</link>.
     The installation of OVITO is very simple: Just extract the downloaded archive into a directory of your choice (no admin privileges required).</para>
     
@@ -36,12 +36,13 @@
     </simplesect>
 
     <simplesect xml:id="installation.runovito.macos">
-      <title>Mac OS X</title>
+      <title>macOS</title>
 
-      <para>Extract the <filename>.zip</filename> archive in a location of your choice (e.g. into the <filename>Applications</filename> folder).
-      Then start OVITO by double-clicking the extracted application bundle.
-      Mac OS X might refuse to start OVITO, because it was not downloaded from the official App Store.
-      Then right-click the application and select <menuchoice><guimenuitem>Open</guimenuitem></menuchoice> from 
+      <para>Double-click the <filename>.dmg</filename> disk image file to open it, 
+      agree to the program license, and drag the <filename>Ovito</filename> application bundle into your <filename>Applications</filename> folder.
+      Then start OVITO by double-clicking the application bundle.
+      MacOS might refuse to start OVITO, because it was not downloaded from the official App Store.
+      In this case right-click the application and select <menuchoice><guimenuitem>Open</guimenuitem></menuchoice> from 
       the context menu (only required the first time you start OVITO).
       </para>
     </simplesect>

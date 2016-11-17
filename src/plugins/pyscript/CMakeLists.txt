@@ -112,7 +112,6 @@ IF(APPLE)
 		PATTERN "test" EXCLUDE
 		PATTERN "*.exe" EXCLUDE
 		PATTERN "sphinx" EXCLUDE
-		PATTERN "Pygments*" EXCLUDE
 		PATTERN "PyQt4" EXCLUDE)
 		
 	# Install Python header files.
