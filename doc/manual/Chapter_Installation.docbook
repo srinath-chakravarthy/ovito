@@ -10,10 +10,9 @@
   <title>Installation</title>
 
     <para>Binary program packages for Linux, Windows, and macOS
-    can be downloaded from <link xlink:href="http://www.ovito.org/">http://www.ovito.org/</link>.
-    The installation of OVITO is very simple: Just extract the downloaded archive into a directory of your choice (no admin privileges required).</para>
+    can be downloaded from <link xlink:href="http://www.ovito.org/">http://www.ovito.org/</link>.</para>
     
-    <para>OVITO uses hardware-accelerated OpenGL to render particles and other graphical elements.
+    <para>Note that OVITO uses OpenGL to render particles and other graphical elements.
     Older computers or outdated OpenGL graphics drivers may not be compatible with OVITO. It is recommended to install the most recent 
     version of your hardware vendor's graphics driver.</para>
 
@@ -28,10 +27,8 @@
     <simplesect xml:id="installation.runovito.windows">
       <title>Windows</title>
 
-      <para>Extract the <filename>.zip</filename> archive to an
-      empty directory of your choice. Then start the program by double-clicking
-      <command>ovito.exe</command>. Windows might ask whether you really want to launch the program,
-      because OVITO was downloaded from the web, has no digital signature, and comes from an untrusted source. 
+      <para>Run the installer program <filename>ovito-x.y.z-win64.exe</filename> to install OVITO in a directory of your choice. 
+      Windows might ask whether you really want to launch the program, because it was downloaded from the web and is not digitally signed. 
       </para>
     </simplesect>
 

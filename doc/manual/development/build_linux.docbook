@@ -24,7 +24,7 @@
                      libavutil-dev libswscale-dev libnetcdf-dev libhdf5-dev libhdf5-serial-dev \
                      libbotan1.10-dev libmuparser-dev python3-dev \
                      python3-sphinx python3-numpy python3-sip python3-pyqt5 \
-                     xsltproc docbook-xml docbook-xsl docbook-xsl-doc-html doxygen
+                     xsltproc docbook-xml doxygen
 </command></screen>
   </para>
   </simplesect>
@@ -33,7 +33,7 @@
     <title>Downloading the source code</title>
     <para>
     Then download OVITO's source code into a new subdirectory named <filename>ovito/</filename>: 
-<screen><command>git clone --recursive git://git.code.sf.net/p/ovito/git ovito</command></screen>
+<screen><command>git clone --recursive https://gitlab.com/stuko/ovito.git ovito</command></screen>
   </para>
   </simplesect>
 

@@ -7,7 +7,7 @@
          xmlns:xlink="http://www.w3.org/1999/xlink"
          xmlns:xi="http://www.w3.org/2001/XInclude"
          xmlns:ns="http://docbook.org/ns/docbook">
-  <title>Building OVITO on Mac OS X</title>
+  <title>Building OVITO on MacOS</title>
 
  <simplesect>
     <title>Installing dependencies</title>
@@ -18,8 +18,7 @@
     It's easiest to use <link xlink:href="https://www.macports.org/">MacPorts</link> to install many of the required dependencies.
     After installing MacPorts, run 
 <screen><command>sudo port install netcdf python35 py35-sphinx py35-numpy py35-sip zlib \
-                  boost +no_static cmake docbook-xml \
-                  doxygen libxslt yasm
+                  boost cmake docbook-xml doxygen libxslt yasm
 </command></screen>
   </para>
   <para>
@@ -39,8 +38,6 @@
 	--enable QtCore \
 	--enable QtGui \
 	--enable QtWidgets \
-	--enable QtNetwork \
-	--enable QtSvg \
 	--enable QtMacExtras
 make -j2
 sudo make install
@@ -56,7 +53,7 @@ install_name_tool -id $PWD/libqscintilla2.dylib libqscintilla2.dylib
 </command></screen>
   </para>
   <para>
-Download and build a static version of the <emphasis>libav</emphasis> video encoding library:
+Download and build a static version of the <emphasis>Libav</emphasis> video encoding library:
 <screen><command>
 wget https://libav.org/releases/libav-11.1.tar.gz
 tar xzfv libav-11.1.tar.gz
@@ -79,7 +76,7 @@ The compiled libraries will be installed under <filename>$HOME/libavstatic/</fil
     <title>Downloading the source code</title>
     <para>
     To download OVITO's source code into a new subdirectory named <filename>ovito</filename>, run: 
-<screen><command>git clone --recursive git://git.code.sf.net/p/ovito/git ovito</command></screen>
+<screen><command>git clone --recursive https://gitlab.com/stuko/ovito.git ovito</command></screen>
   </para>
   </simplesect>
 
