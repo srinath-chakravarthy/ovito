@@ -3,6 +3,7 @@ image: ubuntu:latest
 before_script:
   - apt-get -yqq update
   - apt-get -yqq install cmake
+                         git
                          build-essential
                          qt5-default
                          libboost-dev
@@ -39,5 +40,7 @@ build_linux:
            -DOVITO_BUILD_DOCUMENTATION=ON
            -DPYTHON_INCLUDE_DIR=/usr/include/python3.5m
            -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.5m.so
+           -DCMAKE_INSTALL_PREFIX=../install
            ..
+      - make install
       - make test
