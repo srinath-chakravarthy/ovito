@@ -42,5 +42,5 @@ build_linux:
            -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.5m.so
            -DCMAKE_INSTALL_PREFIX=../install
            ..
-      - make install
+      - make -j2 install
       - ctest --output-on-failure
