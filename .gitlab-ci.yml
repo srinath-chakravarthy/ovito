@@ -1,8 +1,31 @@
 image: ubuntu:latest
 
 before_script:
-  - apt-get update -y -q
-  - apt-get install -y cmake
+  - apt-get -yqq update
+  - apt-get -yqq install cmake \
+                         build-essential \
+                         qt5-default \
+                         libboost-dev \
+                         libqt5scintilla2-dev \
+                         libavcodec-dev \
+                         libavdevice-dev \
+                         libavfilter-dev \
+                         libavformat-dev \
+                         libavresample-dev \
+                         libavutil-dev \
+                         libswscale-dev \
+                         libnetcdf-dev \
+                         libhdf5-dev \
+                         libhdf5-serial-dev \
+                         libbotan1.10-dev \
+                         libmuparser-dev \
+                         python3-dev \
+                         python3-sphinx \
+                         python3-numpy \
+                         python3-sip \
+                         python3-pyqt5 \
+                         xsltproc \
+                         docbook-xml
 
 build_linux:
    stage: build
@@ -11,5 +34,10 @@ build_linux:
    script:
       - mkdir build
       - cd build
-      - cmake -DCMAKE_BUILD_TYPE=Debug ..
-      - make
+      - cmake \
+           -DCMAKE_BUILD_TYPE=Debug \
+           -DOVITO_BUILD_DOCUMENTATION=ON \
+           -DPYTHON_INCLUDE_DIR=/usr/include/python3.5m \
+           -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.5m.so \
+           ..
+      - make test
