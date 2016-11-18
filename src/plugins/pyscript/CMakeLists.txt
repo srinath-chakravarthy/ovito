@@ -179,6 +179,9 @@ ELSEIF(WIN32)
 
 	# Install Python interpreter dll.
 	OVITO_INSTALL_DLL("${PYTHON_LIBRARY_PATH}/../${PYTHON_LIBRARY_NAME}.dll")
+
+	# Install Visual C++ runtime needed by Python interpreter.
+	OVITO_INSTALL_DLL("${PYTHON_LIBRARY_PATH}/../msvcr100.dll")
 ENDIF()
 
 # Define tests for the scripting interface.

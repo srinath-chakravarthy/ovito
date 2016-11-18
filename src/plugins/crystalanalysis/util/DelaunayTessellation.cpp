@@ -107,7 +107,7 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 
 				Vector3 shift = simCell.reducedToAbsolute(Vector3(ix,iy,iz));
 				Vector_3<double> shiftd = (Vector_3<double>)shift;
-				for(int vertexIndex = 0; vertexIndex < _primaryVertexCount; vertexIndex++) {
+				for(size_t vertexIndex = 0; vertexIndex < _primaryVertexCount; vertexIndex++) {
 					if(progress && progress->isCanceled())
 						return false;
 

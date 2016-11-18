@@ -56,7 +56,7 @@ ELSEIF(UNIX)
 ENDIF()
 
 # This executable will be part of the installation package.
-INSTALL(TARGETS ${PROJECT_NAME} DESTINATION "${OVITO_RELATIVE_BINARY_DIRECTORY}")
+INSTALL(TARGETS ${PROJECT_NAME} DESTINATION "${OVITO_RELATIVE_BINARY_DIRECTORY}/")
 
 # Build all plugins first before building the main executable.
 FOREACH(plugin ${OVITO_PLUGIN_LIST})

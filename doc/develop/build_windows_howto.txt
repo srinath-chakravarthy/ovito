@@ -17,8 +17,8 @@ Source code of third-party libraries is extracted into subdirectories of 'ovito/
 **************************************************************************
 zlib (http://www.zlib.net/)
 **************************************************************************
-mkdir zlib
-cd zlib
+mkdir zlib_build
+cd zlib_build
 cmake -G "NMake Makefiles" -DCMAKE_INSTALL_PREFIX=../zlib_install -DCMAKE_BUILD_TYPE=Release ..\..\zlib-1.2.8
 nmake install
 
@@ -67,27 +67,29 @@ Boost libraries (release 1.62):
 No installation needed, simply extract archive.
 
 **************************************************************************
-HDF5 (version 1.8.x)
+HDF5
 **************************************************************************
-mkdir hdf5
-cd hdf5
+mkdir hdf5_build
+cd hdf5_build
 cmake -G "NMake Makefiles" ^
    -DCMAKE_BUILD_TYPE=Release ^
    -DCMAKE_INSTALL_PREFIX=../hdf5_install ^
    -DBUILD_SHARED_LIBS=ON ^
    -DHDF5_ENABLE_Z_LIB_SUPPORT=ON ^
    -DHDF5_BUILD_HL_LIB=ON ^
+   -DBUILD_TESTING=OFF ^
+   -DHDF5_BUILD_EXAMPLES=OFF ^
    -DZLIB_INCLUDE_DIR=%cd:\=/%/../zlib_install/include ^
    -DZLIB_LIBRARY=%cd:\=/%/../zlib_install/lib/zlib.lib ^
-   ../../hdf5-1.8.14
+   ../../hdf5-1.8.18
 
 nmake install
 
 **************************************************************************
-NetCDF (version 4.4.x)
+NetCDF
 **************************************************************************
-mkdir netcdf
-cd netcdf
+mkdir netcdf_build
+cd netcdf_build
 set HDF5_DIR=%cd:\=/%/../hdf5_install/cmake
 cmake -G "NMake Makefiles" ^
    -DCMAKE_BUILD_TYPE=Release ^
@@ -104,8 +106,7 @@ cmake -G "NMake Makefiles" ^
    -DHDF5_HL_LIB=%cd:\=/%/../hdf5_install/lib/hdf5_hl.lib ^
    -DZLIB_INCLUDE_DIR=%cd:\=/%/../zlib_install/include ^
    -DZLIB_LIBRARY=%cd:\=/%/../zlib_install/lib/zlib.lib ^
-   ../../netcdf-4.4.0
-
+   ../../netcdf-4.4.1
 nmake install
    
 **************************************************************************
@@ -156,8 +157,8 @@ cmake -G "NMake Makefiles" ^
    -DCMAKE_INSTALL_PREFIX=../ovito_release_install ^
    -DZLIB_INCLUDE_DIR=%cd:\=/%/../zlib_install/include ^
    -DZLIB_LIBRARY=%cd:\=/%/../zlib_install/lib/zlib.lib ^
-   -Dnetcdf_DIR=%cd:\=/%/../netcdf_install/share/cmake ^
-   -DHDF5_DIR=%cd:\=/%/../hdf5_install/cmake/hdf5 ^
+   -Dnetcdf_DIR=%cd:\=/%/../netcdf_install/lib/cmake/netCDF ^
+   -DHDF5_DIR=%cd:\=/%/../hdf5_install/cmake ^
    -DBOOST_INCLUDEDIR=%cd:\=/%/../../boost_1_62_0 ^
    -DQSCINTILLA_INCLUDE_DIR=%cd:\=/%/../../QScintilla_gpl-2.9.3\Qt4Qt5 ^
    -DQSCINTILLA_LIBRARY=%cd:\=/%/../qscintilla/release/qscintilla2.lib ^
