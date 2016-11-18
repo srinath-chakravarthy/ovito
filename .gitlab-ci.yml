@@ -1,7 +1,8 @@
 image: ubuntu:latest
 
 before_script:
-  - apt-get install --yes cmake
+  - apt-get update -y -q
+  - apt-get install -y cmake
 
 build_linux:
    stage: build
