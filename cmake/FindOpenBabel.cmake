@@ -3,7 +3,7 @@
 #  OpenBabel_INCLUDE_DIRS - the include directories needed
 #  OpenBabel_LIBRARIES - libraries needed
 
-FIND_PATH(OPENBABEL_INCLUDE_DIR NAMES openbabel/mol.h)
+FIND_PATH(OPENBABEL_INCLUDE_DIR NAMES openbabel/mol.h PATH_SUFFIXES openbabel-2.0)
 FIND_LIBRARY(OPENBABEL_LIBRARY NAMES openbabel)
 
 SET(OpenBabel_INCLUDE_DIRS ${OPENBABEL_INCLUDE_DIR})

@@ -144,7 +144,7 @@ namespace GEO {
 #define GEO_OS_ANDROID
 #endif
 
-#if defined(__linux__)
+#if defined(__linux__) || defined(__CYGWIN__)
 
 #define GEO_OS_LINUX
 #define GEO_OS_UNIX

@@ -87,6 +87,13 @@ ELSE()
 	ENDIF()
 ENDIF()
 
+IF(CYGWIN)
+	IF(CMAKE_COMPILER_IS_GNUCXX)
+		# Linking fails without -O3
+		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+	ENDIF()
+ENDIF()
+
 IF(APPLE)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -Wno-invalid-offsetof")
 ENDIF()

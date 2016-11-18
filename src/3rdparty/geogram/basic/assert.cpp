@@ -54,7 +54,7 @@
 #include <signal.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#ifndef GEO_OS_ANDROID
+#if !defined(GEO_OS_ANDROID) && !defined(__CYGWIN__)
 #include <execinfo.h>
 #endif
 #endif
