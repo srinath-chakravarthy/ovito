@@ -43,4 +43,4 @@ build_linux:
            -DCMAKE_INSTALL_PREFIX=../install
            ..
       - make install
-      - make test
+      - ctest --output-on-failure
