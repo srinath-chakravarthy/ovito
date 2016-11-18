@@ -1,0 +1,10 @@
+
+build_linux:
+   stage: build
+   tags:
+      - linux
+   script:
+      - mkdir build
+      - cd build
+      - cmake -DCMAKE_BUILD_TYPE=Debug ..
+      - make
