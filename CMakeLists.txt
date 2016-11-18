@@ -24,20 +24,20 @@ PROJECT(Ovito)
 # Make sure we have a recent version of CMake.
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12 FATAL_ERROR)
 CMAKE_POLICY(VERSION 2.8.12)
-CMAKE_POLICY(SET CMP0023 OLD)
+
+# Choose CMake policies.
+CMAKE_POLICY(SET CMP0023 OLD)   # Allow keyword and plain target_link_libraries signatures to be mixed.
+CMAKE_POLICY(SET CMP0020 NEW) 	# Automatically link to qtmain.lib on Windows.
 IF(NOT CMAKE_VERSION VERSION_LESS "3")
 	CMAKE_POLICY(SET CMP0026 OLD)	# Suppress warning when reading the LOCATION target property.
 	CMAKE_POLICY(SET CMP0043 OLD)	# Suppress warning because COMPILE_DEFINITIONS_* target property is used.
 	CMAKE_POLICY(SET CMP0045 OLD)	# Don't warn about non-existing targets in GET_TARGET_PROPERTY().
 ENDIF()
 
-IF(WIN32)
-	CMAKE_POLICY(SET CMP0020 NEW) 	# Automatically link to qtmain.lib on Windows.
-
-	IF(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
-		IF(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "18")
-			MESSAGE(FATAL_ERROR "OVITO requires Visual C++ 2013 or newer.")
-		ENDIF()
+# Check compiler requirement.
+IF(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
+	IF(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "18")
+		MESSAGE(FATAL_ERROR "OVITO requires Visual C++ 2013 or newer.")
 	ENDIF()
 ENDIF()
 
@@ -70,10 +70,10 @@ OPTION(OVITO_BUILD_PLUGIN_OPENBABELPLUGIN "Build the OpenBabel plugin (experimen
 # It will get populated by the OVITO_PLUGIN macro.
 SET(OVITO_PLUGINS_LIST "")
 
-# Enable software tests.
+# Enable software testing framework.
 ENABLE_TESTING()
 
-# Enable C++11 standard.
+# Activate C++11 language standard.
 IF(NOT CMAKE_VERSION VERSION_LESS "3.1")
 	SET(CMAKE_CXX_STANDARD 11)
 	SET(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -90,14 +90,6 @@ ENDIF()
 IF(APPLE)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -Wno-invalid-offsetof")
 ENDIF()
-
-# Enable additional optimizations for release builds.
-#IF(CMAKE_COMPILER_IS_GNUCXX)
-#	# Use -flto flag to enable GCC's link-time optimization.
-#	SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto -fuse-linker-plugin")
-#	SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -flto -fuse-linker-plugin")
-#	SET(CMAKE_MODULE_LINKER_FLAGS_RELEASE "${CMAKE_MODULE_LINKER_FLAGS_RELEASE} -flto -fuse-linker-plugin")
-#ENDIF()
 
 IF(MSVC)
 	# Suppress warning related to QVarLengthArray implementation.
@@ -230,17 +222,6 @@ IF(OVITO_BUILD_GUI)
 	ENDIF()
 ENDIF()
 
-# Find OpenGL library.
-IF(OVITO_BUILD_GUI) 
-	FIND_PACKAGE(OpenGL REQUIRED)
-	ADD_LIBRARY(OpenGLLib SHARED IMPORTED GLOBAL)
-	SET_PROPERTY(TARGET OpenGLLib PROPERTY IMPORTED_LOCATION "${OPENGL_gl_LIBRARY}")
-	SET_PROPERTY(TARGET OpenGLLib APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${OPENGL_INCLUDE_DIR}")
-ENDIF()
-
-# Find the zlib library. It is required for reading/writing compressed simulation files.
-FIND_PACKAGE(ZLIB REQUIRED)
-
 # Find the Boost library.
 FIND_PACKAGE(Boost REQUIRED)
 IF(NOT Boost_FOUND)
@@ -250,19 +231,11 @@ ENDIF()
 # Generate build targets.
 ADD_SUBDIRECTORY(src)
 
-################# OpenGL test program ####################
-OPTION(OVITO_BUILD_OPENGLTEST "Build the OpenGL test program." "OFF")
-IF(OVITO_BUILD_OPENGLTEST)
-	ADD_SUBDIRECTORY(tests/opengltest)
-ENDIF()
-
-################## Build documentation #####################
+# Gnerate user documentation.
 INCLUDE(cmake/Documentation.cmake)
 
-##################### Set up CPack #########################
+# Set up CPack for generating distributable program packages.
 INCLUDE(cmake/Packaging.cmake)
-
-############################################################
 
 # Export our targets so that external plugins can use them.
 CONFIGURE_FILE(cmake/OVITOConfig.cmake "${${PROJECT_NAME}_BINARY_DIR}/" @ONLY)
