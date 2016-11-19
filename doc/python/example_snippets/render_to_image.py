@@ -1,10 +1,10 @@
 from ovito import *
-from ovito.vis import RenderSettings
+from ovito.vis import *
 from PyQt5.QtGui import QPainter
 
 # Let OVITO render an image of the active viewport.
 vp = dataset.viewports.active_vp
-rs = RenderSettings(size = (320,240))
+rs = RenderSettings(size = (320,240), renderer = TachyonRenderer())
 image = vp.render(rs)
 
 # Paint something on top of the rendered image.

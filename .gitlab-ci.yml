@@ -25,6 +25,7 @@ before_script:
                          python3-numpy
                          python3-sip
                          python3-pyqt5
+                         python3-matplotlib
                          xsltproc
                          docbook-xml
 

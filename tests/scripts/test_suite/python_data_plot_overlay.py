@@ -62,4 +62,6 @@ def render(painter, **args):
 overlay = PythonViewportOverlay()
 overlay.function = render
 vp.overlays.append(overlay)
+if ovito.headless_mode: 
+    ovito.dataset.render_settings.renderer = TachyonRenderer(ambient_occlusion = False, antialiasing = False)
 vp.render()

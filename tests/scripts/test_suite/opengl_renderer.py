@@ -3,14 +3,16 @@ from ovito import *
 from ovito.io import *
 from ovito.vis import OpenGLRenderer, RenderSettings
 
-# Import a data file.
-node = import_file("../../files/CFG/shear.void.120.cfg")
+if not ovito.headless_mode:
 
-renderer = OpenGLRenderer()
+    # Import a data file.
+    node = import_file("../../files/CFG/shear.void.120.cfg")
 
-print("Parameter defaults:")
-print("  antialiasing_level: {}".format(renderer.antialiasing_level))
-renderer.antialiasing_level = 2
+    renderer = OpenGLRenderer()
 
-settings = RenderSettings(size = (100,100), renderer = renderer)
-dataset.viewports.active_vp.render(settings)
+    print("Parameter defaults:")
+    print("  antialiasing_level: {}".format(renderer.antialiasing_level))
+    renderer.antialiasing_level = 2
+
+    settings = RenderSettings(size = (100,100), renderer = renderer)
+    dataset.viewports.active_vp.render(settings)

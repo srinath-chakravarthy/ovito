@@ -17,6 +17,8 @@ settings = RenderSettings(
     size = (64, 64),
     range = RenderSettings.Range.ANIMATION        
 )
+if ovito.headless_mode: 
+    settings.renderer = TachyonRenderer(ambient_occlusion = False, antialiasing = False)
 vp.render(settings)
 
 assert(os.path.isfile("movie.avi"))
