@@ -52,7 +52,7 @@
 void rt_finalize(void); /* UGLY! tachyon.h needs more cleanup before it can */
                         /* be properly included without risk of bogosity    */
 
-#if defined(__linux) || defined(Bsd) || defined(AIX) || defined(__APPLE__) || defined(__sun) || defined(__hpux) || defined(_CRAYT3E) || defined(_CRAY) || defined(_CRAYC) || defined(__osf__) || defined(__BEOS__)
+#if defined(__linux) || defined(Bsd) || defined(AIX) || defined(__APPLE__) || defined(__sun) || defined(__hpux) || defined(_CRAYT3E) || defined(_CRAY) || defined(_CRAYC) || defined(__osf__) || defined(__BEOS__) || defined(__CYGWIN__)
 #include <sys/time.h>
 #endif
 
