@@ -493,10 +493,10 @@ void TachyonRenderer::renderArrows(const DefaultArrowPrimitive& arrowBuffer)
 	else if(arrowBuffer.shape() == ArrowPrimitive::ArrowShape) {
 		for(const DefaultArrowPrimitive::ArrowElement& element : arrowBuffer.elements()) {
 			void* tex = getTachyonTexture(element.color.r(), element.color.g(), element.color.b(), element.color.a());
-			FloatType arrowHeadRadius = element.width * 2.5f;
-			FloatType arrowHeadLength = arrowHeadRadius * 1.8f;
+			FloatType arrowHeadRadius = element.width * FloatType(2.5);
+			FloatType arrowHeadLength = arrowHeadRadius * FloatType(1.8);
 			FloatType length = element.dir.length();
-			if(length == 0.0f)
+			if(length == 0)
 				continue;
 
 			if(length > arrowHeadLength) {

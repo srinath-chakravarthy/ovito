@@ -191,6 +191,7 @@ def export_file(node, file, format, **params):
                             * ``"xyz"`` -- XYZ format
                             * ``"fhi-aims"`` -- FHI-aims format
                             * ``"ca"`` -- Text-based format for storing dislocation lines (Crystal Analysis Tool)
+                            * ``"povray"`` -- POV-Ray scene format
         
         The function evaluates the modification pipeline of the given object node to obtain the data to be exported. 
         This means it is not necessary to call :py:meth:`ObjectNode.compute() <ovito.ObjectNode.compute>` before calling
@@ -283,11 +284,15 @@ def export_file(node, file, format, **params):
         exporter.use_wildcard_filename = True
     
     # Ensure the data to be exported is available.
-    if not node.wait(time = time):
-        raise RuntimeError("Operation has been canceled by the user.")
-
-    # Pass objects to exporter object.
-    exporter.set_node(node)
+    if isinstance(node, ovito.ObjectNode):
+        if not node.wait(time = time):
+            raise RuntimeError("Operation has been canceled by the user.")
+        # Pass objects to exporter object.
+        exporter.set_node(node)
+    elif node is None:
+        exporter.select_standard_output_data()
+    else:
+        raise ValueError("Invalid node parameter.")
 
     # Export data.
     if not exporter.export_nodes(ovito.get_progress_display()):

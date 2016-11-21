@@ -8,8 +8,6 @@ import os.path
 test_data_dir = "../../files/"
 
 node1 = import_file(test_data_dir + "LAMMPS/class2.data", atom_style = "full")
-node1.add_to_scene()
-node1.source.particle_properties.position.display.shape = ParticleDisplay.Shape.Square
 print(node1.source)
 export_file(node1, "test.data", "lammps_data", atom_style = "full")
 export_file(node1, "test.data", "lammps_data", atom_style = "bond")
@@ -17,14 +15,13 @@ export_file(node1, "test.data", "lammps_dump", columns = ["Particle Identifier",
 export_file(node1, "test.data", "fhi-aims")
 export_file(node1, "test.data", "imd")
 export_file(node1, "test.data", "vasp")
+export_file(node1, "test.data", "povray")
 export_file(node1, "test.data", "xyz", columns = ["Position.X", "Position.Y", "Position.Z"])
-export_file(node1, "test.pov", "povray")
 ovito.dataset.anim.last_frame = 7
 export_file(node1, "test.dump", "lammps_dump", columns = ["Position.X", "Position.Y", "Position.Z"], multiple_frames = True)
 export_file(node1, "test.*.dump", "lammps_dump", columns = ["Position.X", "Position.Y", "Position.Z"], multiple_frames = True, start_frame = 1, end_frame = 5, every_nth_frame = 2)
 os.remove("test.data")
 os.remove("test.dump")
-#os.remove("test.pov")
 os.remove("test.1.dump")
 os.remove("test.3.dump")
 os.remove("test.5.dump")

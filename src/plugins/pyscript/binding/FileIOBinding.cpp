@@ -81,6 +81,7 @@ PYBIND11_PLUGIN(PyScriptFileIO)
 		// Required by ovito.io.export_file():
 		.def("set_node", [](FileExporter& exporter, SceneNode* node) { exporter.setOutputData({ node }); })
 		.def("export_nodes", &FileExporter::exportNodes)
+		.def("select_standard_output_data", &FileExporter::selectStandardOutputData)		
 	;
 
 	ovito_class<AttributeFileExporter, FileExporter>(m)

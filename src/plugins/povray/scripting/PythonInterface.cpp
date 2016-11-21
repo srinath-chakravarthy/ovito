@@ -36,7 +36,13 @@ PYBIND11_PLUGIN(POVRay)
 
 	py::module m("POVRay");
 
-	ovito_abstract_class<POVRayRenderer, NonInteractiveSceneRenderer>{m}
+	ovito_class<POVRayRenderer, NonInteractiveSceneRenderer>{m}
+		.def_property("povray_executable", &POVRayRenderer::povrayExecutable, &POVRayRenderer::setPovrayExecutable)
+		.def_property("quality_level", &POVRayRenderer::qualityLevel, &POVRayRenderer::setQualityLevel)
+		.def_property("antialiasing", &POVRayRenderer::antialiasingEnabled, &POVRayRenderer::setAntialiasingEnabled)
+		.def_property("show_window", &POVRayRenderer::povrayDisplayEnabled, &POVRayRenderer::setPovrayDisplayEnabled)
+		.def_property("radiosity", &POVRayRenderer::radiosityEnabled, &POVRayRenderer::setRadiosityEnabled)
+		.def_property("radiosity_raycount", &POVRayRenderer::radiosityRayCount, &POVRayRenderer::setRadiosityRayCount)
 	;
 
 	ovito_class<POVRayExporter, FileExporter>{m}

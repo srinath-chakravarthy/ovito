@@ -20,24 +20,11 @@
 ###############################################################################
 
 SET(SourceFiles
-	renderer/POVRayRenderer.cpp
-	exporter/POVRayExporter.cpp
+	POVRayRendererEditor.cpp
 )
 
-IF(OVITO_BUILD_PLUGIN_PYSCRIPT)
-	LIST(APPEND SourceFiles scripting/PythonInterface.cpp)
-ENDIF()
-
-OVITO_STANDARD_PLUGIN(POVRay
+OVITO_STANDARD_PLUGIN(POVRayGui
 	SOURCES ${SourceFiles}
-	OPTIONAL_PLUGIN_DEPENDENCIES PyScript
-	PYTHON_WRAPPERS "${CMAKE_CURRENT_SOURCE_DIR}/resources/python/"
+	PLUGIN_DEPENDENCIES POVRay
+	GUI_PLUGIN
 )
-
-# Build corresponding GUI plugin.
-IF(OVITO_BUILD_GUI)
-	ADD_SUBDIRECTORY(gui)
-ENDIF()
-
-# Propagate list of plugins to parent scope.
-SET(OVITO_PLUGIN_LIST ${OVITO_PLUGIN_LIST} PARENT_SCOPE)

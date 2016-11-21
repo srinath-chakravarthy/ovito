@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 // 
-//  Copyright (2015) Alexander Stukowski
+//  Copyright (2016) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,32 +19,38 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_HTML_LIST_WIDGET_H
-#define __OVITO_HTML_LIST_WIDGET_H
+#ifndef __OVITO_POVRAY_RENDERER_EDITOR_H
+#define __OVITO_POVRAY_RENDERER_EDITOR_H
 
 #include <gui/GUI.h>
+#include <gui/properties/PropertiesEditor.h>
+#include <core/reference/RefTarget.h>
 
-namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Widgets)
-
-/**
- * \brief A QListWidget that supports HTML text items.
+namespace Ovito { namespace POVRay { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
+	
+/*
+ * \brief The UI component for the POVRayRenderer class.
  */
-class OVITO_GUI_EXPORT HtmlListWidget : public QListWidget
+class POVRayRendererEditor : public PropertiesEditor
 {
 public:
-	
-	/// \brief Constructs a list widget.
-	/// \param parent The parent widget for the new widget.
-	HtmlListWidget(QWidget* parent = nullptr);
 
-	/// Returns the recommended size for the widget.
-	virtual QSize sizeHint() const override {
-		return QSize(320, 240);
-	}
+	/// Default constructor.
+	Q_INVOKABLE POVRayRendererEditor() {}
+
+protected:
+	
+	/// Creates the user interface controls for the editor.
+	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
+	
+private:
+
+	Q_OBJECT
+	OVITO_OBJECT
 };
 
 OVITO_END_INLINE_NAMESPACE
-OVITO_END_INLINE_NAMESPACE
+}	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_ELIDED_TEXT_LABEL_H
+#endif // __OVITO_POVRAY_RENDERER_EDITOR_H

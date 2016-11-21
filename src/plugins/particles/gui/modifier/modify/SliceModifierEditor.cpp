@@ -43,7 +43,9 @@ SET_OVITO_OBJECT_EDITOR(SliceModifier, SliceModifierEditor);
 
 /******************************************************************************
 * Sets up the UI widgets of the editor.
-******************************************************************************/
+************************************************axisLabelPUI = new StringParameterUI(this, PROPERTY_FIELD(CoordinateTripodOverlay::_axis1Label));
+	sublayout->addWidget(new QLabel(tr("Label:")), 0, 0);
+	sublayout->addWidget(axisLabelPUI->textBox(), 0, 1, 1, 2);******************************/
 void SliceModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 {
 	// Create a rollout.

@@ -246,6 +246,21 @@ void RenderSettingsEditor::onSwitchRenderer()
 
 	QVector<OvitoObjectType*> rendererClasses = PluginManager::instance().listClasses(SceneRenderer::OOType);
 
+	// Preferred ordering of renderers:
+	const QStringList displayOrdering = {
+		"StandardSceneRenderer", 
+		"TachyonRenderer",
+		"POVRayRenderer"
+	};
+	std::sort(rendererClasses.begin(), rendererClasses.end(), [&displayOrdering](OvitoObjectType* a, OvitoObjectType* b) {
+		int ia = displayOrdering.indexOf(a->name());
+		int ib = displayOrdering.indexOf(b->name());
+		if(ia == -1 && ib == -1) return a->displayName() < b->displayName();
+		else if(ia == -1) return false;
+		else if(ib == -1) return true;
+		else return ia < ib;
+	});
+
 	QDialog dlg(container());
 	dlg.setWindowTitle(tr("Switch renderer"));
 	QGridLayout* layout = new QGridLayout(&dlg);
@@ -264,6 +279,8 @@ void RenderSettingsEditor::onSwitchRenderer()
 			description = tr("This is a software-based raytracing engine, which can offer better shading and shadows. "
 					"The Tachyon renderer is slower and requires more memory. "
 					"It may not be able to render very large datasets depending on your computer.");
+		else if(clazz->name() == QStringLiteral("POVRayRenderer"))
+			description = tr("This rendering backend uses the Persistence of Vision Raytracer (POV-Ray) to render the scene. POV-Ray must be installed on the computer.");
 		QString text = QStringLiteral("<p style=\"font-weight: bold;\">") + clazz->displayName() + QStringLiteral("</p>");
 		if(description.isEmpty() == false)
 			text += QStringLiteral("<p style=\"font-size: small;\">") + description + QStringLiteral("</p>");
