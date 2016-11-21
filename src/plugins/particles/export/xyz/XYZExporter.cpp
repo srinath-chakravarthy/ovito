@@ -45,7 +45,7 @@ bool XYZExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint 
 
 	const OutputColumnMapping& mapping = columnMapping();
 	if(mapping.empty())
-		throw Exception(tr("No particle properties have been selected for export to the XYZ file. Cannot write file with zero columns."));
+		throwException(tr("No particle properties have been selected for export to the XYZ file. Cannot write file with zero columns."));
 	OutputColumnWriter columnWriter(mapping, state, true);
 
 	SimulationCellObject* simulationCell = state.findObject<SimulationCellObject>();
@@ -125,7 +125,7 @@ bool XYZExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint 
 			// Find matching property
 			ParticlePropertyObject* property = pref.findInState(state);
 			if(property == nullptr && pref.type() != ParticleProperty::IdentifierProperty)
-				throw Exception(tr("Particle property '%1' cannot be exported because it does not exist.").arg(pref.name()));
+				throwException(tr("Particle property '%1' cannot be exported because it does not exist.").arg(pref.name()));
 
 			// Count the number of consecutive columns with the same property.
 			int nCols = 1;
@@ -144,7 +144,7 @@ bool XYZExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint 
 			else if(dataType == qMetaTypeId<bool>())
 				dataTypeStr = QStringLiteral("L");
 			else
-				throw Exception(tr("Unexpected data type '%1' for property '%2'.").arg(QMetaType::typeName(dataType) ? QMetaType::typeName(dataType) : "unknown").arg(pref.name()));
+				throwException(tr("Unexpected data type '%1' for property '%2'.").arg(QMetaType::typeName(dataType) ? QMetaType::typeName(dataType) : "unknown").arg(pref.name()));
 
 			if(!propertiesStr.isEmpty()) propertiesStr += QStringLiteral(":");
 			propertiesStr += QStringLiteral("%1:%2:%3").arg(columnName).arg(dataTypeStr).arg(nCols);

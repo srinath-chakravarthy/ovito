@@ -293,13 +293,6 @@ void ActionManager::on_FileRemoteImport_triggered()
 ******************************************************************************/
 void ActionManager::on_FileExport_triggered()
 {
-	// Create the list of scene nodes to be exported.
-	QVector<SceneNode*> nodes = _dataset->selection()->nodes();
-	if(nodes.empty()) {
-		Exception(tr("Please select an object to be exported first.")).showError();
-		return;
-	}
-
 	// Build filter string.
 	QStringList filterStrings;
 	const auto& exporterTypes = FileExporter::availableExporters();
@@ -311,7 +304,7 @@ void ActionManager::on_FileExport_triggered()
 		catch(...) { filterStrings << QString(); }
 	}
 	if(filterStrings.isEmpty()) {
-		Exception(tr("This function is disabled, because there are no export services available.")).showError();
+		Exception(tr("This function is disabled, because there are no export services available."), _dataset).showError();
 		return;
 	}
 
@@ -365,8 +358,8 @@ void ActionManager::on_FileExport_triggered()
 		if(!_dataset->waitUntilSceneIsReady(tr("Waiting for running tasks to complete.")))
 			return;
 
-		// Pass data to be exported to exporter.
-		exporter->setOutputData(nodes);
+		// Choose the scene nodes to be exported.
+		exporter->selectStandardOutputData();
 
 		// Let the user adjust the settings of the exporter.
 		FileExporterSettingsDialog settingsDialog(mainWindow(), exporter);

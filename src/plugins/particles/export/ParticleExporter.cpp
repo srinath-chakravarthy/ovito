@@ -23,6 +23,7 @@
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <core/utilities/concurrent/ProgressDisplay.h>
 #include <core/scene/ObjectNode.h>
+#include <core/scene/SelectionSet.h>
 #include "ParticleExporter.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export)
@@ -34,6 +35,18 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ParticleExporter, FileExporter);
 ******************************************************************************/
 ParticleExporter::ParticleExporter(DataSet* dataset) : FileExporter(dataset)
 {
+}
+
+/******************************************************************************
+* Selects the natural scene nodes to be exported by this exporter under 
+* normal circumstances.
+******************************************************************************/
+void ParticleExporter::selectStandardOutputData()
+{
+	QVector<SceneNode*> nodes = dataset()->selection()->nodes();
+	if(nodes.empty())
+		throwException(tr("Please select an object to be exported first."));
+	setOutputData(nodes);
 }
 
 /******************************************************************************
@@ -76,7 +89,7 @@ bool ParticleExporter::openOutputFile(const QString& filePath, int numberOfFrame
 	OVITO_ASSERT(!_outputStream);
 
 	_outputFile.setFileName(filePath);
-	_outputStream.reset(new CompressedTextWriter(_outputFile));
+	_outputStream.reset(new CompressedTextWriter(_outputFile, dataset()));
 
 	return true;
 }
@@ -93,6 +106,26 @@ void ParticleExporter::closeOutputFile(bool exportCompleted)
 
 	if(!exportCompleted)
 		_outputFile.remove();
+}
+
+/******************************************************************************
+ * Exports a single animation frame to the current output file.
+ *****************************************************************************/
+bool ParticleExporter::exportFrame(int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay)
+{
+	if(!FileExporter::exportFrame(frameNumber, time, filePath, progressDisplay))
+		return false;
+
+	if(progressDisplay)
+		progressDisplay->setStatusText(tr("Exporting frame %1 to file '%2'.").arg(frameNumber).arg(filePath));
+
+	// Export the first scene node from the selection set.
+	if(!outputData().empty())
+		return exportObject(outputData().front(), frameNumber, time, filePath, progressDisplay);
+	else
+		throwException(tr("The selection set to be exported is empty."));
+
+	return true;
 }
 
 OVITO_END_INLINE_NAMESPACE

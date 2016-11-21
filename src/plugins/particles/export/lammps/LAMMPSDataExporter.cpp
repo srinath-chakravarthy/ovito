@@ -54,7 +54,7 @@ bool LAMMPSDataExporter::exportObject(SceneNode* sceneNode, int frameNumber, Tim
 	// Get simulation cell info.
 	SimulationCellObject* simulationCell = state.findObject<SimulationCellObject>();
 	if(!simulationCell)
-		throw Exception(tr("No simulation cell defined. Cannot write LAMMPS file."));
+		throwException(tr("No simulation cell defined. Cannot write LAMMPS file."));
 
 	AffineTransformation simCell = simulationCell->cellMatrix();
 

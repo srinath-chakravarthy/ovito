@@ -44,6 +44,9 @@ public:
 	/// \brief Returns the filter description that is displayed in the drop-down box of the file dialog.
 	virtual QString fileFilterDescription() override { return tr("Crystal Analysis File"); }
 
+	/// \brief Selects the natural scene nodes to be exported by this exporter under normal circumstances.
+	virtual void selectStandardOutputData() override; 
+
 	/// Returns whether the DXA defect mesh is exported (in addition to the dislocation lines).
 	bool meshExportEnabled() const { return _meshExportEnabled; }
 
@@ -52,8 +55,8 @@ public:
 
 protected:
 
-	/// \brief Writes the particles of one animation frame to the current output file.
-	virtual bool exportObject(SceneNode* node, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress) override;
+	/// \brief Exports a single animation frame to the current output file.
+	virtual bool exportFrame(int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay);
 
 	/// \brief This is called once for every output file to be written and before exportData() is called.
 	virtual bool openOutputFile(const QString& filePath, int numberOfFrames) override;

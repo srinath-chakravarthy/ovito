@@ -219,24 +219,8 @@ bool FileExporter::exportFrame(int frameNumber, TimePoint time, const QString& f
 			throw;
 		}
 	}
-
-	if(progressDisplay)
-		progressDisplay->setStatusText(tr("Exporting frame %1 to file '%2'.").arg(frameNumber).arg(filePath));
-
-	// Export the scene nodes.
-	for(SceneNode* sceneNode : outputData()) {
-		// Call virtual method to export the data.
-		try {
-			return exportObject(sceneNode, frameNumber, time, filePath, progressDisplay);
-		}
-		catch(Exception& ex) {
-			// Provide a local context for errors that occurred during export.
-			if(ex.context() == nullptr) ex.setContext(dataset());
-			throw;
-		}
-	}
-
-	throwException(tr("The selection set to be exported does not contain any object."));
+	
+	return true;
 }
 
 /******************************************************************************

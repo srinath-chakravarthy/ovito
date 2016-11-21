@@ -48,6 +48,9 @@ public:
 	///        application's settings store.
 	virtual void loadUserDefaults() override;
 
+ 	/// \brief Selects the natural scene nodes to be exported by this exporter under normal circumstances.
+	virtual void selectStandardOutputData() override; 	
+
 	/// Returns the list of global attributes to be exported.
 	const QStringList& attributesToExport() const { return _attributesToExport; }
 
@@ -65,14 +68,14 @@ protected:
 	/// \brief This is called once for every output file written after exportData() has been called.
 	virtual void closeOutputFile(bool exportCompleted) override;
 
+	/// \brief Exports a single animation frame to the current output file.
+	virtual bool exportFrame(int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) override;
+
 	/// Returns the current file this exporter is writing to.
 	QFile& outputFile() { return _outputFile; }
 
 	/// Returns the text stream used to write into the current output file.
 	CompressedTextWriter& textStream() { return *_outputStream; }
-
-	/// \brief Writes the particles of one animation frame to the current output file.
-	virtual bool exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) override;
 
 private:
 

@@ -47,8 +47,16 @@ void PropertyFieldDescriptor::memorizeDefaultValue(RefMaker* object) const
 	QSettings settings;
 	settings.beginGroup(definingClass()->plugin()->pluginId());
 	settings.beginGroup(definingClass()->name());
-	settings.setValue(identifier(), object->getPropertyFieldValue(*this));
-	//qDebug() << "Memorizing default value for parameter" << identifier() << "of class" << definingClass()->name() << ":" << object->getPropertyFieldValue(*this);
+	QVariant v = object->getPropertyFieldValue(*this);
+	// Workaround for bug in Qt 5.7: QVariants of type float for not get correctly stored
+	// by QSettings (at least on macOS), because QVariant::Float is not an official type.
+	if(v.type() == QMetaType::Float)
+		v = QVariant::fromValue((double)v.toFloat());
+	settings.setValue(identifier(), v);
+
+	//qDebug() << "Saving default value for parameter" << identifier() << "of class" << definingClass()->name() << 
+	//	"to settings store" << settings.fileName() << ":" << object->getPropertyFieldValue(*this) <<
+	//	"(type=" << object->getPropertyFieldValue(*this).type() << ")";
 }
 
 /******************************************************************************

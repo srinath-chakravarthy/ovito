@@ -124,8 +124,8 @@ public:
 	virtual Box3 sceneBoundingBox(TimePoint time);
 
 	/// This method is called just before renderFrame() is called.
-	/// Sets the view projection parameters, the animation frame to render.
-	/// and the viewport whose being rendered.
+	/// Sets the view projection parameters, the animation frame to render,
+	/// and the viewport who is being rendered.
 	virtual void beginFrame(TimePoint time, const ViewProjectionParameters& params, Viewport* vp) {
 		_time = time;
 		_viewport = vp;

@@ -679,7 +679,7 @@ PYBIND11_PLUGIN(Particles)
 				if(!SurfaceMeshDisplay::buildSurfaceMesh(*mesh.storage(), simCellObj->data(), false, mesh.cuttingPlanes(), output))
 					throw Exception("Failed to generate non-periodic mesh for export. Simulation cell might be too small.");
 				QFile file(filename);
-				CompressedTextWriter writer(file);
+				CompressedTextWriter writer(file, mesh.dataset());
 				output.saveToVTK(writer);
 			},
 			"export_vtk(filename, cell)"
@@ -694,7 +694,7 @@ PYBIND11_PLUGIN(Particles)
 				TriMesh output;
 				SurfaceMeshDisplay::buildCapMesh(*mesh.storage(), simCellObj->data(), mesh.isCompletelySolid(), false, mesh.cuttingPlanes(), output);
 				QFile file(filename);
-				CompressedTextWriter writer(file);
+				CompressedTextWriter writer(file, mesh.dataset());
 				output.saveToVTK(writer);
 			},
 			"export_cap_vtk(filename, cell)"
