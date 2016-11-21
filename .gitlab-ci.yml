@@ -28,6 +28,7 @@ before_script:
                          python3-matplotlib
                          xsltproc
                          docbook-xml
+                         povray
 
 build_linux:
    stage: build

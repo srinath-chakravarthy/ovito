@@ -28,7 +28,8 @@ sudo apt-get install \
    liblapack3gf \
    ncurses-dev \
    libssl-dev \
-   libreadline-dev
+   libreadline-dev \
+   povray
 
 **************************************************************************
 Install GNU g++ 5 compiler on Ubuntu 10.04

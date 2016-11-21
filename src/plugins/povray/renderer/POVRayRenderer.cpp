@@ -301,8 +301,8 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 
 		QProcess povrayProcess;
 		QString executablePath = povrayExecutable().isEmpty() ? QString("povray") : povrayExecutable();
-		qDebug() << "Starting POV-Ray sub-process (path =" << executablePath << ")";
-		qDebug() << "POV-Ray parameters:" << parameters;
+		//qDebug() << "Starting POV-Ray sub-process (path =" << executablePath << ")";
+		//qDebug() << "POV-Ray parameters:" << parameters;
 		povrayProcess.setReadChannel(QProcess::StandardOutput);
 		povrayProcess.start(executablePath, parameters);
 		if(!povrayProcess.waitForStarted()) {
@@ -317,7 +317,6 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 			progress->setStatusText(tr("Waiting for external POV-Ray program..."));
 			if(progress->wasCanceled()) return false;
 		}
-
 		while(!povrayProcess.waitForFinished(100)) {
 			if(progress) {
 				QCoreApplication::processEvents();
@@ -327,9 +326,9 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 		}
 
 		OVITO_ASSERT(povrayProcess.exitStatus() == QProcess::NormalExit);
-		qDebug() << "POV-Ray console output:";
-		std::cout << povrayProcess.readAllStandardError().constData(); 
-		qDebug() << "POV-Ray program returned with exit code" << povrayProcess.exitCode();
+		//qDebug() << "POV-Ray console output:";
+		//std::cout << povrayProcess.readAllStandardError().constData(); 
+		//qDebug() << "POV-Ray program returned with exit code" << povrayProcess.exitCode();
 		if(povrayProcess.exitCode() != 0)
 			throwException(tr("POV-Ray program returned with error code %1.").arg(povrayProcess.exitCode()));
 
@@ -341,9 +340,9 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 
 		QImage povrayImage;
 		if(!povrayImage.load(_imageFile->fileName(), "PNG")) {
-			_imageFile->setAutoRemove(false);
-			qDebug() << "Temporary image filename was" << QDir::toNativeSeparators(_imageFile->fileName());
-			qDebug() << "Temporary file will not be deleted.";
+			//_imageFile->setAutoRemove(false);
+			//qDebug() << "Temporary image filename was" << QDir::toNativeSeparators(_imageFile->fileName());
+			//qDebug() << "Temporary file will not be deleted.";
 			throwException(tr("Failed to parse image data obtained from external POV-Ray program."));
 		}
 

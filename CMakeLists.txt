@@ -64,7 +64,7 @@ OPTION(OVITO_BUILD_PLUGIN_TACHYON "Build the Tachyon renderer plugin." "ON")
 OPTION(OVITO_BUILD_PLUGIN_CRYSTALANALYSIS "Build the CrystalAnalysis plugin." "ON")
 OPTION(OVITO_BUILD_PLUGIN_PYSCRIPT "Build the Python scripting plugin." "ON")
 OPTION(OVITO_BUILD_PLUGIN_NETCDFPLUGIN "Build the NetCDF plugin." "ON")
-OPTION(OVITO_BUILD_PLUGIN_POVRAY "Build the POVRay plugin." "ON")
+OPTION(OVITO_BUILD_PLUGIN_POVRAY "Build the POV-Ray plugin." "ON")
 OPTION(OVITO_BUILD_PLUGIN_OPENBABELPLUGIN "Build the OpenBabel plugin (experimental)." "OFF")
 
 # This is a global list of plugin targets that will be built.
