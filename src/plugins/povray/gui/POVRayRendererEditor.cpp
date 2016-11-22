@@ -103,7 +103,7 @@ private:
 void POVRayRendererEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 {
 	// Create the rollout.
-	QWidget* rollout = createRollout(tr("POV-Ray settings"), rolloutParams);
+	QWidget* rollout = createRollout(tr("POV-Ray settings"), rolloutParams, "rendering.povray_renderer.html");
 
 	QVBoxLayout* mainLayout = new QVBoxLayout(rollout);
 	mainLayout->setContentsMargins(4,4,4,4);
@@ -206,9 +206,9 @@ void POVRayRendererEditor::createUI(const RolloutInsertionParameters& rolloutPar
 	layout->addLayout(dofSampleCountUI->createFieldLayout(), 2, 1);
 
 	// Preferences group
-	QGroupBox* preferencesGroupBox = new QGroupBox(tr("Preferences"));
-	mainLayout->addWidget(preferencesGroupBox);
-	layout = new QGridLayout(preferencesGroupBox);
+	QGroupBox* settingsGroupBox = new QGroupBox(tr("Settings"));
+	mainLayout->addWidget(settingsGroupBox);
+	layout = new QGridLayout(settingsGroupBox);
 	layout->setContentsMargins(4,4,4,4);
 	layout->setSpacing(0);
 	layout->setColumnStretch(0, 1);

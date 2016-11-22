@@ -49,13 +49,13 @@ DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _dofFocalLength, "DOFFocalLength", P
 DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _dofAperture, "DOFAperture", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _dofSampleCount, "DOFSampleCount", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _qualityLevel, "Quality level");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _enableAntialiasing, "Enable anti-aliasing");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _enableAntialiasing, "Anti-aliasing");
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _samplingMethod, "Sampling method");
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _AAThreshold, "Anti-aliasing threshold");
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _antialiasDepth, "Anti-aliasing depth");
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _enableJitter, "Enable jitter");
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _povrayDisplayEnabled, "Show POV-Ray window");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _enableRadiosity, "Enable radiosity");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _enableRadiosity, "Radiosity");
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _radiosityRayCount, "Ray count");
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _radiosityRecursionLimit, "Recursion limit");
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _radiosityErrorBound, "Error bound");
