@@ -113,6 +113,7 @@ PYBIND11_PLUGIN(PyScriptApp)
 	;
 
 	py::class_<CloneHelper>(m, "CloneHelper")
+		.def(py::init<>())
 		.def("clone", static_cast<OORef<RefTarget> (CloneHelper::*)(RefTarget*, bool)>(&CloneHelper::cloneObject<RefTarget>))
 	;
 
