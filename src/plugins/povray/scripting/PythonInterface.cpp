@@ -36,13 +36,60 @@ PYBIND11_PLUGIN(POVRay)
 
 	py::module m("POVRay");
 
-	ovito_class<POVRayRenderer, NonInteractiveSceneRenderer>{m}
-		.def_property("povray_executable", &POVRayRenderer::povrayExecutable, &POVRayRenderer::setPovrayExecutable)
-		.def_property("quality_level", &POVRayRenderer::qualityLevel, &POVRayRenderer::setQualityLevel)
-		.def_property("antialiasing", &POVRayRenderer::antialiasingEnabled, &POVRayRenderer::setAntialiasingEnabled)
-		.def_property("show_window", &POVRayRenderer::povrayDisplayEnabled, &POVRayRenderer::setPovrayDisplayEnabled)
-		.def_property("radiosity", &POVRayRenderer::radiosityEnabled, &POVRayRenderer::setRadiosityEnabled)
-		.def_property("radiosity_raycount", &POVRayRenderer::radiosityRayCount, &POVRayRenderer::setRadiosityRayCount)
+	ovito_class<POVRayRenderer, NonInteractiveSceneRenderer>(m,
+			"This is one of the rendering backends of OVITO. "
+			"\n\n"
+			"POV-Ray (The Persistence of Vision Raytracer) is an open-source raytracing program. "
+			"The POV-Ray rendering backend streams the scene data to a temporary file, which is then processed and rendered by the "
+			"external POV-Ray program. The final rendered image is read back into OVITO. "
+			"\n\n"
+			"The rendering backend requires the POV-Ray executable to be installed on the system. It will automatically "
+			"look for the executable ``povray`` in the system path. If the executable is not in the default search path, "
+			"its location must be explicitly specified by setting the :py:attr:`.povray_executable` attribute. "
+			"\n\n"
+			"For a more detailed description of the rendering parameters exposed by this Python class, please consult the "
+			"`official POV-Ray documentation <http://www.povray.org/documentation/>`_.")
+		.def_property("povray_executable", &POVRayRenderer::povrayExecutable, &POVRayRenderer::setPovrayExecutable,
+				"The absolute path to the external POV-Ray executable on the local computer, which is called by this rendering backend to render an image. "
+				"If no path is set, OVITO will look for ``povray`` in the default executable search path. "
+				"\n\n"
+				"Default: ``\"\"``")
+		.def_property("quality_level", &POVRayRenderer::qualityLevel, &POVRayRenderer::setQualityLevel,
+				"The `image rendering quality <http://www.povray.org/documentation/3.7.0/r3_2.html#r3_2_8_3>`_ parameter passed to POV-Ray."
+				"\n\n"
+				"Default: 9")
+		.def_property("antialiasing", &POVRayRenderer::antialiasingEnabled, &POVRayRenderer::setAntialiasingEnabled,
+				"Enables supersampling to reduce aliasing effects."
+				"\n\n"
+				"Default: ``True``")
+		.def_property("show_window", &POVRayRenderer::povrayDisplayEnabled, &POVRayRenderer::setPovrayDisplayEnabled,
+				"Controls whether the POV-Ray window is shown during rendering. This allows you to follow the image generation process. "
+				"\n\n"
+				"Default: ``True``")
+		.def_property("radiosity", &POVRayRenderer::radiosityEnabled, &POVRayRenderer::setRadiosityEnabled,
+				"Enables `radiosity light calculations <http://www.povray.org/documentation/3.7.0/r3_4.html#r3_4_4_3>`_."
+				"\n\n"
+				"Default: ``False``")
+		.def_property("radiosity_raycount", &POVRayRenderer::radiosityRayCount, &POVRayRenderer::setRadiosityRayCount,
+				"The number of rays that are sent out whenever a new radiosity value has to be calculated."
+				"\n\n"
+				"Default: 50")
+		.def_property("depth_of_field", &POVRayRenderer::depthOfFieldEnabled, &POVRayRenderer::setDepthOfFieldEnabled,
+				"This flag enables `focus blur <http://www.povray.org/documentation/3.7.0/r3_4.html#r3_4_2_3>`_ (depth-of-field) rendering."
+				"\n\n"
+				"Default: ``False``")
+		.def_property("focal_length", &POVRayRenderer::dofFocalLength, &POVRayRenderer::setDofFocalLength,
+				"Controls the focal length of the camera, which is used for depth-of-field rendering."
+				"\n\n"
+				"Default: 40.0")
+		.def_property("aperture", &POVRayRenderer::dofAperture, &POVRayRenderer::setDofAperture,
+				"Controls the aperture of the camera, which is used for depth-of-field rendering."
+				"\n\n"
+				"Default: 1.0")
+		.def_property("blur_samples", &POVRayRenderer::dofSampleCount, &POVRayRenderer::setDofSampleCount,
+				"Controls the maximum number of rays to use for each pixel to compute focus blur (depth-of-field)."
+				"\n\n"
+				"Default: 1.0")		
 	;
 
 	ovito_class<POVRayExporter, FileExporter>{m}

@@ -60,6 +60,7 @@ PYBIND11_PLUGIN(PyScriptRendering)
 			"\n\n"
 			"  * :py:class:`OpenGLRenderer` -- An OpenGL-based renderer, which is also used for the interactive display in OVITO's viewports.\n"
 			"  * :py:class:`TachyonRenderer` -- A software-based, high-quality raytracing renderer.\n"
+			"  * :py:class:`POVRayRenderer` -- A rendering backend that invokes the external POV-Ray raytracing program.\n"
 			"\n"
 			"Usage example::"
 			"\n\n"
@@ -74,8 +75,8 @@ PYBIND11_PLUGIN(PyScriptRendering)
 				"The renderer that is used to generate the image or movie. Depending on the selected renderer you "
 				"can use this to set additional parameters such as the anti-aliasing level."
 				"\n\n"
-				"See the :py:class:`OpenGLRenderer` and :py:class:`TachyonRenderer` classes "
-				"for a list of renderer-specific parameters.")
+				"See the :py:class:`OpenGLRenderer`, :py:class:`TachyonRenderer` and :py:class:`POVRayRenderer` classes "
+				"for the list of parameters specific to each rendering backend.")
 		.def_property("range", &RenderSettings::renderingRangeType, &RenderSettings::setRenderingRangeType,
 				"Selects the animation frames to be rendered."
 				"\n\n"

@@ -122,6 +122,30 @@ public:
 	/// Sets the number of rays that are sent out whenever a new radiosity value has to be calculated.
 	void setRadiosityRayCount(int count) { _radiosityRayCount = count; }
 	
+	/// Returns whether depth-of-field rendering is enabled.
+	bool depthOfFieldEnabled() const { return _depthOfFieldEnabled; }
+
+	/// Enables/disables depth-of-field rendering.
+	void setDepthOfFieldEnabled(bool enabled) { _depthOfFieldEnabled = enabled; }
+
+	/// Returns the camera's focal length, which is used for depth-of-field rendering.
+	FloatType dofFocalLength() const { return _dofFocalLength; }
+
+	/// Sets the camera's focal length, which is used for depth-of-field rendering.
+	void setDofFocalLength(FloatType length) { _dofFocalLength = length; }
+
+	/// Returns the camera's aperture, which is used for depth-of-field rendering.
+	FloatType dofAperture() const { return _dofAperture; }
+
+	/// Sets the camera's aperture, which is used for depth-of-field rendering.
+	void setDofAperture(FloatType aperture) { _dofAperture = aperture; }
+
+	/// Returns the number of sampling rays used for focal blur.
+	int dofSampleCount() const { return _dofSampleCount; }
+
+	/// Sets the number of sampling rays used for focal blur.
+	void setDofSampleCount(int count) { _dofSampleCount = count; }
+
 private:
 
     /// Writes a 3d vector to the output stream in POV-Ray format.
@@ -205,6 +229,18 @@ private:
 	/// Controls the fraction of error tolerated for the radiosity calculation.
 	PropertyField<FloatType> _radiosityErrorBound;
 
+	/// Enables depth-of-field rendering.
+	PropertyField<bool> _depthOfFieldEnabled;
+
+	/// Controls the camera's focal length, which is used for depth-of-field rendering.
+	PropertyField<FloatType> _dofFocalLength;
+
+	/// Controls the camera's aperture, which is used for depth-of-field rendering.
+	PropertyField<FloatType> _dofAperture;	
+
+	/// Controls the number of sampling rays used for focal blur.
+	PropertyField<int> _dofSampleCount;
+
 	/// Path to the external POV-Ray executable.
 	PropertyField<QString> _povrayExecutable;
 
@@ -224,6 +260,10 @@ private:
 	DECLARE_PROPERTY_FIELD(_radiosityRayCount);
 	DECLARE_PROPERTY_FIELD(_radiosityRecursionLimit);
 	DECLARE_PROPERTY_FIELD(_radiosityErrorBound);
+	DECLARE_PROPERTY_FIELD(_depthOfFieldEnabled);
+	DECLARE_PROPERTY_FIELD(_dofFocalLength);
+	DECLARE_PROPERTY_FIELD(_dofAperture);
+	DECLARE_PROPERTY_FIELD(_dofSampleCount);
 	DECLARE_PROPERTY_FIELD(_povrayExecutable);
 
 	friend class POVRayExporter;

@@ -64,7 +64,14 @@ bool POVRayExporter::openOutputFile(const QString& filePath, int numberOfFrames)
 	if(!_outputFile.open(QIODevice::WriteOnly | QIODevice::Text))
 		throwException(tr("Failed to open output file '%1' for writing: %2").arg(filePath).arg(_outputFile.errorString()));
 
-	_renderer.reset(new POVRayRenderer(dataset()));
+	// Take the already-existing POV-Ray renderer from the dataset if there is one.
+	// Otherwise, create a temporary POV-Ray renderer for streaming the scene objects to the output file.
+	POVRayRenderer* sceneRenderer = dynamic_object_cast<POVRayRenderer>(dataset()->renderSettings()->renderer());
+	if(sceneRenderer)
+		_renderer.reset(sceneRenderer);
+	else
+		_renderer.reset(new POVRayRenderer(dataset()));
+
 	_renderer->setScriptOutputDevice(&_outputFile);
 	if(!_renderer->startRender(dataset(), dataset()->renderSettings()))
 		return false;

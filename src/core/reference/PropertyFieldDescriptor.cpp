@@ -50,7 +50,7 @@ void PropertyFieldDescriptor::memorizeDefaultValue(RefMaker* object) const
 	QVariant v = object->getPropertyFieldValue(*this);
 	// Workaround for bug in Qt 5.7: QVariants of type float for not get correctly stored
 	// by QSettings (at least on macOS), because QVariant::Float is not an official type.
-	if(v.type() == QMetaType::Float)
+	if((QMetaType::Type)v.type() == QMetaType::Float)
 		v = QVariant::fromValue((double)v.toFloat());
 	settings.setValue(identifier(), v);
 

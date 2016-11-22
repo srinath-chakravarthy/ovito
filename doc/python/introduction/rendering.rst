@@ -112,17 +112,19 @@ the parameters::
         size = (800, 600)
     )
 
-OVITO provides two different rendering engines, which are responsible for producing the final image
-of the scene. The default renderer is the :py:class:`~ovito.vis.OpenGLRenderer`, which uses a fast, hardware-accelerated
+You can choose between three different rendering engines, which can produce the final image
+of the scene. The default renderer is the :py:class:`~ovito.vis.OpenGLRenderer`, which implements a fast, hardware-accelerated
 OpenGL rendering method. The second option is the :py:class:`~ovito.vis.TachyonRenderer`, which is
-based on a software-only raytracing algorithm and is able to produce better looking results in some cases.
-Each of these rendering engines has specific parameters, and you can access the current renderer object
+a software-only raytracing engine and which is able to produce better looking results in many cases.
+Finally, the :py:class:`~ovito.vis.POVRayRenderer` offloads the rendering to the external `POV-Ray <http://www.povray.org/>`_
+program, which must be installed on the local computer. 
+Each of these rendering backends has specific parameters, and you can access the current renderer 
 through the :py:attr:`RenderSettings.renderer <ovito.vis.RenderSettings.renderer>` attribute::
 
-    settings.renderer = TachyonRenderer() # Replace default OpenGLRenderer with TachyonRenderer
+    settings.renderer = TachyonRenderer() # Activate the TachyonRenderer backend
     settings.renderer.shadows = False     # Turn off cast shadows
     
-After all render settings have been specified, we can let OVITO render the image by calling 
+After the render settings have been specified, we can let OVITO render the image by calling 
 :py:meth:`Viewport.render() <ovito.vis.Viewport.render>`::
 
     vp.render(settings)

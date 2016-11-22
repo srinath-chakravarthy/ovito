@@ -26,6 +26,11 @@
 #include <gui/properties/IntegerParameterUI.h>
 #include <gui/properties/FloatParameterUI.h>
 #include <gui/properties/StringParameterUI.h>
+#include <gui/viewport/input/ViewportInputManager.h>
+#include <gui/viewport/input/ViewportInputMode.h>
+#include <gui/viewport/ViewportWindow.h>
+#include <gui/actions/ViewportModeAction.h>
+#include <gui/mainwin/MainWindow.h>
 #include <plugins/povray/renderer/POVRayRenderer.h>
 #include "POVRayRendererEditor.h"
 
@@ -33,6 +38,64 @@ namespace Ovito { namespace POVRay { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 IMPLEMENT_OVITO_OBJECT(POVRayGui, POVRayRendererEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(POVRayRenderer, POVRayRendererEditor);
+
+/**
+ * Viewport input mode that allows to pick a focal length.
+ */
+class PickFocalLengthInputMode : public ViewportInputMode
+{
+public:
+
+	/// Constructor.
+	PickFocalLengthInputMode(POVRayRendererEditor* editor) : ViewportInputMode(editor), _editor(editor) {}
+
+	/// Handles the mouse move events for a Viewport.
+	virtual void mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event) override {
+
+		// Change mouse cursor while hovering over an object.
+		ViewportPickResult pickResult = vpwin->pick(event->localPos());
+		setCursor(pickResult.valid ? SelectionMode::selectionCursor() : QCursor());
+
+		ViewportInputMode::mouseMoveEvent(vpwin, event);
+	}
+
+	/// Handles the mouse up events for a Viewport.
+	virtual void mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event) override {
+		if(event->button() == Qt::LeftButton) {
+			ViewportPickResult pickResult = vpwin->pick(event->localPos());
+			if(pickResult.valid && vpwin->viewport()->isPerspectiveProjection()) {
+				FloatType distance = (pickResult.worldPosition - vpwin->viewport()->cameraPosition()).length();
+
+				if(POVRayRenderer* renderer = static_object_cast<POVRayRenderer>(_editor->editObject())) {
+					_editor->undoableTransaction(tr("Set focal length"), [renderer, distance]() {
+						renderer->setDofFocalLength(distance);
+					});
+				}
+			}
+			inputManager()->removeInputMode(this);
+		}
+		ViewportInputMode::mouseReleaseEvent(vpwin, event);
+	}
+
+protected:
+
+	/// This is called by the system when the input handler has become active.
+	virtual void activated(bool temporary) override {
+		ViewportInputMode::activated(temporary);
+		inputManager()->mainWindow()->statusBar()->showMessage(
+				tr("Click on an object in the viewport to set the camera's focal length."));
+	}
+
+	/// This is called by the system after the input handler is no longer the active handler.
+	virtual void deactivated(bool temporary) override {
+		inputManager()->mainWindow()->statusBar()->clearMessage();
+		ViewportInputMode::deactivated(temporary);
+	}
+
+private:
+
+	POVRayRendererEditor* _editor;
+};
 
 /******************************************************************************
 * Creates the UI controls for the editor.
@@ -111,6 +174,36 @@ void POVRayRendererEditor::createUI(const RolloutInsertionParameters& rolloutPar
 	FloatParameterUI* radiosityErrorBoundUI = new FloatParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_radiosityErrorBound));
 	layout->addWidget(radiosityErrorBoundUI->label(), 2, 0);
 	layout->addLayout(radiosityErrorBoundUI->createFieldLayout(), 2, 1);
+
+	// Focal blur
+	BooleanGroupBoxParameterUI* enableDepthOfFieldUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_depthOfFieldEnabled));
+	QGroupBox* dofGroupBox = enableDepthOfFieldUI->groupBox();
+	mainLayout->addWidget(dofGroupBox);
+
+	layout = new QGridLayout(enableDepthOfFieldUI->childContainer());
+	layout->setContentsMargins(4,4,4,4);
+	layout->setSpacing(2);
+	layout->setColumnStretch(1, 1);
+
+	// Focal length
+	FloatParameterUI* focalLengthUI = new FloatParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_dofFocalLength));
+	layout->addWidget(focalLengthUI->label(), 0, 0);
+	layout->addLayout(focalLengthUI->createFieldLayout(), 0, 1);
+
+	// Focal length picking mode.
+	ViewportInputMode* pickFocalLengthMode = new PickFocalLengthInputMode(this);
+	ViewportModeAction* modeAction = new ViewportModeAction(mainWindow(), tr("Pick in viewport"), this, pickFocalLengthMode);
+	layout->addWidget(modeAction->createPushButton(), 0, 2);
+
+	// Aperture
+	FloatParameterUI* apertureUI = new FloatParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_dofAperture));
+	layout->addWidget(apertureUI->label(), 1, 0);
+	layout->addLayout(apertureUI->createFieldLayout(), 1, 1);
+
+	// Sample count
+	IntegerParameterUI* dofSampleCountUI = new IntegerParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_dofSampleCount));
+	layout->addWidget(dofSampleCountUI->label(), 2, 0);
+	layout->addLayout(dofSampleCountUI->createFieldLayout(), 2, 1);
 
 	// Preferences group
 	QGroupBox* preferencesGroupBox = new QGroupBox(tr("Preferences"));

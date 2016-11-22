@@ -44,6 +44,10 @@ DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _radiosityRayCount, "RadiosityRayCou
 DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _radiosityRecursionLimit, "RadiosityRecursionLimit", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _radiosityErrorBound, "RadiosityErrorBound", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _povrayExecutable, "ExecutablePath", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _depthOfFieldEnabled, "DepthOfFieldEnabled", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _dofFocalLength, "DOFFocalLength", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _dofAperture, "DOFAperture", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _dofSampleCount, "DOFSampleCount", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _qualityLevel, "Quality level");
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _enableAntialiasing, "Enable anti-aliasing");
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _samplingMethod, "Sampling method");
@@ -56,6 +60,10 @@ SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _radiosityRayCount, "Ray count");
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _radiosityRecursionLimit, "Recursion limit");
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _radiosityErrorBound, "Error bound");
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _povrayExecutable, "POV-Ray executable path");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _depthOfFieldEnabled, "Focal blur");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _dofFocalLength, "Focal length");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _dofAperture, "Aperture");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _dofSampleCount, "Blur samples");
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _qualityLevel, IntegerParameterUnit, 0, 11);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _samplingMethod, IntegerParameterUnit, 1, 2);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _AAThreshold, FloatParameterUnit, 0, 1);
@@ -63,6 +71,9 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _antialiasDepth, IntegerParam
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _radiosityRayCount, IntegerParameterUnit, 1, 1600);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _radiosityRecursionLimit, IntegerParameterUnit, 1, 20);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _radiosityErrorBound, FloatParameterUnit, 1e-5, 100);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(POVRayRenderer, _dofFocalLength, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _dofAperture, FloatParameterUnit, 0, 1);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(POVRayRenderer, _dofSampleCount, IntegerParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.
@@ -70,7 +81,8 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _radiosityErrorBound, FloatPa
 POVRayRenderer::POVRayRenderer(DataSet* dataset) : NonInteractiveSceneRenderer(dataset),
 	_qualityLevel(9), _enableAntialiasing(true), _samplingMethod(1), _AAThreshold(0.3f),
 	_antialiasDepth(3), _enableJitter(true), _povrayDisplayEnabled(true), _enableRadiosity(false),
-	_radiosityRayCount(35), _radiosityRecursionLimit(3), _radiosityErrorBound(1.8f)
+	_radiosityRayCount(50), _radiosityRecursionLimit(2), _radiosityErrorBound(0.8f),
+	_depthOfFieldEnabled(false), _dofFocalLength(40), _dofAperture(1.0f), _dofSampleCount(80)
 {
 	INIT_PROPERTY_FIELD(POVRayRenderer::_qualityLevel);
 	INIT_PROPERTY_FIELD(POVRayRenderer::_enableAntialiasing);
@@ -84,6 +96,10 @@ POVRayRenderer::POVRayRenderer(DataSet* dataset) : NonInteractiveSceneRenderer(d
 	INIT_PROPERTY_FIELD(POVRayRenderer::_radiosityRecursionLimit);
 	INIT_PROPERTY_FIELD(POVRayRenderer::_radiosityErrorBound);
 	INIT_PROPERTY_FIELD(POVRayRenderer::_povrayExecutable);
+	INIT_PROPERTY_FIELD(POVRayRenderer::_depthOfFieldEnabled);
+	INIT_PROPERTY_FIELD(POVRayRenderer::_dofFocalLength);
+	INIT_PROPERTY_FIELD(POVRayRenderer::_dofAperture);	
+	INIT_PROPERTY_FIELD(POVRayRenderer::_dofSampleCount);
 }
 
 /******************************************************************************
@@ -114,7 +130,7 @@ void POVRayRenderer::beginFrame(TimePoint time, const ViewProjectionParameters& 
 		_sceneFile->setTextModeEnabled(true);
 		_outputStream.setDevice(_sceneFile.get());
 
-		// Let POV-Ray write the image to a temporary file.
+		// Let POV-Ray write the rendered image to a temporary file which we create beforehand.
 		_imageFile.reset(new QTemporaryFile(QDir::tempPath() + QStringLiteral("/povray.XXXXXX.png")));
 		if(!_imageFile->open())
 			throwException(tr("Failed to open temporary POV-Ray image file."));
@@ -160,6 +176,12 @@ void POVRayRenderer::beginFrame(TimePoint time, const ViewProjectionParameters& 
 		_outputStream << "  right "; write(right); _outputStream << "\n";
 		_outputStream << "  up "; write(up); _outputStream << "\n";
 		_outputStream << "  angle " << (atan(tan(projParams().fieldOfView * 0.5) / projParams().aspectRatio) * 2.0 * 180.0 / FLOATTYPE_PI) << "\n";
+
+		if(depthOfFieldEnabled()) {
+			_outputStream << "  aperture " << dofAperture() << "\n";
+			_outputStream << "  focal_point "; write(p0 + dofFocalLength() * direction); _outputStream << "\n";
+			_outputStream << "  blur_samples " << dofSampleCount() << "\n";	
+		}		
 	}
 	else {
 		_outputStream << "  orthographic\n";

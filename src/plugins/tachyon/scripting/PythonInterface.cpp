@@ -36,9 +36,9 @@ PYBIND11_PLUGIN(Tachyon)
 	py::module m("Tachyon");
 
 	ovito_class<TachyonRenderer, NonInteractiveSceneRenderer>(m,
-			"This is the software-based raytracing renderer of OVITO."
+			"This is one of the software-based rendering backends of OVITO. Tachyon is an open-source raytracing engine integrated into OVITO."
 			"\n\n"
-			"It can render scenes with ambient occlusion lighting and semi-transparent objects.")
+			"It can render scenes with ambient occlusion lighting, semi-transparent objects, and depth-of-field focal blur.")
 		.def_property("antialiasing", &TachyonRenderer::antialiasingEnabled, &TachyonRenderer::setAntialiasingEnabled,
 				"Enables supersampling to reduce aliasing effects."
 				"\n\n"

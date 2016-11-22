@@ -11,6 +11,7 @@ This module contains classes related to data visualization and rendering.
 
   * :py:class:`OpenGLRenderer`
   * :py:class:`TachyonRenderer`
+  * :py:class:`POVRayRenderer`
 
 **Data visualization:**
 
