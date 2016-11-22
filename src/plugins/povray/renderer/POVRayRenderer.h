@@ -25,6 +25,8 @@
 #include <core/Core.h>
 #include <core/rendering/noninteractive/NonInteractiveSceneRenderer.h>
 
+#include <QTemporaryFile>
+
 #ifdef POVRay_EXPORTS		// This is defined by CMake when building the plugin library.
 #  define OVITO_POVRAY_EXPORT Q_DECL_EXPORT
 #else

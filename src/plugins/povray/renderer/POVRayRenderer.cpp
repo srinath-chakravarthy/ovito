@@ -70,7 +70,7 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _AAThreshold, FloatParameterU
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _antialiasDepth, IntegerParameterUnit, 1, 9);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _radiosityRayCount, IntegerParameterUnit, 1, 1600);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _radiosityRecursionLimit, IntegerParameterUnit, 1, 20);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _radiosityErrorBound, FloatParameterUnit, 1e-5, 100);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _radiosityErrorBound, FloatParameterUnit, FloatType(1e-5), 100);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(POVRayRenderer, _dofFocalLength, WorldParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _dofAperture, FloatParameterUnit, 0, 1);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(POVRayRenderer, _dofSampleCount, IntegerParameterUnit, 0);
