@@ -39,7 +39,7 @@ class OVITO_GUI_EXPORT PropertiesEditor : public RefMaker
 public:
 
 	/// Registry for editor classes.
-	class Registry : private std::map<const OvitoObjectType*, const OvitoObjectType*>
+	class OVITO_GUI_EXPORT Registry : private std::map<const OvitoObjectType*, const OvitoObjectType*>
 	{
 	public:
 		void registerEditorClass(const OvitoObjectType* refTargetClass, const OvitoObjectType* editorClass) {
@@ -52,11 +52,8 @@ public:
 		}
 	};
 
-	/// Returns the global editor registry, which can be used to lookup the editor class for editable RefTarget class.
-	static Registry& registry() {
-		static Registry* reg = new Registry();
-		return *reg;
-	}
+	/// Returns the global editor registry, which allows looking up the editor class for a RefTarget class.
+	static Registry& registry();
 
 protected:
 

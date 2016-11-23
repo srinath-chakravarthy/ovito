@@ -29,6 +29,16 @@ IMPLEMENT_OVITO_OBJECT(Gui, PropertiesEditor, RefMaker);
 DEFINE_FLAGS_REFERENCE_FIELD(PropertiesEditor, _editObject, "EditObject", RefTarget, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_WEAK_REF | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
 
 /******************************************************************************
+* Returns the global editor registry, which can be used to look up the editor 
+* class for editable RefTarget class.
+******************************************************************************/
+PropertiesEditor::Registry& PropertiesEditor::registry() 
+{
+	static Registry singleton;
+	return singleton;
+}
+
+/******************************************************************************
 * Creates a PropertiesEditor for an object.
 ******************************************************************************/
 OORef<PropertiesEditor> PropertiesEditor::create(RefTarget* obj)
