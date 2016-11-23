@@ -33,7 +33,7 @@
     <title>Downloading the source code</title>
     <para>
     Then download OVITO's source code into a new subdirectory named <filename>ovito/</filename>: 
-<screen><command>git clone --recursive https://gitlab.com/stuko/ovito.git ovito</command></screen>
+<screen><command>git clone https://gitlab.com/stuko/ovito.git ovito</command></screen>
   </para>
   </simplesect>
 

@@ -76,7 +76,7 @@ The compiled libraries will be installed under <filename>$HOME/libavstatic/</fil
     <title>Downloading the source code</title>
     <para>
     To download OVITO's source code into a new subdirectory named <filename>ovito</filename>, run: 
-<screen><command>git clone --recursive https://gitlab.com/stuko/ovito.git ovito</command></screen>
+<screen><command>git clone https://gitlab.com/stuko/ovito.git ovito</command></screen>
   </para>
   </simplesect>
 

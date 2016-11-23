@@ -71,7 +71,7 @@ SET(SourceFiles
 	modifier/analysis/scatterplot/ScatterPlotModifier.cpp
 	modifier/analysis/wignerseitz/WignerSeitzAnalysisModifier.cpp
 	modifier/analysis/ptm/PolyhedralTemplateMatchingModifier.cpp
-	modifier/analysis/structural_clustering/StructuralClusteringModifier.cpp
+	#modifier/analysis/structural_clustering/StructuralClusteringModifier.cpp
 	modifier/selection/ExpandSelectionModifier.cpp
 	modifier/selection/InvertSelectionModifier.cpp
 	modifier/selection/SelectParticleTypeModifier.cpp

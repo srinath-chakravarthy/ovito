@@ -18,7 +18,7 @@
 
     <simplesect xml:id="installation.runovito.linux">
       <title>Linux</title>
-      <para>Extract the downloaded <filename>.tar.gz</filename> archive using the <command>tar</command> command, e.g.: <command>tar xzf ovito-2.5.1-x86_64.tar.gz</command>. 
+      <para>Extract the downloaded <filename>.tar.gz</filename> archive using the <command>tar</command> command, e.g.: <command>tar xzf ovito-2.8.0-x86_64.tar.gz</command>. 
       This will create a new subdirectory containing the program package. 
       Change into the new directory and start OVITO by running the executable <command>./bin/ovito</command>.
       </para>
