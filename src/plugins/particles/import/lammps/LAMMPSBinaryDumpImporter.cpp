@@ -194,8 +194,10 @@ bool LAMMPSBinaryDumpHeader::parse(QIODevice& input)
 
 		// Try the new format first.
 		int triclinic = -1;
-		input.read(reinterpret_cast<char*>(&triclinic), sizeof(triclinic));
-		input.read(reinterpret_cast<char*>(&boundary[0][0]), sizeof(boundary));
+		if(input.read(reinterpret_cast<char*>(&triclinic), sizeof(triclinic)) != sizeof(triclinic))
+			continue;
+		if(input.read(reinterpret_cast<char*>(boundary), sizeof(boundary)) != sizeof(boundary))
+			continue;
 		bool isValid = true;
 		for(int i = 0; i < 3; i++) {
 			for(int j = 0; j < 2; j++) {
@@ -212,7 +214,8 @@ bool LAMMPSBinaryDumpHeader::parse(QIODevice& input)
 		}
 
 		// Read bounding box.
-		input.read(reinterpret_cast<char*>(&bbox[0][0]), sizeof(bbox));
+		if(input.read(reinterpret_cast<char*>(bbox), sizeof(bbox)) != sizeof(bbox))
+			continue;
 		for(int i = 0; i < 3; i++) {
 			if(bbox[i][0] > bbox[i][1])
 				isValid = false;
@@ -227,7 +230,8 @@ bool LAMMPSBinaryDumpHeader::parse(QIODevice& input)
 		// Try to read shear parameters of triclinic cell.
 		if(triclinic != 0) {
 			startPos = input.pos();
-			input.read(reinterpret_cast<char*>(&tiltFactors[0]), sizeof(tiltFactors));
+			if(input.read(reinterpret_cast<char*>(tiltFactors), sizeof(tiltFactors)) != sizeof(tiltFactors))
+				continue;
 			for(int i = 0; i < 3; i++) {
 				if(!std::isfinite(tiltFactors[i]) || tiltFactors[i] < bbox[i][0] - bbox[i][1] || tiltFactors[i] > bbox[i][1] - bbox[i][0])
 					isValid = false;

@@ -158,7 +158,7 @@ private:
 		QExplicitlySharedDataPointer<ParticleProperty> _deformationGradients;
 		QExplicitlySharedDataPointer<ParticleProperty> _alloyTypes;
 		QVector<int> _rmsdHistogramData;
-		FloatType _rmsdHistogramBinSize;
+		FloatType _rmsdHistogramBinSize = 0;
 	};
 
 private:

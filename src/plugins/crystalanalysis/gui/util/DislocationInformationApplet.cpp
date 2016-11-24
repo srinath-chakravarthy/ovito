@@ -199,7 +199,7 @@ bool DislocationInformationInputMode::pickDislocationSegment(ViewportWindow* vpw
 	ViewportPickResult vpPickResult = vpwin->pick(pos);
 
 	// Check if user has clicked on something.
-	if(vpPickResult.valid) {
+	if(vpPickResult) {
 
 		// Check if that was a dislocation.
 		DislocationPickInfo* pickInfo = dynamic_object_cast<DislocationPickInfo>(vpPickResult.pickInfo);

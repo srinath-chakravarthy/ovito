@@ -443,12 +443,11 @@ void PickOrbitCenterMode::mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* eve
 ******************************************************************************/
 bool PickOrbitCenterMode::findIntersection(ViewportWindow* vpwin, const QPointF& mousePos, Point3& intersectionPoint)
 {
-	ViewportPickResult pickResults = vpwin->pick(mousePos);
-	if(!pickResults.valid)
-		return false;
-
-	intersectionPoint = pickResults.worldPosition;
-	return true;
+	if(ViewportPickResult pickResults = vpwin->pick(mousePos)) {
+		intersectionPoint = pickResults.worldPosition;
+		return true;
+	}
+	return false;
 }
 
 /******************************************************************************

@@ -53,8 +53,7 @@ public:
 	virtual void mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event) override {
 
 		// Change mouse cursor while hovering over an object.
-		ViewportPickResult pickResult = vpwin->pick(event->localPos());
-		setCursor(pickResult.valid ? SelectionMode::selectionCursor() : QCursor());
+		setCursor(vpwin->pick(event->localPos()) ? SelectionMode::selectionCursor() : QCursor());
 
 		ViewportInputMode::mouseMoveEvent(vpwin, event);
 	}
@@ -63,7 +62,7 @@ public:
 	virtual void mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event) override {
 		if(event->button() == Qt::LeftButton) {
 			ViewportPickResult pickResult = vpwin->pick(event->localPos());
-			if(pickResult.valid && vpwin->viewport()->isPerspectiveProjection()) {
+			if(pickResult && vpwin->viewport()->isPerspectiveProjection()) {
 				FloatType distance = (pickResult.worldPosition - vpwin->viewport()->cameraPosition()).length();
 
 				if(POVRayRenderer* renderer = static_object_cast<POVRayRenderer>(_editor->editObject())) {
