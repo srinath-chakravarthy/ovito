@@ -24,11 +24,11 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/gui/modifier/ParticleModifierEditor.h>
+#include <core/utilities/DeferredMethodInvocation.h>
 
-#ifndef signals
-#define signals Q_SIGNALS
-#endif
-#include <qcustomplot.h>
+class QwtPlot;
+class QwtPlotCurve;
+class QwtPlotZoneItem;
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -57,11 +57,17 @@ protected:
 
 private:
 
-	/// The graph widget to display the histogram.
-	QCustomPlot* _histogramPlot;
+	/// The graph widget to display the RMSD histogram.
+	QwtPlot* _plot;
+
+	/// The plot item for the histogram.
+    QwtPlotCurve* _plotCurve = nullptr;
 
 	/// Marks the RMSD cutoff in the histogram plot.
-	QCPItemStraightLine* _rmsdCutoffMarker;
+	QwtPlotZoneItem* _rmsdRange = nullptr;
+
+	/// For deferred invocation of the plot repaint function.
+	DeferredMethodInvocation<GrainSegmentationModifierEditor, &GrainSegmentationModifierEditor::plotHistogram> plotHistogramLater;
 
 	Q_OBJECT
 	OVITO_OBJECT
