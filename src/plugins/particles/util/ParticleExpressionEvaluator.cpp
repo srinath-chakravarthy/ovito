@@ -22,6 +22,7 @@
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
+#include <core/app/Application.h>
 #include "ParticleExpressionEvaluator.h"
 
 #include <QtConcurrent>
@@ -217,7 +218,7 @@ void ParticleExpressionEvaluator::evaluate(const std::function<void(size_t,size_
 	OVITO_ASSERT(!_inputVariables.empty());
 
 	// Determine the number of parallel threads to use.
-	size_t nthreads = std::max(QThread::idealThreadCount(), 1);
+	size_t nthreads = Application::instance().idealThreadCount();
 	if(_particleCount == 0)
 		return;
 	else if(_particleCount < 100)

@@ -94,7 +94,7 @@ private:
 #define OVITO_OBJECT													\
 	public:																\
 		static const Ovito::NativeOvitoObjectType OOType;				\
-		virtual const Ovito::OvitoObjectType& getOOType() const { return OOType; }
+		virtual const Ovito::OvitoObjectType& getOOType() const override { return OOType; }
 
 /// This macro must be included in the .cpp file for a OvitoObject-derived class.
 #define IMPLEMENT_OVITO_OBJECT(plugin, name, basename)							\

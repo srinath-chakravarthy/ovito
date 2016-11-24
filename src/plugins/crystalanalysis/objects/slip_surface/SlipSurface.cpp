@@ -48,6 +48,57 @@ OORef<RefTarget> SlipSurface::clone(bool deepCopy, CloneHelper& cloneHelper)
 	return clone;
 }
 
+/******************************************************************************
+* Fairs a closed triangle mesh.
+******************************************************************************/
+void SlipSurface::smoothMesh(SlipSurfaceData& mesh, const SimulationCell& cell, int numIterations, FutureInterfaceBase* progress, FloatType k_PB, FloatType lambda)
+{
+	// This is the implementation of the mesh smoothing algorithm:
+	//
+	// Gabriel Taubin
+	// A Signal Processing Approach To Fair Surface Design
+	// In SIGGRAPH 95 Conference Proceedings, pages 351-358 (1995)
+
+	FloatType mu = 1.0f / (k_PB - 1.0f/lambda);
+	if(progress) progress->setProgressRange(numIterations);
+
+	for(int iteration = 0; iteration < numIterations; iteration++) {
+		smoothMeshIteration(mesh, lambda, cell);
+		smoothMeshIteration(mesh, mu, cell);
+		if(progress && !progress->setProgressValue(iteration+1))
+			return;
+	}
+}
+
+/******************************************************************************
+* Performs one iteration of the smoothing algorithm.
+******************************************************************************/
+void SlipSurface::smoothMeshIteration(SlipSurfaceData& mesh, FloatType prefactor, const SimulationCell& cell)
+{
+	const AffineTransformation absoluteToReduced = cell.inverseMatrix();
+	const AffineTransformation reducedToAbsolute = cell.matrix();
+
+	// Compute displacement for each vertex.
+	std::vector<Vector3> displacements(mesh.vertexCount());
+	parallelFor(mesh.vertexCount(), [&mesh, &displacements, prefactor, cell, absoluteToReduced](int index) {
+		SlipSurfaceData::Vertex* vertex = mesh.vertex(index);
+		Vector3 d = Vector3::Zero();
+
+		for(SlipSurfaceData::Edge* edge = vertex->edges(); edge != nullptr; edge = edge->nextVertexEdge()) {
+			d += cell.wrapVector(edge->vertex2()->pos() - vertex->pos());
+		}
+		if(vertex->edges() != nullptr)
+			d *= (prefactor / vertex->numEdges());
+
+		displacements[index] = d;
+	});
+
+	// Apply computed displacements.
+	auto d = displacements.cbegin();
+	for(SlipSurfaceData::Vertex* vertex : mesh.vertices())
+		vertex->pos() += *d++;
+}
+
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

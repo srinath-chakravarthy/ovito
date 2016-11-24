@@ -118,7 +118,7 @@ protected:
 		}
 
 		/// Returns the number of columns of the table model. Default is 1.
-		int columnCount(const QModelIndex& parent = QModelIndex()) const { return owner()->tableColumnCount(); }
+		int columnCount(const QModelIndex& parent = QModelIndex()) const override { return owner()->tableColumnCount(); }
 
 		/// Updates the entire list model.
 		void resetList() { beginResetModel(); endResetModel(); }

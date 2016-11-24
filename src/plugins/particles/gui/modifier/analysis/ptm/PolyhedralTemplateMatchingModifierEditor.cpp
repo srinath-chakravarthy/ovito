@@ -26,6 +26,11 @@
 #include <gui/properties/FloatParameterUI.h>
 #include "PolyhedralTemplateMatchingModifierEditor.h"
 
+#include <3rdparty/qwt/qwt_plot.h>
+#include <3rdparty/qwt/qwt_plot_curve.h>
+#include <3rdparty/qwt/qwt_plot_zoneitem.h>
+#include <3rdparty/qwt/qwt_plot_grid.h>
+
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 IMPLEMENT_OVITO_OBJECT(ParticlesGui, PolyhedralTemplateMatchingModifierEditor, ParticleModifierEditor);
@@ -89,28 +94,15 @@ void PolyhedralTemplateMatchingModifierEditor::createUI(const RolloutInsertionPa
 	label->setWordWrap(true);
 	layout1->addWidget(label);
 
-	_histogramPlot = new QCustomPlot();
-	_histogramPlot->setMinimumHeight(240);
-	_histogramPlot->setInteraction(QCP::iRangeDrag, true);
-	_histogramPlot->axisRect()->setRangeDrag(Qt::Horizontal);
-	_histogramPlot->setInteraction(QCP::iRangeZoom, true);
-	_histogramPlot->axisRect()->setRangeZoom(Qt::Horizontal);
-	_histogramPlot->xAxis->setLabel(tr("RMSD"));
-	_histogramPlot->yAxis->setLabel(tr("Count"));
-	_histogramPlot->addGraph();
-	_histogramPlot->graph()->setBrush(QBrush(QColor(255, 160, 100)));
-
-	_rmsdCutoffMarker = new QCPItemStraightLine(_histogramPlot);
-	_rmsdCutoffMarker->setVisible(false);
-	QPen markerPen;
-	markerPen.setColor(QColor(255, 40, 30));
-	markerPen.setStyle(Qt::DotLine);
-	markerPen.setWidth(2);
-	_rmsdCutoffMarker->setPen(markerPen);
-	_histogramPlot->addItem(_rmsdCutoffMarker);
+	_plot = new QwtPlot();
+	_plot->setMinimumHeight(240);
+	_plot->setMaximumHeight(240);
+	_plot->setCanvasBackground(Qt::white);
+	_plot->setAxisTitle(QwtPlot::xBottom, tr("RMSD"));	
+	_plot->setAxisTitle(QwtPlot::yLeft, tr("Count"));	
 
 	layout1->addSpacing(10);
-	layout1->addWidget(_histogramPlot);
+	layout1->addWidget(_plot);
 	connect(this, &PolyhedralTemplateMatchingModifierEditor::contentsReplaced, this, &PolyhedralTemplateMatchingModifierEditor::plotHistogram);
 
 	// Status label.
@@ -124,7 +116,7 @@ void PolyhedralTemplateMatchingModifierEditor::createUI(const RolloutInsertionPa
 bool PolyhedralTemplateMatchingModifierEditor::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
 	if(event->sender() == editObject() && (event->type() == ReferenceEvent::ObjectStatusChanged || event->type() == ReferenceEvent::TargetChanged)) {
-		plotHistogram();
+		plotHistogramLater(this);
 	}
 	return ParticleModifierEditor::referenceEvent(source, event);
 }
@@ -135,36 +127,47 @@ bool PolyhedralTemplateMatchingModifierEditor::referenceEvent(RefTarget* source,
 void PolyhedralTemplateMatchingModifierEditor::plotHistogram()
 {
 	PolyhedralTemplateMatchingModifier* modifier = static_object_cast<PolyhedralTemplateMatchingModifier>(editObject());
-	if(!modifier)
+	
+	if(!modifier || modifier->rmsdHistogramData().empty()) {
+		if(_plotCurve) _plotCurve->hide();
 		return;
+	}
 
-	if(modifier->rmsdHistogramData().empty())
-		return;
-
-	QVector<double> xdata(modifier->rmsdHistogramData().size());
-	QVector<double> ydata(modifier->rmsdHistogramData().size());
+	QVector<QPointF> plotData(modifier->rmsdHistogramData().size());
 	double binSize = modifier->rmsdHistogramBinSize();
 	double maxHistogramData = 0;
-	for(int i = 0; i < xdata.size(); i++) {
-		xdata[i] = binSize * ((double)i + 0.5);
-		ydata[i] = modifier->rmsdHistogramData()[i];
-		maxHistogramData = std::max(maxHistogramData, ydata[i]);
+	for(int i = 0; i < modifier->rmsdHistogramData().size(); i++) {
+		plotData[i].rx() = binSize * ((double)i + 0.5);
+		plotData[i].ry() = modifier->rmsdHistogramData()[i];
+		maxHistogramData = std::max(maxHistogramData, plotData[i].y());
 	}
-	_histogramPlot->graph()->setLineStyle(QCPGraph::lsStepCenter);
-	_histogramPlot->graph()->setData(xdata, ydata);
+
+	if(!_plotCurve) {
+		_plotCurve = new QwtPlotCurve();
+	    _plotCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+		_plotCurve->setBrush(QColor(255, 160, 100));
+		_plotCurve->attach(_plot);
+		QwtPlotGrid* plotGrid = new QwtPlotGrid();
+		plotGrid->setPen(Qt::gray, 0, Qt::DotLine);
+		plotGrid->attach(_plot);
+	}
+    _plotCurve->setSamples(plotData);
 
 	if(modifier->rmsdCutoff() > 0) {
-		_rmsdCutoffMarker->setVisible(true);
-		_rmsdCutoffMarker->point1->setCoords(modifier->rmsdCutoff(), 0);
-		_rmsdCutoffMarker->point2->setCoords(modifier->rmsdCutoff(), 1);
+		if(!_rmsdRange) {
+			_rmsdRange = new QwtPlotZoneItem();
+			_rmsdRange->setOrientation(Qt::Vertical);
+			_rmsdRange->setZ(_plotCurve->z() + 1);
+			_rmsdRange->attach(_plot);
+		}
+		_rmsdRange->show();
+		_rmsdRange->setInterval(0, modifier->rmsdCutoff());
 	}
-	else {
-		_rmsdCutoffMarker->setVisible(false);
+	else if(_rmsdRange) {
+		_rmsdRange->hide();
 	}
 
-	_histogramPlot->xAxis->setRange(0, binSize * xdata.size());
-	_histogramPlot->yAxis->setRange(0, maxHistogramData);
-	_histogramPlot->replot(QCustomPlot::rpQueued);
+	_plot->replot();
 }
 
 OVITO_END_INLINE_NAMESPACE

@@ -1,7 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (2014) Alexander Stukowski
-//  Copyright (2014) Lars Pastewka
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -30,6 +29,16 @@
 #include <plugins/particles/modifier/analysis/binandreduce/BinAndReduceModifier.h>
 #include <plugins/particles/gui/util/ParticlePropertyParameterUI.h>
 #include "BinAndReduceModifierEditor.h"
+
+#include <3rdparty/qwt/qwt_plot.h>
+#include <3rdparty/qwt/qwt_plot_curve.h>
+#include <3rdparty/qwt/qwt_plot_spectrogram.h>
+#include <3rdparty/qwt/qwt_plot_grid.h>
+#include <3rdparty/qwt/qwt_scale_engine.h>
+#include <3rdparty/qwt/qwt_matrix_raster_data.h>
+#include <3rdparty/qwt/qwt_color_map.h>
+#include <3rdparty/qwt/qwt_scale_widget.h>
+#include <3rdparty/qwt/qwt_plot_layout.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -95,15 +104,14 @@ void BinAndReduceModifierEditor::createUI(const RolloutInsertionParameters& roll
 
 	layout->addLayout(gridlayout);
 
-	_averagesPlot = new QCustomPlot();
-	_averagesPlot->setMinimumHeight(240);
-    _averagesPlot->axisRect()->setRangeDrag(Qt::Vertical);
-    _averagesPlot->axisRect()->setRangeZoom(Qt::Vertical);
-	_averagesPlot->xAxis->setLabel("Position");
-    connect(_averagesPlot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(updatePropertyAxisRange(const QCPRange&)));
+	_plot = new QwtPlot();
+	_plot->setMinimumHeight(240);
+	_plot->setMaximumHeight(240);
+	_plot->setCanvasBackground(Qt::white);
+    _plot->axisScaleEngine(QwtPlot::xBottom)->setAttribute(QwtScaleEngine::Floating);
 
 	layout->addWidget(new QLabel(tr("Reduction:")));
-	layout->addWidget(_averagesPlot);
+	layout->addWidget(_plot);
 	connect(this, &BinAndReduceModifierEditor::contentsReplaced, this, &BinAndReduceModifierEditor::plotData);
 
 	QPushButton* saveDataButton = new QPushButton(tr("Save data"));
@@ -153,9 +161,8 @@ void BinAndReduceModifierEditor::createUI(const RolloutInsertionParameters& roll
 ******************************************************************************/
 bool BinAndReduceModifierEditor::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
-	if(event->sender() == editObject()
-			&& event->type() == ReferenceEvent::ObjectStatusChanged) {
-		plotData();
+	if(event->sender() == editObject() && event->type() == ReferenceEvent::ObjectStatusChanged) {
+		plotLater(this);
 	}
 	return ParticleModifierEditor::referenceEvent(source, event);
 }
@@ -171,98 +178,113 @@ void BinAndReduceModifierEditor::plotData()
 
 	int binDataSizeX = std::max(1, modifier->numberOfBinsX());
 	int binDataSizeY = std::max(1, modifier->numberOfBinsY());
-    if (modifier->is1D()) binDataSizeY = 1;
-    size_t binDataSize = binDataSizeX*binDataSizeY;
+    if(modifier->is1D()) binDataSizeY = 1;
+    size_t binDataSize = binDataSizeX * binDataSizeY;
 
-    if (modifier->is1D()) {
-        // If previous plot was a color map, delete and create graph.
-        if (!_averagesGraph) {
-            if (_averagesColorMap) {
-                _averagesPlot->removePlottable(_averagesColorMap);
-                _averagesColorMap = nullptr;
-            }
-            _averagesGraph = _averagesPlot->addGraph();
-        }
-
-        _averagesPlot->setInteraction(QCP::iRangeDrag, true);
-        _averagesPlot->axisRect()->setRangeDrag(Qt::Vertical);
-        _averagesPlot->setInteraction(QCP::iRangeZoom, true);
-        _averagesPlot->axisRect()->setRangeZoom(Qt::Vertical);
+    if(modifier->is1D()) {
+    	_plot->setAxisTitle(QwtPlot::yRight, QString());
+        _plot->enableAxis(QwtPlot::yRight, false);
+    	_plot->setAxisTitle(QwtPlot::xBottom, tr("Position"));
         if(modifier->firstDerivative()) {
-            _averagesPlot->yAxis->setLabel("d( "+modifier->sourceProperty().name()+" )/d( Position )");
+        	_plot->setAxisTitle(QwtPlot::yLeft, QStringLiteral("d(%1)/d(Position)").arg(modifier->sourceProperty().nameWithComponent()));
         }
         else {
-            _averagesPlot->yAxis->setLabel(modifier->sourceProperty().name());
+        	_plot->setAxisTitle(QwtPlot::yLeft, modifier->sourceProperty().nameWithComponent());
         }
 
-        if(modifier->binData().empty())
+        if(!_plotCurve) {
+            _plotCurve = new QwtPlotCurve();
+            _plotCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+            _plotCurve->setStyle(QwtPlotCurve::Steps);
+            _plotCurve->attach(_plot);
+            _plotGrid = new QwtPlotGrid();
+            _plotGrid->setPen(Qt::gray, 0, Qt::DotLine);
+            _plotGrid->attach(_plot);
+        }
+        _plotGrid->show();
+
+        if(_plotRaster) _plotRaster->hide();
+
+        if(modifier->binData().empty()) {
+            _plotCurve->hide();
             return;
-
-        QVector<double> xdata(binDataSize+2);
-        QVector<double> ydata(binDataSize+2);
-        double binSize = ( modifier->xAxisRangeEnd() - modifier->xAxisRangeStart() ) / binDataSize;
-        for(int i = 0; i < binDataSize; i++) {
-            xdata[i+1] = binSize * ((double)i + 0.5) + modifier->xAxisRangeStart();
-            ydata[i+1] = modifier->binData()[i];
         }
-        xdata.front() = modifier->xAxisRangeStart();
-        ydata.front() = modifier->binData().front();
-        xdata.back() = modifier->xAxisRangeEnd();
-        ydata.back() = modifier->binData().back();
-        _averagesPlot->graph()->setLineStyle(QCPGraph::lsStepCenter);
-        _averagesPlot->graph()->setData(xdata, ydata);
+        _plotCurve->show();
 
-        // Check if range is already correct, because setRange emits the rangeChanged signal
-        // which is to be avoided if the range is not determined automatically.
-        _rangeUpdate = false;
-        _averagesPlot->xAxis->setRange(modifier->xAxisRangeStart(), modifier->xAxisRangeEnd());
-        _averagesPlot->yAxis->setRange(modifier->propertyAxisRangeStart(), modifier->propertyAxisRangeEnd());
-        _rangeUpdate = true;
+        QVector<QPointF> plotData(binDataSize + 1);
+        double binSize = (modifier->xAxisRangeEnd() - modifier->xAxisRangeStart()) / binDataSize;
+        for(int i = 1; i <= binDataSize; i++) {
+            plotData[i].rx() = binSize * i + modifier->xAxisRangeStart();
+            plotData[i].ry() = modifier->binData()[i-1];
+        }
+        plotData.front().rx() = modifier->xAxisRangeStart();
+        plotData.front().ry() = modifier->binData().front();
+        _plotCurve->setSamples(plotData);
+
+		_plot->setAxisAutoScale(QwtPlot::xBottom);
+        if(!modifier->fixPropertyAxisRange())
+            _plot->setAxisAutoScale(QwtPlot::yLeft);
+        else
+            _plot->setAxisScale(QwtPlot::yLeft, modifier->propertyAxisRangeStart(), modifier->propertyAxisRangeEnd());
     }
     else {
-        // If previous plot was a graph, delete and create color map.
-        if (!_averagesColorMap) {
-            if (_averagesGraph) {
-                _averagesPlot->removeGraph(_averagesGraph);
-                _averagesGraph = nullptr;
+        if(_plotCurve) _plotCurve->hide();
+        if(_plotGrid) _plotGrid->hide();
+
+        class ColorMap: public QwtLinearColorMap
+        {
+        public:
+            ColorMap() : QwtLinearColorMap(Qt::darkBlue, Qt::darkRed) {
+                addColorStop(0.2, Qt::blue);
+                addColorStop(0.4, Qt::cyan);
+                addColorStop(0.6, Qt::yellow);
+                addColorStop(0.8, Qt::red);
             }
-            _averagesColorMap = new QCPColorMap(_averagesPlot->xAxis, _averagesPlot->yAxis);
-            _averagesPlot->addPlottable(_averagesColorMap);
+        };
+    	_plot->setAxisTitle(QwtPlot::xBottom, tr("Position"));
+    	_plot->setAxisTitle(QwtPlot::yLeft, tr("Position"));
+
+        if(!_plotRaster) {
+            _plotRaster = new QwtPlotSpectrogram();
+            _plotRaster->attach(_plot);
+            _plotRaster->setColorMap(new ColorMap());
+            _rasterData = new QwtMatrixRasterData();
+            _plotRaster->setData(_rasterData);
+
+            QwtScaleWidget* rightAxis = _plot->axisWidget(QwtPlot::yRight);
+            rightAxis->setColorBarEnabled(true);
+            rightAxis->setColorBarWidth(20);
+            _plot->plotLayout()->setAlignCanvasToScales(true);
         }
 
-        _averagesPlot->setInteraction(QCP::iRangeDrag, false);
-        _averagesPlot->setInteraction(QCP::iRangeZoom, false);
-        _averagesPlot->yAxis->setLabel("Position");
-
-        if(modifier->binData().empty())
+        if(modifier->binData().empty()) {
+            _plotRaster->hide();
             return;
-
-        _averagesColorMap->setInterpolate(false);
-        _averagesColorMap->setTightBoundary(false);
-        _averagesColorMap->setGradient(QCPColorGradient::gpJet);
-
-        _averagesColorMap->data()->setSize(binDataSizeX, binDataSizeY);
-        _averagesColorMap->data()->setRange(QCPRange(modifier->xAxisRangeStart(), modifier->xAxisRangeEnd()),
-                                            QCPRange(modifier->yAxisRangeStart(), modifier->yAxisRangeEnd()));
-
-        _averagesPlot->xAxis->setRange(QCPRange(modifier->xAxisRangeStart(), modifier->xAxisRangeEnd()));
-        _averagesPlot->yAxis->setRange(QCPRange(modifier->yAxisRangeStart(), modifier->yAxisRangeEnd()));
-
-        // Copy data to QCPColorMapData object.
-        for (int j = 0; j < binDataSizeY; j++) {
-            for (int i = 0; i < binDataSizeX; i++) {
-                _averagesColorMap->data()->setCell(i, j, modifier->binData()[j*binDataSizeX+i]);
-            }
         }
+        _plotRaster->show();
 
-        // Check if range is already correct, because setRange emits the rangeChanged signal
-        // which is to be avoided if the range is not determined automatically.
-        _rangeUpdate = false;
-        _averagesColorMap->setDataRange(QCPRange(modifier->propertyAxisRangeStart(), modifier->propertyAxisRangeEnd()));
-        _rangeUpdate = true;
+        _plot->enableAxis(QwtPlot::yRight);
+        _rasterData->setValueMatrix(modifier->binData(), binDataSizeX);
+        _rasterData->setInterval(Qt::XAxis, QwtInterval(modifier->xAxisRangeStart(), modifier->xAxisRangeEnd(), QwtInterval::ExcludeMaximum));
+        _rasterData->setInterval(Qt::YAxis, QwtInterval(modifier->yAxisRangeStart(), modifier->yAxisRangeEnd(), QwtInterval::ExcludeMaximum));
+        QwtInterval zInterval;
+        if(!modifier->fixPropertyAxisRange()) {
+            auto minmax = std::minmax_element(modifier->binData().begin(), modifier->binData().end());
+            zInterval = QwtInterval(*minmax.first, *minmax.second, QwtInterval::ExcludeMaximum);
+        }
+        else {
+            zInterval = QwtInterval(modifier->propertyAxisRangeStart(), modifier->propertyAxisRangeEnd(), QwtInterval::ExcludeMaximum);
+        }
+        _plot->axisScaleEngine(QwtPlot::yRight)->setAttribute(QwtScaleEngine::Inverted, zInterval.minValue() > zInterval.maxValue());
+        _rasterData->setInterval(Qt::ZAxis, zInterval.normalized());
+		_plot->setAxisScale(QwtPlot::xBottom, modifier->xAxisRangeStart(), modifier->xAxisRangeEnd());
+		_plot->setAxisScale(QwtPlot::yLeft, modifier->yAxisRangeStart(), modifier->yAxisRangeEnd());
+        _plot->axisWidget(QwtPlot::yRight)->setColorMap(zInterval.normalized(), new ColorMap());
+        _plot->setAxisScale(QwtPlot::yRight, zInterval.minValue(), zInterval.maxValue());
+        _plot->setAxisTitle(QwtPlot::yRight, modifier->sourceProperty().name());
     }
-    
-    _averagesPlot->replot(QCustomPlot::rpQueued);
+ 
+    _plot->replot();
 }
 
 /******************************************************************************
@@ -277,24 +299,6 @@ void BinAndReduceModifierEditor::updateWidgets()
 
     _numBinsYPUI->setEnabled(!modifier->is1D());
     _firstDerivativePUI->setEnabled(modifier->is1D());
-}
-
-/******************************************************************************
-* Keep y-axis range updated
-******************************************************************************/
-void BinAndReduceModifierEditor::updatePropertyAxisRange(const QCPRange &newRange)
-{
-	if (_rangeUpdate) {
-		BinAndReduceModifier* modifier = static_object_cast<BinAndReduceModifier>(editObject());
-		if(!modifier)
-			return;
-        if (!modifier->is1D())
-            return;
-
-		// Fix range if user modifies the range by a mouse action in QCustomPlot
-		modifier->setFixPropertyAxisRange(true);
-		modifier->setPropertyAxisRange(newRange.lower, newRange.upper);
-	}
 }
 
 /******************************************************************************
@@ -329,13 +333,13 @@ void BinAndReduceModifierEditor::onSaveData()
 
 		QTextStream stream(&file);
         if (binDataSizeY == 1) {
-            stream << "# " << modifier->sourceProperty().name() << " bin size: " << binSizeX << endl;
+            stream << "# " << modifier->sourceProperty().nameWithComponent() << " bin size: " << binSizeX << endl;
 			for(size_t i = 0; i < modifier->binData().size(); i++) {
                 stream << (binSizeX * (FloatType(i) + 0.5f) + modifier->xAxisRangeStart()) << " " << modifier->binData()[i] << endl;
             }
         }
         else {
-            stream << "# " << modifier->sourceProperty().name() << " bin size X: " << binDataSizeX << ", bin size Y: " << binDataSizeY << endl;
+            stream << "# " << modifier->sourceProperty().nameWithComponent() << " bin size X: " << binDataSizeX << ", bin size Y: " << binDataSizeY << endl;
             for(int i = 0; i < binDataSizeY; i++) {
                 for(int j = 0; j < binDataSizeX; j++) {
                     stream << modifier->binData()[i*binDataSizeX+j] << " ";

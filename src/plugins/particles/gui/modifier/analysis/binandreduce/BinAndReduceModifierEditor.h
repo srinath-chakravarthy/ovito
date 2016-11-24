@@ -1,7 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (2014) Alexander Stukowski
-//  Copyright (2014) Lars Pastewka
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -27,11 +26,13 @@
 #include <plugins/particles/gui/modifier/ParticleModifierEditor.h>
 #include <gui/properties/BooleanParameterUI.h>
 #include <gui/properties/IntegerParameterUI.h>
+#include <core/utilities/DeferredMethodInvocation.h>
 
-#ifndef signals
-#define signals Q_SIGNALS
-#endif
-#include <qcustomplot.h>
+class QwtPlot;
+class QwtPlotCurve;
+class QwtPlotSpectrogram;
+class QwtMatrixRasterData;
+class QwtPlotGrid;
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
@@ -45,7 +46,7 @@ class BinAndReduceModifierEditor : public ParticleModifierEditor
 public:
 
 	/// Default constructor.
-	Q_INVOKABLE BinAndReduceModifierEditor() : _rangeUpdate(true), _averagesGraph(nullptr), _averagesColorMap(nullptr) {}
+	Q_INVOKABLE BinAndReduceModifierEditor() {}
 
 protected:
 
@@ -63,9 +64,6 @@ protected Q_SLOTS:
     /// Enable/disable the editor for number of y-bins and the first derivative button.
     void updateWidgets();
 
-	/// Keep y-axis range updated
-	void updatePropertyAxisRange(const QCPRange &newRange);
-
 	/// This is called when the user has clicked the "Save Data" button.
 	void onSaveData();
 
@@ -77,17 +75,23 @@ private:
     /// Widget controlling the number of y-bins.
     IntegerParameterUI* _numBinsYPUI;
 
-	/// The plot widget to display the average data.
-	QCustomPlot* _averagesPlot;
+	/// The graph widget to display the data.
+	QwtPlot* _plot;
 
-	/// The graph widget to display the average data.
-	QCPGraph* _averagesGraph;
+	/// The plot item for the graph.
+    QwtPlotCurve* _plotCurve = nullptr;
 
-	/// The color map widget to display the average data on a 2D grid.
-	QCPColorMap* _averagesColorMap;
+	/// The plot item for the 2D color plot.
+	QwtPlotSpectrogram* _plotRaster = nullptr;
 
-	/// Update range when plot ranges change?
-	bool _rangeUpdate;
+	/// The data storage for the 2D color plot.
+	QwtMatrixRasterData* _rasterData = nullptr;
+
+	/// The grid.
+	QwtPlotGrid* _plotGrid = nullptr;
+
+	/// For deferred invocation of the plot repaint function.
+	DeferredMethodInvocation<BinAndReduceModifierEditor, &BinAndReduceModifierEditor::plotData> plotLater;
 
 	Q_OBJECT
 	OVITO_OBJECT

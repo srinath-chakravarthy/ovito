@@ -50,13 +50,13 @@ public:
 	
 	/// This method is called when a new editable object has been assigned to the properties owner this
 	/// parameter UI belongs to.  
-	virtual void resetUI();
+	virtual void resetUI() override;
 
 	/// This method updates the displayed value of the property UI.
-	virtual void updateUI();
+	virtual void updateUI() override;
 	
 	/// Sets the enabled state of the UI.
-	virtual void setEnabled(bool enabled);
+	virtual void setEnabled(bool enabled) override;
 	
 	/// Sets the tooltip text for the radio button widgets.
 	void setToolTip(const QString& text) const { 

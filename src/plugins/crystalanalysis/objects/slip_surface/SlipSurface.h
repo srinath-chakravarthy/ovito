@@ -37,7 +37,20 @@ struct SlipSurfaceFace
 	ClusterVector slipVector = Vector3::Zero();
 };
 
-using SlipSurfaceData = HalfEdgeMesh<EmptyHalfEdgeMeshStruct, SlipSurfaceFace, EmptyHalfEdgeMeshStruct>;
+class SlipSurfaceData : public HalfEdgeMesh<EmptyHalfEdgeMeshStruct, SlipSurfaceFace, EmptyHalfEdgeMeshStruct>
+{
+public:
+
+	/// Default constructor.
+	SlipSurfaceData() {}
+
+	/// Copy constructor.
+	SlipSurfaceData(const SlipSurfaceData& other) : HalfEdgeMesh<EmptyHalfEdgeMeshStruct, SlipSurfaceFace, EmptyHalfEdgeMeshStruct>(other) {
+		OVITO_ASSERT(faces().size() == other.faces().size());
+		for(size_t f = 0; f < faces().size(); f++)
+			faces()[f]->slipVector = other.faces()[f]->slipVector;
+	}
+};
 
 /**
  * \brief A triangle mesh representing the slipped surfaces in a deformed crystal.
@@ -67,7 +80,19 @@ public:
 		notifyDependents(ReferenceEvent::TargetChanged);
 	}
 
+	/// Fairs the mesh stored in this object.
+	void smoothMesh(const SimulationCell& cell, int numIterations, FutureInterfaceBase* progress = nullptr, FloatType k_PB = 0.1f, FloatType lambda = 0.5f) {
+		smoothMesh(*modifiableStorage(), cell, numIterations, progress, k_PB, lambda);
+		changed();
+	}
+
+	/// Fairs a mesh.
+	static void smoothMesh(SlipSurfaceData& mesh, const SimulationCell& cell, int numIterations, FutureInterfaceBase* progress = nullptr, FloatType k_PB = 0.1f, FloatType lambda = 0.5f);
+
 protected:
+
+	/// Performs one iteration of the smoothing algorithm.
+	static void smoothMeshIteration(SlipSurfaceData& mesh, FloatType prefactor, const SimulationCell& cell);
 
 	/// Creates a copy of this object.
 	virtual OORef<RefTarget> clone(bool deepCopy, CloneHelper& cloneHelper) override;

@@ -39,7 +39,7 @@ public:
 
 	/// Returns the recommended size for the widget.
 	virtual QSize sizeHint() const override {
-		return QSize(320, 200);
+		return QSize(320, 240);
 	}
 };
 

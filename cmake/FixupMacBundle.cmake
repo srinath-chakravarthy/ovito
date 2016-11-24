@@ -67,6 +67,12 @@ IF(APPLE)
     		    MESSAGE(\"     Embedding path override: \${item} -> \${path}\")
             ENDIF()
 		ENDFUNCTION()
+		# This is needed to correctly install Matplotlib's shared libraries in the .dylibs/ subdirectory:
+		FUNCTION(gp_resolved_file_type_override resolved_file type)
+		    IF(resolved_file MATCHES \"@loader_path/\" AND resolved_file MATCHES \"/.dylibs/\")
+				SET(\${type} \"system\" PARENT_SCOPE)
+			ENDIF()
+		ENDFUNCTION()
 		FILE(GLOB_RECURSE QTPLUGINS
 			\"${CMAKE_INSTALL_PREFIX}/${plugin_dest_dir}/plugins/*${CMAKE_SHARED_LIBRARY_SUFFIX}\")
 		FILE(GLOB_RECURSE OVITO_PLUGINS

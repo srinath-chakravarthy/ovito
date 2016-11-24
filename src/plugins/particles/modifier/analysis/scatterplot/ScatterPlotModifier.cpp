@@ -1,7 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (2013) Alexander Stukowski
-//  Copyright (2014) Lars Pastewka
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -49,12 +48,12 @@ SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _selectionXAxisRangeEnd, "Selectio
 SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _selectYAxisInRange, "Select particles in y-range");
 SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _selectionYAxisRangeStart, "Selection y-range start");
 SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _selectionYAxisRangeEnd, "Selection y-range end");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _fixXAxisRange, "Fix x-axis range");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _xAxisRangeStart, "X-axis range start");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _xAxisRangeEnd, "X-axis range end");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _fixYAxisRange, "Fix y-axis range");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _yAxisRangeStart, "Y-axis range start");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _yAxisRangeEnd, "Y-axis range end");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _fixXAxisRange, "Fix x-range");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _xAxisRangeStart, "X-range start");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _xAxisRangeEnd, "X-range end");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _fixYAxisRange, "Fix y-range");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _yAxisRangeStart, "Y-range start");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _yAxisRangeEnd, "Y-range end");
 SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _xAxisProperty, "X-axis property");
 SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _yAxisProperty, "Y-axis property");
 
@@ -134,19 +133,16 @@ PipelineStatus ScatterPlotModifier::modifyParticles(TimePoint time, TimeInterval
 	size_t yVecComponent = std::max(0, yAxisProperty().vectorComponent());
 	size_t yVecComponentCount = yProperty->componentCount();
 
-	int numParticleTypes = 0;
 	ParticleTypeProperty* typeProperty = static_object_cast<ParticleTypeProperty>(inputStandardProperty(ParticleProperty::ParticleTypeProperty));
 	if(typeProperty) {
 		_colorMap = typeProperty->colorMap();
-
-		for(const ParticleType *type : typeProperty->particleTypes()) {
-			numParticleTypes = std::max(numParticleTypes, type->id());
-		}
-		numParticleTypes++;
+		_typeData.clear();
+		_typeData.resize(typeProperty->size());
+		std::copy(typeProperty->constDataInt(), typeProperty->constDataInt() + typeProperty->size(), _typeData.begin());
 	}
 	else {
 		_colorMap.clear();
-		numParticleTypes = 1;
+		_typeData.clear();
 	}
 
 	ParticlePropertyObject* selProperty = nullptr;
@@ -156,13 +152,9 @@ PipelineStatus ScatterPlotModifier::modifyParticles(TimePoint time, TimeInterval
 	FloatType selectionYAxisRangeEnd = _selectionYAxisRangeEnd;
 	size_t numSelected = 0;
 	if(_selectXAxisInRange || _selectYAxisInRange) {
-		selProperty = outputStandardProperty(ParticleProperty::SelectionProperty, true);
-		int* s_begin = selProperty->dataInt();
-		int* s_end = s_begin + selProperty->size();
-		for(auto s = s_begin; s != s_end; ++s) {
-			*s = 1;
-			numSelected++;
-		}
+		selProperty = outputStandardProperty(ParticleProperty::SelectionProperty, false);
+		std::fill(selProperty->dataInt(), selProperty->dataInt() + selProperty->size(), 1);
+		numSelected = selProperty->size();
 	}
 	if(_selectXAxisInRange) {
 		if(selectionXAxisRangeStart > selectionXAxisRangeEnd)
@@ -178,173 +170,84 @@ PipelineStatus ScatterPlotModifier::modifyParticles(TimePoint time, TimeInterval
 	double yIntervalStart = _yAxisRangeStart;
 	double yIntervalEnd = _yAxisRangeEnd;
 
-	_xData.clear();
-	_yData.clear();
-	_xData.resize(numParticleTypes);
-	_yData.resize(numParticleTypes);
+	_xyData.clear();
+	_xyData.resize(inputParticleCount());
 
-	if(xProperty->size() > 0) {
-		if(xProperty->dataType() == qMetaTypeId<FloatType>()) {
-			const FloatType* vx_begin = xProperty->constDataFloat() + xVecComponent;
-			const FloatType* vx_end = vx_begin + (xProperty->size() * xVecComponentCount);
-			if (!_fixXAxisRange) {
-				xIntervalStart = xIntervalEnd = *vx_begin;
-				for(auto vx = vx_begin; vx != vx_end; vx += xVecComponentCount) {
-					if(*vx < xIntervalStart) xIntervalStart = *vx;
-					if(*vx > xIntervalEnd) xIntervalEnd = *vx;
-				}
-			}
-			if(xIntervalEnd != xIntervalStart) {
-				if(typeProperty) {
-					const int *particleTypeId = typeProperty->constDataInt();
-					for(auto vx = vx_begin; vx != vx_end; vx += xVecComponentCount, particleTypeId++) {
-						_xData[*particleTypeId].append(*vx);
-					}
-				}
-				else {
-					for(auto vx = vx_begin; vx != vx_end; vx += xVecComponentCount) {
-						_xData[0].append(*vx);
-					}
-				}
-			}
-
-			if(selProperty && _selectXAxisInRange) {
-				OVITO_ASSERT(selProperty->size() == xProperty->size());
-				int* s = selProperty->dataInt();
-				int* s_end = s + selProperty->size();
-				for(auto vx = vx_begin; vx != vx_end; vx += xVecComponentCount, ++s) {
-					if(*vx < selectionXAxisRangeStart || *vx > selectionXAxisRangeEnd) {
-						*s = 0;
-						numSelected--;
-					}
-				}
-			}
-		}
-		else if(xProperty->dataType() == qMetaTypeId<int>()) {
-			const int* vx_begin = xProperty->constDataInt() + xVecComponent;
-			const int* vx_end = vx_begin + (xProperty->size() * xVecComponentCount);
-			if (!_fixXAxisRange) {
-				xIntervalStart = xIntervalEnd = *vx_begin;
-				for(auto vx = vx_begin; vx != vx_end; vx += xVecComponentCount) {
-					if(*vx < xIntervalStart) xIntervalStart = *vx;
-					if(*vx > xIntervalEnd) xIntervalEnd = *vx;
-				}
-			}
-			if(xIntervalEnd != xIntervalStart) {
-				if(typeProperty) {
-					const int *particleTypeId = typeProperty->constDataInt();
-					for(auto vx = vx_begin; vx != vx_end; vx += xVecComponentCount, particleTypeId++) {
-						_xData[*particleTypeId].append(*vx);
-					}
-				}
-				else {
-					for(auto vx = vx_begin; vx != vx_end; vx += xVecComponentCount) {
-						_xData[0].append(*vx);
-					}
-				}
-			}
-
-			if(selProperty && _selectXAxisInRange) {
-				OVITO_ASSERT(selProperty->size() == xProperty->size());
-				int* s = selProperty->dataInt();
-				int* s_end = s + selProperty->size();
-				for(auto vx = vx_begin; vx != vx_end; vx += xVecComponentCount, ++s) {
-					if(*vx < selectionXAxisRangeStart || *vx > selectionXAxisRangeEnd) {
-						*s = 0;
-						numSelected--;
-					}
-				}
-			}
+	// Collect X coordinates.
+	if(xProperty->dataType() == qMetaTypeId<FloatType>()) {
+		for(size_t i = 0; i < inputParticleCount(); i++) {
+			_xyData[i].rx() = xProperty->getFloatComponent(i, xVecComponent);
 		}
 	}
-	if (yProperty->size() > 0) {
-		if(yProperty->dataType() == qMetaTypeId<FloatType>()) {
-			const FloatType* vy_begin = yProperty->constDataFloat() + yVecComponent;
-			const FloatType* vy_end = vy_begin + (yProperty->size() * yVecComponentCount);
-			if (!_fixYAxisRange) {
-				yIntervalStart = yIntervalEnd = *vy_begin;
-				for(auto vy = vy_begin; vy != vy_end; vy += yVecComponentCount) {
-					if(*vy < yIntervalStart) yIntervalStart = *vy;
-					if(*vy > yIntervalEnd) yIntervalEnd = *vy;
-				}
-			}
-			if(yIntervalEnd != yIntervalStart) {
-				if(typeProperty) {
-					const int *particleTypeId = typeProperty->constDataInt();
-					for(auto vy = vy_begin; vy != vy_end; vy += yVecComponentCount, particleTypeId++) {
-						_yData[*particleTypeId].append(*vy);
-					}
-				}
-				else {
-					for(auto vy = vy_begin; vy != vy_end; vy += yVecComponentCount) {
-						_yData[0].append(*vy);
-					}
-				}
-			}
-
-			if(selProperty && _selectYAxisInRange) {
-				OVITO_ASSERT(selProperty->size() == yProperty->size());
-				int* s = selProperty->dataInt();
-				int* s_end = s + selProperty->size();
-				for(auto vy = vy_begin; vy != vy_end; vy += yVecComponentCount, ++s) {
-					if(*vy < selectionYAxisRangeStart || *vy > selectionYAxisRangeEnd) {
-						if(*s) {
-							*s = 0;
-							numSelected--;
-						}
-					}
-				}
-			}
-		}
-		else if(yProperty->dataType() == qMetaTypeId<int>()) {
-			const int* vy_begin = yProperty->constDataInt() + yVecComponent;
-			const int* vy_end = vy_begin + (yProperty->size() * yVecComponentCount);
-			if (!_fixYAxisRange) {
-				yIntervalStart = yIntervalEnd = *vy_begin;
-				for(auto vy = vy_begin; vy != vy_end; vy += yVecComponentCount) {
-					if(*vy < yIntervalStart) yIntervalStart = *vy;
-					if(*vy > yIntervalEnd) yIntervalEnd = *vy;
-				}
-			}
-			if(yIntervalEnd != yIntervalStart) {
-				if(typeProperty) {
-					const int *particleTypeId = typeProperty->constDataInt();
-					for(auto vy = vy_begin; vy != vy_end; vy += yVecComponentCount, particleTypeId++) {
-						_yData[*particleTypeId].append(*vy);
-					}
-				}
-				else {
-					for(auto vy = vy_begin; vy != vy_end; vy += yVecComponentCount) {
-						_yData[0].append(*vy);
-					}
-				}
-			}
-
-			if(selProperty && _selectYAxisInRange) {
-				OVITO_ASSERT(selProperty->size() == yProperty->size());
-				int* s = selProperty->dataInt();
-				int* s_end = s + selProperty->size();
-				for(auto vy = vy_begin; vy != vy_end; vy += yVecComponentCount, ++s) {
-					if(*vy < selectionYAxisRangeStart || *vy > selectionYAxisRangeEnd) {
-						if(*s) {
-							*s = 0;
-							numSelected--;
-						}
-					}
-				}
-			}
+	else if(xProperty->dataType() == qMetaTypeId<int>()) {
+		for(size_t i = 0; i < inputParticleCount(); i++) {
+			_xyData[i].rx() = xProperty->getIntComponent(i, xVecComponent);
 		}
 	}
-	else {
-		xIntervalStart = xIntervalEnd = 0;
-		yIntervalStart = yIntervalEnd = 0;
+	else throwException(tr("Particle property '%1' has an invalid data type.").arg(xAxisProperty().name()));
+
+	// Collect Y coordinates.
+	if(yProperty->dataType() == qMetaTypeId<FloatType>()) {
+		for(size_t i = 0; i < inputParticleCount(); i++) {
+			_xyData[i].ry() = yProperty->getFloatComponent(i, yVecComponent);
+		}
+	}
+	else if(yProperty->dataType() == qMetaTypeId<int>()) {
+		for(size_t i = 0; i < inputParticleCount(); i++) {
+			_xyData[i].ry() = yProperty->getIntComponent(i, yVecComponent);
+		}
+	}
+	else throwException(tr("Particle property '%1' has an invalid data type.").arg(yAxisProperty().name()));
+
+	// Determine value ranges.
+	if(_fixXAxisRange == false || _fixYAxisRange == false) {
+		Box2 bbox;
+		for(const QPointF& p : _xyData) {
+			bbox.addPoint(p.x(), p.y());
+		}
+		if(_fixXAxisRange == false) {
+			xIntervalStart = bbox.minc.x();
+			xIntervalEnd = bbox.maxc.x();
+		}
+		if(_fixYAxisRange == false) {
+			yIntervalStart = bbox.minc.y();
+			yIntervalEnd = bbox.maxc.y();
+		}
+	}
+
+	if(selProperty && _selectXAxisInRange) {
+		OVITO_ASSERT(selProperty->size() == _xyData.size());
+		int* s = selProperty->dataInt();
+		int* s_end = s + selProperty->size();
+		for(const QPointF& p : _xyData) {
+			if(p.x() < selectionXAxisRangeStart || p.x() > selectionXAxisRangeEnd) {
+				*s = 0;
+				numSelected--;
+			}
+			++s;
+		}
+		selProperty->changed();
+	}
+
+	if(selProperty && _selectYAxisInRange) {
+		OVITO_ASSERT(selProperty->size() == _xyData.size());
+		int* s = selProperty->dataInt();
+		int* s_end = s + selProperty->size();
+		for(const QPointF& p : _xyData) {
+			if(p.y() < selectionYAxisRangeStart || p.y() > selectionYAxisRangeEnd) {
+				if(*s) {
+					*s = 0;
+					numSelected--;
+				}
+			}
+			++s;
+		}
+		selProperty->changed();
 	}
 
 	QString statusMessage;
-	if(selProperty) {
-		selProperty->changed();
+	if(selProperty)
 		statusMessage += tr("%1 particles selected (%2%)").arg(numSelected).arg((FloatType)numSelected * 100 / std::max(1,(int)selProperty->size()), 0, 'f', 1);
-	}
 
 	_xAxisRangeStart = xIntervalStart;
 	_xAxisRangeEnd = xIntervalEnd;

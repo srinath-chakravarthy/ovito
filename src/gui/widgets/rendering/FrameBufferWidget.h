@@ -38,10 +38,10 @@ public:
 	FrameBufferWidget(QWidget* parent = nullptr) : QWidget(parent) {}
 
 	/// Return the FrameBuffer that is currently shown in the widget (can be NULL).
-	const boost::shared_ptr<FrameBuffer>& frameBuffer() const { return _frameBuffer; }
+	const std::shared_ptr<FrameBuffer>& frameBuffer() const { return _frameBuffer; }
 	
 	/// Sets the FrameBuffer that is currently shown in the widget.
-	void setFrameBuffer(const boost::shared_ptr<FrameBuffer>& frameBuffer);
+	void setFrameBuffer(const std::shared_ptr<FrameBuffer>& frameBuffer);
 	
 	/// Returns the preferred size of the widget.
 	virtual QSize sizeHint() const override;
@@ -65,7 +65,7 @@ private Q_SLOTS:
 private:
 
 	/// The FrameBuffer that is shown in the widget. 
-	boost::shared_ptr<FrameBuffer> _frameBuffer;
+	std::shared_ptr<FrameBuffer> _frameBuffer;
 
 private:
 

@@ -53,19 +53,22 @@ public:
 	const QString& scriptOutput() const { return _scriptOutput; }
 
 	/// Returns the Python script function executed by the overlay.
-	boost::python::object scriptFunction() {
-		return _overlayScriptFunction;
+	py::object scriptFunction() {
+		if(_overlayScriptFunction)
+			return _overlayScriptFunction;
+		else
+			return py::none();
 	}
 
 	/// Sets the Python script function to be executed by the overlay.
-	void setScriptFunction(const boost::python::object& func) {
+	void setScriptFunction(const py::function& func) {
 		_overlayScriptFunction = func;
 		notifyDependents(ReferenceEvent::TargetChanged);
 	}
 
 	/// Returns whether the script was successfully compiled.
 	bool compilationSucessful() const {
-		return !_overlayScriptFunction.is_none();
+		return _overlayScriptFunction.check();
 	}
 
 protected:
@@ -99,7 +102,7 @@ private:
 	QString _scriptOutput;
 
 	/// The compiled script function.
-	boost::python::object _overlayScriptFunction;
+	py::function _overlayScriptFunction;
 
 	Q_CLASSINFO("DisplayName", "Python script");
 

@@ -17,7 +17,7 @@ extern "C" {
 #endif
 
 /* POSIX Threads */
-#if defined(_AIX) || defined(__APPLE__) || defined(_CRAY) || defined(__hpux) || defined(__irix) || defined(__linux) || defined(__osf__) ||  defined(__PARAGON__)
+#if defined(_AIX) || defined(__APPLE__) || defined(_CRAY) || defined(__hpux) || defined(__irix) || defined(__linux) || defined(__osf__) ||  defined(__PARAGON__) || defined(__CYGWIN__)
 #if !defined(USEUITHREADS) && !defined(USEPOSIXTHREADS)
 #define USEPOSIXTHREADS
 #endif

@@ -54,7 +54,7 @@ public:
 	virtual bool setShadingMode(ShadingMode mode) override { return (mode == shadingMode()); }
 
 	/// \brief Changes the rendering quality of elements.
-	virtual bool setRenderingQuality(RenderingQuality level) { return (renderingQuality() == level); }
+	virtual bool setRenderingQuality(RenderingQuality level) override { return (renderingQuality() == level); }
 
 	/// \brief Returns true if the geometry buffer is filled and can be rendered with the given renderer.
 	virtual bool isValid(SceneRenderer* renderer) override;

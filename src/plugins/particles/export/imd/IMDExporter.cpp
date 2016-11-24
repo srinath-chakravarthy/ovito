@@ -47,7 +47,7 @@ bool IMDExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint 
 	// Get simulation cell info.
 	SimulationCellObject* simulationCell = state.findObject<SimulationCellObject>();
 	if(!simulationCell)
-		throw Exception(tr("No simulation cell available. Cannot write IMD file."));
+		throwException(tr("No simulation cell available. Cannot write IMD file."));
 
 	AffineTransformation simCell = simulationCell->cellMatrix();
 	size_t atomsCount = posProperty->size();
@@ -59,11 +59,11 @@ bool IMDExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint 
 	for(const ParticlePropertyReference& pref : columnMapping()) {
 		if(pref.type() == ParticleProperty::PositionProperty) {
 			posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
-			if(!posProperty) throw Exception(tr("Cannot export particle positions, because they are not present in the dataset to be exported."));
+			if(!posProperty) throwException(tr("Cannot export particle positions, because they are not present in the dataset to be exported."));
 		}
 		else if(pref.type() == ParticleProperty::ParticleTypeProperty) {
 			typeProperty = dynamic_object_cast<ParticleTypeProperty>(ParticlePropertyObject::findInState(state, ParticleProperty::ParticleTypeProperty));
-			if(!typeProperty) throw Exception(tr("Cannot export particle types, because they are not present in the dataset to be exported."));
+			if(!typeProperty) throwException(tr("Cannot export particle types, because they are not present in the dataset to be exported."));
 		}
 		else if(pref.type() == ParticleProperty::IdentifierProperty) {
 			identifierProperty = ParticlePropertyObject::findInState(state, ParticleProperty::IdentifierProperty);
@@ -71,11 +71,11 @@ bool IMDExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint 
 		}
 		else if(pref.type() == ParticleProperty::VelocityProperty) {
 			velocityProperty = ParticlePropertyObject::findInState(state, ParticleProperty::VelocityProperty);
-			if(!velocityProperty) throw Exception(tr("Cannot export particle velocities, because they are not present in the dataset to be exported."));
+			if(!velocityProperty) throwException(tr("Cannot export particle velocities, because they are not present in the dataset to be exported."));
 		}
 		else if(pref.type() == ParticleProperty::MassProperty) {
 			massProperty = ParticlePropertyObject::findInState(state, ParticleProperty::MassProperty);
-			if(!massProperty) throw Exception(tr("Cannot export particle masses, because they are not present in the dataset to be exported."));
+			if(!massProperty) throwException(tr("Cannot export particle masses, because they are not present in the dataset to be exported."));
 		}
 		else filteredMapping.push_back(pref);
 	}

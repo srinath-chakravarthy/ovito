@@ -34,6 +34,7 @@
       <xi:include href="reference/rendering/render_settings.docbook"/>
       <xi:include href="reference/rendering/opengl_renderer.docbook"/>
       <xi:include href="reference/rendering/tachyon_renderer.docbook"/>
+      <xi:include href="reference/rendering/povray_renderer.docbook"/>
   </section>
 
 </chapter>

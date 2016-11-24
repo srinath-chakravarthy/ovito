@@ -3,7 +3,7 @@ body {
 	font-weight: normal;
 	padding: 0px;
 	margin: 0px;
-	background-color: rgb(243, 240, 240);
+	background-color: rgb(254, 251, 251);
 }
 
 th {
@@ -89,7 +89,7 @@ hr {
     clear: both;
     float: right;
     padding: 10px;
-    background-color: rgb(243, 240, 240);
+    background-color: rgb(254, 251, 251);
 }
 
 .figure p.title, .inlinefigure p.title, .informalfigure .informaltable td, .inlinefigure .informaltable td {

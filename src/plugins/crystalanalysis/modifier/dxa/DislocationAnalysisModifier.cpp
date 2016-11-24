@@ -39,6 +39,7 @@ DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _maxTrialCircuitSize, "MaxTri
 DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _circuitStretchability, "CircuitStretchability");
 DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _outputInterfaceMesh, "OutputInterfaceMesh");
 DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _reconstructEdgeVectors, "ReconstructEdgeVectors");
+DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _onlyPerfectDislocations, "OnlyPerfectDislocations");
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _patternCatalog, "PatternCatalog", PatternCatalog, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _dislocationDisplay, "DislocationDisplay", DislocationDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _defectMeshDisplay, "DefectMeshDisplay", SurfaceMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
@@ -50,6 +51,7 @@ SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _maxTrialCircuitSize, "Tri
 SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _circuitStretchability, "Circuit stretchability");
 SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _outputInterfaceMesh, "Output interface mesh");
 SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _reconstructEdgeVectors, "Reconstruct edge vectors");
+SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _onlyPerfectDislocations, "Generate perfect dislocations");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(DislocationAnalysisModifier, _maxTrialCircuitSize, IntegerParameterUnit, 3);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(DislocationAnalysisModifier, _circuitStretchability, IntegerParameterUnit, 0);
 
@@ -58,13 +60,14 @@ SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(DislocationAnalysisModifier, _circuitStretc
 ******************************************************************************/
 DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : StructureIdentificationModifier(dataset),
 		_inputCrystalStructure(StructureAnalysis::LATTICE_FCC), _maxTrialCircuitSize(14), _circuitStretchability(9), _outputInterfaceMesh(false),
-		_reconstructEdgeVectors(false)
+		_reconstructEdgeVectors(false), _onlyPerfectDislocations(false)
 {
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_inputCrystalStructure);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_maxTrialCircuitSize);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_circuitStretchability);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_outputInterfaceMesh);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_reconstructEdgeVectors);
+	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_onlyPerfectDislocations);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_patternCatalog);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_dislocationDisplay);
 	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_defectMeshDisplay);
@@ -175,7 +178,8 @@ void DislocationAnalysisModifier::propertyChanged(const PropertyFieldDescriptor&
 			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_maxTrialCircuitSize)
 			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_circuitStretchability)
 			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_outputInterfaceMesh)
-			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_reconstructEdgeVectors))
+			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_reconstructEdgeVectors)
+			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_onlyPerfectDislocations))
 		invalidateCachedResults();
 }
 
@@ -205,6 +209,7 @@ void DislocationAnalysisModifier::invalidateCachedResults()
 	_unassignedEdges.reset();
 	_segmentCounts.clear();
 	_dislocationLengths.clear();
+	_dislocationStructurePatterns.clear();
 	_planarDefects.reset();
 }
 
@@ -235,7 +240,8 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> DislocationAnalysis
 	return std::make_shared<DislocationAnalysisEngine>(validityInterval, posProperty->storage(),
 			simCell->data(), inputCrystalStructure(), maxTrialCircuitSize(), circuitStretchability(),
 			reconstructEdgeVectors(), selectionProperty,
-			clusterProperty ? clusterProperty->storage() : nullptr, std::move(preferredCrystalOrientations));
+			clusterProperty ? clusterProperty->storage() : nullptr, std::move(preferredCrystalOrientations),
+			onlyPerfectDislocations());
 }
 
 /******************************************************************************
@@ -261,6 +267,7 @@ void DislocationAnalysisModifier::transferComputationResults(ComputeEngine* engi
 	_unassignedEdges = eng->elasticMapping().unassignedEdges();
 	_segmentCounts.clear();
 	_dislocationLengths.clear();
+	_dislocationStructurePatterns.clear();
 
 #if 0
 	_planarDefects = eng->planarDefectIdentification().planarDefects();
@@ -307,9 +314,19 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 		smoothDislocationsModifier()->smoothDislocationLines(dislocationsObj);
 	output().addObject(dislocationsObj);
 
-	// Classify, count and measure length of dislocation segments.
 	_segmentCounts.clear();
 	_dislocationLengths.clear();
+	_dislocationStructurePatterns.clear();
+
+	StructurePattern* defaultPattern = _patternCatalog->structureById(inputCrystalStructure());
+	if(defaultPattern) {
+		for(BurgersVectorFamily* family : defaultPattern->burgersVectorFamilies()) {
+			_dislocationLengths[family] = 0;
+			_dislocationStructurePatterns[family] = defaultPattern;
+		}
+	}
+	
+	// Classify, count and measure length of dislocation segments.
 	FloatType totalLineLength = 0;
 	int totalSegmentCount = 0;
 	for(DislocationSegment* segment : dislocationsObj->storage()->segments()) {
@@ -330,6 +347,7 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 		}
 		_segmentCounts[family]++;
 		_dislocationLengths[family] += len;
+		_dislocationStructurePatterns[family] = pattern;
 	}
 
 	// Output pattern catalog.
@@ -362,7 +380,28 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 	}
 
 	output().attributes().insert(QStringLiteral("DislocationAnalysis.total_line_length"), QVariant::fromValue(totalLineLength));
-
+	output().attributes().insert(QStringLiteral("DislocationAnalysis.counts.OTHER"), QVariant::fromValue(structureCounts()[StructureAnalysis::LATTICE_OTHER]));
+	output().attributes().insert(QStringLiteral("DislocationAnalysis.counts.FCC"), QVariant::fromValue(structureCounts()[StructureAnalysis::LATTICE_FCC]));
+	output().attributes().insert(QStringLiteral("DislocationAnalysis.counts.HCP"), QVariant::fromValue(structureCounts()[StructureAnalysis::LATTICE_HCP]));
+	output().attributes().insert(QStringLiteral("DislocationAnalysis.counts.BCC"), QVariant::fromValue(structureCounts()[StructureAnalysis::LATTICE_BCC]));
+	output().attributes().insert(QStringLiteral("DislocationAnalysis.counts.CubicDiamond"), QVariant::fromValue(structureCounts()[StructureAnalysis::LATTICE_CUBIC_DIAMOND]));
+	output().attributes().insert(QStringLiteral("DislocationAnalysis.counts.HexagonalDiamond"), QVariant::fromValue(structureCounts()[StructureAnalysis::LATTICE_HEX_DIAMOND]));
+	for(const auto& dlen : _dislocationLengths) {
+		StructurePattern* pattern = _dislocationStructurePatterns[dlen.first];
+		QString bstr;
+		if(dlen.first->burgersVector() != Vector3::Zero()) {
+			bstr = DislocationDisplay::formatBurgersVector(dlen.first->burgersVector(), pattern);
+			bstr.remove(QChar(' '));
+			bstr.replace(QChar('['), QChar('<'));
+			bstr.replace(QChar(']'), QChar('>'));
+		}
+		else bstr = "other";
+		output().attributes().insert(QStringLiteral("DislocationAnalysis.length.%1")
+			.arg(bstr), 
+			QVariant::fromValue(dlen.second));
+	}
+	output().attributes().insert(QStringLiteral("DislocationAnalysis.cell_volume"), QVariant::fromValue(_simCell.volume3D()));
+	
 	if(totalSegmentCount == 0)
 		return PipelineStatus(PipelineStatus::Success, tr("No dislocations found"));
 	else

@@ -24,21 +24,26 @@ PROJECT(Ovito)
 # Make sure we have a recent version of CMake.
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12 FATAL_ERROR)
 CMAKE_POLICY(VERSION 2.8.12)
-CMAKE_POLICY(SET CMP0023 OLD)
+
+# Choose CMake policies.
+CMAKE_POLICY(SET CMP0023 OLD)   # Allow keyword and plain target_link_libraries signatures to be mixed.
+CMAKE_POLICY(SET CMP0020 NEW) 	# Automatically link to qtmain.lib on Windows.
 IF(NOT CMAKE_VERSION VERSION_LESS "3")
 	CMAKE_POLICY(SET CMP0026 OLD)	# Suppress warning when reading the LOCATION target property.
 	CMAKE_POLICY(SET CMP0043 OLD)	# Suppress warning because COMPILE_DEFINITIONS_* target property is used.
+	CMAKE_POLICY(SET CMP0045 OLD)	# Don't warn about non-existing targets in GET_TARGET_PROPERTY().
 ENDIF()
 
-IF(WIN32)
-	CMAKE_POLICY(SET CMP0020 NEW) 	# Automatically link to qtmain.lib on Windows.
-
-	IF(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
-		IF(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "18")
-			MESSAGE(FATAL_ERROR "OVITO requires Visual C++ 2013 or newer.")
-		ENDIF()
+# Check compiler requirement.
+IF(CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
+	IF(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "18")
+		MESSAGE(FATAL_ERROR "OVITO requires Visual C++ 2013 or newer.")
 	ENDIF()
 ENDIF()
+
+# This is to enable target debugging within Visual Studio Code. 
+# It is ignored oustide of Visual Studio Code/CMake tools. 
+INCLUDE(CMakeToolsHelpers OPTIONAL)
 
 SET(OVITO_SOURCE_BASE_DIR "${CMAKE_CURRENT_LIST_DIR}")
 LIST(APPEND CMAKE_MODULE_PATH ${OVITO_SOURCE_BASE_DIR}/cmake)
@@ -59,17 +64,17 @@ OPTION(OVITO_BUILD_PLUGIN_TACHYON "Build the Tachyon renderer plugin." "ON")
 OPTION(OVITO_BUILD_PLUGIN_CRYSTALANALYSIS "Build the CrystalAnalysis plugin." "ON")
 OPTION(OVITO_BUILD_PLUGIN_PYSCRIPT "Build the Python scripting plugin." "ON")
 OPTION(OVITO_BUILD_PLUGIN_NETCDFPLUGIN "Build the NetCDF plugin." "ON")
+OPTION(OVITO_BUILD_PLUGIN_POVRAY "Build the POV-Ray plugin." "ON")
 OPTION(OVITO_BUILD_PLUGIN_OPENBABELPLUGIN "Build the OpenBabel plugin (experimental)." "OFF")
-OPTION(OVITO_BUILD_PLUGIN_VOROTOP "Build the VoroTop plugin (experimental)." "OFF")
 
 # This is a global list of plugin targets that will be built.
 # It will get populated by the OVITO_PLUGIN macro.
 SET(OVITO_PLUGINS_LIST "")
 
-# Enable software tests.
+# Enable software testing framework.
 ENABLE_TESTING()
 
-# Enable C++11 standard.
+# Activate C++11 language standard.
 IF(NOT CMAKE_VERSION VERSION_LESS "3.1")
 	SET(CMAKE_CXX_STANDARD 11)
 	SET(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -83,24 +88,23 @@ ELSE()
 	ENDIF()
 ENDIF()
 
+IF(CYGWIN)
+	IF(CMAKE_COMPILER_IS_GNUCXX)
+		# Linking fails without -O3
+		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+	ENDIF()
+ENDIF()
+
 IF(APPLE)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -Wno-invalid-offsetof")
 ENDIF()
-
-# Enable additional optimizations for release builds.
-#IF(CMAKE_COMPILER_IS_GNUCXX)
-#	# Use -flto flag to enable GCC's link-time optimization.
-#	SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto -fuse-linker-plugin")
-#	SET(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -flto -fuse-linker-plugin")
-#	SET(CMAKE_MODULE_LINKER_FLAGS_RELEASE "${CMAKE_MODULE_LINKER_FLAGS_RELEASE} -flto -fuse-linker-plugin")
-#ENDIF()
 
 IF(MSVC)
 	# Suppress warning related to QVarLengthArray implementation.
 	ADD_COMPILE_OPTIONS("/wd4996")
 	# Suppress warning on conversion from size_t to int, possible loss of data.
 	ADD_COMPILE_OPTIONS("/wd4267")
-	# Compiling Boost.Python template code leads to large object files.
+	# Compiling template code leads to large object files.
 	ADD_COMPILE_OPTIONS("/bigobj")	
 ENDIF()
 
@@ -186,7 +190,8 @@ ENDMACRO()
 
 # This macro installs a required third-party shared library in the OVITO directory
 # so that it can be distributed together with the program.
-MACRO(OVITO_INSTALL_SHARED_LIB shared_lib)
+MACRO(OVITO_INSTALL_SHARED_LIB shared_lib destination_dir)
+	FILE(MAKE_DIRECTORY "${${PROJECT_NAME}_BINARY_DIR}/${destination_dir}")
 	# Strip version number from shared lib filename.
 	GET_FILENAME_COMPONENT(shared_lib_ext "${shared_lib}" EXT)
 	STRING(REPLACE ${shared_lib_ext} ".so" shared_lib_new "${shared_lib}")
@@ -197,12 +202,12 @@ MACRO(OVITO_INSTALL_SHARED_LIB shared_lib)
 			GET_FILENAME_COMPONENT(symlink_target_name "${symlink_target}" NAME)
 			GET_FILENAME_COMPONENT(lib_version_name "${lib_version}" NAME)
 			MESSAGE("Installing symlink ${lib_version} to shared library ${symlink_target}")
-			EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E create_symlink ${symlink_target_name} "${OVITO_LIBRARY_DIRECTORY}/${lib_version_name}")
+			EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E create_symlink ${symlink_target_name} "${${PROJECT_NAME}_BINARY_DIR}/${destination_dir}/${lib_version_name}")
 		ELSE()
 			MESSAGE("Installing shared library ${lib_version}")
-			CONFIGURE_FILE("${lib_version}" "${OVITO_LIBRARY_DIRECTORY}" COPYONLY)
+			CONFIGURE_FILE("${lib_version}" "${${PROJECT_NAME}_BINARY_DIR}/${destination_dir}/" COPYONLY)
 		ENDIF()
-		INSTALL(FILES "${lib_version}" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/")
+		INSTALL(FILES "${lib_version}" DESTINATION "${destination_dir}/")
 	ENDFOREACH()
 ENDMACRO()
 
@@ -220,26 +225,13 @@ IF(OVITO_BUILD_GUI)
 		FIND_PACKAGE(Qt5${component} REQUIRED)
 	ENDFOREACH()
 	IF(UNIX AND NOT APPLE AND CMAKE_COMPILER_IS_GNUCXX)
+		# This is an indirect dependency:
 		FIND_PACKAGE(Qt5DBus REQUIRED)
 	ENDIF()
 ENDIF()
 
-# Find OpenGL library.
-IF(OVITO_BUILD_GUI) 
-	FIND_PACKAGE(OpenGL REQUIRED)
-	ADD_LIBRARY(OpenGLLib SHARED IMPORTED GLOBAL)
-	SET_PROPERTY(TARGET OpenGLLib PROPERTY IMPORTED_LOCATION "${OPENGL_gl_LIBRARY}")
-	SET_PROPERTY(TARGET OpenGLLib APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${OPENGL_INCLUDE_DIR}")
-ENDIF()
-
-# Find the zlib library. It is required for reading/writing compressed simulation files.
-FIND_PACKAGE(ZLIB REQUIRED)
-
 # Find the Boost library.
-IF(OVITO_BUILD_PLUGIN_PYSCRIPT)
-	LIST(APPEND Boost_REQUIRED_COMPONENTS python)
-ENDIF()
-FIND_PACKAGE(Boost COMPONENTS ${Boost_REQUIRED_COMPONENTS} REQUIRED)
+FIND_PACKAGE(Boost REQUIRED)
 IF(NOT Boost_FOUND)
 	MESSAGE(FATAL_ERROR "The Boost library could not be found on your system. ${Boost_ERROR_REASON}")
 ENDIF()
@@ -247,19 +239,11 @@ ENDIF()
 # Generate build targets.
 ADD_SUBDIRECTORY(src)
 
-################# OpenGL test program ####################
-OPTION(OVITO_BUILD_OPENGLTEST "Build the OpenGL test program." "OFF")
-IF(OVITO_BUILD_OPENGLTEST)
-	ADD_SUBDIRECTORY(tests/opengltest)
-ENDIF()
-
-################## Build documentation #####################
+# Gnerate user documentation.
 INCLUDE(cmake/Documentation.cmake)
 
-##################### Set up CPack #########################
+# Set up CPack for generating distributable program packages.
 INCLUDE(cmake/Packaging.cmake)
-
-############################################################
 
 # Export our targets so that external plugins can use them.
 CONFIGURE_FILE(cmake/OVITOConfig.cmake "${${PROJECT_NAME}_BINARY_DIR}/" @ONLY)

@@ -32,54 +32,52 @@
 #include <plugins/particles/export/lammps/LAMMPSDumpExporter.h>
 #include <plugins/particles/export/lammps/LAMMPSDataExporter.h>
 #include <plugins/particles/export/fhi_aims/FHIAimsExporter.h>
-
-#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include "PythonBinding.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-using namespace boost::python;
 using namespace PyScript;
 
-BOOST_PYTHON_MODULE(ParticlesExporter)
+PYBIND11_PLUGIN(ParticlesExporter)
 {
-	docstring_options docoptions(true, false);
+	py::options options;
+	options.disable_function_signatures();
 
-	class_<OutputColumnMapping>("OutputColumnMapping", init<>())
-		.def(vector_indexing_suite<OutputColumnMapping>())
-	;
-	python_to_container_conversion<OutputColumnMapping>();
+	py::module m("ParticlesExporter");
 
-	ovito_abstract_class<ParticleExporter, FileExporter>()
+	ovito_abstract_class<ParticleExporter, FileExporter>{m}
 	;
 
-	ovito_abstract_class<FileColumnParticleExporter, ParticleExporter>()
-		.add_property("columns", make_function(&FileColumnParticleExporter::columnMapping, return_value_policy<copy_const_reference>()), &FileColumnParticleExporter::setColumnMapping)
+	ovito_abstract_class<FileColumnParticleExporter, ParticleExporter>(m)
+		.def_property("columns", &FileColumnParticleExporter::columnMapping, &FileColumnParticleExporter::setColumnMapping)
 	;
 
-	ovito_class<IMDExporter, FileColumnParticleExporter>()
+	ovito_class<IMDExporter, FileColumnParticleExporter>{m}
 	;
 
-	ovito_class<POSCARExporter, ParticleExporter>()
+	ovito_class<POSCARExporter, ParticleExporter>{m}
 	;
 
-	ovito_class<LAMMPSDataExporter, ParticleExporter>()
-		.add_property("atomStyle", &LAMMPSDataExporter::atomStyle, &LAMMPSDataExporter::setAtomStyle)
+	ovito_class<LAMMPSDataExporter, ParticleExporter>{m}
+		.def_property("_atom_style", &LAMMPSDataExporter::atomStyle, &LAMMPSDataExporter::setAtomStyle)
 	;
 
-	ovito_class<LAMMPSDumpExporter, FileColumnParticleExporter>()
+	ovito_class<LAMMPSDumpExporter, FileColumnParticleExporter>{m}
 	;
 
-	ovito_class<XYZExporter, FileColumnParticleExporter>()
-		.add_property("subFormat", &XYZExporter::subFormat, &XYZExporter::setSubFormat)
+	auto XYZExporter_py = ovito_class<XYZExporter, FileColumnParticleExporter>{m}
+		.def_property("sub_format", &XYZExporter::subFormat, &XYZExporter::setSubFormat)
 	;
 
-	enum_<XYZExporter::XYZSubFormat>("XYZSubFormat")
+	py::enum_<XYZExporter::XYZSubFormat>(XYZExporter_py, "XYZSubFormat")
 		.value("Parcas", XYZExporter::ParcasFormat)
 		.value("Extended", XYZExporter::ExtendedFormat)
 	;
 
-	ovito_class<FHIAimsExporter, ParticleExporter>()
+	ovito_class<FHIAimsExporter, ParticleExporter>{m}
 	;
+
+	return m.ptr();
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(ParticlesExporter);

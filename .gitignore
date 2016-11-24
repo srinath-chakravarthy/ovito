@@ -3,3 +3,4 @@
 build/
 releases/
 doc/develop/apidoc/
+CMakeFiles

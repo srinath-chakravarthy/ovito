@@ -21,6 +21,7 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DataObject.h>
+#include <core/app/Application.h>
 #include "CoordinationNumberModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
@@ -79,12 +80,12 @@ void CoordinationNumberModifier::CoordinationAnalysisEngine::perform()
 
 	// Perform analysis on each particle in parallel.
 	std::vector<std::thread> workers;
-	int num_threads = std::max(1, QThread::idealThreadCount());
+	size_t num_threads = Application::instance().idealThreadCount();
 	size_t chunkSize = particleCount / num_threads;
 	size_t startIndex = 0;
 	size_t endIndex = chunkSize;
 	std::mutex mutex;
-	for(int t = 0; t < num_threads; t++) {
+	for(size_t t = 0; t < num_threads; t++) {
 		if(t == num_threads - 1) {
 			endIndex += particleCount % num_threads;
 		}
@@ -98,7 +99,7 @@ void CoordinationNumberModifier::CoordinationAnalysisEngine::perform()
 				for(CutoffNeighborFinder::Query neighQuery(neighborListBuilder, i); !neighQuery.atEnd(); neighQuery.next()) {
 					(*coordOutput)++;
 					size_t rdfInterval = (size_t)(sqrt(neighQuery.distanceSquared()) / rdfBinSize);
-					OVITO_ASSERT(rdfInterval < threadLocalRDF.size());
+					rdfInterval = std::min(rdfInterval, threadLocalRDF.size() - 1);
 					threadLocalRDF[rdfInterval]++;
 				}
 

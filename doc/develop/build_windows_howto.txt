@@ -1,6 +1,6 @@
 **************************************************************************
 Compiler: 
-    Microsoft Visual C++ 2013/2015
+    Microsoft Visual C++ 2015
 **************************************************************************
 
 Typical layour for the build directory:
@@ -17,15 +17,15 @@ Source code of third-party libraries is extracted into subdirectories of 'ovito/
 **************************************************************************
 zlib (http://www.zlib.net/)
 **************************************************************************
-mkdir zlib
-cd zlib
+mkdir zlib_build
+cd zlib_build
 cmake -G "NMake Makefiles" -DCMAKE_INSTALL_PREFIX=../zlib_install -DCMAKE_BUILD_TYPE=Release ..\..\zlib-1.2.8
 nmake install
 
 **************************************************************************
 Qt
 **************************************************************************
-Install components (Qt 5.6) under C:\Qt\ : 
+Install the following components (Qt 5.7) in C:\Qt\ : 
    msvc2015 32-bit
    msvc2015 64-bit
 
@@ -44,70 +44,52 @@ nmake
 nmake install
 
 ----- Install PyQt5 ----
-..\XXbit\python\python.exe configure.py ^
+..\64bit\python\python.exe configure.py ^
    --concatenate ^
    --concatenate-split 10 ^
    --confirm-license ^
    --no-designer-plugin ^
    --no-qml-plugin ^
-   --sip=..\python\sip.exe ^
+   --sip=..\64bit\python\sip.exe ^
    --enable QtCore ^
    --enable QtGui ^
-   --enable QtWidgets ^
-   --enable QtNetwork ^
-   --enable QtOpenGL ^
-   --enable QtSvg
+   --enable QtWidgets
 nmake
 nmake install
 
-**************************************************************************
-Boost libraries (release 1.61):
-**************************************************************************
-
---- Create file user-config.jam:
-using python 
-	: 3.5
-	: ..\\64bit\\Python\\python.exe 
-	: ..\\64bit\\Python\\include
-	: ..\\64bit\\Python\\libs ;
-
---- Create file user-config-debug.jam:
-using python 
-	: 3.5
-	: ..\\64bit\\Python\\python_d.exe 
-	: ..\\64bit\\Python\\include
-	: ..\\64bit\\Python\\libs
-	: <python-debugging>on ;
-	
---- Compile Boost:
-cd 
-bootstrap.bat msvc
-b2 --prefix=../32bit/boost --user-config=../32bit/user-config.jam address-model=32 link=shared threading=multi runtime-link=shared toolset=msvc --ignore-mpi --with-system --with-thread --with-python install
-b2 --prefix=../64bit/boost --user-config=../64bit/user-config.jam address-model=64 link=shared threading=multi runtime-link=shared toolset=msvc --ignore-mpi --with-system --with-thread --with-python python-debugging=off install
-b2 --prefix=../64bit/boost --user-config=../64bit/user-config-debug.jam address-model=64 link=shared threading=multi runtime-link=shared toolset=msvc --ignore-mpi --with-system --with-thread --with-python python-debugging=on variant=debug install
+---- Install matplotlib ----
+..\XXbit\python\python.exe -m pip install -U pip setuptools
+..\XXbit\python\python.exe -m pip install matplotlib
 
 **************************************************************************
-HDF5 (version 1.8.x)
+Boost libraries (release 1.62):
 **************************************************************************
-mkdir hdf5
-cd hdf5
+No installation needed, simply extract archive.
+
+**************************************************************************
+HDF5
+**************************************************************************
+mkdir hdf5_build
+cd hdf5_build
 cmake -G "NMake Makefiles" ^
    -DCMAKE_BUILD_TYPE=Release ^
    -DCMAKE_INSTALL_PREFIX=../hdf5_install ^
    -DBUILD_SHARED_LIBS=ON ^
    -DHDF5_ENABLE_Z_LIB_SUPPORT=ON ^
    -DHDF5_BUILD_HL_LIB=ON ^
+   -DBUILD_TESTING=OFF ^
+   -DHDF5_BUILD_EXAMPLES=OFF ^
    -DZLIB_INCLUDE_DIR=%cd:\=/%/../zlib_install/include ^
    -DZLIB_LIBRARY=%cd:\=/%/../zlib_install/lib/zlib.lib ^
-   ../../hdf5-1.8.14
+   ../../hdf5-1.8.18
 
 nmake install
 
 **************************************************************************
-NetCDF (version 4.4.x)
+NetCDF
 **************************************************************************
-mkdir netcdf
-cd netcdf
+mkdir netcdf_build
+cd netcdf_build
 set HDF5_DIR=%cd:\=/%/../hdf5_install/cmake
 cmake -G "NMake Makefiles" ^
    -DCMAKE_BUILD_TYPE=Release ^
@@ -124,8 +106,7 @@ cmake -G "NMake Makefiles" ^
    -DHDF5_HL_LIB=%cd:\=/%/../hdf5_install/lib/hdf5_hl.lib ^
    -DZLIB_INCLUDE_DIR=%cd:\=/%/../zlib_install/include ^
    -DZLIB_LIBRARY=%cd:\=/%/../zlib_install/lib/zlib.lib ^
-   ../../netcdf-4.4.0
-
+   ../../netcdf-4.4.1
 nmake install
    
 **************************************************************************
@@ -133,7 +114,7 @@ QScintilla2
 **************************************************************************
 mkdir qscintilla
 cd qscintilla
-qmake ..\..\QScintilla-gpl-2.9.2\Qt4Qt5\qscintilla.pro
+qmake ..\..\QScintilla_gpl-2.9.3\Qt4Qt5\qscintilla.pro
 nmake
 
 **************************************************************************
@@ -176,11 +157,12 @@ cmake -G "NMake Makefiles" ^
    -DCMAKE_INSTALL_PREFIX=../ovito_release_install ^
    -DZLIB_INCLUDE_DIR=%cd:\=/%/../zlib_install/include ^
    -DZLIB_LIBRARY=%cd:\=/%/../zlib_install/lib/zlib.lib ^
-   -Dnetcdf_DIR=%cd:\=/%/../netcdf_install/share/cmake ^
-   -DBOOST_INCLUDEDIR=%cd:\=/%/../boost/include ^
-   -DQSCINTILLA_INCLUDE_DIR=%cd:\=/%/../../QScintilla-gpl-2.9.2\Qt4Qt5 ^
+   -Dnetcdf_DIR=%cd:\=/%/../netcdf_install/lib/cmake/netCDF ^
+   -DHDF5_DIR=%cd:\=/%/../hdf5_install/cmake ^
+   -DBOOST_INCLUDEDIR=%cd:\=/%/../../boost_1_62_0 ^
+   -DQSCINTILLA_INCLUDE_DIR=%cd:\=/%/../../QScintilla_gpl-2.9.3\Qt4Qt5 ^
    -DQSCINTILLA_LIBRARY=%cd:\=/%/../qscintilla/release/qscintilla2.lib ^
-   -DPYTHON_LIBRARY=%cd:\=/%/../Python/libs/python35.lib ^
+   -DPYTHON_LIBRARY=%cd:\=/%/../Python/libs/python34.lib ^
    -DPYTHON_INCLUDE_DIR=%cd:\=/%/../Python/include ^
    -DXSLT_PROCESSOR=../../libxslt-1.1.26.win32/bin/xsltproc.exe ^
    -DSPHINX_PROCESSOR_PATH=%cd:\=/%/../Python/Scripts ^

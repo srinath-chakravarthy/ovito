@@ -58,7 +58,7 @@ SET(SourceFiles
 	modifier/analysis/scatterplot/ScatterPlotModifierEditor.cpp
 	modifier/analysis/wignerseitz/WignerSeitzAnalysisModifierEditor.cpp
 	modifier/analysis/ptm/PolyhedralTemplateMatchingModifierEditor.cpp
-	modifier/analysis/structural_clustering/StructuralClusteringModifierEditor.cpp	
+	#modifier/analysis/structural_clustering/StructuralClusteringModifierEditor.cpp	
 	modifier/selection/ExpandSelectionModifierEditor.cpp
 	modifier/selection/SelectParticleTypeModifierEditor.cpp
 	modifier/selection/SelectExpressionModifierEditor.cpp
@@ -89,7 +89,7 @@ QT5_ADD_RESOURCES(ResourceFiles resources/particles_gui.qrc)
 
 OVITO_STANDARD_PLUGIN(ParticlesGui
 	SOURCES ParticlesGui.cpp ${SourceFiles} ${ResourceFiles}
-	LIB_DEPENDENCIES qcustomplot 
+	PRIVATE_LIB_DEPENDENCIES Qwt
 	PLUGIN_DEPENDENCIES Particles
 	GUI_PLUGIN
 )

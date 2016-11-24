@@ -215,7 +215,7 @@ public:
 	/// Adds a new rollout to the container.
 	Rollout* addRollout(QWidget* content, const QString& title, const RolloutInsertionParameters& param = RolloutInsertionParameters(), const char* helpPage = nullptr);
 	
-	virtual QSize minimumSizeHint() const { 
+	virtual QSize minimumSizeHint() const override { 
 		return QSize(QFrame::minimumSizeHint().width(), 10); 
 	}
 

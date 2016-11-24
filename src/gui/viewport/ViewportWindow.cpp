@@ -349,36 +349,32 @@ void ViewportWindow::renderRenderFrame()
 ViewportPickResult ViewportWindow::pick(const QPointF& pos)
 {
 	// Cannot perform picking while viewport is not visible or currently rendering or when updates are disabled.
-	if(!isExposed() || viewport()->isRendering() || viewport()->dataset()->viewportConfig()->isSuspended()) {
-		ViewportPickResult result;
-		result.valid = false;
-		return result;
-	}
+	if(isExposed() && !viewport()->isRendering() && !viewport()->dataset()->viewportConfig()->isSuspended()) {
+		try {
+			if(_pickingRenderer->isRefreshRequired()) {
+				// Let the viewport do the actual rendering work.
+				viewport()->renderInteractive(_pickingRenderer);
+			}
 
-	try {
-		if(_pickingRenderer->isRefreshRequired()) {
-			// Let the viewport do the actual rendering work.
-			viewport()->renderInteractive(_pickingRenderer);
+			// Query which object is located at the given window position.
+			const QPoint pixelPos = (pos * devicePixelRatio()).toPoint();
+			const PickingSceneRenderer::ObjectRecord* objInfo;
+			quint32 subobjectId;
+			std::tie(objInfo, subobjectId) = _pickingRenderer->objectAtLocation(pixelPos);
+			if(objInfo) {
+				ViewportPickResult result;
+				result.objectNode = objInfo->objectNode;
+				result.pickInfo = objInfo->pickInfo;
+				result.worldPosition = _pickingRenderer->worldPositionFromLocation(pixelPos);
+				result.subobjectId = subobjectId;
+				return result;
+			}
 		}
-
-		// Query which object is located at the given window position.
-		ViewportPickResult result;
-		const PickingSceneRenderer::ObjectRecord* objInfo;
-		std::tie(objInfo, result.subobjectId) = _pickingRenderer->objectAtLocation((pos * devicePixelRatio()).toPoint());
-		result.valid = (objInfo != nullptr);
-		if(objInfo) {
-			result.objectNode = objInfo->objectNode;
-			result.pickInfo = objInfo->pickInfo;
-			result.worldPosition = _pickingRenderer->worldPositionFromLocation((pos * devicePixelRatio()).toPoint());
+		catch(const Exception& ex) {
+			ex.showError();
 		}
-		return result;
 	}
-	catch(const Exception& ex) {
-		ex.showError();
-		ViewportPickResult result;
-		result.valid = false;
-		return result;
-	}
+	return {};
 }
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
@@ -402,9 +398,7 @@ bool ViewportWindow::event(QEvent* event)
 ******************************************************************************/
 void ViewportWindow::exposeEvent(QExposeEvent*)
 {
-	if(isExposed()) {
-		renderNow();
-	}
+	renderNow();
 }
 
 /******************************************************************************
@@ -412,9 +406,7 @@ void ViewportWindow::exposeEvent(QExposeEvent*)
 ******************************************************************************/
 void ViewportWindow::resizeEvent(QResizeEvent*)
 {
-	if(isExposed()) {
-		renderNow();
-	}
+	renderNow();
 }
 
 #else
@@ -434,6 +426,15 @@ void ViewportWindow::paintGL()
 	OVITO_ASSERT_MSG(!_viewport->isRendering(), "ViewportWindow::paintGL()", "Recursive viewport repaint detected.");
 	OVITO_ASSERT_MSG(!_viewport->dataset()->viewportConfig()->isRendering(), "ViewportWindow::paintGL()", "Recursive viewport repaint detected.");
 	renderNow();
+}
+
+/******************************************************************************
+* Handles the show events.
+******************************************************************************/
+void ViewportWindow::showEvent(QShowEvent* event)
+{
+	if(!event->spontaneous())
+		update();
 }
 
 #endif

@@ -39,6 +39,7 @@
 #include <array>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include <set>
 #include <utility>
 #include <random>
@@ -54,8 +55,6 @@
 * Boost Library
 ******************************************************************************/
 #include <boost/dynamic_bitset.hpp>
-#include <boost/smart_ptr/shared_ptr.hpp>
-#include <boost/smart_ptr/make_shared.hpp>
 
 /******************************************************************************
 * QT Library

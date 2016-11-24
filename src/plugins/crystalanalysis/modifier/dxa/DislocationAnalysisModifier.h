@@ -133,6 +133,12 @@ public:
 	/// Sets the surface smoothing strength for the defect mesh.
 	void setDefectMeshSmoothingLevel(int level) { smoothSurfaceModifier()->setSmoothingLevel(level); }
 
+	/// Returns whether identification is restricted to perfect lattice dislocations.
+	bool onlyPerfectDislocations() const { return _onlyPerfectDislocations; }
+
+	/// Controls whether identification is restricted to perfect lattice dislocations.
+	void setOnlyPerfectDislocations(bool onlyPerfect) { _onlyPerfectDislocations = onlyPerfect; }
+
 protected:
 
 	/// Handles reference events sent by reference targets of this object.
@@ -166,6 +172,9 @@ private:
 
 	/// Enables the reconstruction of missing tessellation edge lattice vectors.
 	PropertyField<bool> _reconstructEdgeVectors;
+
+	/// Restricts the identification to perfect lattice dislocations.
+	PropertyField<bool> _onlyPerfectDislocations;
 
 	/// The catalog of structure patterns.
 	ReferenceField<PatternCatalog> _patternCatalog;
@@ -221,6 +230,9 @@ private:
 	/// The total length of segments found per dislocation type.
 	std::map<BurgersVectorFamily*,FloatType> _dislocationLengths;
 
+	/// The structure pattern each dislocation type belongs to.
+	std::map<BurgersVectorFamily*,StructurePattern*> _dislocationStructurePatterns;
+
 	Q_OBJECT
 	OVITO_OBJECT
 
@@ -232,6 +244,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_circuitStretchability);
 	DECLARE_PROPERTY_FIELD(_outputInterfaceMesh);
 	DECLARE_PROPERTY_FIELD(_reconstructEdgeVectors);
+	DECLARE_PROPERTY_FIELD(_onlyPerfectDislocations);
 	DECLARE_REFERENCE_FIELD(_patternCatalog);
 	DECLARE_REFERENCE_FIELD(_dislocationDisplay);
 	DECLARE_REFERENCE_FIELD(_defectMeshDisplay);

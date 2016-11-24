@@ -6,7 +6,7 @@ node = import_file("../../files/LAMMPS/animation.dump.gz")
 num_particles = node.source.number_of_particles
 
 cutoff = 2.5
-finder = CutoffNeighborFinder(cutoff, node.source.data)
+finder = CutoffNeighborFinder(cutoff, node.source)
 
 for index in range(num_particles):
     for n in finder.find(index):

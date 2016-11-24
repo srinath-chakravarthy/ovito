@@ -51,7 +51,7 @@ void ActionManager::on_RenderActiveViewport_triggered()
 		FrameBufferWindow* frameBufferWindow = mainWindow()->frameBufferWindow();
 
 		// Allocate and resize frame buffer and frame buffer window if necessary.
-		boost::shared_ptr<FrameBuffer> frameBuffer = frameBufferWindow->createFrameBuffer(settings->outputImageWidth(), settings->outputImageHeight());
+		std::shared_ptr<FrameBuffer> frameBuffer = frameBufferWindow->createFrameBuffer(settings->outputImageWidth(), settings->outputImageHeight());
 
 		// Show and activate frame buffer window.
 		frameBufferWindow->showAndActivateWindow();

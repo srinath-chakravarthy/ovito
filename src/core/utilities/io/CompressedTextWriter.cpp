@@ -20,6 +20,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <core/Core.h>
+#include <core/dataset/DataSet.h>
 #include "CompressedTextWriter.h"
 
 #include <boost/spirit/include/karma.hpp>
@@ -29,8 +30,8 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPAC
 /******************************************************************************
 * Opens the output file for writing.
 ******************************************************************************/
-CompressedTextWriter::CompressedTextWriter(QFileDevice& output) :
-	_device(output), _compressor(&output)
+CompressedTextWriter::CompressedTextWriter(QFileDevice& output, DataSet* context) :
+	_device(output), _compressor(&output), _context(context)
 {
 	_filename = output.fileName();
 
@@ -39,13 +40,13 @@ CompressedTextWriter::CompressedTextWriter(QFileDevice& output) :
 		// Open file for writing.
 		_compressor.setStreamFormat(QtIOCompressor::GzipFormat);
 		if(!_compressor.open(QIODevice::WriteOnly))
-			throw Exception(tr("Failed to open output file '%1' for writing: %2").arg(_compressor.errorString()));
+			throw Exception(tr("Failed to open output file '%1' for writing: %2").arg(_compressor.errorString()), _context);
 		_stream = &_compressor;
 	}
 	else {
 		// Open file for writing.
 		if(!output.open(QIODevice::WriteOnly | QIODevice::Text))
-			throw Exception(tr("Failed to open output file '%1' for writing: %2").arg(_filename).arg(output.errorString()));
+			throw Exception(tr("Failed to open output file '%1' for writing: %2").arg(_filename).arg(output.errorString()), _context);
 		_stream = &output;
 	}
 }
@@ -182,7 +183,7 @@ CompressedTextWriter& CompressedTextWriter::operator<<(FloatType f)
 ******************************************************************************/
 void CompressedTextWriter::reportWriteError()
 {
-	throw Exception(tr("Failed to write output file '%1': %2").arg(filename()).arg(_stream->errorString()));
+	throw Exception(tr("Failed to write output file '%1': %2").arg(filename()).arg(_stream->errorString()), _context);
 }
 
 OVITO_END_INLINE_NAMESPACE

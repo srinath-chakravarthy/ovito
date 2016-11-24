@@ -45,9 +45,9 @@ You typically execute a Python script from the terminal using the :program:`ovit
 The :program:`ovitos` program is located in the :file:`bin/` subdirectory of OVITO for Linux, in the 
 :file:`Ovito.app/Contents/MacOS/` directory of OVITO for MacOS, and in the main application directory 
 on Windows systems. It should not be confused with :program:`ovito`, the main program which
-has a graphical user interface.
+provides the graphical user interface.
 
-Let's assume we used a text editor to write a simple Python script file named :file:`hello.py`::
+Let's assume we've used a text editor to write a simple Python script file named :file:`hello.py`::
 
 	import ovito
 	print("Hello, this is OVITO %i.%i.%i" % ovito.version)
@@ -56,41 +56,58 @@ We can execute the script from a Linux terminal as follows:
 
 .. code-block:: shell-session
 
-	me@linux:~/ovito-2.7.0-x86_64/bin$ ./ovitos hello.py
-	Hello, this is OVITO 2.7.0
+	me@linux:~/ovito-2.7.1-x86_64/bin$ ./ovitos hello.py
+	Hello, this is OVITO 2.7.1
 	
 By default, the :program:`ovitos` script launcher invokes OVITO in console mode, which is a non-graphical mode
 where the main window isn't shown. This allows running OVITO scripts on remote machines or
-computing clusters that don't possess a graphics terminal. In OVITO's console mode, scripts can read from and write
+computing clusters that don't possess a graphics display. In OVITO's console mode, scripts can read from and write
 to the terminal as if they were executed by a standard Python interpreter. Any command line arguments following the 
 script's name are passed to the script via the ``sys.argv`` variable. Furthermore, it is possible to start OVITO's 
 interpreter in interactive scripting mode by running :program:`ovitos` without any arguments.
 
+Preloading program state
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 The :command:`-o` command line option loads an OVITO state file before executing the
 script. This allows you to preload and use an existing visualization setup that has 
 been manually prepared using the graphical version of OVITO and saved to a :file:`.ovito` file. This can save you programming
-work, because modifiers, parameters, and the camera setup get loaded from the OVITO file and 
-don't have to be set up programatically in the script anymore.
+work, because modifiers, parameters, and the camera setup already get loaded from the OVITO file and 
+don't need to be set up programatically in the script anymore.
+
+Running scripts in graphical mode
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :command:`-g` command line option switches from console mode to graphical mode. This displays OVITO's main window
 and you can follow your script's actions as they are being executed. This is useful, for instance, if you want to visually 
-inspect the results of your script and check if everything is correctly set up during the development of a script.
+inspect the results of your script during the development phase.
 
-.. note::
+Using third-party Python modules from OVITO scripts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	It is not possible to run scripts written for OVITO with a standard Python interpreter (usually named :program:`python`). 
-	They must always be executed with the launcher :program:`ovitos`. The Python interpreter shipping with OVITO
-	includes only the standard Python modules and `NumPy <http://www.numpy.org/>`_, a popular package for working with numeric data.
+It is not possible to run scripts written for OVITO with a standard Python interpreter (usually named :program:`python`). 
+They must be executed with the launcher :program:`ovitos`. However, the Python installation shipping with OVITO
+includes only `NumPy <http://www.numpy.org/>`_ and `matplotlib <http://matplotlib.org/>`_ as non-standard extension modules. 
+
+If you want to use other third-party Python modules in your OVITO scripts, it might be possible to install them in the 
+built-in interpreter using the normal *setuptools* or *pip* mechanisms. 
+(Use :program:`ovitos` instead of :program:`python` to execute the *setup.py* installation script or run 
+:command:`ovitos -m pip install <package>`).
+
+Installing Python extension that include native code (e.g. `Scipy <http:://www.scipy.org>`_) in the interpreter shipping with OVITO is currently not possible.
+In this case it is recommended to build OVITO from source on your system. OVITO will then use the system's standard Python interpreter instead of its own.
+This will make all modules that are installed in the system Python interpreter accessible within OVITO as well. (Note that you still need
+to execute OVITO scripts with the :program:`ovitos` launcher.) How to build OVITO from source is described `on this page <http://www.ovito.org/manual/development.html>`_.
+
+Number of parallel threads
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+OVITO uses all available processor cores on a machine to perform computations by default. To restrict OVITO
+to a certain number of parallel threads, use the :command:`-nt` command line parameter, e.g. :command:`ovitos -nt 1 myscript.py`.
 	
-	If you want to use other third-party Python packages in your OVITO scripts, it might be possible to install them in the 
-	built-in interpreter using the normal *setuptools* mechanism. 
-	(Use :program:`ovitos` instead of :program:`python` to run the *setup.py* installation script).
+Further uses of Python scripts within OVITO
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-	Installing Python extension that include native code (e.g. `Scipy <http:://www.scipy.org>`_) in the interpreter that ships with OVITO is currently not possible.
-	In this case it is recommended to build OVITO from source. OVITO will then make use of the system's standard Python interpreter.	
-	All modules that are available in the standard Python interpreter will also be accessible within OVITO. (Note that you still need
-	to execute OVITO scripts with the :program:`ovitos` launcher.) How to build OVITO from source is described `on this page <http://www.ovito.org/manual/development.html>`_.
-	
 In addition to non-interactive scripts that execute program commands and automate tasks, OVITO provides two more uses of the built-in script interpreter:
 You can :ref:`write your own modifier function <writing_custom_modifiers>` using Python, which can then also be used within the graphical program like the 
 standard modifiers. Or you can write a `custom viewport overlay <../../viewport_overlays.python_script.html>`_, which is a script function

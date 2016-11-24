@@ -58,8 +58,10 @@ Box3 SimulationCellDisplay::boundingBox(TimePoint time, DataObject* dataObject, 
 	OVITO_CHECK_OBJECT_POINTER(cellObject);
 
 	AffineTransformation matrix = cellObject->cellMatrix();
-	if(cellObject->is2D())
+	if(cellObject->is2D()) {
 		matrix.column(2).setZero();
+		matrix.translation().z() = 0;
+	}
 
 	return Box3(Point3(0), Point3(1)).transformed(matrix).padBox(simulationCellLineWidth());
 }

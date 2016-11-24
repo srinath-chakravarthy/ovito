@@ -366,7 +366,7 @@ ParticlePropertyObject* ParticleModifier::outputCustomProperty(const QString& na
 				throwException(tr("Existing property '%1' has a different data type.").arg(name));
 			if(property->componentCount() != componentCount)
 				throwException(tr("Existing property '%1' has a different number of components.").arg(name));
-			if(property->stride() != stride)
+			if(stride != 0 && property->stride() != stride)
 				throwException(tr("Existing property '%1' has a different stride.").arg(name));
 			break;
 		}

@@ -110,8 +110,8 @@ public:
 	/// Transformation::changeParents() on the node's local transformation controller.
 	///
 	/// \undoable
-	/// \sa removeChild()
-	void insertChild(int index, SceneNode* newChild);
+	/// \sa children(), addChildNode(), removeChildNode()
+	void insertChildNode(int index, SceneNode* newChild);
 
 	/// \brief Adds a child scene node to this node.
 	/// \param newChild The node that becomes a child of this node. If \a newChild is already a child
@@ -121,24 +121,24 @@ public:
 	/// Transformation::changeParents() on the node's local transformation controller.
 	///
 	/// \undoable
-	/// \sa removeChild()
-	void addChild(SceneNode* newChild) {
-		insertChild(children().size(), newChild);
+	/// \sa children(), insertChildNode(), removeChildNode()
+	void addChildNode(SceneNode* newChild) {
+		insertChildNode(children().size(), newChild);
 	}
 
 	/// \brief Removes a child node from this parent node.
-	/// \param child A child node of this parent node.
+	/// \param index An index into this node's list of children.
 	///
 	/// This method preserves the world transformation of the child node by calling
 	/// Transformation::changeParents() on the node's local transformation controller.
 	///
 	/// \undoable
-	/// \sa addChild()
-	void removeChild(SceneNode* child);
+	/// \sa children(), insertChildNode(), addChildNode()
+	void removeChildNode(int index);
 
 	/// \brief Returns the array of child nodes.
 	/// \return A vector that contains all children of this scene node.
-	/// \sa childCount(), childNode(), addChild(), removeChild()
+	/// \sa addChildNode(), removeChildNode()
 	const QVector<SceneNode*>& children() const { return _children; }
 
 	/// \brief Recursively visits all nodes below this parent node

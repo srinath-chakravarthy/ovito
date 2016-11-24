@@ -50,11 +50,24 @@ public:
 			_dataObjects.push_back(obj);
 	}
 
+	/// \brief Inserts a new object into the list of data objects held by this container object.
+	void insertDataObject(int index, DataObject* obj) {
+		OVITO_ASSERT(!_dataObjects.contains(obj));
+		if(!_dataObjects.contains(obj))
+			_dataObjects.insert(index, obj);
+	}
+
+	/// \brief Removes a data object from the compound.
+	void removeDataObjectByIndex(int index) {
+		_dataObjects.remove(index);
+	}
+
 	/// \brief Removes a data object from the compound.
 	void removeDataObject(DataObject* obj) {
 		int index = _dataObjects.indexOf(obj);
+		OVITO_ASSERT(index >= 0);
 		if(index >= 0)
-			_dataObjects.remove(index);
+			removeDataObjectByIndex(index);
 	}
 
 	/// \brief Replaces a data object in the compound.

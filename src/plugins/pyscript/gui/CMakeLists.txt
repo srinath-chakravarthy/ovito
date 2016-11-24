@@ -22,7 +22,7 @@
 FIND_PACKAGE(QScintilla REQUIRED)
 
 SET(SourceFiles
-    GUIBinding.cpp
+	GUIBinding.cpp
 	PythonViewportOverlayEditor.cpp
 	PythonScriptModifierEditor.cpp
 	RunScriptAction.cpp

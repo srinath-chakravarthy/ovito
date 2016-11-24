@@ -32,7 +32,7 @@ HtmlListWidget::HtmlListWidget(QWidget* parent) : QListWidget(parent)
 	class HtmlItemDelegate : public QStyledItemDelegate {
 	protected:
 		virtual void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& index) const override {
-			QStyleOptionViewItemV4 options = option;
+			QStyleOptionViewItem options = option;
 			initStyleOption(&options, index);
 			painter->save();
 			QTextDocument doc;
@@ -53,7 +53,7 @@ HtmlListWidget::HtmlListWidget(QWidget* parent) : QListWidget(parent)
 		}
 
 		virtual QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& index) const override {
-			QStyleOptionViewItemV4 options = option;
+			QStyleOptionViewItem options = option;
 			initStyleOption(&options, index);
 			QTextDocument doc;
 			doc.setHtml(options.text);

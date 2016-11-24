@@ -44,38 +44,36 @@ Particles.BondProperty._data_key = property(_ParticleProperty_data_key)
 # Implement the 'particle_properties' attribute of the DataCollection class.
 def _DataCollection_particle_properties(self):
     """
-    Returns a dictionary view that provides access to the :py:class:`ParticleProperty` 
-    instances stored in this :py:class:`!DataCollection`.
+    Returns a read-only dictionary view that provides access to the :py:class:`ParticleProperty` 
+    objects stored in this :py:class:`!DataCollection`.
     """
     
     # Helper class used to implement the 'particle_properties' property of the DataCollection class.
     class _ParticlePropertyView(collections.Mapping):
         
-        def __init__(self, data_collection):
-            self._data_collection = data_collection
+        def __init__(self, objects):
+            self._objects = objects
             
         def __len__(self):
-            property_count = 0
-            for obj in self._data_collection.objects:
-                if isinstance(obj, ovito.data.ParticleProperty): property_count += 1
-            return property_count
-        
+            # Count the number of ParticleProperty objects in the collection.
+            return sum(isinstance(obj, ovito.data.ParticleProperty) for obj in self._objects)
+
         def __getitem__(self, key):
             if not isinstance(key, str):
                 raise TypeError("Property name key is not a string.")
-            for obj in self._data_collection.objects:
+            for obj in self._objects:
                 if isinstance(obj, ovito.data.ParticleProperty): 
                     if obj.name == key:
                         return obj
-            raise KeyError("The DataCollection contains no particle property with the name '%s'." % key)
+            raise KeyError("The DataCollection does not contain a particle property with the name '%s'." % key)
         
         def __iter__(self):
-            for obj in self._data_collection.objects:
+            for obj in self._objects:
                 if isinstance(obj, ovito.data.ParticleProperty):
                     yield obj.name
                
         def __getattr__(self, name):
-            for obj in self._data_collection.objects:
+            for obj in self._objects:
                 if isinstance(obj, ovito.data.ParticleProperty): 
                     if obj.type != ovito.data.ParticleProperty.Type.User and re.sub('\W|^(?=\d)','_', obj.name).lower() == name:
                         return obj
@@ -84,7 +82,7 @@ def _DataCollection_particle_properties(self):
         def __repr__(self):
             return repr(dict(self))
      
-    return _ParticlePropertyView(self)
+    return _ParticlePropertyView(self.objects)
 ovito.data.DataCollection.particle_properties = property(_DataCollection_particle_properties)
 
 # Implement the 'bond_properties' attribute of the DataCollection class.
@@ -97,37 +95,35 @@ def _DataCollection_bond_properties(self):
     # Helper class used to implement the 'bond_properties' property of the DataCollection class.
     class _BondPropertyView(collections.Mapping):
         
-        def __init__(self, data_collection):
-            self._data_collection = data_collection
+        def __init__(self, objects):
+            self._objects = objects
             
         def __len__(self):
-            property_count = 0
-            for obj in self._data_collection.objects:
-                if isinstance(obj, ovito.data.BondProperty): property_count += 1
-            return property_count
+            # Count the number of BondProperty objects in the collection.
+            return sum(isinstance(obj, ovito.data.BondProperty) for obj in self._objects)
         
         def __getitem__(self, key):
             if not isinstance(key, str):
                 raise TypeError("Property name key is not a string.")
-            for obj in self._data_collection.objects:
+            for obj in self._objects:
                 if isinstance(obj, ovito.data.BondProperty): 
                     if obj.name == key:
                         return obj
             raise KeyError("The DataCollection contains no bond property with the name '%s'." % key)
         
         def __iter__(self):
-            for obj in self._data_collection.objects:
+            for obj in self._objects:
                 if isinstance(obj, ovito.data.BondProperty):
                     yield obj.name
                
         def __getattr__(self, name):
-            for obj in self._data_collection.objects:
+            for obj in self._objects:
                 if isinstance(obj, ovito.data.BondProperty): 
                     if obj.type != ovito.data.BondProperty.Type.User and re.sub('\W|^(?=\d)','_', obj.name).lower() == name:
                         return obj
             raise AttributeError("DataCollection does not contain the bond property '%s'." % name)
      
-    return _BondPropertyView(self)
+    return _BondPropertyView(self.objects)
 ovito.data.DataCollection.bond_properties = property(_DataCollection_bond_properties)
 
 # Implement 'cell' attribute of DataCollection class.
@@ -295,23 +291,23 @@ Particles.Bonds.array = property(_Bonds_array)
 def _Bonds_pbc_vectors(self):
     """ A NumPy array providing read access to the PBC shift vectors of bonds.
         
-        The returned array's shape is *N x 3*, where *N* is the number of half bonds. It contains the
+        The returned array's shape is *N x 3*, where *N* is the number of half-bonds. It contains the
         periodic shift vector for each half-bond.
         
         A PBC shift vector consists of three integers, which specify how many times (and in which direction)
         the corresonding half-bond crosses the periodic boundaries of the simulation cell. For example, a shift vector (0,-1,0)
-        would indicate that the half-bond crosses the periodic boundary in the negative Y direction 
-        once. In other words, the particle the half-bond originates from is located
+        indicates that the half-bond crosses the periodic boundary in the negative Y direction 
+        once. In other words, the particle where the half-bond originates from is located
         close to the lower edge of the simulation cell in the Y direction while the second particle is located 
         close to the opposite side of the box.
         
         The PBC shift vectors are important for visualizing the bonds between particles with wrapped coordinates, 
         which are located on opposite sides of a periodic cell. When the PBC shift vector of a bond is (0,0,0), OVITO assumes that 
-        both particles connected by the bond are located in the same periodic image and the bond is displayed such that
+        both particles connected by the bond are located in the same periodic image and the bond is rendered such that
         it directly connects the two particles without going through a cell boundary.
         
-        Furthermore, if the PBC shift vector of a half-bond A->B is (s\ :sub:`x`, s\ :sub:`y`, s\ :sub:`z`), then
-        the shift vector of the reverse half-bond B->A is always (-s\ :sub:`x`, -s\ :sub:`y`, -s\ :sub:`z`).
+        Note that, if the PBC shift vector of a half-bond A->B is (n\ :sub:`x`, n\ :sub:`y`, n\ :sub:`z`), then
+        the shift vector of the reverse half-bond B->A is always (-n\ :sub:`x`, -n\ :sub:`y`, -n\ :sub:`z`).
     """
     class DummyClass:
         pass
@@ -363,22 +359,6 @@ def _set_SimulationCell_pbc(self, flags):
     self.pbc_z = flags[2]
 Particles.SimulationCell.pbc = property(_get_SimulationCell_pbc, _set_SimulationCell_pbc)
 
-# Implement 'matrix' property of SimulationCell class.
-def _get_SimulationCell_matrix(self):
-    """ A 3x4 matrix containing the three edge vectors of the cell (matrix columns 0 to 2)
-        and the cell origin (matrix column 3). """
-    a = numpy.asarray(self.cellMatrix)
-    a.setflags(write = 0)   # Mark array data as read-only, because it's only a temporary object.
-    return a
-def _set_SimulationCell_matrix(self, m):
-    a = numpy.asarray(m)
-    assert(a.shape == (3,4)) # Expected 3x4 matrix array
-    self.vector1 = a[:,0]
-    self.vector2 = a[:,1]
-    self.vector3 = a[:,2]
-    self.origin = a[:,3]
-Particles.SimulationCell.matrix = property(_get_SimulationCell_matrix, _set_SimulationCell_matrix)
-
 class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
     """ 
     A utility class that computes particle neighbor lists.
@@ -429,7 +409,7 @@ class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
         if index < 0 or index >= self.particle_count:
             raise IndexError("Particle index is out of range.")
         # Construct the C++ neighbor query. 
-        query = Particles.CutoffNeighborFinder.Query(self, index)
+        query = Particles.CutoffNeighborFinder.Query(self, int(index))
         # Iterate over neighbors.
         while not query.atEnd:
             yield query
@@ -490,7 +470,7 @@ class NearestNeighborFinder(Particles.NearestNeighborFinder):
             raise IndexError("Particle index is out of range.")
         # Construct the C++ neighbor query. 
         query = Particles.NearestNeighborFinder.Query(self)
-        query.findNeighbors(index)
+        query.findNeighbors(int(index))
         # Iterate over neighbors.
         for i in range(query.count):
             yield query[i]
@@ -838,35 +818,6 @@ def _get_DataCollection_number_of_full_bonds(self):
         return 0
 ovito.data.DataCollection.number_of_full_bonds = property(_get_DataCollection_number_of_full_bonds)
 
-# Implement the 'type_list' property of the ParticleTypeProperty class, which provides access to particle types. 
-def _get_ParticleTypeProperty_type_list(self):
-    """ A (mutable) list of :py:class:`ParticleType` instances. 
-    
-        Note that the particle types may be stored in arbitrary order in this type list. 
-        Each type has a unique integer ID (given by the :py:attr:`ParticleType.id` attribute).
-        The numbers stored in the particle type property :py:attr:`~ParticleProperty.array` refer to these type IDs.
-    """
-    class ParticleTypeList(collections.MutableSequence):
-        def __init__(self, owner):
-            self.__owner = owner;
-        def __len__(self):
-            return len(self.__owner.particleTypes)
-        def __getitem__(self, index):
-            if index < 0: index += len(self)
-            return self.__owner.particleTypes[index]
-        def __delitem__(self, index):
-            if index < 0: index += len(self)
-            self.__owner.removeParticleType(index)
-        def __setitem__(self, index, obj):
-            if index < 0: index += len(self)
-            self.__owner.removeParticleType(index)
-            self.__owner.insertParticleType(index, obj)
-        def insert(self, index, obj):
-            if index < 0: index += len(self)
-            self.__owner.insertParticleType(index, obj)
-    return ParticleTypeList(self)
-ovito.data.ParticleTypeProperty.type_list = property(_get_ParticleTypeProperty_type_list)
-
 def _ParticleTypeProperty_get_type_by_id(self, id):
     """
     Returns the :py:class:`ParticleType` with the given numeric ID from the :py:attr:`.type_list`. 
@@ -881,7 +832,7 @@ ovito.data.ParticleTypeProperty.get_type_by_id = _ParticleTypeProperty_get_type_
 def _ParticleTypeProperty_get_type_by_name(self, name):
     """
     Returns the :py:class:`ParticleType` with the given name from the :py:attr:`.type_list`.
-    If multiple type exists with the same name, the first type is returned. 
+    If multiple types exists with the same name, the first type is returned. 
     Raises a ``KeyError`` if there is no type with such a name.
     """
     t = self._get_type_by_name(name)
@@ -890,29 +841,28 @@ def _ParticleTypeProperty_get_type_by_name(self, name):
     return t
 ovito.data.ParticleTypeProperty.get_type_by_name = _ParticleTypeProperty_get_type_by_name
 
-# Implement the 'type_list' property of the BondTypeProperty class, which provides access to bond types. 
-def _get_BondTypeProperty_type_list(self):
-    """A mutable list of :py:class:`BondType` instances."""    
-    class BondTypeList(collections.MutableSequence):
-        def __init__(self, owner):
-            self.__owner = owner;
-        def __len__(self):
-            return len(self.__owner.bondTypes)
-        def __getitem__(self, index):
-            if index < 0: index += len(self)
-            return self.__owner.bondTypes[index]
-        def __delitem__(self, index):
-            if index < 0: index += len(self)
-            self.__owner.removeBondType(index)
-        def __setitem__(self, index, obj):
-            if index < 0: index += len(self)
-            self.__owner.removeBondType(index)
-            self.__owner.insertBondType(index, obj)
-        def insert(self, index, obj):
-            if index < 0: index += len(self)
-            self.__owner.insertBondType(index, obj)
-    return BondTypeList(self)
-ovito.data.BondTypeProperty.type_list = property(_get_BondTypeProperty_type_list)
+def _BondTypeProperty_get_type_by_id(self, id):
+    """
+    Returns the :py:class:`BondType` with the given numeric ID from the :py:attr:`.type_list`. 
+    Raises a ``KeyError`` if the ID does not exist.
+    """
+    t = self._get_type_by_id(int(id))
+    if t is None:
+        raise KeyError("Bond type with ID %i is not defined." % id)
+    return t
+ovito.data.BondTypeProperty.get_type_by_id = _BondTypeProperty_get_type_by_id
+
+def _BondTypeProperty_get_type_by_name(self, name):
+    """
+    Returns the :py:class:`BondType` with the given name from the :py:attr:`.type_list`.
+    If multiple types exists with the same name, the first type is returned. 
+    Raises a ``KeyError`` if there is no type with such a name.
+    """
+    t = self._get_type_by_name(name)
+    if t is None:
+        raise KeyError("Bond type with name '%s' is not defined." % name)
+    return t
+ovito.data.BondTypeProperty.get_type_by_name = _BondTypeProperty_get_type_by_name
 
 class Enumerator(Particles.Bonds.ParticleBondMap):
     """

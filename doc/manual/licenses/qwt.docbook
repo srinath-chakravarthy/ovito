@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section version="5.0" role="NotInToc"
+          xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd"
+          xml:id="appendix.license.qwt" xmlns="http://docbook.org/ns/docbook"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:xs="http://www.w3.org/2001/XMLSchema"
+          xmlns:xlink="http://www.w3.org/1999/xlink"
+          xmlns:ns="http://docbook.org/ns/docbook">
+  <title>Qwt License (Version 1.0, January 1, 2003)</title>
+
+<para>
+The Qwt library and included programs are provided under the terms
+of the GNU LESSER GENERAL PUBLIC LICENSE (LGPL) with the following
+exceptions:
+<orderedlist>
+<listitem><para>Widgets that are subclassed from Qwt widgets do not
+       constitute a derivative work.</para></listitem>
+<listitem><para>Static linking of applications and widgets to the
+       Qwt library does not constitute a derivative work
+       and does not require the author to provide source
+       code for the application or widget, use the shared
+       Qwt libraries, or link their applications or
+       widgets against a user-supplied version of Qwt.
+       </para><para>
+       If you link the application or widget to a modified
+       version of Qwt, then the changes to Qwt must be 
+       provided under the terms of the LGPL in sections
+       1, 2, and 4.</para></listitem>
+<listitem><para>You do not have to provide a copy of the Qwt license
+       with programs that are linked to the Qwt library, nor
+       do you have to identify the Qwt license in your
+       program or documentation as required by section 6
+       of the LGPL.</para>
+       <para>
+       However, programs must still identify their use of Qwt.
+       The following example statement can be included in user
+       documentation to satisfy this requirement:
+       </para>
+       <para>
+           [program/widget] is based in part on the work of
+           the Qwt project (http://qwt.sf.net).
+           </para></listitem>
+</orderedlist>
+</para>
+</section>

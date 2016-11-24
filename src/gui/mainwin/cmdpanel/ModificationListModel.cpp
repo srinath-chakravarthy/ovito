@@ -287,7 +287,7 @@ void ModificationListModel::applyModifiers(const QVector<OORef<Modifier>>& modif
 				PipelineObject* pipelineObj = modApp->pipelineObject();
 				OVITO_CHECK_OBJECT_POINTER(pipelineObj);
 				for(Modifier* modifier : modifiers)
-					modApp = pipelineObj->insertModifier(modifier, pipelineObj->modifierApplications().indexOf(modApp) + 1);
+					modApp = pipelineObj->insertModifier(pipelineObj->modifierApplications().indexOf(modApp) + 1, modifier);
 			}
 			return;
 		}
@@ -295,13 +295,13 @@ void ModificationListModel::applyModifiers(const QVector<OORef<Modifier>>& modif
 			PipelineObject* pipelineObj = static_object_cast<PipelineObject>(currentItem->object());
 			OVITO_CHECK_OBJECT_POINTER(pipelineObj);
 			for(int index = modifiers.size() - 1; index >= 0; index--)
-				pipelineObj->insertModifier(modifiers[index], 0);
+				pipelineObj->insertModifier(0, modifiers[index]);
 			return;
 		}
 		else if(dynamic_object_cast<DataObject>(currentItem->object())) {
 			if(PipelineObject* pipelineObj = hiddenPipelineObject()) {
 				for(int index = modifiers.size() - 1; index >= 0; index--)
-					pipelineObj->insertModifier(modifiers[index], 0);
+					pipelineObj->insertModifier(0, modifiers[index]);
 				return;
 			}
 		}
@@ -529,12 +529,12 @@ bool ModificationListModel::dropMimeData(const QMimeData* data, Qt::DropAction a
 	UndoableTransaction::handleExceptions(modApp->dataset()->undoStack(), tr("Move modifier"), [pipelineObj, modApp, indexDelta]() {
 		// Determine old position in stack.
 		int index = pipelineObj->modifierApplications().indexOf(modApp);
-		if(indexDelta == 0 || index+indexDelta < 0 || index+indexDelta >= pipelineObj->modifierApplications().size())
+		if(indexDelta == 0 || index + indexDelta < 0 || index+indexDelta >= pipelineObj->modifierApplications().size())
 			return;
 		// Remove ModifierApplication from the PipelineObject.
-		pipelineObj->removeModifier(modApp);
+		pipelineObj->removeModifierApplication(index);
 		// Re-insert ModifierApplication into the PipelineObject.
-		pipelineObj->insertModifierApplication(modApp, index+indexDelta);
+		pipelineObj->insertModifierApplication(index + indexDelta, modApp);
 	});
 
 	return true;

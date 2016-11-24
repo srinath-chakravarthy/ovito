@@ -49,7 +49,7 @@ def _DataCollection__iter__(self):
         if hasattr(o, "_data_key"):
             yield o._data_key
         else:
-            yield o.objectTitle
+            yield o.object_title
 DataCollection.__iter__ = _DataCollection__iter__
 
 def _DataCollection__getitem__(self, key):
@@ -58,7 +58,7 @@ def _DataCollection__getitem__(self, key):
             if o._data_key == key:
                 return o
         else:
-            if o.objectTitle == key:
+            if o.object_title == key:
                 return o
     raise KeyError("DataCollection does not contain object key '%s'." % key)
 DataCollection.__getitem__ = _DataCollection__getitem__
@@ -231,17 +231,6 @@ def _DataCollection_copy_if_needed(self, obj):
         return clone
     return obj
 DataCollection.copy_if_needed = _DataCollection_copy_if_needed
-
-# Implement 'display' attribute of DataObject class.
-def _DataObject_get_display(self):
-    """ The :py:class:`~ovito.vis.Display` object associated with this data object, which is responsible for
-        displaying the data. If this field is ``None``, the data is non-visual.
-    """
-    if not self.displayObjects:
-        return None # This data object doesn't have a display object.
-    return self.displayObjects[0]
-DataObject.display = property(_DataObject_get_display, DataObject.setDisplayObject)
-
 
 def _DataCollection_to_ase_atoms(self):
     """

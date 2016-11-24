@@ -35,11 +35,8 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 *******************************************************************************/
 struct OVITO_GUI_EXPORT ViewportPickResult
 {
-	/// Indicates whether an object was picked or not.
-	bool valid;
-
-	/// The coordinates of the hit point in world space.
-	Point3 worldPosition;
+	/// Indicates whether an object was picked.
+	explicit operator bool() const { return objectNode != nullptr; }
 
 	/// The object node that was picked.
 	OORef<ObjectNode> objectNode;
@@ -47,8 +44,11 @@ struct OVITO_GUI_EXPORT ViewportPickResult
 	/// The object-specific information attached to the pick record.
 	OORef<ObjectPickInfo> pickInfo;
 
+	/// The coordinates of the hit point in world space.
+	Point3 worldPosition;
+
 	/// The subobject that was picked.
-	quint32 subobjectId;
+	quint32 subobjectId = 0;
 };
 
 /**
@@ -166,6 +166,9 @@ protected:
 	
 	/// Is called when the mouse cursor leaves the widget.
 	virtual void leaveEvent(QEvent* event) override;
+
+	/// Is called when the viewport becomes visible.
+	virtual void showEvent(QShowEvent* event) override;
 #endif
 
 	/// Handles double click events.

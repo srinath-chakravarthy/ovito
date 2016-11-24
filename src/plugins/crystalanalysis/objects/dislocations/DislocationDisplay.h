@@ -94,6 +94,15 @@ class OVITO_CRYSTALANALYSIS_EXPORT DislocationDisplay : public DisplayObject
 {
 public:
 
+	enum LineColoringMode {
+		ColorByDislocationType,
+		ColorByBurgersVector,
+		ColorByCharacter
+	};
+	Q_ENUMS(LineColoringMode);
+
+public:
+
 	/// \brief Constructor.
 	Q_INVOKABLE DislocationDisplay(DataSet* dataset);
 
@@ -145,11 +154,11 @@ public:
 	/// Sets whether line directions should be indicated.
 	void setShowLineDirections(bool enabled) { _showLineDirections = enabled; }
 
-	/// Returns whether local dislocation character should be indicated.
-	bool indicateDislocationCharacter() const { return _indicateDislocationCharacter; }
+	/// Returns how the display color of dislocation lines is chosen.
+	LineColoringMode lineColoringMode() const { return _lineColoringMode; }
 
-	/// Sets whether local dislocation character should be indicated.
-	void setIndicateDislocationCharacter(bool enabled) { _indicateDislocationCharacter = enabled; }
+	/// Sets how the display color of dislocation lines is chosen.
+	void setLineColoringMode(LineColoringMode mode) { _lineColoringMode = mode; }
 
 	/// \brief Renders an overlay marker for a single dislocation segment.
 	void renderOverlayMarker(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState, int segmentIndex, SceneRenderer* renderer, ObjectNode* contextNode);
@@ -189,7 +198,7 @@ protected:
 		FloatType,							// Burgers vectors scaling
 		FloatType,							// Burgers vector width
 		Color,								// Burgers vector color
-		bool								// Indicate local dislocation character
+		LineColoringMode					// Way to color lines
 		> _geometryCacheHelper;
 
 	/// The cached bounding box.
@@ -227,8 +236,8 @@ protected:
 	/// Controls the display of the line directions.
 	PropertyField<bool> _showLineDirections;
 
-	/// Controls whether the local dislocation character is indicated.
-	PropertyField<bool> _indicateDislocationCharacter;
+	/// Controls how the display color of dislocation lines is chosen.
+	PropertyField<LineColoringMode, int> _lineColoringMode;
 
 	/// The data record used for picking dislocations in the viewports.
 	OORef<DislocationPickInfo> _pickInfo;
@@ -247,7 +256,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_burgersVectorColor);
 	DECLARE_PROPERTY_FIELD(_showBurgersVectors);
 	DECLARE_PROPERTY_FIELD(_showLineDirections);
-	DECLARE_PROPERTY_FIELD(_indicateDislocationCharacter);
+	DECLARE_PROPERTY_FIELD(_lineColoringMode);
 };
 
 }	// End of namespace

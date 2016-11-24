@@ -9,17 +9,16 @@
          xmlns:ns="http://docbook.org/ns/docbook">
   <title>Installation</title>
 
-    <para>Binary program packages for Linux, Windows, and Mac OS X 
-    can be downloaded from <link xlink:href="http://www.ovito.org/">http://www.ovito.org/</link>.
-    The installation of OVITO is very simple: Just extract the downloaded archive into a directory of your choice (no admin privileges required).</para>
+    <para>Binary program packages for Linux, Windows, and macOS
+    can be downloaded from <link xlink:href="http://www.ovito.org/">http://www.ovito.org/</link>.</para>
     
-    <para>OVITO uses hardware-accelerated OpenGL to render particles and other graphical elements.
+    <para>Note that OVITO uses OpenGL to render particles and other graphical elements.
     Older computers or outdated OpenGL graphics drivers may not be compatible with OVITO. It is recommended to install the most recent 
     version of your hardware vendor's graphics driver.</para>
 
     <simplesect xml:id="installation.runovito.linux">
       <title>Linux</title>
-      <para>Extract the downloaded <filename>.tar.gz</filename> archive using the <command>tar</command> command, e.g.: <command>tar xzf ovito-2.5.1-x86_64.tar.gz</command>. 
+      <para>Extract the downloaded <filename>.tar.gz</filename> archive using the <command>tar</command> command, e.g.: <command>tar xzf ovito-2.8.0-x86_64.tar.gz</command>. 
       This will create a new subdirectory containing the program package. 
       Change into the new directory and start OVITO by running the executable <command>./bin/ovito</command>.
       </para>
@@ -28,20 +27,19 @@
     <simplesect xml:id="installation.runovito.windows">
       <title>Windows</title>
 
-      <para>Extract the <filename>.zip</filename> archive to an
-      empty directory of your choice. Then start the program by double-clicking
-      <command>ovito.exe</command>. Windows might ask whether you really want to launch the program,
-      because OVITO was downloaded from the web, has no digital signature, and comes from an untrusted source. 
+      <para>Run the installer program <filename>ovito-x.y.z-win64.exe</filename> to install OVITO in a directory of your choice. 
+      Windows might ask whether you really want to launch the program, because it was downloaded from the web and is not digitally signed. 
       </para>
     </simplesect>
 
     <simplesect xml:id="installation.runovito.macos">
-      <title>Mac OS X</title>
+      <title>macOS</title>
 
-      <para>Extract the <filename>.zip</filename> archive in a location of your choice (e.g. into the <filename>Applications</filename> folder).
-      Then start OVITO by double-clicking the extracted application bundle.
-      Mac OS X might refuse to start OVITO, because it was not downloaded from the official App Store.
-      Then right-click the application and select <menuchoice><guimenuitem>Open</guimenuitem></menuchoice> from 
+      <para>Double-click the <filename>.dmg</filename> disk image file to open it, 
+      agree to the program license, and drag the <filename>Ovito</filename> application bundle into your <filename>Applications</filename> folder.
+      Then start OVITO by double-clicking the application bundle.
+      MacOS might refuse to start OVITO, because it was not downloaded from the official App Store.
+      In this case right-click the application and select <menuchoice><guimenuitem>Open</guimenuitem></menuchoice> from 
       the context menu (only required the first time you start OVITO).
       </para>
     </simplesect>

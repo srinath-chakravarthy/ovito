@@ -55,6 +55,9 @@ public:
 	/// \return A human-readable string describing the file format written by this FileExporter.
 	virtual QString fileFilterDescription() = 0;
 
+	/// \brief Selects the natural scene nodes to be exported by this exporter under normal circumstances.
+	virtual void selectStandardOutputData() = 0; 
+
 	/// \brief Sets the scene objects to be exported.
 	void setOutputData(const QVector<SceneNode*>& nodes);
 
@@ -128,15 +131,6 @@ protected:
 
 	/// \brief Exports a single animation frame to the current output file.
 	virtual bool exportFrame(int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay);
-
-	/// \brief Writes the data of one object at one animation frame to the current output file.
-	/// \param sceneNode The object to be exported.
-	/// \param frameNumber The animation frame to be written to the output file.
-	/// \param time The animation time to be written to the output file.
-	/// \param filePath The path of the output file.
-	/// \throws Exception on error.
-	/// \return \a false when the operation has been canceled by the user; \a true on success.
-	virtual bool exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) = 0;
 
 private:
 

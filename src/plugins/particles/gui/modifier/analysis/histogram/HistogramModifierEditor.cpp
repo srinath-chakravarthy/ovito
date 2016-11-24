@@ -28,6 +28,11 @@
 #include <gui/mainwin/MainWindow.h>
 #include "HistogramModifierEditor.h"
 
+#include <3rdparty/qwt/qwt_plot.h>
+#include <3rdparty/qwt/qwt_plot_curve.h>
+#include <3rdparty/qwt/qwt_plot_zoneitem.h>
+#include <3rdparty/qwt/qwt_plot_grid.h>
+
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 IMPLEMENT_OVITO_OBJECT(ParticlesGui, HistogramModifierEditor, ParticleModifierEditor);
@@ -61,29 +66,11 @@ void HistogramModifierEditor::createUI(const RolloutInsertionParameters& rollout
 
 	layout->addLayout(gridlayout);
 
-	_histogramPlot = new QCustomPlot();
+	_histogramPlot = new QwtPlot();
 	_histogramPlot->setMinimumHeight(240);
-	_histogramPlot->setInteraction(QCP::iRangeDrag, true);
-	_histogramPlot->axisRect()->setRangeDrag(Qt::Horizontal);
-	_histogramPlot->setInteraction(QCP::iRangeZoom, true);
-	_histogramPlot->axisRect()->setRangeZoom(Qt::Horizontal);
-	_histogramPlot->yAxis->setLabel("Particle count");
-	_histogramPlot->addGraph();
-	_histogramPlot->graph()->setBrush(QBrush(QColor(255, 160, 100)));
-
-	_selectionRangeStartMarker = new QCPItemStraightLine(_histogramPlot);
-	_selectionRangeEndMarker = new QCPItemStraightLine(_histogramPlot);
-	_selectionRangeStartMarker->setVisible(false);
-	_selectionRangeEndMarker->setVisible(false);
-	QPen markerPen;
-	markerPen.setColor(QColor(255, 40, 30));
-	markerPen.setStyle(Qt::DotLine);
-	markerPen.setWidth(2);
-	_selectionRangeStartMarker->setPen(markerPen);
-	_selectionRangeEndMarker->setPen(markerPen);
-	_histogramPlot->addItem(_selectionRangeStartMarker);
-	_histogramPlot->addItem(_selectionRangeEndMarker);
-	connect(_histogramPlot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(updateXAxisRange(const QCPRange&)));
+	_histogramPlot->setMaximumHeight(240);
+	_histogramPlot->setCanvasBackground(Qt::white);
+	_histogramPlot->setAxisTitle(QwtPlot::yLeft, tr("Particle count"));	
 
 	layout->addWidget(new QLabel(tr("Histogram:")));
 	layout->addWidget(_histogramPlot);
@@ -179,8 +166,8 @@ void HistogramModifierEditor::createUI(const RolloutInsertionParameters& rollout
 ******************************************************************************/
 bool HistogramModifierEditor::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
-	if(event->sender() == editObject() && event->type() == ReferenceEvent::ObjectStatusChanged) {
-		plotHistogram();
+	if(event->sender() == editObject() && (event->type() == ReferenceEvent::ObjectStatusChanged || event->type() == ReferenceEvent::TargetChanged)) {
+		plotHistogramLater(this);
 	}
 	return ParticleModifierEditor::referenceEvent(source, event);
 }
@@ -194,60 +181,57 @@ void HistogramModifierEditor::plotHistogram()
 	if(!modifier)
 		return;
 
-	_histogramPlot->xAxis->setLabel(modifier->sourceProperty().name());
+	_histogramPlot->setAxisTitle(QwtPlot::xBottom, modifier->sourceProperty().nameWithComponent());
 
 	if(modifier->histogramData().empty())
 		return;
 
-	QVector<double> xdata(modifier->histogramData().size());
-	QVector<double> ydata(modifier->histogramData().size());
-	double binSize = (modifier->xAxisRangeEnd() - modifier->xAxisRangeStart()) / xdata.size();
-	double maxHistogramData = 0.0;
-	for(int i = 0; i < xdata.size(); i++) {
-		xdata[i] = binSize * ((double)i + 0.5) + modifier->xAxisRangeStart();
-		ydata[i] = modifier->histogramData()[i];
-		maxHistogramData = std::max(maxHistogramData, ydata[i]);
+	size_t binCount = modifier->histogramData().size();
+	FloatType binSize = (modifier->xAxisRangeEnd() - modifier->xAxisRangeStart()) / binCount;
+	auto maxHistogramData = *std::max_element(modifier->histogramData().begin(), modifier->histogramData().end());
+	QVector<QPointF> plotData(binCount);
+	for(size_t i = 0; i < binCount; i++) {
+		plotData[i].rx() = binSize * (i + FloatType(0.5)) + modifier->xAxisRangeStart();
+		plotData[i].ry() = modifier->histogramData()[i];
 	}
-	_histogramPlot->graph()->setLineStyle(QCPGraph::lsStepCenter);
-	_histogramPlot->graph()->setData(xdata, ydata);
 
-	// Check if range is already correct, because setRange emits the rangeChanged signa
-	// which is to be avoided if the range is not determined automatically.
-	_rangeUpdate = false;
-	_histogramPlot->xAxis->setRange(modifier->xAxisRangeStart(), modifier->xAxisRangeEnd());
-	_histogramPlot->yAxis->setRange(modifier->yAxisRangeStart(), modifier->yAxisRangeEnd());
-	_rangeUpdate = true;
+	if(!_plotCurve) {
+		_plotCurve = new QwtPlotCurve();
+	    _plotCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+		_plotCurve->setBrush(QColor(255, 160, 100));
+		_plotCurve->attach(_histogramPlot);
+		QwtPlotGrid* plotGrid = new QwtPlotGrid();
+		plotGrid->setPen(Qt::gray, 0, Qt::DotLine);
+		plotGrid->attach(_histogramPlot);
+	}
+    _plotCurve->setSamples(plotData);
+
+	if(!modifier->fixXAxisRange())
+		_histogramPlot->setAxisAutoScale(QwtPlot::xBottom);
+	else
+		_histogramPlot->setAxisScale(QwtPlot::xBottom, modifier->xAxisRangeStart(), modifier->xAxisRangeEnd());
+
+	if(!modifier->fixYAxisRange())
+		_histogramPlot->setAxisAutoScale(QwtPlot::yLeft);
+	else
+		_histogramPlot->setAxisScale(QwtPlot::yLeft, modifier->yAxisRangeStart(), modifier->yAxisRangeEnd());
 
 	if(modifier->selectInRange()) {
-		_selectionRangeStartMarker->setVisible(true);
-		_selectionRangeEndMarker->setVisible(true);
-		_selectionRangeStartMarker->point1->setCoords(modifier->selectionRangeStart(), 0);
-		_selectionRangeStartMarker->point2->setCoords(modifier->selectionRangeStart(), 1);
-		_selectionRangeEndMarker->point1->setCoords(modifier->selectionRangeEnd(), 0);
-		_selectionRangeEndMarker->point2->setCoords(modifier->selectionRangeEnd(), 1);
+		if(!_selectionRange) {
+			_selectionRange = new QwtPlotZoneItem();
+			_selectionRange->setOrientation(Qt::Vertical);
+			_selectionRange->setZ(_plotCurve->z() + 1);
+			_selectionRange->attach(_histogramPlot);
+		}
+		_selectionRange->show();
+		auto minmax = std::minmax(modifier->selectionRangeStart(), modifier->selectionRangeEnd());
+		_selectionRange->setInterval(minmax.first, minmax.second);
 	}
-	else {
-		_selectionRangeStartMarker->setVisible(false);
-		_selectionRangeEndMarker->setVisible(false);
+	else if(_selectionRange) {
+		_selectionRange->hide();
 	}
 
-	_histogramPlot->replot(QCustomPlot::rpQueued);
-}
-
-/******************************************************************************
-* Keep x-axis range updated
-******************************************************************************/
-void HistogramModifierEditor::updateXAxisRange(const QCPRange &newRange)
-{
-	if (_rangeUpdate) {
-		HistogramModifier* modifier = static_object_cast<HistogramModifier>(editObject());
-		if(!modifier)
-			return;
-
-		// Fix range if user modifies the range by a mouse action in QCustomPlot
-		modifier->setFixXAxisRange(true);
-		modifier->setXAxisRange(newRange.lower, newRange.upper);
-	}
+	_histogramPlot->replot();
 }
 
 /******************************************************************************
@@ -276,7 +260,7 @@ void HistogramModifierEditor::onSaveData()
 		QTextStream stream(&file);
 
 		FloatType binSize = (modifier->xAxisRangeEnd() - modifier->xAxisRangeStart()) / modifier->histogramData().size();
-		stream << "# " << modifier->sourceProperty().name() << " histogram (bin size: " << binSize << ")" << endl;
+		stream << "# " << modifier->sourceProperty().nameWithComponent() << " histogram (bin size: " << binSize << ")" << endl;
 		for(int i = 0; i < modifier->histogramData().size(); i++) {
 			stream << (binSize * (FloatType(i) + FloatType(0.5)) + modifier->xAxisRangeStart()) << " " <<
 					modifier->histogramData()[i] << endl;

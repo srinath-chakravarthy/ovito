@@ -58,7 +58,8 @@ void bitmapSort(iterator begin, iterator end, int max)
 ******************************************************************************/
 StructureAnalysis::StructureAnalysis(ParticleProperty* positions, const SimulationCell& simCell,
 		LatticeStructureType inputCrystalType, ParticleProperty* particleSelection,
-		ParticleProperty* outputStructures, std::vector<Matrix3>&& preferredCrystalOrientations) :
+		ParticleProperty* outputStructures, std::vector<Matrix3>&& preferredCrystalOrientations,
+		bool identifyPlanarDefects) :
 	_positions(positions), _simCell(simCell),
 	_inputCrystalType(inputCrystalType),
 	_structureTypes(outputStructures),
@@ -66,7 +67,8 @@ StructureAnalysis::StructureAnalysis(ParticleProperty* positions, const Simulati
 	_atomClusters(new ParticleProperty(positions->size(), ParticleProperty::ClusterProperty, 0, true)),
 	_atomSymmetryPermutations(new ParticleProperty(positions->size(), qMetaTypeId<int>(), 1, 0, QStringLiteral("SymmetryPermutations"), false)),
 	_clusterGraph(new ClusterGraph()),
-	_preferredCrystalOrientations(std::move(preferredCrystalOrientations))
+	_preferredCrystalOrientations(std::move(preferredCrystalOrientations)),
+	_identifyPlanarDefects(identifyPlanarDefects)
 {
 	static bool initialized = false;
 	if(!initialized) {
@@ -598,10 +600,10 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 			}
 			else break;
 		}
-		if(n421 == 12) {
+		if(n421 == 12 && (_identifyPlanarDefects || _inputCrystalType == LATTICE_FCC)) {
 			coordinationType = COORD_FCC;
 		}
-		else if(n421 == 6 && n422 == 6) {
+		else if(n421 == 6 && n422 == 6 && (_identifyPlanarDefects || _inputCrystalType == LATTICE_HCP)) {
 			coordinationType = COORD_HCP;
 		}
 		else return;
@@ -674,10 +676,10 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 			}
 			else break;
 		}
-		if(n543 == 12) {
+		if(n543 == 12 && (_identifyPlanarDefects || _inputCrystalType == LATTICE_CUBIC_DIAMOND)) {
 			coordinationType = COORD_CUBIC_DIAMOND;
 		}
-		else if(n543 == 6 && n544 == 6) {
+		else if(n543 == 6 && n544 == 6 && (_identifyPlanarDefects || _inputCrystalType == LATTICE_HEX_DIAMOND)) {
 			coordinationType = COORD_HEX_DIAMOND;
 		}
 		else return;
@@ -871,6 +873,7 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 		// Compute matrix, which transforms vectors from lattice space to simulation coordinates.
 		cluster->orientation = Matrix3(orientationW * orientationV.inverse());
 
+#if 1
 		if(latticeStructureType == _inputCrystalType && !_preferredCrystalOrientations.empty()) {
 			// Determine the symmetry permutation that leads to the best cluster orientation.
 			// The best cluster orientation is the one that forms the smallest angle with one of the
@@ -894,6 +897,7 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 				}
 			}
 		}
+#endif
 	}
 
 	// Reorient atoms to align clusters with global coordinate system.
@@ -906,10 +910,10 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 		const LatticeStructure& latticeStructure = _latticeStructures[cluster->structure];
 		int oldSymmetryPermutation = _atomSymmetryPermutations->getInt(atomIndex);
 		int newSymmetryPermutation = latticeStructure.permutations[oldSymmetryPermutation].inverseProduct[cluster->symmetryTransformation];
-		_atomSymmetryPermutations->setInt(atomIndex, oldSymmetryPermutation);
+		_atomSymmetryPermutations->setInt(atomIndex, newSymmetryPermutation);
 	}
 
-	qDebug() << "Number of clusters:" << (clusterGraph().clusters().size() - 1);
+	//qDebug() << "Number of clusters:" << (clusterGraph().clusters().size() - 1);
 
 	return true;
 }
@@ -1013,7 +1017,7 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 		}
 	}
 
-	qDebug() << "Number of cluster transitions:" << clusterGraph().clusterTransitions().size();
+	//qDebug() << "Number of cluster transitions:" << clusterGraph().clusterTransitions().size();
 
 	return true;
 }

@@ -64,28 +64,27 @@ public:
 
 	/// \brief Inserts a modifier into the data flow pipeline.
 	/// \param modifier The modifier to be inserted.
-	/// \param atIndex Specifies the position in the pipeline where the modifier should be inserted.
-	///                It must be between zero and the number of existing modifier applications as returned by
-	///                modifierApplications(). Modifiers are applied in ascending order, i.e., the modifier
-	///                at index 0 is applied first to the input data.
+	/// \param index Specifies the position in the pipeline where the modifier should be inserted.
+	///              It must be between zero and the number of existing modifier applications as returned by
+	///              modifierApplications(). Modifiers are applied in ascending order, i.e., the modifier
+	///              at index 0 is applied first to the input data.
 	/// \return The ModifierApplication object that has been created for the usage of the modifier in this pipeline.
 	/// \undoable
-	ModifierApplication* insertModifier(Modifier* modifier, int atIndex);
+	ModifierApplication* insertModifier(int index, Modifier* modifier);
 
 	/// \brief Inserts a modifier application into the pipeline.
 	/// \param modApp The modifier application to be inserted.
-	/// \param atIndex Specifies the position in the pipeline where the modifier should be inserted.
-	///                It must be between zero and the number of existing modifier applications as returned by
-	///                modifierApplications(). Modifiers are applied in ascending order, i.e., the modifier
-	///                at index 0 is applied first.
+	/// \param index Specifies the position in the pipeline where the modifier should be inserted.
+	///              It must be between zero and the number of existing modifier applications as returned by
+	///              modifierApplications(). Modifiers are applied in ascending order, i.e., the modifier
+	///              at index 0 is applied first.
 	/// \undoable
-	void insertModifierApplication(ModifierApplication* modApp, int atIndex);
+	void insertModifierApplication(int index, ModifierApplication* modApp);
 
 	/// \brief Removes a modifier from the geometry pipeline.
-	/// \param app The ModifierApplication that should be removed. This must be one from the
-	///            list returned by modifierApplications().
+	/// \param index The index of the ModifierApplication that should be removed.
 	/// \undoable
-	void removeModifier(ModifierApplication* app);
+	void removeModifierApplication(int index);
 
 	/////////////////////////////////////// from DataObject /////////////////////////////////////////
 

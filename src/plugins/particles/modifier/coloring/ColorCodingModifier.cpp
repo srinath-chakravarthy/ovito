@@ -229,6 +229,10 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 	if(_startValueCtrl) startValue = _startValueCtrl->getFloatValue(time, validityInterval);
 	if(_endValueCtrl) endValue = _endValueCtrl->getFloatValue(time, validityInterval);
 
+	// Clamp to finite range.
+	if(!std::isfinite(startValue)) startValue = std::numeric_limits<FloatType>::min();
+	if(!std::isfinite(endValue)) endValue = std::numeric_limits<FloatType>::max();
+
 	// Get the particle selection property if enabled by the user.
 	const int* sel = nullptr;
 	std::vector<Color> existingColors;
@@ -318,7 +322,7 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 
 /******************************************************************************
 * Sets the start and end value to the minimum and maximum value
-* in the selected particle property.
+* in the selected particle or bond property.
 ******************************************************************************/
 bool ColorCodingModifier::adjustRange()
 {
@@ -349,7 +353,7 @@ bool ColorCodingModifier::adjustRange()
 
 	int stride = property->stride() / property->dataTypeSize();
 
-	// Iterate over all atoms.
+	// Iterate over all particles/bonds.
 	FloatType maxValue = FLOATTYPE_MIN;
 	FloatType minValue = FLOATTYPE_MAX;
 	if(property->dataType() == qMetaTypeId<FloatType>()) {
@@ -370,6 +374,10 @@ bool ColorCodingModifier::adjustRange()
 	}
 	if(minValue == FLOATTYPE_MAX)
 		return false;
+
+	// Clamp to finite range.
+	if(!std::isfinite(minValue)) minValue = std::numeric_limits<FloatType>::min();
+	if(!std::isfinite(maxValue)) maxValue = std::numeric_limits<FloatType>::max();
 
 	if(startValueController())
 		startValueController()->setCurrentFloatValue(minValue);

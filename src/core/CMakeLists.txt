@@ -22,6 +22,9 @@
 # Find Libav libraries for video encoding support.
 FIND_PACKAGE(Libav)
 
+# Find the zlib library. It is required for reading/writing compressed data files.
+FIND_PACKAGE(ZLIB REQUIRED)
+
 SET(SourceFiles 
 	utilities/Exception.cpp
 	utilities/linalg/AffineDecomposition.cpp
@@ -131,11 +134,11 @@ TARGET_INCLUDE_DIRECTORIES(Core PRIVATE "${ZLIB_INCLUDE_DIRS}")
 # Add Boost include directories.
 TARGET_INCLUDE_DIRECTORIES(Core PUBLIC ${Boost_INCLUDE_DIRS})
 
-# Link Qt5.
+# Link to Qt5.
 TARGET_LINK_LIBRARIES(Core PUBLIC Qt5::Core Qt5::Gui Qt5::Concurrent)
 TARGET_LINK_LIBRARIES(Core PRIVATE Qt5::Network)
 
-# Link video encoding lib.
+# Link to video encoding lib.
 IF(LIBAV_FOUND)
 	TARGET_COMPILE_DEFINITIONS(Core PUBLIC OVITO_VIDEO_OUTPUT_SUPPORT)
 	TARGET_LINK_LIBRARIES(Core PRIVATE ${Libav_LIBRARIES})
@@ -198,4 +201,11 @@ IF(LIBAV_FOUND)
 			ENDFOREACH()
 		ENDIF()
 	ENDFOREACH()
+ENDIF()
+
+# Install the zlib DLL.
+IF(WIN32)
+	LIST(GET ZLIB_LIBRARIES 0 ZLIB_FIRST_LIBRARY)
+	GET_FILENAME_COMPONENT(ZLIB_LIBRARY_PATH "${ZLIB_FIRST_LIBRARY}" PATH)
+	OVITO_INSTALL_DLL("${ZLIB_LIBRARY_PATH}/../bin/zlib.dll")
 ENDIF()

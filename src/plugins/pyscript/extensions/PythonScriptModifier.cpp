@@ -67,7 +67,7 @@ void PythonScriptModifier::propertyChanged(const PropertyFieldDescriptor& field)
 
 	// Recompute results when script has been changed.
 	if(field == PROPERTY_FIELD(PythonScriptModifier::_script)) {
-		_modifyScriptFunction = boost::none;
+		_modifyScriptFunction = py::object();
 		invalidateCachedResults(false);
 	}
 }
@@ -104,7 +104,7 @@ PipelineStatus PythonScriptModifier::modifyObject(TimePoint time, ModifierApplic
 			_computingInterval = _inputCache.stateValidity();
 
 			// Request script execution.
-			if(ScriptEngine::activeEngine() != nullptr) {
+			if(ScriptEngine::activeEngine()) {
 				// When running in the context of an active script engine, process request immediately.
 				runScriptFunction();
 			}
@@ -151,7 +151,7 @@ void PythonScriptModifier::runScriptFunction()
 	_scriptExecutionQueued = false;
 
 	do {
-		if(!_generatorObject || _generatorObject->is_none()) {
+		if(!_generatorObject) {
 
 			// Check if an evaluation request is still pending.
 			_computingInterval = _inputCache.stateValidity();
@@ -181,12 +181,12 @@ void PythonScriptModifier::runScriptFunction()
 				}
 
 				// Compile script if needed.
-				if(!_modifyScriptFunction || _modifyScriptFunction->is_none()) {
+				if(!_modifyScriptFunction) {
 					compileScript();
 				}
 
 				// Check if script function has been set.
-				if(!_modifyScriptFunction || _modifyScriptFunction->is_none())
+				if(!_modifyScriptFunction)
 					throwException(tr("PythonScriptModifier script function has not been set."));
 
 				// Get animation frame at which the modifier is evaluated.
@@ -216,10 +216,10 @@ void PythonScriptModifier::runScriptFunction()
 
 				engine->execute([this,animationFrame,&inputDataCollection,engine]() {
 					// Prepare arguments to be passed to script function.
-					boost::python::tuple arguments = boost::python::make_tuple(animationFrame, inputDataCollection, _dataCollection);
+					py::tuple arguments = py::make_tuple(animationFrame, inputDataCollection.get(), _dataCollection.get());
 
 					// Execute modify() script function.
-					_generatorObject = engine->callObject(*_modifyScriptFunction, arguments);
+					_generatorObject = engine->callObject(_modifyScriptFunction, arguments);
 				});
 			}
 			catch(const Exception& ex) {
@@ -228,7 +228,7 @@ void PythonScriptModifier::runScriptFunction()
 			}
 
 			// Check if the function has returned a generator object.
-			if(_generatorObject && !_generatorObject->is_none()) {
+			if(_generatorObject && !_generatorObject.is_none()) {
 
 				// Keep calling this method in GUI mode. Otherwise stay in the outer while loop.
 				if(ScriptEngine::activeEngine() == nullptr)
@@ -264,11 +264,11 @@ void PythonScriptModifier::runScriptFunction()
 				do {
 
 					engine->execute([this, &exhausted]() {
-						PyObject* item = PyIter_Next(_generatorObject->ptr());
-						if(item != NULL) {
-							boost::python::object itemObj{boost::python::handle<>(item)};
+						PyObject* item = PyIter_Next(_generatorObject.ptr());
+						if(item != nullptr) {
+							py::object itemObj(item, false);
 							if(PyFloat_Check(item)) {
-								double progressValue = boost::python::extract<double>(item);
+								double progressValue = itemObj.cast<double>();
 								if(progressValue >= 0.0 && progressValue <= 1.0) {
 									_runningTask->setProgressRange(100);
 									_runningTask->setProgressValue((int)(progressValue * 100.0));
@@ -279,15 +279,16 @@ void PythonScriptModifier::runScriptFunction()
 								}
 							}
 							else {
-								boost::python::extract<QString> get_str(item);
-								if(get_str.check())
-									_runningTask->setProgressText(get_str());
+								try {
+									_runningTask->setProgressText(itemObj.cast<QString>());
+								}
+								catch(const py::cast_error&) {}
 							}
 						}
 						else {
 							exhausted = true;
 							if(PyErr_Occurred())
-								boost::python::throw_error_already_set();
+								throw py::error_already_set();
 						}
 					});
 
@@ -336,7 +337,7 @@ void PythonScriptModifier::scriptCompleted()
 	// Indicate that we are done.
 	_computingInterval.setEmpty();
 	_dataCollection.reset();
-	_generatorObject = boost::none;
+	_generatorObject = py::object();
 
 	// Set output status.
 	setStatus(_outputCache.status());
@@ -359,21 +360,20 @@ void PythonScriptModifier::compileScript()
 	OVITO_ASSERT(_scriptEngine);
 
 	// Reset Python environment.
-	_scriptEngine->mainNamespace() = _mainNamespacePrototype->copy();
-	_modifyScriptFunction = boost::python::object();
+	_scriptEngine->mainNamespace() = _mainNamespacePrototype.attr("copy")();
+	_modifyScriptFunction = py::function();
 	// Run script once.
 	_scriptEngine->executeCommands(script());
 	// Extract the modify() function defined by the script.
 	_scriptEngine->execute([this]() {
 		try {
 			_modifyScriptFunction = _scriptEngine->mainNamespace()["modify"];
-			if(!PyCallable_Check(_modifyScriptFunction->ptr())) {
-				_modifyScriptFunction = boost::python::object();
+			if(!_modifyScriptFunction.check()) {
+				_modifyScriptFunction = py::function();
 				throwException(tr("Invalid Python script. It does not define a callable function modify()."));
 			}
 		}
-		catch(const boost::python::error_already_set&) {
-			PyErr_Clear();
+		catch(const py::error_already_set&) {
 			throwException(tr("Invalid Python script. It does not define the function modify()."));
 		}
 	});
@@ -411,7 +411,7 @@ void PythonScriptModifier::stopRunningScript()
 		_runningTask.reset();
 	}
 	// Discard active generator object.
-	_generatorObject = boost::none;
+	_generatorObject = py::object();
 }
 
 /******************************************************************************

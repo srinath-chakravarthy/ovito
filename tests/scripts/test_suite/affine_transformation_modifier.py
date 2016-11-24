@@ -23,11 +23,11 @@ modifier.transform_box = True
 print(modifier.transform_surface)
 modifier.transform_surface = False
 
+print(modifier.transformation)
+modifier.transformation = [[1,0,0,0],[0,1,0,0.8],[0,0,1,0]]
+
 print(modifier.target_cell)
 modifier.target_cell = [[2,0,0,0],[0,1,0,0],[0,0,1,0]]
 modifier.target_cell = np.array([[1,2,0,0],[0,1,0,0],[0,0,1,0.5]])
  
-print(modifier.transformation)
-modifier.transformation = [[1,0,0,0],[0,1,0,0.8],[0,0,1,0]]
-
 node.compute()

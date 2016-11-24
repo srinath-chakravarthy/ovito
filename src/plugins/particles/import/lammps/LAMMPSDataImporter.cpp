@@ -225,6 +225,10 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 	for(int i = 1; i <= natomtypes; i++)
 		typeList->addParticleTypeId(i);
 
+	/// Maps atom IDs to indices.
+	std::unordered_map<int,int> atomIdMap;
+	atomIdMap.reserve(natoms);
+
 	// Read identifier strings one by one in free-form part of data file.
 	QByteArray keyword = QByteArray(stream.line()).trimmed();
 	for(;;) {
@@ -262,6 +266,7 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 							throw Exception(tr("Invalid data in Atoms section of LAMMPS data file at line %1: %2").arg(stream.lineNumber()).arg(stream.lineString()));
 						if(*atomType < 1 || *atomType > natomtypes)
 							throw Exception(tr("Atom type out of range in Atoms section of LAMMPS data file at line %1.").arg(stream.lineNumber()));
+						atomIdMap.insert(std::make_pair(*atomId, i));
 					}
 				}
 				else if(_atomStyle == AtomStyle_Charge || _atomStyle == AtomStyle_Dipole) {
@@ -282,6 +287,7 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 							throw Exception(tr("Invalid data in Atoms section of LAMMPS data file at line %1: %2").arg(stream.lineNumber()).arg(stream.lineString()));
 						if(*atomType < 1 || *atomType > natomtypes)
 							throw Exception(tr("Atom type out of range in Atoms section of LAMMPS data file at line %1.").arg(stream.lineNumber()));
+						atomIdMap.insert(std::make_pair(*atomId, i));
 					}
 				}
 				else if(_atomStyle == AtomStyle_Angle || _atomStyle == AtomStyle_Bond || _atomStyle == AtomStyle_Molecular) {
@@ -302,6 +308,7 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 							throw Exception(tr("Invalid data in Atoms section of LAMMPS data file at line %1: %2").arg(stream.lineNumber()).arg(stream.lineString()));
 						if(*atomType < 1 || *atomType > natomtypes)
 							throw Exception(tr("Atom type out of range in Atoms section of LAMMPS data file at line %1.").arg(stream.lineNumber()));
+						atomIdMap.insert(std::make_pair(*atomId, i));
 					}
 				}
 				else if(_atomStyle == AtomStyle_Full) {
@@ -325,6 +332,7 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 							throw Exception(tr("Invalid data in Atoms section of LAMMPS data file at line %1: %2").arg(stream.lineNumber()).arg(stream.lineString()));
 						if(*atomType < 1 || *atomType > natomtypes)
 							throw Exception(tr("Atom type out of range in Atoms section of LAMMPS data file at line %1.").arg(stream.lineNumber()));
+						atomIdMap.insert(std::make_pair(*atomId, i));
 					}
 				}
 				else if(_atomStyle == AtomStyle_Unknown) {
@@ -359,9 +367,10 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 
     			int atomIndex = i;
     			if(atomId != identifierProperty->getInt(i)) {
-    				atomIndex = std::find(identifierProperty->constDataInt(), identifierProperty->constDataInt() + identifierProperty->size(), atomId) - identifierProperty->constDataInt();
-					if(atomIndex >= (int)identifierProperty->size())
+					auto iter = atomIdMap.find(atomId);
+					if(iter == atomIdMap.end())
     					throw Exception(tr("Nonexistent atom ID encountered in line %1 of data file.").arg(stream.lineNumber()));
+					atomIndex = iter->second;
     			}
 
 				velocityProperty->setVector3(atomIndex, v);
@@ -437,10 +446,21 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
     			if(sscanf(stream.line(), "%u %u %u %u", &bondId, bondType, &atomId1, &atomId2) != 4)
 					throw Exception(tr("Invalid bond specification (line %1): %2").arg(stream.lineNumber()).arg(stream.lineString()));
 
-   				unsigned int atomIndex1 = std::find(identifierProperty->constDataInt(), identifierProperty->constDataInt() + identifierProperty->size(), atomId1) - identifierProperty->constDataInt();
-   				unsigned int atomIndex2 = std::find(identifierProperty->constDataInt(), identifierProperty->constDataInt() + identifierProperty->size(), atomId2) - identifierProperty->constDataInt();
-				if(atomIndex1 >= identifierProperty->size() || atomIndex2 >= identifierProperty->size())
-					throw Exception(tr("Nonexistent atom ID encountered in line %1 of data file.").arg(stream.lineNumber()));
+				unsigned int atomIndex1 = atomId1;
+    			if(atomIndex1 >= identifierProperty->size() || atomId1 != identifierProperty->getInt(atomIndex1)) {
+					auto iter = atomIdMap.find(atomId1);
+					if(iter == atomIdMap.end())
+    					throw Exception(tr("Nonexistent atom ID encountered in line %1 of data file.").arg(stream.lineNumber()));
+					atomIndex1 = iter->second;
+    			}
+
+				unsigned int atomIndex2 = atomId2;
+    			if(atomIndex2 >= identifierProperty->size() || atomId2 != identifierProperty->getInt(atomIndex2)) {
+					auto iter = atomIdMap.find(atomId2);
+					if(iter == atomIdMap.end())
+    					throw Exception(tr("Nonexistent atom ID encountered in line %1 of data file.").arg(stream.lineNumber()));
+					atomIndex2 = iter->second;
+    			}
 
 				if(*bondType < 1 || *bondType > nbondtypes)
 					throw Exception(tr("Bond type out of range in Bonds section of LAMMPS data file at line %1.").arg(stream.lineNumber()));

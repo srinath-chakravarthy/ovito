@@ -129,13 +129,14 @@ public:
 
 	/// \brief Attaches a display object to this scene object that will be responsible for rendering the
 	///        data object.
-	void addDisplayObject(DisplayObject* displayObj) { _displayObjects.push_back(displayObj); }
+	void addDisplayObject(DisplayObject* displayObj) { 
+		_displayObjects.push_back(displayObj); 
+	}
 
 	/// \brief Attaches a display object to this scene object that will be responsible for rendering the
 	///        data object.
-	void setDisplayObject(DisplayObject* displayObj) {
-		_displayObjects.clear();
-		_displayObjects.push_back(displayObj);
+	void insertDisplayObject(int index, DisplayObject* displayObj) { 
+		_displayObjects.insert(index, displayObj); 
 	}
 
 	/// \brief Attaches one or more display objects to this scene object that will be responsible for rendering the
@@ -145,7 +146,22 @@ public:
 	}
 
 	/// \brief Removes a display object from this scene object.
-	void removeDisplayObject(int index) { _displayObjects.remove(index); }
+	void removeDisplayObject(int index) { 
+		_displayObjects.remove(index); 
+	}
+
+	/// \brief Attaches a display object to this scene object that will be responsible for rendering the
+	///        data object. All existing display objects will be replaced.
+	void setDisplayObject(DisplayObject* displayObj) {
+		_displayObjects.clear();
+		_displayObjects.push_back(displayObj);
+	}
+
+	/// \brief Returns the first display object attached to this data object or NULL if there is 
+	///        no display object attached.
+	DisplayObject* displayObject() const {
+		return !displayObjects().empty() ? displayObjects().front() : nullptr;
+	}
 
 	/// \brief Returns whether the internal data is saved along with the scene.
 	/// \return \c true if the data is stored in the state file; \c false if the data can be restored from an external file or recomputed.

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section version="5.0"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd"
+         xml:id="rendering.povray_renderer"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:ns="http://docbook.org/ns/docbook">
+  <title>POV-Ray renderer</title>
+
+  <para>
+     <informalfigure><screenshot><mediaobject><imageobject>
+       <imagedata fileref="images/rendering/povray_renderer_panel.png" format="PNG" />
+     </imageobject></mediaobject></screenshot></informalfigure>  
+     
+     This rendering backend of OVITO invokes the external <link xlink:href="http://www.povray.org/">POV-Ray (Persistence of Vision Raytracer)</link>
+     program to generate images of the scene. <link xlink:href="http://www.povray.org/">POV-Ray</link> must be installed
+     on the computer if you want to use this rendering backend. It is available free of charge under an Open Source license on all platforms.
+   </para>
+   <para>
+     Every time an image of a viewport is being rendered, the rendering backend automatically saves the visible scene objects to a temporary file, which is then processed by 
+     the POV-Ray program. Once POV-Ray has finished, the rendered image is read back into OVITO. 
+   </para>
+   <para>
+     Note that you can also save the current scene to
+     a <filename>.pov</filename> file using OVITO's <link linkend="usage.export">file export function</link>. 
+     This allows you to render the exported scene through POV-Ray at a later time or on a different machine.
+   </para>
+</section>

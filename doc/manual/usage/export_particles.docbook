@@ -75,6 +75,10 @@
               <entry>Calculation Results File</entry>
               <entry><para>A simple tabular text file with scalar quantities computed by OVITO's analysis modifiers.</para></entry>
             </row>
+            <row>
+              <entry>POV-Ray scene</entry>
+              <entry><para>Exports the entire scene to a file than can be rendered with <link xlink:href="http://www.povray.org/">POV-Ray (Persistence of Vision Raytracer)</link>.</para></entry>
+            </row>
           </tbody>
         </tgroup>
       </informaltable>  

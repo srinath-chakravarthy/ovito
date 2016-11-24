@@ -94,6 +94,9 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	BooleanParameterUI* outputInterfaceMeshUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_outputInterfaceMesh));
 	sublayout->addWidget(outputInterfaceMeshUI->checkBox(), 1, 0);
 
+	BooleanParameterUI* onlyPerfectDislocationsUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_onlyPerfectDislocations));
+	sublayout->addWidget(onlyPerfectDislocationsUI->checkBox(), 2, 0);
+
 	// Status label.
 	layout->addWidget(statusLabel());
 	//statusLabel()->setMinimumHeight(60);

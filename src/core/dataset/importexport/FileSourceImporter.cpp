@@ -182,7 +182,7 @@ bool FileSourceImporter::importFile(const QUrl& sourceUrl, ImportMode importMode
 		}
 
 		// Insert node into scene.
-		scene->addChild(node);
+		scene->addChildNode(node);
 	}
 	else node = existingNode;
 

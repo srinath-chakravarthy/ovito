@@ -39,9 +39,10 @@ DislocationAnalysisEngine::DislocationAnalysisEngine(const TimeInterval& validit
 		int inputCrystalStructure, int maxTrialCircuitSize, int maxCircuitElongation,
 		bool reconstructEdgeVectors, ParticleProperty* particleSelection,
 		ParticleProperty* crystalClusters,
-		std::vector<Matrix3>&& preferredCrystalOrientations) :
+		std::vector<Matrix3>&& preferredCrystalOrientations,
+		bool onlyPerfectDislocations) :
 	StructureIdentificationModifier::StructureIdentificationEngine(validityInterval, positions, simCell, QVector<bool>(), particleSelection),
-	_structureAnalysis(positions, simCell, (StructureAnalysis::LatticeStructureType)inputCrystalStructure, selection(), structures(), std::move(preferredCrystalOrientations)),
+	_structureAnalysis(positions, simCell, (StructureAnalysis::LatticeStructureType)inputCrystalStructure, selection(), structures(), std::move(preferredCrystalOrientations), !onlyPerfectDislocations),
 	_defectMesh(new HalfEdgeMesh<>()),
 	_elasticMapping(_structureAnalysis, _tessellation),
 	_interfaceMesh(_elasticMapping),
@@ -51,7 +52,8 @@ DislocationAnalysisEngine::DislocationAnalysisEngine(const TimeInterval& validit
 	_planarDefectIdentification(_elasticMapping),
 #endif
 	_reconstructEdgeVectors(reconstructEdgeVectors),
-	_crystalClusters(crystalClusters)
+	_crystalClusters(crystalClusters),
+	_onlyPerfectDislocations(onlyPerfectDislocations)
 {
 }
 

@@ -48,7 +48,11 @@ public:
 	bool is2D() const { return _is2D; }
 
 	/// Sets whether this is a 2D system.
-	void set2D(bool is2D) { _is2D = is2D; }
+	void set2D(bool is2D) { 
+		_is2D = is2D;
+		if(is2D) _pbcFlags[2] = false;
+		computeInverseMatrix(); 
+	}
 
 	/// Returns the current simulation cell matrix.
 	const AffineTransformation& matrix() const { return _simulationCell; }
@@ -59,8 +63,7 @@ public:
 	/// Sets the simulation cell matrix.
 	void setMatrix(const AffineTransformation& cellMatrix) {
 		_simulationCell = cellMatrix;
-		if(!cellMatrix.inverse(_reciprocalSimulationCell))
-			_reciprocalSimulationCell.setIdentity();
+		computeInverseMatrix();
 	}
 
 	/// Returns the PBC flags.
@@ -171,6 +174,24 @@ public:
 	}
 
 private:
+
+	/// Computes the inverse of the cell matrix.
+	void computeInverseMatrix() {
+		if(!is2D()) {			
+			if(!_simulationCell.inverse(_reciprocalSimulationCell))
+				_reciprocalSimulationCell.setIdentity();
+		}
+		else {
+			_reciprocalSimulationCell.setIdentity();
+			FloatType det = _simulationCell(0,0)*_simulationCell(1,1) - _simulationCell(0,1)*_simulationCell(1,0);
+			if(std::abs(det) > FLOATTYPE_EPSILON) {
+				_reciprocalSimulationCell(0,0) = _simulationCell(1,1) / det;
+				_reciprocalSimulationCell(1,0) = -_simulationCell(1,0) / det;
+				_reciprocalSimulationCell(0,1) = -_simulationCell(0,1) / det;
+				_reciprocalSimulationCell(1,1) = _simulationCell(0,0) / det;
+			}
+		}
+	}
 
 	/// The geometry of the cell.
 	AffineTransformation _simulationCell;

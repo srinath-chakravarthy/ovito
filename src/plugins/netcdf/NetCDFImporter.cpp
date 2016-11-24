@@ -663,17 +663,21 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 									else {
 										if(type != NC_CHAR) {
 											size_t totalCount = countp[1];
+											size_t remaining = totalCount;
 											countp[1] = 1000000;
 											setProgressRange(totalCount / countp[1] + 1);
+											OVITO_ASSERT(totalCount <= property->size());
 											for(size_t chunk = 0; chunk < totalCount; chunk += countp[1], startp[1] += countp[1]) {
-												countp[1] = std::min(countp[1], totalCount - startp[1]);
+												countp[1] = std::min(countp[1], remaining);
+												remaining -= countp[1];
 												OVITO_ASSERT(countp[1] >= 1);
-												NCERRI( nc_get_vara_int(_ncid, varId, startp, countp, property->dataInt() + property->componentCount()*startp[1]), tr("(While reading variable '%1'.)").arg(columnName) );
+												NCERRI( nc_get_vara_int(_ncid, varId, startp, countp, property->dataInt() + property->componentCount()*chunk), tr("(While reading variable '%1'.)").arg(columnName) );
 												if(!incrementProgressValue()) {
 													closeNetCDF();
 													return;
 												}
 											}
+											OVITO_ASSERT(remaining == 0);
 										}
 									}
 								}
@@ -691,15 +695,17 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 								}
 
 								size_t totalCount = countp[1];
+								size_t remaining = totalCount;
 								countp[1] = 1000000;
 								setProgressRange(totalCount / countp[1] + 1);
 								for(size_t chunk = 0; chunk < totalCount; chunk += countp[1], startp[1] += countp[1]) {
-									countp[1] = std::min(countp[1], totalCount - startp[1]);
+									countp[1] = std::min(countp[1], remaining);
+									remaining -= countp[1];
 									OVITO_ASSERT(countp[1] >= 1);
 #ifdef FLOATTYPE_FLOAT
-									NCERRI( nc_get_vara_float(_ncid, varId, startp, countp, dest + property->componentCount()*startp[1]), tr("(While reading variable '%1'.)").arg(columnName) );
+									NCERRI( nc_get_vara_float(_ncid, varId, startp, countp, dest + property->componentCount()*chunk), tr("(While reading variable '%1'.)").arg(columnName) );
 #else
-									NCERRI( nc_get_vara_double(_ncid, varId, startp, countp, dest + property->componentCount()*startp[1]), tr("(While reading variable '%1'.)").arg(columnName) );
+									NCERRI( nc_get_vara_double(_ncid, varId, startp, countp, dest + property->componentCount()*chunk), tr("(While reading variable '%1'.)").arg(columnName) );
 #endif
 									if(!incrementProgressValue()) {
 										closeNetCDF();

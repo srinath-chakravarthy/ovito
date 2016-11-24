@@ -185,8 +185,7 @@
             </row>
             <row>
               <entry>GSD/HOOMD</entry>
-              <entry><para>Binary format for molecular dynamics data used by the <link xlink:href="http://glotzerlab.engin.umich.edu/hoomd-blue/">HOOMD-blue code</link>. See <link xlink:href="http://gsd.readthedocs.io">GSD (General Simulation Data) format</link>. 
-			  Support for this format is not available in the Windows version of OVITO.</para></entry>
+              <entry><para>Binary format for molecular dynamics data used by the <link xlink:href="http://glotzerlab.engin.umich.edu/hoomd-blue/">HOOMD-blue code</link>. See <link xlink:href="http://gsd.readthedocs.io">GSD (General Simulation Data) format</link>.</para></entry>
             </row>
           </tbody>
         </tgroup>

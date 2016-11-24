@@ -135,6 +135,8 @@ public:
 				default: throw Exception(GSDImporter::tr("GSD file I/O error."));
 			}
 			for(uint64_t i = 0; i < chunk->N; i++) {
+				// Null-terminate string, just to be save.
+				buffer[(i+1)*chunk->M - 1] = '\0';
 				result.push_back(QString::fromUtf8(buffer.data() + i*chunk->M));
 			}
 		}

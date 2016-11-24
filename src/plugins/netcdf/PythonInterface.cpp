@@ -22,20 +22,25 @@
 #include <plugins/pyscript/PyScript.h>
 #include <plugins/pyscript/binding/PythonBinding.h>
 #include <plugins/netcdf/NetCDFImporter.h>
+#include <plugins/particles/scripting/PythonBinding.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-using namespace boost::python;
 using namespace PyScript;
 
-BOOST_PYTHON_MODULE(NetCDFPlugin)
+PYBIND11_PLUGIN(NetCDFPlugin)
 {
-	docstring_options docoptions(true, false);
+	py::options options;
+	options.disable_function_signatures();
 
-	ovito_class<NetCDFImporter, ParticleImporter>()
-		.add_property("customColumnMapping", make_function(&NetCDFImporter::customColumnMapping, return_value_policy<copy_const_reference>()), &NetCDFImporter::setCustomColumnMapping)
-		.add_property("useCustomColumnMapping", &NetCDFImporter::useCustomColumnMapping, &NetCDFImporter::setUseCustomColumnMapping)
+	py::module m("NetCDFPlugin");
+
+	ovito_class<NetCDFImporter, ParticleImporter>(m)
+		.def_property("custom_column_mapping", &NetCDFImporter::customColumnMapping, &NetCDFImporter::setCustomColumnMapping)
+		.def_property("use_custom_column_mapping", &NetCDFImporter::useCustomColumnMapping, &NetCDFImporter::setUseCustomColumnMapping)
 	;
+
+	return m.ptr();
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(NetCDFPlugin);

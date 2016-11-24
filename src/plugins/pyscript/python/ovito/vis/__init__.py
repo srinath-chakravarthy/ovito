@@ -11,6 +11,7 @@ This module contains classes related to data visualization and rendering.
 
   * :py:class:`OpenGLRenderer`
   * :py:class:`TachyonRenderer`
+  * :py:class:`POVRayRenderer`
 
 **Data visualization:**
 
@@ -113,48 +114,10 @@ def _Viewport_render(self, settings = None):
     else:
         # Create a temporary off-screen frame buffer.
         fb = FrameBuffer(settings.size[0], settings.size[1])
-    if not self.dataset.renderScene(settings, self, fb, ovito.get_progress_display()):
+    if not self.dataset.render_scene(settings, self, fb, ovito.get_progress_display()):
         return None
     return fb.image
 Viewport.render = _Viewport_render
-
-
-# Implement the 'overlays' property of the Viewport class. 
-def _get_Viewport_overlays(self):
-    """ A list-like sequence of viewport overlay objects that are attached to this viewport.
-        See the following classes for more information: 
-           
-           * :py:class:`TextLabelOverlay`
-           * :py:class:`CoordinateTripodOverlay`
-           * :py:class:`PythonViewportOverlay`
-    """
-    
-    def ViewportOverlayList__delitem__(self, index):
-        if index < 0: index += len(self)
-        if index >= len(self): raise IndexError("List index is out of range.")
-        self.__vp.removeOverlay(index)
-
-    def ViewportOverlayList__setitem__(self, index, overlay):
-        if index < 0: index += len(self)
-        if index >= len(self): raise IndexError("List index is out of range.")
-        self.__vp.removeOverlay(index)
-        self.__vp.insertOverlay(index, overlay)
-
-    def ViewportOverlayList_append(self, overlay):
-        self.__vp.insertOverlay(len(self), overlay)
-            
-    def ViewportOverlayList_insert(self, index, overlay):
-        if index < 0: index += len(self)        
-        self.__vp.insertOverlay(index, overlay)
-
-    overlay_list = self._overlays
-    overlay_list.__vp = self
-    type(overlay_list).__delitem__ = ViewportOverlayList__delitem__
-    type(overlay_list).__setitem__ = ViewportOverlayList__setitem__
-    type(overlay_list).append = ViewportOverlayList_append
-    type(overlay_list).insert = ViewportOverlayList_insert
-    return overlay_list
-Viewport.overlays = property(_get_Viewport_overlays)
 
 def _ViewportConfiguration__len__(self):
     return len(self.viewports)

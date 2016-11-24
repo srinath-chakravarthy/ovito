@@ -56,7 +56,7 @@ ELSEIF(UNIX)
 ENDIF()
 
 # This executable will be part of the installation package.
-INSTALL(TARGETS ${PROJECT_NAME} DESTINATION "${OVITO_RELATIVE_BINARY_DIRECTORY}")
+INSTALL(TARGETS ${PROJECT_NAME} DESTINATION "${OVITO_RELATIVE_BINARY_DIRECTORY}/")
 
 # Build all plugins first before building the main executable.
 FOREACH(plugin ${OVITO_PLUGIN_LIST})
@@ -70,7 +70,7 @@ ENDIF()
 
 IF(UNIX AND NOT APPLE AND OVITO_MONOLITHIC_BUILD)
 	# Install copies of the Qt libraries.
-	FOREACH(component IN ITEMS Core Gui Widgets Concurrent Network PrintSupport DBus)
+	FOREACH(component IN ITEMS Core Gui Widgets Concurrent Network PrintSupport)
 		GET_TARGET_PROPERTY(lib Qt5::${component} LOCATION)
 		GET_TARGET_PROPERTY(lib_soname Qt5::${component} IMPORTED_SONAME_RELEASE)
 		CONFIGURE_FILE("${lib}" "${OVITO_LIBRARY_DIRECTORY}" COPYONLY)		
@@ -90,28 +90,25 @@ IF(UNIX AND NOT APPLE AND OVITO_MONOLITHIC_BUILD)
 	# Install Qt plugins.
 	INSTALL(DIRECTORY "${QtBinaryPath}/../plugins/platforms" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins_qt/")
 	INSTALL(DIRECTORY "${QtBinaryPath}/../plugins/bearer" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins_qt/")
-	INSTALL(DIRECTORY "${QtBinaryPath}/../plugins/imageformats" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins_qt/")
+	INSTALL(DIRECTORY "${QtBinaryPath}/../plugins/imageformats" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins_qt/" PATTERN "libqsvg.so" EXCLUDE)
 	IF(Qt5Core_VERSION VERSION_LESS "5.4")
-    	INSTALL(DIRECTORY "${QtBinaryPath}/../plugins/accessible" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins_qt/")
-    ENDIF()
+		INSTALL(DIRECTORY "${QtBinaryPath}/../plugins/accessible" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins_qt/")
+	ENDIF()
+	IF(NOT Qt5Core_VERSION VERSION_LESS "5.6")
+		INSTALL(DIRECTORY "${QtBinaryPath}/../plugins/xcbglintegrations" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins_qt/")
+		OVITO_INSTALL_SHARED_LIB("${QtBinaryPath}/libQt5DBus.so" "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/lib")
+		OVITO_INSTALL_SHARED_LIB("${QtBinaryPath}/libQt5XcbQpa.so" "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/lib")
+	ENDIF()
 
 	# Make the executable look in lib/ovito/ directory for shared libraries.
 	SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES INSTALL_RPATH "\$ORIGIN/../lib/ovito")
 	SET_TARGET_PROPERTIES(${PROJECT_NAME} PROPERTIES BUILD_WITH_INSTALL_RPATH "1")
-	FIND_LIBRARY(OVITO_LIBSTDCXX NAMES libstdc++.so.6 PATHS /usr/lib NO_DEFAULT_PATH)
+	FIND_LIBRARY(OVITO_LIBSTDCXX NAMES libstdc++.so.6 PATHS /usr/lib /usr/lib/x86_64-linux-gnu NO_DEFAULT_PATH)
 	IF(NOT OVITO_LIBSTDCXX)
 		MESSAGE(FATAL_ERROR "Please specify the location of the C++ standard library with the OVITO_LIBSTDCXX option.") 
 	ENDIF()
 	GET_FILENAME_COMPONENT(OVITO_LIBSTDCXX_REAL ${OVITO_LIBSTDCXX} REALPATH)
 	INSTALL(FILES "${OVITO_LIBSTDCXX}" "${OVITO_LIBSTDCXX_REAL}" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/")
-	
-	# Install Boost libraries.
-	FOREACH(lib ${Boost_LIBRARIES})
-		FILE(GLOB lib_versions "${lib}*")
-		FOREACH(lib_version ${lib_versions})
-			INSTALL(FILES "${lib_version}" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/")
-		ENDFOREACH()
-	ENDFOREACH()
 
 ENDIF()
 
@@ -157,24 +154,6 @@ IF(WIN32)
 	INSTALL(CODE "
 	    file(WRITE \"\${CMAKE_INSTALL_PREFIX}/${OVITO_RELATIVE_BINARY_DIRECTORY}/qt.conf\" \"[Paths]\\nPlugins = plugins/\")
 	    " COMPONENT Runtime)
-		
-	# Install zlib DLL.
-	LIST(GET ZLIB_LIBRARIES 0 ZLIB_FIRST_LIBRARY)
-	GET_FILENAME_COMPONENT(ZLIB_LIBRARY_PATH "${ZLIB_FIRST_LIBRARY}" PATH)
-	OVITO_INSTALL_DLL("${ZLIB_LIBRARY_PATH}/../bin/zlib.dll")
-
-	# Install Boost libraries.
-	FOREACH(lib ${Boost_LIBRARIES})
-		IF(lib STREQUAL "optimized")
-			SET(is_debug_libs FALSE)
-		ELSEIF(lib STREQUAL "debug")
-			SET(is_debug_libs TRUE)
-		ELSEIF((NOT is_debug_libs AND NOT CMAKE_BUILD_TYPE STREQUAL "Debug") OR (is_debug_libs AND CMAKE_BUILD_TYPE STREQUAL "Debug"))
-			GET_FILENAME_COMPONENT(base_name "${lib}" NAME_WE)
-			GET_FILENAME_COMPONENT(lib_path "${lib}" PATH)
-			OVITO_INSTALL_DLL("${lib_path}/${base_name}.dll")
-		ENDIF()
-	ENDFOREACH()
 
 ENDIF()
 

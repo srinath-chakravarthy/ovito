@@ -15,7 +15,8 @@
        <imagedata fileref="images/rendering/opengl_renderer_panel.png" format="PNG" />
      </imageobject></mediaobject></screenshot></informalfigure>  
      
-	 This is the default built-in <link linkend="usage.rendering">rendering engine</link>, which is also used by OVITO to render the contents of the interactive viewports.
+	 This is the default built-in <link linkend="usage.rendering">rendering engine</link>, 
+	 which is also used by OVITO for rendering the interactive viewports.
     </para>
     
   <simplesect>

@@ -491,7 +491,7 @@ class OVITO_PARTICLES_EXPORT ParticlePropertyReference
 {
 public:
 
-	/// \brief Default constructor. Creates an empty reference.
+	/// \brief Default constructor. Creates a null reference.
 	ParticlePropertyReference() : _type(ParticleProperty::UserProperty), _vectorComponent(-1) {}
 	/// \brief Constructs a reference to a standard property.
 	ParticlePropertyReference(ParticleProperty::Type type, int vectorComponent = -1) : _type(type), _name(ParticleProperty::standardPropertyName(type)), _vectorComponent(vectorComponent) {}
@@ -571,6 +571,9 @@ private:
 
 	/// The zero-based component index if the property is a vector property (or zero if not a vector property).
 	int _vectorComponent;
+
+	friend SaveStream& operator<<(SaveStream& stream, const ParticlePropertyReference& r);
+	friend LoadStream& operator>>(LoadStream& stream, ParticlePropertyReference& r);
 };
 
 /// Writes a ParticlePropertyReference to an output stream.
@@ -587,16 +590,9 @@ inline SaveStream& operator<<(SaveStream& stream, const ParticlePropertyReferenc
 /// \relates ParticlePropertyReference
 inline LoadStream& operator>>(LoadStream& stream, ParticlePropertyReference& r)
 {
-	ParticleProperty::Type type;
-	QString name;
-	stream >> type;
-	stream >> name;
-	int vecComponent;
-	stream >> vecComponent;
-	if(type != ParticleProperty::UserProperty)
-		r = ParticlePropertyReference(type, vecComponent);
-	else
-		r = ParticlePropertyReference(name, vecComponent);
+	stream >> r._type;
+	stream >> r._name;
+	stream >> r._vectorComponent;
 	return stream;
 }
 

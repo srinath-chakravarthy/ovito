@@ -14,7 +14,7 @@ node.compute()
 print("Computed structure types:")
 print(node.output.structure_type.array)
 
-assert(modifier.counts[BondAngleAnalysisModifier.Type.FCC] == 128)
+assert(node.output.attributes["BondAngleAnalysis.counts.FCC"] == 128)
 assert(node.output.structure_type.array[0] == 1)
 assert(node.output.structure_type.array[0] == BondAngleAnalysisModifier.Type.FCC)
 assert((node.output.color.array[0] == (1,0,0)).all())

@@ -1,7 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (2013) Alexander Stukowski
-//  Copyright (2014) Lars Pastewka
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -25,11 +24,11 @@
 
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/particles/gui/modifier/ParticleModifierEditor.h>
+#include <core/utilities/DeferredMethodInvocation.h>
 
-#ifndef signals
-#define signals Q_SIGNALS
-#endif
-#include <qcustomplot.h>
+class QwtPlot;
+class QwtPlotSpectroCurve;
+class QwtPlotZoneItem;
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -41,7 +40,7 @@ class ScatterPlotModifierEditor : public ParticleModifierEditor
 public:
 
 	/// Default constructor.
-	Q_INVOKABLE ScatterPlotModifierEditor() : _rangeUpdate(true) {}
+	Q_INVOKABLE ScatterPlotModifierEditor() {}
 
 protected:
 
@@ -56,34 +55,25 @@ protected Q_SLOTS:
 	/// Replots the scatter plot computed by the modifier.
 	void plotScatterPlot();
 
-	/// Keep x-axis range updated
-	void updateXAxisRange(const QCPRange &newRange);
-
-	/// Keep y-axis range updated
-	void updateYAxisRange(const QCPRange &newRange);
-
 	/// This is called when the user has clicked the "Save Data" button.
 	void onSaveData();
 
 private:
 
-	/// The graph widget to display the scatter plot.
-	QCustomPlot* _scatterPlot;
+	/// The graph widget to display the plot.
+	QwtPlot* _plot;
 
-	/// Marks the selection interval in the scatter plot (x-axis).
-	QCPItemStraightLine* _selectionXAxisRangeStartMarker;
+	/// The plot item for the points.
+    QwtPlotSpectroCurve* _plotCurve = nullptr;
 
-	/// Marks the selection interval in the scatter plot (x-axis).
-	QCPItemStraightLine* _selectionXAxisRangeEndMarker;
+	/// Marks the range of selected points in the X direction.
+	QwtPlotZoneItem* _selectionRangeX = nullptr;
 
-	/// Marks the selection interval in the scatter plot (y-axis).
-	QCPItemStraightLine* _selectionYAxisRangeStartMarker;
+	/// Marks the range of selected points in the Y direction.
+	QwtPlotZoneItem* _selectionRangeY = nullptr;
 
-	/// Marks the selection interval in the scatter plot (y-axis).
-	QCPItemStraightLine* _selectionYAxisRangeEndMarker;
-
-	/// Update range when plot ranges change?
-	bool _rangeUpdate;
+	/// For deferred invocation of the plot repaint function.
+	DeferredMethodInvocation<ScatterPlotModifierEditor, &ScatterPlotModifierEditor::plotScatterPlot> plotLater;
 
 	Q_OBJECT
 	OVITO_OBJECT

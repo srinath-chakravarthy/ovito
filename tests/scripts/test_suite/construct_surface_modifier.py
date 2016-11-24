@@ -29,7 +29,6 @@ print("  surface_transparency: {}".format(modifier.mesh_display.surface_transpar
 node.compute()
 
 print("Output:")
-print("  solid_volume= {}".format(modifier.solid_volume))
-print("  surface_area= {}".format(modifier.surface_area))
-print("  total_volume= {}".format(modifier.total_volume))
+print("  solid_volume= {}".format(node.output.attributes['ConstructSurfaceMesh.solid_volume']))
+print("  surface_area= {}".format(node.output.attributes['ConstructSurfaceMesh.surface_area']))
 print(node.output)

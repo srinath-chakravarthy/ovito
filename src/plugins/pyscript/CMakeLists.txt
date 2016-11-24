@@ -36,8 +36,6 @@ SET(SourceFiles
 	binding/SceneBinding.cpp
 	binding/FileIOBinding.cpp
 	binding/RenderingBinding.cpp
-	binding/LinearAlgebraBinding.cpp
-	binding/ContainerBinding.cpp
 	binding/AppBinding.cpp
 	extensions/PythonViewportOverlay.cpp
 	extensions/PythonScriptModifier.cpp
@@ -45,21 +43,12 @@ SET(SourceFiles
 
 OVITO_STANDARD_PLUGIN(PyScript
 	SOURCES PyScript.cpp ${SourceFiles}
-	LIB_DEPENDENCIES ${PYTHON_LIBRARIES} ${Boost_PYTHON_LIBRARY}
+	LIB_DEPENDENCIES ${PYTHON_LIBRARIES} 
 	PYTHON_WRAPPERS "${CMAKE_CURRENT_SOURCE_DIR}/python/"
 )
 
 # Add Python include directory.
 TARGET_INCLUDE_DIRECTORIES(PyScript PUBLIC ${PYTHON_INCLUDE_PATH})
-
-IF(MSVC)
-	# Boost.Python temporarily disables the _DEBUG macro definition by default when including the Python.h header.
-	# That is something we don't want, because then the release version of the Python library is
-	# automatically linked and Python debugging gets disabled.
-	IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-		TARGET_COMPILE_DEFINITIONS(PyScript PUBLIC BOOST_DEBUG_PYTHON BOOST_LINKING_PYTHON)
-	ENDIF()
-ENDIF()
 
 # Speed up compilation by using precompiled headers.
 ADD_PRECOMPILED_HEADER(PyScript plugins/pyscript/PyScript.h)
@@ -123,7 +112,6 @@ IF(APPLE)
 		PATTERN "test" EXCLUDE
 		PATTERN "*.exe" EXCLUDE
 		PATTERN "sphinx" EXCLUDE
-		PATTERN "Pygments*" EXCLUDE
 		PATTERN "PyQt4" EXCLUDE)
 		
 	# Install Python header files.
@@ -158,7 +146,7 @@ ELSEIF(UNIX)
 		# Also install copies of shared libraries that are required by Python modules.
 		SET(OVITO_PYTHON_DEPENDENCIES libssl.so libcrypto.so liblapack.so.3gf libblas.so.3gf libquadmath.so.0 libgfortran.so.3 libncurses.so libsqlite3.so.0)
 		FOREACH(PYTHON_DEPENDENCY ${OVITO_PYTHON_DEPENDENCIES})
-			FIND_LIBRARY(OVITO_PYTHON_DEP NAMES ${PYTHON_DEPENDENCY} PATHS /usr/lib NO_DEFAULT_PATH)
+			FIND_LIBRARY(OVITO_PYTHON_DEP NAMES ${PYTHON_DEPENDENCY} PATHS /usr/lib /usr/local/lib /usr/lib/x86_64-linux-gnu NO_DEFAULT_PATH)
 			IF(NOT OVITO_PYTHON_DEP)
 				MESSAGE(FATAL_ERROR "Could not find shared library ${PYTHON_DEPENDENCY}, which is required by Python interpreter, in system path.")
 			ENDIF()
@@ -191,6 +179,9 @@ ELSEIF(WIN32)
 
 	# Install Python interpreter dll.
 	OVITO_INSTALL_DLL("${PYTHON_LIBRARY_PATH}/../${PYTHON_LIBRARY_NAME}.dll")
+
+	# Install Visual C++ runtime needed by Python interpreter.
+	OVITO_INSTALL_DLL("${PYTHON_LIBRARY_PATH}/../msvcr100.dll")
 ENDIF()
 
 # Define tests for the scripting interface.

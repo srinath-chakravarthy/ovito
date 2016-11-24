@@ -1,7 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (2013) Alexander Stukowski
-//  Copyright (2014) Lars Pastewka
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -30,6 +29,12 @@
 #include <gui/mainwin/MainWindow.h>
 #include "ScatterPlotModifierEditor.h"
 
+#include <3rdparty/qwt/qwt_plot.h>
+#include <3rdparty/qwt/qwt_plot_spectrocurve.h>
+#include <3rdparty/qwt/qwt_plot_zoneitem.h>
+#include <3rdparty/qwt/qwt_plot_grid.h>
+#include <3rdparty/qwt/qwt_color_map.h>
+
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 IMPLEMENT_OVITO_OBJECT(ParticlesGui, ScatterPlotModifierEditor, ParticleModifierEditor);
@@ -55,38 +60,13 @@ void ScatterPlotModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	layout->addWidget(new QLabel(tr("Y-axis property:"), rollout));
 	layout->addWidget(yPropertyUI->comboBox());
 
-	_scatterPlot = new QCustomPlot();
-	_scatterPlot->setMinimumHeight(240);
-	_scatterPlot->setInteraction(QCP::iRangeDrag, true);
-	_scatterPlot->axisRect()->setRangeDrag(Qt::Orientations(Qt::Horizontal | Qt::Vertical));
-	_scatterPlot->setInteraction(QCP::iRangeZoom, true);
-	_scatterPlot->axisRect()->setRangeZoom(Qt::Orientations(Qt::Horizontal | Qt::Vertical));
-
-	QPen markerPen;
-	markerPen.setColor(QColor(255, 40, 30));
-	markerPen.setStyle(Qt::DotLine);
-	markerPen.setWidth(2);
-	_selectionXAxisRangeStartMarker = new QCPItemStraightLine(_scatterPlot);
-	_selectionXAxisRangeEndMarker = new QCPItemStraightLine(_scatterPlot);
-	_selectionXAxisRangeStartMarker->setVisible(false);
-	_selectionXAxisRangeEndMarker->setVisible(false);
-	_selectionXAxisRangeStartMarker->setPen(markerPen);
-	_selectionXAxisRangeEndMarker->setPen(markerPen);
-	_scatterPlot->addItem(_selectionXAxisRangeStartMarker);
-	_scatterPlot->addItem(_selectionXAxisRangeEndMarker);
-	_selectionYAxisRangeStartMarker = new QCPItemStraightLine(_scatterPlot);
-	_selectionYAxisRangeEndMarker = new QCPItemStraightLine(_scatterPlot);
-	_selectionYAxisRangeStartMarker->setVisible(false);
-	_selectionYAxisRangeEndMarker->setVisible(false);
-	_selectionYAxisRangeStartMarker->setPen(markerPen);
-	_selectionYAxisRangeEndMarker->setPen(markerPen);
-	_scatterPlot->addItem(_selectionYAxisRangeStartMarker);
-	_scatterPlot->addItem(_selectionYAxisRangeEndMarker);
-	connect(_scatterPlot->xAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(updateXAxisRange(const QCPRange&)));
-	connect(_scatterPlot->yAxis, SIGNAL(rangeChanged(const QCPRange&)), this, SLOT(updateYAxisRange(const QCPRange&)));
+	_plot = new QwtPlot();
+	_plot->setMinimumHeight(240);
+	_plot->setMaximumHeight(240);
+	_plot->setCanvasBackground(Qt::white);
 
 	layout->addWidget(new QLabel(tr("Scatter plot:")));
-	layout->addWidget(_scatterPlot);
+	layout->addWidget(_plot);
 	connect(this, &ScatterPlotModifierEditor::contentsReplaced, this, &ScatterPlotModifierEditor::plotScatterPlot);
 
 	QPushButton* saveDataButton = new QPushButton(tr("Save scatter plot data"));
@@ -188,7 +168,7 @@ void ScatterPlotModifierEditor::createUI(const RolloutInsertionParameters& rollo
 bool ScatterPlotModifierEditor::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
 	if(event->sender() == editObject() && event->type() == ReferenceEvent::ObjectStatusChanged) {
-		plotScatterPlot();
+		plotLater(this);
 	}
 	return ParticleModifierEditor::referenceEvent(source, event);
 }
@@ -199,101 +179,95 @@ bool ScatterPlotModifierEditor::referenceEvent(RefTarget* source, ReferenceEvent
 void ScatterPlotModifierEditor::plotScatterPlot()
 {
 	ScatterPlotModifier* modifier = static_object_cast<ScatterPlotModifier>(editObject());
-	if(!modifier)
+
+	if(!modifier) {
+		if(_plotCurve) _plotCurve->hide();
 		return;
-
-	_scatterPlot->xAxis->setLabel(modifier->xAxisProperty().name());
-	_scatterPlot->yAxis->setLabel(modifier->yAxisProperty().name());
-
-	if(modifier->numberOfParticleTypeIds() == 0)
-		return;
-
-	// Make sure we have the correct number of graphs. (One graph per particle id.)
-	while (_scatterPlot->graphCount() > modifier->numberOfParticleTypeIds()) {
-		_scatterPlot->removeGraph(_scatterPlot->graph(0));
-	}
-	while (_scatterPlot->graphCount() < modifier->numberOfParticleTypeIds()) {
-		_scatterPlot->addGraph();
-		_scatterPlot->graph()->setLineStyle(QCPGraph::lsNone);
 	}
 
-	for (int i = 0; i < modifier->numberOfParticleTypeIds(); i++) {
-		if (modifier->hasColor(i)) {
-			_scatterPlot->graph(i)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc,
-																	modifier->color(i), 5.0));
+	_plot->setAxisTitle(QwtPlot::xBottom, modifier->xAxisProperty().nameWithComponent());
+	_plot->setAxisTitle(QwtPlot::yLeft, modifier->yAxisProperty().nameWithComponent());
+
+	if(!_plotCurve) {
+		_plotCurve = new QwtPlotSpectroCurve();
+	    _plotCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+		_plotCurve->setPenWidth(3);
+		_plotCurve->attach(_plot);
+		QwtPlotGrid* plotGrid = new QwtPlotGrid();
+		plotGrid->setPen(Qt::gray, 0, Qt::DotLine);
+		plotGrid->attach(_plot);
+	}
+	const auto& xyData = modifier->xyData();
+	const auto& typeData = modifier->typeData();
+	QVector<QwtPoint3D> plotData(xyData.size());
+	for(int i = 0; i < plotData.size(); i++) {
+		plotData[i].rx() = xyData[i].x();
+		plotData[i].ry() = xyData[i].y();
+		plotData[i].rz() = typeData.empty() ? 0 : typeData[i];
+	}
+	_plotCurve->setSamples(plotData);
+
+	class ColorMap : public QwtColorMap {
+		std::unordered_map<int,QRgb> _map;
+	public:
+		ColorMap(const std::map<int,Color>& map) {
+			for(const auto& e : map) {
+				int r = 255 * e.second.r();
+				int g = 255 * e.second.g();
+				int b = 255 * e.second.b();
+				_map.insert(std::make_pair(e.first, qRgb(r,g,b)));
+			}
 		}
-		else {
-			_scatterPlot->graph(i)->setScatterStyle(QCPScatterStyle(QCPScatterStyle::ssDisc, 5.0));
+		virtual unsigned char colorIndex(const QwtInterval& interval, double value) const override { return 0; }
+		virtual QRgb rgb(const QwtInterval& interval, double value) const override {
+			auto iter = _map.find((int)value);
+			if(iter != _map.end()) return iter->second;
+			else return qRgb(0,0,200);
 		}
-		_scatterPlot->graph(i)->setData(modifier->xData(i), modifier->yData(i));
-	}
-
-	// Check if range is already correct, because setRange emits the rangeChanged signa
-	// which is to be avoided if the range is not determined automatically.
-	_rangeUpdate = false;
-	_scatterPlot->xAxis->setRange(modifier->xAxisRangeStart(), modifier->xAxisRangeEnd());
-	_scatterPlot->yAxis->setRange(modifier->yAxisRangeStart(), modifier->yAxisRangeEnd());
-	_rangeUpdate = true;
+	};
+	_plotCurve->setColorMap(new ColorMap(modifier->colorMap()));
 
 	if(modifier->selectXAxisInRange()) {
-		_selectionXAxisRangeStartMarker->setVisible(true);
-		_selectionXAxisRangeEndMarker->setVisible(true);
-		_selectionXAxisRangeStartMarker->point1->setCoords(modifier->selectionXAxisRangeStart(), 0);
-		_selectionXAxisRangeStartMarker->point2->setCoords(modifier->selectionXAxisRangeStart(), 1);
-		_selectionXAxisRangeEndMarker->point1->setCoords(modifier->selectionXAxisRangeEnd(), 0);
-		_selectionXAxisRangeEndMarker->point2->setCoords(modifier->selectionXAxisRangeEnd(), 1);
+		if(!_selectionRangeX) {
+			_selectionRangeX = new QwtPlotZoneItem();
+			_selectionRangeX->setOrientation(Qt::Vertical);
+			_selectionRangeX->setZ(_plotCurve->z() + 1);
+			_selectionRangeX->attach(_plot);
+		}
+		_selectionRangeX->show();
+		auto minmax = std::minmax(modifier->selectionXAxisRangeStart(), modifier->selectionXAxisRangeEnd());
+		_selectionRangeX->setInterval(minmax.first, minmax.second);
 	}
-	else {
-		_selectionXAxisRangeStartMarker->setVisible(false);
-		_selectionXAxisRangeEndMarker->setVisible(false);
+	else if(_selectionRangeX) {
+		_selectionRangeX->hide();
 	}
 
 	if(modifier->selectYAxisInRange()) {
-		_selectionYAxisRangeStartMarker->setVisible(true);
-		_selectionYAxisRangeEndMarker->setVisible(true);
-		_selectionYAxisRangeStartMarker->point1->setCoords(0, modifier->selectionYAxisRangeStart());
-		_selectionYAxisRangeStartMarker->point2->setCoords(1, modifier->selectionYAxisRangeStart());
-		_selectionYAxisRangeEndMarker->point1->setCoords(0, modifier->selectionYAxisRangeEnd());
-		_selectionYAxisRangeEndMarker->point2->setCoords(1, modifier->selectionYAxisRangeEnd());
+		if(!_selectionRangeY) {
+			_selectionRangeY = new QwtPlotZoneItem();
+			_selectionRangeY->setOrientation(Qt::Horizontal);
+			_selectionRangeY->setZ(_plotCurve->z() + 2);
+			_selectionRangeY->attach(_plot);
+		}
+		_selectionRangeY->show();
+		auto minmax = std::minmax(modifier->selectionYAxisRangeStart(), modifier->selectionYAxisRangeEnd());
+		_selectionRangeY->setInterval(minmax.first, minmax.second);
 	}
-	else {
-		_selectionYAxisRangeStartMarker->setVisible(false);
-		_selectionYAxisRangeEndMarker->setVisible(false);
+	else if(_selectionRangeY) {
+		_selectionRangeY->hide();
 	}
 
-	_scatterPlot->replot(QCustomPlot::rpQueued);
-}
+	if(!modifier->fixXAxisRange())
+		_plot->setAxisAutoScale(QwtPlot::xBottom);
+	else
+		_plot->setAxisScale(QwtPlot::xBottom, modifier->xAxisRangeStart(), modifier->xAxisRangeEnd());
 
-/******************************************************************************
-* Keep x-axis range updated
-******************************************************************************/
-void ScatterPlotModifierEditor::updateXAxisRange(const QCPRange &newRange)
-{
-	if (_rangeUpdate) {
-		ScatterPlotModifier* modifier = static_object_cast<ScatterPlotModifier>(editObject());
-		if(!modifier)
-			return;
+	if(!modifier->fixYAxisRange())
+		_plot->setAxisAutoScale(QwtPlot::yLeft);
+	else
+		_plot->setAxisScale(QwtPlot::yLeft, modifier->yAxisRangeStart(), modifier->yAxisRangeEnd());
 
-		// Fix range if user modifies the range by a mouse action in QCustomPlot
-		modifier->setFixXAxisRange(true);
-		modifier->setXAxisRange(newRange.lower, newRange.upper);
-	}
-}
-
-/******************************************************************************
-* Keep y-axis range updated
-******************************************************************************/
-void ScatterPlotModifierEditor::updateYAxisRange(const QCPRange &newRange)
-{
-	if (_rangeUpdate) {
-		ScatterPlotModifier* modifier = static_object_cast<ScatterPlotModifier>(editObject());
-		if(!modifier)
-			return;
-
-		// Fix range if user modifies the range by a mouse action in QCustomPlot
-		modifier->setFixYAxisRange(true);
-		modifier->setYAxisRange(newRange.lower, newRange.upper);
-	}
+	_plot->replot();
 }
 
 /******************************************************************************
@@ -305,8 +279,6 @@ void ScatterPlotModifierEditor::onSaveData()
 	if(!modifier)
 		return;
 
-	if(modifier->numberOfParticleTypeIds() == 0)
-		return;
 
 	QString fileName = QFileDialog::getSaveFileName(mainWindow(),
 	    tr("Save Scatter Plot"), QString(), tr("Text files (*.txt);;All files (*)"));
@@ -321,12 +293,17 @@ void ScatterPlotModifierEditor::onSaveData()
 
 		QTextStream stream(&file);
 
-		stream << "# " << modifier->xAxisProperty().name() << " " << modifier->yAxisProperty().name() << endl;
-		for(int typeId = 0; typeId < modifier->numberOfParticleTypeIds(); typeId++) {
-			stream << "# Data for particle type id " << typeId << " follow." << endl;
-			for(int i = 0; i < modifier->xData(typeId).size(); i++) {
-				stream << modifier->xData(typeId)[i] << " " << modifier->yData(typeId)[i] << endl;
-			}
+		if(modifier->typeData().empty()) {
+			stream << "# " << modifier->xAxisProperty().nameWithComponent() << " " << modifier->yAxisProperty().nameWithComponent() << "\n";
+			for(const QPointF& p : modifier->xyData())
+				stream << p.x() << " " << p.y() << "\n";
+		}
+		else {
+			stream << "# " << modifier->xAxisProperty().nameWithComponent() << " " << modifier->yAxisProperty().nameWithComponent() << " type\n";
+			OVITO_ASSERT(modifier->typeData().size() == modifier->xyData().size());
+			auto t = modifier->typeData().constBegin();
+			for(const QPointF& p : modifier->xyData())
+				stream << p.x() << " " << p.y() << " " << *t++ << "\n";
 		}
 	}
 	catch(const Exception& ex) {

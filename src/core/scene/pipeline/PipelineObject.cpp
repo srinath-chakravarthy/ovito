@@ -159,42 +159,37 @@ PipelineFlowState PipelineObject::evaluatePipeline(TimePoint time, ModifierAppli
 /******************************************************************************
 * Inserts the given modifier into this object.
 ******************************************************************************/
-ModifierApplication* PipelineObject::insertModifier(Modifier* modifier, int atIndex)
+ModifierApplication* PipelineObject::insertModifier(int index, Modifier* modifier)
 {
 	OVITO_CHECK_OBJECT_POINTER(modifier);
 	OVITO_ASSERT(modifier->dataset() == this->dataset());
 
 	// Create a modifier application object.
 	OORef<ModifierApplication> modApp(new ModifierApplication(dataset(), modifier));
-	insertModifierApplication(modApp, atIndex);
+	insertModifierApplication(index, modApp);
 	return modApp;
 }
 
 /******************************************************************************
 * Inserts the given modifier into this object.
 ******************************************************************************/
-void PipelineObject::insertModifierApplication(ModifierApplication* modApp, int atIndex)
+void PipelineObject::insertModifierApplication(int index, ModifierApplication* modApp)
 {
-	OVITO_ASSERT(atIndex >= 0);
+	OVITO_ASSERT(index >= 0 && index <= modifierApplications().size());
 	OVITO_CHECK_OBJECT_POINTER(modApp);
-	atIndex = std::min(atIndex, modifierApplications().size());
-	_modApps.insert(atIndex, modApp);
+	_modApps.insert(index, modApp);
 
 	if(modApp->modifier())
 		modApp->modifier()->initializeModifier(this, modApp);
 }
 
 /******************************************************************************
-* Removes the given modifier application.
+* Removes a modifier application.
 ******************************************************************************/
-void PipelineObject::removeModifier(ModifierApplication* app)
+void PipelineObject::removeModifierApplication(int index)
 {
-	OVITO_CHECK_OBJECT_POINTER(app);
-	OVITO_ASSERT(app->pipelineObject() == this);
-
-	int index = _modApps.indexOf(app);
-	OVITO_ASSERT(index >= 0);
-
+	OVITO_ASSERT(index >= 0 && index < modifierApplications().size());
+	OVITO_ASSERT(modifierApplications()[index]->pipelineObject() == this);
 	_modApps.remove(index);
 }
 

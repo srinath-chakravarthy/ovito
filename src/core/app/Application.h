@@ -112,6 +112,12 @@ public:
 	/// Returns the list of auto-start objects created at application startup.
 	const std::vector<OORef<AutoStartObject>>& autostartObjects() const { return _autostartObjects; }
 
+	/// Returns the number of parallel threads to be used by the application when doing computations.
+	int idealThreadCount() const { return _idealThreadCount; }
+
+	/// Sets the number of parallel threads to be used by the application when doing computations.
+	void setIdealThreadCount(int count) { _idealThreadCount = std::max(1, count); }
+
 	/// Returns the major version number of the application.
 	static int applicationVersionMajor();
 
@@ -169,6 +175,9 @@ protected:
 
 	/// The auto-start objects created at application startup.
 	std::vector<OORef<AutoStartObject>> _autostartObjects;
+
+	/// The number of parallel threads to be used by the application when doing computations.
+	int _idealThreadCount;
 
 	/// The default message handler method of Qt.
 	static QtMessageHandler defaultQtMessageHandler;

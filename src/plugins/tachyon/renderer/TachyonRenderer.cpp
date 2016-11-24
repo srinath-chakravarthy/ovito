@@ -63,6 +63,9 @@ DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _defaultLightSourceIntensity, "Defa
 DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _ambientOcclusionEnabled, "EnableAmbientOcclusion", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _ambientOcclusionSamples, "AmbientOcclusionSamples", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _ambientOcclusionBrightness, "AmbientOcclusionBrightness", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _depthOfFieldEnabled, "DepthOfFieldEnabled", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _dofFocalLength, "DOFFocalLength", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _dofAperture, "DOFAperture", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _antialiasingEnabled, "Enable anti-aliasing");
 SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _antialiasingSamples, "Anti-aliasing samples");
 SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _directLightSourceEnabled, "Direct light");
@@ -71,9 +74,14 @@ SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _defaultLightSourceIntensity, "Direct 
 SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _ambientOcclusionEnabled, "Ambient occlusion");
 SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _ambientOcclusionSamples, "Ambient occlusion samples");
 SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _ambientOcclusionBrightness, "Ambient occlusion brightness");
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, _antialiasingSamples, IntegerParameterUnit, 1, 100);
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _depthOfFieldEnabled, "Depth of field");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _dofFocalLength, "Focal length");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _dofAperture, "Aperture");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, _antialiasingSamples, IntegerParameterUnit, 1, 500);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TachyonRenderer, _defaultLightSourceIntensity, FloatParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TachyonRenderer, _ambientOcclusionBrightness, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TachyonRenderer, _dofFocalLength, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, _dofAperture, FloatParameterUnit, 0, 1);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, _ambientOcclusionSamples, IntegerParameterUnit, 1, 100);
 
 /******************************************************************************
@@ -82,7 +90,8 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, _ambientOcclusionSamples, In
 TachyonRenderer::TachyonRenderer(DataSet* dataset) : NonInteractiveSceneRenderer(dataset),
 		_antialiasingEnabled(true), _directLightSourceEnabled(true), _shadowsEnabled(true),
 	  _antialiasingSamples(12), _ambientOcclusionEnabled(true), _ambientOcclusionSamples(12),
-	  _defaultLightSourceIntensity(0.90f), _ambientOcclusionBrightness(0.80f)
+	  _defaultLightSourceIntensity(0.90f), _ambientOcclusionBrightness(0.80f), _depthOfFieldEnabled(false),
+	  _dofFocalLength(40), _dofAperture(1e-2f)
 {
 	INIT_PROPERTY_FIELD(TachyonRenderer::_antialiasingEnabled);
 	INIT_PROPERTY_FIELD(TachyonRenderer::_antialiasingSamples);
@@ -92,6 +101,9 @@ TachyonRenderer::TachyonRenderer(DataSet* dataset) : NonInteractiveSceneRenderer
 	INIT_PROPERTY_FIELD(TachyonRenderer::_ambientOcclusionEnabled);
 	INIT_PROPERTY_FIELD(TachyonRenderer::_ambientOcclusionSamples);
 	INIT_PROPERTY_FIELD(TachyonRenderer::_ambientOcclusionBrightness);
+	INIT_PROPERTY_FIELD(TachyonRenderer::_depthOfFieldEnabled);
+	INIT_PROPERTY_FIELD(TachyonRenderer::_dofFocalLength);
+	INIT_PROPERTY_FIELD(TachyonRenderer::_dofAperture);
 }
 
 /******************************************************************************
@@ -139,7 +151,15 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 
 	// Set up camera.
 	if(projParams().isPerspective) {
-		rt_camera_projection(_rtscene, RT_PROJECTION_PERSPECTIVE);
+		double zoomScale = 1;
+		if(!depthOfFieldEnabled() || dofFocalLength() <= 0 || dofAperture() <= 0) {
+			rt_camera_projection(_rtscene, RT_PROJECTION_PERSPECTIVE);
+		}
+		else {
+			rt_camera_projection(_rtscene, RT_PROJECTION_PERSPECTIVE_DOF);
+			rt_camera_dof(_rtscene, dofFocalLength(), dofAperture());
+			zoomScale = dofFocalLength();
+		}
 
 		// Calculate projection point and directions in camera space.
 		Point3 p0 = projParams().inverseProjectionMatrix * Point3(0,0,0);
@@ -150,7 +170,7 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 		direction = (projParams().inverseViewMatrix * direction).normalized();
 		up = (projParams().inverseViewMatrix * up).normalized();
 		rt_camera_position(_rtscene, tvec(p0), tvec(direction), tvec(up));
-		rt_camera_zoom(_rtscene, 0.5 / tan(projParams().fieldOfView * 0.5));
+		rt_camera_zoom(_rtscene, 0.5 / tan(projParams().fieldOfView * 0.5) / zoomScale);
 	}
 	else {
 		rt_camera_projection(_rtscene, RT_PROJECTION_ORTHOGRAPHIC);
@@ -342,17 +362,21 @@ void TachyonRenderer::renderParticles(const DefaultParticlePrimitive& particleBu
 	if(particleBuffer.particleShape() == ParticlePrimitive::SphericalShape) {
 		// Rendering spherical particles.
 		for(; p != p_end; ++p, ++c, ++r) {
-			void* tex = getTachyonTexture(c->r(), c->g(), c->b(), c->a());
-			Point3 tp = tm * (*p);
-			rt_sphere(_rtscene, tex, tvec(tp), *r);
+			if(c->a() > 0) {
+				void* tex = getTachyonTexture(c->r(), c->g(), c->b(), c->a());
+				Point3 tp = tm * (*p);
+				rt_sphere(_rtscene, tex, tvec(tp), *r);
+			}
 		}
 	}
 	else if(particleBuffer.particleShape() == ParticlePrimitive::SquareShape) {
 		// Rendering cubic particles.
 		for(; p != p_end; ++p, ++c, ++r) {
-			void* tex = getTachyonTexture(c->r(), c->g(), c->b(), c->a());
-			Point3 tp = tm * (*p);
-			rt_box(_rtscene, tex, rt_vector(tp.x() - *r, tp.y() - *r, -tp.z() - *r), rt_vector(tp.x() + *r, tp.y() + *r, -tp.z() + *r));
+			if(c->a() > 0) {
+				void* tex = getTachyonTexture(c->r(), c->g(), c->b(), c->a());
+				Point3 tp = tm * (*p);
+				rt_box(_rtscene, tex, rt_vector(tp.x() - *r, tp.y() - *r, -tp.z() - *r), rt_vector(tp.x() + *r, tp.y() + *r, -tp.z() + *r));
+			}
 		}
 	}
 	else if(particleBuffer.particleShape() == ParticlePrimitive::BoxShape) {
@@ -362,6 +386,7 @@ void TachyonRenderer::renderParticles(const DefaultParticlePrimitive& particleBu
 		auto orientation = particleBuffer.orientations().cbegin();
 		auto orientation_end = particleBuffer.orientations().cend();
 		for(; p != p_end; ++p, ++c, ++r) {
+			if(c->a() <= 0) continue;
 			void* tex = getTachyonTexture(c->r(), c->g(), c->b(), c->a());
 			Point3 tp = tm * (*p);
 			Quaternion quat(0,0,0,1);
@@ -417,6 +442,7 @@ void TachyonRenderer::renderParticles(const DefaultParticlePrimitive& particleBu
 		auto orientation = particleBuffer.orientations().cbegin();
 		auto orientation_end = particleBuffer.orientations().cend();
 		for(; p != p_end && shape != shape_end; ++p, ++c, ++shape, ++r) {
+			if(c->a() <= 0) continue;
 			void* tex = getTachyonTexture(c->r(), c->g(), c->b(), c->a());
 			Point3 tp = tm * (*p);
 			Quaternion quat(0,0,0,1);
@@ -467,10 +493,10 @@ void TachyonRenderer::renderArrows(const DefaultArrowPrimitive& arrowBuffer)
 	else if(arrowBuffer.shape() == ArrowPrimitive::ArrowShape) {
 		for(const DefaultArrowPrimitive::ArrowElement& element : arrowBuffer.elements()) {
 			void* tex = getTachyonTexture(element.color.r(), element.color.g(), element.color.b(), element.color.a());
-			FloatType arrowHeadRadius = element.width * 2.5f;
-			FloatType arrowHeadLength = arrowHeadRadius * 1.8f;
+			FloatType arrowHeadRadius = element.width * FloatType(2.5);
+			FloatType arrowHeadLength = arrowHeadRadius * FloatType(1.8);
 			FloatType length = element.dir.length();
-			if(length == 0.0f)
+			if(length == 0)
 				continue;
 
 			if(length > arrowHeadLength) {

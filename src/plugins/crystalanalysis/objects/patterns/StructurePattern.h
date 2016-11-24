@@ -94,6 +94,9 @@ public:
 	/// Sets the symmetry type of lattice structure described by this pattern.
 	void setSymmetryType(SymmetryType type) { _symmetryType = type; }
 
+	/// Returns the display color to be used for a given Burgers vector.
+	static Color getBurgersVectorColor(const QString& latticeName, const Vector3& b);
+
 private:
 
 	/// The short name of this pattern.

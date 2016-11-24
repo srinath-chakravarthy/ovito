@@ -21,6 +21,7 @@
 
 #include <core/Core.h>
 #include <core/scene/ObjectNode.h>
+#include <core/scene/SelectionSet.h>
 #include <core/animation/AnimationSettings.h>
 #include "AttributeFileExporter.h"
 
@@ -38,6 +39,18 @@ AttributeFileExporter::AttributeFileExporter(DataSet* dataset) : FileExporter(da
 }
 
 /******************************************************************************
+* Selects the natural scene nodes to be exported by this exporter under 
+* normal circumstances.
+******************************************************************************/
+void AttributeFileExporter::selectStandardOutputData()
+{
+	QVector<SceneNode*> nodes = dataset()->selection()->nodes();
+	if(nodes.empty())
+		throwException(tr("Please select an object to be exported first."));
+	setOutputData(nodes);
+}
+
+/******************************************************************************
  * This is called once for every output file to be written and before
  * exportData() is called.
  *****************************************************************************/
@@ -47,7 +60,7 @@ bool AttributeFileExporter::openOutputFile(const QString& filePath, int numberOf
 	OVITO_ASSERT(!_outputStream);
 
 	_outputFile.setFileName(filePath);
-	_outputStream.reset(new CompressedTextWriter(_outputFile));
+	_outputStream.reset(new CompressedTextWriter(_outputFile, dataset()));
 
 	textStream() << "#";
 	for(const QString& attrName : attributesToExport()) {
@@ -111,11 +124,18 @@ QVariantMap AttributeFileExporter::getAttributes(SceneNode* sceneNode, TimePoint
 }
 
 /******************************************************************************
-* Writes the data of one animation frame to the current output file.
-******************************************************************************/
-bool AttributeFileExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
+ * Exports a single animation frame to the current output file.
+ *****************************************************************************/
+bool AttributeFileExporter::exportFrame(int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay)
 {
-	QVariantMap attrMap = getAttributes(sceneNode, time);
+	if(!FileExporter::exportFrame(frameNumber, time, filePath, progressDisplay))
+		return false;
+
+	// Export the first scene node from the selection set.
+	if(outputData().empty())
+		throwException(tr("The selection set to be exported is empty."));
+
+	QVariantMap attrMap = getAttributes(outputData().front(), time);
 
 	for(const QString& attrName : attributesToExport()) {
 		if(!attrMap.contains(attrName))

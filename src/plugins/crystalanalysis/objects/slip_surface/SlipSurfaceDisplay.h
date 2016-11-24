@@ -63,7 +63,7 @@ public:
 	void setSurfaceTransparency(FloatType transparency) { if(_surfaceTransparency) _surfaceTransparency->setCurrentFloatValue(transparency); }
 
 	/// Generates the final triangle mesh, which will be rendered.
-	static bool buildMesh(const SlipSurfaceData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress = nullptr);
+	static bool buildMesh(const SlipSurfaceData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, const QStringList& structureNames, TriMesh& output, std::vector<ColorA>& materialColors, FutureInterfaceBase* progress = nullptr);
 
 protected:
 
@@ -79,20 +79,26 @@ protected:
 	public:
 
 		/// Constructor.
-		PrepareMeshEngine(SlipSurfaceData* mesh, const SimulationCell& simCell, const QVector<Plane3>& cuttingPlanes) :
-			_inputMesh(mesh), _simCell(simCell), _cuttingPlanes(cuttingPlanes) {}
+		PrepareMeshEngine(SlipSurfaceData* mesh, ClusterGraph* clusterGraph, const SimulationCell& simCell,
+				QStringList structureNames, const QVector<Plane3>& cuttingPlanes) :
+			_inputMesh(mesh), _clusterGraph(clusterGraph), _simCell(simCell),
+			_structureNames(structureNames), _cuttingPlanes(cuttingPlanes) {}
 
 		/// Computes the results and stores them in this object for later retrieval.
 		virtual void perform() override;
 
 		TriMesh& surfaceMesh() { return _surfaceMesh; }
+		std::vector<ColorA>& materialColors() { return _materialColors; }
 
 	private:
 
 		QExplicitlySharedDataPointer<SlipSurfaceData> _inputMesh;
+		QExplicitlySharedDataPointer<ClusterGraph> _clusterGraph;
 		SimulationCell _simCell;
+		QStringList _structureNames;
 		QVector<Plane3> _cuttingPlanes;
 		TriMesh _surfaceMesh;
+		std::vector<ColorA> _materialColors;
 	};
 
 protected:
@@ -112,12 +118,14 @@ protected:
 	/// The non-periodic triangle mesh generated from the surface mesh for rendering.
 	TriMesh _surfaceMesh;
 
+	/// The material colors used for mesh rendering.
+	std::vector<ColorA> _materialColors;
+
 	/// This helper structure is used to detect any changes in the input data
 	/// that require updating the geometry buffer.
 	SceneObjectCacheHelper<
 		FloatType,							// Surface transparency
-		bool,								// Smooth shading
-		WeakVersionedOORef<DataObject>		// Cluster graph
+		bool								// Smooth shading
 		> _geometryCacheHelper;
 
 	/// This helper structure is used to detect any changes in the input data

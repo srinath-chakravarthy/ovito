@@ -38,7 +38,7 @@ bool ParticlePickingHelper::pickParticle(ViewportWindow* vpwin, const QPoint& cl
 {
 	ViewportPickResult vpPickResult = vpwin->pick(clickPoint);
 	// Check if user has clicked on something.
-	if(vpPickResult.valid) {
+	if(vpPickResult) {
 
 		// Check if that was a particle.
 		ParticlePickInfo* pickInfo = dynamic_object_cast<ParticlePickInfo>(vpPickResult.pickInfo);

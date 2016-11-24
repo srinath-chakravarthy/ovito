@@ -10,7 +10,7 @@
 <!-- Customizations of the chunked HTML style for the generation of the HTML formatted manual. -->
 <!-- ================================================================================== -->
 	
-<xsl:import href="http://docbook.sourceforge.net/release/xsl/current/html/chunk.xsl"/>
+<xsl:import href="docbook-xsl/html/chunk.xsl"/>
 
 <xsl:param name="chunk.section.depth" select="3"/>
 <xsl:param name="chunk.first.sections" select="1"/>

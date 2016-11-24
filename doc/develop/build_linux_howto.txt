@@ -12,55 +12,89 @@ Install essential tools and dependencies on Ubuntu 10.04 for
 building the static executable:
 **************************************************************************
 
-sudo apt-get install build-essential perl python git libfreetype6-dev libfontconfig-dev \
-                     libx11-xcb-dev libpcre3-dev libxi-dev libgmp-dev \
-                     libmpfr-dev libsm-dev libice-dev libnetcdf-dev libhdf5-serial-dev \
-                     libglu1-mesa-dev libxrender-dev xsltproc docbook-xml docbook-xsl docbook-xsl-doc-html \
-                     python-sphinx libssl-dev liblapack3gf ncurses-dev
+sudo apt-get install \
+   libfreetype6-dev \
+   libfontconfig-dev \
+   libx11-xcb-dev \
+   libpcre3-dev \
+   libxi-dev \
+   libsm-dev \
+   libice-dev \
+   libglu1-mesa-dev \
+   libxrender-dev \
+   xsltproc \
+   docbook-xml \
+   libssl-dev \
+   liblapack3gf \
+   ncurses-dev \
+   libssl-dev \
+   libreadline-dev \
+   povray
 
 **************************************************************************
-Install GNU g++ 4.8 compiler on Ubuntu 10.04
+Install GNU g++ 5 compiler on Ubuntu 10.04
 **************************************************************************
 
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 sudo apt-get update
-sudo apt-get install gcc-4.8 g++-4.8
+sudo apt-get install gcc-5 g++-5
 sudo update-alternatives --remove-all gcc 
 sudo update-alternatives --remove-all g++
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 20
-sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 20
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-5 20
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-5 20
 sudo update-alternatives --config gcc
 sudo update-alternatives --config g++
-export CC=gcc-4.8
-export CXX=g++-4.8
 
 **************************************************************************
-Build Qt libraries (version 5.4.1):
-
-Edit file qtbase/mkspecs/common/g++-base.conf and specify
-paths to latest gcc and g++ compilers if necessary (e.g. 'g++-4.8').
+Build Qt libraries (version 5.7):
 **************************************************************************
 
-export CC=gcc-4.8
-export CXX=g++-4.8
 ./configure \
 	-opensource \
 	-confirm-license \
+	-shared \
 	-no-qml-debug \
 	-nomake examples \
 	-qt-libpng \
 	-qt-libjpeg \
 	-qt-pcre \
 	-qt-xcb \
-	-qt-xkbcommon \
+	-qt-xkbcommon-x11 \
 	-no-nis \
 	-no-cups \
 	-no-glib \
 	-no-xinput2 \
-	-fontconfig \
-	-skip qtconnectivity -skip qtmultimedia -skip qtwebkit -skip qtwebkit-examples -skip qtxmlpatterns -skip qtlocation \
-	-skip qtsensors -skip qtdeclarative -skip qtdoc -skip qtquick1 -skip qtquickcontrols \
-	-skip qtserialport -skip qtgraphicaleffects -skip qttranslations -skip qtwebchannel \
+	-no-alsa \
+	-no-pulseaudio \
+	-pch \
+	-no-eglfs \
+	-no-linuxfb \
+	-skip qtconnectivity \
+	-skip qtmultimedia \
+	-skip qt3d \
+	-skip qtcanvas3d \
+	-skip qtcharts \
+	-skip qtxmlpatterns \
+	-skip qtlocation \
+	-skip qtsensors \
+	-skip qtdeclarative \
+	-skip qtdoc \
+	-skip qtquickcontrols \
+	-skip qtquickcontrols2 \
+	-skip qtserialport \
+	-skip qtgraphicaleffects \
+	-skip qttranslations \
+	-skip qtwebchannel \
+	-skip qtactiveqt \
+	-skip qtdatavis3d \
+	-skip qtgamepad \
+	-skip qtscript \
+	-skip qtserialbus \
+	-skip qtvirtualkeyboard \
+	-skip qtwayland \
+	-skip qtwebengine \
+	-skip qtwebsockets \
+	-skip qtwebview \
 	-prefix $HOME/progs/qt5
 
 make
@@ -69,26 +103,22 @@ make install
 **************************************************************************
 QScintilla2
 *************************************************************************
-export CC=gcc-4.8
-export CXX=g++-4.8
-cd QScintilla-gpl-2.9/Qt4Qt5/
+cd QScintilla_gpl-2.9.3/Qt4Qt5/
 $HOME/progs/qt5/bin/qmake qscintilla.pro
 make
 
 **************************************************************************
 Build sqlite3:
 **************************************************************************
-export CC=gcc-4.8
-export CXX=g++-4.8
 ./configure
 make 
 sudo make install
 
 **************************************************************************
-Build Python (version 3.4.x):
+Build Python (version 3.5.x):
 **************************************************************************
 
-Edit Modules/Setup to enable SSL module:
+Edit Modules/Setup.dist to enable SSL module:
 
 # Socket module helper for socket(2)
 _socket socketmodule.c timemodule.c
@@ -98,24 +128,20 @@ _ssl _ssl.c \
 	-DUSE_SSL -I$(SSL)/include -I$(SSL)/include/openssl \
 	-L$(SSL)/lib -lssl -lcrypto
 
-export CC=gcc-4.8
-export CXX=g++-4.8
 ./configure --enable-shared --prefix=$HOME/progs/python
 make
 make install
 
-Install Sphinx:
 
+**************************************************************************
+Install Sphinx:
+**************************************************************************
 cd $HOME/progs/python/bin
-wget https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py
-LD_LIBRARY_PATH=$PWD/../lib ./python3 ez_setup.py --insecure
-LD_LIBRARY_PATH=$PWD/../lib ./easy_install sphinx
+LD_LIBRARY_PATH=$PWD/../lib ./python3 -m pip install sphinx
 
 **************************************************************************
 Build NumPy:
 **************************************************************************
-export CC=gcc-4.8
-export CXX=g++-4.8
 LD_LIBRARY_PATH=$HOME/progs/python/lib $HOME/progs/python/bin/python3 setup.py install
 
 **************************************************************************
@@ -127,9 +153,6 @@ LD_LIBRARY_PATH=$HOME/progs/python/lib ./pip3 install ipython
 **************************************************************************
 Build SIP:
 **************************************************************************
-
-export CC=gcc-4.8
-export CXX=g++-4.8
 LD_LIBRARY_PATH=$HOME/progs/python/lib $HOME/progs/python/bin/python3 configure.py
 make
 make install
@@ -137,9 +160,6 @@ make install
 **************************************************************************
 Build PyQt5:
 **************************************************************************
-
-export CC=gcc-4.8
-export CXX=g++-4.8
 LD_LIBRARY_PATH=$HOME/progs/python/lib $HOME/progs/python/bin/python3 configure.py \
    --concatenate \
    --concatenate-split 10 \
@@ -159,36 +179,37 @@ make
 make install
 
 **************************************************************************
+Install matplotlib:
+**************************************************************************
+cd $HOME/progs/python/bin
+LD_LIBRARY_PATH=$HOME/progs/python/lib ./pip3 install matplotlib
+
+**************************************************************************
 Build Boost libraries:
 **************************************************************************
-
-echo "using gcc : 4.8 : /usr/bin/g++-4.8 ; " >> tools/build/v2/user-config.jam
-echo "using python : 3.4 : /home/stuko/progs/python : /home/stuko/progs/python/include/python3.4m ; " >> tools/build/v2/user-config.jam
+echo "using python : 3.5 : /home/stuko/progs/python : /home/stuko/progs/python/include/python3.5m ; " > user-config.jam
 ./bootstrap.sh \
 	--with-libraries=system,thread,python \
 	--with-python=$HOME/progs/python/bin/python \
 	--with-python-root=$HOME/progs/python \
-	--with-python-version=3.4 \
+	--with-python-version=3.5 \
 	--prefix=$HOME/progs/boost
 
-./b2 toolset=gcc-4.8 release link=shared install
+./b2 --user-config=$PWD/user-config.jam release link=shared install
 
 **************************************************************************
-Build static libav (release 11) on Ubuntu 10.04:
+Build libav (release 11):
 **************************************************************************
-
 sudo apt-get install yasm
-cd libav-11.1
-export CC=gcc-4.8
-export CXX=g++-4.8
+cd libav-11.8
 ./configure \
 	--enable-pic \
 	--enable-shared \
-    --enable-gpl \
-    --disable-static \
+	--enable-gpl \
+	--disable-static \
 	--disable-doc \
 	--disable-network \
-    --disable-programs \
+	--disable-programs \
 	--disable-debug \
 	--disable-filters \
 	--prefix=$HOME/progs/libav
@@ -198,8 +219,9 @@ make install
 **************************************************************************
 Build HDF5:
 **************************************************************************
-
-$HOME/progs/cmake-3.6.2-Linux-x86_64/bin/cmake \
+mkdir hdf5_build
+cd hdf5_build
+$HOME/progs/cmake-3.6.3-Linux-x86_64/bin/cmake \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_INSTALL_PREFIX=../hdf5 \
 	-DBUILD_SHARED_LIBS=ON \
@@ -212,8 +234,9 @@ make install
 **************************************************************************
 Build NetCDF:
 **************************************************************************
-
-$HOME/progs/cmake-3.6.2-Linux-x86_64/bin/cmake \
+mkdir netcdf_build
+cd netcdf_build
+$HOME/progs/cmake-3.6.3-Linux-x86_64/bin/cmake \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_INSTALL_PREFIX=../netcdf \
 	-DENABLE_DAP=OFF \
@@ -223,9 +246,8 @@ $HOME/progs/cmake-3.6.2-Linux-x86_64/bin/cmake \
 	-DBUILD_UTILITIES=OFF \
 	-DENABLE_HDF4=OFF \
 	-DUSE_HDF5=ON \
+	-DHDF5_DIR=$HOME/progs/hdf5/share/cmake \
 	-DHDF5_INCLUDE_DIR=$HOME/progs/hdf5/include/ \
-	-DHDF5_LIB=$HOME/progs/hdf5/lib/libhdf5.so \
-	-DHDF5_HL_LIB=$HOME/progs/hdf5/lib/libhdf5_hl.so \
 	../netcdf-4.4.1/
 
 make install
@@ -233,23 +255,21 @@ make install
 **************************************************************************
 Set the following flags in the CMake configuration to build all features:
 **************************************************************************
-
-export CC=gcc-4.8
-export CXX=g++-4.8
-$HOME/progs/cmake-2.8.12.2/bin/cmake \
+export LD_LIBRARY_PATH=$HOME/progs/libav/lib:$LD_LIBRARY_PATH
+$HOME/progs/cmake-3.6.3-Linux-x86_64/bin/cmake \
   -DOVITO_BUILD_DOCUMENTATION=ON \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_PREFIX=../release_install \
   -DOVITO_MONOLITHIC_BUILD=ON \
   -DBOOST_ROOT=$HOME/progs/boost \
   -DHDF5_DIR=$HOME/progs/hdf5/share/cmake \
-  -Dnetcdf_DIR=$HOME/progs/netcdf/lib/cmake/netCDF \
-  -DPYTHON_LIBRARY=$HOME/progs/python/lib/libpython3.4m.so.1.0 \
-  -DPYTHON_INCLUDE_DIR=$HOME/progs/python/include/python3.4m \
+  -DnetCDF_DIR=$HOME/progs/netcdf/lib/cmake/netCDF \
+  -DPYTHON_LIBRARY=$HOME/progs/python/lib/libpython3.5m.so.1.0 \
+  -DPYTHON_INCLUDE_DIR=$HOME/progs/python/include/python3.5m \
   -DSPHINX_PROCESSOR_PATH=$HOME/progs/python/bin \
   -DCMAKE_PREFIX_PATH=$HOME/progs/qt5/ \
-  -DQSCINTILLA_INCLUDE_DIR=$HOME/progs/QScintilla-gpl-2.9/Qt4Qt5/ \
-  -DQSCINTILLA_LIBRARY=$HOME/progs/QScintilla-gpl-2.9/Qt4Qt5/libqscintilla2.so.12 \
+  -DQSCINTILLA_INCLUDE_DIR=$HOME/progs/QScintilla_gpl-2.9.3/Qt4Qt5/ \
+  -DQSCINTILLA_LIBRARY=$HOME/progs/QScintilla_gpl-2.9.3/Qt4Qt5/libqscintilla2.so.12 \
   -DLIBAV_INCLUDE_DIR=$HOME/progs/libav/include \
   -DLIBAV_LIBRARY_DIR=$HOME/progs/libav/lib \
   ../source/

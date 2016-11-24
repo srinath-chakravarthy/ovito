@@ -32,146 +32,150 @@
 
 namespace PyScript {
 
-using namespace boost::python;
 using namespace Ovito;
 
-BOOST_PYTHON_MODULE(PyScriptRendering)
+PYBIND11_PLUGIN(PyScriptRendering)
 {
-	docstring_options docoptions(true, false);
+	py::options options;
+	options.disable_function_signatures();
 
-	class_<FrameBuffer, bases<>, boost::shared_ptr<FrameBuffer>, boost::noncopyable>("FrameBuffer", init<>())
-		.def(init<int, int>())
-		.add_property("width", &FrameBuffer::width)
-		.add_property("height", &FrameBuffer::height)
-		.add_property("_image", lambda_address([](const FrameBuffer& fb) { return reinterpret_cast<std::uintptr_t>(&fb.image()); }))
+	py::module m("PyScriptRendering");
+
+	py::class_<FrameBuffer, std::shared_ptr<FrameBuffer>>(m, "FrameBuffer")
+		.def(py::init<>())
+		.def(py::init<int, int>())
+		.def_property_readonly("width", &FrameBuffer::width)
+		.def_property_readonly("height", &FrameBuffer::height)
+		.def_property_readonly("_image", [](const FrameBuffer& fb) { return reinterpret_cast<std::uintptr_t>(&fb.image()); })
 	;
 
-	{
-		scope s = ovito_class<RenderSettings, RefTarget>(
-				"Stores settings and parameters for rendering images and movies."
+	py::object RenderSettings_py = ovito_class<RenderSettings, RefTarget>(m,
+			"Stores settings and parameters for rendering images and movies."
+			"\n\n"
+			"A instance of this class can be passed to the :py:func:`~Viewport.render` function "
+			"of the :py:class:`Viewport` class to control various aspects such as the resolution of the generated image. "
+			"The ``RenderSettings`` object contains a :py:attr:`.renderer`, which is the rendering engine "
+			"that will be used to generate images of the three-dimensional scene. OVITO comes with two different "
+			"rendering engines:"
+			"\n\n"
+			"  * :py:class:`OpenGLRenderer` -- An OpenGL-based renderer, which is also used for the interactive display in OVITO's viewports.\n"
+			"  * :py:class:`TachyonRenderer` -- A software-based, high-quality raytracing renderer.\n"
+			"  * :py:class:`POVRayRenderer` -- A rendering backend that invokes the external POV-Ray raytracing program.\n"
+			"\n"
+			"Usage example::"
+			"\n\n"
+			"    rs = RenderSettings(\n"
+			"        filename = 'image.png',\n"
+			"        size = (1024,768),\n"
+			"        background_color = (0.8,0.8,1.0)\n"
+			"    )\n"
+			"    rs.renderer.antialiasing = False\n"
+			"    dataset.viewports.active_vp.render(rs)\n")
+		.def_property("renderer", &RenderSettings::renderer, &RenderSettings::setRenderer,
+				"The renderer that is used to generate the image or movie. Depending on the selected renderer you "
+				"can use this to set additional parameters such as the anti-aliasing level."
 				"\n\n"
-				"A instance of this class can be passed to the :py:func:`~Viewport.render` function "
-				"of the :py:class:`Viewport` class to control various aspects such as the resolution of the generated image. "
-				"The ``RenderSettings`` object contains a :py:attr:`.renderer`, which is the rendering engine "
-				"that will be used to generate images of the three-dimensional scene. OVITO comes with two different "
-				"rendering engines:"
+				"See the :py:class:`OpenGLRenderer`, :py:class:`TachyonRenderer` and :py:class:`POVRayRenderer` classes "
+				"for the list of parameters specific to each rendering backend.")
+		.def_property("range", &RenderSettings::renderingRangeType, &RenderSettings::setRenderingRangeType,
+				"Selects the animation frames to be rendered."
 				"\n\n"
-				"  * :py:class:`OpenGLRenderer` -- An OpenGL-based renderer, which is also used for the interactive display in OVITO's viewports.\n"
-				"  * :py:class:`TachyonRenderer` -- A software-based, high-quality raytracing renderer.\n"
-				"\n"
-				"Usage example::"
+				"Possible values:\n"
+				"  * ``RenderSettings.Range.CURRENT_FRAME`` (default): Renders a single image at the current animation time.\n"
+				"  * ``RenderSettings.Range.ANIMATION``: Renders a movie of the entire animation sequence.\n"
+				"  * ``RenderSettings.Range.CUSTOM_INTERVAL``: Renders a movie of the animation interval given by the :py:attr:`.custom_range` attribute.\n")
+		.def_property("outputImageWidth", &RenderSettings::outputImageWidth, &RenderSettings::setOutputImageWidth)
+		.def_property("outputImageHeight", &RenderSettings::outputImageHeight, &RenderSettings::setOutputImageHeight)
+		.def_property_readonly("outputImageAspectRatio", &RenderSettings::outputImageAspectRatio)
+		.def_property("imageFilename", &RenderSettings::imageFilename, &RenderSettings::setImageFilename)
+		.def_property("background_color", &RenderSettings::backgroundColor, &RenderSettings::setBackgroundColor,
+				"Controls the background color of the rendered image."
 				"\n\n"
-				"    rs = RenderSettings(\n"
-				"        filename = 'image.png',\n"
-				"        size = (1024,768),\n"
-				"        background_color = (0.8,0.8,1.0)\n"
-				"    )\n"
-				"    rs.renderer.antialiasing = False\n"
-				"    dataset.viewports.active_vp.render(rs)\n")
-			.add_property("renderer", make_function(&RenderSettings::renderer, return_value_policy<ovito_object_reference>()), &RenderSettings::setRenderer,
-					"The renderer that is used to generate the image or movie. Depending on the selected renderer you "
-					"can use this to set additional parameters such as the anti-aliasing level."
-					"\n\n"
-					"See the :py:class:`OpenGLRenderer` and :py:class:`TachyonRenderer` classes "
-					"for a list of renderer-specific parameters.")
-			.add_property("range", &RenderSettings::renderingRangeType, &RenderSettings::setRenderingRangeType,
-					"Selects the animation frames to be rendered."
-					"\n\n"
-					"Possible values:\n"
-					"  * ``RenderSettings.Range.CURRENT_FRAME`` (default): Renders a single image at the current animation time.\n"
-					"  * ``RenderSettings.Range.ANIMATION``: Renders a movie of the entire animation sequence.\n"
-					"  * ``RenderSettings.Range.CUSTOM_INTERVAL``: Renders a movie of the animation interval given by the :py:attr:`.custom_range` attribute.\n")
-			.add_property("outputImageWidth", &RenderSettings::outputImageWidth, &RenderSettings::setOutputImageWidth)
-			.add_property("outputImageHeight", &RenderSettings::outputImageHeight, &RenderSettings::setOutputImageHeight)
-			.add_property("outputImageAspectRatio", &RenderSettings::outputImageAspectRatio)
-			.add_property("imageFilename", make_function(&RenderSettings::imageFilename, return_value_policy<copy_const_reference>()), &RenderSettings::setImageFilename)
-			.add_property("background_color", &RenderSettings::backgroundColor, &RenderSettings::setBackgroundColor,
-					"Controls the background color of the rendered image."
-					"\n\n"
-					":Default: ``(1,1,1)`` -- white")
-			.add_property("generate_alpha", &RenderSettings::generateAlphaChannel, &RenderSettings::setGenerateAlphaChannel,
-					"When saving the generated image to a file format that can store transparency information (e.g. PNG), this option will make "
-					"those parts of the output image transparent that are not covered by an object."
-					"\n\n"
-					":Default: ``False``")
-			.add_property("saveToFile", &RenderSettings::saveToFile, &RenderSettings::setSaveToFile)
-			.add_property("skip_existing_images", &RenderSettings::skipExistingImages, &RenderSettings::setSkipExistingImages,
-					"Controls whether animation frames for which the output image file already exists will be skipped "
-					"when rendering an animation sequence. This flag is ignored when directly rendering to a movie file and not an image file sequence. "
-					"Use this flag when the image sequence has already been partially rendered and you want to render just the missing frames. "
-					"\n\n"
-					":Default: ``False``")
-			.add_property("customRangeStart", &RenderSettings::customRangeStart, &RenderSettings::setCustomRangeStart)
-			.add_property("customRangeEnd", &RenderSettings::customRangeEnd, &RenderSettings::setCustomRangeEnd)
-			.add_property("everyNthFrame", &RenderSettings::everyNthFrame, &RenderSettings::setEveryNthFrame)
-			.add_property("fileNumberBase", &RenderSettings::fileNumberBase, &RenderSettings::setFileNumberBase)
-		;
-
-		enum_<RenderSettings::RenderingRangeType>("Range")
-			.value("CURRENT_FRAME", RenderSettings::CURRENT_FRAME)
-			.value("ANIMATION", RenderSettings::ANIMATION_INTERVAL)
-			.value("CUSTOM_INTERVAL", RenderSettings::CUSTOM_INTERVAL)
-		;
-	}
-
-	ovito_abstract_class<SceneRenderer, RefTarget>()
-		.add_property("isInteractive", &SceneRenderer::isInteractive)
+				":Default: ``(1,1,1)`` -- white")
+		.def_property("generate_alpha", &RenderSettings::generateAlphaChannel, &RenderSettings::setGenerateAlphaChannel,
+				"When saving the generated image to a file format that can store transparency information (e.g. PNG), this option will make "
+				"those parts of the output image transparent that are not covered by an object."
+				"\n\n"
+				":Default: ``False``")
+		.def_property("saveToFile", &RenderSettings::saveToFile, &RenderSettings::setSaveToFile)
+		.def_property("skip_existing_images", &RenderSettings::skipExistingImages, &RenderSettings::setSkipExistingImages,
+				"Controls whether animation frames for which the output image file already exists will be skipped "
+				"when rendering an animation sequence. This flag is ignored when directly rendering to a movie file and not an image file sequence. "
+				"Use this flag when the image sequence has already been partially rendered and you want to render just the missing frames. "
+				"\n\n"
+				":Default: ``False``")
+		.def_property("customRangeStart", &RenderSettings::customRangeStart, &RenderSettings::setCustomRangeStart)
+		.def_property("customRangeEnd", &RenderSettings::customRangeEnd, &RenderSettings::setCustomRangeEnd)
+		.def_property("everyNthFrame", &RenderSettings::everyNthFrame, &RenderSettings::setEveryNthFrame)
+		.def_property("fileNumberBase", &RenderSettings::fileNumberBase, &RenderSettings::setFileNumberBase)
 	;
 
-	ovito_abstract_class<NonInteractiveSceneRenderer, SceneRenderer>()
+	py::enum_<RenderSettings::RenderingRangeType>(RenderSettings_py, "Range")
+		.value("CURRENT_FRAME", RenderSettings::CURRENT_FRAME)
+		.value("ANIMATION", RenderSettings::ANIMATION_INTERVAL)
+		.value("CUSTOM_INTERVAL", RenderSettings::CUSTOM_INTERVAL)
 	;
 
-	ovito_abstract_class<DisplayObject, RefTarget>(
+	ovito_abstract_class<SceneRenderer, RefTarget>(m)
+		.def_property_readonly("isInteractive", &SceneRenderer::isInteractive)
+	;
+
+	ovito_abstract_class<NonInteractiveSceneRenderer, SceneRenderer>{m}
+	;
+
+	ovito_abstract_class<DisplayObject, RefTarget>(m,
 			"Abstract base class for display setting objects that control the visual appearance of data. "
 			":py:class:`DataObjects <ovito.data.DataObject>` may be associated with an instance of this class, which can be accessed via "
 			"their :py:attr:`~ovito.data.DataObject.display` property.",
 			// Python class name:
 			"Display")
-		.add_property("enabled", &DisplayObject::isEnabled, &DisplayObject::setEnabled,
+		.def_property("enabled", &DisplayObject::isEnabled, &DisplayObject::setEnabled,
 				"Boolean flag controlling the visibility of the data. If set to ``False``, the "
 				"data will not be visible in the viewports or in rendered images."
 				"\n\n"
 				":Default: ``True``\n")
 	;
 
-	ovito_class<TriMeshDisplay, DisplayObject>()
-		.add_property("color", make_function(&TriMeshDisplay::color, return_value_policy<copy_const_reference>()), &TriMeshDisplay::setColor)
-		.add_property("transparency", &TriMeshDisplay::transparency, &TriMeshDisplay::setTransparency)
+	ovito_class<TriMeshDisplay, DisplayObject>(m)
+		.def_property("color", &TriMeshDisplay::color, &TriMeshDisplay::setColor)
+		.def_property("transparency", &TriMeshDisplay::transparency, &TriMeshDisplay::setTransparency)
 	;
 
-	enum_<ParticlePrimitive::ShadingMode>("ParticleShadingMode")
+	py::enum_<ParticlePrimitive::ShadingMode>(m, "ParticleShadingMode")
 		.value("Normal", ParticlePrimitive::NormalShading)
 		.value("Flat", ParticlePrimitive::FlatShading)
 	;
 
-	enum_<ParticlePrimitive::RenderingQuality>("ParticleRenderingQuality")
+	py::enum_<ParticlePrimitive::RenderingQuality>(m, "ParticleRenderingQuality")
 		.value("LowQuality", ParticlePrimitive::LowQuality)
 		.value("MediumQuality", ParticlePrimitive::MediumQuality)
 		.value("HighQuality", ParticlePrimitive::HighQuality)
 		.value("AutoQuality", ParticlePrimitive::AutoQuality)
 	;
 
-	enum_<ParticlePrimitive::ParticleShape>("ParticleShape")
+	py::enum_<ParticlePrimitive::ParticleShape>(m, "ParticleShape")
 		.value("Spherical", ParticlePrimitive::SphericalShape)	// Deprecated since v2.4.5
 		.value("Round", ParticlePrimitive::SphericalShape)
 		.value("Square", ParticlePrimitive::SquareShape)
 	;
 
-	enum_<ArrowPrimitive::ShadingMode>("ArrowShadingMode")
+	py::enum_<ArrowPrimitive::ShadingMode>(m, "ArrowShadingMode")
 		.value("Normal", ArrowPrimitive::NormalShading)
 		.value("Flat", ArrowPrimitive::FlatShading)
 	;
 
-	enum_<ArrowPrimitive::RenderingQuality>("ArrowRenderingQuality")
+	py::enum_<ArrowPrimitive::RenderingQuality>(m, "ArrowRenderingQuality")
 		.value("LowQuality", ArrowPrimitive::LowQuality)
 		.value("MediumQuality", ArrowPrimitive::MediumQuality)
 		.value("HighQuality", ArrowPrimitive::HighQuality)
 	;
 
-	enum_<ArrowPrimitive::Shape>("ArrowShape")
+	py::enum_<ArrowPrimitive::Shape>(m, "ArrowShape")
 		.value("CylinderShape", ArrowPrimitive::CylinderShape)
 		.value("ArrowShape", ArrowPrimitive::ArrowShape)
 	;
+
+	return m.ptr();
 }
 
 OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScriptRendering);

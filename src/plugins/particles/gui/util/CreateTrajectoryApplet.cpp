@@ -255,7 +255,7 @@ void CreateTrajectoryApplet::onCreateTrajectory()
 			node->setDataProvider(trajObj);
 		}
 		// Insert node into scene.
-		dataset->sceneRoot()->addChild(node);
+		dataset->sceneRoot()->addChildNode(node);
 
 		// Select new scene node.
 		dataset->selection()->setNode(node);

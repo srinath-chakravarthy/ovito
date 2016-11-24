@@ -31,9 +31,8 @@ modifier.sort_by_size = False
 node.compute()
 
 print("Output:")
-print("Number of clusters: {}".format(modifier.count))
-assert(modifier.count == 2)
-assert(node.output.attributes['ClusterAnalysis.cluster_count'] == modifier.count)
+print("Number of clusters: {}".format(node.output.attributes['ClusterAnalysis.cluster_count']))
+assert(node.output.attributes['ClusterAnalysis.cluster_count'] == 2)
 print(node.output.cluster)
 print(node.output.cluster.array)
 

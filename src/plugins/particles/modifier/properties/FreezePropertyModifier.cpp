@@ -29,6 +29,7 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, FreezePropertyModifier, ParticleModifier);
 DEFINE_PROPERTY_FIELD(FreezePropertyModifier, _sourceProperty, "SourceProperty");
 DEFINE_PROPERTY_FIELD(FreezePropertyModifier, _destinationProperty, "DestinationProperty");
+DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(FreezePropertyModifier, _cachedDisplayObjects, "CachedDisplayObjects", DisplayObject, PROPERTY_FIELD_NEVER_CLONE_TARGET|PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_NO_UNDO|PROPERTY_FIELD_NO_SUB_ANIM);
 SET_PROPERTY_FIELD_LABEL(FreezePropertyModifier, _sourceProperty, "Property");
 SET_PROPERTY_FIELD_LABEL(FreezePropertyModifier, _destinationProperty, "Destination property");
 
@@ -45,6 +46,7 @@ FreezePropertyModifier::FreezePropertyModifier(DataSet* dataset) : ParticleModif
 {
 	INIT_PROPERTY_FIELD(FreezePropertyModifier::_sourceProperty);
 	INIT_PROPERTY_FIELD(FreezePropertyModifier::_destinationProperty);
+	INIT_PROPERTY_FIELD(FreezePropertyModifier::_cachedDisplayObjects);
 }
 
 /******************************************************************************
@@ -62,69 +64,84 @@ PipelineStatus FreezePropertyModifier::modifyParticles(TimePoint time, TimeInter
 	if(!savedProperty || !savedProperty->property())
 		throwException(tr("No stored values available. Please take a new snapshot of the current property values."));
 
-	// Make a copy of the stored property values, which will be fed into the modification pipeline.
-	OORef<ParticlePropertyObject> outputProperty = cloneHelper()->cloneObject(savedProperty->property(), false);
-	if(outputProperty->size() != outputParticleCount())
-		outputProperty->resize(outputParticleCount(), false);
-
 	// Get the particle property that will be overwritten by the stored one.
-	ParticlePropertyObject* oldProperty;
+	ParticlePropertyObject* outputProperty;
 	if(destinationProperty().type() != ParticleProperty::UserProperty) {
-		oldProperty = outputStandardProperty(destinationProperty().type());
-		if(!outputProperty->getOOType().isDerivedFrom(oldProperty->getOOType())
-				|| outputProperty->dataType() != oldProperty->dataType()
-				|| outputProperty->componentCount() != oldProperty->componentCount())
+		outputProperty = outputStandardProperty(destinationProperty().type(), true);
+		if(outputProperty->dataType() != savedProperty->property()->dataType()
+			|| outputProperty->componentCount() != savedProperty->property()->componentCount())
 			throwException(tr("Types of source property and output property are not compatible. Cannot restore saved property values."));
-		outputProperty->setType(oldProperty->type());
 	}
 	else {
-		oldProperty = destinationProperty().findInState(output());
-		outputProperty->setType(ParticleProperty::UserProperty);
-		outputProperty->setName(destinationProperty().name());
+		outputProperty = outputCustomProperty(destinationProperty().name(), 
+			savedProperty->property()->dataType(), savedProperty->property()->componentCount(),
+			0, true);
 	}
-	// Remove the old particle property.
-	if(oldProperty)
-		removeOutputProperty(oldProperty);
+	OVITO_ASSERT(outputProperty->stride() == savedProperty->property()->stride());
 
 	// Check if particle IDs are present and if the order of particles has changed
 	// since we took the snapshot of the property values.
 	ParticlePropertyObject* idProperty = inputStandardProperty(ParticleProperty::IdentifierProperty);
-	bool usingIdentifiers = false;
-	if(savedProperty->identifiers() && idProperty) {
-		if(idProperty->size() != savedProperty->identifiers()->size() || !std::equal(idProperty->constDataInt(), idProperty->constDataInt() + idProperty->size(), savedProperty->identifiers()->constDataInt())) {
-			usingIdentifiers = true;
+	if(savedProperty->identifiers() && idProperty && 
+			(idProperty->size() != savedProperty->identifiers()->size() || 
+			!std::equal(idProperty->constDataInt(), idProperty->constDataInt() + idProperty->size(), savedProperty->identifiers()->constDataInt()))) {
 
-			// Build ID-to-index map.
-			std::map<int,int> idmap;
-			int index = 0;
-			for(int id : savedProperty->identifiers()->constIntRange()) {
-				if(!idmap.insert(std::make_pair(id,index)).second)
-					throwException(tr("Detected duplicate particle ID %1 in saved snapshot. Cannot restore saved property values.").arg(id));
-				index++;
-			}
+		// Build ID-to-index map.
+		std::unordered_map<int,int> idmap;
+		int index = 0;
+		for(int id : savedProperty->identifiers()->constIntRange()) {
+			if(!idmap.insert(std::make_pair(id,index)).second)
+				throwException(tr("Detected duplicate particle ID %1 in saved snapshot. Cannot apply saved property values.").arg(id));
+			index++;
+		}
 
-			// Copy and reorder property data.
-			const int* id = idProperty->constDataInt();
-			char* dest = static_cast<char*>(outputProperty->data());
-			const char* src = static_cast<const char*>(savedProperty->property()->constData());
-			size_t stride = outputProperty->stride();
-			for(size_t index = 0; index < outputProperty->size(); index++, ++id, dest += stride) {
-				auto mapEntry = idmap.find(*id);
-				if(mapEntry == idmap.end())
-					throwException(tr("Detected new particle ID %1, which didn't exist when the snapshot was taken. Cannot restore saved property values.").arg(*id));
-				memcpy(dest, src + stride * mapEntry->second, stride);
-			}
+		// Copy and reorder property data.
+		const int* id = idProperty->constDataInt();
+		char* dest = static_cast<char*>(outputProperty->data());
+		const char* src = static_cast<const char*>(savedProperty->property()->constData());
+		size_t stride = outputProperty->stride();
+		for(size_t index = 0; index < outputProperty->size(); index++, ++id, dest += stride) {
+			auto mapEntry = idmap.find(*id);
+			if(mapEntry == idmap.end())
+				throwException(tr("Detected new particle ID %1, which didn't exist when the snapshot was created. Cannot restore saved property values.").arg(*id));
+			memcpy(dest, src + stride * mapEntry->second, stride);
+		}
 
+		outputProperty->changed();
+	}
+	else {
+		// Make sure the number of particles didn't change when no particle IDs are defined.
+		if(savedProperty->property()->size() != outputParticleCount())
+			throwException(tr("Number of input particles has changed. Cannot restore saved property values. There were %1 particles when the snapshot was created. Now there are %2.").arg(savedProperty->property()->size()).arg(outputParticleCount()));
+
+		if(outputProperty->type() == savedProperty->property()->type()
+				&& outputProperty->name() == savedProperty->property()->name()
+				&& outputProperty->dataType() == savedProperty->property()->dataType()) {
+			// Make shallow data copy if input and output property are the same.
+			outputProperty->setStorage(savedProperty->property()->storage());
+		}
+		else {
+			// Make a full data copy otherwise.
+			OVITO_ASSERT(outputProperty->dataType() == savedProperty->property()->dataType());
+			OVITO_ASSERT(outputProperty->stride() == savedProperty->property()->stride());
+			OVITO_ASSERT(outputProperty->size() == savedProperty->property()->size());
+			memcpy(outputProperty->data(), savedProperty->property()->constData(), outputProperty->stride() * outputProperty->size());
 			outputProperty->changed();
 		}
 	}
 
-	// Make sure the number of particles didn't change if no identifiers are present.
-	if(!usingIdentifiers && savedProperty->property()->size() != outputParticleCount())
-		throwException(tr("Number of input particles has changed. Cannot restore saved property values. There were %1 particles when the snapshot was taken. Now there are %2.").arg(savedProperty->property()->size()).arg(outputParticleCount()));
-
-	// Insert particle property into modification pipeline.
-	output().addObject(outputProperty);
+	// Replace display objects of output property with cached ones and cache any new display objects.
+	// This is required to avoid losing the output property's display settings
+	// each time the modifier is re-evaluated or when serializing the modifier.
+	QVector<DisplayObject*> currentDisplayObjs = outputProperty->displayObjects();
+	// Replace with cached display objects if they are of the same class type.
+	for(int i = 0; i < currentDisplayObjs.size() && i < _cachedDisplayObjects.size(); i++) {
+		if(currentDisplayObjs[i]->getOOType() == _cachedDisplayObjects[i]->getOOType()) {
+			currentDisplayObjs[i] = _cachedDisplayObjects[i];
+		}
+	}
+	outputProperty->setDisplayObjects(currentDisplayObjs);
+	_cachedDisplayObjects = currentDisplayObjs;
 
 	return PipelineStatus::Success;
 }

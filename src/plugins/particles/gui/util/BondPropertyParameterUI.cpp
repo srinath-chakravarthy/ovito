@@ -130,6 +130,9 @@ void BondPropertyParameterUI::updateUI()
 				}
 			}
 
+			if(_comboBox->count() == 0)
+				_comboBox->addItem(BondPropertyReference(), tr("<No properties available>"));
+
 			// Select the right item in the list box.
 			int selIndex = _comboBox->propertyIndex(pref);
 			if(selIndex < 0 && !pref.isNull()) {

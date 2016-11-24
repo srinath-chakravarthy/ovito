@@ -43,12 +43,12 @@ SET_PROPERTY_FIELD_LABEL(HistogramModifier, _numberOfBins, "Number of histogram 
 SET_PROPERTY_FIELD_LABEL(HistogramModifier, _selectInRange, "Select particles in range");
 SET_PROPERTY_FIELD_LABEL(HistogramModifier, _selectionRangeStart, "Selection range start");
 SET_PROPERTY_FIELD_LABEL(HistogramModifier, _selectionRangeEnd, "Selection range end");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _fixXAxisRange, "Fix x-axis range");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _xAxisRangeStart, "X-axis range start");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _xAxisRangeEnd, "X-axis range end");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _fixYAxisRange, "Fix y-axis range");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _yAxisRangeStart, "Y-axis range start");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _yAxisRangeEnd, "Y-axis range end");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, _fixXAxisRange, "Fix x-range");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, _xAxisRangeStart, "X-range start");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, _xAxisRangeEnd, "X-range end");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, _fixYAxisRange, "Fix y-range");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, _yAxisRangeStart, "Y-range start");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, _yAxisRangeEnd, "Y-range end");
 SET_PROPERTY_FIELD_LABEL(HistogramModifier, _sourceProperty, "Source property");
 SET_PROPERTY_FIELD_LABEL(HistogramModifier, _onlySelected, "Use only selected particles");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(HistogramModifier, _numberOfBins, IntegerParameterUnit, 1);

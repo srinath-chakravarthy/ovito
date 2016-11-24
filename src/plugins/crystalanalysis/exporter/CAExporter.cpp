@@ -28,11 +28,24 @@
 #include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
 #include <core/utilities/concurrent/ProgressDisplay.h>
 #include <core/scene/ObjectNode.h>
+#include <core/scene/SelectionSet.h>
 #include "CAExporter.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, CAExporter, FileExporter);
+
+/******************************************************************************
+* Selects the natural scene nodes to be exported by this exporter under 
+* normal circumstances.
+******************************************************************************/
+void CAExporter::selectStandardOutputData()
+{
+	QVector<SceneNode*> nodes = dataset()->selection()->nodes();
+	if(nodes.empty())
+		throwException(tr("Please select an object to be exported first."));
+	setOutputData(nodes);
+}
 
 /******************************************************************************
  * This is called once for every output file to be written and before
@@ -44,7 +57,7 @@ bool CAExporter::openOutputFile(const QString& filePath, int numberOfFrames)
 	OVITO_ASSERT(!_outputStream);
 
 	_outputFile.setFileName(filePath);
-	_outputStream.reset(new CompressedTextWriter(_outputFile));
+	_outputStream.reset(new CompressedTextWriter(_outputFile, dataset()));
 
 	return true;
 }
@@ -64,11 +77,21 @@ void CAExporter::closeOutputFile(bool exportCompleted)
 }
 
 /******************************************************************************
-* Writes the data of one animation frame to the current output file.
-******************************************************************************/
-bool CAExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
+ * Exports a single animation frame to the current output file.
+ *****************************************************************************/
+bool CAExporter::exportFrame(int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay)
 {
-	ObjectNode* objectNode = dynamic_object_cast<ObjectNode>(sceneNode);
+	if(!FileExporter::exportFrame(frameNumber, time, filePath, progressDisplay))
+		return false;
+
+	if(progressDisplay)
+		progressDisplay->setStatusText(tr("Exporting frame %1 to file '%2'.").arg(frameNumber).arg(filePath));
+
+	// Export the first scene node from the selection set.
+	if(outputData().empty())
+		throwException(tr("The selection set to be exported is empty."));
+
+	ObjectNode* objectNode = dynamic_object_cast<ObjectNode>(outputData().front());
 	if(!objectNode)
 		throwException(tr("The scene node to be exported is not an object node."));
 

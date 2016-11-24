@@ -163,9 +163,9 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> AtomicStrainModifie
 		throwException(tr("Reference configuration does not contain simulation cell info."));
 
 	// Check simulation cell(s).
-	if(inputCell->volume3D() < FLOATTYPE_EPSILON)
+	if((!inputCell->is2D() && inputCell->volume3D() < FLOATTYPE_EPSILON) || (inputCell->is2D() && inputCell->volume2D() < FLOATTYPE_EPSILON))
 		throwException(tr("Simulation cell is degenerate in the deformed configuration."));
-	if(refCell->volume3D() < FLOATTYPE_EPSILON)
+	if((!inputCell->is2D() && refCell->volume3D() < FLOATTYPE_EPSILON) || (inputCell->is2D() && refCell->volume2D() < FLOATTYPE_EPSILON))
 		throwException(tr("Simulation cell is degenerate in the reference configuration."));
 
 	// Get particle identifiers.
@@ -260,13 +260,25 @@ void AtomicStrainModifier::AtomicStrainEngine::perform()
 		return;
 
 	// Automatically disable PBCs in Z direction for 2D systems.
-	if(_simCell.is2D())
+	if(_simCell.is2D()) {
 		_simCell.setPbcFlags(_simCell.pbcFlags()[0], _simCell.pbcFlags()[1], false);
+		// Make sure the matrix is invertible.
+		AffineTransformation m = _simCell.matrix();
+		m.column(2) = Vector3(0,0,1);
+		_simCell.setMatrix(m);
+		m = _simCellRef.matrix();
+		m.column(2) = Vector3(0,0,1);
+		_simCellRef.setMatrix(m);
+	}
 
 	// PBCs flags of the current configuration always override PBCs flags
 	// of the reference config.
 	_simCellRef.setPbcFlags(_simCell.pbcFlags());
 	_simCellRef.set2D(_simCell.is2D());
+
+	// Precompute matrices.
+	_currentSimCellInv = _simCell.inverseMatrix();
+	_reducedToAbsolute = _eliminateCellDeformation ? _simCellRef.matrix() : _simCell.matrix();	
 
 	// Prepare the neighbor list for the reference configuration.
 	CutoffNeighborFinder neighborFinder;
@@ -332,7 +344,7 @@ bool AtomicStrainModifier::AtomicStrainEngine::computeStrain(size_t particleInde
 
 	// Check if matrix can be inverted.
 	Matrix_3<double> inverseV;
-	if(numNeighbors < 3 || !V.inverse(inverseV, 1e-4) || std::abs(W.determinant()) < 1e-4) {
+	if(numNeighbors < 2 || (!_simCell.is2D() && numNeighbors < 3) || !V.inverse(inverseV, FloatType(1e-4)) || std::abs(W.determinant()) < FloatType(1e-4)) {
 		_invalidParticles->setInt(particleIndex, 1);
 		if(_deformationGradients) {
 			for(Matrix_3<double>::size_type col = 0; col < 3; col++) {

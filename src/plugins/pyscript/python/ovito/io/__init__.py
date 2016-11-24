@@ -92,18 +92,18 @@ def import_file(location, **params):
     """
     
     # Determine the file's format.
-    importer = FileImporter.autodetectFileFormat(ovito.dataset, location)
+    importer = FileImporter.autodetect_format(ovito.dataset, location)
     if not importer:
         raise RuntimeError("Could not detect the file format. The format might not be supported.")
     
     # Forward user parameters to the file importer object.
     for key in params:
         if not hasattr(importer, key):
-            raise RuntimeError("Importer object %s has no attribute '%s'." % (importer, key))
+            raise RuntimeError("Invalid keyword parameter. Object %s doesn't have a parameter named '%s'." % (repr(importer), key))
         importer.__setattr__(key, params[key])
 
     # Import data.
-    if not importer.importFile(location, ImportMode.AddToScene, False):
+    if not importer.import_file(location, ImportMode.AddToScene, False):
         raise RuntimeError("Operation has been canceled by the user.")
 
     # Get the newly created ObjectNode.
@@ -138,7 +138,7 @@ def _FileSource_load(self, location, **params):
     """
 
     # Determine the file's format.
-    importer = FileImporter.autodetectFileFormat(self.dataset, location)
+    importer = FileImporter.autodetect_format(self.dataset, location)
     if not importer:
         raise RuntimeError("Could not detect the file format. The format might not be supported.")
     
@@ -153,11 +153,11 @@ def _FileSource_load(self, location, **params):
         importer.__setattr__(key, params[key])
 
     # Load new data file.
-    if not self.setSource(location, importer, False):
+    if not self.set_source(location, importer, False):
         raise RuntimeError("Operation has been canceled by the user.")
     
     # Block execution until data has been loaded. 
-    if not self.waitUntilReady(self.dataset.anim.time, "Script is waiting for I/O operation to finish.", ovito.get_progress_display()):
+    if not self.wait_until_ready(self.dataset.anim.time, "Script is waiting for I/O operation to finish.", ovito.get_progress_display()):
         raise RuntimeError("Operation has been canceled by the user.")
     
     # Raise Python error if loading failed.
@@ -165,11 +165,6 @@ def _FileSource_load(self, location, **params):
         raise RuntimeError(self.status.text)
     
 FileSource.load = _FileSource_load
-
-# For backward compatibility with OVITO 2.4.4:
-def _FileSource_data(self):
-    return self    
-FileSource.data = property(_FileSource_data)
 
 # Implement the 'sourceUrl' property of FileSource, which returns or sets the currently loaded file path.
 def _get_FileSource_source_path(self, _originalGetterMethod = FileSource.source_path):
@@ -196,6 +191,7 @@ def export_file(node, file, format, **params):
                             * ``"xyz"`` -- XYZ format
                             * ``"fhi-aims"`` -- FHI-aims format
                             * ``"ca"`` -- Text-based format for storing dislocation lines (Crystal Analysis Tool)
+                            * ``"povray"`` -- POV-Ray scene format
         
         The function evaluates the modification pipeline of the given object node to obtain the data to be exported. 
         This means it is not necessary to call :py:meth:`ObjectNode.compute() <ovito.ObjectNode.compute>` before calling
@@ -264,7 +260,7 @@ def export_file(node, file, format, **params):
     # Determine the animation frame to be exported.    
     if 'frame' in params:
         frame = int(params['frame'])
-        time = ovito.dataset.anim.frameToTime(frame)
+        time = ovito.dataset.anim.frame_to_time(frame)
         params['multiple_frames'] = True
         params['start_frame'] = frame
         params['end_frame'] = frame
@@ -288,14 +284,18 @@ def export_file(node, file, format, **params):
         exporter.use_wildcard_filename = True
     
     # Ensure the data to be exported is available.
-    if not node.wait(time = time):
-        raise RuntimeError("Operation has been canceled by the user.")
-
-    # Pass objects to exporter object.
-    exporter.setOutputData([node])
+    if isinstance(node, ovito.ObjectNode):
+        if not node.wait(time = time):
+            raise RuntimeError("Operation has been canceled by the user.")
+        # Pass objects to exporter object.
+        exporter.set_node(node)
+    elif node is None:
+        exporter.select_standard_output_data()
+    else:
+        raise ValueError("Invalid node parameter.")
 
     # Export data.
-    if not exporter.exportNodes(ovito.get_progress_display()):
+    if not exporter.export_nodes(ovito.get_progress_display()):
         raise RuntimeError("Operation has been canceled by the user.")
 
 # This is the table of export formats used by the export_file() function

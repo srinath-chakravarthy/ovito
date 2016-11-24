@@ -28,6 +28,7 @@
 namespace PyScript {
 
 using namespace Ovito;
+namespace py = pybind11;
 
 /**
  * \brief A scripting engine that provides bindings to OVITO's C++ classes.
@@ -41,6 +42,9 @@ public:
 	/// \param parent The owner of this QObject.
 	/// \param redirectOutputToConsole Controls whether the Python script output should be forwarded to the terminal.
 	ScriptEngine(DataSet* dataset, QObject* parent = nullptr, bool redirectOutputToConsole = true);
+
+	/// \brief Destructor
+	virtual ~ScriptEngine();
 
 	/// \brief Returns the dataset that provides the context for the script.
 	DataSet* dataset() const { return _dataset; }
@@ -71,13 +75,13 @@ public:
 	/// \param kwargs The keyword arguments to be passed to the function.
 	/// \return The value returned by the Python function.
 	/// \throw Exception on error.
-	boost::python::object callObject(const boost::python::object& callable, const boost::python::tuple& arguments = boost::python::tuple(), const boost::python::dict& kwargs = boost::python::dict());
+	py::object callObject(const py::object& callable, const py::tuple& arguments = py::tuple(), const py::dict& kwargs = py::dict());
 
 	/// \brief Executes the given C++ function, which in turn may invoke Python functions in the context of this engine.
 	void execute(const std::function<void()>& func);
 
 	/// \brief Provides access to the global namespace the script will be executed in by this script engine.
-	boost::python::dict& mainNamespace() { return _mainNamespace; }
+	py::dict& mainNamespace() { return _mainNamespace; }
 
 	/// Returns the progress display that has been registered with the engine, which
 	/// is responsible for showing the progress of long-running operations
@@ -99,7 +103,7 @@ Q_SIGNALS:
 private:
 
 	/// Initializes the Python interpreter and sets up the global namespace.
-	static void initializeInterpreter();
+	void initializeInterpreter();
 
 	/// Handles a call to sys.exit() in the Python interpreter.
 	/// Returns the program exit code.
@@ -131,7 +135,7 @@ private:
 	OORef<DataSet> _dataset;
 
 	/// The namespace (scope) the script will be executed in by this script engine.
-	boost::python::dict _mainNamespace;
+	py::dict _mainNamespace;
 
 	/// The progress display that has been registered with the engine, which
 	/// is responsible for showing the progress of long-running operations

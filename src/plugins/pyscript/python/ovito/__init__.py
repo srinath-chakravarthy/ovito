@@ -1,12 +1,16 @@
 import os.path
+try:
+    # Python 3.x
+    import collections.abc as collections
+except ImportError:
+    # Python 2.x
+    import collections
 
 # Load the native module with the core bindings
 from PyScript import *
-from PyScriptContainers import *
 from PyScriptApp import *
 
 # Load sub-modules (in the right order because there are dependencies between them)
-import ovito.linalg
 import ovito.anim
 import ovito.data
 import ovito.vis
@@ -19,29 +23,30 @@ from PyScriptScene import PipelineObject
 from PyScriptScene import PipelineStatus
 
 # Load all OVITO modules packages. This is required
-# to make all Boost.Python bindings available.
+# to make all Python bindings available.
 import pkgutil
 import importlib
 for _, _name, _ in pkgutil.walk_packages(__path__, __name__ + '.'):
+    if _name == "ovito.linalg": continue  # For backward compatibility with OVITO 2.7.1
     importlib.import_module(_name)
+
+def _DataSet_scene_nodes(self):
+    """ A list-like object containing the :py:class:`~ovito.ObjectNode` instances that are part of the three-dimensional scene.
+        Only nodes which are in this list are visible in the viewports. You can add or remove nodes from this list either by calling
+        :py:meth:`ObjectNode.add_to_scene` and :py:meth:`ObjectNode.remove_from_scene` or by using the standard Python ``append()`` and ``del`` statements. 
+    """
+    return self.scene_root.children
+DataSet.scene_nodes = property(_DataSet_scene_nodes)
 
 def _get_DataSet_selected_node(self):
     """ The :py:class:`~ovito.ObjectNode` that is currently selected in OVITO's graphical user interface, 
         or ``None`` if no node is selected. """
-    return self.selection.front
+    return self.selection.nodes[0] if self.selection.nodes else None
 def _set_DataSet_selected_node(self, node):
     """ Sets the scene node that is currently selected in OVITO. """
-    if node: self.selection.setNode(node)
-    else: self.selection.clear()
+    if node: self.selection.nodes = [node]
+    else: del self.selection.nodes[:]
 DataSet.selected_node = property(_get_DataSet_selected_node, _set_DataSet_selected_node)
-
-def _DataSet_save(self, filename):
-    """ 
-    Saves the dataset, including the viewports, all objects that are part of the scene, modification pipelines, and other settings, to an OVITO file.
-    This function works like the *Save State As* function in OVITO's file menu. 
-    """
-    self.saveToFile(filename)
-DataSet.save = _DataSet_save
 
 # Implement the 'modifiers' property of the ObjectNode class, which provides access to modifiers in the pipeline. 
 def _get_ObjectNode_modifiers(self):
@@ -58,7 +63,7 @@ def _get_ObjectNode_modifiers(self):
            node.modifiers.append(WrapPeriodicImagesModifier())
     """    
     
-    class ObjectNodeModifierList:
+    class ObjectNodeModifierList(collections.MutableSequence):
         """ This helper class emulates a mutable sequence of modifiers. """
         def __init__(self, node): 
             self.node = node
@@ -74,7 +79,7 @@ def _get_ObjectNode_modifiers(self):
             """ This internal helper function builds a list containing all modifiers in the node's pipeline. """
             mods = []
             for obj in self._pipelineObjectList():
-                for app in obj.modifierApplications:
+                for app in obj.modifier_applications:
                     mods.append(app.modifier)
             return mods
         def __len__(self):
@@ -82,7 +87,7 @@ def _get_ObjectNode_modifiers(self):
             count = 0
             obj = self.node.data_provider
             while isinstance(obj, PipelineObject):
-                count += len(obj.modifierApplications)
+                count += len(obj.modifier_applications)
                 obj = obj.source_object
             return count
         def __iter__(self):
@@ -91,38 +96,46 @@ def _get_ObjectNode_modifiers(self):
             return self._modifierList()[i]
         def __setitem__(self, index, newMod):
             """ Replaces an existing modifier in the pipeline with a different one. """
-            if index < 0: index += len(self)
-            count = 0
-            for obj in self._pipelineObjectList():
-                for app in enumerate(obj.modifierApplications):
-                    if count == index:
-                        obj.removeModifier(app[1])
-                        obj.insertModifier(newMod, app[0])
-                        return
-                    count += 1
-            raise IndexError("List index is out of range.")
+            if isinstance(index, slice):
+                raise TypeError("This sequence type does not support slicing.")
+            if isinstance(index, int):
+                if index < 0: index += len(self)
+                count = 0
+                for obj in self._pipelineObjectList():
+                    for i in range(len(obj.modifier_applications)):
+                        if count == index:
+                            del obj.modifier_applications[i]
+                            obj.insert_modifier(i, newMod)
+                            return
+                        count += 1
+                raise IndexError("List index is out of range.")
+            else:
+                raise TypeError("Expected integer index")
         def __delitem__(self, index):
-            if index < 0: index += len(self)
-            count = 0
-            for obj in self._pipelineObjectList():
-                for app in obj.modifierApplications:
-                    if count == index:
-                        obj.removeModifier(app)
-                        return
-                    count += 1
-            raise IndexError("List index is out of range.")
-        def append(self, mod):
-            self.node.applyModifier(mod)
+            if isinstance(index, slice):
+                raise TypeError("This sequence type does not support slicing.")
+            if isinstance(index, int):
+                if index < 0: index += len(self)
+                count = 0
+                for obj in self._pipelineObjectList():
+                    for i in range(len(obj.modifier_applications)):
+                        if count == index:
+                            del obj.modifier_applications[i]
+                            return
+                        count += 1
+                raise IndexError("List index is out of range.")
+            else:
+                raise TypeError("Expected integer index")
         def insert(self, index, mod):
             if index < 0: index += len(self)
             count = 0
             for obj in self._pipelineObjectList():
-                for i in range(len(obj.modifierApplications)):
+                for i in range(len(obj.modifier_applications)):
                     if count == index:
-                        obj.insertModifier(mod, i)
+                        obj.insert_modifier(i, mod)
                         return
                     count += 1
-            self.node.applyModifier(mod)
+            self.node.apply_modifier(mod)
         def __str__(self):
             return str(self._modifierList())
                     
@@ -139,10 +152,10 @@ def _ObjectNode_wait(self, signalError = True, msgText = None, time = None):
     #
     if not msgText: msgText = "Data pipeline is being evaluated. Waiting for operation for complete."
     if time is None: time = self.dataset.anim.time 
-    if not self.waitUntilReady(time, msgText, ovito.get_progress_display()):
+    if not self.wait_until_ready(time, msgText, ovito.get_progress_display()):
         return False
     if signalError:
-        state = self.evalPipeline(time)
+        state = self.eval_pipeline(time)
         if state.status.type == PipelineStatus.Type.Error:
             raise RuntimeError("Data pipeline evaluation failed with the following error: %s" % state.status.text)
     return True
@@ -169,19 +182,19 @@ def _ObjectNode_compute(self, frame = None):
                   It is also accessible via the :py:attr:`.output` attribute after calling :py:meth:`.compute`.
     """
     if frame is not None:
-        time = self.dataset.anim.frameToTime(frame)
+        time = self.dataset.anim.frame_to_time(frame)
     else:
         time = self.dataset.anim.time
 
     if not self.wait(time = time):
         raise RuntimeError("Operation has been canceled by the user.")
     
-    state = self.evalPipeline(time)
+    state = self.eval_pipeline(time)
     assert(state.status.type != PipelineStatus.Type.Error)
     assert(state.status.type != PipelineStatus.Type.Pending)
     
     self.__output = ovito.data.DataCollection()
-    self.__output.setDataObjects(state)
+    self.__output.set_data_objects(state)
         
     return self.__output
    
@@ -202,9 +215,11 @@ def _ObjectNode_remove_from_scene(self):
     """ Removes the node from the scene by deleting it from the :py:attr:`ovito.DataSet.scene_nodes` list.
         The visual representation of the node will disappear from the viewports after calling this method.
     """
-    del self.dataset.scene_nodes[self]
+    # Remove node from its parent's list of children
+    if self.parent_node is not None:
+        del self.parent_node.children[self.parent_node.children.index(self)]
     
-    # Unselect node
+    # Automatically unselect node
     if self == self.dataset.selected_node:
         self.dataset.selected_node = None
 ObjectNode.remove_from_scene = _ObjectNode_remove_from_scene

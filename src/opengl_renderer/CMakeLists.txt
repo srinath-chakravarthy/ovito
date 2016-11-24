@@ -19,6 +19,12 @@
 #
 ###############################################################################
 
+# Find OpenGL library.
+FIND_PACKAGE(OpenGL REQUIRED)
+ADD_LIBRARY(OpenGLLib SHARED IMPORTED GLOBAL)
+SET_PROPERTY(TARGET OpenGLLib PROPERTY IMPORTED_LOCATION "${OPENGL_gl_LIBRARY}")
+SET_PROPERTY(TARGET OpenGLLib APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${OPENGL_INCLUDE_DIR}")
+
 SET(SourceFiles 
 	OpenGLLinePrimitive.cpp
 	OpenGLParticlePrimitive.cpp

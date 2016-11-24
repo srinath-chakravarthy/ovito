@@ -23,6 +23,7 @@
 #define __OVITO_PARALLEL_FOR_H
 
 #include <core/Core.h>
+#include <core/app/Application.h>
 #include "FutureInterface.h"
 
 #include <future>
@@ -40,11 +41,11 @@ bool parallelFor(
 	futureInterface.setProgressValue(0);
 
 	std::vector<std::future<void>> workers;
-	int num_threads = std::max(1, QThread::idealThreadCount());
+	size_t num_threads = Application::instance().idealThreadCount();
 	T chunkSize = loopCount / num_threads;
 	T startIndex = 0;
 	T endIndex = chunkSize;
-	for(int t = 0; t < num_threads; t++) {
+	for(size_t t = 0; t < num_threads; t++) {
 		if(t == num_threads - 1)
 			endIndex += loopCount % num_threads;
 		workers.push_back(std::async(std::launch::async, [&futureInterface, &kernel, startIndex, endIndex, progressChunkSize]() {
@@ -80,16 +81,15 @@ template<class Function, typename T>
 void parallelFor(T loopCount, Function kernel)
 {
 	std::vector<std::future<void>> workers;
-	int num_threads = QThread::idealThreadCount();
-	if(num_threads < 1) num_threads = 1;
-	else if(num_threads > loopCount) {
+	size_t num_threads = Application::instance().idealThreadCount();
+	if(num_threads > loopCount) {
 		if(loopCount <= 0) return;
 		num_threads = loopCount;
 	}
 	T chunkSize = loopCount / num_threads;
 	T startIndex = 0;
 	T endIndex = chunkSize;
-	for(int t = 0; t < num_threads; t++) {
+	for(size_t t = 0; t < num_threads; t++) {
 		if(t == num_threads - 1) {
 			OVITO_ASSERT(endIndex + (loopCount % num_threads) == loopCount);
 			endIndex = loopCount;
@@ -119,9 +119,8 @@ template<class Function>
 bool parallelForChunks(size_t loopCount, FutureInterfaceBase& futureInterface, Function kernel)
 {
 	std::vector<std::future<void>> workers;
-	size_t num_threads = QThread::idealThreadCount();
-	if(num_threads < 1) num_threads = 1;
-	else if(num_threads > loopCount) {
+	size_t num_threads = Application::instance().idealThreadCount();
+	if(num_threads > loopCount) {
 		if(loopCount <= 0) return true;
 		num_threads = loopCount;
 	}
@@ -153,9 +152,8 @@ template<class Function>
 void parallelForChunks(size_t loopCount, Function kernel)
 {
 	std::vector<std::future<void>> workers;
-	size_t num_threads = QThread::idealThreadCount();
-	if(num_threads < 1) num_threads = 1;
-	else if(num_threads > loopCount) {
+	size_t num_threads = Application::instance().idealThreadCount();
+	if(num_threads > loopCount) {
 		if(loopCount <= 0) return;
 		num_threads = loopCount;
 	}

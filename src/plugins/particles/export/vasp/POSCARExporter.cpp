@@ -43,7 +43,7 @@ bool POSCARExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoi
 	// Get simulation cell info.
 	SimulationCellObject* simulationCell = state.findObject<SimulationCellObject>();
 	if(!simulationCell)
-		throw Exception(tr("No simulation cell available. Cannot write POSCAR file."));
+		throwException(tr("No simulation cell available. Cannot write POSCAR file."));
 
 	// Write POSCAR header including the simulation cell geometry.
 	textStream() << "POSCAR file written by OVITO\n";
