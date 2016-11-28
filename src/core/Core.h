@@ -83,6 +83,7 @@
 #include <QBrush>
 #include <QCommandLineParser>
 #include <QGuiApplication>
+#include <QFile>
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
 #  error "OVITO requires at least Qt 5.2"
