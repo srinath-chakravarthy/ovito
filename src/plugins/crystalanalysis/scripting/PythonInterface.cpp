@@ -26,7 +26,7 @@
 #include <plugins/crystalanalysis/modifier/dxa/DislocationAnalysisModifier.h>
 #include <plugins/crystalanalysis/modifier/dxa/StructureAnalysis.h>
 #include <plugins/crystalanalysis/modifier/elasticstrain/ElasticStrainModifier.h>
-//#include <plugins/crystalanalysis/modifier/grains/GrainSegmentationModifier.h>
+#include <plugins/crystalanalysis/modifier/grains/GrainSegmentationModifier.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationDisplay.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
@@ -245,11 +245,11 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 				":Default: sqrt(8/3)\n")
 	;
 
-#if 0
+//#if 0
 	ovito_class<GrainSegmentationModifier, StructureIdentificationModifier>()
 		.add_property("input_crystal_structure", &GrainSegmentationModifier::inputCrystalStructure, &GrainSegmentationModifier::setInputCrystalStructure)
 		.add_property("misorientation_threshold", &GrainSegmentationModifier::misorientationThreshold, &GrainSegmentationModifier::setMisorientationThreshold)
-		.add_property("fluctuation_tolerance", &GrainSegmentationModifier::fluctuationTolerance, &GrainSegmentationModifier::setFluctuationTolerance)
+		//.add_property("fluctuation_tolerance", &GrainSegmentationModifier::fluctuationTolerance, &GrainSegmentationModifier::setFluctuationTolerance)
 		.add_property("min_atom_count", &GrainSegmentationModifier::minGrainAtomCount, &GrainSegmentationModifier::setMinGrainAtomCount)
 		.add_property("probe_sphere_radius", &GrainSegmentationModifier::probeSphereRadius, &GrainSegmentationModifier::setProbeSphereRadius,
 				"The radius of the probe sphere used in the free surface construction algorithm."
@@ -276,8 +276,13 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 				"in addition to assigning each input atom to a grain. "
 				"\n\n"
 				":Default: ``False``\n")
+		.add_property("output_orientations", &GrainSegmentationModifier::outputLocalOrientations, &GrainSegmentationModifier::setOutputLocalOrientations,
+			      "This parameter controls the output of local smoothed orientations of each grain."
+			      "\n\n"
+			      ":Default: ``False``\n")
+
 	;
-#endif
+//#endif
 
 	ovito_class<SmoothDislocationsModifier, Modifier>()
 		.add_property("smoothingEnabled", &SmoothDislocationsModifier::smoothingEnabled, &SmoothDislocationsModifier::setSmoothingEnabled)
@@ -408,13 +413,46 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 				"The unique identifier of this atomic cluster.")
 		.add_property("atom_count", &Cluster::atomCount)
 		.add_property("orientation", &Cluster::orientation)
+		.add_property("transitions", make_getter<>(&Cluster::transitions, return_internal_reference<>()))
+	;
+	class_<ClusterTransition, ClusterTransition*, boost::noncopyable>("ClusterTransition",	no_init)
+		.add_property("next", make_getter<>(&ClusterTransition::next, return_internal_reference<>()))
+		.add_property("cluster1", make_getter<>(&ClusterTransition::cluster1, return_internal_reference<>()))
+		.add_property("cluster2", make_getter<>(&ClusterTransition::cluster2, return_internal_reference<>()))
 	;
 
 	class_<std::vector<Cluster*>, boost::noncopyable>("ClusterList", no_init)
 		.def(array_indexing_suite<std::vector<Cluster*>, return_internal_reference<>>())
 	;
 
-	ovito_class<PartitionMesh, DataObject>()
+	ovito_class<PartitionMesh, DataObject>(
+			":Base class: :py:class:`ovito.data.DataObject`\n\n"
+			"This data object stores the partitionmesh mesh computed by a :py:class:`GrainSegmentationModifier`. "
+			"\n\n"
+			"Currently, no direct script access to the vertices and faces of the mesh is possible. But you can export the mesh to a VTK text file, "
+			"which can be further processed by external tools such as ParaView. "
+			"\n\n"
+			"The visual appearance of the surface mesh within Ovito is controlled by its attached :py:class:`~ovito.vis.PartitionMeshDisplay` instance, which is "
+			"accessible through the :py:attr:`~DataObject.display` attribute of the :py:class:`DataObject` base class or through the :py:attr:`~ovito.modifiers.GrainSegmentationModifier.mesh_display` attribute "
+			"of the :py:class:`~ovito.modifiers.GrainSegmentationModifier` that created the surface mesh."
+			"\n\n"
+		)
+		.def("export_vtk", lambda_address([](PartitionMesh& mesh, const QString& filename, SimulationCellObject* simCellObj) {
+			if(!simCellObj)
+				throw Exception("A simulation cell is required to generate non-periodic mesh for export.");
+			TriMesh output;
+			if(!PartitionMeshDisplay::buildMesh(*mesh.storage(), simCellObj->data(), mesh.cuttingPlanes(), output))
+				throw Exception("Failed to generate non-periodic mesh for export. Simulation cell might be too small.");
+			QFile file(filename);
+			CompressedTextWriter writer(file);
+			output.saveToVTK(writer);
+		}),
+		"export_vtk(filename, cell)"
+		"\n\n"
+		"Writes the surface mesh to a VTK file, which is a simple text-based format and which can be opened with the software ParaView. "
+		"The method takes the output filename and a :py:class:`~ovito.data.SimulationCell` object as input. The simulation cell information "
+		"is needed by the method to generate a non-periodic version of the mesh, which is truncated at the periodic boundaries "
+		"of the simulation cell (if it has any).")
 	;
 
 	ovito_class<PartitionMeshDisplay, DisplayObject>()
