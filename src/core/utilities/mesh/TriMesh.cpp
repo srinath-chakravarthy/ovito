@@ -243,6 +243,11 @@ void TriMesh::saveToVTK(CompressedTextWriter& stream)
 	stream << "\nCELL_TYPES " << faceCount() << "\n";
 	for(size_t i = 0; i < faceCount(); i++)
 		stream << "5\n";	// Triangle
+	stream << "CELL_DATA " << faceCount() << "\n";
+	stream << "SCALARS materialIndex integer" << "\n";
+	stream << "LOOKUP_TABLE default"  << "\n";
+	for(const TriMeshFace& f : faces())
+	  stream << f.materialIndex() << "\n";
 }
 
 /******************************************************************************
