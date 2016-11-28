@@ -244,6 +244,59 @@ bool DelaunayTessellation::alphaTest(CellHandle cell, FloatType alpha) const
 	return (num_x*num_x + num_y*num_y + num_z*num_z) / (4 * den * den) < alpha;
 }
 
+void DelaunayTessellation::export_vtk(const QString &filename)
+{
+  
+	QFile file(filename);
+	CompressedTextWriter stream(file);
+
+
+  	stream << "# vtk DataFile Version 3.0\n";
+	stream << "# Delaunay Tesselation mesh\n";
+	stream << "ASCII\n";
+	stream << "DATASET UNSTRUCTURED_GRID\n";
+	stream << "POINTS " << _primaryVertexCount << " double\n";
+	for(CellIterator cell = begin_cells(); cell != end_cells(); ++cell) {
+	  auto cellIndex = getCellIndex(cell);
+	  if (getCellIndex(cell) > -1) {
+	    for (size_type i= 0; i < 4; i ++){
+	      auto vertex = cellVertex(cell,i);
+	      Point3 position = vertexPosition(vertex);
+	      auto vertexindex = vertexIndex(vertex);
+	      stream << position.x() << " "<< position.y() << " " << position.z() << "\n";
+	    }
+	  }
+	}
+	qDebug() << _primaryVertexCount ;
+	stream << "\nCELLS " << numberOfPrimaryTetrahedra() << " " << (numberOfPrimaryTetrahedra() * 5) << "\n";
+	for(CellIterator cell = begin_cells(); cell != end_cells(); ++cell) {
+	  auto cellIndex = getCellIndex(cell);
+	  if (getCellIndex(cell) > -1) {
+	    stream << 4;
+	    for (size_type i= 0; i < 4; i ++){
+	      auto vertex = cellVertex(cell,i);
+	      //auto vertexPosition = vertexPosition(vertex);
+	      auto vertexindex = vertexIndex(vertex);
+	      stream << " " << vertexindex;
+	    }
+	    stream << "\n";
+	  }
+	}
+	stream << "\nCELL_TYPES " << numberOfPrimaryTetrahedra() << "\n";
+	for(CellIterator cell = begin_cells(); cell != end_cells(); ++cell) {
+	  if (getCellIndex(cell) > -1) 
+		stream << "10\n";	// Tetrahedron
+	}
+	stream << "CELL_DATA " << numberOfPrimaryTetrahedra() << "\n";
+	stream << "SCALARS materialIndex integer" << "\n";
+	stream << "LOOKUP_TABLE default"  << "\n";
+	for(CellIterator cell = begin_cells(); cell != end_cells(); ++cell) {
+	  if (getCellIndex(cell) > -1) 
+	    stream << getUserField(cell) << "\n";
+	}
+}
+
+
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace

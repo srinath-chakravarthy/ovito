@@ -22,6 +22,10 @@
 #ifndef __OVITO_DELAUNAY_TESSELLATION_H
 #define __OVITO_DELAUNAY_TESSELLATION_H
 
+#include <core/Core.h>
+#include <core/utilities/io/CompressedTextWriter.h>
+
+
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/data/SimulationCell.h>
 #include <plugins/particles/data/ParticleProperty.h>
@@ -201,6 +205,8 @@ public:
 
 	/// Returns the simulation cell geometry.
 	const SimulationCell& simCell() const { return _simCell; }
+	
+	void export_vtk(const QString& filename);
 
 private:
 
