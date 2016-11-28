@@ -195,11 +195,13 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 			double rmsd;
 			double q[4];
 			double F[9], F_res[3];
+			int symmindex;
 			ptm_index(ptm_local_handle, numNeighbors + 1, points, _alloyTypes ? atomTypes : nullptr, flags, true,
-					&type, &alloy_type, &scale, &rmsd, q,
+					&type, &alloy_type, &scale, &rmsd, q, symmindex,
 					_deformationGradients ? F : nullptr,
 					_deformationGradients ? F_res : nullptr,
 					nullptr, nullptr, nullptr, &interatomic_distance, nullptr);
+			//qDebug() << index << "symmetry = " << symmindex;
 
 			// Convert PTM classification to our own scheme and store computed quantities.
 			if(type == PTM_MATCH_NONE) {
