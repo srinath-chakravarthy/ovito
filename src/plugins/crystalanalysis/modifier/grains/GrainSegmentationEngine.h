@@ -29,6 +29,8 @@
 #include <plugins/particles/data/BondsStorage.h>
 #include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
 
+#include <core/utilities/io/CompressedTextWriter.h>
+
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 /*
@@ -72,6 +74,10 @@ public:
 	/// Returns the array of atom cluster IDs.
 	ParticleProperty* atomClusters() const { return _atomClusters.data(); }
 
+	
+	/// Returns the array of atom cluster IDs.
+	ParticleProperty* symmetry() const { return _symmetryorient.data(); }
+
 	/// Returns the created cluster graph.
 	ClusterGraph* outputClusterGraph() { return _outputClusterGraph.data(); }
 
@@ -100,12 +106,14 @@ public:
 	ParticleProperty* defectDistances() const { return _defectDistances.data(); }
 
 	/// Returns the property storing the distance transform basin each atom has been assigned to.
-	ParticleProperty* defectDistanceBasins() const { return _defectDistanceBasins.data(); }
+	ParticleProperty* defectDistanceBasins() const { return _defectDistanceBasins.data(); }	
 
 private:
 
 	/// Builds the triangle mesh for the grain boundaries.
 	bool buildPartitionMesh();
+	// Extract submesh from partitionmesh
+	void extractMesh();
 
 private:
 
@@ -122,6 +130,10 @@ private:
 
 	/// The computed per-particle lattice orientations.
 	QExplicitlySharedDataPointer<ParticleProperty> _orientations;
+
+	
+	/// The computed per-particle lattice orientations.
+	QExplicitlySharedDataPointer<ParticleProperty> _symmetryorient;
 
 	/// The number of iterations of the smoothing procedure.
 	int _numOrientationSmoothingIterations;
