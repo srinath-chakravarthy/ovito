@@ -301,7 +301,7 @@ static double calculate_interatomic_distance(int type, double scale)
 }
 
 int ptm_index(	ptm_local_handle_t local_handle, int num_points, double* unpermuted_points, int32_t* unpermuted_numbers, int32_t flags, bool topological_ordering,
-		int32_t* p_type, int32_t* p_alloy_type, double* p_scale, double* p_rmsd, double* q, double* F, double* F_res, double* U, double* P, int8_t* mapping, double* p_interatomic_distance, double* p_lattice_constant)
+		int32_t* p_type, int32_t* p_alloy_type, double* p_scale, double* p_rmsd, double* q, int &permq, double* F, double* F_res, double* U, double* P, int8_t* mapping, double* p_interatomic_distance, double* p_lattice_constant)
 {
 	if (flags & PTM_CHECK_SC)
 		assert(num_points >= structure_sc.num_nbrs + 1);
@@ -411,7 +411,9 @@ int ptm_index(	ptm_local_handle_t local_handle, int num_points, double* unpermut
 		else if (ref->type == PTM_MATCH_BCC)	bi = rotate_quaternion_into_cubic_fundamental_zone(res.q);
 		else if (ref->type == PTM_MATCH_ICO)	bi = rotate_quaternion_into_icosahedral_fundamental_zone(res.q);
 		else if (ref->type == PTM_MATCH_HCP)	bi = rotate_quaternion_into_hcp_fundamental_zone(res.q);
-
+		
+		permq = bi;
+		
 		int8_t temp[15];
 		for (int i=0;i<ref->num_nbrs+1;i++)
 			temp[ref->mapping[bi][i]] = res.mapping[i];
