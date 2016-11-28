@@ -132,7 +132,7 @@ private:
 	};
 
 	/// The dataset that provides the context for the script execution.
-	OORef<DataSet> _dataset;
+	QPointer<DataSet> _dataset;
 
 	/// The namespace (scope) the script will be executed in by this script engine.
 	py::dict _mainNamespace;
