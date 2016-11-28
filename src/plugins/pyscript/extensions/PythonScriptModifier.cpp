@@ -367,8 +367,8 @@ void PythonScriptModifier::compileScript()
 	// Extract the modify() function defined by the script.
 	_scriptEngine->execute([this]() {
 		try {
-			_modifyScriptFunction = _scriptEngine->mainNamespace()["modify"];
-			if(!_modifyScriptFunction.check()) {
+			_modifyScriptFunction = py::function(_scriptEngine->mainNamespace()["modify"]);
+			if(!py::isinstance<py::function>(_modifyScriptFunction)) {
 				_modifyScriptFunction = py::function();
 				throwException(tr("Invalid Python script. It does not define a callable function modify()."));
 			}

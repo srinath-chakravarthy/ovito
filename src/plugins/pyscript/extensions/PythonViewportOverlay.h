@@ -68,7 +68,7 @@ public:
 
 	/// Returns whether the script was successfully compiled.
 	bool compilationSucessful() const {
-		return _overlayScriptFunction.check();
+		return (bool)_overlayScriptFunction;
 	}
 
 protected:

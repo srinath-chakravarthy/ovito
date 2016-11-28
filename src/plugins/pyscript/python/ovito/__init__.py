@@ -28,7 +28,11 @@ import pkgutil
 import importlib
 for _, _name, _ in pkgutil.walk_packages(__path__, __name__ + '.'):
     if _name == "ovito.linalg": continue  # For backward compatibility with OVITO 2.7.1
-    importlib.import_module(_name)
+    try:
+        importlib.import_module(_name)
+    except:
+        print("Error while loading submodule %s:" % _name, sys.exc_info()[0])
+        raise
 
 def _DataSet_scene_nodes(self):
     """ A list-like object containing the :py:class:`~ovito.ObjectNode` instances that are part of the three-dimensional scene.

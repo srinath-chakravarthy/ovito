@@ -28,13 +28,13 @@
 
 namespace PyScript {
 
-/// Flag that indicates whether the global Python interpreter has been initialized.
+/// Indicates whether the global Python interpreter has been initialized.
 bool ScriptEngine::_isInterpreterInitialized = false;
 
-/// The script engine that is currently active (i.e. which is executing a script).
+/// Points to the script engine that is currently active (i.e. which is executing a script).
 ScriptEngine* ScriptEngine::_activeEngine = nullptr;
 
-/// Head of linked list that contains all initXXX functions.
+/// Head of linked list containing all initXXX functions.
 PythonPluginRegistration* PythonPluginRegistration::linkedlist = nullptr;
 
 /******************************************************************************
@@ -52,6 +52,12 @@ ScriptEngine::ScriptEngine(DataSet* dataset, QObject* parent, bool redirectOutpu
 		throw;
 	}
 
+	// Install default signal handlers for Python script output, which forward the script output to the host application's stdout/stderr.
+	if(redirectOutputToConsole) {
+		connect(this, &ScriptEngine::scriptOutput, [](const QString& str) { std::cout << str.toLocal8Bit().constData(); });
+		connect(this, &ScriptEngine::scriptError, [](const QString& str) { std::cerr << str.toLocal8Bit().constData(); });
+	}
+
 	// Initialize state of the script engine.
 	try {
 		// Import the main module and get a reference to the main namespace.
@@ -63,7 +69,7 @@ ScriptEngine::ScriptEngine(DataSet* dataset, QObject* parent, bool redirectOutpu
 		// Add a reference to the current dataset to the namespace.
         PyObject* mod = PyImport_ImportModule("ovito");
         if(!mod) throw py::error_already_set();
-		py::module ovito_module(mod, false);
+		py::module ovito_module = py::reinterpret_steal<py::module>(mod);
         py::setattr(ovito_module, "dataset", py::cast(dataset));
 	}
 	catch(py::error_already_set& ex) {
@@ -74,12 +80,6 @@ ScriptEngine::ScriptEngine(DataSet* dataset, QObject* parent, bool redirectOutpu
 	}
 	catch(const std::exception& ex) {
 		throw Exception(tr("Failed to initialize Python interpreter. %1").arg(ex.what()), dataset);
-	}
-
-	// Install default signal handlers for Python script output, which forward the script output to the host application's stdout/stderr.
-	if(redirectOutputToConsole) {
-		connect(this, &ScriptEngine::scriptOutput, [](const QString& str) { std::cout << str.toLocal8Bit().constData(); });
-		connect(this, &ScriptEngine::scriptError, [](const QString& str) { std::cerr << str.toLocal8Bit().constData(); });
 	}
 }
 
@@ -120,11 +120,11 @@ void ScriptEngine::initializeInterpreter()
 #endif
 
 		// Make our internal script modules available by registering their initXXX functions with the Python interpreter.
-		// This is always required for static builds where all Ovito plugins are linked into the main executable file.
-		// On Windows this pre-registration is also needed, because OVITO plugin dynamic libraries have an .dll extension and the Python interpreter 
-		// can only find modules that have a .pyd extension.
+		// This is required for static builds where all Ovito plugins are linked into the main executable file.
+		// On Windows this is needed, because OVITO plugins have an .dll extension and the Python interpreter 
+		// only looks for modules that have a .pyd extension.
 		for(PythonPluginRegistration* r = PythonPluginRegistration::linkedlist; r != nullptr; r = r->_next) {
-			// Note: "const_cast" is for backward compatibility with Python 2.6
+			// Note: "const_cast" is for backward compatibility with Python 2.6.
 			PyImport_AppendInittab(const_cast<char*>(r->_moduleName), r->_initFunc);
 		}
 
@@ -158,7 +158,7 @@ void ScriptEngine::initializeInterpreter()
 		});
 
 		// Prepend directories containing OVITO's Python modules to sys.path.
-		py::list sys_path = sys_module.attr("path").cast<py::list>();
+		py::object sys_path = sys_module.attr("path");
 
 		for(const QDir& pluginDir : PluginManager::instance().pluginDirs()) {
 			py::object path = py::cast(QDir::toNativeSeparators(pluginDir.absolutePath() + "/python"));
@@ -195,7 +195,7 @@ int ScriptEngine::executeCommands(const QString& commands, const QStringList& sc
 	if(QThread::currentThread() != QCoreApplication::instance()->thread())
 		throw Exception(tr("Can run Python scripts only from the main thread."));
 
-	if(_mainNamespace.is_none())
+	if(!_mainNamespace)
 		throw Exception(tr("Python script engine is not initialized."), dataset());
 
 	// Remember the script engine that was active so we can restore it later.
@@ -252,7 +252,7 @@ void ScriptEngine::execute(const std::function<void()>& func)
 	if(QThread::currentThread() != QCoreApplication::instance()->thread())
 		throw Exception(tr("Can run Python scripts only from the main thread."));
 
-	if(_mainNamespace.is_none())
+	if(!_mainNamespace)
 		throw Exception(tr("Python script engine is not initialized."), dataset());
 
 	// Remember the script engine that was active so we can restore it later.
@@ -305,7 +305,7 @@ int ScriptEngine::executeFile(const QString& filename, const QStringList& script
 	if(QThread::currentThread() != QCoreApplication::instance()->thread())
 		throw Exception(tr("Can run Python scripts only from the main thread."));
 
-	if(_mainNamespace.is_none())
+	if(!_mainNamespace)
 		throw Exception(tr("Python script engine is not initialized."), dataset());
 
 	// Remember the script engine that was active so we can restore it later.
@@ -347,15 +347,15 @@ int ScriptEngine::executeFile(const QString& filename, const QStringList& script
 			PyErr_Fetch(&extype, &value, &traceback);
 			PyErr_NormalizeException(&extype, &value, &traceback);
 			if(extype) {
-				py::object o_extype(extype, true);
-				py::object o_value(value, true);
+				py::object o_extype = py::reinterpret_borrow<py::object>(extype);
+				py::object o_value = py::reinterpret_borrow<py::object>(value);
 				try {
 					if(traceback) {
-						py::object o_traceback(traceback, true);
+						py::object o_traceback = py::reinterpret_borrow<py::object>(traceback);
 						py::object mod_traceback = py::module::import("traceback");
 						bool chain = PyObject_IsInstance(value, extype) == 1;
-						py::sequence lines(mod_traceback.attr("format_exception")(o_extype, o_value, o_traceback, py::none(), chain));
-						if(lines.check()) {
+						py::sequence lines = mod_traceback.attr("format_exception")(o_extype, o_value, o_traceback, py::none(), chain);
+						if(py::isinstance<py::sequence>(lines)) {
 							QString tracebackString;
 							for(int i = 0; i < py::len(lines); ++i)
 								tracebackString += lines[i].cast<QString>();
@@ -363,10 +363,10 @@ int ScriptEngine::executeFile(const QString& filename, const QStringList& script
 						}
 					}
 					else {
-						exception.appendDetailMessage(o_value.str().cast<QString>());
+						exception.appendDetailMessage(py::str(o_value).cast<QString>());
 					}
 				}
-				catch( py::error_already_set& ex) {
+				catch(py::error_already_set& ex) {
 					ex.restore();
 					PyErr_Print();
 				}
@@ -412,38 +412,34 @@ int ScriptEngine::handleSystemExit()
 	if(Py_FlushLine())
 		PyErr_Clear();
 #endif
-	if(value == NULL || value == Py_None)
-		goto done;
+	if(value && value != Py_None) {
 #ifdef PyExceptionInstance_Check
-	if(PyExceptionInstance_Check(value)) {	// Python 2.6 or newer
+		if(PyExceptionInstance_Check(value)) {	// Python 2.6 or newer
 #else
-	if(PyInstance_Check(value)) {			// Python 2.4
+		if(PyInstance_Check(value)) {			// Python 2.4
 #endif
-		// The error code should be in the code attribute.
-		PyObject *code = PyObject_GetAttrString(value, "code");
-		if(code) {
-			Py_DECREF(value);
-			value = code;
-			if (value == Py_None)
-				goto done;
+			// The error code should be in the code attribute.
+			PyObject *code = PyObject_GetAttrString(value, "code");
+			if(code) {
+				Py_DECREF(value);
+				value = code;
+				if(value == Py_None)
+					goto done;
+			}
+			// If we failed to dig out the 'code' attribute, just let the else clause below print the error.
 		}
-		// If we failed to dig out the 'code' attribute, just let the else clause below print the error.
-	}
 #if PY_MAJOR_VERSION >= 3
-	if(PyLong_Check(value))
-		exitcode = (int)PyLong_AsLong(value);
+		if(PyLong_Check(value))
+			exitcode = (int)PyLong_AsLong(value);
 #else
-	if(PyInt_Check(value))
-		exitcode = (int)PyInt_AsLong(value);
+		if(PyInt_Check(value))
+			exitcode = (int)PyInt_AsLong(value);
 #endif
-	else {
-		py::str s(PyObject_Str(value), false);
-		QString errorMsg;
-		if(s.check())
-			errorMsg = s.cast<QString>() + QChar('\n');
-		if(!errorMsg.isEmpty())
-			Q_EMIT scriptError(errorMsg);
-		exitcode = 1;
+		else {
+			py::str s(value);
+			Q_EMIT scriptError(s.cast<QString>() + QChar('\n'));
+			exitcode = 1;
+		}
 	}
 
 done:

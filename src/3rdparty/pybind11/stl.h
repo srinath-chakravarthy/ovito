@@ -45,15 +45,15 @@ template <typename Type, typename Key> struct set_caster {
     using key_conv = make_caster<Key>;
 
     bool load(handle src, bool convert) {
-        pybind11::set s(src, true);
-        if (!s.check())
+        if (!isinstance<pybind11::set>(src))
             return false;
+        auto s = reinterpret_borrow<pybind11::set>(src);
         value.clear();
         key_conv conv;
         for (auto entry : s) {
             if (!conv.load(entry, convert))
                 return false;
-            value.insert((Key) conv);
+            value.insert(cast_op<Key>(conv));
         }
         return true;
     }
@@ -61,7 +61,7 @@ template <typename Type, typename Key> struct set_caster {
     static handle cast(const type &src, return_value_policy policy, handle parent) {
         pybind11::set s;
         for (auto const &value: src) {
-            object value_ = object(key_conv::cast(value, policy, parent), false);
+            auto value_ = reinterpret_steal<object>(key_conv::cast(value, policy, parent));
             if (!value_ || !s.add(value_))
                 return handle();
         }
@@ -77,9 +77,9 @@ template <typename Type, typename Key, typename Value> struct map_caster {
     using value_conv = make_caster<Value>;
 
     bool load(handle src, bool convert) {
-        dict d(src, true);
-        if (!d.check())
+        if (!isinstance<dict>(src))
             return false;
+        auto d = reinterpret_borrow<dict>(src);
         key_conv kconv;
         value_conv vconv;
         value.clear();
@@ -87,7 +87,7 @@ template <typename Type, typename Key, typename Value> struct map_caster {
             if (!kconv.load(it.first.ptr(), convert) ||
                 !vconv.load(it.second.ptr(), convert))
                 return false;
-            value.emplace((Key) kconv, (Value) vconv);
+            value.emplace(cast_op<Key>(kconv), cast_op<Value>(vconv));
         }
         return true;
     }
@@ -95,8 +95,8 @@ template <typename Type, typename Key, typename Value> struct map_caster {
     static handle cast(const type &src, return_value_policy policy, handle parent) {
         dict d;
         for (auto const &kv: src) {
-            object key = object(key_conv::cast(kv.first, policy, parent), false);
-            object value = object(value_conv::cast(kv.second, policy, parent), false);
+            auto key = reinterpret_steal<object>(key_conv::cast(kv.first, policy, parent));
+            auto value = reinterpret_steal<object>(value_conv::cast(kv.second, policy, parent));
             if (!key || !value)
                 return handle();
             d[key] = value;
@@ -112,16 +112,16 @@ template <typename Type, typename Value> struct list_caster {
     using value_conv = make_caster<Value>;
 
     bool load(handle src, bool convert) {
-        sequence s(src, true);
-        if (!s.check())
+        if (!isinstance<sequence>(src))
             return false;
+        auto s = reinterpret_borrow<sequence>(src);
         value_conv conv;
         value.clear();
         reserve_maybe(s, &value);
         for (auto it : s) {
             if (!conv.load(it, convert))
                 return false;
-            value.push_back((Value) conv);
+            value.push_back(cast_op<Value>(conv));
         }
         return true;
     }
@@ -135,7 +135,7 @@ template <typename Type, typename Value> struct list_caster {
         list l(src.size());
         size_t index = 0;
         for (auto const &value: src) {
-            object value_ = object(value_conv::cast(value, policy, parent), false);
+            auto value_ = reinterpret_steal<object>(value_conv::cast(value, policy, parent));
             if (!value_)
                 return handle();
             PyList_SET_ITEM(l.ptr(), index++, value_.release().ptr()); // steals a reference
@@ -157,9 +157,9 @@ template <typename Type, size_t Size> struct type_caster<std::array<Type, Size>>
     using value_conv = make_caster<Type>;
 
     bool load(handle src, bool convert) {
-        list l(src, true);
-        if (!l.check())
+        if (!isinstance<list>(src))
             return false;
+        auto l = reinterpret_borrow<list>(src);
         if (l.size() != Size)
             return false;
         value_conv conv;
@@ -167,7 +167,7 @@ template <typename Type, size_t Size> struct type_caster<std::array<Type, Size>>
         for (auto it : l) {
             if (!conv.load(it, convert))
                 return false;
-            value[ctr++] = (Type) conv;
+            value[ctr++] = cast_op<Type>(conv);
         }
         return true;
     }
@@ -176,7 +176,7 @@ template <typename Type, size_t Size> struct type_caster<std::array<Type, Size>>
         list l(Size);
         size_t index = 0;
         for (auto const &value: src) {
-            object value_ = object(value_conv::cast(value, policy, parent), false);
+            auto value_ = reinterpret_steal<object>(value_conv::cast(value, policy, parent));
             if (!value_)
                 return handle();
             PyList_SET_ITEM(l.ptr(), index++, value_.release().ptr()); // steals a reference
@@ -200,13 +200,12 @@ template <typename Key, typename Value, typename Hash, typename Equal, typename 
 
 // This type caster is intended to be used for std::optional and std::experimental::optional
 template<typename T> struct optional_caster {
-    using value_type = typename intrinsic_type<typename T::value_type>::type;
-    using caster_type = type_caster<value_type>;
+    using value_conv = make_caster<typename T::value_type>;
 
     static handle cast(const T& src, return_value_policy policy, handle parent) {
         if (!src)
             return none().inc_ref();
-        return caster_type::cast(*src, policy, parent);
+        return value_conv::cast(*src, policy, parent);
     }
 
     bool load(handle src, bool convert) {
@@ -215,18 +214,16 @@ template<typename T> struct optional_caster {
         } else if (src.is_none()) {
             value = {};  // nullopt
             return true;
-        } else if (!inner.load(src, convert)) {
-            return false;
-        } else {
-            value.emplace(static_cast<const value_type&>(inner));
-            return true;
         }
+        value_conv inner_caster;
+        if (!inner_caster.load(src, convert))
+            return false;
+
+        value.emplace(cast_op<typename T::value_type>(inner_caster));
+        return true;
     }
 
-    PYBIND11_TYPE_CASTER(T, _("Optional[") + caster_type::name() + _("]"));
-
-private:
-    caster_type inner;
+    PYBIND11_TYPE_CASTER(T, _("Optional[") + value_conv::name() + _("]"));
 };
 
 #if PYBIND11_HAS_OPTIONAL
@@ -248,7 +245,7 @@ template<> struct type_caster<std::experimental::nullopt_t>
 NAMESPACE_END(detail)
 
 inline std::ostream &operator<<(std::ostream &os, const handle &obj) {
-    os << (std::string) obj.str();
+    os << (std::string) str(obj);
     return os;
 }
 

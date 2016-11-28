@@ -40,12 +40,8 @@ PYBIND11_NOINLINE inline internals &get_internals() {
         return *internals_ptr;
     handle builtins(PyEval_GetBuiltins());
     const char *id = PYBIND11_INTERNALS_ID;
-    capsule caps;
-    if (builtins.contains(id)) {
-        caps = builtins[id];
-    }
-    if (caps.check()) {
-        internals_ptr = caps;
+    if (builtins.contains(id) && isinstance<capsule>(builtins[id])) {
+        internals_ptr = capsule(builtins[id]);
     } else {
         internals_ptr = new internals();
         #if defined(WITH_THREAD)
@@ -111,6 +107,17 @@ PYBIND11_NOINLINE inline handle get_type_handle(const std::type_info &tp, bool t
     return handle(type_info ? ((PyObject *) type_info->type) : nullptr);
 }
 
+PYBIND11_NOINLINE inline bool isinstance_generic(handle obj, const std::type_info &tp) {
+    const auto type = detail::get_type_handle(tp, false);
+    if (!type)
+        return false;
+
+    const auto result = PyObject_IsInstance(obj.ptr(), type.ptr());
+    if (result == -1)
+        throw error_already_set();
+    return result != 0;
+}
+
 PYBIND11_NOINLINE inline std::string error_string() {
     if (!PyErr_Occurred()) {
         PyErr_SetString(PyExc_RuntimeError, "Unknown internal error occurred");
@@ -125,23 +132,33 @@ PYBIND11_NOINLINE inline std::string error_string() {
         errorString += ": ";
     }
     if (scope.value)
-        errorString += (std::string) handle(scope.value).str();
+        errorString += (std::string) str(scope.value);
 
     PyErr_NormalizeException(&scope.type, &scope.value, &scope.trace);
 
+#if PY_MAJOR_VERSION >= 3
+    if (scope.trace != nullptr)
+        PyException_SetTraceback(scope.value, scope.trace);
+#endif
+
     if (scope.trace) {
-        PyFrameObject *frame = ((PyTracebackObject *) scope.trace)->tb_frame;
-        if (frame) {
-            errorString += "\n\nAt:\n";
-            while (frame) {
-                int lineno = PyFrame_GetLineNumber(frame);
-                errorString +=
-                    "  " + handle(frame->f_code->co_filename).cast<std::string>() +
-                    "(" + std::to_string(lineno) + "): " +
-                    handle(frame->f_code->co_name).cast<std::string>() + "\n";
-                frame = frame->f_back;
-            }
+        PyTracebackObject *trace = (PyTracebackObject *) scope.trace;
+
+        /* Get the deepest trace possible */
+        while (trace->tb_next)
+            trace = trace->tb_next;
+
+        PyFrameObject *frame = trace->tb_frame;
+        errorString += "\n\nAt:\n";
+        while (frame) {
+            int lineno = PyFrame_GetLineNumber(frame);
+            errorString +=
+                "  " + handle(frame->f_code->co_filename).cast<std::string>() +
+                "(" + std::to_string(lineno) + "): " +
+                handle(frame->f_code->co_name).cast<std::string>() + "\n";
+            frame = frame->f_back;
         }
+        trace = trace->tb_next;
     }
 
     return errorString;
@@ -209,7 +226,7 @@ public:
             auto const &type_dict = get_internals().registered_types_py;
             bool new_style_class = PyType_Check(tobj);
             if (type_dict.find(tobj) == type_dict.end() && new_style_class && tobj->tp_bases) {
-                tuple parents(tobj->tp_bases, true);
+                auto parents = reinterpret_borrow<tuple>(tobj->tp_bases);
                 for (handle parent : parents) {
                     bool result = load(src, convert, (PyTypeObject *) parent.ptr());
                     if (result)
@@ -230,7 +247,7 @@ public:
         /* Perform an implicit conversion */
         if (convert) {
             for (auto &converter : typeinfo->implicit_conversions) {
-                temp = object(converter(src.ptr(), typeinfo->type), false);
+                temp = reinterpret_steal<object>(converter(src.ptr(), typeinfo->type));
                 if (load(temp, false))
                     return true;
             }
@@ -277,7 +294,7 @@ public:
                 return handle((PyObject *) it_i->second).inc_ref();
         }
 
-        object inst(PyType_GenericAlloc(tinfo->type, 0), false);
+        auto inst = reinterpret_steal<object>(PyType_GenericAlloc(tinfo->type, 0));
 
         auto wrapper = (instance<void> *) inst.ptr();
 
@@ -373,10 +390,8 @@ public:
         return cast(&src, policy, parent);
     }
 
-    static handle cast(itype &&src, return_value_policy policy, handle parent) {
-        if (policy != return_value_policy::copy)
-            policy = return_value_policy::move;
-        return cast(&src, policy, parent);
+    static handle cast(itype &&src, return_value_policy, handle parent) {
+        return cast(&src, return_value_policy::move, parent);
     }
 
     static handle cast(const itype *src, return_value_policy policy, handle parent) {
@@ -416,6 +431,14 @@ protected:
 
 template <typename type, typename SFINAE = void> class type_caster : public type_caster_base<type> { };
 template <typename type> using make_caster = type_caster<intrinsic_t<type>>;
+
+// Shortcut for calling a caster's `cast_op_type` cast operator for casting a type_caster to a T
+template <typename T> typename make_caster<T>::template cast_op_type<T> cast_op(make_caster<T> &caster) {
+    return caster.operator typename make_caster<T>::template cast_op_type<T>();
+}
+template <typename T> typename make_caster<T>::template cast_op_type<T> cast_op(make_caster<T> &&caster) {
+    return cast_op<T>(caster);
+}
 
 template <typename type> class type_caster<std::reference_wrapper<type>> : public type_caster_base<type> {
 public:
@@ -480,9 +503,9 @@ public:
 #endif
             PyErr_Clear();
             if (type_error && PyNumber_Check(src.ptr())) {
-                object tmp(std::is_floating_point<T>::value
-                               ? PyNumber_Float(src.ptr())
-                               : PyNumber_Long(src.ptr()), true);
+                auto tmp = reinterpret_borrow<object>(std::is_floating_point<T>::value
+                                                      ? PyNumber_Float(src.ptr())
+                                                      : PyNumber_Long(src.ptr()));
                 PyErr_Clear();
                 return load(tmp, false);
             }
@@ -536,9 +559,8 @@ public:
         }
 
         /* Check if this is a capsule */
-        capsule c(h, true);
-        if (c.check()) {
-            value = (void *) c;
+        if (isinstance<capsule>(h)) {
+            value = reinterpret_borrow<capsule>(h);
             return true;
         }
 
@@ -590,7 +612,7 @@ public:
         if (!src) {
             return false;
         } else if (PyUnicode_Check(load_src.ptr())) {
-            temp = object(PyUnicode_AsUTF8String(load_src.ptr()), false);
+            temp = reinterpret_steal<object>(PyUnicode_AsUTF8String(load_src.ptr()));
             if (!temp) { PyErr_Clear(); return false; }  // UnicodeEncodeError
             load_src = temp;
         }
@@ -631,7 +653,7 @@ public:
         if (!src) {
             return false;
         } else if (!PyUnicode_Check(load_src.ptr())) {
-            temp = object(PyUnicode_FromObject(load_src.ptr()), false);
+            temp = reinterpret_steal<object>(PyUnicode_FromObject(load_src.ptr()));
             if (!temp) { PyErr_Clear(); return false; }
             load_src = temp;
         }
@@ -640,10 +662,10 @@ public:
 #if PY_MAJOR_VERSION >= 3
         buffer = PyUnicode_AsWideCharString(load_src.ptr(), &length);
 #else
-        temp = object(
+        temp = reinterpret_steal<object>(
             sizeof(wchar_t) == sizeof(short)
                 ? PyUnicode_AsUTF16String(load_src.ptr())
-                : PyUnicode_AsUTF32String(load_src.ptr()), false);
+                : PyUnicode_AsUTF32String(load_src.ptr()));
         if (temp) {
             int err = PYBIND11_BYTES_AS_STRING_AND_SIZE(temp.ptr(), (char **) &buffer, &length);
             if (err == -1) { buffer = nullptr; }  // TypeError
@@ -724,8 +746,8 @@ public:
     }
 
     static handle cast(const type &src, return_value_policy policy, handle parent) {
-        object o1 = object(make_caster<T1>::cast(src.first, policy, parent), false);
-        object o2 = object(make_caster<T2>::cast(src.second, policy, parent), false);
+        auto o1 = reinterpret_steal<object>(make_caster<T1>::cast(src.first, policy, parent));
+        auto o2 = reinterpret_steal<object>(make_caster<T2>::cast(src.second, policy, parent));
         if (!o1 || !o2)
             return handle();
         tuple result(2);
@@ -743,8 +765,7 @@ public:
     template <typename T> using cast_op_type = type;
 
     operator type() {
-        return type(first.operator typename make_caster<T1>::template cast_op_type<T1>(),
-                    second.operator typename make_caster<T2>::template cast_op_type<T2>());
+        return type(cast_op<T1>(first), cast_op<T2>(second));
     }
 protected:
     make_caster<T1> first;
@@ -817,13 +838,11 @@ public:
 
 protected:
     template <typename ReturnValue, typename Func, size_t ... Index> ReturnValue call(Func &&f, index_sequence<Index...>) {
-        return f(std::get<Index>(value)
-            .operator typename make_caster<Tuple>::template cast_op_type<Tuple>()...);
+        return f(cast_op<Tuple>(std::get<Index>(value))...);
     }
 
     template <size_t ... Index> type cast(index_sequence<Index...>) {
-        return type(std::get<Index>(value)
-            .operator typename make_caster<Tuple>::template cast_op_type<Tuple>()...);
+        return type(cast_op<Tuple>(std::get<Index>(value))...);
     }
 
     template <size_t ... Indices> bool load(handle src, bool convert, index_sequence<Indices...>) {
@@ -840,7 +859,7 @@ protected:
     /* Implementation: Convert a C++ tuple into a Python tuple */
     template <size_t ... Indices> static handle cast(const type &src, return_value_policy policy, handle parent, index_sequence<Indices...>) {
         std::array<object, size> entries {{
-            object(make_caster<Tuple>::cast(std::get<Indices>(src), policy, parent), false)...
+            reinterpret_steal<object>(make_caster<Tuple>::cast(std::get<Indices>(src), policy, parent))...
         }};
         for (const auto &entry: entries)
             if (!entry)
@@ -899,7 +918,7 @@ public:
             auto const &type_dict = get_internals().registered_types_py;
             bool new_style_class = PyType_Check(tobj);
             if (type_dict.find(tobj) == type_dict.end() && new_style_class && tobj->tp_bases) {
-                tuple parents(tobj->tp_bases, true);
+                auto parents = reinterpret_borrow<tuple>(tobj->tp_bases);
                 for (handle parent : parents) {
                     bool result = load(src, convert, (PyTypeObject *) parent.ptr());
                     if (result)
@@ -913,7 +932,7 @@ public:
 
         if (convert) {
             for (auto &converter : typeinfo->implicit_conversions) {
-                temp = object(converter(src.ptr(), typeinfo->type), false);
+                temp = reinterpret_steal<object>(converter(src.ptr(), typeinfo->type));
                 if (load(temp, false))
                     return true;
             }
@@ -986,19 +1005,26 @@ template <> struct handle_type_name<args> { static PYBIND11_DESCR name() { retur
 template <> struct handle_type_name<kwargs> { static PYBIND11_DESCR name() { return _("**kwargs"); } };
 
 template <typename type>
-struct type_caster<type, enable_if_t<is_pyobject<type>::value>> {
-public:
-    template <typename T = type, enable_if_t<!std::is_base_of<object, T>::value, int> = 0>
-    bool load(handle src, bool /* convert */) { value = type(src); return value.check(); }
+struct pyobject_caster {
+    template <typename T = type, enable_if_t<std::is_same<T, handle>::value, int> = 0>
+    bool load(handle src, bool /* convert */) { value = src; return static_cast<bool>(value); }
 
     template <typename T = type, enable_if_t<std::is_base_of<object, T>::value, int> = 0>
-    bool load(handle src, bool /* convert */) { value = type(src, true); return value.check(); }
+    bool load(handle src, bool /* convert */) {
+        if (!isinstance<type>(src))
+            return false;
+        value = reinterpret_borrow<type>(src);
+        return true;
+    }
 
     static handle cast(const handle &src, return_value_policy /* policy */, handle /* parent */) {
         return src.inc_ref();
     }
     PYBIND11_TYPE_CASTER(type, handle_type_name<type>::name());
 };
+
+template <typename T>
+class type_caster<T, enable_if_t<is_pyobject<T>::value>> : public pyobject_caster<T> { };
 
 // Our conditions for enabling moving are quite restrictive:
 // At compile time:
@@ -1043,7 +1069,7 @@ template <typename T, typename SFINAE> type_caster<T, SFINAE> &load_type(type_ca
         throw cast_error("Unable to cast Python instance to C++ type (compile in debug mode for details)");
 #else
         throw cast_error("Unable to cast Python instance of type " +
-            (std::string) handle.get_type().str() + " to C++ type '" + type_id<T>() + "''");
+            (std::string) str(handle.get_type()) + " to C++ type '" + type_id<T>() + "''");
 #endif
     }
     return conv;
@@ -1057,21 +1083,28 @@ template <typename T> make_caster<T> load_type(const handle &handle) {
 
 NAMESPACE_END(detail)
 
-template <typename T> T cast(const handle &handle) {
-    static_assert(!detail::cast_is_temporary_value_reference<T>::value,
+// pytype -> C++ type
+template <typename T, detail::enable_if_t<!detail::is_pyobject<T>::value, int> = 0>
+T cast(const handle &handle) {
+    using namespace detail;
+    static_assert(!cast_is_temporary_value_reference<T>::value,
             "Unable to cast type to reference: value is local to type caster");
-    using type_caster = detail::make_caster<T>;
-    return detail::load_type<T>(handle).operator typename type_caster::template cast_op_type<T>();
+    return cast_op<T>(load_type<T>(handle));
 }
 
-template <typename T> object cast(const T &value,
-        return_value_policy policy = return_value_policy::automatic_reference,
-        handle parent = handle()) {
+// pytype -> pytype (calls converting constructor)
+template <typename T, detail::enable_if_t<detail::is_pyobject<T>::value, int> = 0>
+T cast(const handle &handle) { return T(reinterpret_borrow<object>(handle)); }
+
+// C++ type -> py::object
+template <typename T, detail::enable_if_t<!detail::is_pyobject<T>::value, int> = 0>
+object cast(const T &value, return_value_policy policy = return_value_policy::automatic_reference,
+            handle parent = handle()) {
     if (policy == return_value_policy::automatic)
         policy = std::is_pointer<T>::value ? return_value_policy::take_ownership : return_value_policy::copy;
     else if (policy == return_value_policy::automatic_reference)
         policy = std::is_pointer<T>::value ? return_value_policy::reference : return_value_policy::copy;
-    return object(detail::make_caster<T>::cast(value, policy, parent), false);
+    return reinterpret_steal<object>(detail::make_caster<T>::cast(value, policy, parent));
 }
 
 template <typename T> T handle::cast() const { return pybind11::cast<T>(*this); }
@@ -1084,7 +1117,7 @@ detail::enable_if_t<detail::move_always<T>::value || detail::move_if_unreference
         throw cast_error("Unable to cast Python instance to C++ rvalue: instance has multiple references"
             " (compile in debug mode for details)");
 #else
-        throw cast_error("Unable to move from Python " + (std::string) obj.get_type().str() +
+        throw cast_error("Unable to move from Python " + (std::string) str(obj.get_type()) +
                 " instance to C++ " + type_id<T>() + " instance: instance has multiple references");
 #endif
 
@@ -1125,7 +1158,7 @@ template <typename ret_type> using overload_caster_t = conditional_t<
 // Trampoline use: for reference/pointer types to value-converted values, we do a value cast, then
 // store the result in the given variable.  For other types, this is a no-op.
 template <typename T> enable_if_t<cast_is_temporary_value_reference<T>::value, T> cast_ref(object &&o, make_caster<T> &caster) {
-    return load_type(caster, o).operator typename make_caster<T>::template cast_op_type<T>();
+    return cast_op<T>(load_type(caster, o));
 }
 template <typename T> enable_if_t<!cast_is_temporary_value_reference<T>::value, T> cast_ref(object &&, overload_unused &) {
     pybind11_fail("Internal error: cast_ref fallback invoked"); }
@@ -1145,8 +1178,8 @@ template <return_value_policy policy = return_value_policy::automatic_reference,
           typename... Args> tuple make_tuple(Args&&... args_) {
     const size_t size = sizeof...(Args);
     std::array<object, size> args {
-        { object(detail::make_caster<Args>::cast(
-            std::forward<Args>(args_), policy, nullptr), false)... }
+        { reinterpret_steal<object>(detail::make_caster<Args>::cast(
+            std::forward<Args>(args_), policy, nullptr))... }
     };
     for (auto &arg_value : args) {
         if (!arg_value) {
@@ -1178,7 +1211,9 @@ struct arg_v : arg {
     template <typename T>
     arg_v(const char *name, T &&x, const char *descr = nullptr)
         : arg(name),
-          value(detail::make_caster<T>::cast(x, return_value_policy::automatic, handle()), false),
+          value(reinterpret_steal<object>(
+              detail::make_caster<T>::cast(x, return_value_policy::automatic, {})
+          )),
           descr(descr)
 #if !defined(NDEBUG)
         , type(type_id<T>())
@@ -1239,10 +1274,10 @@ public:
 
     /// Call a Python function and pass the collected arguments
     object call(PyObject *ptr) const {
-        auto result = object(PyObject_CallObject(ptr, m_args.ptr()), false);
+        PyObject *result = PyObject_CallObject(ptr, m_args.ptr());
         if (!result)
             throw error_already_set();
-        return result;
+        return reinterpret_steal<object>(result);
     }
 
 private:
@@ -1261,7 +1296,7 @@ public:
         int _[] = { 0, (process(args_list, std::forward<Ts>(values)), 0)... };
         ignore_unused(_);
 
-        m_args = object(PyList_AsTuple(args_list.ptr()), false);
+        m_args = std::move(args_list);
     }
 
     const tuple &args() const & { return m_args; }
@@ -1272,16 +1307,16 @@ public:
 
     /// Call a Python function and pass the collected arguments
     object call(PyObject *ptr) const {
-        auto result = object(PyObject_Call(ptr, m_args.ptr(), m_kwargs.ptr()), false);
+        PyObject *result = PyObject_Call(ptr, m_args.ptr(), m_kwargs.ptr());
         if (!result)
             throw error_already_set();
-        return result;
+        return reinterpret_steal<object>(result);
     }
 
 private:
     template <typename T>
     void process(list &args_list, T &&x) {
-        auto o = object(detail::make_caster<T>::cast(std::forward<T>(x), policy, nullptr), false);
+        auto o = reinterpret_steal<object>(detail::make_caster<T>::cast(std::forward<T>(x), policy, {}));
         if (!o) {
 #if defined(NDEBUG)
             argument_cast_error();
@@ -1318,12 +1353,12 @@ private:
     void process(list &/*args_list*/, detail::kwargs_proxy kp) {
         if (!kp)
             return;
-        for (const auto &k : dict(kp, true)) {
+        for (const auto &k : reinterpret_borrow<dict>(kp)) {
             if (m_kwargs.contains(k.first)) {
 #if defined(NDEBUG)
                 multiple_values_error();
 #else
-                multiple_values_error(k.first.str());
+                multiple_values_error(str(k.first));
 #endif
             }
             m_kwargs[k.first] = k.second;

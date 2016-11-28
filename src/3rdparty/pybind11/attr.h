@@ -47,6 +47,9 @@ struct multiple_inheritance { };
 /// Annotation which enables dynamic attributes, i.e. adds `__dict__` to a class
 struct dynamic_attr { };
 
+/// Annotation to mark enums as an arithmetic type
+struct arithmetic { };
+
 NAMESPACE_BEGIN(detail)
 /* Forward declarations */
 enum op_id : int;
@@ -71,7 +74,7 @@ struct argument_record {
 struct function_record {
     function_record()
         : is_constructor(false), is_stateless(false), is_operator(false),
-          has_args(false), has_kwargs(false) { }
+          has_args(false), has_kwargs(false), is_method(false) { }
 
     /// Function name
     char *name = nullptr; /* why no C++ strings? They generate heavier code.. */
@@ -112,14 +115,14 @@ struct function_record {
     /// True if the function has a '**kwargs' argument
     bool has_kwargs : 1;
 
+    /// True if this is a method
+    bool is_method : 1;
+
     /// Number of arguments
     uint16_t nargs;
 
     /// Python method object
     PyMethodDef *def = nullptr;
-
-    /// Python handle to the associated class (if this is method)
-    handle class_;
 
     /// Python handle to the parent scope (a class or a module)
     handle scope;
@@ -232,7 +235,7 @@ template <> struct process_attribute<sibling> : process_attribute_default<siblin
 
 /// Process an attribute which indicates that this function is a method
 template <> struct process_attribute<is_method> : process_attribute_default<is_method> {
-    static void init(const is_method &s, function_record *r) { r->class_ = s.class_; r->scope = s.class_; }
+    static void init(const is_method &s, function_record *r) { r->is_method = true; r->scope = s.class_; }
 };
 
 /// Process an attribute which indicates the parent scope of a method
@@ -248,7 +251,7 @@ template <> struct process_attribute<is_operator> : process_attribute_default<is
 /// Process a keyword argument attribute (*without* a default value)
 template <> struct process_attribute<arg> : process_attribute_default<arg> {
     static void init(const arg &a, function_record *r) {
-        if (r->class_ && r->args.empty())
+        if (r->is_method && r->args.empty())
             r->args.emplace_back("self", nullptr, handle());
         r->args.emplace_back(a.name, nullptr, handle());
     }
@@ -257,17 +260,17 @@ template <> struct process_attribute<arg> : process_attribute_default<arg> {
 /// Process a keyword argument attribute (*with* a default value)
 template <> struct process_attribute<arg_v> : process_attribute_default<arg_v> {
     static void init(const arg_v &a, function_record *r) {
-        if (r->class_ && r->args.empty())
+        if (r->is_method && r->args.empty())
             r->args.emplace_back("self", nullptr, handle());
 
         if (!a.value) {
 #if !defined(NDEBUG)
             auto descr = "'" + std::string(a.name) + ": " + a.type + "'";
-            if (r->class_) {
+            if (r->is_method) {
                 if (r->name)
-                    descr += " in method '" + (std::string) r->class_.str() + "." + (std::string) r->name + "'";
+                    descr += " in method '" + (std::string) str(r->scope) + "." + (std::string) r->name + "'";
                 else
-                    descr += " in method of '" + (std::string) r->class_.str() + "'";
+                    descr += " in method of '" + (std::string) str(r->scope) + "'";
             } else if (r->name) {
                 descr += " in function named '" + (std::string) r->name + "'";
             }
@@ -305,6 +308,11 @@ template <>
 struct process_attribute<dynamic_attr> : process_attribute_default<dynamic_attr> {
     static void init(const dynamic_attr &, type_record *r) { r->dynamic_attr = true; }
 };
+
+
+/// Process an 'arithmetic' attribute for enums (does nothing here)
+template <>
+struct process_attribute<arithmetic> : process_attribute_default<arithmetic> {};
 
 /***
  * Process a keep_alive call policy -- invokes keep_alive_impl during the

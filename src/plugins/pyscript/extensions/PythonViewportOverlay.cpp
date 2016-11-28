@@ -90,8 +90,8 @@ void PythonViewportOverlay::compileScript()
 		// Extract the render() function defined by the script.
 		_scriptEngine.execute([this]() {
 			try {
-				_overlayScriptFunction = _scriptEngine.mainNamespace()["render"];
-				if(!_overlayScriptFunction.check()) {
+				_overlayScriptFunction = py::function(_scriptEngine.mainNamespace()["render"]);
+				if(!py::isinstance<py::function>(_overlayScriptFunction)) {
 					_overlayScriptFunction = py::function();
 					throwException(tr("Invalid Python script. It does not define a callable function render()."));
 				}

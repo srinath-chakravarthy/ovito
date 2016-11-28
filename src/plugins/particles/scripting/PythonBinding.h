@@ -182,8 +182,8 @@ namespace pybind11 { namespace detail {
 
         bool load(handle src, bool) {
 			try {
-				pybind11::sequence seq(src, true);
-				if(!seq.check()) return false;
+				if(!isinstance<sequence>(src)) return false;
+				sequence seq = reinterpret_borrow<sequence>(src);
 				value.resize(seq.size());
 				for(size_t i = 0; i < value.size(); i++) {
 					Ovito::Particles::ParticlePropertyReference pref = seq[i].cast<Ovito::Particles::ParticlePropertyReference>();
@@ -215,8 +215,8 @@ namespace pybind11 { namespace detail {
 
         bool load(handle src, bool) {
 			try {
-				pybind11::sequence seq(src, true);
-				if(!seq.check()) return false;
+				if(!isinstance<sequence>(src)) return false;
+				sequence seq = reinterpret_borrow<sequence>(src);
 				value.reserve(seq.size());
 				for(size_t i = 0; i < seq.size(); i++) {
 					value.push_back(seq[i].cast<Ovito::Particles::ParticlePropertyReference>());

@@ -54,8 +54,8 @@ struct type_caster<Type, enable_if_t<is_eigen_dense<Type>::value && !is_eigen_re
     static constexpr bool isVector = Type::IsVectorAtCompileTime;
 
     bool load(handle src, bool) {
-        array_t<Scalar> buf(src, true);
-        if (!buf.check())
+        auto buf = array_t<Scalar>::ensure(src);
+        if (!buf)
             return false;
 
         if (buf.ndim() == 1) {
@@ -182,7 +182,7 @@ struct type_caster<Type, enable_if_t<is_eigen_sparse<Type>::value>> {
         if (!src)
             return false;
 
-        object obj(src, true);
+        auto obj = reinterpret_borrow<object>(src);
         object sparse_module = module::import("scipy.sparse");
         object matrix_type = sparse_module.attr(
             rowMajor ? "csr_matrix" : "csc_matrix");
@@ -201,7 +201,7 @@ struct type_caster<Type, enable_if_t<is_eigen_sparse<Type>::value>> {
         auto shape = pybind11::tuple((pybind11::object) obj.attr("shape"));
         auto nnz = obj.attr("nnz").cast<Index>();
 
-        if (!values.check() || !innerIndices.check() || !outerIndices.check())
+        if (!values || !innerIndices || !outerIndices)
             return false;
 
         value = Eigen::MappedSparseMatrix<Scalar, Type::Flags, StorageIndex>(
