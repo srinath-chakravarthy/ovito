@@ -190,6 +190,10 @@ private:
 	/// The computed per-particle orientations.
 	QExplicitlySharedDataPointer<ParticleProperty> _localOrientations;
 
+	/// The computed per-particle orientations.
+	QExplicitlySharedDataPointer<ParticleProperty> _symmetryorient;
+
+	
 	/// The computed histogram of RMSD values.
 	QVector<int> _rmsdHistogramData;
 
