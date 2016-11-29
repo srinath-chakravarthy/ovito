@@ -49,7 +49,7 @@ void ptm_uninitialize_local(ptm_local_handle_t ptr);
 
 int ptm_initialize_global();
 int ptm_index(	ptm_local_handle_t local_handle, int num_points, double* atomic_positions, int32_t* atomic_numbers, int32_t flags, bool topological_ordering,										//inputs
-		int32_t* p_type, int32_t* p_alloy_type, double* p_scale, double* p_rmsd, double* q, int &permq, double* F, double* F_res, double* U, double* P, int8_t* mapping, double* p_interatomic_distance, double* p_lattice_constant);	//outputs
+		int32_t* p_type, int32_t* p_alloy_type, double* p_scale, double* p_rmsd, double* q, double* q_act, int &permq, double* F, double* F_res, double* U, double* P, int8_t* mapping, double* p_interatomic_distance, double* p_lattice_constant);	//outputs
 
 
 //------------------------------------

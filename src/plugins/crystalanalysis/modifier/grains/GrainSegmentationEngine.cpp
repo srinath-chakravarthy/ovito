@@ -41,6 +41,7 @@
 #include <boost/functional/hash.hpp>
 #include <unordered_set>
 
+#include <QStringBuilder>
 
 #define SQRT_2         1.4142135623730951454746218587388284504414
 #define HALF_SQRT_2    0.7071067811865474617150084668537601828575
@@ -257,14 +258,21 @@ void GrainSegmentationEngine::perform()
 			double scale;
 			double rmsd;
 			double q[4];
+			double q_act[4];
 			int8_t mapping[PTM_MAX_NBRS + 1];
 			int symmindex;
 			
 			ptm_index(ptm_local_handle, numNeighbors + 1, points, nullptr, flags, true,
-					&type, &alloy_type, &scale, &rmsd, q, symmindex,
+					&type, &alloy_type, &scale, &rmsd, q, q_act, symmindex,
 					nullptr, nullptr,
 					nullptr, nullptr, mapping, nullptr, nullptr);
 			//qDebug() << index << " Symmetry perm = " << symmindex;
+			    if (q_act[0] < 0){
+				q_act[0] = -q_act[0];
+				q_act[1] = -q_act[1];
+				q_act[2] = -q_act[2];
+				q_act[3] = -q_act[3];
+			    }
 			// Convert PTM classification to our own scheme and store computed quantities.
 			if(type == PTM_MATCH_NONE) {
 				output->setInt(index, OTHER);
@@ -728,7 +736,7 @@ void GrainSegmentationEngine::perform()
 	// Determine new IDs for non-root clusters.
 	for(int i = 0; i < numBasins; i++) {
 		clusterRemapping[i] = clusterRemapping[findParentCluster(i)];
-		qDebug() << i << " " << clusterRemapping[i] << " " << clusterSizes[i] << " " << clusterOrientations[i];
+		//qDebug() << i << " " << clusterRemapping[i] << " " << clusterSizes[i] << " " << clusterOrientations[i];
 	}
 
 #if 1
@@ -897,7 +905,7 @@ void GrainSegmentationEngine::perform()
 		setProgressText(GrainSegmentationModifier::tr("Building grain boundary mesh"));
 		if(!buildPartitionMesh())
 			return;
-	    extractMesh();
+		extractMesh();
 	}
 	
 }
@@ -943,12 +951,12 @@ void GrainSegmentationEngine::extractMesh()
 	Cluster* cluster = outputClusterGraph()->clusters()[clusterIndex];
 	std::vector<PartitionMeshData::Vertex*> newVertices;       //  Storage for new vertices
 	int regionid = cluster->id;
+	Vector3 normal_average = Vector3::Zero();
 	for (ClusterTransition *t = cluster->transitions; t != nullptr; t=t->next){
 	      newmesh->clear();                                    //  Clears the mesh for each transition
 	      newVertices.clear();                                 // Clear the newVertices array
 	      //ClusterTransition *t = cluster->transitions;
 	      int regionId2 = t->cluster2->id;
-	      Vector3 normal_average;
 	      // Loop through the faces and extract all faces that have oppositeFace region equal to other clusterID
 	      for(PartitionMeshData::Face* face : _mesh->faces()) {
 		PartitionMeshData::Face* oppositeFace = face->oppositeFace;
@@ -987,19 +995,14 @@ void GrainSegmentationEngine::extractMesh()
 		    //qDebug() << "Edgecount on Face = " << face->index() << v;
 		    // Create new face in the new mesh 
 		    PartitionMeshData::Face* newface = newmesh->createFace(faceVertices.begin(),faceVertices.end());
-		    Vector3 triedge1 = faceVertices[1]->pos()-faceVertices[0]->pos(); 
-		    Vector3 triedge2 = faceVertices[2]->pos()-faceVertices[0]->pos(); 
-		    Vector3 facenormal = (triedge1.cross(triedge2));
-		    facenormal.normalize();
-		    normal_average +=  facenormal;
+		    //newface->region = regionid;
+		    //newface->oppositeFace->region = regionId2;
 		    // Obtain normal vector to triangle
 		    /// Use Vecto3 and cross product to find normal, average and then normalize to obtain average normal
 		    /// Store this average in the clustergraph so that it can be accessed. 
 		  }
 		}
 	      }	
-	      normal_average.normalize();
-	      
 	      qDebug() << "Transisition = " <<  regionid <<  " to " <<  regionId2 <<  " mesh faces  " << newmesh->faceCount() <<  "Normal = " <<  normal_average;
 	      //}
 	      // Now export this mesh to test
@@ -1010,10 +1013,27 @@ void GrainSegmentationEngine::extractMesh()
 	      if (!PartitionMeshDisplay::buildMesh(*newmesh,cell(),cutting, output_mesh, progress1)){
 		qDebug() << "Error on buildMesh";
 	      }
+	      for(const TriMeshFace& f : output_mesh.faces()) {
+		    Point3 p1 = output_mesh.vertex(f.vertex(0));
+		    Point3 p2 = output_mesh.vertex(f.vertex(1));
+		    Point3 p3 = output_mesh.vertex(f.vertex(2));
+		    
+		    Vector3 triedge1 = p2 - p1;
+		    Vector3 triedge2 = p3 - p1; 
+		    Vector3 facenormal = (triedge1.cross(triedge2));
+		    if (facenormal.length()> 1.0e-6) {
+			facenormal.normalize();
+			normal_average +=  facenormal;
+		    }
+
+	      }
+	      normal_average.normalize();
+	      t->normal = normal_average;
 	      
 	      QString filename;
-	      filename = "%1%2%3%4";
-	      filename.arg("test_new_",  QString::number(regionid),  QString::number(regionId2), ".vtk");
+	      filename = "test_new_" % QString::number(regionid) % "-" % QString::number(regionId2) % ".vtk";
+	      qDebug() << filename; 
+	      //filename.arg("test_new_",  QString::number(regionid),  QString::number(regionId2), ".vtk");
 	      QFile file(filename);
 	      CompressedTextWriter writer(file);
 	      
@@ -1237,90 +1257,6 @@ bool GrainSegmentationEngine::buildPartitionMesh()
 	return true;
 }
 
-bool   splitFace(TriMesh& output, int faceIndex, int oldVertexCount, std::vector<Point3>& newVertices,
-		std::map<std::pair<int,int>,std::pair<int,int>>& newVertexLookupMap, const SimulationCell& cell, size_t dim)
-{
-	TriMeshFace& face = output.face(faceIndex);
-	OVITO_ASSERT(face.vertex(0) != face.vertex(1));
-	OVITO_ASSERT(face.vertex(1) != face.vertex(2));
-	OVITO_ASSERT(face.vertex(2) != face.vertex(0));
-
-	FloatType z[3];
-	for(int v = 0; v < 3; v++)
-		z[v] = output.vertex(face.vertex(v))[dim];
-	FloatType zd[3] = { z[1] - z[0], z[2] - z[1], z[0] - z[2] };
-
-	OVITO_ASSERT(z[1] - z[0] == -(z[0] - z[1]));
-	OVITO_ASSERT(z[2] - z[1] == -(z[1] - z[2]));
-	OVITO_ASSERT(z[0] - z[2] == -(z[2] - z[0]));
-
-	if(std::abs(zd[0]) < 0.5f && std::abs(zd[1]) < 0.5f && std::abs(zd[2]) < 0.5f)
-		return true;	// Face is not crossing the periodic boundary.
-
-	// Create four new vertices (or use existing ones created during splitting of adjacent faces).
-	int properEdge = -1;
-	int newVertexIndices[3][2];
-	for(int i = 0; i < 3; i++) {
-		if(std::abs(zd[i]) < 0.5f) {
-			if(properEdge != -1)
-				return false;		// The simulation box may be too small or invalid.
-			properEdge = i;
-			continue;
-		}
-		int vi1 = face.vertex(i);
-		int vi2 = face.vertex((i+1)%3);
-		int oi1, oi2;
-		if(zd[i] <= -0.5f) {
-			std::swap(vi1, vi2);
-			oi1 = 1; oi2 = 0;
-		}
-		else {
-			oi1 = 0; oi2 = 1;
-		}
-		auto entry = newVertexLookupMap.find(std::make_pair(vi1, vi2));
-		if(entry != newVertexLookupMap.end()) {
-			newVertexIndices[i][oi1] = entry->second.first;
-			newVertexIndices[i][oi2] = entry->second.second;
-		}
-		else {
-			Vector3 delta = output.vertex(vi2) - output.vertex(vi1);
-			delta[dim] -= 1.0f;
-			for(size_t d = dim + 1; d < 3; d++) {
-				if(cell.pbcFlags()[d])
-					delta[d] -= floor(delta[d] + FloatType(0.5));
-			}
-			FloatType t;
-			if(delta[dim] != 0)
-				t = output.vertex(vi1)[dim] / (-delta[dim]);
-			else
-				t = 0.5f;
-			OVITO_ASSERT(std::isfinite(t));
-			Point3 p = delta * t + output.vertex(vi1);
-			newVertexIndices[i][oi1] = oldVertexCount + (int)newVertices.size();
-			newVertexIndices[i][oi2] = oldVertexCount + (int)newVertices.size() + 1;
-			newVertexLookupMap.insert(std::make_pair(std::pair<int,int>(vi1, vi2), std::pair<int,int>(newVertexIndices[i][oi1], newVertexIndices[i][oi2])));
-			newVertices.push_back(p);
-			p[dim] += 1.0f;
-			newVertices.push_back(p);
-		}
-	}
-	OVITO_ASSERT(properEdge != -1);
-
-	// Build output triangles.
-	int originalVertices[3] = { face.vertex(0), face.vertex(1), face.vertex(2) };
-	face.setVertices(originalVertices[properEdge], originalVertices[(properEdge+1)%3], newVertexIndices[(properEdge+2)%3][1]);
-
-	int materialIndex = face.materialIndex();
-	output.setFaceCount(output.faceCount() + 2);
-	TriMeshFace& newFace1 = output.face(output.faceCount() - 2);
-	TriMeshFace& newFace2 = output.face(output.faceCount() - 1);
-	newFace1.setVertices(originalVertices[(properEdge+1)%3], newVertexIndices[(properEdge+1)%3][0], newVertexIndices[(properEdge+2)%3][1]);
-	newFace2.setVertices(newVertexIndices[(properEdge+1)%3][1], originalVertices[(properEdge+2)%3], newVertexIndices[(properEdge+2)%3][0]);
-	newFace1.setMaterialIndex(materialIndex);
-	newFace2.setMaterialIndex(materialIndex);
-
-	return true;
-}
 
 }	// End of namespace
 }	// End of namespace

@@ -419,6 +419,7 @@ BOOST_PYTHON_MODULE(CrystalAnalysis)
 		.add_property("next", make_getter<>(&ClusterTransition::next, return_internal_reference<>()))
 		.add_property("cluster1", make_getter<>(&ClusterTransition::cluster1, return_internal_reference<>()))
 		.add_property("cluster2", make_getter<>(&ClusterTransition::cluster2, return_internal_reference<>()))
+		.add_property("normal", &ClusterTransition::normal)
 	;
 
 	class_<std::vector<Cluster*>, boost::noncopyable>("ClusterList", no_init)

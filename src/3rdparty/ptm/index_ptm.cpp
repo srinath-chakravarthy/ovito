@@ -301,7 +301,7 @@ static double calculate_interatomic_distance(int type, double scale)
 }
 
 int ptm_index(	ptm_local_handle_t local_handle, int num_points, double* unpermuted_points, int32_t* unpermuted_numbers, int32_t flags, bool topological_ordering,
-		int32_t* p_type, int32_t* p_alloy_type, double* p_scale, double* p_rmsd, double* q, int &permq, double* F, double* F_res, double* U, double* P, int8_t* mapping, double* p_interatomic_distance, double* p_lattice_constant)
+		int32_t* p_type, int32_t* p_alloy_type, double* p_scale, double* p_rmsd, double* q, double* q_act, int &permq, double* F, double* F_res, double* U, double* P, int8_t* mapping, double* p_interatomic_distance, double* p_lattice_constant)
 {
 	if (flags & PTM_CHECK_SC)
 		assert(num_points >= structure_sc.num_nbrs + 1);
@@ -352,6 +352,7 @@ int ptm_index(	ptm_local_handle_t local_handle, int num_points, double* unpermut
 #endif
 
 	result_t res;
+	double qq[4];
 	res.ref_struct = NULL;
 	res.rmsd = INFINITY;
 	*p_type = PTM_MATCH_NONE;
@@ -405,6 +406,8 @@ int ptm_index(	ptm_local_handle_t local_handle, int num_points, double* unpermut
 				*p_alloy_type = find_bcc_alloy_type(res.mapping, numbers);
 		}
 
+		memcpy(qq,res.q,4 * sizeof(double));
+		
 		int bi = -1;
 		if      (ref->type == PTM_MATCH_SC)	bi = rotate_quaternion_into_cubic_fundamental_zone(res.q);
 		else if (ref->type == PTM_MATCH_FCC)	bi = rotate_quaternion_into_cubic_fundamental_zone(res.q);
@@ -451,6 +454,7 @@ int ptm_index(	ptm_local_handle_t local_handle, int num_points, double* unpermut
 
 	*p_rmsd = res.rmsd;
 	*p_scale = res.scale;
+	memcpy(q_act, qq, 4 * sizeof(double));
 	memcpy(q, res.q, 4 * sizeof(double));
 
 	return PTM_NO_ERROR;

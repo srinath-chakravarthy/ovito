@@ -193,17 +193,25 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 			int32_t type, alloy_type = PTM_ALLOY_NONE;
 			double scale, interatomic_distance;
 			double rmsd;
+			double q_act[4];
 			double q[4];
 			double F[9], F_res[3];
 			int symmindex;
 			ptm_index(ptm_local_handle, numNeighbors + 1, points, _alloyTypes ? atomTypes : nullptr, flags, true,
-					&type, &alloy_type, &scale, &rmsd, q, symmindex,
+					&type, &alloy_type, &scale, &rmsd, q, q_act, symmindex,
 					_deformationGradients ? F : nullptr,
 					_deformationGradients ? F_res : nullptr,
 					nullptr, nullptr, nullptr, &interatomic_distance, nullptr);
 			//qDebug() << index << "symmetry = " << symmindex;
 
 			// Convert PTM classification to our own scheme and store computed quantities.
+			    if (q_act[0] < 0){
+				q_act[0] = -q_act[0];
+				q_act[1] = -q_act[1];
+				q_act[2] = -q_act[2];
+				q_act[3] = -q_act[3];
+			    }
+			
 			if(type == PTM_MATCH_NONE) {
 				output->setInt(index, OTHER);
 				_rmsd->setFloat(index, 0);
@@ -217,7 +225,7 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 				else OVITO_ASSERT(false);
 				_rmsd->setFloat(index, rmsd);
 				if(_interatomicDistances) _interatomicDistances->setFloat(index, interatomic_distance);
-				if(_orientations) _orientations->setQuaternion(index, Quaternion((FloatType)q[1], (FloatType)q[2], (FloatType)q[3], (FloatType)q[0]));
+				if(_orientations) _orientations->setQuaternion(index, Quaternion((FloatType)q_act[1], (FloatType)q_act[2], (FloatType)q_act[3], (FloatType)q_act[0]));
 				if(_deformationGradients) {
 					for(size_t j = 0; j < 9; j++)
 						_deformationGradients->setFloatComponent(index, j, (FloatType)F[j]);
