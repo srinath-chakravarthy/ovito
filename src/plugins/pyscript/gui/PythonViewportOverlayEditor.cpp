@@ -21,16 +21,9 @@
 
 #include <plugins/pyscript/PyScript.h>
 #include <plugins/pyscript/extensions/PythonViewportOverlay.h>
+#include <gui/mainwin/MainWindow.h>
 #include "PythonViewportOverlayEditor.h"
-
-#ifndef signals
-#define signals Q_SIGNALS
-#endif
-#ifndef slots
-#define slots Q_SLOTS
-#endif
-#include <Qsci/qsciscintilla.h>
-#include <Qsci/qscilexerpython.h>
+#include "ObjectScriptEditor.h"
 
 namespace PyScript { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -49,39 +42,19 @@ void PythonViewportOverlayEditor::createUI(const RolloutInsertionParameters& rol
 	QGridLayout* layout = new QGridLayout(rollout);
 	layout->setContentsMargins(4,4,4,4);
 	layout->setSpacing(4);
-	int row = 0;
 
-	QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+	_editScriptButton = new QPushButton(tr("Edit script..."));
+	layout->addWidget(_editScriptButton, 0, 0);
+	connect(_editScriptButton, &QPushButton::clicked, this, &PythonViewportOverlayEditor::onOpenEditor);
 
-	layout->addWidget(new QLabel(tr("Python script:")), row++, 0);
-	_codeEditor = new QsciScintilla();
-	_codeEditor->setEnabled(false);
-	_codeEditor->setAutoIndent(true);
-	_codeEditor->setTabWidth(4);
-	_codeEditor->setFont(font);
-	QsciLexerPython* lexer = new QsciLexerPython(_codeEditor);
-	lexer->setDefaultFont(font);
-	_codeEditor->setLexer(lexer);
-	_codeEditor->setMarginsFont(font);
-	_codeEditor->setMarginWidth(0, QFontMetrics(font).width(QString::number(123)));
-	_codeEditor->setMarginWidth(1, 0);
-	_codeEditor->setMarginLineNumbers(0, true);
-	layout->addWidget(_codeEditor, row++, 0);
-
-	QPushButton* applyButton = new QPushButton(tr("Apply changes"));
-	layout->addWidget(applyButton, row++, 0);
-
-	layout->addWidget(new QLabel(tr("Script output:")), row++, 0);
-	_errorDisplay = new QsciScintilla();
-	_errorDisplay->setTabWidth(_codeEditor->tabWidth());
-	_errorDisplay->setFont(font);
-	_errorDisplay->setReadOnly(true);
-	_errorDisplay->setMarginWidth(1, 0);
-	_errorDisplay->setPaper(Qt::white);
-	layout->addWidget(_errorDisplay, row++, 0);
+	layout->addWidget(new QLabel(tr("Script output:")), 1, 0);
+	_outputDisplay = new QTextEdit();
+	_outputDisplay->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+	_outputDisplay->setReadOnly(true);
+	_outputDisplay->setLineWrapMode(QTextEdit::NoWrap);
+	layout->addWidget(_outputDisplay, 2, 0);
 
 	connect(this, &PropertiesEditor::contentsChanged, this, &PythonViewportOverlayEditor::onContentsChanged);
-	connect(applyButton, &QPushButton::clicked, this, &PythonViewportOverlayEditor::onApplyChanges);
 }
 
 /******************************************************************************
@@ -91,29 +64,55 @@ void PythonViewportOverlayEditor::createUI(const RolloutInsertionParameters& rol
 void PythonViewportOverlayEditor::onContentsChanged(RefTarget* editObject)
 {
 	PythonViewportOverlay* overlay = static_object_cast<PythonViewportOverlay>(editObject);
-	if(editObject) {
-		_codeEditor->setText(overlay->script());
-		_codeEditor->setEnabled(true);
-		_errorDisplay->setText(overlay->scriptOutput());
+	if(overlay) {
+		_editScriptButton->setEnabled(true);
+		_outputDisplay->setText(overlay->scriptOutput());
 	}
 	else {
-		_codeEditor->setEnabled(false);
-		_codeEditor->clear();
-		_errorDisplay->clear();
+		_editScriptButton->setEnabled(false);
+		_outputDisplay->clear();
 	}
 }
 
 /******************************************************************************
 * Is called when the user presses the 'Apply' button to commit the Python script.
 ******************************************************************************/
-void PythonViewportOverlayEditor::onApplyChanges()
+void PythonViewportOverlayEditor::onOpenEditor()
 {
 	PythonViewportOverlay* overlay = static_object_cast<PythonViewportOverlay>(editObject());
 	if(!overlay) return;
 
-	undoableTransaction(tr("Change script"), [this, overlay]() {
-		overlay->setScript(_codeEditor->text());
-	});
+	class OverlayScriptEditor : public ObjectScriptEditor {
+	public:
+		OverlayScriptEditor(QWidget* parentWidget, RefTarget* scriptableObject) : ObjectScriptEditor(parentWidget, scriptableObject) {}
+	protected:
+		/// Obtains the current script from the owner object.
+		virtual const QString& getObjectScript(RefTarget* obj) const override {
+			return static_object_cast<PythonViewportOverlay>(obj)->script();
+		}
+
+		/// Obtains the script output cached by the owner object.
+		virtual const QString& getOutputText(RefTarget* obj) const override {
+			return static_object_cast<PythonViewportOverlay>(obj)->scriptOutput();
+		}
+
+		/// Sets the current script of the owner object.
+		virtual void setObjectScript(RefTarget* obj, const QString& script) const override {
+			UndoableTransaction::handleExceptions(obj->dataset()->undoStack(), tr("Commit script"), [obj, &script]() {
+				static_object_cast<PythonViewportOverlay>(obj)->setScript(script);
+			});
+		}
+	};
+
+	// First check if there is already an open editor.
+	if(ObjectScriptEditor* editor = ObjectScriptEditor::findEditorForObject(overlay)) {
+		editor->show();
+		editor->activateWindow();
+		return;
+	}
+
+	OverlayScriptEditor* editor = new OverlayScriptEditor(mainWindow(), overlay);
+	editor->show();
 }
 
 /******************************************************************************
@@ -122,9 +121,8 @@ void PythonViewportOverlayEditor::onApplyChanges()
 bool PythonViewportOverlayEditor::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
 	if(source == editObject() && event->type() == ReferenceEvent::ObjectStatusChanged) {
-		PythonViewportOverlay* overlay = static_object_cast<PythonViewportOverlay>(editObject());
-		if(overlay)
-			_errorDisplay->setText(overlay->scriptOutput());
+		if(PythonViewportOverlay* overlay = static_object_cast<PythonViewportOverlay>(editObject()))
+			_outputDisplay->setText(overlay->scriptOutput());
 	}
 	return PropertiesEditor::referenceEvent(source, event);
 }

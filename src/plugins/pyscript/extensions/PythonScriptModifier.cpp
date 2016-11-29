@@ -44,7 +44,6 @@ PythonScriptModifier::PythonScriptModifier(DataSet* dataset) : Modifier(dataset)
 	// Load example script.
 	setScript("from ovito.data import *\n\n"
 			"def modify(frame, input, output):\n"
-			"\tprint(\"Hello world!\")\n"
 			"\tprint(\"The input contains %i particles.\" % input.number_of_particles)\n");
 }
 
@@ -215,7 +214,7 @@ void PythonScriptModifier::runScriptFunction()
 				if(!engine) engine = _scriptEngine.get();
 
 				engine->execute([this,animationFrame,&inputDataCollection,engine]() {
-					// Prepare arguments to be passed to script function.
+					// Prepare arguments to be passed to the script function.
 					py::tuple arguments = py::make_tuple(animationFrame, inputDataCollection.get(), _dataCollection.get());
 
 					// Execute modify() script function.
@@ -223,7 +222,7 @@ void PythonScriptModifier::runScriptFunction()
 				});
 			}
 			catch(const Exception& ex) {
-				_scriptLogOutput += ex.message();
+				_scriptLogOutput += ex.messages().join('\n');
 				_outputCache.setStatus(PipelineStatus(PipelineStatus::Error, ex.message()));
 			}
 
@@ -264,10 +263,10 @@ void PythonScriptModifier::runScriptFunction()
 				do {
 
 					engine->execute([this, &exhausted]() {
-						PyObject* item = PyIter_Next(_generatorObject.ptr());
-						if(item != nullptr) {
-							py::object itemObj(item, false);
-							if(PyFloat_Check(item)) {
+						py::handle item = PyIter_Next(_generatorObject.ptr());
+						if(item) {
+							py::object itemObj = py::reinterpret_steal<py::object>(item);
+							if(PyFloat_Check(itemObj.ptr())) {
 								double progressValue = itemObj.cast<double>();
 								if(progressValue >= 0.0 && progressValue <= 1.0) {
 									_runningTask->setProgressRange(100);
@@ -309,6 +308,7 @@ void PythonScriptModifier::runScriptFunction()
 				}
 			}
 			catch(const Exception& ex) {
+				_scriptLogOutput += ex.messages().join('\n');
 				_outputCache.setStatus(PipelineStatus(PipelineStatus::Error, ex.message()));
 				scriptCompleted();
 				break;

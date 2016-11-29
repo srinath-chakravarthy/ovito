@@ -109,6 +109,9 @@ private:
 	/// Returns the program exit code.
 	int handleSystemExit();
 
+	/// Handles an exception raised by the Python side.
+	int handlePythonException(py::error_already_set& ex, ScriptEngine* previousEngine, const QString& filename = QString());
+
 	/// This helper class redirects Python script write calls to the sys.stdout stream to this script engine.
 	struct InterpreterStdOutputRedirector {
 		void write(const QString& str) {
@@ -141,9 +144,6 @@ private:
 	/// is responsible for showing the progress of long-running operations
 	/// performed by a script.
 	AbstractProgressDisplay* _progressDisplay = nullptr;
-
-	/// Flag that indicates whether the global Python interpreter has been initialized.
-	static bool _isInterpreterInitialized;
 
 	/// The script engine that is currently active (i.e. which is executing a script).
 	static ScriptEngine* _activeEngine;

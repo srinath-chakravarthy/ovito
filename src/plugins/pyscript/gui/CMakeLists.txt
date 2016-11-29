@@ -26,10 +26,14 @@ SET(SourceFiles
 	PythonViewportOverlayEditor.cpp
 	PythonScriptModifierEditor.cpp
 	RunScriptAction.cpp
+	ObjectScriptEditor.cpp
 )
 
+# Compile resources.
+QT5_ADD_RESOURCES(ResourceFiles resources/pyscript_gui.qrc)
+
 OVITO_STANDARD_PLUGIN(PyScriptGui
-	SOURCES ${SourceFiles}
+	SOURCES ${SourceFiles} ${ResourceFiles}
 	PLUGIN_DEPENDENCIES PyScript
 	PRIVATE_LIB_DEPENDENCIES ${QScintilla_LIBRARIES}
 	GUI_PLUGIN

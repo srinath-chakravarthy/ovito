@@ -40,6 +40,7 @@ Unresolved OpenGL problems:
     Windows, AMD Radeon HD8490, Core profile 3.2 (ljloverq@163.com)
     Windows, ATI Mobility Radeon HD 5650, 3.2.9756 Core Profile Forward-Compatible Context (biyikli.emre@gmail.com)
     Windows, AMD Radeon(TM) HD8490, 3.2.13399 Core Profile Context 15.200.1062.1003 (zr3@zips.uakron.edu)
+    Windows, AMD Radeon HD 7450 Graphics, 3.2.13408 Core Profile Context 15.201.2201.0 (18234057493@163.com)
     Workaround is to disable the use of geometry shaders.
 - Simulation cell doesn't show up in rendered images:
     Windows, Intel HD graphics, OpenGL 2.1 (Karsten's laptop)

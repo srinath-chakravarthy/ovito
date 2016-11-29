@@ -44,26 +44,24 @@ PythonViewportOverlay::PythonViewportOverlay(DataSet* dataset) : ViewportOverlay
 
 	// Load example script.
 	setScript("import ovito\n"
-			"# The following function is called by OVITO to let the script\n"
-			"# draw arbitrary graphics content into the viewport.\n"
+			"\n"
+			"# This user-defined function is called by OVITO to let it draw arbitrary graphics on top of the viewport.\n"
 			"# It is passed a QPainter (see http://qt-project.org/doc/qt-5/qpainter.html).\n"
 			"def render(painter, **args):\n"
-			"\t# This demo code prints the current animation frame\n"
-			"\t# into the upper left corner of the viewport.\n"
-			"\txpos = 10\n"
-			"\typos = 10 + painter.fontMetrics().ascent()\n"
-			"\ttext = \"Frame {}\".format(ovito.dataset.anim.current_frame)\n"
-			"\tpainter.drawText(xpos, ypos, text)\n"
-			"\t# The following code prints the current number of particles\n"
-			"\t# into the lower left corner of the viewport.\n"
-			"\txpos = 10\n"
-			"\typos = painter.window().height() - 10\n"
-			"\tif ovito.dataset.selected_node:\n"
-			"\t\tnum_particles = ovito.dataset.selected_node.compute().number_of_particles\n"
-			"\t\ttext = \"{} particles\".format(num_particles)\n"
-			"\telse:\n"
-			"\t\ttext = \"no particles\"\n"
-			"\tpainter.drawText(xpos, ypos, text)\n");
+			"\n"
+			"\t# This demo code prints the current animation frame into the upper left corner of the viewport.\n"
+			"\ttext1 = \"Frame {}\".format(ovito.dataset.anim.current_frame)\n"
+			"\tpainter.drawText(10, 10 + painter.fontMetrics().ascent(), text1)\n"
+			"\n"
+			"\t# Also print the current number of particles into the lower left corner of the viewport.\n"
+			"\tnode = ovito.dataset.selected_node\n"
+			"\tnum_particles = (0 if node else node.compute().number_of_particles)\n"
+			"\ttext2 = \"{} particles\".format(num_particles)\n"
+			"\tpainter.drawText(10, painter.window().height() - 10, text2)\n"
+			"\n"
+			"\t# Print to the log window:\n"
+			"\tprint(text1)\n"
+			"\tprint(text2)\n");
 }
 
 /******************************************************************************
@@ -102,7 +100,7 @@ void PythonViewportOverlay::compileScript()
 		});
 	}
 	catch(const Exception& ex) {
-		_scriptOutput += ex.message();
+		_scriptOutput += ex.messages().join('\n');
 	}
 
 	notifyDependents(ReferenceEvent::ObjectStatusChanged);
@@ -126,7 +124,6 @@ void PythonViewportOverlay::render(Viewport* viewport, QPainter& painter, const 
 
 	_scriptOutput.clear();
 	try {
-
 		// Enable antialiasing for the QPainter by default.
 		painter.setRenderHint(QPainter::Antialiasing);
 		painter.setRenderHint(QPainter::TextAntialiasing);
@@ -161,7 +158,7 @@ void PythonViewportOverlay::render(Viewport* viewport, QPainter& painter, const 
 		});
 	}
 	catch(const Exception& ex) {
-		_scriptOutput += ex.message();
+		_scriptOutput += ex.messages().join('\n');
 	}
 	notifyDependents(ReferenceEvent::ObjectStatusChanged);
 }

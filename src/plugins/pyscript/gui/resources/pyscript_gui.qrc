@@ -1,0 +1,14 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+
+<qresource prefix="/pyscript">
+	
+	<file>icons/edit_undo.png</file>
+	<file>icons/edit_redo.png</file>
+	<file>icons/file_open.png</file>
+	<file>icons/file_save_as.png</file>
+	<file>icons/run_script.png</file>
+	
+</qresource> 
+
+</RCC>

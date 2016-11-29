@@ -28,9 +28,6 @@
 
 namespace PyScript {
 
-/// Indicates whether the global Python interpreter has been initialized.
-bool ScriptEngine::_isInterpreterInitialized = false;
-
 /// Points to the script engine that is currently active (i.e. which is executing a script).
 ScriptEngine* ScriptEngine::_activeEngine = nullptr;
 
@@ -103,8 +100,9 @@ ScriptEngine::~ScriptEngine()
 ******************************************************************************/
 void ScriptEngine::initializeInterpreter()
 {
-	// This is a one-time global initialization. 
-	if(_isInterpreterInitialized)
+	// This is a one-time global initialization.
+	static bool isInterpreterInitialized = false; 
+	if(isInterpreterInitialized)
 		return;	// Interpreter is already initialized.
 
 	try {
@@ -184,7 +182,7 @@ void ScriptEngine::initializeInterpreter()
 		throw Exception(tr("Unhandled exception thrown by Python interpreter."), dataset());
 	}
 
-	_isInterpreterInitialized = true;
+	isInterpreterInitialized = true;
 }
 
 /******************************************************************************
@@ -211,22 +209,15 @@ int ScriptEngine::executeCommands(const QString& commands, const QStringList& sc
 		py::module::import("sys").attr("argv") = argList;
 
 		_mainNamespace["__file__"] = py::none();
-		py::eval<py::eval_statements>(py::cast(commands), _mainNamespace, _mainNamespace);
+		PyObject* result = PyRun_String(commands.toUtf8().constData(), Py_file_input, _mainNamespace.ptr(), _mainNamespace.ptr());
+		if(!result) throw py::error_already_set();
+		Py_XDECREF(result);
+
 		_activeEngine = previousEngine;
 		return 0;
 	}
 	catch(py::error_already_set& ex) {
-		ex.restore();
-		if(PyErr_Occurred()) {
-			// Handle call to sys.exit()
-			if(PyErr_ExceptionMatches(PyExc_SystemExit)) {
-				_activeEngine = previousEngine;
-				return handleSystemExit();
-			}
-			PyErr_Print();
-		}
-	    _activeEngine = previousEngine;
-		throw Exception(tr("Script execution error: %1").arg(ex.what()), dataset());
+		return handlePythonException(ex, previousEngine);
 	}
 	catch(Exception& ex) {
 	    _activeEngine = previousEngine;
@@ -264,11 +255,7 @@ void ScriptEngine::execute(const std::function<void()>& func)
 	    _activeEngine = previousEngine;
 	}
 	catch(py::error_already_set& ex) {
-		ex.restore();
-		if(PyErr_Occurred())
-			PyErr_Print();
-	    _activeEngine = previousEngine;
-		throw Exception(tr("Python interpreter has exited with an error. See interpreter output for details."), dataset());
+		handlePythonException(ex, previousEngine);
 	}
 	catch(Exception& ex) {
 	    _activeEngine = previousEngine;
@@ -277,7 +264,7 @@ void ScriptEngine::execute(const std::function<void()>& func)
 	}
 	catch(const std::exception& ex) {
 	    _activeEngine = previousEngine;
-		throw Exception(tr("Script execution error: %1").arg(QString::fromLocal8Bit(ex.what())), dataset());
+		throw Exception(tr("Script execution error: %1").arg(ex.what()), dataset());
 	}
 	catch(...) {
 	    _activeEngine = previousEngine;
@@ -327,61 +314,8 @@ int ScriptEngine::executeFile(const QString& filename, const QStringList& script
 	    _activeEngine = previousEngine;
 	    return 0;
 	}
-	catch(py::error_already_set& ex) {		
-		ex.restore();
-
-		// Handle calls to sys.exit()
-		if(PyErr_ExceptionMatches(PyExc_SystemExit)) {
-		    _activeEngine = previousEngine;
-			return handleSystemExit();
-		}
-
-		// Prepare C++ exception object.
-	    Exception exception(tr("The Python script '%1' has exited with an error.").arg(filename), dataset());
-
-		// Retrieve Python error message and traceback.
-	    if(Application::instance().guiMode()) {
-			PyObject* extype;
-			PyObject* value;
-			PyObject* traceback;
-			PyErr_Fetch(&extype, &value, &traceback);
-			PyErr_NormalizeException(&extype, &value, &traceback);
-			if(extype) {
-				py::object o_extype = py::reinterpret_borrow<py::object>(extype);
-				py::object o_value = py::reinterpret_borrow<py::object>(value);
-				try {
-					if(traceback) {
-						py::object o_traceback = py::reinterpret_borrow<py::object>(traceback);
-						py::object mod_traceback = py::module::import("traceback");
-						bool chain = PyObject_IsInstance(value, extype) == 1;
-						py::sequence lines = mod_traceback.attr("format_exception")(o_extype, o_value, o_traceback, py::none(), chain);
-						if(py::isinstance<py::sequence>(lines)) {
-							QString tracebackString;
-							for(int i = 0; i < py::len(lines); ++i)
-								tracebackString += lines[i].cast<QString>();
-							exception.appendDetailMessage(tracebackString);
-						}
-					}
-					else {
-						exception.appendDetailMessage(py::str(o_value).cast<QString>());
-					}
-				}
-				catch(py::error_already_set& ex) {
-					ex.restore();
-					PyErr_Print();
-				}
-			}
-	    }
-		else {
-			// Print error message to the console.
-			PyErr_Print();
-		}
-
-		// Deactivate script engine.
-	    _activeEngine = previousEngine;
-
-	    // Raise C++ exception.
-	    throw exception;
+	catch(py::error_already_set& ex) {
+		return handlePythonException(ex, previousEngine, filename);
 	}
 	catch(Exception& ex) {
 	    _activeEngine = previousEngine;
@@ -390,12 +324,75 @@ int ScriptEngine::executeFile(const QString& filename, const QStringList& script
 	}
 	catch(const std::exception& ex) {
 	    _activeEngine = previousEngine;
-		throw Exception(tr("Script execution error: %1").arg(QString::fromLocal8Bit(ex.what())), dataset());
+		throw Exception(tr("Script execution error: %1").arg(ex.what()), dataset());
 	}
 	catch(...) {
 	    _activeEngine = previousEngine;
 		throw Exception(tr("Unhandled exception thrown by Python interpreter."), dataset());
 	}
+}
+
+/******************************************************************************
+* Handles an exception raised by the Python side.
+******************************************************************************/
+int ScriptEngine::handlePythonException(py::error_already_set& ex, ScriptEngine* previousEngine, const QString& filename)
+{
+	ex.restore();
+
+	// Handle calls to sys.exit()
+	if(PyErr_ExceptionMatches(PyExc_SystemExit)) {
+		_activeEngine = previousEngine;
+		return handleSystemExit();
+	}
+
+	// Prepare C++ exception object.
+	Exception exception(filename.isEmpty() ? 
+		tr("The Python script has exited with an error.") :
+		tr("The Python script '%1' has exited with an error.").arg(filename), dataset());
+
+	// Retrieve Python error message and traceback.
+	if(Application::instance().guiMode()) {
+		PyObject* extype;
+		PyObject* value;
+		PyObject* traceback;
+		PyErr_Fetch(&extype, &value, &traceback);
+		PyErr_NormalizeException(&extype, &value, &traceback);
+		if(extype) {
+			py::object o_extype = py::reinterpret_borrow<py::object>(extype);
+			py::object o_value = py::reinterpret_borrow<py::object>(value);
+			try {
+				if(traceback) {
+					py::object o_traceback = py::reinterpret_borrow<py::object>(traceback);
+					py::object mod_traceback = py::module::import("traceback");
+					bool chain = PyObject_IsInstance(value, extype) == 1;
+					py::sequence lines = mod_traceback.attr("format_exception")(o_extype, o_value, o_traceback, py::none(), chain);
+					if(py::isinstance<py::sequence>(lines)) {
+						QString tracebackString;
+						for(int i = 0; i < py::len(lines); ++i)
+							tracebackString += lines[i].cast<QString>();
+						exception.appendDetailMessage(tracebackString);
+					}
+				}
+				else {
+					exception.appendDetailMessage(py::str(o_value).cast<QString>());
+				}
+			}
+			catch(py::error_already_set& ex) {
+				ex.restore();
+				PyErr_Print();
+			}
+		}
+	}
+	else {
+		// Print error message to the console.
+		PyErr_Print();
+	}
+
+	// Deactivate script engine.
+	_activeEngine = previousEngine;
+
+	// Raise C++ exception.
+	throw exception;
 }
 
 /******************************************************************************
