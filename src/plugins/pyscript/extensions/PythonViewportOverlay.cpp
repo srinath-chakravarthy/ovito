@@ -55,7 +55,7 @@ PythonViewportOverlay::PythonViewportOverlay(DataSet* dataset) : ViewportOverlay
 			"\n"
 			"\t# Also print the current number of particles into the lower left corner of the viewport.\n"
 			"\tnode = ovito.dataset.selected_node\n"
-			"\tnum_particles = (0 if node else node.compute().number_of_particles)\n"
+			"\tnum_particles = (node.compute().number_of_particles if node else 0)\n"
 			"\ttext2 = \"{} particles\".format(num_particles)\n"
 			"\tpainter.drawText(10, painter.window().height() - 10, text2)\n"
 			"\n"
