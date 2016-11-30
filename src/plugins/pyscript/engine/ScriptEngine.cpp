@@ -67,7 +67,7 @@ ScriptEngine::ScriptEngine(DataSet* dataset, QObject* parent, bool redirectOutpu
         PyObject* mod = PyImport_ImportModule("ovito");
         if(!mod) throw py::error_already_set();
 		py::module ovito_module = py::reinterpret_steal<py::module>(mod);
-        py::setattr(ovito_module, "dataset", py::cast(dataset));
+        py::setattr(ovito_module, "dataset", py::cast(dataset, py::return_value_policy::reference));
 	}
 	catch(py::error_already_set& ex) {
 		ex.restore();

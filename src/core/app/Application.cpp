@@ -348,6 +348,10 @@ int Application::runApplication()
 ******************************************************************************/
 void Application::shutdown()
 {
+	// Release dataset and all contained objects.
+	if(datasetContainer())
+		datasetContainer()->setCurrentSet(nullptr);
+
 	// Destroy auto-start objects.
 	_autostartObjects.clear();
 

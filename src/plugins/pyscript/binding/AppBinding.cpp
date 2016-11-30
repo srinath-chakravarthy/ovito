@@ -62,7 +62,7 @@ PYBIND11_PLUGIN(PyScriptApp)
 	;
 
 	ovito_abstract_class<RefMaker, OvitoObject>{m}
-		.def_property_readonly("dataset", &RefMaker::dataset)
+		.def_property_readonly("dataset", py::cpp_function(&RefMaker::dataset, py::return_value_policy::reference))
 	;
 
 	ovito_abstract_class<RefTarget, RefMaker>{m}
@@ -75,7 +75,10 @@ PYBIND11_PLUGIN(PyScriptApp)
 		.def_property_readonly("object_title", &RefTarget::objectTitle)
 	;
 
-	ovito_abstract_class<DataSet, RefTarget>(m,
+	// Note that, for DataSet, we are not using OORef<> as holder type like we normally do for other OvitoObject-derived classes, because
+	// we don't want a ScriptEngine to hold a counted reference to a DataSet that it belongs to.
+	// This would create a cyclic reference and potentially lead to a memory leak.
+	py::class_<DataSet>(m, "DataSet",
 			"A container object holding all data associated with an OVITO program session. "
 			"It provides access to the scene data, the viewports, the current selection, and the animation settings. "
 			"Basically everything that would get saved in an OVITO state file. "

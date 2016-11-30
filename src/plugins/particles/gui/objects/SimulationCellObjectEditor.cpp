@@ -122,14 +122,14 @@ void SimulationCellEditor::createUI(const RolloutInsertionParameters& rolloutPar
 	}
 
 	{
-		QGroupBox* vectorsGroupBox = new QGroupBox(tr("Cell vectors"), rollout);
+		QGroupBox* vectorsGroupBox = new QGroupBox(tr("Cell geometry"), rollout);
 		layout1->addWidget(vectorsGroupBox);
 
 		QVBoxLayout* sublayout = new QVBoxLayout(vectorsGroupBox);
 		sublayout->setContentsMargins(4,4,4,4);
 		sublayout->setSpacing(2);
 
-		QString xyz[3] = { QString("X: "), QString("Y: "), QString("Z: ") };
+		QString xyz[3] = { QStringLiteral("X: "), QStringLiteral("Y: "), QStringLiteral("Z: ") };
 
 		{	// First cell vector.
 			sublayout->addSpacing(6);

@@ -12,7 +12,7 @@ vp = dataset.viewports.active_vp
 
 new_overlay = ovito.vis.PythonViewportOverlay()
 new_overlay.script = """
-def render(painter, **args):    
+def render(painter, **args):
     painter.drawText(10, 10, "Hello world")
 """
 vp.overlays.append(new_overlay)
@@ -22,7 +22,7 @@ assert(vp.overlays[0] == new_overlay)
 assert(new_overlay.output == "")
 
 overlay2 = ovito.vis.PythonViewportOverlay()
-overlay2.script = "This is not a valid Python script."
+overlay2.script = "This is an intentionally invalid Python script."
 vp.overlays.append(overlay2)
 
 assert(len(vp.overlays) == 2)
