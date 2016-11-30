@@ -43,6 +43,9 @@ OVITO_STANDARD_PLUGIN(PyScriptGui
 # Add QScintilla include directory.
 TARGET_INCLUDE_DIRECTORIES(PyScriptGui PRIVATE ${QScintilla_INCLUDE_DIRS})
 
+# This define is required when linking against QScintilla on Windows.
+TARGET_COMPILE_DEFINITIONS(PyScriptGui PRIVATE QSCINTILLA_DLL)
+
 # Install required libraries. 
 IF(APPLE)
 	# Nothing to do.
