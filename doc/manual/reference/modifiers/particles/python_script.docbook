@@ -15,16 +15,21 @@
     <informalfigure><screenshot><mediaobject><imageobject>
        <imagedata fileref="images/modifiers/python_script_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
+      <informalfigure><screenshot><mediaobject><imageobject>
+       <imagedata fileref="images/modifiers/python_script_code_editor.png" format="PNG" />
+    </imageobject></mediaobject></screenshot></informalfigure>
     
-    In cases where the available <link linkend="particles.modifiers">standard modifiers</link>  provided by OVITO are not sufficient for your purposes,
-    the special <emphasis>Python script</emphasis> modifier allows you to write your own modifier function and directly manipulate or analyze simulation data in any way you want.
-    A <emphasis>Python script</emphasis> modifier participates in OVITO's data pipeline system like the built-in modifier types do.
-    It essentially consists of a user-defined Python function that you write. This script function is automatically invoked by the system in a callback fashion every time
-    the data pipeline is re-evaulated.
+    The <emphasis>Python script</emphasis> modifier allows you to write your own modifier function and manipulate or analyze the simulation data in any way you want.
+    This is useful in cases where the available <link linkend="particles.modifiers">standard modifiers</link> of OVITO are not sufficient for your purposes.
+    </para>
+  <para>
+    A <emphasis>Python script</emphasis> modifier participates in OVITO's data pipeline system like the built-in modifiers do.
+    It consists of a user-defined Python function that you write. This function is automatically invoked by the system in a callback fashion every time
+    the data pipeline is re-evaluated.
   </para>
   
   <para>
-    Please make sure you take a look at the <link xlink:href="python/introduction/running.html#running-scripts">Running Scripts</link> manual section first to
+    Please take a look at the <link xlink:href="python/introduction/running.html#running-scripts">Running Scripts</link> manual section first to
     understand the different ways Python scripting is used within OVITO. Python-based <emphasis>modifiers</emphasis> provide a way to extend
     the functionality of OVITO. This is in contrast to regular Python scripts, which allow you to automate tasks and programmatically 
     invoke built-in program functions (e.g. adding a modifier to the data pipeline and configuring its parameters).
@@ -51,28 +56,28 @@
     <title>Usage</title>
   
   <para>
-    The modifier's panel, which is shown on the right, provides an input field
-    where you enter the code of the custom modifier function, which must be named <code>modify()</code>.
+  
+    The <guibutton>Edit script</guibutton> button in the modifies panel opens the code editor.
+    This is where you can enter the Python code for the custom modifier function, which must be named <code>modify()</code>.
     How to write a Python modifier function is described in detail in  
     the <link xlink:href="python/introduction/custom_modifiers.html">Scripting Manual</link>.
     Note that the custom <code>modify()</code> function is automatically executed by the
     system whenever the pipeline is re-evaluated (e.g. when the input data changes).
-    That means it is called repeatedly and should not manipulate the global program state or the pipeline itself.    
+    That means it is called repeatedly and should not manipulate the global program state or the pipeline itself.
   </para>
   
   <para>
-    Note that you have to press <guibutton>Commit script</guibutton> after you are done editing
-    the Python code in the input field. This will recompile the code and trigger a new evaluation of the data
-    pipeline.
+    Note that you have to press <emphasis>Commit and run script</emphasis> button in the code editor's toolbar after you are done editing
+    the Python script. This will recompile the code and trigger a new evaluation of the data pipeline and your modifier script.
   </para>
   
   <para>
-    Furthermore, the text field at the top of the panel allows you to assign a user-defined name to the
+    Furthermore, the text field at the top of the modifier panel allows you to assign a custom name to the
     script modifier. This name will be shown in the pipeline editor and makes it easier for you to find the modifier
-    in the list.
-    Also note that it is possible to save the Python script modifier including the entered source code
+    in the pipeline list.
+    Also note that it is possible to save the Python script modifier including your code
     as a <link linkend="modifier_presets">modifier preset</link>. This preset will appear as an additional entry in the list of available
-    modifiers, allowing you to easily access the custom modifier in future program sessions.
+    modifiers, allowing you to easily access your user-defined modifier in future program sessions.
   </para>
   
   </simplesect>
