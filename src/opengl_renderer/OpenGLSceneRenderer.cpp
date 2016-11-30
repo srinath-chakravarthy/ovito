@@ -184,6 +184,13 @@ bool OpenGLSceneRenderer::geometryShadersEnabled(bool forceDefaultSetting)
 		if(userSetting.isValid())
 			return userSetting.toBool() && geometryShadersSupported();
 	}
+
+#if defined(Q_OS_WIN)
+	// Geometry shaders don't seem to work well on AMD/ATI hardware under Windows.
+	if(_openGLVendor.contains("Radeon"))
+		return false;
+#endif
+	
 	if(Application::instance().guiMode())
 		return geometryShadersSupported();
 	else if(QOpenGLContext::currentContext())
