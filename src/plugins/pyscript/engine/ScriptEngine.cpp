@@ -72,7 +72,7 @@ ScriptEngine::ScriptEngine(DataSet* dataset, QObject* parent, bool redirectOutpu
 	catch(py::error_already_set& ex) {
 		ex.restore();
 		if(PyErr_Occurred())
-			PyErr_Print();
+			PyErr_PrintEx(0);
 		throw Exception(tr("Failed to initialize Python interpreter."), dataset);
 	}
 	catch(const std::exception& ex) {
@@ -91,7 +91,7 @@ ScriptEngine::~ScriptEngine()
 	}
 	catch(py::error_already_set& ex) {
 		ex.restore();
-		PyErr_Print();
+		PyErr_PrintEx(0);
 	}
 }
 
@@ -172,7 +172,7 @@ void ScriptEngine::initializeInterpreter()
 	catch(py::error_already_set& ex) {
 		ex.restore();
 		if(PyErr_Occurred())
-			PyErr_Print();
+			PyErr_PrintEx(0);
 		throw Exception(tr("Failed to initialize Python interpreter. %1").arg(ex.what()), dataset());
 	}
 	catch(const std::exception& ex) {
@@ -379,15 +379,14 @@ int ScriptEngine::handlePythonException(py::error_already_set& ex, ScriptEngine*
 			}
 			catch(py::error_already_set& ex) {
 				ex.restore();
-				PyErr_Print();
+				PyErr_PrintEx(0);
 			}
 		}
 	}
 	else {
 		// Print error message to the console.
-		PyErr_Print();
+		PyErr_PrintEx(0);
 	}
-
 	// Deactivate script engine.
 	_activeEngine = previousEngine;
 

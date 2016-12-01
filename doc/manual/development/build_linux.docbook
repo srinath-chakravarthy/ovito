@@ -23,7 +23,7 @@
                      libavcodec-dev libavdevice-dev libavfilter-dev libavformat-dev libavresample-dev \
                      libavutil-dev libswscale-dev libnetcdf-dev libhdf5-dev libhdf5-serial-dev \
                      libbotan1.10-dev libmuparser-dev python3-dev \
-                     python3-sphinx python3-numpy python3-sip python3-pyqt5 \
+                     python3-sphinx python3-numpy python3-matplotlib python3-pyqt5 \
                      xsltproc docbook-xml doxygen
 </command></screen>
   </para>
