@@ -15,16 +15,32 @@
        <imagedata fileref="images/viewport_overlays/text_label_overlay_panel.png" format="PNG" />
     </imageobject></mediaobject></screenshot></informalfigure>
     This <link linkend="viewport_overlays">viewport overlay</link> displays a user-defined text string
-    in the rendered image. The text string can contain placeholders that reference dynamically computed
+    in the rendered image. The text can contain placeholders, which are replaced by computed
     values from OVITO's data pipeline. This makes it possible to display dynamic information
     such as the current simulation timestep, number of atoms, or analysis results in a
     rendered image or movie. 
   </para>
   
   <para>
-    The lower panel displays the list of available attributes which can be referenced in the text 
-    and which will be replaced with their current computed values. Note that you can define
-    new attributes using the <link linkend="particles.modifiers.python_script">Python script modifier</link>.
+    The lower panel displays the list of available attributes which can be incorporated into the label's text
+    and which will be replaced with their current computed values. 
+  </para>
+
+  <para>
+    Note that it is possible to define new attributes that are computed on the basis of other attributes by
+    inserting a <link linkend="particles.modifiers.python_script">Python script modifier</link> into the data pipeline.
+    Consider for example the <code>CommonNeighborAnalysis.counts.BCC</code> attribute, which is output by the
+    <link linkend="particles.modifiers.common_neighbor_analysis">Common Neighbor Analysis</link> modifier 
+    to report the number of BCC atoms found. If, instead of the absolute number of BCC atoms, we want to print the
+    fraction of BCC atoms, we have to divide by the total number of atoms in the system. To this end we can
+    define a new attribute named <emphasis>bcc_fraction</emphasis> by inserting a <link linkend="particles.modifiers.python_script">Python script modifier</link>:
+    <programlisting>def modify(frame, input, output):
+    n_bcc = input.attributes['CommonNeighborAnalysis.counts.BCC']
+    n_total = input.number_of_particles
+    output.attributes['bcc_fraction'] = n_bcc / n_total</programlisting>
+  </para>
+  <para>
+    This new attribute will subsequently become available in the Text Label overlay as a dynamic variable.
   </para>
     
 </section>

@@ -47,13 +47,25 @@
     You can find an example script in the <link xlink:href="python/introduction/examples.html#computing-voronoi-indices">OVITO scripting manual</link>.
   </para>
   
+  <simplesect> 
+    <title>Potential issues in non-periodic domains</title>
+
   <para>
     Note that the modifier calculates the Voronoi tessellation of the volume enclosed by the simulation cell only (and not 
     entire space). Thus, Voronoi cells will be truncated at the simulation box boundaries (unless periodic boundary conditions are used).
     No computation will be performed for particles located outside the (non-periodic) simulation box boundaries 
     (but they will still be taken into account when calculating the Voronoi cells of particles inside the box).
   </para>
-  
+
+  <para>
+    Particles that are located exactly on the simulation box boundaries (along non-periodic directions) also pose a problem.
+    The Voronoi cell of such particles is singular and the analysis may stop with the error message "Could not compute Voronoi cell for some particles".
+    The solution to this problem is to increase the size of the simulation box to fully include all particles. 
+    This can be archieved, for example, by applying the <link linkend="particles.modifiers.affine_transformation">Affine Transformation</link> modifier to scale the box size.
+  </para>
+
+  </simplesect>
+
   <simplesect> 
     <title>Parameters</title>
 

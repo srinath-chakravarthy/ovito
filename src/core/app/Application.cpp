@@ -369,7 +369,6 @@ void Application::shutdown()
 ******************************************************************************/
 DataSetContainer* Application::datasetContainer() const
 {
-	OVITO_ASSERT_MSG(!_datasetContainer.isNull(), "Application::datasetContainer()", "There is no global dataset container.");
 	return _datasetContainer;
 }
 
