@@ -36,7 +36,9 @@ class OVITO_PARTICLES_EXPORT XYZImporter : public ParticleImporter
 public:
 
 	/// \brief Constructs a new instance of this class.
-	Q_INVOKABLE XYZImporter(DataSet* dataset) : ParticleImporter(dataset) {}
+	Q_INVOKABLE XYZImporter(DataSet* dataset) : ParticleImporter(dataset), _autoRescaleCoordinates(true) {
+		INIT_PROPERTY_FIELD(XYZImporter::_autoRescaleCoordinates);	
+	}
 
 	/// \brief Returns the file filter that specifies the files that can be imported by this service.
 	/// \return A wild-card pattern that specifies the file types that can be handled by this import class.
@@ -65,11 +67,17 @@ public:
 
 	/// Creates an asynchronous loader object that loads the data for the given frame from the external file.
 	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame, bool isNewlySelectedFile) override {
-		return std::make_shared<XYZImportTask>(dataset()->container(), frame, isNewlySelectedFile, _columnMapping);
+		return std::make_shared<XYZImportTask>(dataset()->container(), frame, isNewlySelectedFile, columnMapping(), autoRescaleCoordinates());
 	}
 
 	/// Inspects the header of the given file and returns the number of file columns.
 	InputColumnMapping inspectFileHeader(const Frame& frame);
+
+	/// Returns whether reduced atom coordinates in the input file should be automatically detected.
+	bool autoRescaleCoordinates() const { return _autoRescaleCoordinates; }
+
+	/// Sets whether reduced atom coordinates in the input file should be automatically detected.
+	void setAutoRescaleCoordinates(bool enable) { _autoRescaleCoordinates = enable; }
 
 public:
 
@@ -83,8 +91,8 @@ private:
 	public:
 
 		/// Normal constructor.
-		XYZImportTask(DataSetContainer* container, const FileSourceImporter::Frame& frame, bool isNewFile, const InputColumnMapping& columnMapping)
-		  : ParticleFrameLoader(container, frame, isNewFile), _parseFileHeaderOnly(false), _columnMapping(columnMapping) {}
+		XYZImportTask(DataSetContainer* container, const FileSourceImporter::Frame& frame, bool isNewFile, const InputColumnMapping& columnMapping, bool autoRescaleCoordinates)
+		  : ParticleFrameLoader(container, frame, isNewFile), _parseFileHeaderOnly(false), _columnMapping(columnMapping), _autoRescaleCoordinates(autoRescaleCoordinates) {}
 
 		/// Constructor used when reading only the file header information.
 		XYZImportTask(DataSetContainer* container, const FileSourceImporter::Frame& frame)
@@ -101,6 +109,7 @@ private:
 	private:
 
 		bool _parseFileHeaderOnly;
+		bool _autoRescaleCoordinates;
 		InputColumnMapping _columnMapping;
 	};
 
@@ -124,8 +133,13 @@ private:
 	/// the internal particle properties.
 	InputColumnMapping _columnMapping;
 
+	/// Controls the automatic detection of reduced atom coordinates in the input file.
+	PropertyField<bool> _autoRescaleCoordinates;
+
 	Q_OBJECT
 	OVITO_OBJECT
+
+	DECLARE_PROPERTY_FIELD(_autoRescaleCoordinates);	
 };
 
 OVITO_END_INLINE_NAMESPACE

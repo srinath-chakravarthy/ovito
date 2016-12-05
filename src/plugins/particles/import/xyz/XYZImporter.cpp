@@ -36,6 +36,8 @@
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, XYZImporter, ParticleImporter);
+DEFINE_PROPERTY_FIELD(XYZImporter, _autoRescaleCoordinates, "AutoRescaleCoordinates");
+SET_PROPERTY_FIELD_LABEL(XYZImporter, _autoRescaleCoordinates, "Detect reduced coordinates");
 
 /******************************************************************************
  * Sets the user-defined mapping between data columns in the input file and
@@ -479,23 +481,23 @@ void XYZImporter::XYZImportTask::parseFile(CompressedTextReader& stream)
 
 		if(!hasSimulationCell) {
 			// If the input file does not contain simulation cell info,
-			// Use bounding box of particles as simulation cell.
+			// use bounding box of particles as simulation cell.
 			simulationCell().setMatrix(AffineTransformation(
 					Vector3(boundingBox.sizeX(), 0, 0),
 					Vector3(0, boundingBox.sizeY(), 0),
 					Vector3(0, 0, boundingBox.sizeZ()),
 					boundingBox.minc - Point3::Origin()));
 		}
-		else {
+		else if(_autoRescaleCoordinates) {
 			// Determine if coordinates are given in reduced format and need to be rescaled to absolute format.
 			// Assume reduced format if all coordinates are within the [0,1] or [-0.5,+0.5] range (plus some small epsilon).
-			if(Box3(Point3(-0.01f), Point3(1.01f)).containsBox(boundingBox)) {
+			if(Box3(Point3(FloatType(-0.01)), Point3(FloatType(1.01))).containsBox(boundingBox)) {
 				// Convert all atom coordinates from reduced to absolute (Cartesian) format.
 				const AffineTransformation simCell = simulationCell().matrix();
 				for(Point3& p : posProperty->point3Range())
 					p = simCell * p;
 			}
-			else if(Box3(Point3(-0.51f), Point3(0.51f)).containsBox(boundingBox)) {
+			else if(Box3(Point3(FloatType(-0.51)), Point3(FloatType(0.51))).containsBox(boundingBox)) {
 				// Convert all atom coordinates from reduced to absolute (Cartesian) format.
 				const AffineTransformation simCell = simulationCell().matrix();
 				for(Point3& p : posProperty->point3Range())

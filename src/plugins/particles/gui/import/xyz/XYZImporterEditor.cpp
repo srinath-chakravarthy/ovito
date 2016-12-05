@@ -144,6 +144,15 @@ void XYZImporterEditor::createUI(const RolloutInsertionParameters& rolloutParams
 	QPushButton* editMappingButton = new QPushButton(tr("Edit column mapping..."));
 	sublayout->addWidget(editMappingButton);
 	connect(editMappingButton, &QPushButton::clicked, this, &XYZImporterEditor::onEditColumnMapping);
+
+	QGroupBox* settingsBox = new QGroupBox(tr("Settings"), rollout);
+	sublayout = new QVBoxLayout(settingsBox);
+	sublayout->setContentsMargins(4,4,4,4);
+	layout->addWidget(settingsBox);
+
+	// Auto-rescale reduced coordinates.
+	BooleanParameterUI* rescaleReducedUI = new BooleanParameterUI(this, PROPERTY_FIELD(XYZImporter::_autoRescaleCoordinates));
+	sublayout->addWidget(rescaleReducedUI->checkBox());
 }
 
 /******************************************************************************

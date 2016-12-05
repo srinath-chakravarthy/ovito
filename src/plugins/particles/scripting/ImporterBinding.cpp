@@ -62,6 +62,7 @@ PYBIND11_PLUGIN(ParticlesImporter)
 
 	ovito_class<XYZImporter, ParticleImporter>(m)
 		.def_property("columns", &XYZImporter::columnMapping, &XYZImporter::setColumnMapping)
+		.def_property("rescale_reduced_coords", &XYZImporter::autoRescaleCoordinates, &XYZImporter::setAutoRescaleCoordinates)
 	;
 
 	ovito_class<LAMMPSTextDumpImporter, ParticleImporter>(m)

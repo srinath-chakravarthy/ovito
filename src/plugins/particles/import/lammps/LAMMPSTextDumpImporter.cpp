@@ -286,6 +286,7 @@ void LAMMPSTextDumpImporter::LAMMPSTextDumpImportTask::parseFile(CompressedTextR
 								fileColumnNames[i] == "xs" || fileColumnNames[i] == "xsu" ||
 								fileColumnNames[i] == "ys" || fileColumnNames[i] == "ysu" ||
 								fileColumnNames[i] == "zs" || fileColumnNames[i] == "zsu");
+						break;
 					}
 				}
 			}
@@ -296,7 +297,7 @@ void LAMMPSTextDumpImporter::LAMMPSTextDumpImportTask::parseFile(CompressedTextR
 				if(posProperty) {
 					Box3 boundingBox;
 					boundingBox.addPoints(posProperty->constDataPoint3(), posProperty->size());
-					if(Box3(Point3(-0.02f), Point3(1.02f)).containsBox(boundingBox))
+					if(Box3(Point3(FloatType(-0.02)), Point3(FloatType(1.02))).containsBox(boundingBox))
 						reducedCoordinates = true;
 				}
 			}
