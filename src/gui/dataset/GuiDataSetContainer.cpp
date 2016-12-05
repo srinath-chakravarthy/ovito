@@ -347,10 +347,9 @@ bool GuiDataSetContainer::waitUntil(const std::function<bool()>& callback, const
 		progressDisplay->setStatusText(message);
 
 		// Poll callback function until it returns true.
-		while(!callback()) {
-			if(progressDisplay->wasCanceled())
-				return false;
-			QCoreApplication::processEvents(QEventLoop::WaitForMoreEvents, 50);
+		while(!callback() && !progressDisplay->wasCanceled()) {
+			QCoreApplication::processEvents();
+			QThread::msleep(10);
 		}
 
 		return !progressDisplay->wasCanceled();

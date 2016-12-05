@@ -111,15 +111,16 @@ bool TaskManager::waitForTask(const std::shared_ptr<FutureInterfaceBase>& future
 {
 	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "TaskManager::waitForTask", "Function can only be called from the main thread.");
 
-	// Before showing any progress dialog, check if task has already finished.
+	// Before entering the local event loop, check if task has already finished.
 	if(futureInterface->isFinished())
 		return !futureInterface->isCanceled();
 
+	// Start a local event loop and wait for the task to generate the finished signal.
 	FutureWatcher watcher;
+	QEventLoop eventLoop;
 	watcher.setFutureInterface(futureInterface);
-	while(!watcher.isFinished()) {
-		QCoreApplication::processEvents(QEventLoop::WaitForMoreEvents, 50);
-	}
+	connect(&watcher, &FutureWatcher::finished, &eventLoop, &QEventLoop::quit);
+	eventLoop.exec();
 
 	return !futureInterface->isCanceled();
 }

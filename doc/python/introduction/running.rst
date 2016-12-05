@@ -85,14 +85,13 @@ inspect the results of your script during the development phase.
 Using third-party Python modules from OVITO scripts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-It is not possible to run scripts written for OVITO with a standard Python interpreter (usually named :program:`python`). 
-They must be executed with the launcher :program:`ovitos`. However, the Python installation shipping with OVITO
-includes only `NumPy <http://www.numpy.org/>`_ and `matplotlib <http://matplotlib.org/>`_ as non-standard extension modules. 
+Scripts that make use of the :py:mod:`ovito` Python module, cannot be run with a standard Python interpreter (usually named :program:`python`). 
+They must be executed with the launcher :program:`ovitos`, which takes care of setting up the program environment. However, this Python interpreter shipping with OVITO
+includes `NumPy <http://www.numpy.org/>`_ and `matplotlib <http://matplotlib.org/>`_ as the only non-standard extension modules. 
 
-If you want to use other third-party Python modules in your OVITO scripts, it might be possible to install them in the 
-built-in interpreter using the normal *setuptools* or *pip* mechanisms. 
-(Use :program:`ovitos` instead of :program:`python` to execute the *setup.py* installation script or run 
-:command:`ovitos -m pip install <package>`).
+If you want to use other third-party Python modules from your OVITO scripts, it may be possible to install them in the 
+:program:`ovitos` interpreter using the normal *pip* or *setuptools* mechanisms 
+(e.g., run :command:`ovitos -m pip install <package>` to install a module via *pip*).
 
 Installing Python extension that include native code (e.g. `Scipy <http:://www.scipy.org>`_) in the interpreter shipping with OVITO is currently not possible.
 In this case it is recommended to build OVITO from source on your system. OVITO will then use the system's standard Python interpreter instead of its own.

@@ -2,7 +2,7 @@ User interface improvements:
 
 - Default directory for image/movie output should be the path of the current data file.
 - Add file export function to Construct Surface Mesh modifier, which allows to export the mesh to a VTK file (requested by konstantin.avchachov@helsinki.fi).
-- Make initial set of viewports configurable by the user (requested by mathias.hoeld@univie.ac.at).  
+- Make initial set of viewports configurable by the user (requested by mathias.hoeld@univie.ac.at).
 - Add support for keyboard shortcuts (requested by Fossati, Paul C).
 - Add ticks to the color legend.
 - List of most recently accessed files
@@ -19,7 +19,6 @@ New visualization features:
 - Particle text labels (joy5142@psu.edu) and bond text labels (mickaeltrochet@yahoo.fr)
 - More particle representations (e.g. open circles).
 - Test OpenGL rendering support for more than 12 million particles.
-- Text Label overlay: Add more style options like font outline, background color, etc (stefan.parviainen@iki.fi).
 - Thompson Tetrahedra
 - Stereoscopic display (Erik Bitzek)
 - Wireframe mesh rendering (robin.gibaud@simap.grenoble-inp.fr)
@@ -70,12 +69,8 @@ Unresolved OpenGL problems:
 
 Unresolved bugs:
 
-- OVITO crashes under Windows 10 when using the Python script modifier (fsyed2309@mytu.tuskegee.edu). 
 - NearestNeighborFinder doesn't work properly for triclinic cells with small angles.
-- Assertion error at program shut down when Python script references an object or the Dataset
 - Construct surface mesh doesn't work for very small length scales (reported by xin.liu@insa-lyon.fr)
-
-- Include the missing VC runtime DLLs in the Windows package!
 - Particle trajectory creation doesn't work if new particles are created over time.
 - WebM video export not working on Windows (stefan.parviainen@iki.fi). 
 
@@ -95,7 +90,6 @@ New I/O functions:
 - Single precision floating-point numbers, which are used for custom particle properties, cannot represent large integer numbers exactly (e.g. 100400). Find a solution to make it work.
 - Add support for more file formats using OpenBabel.
 - File exporter for the NetCDF format.
-- Add user option that explicitly turns off the rescaling of reduced coordinates in XYZ files.
 
 Performance improvements:
 
@@ -104,7 +98,6 @@ Performance improvements:
 Scripting features:
 
 - Display script output when running a script via the GUI menu.
-- Distribute Scipy with Ovito?
 
 Documentation:
 

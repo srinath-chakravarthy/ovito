@@ -167,8 +167,13 @@ bool DataSetContainer::waitUntil(const std::function<bool()>& callback, const QS
 	try {
 
 		// Poll callback function until it returns true.
+#ifdef Q_OS_UNIX		
 		while(!callback() && !_userInterrupt.loadAcquire()) {
-			QCoreApplication::processEvents(QEventLoop::WaitForMoreEvents, 20);
+#else
+		while(!callback()) {
+#endif
+			QCoreApplication::processEvents();
+			QThread::msleep(20);
 		}
 
 #ifdef Q_OS_UNIX

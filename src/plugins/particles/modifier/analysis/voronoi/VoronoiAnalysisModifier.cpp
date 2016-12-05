@@ -128,10 +128,6 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 	// Compute the total simulation cell volume.
 	_simulationBoxVolume = _simCell.volume3D();
 
-	qDebug() << _simCell.matrix();
-	qDebug() << _simCell.matrix().determinant();
-	qDebug() << _simCell.inverseMatrix();
-
 	if(_positions->size() == 0 || _simulationBoxVolume == 0)
 		return;	// Nothing to do
 
@@ -493,10 +489,10 @@ PipelineStatus VoronoiAnalysisModifier::applyComputationResults(TimePoint time, 
 
 	// Check computed Voronoi cell volume sum.
 	if(std::abs(_voronoiVolumeSum - _simulationBoxVolume) > 1e-8 * inputParticleCount() * _simulationBoxVolume) {
-		qDebug() << _voronoiVolumeSum;
-		qDebug() << _simulationBoxVolume;
-		qDebug() << std::abs(_voronoiVolumeSum - _simulationBoxVolume);
-		qDebug() << (1e-9 * inputParticleCount() * _simulationBoxVolume);
+		//qDebug() << _voronoiVolumeSum;
+		//qDebug() << _simulationBoxVolume;
+		//qDebug() << std::abs(_voronoiVolumeSum - _simulationBoxVolume);
+		//qDebug() << (1e-8 * inputParticleCount() * _simulationBoxVolume);
 		return PipelineStatus(PipelineStatus::Warning,
 				tr("The volume sum of all Voronoi cells does not match the simulation box volume. "
 						"This may be a result of particles being located outside of the simulation box boundaries. "
