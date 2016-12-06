@@ -83,7 +83,7 @@ MACRO(OVITO_STANDARD_PLUGIN target_name)
     SET_TARGET_PROPERTIES(${target_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OVITO_PLUGINS_DIRECTORY}")
 	
 	# Generate plugin manifest.
-	SET(PLUGIN_MANIFEST "${OVITO_PLUGINS_DIRECTORY}/${target_name}.json")
+	SET(PLUGIN_MANIFEST "${OVITO_PLUGIN_MANIFESTS_DIRECTORY}/${target_name}.json")
 	FILE(WRITE "${PLUGIN_MANIFEST}" "{\n  \"plugin-id\" : \"${target_name}\",\n")
 	FILE(APPEND "${PLUGIN_MANIFEST}" "  \"plugin-version\" : \"${OVITO_VERSION_STRING}\",\n")
 	FILE(APPEND "${PLUGIN_MANIFEST}" "  \"dependencies\" : [ ")
@@ -100,13 +100,17 @@ MACRO(OVITO_STANDARD_PLUGIN target_name)
 		ENDIF()
 	ENDFOREACH()
 	FILE(APPEND "${PLUGIN_MANIFEST}" " ],\n")
-	FILE(APPEND "${PLUGIN_MANIFEST}" "  \"native-library\" : \"${target_name}\"\n}\n")
-	INSTALL(FILES "${PLUGIN_MANIFEST}" DESTINATION "${OVITO_RELATIVE_PLUGINS_DIRECTORY}")
+	IF(NOT APPLE)
+		FILE(APPEND "${PLUGIN_MANIFEST}" "  \"native-library\" : \"${target_name}\"\n}\n")
+	ELSE()
+		FILE(APPEND "${PLUGIN_MANIFEST}" "  \"native-library\" : \"../../PlugIns/${target_name}\"\n}\n")
+	ENDIF()
+	INSTALL(FILES "${PLUGIN_MANIFEST}" DESTINATION "${OVITO_RELATIVE_PLUGIN_MANIFESTS_DIRECTORY}")
 
 	# Install Python wrapper files.
 	IF(python_wrappers)
 		# Install the Python source files that belong to the plugin, which provide the scripting interface.
-		ADD_CUSTOM_COMMAND(TARGET ${target_name} POST_BUILD COMMAND ${CMAKE_COMMAND} "-E" copy_directory "${python_wrappers}" "${OVITO_PLUGINS_DIRECTORY}/python/")
+		ADD_CUSTOM_COMMAND(TARGET ${target_name} POST_BUILD COMMAND ${CMAKE_COMMAND} "-E" copy_directory "${python_wrappers}" "${OVITO_PLUGIN_PYTHON_DIRECTORY}/")
 	ENDIF()
 
 	# This plugin will be part of the installation package.

@@ -54,7 +54,9 @@ TARGET_INCLUDE_DIRECTORIES(PyScript PUBLIC ${PYTHON_INCLUDE_PATH})
 ADD_PRECOMPILED_HEADER(PyScript plugins/pyscript/PyScript.h)
 
 # Install the Python source files that belong to the plugin and which provide the scripting interface.
-INSTALL(DIRECTORY "${OVITO_PLUGINS_DIRECTORY}/python/" DESTINATION "${OVITO_RELATIVE_PLUGINS_DIRECTORY}/python/")
+INSTALL(DIRECTORY "${OVITO_PLUGIN_PYTHON_DIRECTORY}/" 
+		DESTINATION "${OVITO_RELATIVE_PLUGIN_PYTHON_DIRECTORY}/"
+		REGEX "__pycache__" EXCLUDE)
 
 # Build corresponding GUI plugin.
 IF(OVITO_BUILD_GUI)
@@ -69,10 +71,9 @@ IF(APPLE)
 	SET_TARGET_PROPERTIES(ovitos PROPERTIES OUTPUT_NAME "ovitos.exe")
 	SET_TARGET_PROPERTIES(ovitos PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OVITO_LIBRARY_DIRECTORY}")
 	INSTALL(TARGETS ovitos DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}")
+	SET(OVITOS_EXECUTABLE "${OVITO_LIBRARY_DIRECTORY}/ovitos.exe")
 	
-	# Install the launcher script.
-	SET(OVITOS_EXECUTABLE "${OVITO_LIBRARY_DIRECTORY}/ovitos")
-	CONFIGURE_FILE("resources/ovitos" "${OVITOS_EXECUTABLE}" COPYONLY)
+	# Install the launch helper script.
 	INSTALL(PROGRAMS "resources/ovitos" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}")
 ELSE()
 	SET_TARGET_PROPERTIES(ovitos PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OVITO_BINARY_DIRECTORY}")
@@ -88,17 +89,6 @@ ENDIF()
 # Build the script launcher together with PyScript plugin.
 ADD_DEPENDENCIES(PyScript ovitos)
 
-IF(APPLE)
-	# Create a nested application bundle with a modified Info.plist file
-	# that starts the application without displaying the dock icon.
-	EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E make_directory "${OVITO_BINARY_DIRECTORY}/${MACOSX_BUNDLE_NAME}.app/Contents/MacOS/Ovito.App/Contents")
-	EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E create_symlink "../../../MacOS" "${OVITO_BINARY_DIRECTORY}/${MACOSX_BUNDLE_NAME}.app/Contents/MacOS/Ovito.App/Contents/MacOS")
-	EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E create_symlink "../../../Resources" "${OVITO_BINARY_DIRECTORY}/${MACOSX_BUNDLE_NAME}.app/Contents/MacOS/Ovito.App/Contents/Resources")
-	EXECUTE_PROCESS(COMMAND "${CMAKE_COMMAND}" -E create_symlink "../../../Frameworks" "${OVITO_BINARY_DIRECTORY}/${MACOSX_BUNDLE_NAME}.app/Contents/MacOS/Ovito.App/Contents/Frameworks")
-	CONFIGURE_FILE("${CMAKE_SOURCE_DIR}/src/main/resources/Info.plist" "${OVITO_BINARY_DIRECTORY}/${MACOSX_BUNDLE_NAME}.app/Contents/MacOS/Ovito.App/Contents/Info.plist")
-	EXECUTE_PROCESS(COMMAND defaults write "${OVITO_BINARY_DIRECTORY}/${MACOSX_BUNDLE_NAME}.app/Contents/MacOS/Ovito.App/Contents/Info" LSUIElement 1)
-ENDIF()
-
 # Install standard Python packages. 
 IF(APPLE)
 	STRING(REGEX MATCH "[0-9]+\\.[0-9]+" PYTHON_MAJORMINOR_VERSION ${PYTHONLIBS_VERSION_STRING})
@@ -111,8 +101,7 @@ IF(APPLE)
 		PATTERN "__pycache__" EXCLUDE
 		PATTERN "test" EXCLUDE
 		PATTERN "*.exe" EXCLUDE
-		PATTERN "sphinx" EXCLUDE
-		PATTERN "PyQt4" EXCLUDE)
+		PATTERN "sphinx" EXCLUDE)
 		
 	# Install Python header files.
 	INSTALL(DIRECTORY "${PYTHON_INCLUDE_PATH}" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/../Frameworks/Python.framework/Versions/${PYTHON_MAJORMINOR_VERSION}/include/")
