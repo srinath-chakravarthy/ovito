@@ -53,8 +53,10 @@ private:
 	QComboBox* _pointSpriteMode;
 	QCheckBox* _overrideUseOfGeometryShaders;
 	QComboBox* _geometryShaderMode;
+#if !defined(OVITO_BUILD_APPSTORE_VERSION)
 	QCheckBox* _enableUpdateChecks;
 	QCheckBox* _enableUsageStatistics;
+#endif
 
 	Q_OBJECT
 	OVITO_OBJECT

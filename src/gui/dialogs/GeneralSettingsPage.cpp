@@ -111,6 +111,7 @@ void GeneralSettingsPage::insertSettingsDialogPage(ApplicationSettingsDialog* se
 
 	layout2->addWidget(new QLabel(tr("<p style=\"font-size: small; color: #686868;\">(Restart required for changes to take effect.)</p>")), 3, 0, 1, 2);
 
+#if !defined(OVITO_BUILD_APPSTORE_VERSION)
 	QGroupBox* updateGroupBox = new QGroupBox(tr("Program updates"), page);
 	layout1->addWidget(updateGroupBox);
 	layout2 = new QGridLayout(updateGroupBox);
@@ -132,6 +133,7 @@ void GeneralSettingsPage::insertSettingsDialogPage(ApplicationSettingsDialog* se
 
 	connect(_enableUpdateChecks, &QCheckBox::toggled, _enableUsageStatistics, &QCheckBox::setEnabled);
 	_enableUsageStatistics->setEnabled(_enableUpdateChecks->isChecked());
+#endif
 
 	layout1->addStretch();
 }
@@ -143,8 +145,10 @@ bool GeneralSettingsPage::saveValues(ApplicationSettingsDialog* settingsDialog, 
 {
 	QSettings settings;
 	settings.setValue("file/use_qt_dialog", _useQtFileDialog->isChecked());
+#if !defined(OVITO_BUILD_APPSTORE_VERSION)
 	settings.setValue("updates/check_for_updates", _enableUpdateChecks->isChecked());
 	settings.setValue("updates/transmit_id", _enableUsageStatistics->isChecked());
+#endif
 	if(_overrideGLContextSharing->isChecked())
 		settings.setValue("display/share_opengl_context", _contextSharingMode->currentIndex() == 0);
 	else

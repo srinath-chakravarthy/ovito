@@ -433,20 +433,26 @@ void ModifyCommandPage::createAboutPanel()
 	aboutLabel->viewport()->setAutoFillBackground(false);
 	layout->addWidget(aboutLabel);
 
-	QSettings settings;
 	QByteArray newsPage;
+#if !defined(OVITO_BUILD_APPSTORE_VERSION)
+	QSettings settings;
 	if(settings.value("updates/check_for_updates", true).toBool()) {
 		// Retrieve cached news page from settings store.
 		newsPage = settings.value("news/cached_webpage").toByteArray();
 	}
 	if(newsPage.isEmpty()) {
-		QResource res("/core/mainwin/command_panel/about_panel.html");
+		QResource res("/gui/mainwin/command_panel/about_panel.html");
 		newsPage = QByteArray((const char *)res.data(), (int)res.size());
 	}
+#else
+	QResource res("/gui/mainwin/command_panel/about_panel_no_updates.html");
+	newsPage = QByteArray((const char *)res.data(), (int)res.size());
+#endif
 	aboutLabel->setHtml(QString::fromUtf8(newsPage.constData()));
 
 	_aboutRollout = _propertiesPanel->addRollout(rollout, QCoreApplication::applicationName());
 
+#if !defined(OVITO_BUILD_APPSTORE_VERSION)
 	if(settings.value("updates/check_for_updates", true).toBool()) {
 
 		// Retrieve/generate unique installation id.
@@ -492,6 +498,7 @@ void ModifyCommandPage::createAboutPanel()
 		QNetworkReply* networkReply = networkAccessManager->get(QNetworkRequest(QUrl(urlString)));
 		connect(networkAccessManager, &QNetworkAccessManager::finished, this, &ModifyCommandPage::onWebRequestFinished);
 	}
+#endif
 }
 
 /******************************************************************************

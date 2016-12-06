@@ -51,11 +51,10 @@ INCLUDE(${OVITO_SOURCE_BASE_DIR}/cmake/Version.cmake)
 INCLUDE(${OVITO_SOURCE_BASE_DIR}/cmake/Plugins.cmake)
 INCLUDE(${OVITO_SOURCE_BASE_DIR}/cmake/PrecompiledHeader.cmake)
 
-# Define user option that controls the default floating-point number precision to use.
+# Define build options.
 OPTION(OVITO_DOUBLE_PRECISION_FP "Use double-precision floating-point numbers." "OFF")
-
-# Define user option that controls the building of OVITO's GUI module.
 OPTION(OVITO_BUILD_GUI "Build the graphical user interface." "ON")
+OPTION(OVITO_BUILD_APPSTORE_VERSION "Build binaries for the Apple App Store and Windows Store." "OFF")
 
 # Define user options that control the building of OVITO's standard plugins.
 OPTION(OVITO_BUILD_PLUGIN_PARTICLES "Build the Particles plugin." "ON")
@@ -120,7 +119,11 @@ IF(UNIX)
 		# The directory where the auxiliary files go to.
 		SET(OVITO_RELATIVE_SHARE_DIRECTORY "${MACOSX_BUNDLE_NAME}.app/Contents/Resources")
 		# The directory where the compiled plugins go to.
-		SET(OVITO_RELATIVE_PLUGINS_DIRECTORY "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins")	
+		SET(OVITO_RELATIVE_PLUGINS_DIRECTORY "${MACOSX_BUNDLE_NAME}.app/Contents/PlugIns")	
+		# The directory where the plugin manifests go to.
+		SET(OVITO_RELATIVE_PLUGIN_MANIFESTS_DIRECTORY "${MACOSX_BUNDLE_NAME}.app/Contents/Resources/plugins")	
+		# The directory where the plugins' Python files go to.
+		SET(OVITO_RELATIVE_PLUGIN_PYTHON_DIRECTORY "${MACOSX_BUNDLE_NAME}.app/Contents/Resources/plugins/python")	
 	ELSE()
 		# The directory where the main executable goes to.
 		SET(OVITO_RELATIVE_BINARY_DIRECTORY "bin")
@@ -130,6 +133,10 @@ IF(UNIX)
 		SET(OVITO_RELATIVE_SHARE_DIRECTORY "share/ovito")
 		# The directory where the compiled plugins go to.
 		SET(OVITO_RELATIVE_PLUGINS_DIRECTORY "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins")
+		# The directory where the plugin manifests go to.
+		SET(OVITO_RELATIVE_PLUGIN_MANIFESTS_DIRECTORY "${OVITO_RELATIVE_PLUGINS_DIRECTORY}")
+		# The directory where the plugins' Python files go to.
+		SET(OVITO_RELATIVE_PLUGIN_PYTHON_DIRECTORY "${OVITO_RELATIVE_PLUGINS_DIRECTORY}/python")	
 	ENDIF()
 ELSE()
 	# The directory where the main executable goes to.
@@ -140,6 +147,10 @@ ELSE()
 	SET(OVITO_RELATIVE_SHARE_DIRECTORY ".")
 	# The directory where the compiled plugins go to.
 	SET(OVITO_RELATIVE_PLUGINS_DIRECTORY "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins")
+	# The directory where the plugin manifests go to.
+	SET(OVITO_RELATIVE_PLUGIN_MANIFESTS_DIRECTORY "${OVITO_RELATIVE_PLUGINS_DIRECTORY}")
+	# The directory where the plugins' Python files go to.
+	SET(OVITO_RELATIVE_PLUGIN_PYTHON_DIRECTORY "${OVITO_RELATIVE_PLUGINS_DIRECTORY}/python")	
 ENDIF()
 
 # Controls whether a static or a shared OVITO executable is built.
@@ -166,6 +177,10 @@ SET(OVITO_BINARY_DIRECTORY "${${PROJECT_NAME}_BINARY_DIR}/${OVITO_RELATIVE_BINAR
 SET(OVITO_LIBRARY_DIRECTORY "${${PROJECT_NAME}_BINARY_DIR}/${OVITO_RELATIVE_LIBRARY_DIRECTORY}")
 # The directory where the compiled plugins go to.
 SET(OVITO_PLUGINS_DIRECTORY "${${PROJECT_NAME}_BINARY_DIR}/${OVITO_RELATIVE_PLUGINS_DIRECTORY}")
+# The directory where the plugin manifests go to.
+SET(OVITO_PLUGIN_MANIFESTS_DIRECTORY "${${PROJECT_NAME}_BINARY_DIR}/${OVITO_RELATIVE_PLUGIN_MANIFESTS_DIRECTORY}")
+# The directory where the plugins' Python files go to.
+SET(OVITO_PLUGIN_PYTHON_DIRECTORY "${${PROJECT_NAME}_BINARY_DIR}/${OVITO_RELATIVE_PLUGIN_PYTHON_DIRECTORY}")
 # The directory where the auxiliary files go to.
 SET(OVITO_SHARE_DIRECTORY "${${PROJECT_NAME}_BINARY_DIR}/${OVITO_RELATIVE_SHARE_DIRECTORY}")
 
