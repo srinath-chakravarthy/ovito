@@ -655,8 +655,9 @@ void ViewportWindow::renderNow()
 					.arg(OVITO_OPENGL_MINIMUM_VERSION_MAJOR)
 					.arg(OVITO_OPENGL_MINIMUM_VERSION_MINOR)
 				);
-			ex.showError();
 			QCoreApplication::removePostedEvents(nullptr, 0);
+			if(_mainWindow) _mainWindow->close();
+			ex.showError();
 			QCoreApplication::instance()->quit();
 		}
 		return;
