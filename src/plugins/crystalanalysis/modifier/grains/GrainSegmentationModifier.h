@@ -187,11 +187,15 @@ private:
 	/// This stores the cached cluster graph computed by the modifier.
 	QExplicitlySharedDataPointer<ClusterGraph> _clusterGraph;
 
-	/// The computed per-particle orientations.
-	QExplicitlySharedDataPointer<ParticleProperty> _localOrientations;
+        /// The computed per-particle orientations.
+        QExplicitlySharedDataPointer<ParticleProperty> _localOrientations;
 
-	/// The computed histogram of RMSD values.
-	QVector<int> _rmsdHistogramData;
+        /// The computed per-particle orientations.
+        QExplicitlySharedDataPointer<ParticleProperty> _symmetryorient;
+
+        
+        /// The computed histogram of RMSD values.
+        QVector<int> _rmsdHistogramData;
 
 	/// The bin size of the RMSD histogram;
 	FloatType _rmsdHistogramBinSize;

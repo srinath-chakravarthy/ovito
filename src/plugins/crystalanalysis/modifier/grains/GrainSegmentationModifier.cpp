@@ -214,12 +214,13 @@ void GrainSegmentationModifier::transferComputationResults(ComputeEngine* engine
 
 	GrainSegmentationEngine* eng = static_cast<GrainSegmentationEngine*>(engine);
 	_atomClusters = eng->atomClusters();
-	_clusterGraph = eng->outputClusterGraph();
-	_partitionMesh = eng->mesh();
-	_spaceFillingRegion = eng->spaceFillingGrain();
+        _clusterGraph = eng->outputClusterGraph();
+        _partitionMesh = eng->mesh();
+        _spaceFillingRegion = eng->spaceFillingGrain();
+        _symmetryorient = eng->symmetry();
 
-	// Copy RMDS histogram data.
-	_rmsdHistogramData = eng->rmsdHistogramData();
+        // Copy RMDS histogram data.
+        _rmsdHistogramData = eng->rmsdHistogramData();
 	_rmsdHistogramBinSize = eng->rmsdHistogramBinSize();
 
 	if(outputLocalOrientations())
@@ -260,11 +261,16 @@ PipelineStatus GrainSegmentationModifier::applyComputationResults(TimePoint time
 		output().addObject(_patternCatalog);
 	}
 
-	// Output particle properties.
-	outputStandardProperty(_atomClusters.data());
-	if(outputLocalOrientations() && _localOrientations) outputStandardProperty(_localOrientations.data());
-	if(_defectDistances) outputCustomProperty(_defectDistances.data());
-	if(_defectDistanceBasins) outputCustomProperty(_defectDistanceBasins.data());
+        // Output particle properties.
+        outputStandardProperty(_atomClusters.data());
+        
+        if (_symmetryorient){
+          outputStandardProperty(_symmetryorient.data());
+        }
+        
+        if(outputLocalOrientations() && _localOrientations) outputStandardProperty(_localOrientations.data());
+        if(_defectDistances) outputCustomProperty(_defectDistances.data());
+        if(_defectDistanceBasins) outputCustomProperty(_defectDistanceBasins.data());
 
 	// Output lattice neighbor bonds.
 	if(_latticeNeighborBonds) {

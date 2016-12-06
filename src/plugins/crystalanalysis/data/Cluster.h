@@ -62,12 +62,15 @@ struct ClusterTransition
 	Cluster* cluster2;
 
 	/// The transformation matrix that transforms vectors from the reference frame of cluster 1 to the frame
-	/// of cluster 2.
-	Matrix3 tm;
+        /// of cluster 2.
+        Matrix3 tm;
 
-	/// Pointer to the reverse transition from cluster 2 to cluster 1.
-	/// The transformation matrix of the reverse transition is the inverse of this transition's matrix.
-	ClusterTransition* reverse;
+        /// The average normal vector of the interface between cluster1 and cluster2
+        Vector3 normal;
+        
+        /// Pointer to the reverse transition from cluster 2 to cluster 1.
+        /// The transformation matrix of the reverse transition is the inverse of this transition's matrix.
+        ClusterTransition* reverse;
 
 	/// The cluster transitions form the directed edges of the cluster cluster graph (with the clusters being the nodes).
 	/// Each node's outgoing edges are stored in a linked list. This field points

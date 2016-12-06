@@ -86,12 +86,16 @@ public:
 	/// Sets the transparency of the cap polygons.
 	void setCapTransparency(FloatType transparency) { if(_capTransparency) _capTransparency->setCurrentFloatValue(transparency); }
 
-	/// Generates the final triangle mesh, which will be rendered.
-	static bool buildMesh(const PartitionMeshData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress = nullptr);
+        /// Generates the final triangle mesh, which will be rendered.
+        static bool buildMesh(const PartitionMeshData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress = nullptr);
 
+        /// Splits a triangle face at a periodic boundary.
+        static bool splitFace(TriMesh& output, int faceIndex, int oldVertexCount, std::vector<Point3>& newVertices, std::map<std::pair<int,int>,std::pair<int,int>>& newVertexLookupMap, const SimulationCell& cell, size_t dim);
+
+        
 protected:
 
-	/// Creates a computation engine that will prepare the data to be displayed.
+        /// Creates a computation engine that will prepare the data to be displayed.
 	virtual std::shared_ptr<AsynchronousTask> createEngine(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState) override;
 
 	/// Unpacks the results of the computation engine and stores them in the display object.
@@ -125,11 +129,8 @@ protected:
 
 protected:
 
-	/// Splits a triangle face at a periodic boundary.
-	static bool splitFace(TriMesh& output, int faceIndex, int oldVertexCount, std::vector<Point3>& newVertices, std::map<std::pair<int,int>,std::pair<int,int>>& newVertexLookupMap, const SimulationCell& cell, size_t dim);
-
-	/// Controls the display color of the outer surface mesh.
-	PropertyField<Color, QColor> _surfaceColor;
+        /// Controls the display color of the outer surface mesh.
+        PropertyField<Color, QColor> _surfaceColor;
 
 	/// Controls whether the cap polygons are rendered.
 	PropertyField<bool> _showCap;

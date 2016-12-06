@@ -120,12 +120,14 @@ ClusterTransition* ClusterGraph::createClusterTransition(Cluster* clusterA, Clus
 	tAB->reverse = tBA;
 	tBA->reverse = tAB;
 	tAB->distance = distance;
-	tBA->distance = distance;
-	tAB->area = 0;
-	tBA->area = 0;
+        tBA->distance = distance;
+        tAB->area = 0;
+        tBA->area = 0;
+        tAB->normal = Vector3::Zero();
+        tBA->normal = Vector3::Zero();
 
-	// Insert the new transition and its reverse into the linked lists of the two clusters.
-	clusterA->insertTransition(tAB);
+        // Insert the new transition and its reverse into the linked lists of the two clusters.
+        clusterA->insertTransition(tAB);
 	clusterB->insertTransition(tBA);
 
 	// Register pair of new transitions in global list.
@@ -159,12 +161,13 @@ ClusterTransition* ClusterGraph::createSelfTransition(Cluster* cluster)
 		t->cluster1 = t->cluster2 = cluster;
 		t->tm.setIdentity();
 		t->reverse = t;
-		t->distance = 0;
-		t->next = cluster->transitions;
-		t->area = 0;
-		cluster->transitions = t;
-		OVITO_ASSERT(t->isSelfTransition());
-		OVITO_ASSERT(t->next == nullptr || t->next->distance >= 1);
+                t->distance = 0;
+                t->next = cluster->transitions;
+                t->area = 0;
+                t->normal = Vector3::Zero();
+                cluster->transitions = t;
+                OVITO_ASSERT(t->isSelfTransition());
+                OVITO_ASSERT(t->next == nullptr || t->next->distance >= 1);
 		return t;
 	}
 }

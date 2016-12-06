@@ -19,6 +19,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <core/Core.h>
+#include <core/utilities/io/CompressedTextWriter.h>
+
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/utilities/concurrent/ParallelFor.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
@@ -38,6 +41,114 @@
 #include <boost/functional/hash.hpp>
 #include <unordered_set>
 
+#if 0
+#define SQRT_2         1.4142135623730951454746218587388284504414
+#define HALF_SQRT_2    0.7071067811865474617150084668537601828575
+
+#define PHI            1.6180339887498949025257388711906969547272
+#define HALF_PHI       0.8090169943749474512628694355953484773636
+
+#define INV_PHI        0.6180339887498947915034364086750429123640
+#define HALF_INV_PHI   0.3090169943749473957517182043375214561820
+
+#define SQRT_5_        2.23606797749978969640917366873127623544061835961152572427089
+#define SQRT_2_3       0.8164965809277260344600790631375275552273
+#define SQRT_1_6       0.4082482904638630172300395315687637776136
+
+
+double generator_cubic[24][4] = {       {1,     0,      0,      0       },
+                                        {0,     1,      0,      0       },
+                                        {0,     0,      1,      0       },
+                                        {0,     0,      0,      1       },
+                                        {0.5,   0.5,    0.5,    0.5     },
+                                        {0.5,   0.5,    -0.5,   0.5     },
+                                        {0.5,   -0.5,   0.5,    0.5     },
+                                        {0.5,   -0.5,   -0.5,   0.5     },
+                                        {-0.5,  0.5,    0.5,    0.5     },
+                                        {-0.5,  0.5,    -0.5,   0.5     },
+                                        {-0.5,  -0.5,   0.5,    0.5     },
+                                        {-0.5,  -0.5,   -0.5,   0.5     },
+                                        {HALF_SQRT_2,   HALF_SQRT_2,    0,      0       },
+                                        {HALF_SQRT_2,   0,      HALF_SQRT_2,    0       },
+                                        {HALF_SQRT_2,   0,      0,      HALF_SQRT_2     },
+                                        {-HALF_SQRT_2,  HALF_SQRT_2,    0,      0       },
+                                        {-HALF_SQRT_2,  0,      HALF_SQRT_2,    0       },
+                                        {-HALF_SQRT_2,  0,      0,      HALF_SQRT_2     },
+                                        {0,     HALF_SQRT_2,    HALF_SQRT_2,    0       },
+                                        {0,     HALF_SQRT_2,    0,      HALF_SQRT_2     },
+                                        {0,     0,      HALF_SQRT_2,    HALF_SQRT_2     },
+                                        {0,     -HALF_SQRT_2,   HALF_SQRT_2,    0       },
+                                        {0,     -HALF_SQRT_2,   0,      HALF_SQRT_2     },
+                                        {0,     0,      -HALF_SQRT_2,   HALF_SQRT_2     }       };
+
+double generator_hcp[6][4] = {          {1, 0, 0, 0},
+                                        {0.5, 0.5, 0.5, 0.5},
+                                        {0.5, -0.5, -0.5, -0.5},
+                                        {0, SQRT_2_3, -SQRT_1_6, -SQRT_1_6},
+                                        {0, SQRT_1_6, -SQRT_2_3, SQRT_1_6},
+                                        {0, SQRT_1_6, SQRT_1_6, -SQRT_2_3}      };
+
+double generator_icosahedral[60][4] = { {1, 0, 0, 0},
+                                        {HALF_PHI, -HALF_INV_PHI, -0.5, 0},
+                                        {HALF_PHI, 0, -HALF_INV_PHI, -0.5},
+                                        {HALF_PHI, -0.5, 0, -HALF_INV_PHI},
+                                        {HALF_PHI, HALF_INV_PHI, -0.5, 0},
+                                        {HALF_PHI, 0, HALF_INV_PHI, -0.5},
+                                        {HALF_PHI, -0.5, 0, HALF_INV_PHI},
+                                        {HALF_PHI, 0.5, 0, -HALF_INV_PHI},
+                                        {HALF_PHI, 0, -HALF_INV_PHI, 0.5},
+                                        {HALF_PHI, -HALF_INV_PHI, 0.5, 0},
+                                        {HALF_PHI, 0, HALF_INV_PHI, 0.5},
+                                        {HALF_PHI, HALF_INV_PHI, 0.5, 0},
+                                        {HALF_PHI, 0.5, 0, HALF_INV_PHI},
+                                        {0.5, HALF_PHI, -HALF_INV_PHI, 0},
+                                        {0.5, HALF_PHI, HALF_INV_PHI, 0},
+                                        {0.5, 0.5, 0.5, 0.5},
+                                        {0.5, 0.5, 0.5, -0.5},
+                                        {0.5, 0.5, -0.5, 0.5},
+                                        {0.5, 0.5, -0.5, -0.5},
+                                        {0.5, HALF_INV_PHI, 0, HALF_PHI},
+                                        {0.5, HALF_INV_PHI, 0, -HALF_PHI},
+                                        {0.5, 0, HALF_PHI, -HALF_INV_PHI},
+                                        {0.5, 0, HALF_PHI, HALF_INV_PHI},
+                                        {0.5, 0, -HALF_PHI, -HALF_INV_PHI},
+                                        {0.5, 0, -HALF_PHI, HALF_INV_PHI},
+                                        {0.5, -HALF_INV_PHI, 0, HALF_PHI},
+                                        {0.5, -HALF_INV_PHI, 0, -HALF_PHI},
+                                        {0.5, -0.5, 0.5, 0.5},
+                                        {0.5, -0.5, 0.5, -0.5},
+                                        {0.5, -0.5, -0.5, 0.5},
+                                        {0.5, -0.5, -0.5, -0.5},
+                                        {0.5, -HALF_PHI, -HALF_INV_PHI, 0},
+                                        {0.5, -HALF_PHI, HALF_INV_PHI, 0},
+                                        {HALF_INV_PHI, -HALF_PHI, 0, -0.5},
+                                        {HALF_INV_PHI, 0, -0.5, -HALF_PHI},
+                                        {HALF_INV_PHI, -0.5, -HALF_PHI, 0},
+                                        {HALF_INV_PHI, 0, 0.5, -HALF_PHI},
+                                        {HALF_INV_PHI, -HALF_PHI, 0, 0.5},
+                                        {HALF_INV_PHI, 0.5, -HALF_PHI, 0},
+                                        {HALF_INV_PHI, HALF_PHI, 0, -0.5},
+                                        {HALF_INV_PHI, -0.5, HALF_PHI, 0},
+                                        {HALF_INV_PHI, 0, -0.5, HALF_PHI},
+                                        {HALF_INV_PHI, HALF_PHI, 0, 0.5},
+                                        {HALF_INV_PHI, 0, 0.5, HALF_PHI},
+                                        {HALF_INV_PHI, 0.5, HALF_PHI, 0},
+                                        {0, 1, 0, 0},
+                                        {0, HALF_PHI, -0.5, HALF_INV_PHI},
+                                        {0, HALF_PHI, -0.5, -HALF_INV_PHI},
+                                        {0, HALF_PHI, 0.5, HALF_INV_PHI},
+                                        {0, HALF_PHI, 0.5, -HALF_INV_PHI},
+                                        {0, 0.5, HALF_INV_PHI, -HALF_PHI},
+                                        {0, 0.5, HALF_INV_PHI, HALF_PHI},
+                                        {0, 0.5, -HALF_INV_PHI, -HALF_PHI},
+                                        {0, 0.5, -HALF_INV_PHI, HALF_PHI},
+                                        {0, HALF_INV_PHI, -HALF_PHI, 0.5},
+                                        {0, HALF_INV_PHI, -HALF_PHI, -0.5},
+                                        {0, HALF_INV_PHI, HALF_PHI, 0.5},
+                                        {0, HALF_INV_PHI, HALF_PHI, -0.5},
+                                        {0, 0, 1, 0},
+                                        {0, 0, 0, 1}    };
+#endif
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 /******************************************************************************
@@ -54,12 +165,13 @@ GrainSegmentationEngine::GrainSegmentationEngine(const TimeInterval& validityInt
 	_rmsd(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, GrainSegmentationModifier::tr("RMSD"), false)),
 	_rmsdCutoff(rmsdCutoff),
 	_inputCrystalStructure(inputCrystalStructure),
-	_numOrientationSmoothingIterations(numOrientationSmoothingIterations),
-	_orientationSmoothingWeight(orientationSmoothingWeight),
-	_orientations(new ParticleProperty(positions->size(), ParticleProperty::OrientationProperty, 0, true)),
-	_misorientationThreshold(misorientationThreshold),
-	_minGrainAtomCount(std::max(minGrainAtomCount, 1)),
-	_probeSphereRadius(probeSphereRadius),
+        _numOrientationSmoothingIterations(numOrientationSmoothingIterations),
+        _orientationSmoothingWeight(orientationSmoothingWeight),
+        _orientations(new ParticleProperty(positions->size(), ParticleProperty::OrientationProperty, 0, true)),
+        _symmetryorient(new ParticleProperty(positions->size(), ParticleProperty::RotationProperty, 0, true)),
+        _misorientationThreshold(misorientationThreshold),
+        _minGrainAtomCount(std::max(minGrainAtomCount, 1)),
+        _probeSphereRadius(probeSphereRadius),
 	_meshSmoothingLevel(meshSmoothingLevel),
 	_latticeNeighborBonds(new BondsStorage()),
 	_neighborDisorientationAngles(new BondProperty(0, qMetaTypeId<FloatType>(), 1, 0, GrainSegmentationModifier::tr("Disorientation"), false)),
@@ -143,17 +255,19 @@ void GrainSegmentationEngine::perform()
 			// Call PTM library to identify local structure.
 			int32_t type, alloy_type;
 			double scale;
-			double rmsd;
-			double q[4];
-			int8_t mapping[PTM_MAX_NBRS + 1];
-			ptm_index(ptm_local_handle, numNeighbors + 1, points, nullptr, flags, true,
-					&type, &alloy_type, &scale, &rmsd, q,
-					nullptr, nullptr,
-					nullptr, nullptr, mapping, nullptr, nullptr);
-
-			// Convert PTM classification to our own scheme and store computed quantities.
-			if(type == PTM_MATCH_NONE) {
-				output->setInt(index, OTHER);
+                        double rmsd;
+                        double q[4];
+                        int8_t mapping[PTM_MAX_NBRS + 1];
+                        int symmindex;
+                        
+                        ptm_index(ptm_local_handle, numNeighbors + 1, points, nullptr, flags, true,
+                                        &type, &alloy_type, &scale, &rmsd, q, symmindex,
+                                        nullptr, nullptr,
+                                        nullptr, nullptr, mapping, nullptr, nullptr);
+                        //qDebug() << index << " Symmetry perm = " << symmindex;
+                        // Convert PTM classification to our own scheme and store computed quantities.
+                        if(type == PTM_MATCH_NONE) {
+                                output->setInt(index, OTHER);
 				_rmsd->setFloat(index, 0);
 
 				// Store neighbor list.
@@ -603,17 +717,19 @@ void GrainSegmentationEngine::perform()
 			// If the cluster's size is below the threshold, dissolve the cluster.
 			if(clusterSizes[i] < _minGrainAtomCount) {
 				clusterRemapping[i] = 0;
-			}
-			else {
-				clusterSizes[numClusters] = clusterSizes[i];
-				clusterRemapping[i] = ++numClusters;
-			}
-		}
+                        }
+                        else {
+                                clusterSizes[numClusters] = clusterSizes[i];
+                                clusterOrientations[numClusters] = clusterOrientations[i];
+                                clusterRemapping[i] = ++numClusters;
+                        }
+                }
 	}
-	// Determine new IDs for non-root clusters.
-	for(int i = 0; i < numBasins; i++) {
-		clusterRemapping[i] = clusterRemapping[findParentCluster(i)];
-	}
+        // Determine new IDs for non-root clusters.
+        for(int i = 0; i < numBasins; i++) {
+                clusterRemapping[i] = clusterRemapping[findParentCluster(i)];
+                //qDebug() << i << " " << clusterRemapping[i] << " " << clusterSizes[i] << " " << clusterOrientations[i];
+        }
 
 #if 1
 	// Randomize cluster IDs for testing purposes (giving more color contrast).
@@ -625,25 +741,36 @@ void GrainSegmentationEngine::perform()
 		clusterRemapping[i] = clusterRandomMapping[clusterRemapping[i]-1];
 #endif
 
-	// Relabel atoms after cluster IDs have changed.
-	clusterSizes.resize(numClusters);
-	clusterOrientations.resize(numClusters);
-	for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
-		int clusterId = atomClusters()->getInt(particleIndex);
-		if(clusterId == 0) continue;
-		clusterId = clusterRemapping[clusterId - 1];
-		atomClusters()->setInt(particleIndex, clusterId);
-	}
+        // Relabel atoms after cluster IDs have changed.
+        // Set atoms to their average orientations
+        clusterSizes.resize(numClusters);
+        clusterOrientations.resize(numClusters);
+        for(size_t particleIndex = 0; particleIndex < output->size(); particleIndex++) {
+                int clusterId = atomClusters()->getInt(particleIndex);
+                int clusterId_orig = clusterId;
+                if(clusterId == 0) continue;
+                clusterId = clusterRemapping[clusterId - 1];
+                atomClusters()->setInt(particleIndex, clusterId);
+                const Quaternion& qavg = clusterOrientations[clusterId];
+                //double q1[4] = {qavg.w(), qavg.x(), qavg.y(), qavg.z()};
+                //int symmindex = rotate_quaternion_into_cubic_fundamental_zone(q1);
+                //qavg = Quaternion(FloatType(q1[1]), FloatType(q1[2]), FloatType(q1[3]), FloatType(q1[0]));
+                _orientations->setQuaternion(particleIndex,qavg);
+                //_symmetryorient->setInt(particleIndex, symmindex);
+        }
 
-	// Build list of orphan atoms.
+        // Build list of orphan atoms.
 	std::vector<size_t> orphanAtoms;
 	for(size_t i = 0; i < atomClusters()->size(); i++) {
-		if(atomClusters()->getInt(i) == 0)
-			orphanAtoms.push_back(i);
-	}
-
-	setProgressText(GrainSegmentationModifier::tr("Grain segmentation - merging orphan atoms"));
-	setProgressValue(0);
+                if(atomClusters()->getInt(i) == 0)
+                        orphanAtoms.push_back(i);
+        }
+        // Create extra storage to hold orphanAtoms
+        std::vector<size_t> oldOrphanAtoms(orphanAtoms);
+        size_t OrphanCountgraph = oldOrphanAtoms.size();
+        
+        setProgressText(GrainSegmentationModifier::tr("Grain segmentation - merging orphan atoms"));
+        setProgressValue(0);
 	setProgressRange(orphanAtoms.size());
 
 	// Add orphan atoms to the grains.
@@ -685,10 +812,11 @@ void GrainSegmentationEngine::perform()
 		}
 		orphanAtoms.resize(newOrphanCount);
 		if(newOrphanCount == oldOrphanCount)
-			break;
+		  break;
+		
 		oldOrphanCount = newOrphanCount;
 	}
-
+	
 	// For output, convert edge disorientation angles from radians to degrees.
 	for(FloatType& angle : _neighborDisorientationAngles->floatRange())
 		angle *= FloatType(180) / FLOATTYPE_PI;
@@ -706,16 +834,73 @@ void GrainSegmentationEngine::perform()
 	// Create output cluster graph.
 	_outputClusterGraph = new ClusterGraph();
 	for(int grain = 0; grain < numClusters; grain++) {
-		Cluster* cluster = _outputClusterGraph->createCluster(_inputCrystalStructure, grain + 1);
-		cluster->atomCount = clusterSizes[grain];
-		cluster->color = grainColorList[grain % (sizeof(grainColorList)/sizeof(grainColorList[0]))];
-	}
+                Cluster* cluster = _outputClusterGraph->createCluster(_inputCrystalStructure, grain + 1);
+                cluster->atomCount = clusterSizes[grain];
+                cluster->color = grainColorList[grain % (sizeof(grainColorList)/sizeof(grainColorList[0]))];
+                const Quaternion& q = clusterOrientations[grain];
+                cluster->orientation = Matrix3::rotation(q);
+                cluster->symmetryTransformation = 0;
+		qDebug() << cluster->id << cluster->orientation << (cluster->orientation).isRotationMatrix(FloatType(1.0e-6));
+        }
+#if 1
+        /// Chakravarthy Nov 2016 changes and hacks
+        // Now go through the existing list of orphanAtoms and find the clusterId of the neighbors
+        // For every boundary atom belonging to a cluster, its neighbor will be another cluster or free space or a periodic boundary
+        // wrapVector wraps the periodic positions and neighbor lists automatically accounts for periodic boundaries
+        // So search through the neighborLists of each atom and find the atom that belongs to a different cluster
+        // This will complete the clusterGraphs of nearest neighbor grains... 
+        // TBD --> Cluster orientation mapping 
+        
+        for (size_t i=0; i< atomClusters()->size(); i ++){
+            int clusterIDa = atomClusters()->getInt(i);
+            Cluster *cluster1 = outputClusterGraph()->findCluster(clusterIDa);
+            for (size_t c=0; c<_neighborLists->componentCount(); c++){
+              int neighborIndex = _neighborLists->getIntComponent(i, c);
+              if (neighborIndex == -1) break;
+              int clusterIDb = atomClusters()->getInt(neighborIndex);
+              // Do not consider Neighbors belonging to the same cluster 
+              if (clusterIDb == 0 || clusterIDa == clusterIDb) continue;
+              Cluster *cluster2 = outputClusterGraph()->findCluster(clusterIDb);
+              // If there is already a transition just increase number of bonds between them
+              ClusterTransition *t;
+              if (t = cluster1->findTransition(cluster2)){
+                t->area++;
+                t->reverse->area++;
+              }
+              else {
+                // TBD create the actual transition matrix between the 2 clusters
+                /// TBD need the quaternion math to do this ....
+                Matrix3 transition = Matrix3::Identity();
+                t = outputClusterGraph()->createClusterTransition(cluster1, cluster2, transition);
+                t->area++;
+                t->reverse->area++;
+              }
+            }
+        }
+        
+        /// Print the Cluster graph
+/*      
+        for(size_t clusterIndex = 0; clusterIndex < outputClusterGraph()->clusters().size(); clusterIndex++) {
+                Cluster* cluster = outputClusterGraph()->clusters()[clusterIndex];
+                if(cluster->id == 0) continue;
+                qDebug() << "Cluster ID = " << cluster->id;
+                qDebug() << "-----------------------------------------------------------";
+                for(ClusterTransition* t = cluster->transitions; t != nullptr; t = t->next) {
+                  qDebug() << t->cluster2->id; 
+                }
 
-	if(_probeSphereRadius > 0) {
-		setProgressText(GrainSegmentationModifier::tr("Building grain boundary mesh"));
-		if(!buildPartitionMesh())
-			return;
-	}
+                qDebug() << "-----------------------------------------------------------";
+        }
+*/      
+#endif  
+        
+        if(_probeSphereRadius > 0) {
+                setProgressText(GrainSegmentationModifier::tr("Building grain boundary mesh"));
+                if(!buildPartitionMesh())
+                        return;
+            extractMesh();
+        }
+        
 }
 
 /** Find the most common element in the [first, last) range.
@@ -742,7 +927,121 @@ ForwardIterator most_common(ForwardIterator first, ForwardIterator last)
 			max_it = it;
 		}
 	}
-	return max_it;
+        return max_it;
+}
+
+/*****************************************************************************
+ * Extracts partitionmesh between clusters and stores them as vtk files 
+ * Also computes average normal vector to each extracted mesh
+ * Also computes surface area for each extracted mesh
+*****************************************************************************/
+void GrainSegmentationEngine::extractMesh()
+{
+  auto vertices = _mesh->vertices();                        //  Get vertices of existing PartitionMesh
+  PartitionMeshData *newmesh = new PartitionMeshData();     //  Create a temporary newmesh for each transition
+  
+  for(size_t clusterIndex = 0; clusterIndex < outputClusterGraph()->clusters().size(); clusterIndex++) {
+        Cluster* cluster = outputClusterGraph()->clusters()[clusterIndex];
+        std::vector<PartitionMeshData::Vertex*> newVertices;       //  Storage for new vertices
+        int regionid = cluster->id;
+        for (ClusterTransition *t = cluster->transitions; t != nullptr; t=t->next){
+              newmesh->clear();                                    //  Clears the mesh for each transition
+              newVertices.clear();                                 // Clear the newVertices array
+              //ClusterTransition *t = cluster->transitions;
+              int regionId2 = t->cluster2->id;
+              Vector3 normal_average;
+              // Loop through the faces and extract all faces that have oppositeFace region equal to other clusterID
+              for(PartitionMeshData::Face* face : _mesh->faces()) {
+                PartitionMeshData::Face* oppositeFace = face->oppositeFace;
+                if (face->region == regionid){
+                  if (oppositeFace->region == regionId2){
+                    //qDebug() << "Face " << face->index() << "is shared between " << regionid << " and " << regionId2;
+                    // Loop through edges belonging to the shared face
+                    // the vertices of the new triangle are edge1->vertex1, edge2->vertex1, edge3->vertex1
+                    int v = 0;
+                    PartitionMeshData::Edge* e = face->edges();
+                    std::array<PartitionMeshData::Vertex*,3> faceVertices;
+                    PartitionMeshData::Vertex* newvertex;
+                    do{
+                      PartitionMeshData::Vertex* vertex = e->vertex1();
+                      int index = vertex->index();
+                      // This clearly does not work because, vertex is a pointer to the original vertex
+                      // Newvertex is a vector to the addresses of the newvertex... 
+                      //if (std::find(newVertices.cbegin(), newVertices.cend(), vertex) != newVertices.cend()) {
+                      // Find the vertex by position in the newvertex list
+                      newvertex = nullptr;
+                      for (auto it = newVertices.cbegin(); it != newVertices.cend(); ++it){
+                        if ((*it)->pos() == vertex->pos()){
+                          newvertex = *it;
+                        }
+                      }
+                      if (!newvertex) {
+                        // Create new vertex in new partitionmesh if it does not exist
+                        newvertex = newmesh->createVertex(vertex->pos());
+                        newVertices.push_back(newvertex);
+                      }
+                      faceVertices[v] = newvertex;
+                      v++;
+                      e = e->nextFaceEdge();\
+                    } 
+                    while(e!=face->edges());
+                    //qDebug() << "Edgecount on Face = " << face->index() << v;
+                    // Create new face in the new mesh 
+                    PartitionMeshData::Face* newface = newmesh->createFace(faceVertices.begin(),faceVertices.end());
+                    Vector3 triedge1 = faceVertices[1]->pos()-faceVertices[0]->pos(); 
+                    Vector3 triedge2 = faceVertices[2]->pos()-faceVertices[0]->pos(); 
+                    //Vector3 facenormal = (triedge1.cross(triedge2));
+                    //facenormal.normalize();
+                    //normal_average +=  facenormal;
+                    // Obtain normal vector to triangle
+                    /// Use Vecto3 and cross product to find normal, average and then normalize to obtain average normal
+                    /// Store this average in the clustergraph so that it can be accessed. 
+                  }
+                }
+              } 
+              //normal_average.normalize();
+              
+              //qDebug() << "Transisition = " <<  regionid <<  " to " <<  regionId2 <<  " mesh faces  " << newmesh->faceCount() <<  "Normal = " <<  normal_average;
+              //}
+              // Now export this mesh to test
+              TriMesh output_mesh;
+              output_mesh.clear();
+              QVector<Plane3> cutting; 
+              FutureInterfaceBase *progress1 = nullptr;
+
+	      //PartitionMesh::smoothMesh(*newmesh, cell(), _meshSmoothingLevel*5, progress1);
+	      
+	      if (!PartitionMeshDisplay::buildMesh(*newmesh,cell(),cutting, output_mesh, progress1)){
+                qDebug() << "Error on buildMesh";
+              }
+	      for(const TriMeshFace& f : output_mesh.faces()) {
+		  Point3 p1 = output_mesh.vertex(f.vertex(0));
+		  Point3 p2 = output_mesh.vertex(f.vertex(1));
+		  Point3 p3 = output_mesh.vertex(f.vertex(2));
+		    
+		  Vector3 triedge1 = p2 - p1;
+		  Vector3 triedge2 = p3 - p1; 
+		  Vector3 facenormal = (triedge1.cross(triedge2));
+		  if (facenormal.length()> 1.0e-6) {
+		      facenormal.normalize();
+		      
+		      normal_average +=  facenormal;
+		  }
+
+	      }
+	      normal_average.normalize();
+	      t->normal = normal_average;
+
+              QString filename;
+              filename = "%1%2%3%4";
+              filename.arg("test_new_",  QString::number(regionid),  QString::number(regionId2), ".vtk");
+              QFile file(filename);
+              CompressedTextWriter writer(file);
+              
+              output_mesh.saveToVTK(writer);
+        }
+  }
+  
 }
 
 /******************************************************************************
@@ -896,20 +1195,69 @@ bool GrainSegmentationEngine::buildPartitionMesh()
 				currentEdge = currentEdge->prevFaceEdge()->oppositeEdge();
 			}
 			while(currentEdge != endEdge);
-		}
-	}
+                }
+        }
+        
+#if 0   
+        QString filename;
+        filename = "tessellation.vtk";
+        QFile file(filename);
+        CompressedTextWriter stream(file);
+        size_t numpts = positions()->size();
+        stream << "# vtk DataFile Version 3.0\n";
+        stream << "# Delaunay Tesselation mesh\n";
+        stream << "ASCII\n";
+        stream << "DATASET UNSTRUCTURED_GRID\n";
+        stream << "POINTS " << numpts << " double\n";
 
-	// Smooth the generated triangle mesh.
-	PartitionMesh::smoothMesh(*_mesh, cell(), _meshSmoothingLevel, this);
+        for(size_t i = 0; i < positions()->size(); i++) {
+            const Point3& vertexPos = positions()->getPoint3(i);
+            stream << vertexPos.x() << " " << vertexPos.y() << " " << vertexPos.z() << "\n";
+        }
+        
+        size_t numtet = 0;
+        for(DelaunayTessellation::CellIterator cell = tessellation.begin_cells(); cell != tessellation.end_cells(); ++cell) { 
+            if(!tessellation.isValidCell(cell)) continue;    // Skip infinite cells
+            numtet++;
+        }
+        stream << "\nCELLS " << numtet << " " << (numtet * 5) << "\n";
+        for(DelaunayTessellation::CellIterator cell = tessellation.begin_cells(); cell != tessellation.end_cells(); ++cell) { 
+            if(!tessellation.isValidCell(cell)) continue;    // Skip infinite cells
+            stream << 4;
+            for(int v = 0; v < 4; v++) {
+               int vertexIndex = tessellation.vertexIndex(tessellation.cellVertex(cell, v));
+               stream << " " << vertexIndex;
+            }
+            stream << "\n";
+        }
+        
+        stream << "\nCELL_TYPES " << numtet << "\n";
+        for(DelaunayTessellation::CellIterator cell = tessellation.begin_cells(); cell != tessellation.end_cells(); ++cell) {
+          if (!tessellation.isValidCell(cell)) continue;
+          stream << "10\n";
+        }
+        stream << "CELL_DATA " << numtet << "\n";
+        stream << "SCALARS materialIndex integer" << "\n";
+        stream << "LOOKUP_TABLE default"  << "\n";
+        for(DelaunayTessellation::CellIterator cell = tessellation.begin_cells(); cell != tessellation.end_cells(); ++cell) {
+          if(!tessellation.isValidCell(cell)) continue;    // Skip infinite cells
+            stream << tessellation.getUserField(cell) << "\n";
+        }
+#endif  
+
+
+
+        // Smooth the generated triangle mesh.
+        PartitionMesh::smoothMesh(*_mesh, cell(), _meshSmoothingLevel, this);
 
 	// Make sure every mesh vertex is only part of one surface manifold.
 	_mesh->duplicateSharedVertices();
 
 	endProgressSubSteps();
 
-	return true;
+        return true;
 }
 
-}	// End of namespace
-}	// End of namespace
+}       // End of namespace
+}       // End of namespace
 }	// End of namespace
