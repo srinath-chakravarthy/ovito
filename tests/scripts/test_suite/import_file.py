@@ -35,3 +35,8 @@ node = import_file(test_data_dir + "LAMMPS/animation*.dump")
 assert(ovito.dataset.anim.last_frame == 0)
 node = import_file(test_data_dir + "LAMMPS/animation*.dump", multiple_frames = True)
 assert(ovito.dataset.anim.last_frame == 10)
+
+node = import_file(test_data_dir + "LAMMPS/shear.void.dump.bin", 
+                            columns = ["Particle Identifier", None, "Position.X", "Position.Y", "Position.Z"])
+node.source.load(test_data_dir + "LAMMPS/shear.void.dump.bin", 
+                            columns = ["Particle Identifier", "Particle Type", "Position.X", "Position.Y", "Position.Z"])

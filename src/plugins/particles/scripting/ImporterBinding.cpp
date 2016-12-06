@@ -52,10 +52,6 @@ PYBIND11_PLUGIN(ParticlesImporter)
 
 	py::module m("ParticlesImporter");
 
-	py::class_<InputColumnMapping>(m, "InputColumnMapping")
-		.def(py::init<>())
-	;
-
 	ovito_abstract_class<ParticleImporter, FileSourceImporter>(m)
 		.def_property("multiple_frames", &ParticleImporter::isMultiTimestepFile, &ParticleImporter::setMultiTimestepFile)
 	;

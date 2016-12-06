@@ -203,7 +203,7 @@ namespace pybind11 { namespace detail {
         static handle cast(const Ovito::Particles::InputColumnMapping& src, return_value_policy /* policy */, handle /* parent */) {
         	list ls;
 			for(const auto& col : src)
-				ls.append(pybind11::cast(col));
+				ls.append(pybind11::cast(col.property.nameWithComponent()));
 			return ls.release();
         }
     };	

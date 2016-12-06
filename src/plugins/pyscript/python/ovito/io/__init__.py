@@ -141,9 +141,9 @@ def _FileSource_load(self, location, **params):
     importer = FileImporter.autodetect_format(self.dataset, location)
     if not importer:
         raise RuntimeError("Could not detect the file format. The format might not be supported.")
-    
+
     # Re-use existing importer if compatible.
-    if self.importer != None and type(self.importer) == type(importer):
+    if self.importer and type(self.importer) == type(importer):
         importer = self.importer
         
     # Forward user parameters to the importer.

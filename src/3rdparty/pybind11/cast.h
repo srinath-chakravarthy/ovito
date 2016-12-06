@@ -737,12 +737,12 @@ template <typename T1, typename T2> class type_caster<std::pair<T1, T2>> {
     typedef std::pair<T1, T2> type;
 public:
     bool load(handle src, bool convert) {
-        if (!src)
+        if (!isinstance<sequence>(src))
             return false;
-        else if (!PyTuple_Check(src.ptr()) || PyTuple_Size(src.ptr()) != 2)
+        const auto seq = reinterpret_borrow<sequence>(src);
+        if (seq.size() != 2)
             return false;
-        return  first.load(PyTuple_GET_ITEM(src.ptr(), 0), convert) &&
-               second.load(PyTuple_GET_ITEM(src.ptr(), 1), convert);
+        return first.load(seq[0], convert) && second.load(seq[1], convert);
     }
 
     static handle cast(const type &src, return_value_policy policy, handle parent) {
@@ -773,93 +773,54 @@ protected:
 };
 
 template <typename... Tuple> class type_caster<std::tuple<Tuple...>> {
-    typedef std::tuple<Tuple...> type;
-    typedef std::tuple<intrinsic_t<Tuple>...> itype;
-    typedef std::tuple<args> args_type;
-    typedef std::tuple<args, kwargs> args_kwargs_type;
+    using type = std::tuple<Tuple...>;
+    using indices = make_index_sequence<sizeof...(Tuple)>;
+    static constexpr auto size = sizeof...(Tuple);
+
 public:
-    enum { size = sizeof...(Tuple) };
-
-    static constexpr const bool has_kwargs = std::is_same<itype, args_kwargs_type>::value;
-    static constexpr const bool has_args = has_kwargs || std::is_same<itype, args_type>::value;
-
     bool load(handle src, bool convert) {
-        if (!src || !PyTuple_Check(src.ptr()) || PyTuple_GET_SIZE(src.ptr()) != size)
+        if (!isinstance<sequence>(src))
             return false;
-        return load(src, convert, typename make_index_sequence<sizeof...(Tuple)>::type());
-    }
-
-    template <typename T = itype, enable_if_t<
-        !std::is_same<T, args_type>::value &&
-        !std::is_same<T, args_kwargs_type>::value, int> = 0>
-    bool load_args(handle args, handle, bool convert) {
-        return load(args, convert, typename make_index_sequence<sizeof...(Tuple)>::type());
-    }
-
-    template <typename T = itype, enable_if_t<std::is_same<T, args_type>::value, int> = 0>
-    bool load_args(handle args, handle, bool convert) {
-        std::get<0>(value).load(args, convert);
-        return true;
-    }
-
-    template <typename T = itype, enable_if_t<std::is_same<T, args_kwargs_type>::value, int> = 0>
-    bool load_args(handle args, handle kwargs, bool convert) {
-        std::get<0>(value).load(args, convert);
-        std::get<1>(value).load(kwargs, convert);
-        return true;
+        const auto seq = reinterpret_borrow<sequence>(src);
+        if (seq.size() != size)
+            return false;
+        return load_impl(seq, convert, indices{});
     }
 
     static handle cast(const type &src, return_value_policy policy, handle parent) {
-        return cast(src, policy, parent, typename make_index_sequence<size>::type());
-    }
-
-    static PYBIND11_DESCR element_names() {
-        return detail::concat(make_caster<Tuple>::name()...);
+        return cast_impl(src, policy, parent, indices{});
     }
 
     static PYBIND11_DESCR name() {
-        return type_descr(_("Tuple[") + element_names() + _("]"));
-    }
-
-    template <typename ReturnValue, typename Func> enable_if_t<!std::is_void<ReturnValue>::value, ReturnValue> call(Func &&f) {
-        return call<ReturnValue>(std::forward<Func>(f), typename make_index_sequence<sizeof...(Tuple)>::type());
-    }
-
-    template <typename ReturnValue, typename Func> enable_if_t<std::is_void<ReturnValue>::value, void_type> call(Func &&f) {
-        call<ReturnValue>(std::forward<Func>(f), typename make_index_sequence<sizeof...(Tuple)>::type());
-        return void_type();
+        return type_descr(_("Tuple[") + detail::concat(make_caster<Tuple>::name()...) + _("]"));
     }
 
     template <typename T> using cast_op_type = type;
 
-    operator type() {
-        return cast(typename make_index_sequence<sizeof...(Tuple)>::type());
-    }
+    operator type() { return implicit_cast(indices{}); }
 
 protected:
-    template <typename ReturnValue, typename Func, size_t ... Index> ReturnValue call(Func &&f, index_sequence<Index...>) {
-        return f(cast_op<Tuple>(std::get<Index>(value))...);
-    }
+    template <size_t... Is>
+    type implicit_cast(index_sequence<Is...>) { return type(cast_op<Tuple>(std::get<Is>(value))...); }
 
-    template <size_t ... Index> type cast(index_sequence<Index...>) {
-        return type(cast_op<Tuple>(std::get<Index>(value))...);
-    }
+    static constexpr bool load_impl(const sequence &, bool, index_sequence<>) { return true; }
 
-    template <size_t ... Indices> bool load(handle src, bool convert, index_sequence<Indices...>) {
-        std::array<bool, size> success {{
-            std::get<Indices>(value).load(PyTuple_GET_ITEM(src.ptr(), Indices), convert)...
-        }};
-        (void) convert; /* avoid a warning when the tuple is empty */
-        for (bool r : success)
+    template <size_t... Is>
+    bool load_impl(const sequence &seq, bool convert, index_sequence<Is...>) {
+        for (bool r : {std::get<Is>(value).load(seq[Is], convert)...})
             if (!r)
                 return false;
         return true;
     }
 
+    static handle cast_impl(const type &, return_value_policy, handle,
+                            index_sequence<>) { return tuple().release(); }
+
     /* Implementation: Convert a C++ tuple into a Python tuple */
-    template <size_t ... Indices> static handle cast(const type &src, return_value_policy policy, handle parent, index_sequence<Indices...>) {
+    template <size_t... Is>
+    static handle cast_impl(const type &src, return_value_policy policy, handle parent, index_sequence<Is...>) {
         std::array<object, size> entries {{
-            reinterpret_steal<object>(make_caster<Tuple>::cast(std::get<Indices>(src), policy, parent))...
+            reinterpret_steal<object>(make_caster<Tuple>::cast(std::get<Is>(src), policy, parent))...
         }};
         for (const auto &entry: entries)
             if (!entry)
@@ -1239,6 +1200,69 @@ constexpr arg operator"" _a(const char *name, size_t) { return arg(name); }
 }
 
 NAMESPACE_BEGIN(detail)
+
+/// Helper class which loads arguments for C++ functions called from Python
+template <typename... Args>
+class argument_loader {
+    using itypes = type_list<intrinsic_t<Args>...>;
+    using indices = make_index_sequence<sizeof...(Args)>;
+
+public:
+    static constexpr auto has_kwargs = std::is_same<itypes, type_list<args, kwargs>>::value;
+    static constexpr auto has_args = has_kwargs || std::is_same<itypes, type_list<args>>::value;
+
+    static PYBIND11_DESCR arg_names() { return detail::concat(make_caster<Args>::name()...); }
+
+    bool load_args(handle args, handle kwargs, bool convert) {
+        return load_impl(args, kwargs, convert, itypes{});
+    }
+
+    template <typename Return, typename Func>
+    enable_if_t<!std::is_void<Return>::value, Return> call(Func &&f) {
+        return call_impl<Return>(std::forward<Func>(f), indices{});
+    }
+
+    template <typename Return, typename Func>
+    enable_if_t<std::is_void<Return>::value, void_type> call(Func &&f) {
+        call_impl<Return>(std::forward<Func>(f), indices{});
+        return void_type();
+    }
+
+private:
+    bool load_impl(handle args_, handle, bool convert, type_list<args>) {
+        std::get<0>(value).load(args_, convert);
+        return true;
+    }
+
+    bool load_impl(handle args_, handle kwargs_, bool convert, type_list<args, kwargs>) {
+        std::get<0>(value).load(args_, convert);
+        std::get<1>(value).load(kwargs_, convert);
+        return true;
+    }
+
+    bool load_impl(handle args, handle, bool convert, ... /* anything else */) {
+        return load_impl_sequence(args, convert, indices{});
+    }
+
+    static constexpr bool load_impl_sequence(handle, bool, index_sequence<>) { return true; }
+
+    template <size_t... Is>
+    bool load_impl_sequence(handle src, bool convert, index_sequence<Is...>) {
+        for (bool r : {std::get<Is>(value).load(PyTuple_GET_ITEM(src.ptr(), Is), convert)...})
+            if (!r)
+                return false;
+        return true;
+    }
+
+    template <typename Return, typename Func, size_t... Is>
+    Return call_impl(Func &&f, index_sequence<Is...>) {
+        return std::forward<Func>(f)(cast_op<Args>(std::get<Is>(value))...);
+    }
+
+private:
+    std::tuple<make_caster<Args>...> value;
+};
+
 NAMESPACE_BEGIN(constexpr_impl)
 /// Implementation details for constexpr functions
 constexpr int first(int i) { return i; }

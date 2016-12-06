@@ -111,10 +111,10 @@ protected:
         }
 
         /* Type casters for the function arguments and return value */
-        typedef detail::type_caster<typename std::tuple<Args...>> cast_in;
-        typedef detail::type_caster<typename std::conditional<
-            std::is_void<Return>::value, detail::void_type,
-            typename detail::intrinsic_type<Return>::type>::type> cast_out;
+        using cast_in = detail::argument_loader<Args...>;
+        using cast_out = detail::make_caster<
+            detail::conditional_t<std::is_void<Return>::value, detail::void_type, Return>
+        >;
 
         /* Dispatch code which converts function arguments and performs the actual function call */
         rec->impl = [](detail::function_record *rec, handle args, handle kwargs, handle parent) -> handle {
@@ -151,7 +151,7 @@ protected:
 
         /* Generate a readable signature describing the function's arguments and return value types */
         using detail::descr; using detail::_;
-        PYBIND11_DESCR signature = _("(") + cast_in::element_names() + _(") -> ") + cast_out::name();
+        PYBIND11_DESCR signature = _("(") + cast_in::arg_names() + _(") -> ") + cast_out::name();
 
         /* Register the function with Python from generic (non-templated) code */
         initialize_generic(rec, signature.text(), signature.types(), sizeof...(Args));
@@ -580,7 +580,7 @@ public:
     static module import(const char *name) {
         PyObject *obj = PyImport_ImportModule(name);
         if (!obj)
-            throw import_error("Module \"" + std::string(name) + "\" not found!");
+            throw error_already_set();
         return reinterpret_steal<module>(obj);
     }
 
@@ -1495,7 +1495,7 @@ PYBIND11_NOINLINE inline void print(tuple args, dict kwargs) {
     } else {
         try {
             file = module::import("sys").attr("stdout");
-        } catch (const import_error &) {
+        } catch (const error_already_set &) {
             /* If print() is called from code that is executed as
                part of garbage collection during interpreter shutdown,
                importing 'sys' can fail. Give up rather than crashing the

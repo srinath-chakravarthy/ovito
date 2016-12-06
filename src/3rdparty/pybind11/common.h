@@ -346,9 +346,15 @@ struct internals {
 inline internals &get_internals();
 
 /// Index sequence for convenient template metaprogramming involving tuples
+#ifdef PYBIND11_CPP14
+using std::index_sequence;
+using std::make_index_sequence;
+#else
 template<size_t ...> struct index_sequence  { };
-template<size_t N, size_t ...S> struct make_index_sequence : make_index_sequence <N - 1, N - 1, S...> { };
-template<size_t ...S> struct make_index_sequence <0, S...> { typedef index_sequence<S...> type; };
+template<size_t N, size_t ...S> struct make_index_sequence_impl : make_index_sequence_impl <N - 1, N - 1, S...> { };
+template<size_t ...S> struct make_index_sequence_impl <0, S...> { typedef index_sequence<S...> type; };
+template<size_t N> using make_index_sequence = typename make_index_sequence_impl<N>::type;
+#endif
 
 /// Strip the class from a method type
 template <typename T> struct remove_class { };
@@ -367,6 +373,9 @@ template <typename T> using intrinsic_t = typename intrinsic_type<T>::type;
 
 /// Helper type to replace 'void' in some expressions
 struct void_type { };
+
+/// Helper template which holds a list of types
+template <typename...> struct type_list { };
 
 /// from __cpp_future__ import (convenient aliases from C++14/17)
 template <bool B> using bool_constant = std::integral_constant<bool, B>;
@@ -511,7 +520,6 @@ PYBIND11_RUNTIME_EXCEPTION(stop_iteration, PyExc_StopIteration)
 PYBIND11_RUNTIME_EXCEPTION(index_error, PyExc_IndexError)
 PYBIND11_RUNTIME_EXCEPTION(key_error, PyExc_KeyError)
 PYBIND11_RUNTIME_EXCEPTION(value_error, PyExc_ValueError)
-PYBIND11_RUNTIME_EXCEPTION(import_error, PyExc_ImportError)
 PYBIND11_RUNTIME_EXCEPTION(type_error, PyExc_TypeError)
 PYBIND11_RUNTIME_EXCEPTION(cast_error, PyExc_RuntimeError) /// Thrown when pybind11::cast or handle::call fail due to a type casting error
 PYBIND11_RUNTIME_EXCEPTION(reference_cast_error, PyExc_RuntimeError) /// Used internally
