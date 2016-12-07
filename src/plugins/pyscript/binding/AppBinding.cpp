@@ -104,14 +104,14 @@ PYBIND11_PLUGIN(PyScriptApp)
 		.def_property_readonly("selection", &DataSet::selection)
 		// This is needed by Viewport.render():
 		.def("render_scene", &DataSet::renderScene)
-		//.def_property_readonly("container", &DataSet::container)
+		.def_property_readonly("container", &DataSet::container, py::return_value_policy::reference)
 		//.def("clearScene", &DataSet::clearScene)
 		//.def("rescaleTime", &DataSet::rescaleTime)
 		//.def("waitUntilSceneIsReady", &DataSet::waitUntilSceneIsReady)
 		//.def_property("filePath", &DataSet::filePath, &DataSet::setFilePath)
 	;
 
-	ovito_abstract_class<DataSetContainer, RefMaker>{m}
+	py::class_<DataSetContainer>{m, "DataSetContainer"}
 		//.def_property("currentSet", &DataSetContainer::currentSet, &DataSetContainer::setCurrentSet)
 	;
 

@@ -38,16 +38,16 @@ PYBIND11_PLUGIN(PyScriptGUI)
 	py::module m("PyScriptGUI");
 
 	py::class_<MainWindow>(m, "MainWindow")
-		.def_property_readonly("frame_buffer_window", &MainWindow::frameBufferWindow)
+		.def_property_readonly("frame_buffer_window", &MainWindow::frameBufferWindow, py::return_value_policy::reference)
 	;
 
-	ovito_abstract_class<GuiDataSetContainer, DataSetContainer>(m)
+	py::class_<GuiDataSetContainer, DataSetContainer>(m, "GuiDataSetContainer")
 		.def("fileNew", &GuiDataSetContainer::fileNew)
 		.def("fileLoad", &GuiDataSetContainer::fileLoad)
 		.def("fileSave", &GuiDataSetContainer::fileSave)
 		.def("fileSaveAs", &GuiDataSetContainer::fileSaveAs)
 		.def("askForSaveChanges", &GuiDataSetContainer::askForSaveChanges)
-		.def_property_readonly("window", &GuiDataSetContainer::mainWindow)
+		.def_property_readonly("window", &GuiDataSetContainer::mainWindow, py::return_value_policy::reference)
 	;
 
 	py::class_<FrameBufferWindow>(m, "FrameBufferWindow")

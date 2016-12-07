@@ -7,6 +7,7 @@ from PyQt5.QtGui import QPainter
 
 # Import a data file.
 node = import_file("../../files/CFG/shear.void.120.cfg")
+node.add_to_scene()
 settings = RenderSettings(size = (100,100))
 if ovito.headless_mode:
     settings.renderer = TachyonRenderer(ambient_occlusion = False, antialiasing = False)
