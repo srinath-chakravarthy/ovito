@@ -65,13 +65,6 @@ IF(OVITO_BUILD_DOCUMENTATION)
 		# Use OVITO's built in Python interpreter to run the Sphinx doc program.
 		# We cannot use the standard Python interpreter for this, because it cannot load OVITO's scripting modules, which is required to auto-generate the
 		# interface documentation from the docstrings.
-		IF(WIN32)
-			GET_PROPERTY(OVITOS_EXECUTABLE TARGET ovitos PROPERTY LOCATION)
-		ELSE()
-			GET_PROPERTY(OVITO_MAIN_EXECUTABLE TARGET ${PROJECT_NAME} PROPERTY LOCATION)
-			GET_FILENAME_COMPONENT(OVITO_MAIN_EXECUTABLE_DIR "${OVITO_MAIN_EXECUTABLE}" PATH)
-			SET(OVITOS_EXECUTABLE "${OVITO_MAIN_EXECUTABLE_DIR}/ovitos")
-		ENDIF()
 		ADD_CUSTOM_TARGET(scripting_documentation ALL 
 					COMMAND "${OVITOS_EXECUTABLE}" ${SPHINX_PROCESSOR} "-b" "html" "-a" "-E" 
 					"-D" "version=${OVITO_VERSION_MAJOR}.${OVITO_VERSION_MINOR}" 
