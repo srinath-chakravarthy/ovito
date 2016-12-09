@@ -193,7 +193,6 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 			int32_t type, alloy_type = PTM_ALLOY_NONE;
 			double scale, interatomic_distance;
 			double rmsd;
-			int symmindex;
 			double q[4];
 			double F[9], F_res[3];
 			int symmindex;

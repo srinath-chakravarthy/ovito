@@ -840,7 +840,7 @@ void GrainSegmentationEngine::perform()
                 const Quaternion& q = clusterOrientations[grain];
                 cluster->orientation = Matrix3::rotation(q);
                 cluster->symmetryTransformation = 0;
-		qDebug() << cluster->id << cluster->orientation << (cluster->orientation).isRotationMatrix(FloatType(1.0e-6));
+		//qDebug() << cluster->id << cluster->orientation << (cluster->orientation).isRotationMatrix(FloatType(1.0e-6));
         }
 #if 1
         /// Chakravarthy Nov 2016 changes and hacks
@@ -850,6 +850,23 @@ void GrainSegmentationEngine::perform()
         // So search through the neighborLists of each atom and find the atom that belongs to a different cluster
         // This will complete the clusterGraphs of nearest neighbor grains... 
         // TBD --> Cluster orientation mapping 
+	// Calculate center of Mass for each cluster
+	std::vector<Point3> com;
+	com.resize(numClusters);
+	for (int grain =0; grain<numClusters; grain++){
+	    Cluster *cluster = outputClusterGraph()->findCluster(grain+1);
+	    for (size_t i =0; i<positions()->size(); i++){
+		int clusterID = atomClusters()->getInt(i);
+		if (clusterID == grain+1){
+		    Point3 pos = cell().reducedToAbsolute(positions()->getPoint3(i));
+		    com[i].x() += pos.x()/cluster->atomCount;
+		    com[i].y() += pos.y()/cluster->atomCount;
+		    com[i].z() += pos.z()/cluster->atomCount;
+		}
+	    }
+	    cluster->centerOfMass = com[grain];
+        }
+        com.clear();
         
         for (size_t i=0; i< atomClusters()->size(); i ++){
             int clusterIDa = atomClusters()->getInt(i);

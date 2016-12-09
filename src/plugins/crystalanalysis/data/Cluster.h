@@ -67,7 +67,7 @@ struct ClusterTransition
 
         /// The average normal vector of the interface between cluster1 and cluster2
         Vector3 normal;
-        
+	        
         /// Pointer to the reverse transition from cluster 2 to cluster 1.
         /// The transformation matrix of the reverse transition is the inverse of this transition's matrix.
         ClusterTransition* reverse;

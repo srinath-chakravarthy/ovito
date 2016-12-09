@@ -454,6 +454,7 @@ PYBIND11_PLUGIN(CrystalAnalysis)
                 .def_readonly("atom_count", &Cluster::atomCount)
                 .def_readonly("orientation", &Cluster::orientation)
 		.def_readonly("transitions", &Cluster::transitions, py::return_value_policy::copy)
+		.def_readonly("center_of_mass",&Cluster::centerOfMass)
         ;
 	py::class_<ClusterTransition>(m, "ClusterTransition")
 		.def_readonly("cluster1", &ClusterTransition::cluster1, py::return_value_policy::reference_internal)
