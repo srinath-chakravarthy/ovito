@@ -72,8 +72,7 @@ Unresolved bugs:
 - NearestNeighborFinder doesn't work properly for triclinic cells with small angles.
 - Construct surface mesh doesn't work for very small length scales (reported by xin.liu@insa-lyon.fr)
 - Particle trajectory creation doesn't work if new particles are created over time.
-- WebM video export not working on Windows (stefan.parviainen@iki.fi). 
-- Input focus problem with file dialog on macOS.
+- WebM video export not working on Windows & Linux (stefan.parviainen@iki.fi). 
 
 New analysis features:
 

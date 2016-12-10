@@ -26,9 +26,9 @@
 #include <gui/properties/FloatParameterUI.h>
 #include "CoordinationNumberModifierEditor.h"
 
-#include <3rdparty/qwt/qwt_plot.h>
-#include <3rdparty/qwt/qwt_plot_curve.h>
-#include <3rdparty/qwt/qwt_plot_grid.h>
+#include <qwt/qwt_plot.h>
+#include <qwt/qwt_plot_curve.h>
+#include <qwt/qwt_plot_grid.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 

@@ -81,7 +81,7 @@ const PipelineFlowState& ParticleExporter::getParticleData(SceneNode* sceneNode,
 
 /******************************************************************************
  * This is called once for every output file to be written and before
- * exportData() is called.
+ * exportFrame() is called.
  *****************************************************************************/
 bool ParticleExporter::openOutputFile(const QString& filePath, int numberOfFrames)
 {
@@ -95,7 +95,7 @@ bool ParticleExporter::openOutputFile(const QString& filePath, int numberOfFrame
 }
 
 /******************************************************************************
- * This is called once for every output file written after exportData()
+ * This is called once for every output file written after exportFrame()
  * has been called.
  *****************************************************************************/
 void ParticleExporter::closeOutputFile(bool exportCompleted)

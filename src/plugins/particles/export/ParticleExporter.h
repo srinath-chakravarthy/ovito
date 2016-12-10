@@ -49,10 +49,10 @@ protected:
 	/// \brief Constructs a new instance of this class.
 	ParticleExporter(DataSet* dataset);
 
-	/// \brief This is called once for every output file to be written and before exportData() is called.
+	/// \brief This is called once for every output file to be written and before exportFrame() is called.
 	virtual bool openOutputFile(const QString& filePath, int numberOfFrames) override;
 
-	/// \brief This is called once for every output file written after exportData() has been called.
+	/// \brief This is called once for every output file written after exportFrame() has been called.
 	virtual void closeOutputFile(bool exportCompleted) override;
 
 	/// Returns the current file this exporter is writing to.

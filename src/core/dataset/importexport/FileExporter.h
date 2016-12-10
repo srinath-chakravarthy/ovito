@@ -126,7 +126,7 @@ protected:
 	/// \brief This is called once for every output file to be written and before exportFrame() is called.
 	virtual bool openOutputFile(const QString& filePath, int numberOfFrames) = 0;
 
-	/// \brief This is called once for every output file written after exportFrame() has been called.s
+	/// \brief This is called once for every output file written after exportFrame() has been called.
 	virtual void closeOutputFile(bool exportCompleted) = 0;
 
 	/// \brief Exports a single animation frame to the current output file.

@@ -29,11 +29,11 @@
 #include <gui/mainwin/MainWindow.h>
 #include "ScatterPlotModifierEditor.h"
 
-#include <3rdparty/qwt/qwt_plot.h>
-#include <3rdparty/qwt/qwt_plot_spectrocurve.h>
-#include <3rdparty/qwt/qwt_plot_zoneitem.h>
-#include <3rdparty/qwt/qwt_plot_grid.h>
-#include <3rdparty/qwt/qwt_color_map.h>
+#include <qwt/qwt_plot.h>
+#include <qwt/qwt_plot_spectrocurve.h>
+#include <qwt/qwt_plot_zoneitem.h>
+#include <qwt/qwt_plot_grid.h>
+#include <qwt/qwt_color_map.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 

@@ -38,7 +38,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <plugins/particles/Particles.h>
 #include <core/utilities/io/FileManager.h>
 #include <core/utilities/concurrent/Future.h>
 #include <core/dataset/DataSetContainer.h>
@@ -46,10 +46,6 @@
 #include "NetCDFImporter.h"
 
 #include <QtMath>
-
-#ifdef WIN32
-	#define DLL_NETCDF
-#endif
 #include <netcdf.h>
 
 #define NCERR(x)  _ncerr(x, __FILE__, __LINE__)
@@ -77,20 +73,20 @@ void fullToVoigt(size_t particleCount, T *full, T *voigt) {
 /******************************************************************************
 * Check for NetCDF error and throw exception
 ******************************************************************************/
-static void _ncerr(int err, const char *file, int line)
+static void _ncerr(int err, const char* file, int line)
 {
-	if (err != NC_NOERR)
-		throw Exception(NetCDFImporter::tr("NetCDF error in line %1 of source file %2: %3").arg(line).arg(file).arg(QString(nc_strerror(err))));
+	if(err != NC_NOERR)
+		throw Exception(NetCDFImporter::tr("NetCDF I/O error: %1 (line %2 of %3)").arg(QString(nc_strerror(err))).arg(line).arg(file));
 }
 
 /******************************************************************************
 * Check for NetCDF error and throw exception (and attach additional information
 * to exception string)
 ******************************************************************************/
-static void _ncerr_with_info(int err, const char *file, int line, const QString &info)
+static void _ncerr_with_info(int err, const char* file, int line, const QString& info)
 {
-	if (err != NC_NOERR)
-		throw Exception(NetCDFImporter::tr("NetCDF error in line %1 of source file %2: %3 %4").arg(line).arg(file).arg(QString(nc_strerror(err))).arg(info));
+	if(err != NC_NOERR)
+		throw Exception(NetCDFImporter::tr("NetCDF I/O error: %1 %2 (line %3 of %4)").arg(QString(nc_strerror(err))).arg(info).arg(line).arg(file));
 }
 
 /******************************************************************************
@@ -198,25 +194,6 @@ void NetCDFImporter::NetCDFImportTask::openNetCDF(const QString &filename)
 	conventions_str[len] = '\0';
 	if (strcmp(conventions_str.get(), "AMBER"))
 		throw Exception(tr("NetCDF file %1 follows '%2' conventions, expected 'AMBER'.").arg(filename, conventions_str.get()));
-
-#if 0
-	// Read creator information
-	NCERR( nc_inq_attlen(_ncid, NC_GLOBAL, "program", &len) );
-	char *program_str = new char[len+1];
-	NCERR( nc_get_att_text(_ncid, NC_GLOBAL, "program", program_str) );
-	program_str[len] = 0;
-
-	NCERR( nc_inq_attlen(_ncid, NC_GLOBAL, "programVersion", &len) );
-	char *program_version_str = new char[len+1];
-	NCERR( nc_get_att_text(_ncid, NC_GLOBAL, "programVersion", program_version_str) );
-	program_version_str[len] = 0;
-
-	// Log this
-	VerboseLogger() << "Opened AMBER-style NetCDF file " << filename << ". File written by " << program_str << ", " << program_version_str << "." << endl;
-
-	delete [] program_str;
-	delete [] program_version_str;
-#endif
 
 	// Read optional file title.
 	if(nc_inq_attlen(_ncid, NC_GLOBAL, "title", &len) == NC_NOERR) {
@@ -371,7 +348,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 		// Now iterate over all variables and see whether they start with either atom or frame dimensions.
 		int nVars;
 		NCERR( nc_inq_nvars(_ncid, &nVars) );
-		for (int varId = 0; varId < nVars; varId++) {
+		for(int varId = 0; varId < nVars; varId++) {
 			char name[NC_MAX_NAME+1];
 			nc_type type;
 
@@ -381,13 +358,13 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 			OVITO_ASSERT(nDims >= 1);
 
 			// Check if dimensions make sense and we can understand them.
-			if ((dimIds[0] == _atom_dim || dimIds[0] == _sph_dim || dimIds[0] == _dem_dim) ||
+			if((dimIds[0] == _atom_dim || dimIds[0] == _sph_dim || dimIds[0] == _dem_dim) ||
 					( nDims > 1 && dimIds[0] == _frame_dim && (dimIds[1] == _atom_dim || dimIds[1] == _sph_dim || dimIds[1] == _dem_dim))) {
 				// Do we support this data type?
-				if (type == NC_BYTE || type == NC_SHORT || type == NC_INT || type == NC_LONG || type == NC_CHAR) {
+				if(type == NC_BYTE || type == NC_SHORT || type == NC_INT || type == NC_LONG || type == NC_CHAR) {
 					columnMapping.push_back(mapVariableToColumn(name, qMetaTypeId<int>()));
 				}
-				else if (type == NC_FLOAT || type == NC_DOUBLE) {
+				else if(type == NC_FLOAT || type == NC_DOUBLE) {
 					columnMapping.push_back(mapVariableToColumn(name, qMetaTypeId<FloatType>()));
 				}
 				else {
@@ -396,7 +373,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 			}
 
 			// Read in scalar values as attributes.
-			if (nDims == 1 && dimIds[0] == _frame_dim) {
+			if(nDims == 1 && dimIds[0] == _frame_dim) {
 				if (type == NC_SHORT || type == NC_INT || type == NC_LONG) {
 					size_t startp[2] = { movieFrame, 0 };
 					size_t countp[2] = { 1, 1 };
@@ -415,7 +392,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 		}
 
 		// Check if the only thing we need to do is read column information.
-		if (_parseFileHeaderOnly) {
+		if(_parseFileHeaderOnly) {
 			_customColumnMapping = columnMapping;
 			closeNetCDF();
 			return;

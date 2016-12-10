@@ -30,15 +30,15 @@
 #include <plugins/particles/gui/util/ParticlePropertyParameterUI.h>
 #include "BinAndReduceModifierEditor.h"
 
-#include <3rdparty/qwt/qwt_plot.h>
-#include <3rdparty/qwt/qwt_plot_curve.h>
-#include <3rdparty/qwt/qwt_plot_spectrogram.h>
-#include <3rdparty/qwt/qwt_plot_grid.h>
-#include <3rdparty/qwt/qwt_scale_engine.h>
-#include <3rdparty/qwt/qwt_matrix_raster_data.h>
-#include <3rdparty/qwt/qwt_color_map.h>
-#include <3rdparty/qwt/qwt_scale_widget.h>
-#include <3rdparty/qwt/qwt_plot_layout.h>
+#include <qwt/qwt_plot.h>
+#include <qwt/qwt_plot_curve.h>
+#include <qwt/qwt_plot_spectrogram.h>
+#include <qwt/qwt_plot_grid.h>
+#include <qwt/qwt_scale_engine.h>
+#include <qwt/qwt_matrix_raster_data.h>
+#include <qwt/qwt_color_map.h>
+#include <qwt/qwt_scale_widget.h>
+#include <qwt/qwt_plot_layout.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 

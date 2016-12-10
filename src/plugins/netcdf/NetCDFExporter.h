@@ -51,10 +51,59 @@ public:
 
 protected:
 
+	/// \brief This is called once for every output file to be written and before exportFrame() is called.
+	virtual bool openOutputFile(const QString& filePath, int numberOfFrames) override;
+
+	/// \brief This is called once for every output file written after exportFrame() has been called.
+	virtual void closeOutputFile(bool exportCompleted) override;
+
 	/// \brief Writes the particles of one animation frame to the current output file.
 	virtual bool exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) override;
 
 private:
+
+	/// Checks for NetCDF error and throws exception.
+	void ncerr(int err, const char* file, int line);
+
+	/// Checks for NetCDF error and throws exception (and attach additional information to exception string.
+	void ncerr_with_info(int err, const char* file, int line, const QString& info);
+
+	/// The NetCDF file handle.
+	int _ncid = -1;
+
+	// NetCDF file dimensions:
+	int _frame_dim;
+	int _spatial_dim;
+	int _Voigt_dim;
+	int _atom_dim = -1;
+	int _cell_spatial_dim;
+	int _cell_angular_dim;
+	int _label_dim;
+
+	// NetCDF file variables:
+	int _spatial_var;
+	int _cell_spatial_var;
+	int _cell_angular_var;
+	int _time_var;
+	int _cell_origin_var;
+	int _cell_lengths_var;
+	int _cell_angles_var;
+	int _coords_var;
+
+	/// NetCDF file variables for global attributes.
+	QMap<QString, int> _attributes_vars;
+
+	struct NCOutputColumn {
+		ParticlePropertyReference property;
+		int dataType;
+		size_t componentCount;
+		int ncvar;
+	};
+
+	std::vector<NCOutputColumn> _columns;
+
+	/// The number of frames written.
+	size_t _frameCounter;
 
 	Q_OBJECT
 	OVITO_OBJECT
