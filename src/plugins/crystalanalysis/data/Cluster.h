@@ -65,11 +65,36 @@ struct ClusterTransition
         /// of cluster 2.
         Matrix3 tm;
 
-        /// The average normal vector of the interface between cluster1 and cluster2
-        Vector3 normal;
+        /// The average normal vector of the interface between cluster1 and cluster2 in sample reference frame
+        Vector3 normal = Vector3::Zero();
 	
-	/// Vector of normal for each element of the transition mesh
+	/// Misorientation in Quaternion representation
+	Quaternion misorientation;
+	
+	/// Disorientation in Quaternion representation
+	FloatType disorientation;
+	
+	/// Axis representation of Misorientation axis in fundamental zone
+	Vector3 misorientation_axis =  Vector3::Zero();
+	
+	/// The average normal vector of the interface between cluster1 and cluster2 in cluster1 crystal
+	Vector3 cluster1_normal = Vector3::Zero();
+	
+	/// The average normal vector of the interface between cluster1 and cluster2 in cluster2 crystal
+	Vector3 cluster2_normal = Vector3::Zero();
+	
+	/// The symmetry operator for cluster1
+	Quaternion cluster1_symmetry;
+	
+	/// The symmetry operator for cluster2
+	Quaternion cluster2_symmetry;
+
+
+	/// Vector of normal for each element of the transition mesh in sample reference frame
 	std::vector<Vector3> normals;
+	
+	/// Vector of areas of triangular mesh between cluster1 and cluster2
+	std::vector<FloatType> areas;
 	        
         /// Pointer to the reverse transition from cluster 2 to cluster 1.
         /// The transformation matrix of the reverse transition is the inverse of this transition's matrix.

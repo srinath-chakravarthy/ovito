@@ -114,6 +114,8 @@ private:
         bool buildPartitionMesh();
         // Extract submesh from partitionmesh
         void extractMesh();
+	
+	void find_axis(const Quaternion &q1, const Quaternion &q2, FloatType& disorientation,Vector3& axis, Quaternion& q1_f, Quaternion& q2_f);
 
 private:
 

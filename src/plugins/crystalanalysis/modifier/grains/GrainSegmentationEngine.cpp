@@ -24,6 +24,7 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/utilities/concurrent/ParallelFor.h>
+#include <core/utilities/linalg/Quaternion.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
 #include <plugins/crystalanalysis/util/DelaunayTessellation.h>
 #include <plugins/crystalanalysis/util/ManifoldConstructionHelper.h>
@@ -41,7 +42,11 @@
 #include <boost/functional/hash.hpp>
 #include <unordered_set>
 
-#if 0
+#define SIGN(x) (x >= 0 ? 1 : -1)
+#define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
+#define MAX(X, Y) (((X) > (Y)) ? (X) : (Y))
+
+
 #define SQRT_2         1.4142135623730951454746218587388284504414
 #define HALF_SQRT_2    0.7071067811865474617150084668537601828575
 
@@ -56,99 +61,31 @@
 #define SQRT_1_6       0.4082482904638630172300395315687637776136
 
 
-double generator_cubic[24][4] = {       {1,     0,      0,      0       },
-                                        {0,     1,      0,      0       },
-                                        {0,     0,      1,      0       },
-                                        {0,     0,      0,      1       },
-                                        {0.5,   0.5,    0.5,    0.5     },
-                                        {0.5,   0.5,    -0.5,   0.5     },
-                                        {0.5,   -0.5,   0.5,    0.5     },
-                                        {0.5,   -0.5,   -0.5,   0.5     },
-                                        {-0.5,  0.5,    0.5,    0.5     },
-                                        {-0.5,  0.5,    -0.5,   0.5     },
-                                        {-0.5,  -0.5,   0.5,    0.5     },
-                                        {-0.5,  -0.5,   -0.5,   0.5     },
-                                        {HALF_SQRT_2,   HALF_SQRT_2,    0,      0       },
-                                        {HALF_SQRT_2,   0,      HALF_SQRT_2,    0       },
-                                        {HALF_SQRT_2,   0,      0,      HALF_SQRT_2     },
-                                        {-HALF_SQRT_2,  HALF_SQRT_2,    0,      0       },
-                                        {-HALF_SQRT_2,  0,      HALF_SQRT_2,    0       },
-                                        {-HALF_SQRT_2,  0,      0,      HALF_SQRT_2     },
-                                        {0,     HALF_SQRT_2,    HALF_SQRT_2,    0       },
-                                        {0,     HALF_SQRT_2,    0,      HALF_SQRT_2     },
-                                        {0,     0,      HALF_SQRT_2,    HALF_SQRT_2     },
-                                        {0,     -HALF_SQRT_2,   HALF_SQRT_2,    0       },
-                                        {0,     -HALF_SQRT_2,   0,      HALF_SQRT_2     },
-                                        {0,     0,      -HALF_SQRT_2,   HALF_SQRT_2     }       };
+double generator_cubic_g[24][4] = {	{1,	0,	0,	0	},
+					{0,	1,	0,	0	},
+					{0,	0,	1,	0	},
+					{0,	0,	0,	1	},
+					{0.5,	0.5,	0.5,	0.5	},
+					{0.5,	0.5,	-0.5,	0.5	},
+					{0.5,	-0.5,	0.5,	0.5	},
+					{0.5,	-0.5,	-0.5,	0.5	},
+					{-0.5,	0.5,	0.5,	0.5	},
+					{-0.5,	0.5,	-0.5,	0.5	},
+					{-0.5,	-0.5,	0.5,	0.5	},
+					{-0.5,	-0.5,	-0.5,	0.5	},
+					{HALF_SQRT_2,	HALF_SQRT_2,	0,	0	},
+					{HALF_SQRT_2,	0,	HALF_SQRT_2,	0	},
+					{HALF_SQRT_2,	0,	0,	HALF_SQRT_2	},
+					{-HALF_SQRT_2,	HALF_SQRT_2,	0,	0	},
+					{-HALF_SQRT_2,	0,	HALF_SQRT_2,	0	},
+					{-HALF_SQRT_2,	0,	0,	HALF_SQRT_2	},
+					{0,	HALF_SQRT_2,	HALF_SQRT_2,	0	},
+					{0,	HALF_SQRT_2,	0,	HALF_SQRT_2	},
+					{0,	0,	HALF_SQRT_2,	HALF_SQRT_2	},
+					{0,	-HALF_SQRT_2,	HALF_SQRT_2,	0	},
+					{0,	-HALF_SQRT_2,	0,	HALF_SQRT_2	},
+					{0,	0,	-HALF_SQRT_2,	HALF_SQRT_2	}	};
 
-double generator_hcp[6][4] = {          {1, 0, 0, 0},
-                                        {0.5, 0.5, 0.5, 0.5},
-                                        {0.5, -0.5, -0.5, -0.5},
-                                        {0, SQRT_2_3, -SQRT_1_6, -SQRT_1_6},
-                                        {0, SQRT_1_6, -SQRT_2_3, SQRT_1_6},
-                                        {0, SQRT_1_6, SQRT_1_6, -SQRT_2_3}      };
-
-double generator_icosahedral[60][4] = { {1, 0, 0, 0},
-                                        {HALF_PHI, -HALF_INV_PHI, -0.5, 0},
-                                        {HALF_PHI, 0, -HALF_INV_PHI, -0.5},
-                                        {HALF_PHI, -0.5, 0, -HALF_INV_PHI},
-                                        {HALF_PHI, HALF_INV_PHI, -0.5, 0},
-                                        {HALF_PHI, 0, HALF_INV_PHI, -0.5},
-                                        {HALF_PHI, -0.5, 0, HALF_INV_PHI},
-                                        {HALF_PHI, 0.5, 0, -HALF_INV_PHI},
-                                        {HALF_PHI, 0, -HALF_INV_PHI, 0.5},
-                                        {HALF_PHI, -HALF_INV_PHI, 0.5, 0},
-                                        {HALF_PHI, 0, HALF_INV_PHI, 0.5},
-                                        {HALF_PHI, HALF_INV_PHI, 0.5, 0},
-                                        {HALF_PHI, 0.5, 0, HALF_INV_PHI},
-                                        {0.5, HALF_PHI, -HALF_INV_PHI, 0},
-                                        {0.5, HALF_PHI, HALF_INV_PHI, 0},
-                                        {0.5, 0.5, 0.5, 0.5},
-                                        {0.5, 0.5, 0.5, -0.5},
-                                        {0.5, 0.5, -0.5, 0.5},
-                                        {0.5, 0.5, -0.5, -0.5},
-                                        {0.5, HALF_INV_PHI, 0, HALF_PHI},
-                                        {0.5, HALF_INV_PHI, 0, -HALF_PHI},
-                                        {0.5, 0, HALF_PHI, -HALF_INV_PHI},
-                                        {0.5, 0, HALF_PHI, HALF_INV_PHI},
-                                        {0.5, 0, -HALF_PHI, -HALF_INV_PHI},
-                                        {0.5, 0, -HALF_PHI, HALF_INV_PHI},
-                                        {0.5, -HALF_INV_PHI, 0, HALF_PHI},
-                                        {0.5, -HALF_INV_PHI, 0, -HALF_PHI},
-                                        {0.5, -0.5, 0.5, 0.5},
-                                        {0.5, -0.5, 0.5, -0.5},
-                                        {0.5, -0.5, -0.5, 0.5},
-                                        {0.5, -0.5, -0.5, -0.5},
-                                        {0.5, -HALF_PHI, -HALF_INV_PHI, 0},
-                                        {0.5, -HALF_PHI, HALF_INV_PHI, 0},
-                                        {HALF_INV_PHI, -HALF_PHI, 0, -0.5},
-                                        {HALF_INV_PHI, 0, -0.5, -HALF_PHI},
-                                        {HALF_INV_PHI, -0.5, -HALF_PHI, 0},
-                                        {HALF_INV_PHI, 0, 0.5, -HALF_PHI},
-                                        {HALF_INV_PHI, -HALF_PHI, 0, 0.5},
-                                        {HALF_INV_PHI, 0.5, -HALF_PHI, 0},
-                                        {HALF_INV_PHI, HALF_PHI, 0, -0.5},
-                                        {HALF_INV_PHI, -0.5, HALF_PHI, 0},
-                                        {HALF_INV_PHI, 0, -0.5, HALF_PHI},
-                                        {HALF_INV_PHI, HALF_PHI, 0, 0.5},
-                                        {HALF_INV_PHI, 0, 0.5, HALF_PHI},
-                                        {HALF_INV_PHI, 0.5, HALF_PHI, 0},
-                                        {0, 1, 0, 0},
-                                        {0, HALF_PHI, -0.5, HALF_INV_PHI},
-                                        {0, HALF_PHI, -0.5, -HALF_INV_PHI},
-                                        {0, HALF_PHI, 0.5, HALF_INV_PHI},
-                                        {0, HALF_PHI, 0.5, -HALF_INV_PHI},
-                                        {0, 0.5, HALF_INV_PHI, -HALF_PHI},
-                                        {0, 0.5, HALF_INV_PHI, HALF_PHI},
-                                        {0, 0.5, -HALF_INV_PHI, -HALF_PHI},
-                                        {0, 0.5, -HALF_INV_PHI, HALF_PHI},
-                                        {0, HALF_INV_PHI, -HALF_PHI, 0.5},
-                                        {0, HALF_INV_PHI, -HALF_PHI, -0.5},
-                                        {0, HALF_INV_PHI, HALF_PHI, 0.5},
-                                        {0, HALF_INV_PHI, HALF_PHI, -0.5},
-                                        {0, 0, 1, 0},
-                                        {0, 0, 0, 1}    };
-#endif
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 /******************************************************************************
@@ -678,8 +615,8 @@ void GrainSegmentationEngine::perform()
 			const Quaternion& orientA = clusterOrientations[clusterIndexA];
 			const Quaternion& orientB = clusterOrientations[clusterIndexB];
 
-			double qA[4] = { orientA.w(), orientA.x(), orientA.y(), orientA.z() };
-			double qB[4] = { orientB.w(), orientB.x(), orientB.y(), orientB.z() };
+			    double qA[4] = { orientA.w(), orientA.x(), orientA.y(), orientA.z() };
+			    double qB[4] = { orientB.w(), orientB.x(), orientB.y(), orientB.z() };
 
 			FloatType disorientation;
 			int structureType = output->getInt(particleIndex);
@@ -951,6 +888,51 @@ ForwardIterator most_common(ForwardIterator first, ForwardIterator last)
 }
 
 /*****************************************************************************
+find the axis between 2 tranisitions (axis will be in the fundamental zone)
+*****************************************************************************/
+void GrainSegmentationEngine::find_axis(const Quaternion &q1, const Quaternion &q2, FloatType& disorientation,Vector3& axis, Quaternion& q1_f, Quaternion& q2_f)
+{
+    // Convert to correct format for quaternion routines in ptm library
+    double qA[4] = { q1.w(), q1.x(), q1.y(), q1.z() };
+    double qB[4] = { q2.w(), q2.x(), q2.y(), q2.z() };
+    double q1inv[4] = {qA[0], -qA[1], -qA[2], -qA[3]};
+    double qrot[4];
+    disorientation = 10000.0;
+    FloatType angle;
+    
+    for (int i = 0; i < 24; i++){
+	double* q1f = generator_cubic_g[i];
+	double qrot1[4];
+	double q1finv[4] = {q1f[0], -q1f[1], -q1f[2], -q1f[3]};
+	quat_rot(q1finv, q1inv, qrot1);
+	for (int j =0; j<24; j++){
+	    double* q2f = generator_cubic_g[j];
+	    double qrot2[4];
+	    quat_rot(qB,q2f,qrot2);
+	    quat_rot(qrot1,qrot2, qrot);
+	    normalize_quaternion(qrot);
+	    double t = qrot[0];
+	    t = MIN(1.0,MAX(-1.0,t));
+	    angle = acos(2*t*t-1);
+	    
+	    if (qrot[1]>=0.0 && qrot[2]>=0.0 && qrot[3]>=0.0){
+		if (qrot[1]<= qrot[2] && qrot[2] <= qrot[3]){
+		    if (angle < disorientation){
+			disorientation = angle;
+			q1_f = Quaternion(q1f[1], q1f[2], q1f[3], q1f[0]);
+			q2_f = Quaternion(q2f[1], q2f[2], q2f[3], q2f[0]);
+			axis = Vector3((FloatType)qrot[1],(FloatType)qrot[2],(FloatType)qrot[3]);
+			axis.normalize();
+		    }
+		}
+	    }
+	}
+    }
+
+}
+
+
+/*****************************************************************************
  * Extracts partitionmesh between clusters and stores them as vtk files 
  * Also computes average normal vector to each extracted mesh
  * Also computes surface area for each extracted mesh
@@ -964,19 +946,21 @@ void GrainSegmentationEngine::extractMesh()
         Cluster* cluster = outputClusterGraph()->clusters()[clusterIndex];
         std::vector<PartitionMeshData::Vertex*> newVertices;       //  Storage for new vertices
         int regionid = cluster->id;
+	Quaternion q1 = Quaternion(cluster->orientation);
         for (ClusterTransition *t = cluster->transitions; t != nullptr; t=t->next){
               newmesh->clear();                                    //  Clears the mesh for each transition
               newVertices.clear();                                 // Clear the newVertices array
               //ClusterTransition *t = cluster->transitions;
               int regionId2 = t->cluster2->id;
-              Vector3 normal_average;
+	      Quaternion q2 = Quaternion(t->cluster2->orientation);
+              Vector3 normal_average = Vector3::Zero();
               // Loop through the faces and extract all faces that have oppositeFace region equal to other clusterID
               for(PartitionMeshData::Face* face : _mesh->faces()) {
                 PartitionMeshData::Face* oppositeFace = face->oppositeFace;
                 if (face->region == regionid){
                   if (oppositeFace->region == regionId2){
-                    //qDebug() << "Face " << face->index() << "is shared between " << regionid << " and " << regionId2;
-                    // Loop through edges belonging to the shared face
+
+		      // Loop through edges belonging to the shared face
                     // the vertices of the new triangle are edge1->vertex1, edge2->vertex1, edge3->vertex1
                     int v = 0;
                     PartitionMeshData::Edge* e = face->edges();
@@ -985,7 +969,8 @@ void GrainSegmentationEngine::extractMesh()
                     do{
                       PartitionMeshData::Vertex* vertex = e->vertex1();
                       int index = vertex->index();
-                      // This clearly does not work because, vertex is a pointer to the original vertex
+
+		      // This clearly does not work because, vertex is a pointer to the original vertex
                       // Newvertex is a vector to the addresses of the newvertex... 
                       //if (std::find(newVertices.cbegin(), newVertices.cend(), vertex) != newVertices.cend()) {
                       // Find the vertex by position in the newvertex list
@@ -1005,25 +990,15 @@ void GrainSegmentationEngine::extractMesh()
                       e = e->nextFaceEdge();\
                     } 
                     while(e!=face->edges());
-                    //qDebug() << "Edgecount on Face = " << face->index() << v;
-                    // Create new face in the new mesh 
+
+		    // Create new face in the new mesh 
                     PartitionMeshData::Face* newface = newmesh->createFace(faceVertices.begin(),faceVertices.end());
 		    newface->region = regionid;
                     Vector3 triedge1 = faceVertices[1]->pos()-faceVertices[0]->pos(); 
                     Vector3 triedge2 = faceVertices[2]->pos()-faceVertices[0]->pos(); 
-                    //Vector3 facenormal = (triedge1.cross(triedge2));
-                    //facenormal.normalize();
-                    //normal_average +=  facenormal;
-                    // Obtain normal vector to triangle
-                    /// Use Vecto3 and cross product to find normal, average and then normalize to obtain average normal
-                    /// Store this average in the clustergraph so that it can be accessed. 
                   }
                 }
               } 
-              //normal_average.normalize();
-              
-              //qDebug() << "Transisition = " <<  regionid <<  " to " <<  regionId2 <<  " mesh faces  " << newmesh->faceCount() <<  "Normal = " <<  normal_average;
-              //}
               // Now export this mesh to test
               TriMesh output_mesh;
               output_mesh.clear();
@@ -1035,6 +1010,8 @@ void GrainSegmentationEngine::extractMesh()
 	      if (!PartitionMeshDisplay::buildMesh(*newmesh,cell(),cutting, output_mesh, progress1)){
                 qDebug() << "Error on buildMesh";
               }
+	      
+
               int facecount = output_mesh.faceCount();
 	      t->normals.clear();
 	      t->normals.reserve(facecount);
@@ -1057,7 +1034,47 @@ void GrainSegmentationEngine::extractMesh()
 	      }
 	      normal_average.normalize();
 	      t->normal = normal_average;
+	      // Find disorientation axis and angle	      
+	      Quaternion q1f1, q2f1, q1f2, q2f2, q1f, q2f;
+	      Vector3 axis12 = Vector3::Zero();
+	      Vector3 axis21 = Vector3::Zero();
+	      Vector3 normal1 = Vector3::Zero();
+	      Vector3 normal2 = Vector3::Zero();
+	      
+	      Vector3 axis = Vector3::Zero();
+	      
+	      FloatType disorientation1, disorientation2, disorientation;
+	      // Find q1->q2 transisition
+	      find_axis(q1,q2,disorientation1,axis12,q1f1, q2f1);
+	      // Switching symmetry q2->q1 transition
+	      find_axis(q2, q1, disorientation2, axis21, q1f2, q2f2);
+	      
+	      if (disorientation1 < disorientation2 || fabs(disorientation1-disorientation2) < 1.e-3){
+		  axis = axis12;
+		  q1f = q1f1;
+		  q2f = q2f1;
+		  disorientation = disorientation1;
+		  normal1 = (q1f.inverse()*q1.inverse())*normal_average;
+		  normal2 = (q2.inverse()*q2f.inverse())*normal_average;
+	      }
+	      else {
+		  axis = axis21;
+		  q1f = q2f2;
+		  q2f = q1f2;
+		  disorientation = disorientation2;		  
+		  normal1 = (q1f.inverse()*q2.inverse())*normal_average;
+		  normal2 = (q1.inverse()*q2f.inverse())*normal_average;
+	      }
+	      t->misorientation_axis = axis;
+	      t->disorientation = disorientation;
+	      t->cluster1_symmetry = q1f;
+	      t->cluster2_symmetry = q2f;
+	      t->cluster1_normal = normal1;
+	      t->cluster2_normal = normal2;
 
+	      
+	      
+	      
               QString filename;
               filename = QString("%1%2%3%4").arg("test_new_",  QString::number(regionid),  QString::number(regionId2), ".vtk");
               QFile file(filename);

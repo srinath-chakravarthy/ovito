@@ -491,6 +491,7 @@ inline QDataStream& operator>>(QDataStream& stream, QuaternionT<double>& q) {
  */
 using Quaternion = QuaternionT<FloatType>;
 
+
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

@@ -126,6 +126,20 @@ ClusterTransition* ClusterGraph::createClusterTransition(Cluster* clusterA, Clus
         tAB->normal = Vector3::Zero();
         tBA->normal = Vector3::Zero();
 
+
+	tAB->cluster1_normal = Vector3::Zero();
+	tAB->cluster2_normal = Vector3::Zero();
+	tAB->misorientation_axis = Vector3::Zero();
+	tAB->cluster1_symmetry = Quaternion(Matrix3::Identity());
+	tAB->cluster2_symmetry = Quaternion(Matrix3::Identity());
+	
+	tBA->cluster1_normal = Vector3::Zero();
+	tBA->cluster2_normal = Vector3::Zero();
+	tBA->misorientation_axis = Vector3::Zero();
+	tBA->cluster1_symmetry = Quaternion(Matrix3::Identity());
+	tBA->cluster2_symmetry = Quaternion(Matrix3::Identity());
+
+	
         // Insert the new transition and its reverse into the linked lists of the two clusters.
         clusterA->insertTransition(tAB);
 	clusterB->insertTransition(tBA);
