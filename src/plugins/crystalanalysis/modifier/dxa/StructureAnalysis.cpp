@@ -475,7 +475,7 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 	NearestNeighborFinder::Query<MAX_NEIGHBORS> neighQuery(neighList);
 
 	// Find N nearest neighbors of current atom.
-	neighQuery.findNeighbors(neighList.particlePos(particleIndex));
+	neighQuery.findNeighbors(particleIndex);
 	int numNeighbors = neighQuery.results().size();
 	int neighborIndices[MAX_NEIGHBORS];
 	Vector3 neighborVectors[MAX_NEIGHBORS];
@@ -537,7 +537,7 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 			neighborVectors[i] = v0;
 			neighborIndices[i] = neighQuery.results()[i].index;
 			NearestNeighborFinder::Query<MAX_NEIGHBORS> neighQuery2(neighList);
-			neighQuery2.findNeighbors(neighList.particlePos(neighborIndices[i]));
+			neighQuery2.findNeighbors(neighborIndices[i]);
 			if(neighQuery2.results().size() < 4) return;
 			for(size_t j = 0; j < 4; j++) {
 				Vector3 v = v0 + neighQuery2.results()[j].delta;

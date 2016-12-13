@@ -88,7 +88,7 @@ FloatType CentroSymmetryModifier::computeCSP(NearestNeighborFinder& neighFinder,
 {
 	// Find k nearest neighbor of current atom.
 	NearestNeighborFinder::Query<MAX_CSP_NEIGHBORS> neighQuery(neighFinder);
-	neighQuery.findNeighbors(neighFinder.particlePos(particleIndex));
+	neighQuery.findNeighbors(particleIndex);
 
 	int numNN = neighQuery.results().size();
 

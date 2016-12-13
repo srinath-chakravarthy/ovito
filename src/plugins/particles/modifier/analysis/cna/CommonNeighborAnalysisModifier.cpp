@@ -387,7 +387,7 @@ CommonNeighborAnalysisModifier::StructureType CommonNeighborAnalysisModifier::de
 	NearestNeighborFinder::Query<MAX_NEIGHBORS> neighQuery(neighFinder);
 
 	// Find N nearest neighbors of current atom.
-	neighQuery.findNeighbors(neighFinder.particlePos(particleIndex));
+	neighQuery.findNeighbors(particleIndex);
 	int numNeighbors = neighQuery.results().size();
 
 	/////////// 12 neighbors ///////////

@@ -91,7 +91,7 @@ void IdentifyDiamondModifier::DiamondIdentificationEngine::perform()
 		if(selection() && selection()->getInt(index) == 0)
 			return;
 		NearestNeighborFinder::Query<4> neighQuery(neighborFinder);
-		neighQuery.findNeighbors(neighborFinder.particlePos(index));
+		neighQuery.findNeighbors(index);
 		for(int i = 0; i < neighQuery.results().size(); i++) {
 			neighLists[index][i].vec = neighQuery.results()[i].delta;
 			neighLists[index][i].index = neighQuery.results()[i].index;

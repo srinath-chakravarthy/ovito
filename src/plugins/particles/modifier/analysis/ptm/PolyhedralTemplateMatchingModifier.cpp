@@ -156,7 +156,7 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 
 			// Find nearest neighbors.
 			NearestNeighborFinder::Query<MAX_NEIGHBORS> neighQuery(neighFinder);
-			neighQuery.findNeighbors(neighFinder.particlePos(index));
+			neighQuery.findNeighbors(index);
 			int numNeighbors = neighQuery.results().size();
 			OVITO_ASSERT(numNeighbors <= MAX_NEIGHBORS);
 

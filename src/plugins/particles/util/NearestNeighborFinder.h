@@ -161,17 +161,17 @@ public:
 
 		/// Builds the sorted list of neighbors around the given particle.
 		void findNeighbors(size_t particleIndex) {
-			findNeighbors(t.particlePos(particleIndex));
+			findNeighbors(t.particlePos(particleIndex), false);
 		}
 
 		/// Builds the sorted list of neighbors around the given point.
-		void findNeighbors(const Point3& query_point) {
+		void findNeighbors(const Point3& query_point, bool includeSelf) {
 			queue.clear();
 			for(const Vector3& pbcShift : t.pbcImages) {
 				q = query_point - pbcShift;
 				if(!queue.full() || queue.top().distanceSq > t.minimumDistance(t.root, q)) {
 					qr = t.simCell.absoluteToReduced(q);
-					visitNode(t.root);
+					visitNode(t.root, includeSelf);
 				}
 			}
 			queue.sort();
@@ -182,14 +182,14 @@ public:
 
 	private:
 
-		/// Inserts all atoms of the given leaf node into the priority queue.
-		void visitNode(TreeNode* node) {
+		/// Inserts all particles of the given leaf node into the priority queue.
+		void visitNode(TreeNode* node, bool includeSelf) {
 			if(node->isLeaf()) {
 				for(NeighborListAtom* atom = node->atoms; atom != nullptr; atom = atom->nextInBin) {
 					Neighbor n;
 					n.delta = atom->pos - q;
 					n.distanceSq = n.delta.squaredLength();
-					if(n.distanceSq != 0) {
+					if(includeSelf || n.distanceSq != 0) {
 						n.atom = atom;
 						n.index = atom - &t.atoms.front();
 						queue.insert(n);
@@ -207,9 +207,9 @@ public:
 					cnear = node->children[1];
 					cfar  = node->children[0];
 				}
-				visitNode(cnear);
+				visitNode(cnear, includeSelf);
 				if(!queue.full() || queue.top().distanceSq > t.minimumDistance(cfar, q))
-					visitNode(cfar);
+					visitNode(cfar, includeSelf);
 			}
 		}
 

@@ -125,7 +125,7 @@ void ExpandSelectionModifier::ExpandSelectionNearestEngine::expandSelection()
 		if(!_inputSelection->getInt(index)) return;
 
 		NearestNeighborFinder::Query<MAX_NEAREST_NEIGHBORS> neighQuery(neighFinder);
-		neighQuery.findNeighbors(neighFinder.particlePos(index));
+		neighQuery.findNeighbors(index);
 		OVITO_ASSERT(neighQuery.results().size() <= _numNearestNeighbors);
 
 		for(auto n = neighQuery.results().begin(); n != neighQuery.results().end(); ++n) {

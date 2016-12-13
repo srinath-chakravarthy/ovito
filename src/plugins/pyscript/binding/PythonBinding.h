@@ -160,6 +160,26 @@ namespace pybind11 { namespace detail {
 		PYBIND11_TYPE_CASTER(Ovito::Vector_3<T>, _("Vector3<") + make_caster<T>::name() + _(">"));
     };	
 
+	/// Automatic Python <--> Point3 conversion
+    template<typename T> struct type_caster<Ovito::Point_3<T>> {
+    public:
+        bool load(handle src, bool) {
+			if(!isinstance<sequence>(src)) return false;
+			sequence seq = reinterpret_borrow<sequence>(src);
+			if(seq.size() != value.size())
+				throw value_error("Expected sequence of length 3.");
+			for(size_t i = 0; i < value.size(); i++)
+				value[i] = seq[i].cast<T>();
+			return true;
+        }
+
+        static handle cast(const Ovito::Point_3<T>& src, return_value_policy /* policy */, handle /* parent */) {
+			return pybind11::make_tuple(src[0], src[1], src[2]).release();
+        }
+
+		PYBIND11_TYPE_CASTER(Ovito::Point_3<T>, _("Point3<") + make_caster<T>::name() + _(">"));
+    };		
+
 	/// Automatic Python <--> Color conversion
     template<typename T> struct type_caster<Ovito::ColorT<T>> {
     public:

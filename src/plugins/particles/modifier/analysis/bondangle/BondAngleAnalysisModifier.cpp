@@ -97,7 +97,7 @@ BondAngleAnalysisModifier::StructureType BondAngleAnalysisModifier::determineStr
 {
 	// Find 14 nearest neighbors of current particle.
 	NearestNeighborFinder::Query<14> neighborQuery(neighFinder);
-	neighborQuery.findNeighbors(neighFinder.particlePos(particleIndex));
+	neighborQuery.findNeighbors(particleIndex);
 
 	// Reject under-coordinated particles.
 	if(neighborQuery.results().size() < 6)

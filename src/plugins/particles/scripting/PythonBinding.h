@@ -23,6 +23,7 @@
 #define __OVITO_PARTICLES_PYTHON_BINDING_H
 
 #include <plugins/pyscript/PyScript.h>
+#include <plugins/pyscript/binding/PythonBinding.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/BondPropertyObject.h>
 #include <plugins/particles/import/InputColumnMapping.h>

@@ -382,7 +382,7 @@ class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
         """ This is the constructor. """
         super(self.__class__, self).__init__()        
         if not hasattr(data_collection, 'position'):
-            raise KeyError("Data collection does not contain particle positions.")
+            raise KeyError("Data collection does not contain any particles.")
         if not hasattr(data_collection, 'cell'):
             raise KeyError("Data collection does not contain simulation cell information.")
         self.particle_count = data_collection.number_of_particles
@@ -411,7 +411,7 @@ class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
         # Construct the C++ neighbor query. 
         query = Particles.CutoffNeighborFinder.Query(self, int(index))
         # Iterate over neighbors.
-        while not query.atEnd:
+        while not query.at_end:
             yield query
             query.next()
             
@@ -419,9 +419,9 @@ ovito.data.CutoffNeighborFinder = CutoffNeighborFinder
 
 class NearestNeighborFinder(Particles.NearestNeighborFinder):
     """ 
-    A utility class that finds the *N* nearest neighbors of a particle.
+    A utility class that finds the *N* nearest neighbors of a particle or a spatial location.
     
-    The constructor takes the number of requested nearest neighbors, *N*, and a :py:class:`DataCollection <ovito.data.DataCollection>` 
+    The constructor takes the (maximum) number of requested nearest neighbors, *N*, and a :py:class:`DataCollection <ovito.data.DataCollection>` 
     containing the input particle positions and the cell geometry (including periodic boundary flags).
     *N* must be a positive integer not greater than 30 (which is the built-in maximum supported by this class).
     
@@ -429,8 +429,15 @@ class NearestNeighborFinder(Particles.NearestNeighborFinder):
     iterate over the sorted list of nearest neighbors of a specific particle, for example:
     
     .. literalinclude:: ../example_snippets/nearest_neighbor_finder.py
+       :lines: 1-18
     
-    If you want to iterate over all neighbors within a certain cutoff radius of a central particle,
+    Furthermore, the class provides the :py:meth:`find_at` method, which allows to query the nearest neighbors at an 
+    arbitrary spatial position (doesn't have to be a physical particle):
+
+    .. literalinclude:: ../example_snippets/nearest_neighbor_finder.py    
+       :lines: 19-
+
+    If you want to find all neighbor particles within a certain cutoff radius of a central particle,
     use the :py:class:`CutoffNeighborFinder` class instead.
     """
         
@@ -440,7 +447,7 @@ class NearestNeighborFinder(Particles.NearestNeighborFinder):
         if N<=0 or N>30:
             raise ValueError("The requested number of nearest neighbors is out of range.")
         if not hasattr(data_collection, 'position'):
-            raise KeyError("Data collection does not contain particle positions.")
+            raise KeyError("Data collection does not contain any particles.")
         if not hasattr(data_collection, 'cell'):
             raise KeyError("Data collection does not contain simulation cell information.")
         self.particle_count = data_collection.number_of_particles
@@ -464,13 +471,41 @@ class NearestNeighborFinder(Particles.NearestNeighborFinder):
         However, the computed neighbor vector (``delta``) will be unique for each visited image of a neighboring particle.
         
         The number of neighbors actually visited may be smaller than the requested number, *N*, if the
-        system contains too few particles and no periodic boundary conditions are used.
+        system contains too few particles and has no periodic boundary conditions.
         """
         if index < 0 or index >= self.particle_count:
             raise IndexError("Particle index is out of range.")
         # Construct the C++ neighbor query. 
         query = Particles.NearestNeighborFinder.Query(self)
         query.findNeighbors(int(index))
+        # Iterate over neighbors.
+        for i in range(query.count):
+            yield query[i]
+
+    def find_at(self, coords):
+        """ 
+        Returns an iterator that visits the *N* nearest particles around a spatial point given by *coords* in order of ascending distance.
+        Unlike the :py:meth:`find` method, which queries the nearest neighbors of a physical particle, the :py:meth:`!find_at` method allows  
+        searching for neareby particles at arbitrary locations in space. 
+         
+        :param coords: A (x,y,z) coordinate triple specifying the spatial location where the *N* nearest particles should be queried.
+        :returns: A Python iterator that visits the *N* nearest neighbors in order of ascending distance. 
+                  For each visited particle the iterator returns an object with the following attributes:
+                  
+                      * **index**: The index of the current particle (starting at 0).
+                      * **distance**: The distance of the current neighbor from the query location.
+                      * **distance_squared**: The squared distance to the query location.
+                      * **delta**: The three-dimensional vector from the query point to the current particle (taking into account periodicity).
+
+        If there exists a particle that is exactly located at the query position given by *coords*, then it will be returned by this function.
+        This is in contrast to the :py:meth:`find` function, which does not visit the central particle itself.
+        
+        The number of neighbors actually visited may be smaller than the requested number, *N*, if the
+        system contains too few particles and has no periodic boundary conditions.
+        """
+        # Construct the C++ neighbor query. 
+        query = Particles.NearestNeighborFinder.Query(self)
+        query.findNeighborsAtLocation(coords, True)
         # Iterate over neighbors.
         for i in range(query.count):
             yield query[i]
