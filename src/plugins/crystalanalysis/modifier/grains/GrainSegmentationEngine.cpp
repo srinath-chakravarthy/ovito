@@ -1008,6 +1008,7 @@ void GrainSegmentationEngine::extractMesh()
                     //qDebug() << "Edgecount on Face = " << face->index() << v;
                     // Create new face in the new mesh 
                     PartitionMeshData::Face* newface = newmesh->createFace(faceVertices.begin(),faceVertices.end());
+		    newface->region = regionid;
                     Vector3 triedge1 = faceVertices[1]->pos()-faceVertices[0]->pos(); 
                     Vector3 triedge2 = faceVertices[2]->pos()-faceVertices[0]->pos(); 
                     //Vector3 facenormal = (triedge1.cross(triedge2));
@@ -1034,6 +1035,9 @@ void GrainSegmentationEngine::extractMesh()
 	      if (!PartitionMeshDisplay::buildMesh(*newmesh,cell(),cutting, output_mesh, progress1)){
                 qDebug() << "Error on buildMesh";
               }
+              int facecount = output_mesh.faceCount();
+	      t->normals.clear();
+	      t->normals.reserve(facecount);
 	      for(const TriMeshFace& f : output_mesh.faces()) {
 		  Point3 p1 = output_mesh.vertex(f.vertex(0));
 		  Point3 p2 = output_mesh.vertex(f.vertex(1));
@@ -1044,8 +1048,10 @@ void GrainSegmentationEngine::extractMesh()
 		  Vector3 facenormal = (triedge1.cross(triedge2));
 		  if (facenormal.length()> 1.0e-6) {
 		      facenormal.normalize();
-		      
+		      t->normals.push_back(facenormal);
 		      normal_average +=  facenormal;
+		  } else {
+		    t->normals.push_back(Vector3(0.0));
 		  }
 
 	      }
@@ -1053,8 +1059,7 @@ void GrainSegmentationEngine::extractMesh()
 	      t->normal = normal_average;
 
               QString filename;
-              filename = "%1%2%3%4";
-              filename.arg("test_new_",  QString::number(regionid),  QString::number(regionId2), ".vtk");
+              filename = QString("%1%2%3%4").arg("test_new_",  QString::number(regionid),  QString::number(regionId2), ".vtk");
               QFile file(filename);
               CompressedTextWriter writer(file);
               

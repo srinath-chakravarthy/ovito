@@ -67,6 +67,9 @@ struct ClusterTransition
 
         /// The average normal vector of the interface between cluster1 and cluster2
         Vector3 normal;
+	
+	/// Vector of normal for each element of the transition mesh
+	std::vector<Vector3> normals;
 	        
         /// Pointer to the reverse transition from cluster 2 to cluster 1.
         /// The transformation matrix of the reverse transition is the inverse of this transition's matrix.

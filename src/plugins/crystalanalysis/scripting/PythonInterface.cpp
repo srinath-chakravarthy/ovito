@@ -461,6 +461,7 @@ PYBIND11_PLUGIN(CrystalAnalysis)
 		.def_readonly("cluster2", &ClusterTransition::cluster2, py::return_value_policy::reference_internal)
 		.def_readonly("next", &ClusterTransition::next, py::return_value_policy::reference_internal)
 		.def_readonly("normal", &ClusterTransition::normal)
+		.def_readonly("normals", &ClusterTransition::normals, py::return_value_policy::reference_internal)
 	;	
         ovito_class<PartitionMesh, DataObject>(m,
                         ":Base class: :py:class:`ovito.data.DataObject`\n\n"
