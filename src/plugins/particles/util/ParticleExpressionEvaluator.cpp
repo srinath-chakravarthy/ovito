@@ -115,13 +115,7 @@ void ParticleExpressionEvaluator::createInputVariables(const std::vector<Particl
 				fullPropertyName += "." + property->componentNames()[k];
 
 			// Filter out invalid characters.
-			v.name.clear();
-			for(QChar c : fullPropertyName) {
-				char cc = c.toLatin1();
-				if(_validVariableNameChars.contains(cc))
-					v.name.push_back(cc);
-			}
-			if(v.name.empty()) continue;
+			v.name = fullPropertyName.toStdString();
 
 			// Initialize data pointer into particle property storage.
 			if(property->dataType() == qMetaTypeId<int>())
@@ -193,6 +187,15 @@ void ParticleExpressionEvaluator::createInputVariables(const std::vector<Particl
 ******************************************************************************/
 void ParticleExpressionEvaluator::addVariable(ExpressionVariable&& v)
 {
+	// Replace invalid characters in variable name with an underscore.
+	std::string filteredName;
+	filteredName.reserve(v.name.size());
+	std::transform(v.name.begin(), v.name.end(), std::back_inserter(filteredName), [](char c) {
+		return _validVariableNameChars.contains(c) ? c : '_';
+	});
+	if(filteredName.empty()) return;
+	v.name.swap(filteredName);
+	
 	// Check if name is unique.
 	if(std::none_of(_inputVariables.begin(), _inputVariables.end(), [&v](const ExpressionVariable& v2) -> bool { return v2.name == v.name; }))
 		_inputVariables.push_back(std::move(v));
@@ -205,7 +208,7 @@ QStringList ParticleExpressionEvaluator::inputVariableNames() const
 {
 	QStringList vlist;
 	for(const ExpressionVariable& v : _inputVariables)
-		vlist << QString::fromLatin1(v.name.c_str());
+		vlist << QString::fromStdString(v.name);
 	return vlist;
 }
 
