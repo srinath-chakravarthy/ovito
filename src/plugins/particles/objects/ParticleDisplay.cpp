@@ -192,9 +192,11 @@ void ParticleDisplay::particleRadii(std::vector<FloatType>& output, ParticleProp
 	OVITO_ASSERT(radiusProperty == nullptr || radiusProperty->type() == ParticleProperty::RadiusProperty);
 	OVITO_ASSERT(typeProperty == nullptr || typeProperty->type() == ParticleProperty::ParticleTypeProperty);
 
+	FloatType defaultRadius = defaultParticleRadius();
 	if(radiusProperty && radiusProperty->size() == output.size()) {
 		// Take particle radii directly from the radius property.
-		std::copy(radiusProperty->constDataFloat(), radiusProperty->constDataFloat() + output.size(), output.begin());
+		std::transform(radiusProperty->constDataFloat(), radiusProperty->constDataFloat() + output.size(), 
+			output.begin(), [defaultRadius](FloatType r) { return r > 0 ? r : defaultRadius; } );
 	}
 	else if(typeProperty && typeProperty->size() == output.size()) {
 		// Assign radii based on particle types.
@@ -213,12 +215,12 @@ void ParticleDisplay::particleRadii(std::vector<FloatType>& output, ParticleProp
 		}
 		else {
 			// Assign a uniform radius to all particles.
-			std::fill(output.begin(), output.end(), defaultParticleRadius());
+			std::fill(output.begin(), output.end(), defaultRadius);
 		}
 	}
 	else {
 		// Assign a uniform radius to all particles.
-		std::fill(output.begin(), output.end(), defaultParticleRadius());
+		std::fill(output.begin(), output.end(), defaultRadius);
 	}
 }
 
@@ -232,7 +234,8 @@ FloatType ParticleDisplay::particleRadius(size_t particleIndex, ParticleProperty
 
 	if(radiusProperty && radiusProperty->size() > particleIndex) {
 		// Take particle radius directly from the radius property.
-		return radiusProperty->getFloat(particleIndex);
+		FloatType r = radiusProperty->getFloat(particleIndex);
+		if(r > 0) return r;
 	}
 	else if(typeProperty && typeProperty->size() > particleIndex) {
 		// Assign radius based on particle types.
@@ -417,8 +420,12 @@ void ParticleDisplay::render(TimePoint time, DataObject* dataObject, const Pipel
 		// Update radius buffer.
 		if(updateRadii && particleCount) {
 			if(radiusProperty && radiusProperty->size() == particleCount) {
-				// Take particle radii directly from the radius property.
-				_particleBuffer->setParticleRadii(radiusProperty->constDataFloat());
+				// Allocate memory buffer.
+				std::vector<FloatType> particleRadii(particleCount);
+				FloatType defaultRadius = defaultParticleRadius();
+				std::transform(radiusProperty->constDataFloat(), radiusProperty->constDataFloat() + particleCount, 
+					particleRadii.begin(), [defaultRadius](FloatType r) { return r > 0 ? r : defaultRadius; } );
+				_particleBuffer->setParticleRadii(particleRadii.data());
 			}
 			else if(typeProperty && typeProperty->size() == particleCount) {
 				// Assign radii based on particle types.

@@ -81,6 +81,7 @@ PYBIND11_PLUGIN(ParticlesImporter)
 		.value("full", LAMMPSDataImporter::AtomStyle_Full)
 		.value("dipole", LAMMPSDataImporter::AtomStyle_Dipole)
 		.value("molecular", LAMMPSDataImporter::AtomStyle_Molecular)
+		.value("sphere", LAMMPSDataImporter::AtomStyle_Sphere)
 	;
 
 	ovito_class<LAMMPSBinaryDumpImporter, ParticleImporter>(m)

@@ -335,6 +335,33 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 						atomIdMap.insert(std::make_pair(*atomId, i));
 					}
 				}
+				else if(_atomStyle == AtomStyle_Sphere) {
+					ParticleProperty* radiusProperty = new ParticleProperty(natoms, ParticleProperty::RadiusProperty, 0, true);
+					addParticleProperty(radiusProperty);
+					FloatType* radius = radiusProperty->dataFloat();
+					ParticleProperty* massProperty = new ParticleProperty(natoms, ParticleProperty::MassProperty, 0, true);
+					addParticleProperty(massProperty);
+					FloatType* mass = massProperty->dataFloat();
+					for(int i = 0; i < natoms; i++, ++pos, ++atomType, ++atomId, ++radius, ++mass) {
+						if(!setProgressValueIntermittent(i)) return;
+						if(i != 0) stream.readLine();
+						bool invalidLine;
+						if(!pbcImage)
+							invalidLine = (sscanf(stream.line(), "%u %u " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING, atomId, atomType, radius, mass, &pos->x(), &pos->y(), &pos->z()) != 7);
+						else {
+							invalidLine = (sscanf(stream.line(), "%u %u " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " %i %i %i", atomId, atomType, radius, mass, &pos->x(), &pos->y(), &pos->z(), &pbcImage->x(), &pbcImage->y(), &pbcImage->z()) != 7+3);
+							++pbcImage;
+						}
+						if(invalidLine)
+							throw Exception(tr("Invalid data in Atoms section of LAMMPS data file at line %1: %2").arg(stream.lineNumber()).arg(stream.lineString()));
+						if(*atomType < 1 || *atomType > natomtypes)
+							throw Exception(tr("Atom type out of range in Atoms section of LAMMPS data file at line %1.").arg(stream.lineNumber()));
+						atomIdMap.insert(std::make_pair(*atomId, i));
+						
+						*radius /= 2; // Convert diameter to radius.
+						if(*radius != 0) *mass *= pow(*radius, 3) * (FLOATTYPE_PI * FloatType(4) / FloatType(3)); // Convert density to mass.
+					}
+				}
 				else if(_atomStyle == AtomStyle_Unknown) {
 					throw Exception(tr("Number of columns in Atoms section of data file (line %1) does not match to selected LAMMPS atom style.").arg(stream.lineNumber()));
 				}
@@ -531,6 +558,7 @@ bool LAMMPSDataImporter::LAMMPSDataImportTask::detectAtomStyle(const char* first
 		else if(atomTypeHint == QStringLiteral("bond")) _atomStyle = AtomStyle_Bond;
 		else if(atomTypeHint == QStringLiteral("charge")) _atomStyle = AtomStyle_Charge;
 		else if(atomTypeHint == QStringLiteral("molecular")) _atomStyle = AtomStyle_Molecular;
+		else if(atomTypeHint == QStringLiteral("sphere")) _atomStyle = AtomStyle_Sphere;
 	}
 
 	if(_atomStyle == AtomStyle_Unknown) {

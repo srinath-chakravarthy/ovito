@@ -53,6 +53,7 @@ void LAMMPSDataExporterEditor::createUI(const RolloutInsertionParameters& rollou
 	atomStyleUI->comboBox()->addItem("dipole", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Dipole));
 	atomStyleUI->comboBox()->addItem("full", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Full));
 	atomStyleUI->comboBox()->addItem("molecular", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Molecular));
+	atomStyleUI->comboBox()->addItem("sphere", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Sphere));
 	layout->addWidget(atomStyleUI->comboBox(), 0, 1);
 }
 

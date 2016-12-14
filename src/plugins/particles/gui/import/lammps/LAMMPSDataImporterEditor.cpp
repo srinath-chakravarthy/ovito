@@ -52,7 +52,8 @@ bool LAMMPSDataImporterEditor::inspectNewFile(FileImporter* importer, const QUrl
 				{ QStringLiteral("dipole"), LAMMPSDataImporter::AtomStyle_Dipole },
 				{ QStringLiteral("molecular"), LAMMPSDataImporter::AtomStyle_Molecular },
 				{ QStringLiteral("full"), LAMMPSDataImporter::AtomStyle_Full },
-				{ QStringLiteral("angle"), LAMMPSDataImporter::AtomStyle_Angle }
+				{ QStringLiteral("angle"), LAMMPSDataImporter::AtomStyle_Angle },
+				{ QStringLiteral("sphere"), LAMMPSDataImporter::AtomStyle_Sphere }
 		};
 		QStringList itemList = styleList.keys();
 
