@@ -270,7 +270,10 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 			else t = ((*v) - startValue) / (endValue - startValue);
 
 			// Clamp values.
-			if(t < 0) t = 0;
+			if(std::isnan(t)) t = 0;
+			else if(t == std::numeric_limits<FloatType>::infinity()) t = 1;
+			else if(t == -std::numeric_limits<FloatType>::infinity()) t = 0;
+			else if(t < 0) t = 0;
 			else if(t > 1) t = 1;
 
 			*c = _colorGradient->valueToColor(t);
