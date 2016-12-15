@@ -190,9 +190,10 @@ void ParticleExpressionEvaluator::addVariable(ExpressionVariable&& v)
 	// Replace invalid characters in variable name with an underscore.
 	std::string filteredName;
 	filteredName.reserve(v.name.size());
-	std::transform(v.name.begin(), v.name.end(), std::back_inserter(filteredName), [](char c) {
-		return _validVariableNameChars.contains(c) ? c : '_';
-	});
+	for(char c : v.name) {
+		if(c != ' ')
+			filteredName.push_back(_validVariableNameChars.contains(c) ? c : '_');
+	}
 	if(filteredName.empty()) return;
 	v.name.swap(filteredName);
 	
