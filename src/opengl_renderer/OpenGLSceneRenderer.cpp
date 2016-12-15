@@ -187,7 +187,7 @@ bool OpenGLSceneRenderer::geometryShadersEnabled(bool forceDefaultSetting)
 
 #if defined(Q_OS_WIN)
 	// Geometry shaders don't seem to work well on AMD/ATI hardware under Windows.
-	if(_openGLVendor.contains("Radeon"))
+	if(_openGLVendor.contains("Radeon") || _openGLRenderer.contains("Radeon"))
 		return false;
 #endif
 	
