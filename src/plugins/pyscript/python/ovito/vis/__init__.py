@@ -106,6 +106,8 @@ def _Viewport_render(self, settings = None):
         settings = self.dataset.render_settings
     elif isinstance(settings, dict):
         settings = RenderSettings(settings)
+    if len(self.dataset.scene_nodes) == 0:
+        print("Warning: The scene to be rendered is empty. Did you forget to add a node to the scene by calling ObjectNode.add_to_scene()?")
     if ovito.gui_mode:
         # Use the frame buffer of the GUI window for rendering.
         fb_window = self.dataset.container.window.frame_buffer_window

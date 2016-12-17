@@ -73,8 +73,6 @@ Unresolved bugs:
 - Construct surface mesh doesn't work for very small length scales (reported by xin.liu@insa-lyon.fr)
 - Particle trajectory creation doesn't work if new particles are created over time.
 - WebM video export not working on Windows & Linux (stefan.parviainen@iki.fi). 
-- Compute property modifier fails when inserted after a Dislocation Analysis modifier.
-- NaN value handling of Color Coding modifier is not correct yet.
 
 New analysis features:
 
