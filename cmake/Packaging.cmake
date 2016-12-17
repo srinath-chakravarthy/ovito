@@ -81,3 +81,16 @@ ENDIF()
 
 INCLUDE(CPack)
 
+IF(WIN32 AND OVITO_BUILD_APPSTORE_VERSION)
+	# Package Ovito for the Windows Store.
+	CONFIGURE_FILE("${OVITO_SOURCE_BASE_DIR}/src/main/resources/AppxManifest.xml" "${OVITO_BINARY_DIRECTORY}/AppxManifest.xml")
+	INSTALL(FILES "${OVITO_BINARY_DIRECTORY}/appxmanifest.xml" DESTINATION "./")
+	INSTALL(FILES "${OVITO_SOURCE_BASE_DIR}/src/gui/resources/mainwin/window_icon_44.png" DESTINATION "./")
+	INSTALL(FILES "${OVITO_SOURCE_BASE_DIR}/src/gui/resources/mainwin/window_icon_150.png" DESTINATION "./")
+		
+	ADD_CUSTOM_TARGET(appx
+					COMMAND "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\x64\\MakeAppx.exe" pack /o /d "${CMAKE_INSTALL_PREFIX}" /p "${CMAKE_INSTALL_PREFIX}\\..\\ovito-${OVITO_VERSION_STRING}.appx"
+					COMMAND SignTool sign /fd SHA256 /a /f "${CMAKE_INSTALL_PREFIX}\\..\\..\\ovito.pfx" "${CMAKE_INSTALL_PREFIX}\\..\\ovito-${OVITO_VERSION_STRING}.appx"
+					COMMENT "Creating AppX package")
+
+ENDIF()
