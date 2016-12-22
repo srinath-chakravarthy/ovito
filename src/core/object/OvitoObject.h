@@ -150,7 +150,7 @@ private:
 	size_t _referenceCount;
 
 	/// \brief Increments the reference count by one.
-	void incrementReferenceCount() {
+	void incrementReferenceCount() Q_DECL_NOTHROW {
 		OVITO_CHECK_OBJECT_POINTER(this);
 		++_referenceCount;
 	}

@@ -26,6 +26,7 @@ ovito.data.ParticleType = Particles.ParticleType
 ovito.data.BondProperty = Particles.BondProperty
 ovito.data.BondTypeProperty = Particles.BondTypeProperty
 ovito.data.BondType = Particles.BondType
+ovito.data.TrajectoryLineGenerator = Particles.TrajectoryLineGenerator
 
 # For backward-compatibility with OVITO 2.5.1:
 def _ParticleProperty_data_attribute_name(self):

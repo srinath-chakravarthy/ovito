@@ -34,9 +34,13 @@
 #include <plugins/particles/objects/BondPropertyObject.h>
 #include <plugins/particles/objects/BondTypeProperty.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
+#include <plugins/particles/objects/TrajectoryObject.h>
+#include <plugins/particles/objects/TrajectoryGeneratorObject.h>
+#include <plugins/particles/objects/TrajectoryDisplay.h>
 #include <plugins/particles/util/CutoffNeighborFinder.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
 #include <core/utilities/io/CompressedTextWriter.h>
+#include <core/animation/AnimationSettings.h>
 #include "PythonBinding.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -857,6 +861,96 @@ PYBIND11_PLUGIN(Particles)
 				"The display color to use for bonds of this type.")
 		.def_property("name", &BondType::name, &BondType::setName,
 				"The display name of this bond type.")
+	;
+
+	ovito_class<TrajectoryObject, DataObject>{m};
+
+	ovito_class<TrajectoryGeneratorObject, TrajectoryObject>(m,
+			":Base class: :py:class:`ovito.data.DataObject`\n\n"
+			"Data object that generates and stores the trajectory lines from a set of moving particles. "
+			"\n\n"
+			"The visual appearance of the trajectory lines is controlled by the attached :py:class:`~ovito.vis.TrajectoryLineDisplay` instance, which is "
+			"accessible through the :py:attr:`~DataObject.display` attribute."
+			"\n\n"
+			"**Usage example:**"
+			"\n\n"
+			".. literalinclude:: ../example_snippets/trajectory_lines.py",
+			"TrajectoryLineGenerator")
+		.def_property("source_node", &TrajectoryGeneratorObject::source, &TrajectoryGeneratorObject::setSource,
+				"The :py:class:`~ovito.ObjectNode` that serves as source for particle trajectory data. ") 
+		.def_property("only_selected", &TrajectoryGeneratorObject::onlySelectedParticles, &TrajectoryGeneratorObject::setOnlySelectedParticles,
+				"Controls whether trajectory lines should only by generated for currently selected particles."
+				"\n\n"
+				":Default: ``True``\n")
+		.def_property("unwrap_trajectories", &TrajectoryGeneratorObject::unwrapTrajectories, &TrajectoryGeneratorObject::setUnwrapTrajectories,
+				"Controls whether trajectory lines should be automatically unwrapped at the box boundaries when the particles cross a periodic boundary."
+				"\n\n"
+				":Default: ``True``\n")
+		.def_property("sampling_frequency", &TrajectoryGeneratorObject::everyNthFrame, &TrajectoryGeneratorObject::setEveryNthFrame,
+				"Length of animation frame interval at which the particle positions should be sampled when generating the trajectory lines."
+				"\n\n"
+				":Default: 1\n")
+		.def_property("frame_interval", [](TrajectoryGeneratorObject& tgo) -> py::object {
+					if(tgo.useCustomInterval()) return py::make_tuple(
+						tgo.dataset()->animationSettings()->timeToFrame(tgo.customIntervalStart()),
+						tgo.dataset()->animationSettings()->timeToFrame(tgo.customIntervalEnd()));
+					else
+						return py::none();
+				},
+				[](TrajectoryGeneratorObject& tgo, py::object arg) {
+					if(py::isinstance<py::none>(arg)) {
+						tgo.setUseCustomInterval(false);
+						return;
+					}
+					else if(py::isinstance<py::tuple>(arg)) {
+						py::tuple tup = py::reinterpret_borrow<py::tuple>(arg);
+						if(tup.size() == 2) {
+							int a  = tup[0].cast<int>();
+							int b  = tup[1].cast<int>();
+							tgo.setCustomIntervalStart(tgo.dataset()->animationSettings()->frameToTime(a));
+							tgo.setCustomIntervalEnd(tgo.dataset()->animationSettings()->frameToTime(b));
+							tgo.setUseCustomInterval(true);
+							return;
+						}
+					}
+					throw py::value_error("Tuple of two integers or None expected.");
+				},
+				"The animation frame interval over which the particle positions are sampled to generate the trajectory lines. "
+				"Set this to a tuple of two integers to specify the first and the last animation frame; or use ``None`` to generate trajectory lines "
+				"over the entire animation interval of the currect :py:class:`~ovito.DataSet`."
+				"\n\n"
+				":Default: ``None``\n")
+		.def("generate", [](TrajectoryGeneratorObject& obj) {
+				return obj.generateTrajectories(ScriptEngine::activeEngine() ? ScriptEngine::activeEngine()->progressDisplay() : nullptr);
+			},
+			"Generates the trajectory lines by sampling the positions of the particles in the :py:attr:`.source_node` at regular time intervals. "
+			"The trajectory line data is cached by the :py:class:`!TrajectoryLineGenerator`.")
+	;	
+
+	ovito_class<TrajectoryDisplay, DisplayObject>(m,
+			":Base class: :py:class:`ovito.vis.Display`\n\n"
+			"Controls the visual appearance of particle trajectory lines. An instance of this class is attached to every :py:class:`~ovito.data.TrajectoryLineGenerator` data object.",
+			"TrajectoryLineDisplay")
+		.def_property("width", &TrajectoryDisplay::lineWidth, &TrajectoryDisplay::setLineWidth,
+				"The display width of trajectory lines."
+				"\n\n"
+				":Default: 0.2\n")
+		.def_property("color", &TrajectoryDisplay::lineColor, &TrajectoryDisplay::setLineColor,
+				"The display color of trajectory lines."
+				"\n\n"
+				":Default: ``(0.6, 0.6, 0.6)``\n")
+		.def_property("shading", &TrajectoryDisplay::shadingMode, &TrajectoryDisplay::setShadingMode,
+				"The shading style used for trajectory lines.\n"
+				"Possible values:"
+				"\n\n"
+				"   * ``TrajectoryLineDisplay.Shading.Normal`` \n"
+				"   * ``TrajectoryLineDisplay.Shading.Flat`` (default)\n"
+				"\n")
+		.def_property("upto_current_time", &TrajectoryDisplay::showUpToCurrentTime, &TrajectoryDisplay::setShowUpToCurrentTime,
+				"If ``True``, trajectory lines are only rendered up to the particle positions at the current animation time. "
+				"Otherwise, the complete trajectory lines are displayed."
+				"\n\n"
+				":Default: ``False``\n")
 	;
 
 	return m.ptr();

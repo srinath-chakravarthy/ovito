@@ -21,6 +21,7 @@ This module contains classes related to data visualization and rendering.
   * :py:class:`ParticleDisplay`
   * :py:class:`SimulationCellDisplay`
   * :py:class:`SurfaceMeshDisplay`
+  * :py:class:`TrajectoryDisplay`
   * :py:class:`VectorDisplay`
 
 **Viewport overlays:**

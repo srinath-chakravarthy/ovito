@@ -49,18 +49,18 @@ public:
     OORef() Q_DECL_NOTHROW : px(nullptr) {}
 
     /// Initialization constructor.
-    OORef(T* p) : px(p) {
+    OORef(T* p) Q_DECL_NOTHROW : px(p) {
     	if(px) px->incrementReferenceCount();
     }
 
     /// Copy constructor.
-    OORef(const OORef& rhs) : px(rhs.get()) {
+    OORef(const OORef& rhs) Q_DECL_NOTHROW : px(rhs.get()) {
     	if(px) px->incrementReferenceCount();
     }
 
     /// Copy and conversion constructor.
     template<class U>
-    OORef(const OORef<U>& rhs) : px(rhs.get()) {
+    OORef(const OORef<U>& rhs) Q_DECL_NOTHROW : px(rhs.get()) {
     	if(px) px->incrementReferenceCount();
     }
 
@@ -95,7 +95,7 @@ public:
     	return *this;
     }
 
-    void reset() Q_DECL_NOTHROW {
+    void reset() {
     	this_type().swap(*this);
     }
 
@@ -111,12 +111,12 @@ public:
     	return px;
     }
 
-    inline T& operator*() const {
+    inline T& operator*() const Q_DECL_NOTHROW {
     	OVITO_ASSERT(px != nullptr);
     	return *px;
     }
 
-    inline T* operator->() const {
+    inline T* operator->() const Q_DECL_NOTHROW {
     	OVITO_ASSERT(px != nullptr);
     	return px;
     }
@@ -130,32 +130,32 @@ private:
     T* px;
 };
 
-template<class T, class U> inline bool operator==(const OORef<T>& a, const OORef<U>& b)
+template<class T, class U> inline bool operator==(const OORef<T>& a, const OORef<U>& b) Q_DECL_NOTHROW
 {
     return a.get() == b.get();
 }
 
-template<class T, class U> inline bool operator!=(const OORef<T>& a, const OORef<U>& b)
+template<class T, class U> inline bool operator!=(const OORef<T>& a, const OORef<U>& b) Q_DECL_NOTHROW
 {
     return a.get() != b.get();
 }
 
-template<class T, class U> inline bool operator==(const OORef<T>& a, U* b)
+template<class T, class U> inline bool operator==(const OORef<T>& a, U* b) Q_DECL_NOTHROW
 {
     return a.get() == b;
 }
 
-template<class T, class U> inline bool operator!=(const OORef<T>& a, U* b)
+template<class T, class U> inline bool operator!=(const OORef<T>& a, U* b) Q_DECL_NOTHROW
 {
     return a.get() != b;
 }
 
-template<class T, class U> inline bool operator==(T* a, const OORef<U>& b)
+template<class T, class U> inline bool operator==(T* a, const OORef<U>& b) Q_DECL_NOTHROW
 {
     return a == b.get();
 }
 
-template<class T, class U> inline bool operator!=(T* a, const OORef<U>& b)
+template<class T, class U> inline bool operator!=(T* a, const OORef<U>& b) Q_DECL_NOTHROW
 {
     return a != b.get();
 }
@@ -180,7 +180,7 @@ template<class T> inline bool operator!=(std::nullptr_t, const OORef<T>& p) Q_DE
     return p.get() != nullptr;
 }
 
-template<class T> inline bool operator<(const OORef<T>& a, const OORef<T>& b)
+template<class T> inline bool operator<(const OORef<T>& a, const OORef<T>& b) Q_DECL_NOTHROW
 {
     return std::less<T*>()(a.get(), b.get());
 }
@@ -190,7 +190,7 @@ template<class T> void swap(OORef<T>& lhs, OORef<T>& rhs) Q_DECL_NOTHROW
 	lhs.swap(rhs);
 }
 
-template<class T> T* get_pointer(const OORef<T>& p)
+template<class T> T* get_pointer(const OORef<T>& p) Q_DECL_NOTHROW
 {
     return p.get();
 }

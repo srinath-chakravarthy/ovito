@@ -17,7 +17,7 @@ SET(LIBAV_HEADER_NAMES libavformat/avformat.h libavcodec/avcodec.h libavutil/avu
 SET(LIBAV_LIBRARY_NAMES avformat avcodec avutil avfilter swscale avresample)
 
 # Detect header path.
-FIND_PATH(LIBAV_INCLUDE_DIR NAMES libavcodec/avcodec.h)
+FIND_PATH(LIBAV_INCLUDE_DIR NAMES libavcodec/avcodec.h PATH_SUFFIXES ffmpeg) 
 SET(Libav_INCLUDE_DIRS "${LIBAV_INCLUDE_DIR}")
 
 # Detect library path.

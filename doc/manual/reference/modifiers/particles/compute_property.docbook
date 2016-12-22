@@ -88,11 +88,11 @@
     <screenshot><mediaobject><imageobject>
       <imagedata fileref="images/modifiers/compute_property_modifier_neighbor_formula.png" format="PNG" />
     </imageobject></mediaobject></screenshot>
-    The first term, <emphasis>F(i)</emphasis>, is the first user-defined function, which is evaluated once for the central particle. 
-    The second term consists of contributions from all neighbors within the cutoff radius <emphasis>R<subscript>c</subscript></emphasis>. Each contribution is determined by a second user-defined
-    function, <emphasis>G(j)</emphasis>, which is evaluated for every neighbor particle <emphasis>j</emphasis>. The function <emphasis>G(j)</emphasis>
-    must be entered into the input field <emphasis>Neighbor expression</emphasis>, and it may only depend on properties
-    of the current neighbor and on global parameters. In addition it may depend on the distance of the neighbor from the central particle.
+    The first term, <emphasis>F(i)</emphasis>, is the first user-defined function, which gets evaluated once for the central particle. 
+    The second term consists of contributions from all neighbors within the cutoff radius <emphasis>R<subscript>c</subscript></emphasis>. The contributions are given by a second 
+    function, <emphasis>G(j)</emphasis>, which is evaluated for every neighbor particle <emphasis>j</emphasis>. The user-defined function <emphasis>G(j)</emphasis>
+    is entered into the input field <emphasis>Neighbor expression</emphasis>, and it may only depend on properties
+    of the current neighbor, its distance from the central particle, and on global parameters.
     </para>
     <para>
     This allows you to perform advanced computions that take into account the local neighborhood of particles. For example, we can

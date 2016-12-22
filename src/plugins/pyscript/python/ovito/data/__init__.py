@@ -16,6 +16,7 @@ This module contains data structures and container classes that are used by OVIT
   * :py:class:`ParticleTypeProperty`
   * :py:class:`SimulationCell`
   * :py:class:`SurfaceMesh`
+  * :py:class:`TrajectoryLineGenerator`
 
 **Auxiliary classes:**
 

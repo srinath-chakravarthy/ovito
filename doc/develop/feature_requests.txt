@@ -98,6 +98,7 @@ Performance improvements:
 Scripting features:
 
 - Display script output when running a script via the GUI menu.
+- Make "ovito" module usable from normal Python interpreter (n.hamilton@unsw.onmicrosoft.com)
 
 Documentation:
 
