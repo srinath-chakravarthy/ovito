@@ -309,9 +309,9 @@ void Application::createQtApplication(int& argc, char** argv)
 		qputenv("QT_DEBUG_BACKINGSTORE", "1");
 		qputenv("QT_QPA_FONTDIR", fontPath.c_str());
 
-		_app.reset(new QGuiApplication(argc, argv));
+		new QGuiApplication(argc, argv);
 #else
-		_app.reset(new QCoreApplication(argc, argv));
+		new QCoreApplication(argc, argv);
 #endif
 	}
 }
@@ -361,7 +361,7 @@ void Application::shutdown()
 	PluginManager::shutdown();
 
 	// Destroy Qt application object.
-	_app.reset();
+	delete QCoreApplication::instance();
 }
 
 /******************************************************************************

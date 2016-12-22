@@ -152,9 +152,6 @@ private:
 
 protected:
 
-	/// The Qt application object.
-	QScopedPointer<QCoreApplication> _app;
-
 	/// The parser for the command line options passed to the program.
 	QCommandLineParser _cmdLineParser;
 

@@ -8,6 +8,7 @@ User interface improvements:
 - List of most recently accessed files
 - Histogram plot export (SaeeD PourasaD <saeedpourasad@gmail.com>).
 - Spherical and cylindral slices (Enrique Martinez)
+- Warn about NaN/infinite values in the input of modifiers
 
 Work-flow improvements:
 

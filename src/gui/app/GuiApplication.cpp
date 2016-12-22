@@ -85,7 +85,7 @@ void GuiApplication::createQtApplication(int& argc, char** argv)
 		Application::createQtApplication(argc, argv);
 	}
 	else {
-		_app.reset(new QApplication(argc, argv));
+		new QApplication(argc, argv);
 
 #if defined(Q_OS_LINUX)
 		// Enforce Fusion UI style on Linux.
@@ -102,7 +102,6 @@ void GuiApplication::createQtApplication(int& argc, char** argv)
 	// This will let Qt use core profile contexts.
 	QSurfaceFormat::setDefaultFormat(ViewportSceneRenderer::getDefaultSurfaceFormat());
 #endif
-
 }
 
 /******************************************************************************
