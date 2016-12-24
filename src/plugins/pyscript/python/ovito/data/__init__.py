@@ -72,12 +72,28 @@ def _DataCollection__getattr__(self, name):
     raise AttributeError("DataCollection does not have an attribute named '%s'." % name)
 DataCollection.__getattr__ = _DataCollection__getattr__
 
+def _DataCollection_get(self, key, default=None):
+    try: return self[key]
+    except KeyError: return default
+DataCollection.get = _DataCollection_get
+
+def _DataCollection_keys(self):
+    return collections.KeysView(self)
+DataCollection.keys = _DataCollection_keys
+
+def _DataCollection_items(self):
+    return collections.ItemsView(self)
+DataCollection.items = _DataCollection_items
+
+def _DataCollection_values(self):
+    return collections.ValuesView(self)
+DataCollection.values = _DataCollection_values
+
 def _DataCollection__str__(self):
     return "DataCollection(" + str(list(self.keys())) + ")"
 DataCollection.__str__ = _DataCollection__str__
 
-# Mix in base class collections.Mapping:
-DataCollection.__bases__ = DataCollection.__bases__ + (collections.Mapping, )
+collections.Mapping.register(DataCollection)
 
 # Implement the 'attributes' property of the DataCollection class.
 def _DataCollection_attributes(self):
