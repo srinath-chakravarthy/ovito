@@ -28,5 +28,3 @@ assert(scene_nodes[0] == o2)
 
 del scene_nodes[0]
 assert(len(scene_nodes) == 0)
-
-ovito.dataset.save("../../files/output.ovito")
