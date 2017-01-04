@@ -275,13 +275,13 @@ void SpinnerWidget::mouseReleaseEvent(QMouseEvent* event)
 				if(unit())
 					newValue = unit()->roundValue(floatValue() + unit()->stepSize(floatValue(), true));
 				else
-					newValue = floatValue() + 1.0f;
+					newValue = floatValue() + FloatType(1);
 			}
 			else {
 				if(unit())
 					newValue = unit()->roundValue(floatValue() - unit()->stepSize(floatValue(), false));
 				else
-					newValue = floatValue() - 1.0f;
+					newValue = floatValue() - FloatType(1);
 			}
 			setFloatValue(newValue, true);
 		}
@@ -322,15 +322,15 @@ void SpinnerWidget::mouseMoveEvent(QMouseEvent* event)
 			int screenY = cursorPos.y();
 			if(screenY != _lastMouseY) {
 				int screenHeight = QApplication::desktop()->screenGeometry().height();
-				if(screenY <= 5 && _lastMouseY == screenHeight-1) return;
+				if(screenY <= 5 && _lastMouseY == screenHeight - 1) return;
 				if(screenY >= screenHeight - 5 && _lastMouseY == 0) return;
 				
-				FloatType newVal = _oldValue + _currentStepSize * (FloatType)(_startMouseY - screenY) * 0.1f;
+				FloatType newVal = _oldValue + _currentStepSize * (FloatType)(_startMouseY - screenY) * FloatType(0.1);
 				if(unit())
 					newVal = unit()->roundValue(newVal);
 	
 				if(screenY < _lastMouseY && screenY <= 5) {
-					_lastMouseY = screenHeight-1;
+					_lastMouseY = screenHeight - 1;
 					_startMouseY += _lastMouseY - screenY;
 					QCursor::setPos(cursorPos.x(), _lastMouseY);
 				}

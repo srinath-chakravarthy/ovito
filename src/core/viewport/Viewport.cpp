@@ -248,7 +248,7 @@ ViewProjectionParameters Viewport::projectionParameters(TimePoint time, FloatTyp
 
 	// Compute projection matrix.
 	if(params.isPerspective) {
-		if(bb.minc.z() < -FLOATTYPE_EPSILON) {
+		if(bb.minc.z() < 0) {
 			params.zfar = -bb.minc.z();
 			params.znear = std::max(-bb.maxc.z(), params.zfar * FloatType(1e-4));
 		}
@@ -262,7 +262,9 @@ ViewProjectionParameters Viewport::projectionParameters(TimePoint time, FloatTyp
 	else {
 		if(!bb.isEmpty()) {
 			params.znear = -bb.maxc.z();
-			params.zfar  = std::max(-bb.minc.z(), params.znear + FloatType(1));
+			params.zfar  = -bb.minc.z();
+			if(params.zfar <= params.znear)
+				params.zfar  = params.znear + FloatType(1);
 		}
 		else {
 			params.znear = 1;
@@ -335,8 +337,8 @@ void Viewport::zoomToBox(const Box3& box)
 			if(trans.y() < minY) minY = trans.y();
 			if(trans.y() > maxY) maxY = trans.y();
 		}
-		FloatType w = std::max(maxX - minX, FloatType(1e-5));
-		FloatType h = std::max(maxY - minY, FloatType(1e-5));
+		FloatType w = std::max(maxX - minX, FloatType(1e-12));
+		FloatType h = std::max(maxY - minY, FloatType(1e-12));
 		if(aspectRatio > h/w)
 			setFieldOfView(w * aspectRatio * FloatType(0.55));
 		else
@@ -728,7 +730,7 @@ FloatType Viewport::nonScalingSize(const Point3& worldPosition)
 	if(isPerspectiveProjection()) {
 
 		Point3 p = projectionParams().viewMatrix * worldPosition;
-        if(std::abs(p.z()) < FLOATTYPE_EPSILON) return FloatType(1);
+		if(p.z() == 0) return FloatType(1);
 
         Point3 p1 = projectionParams().projectionMatrix * p;
 		Point3 p2 = projectionParams().projectionMatrix * (p + Vector3(1,0,0));

@@ -142,7 +142,8 @@ bool LAMMPSDataExporter::exportObject(SceneNode* sceneNode, int frameNumber, Tim
 		case LAMMPSDataImporter::AtomStyle_Charge: textStream() << " # charge"; break;
 		case LAMMPSDataImporter::AtomStyle_Dipole: textStream() << " # dipole"; break;
 		case LAMMPSDataImporter::AtomStyle_Sphere: textStream() << " # sphere"; break;
-	}		
+		default: break; // Do nothing
+	}
 	textStream() << "\n\n";
 
 	if(progress) progress->setMaximum(100);

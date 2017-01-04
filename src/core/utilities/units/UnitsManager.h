@@ -154,9 +154,9 @@ public:
 		int exponent;
 		currentValue = nativeToUser(currentValue);
 		if(currentValue != 0) {
-			exponent = (int)std::floor(std::log10(std::abs(currentValue))-1.0);
-			if(exponent < -5) exponent = -5;
-			else if(exponent > 5) exponent = 5;
+			exponent = (int)std::floor(std::log10(std::abs(currentValue)) - FloatType(1));
+			if(exponent < -12) exponent = -12;
+			else if(exponent > 6) exponent = 6;
 		}
 		else exponent = 0;
 		return userToNative(std::pow(FloatType(10), exponent));
@@ -212,7 +212,7 @@ public:
 
 	/// \brief Given an arbitrary value, which is potentially invalid, rounds it to the closest valid value.
 	virtual FloatType roundValue(FloatType value) override {
-		return floor(value + (FloatType)0.5);
+		return std::floor(value + FloatType(0.5));
 	}
 
 };

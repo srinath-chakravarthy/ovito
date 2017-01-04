@@ -131,7 +131,6 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 	rt_resolution(_rtscene, renderSettings()->outputImageWidth(), renderSettings()->outputImageHeight());
 	if(antialiasingEnabled())
 		rt_aa_maxsamples(_rtscene, antialiasingSamples());
-	//rt_normal_fixup_mode(_rtscene, 2);
 
 	// Create Tachyon frame buffer.
 	QImage img(renderSettings()->outputImageWidth(), renderSettings()->outputImageHeight(), QImage::Format_RGBA8888);
@@ -183,7 +182,7 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 		p0 = projParams().inverseViewMatrix * p0;
 		direction = (projParams().inverseViewMatrix * direction).normalized();
 		up = (projParams().inverseViewMatrix * up).normalized();
-		p0 += direction * projParams().znear;
+		p0 += direction * (projParams().znear - FloatType(1e-9));
 
 		rt_camera_position(_rtscene, tvec(p0), tvec(direction), tvec(up));
 		rt_camera_zoom(_rtscene, 0.5 / projParams().fieldOfView);
@@ -244,7 +243,7 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 	/* since the last frame rendered, or when rendering the scene the   */
 	/* first time, various setup, initialization and memory allocation  */
 	/* routines need to be run in order to prepare for rendering.       */
-	if (scene->scenecheck)
+	if(scene->scenecheck)
 		rendercheck(scene);
 
 	camera_init(scene);      /* Initialize all aspects of camera system  */

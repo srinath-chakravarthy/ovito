@@ -45,12 +45,13 @@ void main()
 	// Compute local coordinate system.
 	vec4 u;
 	if(cylinder_view_axis_gs[0].y != 0.0 || cylinder_view_axis_gs[0].x != 0.0)
-		u = normalize(vec4(cylinder_view_axis_gs[0].y, -cylinder_view_axis_gs[0].x, 0.0, 0.0)) * cylinder_radius_gs[0];
+		u = normalize(vec4(cylinder_view_axis_gs[0].y, -cylinder_view_axis_gs[0].x, 0.0, 0.0));
 	else if(cylinder_view_axis_gs[0].z != 0.0)
-		u = normalize(vec4(-cylinder_view_axis_gs[0].z, 0.0, cylinder_view_axis_gs[0].x, 0.0)) * cylinder_radius_gs[0];
+		u = normalize(vec4(-cylinder_view_axis_gs[0].z, 0.0, cylinder_view_axis_gs[0].x, 0.0));
 	else
 	    u = vec4(0.0);
 	vec4 v = vec4(normalize(cross(cylinder_view_axis_gs[0].xyz, u.xyz)), 0.0) * cylinder_radius_gs[0];
+	u *= cylinder_radius_gs[0];
 
 	cylinder_color_fs = cylinder_color_gs[0];
 	cylinder_radius_sq_fs = cylinder_radius_gs[0]*cylinder_radius_gs[0];
