@@ -673,7 +673,8 @@ PYBIND11_PLUGIN(Particles)
 			"of the :py:class:`~ovito.modifiers.ConstructSurfaceModifier` that created the surface mesh."
 			"\n\n"
 			"Example:\n\n"
-			".. literalinclude:: ../example_snippets/surface_mesh.py"
+			".. literalinclude:: ../example_snippets/surface_mesh.py\n"
+			"   :lines: 4-\n"
 		)
 		.def_property("is_completely_solid", &SurfaceMesh::isCompletelySolid, &SurfaceMesh::setCompletelySolid)
 		.def("export_vtk", [](SurfaceMesh& mesh, const QString& filename, SimulationCellObject* simCellObj) {

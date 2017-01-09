@@ -74,7 +74,8 @@ PYBIND11_PLUGIN(CrystalAnalysis)
 			"   The volume of the solid region bounded by the surface mesh.\n"
 			"\n\n"
 			"Example:\n\n"
-			".. literalinclude:: ../example_snippets/construct_surface_modifier.py"
+			".. literalinclude:: ../example_snippets/construct_surface_modifier.py\n"
+			"   :lines: 4-\n"
 			)
 		.def_property("radius", &ConstructSurfaceModifier::probeSphereRadius, &ConstructSurfaceModifier::setProbeSphereRadius,
 				"The radius of the probe sphere used in the surface construction algorithm."
@@ -142,7 +143,8 @@ PYBIND11_PLUGIN(CrystalAnalysis)
 			"   The number of particles with local hexagonal diamond structure.\n"
 			"\n\n"
 			"Example:\n\n"
-			".. literalinclude:: ../example_snippets/dislocation_analysis_modifier.py"
+			".. literalinclude:: ../example_snippets/dislocation_analysis_modifier.py\n"
+			"   :lines: 4-\n"
 			)
 		.def_property("trial_circuit_length", &DislocationAnalysisModifier::maxTrialCircuitSize, &DislocationAnalysisModifier::setMaxTrialCircuitSize,
 				"The maximum length of trial Burgers circuits constructed by the DXA to discover dislocations. "
@@ -377,7 +379,8 @@ PYBIND11_PLUGIN(CrystalAnalysis)
 			"the :py:attr:`~DataObject.display` attribute of the :py:class:`~DataObject` base class."
 			"\n\n"
 			"Example:\n\n"
-			".. literalinclude:: ../example_snippets/dislocation_analysis_modifier.py",
+			".. literalinclude:: ../example_snippets/dislocation_analysis_modifier.py\n"
+			"   :lines: 4-\n",
 			// Python class name:
 			"DislocationNetwork")
 
