@@ -57,8 +57,9 @@ PYBIND11_PLUGIN(PyScriptFileIO)
 		.value("ResetScene", FileImporter::ResetScene)
 	;
 
-	py::class_<FileManager>(m, "FileManager")
-		.def_property_readonly_static("instance", py::cpp_function(&FileManager::instance, py::return_value_policy::reference))
+	py::class_<FileManager>(m, "FileManager", py::metaclass())
+		.def_property_readonly_static("instance", py::cpp_function(
+			[](py::object /*self*/) { return &FileManager::instance(); }, py::return_value_policy::reference))
 		//.def("removeFromCache", &FileManager::removeFromCache)
 		//.def("urlFromUserInput", &FileManager::urlFromUserInput)
 	;
