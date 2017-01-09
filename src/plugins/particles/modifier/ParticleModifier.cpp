@@ -81,6 +81,10 @@ PipelineStatus ParticleModifier::modifyObject(TimePoint time, ModifierApplicatio
 		status = PipelineStatus(PipelineStatus::Error, ex.messages().join('\n'));
 		state.intersectStateValidity(TimeInterval(time));
 	}
+	catch(const std::bad_alloc&) {
+		status = PipelineStatus(PipelineStatus::Error, tr("Not enough memory to execute this modifier."));
+		state.intersectStateValidity(TimeInterval(time));
+	}
 	catch(const PipelineStatus& thrown_status) {
 		// Transfer exception message to evaluation status.
 		status = thrown_status;

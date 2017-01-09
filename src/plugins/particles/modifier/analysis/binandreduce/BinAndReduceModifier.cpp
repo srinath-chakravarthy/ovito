@@ -48,8 +48,8 @@ SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _propertyAxisRangeStart, "Propert
 SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _propertyAxisRangeEnd, "Property axis range end");
 SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _sourceProperty, "Source property");
 SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _onlySelected, "Use only selected particles");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(BinAndReduceModifier, _numberOfBinsX, IntegerParameterUnit, 1);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(BinAndReduceModifier, _numberOfBinsY, IntegerParameterUnit, 1);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(BinAndReduceModifier, _numberOfBinsX, IntegerParameterUnit, 1, 100000);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(BinAndReduceModifier, _numberOfBinsY, IntegerParameterUnit, 1, 100000);
 
 /******************************************************************************
 * Constructs the modifier object.

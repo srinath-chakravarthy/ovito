@@ -32,7 +32,7 @@ DEFINE_FLAGS_PROPERTY_FIELD(CoordinationNumberModifier, _numberOfBins, "NumberOf
 SET_PROPERTY_FIELD_LABEL(CoordinationNumberModifier, _cutoff, "Cutoff radius");
 SET_PROPERTY_FIELD_LABEL(CoordinationNumberModifier, _numberOfBins, "Number of histogram bins");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CoordinationNumberModifier, _cutoff, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CoordinationNumberModifier, _numberOfBins, IntegerParameterUnit, 4);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(CoordinationNumberModifier, _numberOfBins, IntegerParameterUnit, 4, 100000);
 
 /******************************************************************************
 * Constructs the modifier object.

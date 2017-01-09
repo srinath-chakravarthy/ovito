@@ -163,6 +163,10 @@ void AsynchronousParticleModifier::computeEngineFinished()
 			// Transfer exception message into evaluation status.
 			_computationStatus = PipelineStatus(PipelineStatus::Error, ex.messages().join(QChar('\n')));
 		}
+		catch(const std::bad_alloc&) {
+			// Transfer exception message into evaluation status.
+			_computationStatus = PipelineStatus(PipelineStatus::Error, tr("Not enough memory to execute this modifier."));
+		}
 		_cacheValidity = _runningEngine->validityInterval();
 	}
 	else {

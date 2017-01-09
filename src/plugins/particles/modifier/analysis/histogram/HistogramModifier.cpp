@@ -51,7 +51,7 @@ SET_PROPERTY_FIELD_LABEL(HistogramModifier, _yAxisRangeStart, "Y-range start");
 SET_PROPERTY_FIELD_LABEL(HistogramModifier, _yAxisRangeEnd, "Y-range end");
 SET_PROPERTY_FIELD_LABEL(HistogramModifier, _sourceProperty, "Source property");
 SET_PROPERTY_FIELD_LABEL(HistogramModifier, _onlySelected, "Use only selected particles");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(HistogramModifier, _numberOfBins, IntegerParameterUnit, 1);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(HistogramModifier, _numberOfBins, IntegerParameterUnit, 1, 100000);
 
 /******************************************************************************
 * Constructs the modifier object.
