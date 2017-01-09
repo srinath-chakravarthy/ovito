@@ -381,7 +381,7 @@ class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
         
     def __init__(self, cutoff, data_collection):
         """ This is the constructor. """
-        super(self.__class__, self).__init__()        
+        super(self.__class__, self).__init__()
         if not hasattr(data_collection, 'position'):
             raise KeyError("Data collection does not contain any particles.")
         if not hasattr(data_collection, 'cell'):

@@ -26,7 +26,7 @@
 #include <plugins/pyscript/engine/ScriptEngine.h>
 #include <core/utilities/io/FileManager.h>
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, Ovito::OORef<T>);
+PYBIND11_DECLARE_HOLDER_TYPE(T, Ovito::OORef<T>, true);
 
 namespace pybind11 { namespace detail {
 
