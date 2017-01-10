@@ -1049,6 +1049,10 @@ void GrainSegmentationEngine::extractMesh()
 	      // Switching symmetry q2->q1 transition
 	      find_axis(q2, q1, disorientation2, axis21, q1f2, q2f2);
 	      
+	      // Crystal 1 and 2 are always defined based on input independent of switching symmetry
+	      // So after switching symmetry is performed we need to change the normals back to 
+	      // crystal 1 and crystal 2 directions 
+	      
 	      if (disorientation1 < disorientation2 || fabs(disorientation1-disorientation2) < 1.e-3){
 		  axis = axis12;
 		  q1f = q1f1;
@@ -1061,7 +1065,7 @@ void GrainSegmentationEngine::extractMesh()
 		  axis = axis21;
 		  q1f = q2f2;
 		  q2f = q1f2;
-		  disorientation = disorientation2;		  
+		  disorientation = disorientation2;	
 		  normal1 = (q1f.inverse()*q2.inverse())*normal_average;
 		  normal2 = (q1.inverse()*q2f.inverse())*normal_average;
 	      }
