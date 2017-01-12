@@ -22,7 +22,9 @@
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/particles/modifier/analysis/histogram/HistogramModifier.h>
 #include <plugins/particles/gui/util/ParticlePropertyParameterUI.h>
+#include <plugins/particles/gui/util/BondPropertyParameterUI.h>
 #include <gui/properties/IntegerParameterUI.h>
+#include <gui/properties/IntegerRadioButtonParameterUI.h>
 #include <gui/properties/FloatParameterUI.h>
 #include <gui/properties/BooleanParameterUI.h>
 #include <gui/mainwin/MainWindow.h>
@@ -51,9 +53,35 @@ void HistogramModifierEditor::createUI(const RolloutInsertionParameters& rollout
 	layout->setContentsMargins(4,4,4,4);
 	layout->setSpacing(4);
 
-	ParticlePropertyParameterUI* sourcePropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(HistogramModifier::_sourceProperty));
-	layout->addWidget(new QLabel(tr("Property:"), rollout));
-	layout->addWidget(sourcePropertyUI->comboBox());
+	QHBoxLayout* layout3 = new QHBoxLayout();
+	layout3->setContentsMargins(0,0,0,0);
+	layout3->setSpacing(4);
+	layout3->addWidget(new QLabel(tr("Input:")));
+	IntegerRadioButtonParameterUI* sourceTypeUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(HistogramModifier::_dataSourceType));
+	QRadioButton* particlesModeBtn = sourceTypeUI->addRadioButton(HistogramModifier::Particles, tr("particles"));
+	QRadioButton* bondsModeBtn = sourceTypeUI->addRadioButton(HistogramModifier::Bonds, tr("bonds"));
+	layout3->addWidget(particlesModeBtn);
+	layout3->addWidget(bondsModeBtn);
+	layout3->addStretch(1);
+	layout->addLayout(layout3);
+	layout->addSpacing(4);	
+
+	ParticlePropertyParameterUI* sourceParticlePropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(HistogramModifier::_sourceParticleProperty));
+	BondPropertyParameterUI* sourceBondPropertyUI = new BondPropertyParameterUI(this, PROPERTY_FIELD(HistogramModifier::_sourceBondProperty));
+	QLabel* particlePropertyLabel = new QLabel(tr("Particle property:"));	
+	layout->addWidget(particlePropertyLabel);
+	layout->addWidget(sourceParticlePropertyUI->comboBox());
+	QLabel* bondPropertyLabel = new QLabel(tr("Bond property:"));
+	layout->addWidget(bondPropertyLabel);
+	layout->addWidget(sourceBondPropertyUI->comboBox());
+
+	bondPropertyLabel->hide();
+	sourceBondPropertyUI->comboBox()->hide();
+	particlesModeBtn->setChecked(true);
+	connect(bondsModeBtn, &QRadioButton::toggled, sourceParticlePropertyUI->comboBox(), &QWidget::setHidden);
+	connect(bondsModeBtn, &QRadioButton::toggled, particlePropertyLabel, &QWidget::setHidden);
+	connect(bondsModeBtn, &QRadioButton::toggled, sourceBondPropertyUI->comboBox(), &QWidget::setVisible);
+	connect(bondsModeBtn, &QRadioButton::toggled, bondPropertyLabel, &QWidget::setVisible);
 
 	QGridLayout* gridlayout = new QGridLayout();
 	gridlayout->setContentsMargins(4,4,4,4);
@@ -70,7 +98,7 @@ void HistogramModifierEditor::createUI(const RolloutInsertionParameters& rollout
 	_histogramPlot->setMinimumHeight(240);
 	_histogramPlot->setMaximumHeight(240);
 	_histogramPlot->setCanvasBackground(Qt::white);
-	_histogramPlot->setAxisTitle(QwtPlot::yLeft, tr("Particle count"));	
+	_histogramPlot->setAxisTitle(QwtPlot::yLeft, tr("Count"));
 
 	layout->addWidget(new QLabel(tr("Histogram:")));
 	layout->addWidget(_histogramPlot);
@@ -181,7 +209,10 @@ void HistogramModifierEditor::plotHistogram()
 	if(!modifier)
 		return;
 
-	_histogramPlot->setAxisTitle(QwtPlot::xBottom, modifier->sourceProperty().nameWithComponent());
+	QString axisTitle = modifier->dataSourceType() == HistogramModifier::Particles ?
+		modifier->sourceParticleProperty().nameWithComponent() :
+		modifier->sourceBondProperty().nameWithComponent();
+	_histogramPlot->setAxisTitle(QwtPlot::xBottom, axisTitle);
 
 	if(modifier->histogramData().empty())
 		return;
@@ -259,8 +290,12 @@ void HistogramModifierEditor::onSaveData()
 
 		QTextStream stream(&file);
 
+		QString sourceTitle = modifier->dataSourceType() == HistogramModifier::Particles ?
+			modifier->sourceParticleProperty().nameWithComponent() :
+			modifier->sourceBondProperty().nameWithComponent();
+
 		FloatType binSize = (modifier->xAxisRangeEnd() - modifier->xAxisRangeStart()) / modifier->histogramData().size();
-		stream << "# " << modifier->sourceProperty().nameWithComponent() << " histogram (bin size: " << binSize << ")" << endl;
+		stream << "# " << sourceTitle << " histogram (bin size: " << binSize << ")" << endl;
 		for(int i = 0; i < modifier->histogramData().size(); i++) {
 			stream << (binSize * (FloatType(i) + FloatType(0.5)) + modifier->xAxisRangeStart()) << " " <<
 					modifier->histogramData()[i] << endl;

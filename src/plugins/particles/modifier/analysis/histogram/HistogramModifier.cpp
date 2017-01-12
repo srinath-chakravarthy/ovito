@@ -37,10 +37,12 @@ DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, _xAxisRangeEnd, "XAxisRangeEnd", 
 DEFINE_PROPERTY_FIELD(HistogramModifier, _fixYAxisRange, "FixYAxisRange");
 DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, _yAxisRangeStart, "YAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, _yAxisRangeEnd, "YAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(HistogramModifier, _sourceProperty, "SourceProperty");
+DEFINE_PROPERTY_FIELD(HistogramModifier, _sourceParticleProperty, "SourceProperty");
+DEFINE_PROPERTY_FIELD(HistogramModifier, _sourceBondProperty, "SourceBondProperty");
 DEFINE_PROPERTY_FIELD(HistogramModifier, _onlySelected, "OnlySelected");
+DEFINE_PROPERTY_FIELD(HistogramModifier, _dataSourceType, "DataSourceType");
 SET_PROPERTY_FIELD_LABEL(HistogramModifier, _numberOfBins, "Number of histogram bins");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _selectInRange, "Select particles in range");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, _selectInRange, "Select value range");
 SET_PROPERTY_FIELD_LABEL(HistogramModifier, _selectionRangeStart, "Selection range start");
 SET_PROPERTY_FIELD_LABEL(HistogramModifier, _selectionRangeEnd, "Selection range end");
 SET_PROPERTY_FIELD_LABEL(HistogramModifier, _fixXAxisRange, "Fix x-range");
@@ -49,8 +51,10 @@ SET_PROPERTY_FIELD_LABEL(HistogramModifier, _xAxisRangeEnd, "X-range end");
 SET_PROPERTY_FIELD_LABEL(HistogramModifier, _fixYAxisRange, "Fix y-range");
 SET_PROPERTY_FIELD_LABEL(HistogramModifier, _yAxisRangeStart, "Y-range start");
 SET_PROPERTY_FIELD_LABEL(HistogramModifier, _yAxisRangeEnd, "Y-range end");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _sourceProperty, "Source property");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _onlySelected, "Use only selected particles");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, _sourceParticleProperty, "Source property");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, _sourceBondProperty, "Source property");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, _onlySelected, "Use only selected particles/bonds");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, _dataSourceType, "Source type");
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(HistogramModifier, _numberOfBins, IntegerParameterUnit, 1, 100000);
 
 /******************************************************************************
@@ -61,7 +65,7 @@ HistogramModifier::HistogramModifier(DataSet* dataset) : ParticleModifier(datase
 	_selectionRangeStart(0), _selectionRangeEnd(1),
 	_fixXAxisRange(false), _xAxisRangeStart(0), _xAxisRangeEnd(0),
 	_fixYAxisRange(false), _yAxisRangeStart(0), _yAxisRangeEnd(0),
-	_onlySelected(false)
+	_onlySelected(false), _dataSourceType(Particles)
 {
 	INIT_PROPERTY_FIELD(HistogramModifier::_numberOfBins);
 	INIT_PROPERTY_FIELD(HistogramModifier::_selectInRange);
@@ -73,8 +77,10 @@ HistogramModifier::HistogramModifier(DataSet* dataset) : ParticleModifier(datase
 	INIT_PROPERTY_FIELD(HistogramModifier::_fixYAxisRange);
 	INIT_PROPERTY_FIELD(HistogramModifier::_yAxisRangeStart);
 	INIT_PROPERTY_FIELD(HistogramModifier::_yAxisRangeEnd);
-	INIT_PROPERTY_FIELD(HistogramModifier::_sourceProperty);
+	INIT_PROPERTY_FIELD(HistogramModifier::_sourceParticleProperty);
+	INIT_PROPERTY_FIELD(HistogramModifier::_sourceBondProperty);
 	INIT_PROPERTY_FIELD(HistogramModifier::_onlySelected);
+	INIT_PROPERTY_FIELD(HistogramModifier::_dataSourceType);
 }
 
 /******************************************************************************
@@ -86,8 +92,8 @@ void HistogramModifier::initializeModifier(PipelineObject* pipeline, ModifierApp
 	ParticleModifier::initializeModifier(pipeline, modApp);
 
 	// Use the first available particle property from the input state as data source when the modifier is newly created.
-	if(sourceProperty().isNull()) {
-		PipelineFlowState input = pipeline->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+	if(sourceParticleProperty().isNull()) {
+		PipelineFlowState input = getModifierInput(modApp);
 		ParticlePropertyReference bestProperty;
 		for(DataObject* o : input.objects()) {
 			ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(o);
@@ -96,9 +102,23 @@ void HistogramModifier::initializeModifier(PipelineObject* pipeline, ModifierApp
 			}
 		}
 		if(!bestProperty.isNull()) {
-			setSourceProperty(bestProperty);
+			setSourceParticleProperty(bestProperty);
 		}
 	}
+
+	// Select the first available bond property from the input by default.
+	if(sourceBondProperty().isNull()) {
+		PipelineFlowState input = getModifierInput(modApp);
+		BondPropertyReference bestProperty;
+		for(DataObject* o : input.objects()) {
+			BondPropertyObject* property = dynamic_object_cast<BondPropertyObject>(o);
+			if(property && (property->dataType() == qMetaTypeId<int>() || property->dataType() == qMetaTypeId<FloatType>())) {
+				bestProperty = BondPropertyReference(property, (property->componentCount() > 1) ? 0 : -1);
+			}
+		}
+		if(!bestProperty.isNull())
+			setSourceBondProperty(bestProperty);
+	}	
 }
 
 /******************************************************************************
@@ -110,34 +130,67 @@ PipelineStatus HistogramModifier::modifyParticles(TimePoint time, TimeInterval& 
 	std::fill(_histogramData.begin(), _histogramData.end(), 0);
 
 	// Get the source property.
-	if(sourceProperty().isNull())
-		throwException(tr("Select a particle property first."));
-	ParticlePropertyObject* property = sourceProperty().findInState(input());
-	if(!property)
-		throwException(tr("The selected particle property with the name '%1' does not exist.").arg(sourceProperty().name()));
-	if(sourceProperty().vectorComponent() >= (int)property->componentCount())
-		throwException(tr("The selected vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(sourceProperty().name()).arg(property->componentCount()));
+	PropertyBase* property;
+	PropertyBase* inputSelection = nullptr;
+	PropertyBase* outputSelection = nullptr;
+	ParticlePropertyObject* outputParticleSelectionObj = nullptr;
+	BondPropertyObject* outputBondSelectionObj = nullptr;
+	size_t vecComponent;
+	if(dataSourceType() == Particles) {
+		if(sourceParticleProperty().isNull())
+			throwException(tr("Select a particle property first."));
+		ParticlePropertyObject* propertyObj = sourceParticleProperty().findInState(input());
+		if(!propertyObj)
+			throwException(tr("The selected particle property with the name '%1' does not exist.").arg(sourceParticleProperty().name()));
+		if(sourceParticleProperty().vectorComponent() >= (int)propertyObj->componentCount())
+			throwException(tr("The selected vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(sourceParticleProperty().name()).arg(propertyObj->componentCount()));
+		property = propertyObj->storage();
+		vecComponent = std::max(0, sourceParticleProperty().vectorComponent());
 
-	size_t vecComponent = std::max(0, sourceProperty().vectorComponent());
+		// Get the particle selection property if enabled by the user.
+		if(onlySelected()) {
+			ParticlePropertyObject* selPropertyObj = expectStandardProperty(ParticleProperty::SelectionProperty);
+			OVITO_ASSERT(selPropertyObj->size() == property->size());
+			inputSelection = selPropertyObj->storage();
+		}
+
+		// Create selection property for output.
+		if(selectInRange()) {
+			outputParticleSelectionObj = outputStandardProperty(ParticleProperty::SelectionProperty, true);
+			outputSelection = outputParticleSelectionObj->modifiableStorage();
+		}
+	}
+	else {
+		if(sourceBondProperty().isNull())
+			throwException(tr("Select a bond property first."));
+		BondPropertyObject* propertyObj = sourceBondProperty().findInState(input());
+		if(!propertyObj)
+			throwException(tr("The selected bond property with the name '%1' does not exist.").arg(sourceBondProperty().name()));
+		if(sourceBondProperty().vectorComponent() >= (int)propertyObj->componentCount())
+			throwException(tr("The selected vector component is out of range. The bond property '%1' contains only %2 values per bond.").arg(sourceBondProperty().name()).arg(propertyObj->componentCount()));
+		property = propertyObj->storage();
+		vecComponent = std::max(0, sourceBondProperty().vectorComponent());
+
+		// Get the bond selection property if enabled by the user.
+		if(onlySelected()) {
+			BondPropertyObject* selPropertyObj = expectStandardBondProperty(BondProperty::SelectionProperty);
+			OVITO_ASSERT(selPropertyObj->size() == property->size());
+			inputSelection = selPropertyObj->storage();
+		}
+
+		// Create selection property for output.
+		if(selectInRange()) {
+			outputBondSelectionObj = outputStandardBondProperty(BondProperty::SelectionProperty, true);
+			outputSelection = outputBondSelectionObj->modifiableStorage();
+		}		
+	}
 	size_t vecComponentCount = property->componentCount();
 
-	// Get input selection.
-	ParticleProperty* inputSelectionProperty = nullptr;
-	if(onlySelected()) {
-		inputSelectionProperty = expectStandardProperty(ParticleProperty::SelectionProperty)->storage();
-		OVITO_ASSERT(inputSelectionProperty->size() == property->size());
-	}
-
 	// Create selection property for output.
-	ParticlePropertyObject* outputSelectionProperty = nullptr;
 	FloatType selectionRangeStart = _selectionRangeStart;
 	FloatType selectionRangeEnd = _selectionRangeEnd;
+	if(selectionRangeStart > selectionRangeEnd) std::swap(selectionRangeStart, selectionRangeEnd);
 	size_t numSelected = 0;
-	if(selectInRange()) {
-		outputSelectionProperty = outputStandardProperty(ParticleProperty::SelectionProperty, true);
-		if(selectionRangeStart > selectionRangeEnd)
-			std::swap(selectionRangeStart, selectionRangeEnd);
-	}
 
 	double intervalStart = _xAxisRangeStart;
 	double intervalEnd = _xAxisRangeEnd;
@@ -150,7 +203,7 @@ PipelineStatus HistogramModifier::modifyParticles(TimePoint time, TimeInterval& 
 			if(!fixXAxisRange()) {
 				intervalStart = std::numeric_limits<double>::max();
 				intervalEnd = std::numeric_limits<double>::lowest();
-				const int* sel = inputSelectionProperty ? inputSelectionProperty->constDataInt() : nullptr;
+				const int* sel = inputSelection ? inputSelection->constDataInt() : nullptr;
 				for(auto v = v_begin; v != v_end; v += vecComponentCount) {
 					if(sel && !*sel++) continue;
 					if(*v < intervalStart) intervalStart = *v;
@@ -160,7 +213,7 @@ PipelineStatus HistogramModifier::modifyParticles(TimePoint time, TimeInterval& 
 			// Perform binning.
 			if(intervalEnd > intervalStart) {
 				FloatType binSize = (intervalEnd - intervalStart) / _histogramData.size();
-				const int* sel = inputSelectionProperty ? inputSelectionProperty->constDataInt() : nullptr;
+				const int* sel = inputSelection ? inputSelection->constDataInt() : nullptr;
 				for(auto v = v_begin; v != v_end; v += vecComponentCount) {
 					if(sel && !*sel++) continue;
 					if(*v < intervalStart || *v > intervalEnd) continue;
@@ -169,16 +222,16 @@ PipelineStatus HistogramModifier::modifyParticles(TimePoint time, TimeInterval& 
 				}
 			}
 			else {
-				if(!inputSelectionProperty)
+				if(!inputSelection)
 					_histogramData[0] = property->size();
 				else
-					_histogramData[0] = property->size() - std::count(inputSelectionProperty->constDataInt(), inputSelectionProperty->constDataInt() + inputSelectionProperty->size(), 0);
+					_histogramData[0] = property->size() - std::count(inputSelection->constDataInt(), inputSelection->constDataInt() + inputSelection->size(), 0);
 			}
-			if(outputSelectionProperty) {
-				OVITO_ASSERT(outputSelectionProperty->size() == property->size());
-				int* s = outputSelectionProperty->dataInt();
-				int* s_end = s + outputSelectionProperty->size();
-				const int* sel = inputSelectionProperty ? inputSelectionProperty->constDataInt() : nullptr;
+			if(outputSelection) {
+				OVITO_ASSERT(outputSelection->size() == property->size());
+				int* s = outputSelection->dataInt();
+				int* s_end = s + outputSelection->size();
+				const int* sel = inputSelection ? inputSelection->constDataInt() : nullptr;
 				for(auto v = v_begin; v != v_end; v += vecComponentCount, ++s) {
 					if((!sel || *sel++) && *v >= selectionRangeStart && *v <= selectionRangeEnd) {
 						*s = 1;
@@ -195,7 +248,7 @@ PipelineStatus HistogramModifier::modifyParticles(TimePoint time, TimeInterval& 
 			if(!fixXAxisRange()) {
 				intervalStart = std::numeric_limits<double>::max();
 				intervalEnd = std::numeric_limits<double>::lowest();
-				const int* sel = inputSelectionProperty ? inputSelectionProperty->constDataInt() : nullptr;
+				const int* sel = inputSelection ? inputSelection->constDataInt() : nullptr;
 				for(auto v = v_begin; v != v_end; v += vecComponentCount) {
 					if(sel && !*sel++) continue;
 					if(*v < intervalStart) intervalStart = *v;
@@ -205,7 +258,7 @@ PipelineStatus HistogramModifier::modifyParticles(TimePoint time, TimeInterval& 
 			// Perform binning.
 			if(intervalEnd > intervalStart) {
 				FloatType binSize = (intervalEnd - intervalStart) / _histogramData.size();
-				const int* sel = inputSelectionProperty ? inputSelectionProperty->constDataInt() : nullptr;
+				const int* sel = inputSelection ? inputSelection->constDataInt() : nullptr;
 				for(auto v = v_begin; v != v_end; v += vecComponentCount) {
 					if(sel && !*sel++) continue;
 					if(*v < intervalStart || *v > intervalEnd) continue;
@@ -214,16 +267,16 @@ PipelineStatus HistogramModifier::modifyParticles(TimePoint time, TimeInterval& 
 				}
 			}
 			else {
-				if(!inputSelectionProperty)
+				if(!inputSelection)
 					_histogramData[0] = property->size();
 				else
-					_histogramData[0] = property->size() - std::count(inputSelectionProperty->constDataInt(), inputSelectionProperty->constDataInt() + inputSelectionProperty->size(), 0);
+					_histogramData[0] = property->size() - std::count(inputSelection->constDataInt(), inputSelection->constDataInt() + inputSelection->size(), 0);
 			}
-			if(outputSelectionProperty) {
-				OVITO_ASSERT(outputSelectionProperty->size() == property->size());
-				int* s = outputSelectionProperty->dataInt();
-				int* s_end = s + outputSelectionProperty->size();
-				const int* sel = inputSelectionProperty ? inputSelectionProperty->constDataInt() : nullptr;
+			if(outputSelection) {
+				OVITO_ASSERT(outputSelection->size() == property->size());
+				int* s = outputSelection->dataInt();
+				int* s_end = s + outputSelection->size();
+				const int* sel = inputSelection ? inputSelection->constDataInt() : nullptr;
 				for(auto v = v_begin; v != v_end; v += vecComponentCount, ++s) {
 					if((!sel || *sel++) && *v >= selectionRangeStart && *v <= selectionRangeEnd) {
 						*s = 1;
@@ -239,9 +292,13 @@ PipelineStatus HistogramModifier::modifyParticles(TimePoint time, TimeInterval& 
 	}
 
 	QString statusMessage;
-	if(outputSelectionProperty) {
-		outputSelectionProperty->changed();
-		statusMessage += tr("%1 particles selected (%2%)").arg(numSelected).arg((FloatType)numSelected * 100 / std::max(1,(int)outputSelectionProperty->size()), 0, 'f', 1);
+	if(outputParticleSelectionObj) {
+		outputParticleSelectionObj->changed();
+		statusMessage += tr("%1 particles selected (%2%)").arg(numSelected).arg((FloatType)numSelected * 100 / std::max(1,(int)outputParticleSelectionObj->size()), 0, 'f', 1);
+	}
+	else if(outputBondSelectionObj) {
+		outputBondSelectionObj->changed();
+		statusMessage += tr("%1 bonds selected (%2%)").arg(numSelected).arg((FloatType)numSelected * 100 / std::max(1,(int)outputBondSelectionObj->size()), 0, 'f', 1);
 	}
 
 	_xAxisRangeStart = intervalStart;

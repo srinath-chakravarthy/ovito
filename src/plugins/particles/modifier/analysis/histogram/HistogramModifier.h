@@ -25,6 +25,7 @@
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/ParticleProperty.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
+#include <plugins/particles/objects/BondPropertyObject.h>
 #include "../../ParticleModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
@@ -36,14 +37,35 @@ class OVITO_PARTICLES_EXPORT HistogramModifier : public ParticleModifier
 {
 public:
 
+	/// The data sources supported by the histogram modifier.
+	enum DataSourceType {
+		Particles,	//< Particle property values
+		Bonds,		//< Bond property values
+	};
+	Q_ENUMS(DataSourceType);
+
+public:
+
 	/// Constructor.
 	Q_INVOKABLE HistogramModifier(DataSet* dataset);
 
+	/// Returns where this modifier takes the input values from.
+	DataSourceType dataSourceType() const { return _dataSourceType; }
+
+	/// Sets where this modifier should take its input values from.
+	void setDataSourceType(DataSourceType type) { _dataSourceType = type; }
+
 	/// Sets the source particle property for which the histogram should be computed.
-	void setSourceProperty(const ParticlePropertyReference& prop) { _sourceProperty = prop; }
+	void setSourceParticleProperty(const ParticlePropertyReference& prop) { _sourceParticleProperty = prop; }
 
 	/// Returns the source particle property for which the histogram is computed.
-	const ParticlePropertyReference& sourceProperty() const { return _sourceProperty; }
+	const ParticlePropertyReference& sourceParticleProperty() const { return _sourceParticleProperty; }
+
+	/// Sets the source bond property that is used as input for the histogram.
+	void setSourceBondProperty(const BondPropertyReference& prop) { _sourceBondProperty = prop; }
+
+	/// Returns the source bond property that is used as input for the histogram.
+	const BondPropertyReference& sourceBondProperty() const { return _sourceBondProperty; }
 
 	/// Returns the number of bins in the computed histogram.
 	int numberOfBins() const { return _numberOfBins; }
@@ -113,7 +135,10 @@ protected:
 private:
 
 	/// The particle property that serves as data source of the histogram.
-	PropertyField<ParticlePropertyReference> _sourceProperty;
+	PropertyField<ParticlePropertyReference> _sourceParticleProperty;
+
+	/// The bond property that serves as data source of the histogram.
+	PropertyField<BondPropertyReference> _sourceBondProperty;
 
 	/// Controls the number of histogram bins.
 	PropertyField<int> _numberOfBins;
@@ -148,6 +173,9 @@ private:
 	/// Controls whether the modifier should take into account only selected particles.
 	PropertyField<bool> _onlySelected;
 
+	/// Controls where this modifier takes its input values from.
+	PropertyField<DataSourceType, int> _dataSourceType;
+
 	/// Stores the histogram data.
 	QVector<int> _histogramData;
 
@@ -167,8 +195,10 @@ private:
 	DECLARE_PROPERTY_FIELD(_fixYAxisRange);
 	DECLARE_PROPERTY_FIELD(_yAxisRangeStart);
 	DECLARE_PROPERTY_FIELD(_yAxisRangeEnd);
-	DECLARE_PROPERTY_FIELD(_sourceProperty);
+	DECLARE_PROPERTY_FIELD(_sourceParticleProperty);
+	DECLARE_PROPERTY_FIELD(_sourceBondProperty);
 	DECLARE_PROPERTY_FIELD(_onlySelected);
+	DECLARE_PROPERTY_FIELD(_dataSourceType);
 };
 
 OVITO_END_INLINE_NAMESPACE

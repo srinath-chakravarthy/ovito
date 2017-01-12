@@ -62,10 +62,15 @@ public:
 	/// The returned property may be NULL if it does not exist.
 	BondPropertyObject* inputStandardBondProperty(BondProperty::Type which) const;
 
-	/// Returns the given standard property from the input object.
+	/// Returns the given standard particle property from the input object.
 	/// The returned property may not be modified. If the input object does
 	/// not contain the standard property then an exception is thrown.
 	ParticlePropertyObject* expectStandardProperty(ParticleProperty::Type which) const;
+
+	/// Returns the given standard bond property from the input object.
+	/// The returned property may not be modified. If the input object does
+	/// not contain the standard property then an exception is thrown.
+	BondPropertyObject* expectStandardBondProperty(BondProperty::Type which) const;
 
 	/// Returns the property with the given name from the input particles.
 	/// The returned property may not be modified. If the input object does

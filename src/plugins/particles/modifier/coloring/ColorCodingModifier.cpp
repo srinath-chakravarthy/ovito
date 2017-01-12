@@ -178,7 +178,7 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 		if(sourceParticleProperty().vectorComponent() >= (int)property->componentCount())
 			throwException(tr("The vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(sourceParticleProperty().name()).arg(property->componentCount()));
 		vecComponent = std::max(0, sourceParticleProperty().vectorComponent());
-
+		
 		// Get the particle selection property if enabled by the user.
 		if(colorOnlySelected()) {
 			if(ParticlePropertyObject* selPropertyObj = inputStandardProperty(ParticleProperty::SelectionProperty)) {
