@@ -40,11 +40,23 @@ public:
 	/// Constructor.
 	Q_INVOKABLE CorrelationFunctionModifier(DataSet* dataset);
 
-	/// Returns the cutoff radius used to build the neighbor lists for the analysis.
-	FloatType cutoff() const { return _cutoff; }
+	/// Sets the first source particle property for which the correlation should be computed.
+	void setSourceProperty1(const ParticlePropertyReference& prop) { _sourceProperty1 = prop; }
+
+	/// Returns the first source particle property for which the correlation is computed.
+	const ParticlePropertyReference& sourceProperty1() const { return _sourceProperty1; }
+
+	/// Sets the second source particle property for which the correlation should be computed.
+	void setSourceProperty2(const ParticlePropertyReference& prop) { _sourceProperty2 = prop; }
+
+	/// Returns the second source particle property for which the correlation is computed.
+	const ParticlePropertyReference& sourceProperty2() const { return _sourceProperty2; }
 
 	/// \brief Sets the cutoff radius used to build the neighbor lists for the analysis.
 	void setCutoff(FloatType newCutoff) { _cutoff = newCutoff; }
+
+	/// Returns the cutoff radius used to build the neighbor lists for the analysis.
+	FloatType cutoff() const { return _cutoff; }
 
 	/// Returns the X coordinates of the RDF data points.
 	const QVector<double>& rdfX() const { return _rdfX; }
@@ -66,11 +78,15 @@ private:
 	public:
 
 		/// Constructor.
-		CorrelationAnalysisEngine(const TimeInterval& validityInterval, ParticleProperty* positions, const SimulationCell& simCell, FloatType cutoff, int rdfSampleCount) :
-			ComputeEngine(validityInterval),
-			_positions(positions), _simCell(simCell),
-			_cutoff(cutoff), _rdfHistogram(rdfSampleCount, 0.0),
-			_coordinationNumbers(new ParticleProperty(positions->size(), ParticleProperty::CoordinationProperty, 0, true)) {}
+		CorrelationAnalysisEngine(const TimeInterval& validityInterval,
+								  ParticleProperty* positions,
+								  ParticleProperty* sourceProperty1,
+								  ParticleProperty* sourceProperty2,
+								  const SimulationCell& simCell,
+								  FloatType cutoff) :
+			ComputeEngine(validityInterval), _positions(positions),
+			_sourceProperty1(sourceProperty1), _sourceProperty2(_sourceProperty2),
+			_simCell(simCell), _cutoff(cutoff) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;
@@ -78,25 +94,33 @@ private:
 		/// Returns the property storage that contains the input particle positions.
 		ParticleProperty* positions() const { return _positions.data(); }
 
+		/// Returns the property storage that contains the first input particle property.
+		ParticleProperty* sourceProperty1() const { return _sourceProperty1.data(); }
+
+		/// Returns the property storage that contains the second input particle property.
+		ParticleProperty* sourceProperty2() const { return _sourceProperty2.data(); }
+
 		/// Returns the simulation cell data.
 		const SimulationCell& cell() const { return _simCell; }
-
-		/// Returns the property storage that contains the computed coordination numbers.
-		ParticleProperty* coordinationNumbers() const { return _coordinationNumbers.data(); }
 
 		/// Returns the cutoff radius.
 		FloatType cutoff() const { return _cutoff; }
 
-		/// Returns the histogram for the radial distribution function.
-		const QVector<double>& rdfHistogram() const { return _rdfHistogram; }
+		/// Returns the real-space correlation function.
+		const QVector<double>& realSpaceCorrelationFunction() const { return _realSpaceCorrelationFunction; }
+
+		/// Returns the reciprocal-space correlation function.
+		const QVector<double>& reciprocalSpaceCorrelationFunction() const { return _reciprocalSpaceCorrelationFunction; }
 
 	private:
 
 		FloatType _cutoff;
 		SimulationCell _simCell;
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
-		QExplicitlySharedDataPointer<ParticleProperty> _coordinationNumbers;
-		QVector<double> _rdfHistogram;
+		QExplicitlySharedDataPointer<ParticleProperty> _sourceProperty1;
+		QExplicitlySharedDataPointer<ParticleProperty> _sourceProperty2;
+		QVector<double> _realSpaceCorrelationFunction;
+		QVector<double> _reciprocalSpaceCorrelationFunction;
 	};
 
 protected:
@@ -115,8 +139,11 @@ protected:
 
 private:
 
-	/// This stores the cached results of the modifier.
-	QExplicitlySharedDataPointer<ParticleProperty> _coordinationNumbers;
+	/// The particle property that serves as the first data source for the correlation function.
+	PropertyField<ParticlePropertyReference> _sourceProperty1;
+
+	/// The particle property that serves as the second data source for the correlation function.
+	PropertyField<ParticlePropertyReference> _sourceProperty2;
 
 	/// Controls the cutoff radius for the neighbor lists.
 	PropertyField<FloatType> _cutoff;
@@ -136,6 +163,8 @@ private:
 	Q_CLASSINFO("DisplayName", "Correlation function");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
 
+	DECLARE_PROPERTY_FIELD(_sourceProperty1);
+	DECLARE_PROPERTY_FIELD(_sourceProperty2);
 	DECLARE_PROPERTY_FIELD(_cutoff);
 	DECLARE_PROPERTY_FIELD(_numberOfBins);
 };
