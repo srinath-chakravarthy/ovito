@@ -56,7 +56,7 @@ CorrelationFunctionModifier::CorrelationFunctionModifier(DataSet* dataset) : Asy
 ******************************************************************************/
 std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CorrelationFunctionModifier::createEngine(TimePoint time, TimeInterval validityInterval)
 {
-	// Get the source property.
+	// Get the source
 	if(sourceProperty1().isNull())
 		throwException(tr("Select a first particle property first."));
 	if(sourceProperty2().isNull())
@@ -85,11 +85,61 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CorrelationFunction
 }
 
 /******************************************************************************
+* Map property onto grid.
+******************************************************************************/
+void CorrelationFunctionModifier::CorrelationAnalysisEngine::mapToSpatialGrid(ParticleProperty *property,
+																			  size_t propertyVectorComponent,
+																			  QVector<double> &gridData)
+{
+	int nX, nY, nZ = 20;
+
+	size_t vecComponent = std::max(size_t(0), propertyVectorComponent);
+	size_t vecComponentCount = property->componentCount();
+
+	int numberOfGridPoints = nX*nY*nZ;
+
+	// Resize real space grid.
+	gridData.resize(numberOfGridPoints);
+
+	// Get periodic boundary flag.
+	std::array<bool, 3> pbc = cell().pbcFlags();
+
+	// Get reciprocal cell.
+    AffineTransformation reciprocalCell = cell().inverseMatrix();
+
+	if(property->size() > 0) {
+		const Point3* pos = positions()->constDataPoint3();
+		const Point3* pos_end = pos + positions()->size();
+
+		if(property->dataType() == qMetaTypeId<FloatType>()) {
+			const FloatType* v = property->constDataFloat() + vecComponent;
+			const FloatType* v_end = v + (property->size() * vecComponentCount);
+            for(; v != v_end; v += vecComponentCount, ++pos) {
+                if(!std::isnan(*v)) {
+                	Point3 fractionalPos = reciprocalCell*(*pos);
+                    int binIndexX = int( fractionalPos.x() * nX );
+                    int binIndexY = int( fractionalPos.y() * nY );
+                    int binIndexZ = int( fractionalPos.z() * nZ );
+                    if(pbc[0]) binIndexX = SimulationCell::modulo(binIndexX, nX);
+                    if(pbc[1]) binIndexY = SimulationCell::modulo(binIndexY, nY);
+                    if(pbc[2]) binIndexZ = SimulationCell::modulo(binIndexZ, nZ);
+                    if(binIndexX >= 0 && binIndexX < nX && binIndexY >= 0 && binIndexY < nY && binIndexZ >= 0 && binIndexZ < nZ) {
+                        size_t binIndex = (binIndexX+binIndexY*nX)*nZ+binIndexZ;
+                        gridData[binIndex] += *v;
+                    }
+                }
+            }
+		}
+	}
+}
+
+/******************************************************************************
 * Performs the actual computation. This method is executed in a worker thread.
 ******************************************************************************/
 void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 {
 	setProgressText(tr("Computing correlation function"));
+
 }
 
 /******************************************************************************

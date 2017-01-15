@@ -114,6 +114,9 @@ private:
 
 	private:
 
+		/// Map property onto grid.
+		void mapToSpatialGrid(ParticleProperty *property, size_t propertyVectorComponent, QVector<double> &gridData);
+
 		FloatType _cutoff;
 		SimulationCell _simCell;
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
