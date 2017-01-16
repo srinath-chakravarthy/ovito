@@ -42,6 +42,8 @@ SET_OVITO_OBJECT_EDITOR(CorrelationFunctionModifier, CorrelationFunctionModifier
 ******************************************************************************/
 void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 {
+	qDebug() << "CorrelationFunctionModifierEditor::createUI";
+
 	// Create a rollout.
 	QWidget* rollout = createRollout(tr("Correlation function"), rolloutParams, "particles.modifiers.correlation_function.html");
 
@@ -74,16 +76,16 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 
 	layout->addLayout(gridlayout);
 
-	_rdfPlot = new QwtPlot();
-	_rdfPlot->setMinimumHeight(200);
-	_rdfPlot->setMaximumHeight(200);
-	_rdfPlot->setCanvasBackground(Qt::white);
-	_rdfPlot->setAxisTitle(QwtPlot::xBottom, tr("Pair separation distance"));
-	_rdfPlot->setAxisTitle(QwtPlot::yLeft, tr("g(r)"));
+	_realSpacePlot = new QwtPlot();
+	_realSpacePlot->setMinimumHeight(200);
+	_realSpacePlot->setMaximumHeight(200);
+	_realSpacePlot->setCanvasBackground(Qt::white);
+	_realSpacePlot->setAxisTitle(QwtPlot::xBottom, tr("Pair separation distance"));
+	_realSpacePlot->setAxisTitle(QwtPlot::yLeft, tr("C(r)"));
 
-	layout->addWidget(new QLabel(tr("Radial distribution function:")));
-	layout->addWidget(_rdfPlot);
-	connect(this, &CorrelationFunctionModifierEditor::contentsReplaced, this, &CorrelationFunctionModifierEditor::plotRDF);
+	layout->addWidget(new QLabel(tr("Correlation function:")));
+	layout->addWidget(_realSpacePlot);
+	connect(this, &CorrelationFunctionModifierEditor::contentsReplaced, this, &CorrelationFunctionModifierEditor::plot);
 
 	layout->addSpacing(12);
 	QPushButton* saveDataButton = new QPushButton(tr("Export data to text file"));
@@ -100,8 +102,10 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 ******************************************************************************/
 bool CorrelationFunctionModifierEditor::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
+	qDebug() << "CorrelationFunctionModifierEditor::referenceEvent";
+
 	if(event->sender() == editObject() && event->type() == ReferenceEvent::ObjectStatusChanged) {
-		plotRDFLater(this);
+		plotLater(this);
 	}
 	return ParticleModifierEditor::referenceEvent(source, event);
 }
@@ -109,38 +113,45 @@ bool CorrelationFunctionModifierEditor::referenceEvent(RefTarget* source, Refere
 /******************************************************************************
 * Updates the plot of the RDF computed by the modifier.
 ******************************************************************************/
-void CorrelationFunctionModifierEditor::plotRDF()
+void CorrelationFunctionModifierEditor::plot()
 {
+	qDebug() << "CorrelationFunctionModifierEditor::plot";
+
 	CorrelationFunctionModifier* modifier = static_object_cast<CorrelationFunctionModifier>(editObject());
 	if(!modifier)
 		return;
 
-	if(modifier->rdfX().empty())
+	if(modifier->realSpaceCorrelationFunctionX().empty())
+		return;
+	if(modifier->realSpaceCorrelationFunction().empty())
 		return;
 
-	if(!_plotCurve) {
-		_plotCurve = new QwtPlotCurve();
-	    _plotCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
-		_plotCurve->setBrush(Qt::lightGray);
-		_plotCurve->attach(_rdfPlot);
+	qDebug() << modifier->realSpaceCorrelationFunctionX().size();
+	qDebug() << modifier->realSpaceCorrelationFunction().size();
+	qDebug() << modifier->realSpaceCorrelationFunctionX();
+	qDebug() << modifier->realSpaceCorrelationFunction();
+
+/*
+	if(!_realSpaceCurve) {
+		qDebug() << "Allocating QwtPlotCurve";
+		_realSpaceCurve = new QwtPlotCurve();
+	    _realSpaceCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+		_realSpaceCurve->setBrush(Qt::lightGray);
+		_realSpaceCurve->attach(_realSpacePlot);
 		QwtPlotGrid* plotGrid = new QwtPlotGrid();
 		plotGrid->setPen(Qt::gray, 0, Qt::DotLine);
-		plotGrid->attach(_rdfPlot);
-	}
-    _plotCurve->setSamples(modifier->rdfX().data(), modifier->rdfY().data(), modifier->rdfX().size());
-
-	// Determine lower X bound where the histogram is non-zero.
-	_rdfPlot->setAxisAutoScale(QwtPlot::xBottom);
-	double maxx = modifier->cutoff();
-	for(int i = 0; i < modifier->rdfX().size(); i++) {
-		if(modifier->rdfY()[i] != 0) {
-			double minx = std::floor(modifier->rdfX()[i] * 9.0 / maxx) / 10.0 * maxx;
-			_rdfPlot->setAxisScale(QwtPlot::xBottom, minx, maxx);
-			break;
-		}
+		plotGrid->attach(_realSpacePlot);
 	}
 
-	_rdfPlot->replot();
+    _realSpaceCurve->setSamples(modifier->realSpaceCorrelationFunctionX().data(),
+    						    modifier->realSpaceCorrelationFunction().data(),
+    						    modifier->realSpaceCorrelationFunction().size());
+
+	// Determine lower X bound where the correlation function is non-zero.
+	_realSpacePlot->setAxisAutoScale(QwtPlot::xBottom);
+	_realSpacePlot->setAxisScale(QwtPlot::xBottom, 0, 20);
+	_realSpacePlot->replot();
+*/
 }
 
 /******************************************************************************
@@ -151,33 +162,6 @@ void CorrelationFunctionModifierEditor::onSaveData()
 	CorrelationFunctionModifier* modifier = static_object_cast<CorrelationFunctionModifier>(editObject());
 	if(!modifier)
 		return;
-
-	if(modifier->rdfX().empty())
-		return;
-
-	QString fileName = QFileDialog::getSaveFileName(mainWindow(),
-	    tr("Save RDF Data"), QString(), tr("Text files (*.txt);;All files (*)"));
-	if(fileName.isEmpty())
-		return;
-
-	try {
-
-		QFile file(fileName);
-		if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
-			modifier->throwException(tr("Could not open file for writing: %1").arg(file.errorString()));
-
-		QTextStream stream(&file);
-
-		stream << "# 1: Bin number" << endl;
-		stream << "# 2: r" << endl;
-		stream << "# 3: g(r)" << endl;
-		for(int i = 0; i < modifier->rdfX().size(); i++) {
-			stream << i << "\t" << modifier->rdfX()[i] << "\t" << modifier->rdfY()[i] << endl;
-		}
-	}
-	catch(const Exception& ex) {
-		ex.showError();
-	}
 }
 
 OVITO_END_INLINE_NAMESPACE

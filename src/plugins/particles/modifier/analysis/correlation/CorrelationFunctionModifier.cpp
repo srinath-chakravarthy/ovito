@@ -56,6 +56,8 @@ CorrelationFunctionModifier::CorrelationFunctionModifier(DataSet* dataset) : Asy
 ******************************************************************************/
 std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CorrelationFunctionModifier::createEngine(TimePoint time, TimeInterval validityInterval)
 {
+	qDebug() << "CorrelationFunctionModifier::createEngine";
+
 	// Get the source
 	if(sourceProperty1().isNull())
 		throwException(tr("Select a first particle property first."));
@@ -75,6 +77,8 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CorrelationFunction
 	// The number of sampling intervals for the radial distribution function.
 	int rdfSampleCount = std::max(numberOfBins(), 4);
 
+	qDebug() << posProperty << property1 << property2;
+
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<CorrelationAnalysisEngine>(validityInterval,
 													   posProperty->storage(),
@@ -89,10 +93,9 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CorrelationFunction
 ******************************************************************************/
 void CorrelationFunctionModifier::CorrelationAnalysisEngine::mapToSpatialGrid(ParticleProperty *property,
 																			  size_t propertyVectorComponent,
+																			  int nX, int nY, int nZ,
 																			  QVector<double> &gridData)
 {
-	int nX, nY, nZ = 20;
-
 	size_t vecComponent = std::max(size_t(0), propertyVectorComponent);
 	size_t vecComponentCount = property->componentCount();
 
@@ -138,16 +141,44 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::mapToSpatialGrid(Pa
 ******************************************************************************/
 void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 {
+	qDebug() << "CorrelationFunctionModifier::CorrelationAnalysisEngine::perform";
+
 	setProgressText(tr("Computing correlation function"));
 
+/*
+	QVector<double> gridProperty1, gridProperty2;
+	mapToSpatialGrid(sourceProperty1(),
+				     0, // FIXME! Selected vector component should be passed to engine.
+				     20, 20, 20,
+				     gridProperty1);
+	mapToSpatialGrid(sourceProperty2(),
+				     0, // FIXME! Selected vector component should be passed to engine.
+				     20, 20, 20,
+				     gridProperty2);
+*/
+
+	int n = 20;
+	_realSpaceCorrelationFunction.resize(n);
+	_realSpaceCorrelationFunctionX.resize(n);
+	for (int i = 0; i < n; i++) {
+		_realSpaceCorrelationFunction[i] = sin(i);
+		_realSpaceCorrelationFunctionX[i] = i;
+	}
+	qDebug() << "r" << _realSpaceCorrelationFunctionX;
+	qDebug() << "q" << _realSpaceCorrelationFunction;
 }
 
 /******************************************************************************
 * Unpacks the results of the computation engine and stores them in the modifier.
 ******************************************************************************/
 void CorrelationFunctionModifier::transferComputationResults(ComputeEngine* engine)
-{
+{	
+	qDebug() << "CorrelationFunctionModifier::transferComputationResults";
+
 	CorrelationAnalysisEngine* eng = static_cast<CorrelationAnalysisEngine*>(engine);
+	qDebug() << "rr" << eng->realSpaceCorrelationFunction();
+	_realSpaceCorrelationFunction = eng->realSpaceCorrelationFunction();
+	_realSpaceCorrelationFunctionX = eng->realSpaceCorrelationFunctionX();
 }
 
 /******************************************************************************
@@ -156,6 +187,8 @@ void CorrelationFunctionModifier::transferComputationResults(ComputeEngine* engi
 ******************************************************************************/
 PipelineStatus CorrelationFunctionModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
 {
+	qDebug() << "CorrelationFunctionModifier::applyComputationResults";
+	return PipelineStatus::Success;
 }
 
 /******************************************************************************
@@ -163,6 +196,8 @@ PipelineStatus CorrelationFunctionModifier::applyComputationResults(TimePoint ti
 ******************************************************************************/
 void CorrelationFunctionModifier::propertyChanged(const PropertyFieldDescriptor& field)
 {
+	qDebug() << "CorrelationFunctionModifier::propertyChanged";
+
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Recompute modifier results when the parameters have been changed.

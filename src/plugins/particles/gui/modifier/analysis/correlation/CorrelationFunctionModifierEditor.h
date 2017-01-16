@@ -53,7 +53,7 @@ protected:
 protected Q_SLOTS:
 
 	/// Replots the RDF computed by the modifier.
-	void plotRDF();
+	void plot();
 
 	/// This is called when the user has clicked the "Save Data" button.
 	void onSaveData();
@@ -61,13 +61,13 @@ protected Q_SLOTS:
 private:
 
 	/// The plotting widget for displaying the computed RDF.
-	QwtPlot* _rdfPlot;
+	QwtPlot* _realSpacePlot;
 
 	/// The plot item for the RDF.
-    QwtPlotCurve* _plotCurve = nullptr;
+    QwtPlotCurve* _realSpaceCurve = nullptr;
 
 	/// For deferred invocation of the plot repaint function.
-	DeferredMethodInvocation<CorrelationFunctionModifierEditor, &CorrelationFunctionModifierEditor::plotRDF> plotRDFLater;
+	DeferredMethodInvocation<CorrelationFunctionModifierEditor, &CorrelationFunctionModifierEditor::plot> plotLater;
 
 	Q_OBJECT
 	OVITO_OBJECT

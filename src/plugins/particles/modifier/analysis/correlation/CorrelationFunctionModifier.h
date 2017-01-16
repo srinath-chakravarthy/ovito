@@ -59,10 +59,10 @@ public:
 	FloatType cutoff() const { return _cutoff; }
 
 	/// Returns the X coordinates of the RDF data points.
-	const QVector<double>& rdfX() const { return _rdfX; }
+	const QVector<double>& realSpaceCorrelationFunction() const { return _realSpaceCorrelationFunction; }
 
 	/// Returns the Y coordinates of the RDF data points.
-	const QVector<double>& rdfY() const { return _rdfY; }
+	const QVector<double>& realSpaceCorrelationFunctionX() const { return _realSpaceCorrelationFunctionX; }
 
 	/// Returns the number of bins in the computed RDF histogram.
 	int numberOfBins() const { return _numberOfBins; }
@@ -109,13 +109,16 @@ private:
 		/// Returns the real-space correlation function.
 		const QVector<double>& realSpaceCorrelationFunction() const { return _realSpaceCorrelationFunction; }
 
+		/// Returns the real-space correlation function.
+		const QVector<double>& realSpaceCorrelationFunctionX() const { return _realSpaceCorrelationFunctionX; }
+
 		/// Returns the reciprocal-space correlation function.
 		const QVector<double>& reciprocalSpaceCorrelationFunction() const { return _reciprocalSpaceCorrelationFunction; }
 
 	private:
 
 		/// Map property onto grid.
-		void mapToSpatialGrid(ParticleProperty *property, size_t propertyVectorComponent, QVector<double> &gridData);
+		void mapToSpatialGrid(ParticleProperty *property, size_t propertyVectorComponent, int nX, int nY, int nZ, QVector<double> &gridData);
 
 		FloatType _cutoff;
 		SimulationCell _simCell;
@@ -123,6 +126,7 @@ private:
 		QExplicitlySharedDataPointer<ParticleProperty> _sourceProperty1;
 		QExplicitlySharedDataPointer<ParticleProperty> _sourceProperty2;
 		QVector<double> _realSpaceCorrelationFunction;
+		QVector<double> _realSpaceCorrelationFunctionX;
 		QVector<double> _reciprocalSpaceCorrelationFunction;
 	};
 
@@ -154,11 +158,11 @@ private:
 	/// Controls the number of RDF histogram bins.
 	PropertyField<FloatType> _numberOfBins;
 
-	/// The X coordinates of the RDF data points.
-	QVector<double> _rdfX;
+	/// The real-space correlation function.
+	QVector<double> _realSpaceCorrelationFunction;
 
-	/// The Y coordinates of the RDF data points.
-	QVector<double> _rdfY;
+	/// The real-space correlation function.
+	QVector<double> _realSpaceCorrelationFunctionX;
 
 	Q_OBJECT
 	OVITO_OBJECT
