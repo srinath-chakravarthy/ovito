@@ -85,7 +85,7 @@ private:
 								  const SimulationCell& simCell,
 								  FloatType cutoff) :
 			ComputeEngine(validityInterval), _positions(positions),
-			_sourceProperty1(sourceProperty1), _sourceProperty2(_sourceProperty2),
+			_sourceProperty1(sourceProperty1), _sourceProperty2(sourceProperty2),
 			_simCell(simCell), _cutoff(cutoff) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
@@ -131,6 +131,9 @@ private:
 	};
 
 protected:
+
+	/// This virtual method is called by the system when the modifier has been inserted into a PipelineObject.
+	virtual void initializeModifier(PipelineObject* pipelineObject, ModifierApplication* modApp) override;
 
 	/// Is called when the value of a property of this object has changed.
 	virtual void propertyChanged(const PropertyFieldDescriptor& field) override;

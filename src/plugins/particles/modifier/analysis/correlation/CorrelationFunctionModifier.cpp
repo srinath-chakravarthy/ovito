@@ -22,7 +22,9 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DataObject.h>
+#include <core/scene/pipeline/PipelineObject.h>
 #include <core/app/Application.h>
+#include <core/animation/AnimationSettings.h>
 #include "CorrelationFunctionModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
@@ -51,6 +53,34 @@ CorrelationFunctionModifier::CorrelationFunctionModifier(DataSet* dataset) : Asy
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfBins);
 }
 
+
+/******************************************************************************
+* This method is called by the system when the modifier has been inserted
+* into a pipeline.
+******************************************************************************/
+void CorrelationFunctionModifier::initializeModifier(PipelineObject* pipeline, ModifierApplication* modApp)
+{
+	ParticleModifier::initializeModifier(pipeline, modApp);
+
+	// Use the first available particle property from the input state as data source when the modifier is newly created.
+	if(sourceProperty1().isNull() || sourceProperty2().isNull()) {
+		PipelineFlowState input = pipeline->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+		ParticlePropertyReference bestProperty;
+		for(DataObject* o : input.objects()) {
+			ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(o);
+			if(property && (property->dataType() == qMetaTypeId<int>() || property->dataType() == qMetaTypeId<FloatType>())) {
+				bestProperty = ParticlePropertyReference(property, (property->componentCount() > 1) ? 0 : -1);
+			}
+		}
+		if(!bestProperty.isNull()) {
+			if (sourceProperty1().isNull())
+				setSourceProperty1(bestProperty);
+			if (sourceProperty2().isNull())
+				setSourceProperty2(bestProperty);
+		}
+	}
+}
+
 /******************************************************************************
 * Creates and initializes a computation engine that will compute the modifier's results.
 ******************************************************************************/
@@ -73,9 +103,6 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CorrelationFunction
 
 	// Get simulation cell.
 	SimulationCellObject* inputCell = expectSimulationCell();
-
-	// The number of sampling intervals for the radial distribution function.
-	int rdfSampleCount = std::max(numberOfBins(), 4);
 
 	qDebug() << posProperty << property1 << property2;
 
@@ -157,6 +184,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 				     gridProperty2);
 */
 
+/*
 	int n = 20;
 	_realSpaceCorrelationFunction.resize(n);
 	_realSpaceCorrelationFunctionX.resize(n);
@@ -166,6 +194,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	}
 	qDebug() << "r" << _realSpaceCorrelationFunctionX;
 	qDebug() << "q" << _realSpaceCorrelationFunction;
+*/
 }
 
 /******************************************************************************
