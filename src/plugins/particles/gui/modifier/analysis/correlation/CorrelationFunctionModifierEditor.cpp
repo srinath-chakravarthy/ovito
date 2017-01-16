@@ -85,12 +85,7 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 
 	layout->addWidget(new QLabel(tr("Correlation function:")));
 	layout->addWidget(_realSpacePlot);
-	connect(this, &CorrelationFunctionModifierEditor::contentsReplaced, this, &CorrelationFunctionModifierEditor::plot);
-
-	layout->addSpacing(12);
-	QPushButton* saveDataButton = new QPushButton(tr("Export data to text file"));
-	layout->addWidget(saveDataButton);
-	connect(saveDataButton, &QPushButton::clicked, this, &CorrelationFunctionModifierEditor::onSaveData);
+	connect(this, &CorrelationFunctionModifierEditor::contentsReplaced, this, &CorrelationFunctionModifierEditor::plotData);
 
 	// Status label.
 	layout->addSpacing(6);
@@ -105,7 +100,7 @@ bool CorrelationFunctionModifierEditor::referenceEvent(RefTarget* source, Refere
 	qDebug() << "CorrelationFunctionModifierEditor::referenceEvent";
 
 	if(event->sender() == editObject() && event->type() == ReferenceEvent::ObjectStatusChanged) {
-		plotLater(this);
+		plotDataLater(this);
 	}
 	return ParticleModifierEditor::referenceEvent(source, event);
 }
@@ -113,9 +108,9 @@ bool CorrelationFunctionModifierEditor::referenceEvent(RefTarget* source, Refere
 /******************************************************************************
 * Updates the plot of the RDF computed by the modifier.
 ******************************************************************************/
-void CorrelationFunctionModifierEditor::plot()
+void CorrelationFunctionModifierEditor::plotData()
 {
-	qDebug() << "CorrelationFunctionModifierEditor::plot";
+	qDebug() << "CorrelationFunctionModifierEditor::plotData";
 
 	CorrelationFunctionModifier* modifier = static_object_cast<CorrelationFunctionModifier>(editObject());
 	if(!modifier)
@@ -152,16 +147,6 @@ void CorrelationFunctionModifierEditor::plot()
 	_realSpacePlot->setAxisScale(QwtPlot::xBottom, 0, 20);
 	_realSpacePlot->replot();
 */
-}
-
-/******************************************************************************
-* This is called when the user has clicked the "Save Data" button.
-******************************************************************************/
-void CorrelationFunctionModifierEditor::onSaveData()
-{
-	CorrelationFunctionModifier* modifier = static_object_cast<CorrelationFunctionModifier>(editObject());
-	if(!modifier)
-		return;
 }
 
 OVITO_END_INLINE_NAMESPACE
