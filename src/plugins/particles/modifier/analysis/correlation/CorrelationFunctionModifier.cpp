@@ -184,7 +184,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 				     gridProperty2);
 */
 
-/*
 	int n = 20;
 	_realSpaceCorrelationFunction.resize(n);
 	_realSpaceCorrelationFunctionX.resize(n);
@@ -194,7 +193,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	}
 	qDebug() << "r" << _realSpaceCorrelationFunctionX;
 	qDebug() << "q" << _realSpaceCorrelationFunction;
-*/
 }
 
 /******************************************************************************

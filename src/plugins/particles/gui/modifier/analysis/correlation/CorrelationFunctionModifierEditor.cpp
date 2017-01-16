@@ -126,7 +126,6 @@ void CorrelationFunctionModifierEditor::plotData()
 	qDebug() << modifier->realSpaceCorrelationFunctionX();
 	qDebug() << modifier->realSpaceCorrelationFunction();
 
-/*
 	if(!_realSpaceCurve) {
 		qDebug() << "Allocating QwtPlotCurve";
 		_realSpaceCurve = new QwtPlotCurve();
@@ -146,7 +145,6 @@ void CorrelationFunctionModifierEditor::plotData()
 	_realSpacePlot->setAxisAutoScale(QwtPlot::xBottom);
 	_realSpacePlot->setAxisScale(QwtPlot::xBottom, 0, 20);
 	_realSpacePlot->replot();
-*/
 }
 
 OVITO_END_INLINE_NAMESPACE
