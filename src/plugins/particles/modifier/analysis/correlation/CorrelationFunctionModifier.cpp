@@ -20,6 +20,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <fftw3.h>
+
+#include <complex>
+
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DataObject.h>
 #include <core/scene/pipeline/PipelineObject.h>
@@ -128,8 +132,12 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::mapToSpatialGrid(Pa
 
 	int numberOfGridPoints = nX*nY*nZ;
 
+	qDebug() << numberOfGridPoints;
+
 	// Resize real space grid.
 	gridData.resize(numberOfGridPoints);
+
+	qDebug() << "2";
 
 	// Get periodic boundary flag.
 	std::array<bool, 3> pbc = cell().pbcFlags();
@@ -137,13 +145,18 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::mapToSpatialGrid(Pa
 	// Get reciprocal cell.
     AffineTransformation reciprocalCell = cell().inverseMatrix();
 
+	qDebug() << "3";
+
 	if(property->size() > 0) {
 		const Point3* pos = positions()->constDataPoint3();
 		const Point3* pos_end = pos + positions()->size();
 
+		qDebug() << "4";
+
 		if(property->dataType() == qMetaTypeId<FloatType>()) {
 			const FloatType* v = property->constDataFloat() + vecComponent;
 			const FloatType* v_end = v + (property->size() * vecComponentCount);
+			qDebug() << "5";
             for(; v != v_end; v += vecComponentCount, ++pos) {
                 if(!std::isnan(*v)) {
                 	Point3 fractionalPos = reciprocalCell*(*pos);
@@ -172,17 +185,40 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 
 	setProgressText(tr("Computing correlation function"));
 
-/*
+	int nX, nY, nZ;
+	nX = nY = nZ = 20;
+
 	QVector<double> gridProperty1, gridProperty2;
+	qDebug() << "A";
 	mapToSpatialGrid(sourceProperty1(),
 				     0, // FIXME! Selected vector component should be passed to engine.
-				     20, 20, 20,
+				     nX, nY, nZ,
 				     gridProperty1);
+	qDebug() << "B";
 	mapToSpatialGrid(sourceProperty2(),
 				     0, // FIXME! Selected vector component should be passed to engine.
-				     20, 20, 20,
+				     nX, nY, nZ,
 				     gridProperty2);
-*/
+
+	qDebug() << "C";
+	QVector<std::complex<double>> ftProperty1(nX*nY*(nZ/2+1));
+	auto plan = fftw_plan_dft_r2c_3d(
+		nX, nY, nZ,
+		gridProperty1.data(),
+		reinterpret_cast<fftw_complex*>(ftProperty1.data()),
+		FFTW_ESTIMATE);
+	fftw_execute(plan);
+	fftw_destroy_plan(plan);
+
+	qDebug() << "D";
+	QVector<std::complex<double>> ftProperty2(nX*nY*(nZ/2+1));
+	plan = fftw_plan_dft_r2c_3d(
+		nX, nY, nZ,
+		gridProperty2.data(),
+		reinterpret_cast<fftw_complex*>(ftProperty2.data()),
+		FFTW_ESTIMATE);
+	fftw_execute(plan);
+	fftw_destroy_plan(plan);
 
 	int n = 20;
 	_realSpaceCorrelationFunction.resize(n);
