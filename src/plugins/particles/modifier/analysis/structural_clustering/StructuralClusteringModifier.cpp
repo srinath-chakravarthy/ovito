@@ -29,7 +29,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, StructuralClusteringModifier, AsynchronousParticleModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(StructuralClusteringModifier, AsynchronousParticleModifier);
 DEFINE_FLAGS_PROPERTY_FIELD(StructuralClusteringModifier, _faceThreshold, "FaceThreshold", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(StructuralClusteringModifier, _rmsdThreshold, "RMSDThreshold", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(StructuralClusteringModifier, _faceThreshold, "Voronoi face threshold");

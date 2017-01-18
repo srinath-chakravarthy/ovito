@@ -34,7 +34,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Gui, CoordinateTripodOverlayEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(CoordinateTripodOverlayEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(CoordinateTripodOverlay, CoordinateTripodOverlayEditor);
 
 /******************************************************************************

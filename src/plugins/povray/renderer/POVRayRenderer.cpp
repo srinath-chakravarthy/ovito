@@ -31,7 +31,7 @@
 
 namespace Ovito { namespace POVRay {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(POVRay, POVRayRenderer, NonInteractiveSceneRenderer);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(POVRayRenderer, NonInteractiveSceneRenderer);
 DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _qualityLevel, "QualityLevel", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _enableAntialiasing, "EnableAntialiasing", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _samplingMethod, "SamplingMethod", PROPERTY_FIELD_MEMORIZE);

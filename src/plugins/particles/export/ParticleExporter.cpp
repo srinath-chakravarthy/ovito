@@ -28,7 +28,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ParticleExporter, FileExporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ParticleExporter, FileExporter);
 
 /******************************************************************************
 * Constructs a new instance of the class.

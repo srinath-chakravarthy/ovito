@@ -26,7 +26,7 @@
 
 namespace Ovito { namespace Particles {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ParticleType, RefTarget);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ParticleType, RefTarget);
 DEFINE_PROPERTY_FIELD(ParticleType, _id, "Identifier");
 DEFINE_PROPERTY_FIELD(ParticleType, _color, "Color");
 DEFINE_PROPERTY_FIELD(ParticleType, _radius, "Radius");

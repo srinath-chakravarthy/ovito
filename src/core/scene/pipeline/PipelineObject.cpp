@@ -25,7 +25,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, PipelineObject, DataObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PipelineObject, DataObject);
 DEFINE_REFERENCE_FIELD(PipelineObject, _sourceObject, "InputObject", DataObject);
 DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(PipelineObject, _modApps, "ModifierApplications", ModifierApplication, PROPERTY_FIELD_ALWAYS_CLONE);
 SET_PROPERTY_FIELD_LABEL(PipelineObject, _sourceObject, "Input");

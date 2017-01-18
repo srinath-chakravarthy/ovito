@@ -28,7 +28,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysisGui, StructurePatternEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(StructurePatternEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(StructurePattern, StructurePatternEditor);
 
 /******************************************************************************

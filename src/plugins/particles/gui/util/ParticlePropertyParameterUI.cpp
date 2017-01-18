@@ -27,7 +27,7 @@
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util)
 
 // Gives the class run-time type information.
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, ParticlePropertyParameterUI, PropertyParameterUI);
+IMPLEMENT_OVITO_OBJECT(ParticlePropertyParameterUI, PropertyParameterUI);
 
 /******************************************************************************
 * Constructor.

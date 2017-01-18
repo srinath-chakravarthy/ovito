@@ -29,7 +29,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, TrajectoryDisplayEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(TrajectoryDisplayEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(TrajectoryDisplay, TrajectoryDisplayEditor);
 
 /******************************************************************************

@@ -29,7 +29,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysisGui, ConstructSurfaceModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(ConstructSurfaceModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(ConstructSurfaceModifier, ConstructSurfaceModifierEditor);
 
 /******************************************************************************

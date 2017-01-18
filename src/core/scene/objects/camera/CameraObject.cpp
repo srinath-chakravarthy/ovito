@@ -30,8 +30,8 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene) OVITO_BEGIN_INLINE_NAMESPACE(StdObj)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, AbstractCameraObject, DataObject);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, CameraObject, AbstractCameraObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(AbstractCameraObject, DataObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CameraObject, AbstractCameraObject);
 DEFINE_PROPERTY_FIELD(CameraObject, _isPerspective, "IsPerspective");
 DEFINE_REFERENCE_FIELD(CameraObject, _fov, "FOV", Controller);
 DEFINE_REFERENCE_FIELD(CameraObject, _zoom, "Zoom", Controller);
@@ -42,7 +42,7 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(CameraObject, _fov, AngleParameterUnit, Float
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CameraObject, _zoom, WorldParameterUnit, 0);
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, CameraDisplayObject, DisplayObject);
+	IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CameraDisplayObject, DisplayObject);
 OVITO_END_INLINE_NAMESPACE
 
 /******************************************************************************

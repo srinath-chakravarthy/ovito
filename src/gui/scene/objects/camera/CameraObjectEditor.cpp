@@ -28,7 +28,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene) OVITO_BEGIN_INLINE_NAMESPACE(StdObj) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Gui, CameraObjectEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(CameraObjectEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(CameraObject, CameraObjectEditor);
 
 /******************************************************************************

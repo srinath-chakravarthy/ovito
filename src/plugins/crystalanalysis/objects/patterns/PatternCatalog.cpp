@@ -24,7 +24,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, PatternCatalog, DataObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PatternCatalog, DataObject);
 DEFINE_VECTOR_REFERENCE_FIELD(PatternCatalog, _patterns, "Patterns", StructurePattern);
 SET_PROPERTY_FIELD_LABEL(PatternCatalog, _patterns, "Structure patterns");
 

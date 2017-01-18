@@ -37,7 +37,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, ScatterPlotModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(ScatterPlotModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(ScatterPlotModifier, ScatterPlotModifierEditor);
 
 /******************************************************************************

@@ -27,7 +27,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene) OVITO_BEGIN_INLINE_NAMESPACE(StdObj) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Gui, TriMeshDisplayEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(TriMeshDisplayEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(TriMeshDisplay, TriMeshDisplayEditor);
 
 /******************************************************************************

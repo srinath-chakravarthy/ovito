@@ -24,7 +24,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ParcasFileImporter, ParticleImporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ParcasFileImporter, ParticleImporter);
 
 // Byte-swaps a 32 bit word.
 #define SWAP32(x) (((uint32_t)(x) >> 24) |			\

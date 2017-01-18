@@ -29,7 +29,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, CombineParticleSetsModifier, ParticleModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CombineParticleSetsModifier, ParticleModifier);
 DEFINE_FLAGS_REFERENCE_FIELD(CombineParticleSetsModifier, _secondarySource, "SecondarySource", DataObject, PROPERTY_FIELD_NO_SUB_ANIM);
 SET_PROPERTY_FIELD_LABEL(CombineParticleSetsModifier, _secondarySource, "Secondary source");
 

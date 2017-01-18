@@ -37,7 +37,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Gui, ViewportSceneRenderer, OpenGLSceneRenderer);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ViewportSceneRenderer, OpenGLSceneRenderer);
 
 /******************************************************************************
 * This method is called just before renderFrame() is called.

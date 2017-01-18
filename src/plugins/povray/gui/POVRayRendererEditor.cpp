@@ -36,7 +36,7 @@
 
 namespace Ovito { namespace POVRay { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(POVRayGui, POVRayRendererEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(POVRayRendererEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(POVRayRenderer, POVRayRendererEditor);
 
 /**

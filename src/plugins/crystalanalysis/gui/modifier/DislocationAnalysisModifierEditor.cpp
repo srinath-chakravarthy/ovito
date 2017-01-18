@@ -30,10 +30,10 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysisGui, DislocationAnalysisModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(DislocationAnalysisModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(DislocationAnalysisModifier, DislocationAnalysisModifierEditor);
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysisGui, DislocationTypeListParameterUI, RefTargetListParameterUI);
+IMPLEMENT_OVITO_OBJECT(DislocationTypeListParameterUI, RefTargetListParameterUI);
 DEFINE_FLAGS_REFERENCE_FIELD(DislocationTypeListParameterUI, _modifier, "Modifier", DislocationAnalysisModifier, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_WEAK_REF | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
 
 /******************************************************************************

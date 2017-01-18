@@ -46,7 +46,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Gui, OpenGLSceneRenderer, SceneRenderer);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(OpenGLSceneRenderer, SceneRenderer);
 
 /// The vendor of the OpenGL implementation in use.
 QByteArray OpenGLSceneRenderer::_openGLVendor;

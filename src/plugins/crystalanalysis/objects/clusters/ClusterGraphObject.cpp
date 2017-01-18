@@ -24,7 +24,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, ClusterGraphObject, DataObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ClusterGraphObject, DataObject);
 
 /******************************************************************************
 * Constructs a cluster graph object.

@@ -26,7 +26,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene) OVITO_BEGIN_INLINE_NAMESPACE(StdObj)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, TriMeshDisplay, DisplayObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(TriMeshDisplay, DisplayObject);
 DEFINE_FLAGS_PROPERTY_FIELD(TriMeshDisplay, _color, "Color", PROPERTY_FIELD_MEMORIZE);
 DEFINE_REFERENCE_FIELD(TriMeshDisplay, _transparency, "Transparency", Controller);
 SET_PROPERTY_FIELD_LABEL(TriMeshDisplay, _color, "Display color");

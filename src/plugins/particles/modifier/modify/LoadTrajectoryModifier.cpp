@@ -28,7 +28,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, LoadTrajectoryModifier, ParticleModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(LoadTrajectoryModifier, ParticleModifier);
 DEFINE_FLAGS_REFERENCE_FIELD(LoadTrajectoryModifier, _trajectorySource, "TrajectorySource", DataObject, PROPERTY_FIELD_NO_SUB_ANIM);
 SET_PROPERTY_FIELD_LABEL(LoadTrajectoryModifier, _trajectorySource, "Trajectory source");
 

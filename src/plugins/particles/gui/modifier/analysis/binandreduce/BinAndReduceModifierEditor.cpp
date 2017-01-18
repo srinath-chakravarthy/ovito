@@ -42,7 +42,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, BinAndReduceModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(BinAndReduceModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(BinAndReduceModifier, BinAndReduceModifierEditor);
 
 /******************************************************************************

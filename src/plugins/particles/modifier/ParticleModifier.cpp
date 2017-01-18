@@ -32,7 +32,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ParticleModifier, Modifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ParticleModifier, Modifier);
 
 /******************************************************************************
 * This modifies the input object.

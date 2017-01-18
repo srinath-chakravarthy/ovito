@@ -25,7 +25,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Gui, GeneralSettingsPage, ApplicationSettingsDialogPage);
+IMPLEMENT_OVITO_OBJECT(GeneralSettingsPage, ApplicationSettingsDialogPage);
 
 /******************************************************************************
 * Creates the widget that contains the plugin specific setting controls.

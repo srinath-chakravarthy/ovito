@@ -27,7 +27,7 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem)
 
 // Gives the class run-time type information.
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, RefTarget, RefMaker);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(RefTarget, RefMaker);
 
 /******************************************************************************
 * This method is called when the reference counter of this OvitoObject

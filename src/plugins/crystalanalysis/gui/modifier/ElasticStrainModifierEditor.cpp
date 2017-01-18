@@ -31,7 +31,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysisGui, ElasticStrainModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(ElasticStrainModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(ElasticStrainModifier, ElasticStrainModifierEditor);
 
 /******************************************************************************

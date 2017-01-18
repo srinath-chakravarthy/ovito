@@ -31,7 +31,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingModifier, ParticleModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingModifier, ParticleModifier);
 DEFINE_REFERENCE_FIELD(ColorCodingModifier, _startValueCtrl, "StartValue", Controller);
 DEFINE_REFERENCE_FIELD(ColorCodingModifier, _endValueCtrl, "EndValue", Controller);
 DEFINE_REFERENCE_FIELD(ColorCodingModifier, _colorGradient, "ColorGradient", ColorCodingGradient);
@@ -49,15 +49,15 @@ SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _sourceParticleProperty, "Source p
 SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _sourceBondProperty, "Source property");
 SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _colorApplicationMode, "Target");
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingGradient, RefTarget);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingHSVGradient, ColorCodingGradient);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingGrayscaleGradient, ColorCodingGradient);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingHotGradient, ColorCodingGradient);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingJetGradient, ColorCodingGradient);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingBlueWhiteRedGradient, ColorCodingGradient);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingViridisGradient, ColorCodingGradient);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingMagmaGradient, ColorCodingGradient);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingImageGradient, ColorCodingGradient);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingGradient, RefTarget);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingHSVGradient, ColorCodingGradient);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingGrayscaleGradient, ColorCodingGradient);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingHotGradient, ColorCodingGradient);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingJetGradient, ColorCodingGradient);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingBlueWhiteRedGradient, ColorCodingGradient);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingViridisGradient, ColorCodingGradient);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingMagmaGradient, ColorCodingGradient);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingImageGradient, ColorCodingGradient);
 DEFINE_PROPERTY_FIELD(ColorCodingImageGradient, _image, "Image");
 
 /******************************************************************************

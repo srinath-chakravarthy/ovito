@@ -28,7 +28,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, ElasticStrainModifier, StructureIdentificationModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ElasticStrainModifier, StructureIdentificationModifier);
 DEFINE_FLAGS_PROPERTY_FIELD(ElasticStrainModifier, _inputCrystalStructure, "CrystalStructure", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(ElasticStrainModifier, _calculateDeformationGradients, "CalculateDeformationGradients", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(ElasticStrainModifier, _calculateStrainTensors, "CalculateStrainTensors", PROPERTY_FIELD_MEMORIZE);

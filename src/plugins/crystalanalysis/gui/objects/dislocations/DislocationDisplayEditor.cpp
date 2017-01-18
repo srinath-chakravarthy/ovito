@@ -31,7 +31,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysisGui, DislocationDisplayEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(DislocationDisplayEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(DislocationDisplay, DislocationDisplayEditor);
 
 /******************************************************************************

@@ -27,7 +27,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, DataObject, RefTarget);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(DataObject, RefTarget);
 DEFINE_PROPERTY_FIELD(DataObject, _saveWithScene, "SaveWithScene");
 DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(DataObject, _displayObjects, "DisplayObjects", DisplayObject, PROPERTY_FIELD_NEVER_CLONE_TARGET);
 SET_PROPERTY_FIELD_LABEL(DataObject, _saveWithScene, "Save data with scene");

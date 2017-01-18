@@ -28,7 +28,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, SimulationCellDisplayEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(SimulationCellDisplayEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(SimulationCellDisplay, SimulationCellDisplayEditor);
 
 /******************************************************************************

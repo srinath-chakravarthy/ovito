@@ -27,7 +27,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Anim)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, PRSTransformationController, Controller);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PRSTransformationController, Controller);
 DEFINE_REFERENCE_FIELD(PRSTransformationController, _position, "Position", Controller);
 DEFINE_REFERENCE_FIELD(PRSTransformationController, _rotation, "Rotation", Controller);
 DEFINE_REFERENCE_FIELD(PRSTransformationController, _scaling, "Scaling", Controller);

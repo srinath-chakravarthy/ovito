@@ -25,7 +25,7 @@
 
 namespace Ovito { namespace Particles {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SurfaceMesh, DataObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SurfaceMesh, DataObject);
 DEFINE_PROPERTY_FIELD(SurfaceMesh, _isCompletelySolid, "IsCompletelySolid");
 
 /******************************************************************************

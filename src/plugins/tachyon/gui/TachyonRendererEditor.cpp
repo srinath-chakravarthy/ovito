@@ -34,7 +34,7 @@
 
 namespace Ovito { namespace Tachyon { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(TachyonGui, TachyonRendererEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(TachyonRendererEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(TachyonRenderer, TachyonRendererEditor);
 
 /**

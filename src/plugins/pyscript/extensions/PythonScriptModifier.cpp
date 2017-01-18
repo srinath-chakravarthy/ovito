@@ -28,7 +28,7 @@
 
 namespace PyScript {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PyScript, PythonScriptModifier, Modifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PythonScriptModifier, Modifier);
 DEFINE_PROPERTY_FIELD(PythonScriptModifier, _script, "Script");
 SET_PROPERTY_FIELD_LABEL(PythonScriptModifier, _script, "Script");
 

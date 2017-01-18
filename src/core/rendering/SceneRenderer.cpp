@@ -30,8 +30,8 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, SceneRenderer, RefTarget);
-IMPLEMENT_OVITO_OBJECT(Core, ObjectPickInfo, OvitoObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SceneRenderer, RefTarget);
+IMPLEMENT_OVITO_OBJECT(ObjectPickInfo, OvitoObject);
 
 /******************************************************************************
 * Constructor.

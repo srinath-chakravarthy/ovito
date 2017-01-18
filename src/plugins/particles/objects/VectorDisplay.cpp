@@ -29,8 +29,8 @@
 
 namespace Ovito { namespace Particles {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, VectorDisplay, DisplayObject);
-IMPLEMENT_OVITO_OBJECT(Particles, VectorPickInfo, ObjectPickInfo);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(VectorDisplay, DisplayObject);
+IMPLEMENT_OVITO_OBJECT(VectorPickInfo, ObjectPickInfo);
 DEFINE_PROPERTY_FIELD(VectorDisplay, _reverseArrowDirection, "ReverseArrowDirection");
 DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _arrowPosition, "ArrowPosition", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _arrowColor, "ArrowColor", PROPERTY_FIELD_MEMORIZE);

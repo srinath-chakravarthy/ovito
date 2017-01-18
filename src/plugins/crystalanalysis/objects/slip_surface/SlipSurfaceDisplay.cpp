@@ -30,7 +30,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, SlipSurfaceDisplay, AsynchronousDisplayObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SlipSurfaceDisplay, AsynchronousDisplayObject);
 DEFINE_PROPERTY_FIELD(SlipSurfaceDisplay, _smoothShading, "SmoothShading");
 DEFINE_REFERENCE_FIELD(SlipSurfaceDisplay, _surfaceTransparency, "SurfaceTransparency", Controller);
 SET_PROPERTY_FIELD_LABEL(SlipSurfaceDisplay, _smoothShading, "Smooth shading");

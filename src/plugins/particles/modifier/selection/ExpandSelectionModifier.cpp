@@ -28,7 +28,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Selection)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ExpandSelectionModifier, ParticleModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ExpandSelectionModifier, ParticleModifier);
 DEFINE_FLAGS_PROPERTY_FIELD(ExpandSelectionModifier, _mode, "Mode", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(ExpandSelectionModifier, _cutoffRange, "Cutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(ExpandSelectionModifier, _numNearestNeighbors, "NumNearestNeighbors", PROPERTY_FIELD_MEMORIZE);

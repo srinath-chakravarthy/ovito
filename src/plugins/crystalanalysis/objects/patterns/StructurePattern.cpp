@@ -24,7 +24,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, StructurePattern, ParticleType);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(StructurePattern, ParticleType);
 DEFINE_PROPERTY_FIELD(StructurePattern, _shortName, "ShortName");
 DEFINE_PROPERTY_FIELD(StructurePattern, _structureType, "StructureType");
 DEFINE_PROPERTY_FIELD(StructurePattern, _symmetryType, "SymmetryType");

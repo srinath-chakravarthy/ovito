@@ -29,7 +29,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, SurfaceMeshDisplayEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(SurfaceMeshDisplayEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(SurfaceMeshDisplay, SurfaceMeshDisplayEditor);
 
 /******************************************************************************

@@ -27,7 +27,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, AttributeFileExporter, FileExporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(AttributeFileExporter, FileExporter);
 DEFINE_PROPERTY_FIELD(AttributeFileExporter, _attributesToExport, "AttributesToExport");
 
 /******************************************************************************

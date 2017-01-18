@@ -27,8 +27,8 @@
 
 namespace Ovito { namespace Particles {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ParticleDisplay, DisplayObject);
-IMPLEMENT_OVITO_OBJECT(Particles, ParticlePickInfo, ObjectPickInfo);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ParticleDisplay, DisplayObject);
+IMPLEMENT_OVITO_OBJECT(ParticlePickInfo, ObjectPickInfo);
 DEFINE_FLAGS_PROPERTY_FIELD(ParticleDisplay, _defaultParticleRadius, "DefaultParticleRadius", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(ParticleDisplay, _shadingMode, "ShadingMode");
 DEFINE_PROPERTY_FIELD(ParticleDisplay, _renderingQuality, "RenderingQuality");

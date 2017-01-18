@@ -26,7 +26,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, CoordinateTripodOverlay, ViewportOverlay);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CoordinateTripodOverlay, ViewportOverlay);
 DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, _alignment, "Alignment", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, _tripodSize, "Size", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, _lineWidth, "LineWidth", PROPERTY_FIELD_MEMORIZE);

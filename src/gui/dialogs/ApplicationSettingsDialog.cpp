@@ -25,7 +25,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Dialogs)
 	
-IMPLEMENT_OVITO_OBJECT(Gui, ApplicationSettingsDialogPage, OvitoObject);
+IMPLEMENT_OVITO_OBJECT(ApplicationSettingsDialogPage, OvitoObject);
 
 /******************************************************************************
 * The constructor of the settings dialog class.

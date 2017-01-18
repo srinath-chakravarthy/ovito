@@ -38,7 +38,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Gui, RenderSettingsEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(RenderSettingsEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(RenderSettings, RenderSettingsEditor);
 
 // Predefined output image dimensions.

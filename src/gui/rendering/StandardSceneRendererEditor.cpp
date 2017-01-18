@@ -26,7 +26,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Gui, StandardSceneRendererEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(StandardSceneRendererEditor, PropertiesEditor);
 
 /******************************************************************************
 * Constructor that creates the UI controls for the editor.

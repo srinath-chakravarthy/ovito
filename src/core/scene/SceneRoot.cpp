@@ -24,7 +24,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, SceneRoot, SceneNode);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SceneRoot, SceneNode);
 
 /******************************************************************************
 * Default constructor.

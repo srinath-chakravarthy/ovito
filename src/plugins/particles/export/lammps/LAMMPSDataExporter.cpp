@@ -30,7 +30,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, LAMMPSDataExporter, ParticleExporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(LAMMPSDataExporter, ParticleExporter);
 DEFINE_FLAGS_PROPERTY_FIELD(LAMMPSDataExporter, _atomStyle, "AtomStyle", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(LAMMPSDataExporter, _atomStyle, "Atom style");
 

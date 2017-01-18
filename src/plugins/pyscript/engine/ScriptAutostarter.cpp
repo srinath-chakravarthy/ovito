@@ -27,7 +27,7 @@
 
 namespace PyScript {
 
-IMPLEMENT_OVITO_OBJECT(PyScript, ScriptAutostarter, AutoStartObject);
+IMPLEMENT_OVITO_OBJECT(ScriptAutostarter, AutoStartObject);
 
 /******************************************************************************
 * Destructor, which is called at program exit.

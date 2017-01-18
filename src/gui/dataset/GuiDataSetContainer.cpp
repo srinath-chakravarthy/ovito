@@ -39,7 +39,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem)
 
-IMPLEMENT_OVITO_OBJECT(Gui, GuiDataSetContainer, DataSetContainer);
+IMPLEMENT_OVITO_OBJECT(GuiDataSetContainer, DataSetContainer);
 
 /******************************************************************************
 * Initializes the dataset manager.

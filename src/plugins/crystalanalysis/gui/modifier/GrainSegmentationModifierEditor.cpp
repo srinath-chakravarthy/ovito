@@ -32,7 +32,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysisGui, GrainSegmentationModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(GrainSegmentationModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(GrainSegmentationModifier, GrainSegmentationModifierEditor);
 
 /******************************************************************************

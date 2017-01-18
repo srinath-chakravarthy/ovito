@@ -33,7 +33,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, FileSourceImporter, FileImporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(FileSourceImporter, FileImporter);
 
 /******************************************************************************
 * Sends a request to the FileSource owning this importer to reload

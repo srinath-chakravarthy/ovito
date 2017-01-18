@@ -37,7 +37,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Gui, FileSourceEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(FileSourceEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(FileSource, FileSourceEditor);
 
 /******************************************************************************

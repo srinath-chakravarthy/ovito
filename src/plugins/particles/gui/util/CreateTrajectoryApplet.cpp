@@ -34,7 +34,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, CreateTrajectoryApplet, UtilityApplet);
+IMPLEMENT_OVITO_OBJECT(CreateTrajectoryApplet, UtilityApplet);
 
 /******************************************************************************
 * Shows the UI of the utility in the given RolloutContainer.

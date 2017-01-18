@@ -29,7 +29,7 @@
 
 namespace PyScript { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(PyScriptGui, PythonScriptModifierEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(PythonScriptModifierEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(PythonScriptModifier, PythonScriptModifierEditor);
 
 /******************************************************************************

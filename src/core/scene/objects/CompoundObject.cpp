@@ -24,7 +24,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, CompoundObject, DataObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CompoundObject, DataObject);
 DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(CompoundObject, _dataObjects, "SceneObjects", DataObject, PROPERTY_FIELD_ALWAYS_DEEP_COPY);
 SET_PROPERTY_FIELD_LABEL(CompoundObject, _dataObjects, "Objects");
 

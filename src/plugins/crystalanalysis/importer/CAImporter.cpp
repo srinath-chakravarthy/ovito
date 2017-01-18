@@ -41,7 +41,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, CAImporter, ParticleImporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CAImporter, ParticleImporter);
 DEFINE_PROPERTY_FIELD(CAImporter, _loadParticles, "LoadParticles");
 SET_PROPERTY_FIELD_LABEL(CAImporter, _loadParticles, "Load particles");
 

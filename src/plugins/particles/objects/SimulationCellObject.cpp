@@ -26,7 +26,7 @@
 
 namespace Ovito { namespace Particles {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SimulationCellObject, DataObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SimulationCellObject, DataObject);
 DEFINE_PROPERTY_FIELD(SimulationCellObject, _cellVector1, "CellVector1");
 DEFINE_PROPERTY_FIELD(SimulationCellObject, _cellVector2, "CellVector2");
 DEFINE_PROPERTY_FIELD(SimulationCellObject, _cellVector3, "CellVector3");

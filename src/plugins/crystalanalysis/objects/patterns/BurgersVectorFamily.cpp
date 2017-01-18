@@ -26,7 +26,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, BurgersVectorFamily, RefTarget);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(BurgersVectorFamily, RefTarget);
 DEFINE_PROPERTY_FIELD(BurgersVectorFamily, _name, "Name");
 DEFINE_PROPERTY_FIELD(BurgersVectorFamily, _color, "Color");
 DEFINE_PROPERTY_FIELD(BurgersVectorFamily, _burgersVector, "BurgersVector");

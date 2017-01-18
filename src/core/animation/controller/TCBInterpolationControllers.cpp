@@ -24,7 +24,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Anim)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, FloatTCBAnimationKey, FloatAnimationKey);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(FloatTCBAnimationKey, FloatAnimationKey);
 DEFINE_PROPERTY_FIELD(FloatTCBAnimationKey, _easeTo, "EaseTo");
 DEFINE_PROPERTY_FIELD(FloatTCBAnimationKey, _easeFrom, "EaseFrom");
 DEFINE_PROPERTY_FIELD(FloatTCBAnimationKey, _tension, "Tension");
@@ -41,7 +41,7 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(FloatTCBAnimationKey, _tension, FloatParamete
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(FloatTCBAnimationKey, _continuity, FloatParameterUnit, -1, 1);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(FloatTCBAnimationKey, _bias, FloatParameterUnit, -1, 1);
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, PositionTCBAnimationKey, PositionAnimationKey);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PositionTCBAnimationKey, PositionAnimationKey);
 DEFINE_PROPERTY_FIELD(PositionTCBAnimationKey, _easeTo, "EaseTo");
 DEFINE_PROPERTY_FIELD(PositionTCBAnimationKey, _easeFrom, "EaseFrom");
 DEFINE_PROPERTY_FIELD(PositionTCBAnimationKey, _tension, "Tension");
@@ -58,7 +58,7 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(PositionTCBAnimationKey, _tension, FloatParam
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(PositionTCBAnimationKey, _continuity, FloatParameterUnit, -1, 1);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(PositionTCBAnimationKey, _bias, FloatParameterUnit, -1, 1);
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, TCBPositionController, KeyframeController);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(TCBPositionController, KeyframeController);
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

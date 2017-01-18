@@ -27,7 +27,7 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
 
 // Gives the class run-time type information.
-IMPLEMENT_OVITO_OBJECT(Gui, FontParameterUI, PropertyParameterUI);
+IMPLEMENT_OVITO_OBJECT(FontParameterUI, PropertyParameterUI);
 
 /******************************************************************************
 * The constructor.

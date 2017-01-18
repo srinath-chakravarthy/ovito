@@ -26,7 +26,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Anim)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, LookAtController, Controller);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(LookAtController, Controller);
 DEFINE_REFERENCE_FIELD(LookAtController, _rollCtrl, "Roll", Controller);
 DEFINE_FLAGS_REFERENCE_FIELD(LookAtController, _targetNode, "Target", SceneNode, PROPERTY_FIELD_NEVER_CLONE_TARGET | PROPERTY_FIELD_NO_SUB_ANIM);
 SET_PROPERTY_FIELD_LABEL(LookAtController, _rollCtrl, "Roll");

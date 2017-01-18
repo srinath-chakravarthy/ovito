@@ -33,9 +33,9 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SliceModifier, ParticleModifier);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SliceModifierFunction, RefTarget);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SliceParticlesFunction, SliceModifierFunction);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SliceModifier, ParticleModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SliceModifierFunction, RefTarget);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SliceParticlesFunction, SliceModifierFunction);
 DEFINE_REFERENCE_FIELD(SliceModifier, _normalCtrl, "PlaneNormal", Controller);
 DEFINE_REFERENCE_FIELD(SliceModifier, _distanceCtrl, "PlaneDistance", Controller);
 DEFINE_REFERENCE_FIELD(SliceModifier, _widthCtrl, "SliceWidth", Controller);

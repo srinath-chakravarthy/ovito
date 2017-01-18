@@ -35,7 +35,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, XYZImporter, ParticleImporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(XYZImporter, ParticleImporter);
 DEFINE_PROPERTY_FIELD(XYZImporter, _autoRescaleCoordinates, "AutoRescaleCoordinates");
 SET_PROPERTY_FIELD_LABEL(XYZImporter, _autoRescaleCoordinates, "Detect reduced coordinates");
 

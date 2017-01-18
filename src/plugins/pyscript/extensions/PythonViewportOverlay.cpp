@@ -27,7 +27,7 @@
 
 namespace PyScript {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PyScript, PythonViewportOverlay, ViewportOverlay);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PythonViewportOverlay, ViewportOverlay);
 DEFINE_PROPERTY_FIELD(PythonViewportOverlay, _script, "Script");
 SET_PROPERTY_FIELD_LABEL(PythonViewportOverlay, _script, "Script");
 

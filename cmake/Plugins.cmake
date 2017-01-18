@@ -21,6 +21,9 @@ MACRO(OVITO_STANDARD_PLUGIN target_name)
     TARGET_INCLUDE_DIRECTORIES(${target_name} PUBLIC 
         "$<BUILD_INTERFACE:${OVITO_SOURCE_BASE_DIR}/src>")
 
+	# Pass name of current plugin to the code.
+	TARGET_COMPILE_DEFINITIONS(${target_name} PRIVATE "OVITO_PLUGIN_NAME=\"${target_name}\"")
+
 	# Link to OVITO's core library.
 	TARGET_LINK_LIBRARIES(${target_name} PUBLIC Core)
 

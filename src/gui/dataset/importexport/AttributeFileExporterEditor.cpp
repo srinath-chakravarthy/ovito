@@ -26,7 +26,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO)
 
-IMPLEMENT_OVITO_OBJECT(Gui, AttributeFileExporterEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(AttributeFileExporterEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(AttributeFileExporter, AttributeFileExporterEditor);
 
 /******************************************************************************

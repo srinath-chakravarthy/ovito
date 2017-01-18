@@ -121,6 +121,9 @@ QT5_ADD_RESOURCES(ResourceFiles resources/gui.qrc)
 # Build library
 ADD_LIBRARY(Gui SHARED GUI.cpp ${SourceFiles} ${ResourceFiles})
 
+# Pass name of gui plugin to the code.
+TARGET_COMPILE_DEFINITIONS(Gui PRIVATE "OVITO_PLUGIN_NAME=\"Gui\"")
+
 # Set default include directory.
 TARGET_INCLUDE_DIRECTORIES(Gui PUBLIC "$<BUILD_INTERFACE:${OVITO_SOURCE_BASE_DIR}/src>")
 

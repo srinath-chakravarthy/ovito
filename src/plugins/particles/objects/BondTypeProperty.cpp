@@ -24,7 +24,7 @@
 
 namespace Ovito { namespace Particles {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, BondTypeProperty, BondPropertyObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(BondTypeProperty, BondPropertyObject);
 DEFINE_VECTOR_REFERENCE_FIELD(BondTypeProperty, _bondTypes, "BondTypes", BondType);
 SET_PROPERTY_FIELD_LABEL(BondTypeProperty, _bondTypes, "Bond Types");
 

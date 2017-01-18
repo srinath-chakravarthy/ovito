@@ -24,12 +24,12 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Anim)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, LinearFloatController, KeyframeController);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, LinearIntegerController, KeyframeController);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, LinearVectorController, KeyframeController);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, LinearPositionController, KeyframeController);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, LinearRotationController, KeyframeController);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, LinearScalingController, KeyframeController);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(LinearFloatController, KeyframeController);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(LinearIntegerController, KeyframeController);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(LinearVectorController, KeyframeController);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(LinearPositionController, KeyframeController);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(LinearRotationController, KeyframeController);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(LinearScalingController, KeyframeController);
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

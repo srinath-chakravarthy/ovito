@@ -28,7 +28,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ParticleImporter, FileSourceImporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ParticleImporter, FileSourceImporter);
 DEFINE_PROPERTY_FIELD(ParticleImporter, _isMultiTimestepFile, "IsMultiTimestepFile");
 SET_PROPERTY_FIELD_LABEL(ParticleImporter, _isMultiTimestepFile, "File contains time series");
 

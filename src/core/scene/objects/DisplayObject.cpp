@@ -24,7 +24,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, DisplayObject, RefTarget);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(DisplayObject, RefTarget);
 DEFINE_PROPERTY_FIELD(DisplayObject, _isEnabled, "IsEnabled");
 SET_PROPERTY_FIELD_LABEL(DisplayObject, _isEnabled, "Enabled");
 DEFINE_PROPERTY_FIELD(DisplayObject, _title, "Name");

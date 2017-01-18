@@ -31,7 +31,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, FileExporter, RefTarget);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(FileExporter, RefTarget);
 DEFINE_PROPERTY_FIELD(FileExporter, _outputFilename, "OutputFile");
 DEFINE_PROPERTY_FIELD(FileExporter, _exportAnimation, "ExportAnimation");
 DEFINE_PROPERTY_FIELD(FileExporter, _useWildcardFilename, "UseWildcardFilename");

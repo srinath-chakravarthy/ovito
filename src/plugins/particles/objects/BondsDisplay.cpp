@@ -30,8 +30,8 @@
 
 namespace Ovito { namespace Particles {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, BondsDisplay, DisplayObject);
-IMPLEMENT_OVITO_OBJECT(Particles, BondPickInfo, ObjectPickInfo);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(BondsDisplay, DisplayObject);
+IMPLEMENT_OVITO_OBJECT(BondPickInfo, ObjectPickInfo);
 DEFINE_FLAGS_PROPERTY_FIELD(BondsDisplay, _bondWidth, "BondWidth", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(BondsDisplay, _bondColor, "BondColor", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(BondsDisplay, _useParticleColors, "UseParticleColors", PROPERTY_FIELD_MEMORIZE);

@@ -26,7 +26,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysisGui, CAImporterEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(CAImporterEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(CAImporter, CAImporterEditor);
 
 /******************************************************************************

@@ -54,7 +54,7 @@ inline apivector tvec(const Point_3<T>& p) {
 	return rt_vector(p.x(), p.y(), -p.z());
 }
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Tachyon, TachyonRenderer, NonInteractiveSceneRenderer);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(TachyonRenderer, NonInteractiveSceneRenderer);
 DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _antialiasingEnabled, "EnableAntialiasing", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _directLightSourceEnabled, "EnableDirectLightSource", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _shadowsEnabled, "EnableShadows", PROPERTY_FIELD_MEMORIZE);

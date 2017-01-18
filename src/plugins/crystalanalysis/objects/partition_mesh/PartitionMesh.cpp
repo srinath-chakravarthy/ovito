@@ -25,7 +25,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, PartitionMesh, DataObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PartitionMesh, DataObject);
 DEFINE_PROPERTY_FIELD(PartitionMesh, _spaceFillingRegion, "SpaceFillingRegion");
 
 /******************************************************************************

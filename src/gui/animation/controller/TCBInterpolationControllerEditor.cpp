@@ -24,7 +24,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Anim) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Gui, PositionTCBAnimationKeyEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(PositionTCBAnimationKeyEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(PositionTCBAnimationKey, PositionTCBAnimationKeyEditor);
 
 OVITO_END_INLINE_NAMESPACE

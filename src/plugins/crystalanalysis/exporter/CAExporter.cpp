@@ -33,7 +33,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, CAExporter, FileExporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CAExporter, FileExporter);
 
 /******************************************************************************
 * Selects the natural scene nodes to be exported by this exporter under 

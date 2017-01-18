@@ -24,32 +24,32 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Anim)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, AnimationKey, RefTarget);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(AnimationKey, RefTarget);
 DEFINE_PROPERTY_FIELD(AnimationKey, _time, "Time");
 SET_PROPERTY_FIELD_LABEL(AnimationKey, _time, "Time");
 SET_PROPERTY_FIELD_UNITS(AnimationKey, _time, TimeParameterUnit);
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, FloatAnimationKey, AnimationKey);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(FloatAnimationKey, AnimationKey);
 DEFINE_PROPERTY_FIELD(FloatAnimationKey, _value, "Value");
 SET_PROPERTY_FIELD_LABEL(FloatAnimationKey, _value, "Value");
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, IntegerAnimationKey, AnimationKey);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(IntegerAnimationKey, AnimationKey);
 DEFINE_PROPERTY_FIELD(IntegerAnimationKey, _value, "Value");
 SET_PROPERTY_FIELD_LABEL(IntegerAnimationKey, _value, "Value");
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, Vector3AnimationKey, AnimationKey);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Vector3AnimationKey, AnimationKey);
 DEFINE_PROPERTY_FIELD(Vector3AnimationKey, _value, "Value");
 SET_PROPERTY_FIELD_LABEL(Vector3AnimationKey, _value, "Value");
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, PositionAnimationKey, AnimationKey);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PositionAnimationKey, AnimationKey);
 DEFINE_PROPERTY_FIELD(PositionAnimationKey, _value, "Value");
 SET_PROPERTY_FIELD_LABEL(PositionAnimationKey, _value, "Value");
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, RotationAnimationKey, AnimationKey);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(RotationAnimationKey, AnimationKey);
 DEFINE_PROPERTY_FIELD(RotationAnimationKey, _value, "Value");
 SET_PROPERTY_FIELD_LABEL(RotationAnimationKey, _value, "Value");
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, ScalingAnimationKey, AnimationKey);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ScalingAnimationKey, AnimationKey);
 DEFINE_PROPERTY_FIELD(ScalingAnimationKey, _value, "Value");
 SET_PROPERTY_FIELD_LABEL(ScalingAnimationKey, _value, "Value");
 

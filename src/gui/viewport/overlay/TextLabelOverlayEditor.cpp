@@ -38,7 +38,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Gui, TextLabelOverlayEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(TextLabelOverlayEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(TextLabelOverlay, TextLabelOverlayEditor);
 
 /******************************************************************************

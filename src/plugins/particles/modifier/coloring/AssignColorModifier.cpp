@@ -25,7 +25,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, AssignColorModifier, ParticleModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(AssignColorModifier, ParticleModifier);
 DEFINE_FLAGS_REFERENCE_FIELD(AssignColorModifier, _colorCtrl, "Color", Controller, PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(AssignColorModifier, _keepSelection, "KeepSelection");
 SET_PROPERTY_FIELD_LABEL(AssignColorModifier, _colorCtrl, "Color");

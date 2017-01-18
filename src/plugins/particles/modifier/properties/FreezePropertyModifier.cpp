@@ -26,7 +26,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Properties)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, FreezePropertyModifier, ParticleModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(FreezePropertyModifier, ParticleModifier);
 DEFINE_PROPERTY_FIELD(FreezePropertyModifier, _sourceProperty, "SourceProperty");
 DEFINE_PROPERTY_FIELD(FreezePropertyModifier, _destinationProperty, "DestinationProperty");
 DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(FreezePropertyModifier, _cachedDisplayObjects, "CachedDisplayObjects", DisplayObject, PROPERTY_FIELD_NEVER_CLONE_TARGET|PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_NO_UNDO|PROPERTY_FIELD_NO_SUB_ANIM);
@@ -34,7 +34,7 @@ SET_PROPERTY_FIELD_LABEL(FreezePropertyModifier, _sourceProperty, "Property");
 SET_PROPERTY_FIELD_LABEL(FreezePropertyModifier, _destinationProperty, "Destination property");
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SavedParticleProperty, RefTarget);
+	IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SavedParticleProperty, RefTarget);
 	DEFINE_REFERENCE_FIELD(SavedParticleProperty, _property, "Property", ParticlePropertyObject);
 	DEFINE_REFERENCE_FIELD(SavedParticleProperty, _identifiers, "Identifiers", ParticlePropertyObject);
 OVITO_END_INLINE_NAMESPACE

@@ -32,7 +32,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, CoordinationNumberModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(CoordinationNumberModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(CoordinationNumberModifier, CoordinationNumberModifierEditor);
 
 /******************************************************************************

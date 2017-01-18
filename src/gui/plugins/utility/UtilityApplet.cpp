@@ -24,7 +24,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(PluginSystem)
 
-IMPLEMENT_OVITO_OBJECT(Gui, UtilityApplet, RefMaker);
+IMPLEMENT_OVITO_OBJECT(UtilityApplet, RefMaker);
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

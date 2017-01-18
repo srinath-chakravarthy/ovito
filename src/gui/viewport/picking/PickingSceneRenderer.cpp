@@ -27,7 +27,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Gui, PickingSceneRenderer, ViewportSceneRenderer);
+IMPLEMENT_OVITO_OBJECT(PickingSceneRenderer, ViewportSceneRenderer);
 
 /******************************************************************************
 * This method is called just before renderFrame() is called.

@@ -32,7 +32,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, AsynchronousParticleModifier, ParticleModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(AsynchronousParticleModifier, ParticleModifier);
 
 /******************************************************************************
 * Constructs the modifier object.

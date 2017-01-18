@@ -29,7 +29,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, LAMMPSBinaryDumpImporter, ParticleImporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(LAMMPSBinaryDumpImporter, ParticleImporter);
 
 struct LAMMPSBinaryDumpHeader
 {
