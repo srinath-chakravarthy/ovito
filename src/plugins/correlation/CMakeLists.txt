@@ -21,22 +21,31 @@
 ###############################################################################
 
 # Locate the FFTW library.
-#IF(FLOATTYPE_FLOAT)
-FIND_LIBRARY(FFTW3F_LIBRARIES NAMES fftw3f libfftw3f)
-#ELSE()
-FIND_LIBRARY(FFTW3_LIBRARIES NAMES fftw3 libfftw3)
-#ENDIF()
+IF(OVITO_DOUBLE_PRECISION_FP)
+    FIND_LIBRARY(FFTW3_LIBRARIES NAMES fftw3 libfftw3)
+ELSE()
+    FIND_LIBRARY(FFTW3F_LIBRARIES NAMES fftw3f libfftw3f)
+ENDIF()
 
 SET(SourceFiles
 	CorrelationFunctionModifier.cpp
 )
 
-OVITO_STANDARD_PLUGIN(
-	CorrelationFunctionModifierPlugin
-	SOURCES ${SourceFiles}
-	PLUGIN_DEPENDENCIES Particles
-	PRIVATE_LIB_DEPENDENCIES fftw3 fftw3f
-)
+IF(OVITO_DOUBLE_PRECISION_FP)
+    OVITO_STANDARD_PLUGIN(
+    	CorrelationFunctionModifierPlugin
+    	SOURCES ${SourceFiles}
+    	PLUGIN_DEPENDENCIES Particles
+    	PRIVATE_LIB_DEPENDENCIES fftw3
+    )
+ELSE()
+    OVITO_STANDARD_PLUGIN(
+        CorrelationFunctionModifierPlugin
+        SOURCES ${SourceFiles}
+        PLUGIN_DEPENDENCIES Particles
+        PRIVATE_LIB_DEPENDENCIES fftw3f
+    )
+ENDIF()
 
 # Build corresponding GUI plugin.
 IF(OVITO_BUILD_GUI)
