@@ -65,6 +65,7 @@ OPTION(OVITO_BUILD_PLUGIN_PYSCRIPT "Build the Python scripting plugin." "ON")
 OPTION(OVITO_BUILD_PLUGIN_NETCDFPLUGIN "Build the NetCDF plugin." "ON")
 OPTION(OVITO_BUILD_PLUGIN_POVRAY "Build the POV-Ray plugin." "ON")
 OPTION(OVITO_BUILD_PLUGIN_OPENBABELPLUGIN "Build the OpenBabel plugin (experimental)." "OFF")
+OPTION(OVITO_BUILD_PLUGIN_CORRELATION "Build the correlation function plugin." "ON")
 
 # This is a global list of plugin targets that will be built.
 # It will get populated by the OVITO_PLUGIN macro.

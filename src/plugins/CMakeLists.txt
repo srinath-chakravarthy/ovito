@@ -78,5 +78,12 @@ ELSE()
 	FILE(REMOVE ${OVITO_PLUGIN_MANIFESTS_DIRECTORY}/OpenBabelPlugin.json)
 ENDIF()
 
+IF(OVITO_BUILD_PLUGIN_CORRELATION)
+        ADD_SUBDIRECTORY(correlation)
+ELSE()
+        FILE(REMOVE ${OVITO_PLUGIN_MANIFESTS_DIRECTORY}/CorrelationFunctionModifierPlugin.json)
+        FILE(REMOVE ${OVITO_PLUGIN_MANIFESTS_DIRECTORY}/CorrelationFunctionModifierPluginGui.json)
+ENDIF()
+
 # Propagate list of plugins to parent scope.
 SET(OVITO_PLUGIN_LIST ${OVITO_PLUGIN_LIST} PARENT_SCOPE)

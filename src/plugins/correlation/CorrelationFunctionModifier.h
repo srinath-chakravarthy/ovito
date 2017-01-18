@@ -26,7 +26,7 @@
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/ParticleProperty.h>
 #include <plugins/particles/util/CutoffNeighborFinder.h>
-#include "../../AsynchronousParticleModifier.h"
+#include "../particles/modifier/AsynchronousParticleModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 

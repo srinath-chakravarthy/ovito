@@ -21,7 +21,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/gui/ParticlesGui.h>
-#include <plugins/particles/modifier/analysis/correlation/CorrelationFunctionModifier.h>
+#include <plugins/correlation/CorrelationFunctionModifier.h>
 #include <gui/mainwin/MainWindow.h>
 #include <gui/properties/IntegerParameterUI.h>
 #include <gui/properties/FloatParameterUI.h>
