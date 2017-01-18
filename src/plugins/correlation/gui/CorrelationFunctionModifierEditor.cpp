@@ -80,8 +80,8 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	_realSpacePlot->setMinimumHeight(200);
 	_realSpacePlot->setMaximumHeight(200);
 	_realSpacePlot->setCanvasBackground(Qt::white);
-	_realSpacePlot->setAxisTitle(QwtPlot::xBottom, tr("Pair separation distance"));
-	_realSpacePlot->setAxisTitle(QwtPlot::yLeft, tr("C(r)"));
+	_realSpacePlot->setAxisTitle(QwtPlot::xBottom, tr("Wavevector q"));
+	_realSpacePlot->setAxisTitle(QwtPlot::yLeft, tr("C(q)"));
 
 	layout->addWidget(new QLabel(tr("Correlation function:")));
 	layout->addWidget(_realSpacePlot);
