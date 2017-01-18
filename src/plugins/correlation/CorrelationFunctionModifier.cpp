@@ -136,7 +136,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::mapToSpatialGrid(Pa
 	qDebug() << numberOfGridPoints;
 
 	// Resize real space grid.
-	gridData.resize(numberOfGridPoints);
+	gridData.fill(0.0, numberOfGridPoints);
 
 	qDebug() << "2";
 
@@ -166,7 +166,28 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::mapToSpatialGrid(Pa
 					if(pbc[2]) binIndexZ = SimulationCell::modulo(binIndexZ, nZ);
 					if(binIndexX >= 0 && binIndexX < nX && binIndexY >= 0 && binIndexY < nY && binIndexZ >= 0 && binIndexZ < nZ) {
 						// Store in row-major format.
-						size_t binIndex = (binIndexX+binIndexY*nX)*nZ+binIndexZ;
+						size_t binIndex = binIndexZ+nZ*(binIndexY+nY*binIndexX);
+						gridData[binIndex] += *v;
+					}
+				}
+			}
+		}
+		else if(property->dataType() == qMetaTypeId<int>()) {
+			const int* v = property->constDataInt() + vecComponent;
+			const int* v_end = v + (property->size() * vecComponentCount);
+			qDebug() << "6";
+			for(; v != v_end; v += vecComponentCount, ++pos) {
+				if(!std::isnan(*v)) {
+					Point3 fractionalPos = reciprocalCell*(*pos);
+					int binIndexX = int( fractionalPos.x() * nX );
+					int binIndexY = int( fractionalPos.y() * nY );
+					int binIndexZ = int( fractionalPos.z() * nZ );
+					if(pbc[0]) binIndexX = SimulationCell::modulo(binIndexX, nX);
+					if(pbc[1]) binIndexY = SimulationCell::modulo(binIndexY, nY);
+					if(pbc[2]) binIndexZ = SimulationCell::modulo(binIndexZ, nZ);
+					if(binIndexX >= 0 && binIndexX < nX && binIndexY >= 0 && binIndexY < nY && binIndexZ >= 0 && binIndexZ < nZ) {
+						// Store in row-major format.
+						size_t binIndex = binIndexZ+nZ*(binIndexY+nY*binIndexX);
 						gridData[binIndex] += *v;
 					}
 				}
@@ -244,9 +265,9 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	QVector<int> numberOfValues(nq, 0);
 
 	// Compute distance of cell faces.
-	FloatType cellFaceDistance1 = cell().matrix().column(0).dot(cell().cellNormalVector(0));
-	FloatType cellFaceDistance2 = cell().matrix().column(1).dot(cell().cellNormalVector(1));
-	FloatType cellFaceDistance3 = cell().matrix().column(2).dot(cell().cellNormalVector(2));
+	FloatType cellFaceDistance1 = 1/reciprocalCell.row(0).length();
+	FloatType cellFaceDistance2 = 1/reciprocalCell.row(1).length();
+	FloatType cellFaceDistance3 = 1/reciprocalCell.row(2).length();
 	qDebug() << "cell face distances " << cellFaceDistance1 << " " << cellFaceDistance2 << " " << cellFaceDistance3;
 
 	// Minimum reciprocal space vector is given by the minimum distance of cell faces.
@@ -264,7 +285,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	int binIndex = 0;
 	for (int binIndexX = 0; binIndexX < nX; binIndexX++) {
 		for (int binIndexY = 0; binIndexY < nY; binIndexY++) {
-			for (int binIndexZ = 0; binIndexZ < nX; binIndexZ++, binIndex++) {
+			for (int binIndexZ = 0; binIndexZ < nZ/2+1; binIndexZ++, binIndex++) {
 				// Compute correlation function.
 				std::complex<FloatType> corr = ftProperty1[binIndex]*std::conj(ftProperty2[binIndex]);
 
@@ -272,13 +293,13 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 				ftProperty1[binIndex] = corr;
 
 				// Compute wavevector. (FIXME! Check that this is actually correct for even and odd numbers of grid points.)
-				int n1 = SimulationCell::modulo(binIndexX+nX/2, nX)-nX/2;
-				int n2 = SimulationCell::modulo(binIndexY+nY/2, nY)-nY/2;
-				int n3 = SimulationCell::modulo(binIndexZ+nY/2, nZ)-nZ/2;
+				int iX = SimulationCell::modulo(binIndexX+nX/2, nX)-nX/2;
+				int iY = SimulationCell::modulo(binIndexY+nY/2, nY)-nY/2;
+				int iZ = SimulationCell::modulo(binIndexZ+nZ/2, nZ)-nZ/2;
 				// This is the reciprocal space vector (without a factor of 2*pi).
-				Vector_4<FloatType> q = reciprocalCell.row(0) +
-						 		   	 	reciprocalCell.row(1) +
-						 			 	reciprocalCell.row(2);
+				Vector_4<FloatType> q = FloatType(iX)*reciprocalCell.row(0) +
+						 		   	 	FloatType(iY)*reciprocalCell.row(1) +
+						 			 	FloatType(iZ)*reciprocalCell.row(2);
 				q.w() = 0.0;
 
 				// Length of reciprocal space vector.
@@ -303,7 +324,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	qDebug() << "G";
 
 	// Computer inverse Fourier transform of correlation function.
-#if 0
 	plan = fftw_plan_dft_c2r_3d(
 		nX, nY, nZ,
 		reinterpret_cast<fftw_complex*>(ftProperty1.data()),
@@ -313,7 +333,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	fftw_destroy_plan(plan);
 
 	qDebug() << "H";
-#endif
 
 	int n = 20;
 	_realSpaceCorrelationFunction.resize(n);
