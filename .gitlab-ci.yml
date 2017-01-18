@@ -16,6 +16,7 @@ before_script:
                          libavutil-dev
                          libswscale-dev
                          libnetcdf-dev
+                         libfftw3-dev
                          libhdf5-dev
                          libhdf5-serial-dev
                          libbotan1.10-dev
