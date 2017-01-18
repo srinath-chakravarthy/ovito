@@ -137,9 +137,14 @@ void CorrelationFunctionModifierEditor::plotData()
 		plotGrid->attach(_realSpacePlot);
 	}
 
-	_realSpaceCurve->setSamples(modifier->realSpaceCorrelationFunctionX().data(),
-								modifier->realSpaceCorrelationFunction().data(),
-								modifier->realSpaceCorrelationFunction().size());
+	// Set data to plot.
+	size_t numberOfDataPoints = modifier->realSpaceCorrelationFunction().size();
+	QVector<QPointF> plotData(numberOfDataPoints);
+	for (int i = 0; i < numberOfDataPoints; i++) {
+		plotData[i].rx() = modifier->realSpaceCorrelationFunctionX()[i];
+		plotData[i].ry() = modifier->realSpaceCorrelationFunction()[i];
+	}
+	_realSpaceCurve->setSamples(plotData);
 
 	// Determine lower X bound where the correlation function is non-zero.
 	_realSpacePlot->setAxisAutoScale(QwtPlot::xBottom);

@@ -59,10 +59,10 @@ public:
 	FloatType cutoff() const { return _cutoff; }
 
 	/// Returns the X coordinates of the RDF data points.
-	const QVector<double>& realSpaceCorrelationFunction() const { return _realSpaceCorrelationFunction; }
+	const QVector<FloatType>& realSpaceCorrelationFunction() const { return _realSpaceCorrelationFunction; }
 
 	/// Returns the Y coordinates of the RDF data points.
-	const QVector<double>& realSpaceCorrelationFunctionX() const { return _realSpaceCorrelationFunctionX; }
+	const QVector<FloatType>& realSpaceCorrelationFunctionX() const { return _realSpaceCorrelationFunctionX; }
 
 	/// Returns the number of bins in the computed RDF histogram.
 	int numberOfBins() const { return _numberOfBins; }
@@ -107,27 +107,32 @@ private:
 		FloatType cutoff() const { return _cutoff; }
 
 		/// Returns the real-space correlation function.
-		const QVector<double>& realSpaceCorrelationFunction() const { return _realSpaceCorrelationFunction; }
+		const QVector<FloatType>& realSpaceCorrelationFunction() const { return _realSpaceCorrelationFunction; }
 
 		/// Returns the real-space correlation function.
-		const QVector<double>& realSpaceCorrelationFunctionX() const { return _realSpaceCorrelationFunctionX; }
+		const QVector<FloatType>& realSpaceCorrelationFunctionX() const { return _realSpaceCorrelationFunctionX; }
 
 		/// Returns the reciprocal-space correlation function.
-		const QVector<double>& reciprocalSpaceCorrelationFunction() const { return _reciprocalSpaceCorrelationFunction; }
+		const QVector<FloatType>& reciprocalSpaceCorrelationFunction() const { return _reciprocalSpaceCorrelationFunction; }
 
 	private:
 
 		/// Map property onto grid.
-		void mapToSpatialGrid(ParticleProperty *property, size_t propertyVectorComponent, int nX, int nY, int nZ, QVector<double> &gridData);
+		void mapToSpatialGrid(ParticleProperty *property,
+							  size_t propertyVectorComponent,
+							  const AffineTransformation &reciprocalCell,
+							  int nX, int nY, int nZ,
+							  QVector<FloatType> &gridData);
 
 		FloatType _cutoff;
 		SimulationCell _simCell;
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
 		QExplicitlySharedDataPointer<ParticleProperty> _sourceProperty1;
 		QExplicitlySharedDataPointer<ParticleProperty> _sourceProperty2;
-		QVector<double> _realSpaceCorrelationFunction;
-		QVector<double> _realSpaceCorrelationFunctionX;
-		QVector<double> _reciprocalSpaceCorrelationFunction;
+		QVector<FloatType> _realSpaceCorrelationFunction;
+		QVector<FloatType> _realSpaceCorrelationFunctionX;
+		QVector<FloatType> _reciprocalSpaceCorrelationFunction;
+		QVector<FloatType> _reciprocalSpaceCorrelationFunctionX;
 	};
 
 protected:
@@ -162,10 +167,10 @@ private:
 	PropertyField<FloatType> _numberOfBins;
 
 	/// The real-space correlation function.
-	QVector<double> _realSpaceCorrelationFunction;
+	QVector<FloatType> _realSpaceCorrelationFunction;
 
 	/// The real-space correlation function.
-	QVector<double> _realSpaceCorrelationFunctionX;
+	QVector<FloatType> _realSpaceCorrelationFunctionX;
 
 	Q_OBJECT
 	OVITO_OBJECT

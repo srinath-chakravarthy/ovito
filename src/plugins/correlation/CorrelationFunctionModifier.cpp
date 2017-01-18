@@ -124,8 +124,9 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CorrelationFunction
 ******************************************************************************/
 void CorrelationFunctionModifier::CorrelationAnalysisEngine::mapToSpatialGrid(ParticleProperty *property,
 																			  size_t propertyVectorComponent,
+																			  const AffineTransformation &reciprocalCell,
 																			  int nX, int nY, int nZ,
-																			  QVector<double> &gridData)
+																			  QVector<FloatType> &gridData)
 {
 	size_t vecComponent = std::max(size_t(0), propertyVectorComponent);
 	size_t vecComponentCount = property->componentCount();
@@ -142,9 +143,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::mapToSpatialGrid(Pa
 	// Get periodic boundary flag.
 	std::array<bool, 3> pbc = cell().pbcFlags();
 
-	// Get reciprocal cell.
-    AffineTransformation reciprocalCell = cell().inverseMatrix();
-
 	qDebug() << "3";
 
 	if(property->size() > 0) {
@@ -157,21 +155,22 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::mapToSpatialGrid(Pa
 			const FloatType* v = property->constDataFloat() + vecComponent;
 			const FloatType* v_end = v + (property->size() * vecComponentCount);
 			qDebug() << "5";
-            for(; v != v_end; v += vecComponentCount, ++pos) {
-                if(!std::isnan(*v)) {
-                	Point3 fractionalPos = reciprocalCell*(*pos);
-                    int binIndexX = int( fractionalPos.x() * nX );
-                    int binIndexY = int( fractionalPos.y() * nY );
-                    int binIndexZ = int( fractionalPos.z() * nZ );
-                    if(pbc[0]) binIndexX = SimulationCell::modulo(binIndexX, nX);
-                    if(pbc[1]) binIndexY = SimulationCell::modulo(binIndexY, nY);
-                    if(pbc[2]) binIndexZ = SimulationCell::modulo(binIndexZ, nZ);
-                    if(binIndexX >= 0 && binIndexX < nX && binIndexY >= 0 && binIndexY < nY && binIndexZ >= 0 && binIndexZ < nZ) {
-                        size_t binIndex = (binIndexX+binIndexY*nX)*nZ+binIndexZ;
-                        gridData[binIndex] += *v;
-                    }
-                }
-            }
+			for(; v != v_end; v += vecComponentCount, ++pos) {
+				if(!std::isnan(*v)) {
+					Point3 fractionalPos = reciprocalCell*(*pos);
+					int binIndexX = int( fractionalPos.x() * nX );
+					int binIndexY = int( fractionalPos.y() * nY );
+					int binIndexZ = int( fractionalPos.z() * nZ );
+					if(pbc[0]) binIndexX = SimulationCell::modulo(binIndexX, nX);
+					if(pbc[1]) binIndexY = SimulationCell::modulo(binIndexY, nY);
+					if(pbc[2]) binIndexZ = SimulationCell::modulo(binIndexZ, nZ);
+					if(binIndexX >= 0 && binIndexX < nX && binIndexY >= 0 && binIndexY < nY && binIndexZ >= 0 && binIndexZ < nZ) {
+						// Store in row-major format.
+						size_t binIndex = (binIndexX+binIndexY*nX)*nZ+binIndexZ;
+						gridData[binIndex] += *v;
+					}
+				}
+			}
 		}
 	}
 }
@@ -185,24 +184,43 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 
 	setProgressText(tr("Computing correlation function"));
 
-	int nX, nY, nZ;
-	nX = nY = nZ = 20;
+	int nX, nY, nZ, nq;
+	nX = nY = nZ = nq = 20;
 
-	QVector<double> gridProperty1, gridProperty2;
+	// Get reciprocal cell.
+	AffineTransformation reciprocalCell = cell().inverseMatrix();
+
+	// Map all quantities onto a spatial grid.
+	QVector<FloatType> gridProperty1, gridProperty2;
 	qDebug() << "A";
 	mapToSpatialGrid(sourceProperty1(),
-				     0, // FIXME! Selected vector component should be passed to engine.
-				     nX, nY, nZ,
-				     gridProperty1);
+					 0, // FIXME! Selected vector component should be passed to engine.
+					 reciprocalCell,
+					 nX, nY, nZ,
+					 gridProperty1);
 	qDebug() << "B";
 	mapToSpatialGrid(sourceProperty2(),
-				     0, // FIXME! Selected vector component should be passed to engine.
-				     nX, nY, nZ,
-				     gridProperty2);
+					 0, // FIXME! Selected vector component should be passed to engine.
+					 reciprocalCell,
+					 nX, nY, nZ,
+					 gridProperty2);
 
+	// FIXME. Apply windowing function in nonperiodic directions here.
+
+	// Use single precision FFTW if Ovito is compiled with single precision
+	// floating point type.
+#ifdef FLOATTYPE_FLOAT
+#define fftw_complex fftwf_complex
+#define fftw_plan_dft_r2c_3d fftwf_plan_dft_r2c_3d
+#define fftw_plan_dft_c2r_3d fftwf_plan_dft_c2r_3d
+#define fftw_execute fftwf_execute
+#define fftw_destroy_plan fftwf_destroy_plan
+#endif
+
+	// Compute Fourier transform of spatial grid.
 	qDebug() << "C";
-	QVector<std::complex<double>> ftProperty1(nX*nY*(nZ/2+1));
-	auto plan = fftw_plan_dft_r2c_3d(
+	QVector<std::complex<FloatType>> ftProperty1(nX*nY*(nZ/2+1));
+	auto plan = fftwf_plan_dft_r2c_3d(
 		nX, nY, nZ,
 		gridProperty1.data(),
 		reinterpret_cast<fftw_complex*>(ftProperty1.data()),
@@ -211,11 +229,78 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	fftw_destroy_plan(plan);
 
 	qDebug() << "D";
-	QVector<std::complex<double>> ftProperty2(nX*nY*(nZ/2+1));
+	QVector<std::complex<FloatType>> ftProperty2(nX*nY*(nZ/2+1));
 	plan = fftw_plan_dft_r2c_3d(
 		nX, nY, nZ,
 		gridProperty2.data(),
 		reinterpret_cast<fftw_complex*>(ftProperty2.data()),
+		FFTW_ESTIMATE);
+	fftw_execute(plan);
+	fftw_destroy_plan(plan);
+
+	// Radially average reciprocal space correlation function.
+	_reciprocalSpaceCorrelationFunction.fill(0.0, nq);
+	_reciprocalSpaceCorrelationFunctionX.resize(nq);
+	QVector<int> numberOfValues(nq, 0);
+
+	// Compute distance of cell faces.
+	FloatType cellFaceDistance1 = cell().matrix().column(0).dot(cell().cellNormalVector(0));
+	FloatType cellFaceDistance2 = cell().matrix().column(1).dot(cell().cellNormalVector(1));
+	FloatType cellFaceDistance3 = cell().matrix().column(2).dot(cell().cellNormalVector(2));
+	qDebug() << "cell face distances " << cellFaceDistance1 << " " << cellFaceDistance2 << " " << cellFaceDistance3;
+
+	// Minimum reciprocal space vector is given by the minimum distance of cell faces.
+	FloatType minReciprocalSpaceVector = 1/std::min({cellFaceDistance1, cellFaceDistance2, cellFaceDistance3});
+
+	// Populate array with reciprocal space vectors.
+	for (int binIndex = 0; binIndex < nq; binIndex++) {
+		_reciprocalSpaceCorrelationFunctionX[binIndex] = 2*M_PI*(binIndex+0.5)*minReciprocalSpaceVector;
+	}
+
+	// Compute Fourier-transformed correlation function and put it on a radial
+	// grid.
+	int binIndex = 0;
+	for (int binIndexX = 0; binIndexX < nX; binIndexX++) {
+		for (int binIndexY = 0; binIndexY < nY; binIndexY++) {
+			for (int binIndexZ = 0; binIndexZ < nX; binIndexZ++, binIndex++) {
+				// Compute correlation function.
+				std::complex<FloatType> corr = ftProperty1[binIndex]*std::conj(ftProperty2[binIndex]);
+
+				// Store correlation function to property1 for back transform.
+				ftProperty1[binIndex] = corr;
+
+				// Compute wavevector. (FIXME! Check that this is actually correct for even and odd numbers of grid points.)
+				int n1 = SimulationCell::modulo(binIndexX+nX/2, nX)-nX/2;
+				int n2 = SimulationCell::modulo(binIndexY+nY/2, nY)-nY/2;
+				int n3 = SimulationCell::modulo(binIndexZ+nY/2, nZ)-nZ/2;
+				// This is the reciprocal space vector (without a factor of 2*pi).
+				Vector_4<FloatType> q = reciprocalCell.row(0) +
+						 		   	 	reciprocalCell.row(1) +
+						 			 	reciprocalCell.row(2);
+				q.w() = 0.0;
+
+				// Length of reciprocal space vector.
+				int qBinIndex = int(std::floor(q.length()/minReciprocalSpaceVector));
+				if (qBinIndex >= 0 && qBinIndex < nq) {
+					_reciprocalSpaceCorrelationFunction[qBinIndex] += std::real(corr);
+					numberOfValues[qBinIndex]++;
+				}
+			}
+		}
+	}
+
+	// Compute averages.
+	for (int qBinIndex = 0; qBinIndex < nq; qBinIndex++) {
+		if (numberOfValues[qBinIndex] > 0) {
+			_reciprocalSpaceCorrelationFunction[qBinIndex] /= numberOfValues[qBinIndex];
+		}
+	}
+
+	// Computer inverse Fourier transform of correlation function.
+	plan = fftw_plan_dft_c2r_3d(
+		nX, nY, nZ,
+		reinterpret_cast<fftw_complex*>(ftProperty1.data()),
+		gridProperty1.data(),
 		FFTW_ESTIMATE);
 	fftw_execute(plan);
 	fftw_destroy_plan(plan);
