@@ -47,7 +47,7 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	// Create a rollout.
 	QWidget* rollout = createRollout(tr("Correlation function"), rolloutParams, "particles.modifiers.correlation_function.html");
 
-    // Create the rollout contents.
+	// Create the rollout contents.
 	QVBoxLayout* layout = new QVBoxLayout(rollout);
 	layout->setContentsMargins(4,4,4,4);
 	layout->setSpacing(4);
@@ -129,7 +129,7 @@ void CorrelationFunctionModifierEditor::plotData()
 	if(!_realSpaceCurve) {
 		qDebug() << "Allocating QwtPlotCurve";
 		_realSpaceCurve = new QwtPlotCurve();
-	    _realSpaceCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+		_realSpaceCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
 		_realSpaceCurve->setBrush(Qt::lightGray);
 		_realSpaceCurve->attach(_realSpacePlot);
 		QwtPlotGrid* plotGrid = new QwtPlotGrid();
@@ -137,9 +137,9 @@ void CorrelationFunctionModifierEditor::plotData()
 		plotGrid->attach(_realSpacePlot);
 	}
 
-    _realSpaceCurve->setSamples(modifier->realSpaceCorrelationFunctionX().data(),
-    						    modifier->realSpaceCorrelationFunction().data(),
-    						    modifier->realSpaceCorrelationFunction().size());
+	_realSpaceCurve->setSamples(modifier->realSpaceCorrelationFunctionX().data(),
+								modifier->realSpaceCorrelationFunction().data(),
+								modifier->realSpaceCorrelationFunction().size());
 
 	// Determine lower X bound where the correlation function is non-zero.
 	_realSpacePlot->setAxisAutoScale(QwtPlot::xBottom);
