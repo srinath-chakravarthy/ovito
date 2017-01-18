@@ -138,11 +138,11 @@ void CorrelationFunctionModifierEditor::plotData()
 	}
 
 	// Set data to plot.
-	size_t numberOfDataPoints = modifier->realSpaceCorrelationFunction().size();
+	size_t numberOfDataPoints = modifier->reciprocalSpaceCorrelationFunction().size();
 	QVector<QPointF> plotData(numberOfDataPoints);
 	for (int i = 0; i < numberOfDataPoints; i++) {
-		plotData[i].rx() = modifier->realSpaceCorrelationFunctionX()[i];
-		plotData[i].ry() = modifier->realSpaceCorrelationFunction()[i];
+		plotData[i].rx() = modifier->reciprocalSpaceCorrelationFunctionX()[i];
+		plotData[i].ry() = modifier->reciprocalSpaceCorrelationFunction()[i];
 	}
 	_realSpaceCurve->setSamples(plotData);
 
