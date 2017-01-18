@@ -64,6 +64,12 @@ public:
 	/// Returns the Y coordinates of the RDF data points.
 	const QVector<FloatType>& realSpaceCorrelationFunctionX() const { return _realSpaceCorrelationFunctionX; }
 
+	/// Returns the X coordinates of the RDF data points.
+	const QVector<FloatType>& reciprocalSpaceCorrelationFunction() const { return _reciprocalSpaceCorrelationFunction; }
+
+	/// Returns the Y coordinates of the RDF data points.
+	const QVector<FloatType>& reciprocalSpaceCorrelationFunctionX() const { return _reciprocalSpaceCorrelationFunctionX; }
+
 	/// Returns the number of bins in the computed RDF histogram.
 	int numberOfBins() const { return _numberOfBins; }
 
@@ -109,11 +115,14 @@ private:
 		/// Returns the real-space correlation function.
 		const QVector<FloatType>& realSpaceCorrelationFunction() const { return _realSpaceCorrelationFunction; }
 
-		/// Returns the real-space correlation function.
+		/// Returns the distances for which the real-space correlation function is tabulated.
 		const QVector<FloatType>& realSpaceCorrelationFunctionX() const { return _realSpaceCorrelationFunctionX; }
 
 		/// Returns the reciprocal-space correlation function.
 		const QVector<FloatType>& reciprocalSpaceCorrelationFunction() const { return _reciprocalSpaceCorrelationFunction; }
+
+		/// Returns the wavevectors for which the reciprocal-space correlation function is tabulated.
+		const QVector<FloatType>& reciprocalSpaceCorrelationFunctionX() const { return _reciprocalSpaceCorrelationFunctionX; }
 
 	private:
 
@@ -169,8 +178,14 @@ private:
 	/// The real-space correlation function.
 	QVector<FloatType> _realSpaceCorrelationFunction;
 
-	/// The real-space correlation function.
+	/// The distances for which the real-space correlation function is tabulated.
 	QVector<FloatType> _realSpaceCorrelationFunctionX;
+
+	/// The reciprocal-space correlation function.
+	QVector<FloatType> _reciprocalSpaceCorrelationFunction;
+
+	/// The wavevevtors for which the reciprocal-space correlation function is tabulated.
+	QVector<FloatType> _reciprocalSpaceCorrelationFunctionX;
 
 	Q_OBJECT
 	OVITO_OBJECT
