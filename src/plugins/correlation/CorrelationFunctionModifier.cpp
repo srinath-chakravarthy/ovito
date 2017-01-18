@@ -220,7 +220,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	// Compute Fourier transform of spatial grid.
 	qDebug() << "C";
 	QVector<std::complex<FloatType>> ftProperty1(nX*nY*(nZ/2+1));
-	auto plan = fftwf_plan_dft_r2c_3d(
+	auto plan = fftw_plan_dft_r2c_3d(
 		nX, nY, nZ,
 		gridProperty1.data(),
 		reinterpret_cast<fftw_complex*>(ftProperty1.data()),
@@ -257,6 +257,8 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		_reciprocalSpaceCorrelationFunctionX[binIndex] = 2*M_PI*(binIndex+0.5)*minReciprocalSpaceVector;
 	}
 
+	qDebug() << "E";
+
 	// Compute Fourier-transformed correlation function and put it on a radial
 	// grid.
 	int binIndex = 0;
@@ -289,6 +291,8 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		}
 	}
 
+	qDebug() << "F";
+
 	// Compute averages.
 	for (int qBinIndex = 0; qBinIndex < nq; qBinIndex++) {
 		if (numberOfValues[qBinIndex] > 0) {
@@ -296,7 +300,10 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		}
 	}
 
+	qDebug() << "G";
+
 	// Computer inverse Fourier transform of correlation function.
+#if 0
 	plan = fftw_plan_dft_c2r_3d(
 		nX, nY, nZ,
 		reinterpret_cast<fftw_complex*>(ftProperty1.data()),
@@ -304,6 +311,9 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		FFTW_ESTIMATE);
 	fftw_execute(plan);
 	fftw_destroy_plan(plan);
+
+	qDebug() << "H";
+#endif
 
 	int n = 20;
 	_realSpaceCorrelationFunction.resize(n);
