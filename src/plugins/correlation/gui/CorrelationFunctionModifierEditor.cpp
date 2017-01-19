@@ -171,19 +171,21 @@ void CorrelationFunctionModifierEditor::plotAllData()
 
 	// Plot real-space correlation function
 	if(!modifier->realSpaceCorrelationFunctionX().empty() &&
-	   !modifier->realSpaceCorrelationFunction().empty())
+	   !modifier->realSpaceCorrelationFunction().empty()) {
 		plotData(modifier->realSpaceCorrelationFunctionX(),
 				 modifier->realSpaceCorrelationFunction(),
 				 _realSpacePlot,
 				 _realSpaceCurve);
+	}
 
 	// Plot reciprocal-space correlation function
 	if(!modifier->reciprocalSpaceCorrelationFunctionX().empty() &&
-	   !modifier->reciprocalSpaceCorrelationFunction().empty())
+	   !modifier->reciprocalSpaceCorrelationFunction().empty()) {
 		plotData(modifier->reciprocalSpaceCorrelationFunctionX(),
 				 modifier->reciprocalSpaceCorrelationFunction(),
 				 _reciprocalSpacePlot,
 				 _reciprocalSpaceCurve);
+	}
 }
 
 OVITO_END_INLINE_NAMESPACE

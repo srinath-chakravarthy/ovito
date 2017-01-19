@@ -95,10 +95,13 @@ private:
 								  ParticleProperty* sourceProperty1,
 								  ParticleProperty* sourceProperty2,
 								  const SimulationCell& simCell,
-								  FloatType cutoff) :
+								  FloatType cutoff,
+								  int numberOfBinsForShortRangedCalculation) :
 			ComputeEngine(validityInterval), _positions(positions),
 			_sourceProperty1(sourceProperty1), _sourceProperty2(sourceProperty2),
-			_simCell(simCell), _cutoff(cutoff) {}
+			_simCell(simCell), _cutoff(cutoff),
+			_shortRangedRealSpaceCorrelationFunction(numberOfBinsForShortRangedCalculation, 0.0),
+			_shortRangedRealSpaceCorrelationFunctionX(numberOfBinsForShortRangedCalculation) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;

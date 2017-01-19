@@ -116,7 +116,8 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CorrelationFunction
 													   property1->storage(),
 													   property2->storage(),
 													   inputCell->data(),
-													   cutoff());
+													   cutoff(),
+													   numberOfBinsForShortRangedCalculation());
 }
 
 /******************************************************************************
@@ -230,7 +231,11 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 					 nX, nY, nZ,
 					 gridProperty2);
 
+	if (isCanceled())
+		return;
+
 	// FIXME. Apply windowing function in nonperiodic directions here.
+	// FIXME. Imaginary part of cross-correlation function is ignored.
 
 	// Use single precision FFTW if Ovito is compiled with single precision
 	// floating point type.
@@ -241,6 +246,8 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 #define fftw_execute fftwf_execute
 #define fftw_destroy_plan fftwf_destroy_plan
 #endif
+
+	// Compute reciprocal-space correlation function from a product in Fourier space.
 
 	// Compute Fourier transform of spatial grid.
 	qDebug() << "C";
@@ -253,6 +260,9 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	fftw_execute(plan);
 	fftw_destroy_plan(plan);
 
+	if (isCanceled())
+		return;
+
 	qDebug() << "D";
 		QVector<std::complex<FloatType>> ftProperty2(nX*nY*(nZ/2+1));
 		plan = fftw_plan_dft_r2c_3d(
@@ -262,6 +272,9 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		FFTW_ESTIMATE);
 	fftw_execute(plan);
 	fftw_destroy_plan(plan);
+
+	if (isCanceled())
+		return;
 
 	// Compute distance of cell faces.
 	FloatType cellFaceDistance1 = 1/reciprocalCellMatrix.row(0).length();
@@ -332,6 +345,11 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 
 	qDebug() << "G";
 
+	if (isCanceled())
+		return;
+
+	// Compute long-ranged part of the real-space correlation function from the FFT convolution.
+
 	// Computer inverse Fourier transform of correlation function.
 	plan = fftw_plan_dft_c2r_3d(
 		nX, nY, nZ,
@@ -342,6 +360,9 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	fftw_destroy_plan(plan);
 
 	qDebug() << "H";
+
+	if (isCanceled())
+		return;
 
 	// Determine number of grid points for real-space correlation function.
 	int numberOfDistanceBins = minCellFaceDistance/(2*cutoff());
@@ -390,6 +411,65 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 			_realSpaceCorrelationFunction[distanceBinIndex] *= normalizationFactor/numberOfValues[distanceBinIndex];
 		}
 	}
+
+	qDebug() << "I";
+
+	if (isCanceled())
+		return;
+
+	// Compute short-ranged part of the real-space correlation function from a direct loop over particle neighbors.
+
+	// Prepare the neighbor list.
+	CutoffNeighborFinder neighborListBuilder;
+	if (!neighborListBuilder.prepare(_cutoff, positions(), cell(), nullptr, this))
+		return;
+
+	size_t particleCount = positions()->size();
+	setProgressValue(0);
+	setProgressRange(particleCount / 1000);
+
+	// Perform analysis on each particle in parallel.
+	std::vector<std::thread> workers;
+	size_t num_threads = Application::instance().idealThreadCount();
+	size_t chunkSize = particleCount / num_threads;
+	size_t startIndex = 0;
+	size_t endIndex = chunkSize;
+	std::mutex mutex;
+	for (size_t t = 0; t < num_threads; t++) {
+		if (t == num_threads - 1) {
+			endIndex += particleCount % num_threads;
+		}
+		workers.push_back(std::thread([&neighborListBuilder, startIndex, endIndex, &mutex, this]() {
+			FloatType gridSpacing = (_cutoff + FLOATTYPE_EPSILON) / _shortRangedRealSpaceCorrelationFunction.size();
+			std::vector<double> threadLocalCorrelation(_shortRangedRealSpaceCorrelationFunction.size(), 0);
+			for (size_t i = startIndex; i < endIndex;) {
+
+				for (CutoffNeighborFinder::Query neighQuery(neighborListBuilder, i); !neighQuery.atEnd(); neighQuery.next()) {
+					size_t distanceBinIndex = (size_t)(sqrt(neighQuery.distanceSquared()) / gridSpacing);
+					distanceBinIndex = std::min(distanceBinIndex, threadLocalCorrelation.size() - 1);
+					threadLocalCorrelation[distanceBinIndex]++;
+				}
+
+				i++;
+
+				// Update progress indicator.
+				if ((i % 1000) == 0)
+					incrementProgressValue();
+				// Abort loop when operation was canceled by the user.
+				if (isCanceled())
+					return;
+			}
+			std::lock_guard<std::mutex> lock(mutex);
+			auto iter_out = _shortRangedRealSpaceCorrelationFunction.begin();
+			for (auto iter = threadLocalCorrelation.cbegin(); iter != threadLocalCorrelation.cend(); ++iter, ++iter_out)
+				*iter_out += *iter;
+		}));
+		startIndex = endIndex;
+		endIndex += chunkSize;
+	}
+
+	for (auto& t: workers)
+		t.join();
 }
 
 /******************************************************************************
