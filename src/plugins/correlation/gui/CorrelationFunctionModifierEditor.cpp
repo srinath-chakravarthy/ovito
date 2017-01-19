@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (2016) Alexander Stukowski
-//  Copyright (2016) Lars Pastewka
+//  Copyright (2017) Lars Pastewka
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -80,12 +80,23 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	_realSpacePlot->setMinimumHeight(200);
 	_realSpacePlot->setMaximumHeight(200);
 	_realSpacePlot->setCanvasBackground(Qt::white);
-	_realSpacePlot->setAxisTitle(QwtPlot::xBottom, tr("Wavevector q"));
-	_realSpacePlot->setAxisTitle(QwtPlot::yLeft, tr("C(q)"));
+	_realSpacePlot->setAxisTitle(QwtPlot::xBottom, tr("Distance r"));
+	_realSpacePlot->setAxisTitle(QwtPlot::yLeft, tr("C(r)"));
 
-	layout->addWidget(new QLabel(tr("Correlation function:")));
+	layout->addWidget(new QLabel(tr("Real-space correlation function:")));
 	layout->addWidget(_realSpacePlot);
-	connect(this, &CorrelationFunctionModifierEditor::contentsReplaced, this, &CorrelationFunctionModifierEditor::plotData);
+
+	_reciprocalSpacePlot = new QwtPlot();
+	_reciprocalSpacePlot->setMinimumHeight(200);
+	_reciprocalSpacePlot->setMaximumHeight(200);
+	_reciprocalSpacePlot->setCanvasBackground(Qt::white);
+	_reciprocalSpacePlot->setAxisTitle(QwtPlot::xBottom, tr("Wavevector q"));
+	_reciprocalSpacePlot->setAxisTitle(QwtPlot::yLeft, tr("C(q)"));
+
+	layout->addWidget(new QLabel(tr("Reciprocal-space correlation function:")));
+	layout->addWidget(_reciprocalSpacePlot);
+
+	connect(this, &CorrelationFunctionModifierEditor::contentsReplaced, this, &CorrelationFunctionModifierEditor::plotAllData);
 
 	// Status label.
 	layout->addSpacing(6);
@@ -100,61 +111,79 @@ bool CorrelationFunctionModifierEditor::referenceEvent(RefTarget* source, Refere
 	qDebug() << "CorrelationFunctionModifierEditor::referenceEvent";
 
 	if(event->sender() == editObject() && event->type() == ReferenceEvent::ObjectStatusChanged) {
-		plotDataLater(this);
+		plotAllDataLater(this);
 	}
 	return ParticleModifierEditor::referenceEvent(source, event);
 }
 
 /******************************************************************************
+* Plot correlation function.
+******************************************************************************/
+void CorrelationFunctionModifierEditor::plotData(const QVector<FloatType> &xData,
+											     const QVector<FloatType> &yData,
+												 QwtPlot *plot,
+												 QwtPlotCurve *&curve)
+{
+	if (xData.size() != yData.size())
+		throwException("Argument to plotData must have same size.");
+
+	if(!curve) {
+		qDebug() << "Allocating QwtPlotCurve";
+		curve = new QwtPlotCurve();
+		curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+		curve->setBrush(Qt::lightGray);
+		curve->attach(plot);
+		QwtPlotGrid* plotGrid = new QwtPlotGrid();
+		plotGrid->setPen(Qt::gray, 0, Qt::DotLine);
+		plotGrid->attach(plot);
+	}
+
+	// Set data to plot.
+	size_t numberOfDataPoints = yData.size();
+	QVector<QPointF> plotData(numberOfDataPoints);
+	FloatType minx, maxx;
+	minx = maxx = xData[0];
+	for (int i = 1; i < numberOfDataPoints; i++) {
+		FloatType xValue = xData[i];
+		plotData[i].rx() = xValue;
+		plotData[i].ry() = yData[i];
+		minx = std::min(minx, xValue);
+		maxx = std::max(maxx, xValue);
+	}
+	curve->setSamples(plotData);
+
+	// Determine lower X bound where the correlation function is non-zero.
+	plot->setAxisAutoScale(QwtPlot::xBottom);
+	plot->setAxisScale(QwtPlot::xBottom, minx, maxx);
+	plot->replot();
+}
+
+/******************************************************************************
 * Updates the plot of the RDF computed by the modifier.
 ******************************************************************************/
-void CorrelationFunctionModifierEditor::plotData()
+void CorrelationFunctionModifierEditor::plotAllData()
 {
-	qDebug() << "CorrelationFunctionModifierEditor::plotData";
+	qDebug() << "CorrelationFunctionModifierEditor::plotAllData";
 
 	CorrelationFunctionModifier* modifier = static_object_cast<CorrelationFunctionModifier>(editObject());
 	if(!modifier)
 		return;
 
-	if(modifier->realSpaceCorrelationFunctionX().empty())
-		return;
-	if(modifier->realSpaceCorrelationFunction().empty())
-		return;
+	// Plot real-space correlation function
+	if(!modifier->realSpaceCorrelationFunctionX().empty() &&
+	   !modifier->realSpaceCorrelationFunction().empty())
+		plotData(modifier->realSpaceCorrelationFunctionX(),
+				 modifier->realSpaceCorrelationFunction(),
+				 _realSpacePlot,
+				 _realSpaceCurve);
 
-	qDebug() << modifier->reciprocalSpaceCorrelationFunctionX().size();
-	qDebug() << modifier->reciprocalSpaceCorrelationFunction().size();
-	qDebug() << modifier->reciprocalSpaceCorrelationFunctionX();
-	qDebug() << modifier->reciprocalSpaceCorrelationFunction();
-
-	if(!_realSpaceCurve) {
-		qDebug() << "Allocating QwtPlotCurve";
-		_realSpaceCurve = new QwtPlotCurve();
-		_realSpaceCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
-		_realSpaceCurve->setBrush(Qt::lightGray);
-		_realSpaceCurve->attach(_realSpacePlot);
-		QwtPlotGrid* plotGrid = new QwtPlotGrid();
-		plotGrid->setPen(Qt::gray, 0, Qt::DotLine);
-		plotGrid->attach(_realSpacePlot);
-	}
-
-	// Set data to plot.
-	size_t numberOfDataPoints = modifier->reciprocalSpaceCorrelationFunction().size();
-	QVector<QPointF> plotData(numberOfDataPoints);
-	FloatType minx, maxx;
-	minx = maxx = modifier->reciprocalSpaceCorrelationFunctionX()[0];
-	for (int i = 1; i < numberOfDataPoints; i++) {
-		FloatType x = modifier->reciprocalSpaceCorrelationFunctionX()[i];
-		plotData[i].rx() = x;
-		plotData[i].ry() = modifier->reciprocalSpaceCorrelationFunction()[i];
-		minx = std::min(minx, x);
-		maxx = std::max(maxx, x);
-	}
-	_realSpaceCurve->setSamples(plotData);
-
-	// Determine lower X bound where the correlation function is non-zero.
-	_realSpacePlot->setAxisAutoScale(QwtPlot::xBottom);
-	_realSpacePlot->setAxisScale(QwtPlot::xBottom, minx, maxx);
-	_realSpacePlot->replot();
+	// Plot reciprocal-space correlation function
+	if(!modifier->reciprocalSpaceCorrelationFunctionX().empty() &&
+	   !modifier->reciprocalSpaceCorrelationFunction().empty())
+		plotData(modifier->reciprocalSpaceCorrelationFunctionX(),
+				 modifier->reciprocalSpaceCorrelationFunction(),
+				 _reciprocalSpacePlot,
+				 _reciprocalSpaceCurve);
 }
 
 OVITO_END_INLINE_NAMESPACE

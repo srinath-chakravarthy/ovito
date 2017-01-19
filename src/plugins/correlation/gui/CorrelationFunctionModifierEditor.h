@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (2016) Alexander Stukowski
-//  Copyright (2016) Lars Pastewka
+//  Copyright (2017) Lars Pastewka
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -52,19 +52,28 @@ protected:
 
 protected Q_SLOTS:
 
+	/// Replots one of the correlation function computed by the modifier.
+	void plotData(const QVector<FloatType> &xData, const QVector<FloatType> &yData, QwtPlot *plot, QwtPlotCurve *&curve);
+
 	/// Replots the correlation function computed by the modifier.
-	void plotData();
+	void plotAllData();
 
 private:
 
-	/// The plotting widget for displaying the computed RDF.
+	/// The plotting widget for displaying the computed real-space correlation function.
 	QwtPlot* _realSpacePlot;
 
-	/// The plot item for the RDF.
+	/// The plotting widget for displaying the computed reciprocal-space correlation function.
+	QwtPlot* _reciprocalSpacePlot;
+
+	/// The plot item for the real-space correlation function.
     QwtPlotCurve* _realSpaceCurve = nullptr;
 
+	/// The plot item for the reciprocal-space correlation function.
+    QwtPlotCurve* _reciprocalSpaceCurve = nullptr;
+
 	/// For deferred invocation of the plot repaint function.
-	DeferredMethodInvocation<CorrelationFunctionModifierEditor, &CorrelationFunctionModifierEditor::plotData> plotDataLater;
+	DeferredMethodInvocation<CorrelationFunctionModifierEditor, &CorrelationFunctionModifierEditor::plotAllData> plotAllDataLater;
 
 	Q_OBJECT
 	OVITO_OBJECT
