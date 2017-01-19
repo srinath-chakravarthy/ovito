@@ -64,15 +64,20 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	gridlayout->setContentsMargins(4,4,4,4);
 	gridlayout->setColumnStretch(1, 1);
 
-	// Cutoff parameter.
+	// FFT cutoff parameter.
 	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_cutoff));
 	gridlayout->addWidget(cutoffRadiusPUI->label(), 0, 0);
 	gridlayout->addLayout(cutoffRadiusPUI->createFieldLayout(), 0, 1);
 
+	// Neighbor cutoff parameter.
+	FloatParameterUI *shortRangedCutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_shortRangedCutoff));
+	gridlayout->addWidget(shortRangedCutoffRadiusPUI->label(), 1, 0);
+	gridlayout->addLayout(shortRangedCutoffRadiusPUI->createFieldLayout(), 1, 1);
+
 	// Number of bins parameter.
 	IntegerParameterUI* numBinsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfBinsForShortRangedCalculation));
-	gridlayout->addWidget(numBinsPUI->label(), 1, 0);
-	gridlayout->addLayout(numBinsPUI->createFieldLayout(), 1, 1);
+	gridlayout->addWidget(numBinsPUI->label(), 2, 0);
+	gridlayout->addLayout(numBinsPUI->createFieldLayout(), 2, 1);
 
 	layout->addLayout(gridlayout);
 

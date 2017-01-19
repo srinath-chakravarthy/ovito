@@ -52,11 +52,17 @@ public:
 	/// Returns the second source particle property for which the correlation is computed.
 	const ParticlePropertyReference& sourceProperty2() const { return _sourceProperty2; }
 
-	/// \brief Sets the cutoff radius used to build the neighbor lists for the analysis.
+	/// \brief Sets the cutoff radius used for the FFT grid.
 	void setCutoff(FloatType newCutoff) { _cutoff = newCutoff; }
 
 	/// Returns the cutoff radius used to build the neighbor lists for the analysis.
 	FloatType cutoff() const { return _cutoff; }
+
+	/// \brief Sets the cutoff radius used to build the neighbor lists for the analysis.
+	void setShortRangedCutoff(FloatType newCutoff) { _shortRangedCutoff = newCutoff; }
+
+	/// Returns the cutoff radius used to build the neighbor lists for the analysis.
+	FloatType shortRangedCutoff() const { return _shortRangedCutoff; }
 
 	/// Returns the Y coordinates of the real-space correlation function.
 	const QVector<FloatType>& realSpaceCorrelationFunction() const { return _realSpaceCorrelationFunction; }
@@ -96,10 +102,11 @@ private:
 								  ParticleProperty* sourceProperty2,
 								  const SimulationCell& simCell,
 								  FloatType cutoff,
+								  FloatType shortRangedCutoff,
 								  int numberOfBinsForShortRangedCalculation) :
 			ComputeEngine(validityInterval), _positions(positions),
 			_sourceProperty1(sourceProperty1), _sourceProperty2(sourceProperty2),
-			_simCell(simCell), _cutoff(cutoff),
+			_simCell(simCell), _cutoff(cutoff), _shortRangedCutoff(shortRangedCutoff),
 			_shortRangedRealSpaceCorrelationFunction(numberOfBinsForShortRangedCalculation, 0.0),
 			_shortRangedRealSpaceCorrelationFunctionX(numberOfBinsForShortRangedCalculation) {}
 
@@ -118,8 +125,11 @@ private:
 		/// Returns the simulation cell data.
 		const SimulationCell& cell() const { return _simCell; }
 
-		/// Returns the cutoff radius.
+		/// Returns the FFT cutoff radius.
 		FloatType cutoff() const { return _cutoff; }
+
+		/// Returns the neighbor cutoff radius.
+		FloatType shortRangedCutoff() const { return _shortRangedCutoff; }
 
 		/// Returns the real-space correlation function.
 		const QVector<FloatType>& realSpaceCorrelationFunction() const { return _realSpaceCorrelationFunction; }
@@ -149,6 +159,7 @@ private:
 							  QVector<FloatType> &gridData);
 
 		FloatType _cutoff;
+		FloatType _shortRangedCutoff;
 		SimulationCell _simCell;
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
 		QExplicitlySharedDataPointer<ParticleProperty> _sourceProperty1;
@@ -186,8 +197,11 @@ private:
 	/// The particle property that serves as the second data source for the correlation function.
 	PropertyField<ParticlePropertyReference> _sourceProperty2;
 
-	/// Controls the cutoff radius for the neighbor lists.
+	/// Controls the cutoff radius for the FFT grid.
 	PropertyField<FloatType> _cutoff;
+
+	/// Controls the cutoff radius for the neighbor lists.
+	PropertyField<FloatType> _shortRangedCutoff;
 
 	/// Controls the number of RDF histogram bins.
 	PropertyField<FloatType> _numberOfBinsForShortRangedCalculation;
@@ -219,6 +233,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_sourceProperty1);
 	DECLARE_PROPERTY_FIELD(_sourceProperty2);
 	DECLARE_PROPERTY_FIELD(_cutoff);
+	DECLARE_PROPERTY_FIELD(_shortRangedCutoff);
 	DECLARE_PROPERTY_FIELD(_numberOfBinsForShortRangedCalculation);
 };
 
