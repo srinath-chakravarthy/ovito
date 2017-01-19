@@ -69,6 +69,7 @@
 #include <QResource>
 #include <QDir>
 #include <QtDebug>
+#include <QtGlobal>
 #include <QMetaClassInfo>
 #include <QColor>
 #include <QGenericMatrix>
