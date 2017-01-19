@@ -41,7 +41,7 @@ DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _numberOfBinsForShortRa
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty1, "First property");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty2, "Second property");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _cutoff, "Cutoff radius");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, "Number of bins for correlation at short ranges");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, "Number of bins");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, _cutoff, WorldParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, IntegerParameterUnit, 4, 100000);
 
@@ -483,6 +483,8 @@ void CorrelationFunctionModifier::transferComputationResults(ComputeEngine* engi
 	qDebug() << "rr" << eng->realSpaceCorrelationFunction();
 	_realSpaceCorrelationFunction = eng->realSpaceCorrelationFunction();
 	_realSpaceCorrelationFunctionX = eng->realSpaceCorrelationFunctionX();
+	_shortRangedRealSpaceCorrelationFunction = eng->shortRangedRealSpaceCorrelationFunction();
+	_shortRangedRealSpaceCorrelationFunctionX = eng->shortRangedRealSpaceCorrelationFunctionX();
 	_reciprocalSpaceCorrelationFunction = eng->reciprocalSpaceCorrelationFunction();
 	_reciprocalSpaceCorrelationFunctionX = eng->reciprocalSpaceCorrelationFunctionX();
 }

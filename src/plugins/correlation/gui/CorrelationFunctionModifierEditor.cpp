@@ -154,7 +154,7 @@ void CorrelationFunctionModifierEditor::plotData(const QVector<FloatType> &xData
 
 	// Determine lower X bound where the correlation function is non-zero.
 	plot->setAxisAutoScale(QwtPlot::xBottom);
-	plot->setAxisScale(QwtPlot::xBottom, minx, maxx);
+	plot->setAxisScale(QwtPlot::xBottom, 0.0, maxx);
 	plot->replot();
 }
 
@@ -176,6 +176,34 @@ void CorrelationFunctionModifierEditor::plotAllData()
 				 modifier->realSpaceCorrelationFunction(),
 				 _realSpacePlot,
 				 _realSpaceCurve);
+	}
+
+	if(!modifier->shortRangedRealSpaceCorrelationFunctionX().empty() &&
+	   !modifier->shortRangedRealSpaceCorrelationFunction().empty()) {
+		if(!_shortRangedRealSpaceCurve) {
+			qDebug() << "Allocating QwtPlotCurve";
+			_shortRangedRealSpaceCurve = new QwtPlotCurve();
+			_shortRangedRealSpaceCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+			_shortRangedRealSpaceCurve->setBrush(Qt::red);
+			_shortRangedRealSpaceCurve->attach(_realSpacePlot);
+		}
+
+		// Set data to plot.
+		auto &xData = modifier->shortRangedRealSpaceCorrelationFunctionX();
+		auto &yData = modifier->shortRangedRealSpaceCorrelationFunction();
+		size_t numberOfDataPoints = yData.size();
+		QVector<QPointF> plotData(numberOfDataPoints);
+		FloatType minx, maxx;
+		minx = maxx = xData[0];
+		for (int i = 1; i < numberOfDataPoints; i++) {
+			FloatType xValue = xData[i];
+			qDebug() << xValue << " " << yData[i];
+			plotData[i].rx() = xValue;
+			plotData[i].ry() = yData[i];
+			minx = std::min(minx, xValue);
+			maxx = std::max(maxx, xValue);
+		}
+		_shortRangedRealSpaceCurve->setSamples(plotData);
 	}
 
 	// Plot reciprocal-space correlation function
