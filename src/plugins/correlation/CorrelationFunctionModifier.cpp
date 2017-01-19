@@ -37,24 +37,24 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CorrelationFunctionModifierPlugin, Correlati
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _sourceProperty1, "SourceProperty1");
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _sourceProperty2, "SourceProperty2");
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _numberOfBins, "NumberOfBins", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, "NumberOfBinsForShortRangedCalculation", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty1, "First property");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty2, "Second property");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _cutoff, "Cutoff radius");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _numberOfBins, "Number of histogram bins");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, "Number of bins for correlation at short ranges");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, _cutoff, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(CorrelationFunctionModifier, _numberOfBins, IntegerParameterUnit, 4, 100000);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, IntegerParameterUnit, 4, 100000);
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
 CorrelationFunctionModifier::CorrelationFunctionModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
-	_cutoff(3.2), _numberOfBins(200)
+	_cutoff(3.2), _numberOfBinsForShortRangedCalculation(50)
 {
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty1);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty2);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_cutoff);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfBins);
+	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfBinsForShortRangedCalculation);
 }
 
 
@@ -427,8 +427,10 @@ void CorrelationFunctionModifier::propertyChanged(const PropertyFieldDescriptor&
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Recompute modifier results when the parameters have been changed.
-	if(field == PROPERTY_FIELD(CorrelationFunctionModifier::_cutoff) ||
-			field == PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfBins))
+	if (field == PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty1) ||
+		field == PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty2) ||
+		field == PROPERTY_FIELD(CorrelationFunctionModifier::_cutoff) ||
+	    field == PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfBinsForShortRangedCalculation))
 		invalidateCachedResults();
 }
 

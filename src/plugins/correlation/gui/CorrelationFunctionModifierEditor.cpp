@@ -70,7 +70,7 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	gridlayout->addLayout(cutoffRadiusPUI->createFieldLayout(), 0, 1);
 
 	// Number of bins parameter.
-	IntegerParameterUI* numBinsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfBins));
+	IntegerParameterUI* numBinsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfBinsForShortRangedCalculation));
 	gridlayout->addWidget(numBinsPUI->label(), 1, 0);
 	gridlayout->addLayout(numBinsPUI->createFieldLayout(), 1, 1);
 

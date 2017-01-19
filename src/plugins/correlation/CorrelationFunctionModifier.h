@@ -58,23 +58,29 @@ public:
 	/// Returns the cutoff radius used to build the neighbor lists for the analysis.
 	FloatType cutoff() const { return _cutoff; }
 
-	/// Returns the X coordinates of the RDF data points.
+	/// Returns the Y coordinates of the real-space correlation function.
 	const QVector<FloatType>& realSpaceCorrelationFunction() const { return _realSpaceCorrelationFunction; }
 
-	/// Returns the Y coordinates of the RDF data points.
+	/// Returns the X coordinates of the real-space correlation function.
 	const QVector<FloatType>& realSpaceCorrelationFunctionX() const { return _realSpaceCorrelationFunctionX; }
 
-	/// Returns the X coordinates of the RDF data points.
+	/// Returns the Y coordinates of the short-ranged part of the real-space correlation function.
+	const QVector<FloatType>& shortRangedRealSpaceCorrelationFunction() const { return _shortRangedRealSpaceCorrelationFunction; }
+
+	/// Returns the X coordinates of the short-ranged part of the real-space correlation function.
+	const QVector<FloatType>& shortRangedRealSpaceCorrelationFunctionX() const { return _shortRangedRealSpaceCorrelationFunctionX; }
+
+	/// Returns the Y coordinates of the reciprocal-space correlation function.
 	const QVector<FloatType>& reciprocalSpaceCorrelationFunction() const { return _reciprocalSpaceCorrelationFunction; }
 
-	/// Returns the Y coordinates of the RDF data points.
+	/// Returns the X coordinates of the reciprocal-space correlation function.
 	const QVector<FloatType>& reciprocalSpaceCorrelationFunctionX() const { return _reciprocalSpaceCorrelationFunctionX; }
 
 	/// Returns the number of bins in the computed RDF histogram.
-	int numberOfBins() const { return _numberOfBins; }
+	int numberOfBinsForShortRangedCalculation() const { return _numberOfBinsForShortRangedCalculation; }
 
 	/// Sets the number of bins in the computed RDF histogram.
-	void setNumberOfBins(int n) { _numberOfBins = n; }
+	void setnumberOfBinsForShortRangedCalculation(int n) { _numberOfBinsForShortRangedCalculation = n; }
 
 private:
 
@@ -118,6 +124,12 @@ private:
 		/// Returns the distances for which the real-space correlation function is tabulated.
 		const QVector<FloatType>& realSpaceCorrelationFunctionX() const { return _realSpaceCorrelationFunctionX; }
 
+		/// Returns the short-ranged real-space correlation function.
+		const QVector<FloatType>& shortRangedRealSpaceCorrelationFunction() const { return _shortRangedRealSpaceCorrelationFunction; }
+
+		/// Returns the distances for which the short-ranged real-space correlation function is tabulated.
+		const QVector<FloatType>& shortRangedRealSpaceCorrelationFunctionX() const { return _shortRangedRealSpaceCorrelationFunctionX; }
+
 		/// Returns the reciprocal-space correlation function.
 		const QVector<FloatType>& reciprocalSpaceCorrelationFunction() const { return _reciprocalSpaceCorrelationFunction; }
 
@@ -140,6 +152,8 @@ private:
 		QExplicitlySharedDataPointer<ParticleProperty> _sourceProperty2;
 		QVector<FloatType> _realSpaceCorrelationFunction;
 		QVector<FloatType> _realSpaceCorrelationFunctionX;
+		QVector<FloatType> _shortRangedRealSpaceCorrelationFunction;
+		QVector<FloatType> _shortRangedRealSpaceCorrelationFunctionX;
 		QVector<FloatType> _reciprocalSpaceCorrelationFunction;
 		QVector<FloatType> _reciprocalSpaceCorrelationFunctionX;
 	};
@@ -173,13 +187,19 @@ private:
 	PropertyField<FloatType> _cutoff;
 
 	/// Controls the number of RDF histogram bins.
-	PropertyField<FloatType> _numberOfBins;
+	PropertyField<FloatType> _numberOfBinsForShortRangedCalculation;
 
 	/// The real-space correlation function.
 	QVector<FloatType> _realSpaceCorrelationFunction;
 
 	/// The distances for which the real-space correlation function is tabulated.
 	QVector<FloatType> _realSpaceCorrelationFunctionX;
+
+	/// The short-ranged part of the real-space correlation function.
+	QVector<FloatType> _shortRangedRealSpaceCorrelationFunction;
+
+	/// The distances for which short-ranged part of the real-space correlation function is tabulated.
+	QVector<FloatType> _shortRangedRealSpaceCorrelationFunctionX;
 
 	/// The reciprocal-space correlation function.
 	QVector<FloatType> _reciprocalSpaceCorrelationFunction;
@@ -196,7 +216,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_sourceProperty1);
 	DECLARE_PROPERTY_FIELD(_sourceProperty2);
 	DECLARE_PROPERTY_FIELD(_cutoff);
-	DECLARE_PROPERTY_FIELD(_numberOfBins);
+	DECLARE_PROPERTY_FIELD(_numberOfBinsForShortRangedCalculation);
 };
 
 OVITO_END_INLINE_NAMESPACE
