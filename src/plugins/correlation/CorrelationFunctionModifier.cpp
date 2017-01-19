@@ -433,6 +433,24 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	setProgressValue(0);
 	setProgressRange(particleCount / 1000);
 
+	// Get pointers to data.
+	const FloatType *floatData1, *floatData2;
+	const int *intData1, *intData2; 
+	floatData1 = floatData2 = nullptr;
+	intData1 = intData2 = nullptr;
+	if(sourceProperty1()->dataType() == qMetaTypeId<FloatType>()) {
+		floatData1 = sourceProperty1()->constDataFloat();
+	}
+	else if (sourceProperty1()->dataType() == qMetaTypeId<int>()) {
+		intData1 = sourceProperty1()->constDataInt();
+	}
+	if(sourceProperty2()->dataType() == qMetaTypeId<FloatType>()) {
+		floatData2 = sourceProperty2()->constDataFloat();
+	}
+	else if (sourceProperty2()->dataType() == qMetaTypeId<int>()) {
+		intData2 = sourceProperty2()->constDataInt();
+	}
+
 	// Perform analysis on each particle in parallel.
 	std::vector<std::thread> workers;
 	size_t num_threads = Application::instance().idealThreadCount();
@@ -444,7 +462,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		if (t == num_threads - 1) {
 			endIndex += particleCount % num_threads;
 		}
-		workers.push_back(std::thread([&neighborListBuilder, startIndex, endIndex, &mutex, this]() {
+		workers.push_back(std::thread([&neighborListBuilder, startIndex, endIndex, floatData1, intData1, floatData2, intData2, &mutex, this]() {
 			FloatType gridSpacing = (_shortRangedCutoff + FLOATTYPE_EPSILON) / _shortRangedRealSpaceCorrelationFunction.size();
 			std::vector<double> threadLocalCorrelation(_shortRangedRealSpaceCorrelationFunction.size(), 0);
 			for (size_t i = startIndex; i < endIndex;) {
@@ -452,7 +470,16 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 				for (CutoffNeighborFinder::Query neighQuery(neighborListBuilder, i); !neighQuery.atEnd(); neighQuery.next()) {
 					size_t distanceBinIndex = (size_t)(sqrt(neighQuery.distanceSquared()) / gridSpacing);
 					distanceBinIndex = std::min(distanceBinIndex, threadLocalCorrelation.size() - 1);
-					threadLocalCorrelation[distanceBinIndex]++;
+					FloatType data1 = 0.0, data2 = 0.0;
+					if (floatData1)
+						data1 = floatData1[i];
+					else if (intData1)
+						data1 = intData1[i];
+					if (floatData2)
+						data2 = floatData2[i];
+					else if (intData2)
+						data2 = intData2[i];
+					threadLocalCorrelation[distanceBinIndex] += data1*data2;
 				}
 
 				i++;
