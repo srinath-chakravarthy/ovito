@@ -42,8 +42,6 @@ SET_OVITO_OBJECT_EDITOR(CorrelationFunctionModifier, CorrelationFunctionModifier
 ******************************************************************************/
 void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 {
-	qDebug() << "CorrelationFunctionModifierEditor::createUI";
-
 	// Create a rollout.
 	QWidget* rollout = createRollout(tr("Correlation function"), rolloutParams, "particles.modifiers.correlation_function.html");
 
@@ -113,7 +111,6 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 ******************************************************************************/
 bool CorrelationFunctionModifierEditor::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
-	qDebug() << "CorrelationFunctionModifierEditor::referenceEvent";
 
 	if(event->sender() == editObject() && event->type() == ReferenceEvent::ObjectStatusChanged) {
 		plotAllDataLater(this);
@@ -133,7 +130,6 @@ void CorrelationFunctionModifierEditor::plotData(const QVector<FloatType> &xData
 		throwException("Argument to plotData must have same size.");
 
 	if(!curve) {
-		qDebug() << "Allocating QwtPlotCurve";
 		curve = new QwtPlotCurve();
 		curve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
 		curve->setBrush(Qt::lightGray);
@@ -168,8 +164,6 @@ void CorrelationFunctionModifierEditor::plotData(const QVector<FloatType> &xData
 ******************************************************************************/
 void CorrelationFunctionModifierEditor::plotAllData()
 {
-	qDebug() << "CorrelationFunctionModifierEditor::plotAllData";
-
 	CorrelationFunctionModifier* modifier = static_object_cast<CorrelationFunctionModifier>(editObject());
 	if(!modifier)
 		return;
@@ -186,7 +180,6 @@ void CorrelationFunctionModifierEditor::plotAllData()
 	if(!modifier->shortRangedRealSpaceCorrelationFunctionX().empty() &&
 	   !modifier->shortRangedRealSpaceCorrelationFunction().empty()) {
 		if(!_shortRangedRealSpaceCurve) {
-			qDebug() << "Allocating QwtPlotCurve";
 			_shortRangedRealSpaceCurve = new QwtPlotCurve();
 			_shortRangedRealSpaceCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
 			_shortRangedRealSpaceCurve->setPen(Qt::red);
@@ -202,7 +195,6 @@ void CorrelationFunctionModifierEditor::plotAllData()
 		minx = maxx = xData[0];
 		for (int i = 1; i < numberOfDataPoints; i++) {
 			FloatType xValue = xData[i];
-			qDebug() << xValue << " " << yData[i];
 			plotData[i].rx() = xValue;
 			plotData[i].ry() = yData[i];
 			minx = std::min(minx, xValue);

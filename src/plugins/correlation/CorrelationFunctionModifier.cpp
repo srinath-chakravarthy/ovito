@@ -94,8 +94,6 @@ void CorrelationFunctionModifier::initializeModifier(PipelineObject* pipeline, M
 ******************************************************************************/
 std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CorrelationFunctionModifier::createEngine(TimePoint time, TimeInterval validityInterval)
 {
-	qDebug() << "CorrelationFunctionModifier::createEngine";
-
 	// Get the source
 	if(sourceProperty1().isNull())
 		throwException(tr("Select a first particle property first."));
@@ -112,7 +110,6 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CorrelationFunction
 	// Get simulation cell.
 	SimulationCellObject* inputCell = expectSimulationCell();
 
-	qDebug() << posProperty << property1 << property2;
 
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<CorrelationAnalysisEngine>(validityInterval,
@@ -139,28 +136,23 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::mapToSpatialGrid(Pa
 
 	int numberOfGridPoints = nX*nY*nZ;
 
-	qDebug() << numberOfGridPoints;
 
 	// Resize real space grid.
 	gridData.fill(0.0, numberOfGridPoints);
 
-	qDebug() << "2";
 
 	// Get periodic boundary flag.
 	std::array<bool, 3> pbc = cell().pbcFlags();
 
-	qDebug() << "3";
 
 	if(property->size() > 0) {
 		const Point3* pos = positions()->constDataPoint3();
 		const Point3* pos_end = pos + positions()->size();
 
-		qDebug() << "4";
 
 		if(property->dataType() == qMetaTypeId<FloatType>()) {
 			const FloatType* v = property->constDataFloat() + vecComponent;
 			const FloatType* v_end = v + (property->size() * vecComponentCount);
-			qDebug() << "5";
 			for(; v != v_end; v += vecComponentCount, ++pos) {
 				if(!std::isnan(*v)) {
 					Point3 fractionalPos = reciprocalCellMatrix*(*pos);
@@ -181,7 +173,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::mapToSpatialGrid(Pa
 		else if(property->dataType() == qMetaTypeId<int>()) {
 			const int* v = property->constDataInt() + vecComponent;
 			const int* v_end = v + (property->size() * vecComponentCount);
-			qDebug() << "6";
 			for(; v != v_end; v += vecComponentCount, ++pos) {
 				if(!std::isnan(*v)) {
 					Point3 fractionalPos = reciprocalCellMatrix*(*pos);
@@ -207,8 +198,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::mapToSpatialGrid(Pa
 ******************************************************************************/
 void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 {
-	qDebug() << "CorrelationFunctionModifier::CorrelationAnalysisEngine::perform";
-
 	setProgressText(tr("Computing correlation function"));
 
 	// Get reciprocal cell.
@@ -219,17 +208,14 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	int nY = cellMatrix.column(1).length()/cutoff();
 	int nZ = cellMatrix.column(2).length()/cutoff();
 
-	qDebug() << nX << " " << nY << " " << nZ;
 
 	// Map all quantities onto a spatial grid.
 	QVector<FloatType> gridProperty1, gridProperty2;
-	qDebug() << "A";
 	mapToSpatialGrid(sourceProperty1(),
 					 0, // FIXME! Selected vector component should be passed to engine.
 					 reciprocalCellMatrix,
 					 nX, nY, nZ,
 					 gridProperty1);
-	qDebug() << "B";
 	mapToSpatialGrid(sourceProperty2(),
 					 0, // FIXME! Selected vector component should be passed to engine.
 					 reciprocalCellMatrix,
@@ -255,7 +241,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	// Compute reciprocal-space correlation function from a product in Fourier space.
 
 	// Compute Fourier transform of spatial grid.
-	qDebug() << "C";
 	QVector<std::complex<FloatType>> ftProperty1(nX*nY*(nZ/2+1));
 	auto plan = fftw_plan_dft_r2c_3d(
 		nX, nY, nZ,
@@ -268,7 +253,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	if (isCanceled())
 		return;
 
-	qDebug() << "D";
 		QVector<std::complex<FloatType>> ftProperty2(nX*nY*(nZ/2+1));
 		plan = fftw_plan_dft_r2c_3d(
 		nX, nY, nZ,
@@ -285,14 +269,12 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	FloatType cellFaceDistance1 = 1/reciprocalCellMatrix.row(0).length();
 	FloatType cellFaceDistance2 = 1/reciprocalCellMatrix.row(1).length();
 	FloatType cellFaceDistance3 = 1/reciprocalCellMatrix.row(2).length();
-	qDebug() << "cell face distances " << cellFaceDistance1 << " " << cellFaceDistance2 << " " << cellFaceDistance3;
 
 	FloatType minCellFaceDistance = std::min({cellFaceDistance1, cellFaceDistance2, cellFaceDistance3});
 
 	// Minimum reciprocal space vector is given by the minimum distance of cell faces.
 	FloatType minReciprocalSpaceVector = 1/minCellFaceDistance;
 	int numberOfWavevectorBins = 1/(2*minReciprocalSpaceVector*cutoff());
-	qDebug() << "numberOfWavevectorBins = " << numberOfWavevectorBins;
 
 	// Radially averaged reciprocal space correlation function.
 	_reciprocalSpaceCorrelationFunction.fill(0.0, numberOfWavevectorBins);
@@ -304,7 +286,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		_reciprocalSpaceCorrelationFunctionX[wavevectorBinIndex] = 2*FLOATTYPE_PI*(wavevectorBinIndex+0.5)*minReciprocalSpaceVector;
 	}
 
-	qDebug() << "E";
 
 	// Compute Fourier-transformed correlation function and put it on a radial
 	// grid.
@@ -338,7 +319,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		}
 	}
 
-	qDebug() << "F";
 
 	// Compute averages and normalize reciprocal-space correlation function.
 	FloatType normalizationFactor = cell().volume3D()/(sourceProperty1()->size()*sourceProperty2()->size());
@@ -348,7 +328,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		}
 	}
 
-	qDebug() << "G";
 
 	if (isCanceled())
 		return;
@@ -364,7 +343,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	fftw_execute(plan);
 	fftw_destroy_plan(plan);
 
-	qDebug() << "H";
 
 	if (isCanceled())
 		return;
@@ -372,8 +350,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	// Determine number of grid points for real-space correlation function.
 	int numberOfDistanceBins = minCellFaceDistance/(2*cutoff());
 	FloatType gridSpacing = minCellFaceDistance/(2*numberOfDistanceBins);
-	qDebug() << "numberOfDistanceBins = " << numberOfDistanceBins;
-	qDebug() << "gridSpacing = " << gridSpacing;
 
 	// Radially averaged real space correlation function.
 	_realSpaceCorrelationFunction.fill(0.0, numberOfDistanceBins);
@@ -417,7 +393,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		}
 	}
 
-	qDebug() << "I";
 
 	if (isCanceled())
 		return;
@@ -513,7 +488,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		_shortRangedRealSpaceCorrelationFunction[distanceBinIndex] *= normalizationFactor/(distance2*distance2*distance2-distance*distance*distance);
 	}
 
-	qDebug() << "normalizationFactor = " << normalizationFactor;
 }
 
 /******************************************************************************
@@ -521,10 +495,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 ******************************************************************************/
 void CorrelationFunctionModifier::transferComputationResults(ComputeEngine* engine)
 {
-	qDebug() << "CorrelationFunctionModifier::transferComputationResults";
-
 	CorrelationAnalysisEngine* eng = static_cast<CorrelationAnalysisEngine*>(engine);
-	qDebug() << "rr" << eng->realSpaceCorrelationFunction();
 	_realSpaceCorrelationFunction = eng->realSpaceCorrelationFunction();
 	_realSpaceCorrelationFunctionX = eng->realSpaceCorrelationFunctionX();
 	_shortRangedRealSpaceCorrelationFunction = eng->shortRangedRealSpaceCorrelationFunction();
@@ -539,7 +510,6 @@ void CorrelationFunctionModifier::transferComputationResults(ComputeEngine* engi
 ******************************************************************************/
 PipelineStatus CorrelationFunctionModifier::applyComputationResults(TimePoint time, TimeInterval& validityInterval)
 {
-	qDebug() << "CorrelationFunctionModifier::applyComputationResults";
 	return PipelineStatus::Success;
 }
 
@@ -548,8 +518,6 @@ PipelineStatus CorrelationFunctionModifier::applyComputationResults(TimePoint ti
 ******************************************************************************/
 void CorrelationFunctionModifier::propertyChanged(const PropertyFieldDescriptor& field)
 {
-	qDebug() << "CorrelationFunctionModifier::propertyChanged";
-
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Recompute modifier results when the parameters have been changed.
