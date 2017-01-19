@@ -37,13 +37,13 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CorrelationFunctionModifierPlugin, Correlati
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _sourceProperty1, "SourceProperty1");
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _sourceProperty2, "SourceProperty2");
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _shortRangedCutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _shortRangedCutoff, "ShortRangedCutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, "NumberOfBinsForShortRangedCalculation", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty1, "First property");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty2, "Second property");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _cutoff, "FFT cutoff radius");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _shortRangedCutoff, "Neighbor cutoff radius");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, "Number of bins");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, "Number of neighbor bins");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, _cutoff, WorldParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, _shortRangedCutoff, WorldParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, IntegerParameterUnit, 4, 100000);
@@ -478,7 +478,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 
 	// Normalize short-ranged real-space correlation function and populate x-array.
 	gridSpacing = (_shortRangedCutoff + FLOATTYPE_EPSILON) / _shortRangedRealSpaceCorrelationFunction.size();
-	normalizationFactor = 4.0*cell().volume3D()/(3.0*FLOATTYPE_PI*sourceProperty1()->size()*sourceProperty2()->size());
+	normalizationFactor = 3.0*cell().volume3D()/(4.0*FLOATTYPE_PI*sourceProperty1()->size()*sourceProperty2()->size());
 	for (int distanceBinIndex = 0; distanceBinIndex < _shortRangedRealSpaceCorrelationFunction.size(); distanceBinIndex++) {
 		FloatType distance = distanceBinIndex*gridSpacing;
 		FloatType distance2 = (distanceBinIndex+1)*gridSpacing;

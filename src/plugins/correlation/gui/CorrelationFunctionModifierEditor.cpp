@@ -189,7 +189,7 @@ void CorrelationFunctionModifierEditor::plotAllData()
 			qDebug() << "Allocating QwtPlotCurve";
 			_shortRangedRealSpaceCurve = new QwtPlotCurve();
 			_shortRangedRealSpaceCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
-			_shortRangedRealSpaceCurve->setBrush(Qt::red);
+			_shortRangedRealSpaceCurve->setPen(Qt::red);
 			_shortRangedRealSpaceCurve->attach(_realSpacePlot);
 		}
 
