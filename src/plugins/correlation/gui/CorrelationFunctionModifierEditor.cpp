@@ -155,6 +155,7 @@ void CorrelationFunctionModifierEditor::plotData(const QVector<FloatType> &xData
 
 	// Determine lower X bound where the correlation function is non-zero.
 	plot->setAxisAutoScale(QwtPlot::xBottom);
+	plot->setAxisAutoScale(QwtPlot::yLeft);
 	plot->setAxisScale(QwtPlot::xBottom, 0.0, maxx);
 	plot->replot();
 }
@@ -175,7 +176,6 @@ void CorrelationFunctionModifierEditor::plotAllData()
 				 modifier->realSpaceCorrelation(),
 				 _realSpacePlot,
 				 _realSpaceCurve);
-		qDebug() << "r->infty (FFT) = " << modifier->realSpaceCorrelation()[modifier->realSpaceCorrelation().size()-1];
 	}
 
 	if(!modifier->neighCorrelationX().empty() &&
@@ -202,8 +202,6 @@ void CorrelationFunctionModifierEditor::plotAllData()
 			maxx = std::max(maxx, xValue);
 		}
 		_neighCurve->setSamples(plotData);
-
-		qDebug() << "r->infty (direct) = " << modifier->neighCorrelation()[modifier->neighCorrelation().size()-1];
 	}
 
 	// Plot reciprocal-space correlation function

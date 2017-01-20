@@ -451,9 +451,9 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 					else if (intData1)
 						data1 = intData1[i];
 					if (floatData2)
-						data2 = floatData2[i];
+						data2 = floatData2[neighQuery.current()];
 					else if (intData2)
-						data2 = intData2[i];
+						data2 = intData2[neighQuery.current()];
 					threadLocalCorrelation[distanceBinIndex] += data1*data2;
 				}
 
