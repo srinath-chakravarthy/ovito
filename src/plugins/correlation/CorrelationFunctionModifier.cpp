@@ -37,27 +37,27 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CorrelationFunctionModifierPlugin, Correlati
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _sourceProperty1, "SourceProperty1");
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _sourceProperty2, "SourceProperty2");
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _fftGridSpacing, "FftGridSpacing", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _shortRangedCutoff, "ShortRangedCutoff", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _neighCutoff, "NeighCutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, "NumberOfBinsForShortRangedCalculation", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty1, "First property");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty2, "Second property");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _fftGridSpacing, "FFT grid spacing");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _shortRangedCutoff, "Neighbor cutoff radius");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _neighCutoff, "Neighbor cutoff radius");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, "Number of neighbor bins");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, _fftGridSpacing, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, _shortRangedCutoff, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, _neighCutoff, WorldParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, IntegerParameterUnit, 4, 100000);
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
 CorrelationFunctionModifier::CorrelationFunctionModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
-	_fftGridSpacing(1.0), _shortRangedCutoff(5.0), _numberOfBinsForShortRangedCalculation(50)
+	_fftGridSpacing(1.0), _neighCutoff(5.0), _numberOfBinsForShortRangedCalculation(50)
 {
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty1);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty2);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_fftGridSpacing);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_shortRangedCutoff);
+	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_neighCutoff);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfBinsForShortRangedCalculation);
 }
 
@@ -118,7 +118,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CorrelationFunction
 													   property2->storage(),
 													   inputCell->data(),
 													   fftGridSpacing(),
-													   shortRangedCutoff(),
+													   neighCutoff(),
 													   numberOfBinsForShortRangedCalculation());
 }
 
@@ -401,7 +401,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 
 	// Prepare the neighbor list.
 	CutoffNeighborFinder neighborListBuilder;
-	if (!neighborListBuilder.prepare(_shortRangedCutoff, positions(), cell(), nullptr, this))
+	if (!neighborListBuilder.prepare(_neighCutoff, positions(), cell(), nullptr, this))
 		return;
 
 	size_t particleCount = positions()->size();
@@ -438,7 +438,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 			endIndex += particleCount % num_threads;
 		}
 		workers.push_back(std::thread([&neighborListBuilder, startIndex, endIndex, floatData1, intData1, floatData2, intData2, &mutex, this]() {
-			FloatType gridSpacing = (_shortRangedCutoff + FLOATTYPE_EPSILON) / _shortRangedRealSpaceCorrelationFunction.size();
+			FloatType gridSpacing = (_neighCutoff + FLOATTYPE_EPSILON) / _shortRangedRealSpaceCorrelationFunction.size();
 			std::vector<double> threadLocalCorrelation(_shortRangedRealSpaceCorrelationFunction.size(), 0);
 			for (size_t i = startIndex; i < endIndex;) {
 
@@ -479,7 +479,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		t.join();
 
 	// Normalize short-ranged real-space correlation function and populate x-array.
-	gridSpacing = (_shortRangedCutoff + FLOATTYPE_EPSILON) / _shortRangedRealSpaceCorrelationFunction.size();
+	gridSpacing = (_neighCutoff + FLOATTYPE_EPSILON) / _shortRangedRealSpaceCorrelationFunction.size();
 	normalizationFactor = 3.0*cell().volume3D()/(4.0*FLOATTYPE_PI*sourceProperty1()->size()*sourceProperty2()->size());
 	for (int distanceBinIndex = 0; distanceBinIndex < _shortRangedRealSpaceCorrelationFunction.size(); distanceBinIndex++) {
 		FloatType distance = distanceBinIndex*gridSpacing;
@@ -524,7 +524,7 @@ void CorrelationFunctionModifier::propertyChanged(const PropertyFieldDescriptor&
 	if (field == PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty1) ||
 		field == PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty2) ||
 		field == PROPERTY_FIELD(CorrelationFunctionModifier::_fftGridSpacing) ||
-		field == PROPERTY_FIELD(CorrelationFunctionModifier::_shortRangedCutoff) ||
+		field == PROPERTY_FIELD(CorrelationFunctionModifier::_neighCutoff) ||
 	    field == PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfBinsForShortRangedCalculation))
 		invalidateCachedResults();
 }

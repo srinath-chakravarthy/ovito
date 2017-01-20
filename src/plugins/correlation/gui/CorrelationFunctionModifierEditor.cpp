@@ -68,9 +68,9 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	gridlayout->addLayout(fftGridSpacingRadiusPUI->createFieldLayout(), 0, 1);
 
 	// Neighbor cutoff parameter.
-	FloatParameterUI *shortRangedCutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_shortRangedCutoff));
-	gridlayout->addWidget(shortRangedCutoffRadiusPUI->label(), 1, 0);
-	gridlayout->addLayout(shortRangedCutoffRadiusPUI->createFieldLayout(), 1, 1);
+	FloatParameterUI *neighCutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_neighCutoff));
+	gridlayout->addWidget(neighCutoffRadiusPUI->label(), 1, 0);
+	gridlayout->addLayout(neighCutoffRadiusPUI->createFieldLayout(), 1, 1);
 
 	// Number of bins parameter.
 	IntegerParameterUI* numBinsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfBinsForShortRangedCalculation));
