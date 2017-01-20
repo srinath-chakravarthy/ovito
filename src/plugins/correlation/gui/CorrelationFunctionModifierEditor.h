@@ -51,7 +51,8 @@ protected:
 	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
 
 	/// Replots one of the correlation function computed by the modifier.
-	void plotData(const QVector<FloatType> &xData, const QVector<FloatType> &yData, QwtPlot *plot, QwtPlotCurve *&curve);
+	void plotData(const QVector<FloatType> &xData, const QVector<FloatType> &yData, QwtPlot *plot, QwtPlotCurve *&curve,
+				  FloatType &minX, FloatType &maxX, FloatType &minY, FloatType &maxY);
 
 protected Q_SLOTS:
 

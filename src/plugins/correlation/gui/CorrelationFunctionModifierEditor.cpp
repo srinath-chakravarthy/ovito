@@ -81,13 +81,6 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 
 	layout->addLayout(gridlayout);
 
-	_realSpacePlot = new QwtPlot();
-	_realSpacePlot->setMinimumHeight(200);
-	_realSpacePlot->setMaximumHeight(200);
-	_realSpacePlot->setCanvasBackground(Qt::white);
-	_realSpacePlot->setAxisTitle(QwtPlot::xBottom, tr("Distance r"));
-	_realSpacePlot->setAxisTitle(QwtPlot::yLeft, tr("C(r)"));
-
 	QGridLayout* typeOfRealSpacePlotLayout = new QGridLayout();
 	IntegerRadioButtonParameterUI *typeOfRealSpacePlotPUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_typeOfRealSpacePlot));
 	typeOfRealSpacePlotLayout->addWidget(new QLabel(tr("Display as:")), 0, 0);
@@ -95,16 +88,16 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	typeOfRealSpacePlotLayout->addWidget(typeOfRealSpacePlotPUI->addRadioButton(1, tr("log-lin")), 0, 2);
 	typeOfRealSpacePlotLayout->addWidget(typeOfRealSpacePlotPUI->addRadioButton(3, tr("log-log")), 0, 3);
 
-	layout->addWidget(new QLabel(tr("Real-space correlation function:")));
-	layout->addWidget(_realSpacePlot);
-	layout->addLayout(typeOfRealSpacePlotLayout);
+	_realSpacePlot = new QwtPlot();
+	_realSpacePlot->setMinimumHeight(200);
+	_realSpacePlot->setMaximumHeight(200);
+	_realSpacePlot->setCanvasBackground(Qt::white);
+	_realSpacePlot->setAxisTitle(QwtPlot::xBottom, tr("Distance r"));
+	_realSpacePlot->setAxisTitle(QwtPlot::yLeft, tr("C(r)"));
 
-	_reciprocalSpacePlot = new QwtPlot();
-	_reciprocalSpacePlot->setMinimumHeight(200);
-	_reciprocalSpacePlot->setMaximumHeight(200);
-	_reciprocalSpacePlot->setCanvasBackground(Qt::white);
-	_reciprocalSpacePlot->setAxisTitle(QwtPlot::xBottom, tr("Wavevector q"));
-	_reciprocalSpacePlot->setAxisTitle(QwtPlot::yLeft, tr("C(q)"));
+	layout->addWidget(new QLabel(tr("Real-space correlation function:")));
+	layout->addLayout(typeOfRealSpacePlotLayout);
+	layout->addWidget(_realSpacePlot);
 
 	QGridLayout* typeOfReciprocalSpacePlotLayout = new QGridLayout();
 	IntegerRadioButtonParameterUI *typeOfReciprocalSpacePlotPUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_typeOfReciprocalSpacePlot));
@@ -113,9 +106,16 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	typeOfReciprocalSpacePlotLayout->addWidget(typeOfReciprocalSpacePlotPUI->addRadioButton(1, tr("log-lin")), 0, 2);
 	typeOfReciprocalSpacePlotLayout->addWidget(typeOfReciprocalSpacePlotPUI->addRadioButton(3, tr("log-log")), 0, 3);
 
+	_reciprocalSpacePlot = new QwtPlot();
+	_reciprocalSpacePlot->setMinimumHeight(200);
+	_reciprocalSpacePlot->setMaximumHeight(200);
+	_reciprocalSpacePlot->setCanvasBackground(Qt::white);
+	_reciprocalSpacePlot->setAxisTitle(QwtPlot::xBottom, tr("Wavevector q"));
+	_reciprocalSpacePlot->setAxisTitle(QwtPlot::yLeft, tr("C(q)"));
+
 	layout->addWidget(new QLabel(tr("Reciprocal-space correlation function:")));
-	layout->addWidget(_reciprocalSpacePlot);
 	layout->addLayout(typeOfReciprocalSpacePlotLayout);
+	layout->addWidget(_reciprocalSpacePlot);
 
 	connect(this, &CorrelationFunctionModifierEditor::contentsReplaced, this, &CorrelationFunctionModifierEditor::plotAllData);
 
@@ -134,8 +134,9 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 ******************************************************************************/
 bool CorrelationFunctionModifierEditor::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
-
-	if(event->sender() == editObject() && event->type() == ReferenceEvent::ObjectStatusChanged) {
+	if (event->sender() == editObject() && 
+		(event->type() == ReferenceEvent::TargetChanged || 
+		 event->type() == ReferenceEvent::ObjectStatusChanged)) {
 		plotAllDataLater(this);
 	}
 	return ParticleModifierEditor::referenceEvent(source, event);
@@ -147,7 +148,9 @@ bool CorrelationFunctionModifierEditor::referenceEvent(RefTarget* source, Refere
 void CorrelationFunctionModifierEditor::plotData(const QVector<FloatType> &xData,
 												 const QVector<FloatType> &yData,
 												 QwtPlot *plot,
-												 QwtPlotCurve *&curve)
+												 QwtPlotCurve *&curve,
+												 FloatType &minX, FloatType &maxX,
+												 FloatType &minY, FloatType &maxY)
 {
 	if (xData.size() != yData.size())
 		throwException("Argument to plotData must have same size.");
@@ -164,22 +167,25 @@ void CorrelationFunctionModifierEditor::plotData(const QVector<FloatType> &xData
 
 	// Set data to plot.
 	size_t numberOfDataPoints = yData.size();
-	QVector<QPointF> plotData(numberOfDataPoints);
-	FloatType minx, maxx;
-	minx = maxx = xData[0];
-	for (int i = 1; i < numberOfDataPoints; i++) {
+	int startAt = 1;
+	QVector<QPointF> plotData(numberOfDataPoints-startAt);
+	minX = minY = 1e20;
+	maxX = maxY = -1e20;
+	for (int i = startAt; i < numberOfDataPoints; i++) {
 		FloatType xValue = xData[i];
-		plotData[i].rx() = xValue;
-		plotData[i].ry() = yData[i];
-		minx = std::min(minx, xValue);
-		maxx = std::max(maxx, xValue);
+		FloatType yValue = yData[i];
+		plotData[i-startAt].rx() = xValue;
+		plotData[i-startAt].ry() = yValue;
+		if (xValue != 0) {
+			minX = std::min(minX, xValue);
+			maxX = std::max(maxX, xValue);
+		}
+		if (yValue != 0) {
+			minY = std::min(minY, yValue);
+			maxY = std::max(maxY, yValue);
+		}
 	}
 	curve->setSamples(plotData);
-
-	// Determine lower X bound where the correlation function is non-zero.
-	//plot->setAxisAutoScale(QwtPlot::xBottom);
-	//plot->setAxisAutoScale(QwtPlot::yLeft);
-	//plot->setAxisScale(QwtPlot::xBottom, 0.0, maxx);
 }
 
 /******************************************************************************
@@ -191,15 +197,19 @@ void CorrelationFunctionModifierEditor::plotAllData()
 	if(!modifier)
 		return;
 
+	FloatType realSpaceMinX = 1e20, realSpaceMaxX = -1e20, realSpaceMinY = 1e20, realSpaceMaxY = -1e20;
 	// Plot real-space correlation function
 	if(!modifier->realSpaceCorrelationX().empty() &&
 	   !modifier->realSpaceCorrelation().empty()) {
 		plotData(modifier->realSpaceCorrelationX(),
 				 modifier->realSpaceCorrelation(),
 				 _realSpacePlot,
-				 _realSpaceCurve);
+				 _realSpaceCurve,
+				 realSpaceMinX, realSpaceMaxX,
+				 realSpaceMinY, realSpaceMaxY);
 	}
 
+	FloatType neighMinX = 1e20, neighMaxX = -1e20, neighMinY = 1e20, neighMaxY = -1e20;
 	if(!modifier->neighCorrelationX().empty() &&
 	   !modifier->neighCorrelation().empty()) {
 		if(!_neighCurve) {
@@ -214,29 +224,37 @@ void CorrelationFunctionModifierEditor::plotAllData()
 		auto &yData = modifier->neighCorrelation();
 		size_t numberOfDataPoints = yData.size();
 		QVector<QPointF> plotData(numberOfDataPoints);
-		FloatType minx, maxx;
-		minx = maxx = xData[0];
 		for (int i = 0; i < numberOfDataPoints; i++) {
 			FloatType xValue = xData[i];
+			FloatType yValue = yData[i];
 			plotData[i].rx() = xValue;
-			plotData[i].ry() = yData[i];
-			minx = std::min(minx, xValue);
-			maxx = std::max(maxx, xValue);
+			plotData[i].ry() = yValue;
+			if (xValue != 0) {
+				neighMinX = std::min(neighMinX, xValue);
+				neighMaxX = std::max(neighMaxX, xValue);
+			}
+			if (yValue != 0) {
+				neighMinY = std::min(neighMinY, yValue);
+				neighMaxY = std::max(neighMaxY, yValue);
+			}
 		}
 		_neighCurve->setSamples(plotData);
 	}
 
 	// Plot reciprocal-space correlation function
+	FloatType reciprocalSpaceMinX = 1e20, reciprocalSpaceMaxX = -1e20, reciprocalSpaceMinY = 1e20, reciprocalSpaceMaxY = -1e20;
 	if(!modifier->reciprocalSpaceCorrelationX().empty() &&
 	   !modifier->reciprocalSpaceCorrelation().empty()) {
 		plotData(modifier->reciprocalSpaceCorrelationX(),
 				 modifier->reciprocalSpaceCorrelation(),
 				 _reciprocalSpacePlot,
-				 _reciprocalSpaceCurve);
+				 _reciprocalSpaceCurve,
+				 reciprocalSpaceMinX, reciprocalSpaceMaxX,
+				 reciprocalSpaceMinY, reciprocalSpaceMaxY);
 	}
 
 	// Set type of plot.
-	if (modifier->typeOfRealSpacePlot() & 1)
+	if (modifier->typeOfRealSpacePlot() & 1) 
 		_realSpacePlot->setAxisScaleEngine(QwtPlot::yLeft, new QwtLogScaleEngine());
 	else
 		_realSpacePlot->setAxisScaleEngine(QwtPlot::yLeft, new QwtLinearScaleEngine());
@@ -254,26 +272,14 @@ void CorrelationFunctionModifierEditor::plotAllData()
 	else
 		_reciprocalSpacePlot->setAxisScaleEngine(QwtPlot::xBottom, new QwtLinearScaleEngine());
 
-/*
-#define MIN_ELEMENT(x) (*std::min_element(x.constBegin(), x.constEnd()))
-#define MAX_ELEMENT(x) (*std::max_element(x.constBegin(), x.constEnd()))
 	_realSpacePlot->setAxisScale(QwtPlot::xBottom,
-								 std::min(MIN_ELEMENT(modifier->realSpaceCorrelationX()),
-										  MIN_ELEMENT(modifier->neighCorrelationX())),
-								 std::max(MAX_ELEMENT(modifier->realSpaceCorrelationX()),
-										  MAX_ELEMENT(modifier->neighCorrelationX())));
+								 std::min(realSpaceMinX, neighMinX),
+								 std::max(realSpaceMaxX, neighMaxX));
 	_realSpacePlot->setAxisScale(QwtPlot::yLeft,
-								 std::min(MIN_ELEMENT(modifier->realSpaceCorrelation()),
-										  MIN_ELEMENT(modifier->neighCorrelation())),
-								 std::max(MAX_ELEMENT(modifier->realSpaceCorrelation()),
-										  MAX_ELEMENT(modifier->neighCorrelation())));
-	_reciprocalSpacePlot->setAxisScale(QwtPlot::xBottom,
-									   MIN_ELEMENT(modifier->reciprocalSpaceCorrelationX()),
-									   MAX_ELEMENT(modifier->reciprocalSpaceCorrelationX()));
-	_reciprocalSpacePlot->setAxisScale(QwtPlot::yLeft,
-									   MIN_ELEMENT(modifier->reciprocalSpaceCorrelation()),
-									   MAX_ELEMENT(modifier->reciprocalSpaceCorrelation()));
-*/
+								 std::min(realSpaceMinY, neighMinY),
+								 std::max(realSpaceMaxY, neighMaxY));
+	_reciprocalSpacePlot->setAxisScale(QwtPlot::xBottom, reciprocalSpaceMinX, reciprocalSpaceMaxX);
+	_reciprocalSpacePlot->setAxisScale(QwtPlot::yLeft, reciprocalSpaceMinY, reciprocalSpaceMaxY);
 
 	_realSpacePlot->replot();
 	_reciprocalSpacePlot->replot();
