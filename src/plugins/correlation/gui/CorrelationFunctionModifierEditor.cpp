@@ -175,15 +175,16 @@ void CorrelationFunctionModifierEditor::plotAllData()
 				 modifier->realSpaceCorrelation(),
 				 _realSpacePlot,
 				 _realSpaceCurve);
+		qDebug() << "r->infty (FFT) = " << modifier->realSpaceCorrelation()[modifier->realSpaceCorrelation().size()-1];
 	}
 
 	if(!modifier->neighCorrelationX().empty() &&
 	   !modifier->neighCorrelation().empty()) {
-		if(!_shortRangedRealSpaceCurve) {
-			_shortRangedRealSpaceCurve = new QwtPlotCurve();
-			_shortRangedRealSpaceCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
-			_shortRangedRealSpaceCurve->setPen(Qt::red);
-			_shortRangedRealSpaceCurve->attach(_realSpacePlot);
+		if(!_neighCurve) {
+			_neighCurve = new QwtPlotCurve();
+			_neighCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
+			_neighCurve->setPen(Qt::red);
+			_neighCurve->attach(_realSpacePlot);
 		}
 
 		// Set data to plot.
@@ -200,7 +201,9 @@ void CorrelationFunctionModifierEditor::plotAllData()
 			minx = std::min(minx, xValue);
 			maxx = std::max(maxx, xValue);
 		}
-		_shortRangedRealSpaceCurve->setSamples(plotData);
+		_neighCurve->setSamples(plotData);
+
+		qDebug() << "r->infty (direct) = " << modifier->neighCorrelation()[modifier->neighCorrelation().size()-1];
 	}
 
 	// Plot reciprocal-space correlation function

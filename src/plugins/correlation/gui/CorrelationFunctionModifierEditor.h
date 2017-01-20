@@ -70,7 +70,7 @@ private:
     QwtPlotCurve* _realSpaceCurve = nullptr;
 
 	/// The plot item for the short-ranged part of the real-space correlation function.
-    QwtPlotCurve* _shortRangedRealSpaceCurve = nullptr;
+    QwtPlotCurve* _neighCurve = nullptr;
 
 	/// The plot item for the reciprocal-space correlation function.
     QwtPlotCurve* _reciprocalSpaceCurve = nullptr;
