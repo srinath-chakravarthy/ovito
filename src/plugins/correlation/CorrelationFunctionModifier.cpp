@@ -36,15 +36,15 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CorrelationFunctionModifierPlugin, CorrelationFunctionModifier, AsynchronousParticleModifier);
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _sourceProperty1, "SourceProperty1");
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _sourceProperty2, "SourceProperty2");
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _fftGridSpacing, "FftGridSpacing", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _shortRangedCutoff, "ShortRangedCutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, "NumberOfBinsForShortRangedCalculation", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty1, "First property");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty2, "Second property");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _cutoff, "FFT cutoff radius");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _fftGridSpacing, "FFT grid spacing");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _shortRangedCutoff, "Neighbor cutoff radius");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, "Number of neighbor bins");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, _cutoff, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, _fftGridSpacing, WorldParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, _shortRangedCutoff, WorldParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, IntegerParameterUnit, 4, 100000);
 
@@ -52,11 +52,11 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(CorrelationFunctionModifier, _numberOfBinsFor
 * Constructs the modifier object.
 ******************************************************************************/
 CorrelationFunctionModifier::CorrelationFunctionModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
-	_cutoff(1.0), _shortRangedCutoff(5.0), _numberOfBinsForShortRangedCalculation(50)
+	_fftGridSpacing(1.0), _shortRangedCutoff(5.0), _numberOfBinsForShortRangedCalculation(50)
 {
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty1);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty2);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_cutoff);
+	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_fftGridSpacing);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_shortRangedCutoff);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfBinsForShortRangedCalculation);
 }
@@ -117,7 +117,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CorrelationFunction
 													   property1->storage(),
 													   property2->storage(),
 													   inputCell->data(),
-													   cutoff(),
+													   fftGridSpacing(),
 													   shortRangedCutoff(),
 													   numberOfBinsForShortRangedCalculation());
 }
@@ -204,9 +204,9 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	AffineTransformation cellMatrix = cell().matrix(); 
 	AffineTransformation reciprocalCellMatrix = cell().inverseMatrix();
 
-	int nX = cellMatrix.column(0).length()/cutoff();
-	int nY = cellMatrix.column(1).length()/cutoff();
-	int nZ = cellMatrix.column(2).length()/cutoff();
+	int nX = cellMatrix.column(0).length()/fftGridSpacing();
+	int nY = cellMatrix.column(1).length()/fftGridSpacing();
+	int nZ = cellMatrix.column(2).length()/fftGridSpacing();
 
 
 	// Map all quantities onto a spatial grid.
@@ -274,7 +274,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 
 	// Minimum reciprocal space vector is given by the minimum distance of cell faces.
 	FloatType minReciprocalSpaceVector = 1/minCellFaceDistance;
-	int numberOfWavevectorBins = 1/(2*minReciprocalSpaceVector*cutoff());
+	int numberOfWavevectorBins = 1/(2*minReciprocalSpaceVector*fftGridSpacing());
 
 	// Radially averaged reciprocal space correlation function.
 	_reciprocalSpaceCorrelationFunction.fill(0.0, numberOfWavevectorBins);
@@ -348,7 +348,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		return;
 
 	// Determine number of grid points for real-space correlation function.
-	int numberOfDistanceBins = minCellFaceDistance/(2*cutoff());
+	int numberOfDistanceBins = minCellFaceDistance/(2*fftGridSpacing());
 	FloatType gridSpacing = minCellFaceDistance/(2*numberOfDistanceBins);
 
 	// Radially averaged real space correlation function.
@@ -523,7 +523,7 @@ void CorrelationFunctionModifier::propertyChanged(const PropertyFieldDescriptor&
 	// Recompute modifier results when the parameters have been changed.
 	if (field == PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty1) ||
 		field == PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty2) ||
-		field == PROPERTY_FIELD(CorrelationFunctionModifier::_cutoff) ||
+		field == PROPERTY_FIELD(CorrelationFunctionModifier::_fftGridSpacing) ||
 		field == PROPERTY_FIELD(CorrelationFunctionModifier::_shortRangedCutoff) ||
 	    field == PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfBinsForShortRangedCalculation))
 		invalidateCachedResults();

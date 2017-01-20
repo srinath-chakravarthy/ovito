@@ -53,10 +53,10 @@ public:
 	const ParticlePropertyReference& sourceProperty2() const { return _sourceProperty2; }
 
 	/// \brief Sets the cutoff radius used for the FFT grid.
-	void setCutoff(FloatType newCutoff) { _cutoff = newCutoff; }
+	void setFftGridSpacing(FloatType newFftBinSize) { _fftGridSpacing = newFftBinSize; }
 
 	/// Returns the cutoff radius used to build the neighbor lists for the analysis.
-	FloatType cutoff() const { return _cutoff; }
+	FloatType fftGridSpacing() const { return _fftGridSpacing; }
 
 	/// \brief Sets the cutoff radius used to build the neighbor lists for the analysis.
 	void setShortRangedCutoff(FloatType newCutoff) { _shortRangedCutoff = newCutoff; }
@@ -101,12 +101,12 @@ private:
 								  ParticleProperty* sourceProperty1,
 								  ParticleProperty* sourceProperty2,
 								  const SimulationCell& simCell,
-								  FloatType cutoff,
+								  FloatType fftGridSpacing,
 								  FloatType shortRangedCutoff,
 								  int numberOfBinsForShortRangedCalculation) :
 			ComputeEngine(validityInterval), _positions(positions),
 			_sourceProperty1(sourceProperty1), _sourceProperty2(sourceProperty2),
-			_simCell(simCell), _cutoff(cutoff), _shortRangedCutoff(shortRangedCutoff),
+			_simCell(simCell), _fftGridSpacing(fftGridSpacing), _shortRangedCutoff(shortRangedCutoff),
 			_shortRangedRealSpaceCorrelationFunction(numberOfBinsForShortRangedCalculation, 0.0),
 			_shortRangedRealSpaceCorrelationFunctionX(numberOfBinsForShortRangedCalculation) {}
 
@@ -126,7 +126,7 @@ private:
 		const SimulationCell& cell() const { return _simCell; }
 
 		/// Returns the FFT cutoff radius.
-		FloatType cutoff() const { return _cutoff; }
+		FloatType fftGridSpacing() const { return _fftGridSpacing; }
 
 		/// Returns the neighbor cutoff radius.
 		FloatType shortRangedCutoff() const { return _shortRangedCutoff; }
@@ -158,7 +158,7 @@ private:
 							  int nX, int nY, int nZ,
 							  QVector<FloatType> &gridData);
 
-		FloatType _cutoff;
+		FloatType _fftGridSpacing;
 		FloatType _shortRangedCutoff;
 		SimulationCell _simCell;
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
@@ -198,7 +198,7 @@ private:
 	PropertyField<ParticlePropertyReference> _sourceProperty2;
 
 	/// Controls the cutoff radius for the FFT grid.
-	PropertyField<FloatType> _cutoff;
+	PropertyField<FloatType> _fftGridSpacing;
 
 	/// Controls the cutoff radius for the neighbor lists.
 	PropertyField<FloatType> _shortRangedCutoff;
@@ -232,7 +232,7 @@ private:
 
 	DECLARE_PROPERTY_FIELD(_sourceProperty1);
 	DECLARE_PROPERTY_FIELD(_sourceProperty2);
-	DECLARE_PROPERTY_FIELD(_cutoff);
+	DECLARE_PROPERTY_FIELD(_fftGridSpacing);
 	DECLARE_PROPERTY_FIELD(_shortRangedCutoff);
 	DECLARE_PROPERTY_FIELD(_numberOfBinsForShortRangedCalculation);
 };

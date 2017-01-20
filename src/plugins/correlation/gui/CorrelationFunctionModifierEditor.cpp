@@ -62,10 +62,10 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	gridlayout->setContentsMargins(4,4,4,4);
 	gridlayout->setColumnStretch(1, 1);
 
-	// FFT cutoff parameter.
-	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_cutoff));
-	gridlayout->addWidget(cutoffRadiusPUI->label(), 0, 0);
-	gridlayout->addLayout(cutoffRadiusPUI->createFieldLayout(), 0, 1);
+	// FFT grid spacing parameter.
+	FloatParameterUI* fftGridSpacingRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_fftGridSpacing));
+	gridlayout->addWidget(fftGridSpacingRadiusPUI->label(), 0, 0);
+	gridlayout->addLayout(fftGridSpacingRadiusPUI->createFieldLayout(), 0, 1);
 
 	// Neighbor cutoff parameter.
 	FloatParameterUI *shortRangedCutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_shortRangedCutoff));
