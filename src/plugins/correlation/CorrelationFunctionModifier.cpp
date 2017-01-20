@@ -214,7 +214,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::r2cFFT(int nX, int 
 		FFTW_ESTIMATE);
 	fftw_execute(plan);
 	fftw_destroy_plan(plan);
-
 }
 
 void CorrelationFunctionModifier::CorrelationAnalysisEngine::c2rFFT(int nX, int nY, int nZ,
@@ -237,6 +236,8 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::c2rFFT(int nX, int 
 void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 {
 	setProgressText(tr("Computing correlation function"));
+	setProgressValue(0);
+	setProgressRange(8);
 
 	// Get reciprocal cell.
 	AffineTransformation cellMatrix = cell().matrix(); 
@@ -246,7 +247,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	int nY = cellMatrix.column(1).length()/fftGridSpacing();
 	int nZ = cellMatrix.column(2).length()/fftGridSpacing();
 
-
 	// Map all quantities onto a spatial grid.
 	QVector<FloatType> gridProperty1, gridProperty2;
 	mapToSpatialGrid(sourceProperty1(),
@@ -254,27 +254,31 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 					 reciprocalCellMatrix,
 					 nX, nY, nZ,
 					 gridProperty1);
+	incrementProgressValue();
+	if (isCanceled())
+		return;
 	mapToSpatialGrid(sourceProperty2(),
 					 0, // FIXME! Selected vector component should be passed to engine.
 					 reciprocalCellMatrix,
 					 nX, nY, nZ,
 					 gridProperty2);
-
+	incrementProgressValue();
 	if (isCanceled())
 		return;
 
 	// FIXME. Apply windowing function in nonperiodic directions here.
-	// FIXME. Imaginary part of cross-correlation function is ignored.
 
 	// Compute reciprocal-space correlation function from a product in Fourier space.
 
 	// Compute Fourier transform of spatial grid.
 	QVector<std::complex<FloatType>> ftProperty1;
 	r2cFFT(nX, nY, nZ, gridProperty1, ftProperty1);
+	incrementProgressValue();
 	if (isCanceled())
 		return;
 	QVector<std::complex<FloatType>> ftProperty2(nX*nY*(nZ/2+1));
 	r2cFFT(nX, nY, nZ, gridProperty2, ftProperty2);
+	incrementProgressValue();
 	if (isCanceled())
 		return;
 
@@ -298,7 +302,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	for (int wavevectorBinIndex = 0; wavevectorBinIndex < numberOfWavevectorBins; wavevectorBinIndex++) {
 		_reciprocalSpaceCorrelationX[wavevectorBinIndex] = 2*FLOATTYPE_PI*(wavevectorBinIndex+0.5)*minReciprocalSpaceVector;
 	}
-
 
 	// Compute Fourier-transformed correlation function and put it on a radial
 	// grid.
@@ -332,7 +335,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		}
 	}
 
-
 	// Compute averages and normalize reciprocal-space correlation function.
 	FloatType normalizationFactor = cell().volume3D()/(sourceProperty1()->size()*sourceProperty2()->size());
 	for (int wavevectorBinIndex = 0; wavevectorBinIndex < numberOfWavevectorBins; wavevectorBinIndex++) {
@@ -341,6 +343,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		}
 	}
 
+	incrementProgressValue();
 	if (isCanceled())
 		return;
 
@@ -348,6 +351,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 
 	// Computer inverse Fourier transform of correlation function.
 	c2rFFT(nX, nY, nZ, ftProperty1, gridProperty1);
+	incrementProgressValue();
 	if (isCanceled())
 		return;
 
@@ -397,7 +401,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		}
 	}
 
-
+	incrementProgressValue();
 	if (isCanceled())
 		return;
 
@@ -409,8 +413,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		return;
 
 	size_t particleCount = positions()->size();
-	setProgressValue(0);
-	setProgressRange(particleCount / 1000);
 
 	// Get pointers to data.
 	const FloatType *floatData1, *floatData2;
@@ -463,9 +465,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 
 				i++;
 
-				// Update progress indicator.
-				if ((i % 1000) == 0)
-					incrementProgressValue();
 				// Abort loop when operation was canceled by the user.
 				if (isCanceled())
 					return;
@@ -482,6 +481,8 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	for (auto& t: workers)
 		t.join();
 
+	incrementProgressValue();
+
 	// Normalize short-ranged real-space correlation function and populate x-array.
 	gridSpacing = (_neighCutoff + FLOATTYPE_EPSILON) / _neighCorrelation.size();
 	normalizationFactor = 3.0*cell().volume3D()/(4.0*FLOATTYPE_PI*sourceProperty1()->size()*sourceProperty2()->size());
@@ -491,7 +492,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		_neighCorrelationX[distanceBinIndex] = (distance+distance2)/2;
 		_neighCorrelation[distanceBinIndex] *= normalizationFactor/(distance2*distance2*distance2-distance*distance*distance);
 	}
-
 }
 
 /******************************************************************************
