@@ -23,6 +23,8 @@
 #ifndef __OVITO_CORRELATION_FUNCTION_MODIFIER_H
 #define __OVITO_CORRELATION_FUNCTION_MODIFIER_H
 
+#include <complex>
+
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/ParticleProperty.h>
 #include <plugins/particles/util/CutoffNeighborFinder.h>
@@ -150,6 +152,12 @@ private:
 		const QVector<FloatType>& reciprocalSpaceCorrelationX() const { return _reciprocalSpaceCorrelationX; }
 
 	private:
+
+		/// Real-to-complex FFT.
+		void r2cFFT(int nX, int nY, int nZ, QVector<FloatType> &rData, QVector<std::complex<FloatType>> &cData);
+
+		/// Complex-to-real inverse FFT
+		void c2rFFT(int nX, int nY, int nZ, QVector<std::complex<FloatType>> &cData, QVector<FloatType> &rData);
 
 		/// Map property onto grid.
 		void mapToSpatialGrid(ParticleProperty *property,

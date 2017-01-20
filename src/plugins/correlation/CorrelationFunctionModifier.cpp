@@ -22,9 +22,8 @@
 
 #include <fftw3.h>
 
-#include <complex>
-
 #include <plugins/particles/Particles.h>
+
 #include <core/scene/objects/DataObject.h>
 #include <core/scene/pipeline/PipelineObject.h>
 #include <core/app/Application.h>
@@ -193,6 +192,45 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::mapToSpatialGrid(Pa
 	}
 }
 
+// Use single precision FFTW if Ovito is compiled with single precision
+// floating point type.
+#ifdef FLOATTYPE_FLOAT
+#define fftw_complex fftwf_complex
+#define fftw_plan_dft_r2c_3d fftwf_plan_dft_r2c_3d
+#define fftw_plan_dft_c2r_3d fftwf_plan_dft_c2r_3d
+#define fftw_execute fftwf_execute
+#define fftw_destroy_plan fftwf_destroy_plan
+#endif
+
+void CorrelationFunctionModifier::CorrelationAnalysisEngine::r2cFFT(int nX, int nY, int nZ,
+																	QVector<FloatType> &rData,
+																	QVector<std::complex<FloatType>> &cData)
+{
+	cData.resize(nX*nY*(nZ/2+1));
+	auto plan = fftw_plan_dft_r2c_3d(
+		nX, nY, nZ,
+		rData.data(),
+		reinterpret_cast<fftw_complex*>(cData.data()),
+		FFTW_ESTIMATE);
+	fftw_execute(plan);
+	fftw_destroy_plan(plan);
+
+}
+
+void CorrelationFunctionModifier::CorrelationAnalysisEngine::c2rFFT(int nX, int nY, int nZ,
+																	QVector<std::complex<FloatType>> &cData,
+																	QVector<FloatType> &rData)
+{
+	rData.resize(nX*nY*nZ);
+	auto plan = fftw_plan_dft_c2r_3d(
+		nX, nY, nZ,
+		reinterpret_cast<fftw_complex*>(cData.data()),
+		rData.data(),
+		FFTW_ESTIMATE);
+	fftw_execute(plan);
+	fftw_destroy_plan(plan);
+}
+
 /******************************************************************************
 * Performs the actual computation. This method is executed in a worker thread.
 ******************************************************************************/
@@ -228,40 +266,15 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	// FIXME. Apply windowing function in nonperiodic directions here.
 	// FIXME. Imaginary part of cross-correlation function is ignored.
 
-	// Use single precision FFTW if Ovito is compiled with single precision
-	// floating point type.
-#ifdef FLOATTYPE_FLOAT
-#define fftw_complex fftwf_complex
-#define fftw_plan_dft_r2c_3d fftwf_plan_dft_r2c_3d
-#define fftw_plan_dft_c2r_3d fftwf_plan_dft_c2r_3d
-#define fftw_execute fftwf_execute
-#define fftw_destroy_plan fftwf_destroy_plan
-#endif
-
 	// Compute reciprocal-space correlation function from a product in Fourier space.
 
 	// Compute Fourier transform of spatial grid.
-	QVector<std::complex<FloatType>> ftProperty1(nX*nY*(nZ/2+1));
-	auto plan = fftw_plan_dft_r2c_3d(
-		nX, nY, nZ,
-		gridProperty1.data(),
-		reinterpret_cast<fftw_complex*>(ftProperty1.data()),
-		FFTW_ESTIMATE);
-	fftw_execute(plan);
-	fftw_destroy_plan(plan);
-
+	QVector<std::complex<FloatType>> ftProperty1;
+	r2cFFT(nX, nY, nZ, gridProperty1, ftProperty1);
 	if (isCanceled())
 		return;
-
-		QVector<std::complex<FloatType>> ftProperty2(nX*nY*(nZ/2+1));
-		plan = fftw_plan_dft_r2c_3d(
-		nX, nY, nZ,
-		gridProperty2.data(),
-		reinterpret_cast<fftw_complex*>(ftProperty2.data()),
-		FFTW_ESTIMATE);
-	fftw_execute(plan);
-	fftw_destroy_plan(plan);
-
+	QVector<std::complex<FloatType>> ftProperty2(nX*nY*(nZ/2+1));
+	r2cFFT(nX, nY, nZ, gridProperty2, ftProperty2);
 	if (isCanceled())
 		return;
 
@@ -328,22 +341,13 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		}
 	}
 
-
 	if (isCanceled())
 		return;
 
 	// Compute long-ranged part of the real-space correlation function from the FFT convolution.
 
 	// Computer inverse Fourier transform of correlation function.
-	plan = fftw_plan_dft_c2r_3d(
-		nX, nY, nZ,
-		reinterpret_cast<fftw_complex*>(ftProperty1.data()),
-		gridProperty1.data(),
-		FFTW_ESTIMATE);
-	fftw_execute(plan);
-	fftw_destroy_plan(plan);
-
-
+	c2rFFT(nX, nY, nZ, ftProperty1, gridProperty1);
 	if (isCanceled())
 		return;
 
