@@ -277,13 +277,13 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	int numberOfWavevectorBins = 1/(2*minReciprocalSpaceVector*fftGridSpacing());
 
 	// Radially averaged reciprocal space correlation function.
-	_reciprocalSpaceCorrelationFunction.fill(0.0, numberOfWavevectorBins);
-	_reciprocalSpaceCorrelationFunctionX.resize(numberOfWavevectorBins);
+	_reciprocalSpaceCorrelation.fill(0.0, numberOfWavevectorBins);
+	_reciprocalSpaceCorrelationX.resize(numberOfWavevectorBins);
 	QVector<int> numberOfValues(numberOfWavevectorBins, 0);
 
 	// Populate array with reciprocal space vectors.
 	for (int wavevectorBinIndex = 0; wavevectorBinIndex < numberOfWavevectorBins; wavevectorBinIndex++) {
-		_reciprocalSpaceCorrelationFunctionX[wavevectorBinIndex] = 2*FLOATTYPE_PI*(wavevectorBinIndex+0.5)*minReciprocalSpaceVector;
+		_reciprocalSpaceCorrelationX[wavevectorBinIndex] = 2*FLOATTYPE_PI*(wavevectorBinIndex+0.5)*minReciprocalSpaceVector;
 	}
 
 
@@ -312,7 +312,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 				// Length of reciprocal space vector.
 				int wavevectorBinIndex = int(std::floor(wavevector.length()/minReciprocalSpaceVector));
 				if (wavevectorBinIndex >= 0 && wavevectorBinIndex < numberOfWavevectorBins) {
-					_reciprocalSpaceCorrelationFunction[wavevectorBinIndex] += std::real(corr);
+					_reciprocalSpaceCorrelation[wavevectorBinIndex] += std::real(corr);
 					numberOfValues[wavevectorBinIndex]++;
 				}
 			}
@@ -324,7 +324,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	FloatType normalizationFactor = cell().volume3D()/(sourceProperty1()->size()*sourceProperty2()->size());
 	for (int wavevectorBinIndex = 0; wavevectorBinIndex < numberOfWavevectorBins; wavevectorBinIndex++) {
 		if (numberOfValues[wavevectorBinIndex] > 0) {
-			_reciprocalSpaceCorrelationFunction[wavevectorBinIndex] *= normalizationFactor/numberOfValues[wavevectorBinIndex];
+			_reciprocalSpaceCorrelation[wavevectorBinIndex] *= normalizationFactor/numberOfValues[wavevectorBinIndex];
 		}
 	}
 
@@ -347,7 +347,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	if (isCanceled())
 		return;
 
-	// Determine number of grid points for real-space correlation function.
+	// Determine number of grid points for reciprocal-spacespace correlation function.
 	int numberOfDistanceBins = minCellFaceDistance/(2*fftGridSpacing());
 	FloatType gridSpacing = minCellFaceDistance/(2*numberOfDistanceBins);
 
@@ -500,8 +500,8 @@ void CorrelationFunctionModifier::transferComputationResults(ComputeEngine* engi
 	_realSpaceCorrelationX = eng->realSpaceCorrelationX();
 	_neighCorrelation = eng->neighCorrelation();
 	_neighCorrelationX = eng->neighCorrelationX();
-	_reciprocalSpaceCorrelationFunction = eng->reciprocalSpaceCorrelationFunction();
-	_reciprocalSpaceCorrelationFunctionX = eng->reciprocalSpaceCorrelationFunctionX();
+	_reciprocalSpaceCorrelation = eng->reciprocalSpaceCorrelation();
+	_reciprocalSpaceCorrelationX = eng->reciprocalSpaceCorrelationX();
 }
 
 /******************************************************************************

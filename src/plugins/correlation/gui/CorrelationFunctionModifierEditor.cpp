@@ -204,10 +204,10 @@ void CorrelationFunctionModifierEditor::plotAllData()
 	}
 
 	// Plot reciprocal-space correlation function
-	if(!modifier->reciprocalSpaceCorrelationFunctionX().empty() &&
-	   !modifier->reciprocalSpaceCorrelationFunction().empty()) {
-		plotData(modifier->reciprocalSpaceCorrelationFunctionX(),
-				 modifier->reciprocalSpaceCorrelationFunction(),
+	if(!modifier->reciprocalSpaceCorrelationX().empty() &&
+	   !modifier->reciprocalSpaceCorrelation().empty()) {
+		plotData(modifier->reciprocalSpaceCorrelationX(),
+				 modifier->reciprocalSpaceCorrelation(),
 				 _reciprocalSpacePlot,
 				 _reciprocalSpaceCurve);
 	}

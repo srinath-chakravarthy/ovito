@@ -77,10 +77,10 @@ public:
 	const QVector<FloatType>& neighCorrelationX() const { return _neighCorrelationX; }
 
 	/// Returns the Y coordinates of the reciprocal-space correlation function.
-	const QVector<FloatType>& reciprocalSpaceCorrelationFunction() const { return _reciprocalSpaceCorrelationFunction; }
+	const QVector<FloatType>& reciprocalSpaceCorrelation() const { return _reciprocalSpaceCorrelation; }
 
 	/// Returns the X coordinates of the reciprocal-space correlation function.
-	const QVector<FloatType>& reciprocalSpaceCorrelationFunctionX() const { return _reciprocalSpaceCorrelationFunctionX; }
+	const QVector<FloatType>& reciprocalSpaceCorrelationX() const { return _reciprocalSpaceCorrelationX; }
 
 	/// Returns the number of bins in the computed RDF histogram.
 	int numberOfNeighBins() const { return _numberOfNeighBins; }
@@ -144,10 +144,10 @@ private:
 		const QVector<FloatType>& neighCorrelationX() const { return _neighCorrelationX; }
 
 		/// Returns the reciprocal-space correlation function.
-		const QVector<FloatType>& reciprocalSpaceCorrelationFunction() const { return _reciprocalSpaceCorrelationFunction; }
+		const QVector<FloatType>& reciprocalSpaceCorrelation() const { return _reciprocalSpaceCorrelation; }
 
 		/// Returns the wavevectors for which the reciprocal-space correlation function is tabulated.
-		const QVector<FloatType>& reciprocalSpaceCorrelationFunctionX() const { return _reciprocalSpaceCorrelationFunctionX; }
+		const QVector<FloatType>& reciprocalSpaceCorrelationX() const { return _reciprocalSpaceCorrelationX; }
 
 	private:
 
@@ -168,8 +168,8 @@ private:
 		QVector<FloatType> _realSpaceCorrelationX;
 		QVector<FloatType> _neighCorrelation;
 		QVector<FloatType> _neighCorrelationX;
-		QVector<FloatType> _reciprocalSpaceCorrelationFunction;
-		QVector<FloatType> _reciprocalSpaceCorrelationFunctionX;
+		QVector<FloatType> _reciprocalSpaceCorrelation;
+		QVector<FloatType> _reciprocalSpaceCorrelationX;
 	};
 
 protected:
@@ -219,10 +219,10 @@ private:
 	QVector<FloatType> _neighCorrelationX;
 
 	/// The reciprocal-space correlation function.
-	QVector<FloatType> _reciprocalSpaceCorrelationFunction;
+	QVector<FloatType> _reciprocalSpaceCorrelation;
 
 	/// The wavevevtors for which the reciprocal-space correlation function is tabulated.
-	QVector<FloatType> _reciprocalSpaceCorrelationFunctionX;
+	QVector<FloatType> _reciprocalSpaceCorrelationX;
 
 	Q_OBJECT
 	OVITO_OBJECT
