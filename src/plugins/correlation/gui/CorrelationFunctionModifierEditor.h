@@ -50,13 +50,16 @@ protected:
 	/// This method is called when a reference target changes.
 	virtual bool referenceEvent(RefTarget* source, ReferenceEvent* event) override;
 
-protected Q_SLOTS:
-
 	/// Replots one of the correlation function computed by the modifier.
 	void plotData(const QVector<FloatType> &xData, const QVector<FloatType> &yData, QwtPlot *plot, QwtPlotCurve *&curve);
 
+protected Q_SLOTS:
+
 	/// Replots the correlation function computed by the modifier.
 	void plotAllData();
+
+    /// This is called when the user has clicked the "Save Data" button.
+    void onSaveData();
 
 private:
 

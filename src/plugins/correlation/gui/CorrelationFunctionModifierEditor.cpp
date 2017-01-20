@@ -101,6 +101,11 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 
 	connect(this, &CorrelationFunctionModifierEditor::contentsReplaced, this, &CorrelationFunctionModifierEditor::plotAllData);
 
+	layout->addSpacing(12);
+	QPushButton* saveDataButton = new QPushButton(tr("Export data to text file"));
+	layout->addWidget(saveDataButton);
+	connect(saveDataButton, &QPushButton::clicked, this, &CorrelationFunctionModifierEditor::onSaveData);
+
 	// Status label.
 	layout->addSpacing(6);
 	layout->addWidget(statusLabel());
@@ -122,7 +127,7 @@ bool CorrelationFunctionModifierEditor::referenceEvent(RefTarget* source, Refere
 * Plot correlation function.
 ******************************************************************************/
 void CorrelationFunctionModifierEditor::plotData(const QVector<FloatType> &xData,
-											     const QVector<FloatType> &yData,
+												 const QVector<FloatType> &yData,
 												 QwtPlot *plot,
 												 QwtPlotCurve *&curve)
 {
@@ -211,6 +216,67 @@ void CorrelationFunctionModifierEditor::plotAllData()
 				 modifier->reciprocalSpaceCorrelation(),
 				 _reciprocalSpacePlot,
 				 _reciprocalSpaceCurve);
+	}
+}
+
+/******************************************************************************
+* This is called when the user has clicked the "Save Data" button.
+******************************************************************************/
+void CorrelationFunctionModifierEditor::onSaveData()
+{
+	CorrelationFunctionModifier* modifier = static_object_cast<CorrelationFunctionModifier>(editObject());
+	if(!modifier)
+		return;
+
+	if(modifier->realSpaceCorrelation().empty() && modifier->neighCorrelation().empty() && modifier->reciprocalSpaceCorrelation().empty())
+		return;
+
+	QString fileName = QFileDialog::getSaveFileName(mainWindow(),
+		tr("Save Correlation Data"), QString(), tr("Text files (*.txt);;All files (*)"));
+	if(fileName.isEmpty())
+		return;
+
+	try {
+		QFile file(fileName);
+		if(!file.open(QIODevice::WriteOnly | QIODevice::Text))
+			modifier->throwException(tr("Could not open file for writing: %1").arg(file.errorString()));
+
+		QTextStream stream(&file);
+
+		if (!modifier->realSpaceCorrelation().empty()) {
+			stream << "# Real-space correlation function from FFT follows." << endl;
+			stream << "# 1: Bin number" << endl;
+			stream << "# 2: Distance r" << endl;
+			stream << "# 3: Correlation function C(r)" << endl;
+			for(int i = 0; i < modifier->realSpaceCorrelation().size(); i++) {
+				stream << i << "\t" << modifier->realSpaceCorrelationX()[i] << "\t" << modifier->realSpaceCorrelation()[i] << endl;
+			}
+			stream << endl;
+		}
+
+		if (!modifier->neighCorrelation().empty()) {
+			stream << "# Real-space correlation function from direct sum over neighbors follows." << endl;
+			stream << "# 1: Bin number" << endl;
+			stream << "# 2: Distance r" << endl;
+			stream << "# 3: Correlation function C(r)" << endl;
+			for(int i = 0; i < modifier->neighCorrelation().size(); i++) {
+				stream << i << "\t" << modifier->neighCorrelationX()[i] << "\t" << modifier->neighCorrelation()[i] << endl;
+			}
+			stream << endl;
+		}
+
+		if (!modifier->reciprocalSpaceCorrelation().empty()) {
+			stream << "# Reciprocal-space correlation function from FFT follows." << endl;
+			stream << "# 1: Bin number" << endl;
+			stream << "# 2: Wavevector q (includes a factor of 2*pi)" << endl;
+			stream << "# 3: Correlation function C(q)" << endl;
+			for(int i = 0; i < modifier->reciprocalSpaceCorrelation().size(); i++) {
+				stream << i << "\t" << modifier->reciprocalSpaceCorrelationX()[i] << "\t" << modifier->reciprocalSpaceCorrelation()[i] << endl;
+			}
+		}
+	}
+	catch(const Exception& ex) {
+		ex.showError();
 	}
 }
 
