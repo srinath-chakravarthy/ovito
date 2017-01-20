@@ -66,6 +66,24 @@ public:
 	/// Returns the cutoff radius used to build the neighbor lists for the analysis.
 	FloatType neighCutoff() const { return _neighCutoff; }
 
+	/// Sets the number of bins in the computed RDF histogram.
+	void setNumberOfNeighBins(int n) { _numberOfNeighBins = n; }
+
+	/// Returns the number of bins in the computed RDF histogram.
+	int numberOfNeighBins() const { return _numberOfNeighBins; }
+
+	/// Sets the type of the real-space plot
+	void setTypeOfRealSpacePlot(int t) { _typeOfRealSpacePlot = t; }
+
+	/// Returns the type of the real-space plot
+	int typeOfRealSpacePlot() const { return _typeOfRealSpacePlot; }
+
+	/// Sets the type of the reciprocal-space plot
+	void setTypeOfReciprocalSpacePlot(int t) { _typeOfReciprocalSpacePlot = t; }
+
+	/// Returns the type of the reciprocal-space plot
+	int typeOfReciprocalSpacePlot() const { return _typeOfReciprocalSpacePlot; }
+
 	/// Returns the Y coordinates of the real-space correlation function.
 	const QVector<FloatType>& realSpaceCorrelation() const { return _realSpaceCorrelation; }
 
@@ -83,12 +101,6 @@ public:
 
 	/// Returns the X coordinates of the reciprocal-space correlation function.
 	const QVector<FloatType>& reciprocalSpaceCorrelationX() const { return _reciprocalSpaceCorrelationX; }
-
-	/// Returns the number of bins in the computed RDF histogram.
-	int numberOfNeighBins() const { return _numberOfNeighBins; }
-
-	/// Sets the number of bins in the computed RDF histogram.
-	void setNumberOfNeighBins(int n) { _numberOfNeighBins = n; }
 
 private:
 
@@ -214,6 +226,12 @@ private:
 	/// Controls the number of RDF histogram bins.
 	PropertyField<FloatType> _numberOfNeighBins;
 
+	/// Type of real-space plot (lin-lin, log-lin or log-log)
+	PropertyField<int> _typeOfRealSpacePlot;
+
+	/// Type of reciprocal-space plot (lin-lin, log-lin or log-log)
+	PropertyField<int> _typeOfReciprocalSpacePlot;
+
 	/// The real-space correlation function.
 	QVector<FloatType> _realSpaceCorrelation;
 
@@ -243,6 +261,8 @@ private:
 	DECLARE_PROPERTY_FIELD(_fftGridSpacing);
 	DECLARE_PROPERTY_FIELD(_neighCutoff);
 	DECLARE_PROPERTY_FIELD(_numberOfNeighBins);
+	DECLARE_PROPERTY_FIELD(_typeOfRealSpacePlot);
+	DECLARE_PROPERTY_FIELD(_typeOfReciprocalSpacePlot);
 };
 
 OVITO_END_INLINE_NAMESPACE

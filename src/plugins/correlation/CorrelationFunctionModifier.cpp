@@ -1,4 +1,3 @@
-///////////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (2014) Alexander Stukowski
 //  Copyright (2017) Lars Pastewka
@@ -38,6 +37,8 @@ DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _sourceProperty2, "SourceProp
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _fftGridSpacing, "FftGridSpacing", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _neighCutoff, "NeighCutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _numberOfNeighBins, "NumberOfNeighBins", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _typeOfRealSpacePlot, "_typeOfRealSpacePlot");
+DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _typeOfReciprocalSpacePlot, "_typeOfRealSpacePlot");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty1, "First property");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty2, "Second property");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _fftGridSpacing, "FFT grid spacing");
@@ -58,6 +59,8 @@ CorrelationFunctionModifier::CorrelationFunctionModifier(DataSet* dataset) : Asy
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_fftGridSpacing);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_neighCutoff);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfNeighBins);
+	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_typeOfRealSpacePlot);
+	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_typeOfReciprocalSpacePlot);
 }
 
 
