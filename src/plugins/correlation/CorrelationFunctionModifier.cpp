@@ -438,8 +438,8 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 			endIndex += particleCount % num_threads;
 		}
 		workers.push_back(std::thread([&neighborListBuilder, startIndex, endIndex, floatData1, intData1, floatData2, intData2, &mutex, this]() {
-			FloatType gridSpacing = (_neighCutoff + FLOATTYPE_EPSILON) / _shortRangedRealSpaceCorrelationFunction.size();
-			std::vector<double> threadLocalCorrelation(_shortRangedRealSpaceCorrelationFunction.size(), 0);
+			FloatType gridSpacing = (_neighCutoff + FLOATTYPE_EPSILON) / _neighCorrelation.size();
+			std::vector<double> threadLocalCorrelation(_neighCorrelation.size(), 0);
 			for (size_t i = startIndex; i < endIndex;) {
 
 				for (CutoffNeighborFinder::Query neighQuery(neighborListBuilder, i); !neighQuery.atEnd(); neighQuery.next()) {
@@ -467,7 +467,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 					return;
 			}
 			std::lock_guard<std::mutex> lock(mutex);
-			auto iter_out = _shortRangedRealSpaceCorrelationFunction.begin();
+			auto iter_out = _neighCorrelation.begin();
 			for (auto iter = threadLocalCorrelation.cbegin(); iter != threadLocalCorrelation.cend(); ++iter, ++iter_out)
 				*iter_out += *iter;
 		}));
@@ -479,13 +479,13 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		t.join();
 
 	// Normalize short-ranged real-space correlation function and populate x-array.
-	gridSpacing = (_neighCutoff + FLOATTYPE_EPSILON) / _shortRangedRealSpaceCorrelationFunction.size();
+	gridSpacing = (_neighCutoff + FLOATTYPE_EPSILON) / _neighCorrelation.size();
 	normalizationFactor = 3.0*cell().volume3D()/(4.0*FLOATTYPE_PI*sourceProperty1()->size()*sourceProperty2()->size());
-	for (int distanceBinIndex = 0; distanceBinIndex < _shortRangedRealSpaceCorrelationFunction.size(); distanceBinIndex++) {
+	for (int distanceBinIndex = 0; distanceBinIndex < _neighCorrelation.size(); distanceBinIndex++) {
 		FloatType distance = distanceBinIndex*gridSpacing;
 		FloatType distance2 = (distanceBinIndex+1)*gridSpacing;
-		_shortRangedRealSpaceCorrelationFunctionX[distanceBinIndex] = (distance+distance2)/2;
-		_shortRangedRealSpaceCorrelationFunction[distanceBinIndex] *= normalizationFactor/(distance2*distance2*distance2-distance*distance*distance);
+		_neighCorrelationX[distanceBinIndex] = (distance+distance2)/2;
+		_neighCorrelation[distanceBinIndex] *= normalizationFactor/(distance2*distance2*distance2-distance*distance*distance);
 	}
 
 }
@@ -498,8 +498,8 @@ void CorrelationFunctionModifier::transferComputationResults(ComputeEngine* engi
 	CorrelationAnalysisEngine* eng = static_cast<CorrelationAnalysisEngine*>(engine);
 	_realSpaceCorrelationFunction = eng->realSpaceCorrelationFunction();
 	_realSpaceCorrelationFunctionX = eng->realSpaceCorrelationFunctionX();
-	_shortRangedRealSpaceCorrelationFunction = eng->shortRangedRealSpaceCorrelationFunction();
-	_shortRangedRealSpaceCorrelationFunctionX = eng->shortRangedRealSpaceCorrelationFunctionX();
+	_neighCorrelation = eng->neighCorrelation();
+	_neighCorrelationX = eng->neighCorrelationX();
 	_reciprocalSpaceCorrelationFunction = eng->reciprocalSpaceCorrelationFunction();
 	_reciprocalSpaceCorrelationFunctionX = eng->reciprocalSpaceCorrelationFunctionX();
 }

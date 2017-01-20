@@ -71,10 +71,10 @@ public:
 	const QVector<FloatType>& realSpaceCorrelationFunctionX() const { return _realSpaceCorrelationFunctionX; }
 
 	/// Returns the Y coordinates of the short-ranged part of the real-space correlation function.
-	const QVector<FloatType>& shortRangedRealSpaceCorrelationFunction() const { return _shortRangedRealSpaceCorrelationFunction; }
+	const QVector<FloatType>& neighCorrelation() const { return _neighCorrelation; }
 
 	/// Returns the X coordinates of the short-ranged part of the real-space correlation function.
-	const QVector<FloatType>& shortRangedRealSpaceCorrelationFunctionX() const { return _shortRangedRealSpaceCorrelationFunctionX; }
+	const QVector<FloatType>& neighCorrelationX() const { return _neighCorrelationX; }
 
 	/// Returns the Y coordinates of the reciprocal-space correlation function.
 	const QVector<FloatType>& reciprocalSpaceCorrelationFunction() const { return _reciprocalSpaceCorrelationFunction; }
@@ -107,8 +107,8 @@ private:
 			ComputeEngine(validityInterval), _positions(positions),
 			_sourceProperty1(sourceProperty1), _sourceProperty2(sourceProperty2),
 			_simCell(simCell), _fftGridSpacing(fftGridSpacing), _neighCutoff(neighCutoff),
-			_shortRangedRealSpaceCorrelationFunction(numberOfNeighBins, 0.0),
-			_shortRangedRealSpaceCorrelationFunctionX(numberOfNeighBins) {}
+			_neighCorrelation(numberOfNeighBins, 0.0),
+			_neighCorrelationX(numberOfNeighBins) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;
@@ -138,10 +138,10 @@ private:
 		const QVector<FloatType>& realSpaceCorrelationFunctionX() const { return _realSpaceCorrelationFunctionX; }
 
 		/// Returns the short-ranged real-space correlation function.
-		const QVector<FloatType>& shortRangedRealSpaceCorrelationFunction() const { return _shortRangedRealSpaceCorrelationFunction; }
+		const QVector<FloatType>& neighCorrelation() const { return _neighCorrelation; }
 
 		/// Returns the distances for which the short-ranged real-space correlation function is tabulated.
-		const QVector<FloatType>& shortRangedRealSpaceCorrelationFunctionX() const { return _shortRangedRealSpaceCorrelationFunctionX; }
+		const QVector<FloatType>& neighCorrelationX() const { return _neighCorrelationX; }
 
 		/// Returns the reciprocal-space correlation function.
 		const QVector<FloatType>& reciprocalSpaceCorrelationFunction() const { return _reciprocalSpaceCorrelationFunction; }
@@ -166,8 +166,8 @@ private:
 		QExplicitlySharedDataPointer<ParticleProperty> _sourceProperty2;
 		QVector<FloatType> _realSpaceCorrelationFunction;
 		QVector<FloatType> _realSpaceCorrelationFunctionX;
-		QVector<FloatType> _shortRangedRealSpaceCorrelationFunction;
-		QVector<FloatType> _shortRangedRealSpaceCorrelationFunctionX;
+		QVector<FloatType> _neighCorrelation;
+		QVector<FloatType> _neighCorrelationX;
 		QVector<FloatType> _reciprocalSpaceCorrelationFunction;
 		QVector<FloatType> _reciprocalSpaceCorrelationFunctionX;
 	};
@@ -213,10 +213,10 @@ private:
 	QVector<FloatType> _realSpaceCorrelationFunctionX;
 
 	/// The short-ranged part of the real-space correlation function.
-	QVector<FloatType> _shortRangedRealSpaceCorrelationFunction;
+	QVector<FloatType> _neighCorrelation;
 
 	/// The distances for which short-ranged part of the real-space correlation function is tabulated.
-	QVector<FloatType> _shortRangedRealSpaceCorrelationFunctionX;
+	QVector<FloatType> _neighCorrelationX;
 
 	/// The reciprocal-space correlation function.
 	QVector<FloatType> _reciprocalSpaceCorrelationFunction;

@@ -177,8 +177,8 @@ void CorrelationFunctionModifierEditor::plotAllData()
 				 _realSpaceCurve);
 	}
 
-	if(!modifier->shortRangedRealSpaceCorrelationFunctionX().empty() &&
-	   !modifier->shortRangedRealSpaceCorrelationFunction().empty()) {
+	if(!modifier->neighCorrelationX().empty() &&
+	   !modifier->neighCorrelation().empty()) {
 		if(!_shortRangedRealSpaceCurve) {
 			_shortRangedRealSpaceCurve = new QwtPlotCurve();
 			_shortRangedRealSpaceCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
@@ -187,8 +187,8 @@ void CorrelationFunctionModifierEditor::plotAllData()
 		}
 
 		// Set data to plot.
-		auto &xData = modifier->shortRangedRealSpaceCorrelationFunctionX();
-		auto &yData = modifier->shortRangedRealSpaceCorrelationFunction();
+		auto &xData = modifier->neighCorrelationX();
+		auto &yData = modifier->neighCorrelation();
 		size_t numberOfDataPoints = yData.size();
 		QVector<QPointF> plotData(numberOfDataPoints);
 		FloatType minx, maxx;
