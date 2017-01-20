@@ -38,27 +38,27 @@ DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _sourceProperty1, "SourceProp
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _sourceProperty2, "SourceProperty2");
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _fftGridSpacing, "FftGridSpacing", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _neighCutoff, "NeighCutoff", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, "NumberOfBinsForShortRangedCalculation", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _numberOfNeighBins, "NumberOfNeighBins", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty1, "First property");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty2, "Second property");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _fftGridSpacing, "FFT grid spacing");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _neighCutoff, "Neighbor cutoff radius");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, "Number of neighbor bins");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _numberOfNeighBins, "Number of neighbor bins");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, _fftGridSpacing, WorldParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, _neighCutoff, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(CorrelationFunctionModifier, _numberOfBinsForShortRangedCalculation, IntegerParameterUnit, 4, 100000);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(CorrelationFunctionModifier, _numberOfNeighBins, IntegerParameterUnit, 4, 100000);
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
 CorrelationFunctionModifier::CorrelationFunctionModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
-	_fftGridSpacing(1.0), _neighCutoff(5.0), _numberOfBinsForShortRangedCalculation(50)
+	_fftGridSpacing(1.0), _neighCutoff(5.0), _numberOfNeighBins(50)
 {
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty1);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty2);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_fftGridSpacing);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_neighCutoff);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfBinsForShortRangedCalculation);
+	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfNeighBins);
 }
 
 
@@ -119,7 +119,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CorrelationFunction
 													   inputCell->data(),
 													   fftGridSpacing(),
 													   neighCutoff(),
-													   numberOfBinsForShortRangedCalculation());
+													   numberOfNeighBins());
 }
 
 /******************************************************************************
@@ -525,7 +525,7 @@ void CorrelationFunctionModifier::propertyChanged(const PropertyFieldDescriptor&
 		field == PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty2) ||
 		field == PROPERTY_FIELD(CorrelationFunctionModifier::_fftGridSpacing) ||
 		field == PROPERTY_FIELD(CorrelationFunctionModifier::_neighCutoff) ||
-	    field == PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfBinsForShortRangedCalculation))
+	    field == PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfNeighBins))
 		invalidateCachedResults();
 }
 

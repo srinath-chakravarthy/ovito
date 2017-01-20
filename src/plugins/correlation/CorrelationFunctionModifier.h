@@ -83,10 +83,10 @@ public:
 	const QVector<FloatType>& reciprocalSpaceCorrelationFunctionX() const { return _reciprocalSpaceCorrelationFunctionX; }
 
 	/// Returns the number of bins in the computed RDF histogram.
-	int numberOfBinsForShortRangedCalculation() const { return _numberOfBinsForShortRangedCalculation; }
+	int numberOfNeighBins() const { return _numberOfNeighBins; }
 
 	/// Sets the number of bins in the computed RDF histogram.
-	void setnumberOfBinsForShortRangedCalculation(int n) { _numberOfBinsForShortRangedCalculation = n; }
+	void setNumberOfNeighBins(int n) { _numberOfNeighBins = n; }
 
 private:
 
@@ -103,12 +103,12 @@ private:
 								  const SimulationCell& simCell,
 								  FloatType fftGridSpacing,
 								  FloatType neighCutoff,
-								  int numberOfBinsForShortRangedCalculation) :
+								  int numberOfNeighBins) :
 			ComputeEngine(validityInterval), _positions(positions),
 			_sourceProperty1(sourceProperty1), _sourceProperty2(sourceProperty2),
 			_simCell(simCell), _fftGridSpacing(fftGridSpacing), _neighCutoff(neighCutoff),
-			_shortRangedRealSpaceCorrelationFunction(numberOfBinsForShortRangedCalculation, 0.0),
-			_shortRangedRealSpaceCorrelationFunctionX(numberOfBinsForShortRangedCalculation) {}
+			_shortRangedRealSpaceCorrelationFunction(numberOfNeighBins, 0.0),
+			_shortRangedRealSpaceCorrelationFunctionX(numberOfNeighBins) {}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;
@@ -204,7 +204,7 @@ private:
 	PropertyField<FloatType> _neighCutoff;
 
 	/// Controls the number of RDF histogram bins.
-	PropertyField<FloatType> _numberOfBinsForShortRangedCalculation;
+	PropertyField<FloatType> _numberOfNeighBins;
 
 	/// The real-space correlation function.
 	QVector<FloatType> _realSpaceCorrelationFunction;
@@ -234,7 +234,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_sourceProperty2);
 	DECLARE_PROPERTY_FIELD(_fftGridSpacing);
 	DECLARE_PROPERTY_FIELD(_neighCutoff);
-	DECLARE_PROPERTY_FIELD(_numberOfBinsForShortRangedCalculation);
+	DECLARE_PROPERTY_FIELD(_numberOfNeighBins);
 };
 
 OVITO_END_INLINE_NAMESPACE

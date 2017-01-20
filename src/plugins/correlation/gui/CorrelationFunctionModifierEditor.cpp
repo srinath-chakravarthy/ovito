@@ -73,9 +73,9 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	gridlayout->addLayout(neighCutoffRadiusPUI->createFieldLayout(), 1, 1);
 
 	// Number of bins parameter.
-	IntegerParameterUI* numBinsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfBinsForShortRangedCalculation));
-	gridlayout->addWidget(numBinsPUI->label(), 2, 0);
-	gridlayout->addLayout(numBinsPUI->createFieldLayout(), 2, 1);
+	IntegerParameterUI* numberOfNeighBinsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfNeighBins));
+	gridlayout->addWidget(numberOfNeighBinsPUI->label(), 2, 0);
+	gridlayout->addLayout(numberOfNeighBinsPUI->createFieldLayout(), 2, 1);
 
 	layout->addLayout(gridlayout);
 
