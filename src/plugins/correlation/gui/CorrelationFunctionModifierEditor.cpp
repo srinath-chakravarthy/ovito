@@ -169,10 +169,10 @@ void CorrelationFunctionModifierEditor::plotAllData()
 		return;
 
 	// Plot real-space correlation function
-	if(!modifier->realSpaceCorrelationFunctionX().empty() &&
-	   !modifier->realSpaceCorrelationFunction().empty()) {
-		plotData(modifier->realSpaceCorrelationFunctionX(),
-				 modifier->realSpaceCorrelationFunction(),
+	if(!modifier->realSpaceCorrelationX().empty() &&
+	   !modifier->realSpaceCorrelation().empty()) {
+		plotData(modifier->realSpaceCorrelationX(),
+				 modifier->realSpaceCorrelation(),
 				 _realSpacePlot,
 				 _realSpaceCurve);
 	}

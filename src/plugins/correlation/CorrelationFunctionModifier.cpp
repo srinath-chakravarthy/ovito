@@ -352,13 +352,13 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	FloatType gridSpacing = minCellFaceDistance/(2*numberOfDistanceBins);
 
 	// Radially averaged real space correlation function.
-	_realSpaceCorrelationFunction.fill(0.0, numberOfDistanceBins);
-	_realSpaceCorrelationFunctionX.resize(numberOfDistanceBins);
+	_realSpaceCorrelation.fill(0.0, numberOfDistanceBins);
+	_realSpaceCorrelationX.resize(numberOfDistanceBins);
 	numberOfValues.fill(0, numberOfDistanceBins);
 
 	// Populate array with real space vectors.
 	for (int distanceBinIndex = 0; distanceBinIndex < numberOfDistanceBins; distanceBinIndex++) {
-		_realSpaceCorrelationFunctionX[distanceBinIndex] = (distanceBinIndex+0.5)*gridSpacing;
+		_realSpaceCorrelationX[distanceBinIndex] = (distanceBinIndex+0.5)*gridSpacing;
 	}
 
 	// Put real-space correlation function on a radial grid.
@@ -378,7 +378,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 				// Length of real space vector.
 				int distanceBinIndex = int(std::floor(distance.length()/gridSpacing));
 				if (distanceBinIndex >= 0 && distanceBinIndex < numberOfDistanceBins) {
-					_realSpaceCorrelationFunction[distanceBinIndex] += gridProperty1[binIndex];
+					_realSpaceCorrelation[distanceBinIndex] += gridProperty1[binIndex];
 					numberOfValues[distanceBinIndex]++;
 				}
 			}
@@ -389,7 +389,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	normalizationFactor = 1.0/(sourceProperty1()->size()*sourceProperty2()->size());
 	for (int distanceBinIndex = 0; distanceBinIndex < numberOfDistanceBins; distanceBinIndex++) {
 		if (numberOfValues[distanceBinIndex] > 0) {
-			_realSpaceCorrelationFunction[distanceBinIndex] *= normalizationFactor/numberOfValues[distanceBinIndex];
+			_realSpaceCorrelation[distanceBinIndex] *= normalizationFactor/numberOfValues[distanceBinIndex];
 		}
 	}
 
@@ -496,8 +496,8 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 void CorrelationFunctionModifier::transferComputationResults(ComputeEngine* engine)
 {
 	CorrelationAnalysisEngine* eng = static_cast<CorrelationAnalysisEngine*>(engine);
-	_realSpaceCorrelationFunction = eng->realSpaceCorrelationFunction();
-	_realSpaceCorrelationFunctionX = eng->realSpaceCorrelationFunctionX();
+	_realSpaceCorrelation = eng->realSpaceCorrelation();
+	_realSpaceCorrelationX = eng->realSpaceCorrelationX();
 	_neighCorrelation = eng->neighCorrelation();
 	_neighCorrelationX = eng->neighCorrelationX();
 	_reciprocalSpaceCorrelationFunction = eng->reciprocalSpaceCorrelationFunction();

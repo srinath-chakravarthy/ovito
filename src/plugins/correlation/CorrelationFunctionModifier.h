@@ -65,10 +65,10 @@ public:
 	FloatType neighCutoff() const { return _neighCutoff; }
 
 	/// Returns the Y coordinates of the real-space correlation function.
-	const QVector<FloatType>& realSpaceCorrelationFunction() const { return _realSpaceCorrelationFunction; }
+	const QVector<FloatType>& realSpaceCorrelation() const { return _realSpaceCorrelation; }
 
 	/// Returns the X coordinates of the real-space correlation function.
-	const QVector<FloatType>& realSpaceCorrelationFunctionX() const { return _realSpaceCorrelationFunctionX; }
+	const QVector<FloatType>& realSpaceCorrelationX() const { return _realSpaceCorrelationX; }
 
 	/// Returns the Y coordinates of the short-ranged part of the real-space correlation function.
 	const QVector<FloatType>& neighCorrelation() const { return _neighCorrelation; }
@@ -132,10 +132,10 @@ private:
 		FloatType neighCutoff() const { return _neighCutoff; }
 
 		/// Returns the real-space correlation function.
-		const QVector<FloatType>& realSpaceCorrelationFunction() const { return _realSpaceCorrelationFunction; }
+		const QVector<FloatType>& realSpaceCorrelation() const { return _realSpaceCorrelation; }
 
 		/// Returns the distances for which the real-space correlation function is tabulated.
-		const QVector<FloatType>& realSpaceCorrelationFunctionX() const { return _realSpaceCorrelationFunctionX; }
+		const QVector<FloatType>& realSpaceCorrelationX() const { return _realSpaceCorrelationX; }
 
 		/// Returns the short-ranged real-space correlation function.
 		const QVector<FloatType>& neighCorrelation() const { return _neighCorrelation; }
@@ -164,8 +164,8 @@ private:
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
 		QExplicitlySharedDataPointer<ParticleProperty> _sourceProperty1;
 		QExplicitlySharedDataPointer<ParticleProperty> _sourceProperty2;
-		QVector<FloatType> _realSpaceCorrelationFunction;
-		QVector<FloatType> _realSpaceCorrelationFunctionX;
+		QVector<FloatType> _realSpaceCorrelation;
+		QVector<FloatType> _realSpaceCorrelationX;
 		QVector<FloatType> _neighCorrelation;
 		QVector<FloatType> _neighCorrelationX;
 		QVector<FloatType> _reciprocalSpaceCorrelationFunction;
@@ -207,10 +207,10 @@ private:
 	PropertyField<FloatType> _numberOfNeighBins;
 
 	/// The real-space correlation function.
-	QVector<FloatType> _realSpaceCorrelationFunction;
+	QVector<FloatType> _realSpaceCorrelation;
 
 	/// The distances for which the real-space correlation function is tabulated.
-	QVector<FloatType> _realSpaceCorrelationFunctionX;
+	QVector<FloatType> _realSpaceCorrelationX;
 
 	/// The short-ranged part of the real-space correlation function.
 	QVector<FloatType> _neighCorrelation;
