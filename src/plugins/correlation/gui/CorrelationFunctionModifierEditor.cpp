@@ -175,13 +175,13 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	layout->addWidget(axesBox);
 	// x-axis.
 	{
-		BooleanParameterUI* rangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_fixRealSpaceXAxisRange));
+		BooleanParameterUI* rangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_fixReciprocalSpaceXAxisRange));
 		axesSublayout->addWidget(rangeUI->checkBox());
 
 		QHBoxLayout* hlayout = new QHBoxLayout();
 		axesSublayout->addLayout(hlayout);
-		FloatParameterUI* startPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_realSpaceXAxisRangeStart));
-		FloatParameterUI* endPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_realSpaceXAxisRangeEnd));
+		FloatParameterUI* startPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_reciprocalSpaceXAxisRangeStart));
+		FloatParameterUI* endPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_reciprocalSpaceXAxisRangeEnd));
 		hlayout->addWidget(new QLabel(tr("From:")));
 		hlayout->addLayout(startPUI->createFieldLayout());
 		hlayout->addSpacing(12);
@@ -194,13 +194,13 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	}
 	// y-axis.
 	{
-		BooleanParameterUI* rangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_fixRealSpaceYAxisRange));
+		BooleanParameterUI* rangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_fixReciprocalSpaceYAxisRange));
 		axesSublayout->addWidget(rangeUI->checkBox());
 
 		QHBoxLayout* hlayout = new QHBoxLayout();
 		axesSublayout->addLayout(hlayout);
-		FloatParameterUI* startPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_realSpaceYAxisRangeStart));
-		FloatParameterUI* endPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_realSpaceYAxisRangeEnd));
+		FloatParameterUI* startPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_reciprocalSpaceYAxisRangeStart));
+		FloatParameterUI* endPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_reciprocalSpaceYAxisRangeEnd));
 		hlayout->addWidget(new QLabel(tr("From:")));
 		hlayout->addLayout(startPUI->createFieldLayout());
 		hlayout->addSpacing(12);
