@@ -32,6 +32,18 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
+#define DECLARE_PROPERTY_FIELD_EX(name, type) 						\
+	public:															\
+		const type name() const { return _##name; }					\
+	private:														\
+		PropertyField<type> _##name;								\
+	DECLARE_PROPERTY_FIELD(_##name)
+
+#define DECLARE_PROPERTY_FIELD_EX_SETTER(name, type, setter)		\
+	DECLARE_PROPERTY_FIELD_EX(name, type)							\
+	public:															\
+		void setter(type x) { _##name = x; }
+
 /**
  * \brief This modifier computes the coordination number of each particle (i.e. the number of neighbors within a given cutoff radius).
  */
@@ -41,54 +53,6 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE CorrelationFunctionModifier(DataSet* dataset);
-
-	/// Sets the first source particle property for which the correlation should be computed.
-	void setSourceProperty1(const ParticlePropertyReference& prop) { _sourceProperty1 = prop; }
-
-	/// Returns the first source particle property for which the correlation is computed.
-	const ParticlePropertyReference& sourceProperty1() const { return _sourceProperty1; }
-
-	/// Sets the second source particle property for which the correlation should be computed.
-	void setSourceProperty2(const ParticlePropertyReference& prop) { _sourceProperty2 = prop; }
-
-	/// Returns the second source particle property for which the correlation is computed.
-	const ParticlePropertyReference& sourceProperty2() const { return _sourceProperty2; }
-
-	/// \brief Sets the cutoff radius used for the FFT grid.
-	void setFftGridSpacing(FloatType newFftBinSize) { _fftGridSpacing = newFftBinSize; }
-
-	/// Returns the cutoff radius used for the FFT grid.
-	FloatType fftGridSpacing() const { return _fftGridSpacing; }
-
-	/// \brief Sets the cutoff radius used to build the neighbor lists for the analysis.
-	void setNeighCutoff(FloatType newNeighCutoff) { _neighCutoff = newNeighCutoff; }
-
-	/// Returns the cutoff radius used to build the neighbor lists for the analysis.
-	FloatType neighCutoff() const { return _neighCutoff; }
-
-	/// Sets the number of bins for the neighbor part of the real-space correlation function.
-	void setNumberOfNeighBins(int n) { _numberOfNeighBins = n; }
-
-	/// Returns the number of bins for the neighbor part of the real-space correlation function.
-	int numberOfNeighBins() const { return _numberOfNeighBins; }
-
-	/// Sets normalization of the real-space correlation function.
-	void setNormalize(bool n) { _normalize = n; }
-
-	/// Returns normalization of the real-space correlation function.
-	bool normalize() const { return _normalize; }
-
-	/// Sets the type of the real-space plot
-	void setTypeOfRealSpacePlot(int t) { _typeOfRealSpacePlot = t; }
-
-	/// Returns the type of the real-space plot
-	int typeOfRealSpacePlot() const { return _typeOfRealSpacePlot; }
-
-	/// Sets the type of the reciprocal-space plot
-	void setTypeOfReciprocalSpacePlot(int t) { _typeOfReciprocalSpacePlot = t; }
-
-	/// Returns the type of the reciprocal-space plot
-	int typeOfReciprocalSpacePlot() const { return _typeOfReciprocalSpacePlot; }
 
 	/// Returns the Y coordinates of the real-space correlation function.
 	const QVector<FloatType>& realSpaceCorrelation() const { return _realSpaceCorrelation; }
@@ -238,30 +202,6 @@ protected:
 
 private:
 
-	/// The particle property that serves as the first data source for the correlation function.
-	PropertyField<ParticlePropertyReference> _sourceProperty1;
-
-	/// The particle property that serves as the second data source for the correlation function.
-	PropertyField<ParticlePropertyReference> _sourceProperty2;
-
-	/// Controls the cutoff radius for the FFT grid.
-	PropertyField<FloatType> _fftGridSpacing;
-
-	/// Controls the cutoff radius for the neighbor lists.
-	PropertyField<FloatType> _neighCutoff;
-
-	/// Controls the number of bins for the neighbor part of the real-space correlation function.
-	PropertyField<FloatType> _numberOfNeighBins;
-
-	/// Controls the normalization of the real-space correlation function.
-	PropertyField<bool> _normalize;
-
-	/// Type of real-space plot (lin-lin, log-lin or log-log)
-	PropertyField<int> _typeOfRealSpacePlot;
-
-	/// Type of reciprocal-space plot (lin-lin, log-lin or log-log)
-	PropertyField<int> _typeOfReciprocalSpacePlot;
-
 	/// The real-space correlation function.
 	QVector<FloatType> _realSpaceCorrelation;
 
@@ -289,21 +229,52 @@ private:
 	/// (Co)variance.
 	FloatType _covariance;
 
-
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Correlation function");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
 
-	DECLARE_PROPERTY_FIELD(_sourceProperty1);
-	DECLARE_PROPERTY_FIELD(_sourceProperty2);
-	DECLARE_PROPERTY_FIELD(_fftGridSpacing);
-	DECLARE_PROPERTY_FIELD(_neighCutoff);
-	DECLARE_PROPERTY_FIELD(_numberOfNeighBins);
-	DECLARE_PROPERTY_FIELD(_normalize);
-	DECLARE_PROPERTY_FIELD(_typeOfRealSpacePlot);
-	DECLARE_PROPERTY_FIELD(_typeOfReciprocalSpacePlot);
+	/// The particle property that serves as the first data source for the correlation function.
+	DECLARE_PROPERTY_FIELD_EX_SETTER(sourceProperty1, ParticlePropertyReference, setSourceProperty1);
+	/// The particle property that serves as the second data source for the correlation function.
+	DECLARE_PROPERTY_FIELD_EX_SETTER(sourceProperty2, ParticlePropertyReference, setSourceProperty2);
+	/// Controls the cutoff radius for the FFT grid.
+	DECLARE_PROPERTY_FIELD_EX(fftGridSpacing, FloatType);
+	/// Controls the cutoff radius for the neighbor lists.
+	DECLARE_PROPERTY_FIELD_EX(neighCutoff, FloatType);
+	/// Controls the number of bins for the neighbor part of the real-space correlation function.
+	DECLARE_PROPERTY_FIELD_EX(numberOfNeighBins, int);
+	/// Controls the normalization of the real-space correlation function.
+	DECLARE_PROPERTY_FIELD_EX(normalize, bool);
+	/// Type of real-space plot (lin-lin, log-lin or log-log)
+	DECLARE_PROPERTY_FIELD_EX(typeOfRealSpacePlot, int);
+	/// Controls the whether the range of the x-axis of the plot should be fixed.
+	DECLARE_PROPERTY_FIELD_EX(fixRealSpaceXAxisRange, bool);
+	/// Controls the start value of the x-axis.
+	DECLARE_PROPERTY_FIELD_EX(realSpaceXAxisRangeStart, FloatType);
+	/// Controls the end value of the x-axis.
+	DECLARE_PROPERTY_FIELD_EX(realSpaceXAxisRangeEnd, FloatType);
+	/// Controls the whether the range of the y-axis of the plot should be fixed.
+	DECLARE_PROPERTY_FIELD_EX(fixRealSpaceYAxisRange, bool);
+	/// Controls the start value of the y-axis.
+	DECLARE_PROPERTY_FIELD_EX(realSpaceYAxisRangeStart, FloatType);
+	/// Controls the end value of the y-axis.
+	DECLARE_PROPERTY_FIELD_EX(realSpaceYAxisRangeEnd, FloatType);
+	/// Type of reciprocal-space plot (lin-lin, log-lin or log-log)
+	DECLARE_PROPERTY_FIELD_EX(typeOfReciprocalSpacePlot, int);
+	/// Controls the whether the range of the x-axis of the plot should be fixed.
+	DECLARE_PROPERTY_FIELD_EX(fixReciprocalSpaceXAxisRange, bool);
+	/// Controls the start value of the x-axis.
+	DECLARE_PROPERTY_FIELD_EX(reciprocalSpaceXAxisRangeStart, FloatType);
+	/// Controls the end value of the x-axis.
+	DECLARE_PROPERTY_FIELD_EX(reciprocalSpaceXAxisRangeEnd, FloatType);
+	/// Controls the whether the range of the y-axis of the plot should be fixed.
+	DECLARE_PROPERTY_FIELD_EX(fixReciprocalSpaceYAxisRange, bool);
+	/// Controls the start value of the y-axis.
+	DECLARE_PROPERTY_FIELD_EX(reciprocalSpaceYAxisRangeStart, FloatType);
+	/// Controls the end value of the y-axis.
+	DECLARE_PROPERTY_FIELD_EX(reciprocalSpaceYAxisRangeEnd, FloatType);
 };
 
 OVITO_END_INLINE_NAMESPACE

@@ -101,10 +101,55 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	_realSpacePlot->setAxisTitle(QwtPlot::xBottom, tr("Distance r"));
 	_realSpacePlot->setAxisTitle(QwtPlot::yLeft, tr("C(r)"));
 
+	// Axes.
+	QGroupBox* axesBox = new QGroupBox(tr("Plot axes"), rollout);
+	QVBoxLayout* axesSublayout = new QVBoxLayout(axesBox);
+	axesSublayout->setContentsMargins(4,4,4,4);
+	layout->addWidget(axesBox);
+	// x-axis.
+	{
+		BooleanParameterUI* rangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_fixRealSpaceXAxisRange));
+		axesSublayout->addWidget(rangeUI->checkBox());
+
+		QHBoxLayout* hlayout = new QHBoxLayout();
+		axesSublayout->addLayout(hlayout);
+		FloatParameterUI* startPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_realSpaceXAxisRangeStart));
+		FloatParameterUI* endPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_realSpaceXAxisRangeEnd));
+		hlayout->addWidget(new QLabel(tr("From:")));
+		hlayout->addLayout(startPUI->createFieldLayout());
+		hlayout->addSpacing(12);
+		hlayout->addWidget(new QLabel(tr("To:")));
+		hlayout->addLayout(endPUI->createFieldLayout());
+		startPUI->setEnabled(false);
+		endPUI->setEnabled(false);
+		connect(rangeUI->checkBox(), &QCheckBox::toggled, startPUI, &FloatParameterUI::setEnabled);
+		connect(rangeUI->checkBox(), &QCheckBox::toggled, endPUI, &FloatParameterUI::setEnabled);
+	}
+	// y-axis.
+	{
+		BooleanParameterUI* rangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_fixRealSpaceYAxisRange));
+		axesSublayout->addWidget(rangeUI->checkBox());
+
+		QHBoxLayout* hlayout = new QHBoxLayout();
+		axesSublayout->addLayout(hlayout);
+		FloatParameterUI* startPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_realSpaceYAxisRangeStart));
+		FloatParameterUI* endPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_realSpaceYAxisRangeEnd));
+		hlayout->addWidget(new QLabel(tr("From:")));
+		hlayout->addLayout(startPUI->createFieldLayout());
+		hlayout->addSpacing(12);
+		hlayout->addWidget(new QLabel(tr("To:")));
+		hlayout->addLayout(endPUI->createFieldLayout());
+		startPUI->setEnabled(false);
+		endPUI->setEnabled(false);
+		connect(rangeUI->checkBox(), &QCheckBox::toggled, startPUI, &FloatParameterUI::setEnabled);
+		connect(rangeUI->checkBox(), &QCheckBox::toggled, endPUI, &FloatParameterUI::setEnabled);
+	}
+
 	QVBoxLayout* realSpaceLayout = new QVBoxLayout(realSpaceGroupBox);
 	realSpaceLayout->addWidget(normalizeUI->checkBox());
 	realSpaceLayout->addLayout(typeOfRealSpacePlotLayout);
 	realSpaceLayout->addWidget(_realSpacePlot);
+	realSpaceLayout->addWidget(axesBox);
 
 	QGroupBox* reciprocalSpaceGroupBox = new QGroupBox(tr("Reciprocal-space correlation function"));
 	layout->addWidget(reciprocalSpaceGroupBox);
@@ -123,9 +168,54 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	_reciprocalSpacePlot->setAxisTitle(QwtPlot::xBottom, tr("Wavevector q"));
 	_reciprocalSpacePlot->setAxisTitle(QwtPlot::yLeft, tr("C(q)"));
 
+	// Axes.
+	axesBox = new QGroupBox(tr("Plot axes"), rollout);
+	axesSublayout = new QVBoxLayout(axesBox);
+	axesSublayout->setContentsMargins(4,4,4,4);
+	layout->addWidget(axesBox);
+	// x-axis.
+	{
+		BooleanParameterUI* rangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_fixRealSpaceXAxisRange));
+		axesSublayout->addWidget(rangeUI->checkBox());
+
+		QHBoxLayout* hlayout = new QHBoxLayout();
+		axesSublayout->addLayout(hlayout);
+		FloatParameterUI* startPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_realSpaceXAxisRangeStart));
+		FloatParameterUI* endPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_realSpaceXAxisRangeEnd));
+		hlayout->addWidget(new QLabel(tr("From:")));
+		hlayout->addLayout(startPUI->createFieldLayout());
+		hlayout->addSpacing(12);
+		hlayout->addWidget(new QLabel(tr("To:")));
+		hlayout->addLayout(endPUI->createFieldLayout());
+		startPUI->setEnabled(false);
+		endPUI->setEnabled(false);
+		connect(rangeUI->checkBox(), &QCheckBox::toggled, startPUI, &FloatParameterUI::setEnabled);
+		connect(rangeUI->checkBox(), &QCheckBox::toggled, endPUI, &FloatParameterUI::setEnabled);
+	}
+	// y-axis.
+	{
+		BooleanParameterUI* rangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_fixRealSpaceYAxisRange));
+		axesSublayout->addWidget(rangeUI->checkBox());
+
+		QHBoxLayout* hlayout = new QHBoxLayout();
+		axesSublayout->addLayout(hlayout);
+		FloatParameterUI* startPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_realSpaceYAxisRangeStart));
+		FloatParameterUI* endPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_realSpaceYAxisRangeEnd));
+		hlayout->addWidget(new QLabel(tr("From:")));
+		hlayout->addLayout(startPUI->createFieldLayout());
+		hlayout->addSpacing(12);
+		hlayout->addWidget(new QLabel(tr("To:")));
+		hlayout->addLayout(endPUI->createFieldLayout());
+		startPUI->setEnabled(false);
+		endPUI->setEnabled(false);
+		connect(rangeUI->checkBox(), &QCheckBox::toggled, startPUI, &FloatParameterUI::setEnabled);
+		connect(rangeUI->checkBox(), &QCheckBox::toggled, endPUI, &FloatParameterUI::setEnabled);
+	}
+
 	QVBoxLayout* reciprocalSpaceLayout = new QVBoxLayout(reciprocalSpaceGroupBox);
 	reciprocalSpaceLayout->addLayout(typeOfReciprocalSpacePlotLayout);
 	reciprocalSpaceLayout->addWidget(_reciprocalSpacePlot);
+	reciprocalSpaceLayout->addWidget(axesBox);
 
 	connect(this, &CorrelationFunctionModifierEditor::contentsReplaced, this, &CorrelationFunctionModifierEditor::plotAllData);
 
@@ -331,7 +421,7 @@ void CorrelationFunctionModifierEditor::onSaveData()
 		stream << "# This file contains the correlation between the following property:" << endl;
 		stream << "# " << modifier->sourceProperty1().name() << " with mean value " << modifier->mean1() << endl;
 		stream << "# " << modifier->sourceProperty2().name() << " with mean value " << modifier->mean2() << endl;
-		stream << "# Covariance is " << modifier->covariance() << endl;
+		stream << "# Covariance is " << modifier->covariance() << endl << endl;
 
 		if (!modifier->realSpaceCorrelation().empty()) {
 			stream << "# Real-space correlation function from FFT follows." << endl;
