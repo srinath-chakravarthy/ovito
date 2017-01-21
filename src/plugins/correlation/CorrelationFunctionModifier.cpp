@@ -357,7 +357,11 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 				// Store correlation function to property1 for back transform.
 				ftProperty1[binIndex] = corr;
 
-				// Compute wavevector. (FIXME! Check that this is actually correct for even and odd numbers of grid points.)
+				// Ignore Gamma-point for radial average.
+				if (binIndex == 0 && binIndexY == 0 && binIndexZ == 0)
+					continue;
+
+				// Compute wavevector.
 				int iX = SimulationCell::modulo(binIndexX+nX/2, nX)-nX/2;
 				int iY = SimulationCell::modulo(binIndexY+nY/2, nY)-nY/2;
 				int iZ = SimulationCell::modulo(binIndexZ+nZ/2, nZ)-nZ/2;
@@ -416,6 +420,10 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	for (int binIndexX = 0; binIndexX < nX; binIndexX++) {
 		for (int binIndexY = 0; binIndexY < nY; binIndexY++) {
 			for (int binIndexZ = 0; binIndexZ < nZ; binIndexZ++, binIndex++) {
+				// Ignore origin for radial average (which is just the covariance of the quantities).
+				if (binIndex == 0 && binIndexY == 0 && binIndexZ == 0)
+					continue;
+
 				// Compute distance. (FIXME! Check that this is actually correct for even and odd numbers of grid points.)
 				FloatType fracX = FloatType(SimulationCell::modulo(binIndexX+nX/2, nX)-nX/2)/nX;
 				FloatType fracY = FloatType(SimulationCell::modulo(binIndexY+nY/2, nY)-nY/2)/nY;

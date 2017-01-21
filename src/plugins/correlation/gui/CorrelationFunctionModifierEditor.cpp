@@ -266,7 +266,7 @@ void CorrelationFunctionModifierEditor::plotData(const QVector<FloatType> &xData
 
 	// Set data to plot.
 	size_t numberOfDataPoints = yData.size();
-	int startAt = 1;
+	int startAt = 0;
 	QVector<QPointF> plotData(numberOfDataPoints-startAt);
 	for (int i = startAt; i < numberOfDataPoints; i++) {
 		FloatType xValue = xData[i];
