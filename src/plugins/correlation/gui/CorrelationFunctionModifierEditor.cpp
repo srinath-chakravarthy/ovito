@@ -249,8 +249,6 @@ void CorrelationFunctionModifierEditor::plotData(const QVector<FloatType> &xData
 												 const QVector<FloatType> &yData,
 												 QwtPlot *plot,
 												 QwtPlotCurve *&curve,
-												 FloatType &minX, FloatType &maxX,
-												 FloatType &minY, FloatType &maxY,
 												 FloatType offset, FloatType fac)
 {
 	if (xData.size() != yData.size())
@@ -270,21 +268,11 @@ void CorrelationFunctionModifierEditor::plotData(const QVector<FloatType> &xData
 	size_t numberOfDataPoints = yData.size();
 	int startAt = 1;
 	QVector<QPointF> plotData(numberOfDataPoints-startAt);
-	minX = minY = 1e20;
-	maxX = maxY = -1e20;
 	for (int i = startAt; i < numberOfDataPoints; i++) {
 		FloatType xValue = xData[i];
 		FloatType yValue = fac*(yData[i]-offset);
 		plotData[i-startAt].rx() = xValue;
 		plotData[i-startAt].ry() = yValue;
-		if (xValue != 0) {
-			minX = std::min(minX, xValue);
-			maxX = std::max(maxX, xValue);
-		}
-		if (yValue != 0) {
-			minY = std::min(minY, yValue);
-			maxY = std::max(maxY, yValue);
-		}
 	}
 	curve->setSamples(plotData);
 }
@@ -305,7 +293,6 @@ void CorrelationFunctionModifierEditor::plotAllData()
 		fac = 1.0/(modifier->covariance()-offset);
 	}
 
-	FloatType realSpaceMinX = 1e20, realSpaceMaxX = -1e20, realSpaceMinY = 1e20, realSpaceMaxY = -1e20;
 	// Plot real-space correlation function
 	if(!modifier->realSpaceCorrelationX().empty() &&
 	   !modifier->realSpaceCorrelation().empty()) {
@@ -313,12 +300,9 @@ void CorrelationFunctionModifierEditor::plotAllData()
 				 modifier->realSpaceCorrelation(),
 				 _realSpacePlot,
 				 _realSpaceCurve,
-				 realSpaceMinX, realSpaceMaxX,
-				 realSpaceMinY, realSpaceMaxY,
 				 offset, fac);
 	}
 
-	FloatType neighMinX = 1e20, neighMaxX = -1e20, neighMinY = 1e20, neighMaxY = -1e20;
 	if(!modifier->neighCorrelationX().empty() &&
 	   !modifier->neighCorrelation().empty()) {
 		if(!_neighCurve) {
@@ -338,28 +322,17 @@ void CorrelationFunctionModifierEditor::plotAllData()
 			FloatType yValue = fac*(yData[i]-offset);
 			plotData[i].rx() = xValue;
 			plotData[i].ry() = yValue;
-			if (xValue != 0) {
-				neighMinX = std::min(neighMinX, xValue);
-				neighMaxX = std::max(neighMaxX, xValue);
-			}
-			if (yValue != 0) {
-				neighMinY = std::min(neighMinY, yValue);
-				neighMaxY = std::max(neighMaxY, yValue);
-			}
 		}
 		_neighCurve->setSamples(plotData);
 	}
 
 	// Plot reciprocal-space correlation function
-	FloatType reciprocalSpaceMinX = 1e20, reciprocalSpaceMaxX = -1e20, reciprocalSpaceMinY = 1e20, reciprocalSpaceMaxY = -1e20;
 	if(!modifier->reciprocalSpaceCorrelationX().empty() &&
 	   !modifier->reciprocalSpaceCorrelation().empty()) {
 		plotData(modifier->reciprocalSpaceCorrelationX(),
 				 modifier->reciprocalSpaceCorrelation(),
 				 _reciprocalSpacePlot,
-				 _reciprocalSpaceCurve,
-				 reciprocalSpaceMinX, reciprocalSpaceMaxX,
-				 reciprocalSpaceMinY, reciprocalSpaceMaxY);
+				 _reciprocalSpaceCurve);
 	}
 
 	// Set type of plot.
@@ -381,14 +354,10 @@ void CorrelationFunctionModifierEditor::plotAllData()
 	else
 		_reciprocalSpacePlot->setAxisScaleEngine(QwtPlot::xBottom, new QwtLinearScaleEngine());
 
-	_realSpacePlot->setAxisScale(QwtPlot::xBottom,
-								 std::min(realSpaceMinX, neighMinX),
-								 std::max(realSpaceMaxX, neighMaxX));
-	_realSpacePlot->setAxisScale(QwtPlot::yLeft,
-								 std::min(realSpaceMinY, neighMinY),
-								 std::max(realSpaceMaxY, neighMaxY));
-	_reciprocalSpacePlot->setAxisScale(QwtPlot::xBottom, reciprocalSpaceMinX, reciprocalSpaceMaxX);
-	_reciprocalSpacePlot->setAxisScale(QwtPlot::yLeft, reciprocalSpaceMinY, reciprocalSpaceMaxY);
+	_realSpacePlot->setAxisScale(QwtPlot::xBottom, modifier->realSpaceXAxisRangeStart(), modifier->realSpaceXAxisRangeEnd());
+	_realSpacePlot->setAxisScale(QwtPlot::yLeft, modifier->realSpaceYAxisRangeStart(), modifier->realSpaceYAxisRangeEnd());
+	_reciprocalSpacePlot->setAxisScale(QwtPlot::xBottom, modifier->reciprocalSpaceXAxisRangeStart(), modifier->reciprocalSpaceXAxisRangeEnd());
+	_reciprocalSpacePlot->setAxisScale(QwtPlot::yLeft, modifier->reciprocalSpaceYAxisRangeStart(), modifier->reciprocalSpaceYAxisRangeEnd());
 
 	_realSpacePlot->replot();
 	_reciprocalSpacePlot->replot();

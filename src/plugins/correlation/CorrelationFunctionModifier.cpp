@@ -575,6 +575,27 @@ void CorrelationFunctionModifier::transferComputationResults(ComputeEngine* engi
 	_mean1 = eng->mean1();
 	_mean2 = eng->mean2();
 	_covariance = eng->covariance();
+
+	// Compute data ranges
+	if (!_fixRealSpaceXAxisRange) {
+		_realSpaceXAxisRangeStart = std::min(_realSpaceCorrelationX.first(), _neighCorrelationX.first());
+		_realSpaceXAxisRangeEnd = std::min(_realSpaceCorrelationX.last(), _neighCorrelationX.last());
+	}
+	if (!_fixRealSpaceYAxisRange) {
+		auto realSpace = std::minmax_element(_realSpaceCorrelation.begin(), _realSpaceCorrelation.end());
+		auto neigh = std::minmax_element(_neighCorrelation.begin(), _neighCorrelation.end());
+		_realSpaceYAxisRangeStart = std::min(*realSpace.first, *neigh.first);
+		_realSpaceYAxisRangeEnd = std::min(*realSpace.second, *neigh.second);
+	}
+	if (!_fixReciprocalSpaceXAxisRange) {
+		_reciprocalSpaceXAxisRangeStart = _reciprocalSpaceCorrelationX.first();
+		_reciprocalSpaceXAxisRangeEnd = _reciprocalSpaceCorrelationX.last();
+	}
+	if (!_fixReciprocalSpaceYAxisRange) {
+		auto reciprocalSpace = std::minmax_element(_reciprocalSpaceCorrelation.begin(), _reciprocalSpaceCorrelation.end());
+		_reciprocalSpaceYAxisRangeStart = *reciprocalSpace.first;
+		_reciprocalSpaceYAxisRangeEnd = *reciprocalSpace.second;
+	}
 }
 
 /******************************************************************************
