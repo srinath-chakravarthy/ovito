@@ -23,6 +23,7 @@
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/correlation/CorrelationFunctionModifier.h>
 #include <gui/mainwin/MainWindow.h>
+#include <gui/properties/BooleanParameterUI.h>
 #include <gui/properties/IntegerParameterUI.h>
 #include <gui/properties/IntegerRadioButtonParameterUI.h>
 #include <gui/properties/FloatParameterUI.h>
@@ -81,6 +82,11 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 
 	layout->addLayout(gridlayout);
 
+	QGroupBox* realSpaceGroupBox = new QGroupBox(tr("Real-space correlation function"));
+	layout->addWidget(realSpaceGroupBox);
+
+	BooleanParameterUI* normalizeUI = new BooleanParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_normalize));
+
 	QGridLayout* typeOfRealSpacePlotLayout = new QGridLayout();
 	IntegerRadioButtonParameterUI *typeOfRealSpacePlotPUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_typeOfRealSpacePlot));
 	typeOfRealSpacePlotLayout->addWidget(new QLabel(tr("Display as:")), 0, 0);
@@ -95,9 +101,13 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	_realSpacePlot->setAxisTitle(QwtPlot::xBottom, tr("Distance r"));
 	_realSpacePlot->setAxisTitle(QwtPlot::yLeft, tr("C(r)"));
 
-	layout->addWidget(new QLabel(tr("Real-space correlation function:")));
-	layout->addLayout(typeOfRealSpacePlotLayout);
-	layout->addWidget(_realSpacePlot);
+	QVBoxLayout* realSpaceLayout = new QVBoxLayout(realSpaceGroupBox);
+	realSpaceLayout->addWidget(normalizeUI->checkBox());
+	realSpaceLayout->addLayout(typeOfRealSpacePlotLayout);
+	realSpaceLayout->addWidget(_realSpacePlot);
+
+	QGroupBox* reciprocalSpaceGroupBox = new QGroupBox(tr("Reciprocal-space correlation function"));
+	layout->addWidget(reciprocalSpaceGroupBox);
 
 	QGridLayout* typeOfReciprocalSpacePlotLayout = new QGridLayout();
 	IntegerRadioButtonParameterUI *typeOfReciprocalSpacePlotPUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_typeOfReciprocalSpacePlot));
@@ -113,9 +123,9 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	_reciprocalSpacePlot->setAxisTitle(QwtPlot::xBottom, tr("Wavevector q"));
 	_reciprocalSpacePlot->setAxisTitle(QwtPlot::yLeft, tr("C(q)"));
 
-	layout->addWidget(new QLabel(tr("Reciprocal-space correlation function:")));
-	layout->addLayout(typeOfReciprocalSpacePlotLayout);
-	layout->addWidget(_reciprocalSpacePlot);
+	QVBoxLayout* reciprocalSpaceLayout = new QVBoxLayout(reciprocalSpaceGroupBox);
+	reciprocalSpaceLayout->addLayout(typeOfReciprocalSpacePlotLayout);
+	reciprocalSpaceLayout->addWidget(_reciprocalSpacePlot);
 
 	connect(this, &CorrelationFunctionModifierEditor::contentsReplaced, this, &CorrelationFunctionModifierEditor::plotAllData);
 
@@ -150,7 +160,8 @@ void CorrelationFunctionModifierEditor::plotData(const QVector<FloatType> &xData
 												 QwtPlot *plot,
 												 QwtPlotCurve *&curve,
 												 FloatType &minX, FloatType &maxX,
-												 FloatType &minY, FloatType &maxY)
+												 FloatType &minY, FloatType &maxY,
+												 FloatType offset, FloatType fac)
 {
 	if (xData.size() != yData.size())
 		throwException("Argument to plotData must have same size.");
@@ -173,7 +184,7 @@ void CorrelationFunctionModifierEditor::plotData(const QVector<FloatType> &xData
 	maxX = maxY = -1e20;
 	for (int i = startAt; i < numberOfDataPoints; i++) {
 		FloatType xValue = xData[i];
-		FloatType yValue = yData[i];
+		FloatType yValue = fac*(yData[i]-offset);
 		plotData[i-startAt].rx() = xValue;
 		plotData[i-startAt].ry() = yValue;
 		if (xValue != 0) {
@@ -197,6 +208,13 @@ void CorrelationFunctionModifierEditor::plotAllData()
 	if(!modifier)
 		return;
 
+	FloatType offset = 0.0;
+	FloatType fac = 1.0;
+	if (modifier->normalize()) {
+		offset = modifier->mean1()*modifier->mean2();
+		fac = 1.0/(modifier->covariance()-offset);
+	}
+
 	FloatType realSpaceMinX = 1e20, realSpaceMaxX = -1e20, realSpaceMinY = 1e20, realSpaceMaxY = -1e20;
 	// Plot real-space correlation function
 	if(!modifier->realSpaceCorrelationX().empty() &&
@@ -206,7 +224,8 @@ void CorrelationFunctionModifierEditor::plotAllData()
 				 _realSpacePlot,
 				 _realSpaceCurve,
 				 realSpaceMinX, realSpaceMaxX,
-				 realSpaceMinY, realSpaceMaxY);
+				 realSpaceMinY, realSpaceMaxY,
+				 offset, fac);
 	}
 
 	FloatType neighMinX = 1e20, neighMaxX = -1e20, neighMinY = 1e20, neighMaxY = -1e20;
@@ -226,7 +245,7 @@ void CorrelationFunctionModifierEditor::plotAllData()
 		QVector<QPointF> plotData(numberOfDataPoints);
 		for (int i = 0; i < numberOfDataPoints; i++) {
 			FloatType xValue = xData[i];
-			FloatType yValue = yData[i];
+			FloatType yValue = fac*(yData[i]-offset);
 			plotData[i].rx() = xValue;
 			plotData[i].ry() = yValue;
 			if (xValue != 0) {
@@ -308,6 +327,11 @@ void CorrelationFunctionModifierEditor::onSaveData()
 			modifier->throwException(tr("Could not open file for writing: %1").arg(file.errorString()));
 
 		QTextStream stream(&file);
+
+		stream << "# This file contains the correlation between the following property:" << endl;
+		stream << "# " << modifier->sourceProperty1().name() << " with mean value " << modifier->mean1() << endl;
+		stream << "# " << modifier->sourceProperty2().name() << " with mean value " << modifier->mean2() << endl;
+		stream << "# Covariance is " << modifier->covariance() << endl;
 
 		if (!modifier->realSpaceCorrelation().empty()) {
 			stream << "# Real-space correlation function from FFT follows." << endl;

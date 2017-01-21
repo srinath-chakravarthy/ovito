@@ -37,6 +37,7 @@ DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _sourceProperty2, "SourceProp
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _fftGridSpacing, "FftGridSpacing", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _neighCutoff, "NeighCutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _numberOfNeighBins, "NumberOfNeighBins", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _normalize, "Normalize", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _typeOfRealSpacePlot, "_typeOfRealSpacePlot");
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _typeOfReciprocalSpacePlot, "_typeOfRealSpacePlot");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty1, "First property");
@@ -44,6 +45,7 @@ SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty2, "Second 
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _fftGridSpacing, "FFT grid spacing");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _neighCutoff, "Neighbor cutoff radius");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _numberOfNeighBins, "Number of neighbor bins");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _normalize, "Normalize correlation function");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, _fftGridSpacing, WorldParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, _neighCutoff, WorldParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(CorrelationFunctionModifier, _numberOfNeighBins, IntegerParameterUnit, 4, 100000);
@@ -52,13 +54,14 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(CorrelationFunctionModifier, _numberOfNeighBi
 * Constructs the modifier object.
 ******************************************************************************/
 CorrelationFunctionModifier::CorrelationFunctionModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
-	_fftGridSpacing(1.0), _neighCutoff(5.0), _numberOfNeighBins(50)
+	_fftGridSpacing(1.0), _neighCutoff(5.0), _numberOfNeighBins(50), _normalize(false)
 {
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty1);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty2);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_fftGridSpacing);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_neighCutoff);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfNeighBins);
+	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_normalize);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_typeOfRealSpacePlot);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_typeOfReciprocalSpacePlot);
 }
@@ -240,7 +243,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 {
 	setProgressText(tr("Computing correlation function"));
 	setProgressValue(0);
-	setProgressRange(8);
+	setProgressRange(9);
 
 	// Get reciprocal cell.
 	AffineTransformation cellMatrix = cell().matrix(); 
@@ -495,6 +498,30 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		_neighCorrelationX[distanceBinIndex] = (distance+distance2)/2;
 		_neighCorrelation[distanceBinIndex] *= normalizationFactor/(distance2*distance2*distance2-distance*distance*distance);
 	}
+
+	incrementProgressValue();
+
+	// Compute mean and covariance values.
+	_mean1 = _mean2 = _covariance = 0.0;
+	if (sourceProperty1()->size() != sourceProperty2()->size())
+		return;
+	for (int particleIndex = 0; particleIndex < sourceProperty1()->size(); particleIndex++) {
+		FloatType data1, data2;
+		if (floatData1)
+			data1 = floatData1[particleIndex];
+		else if (intData1)
+			data1 = intData1[particleIndex];
+		if (floatData2)
+			data2 = floatData2[particleIndex];
+		else if (intData2)
+			data2 = intData2[particleIndex];
+		_mean1 += data1;
+		_mean2 += data2;
+		_covariance += data1*data2;
+	}
+	_mean1 /= sourceProperty1()->size();
+	_mean2 /= sourceProperty1()->size();
+	_covariance /= sourceProperty1()->size();
 }
 
 /******************************************************************************
@@ -509,6 +536,9 @@ void CorrelationFunctionModifier::transferComputationResults(ComputeEngine* engi
 	_neighCorrelationX = eng->neighCorrelationX();
 	_reciprocalSpaceCorrelation = eng->reciprocalSpaceCorrelation();
 	_reciprocalSpaceCorrelationX = eng->reciprocalSpaceCorrelationX();
+	_mean1 = eng->mean1();
+	_mean2 = eng->mean2();
+	_covariance = eng->covariance();
 }
 
 /******************************************************************************

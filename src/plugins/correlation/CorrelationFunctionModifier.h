@@ -57,7 +57,7 @@ public:
 	/// \brief Sets the cutoff radius used for the FFT grid.
 	void setFftGridSpacing(FloatType newFftBinSize) { _fftGridSpacing = newFftBinSize; }
 
-	/// Returns the cutoff radius used to build the neighbor lists for the analysis.
+	/// Returns the cutoff radius used for the FFT grid.
 	FloatType fftGridSpacing() const { return _fftGridSpacing; }
 
 	/// \brief Sets the cutoff radius used to build the neighbor lists for the analysis.
@@ -66,11 +66,17 @@ public:
 	/// Returns the cutoff radius used to build the neighbor lists for the analysis.
 	FloatType neighCutoff() const { return _neighCutoff; }
 
-	/// Sets the number of bins in the computed RDF histogram.
+	/// Sets the number of bins for the neighbor part of the real-space correlation function.
 	void setNumberOfNeighBins(int n) { _numberOfNeighBins = n; }
 
-	/// Returns the number of bins in the computed RDF histogram.
+	/// Returns the number of bins for the neighbor part of the real-space correlation function.
 	int numberOfNeighBins() const { return _numberOfNeighBins; }
+
+	/// Sets normalization of the real-space correlation function.
+	void setNormalize(bool n) { _normalize = n; }
+
+	/// Returns normalization of the real-space correlation function.
+	bool normalize() const { return _normalize; }
 
 	/// Sets the type of the real-space plot
 	void setTypeOfRealSpacePlot(int t) { _typeOfRealSpacePlot = t; }
@@ -101,6 +107,15 @@ public:
 
 	/// Returns the X coordinates of the reciprocal-space correlation function.
 	const QVector<FloatType>& reciprocalSpaceCorrelationX() const { return _reciprocalSpaceCorrelationX; }
+
+	/// Returns the mean of the first property.
+	FloatType mean1() const { return _mean1; }
+
+	/// Returns the mean of the second property.
+	FloatType mean2() const { return _mean2; }
+
+	/// Returns the (co)variance.
+	FloatType covariance() const { return _covariance; }
 
 private:
 
@@ -163,6 +178,15 @@ private:
 		/// Returns the wavevectors for which the reciprocal-space correlation function is tabulated.
 		const QVector<FloatType>& reciprocalSpaceCorrelationX() const { return _reciprocalSpaceCorrelationX; }
 
+		/// Returns the mean of the first property.
+		FloatType mean1() const { return _mean1; }
+
+		/// Returns the mean of the second property.
+		FloatType mean2() const { return _mean2; }
+
+		/// Returns the (co)variance.
+		FloatType covariance() const { return _covariance; }
+
 	private:
 
 		/// Real-to-complex FFT.
@@ -190,6 +214,9 @@ private:
 		QVector<FloatType> _neighCorrelationX;
 		QVector<FloatType> _reciprocalSpaceCorrelation;
 		QVector<FloatType> _reciprocalSpaceCorrelationX;
+		FloatType _mean1;
+		FloatType _mean2;
+		FloatType _covariance;
 	};
 
 protected:
@@ -223,8 +250,11 @@ private:
 	/// Controls the cutoff radius for the neighbor lists.
 	PropertyField<FloatType> _neighCutoff;
 
-	/// Controls the number of RDF histogram bins.
+	/// Controls the number of bins for the neighbor part of the real-space correlation function.
 	PropertyField<FloatType> _numberOfNeighBins;
+
+	/// Controls the normalization of the real-space correlation function.
+	PropertyField<bool> _normalize;
 
 	/// Type of real-space plot (lin-lin, log-lin or log-log)
 	PropertyField<int> _typeOfRealSpacePlot;
@@ -250,6 +280,16 @@ private:
 	/// The wavevevtors for which the reciprocal-space correlation function is tabulated.
 	QVector<FloatType> _reciprocalSpaceCorrelationX;
 
+	/// Mean of the first property.
+	FloatType _mean1;
+
+	/// Mean of the second property.
+	FloatType _mean2;
+
+	/// (Co)variance.
+	FloatType _covariance;
+
+
 	Q_OBJECT
 	OVITO_OBJECT
 
@@ -261,6 +301,7 @@ private:
 	DECLARE_PROPERTY_FIELD(_fftGridSpacing);
 	DECLARE_PROPERTY_FIELD(_neighCutoff);
 	DECLARE_PROPERTY_FIELD(_numberOfNeighBins);
+	DECLARE_PROPERTY_FIELD(_normalize);
 	DECLARE_PROPERTY_FIELD(_typeOfRealSpacePlot);
 	DECLARE_PROPERTY_FIELD(_typeOfReciprocalSpacePlot);
 };
