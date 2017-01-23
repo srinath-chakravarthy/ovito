@@ -21,6 +21,7 @@
 
 OVITO_STANDARD_PLUGIN(CorrelationFunctionModifierPluginGui
 	SOURCES CorrelationFunctionModifierEditor.cpp
+        PRIVATE_LIB_DEPENDENCIES Qwt
 	PLUGIN_DEPENDENCIES CorrelationFunctionModifierPlugin ParticlesGui
 	GUI_PLUGIN
 )
