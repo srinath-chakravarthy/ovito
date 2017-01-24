@@ -34,7 +34,7 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CorrelationFunctionModifierPlugin, CorrelationFunctionModifier, AsynchronousParticleModifier);
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _sourceProperty1, "SourceProperty1");
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _sourceProperty2, "SourceProperty2");
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _fftGridSpacing, "FftGridSpacing");
+DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _fftGridSpacing, "FftGridSpacing");
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _neighCutoff, "NeighCutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _numberOfNeighBins, "NumberOfNeighBins", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _normalize, "Normalize", PROPERTY_FIELD_MEMORIZE);
