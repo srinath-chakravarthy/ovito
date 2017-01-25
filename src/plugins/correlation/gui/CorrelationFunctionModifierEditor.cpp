@@ -286,6 +286,8 @@ void CorrelationFunctionModifierEditor::plotAllData()
 	if(!modifier)
 		return;
 
+	modifier->updateRanges();
+
 	FloatType offset = 0.0;
 	FloatType fac = 1.0;
 	if (modifier->normalize()) {
