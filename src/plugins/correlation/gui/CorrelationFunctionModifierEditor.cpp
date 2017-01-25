@@ -286,14 +286,14 @@ void CorrelationFunctionModifierEditor::plotAllData()
 	if(!modifier)
 		return;
 
-	modifier->updateRanges();
-
 	FloatType offset = 0.0;
 	FloatType fac = 1.0;
 	if (modifier->normalize()) {
 		offset = modifier->mean1()*modifier->mean2();
 		fac = 1.0/(modifier->covariance()-offset);
 	}
+
+	modifier->updateRanges(offset, fac);
 
 	// Plot real-space correlation function
 	if(!modifier->realSpaceCorrelationX().empty() &&

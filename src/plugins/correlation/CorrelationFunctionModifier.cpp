@@ -182,15 +182,12 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::mapToSpatialGrid(Pa
 	// Resize real space grid.
 	gridData.fill(0.0, numberOfGridPoints);
 
-
 	// Get periodic boundary flag.
 	std::array<bool, 3> pbc = cell().pbcFlags();
-
 
 	if(property->size() > 0) {
 		const Point3* pos = positions()->constDataPoint3();
 		const Point3* pos_end = pos + positions()->size();
-
 
 		if(property->dataType() == qMetaTypeId<FloatType>()) {
 			const FloatType* v = property->constDataFloat() + vecComponent;
@@ -583,7 +580,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 /******************************************************************************
 * Update plot ranges.
 ******************************************************************************/
-void CorrelationFunctionModifier::updateRanges()
+void CorrelationFunctionModifier::updateRanges(FloatType offset, FloatType fac)
 {
 	// Compute data ranges
 	if (!_fixRealSpaceXAxisRange) {
@@ -593,8 +590,8 @@ void CorrelationFunctionModifier::updateRanges()
 	if (!_fixRealSpaceYAxisRange) {
 		auto realSpace = std::minmax_element(_realSpaceCorrelation.begin(), _realSpaceCorrelation.end());
 		auto neigh = std::minmax_element(_neighCorrelation.begin(), _neighCorrelation.end());
-		_realSpaceYAxisRangeStart = std::min(*realSpace.first, *neigh.first);
-		_realSpaceYAxisRangeEnd = std::max(*realSpace.second, *neigh.second);
+		_realSpaceYAxisRangeStart = fac*(std::min(*realSpace.first, *neigh.first)-offset);
+		_realSpaceYAxisRangeEnd = fac*(std::max(*realSpace.second, *neigh.second)-offset);
 	}
 	if (!_fixReciprocalSpaceXAxisRange) {
 		_reciprocalSpaceXAxisRangeStart = _reciprocalSpaceCorrelationX.first();
@@ -622,8 +619,6 @@ void CorrelationFunctionModifier::transferComputationResults(ComputeEngine* engi
 	_mean1 = eng->mean1();
 	_mean2 = eng->mean2();
 	_covariance = eng->covariance();
-
-	updateRanges();
 }
 
 /******************************************************************************

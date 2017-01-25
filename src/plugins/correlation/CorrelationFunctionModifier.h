@@ -82,7 +82,7 @@ public:
 	FloatType covariance() const { return _covariance; }
 
 	/// Update plot ranges.
-	virtual void updateRanges();
+	virtual void updateRanges(FloatType offset, FloatType fac);
 
 private:
 
