@@ -81,6 +81,11 @@ public:
 	/// Returns the (co)variance.
 	FloatType covariance() const { return _covariance; }
 
+public Q_SLOTS:
+
+	/// Update plot ranges.
+	virtual void updateRanges();
+
 private:
 
 	/// Computes the modifier's results.

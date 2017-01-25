@@ -177,7 +177,6 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::mapToSpatialGrid(Pa
 
 	int numberOfGridPoints = nX*nY*nZ;
 
-
 	// Resize real space grid.
 	gridData.fill(0.0, numberOfGridPoints);
 
@@ -285,6 +284,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	AffineTransformation cellMatrix = cell().matrix(); 
 	AffineTransformation reciprocalCellMatrix = cell().inverseMatrix();
 
+	// Note: Cell vectors are in columns. Those are 3-vectors.
 	int nX = cellMatrix.column(0).length()/fftGridSpacing();
 	int nY = cellMatrix.column(1).length()/fftGridSpacing();
 	int nZ = cellMatrix.column(2).length()/fftGridSpacing();
@@ -324,10 +324,15 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	if (isCanceled())
 		return;
 
+	// Note: Reciprocal cell vectors are in rows. Those are 4-vectors.
+	Vector_4<FloatType> recCell1 = reciprocalCellMatrix.row(0);
+	Vector_4<FloatType> recCell2 = reciprocalCellMatrix.row(1);
+	Vector_4<FloatType> recCell3 = reciprocalCellMatrix.row(2);
+
 	// Compute distance of cell faces.
-	FloatType cellFaceDistance1 = 1/reciprocalCellMatrix.row(0).length();
-	FloatType cellFaceDistance2 = 1/reciprocalCellMatrix.row(1).length();
-	FloatType cellFaceDistance3 = 1/reciprocalCellMatrix.row(2).length();
+	FloatType cellFaceDistance1 = 1/sqrt(recCell1.x()*recCell1.x() + recCell1.y()*recCell1.y() + recCell1.z()*recCell1.z());
+	FloatType cellFaceDistance2 = 1/sqrt(recCell2.x()*recCell2.x() + recCell2.y()*recCell2.y() + recCell2.z()*recCell2.z());
+	FloatType cellFaceDistance3 = 1/sqrt(recCell3.x()*recCell3.x() + recCell3.y()*recCell3.y() + recCell3.z()*recCell3.z());
 
 	FloatType minCellFaceDistance = std::min({cellFaceDistance1, cellFaceDistance2, cellFaceDistance3});
 
@@ -569,6 +574,33 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 }
 
 /******************************************************************************
+* Update plot ranges.
+******************************************************************************/
+void CorrelationFunctionModifier::updateRanges()
+{
+	// Compute data ranges
+	if (!_fixRealSpaceXAxisRange) {
+		_realSpaceXAxisRangeStart = std::min(_realSpaceCorrelationX.first(), _neighCorrelationX.first());
+		_realSpaceXAxisRangeEnd = std::max(_realSpaceCorrelationX.last(), _neighCorrelationX.last());
+	}
+	if (!_fixRealSpaceYAxisRange) {
+		auto realSpace = std::minmax_element(_realSpaceCorrelation.begin(), _realSpaceCorrelation.end());
+		auto neigh = std::minmax_element(_neighCorrelation.begin(), _neighCorrelation.end());
+		_realSpaceYAxisRangeStart = std::min(*realSpace.first, *neigh.first);
+		_realSpaceYAxisRangeEnd = std::max(*realSpace.second, *neigh.second);
+	}
+	if (!_fixReciprocalSpaceXAxisRange) {
+		_reciprocalSpaceXAxisRangeStart = _reciprocalSpaceCorrelationX.first();
+		_reciprocalSpaceXAxisRangeEnd = _reciprocalSpaceCorrelationX.last();
+	}
+	if (!_fixReciprocalSpaceYAxisRange) {
+		auto reciprocalSpace = std::minmax_element(_reciprocalSpaceCorrelation.begin(), _reciprocalSpaceCorrelation.end());
+		_reciprocalSpaceYAxisRangeStart = *reciprocalSpace.first;
+		_reciprocalSpaceYAxisRangeEnd = *reciprocalSpace.second;
+	}
+}
+
+/******************************************************************************
 * Unpacks the results of the computation engine and stores them in the modifier.
 ******************************************************************************/
 void CorrelationFunctionModifier::transferComputationResults(ComputeEngine* engine)
@@ -584,26 +616,7 @@ void CorrelationFunctionModifier::transferComputationResults(ComputeEngine* engi
 	_mean2 = eng->mean2();
 	_covariance = eng->covariance();
 
-	// Compute data ranges
-	if (!_fixRealSpaceXAxisRange) {
-		_realSpaceXAxisRangeStart = std::min(_realSpaceCorrelationX.first(), _neighCorrelationX.first());
-		_realSpaceXAxisRangeEnd = std::min(_realSpaceCorrelationX.last(), _neighCorrelationX.last());
-	}
-	if (!_fixRealSpaceYAxisRange) {
-		auto realSpace = std::minmax_element(_realSpaceCorrelation.begin(), _realSpaceCorrelation.end());
-		auto neigh = std::minmax_element(_neighCorrelation.begin(), _neighCorrelation.end());
-		_realSpaceYAxisRangeStart = std::min(*realSpace.first, *neigh.first);
-		_realSpaceYAxisRangeEnd = std::min(*realSpace.second, *neigh.second);
-	}
-	if (!_fixReciprocalSpaceXAxisRange) {
-		_reciprocalSpaceXAxisRangeStart = _reciprocalSpaceCorrelationX.first();
-		_reciprocalSpaceXAxisRangeEnd = _reciprocalSpaceCorrelationX.last();
-	}
-	if (!_fixReciprocalSpaceYAxisRange) {
-		auto reciprocalSpace = std::minmax_element(_reciprocalSpaceCorrelation.begin(), _reciprocalSpaceCorrelation.end());
-		_reciprocalSpaceYAxisRangeStart = *reciprocalSpace.first;
-		_reciprocalSpaceYAxisRangeEnd = *reciprocalSpace.second;
-	}
+	updateRanges();
 }
 
 /******************************************************************************
