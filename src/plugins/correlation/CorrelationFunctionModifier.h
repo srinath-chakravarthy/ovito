@@ -95,13 +95,16 @@ private:
 		CorrelationAnalysisEngine(const TimeInterval& validityInterval,
 								  ParticleProperty* positions,
 								  ParticleProperty* sourceProperty1,
+								  size_t vecComponent1,
 								  ParticleProperty* sourceProperty2,
+								  size_t vecComponent2,
 								  const SimulationCell& simCell,
 								  FloatType fftGridSpacing,
 								  FloatType neighCutoff,
 								  int numberOfNeighBins) :
 			ComputeEngine(validityInterval), _positions(positions),
-			_sourceProperty1(sourceProperty1), _sourceProperty2(sourceProperty2),
+			_sourceProperty1(sourceProperty1), _vecComponent1(vecComponent1),
+			_sourceProperty2(sourceProperty2), _vecComponent2(vecComponent2),
 			_simCell(simCell), _fftGridSpacing(fftGridSpacing), _neighCutoff(neighCutoff),
 			_neighCorrelation(numberOfNeighBins, 0.0),
 			_neighCorrelationX(numberOfNeighBins) {}
@@ -169,6 +172,8 @@ private:
 							  int nX, int nY, int nZ,
 							  QVector<FloatType> &gridData);
 
+		size_t _vecComponent1;
+		size_t _vecComponent2;
 		FloatType _fftGridSpacing;
 		FloatType _neighCutoff;
 		SimulationCell _simCell;

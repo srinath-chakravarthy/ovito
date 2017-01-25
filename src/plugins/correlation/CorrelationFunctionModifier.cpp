@@ -156,7 +156,9 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CorrelationFunction
 	return std::make_shared<CorrelationAnalysisEngine>(validityInterval,
 													   posProperty->storage(),
 													   property1->storage(),
+													   std::max(0, sourceProperty1().vectorComponent()),
 													   property2->storage(),
+													   std::max(0, sourceProperty2().vectorComponent()),
 													   inputCell->data(),
 													   fftGridSpacing(),
 													   neighCutoff(),
@@ -292,7 +294,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	// Map all quantities onto a spatial grid.
 	QVector<FloatType> gridProperty1, gridProperty2;
 	mapToSpatialGrid(sourceProperty1(),
-					 0, // FIXME! Selected vector component should be passed to engine.
+					 _vecComponent1,
 					 reciprocalCellMatrix,
 					 nX, nY, nZ,
 					 gridProperty1);
@@ -300,7 +302,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	if (isCanceled())
 		return;
 	mapToSpatialGrid(sourceProperty2(),
-					 0, // FIXME! Selected vector component should be passed to engine.
+					 _vecComponent2,
 					 reciprocalCellMatrix,
 					 nX, nY, nZ,
 					 gridProperty2);
@@ -470,10 +472,10 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	size_t particleCount = positions()->size();
 
 	// Get pointers to data.
-	const FloatType *floatData1, *floatData2;
-	const int *intData1, *intData2; 
-	floatData1 = floatData2 = nullptr;
-	intData1 = intData2 = nullptr;
+	const FloatType *floatData1 = nullptr, *floatData2 = nullptr;
+	const int *intData1 = nullptr, *intData2 = nullptr; 
+	size_t componentCount1 = sourceProperty1()->componentCount();
+	size_t componentCount2 = sourceProperty2()->componentCount();
 	if(sourceProperty1()->dataType() == qMetaTypeId<FloatType>()) {
 		floatData1 = sourceProperty1()->constDataFloat();
 	}
@@ -493,12 +495,17 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	size_t chunkSize = particleCount / num_threads;
 	size_t startIndex = 0;
 	size_t endIndex = chunkSize;
+	size_t vecComponent1 = _vecComponent1;
+	size_t vecComponent2 = _vecComponent2;
 	std::mutex mutex;
 	for (size_t t = 0; t < num_threads; t++) {
 		if (t == num_threads - 1) {
 			endIndex += particleCount % num_threads;
 		}
-		workers.push_back(std::thread([&neighborListBuilder, startIndex, endIndex, floatData1, intData1, floatData2, intData2, &mutex, this]() {
+		workers.push_back(std::thread([&neighborListBuilder, startIndex, endIndex,
+									   floatData1, intData1, componentCount1, vecComponent1,
+									   floatData2, intData2, componentCount2, vecComponent2,
+									   &mutex, this]() {
 			FloatType gridSpacing = (_neighCutoff + FLOATTYPE_EPSILON) / _neighCorrelation.size();
 			std::vector<double> threadLocalCorrelation(_neighCorrelation.size(), 0);
 			for (size_t i = startIndex; i < endIndex;) {
@@ -508,13 +515,13 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 					distanceBinIndex = std::min(distanceBinIndex, threadLocalCorrelation.size() - 1);
 					FloatType data1 = 0.0, data2 = 0.0;
 					if (floatData1)
-						data1 = floatData1[i];
+						data1 = floatData1[i*componentCount1 + vecComponent1];
 					else if (intData1)
-						data1 = intData1[i];
+						data1 = intData1[i*componentCount1 + vecComponent1];
 					if (floatData2)
-						data2 = floatData2[neighQuery.current()];
+						data2 = floatData2[neighQuery.current() * componentCount2 + vecComponent2];
 					else if (intData2)
-						data2 = intData2[neighQuery.current()];
+						data2 = intData2[neighQuery.current() * componentCount2 + vecComponent2];
 					threadLocalCorrelation[distanceBinIndex] += data1*data2;
 				}
 
@@ -569,7 +576,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		_covariance += data1*data2;
 	}
 	_mean1 /= sourceProperty1()->size();
-	_mean2 /= sourceProperty1()->size();
+	_mean2 /= sourceProperty2()->size();
 	_covariance /= sourceProperty1()->size();
 }
 
