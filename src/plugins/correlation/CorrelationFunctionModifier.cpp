@@ -584,8 +584,18 @@ void CorrelationFunctionModifier::updateRanges(FloatType offset, FloatType fac)
 {
 	// Compute data ranges
 	if (!_fixRealSpaceXAxisRange) {
-		_realSpaceXAxisRangeStart = std::min(_realSpaceCorrelationX.first(), _neighCorrelationX.first());
-		_realSpaceXAxisRangeEnd = std::max(_realSpaceCorrelationX.last(), _neighCorrelationX.last());
+		if (!_realSpaceCorrelationX.empty() && !_realSpaceCorrelationX.empty()) {
+			_realSpaceXAxisRangeStart = std::min(_realSpaceCorrelationX.first(), _neighCorrelationX.first());
+			_realSpaceXAxisRangeEnd = std::max(_realSpaceCorrelationX.last(), _neighCorrelationX.last());
+		}
+		else if (!_realSpaceCorrelationX.empty()) {
+			_realSpaceXAxisRangeStart = _realSpaceCorrelationX.first();
+			_realSpaceXAxisRangeEnd = _realSpaceCorrelationX.last();
+		}
+		else if (!_neighCorrelationX.empty()) {
+			_realSpaceXAxisRangeStart = _neighCorrelationX.first();
+			_realSpaceXAxisRangeEnd = _neighCorrelationX.last();
+		}
 	}
 	if (!_fixRealSpaceYAxisRange) {
 		auto realSpace = std::minmax_element(_realSpaceCorrelation.begin(), _realSpaceCorrelation.end());
@@ -593,11 +603,11 @@ void CorrelationFunctionModifier::updateRanges(FloatType offset, FloatType fac)
 		_realSpaceYAxisRangeStart = fac*(std::min(*realSpace.first, *neigh.first)-offset);
 		_realSpaceYAxisRangeEnd = fac*(std::max(*realSpace.second, *neigh.second)-offset);
 	}
-	if (!_fixReciprocalSpaceXAxisRange) {
+	if (!_fixReciprocalSpaceXAxisRange && !_reciprocalSpaceCorrelationX.empty()) {
 		_reciprocalSpaceXAxisRangeStart = _reciprocalSpaceCorrelationX.first();
 		_reciprocalSpaceXAxisRangeEnd = _reciprocalSpaceCorrelationX.last();
 	}
-	if (!_fixReciprocalSpaceYAxisRange) {
+	if (!_fixReciprocalSpaceYAxisRange && !_reciprocalSpaceCorrelation.empty()) {
 		auto reciprocalSpace = std::minmax_element(_reciprocalSpaceCorrelation.begin(), _reciprocalSpaceCorrelation.end());
 		_reciprocalSpaceYAxisRangeStart = *reciprocalSpace.first;
 		_reciprocalSpaceYAxisRangeEnd = *reciprocalSpace.second;
