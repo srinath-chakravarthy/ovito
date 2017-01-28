@@ -75,8 +75,7 @@ protected:
 		virtual void parseFile(CompressedTextReader& stream) override;
 	};
 
-protected:
-
+private:
 
 	Q_OBJECT
 	OVITO_OBJECT

@@ -128,7 +128,7 @@ void ParticleModifier::propertyChanged(const PropertyFieldDescriptor& field)
 	Modifier::propertyChanged(field);
 
 	// Clear status when modifier is disabled.
-	if(field == PROPERTY_FIELD(Modifier::_isEnabled) && !isEnabled())
+	if(field == PROPERTY_FIELD(Modifier::isEnabled) && !isEnabled())
 		setStatus(PipelineStatus(PipelineStatus::Success, tr("Modifier is currently disabled.")));
 }
 

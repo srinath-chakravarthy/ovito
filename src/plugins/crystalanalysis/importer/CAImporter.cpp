@@ -42,15 +42,15 @@
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CAImporter, ParticleImporter);
-DEFINE_PROPERTY_FIELD(CAImporter, _loadParticles, "LoadParticles");
-SET_PROPERTY_FIELD_LABEL(CAImporter, _loadParticles, "Load particles");
+DEFINE_PROPERTY_FIELD(CAImporter, loadParticles, "LoadParticles");
+SET_PROPERTY_FIELD_LABEL(CAImporter, loadParticles, "Load particles");
 
 /******************************************************************************
 * Is called when the value of a property of this object has changed.
 ******************************************************************************/
 void CAImporter::propertyChanged(const PropertyFieldDescriptor& field)
 {
-	if(field == PROPERTY_FIELD(CAImporter::_loadParticles)) {
+	if(field == PROPERTY_FIELD(CAImporter::loadParticles)) {
 		requestReload();
 	}
 	ParticleImporter::propertyChanged(field);

@@ -226,7 +226,7 @@ void AsynchronousParticleModifier::propertyChanged(const PropertyFieldDescriptor
 	ParticleModifier::propertyChanged(field);
 
 	// Stop compute engine when modifier is disbaled.
-	if(field == PROPERTY_FIELD(Modifier::_isEnabled) && !isEnabled())
+	if(field == PROPERTY_FIELD(Modifier::isEnabled) && !isEnabled())
 		stopRunningEngine();
 }
 

@@ -25,38 +25,38 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Anim)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(FloatTCBAnimationKey, FloatAnimationKey);
-DEFINE_PROPERTY_FIELD(FloatTCBAnimationKey, _easeTo, "EaseTo");
-DEFINE_PROPERTY_FIELD(FloatTCBAnimationKey, _easeFrom, "EaseFrom");
-DEFINE_PROPERTY_FIELD(FloatTCBAnimationKey, _tension, "Tension");
-DEFINE_PROPERTY_FIELD(FloatTCBAnimationKey, _continuity, "Continuity");
-DEFINE_PROPERTY_FIELD(FloatTCBAnimationKey, _bias, "Bias");
-SET_PROPERTY_FIELD_LABEL(FloatTCBAnimationKey, _easeTo, "Ease to");
-SET_PROPERTY_FIELD_LABEL(FloatTCBAnimationKey, _easeFrom, "Ease from");
-SET_PROPERTY_FIELD_LABEL(FloatTCBAnimationKey, _tension, "Tension");
-SET_PROPERTY_FIELD_LABEL(FloatTCBAnimationKey, _continuity, "Continuity");
-SET_PROPERTY_FIELD_LABEL(FloatTCBAnimationKey, _bias, "Bias");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(FloatTCBAnimationKey, _easeTo, FloatParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(FloatTCBAnimationKey, _easeFrom, FloatParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(FloatTCBAnimationKey, _tension, FloatParameterUnit, -1, 1);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(FloatTCBAnimationKey, _continuity, FloatParameterUnit, -1, 1);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(FloatTCBAnimationKey, _bias, FloatParameterUnit, -1, 1);
+DEFINE_PROPERTY_FIELD(FloatTCBAnimationKey, easeTo, "EaseTo");
+DEFINE_PROPERTY_FIELD(FloatTCBAnimationKey, easeFrom, "EaseFrom");
+DEFINE_PROPERTY_FIELD(FloatTCBAnimationKey, tension, "Tension");
+DEFINE_PROPERTY_FIELD(FloatTCBAnimationKey, continuity, "Continuity");
+DEFINE_PROPERTY_FIELD(FloatTCBAnimationKey, bias, "Bias");
+SET_PROPERTY_FIELD_LABEL(FloatTCBAnimationKey, easeTo, "Ease to");
+SET_PROPERTY_FIELD_LABEL(FloatTCBAnimationKey, easeFrom, "Ease from");
+SET_PROPERTY_FIELD_LABEL(FloatTCBAnimationKey, tension, "Tension");
+SET_PROPERTY_FIELD_LABEL(FloatTCBAnimationKey, continuity, "Continuity");
+SET_PROPERTY_FIELD_LABEL(FloatTCBAnimationKey, bias, "Bias");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(FloatTCBAnimationKey, easeTo, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(FloatTCBAnimationKey, easeFrom, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(FloatTCBAnimationKey, tension, FloatParameterUnit, -1, 1);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(FloatTCBAnimationKey, continuity, FloatParameterUnit, -1, 1);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(FloatTCBAnimationKey, bias, FloatParameterUnit, -1, 1);
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PositionTCBAnimationKey, PositionAnimationKey);
-DEFINE_PROPERTY_FIELD(PositionTCBAnimationKey, _easeTo, "EaseTo");
-DEFINE_PROPERTY_FIELD(PositionTCBAnimationKey, _easeFrom, "EaseFrom");
-DEFINE_PROPERTY_FIELD(PositionTCBAnimationKey, _tension, "Tension");
-DEFINE_PROPERTY_FIELD(PositionTCBAnimationKey, _continuity, "Continuity");
-DEFINE_PROPERTY_FIELD(PositionTCBAnimationKey, _bias, "Bias");
-SET_PROPERTY_FIELD_LABEL(PositionTCBAnimationKey, _easeTo, "Ease to");
-SET_PROPERTY_FIELD_LABEL(PositionTCBAnimationKey, _easeFrom, "Ease from");
-SET_PROPERTY_FIELD_LABEL(PositionTCBAnimationKey, _tension, "Tension");
-SET_PROPERTY_FIELD_LABEL(PositionTCBAnimationKey, _continuity, "Continuity");
-SET_PROPERTY_FIELD_LABEL(PositionTCBAnimationKey, _bias, "Bias");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(PositionTCBAnimationKey, _easeTo, FloatParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(PositionTCBAnimationKey, _easeFrom, FloatParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(PositionTCBAnimationKey, _tension, FloatParameterUnit, -1, 1);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(PositionTCBAnimationKey, _continuity, FloatParameterUnit, -1, 1);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(PositionTCBAnimationKey, _bias, FloatParameterUnit, -1, 1);
+DEFINE_PROPERTY_FIELD(PositionTCBAnimationKey, easeTo, "EaseTo");
+DEFINE_PROPERTY_FIELD(PositionTCBAnimationKey, easeFrom, "EaseFrom");
+DEFINE_PROPERTY_FIELD(PositionTCBAnimationKey, tension, "Tension");
+DEFINE_PROPERTY_FIELD(PositionTCBAnimationKey, continuity, "Continuity");
+DEFINE_PROPERTY_FIELD(PositionTCBAnimationKey, bias, "Bias");
+SET_PROPERTY_FIELD_LABEL(PositionTCBAnimationKey, easeTo, "Ease to");
+SET_PROPERTY_FIELD_LABEL(PositionTCBAnimationKey, easeFrom, "Ease from");
+SET_PROPERTY_FIELD_LABEL(PositionTCBAnimationKey, tension, "Tension");
+SET_PROPERTY_FIELD_LABEL(PositionTCBAnimationKey, continuity, "Continuity");
+SET_PROPERTY_FIELD_LABEL(PositionTCBAnimationKey, bias, "Bias");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(PositionTCBAnimationKey, easeTo, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(PositionTCBAnimationKey, easeFrom, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(PositionTCBAnimationKey, tension, FloatParameterUnit, -1, 1);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(PositionTCBAnimationKey, continuity, FloatParameterUnit, -1, 1);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(PositionTCBAnimationKey, bias, FloatParameterUnit, -1, 1);
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(TCBPositionController, KeyframeController);
 

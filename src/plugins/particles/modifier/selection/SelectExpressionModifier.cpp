@@ -30,8 +30,8 @@
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Selection)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SelectExpressionModifier, ParticleModifier);
-DEFINE_PROPERTY_FIELD(SelectExpressionModifier, _expression, "Expression");
-SET_PROPERTY_FIELD_LABEL(SelectExpressionModifier, _expression, "Boolean expression");
+DEFINE_PROPERTY_FIELD(SelectExpressionModifier, expression, "Expression");
+SET_PROPERTY_FIELD_LABEL(SelectExpressionModifier, expression, "Boolean expression");
 
 /******************************************************************************
 * This modifies the input object.

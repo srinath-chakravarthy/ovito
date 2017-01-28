@@ -40,18 +40,6 @@ public:
 	/// Asks the modifier for its validity interval at the given time.
 	virtual TimeInterval modifierValidity(TimePoint time) override { return TimeInterval::infinite(); }
 
-	/// Sets the source particle property which should be preserved.
-	void setSourceProperty(const ParticlePropertyReference& prop) { _sourceProperty = prop; }
-
-	/// Returns the source particle property which is preserved.
-	const ParticlePropertyReference& sourceProperty() const { return _sourceProperty; }
-
-	/// Sets the particle property to which the stored values should be written.
-	void setDestinationProperty(const ParticlePropertyReference& prop) { _destinationProperty = prop; }
-
-	/// Returns the particle property to which the stored values will be written
-	const ParticlePropertyReference& destinationProperty() const { return _destinationProperty; }
-
 	/// Takes a snapshot of the source property for a specific ModifierApplication.
 	void takePropertySnapshot(ModifierApplication* modApp, const PipelineFlowState& state);
 
@@ -69,23 +57,19 @@ protected:
 private:
 
 	/// The particle property that is preserved by this modifier.
-	PropertyField<ParticlePropertyReference> _sourceProperty;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ParticlePropertyReference, sourceProperty, setSourceProperty);
 
 	/// The particle property to which the stored values should be written
-	PropertyField<ParticlePropertyReference> _destinationProperty;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ParticlePropertyReference, destinationProperty, setDestinationProperty);
 
 	/// The cached display objects that are attached to the output particle property.
-	VectorReferenceField<DisplayObject> _cachedDisplayObjects;
+	DECLARE_VECTOR_REFERENCE_FIELD(DisplayObject, cachedDisplayObjects);
 
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Freeze property");
 	Q_CLASSINFO("ModifierCategory", "Modification");
-
-	DECLARE_PROPERTY_FIELD(_sourceProperty);
-	DECLARE_PROPERTY_FIELD(_destinationProperty);
-	DECLARE_VECTOR_REFERENCE_FIELD(_cachedDisplayObjects);
 };
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -100,8 +84,8 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE SavedParticleProperty(DataSet* dataset) : RefTarget(dataset) {
-		INIT_PROPERTY_FIELD(SavedParticleProperty::_property);
-		INIT_PROPERTY_FIELD(SavedParticleProperty::_identifiers);
+		INIT_PROPERTY_FIELD(property);
+		INIT_PROPERTY_FIELD(identifiers);
 	}
 
 	/// Makes a copy of the given source property and, optionally, of the provided
@@ -109,25 +93,16 @@ public:
 	/// values even if the order of particles changes.
 	void reset(ParticlePropertyObject* property, ParticlePropertyObject* identifiers);
 
-	/// Returns the stored copy of the particle property.
-	ParticlePropertyObject* property() const { return _property; }
-
-	/// Returns the particle identifiers, taken at the time when the property values were saved.
-	ParticlePropertyObject* identifiers() const { return _identifiers; }
-
 private:
 
 	/// The stored copy of the particle property.
-	ReferenceField<ParticlePropertyObject> _property;
+	DECLARE_REFERENCE_FIELD(ParticlePropertyObject, property);
 
 	/// A copy of the particle identifiers, taken at the time when the property values were saved.
-	ReferenceField<ParticlePropertyObject> _identifiers;
+	DECLARE_REFERENCE_FIELD(ParticlePropertyObject, identifiers);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_property);
-	DECLARE_REFERENCE_FIELD(_identifiers);
 };
 
 OVITO_END_INLINE_NAMESPACE

@@ -30,15 +30,15 @@
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CombineParticleSetsModifier, ParticleModifier);
-DEFINE_FLAGS_REFERENCE_FIELD(CombineParticleSetsModifier, _secondarySource, "SecondarySource", DataObject, PROPERTY_FIELD_NO_SUB_ANIM);
-SET_PROPERTY_FIELD_LABEL(CombineParticleSetsModifier, _secondarySource, "Secondary source");
+DEFINE_FLAGS_REFERENCE_FIELD(CombineParticleSetsModifier, secondaryDataSource, "SecondarySource", DataObject, PROPERTY_FIELD_NO_SUB_ANIM);
+SET_PROPERTY_FIELD_LABEL(CombineParticleSetsModifier, secondaryDataSource, "Secondary source");
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
 CombineParticleSetsModifier::CombineParticleSetsModifier(DataSet* dataset) : ParticleModifier(dataset)
 {
-	INIT_PROPERTY_FIELD(CombineParticleSetsModifier::_secondarySource);
+	INIT_PROPERTY_FIELD(secondaryDataSource);
 
 	// Create the file source object, which will be responsible for loading
 	// and caching the data to be merged.

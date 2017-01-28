@@ -30,12 +30,12 @@
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(StructuralClusteringModifier, AsynchronousParticleModifier);
-DEFINE_FLAGS_PROPERTY_FIELD(StructuralClusteringModifier, _faceThreshold, "FaceThreshold", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(StructuralClusteringModifier, _rmsdThreshold, "RMSDThreshold", PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(StructuralClusteringModifier, _faceThreshold, "Voronoi face threshold");
-SET_PROPERTY_FIELD_LABEL(StructuralClusteringModifier, _rmsdThreshold, "RMSD threshold");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(StructuralClusteringModifier, _faceThreshold, FloatParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(StructuralClusteringModifier, _rmsdThreshold, FloatParameterUnit, 0);
+DEFINE_FLAGS_PROPERTY_FIELD(StructuralClusteringModifier, faceThreshold, "FaceThreshold", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(StructuralClusteringModifier, rmsdThreshold, "RMSDThreshold", PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(StructuralClusteringModifier, faceThreshold, "Voronoi face threshold");
+SET_PROPERTY_FIELD_LABEL(StructuralClusteringModifier, rmsdThreshold, "RMSD threshold");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(StructuralClusteringModifier, faceThreshold, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(StructuralClusteringModifier, rmsdThreshold, FloatParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -43,8 +43,8 @@ SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(StructuralClusteringModifier, _rmsdThreshol
 StructuralClusteringModifier::StructuralClusteringModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
 	_numClusters(0), _faceThreshold(0.02), _rmsdThreshold(0.1)
 {
-	INIT_PROPERTY_FIELD(StructuralClusteringModifier::_faceThreshold);
-	INIT_PROPERTY_FIELD(StructuralClusteringModifier::_rmsdThreshold);
+	INIT_PROPERTY_FIELD(faceThreshold);
+	INIT_PROPERTY_FIELD(rmsdThreshold);
 }
 
 /******************************************************************************
@@ -55,8 +55,8 @@ void StructuralClusteringModifier::propertyChanged(const PropertyFieldDescriptor
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Recompute modifier results when the parameters have been changed.
-	if(	field == PROPERTY_FIELD(StructuralClusteringModifier::_faceThreshold) ||
-		field == PROPERTY_FIELD(StructuralClusteringModifier::_rmsdThreshold))
+	if(	field == PROPERTY_FIELD(faceThreshold) ||
+		field == PROPERTY_FIELD(rmsdThreshold))
 		invalidateCachedResults();
 }
 

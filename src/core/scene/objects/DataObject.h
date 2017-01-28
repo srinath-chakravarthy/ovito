@@ -123,10 +123,6 @@ public:
 	/// An object should generate a ReferenceEvent::ObjectStatusChanged event when its status has changed.
 	virtual PipelineStatus status() const { return PipelineStatus(); }
 
-	/// \brief Returns the list of attached display objects that are responsible for rendering this
-	///        data object.
-	const QVector<DisplayObject*>& displayObjects() const { return _displayObjects; }
-
 	/// \brief Attaches a display object to this scene object that will be responsible for rendering the
 	///        data object.
 	void addDisplayObject(DisplayObject* displayObj) { 
@@ -137,12 +133,6 @@ public:
 	///        data object.
 	void insertDisplayObject(int index, DisplayObject* displayObj) { 
 		_displayObjects.insert(index, displayObj); 
-	}
-
-	/// \brief Attaches one or more display objects to this scene object that will be responsible for rendering the
-	///        data object.
-	void setDisplayObjects(const QVector<DisplayObject*>& displayObjs) {
-		_displayObjects = displayObjs;
 	}
 
 	/// \brief Removes a display object from this scene object.
@@ -193,6 +183,9 @@ public:
 
 	Q_PROPERTY(bool saveWithScene READ saveWithScene WRITE setSaveWithScene);
 
+	/// Controls whether the internal data is saved along with the scene.
+	PropertyField<bool> _saveWithScene;
+
 protected:
 
 	/// Handles reference events sent by reference targets of this object.
@@ -213,18 +206,15 @@ private:
 	/// Controls whether the internal data is saved along with the scene.
 	/// If false, only metadata will be saved in a state file, while the actual contents will be
 	/// recomputed or restored from an external data source.
-	PropertyField<bool> _saveWithScene;
+	DECLARE_PROPERTY_FIELD_DESCRIPTOR(saveWithScene);
 
 	/// The attached display objects that are responsible for rendering this object's data.
-	VectorReferenceField<DisplayObject> _displayObjects;
+	DECLARE_MODIFIABLE_VECTOR_REFERENCE_FIELD(DisplayObject, displayObjects, setDisplayObjects);
 
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("ClassNameAlias", "SceneObject");	// This for backward compatibility with files written by Ovito 2.4 and older.
-
-	DECLARE_PROPERTY_FIELD(_saveWithScene);
-	DECLARE_VECTOR_REFERENCE_FIELD(_displayObjects);
 };
 
 OVITO_END_INLINE_NAMESPACE

@@ -43,7 +43,7 @@ public:
 
 	/// \brief Constructs a new instance of this class.
 	Q_INVOKABLE CAImporter(DataSet* dataset) : ParticleImporter(dataset), _loadParticles(false) {
-		INIT_PROPERTY_FIELD(CAImporter::_loadParticles);
+		INIT_PROPERTY_FIELD(loadParticles);
 	}
 
 	/// \brief Returns the file filter that specifies the files that can be imported by this service.
@@ -57,12 +57,6 @@ public:
 
 	/// Returns the title of this object.
 	virtual QString objectTitle() override { return tr("CA File"); }
-
-	/// Returns whether loading of the associated particle file is enabled.
-	bool loadParticles() const { return _loadParticles; }
-
-	/// Controls the loading of the associated particle file.
-	void setLoadParticles(bool enable) { _loadParticles = enable; }
 
 	/// Creates an asynchronous loader object that loads the data for the given frame from the external file.
 	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame, bool isNewlySelectedFile) override {
@@ -143,12 +137,10 @@ protected:
 private:
 
 	/// Controls whether the associated particle file should be loaded too.
-	PropertyField<bool> _loadParticles;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, loadParticles, setLoadParticles);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_loadParticles);
 };
 
 }	// End of namespace

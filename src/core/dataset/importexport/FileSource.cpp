@@ -35,20 +35,21 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(FileSource, CompoundObject);
-DEFINE_FLAGS_REFERENCE_FIELD(FileSource, _importer, "Importer", FileSourceImporter, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_NO_UNDO);
-DEFINE_PROPERTY_FIELD(FileSource, _adjustAnimationIntervalEnabled, "AdjustAnimationIntervalEnabled");
-DEFINE_FLAGS_PROPERTY_FIELD(FileSource, _sourceUrl, "SourceUrl", PROPERTY_FIELD_NO_UNDO);
-DEFINE_PROPERTY_FIELD(FileSource, _playbackSpeedNumerator, "PlaybackSpeedNumerator");
-DEFINE_PROPERTY_FIELD(FileSource, _playbackSpeedDenominator, "PlaybackSpeedDenominator");
-DEFINE_PROPERTY_FIELD(FileSource, _playbackStartTime, "PlaybackStartTime");
-SET_PROPERTY_FIELD_LABEL(FileSource, _importer, "File Importer");
-SET_PROPERTY_FIELD_LABEL(FileSource, _adjustAnimationIntervalEnabled, "Adjust animation length to time series");
-SET_PROPERTY_FIELD_LABEL(FileSource, _sourceUrl, "Source location");
-SET_PROPERTY_FIELD_LABEL(FileSource, _playbackSpeedNumerator, "Playback rate numerator");
-SET_PROPERTY_FIELD_LABEL(FileSource, _playbackSpeedDenominator, "Playback rate denominator");
-SET_PROPERTY_FIELD_LABEL(FileSource, _playbackStartTime, "Playback start time");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(FileSource, _playbackSpeedNumerator, IntegerParameterUnit, 1);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(FileSource, _playbackSpeedDenominator, IntegerParameterUnit, 1);
+DEFINE_FLAGS_REFERENCE_FIELD(FileSource, importer, "Importer", FileSourceImporter, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_NO_UNDO);
+DEFINE_PROPERTY_FIELD(FileSource, adjustAnimationIntervalEnabled, "AdjustAnimationIntervalEnabled");
+DEFINE_FLAGS_PROPERTY_FIELD(FileSource, sourceUrl, "SourceUrl", PROPERTY_FIELD_NO_UNDO);
+DEFINE_PROPERTY_FIELD(FileSource, playbackSpeedNumerator, "PlaybackSpeedNumerator");
+DEFINE_PROPERTY_FIELD(FileSource, playbackSpeedDenominator, "PlaybackSpeedDenominator");
+DEFINE_PROPERTY_FIELD(FileSource, playbackStartTime, "PlaybackStartTime");
+SET_PROPERTY_FIELD_LABEL(FileSource, importer, "File Importer");
+SET_PROPERTY_FIELD_LABEL(FileSource, adjustAnimationIntervalEnabled, "Adjust animation length to time series");
+SET_PROPERTY_FIELD_LABEL(FileSource, sourceUrl, "Source location");
+SET_PROPERTY_FIELD_LABEL(FileSource, playbackSpeedNumerator, "Playback rate numerator");
+SET_PROPERTY_FIELD_LABEL(FileSource, playbackSpeedDenominator, "Playback rate denominator");
+SET_PROPERTY_FIELD_LABEL(FileSource, playbackStartTime, "Playback start time");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(FileSource, playbackSpeedNumerator, IntegerParameterUnit, 1);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(FileSource, playbackSpeedDenominator, IntegerParameterUnit, 1);
+SET_PROPERTY_FIELD_CHANGE_EVENT(FileSource, sourceUrl, ReferenceEvent::TitleChanged);
 
 /******************************************************************************
 * Constructs the object.
@@ -57,12 +58,12 @@ FileSource::FileSource(DataSet* dataset) : CompoundObject(dataset),
 	_adjustAnimationIntervalEnabled(true), _loadedFrameIndex(-1), _frameBeingLoaded(-1),
 	_playbackSpeedNumerator(1), _playbackSpeedDenominator(1), _playbackStartTime(0), _isNewFile(false)
 {
-	INIT_PROPERTY_FIELD(FileSource::_importer);
-	INIT_PROPERTY_FIELD(FileSource::_adjustAnimationIntervalEnabled);
-	INIT_PROPERTY_FIELD(FileSource::_sourceUrl);
-	INIT_PROPERTY_FIELD(FileSource::_playbackSpeedNumerator);
-	INIT_PROPERTY_FIELD(FileSource::_playbackSpeedDenominator);
-	INIT_PROPERTY_FIELD(FileSource::_playbackStartTime);
+	INIT_PROPERTY_FIELD(importer);
+	INIT_PROPERTY_FIELD(adjustAnimationIntervalEnabled);
+	INIT_PROPERTY_FIELD(sourceUrl);
+	INIT_PROPERTY_FIELD(playbackSpeedNumerator);
+	INIT_PROPERTY_FIELD(playbackSpeedDenominator);
+	INIT_PROPERTY_FIELD(playbackStartTime);
 
 	connect(&_frameLoaderWatcher, &FutureWatcher::finished, this, &FileSource::loadOperationFinished);
 	connect(&_frameDiscoveryWatcher, &FutureWatcher::finished, this, &FileSource::frameDiscoveryFinished);
@@ -197,9 +198,9 @@ void FileSource::cancelLoadOperation()
 int FileSource::animationTimeToInputFrame(TimePoint time) const
 {
 	int animFrame = dataset()->animationSettings()->timeToFrame(time);
-	return (animFrame - _playbackStartTime) *
-			std::max(1, (int)_playbackSpeedNumerator) /
-			std::max(1, (int)_playbackSpeedDenominator);
+	return (animFrame - playbackStartTime()) *
+			std::max(1, playbackSpeedNumerator()) /
+			std::max(1, playbackSpeedDenominator());
 }
 
 /******************************************************************************
@@ -208,9 +209,9 @@ int FileSource::animationTimeToInputFrame(TimePoint time) const
 TimePoint FileSource::inputFrameToAnimationTime(int frame) const
 {
 	int animFrame = frame *
-			std::max(1, (int)_playbackSpeedDenominator) /
-			std::max(1, (int)_playbackSpeedNumerator) +
-			_playbackStartTime;
+			std::max(1, playbackSpeedDenominator()) /
+			std::max(1, playbackSpeedNumerator()) +
+			playbackStartTime();
 	return dataset()->animationSettings()->frameToTime(animFrame);
 }
 
@@ -435,7 +436,7 @@ void FileSource::setStatus(const PipelineStatus& status)
 ******************************************************************************/
 void FileSource::adjustAnimationInterval(int gotoFrameIndex)
 {
-	if(!_adjustAnimationIntervalEnabled)
+	if(!adjustAnimationIntervalEnabled())
 		return;
 
 	AnimationSettings* animSettings = dataset()->animationSettings();
@@ -555,10 +556,10 @@ QString FileSource::objectTitle()
 ******************************************************************************/
 void FileSource::propertyChanged(const PropertyFieldDescriptor& field)
 {
-	if(field == PROPERTY_FIELD(FileSource::_adjustAnimationIntervalEnabled) ||
-			field == PROPERTY_FIELD(FileSource::_playbackSpeedNumerator) ||
-			field == PROPERTY_FIELD(FileSource::_playbackSpeedDenominator) ||
-			field == PROPERTY_FIELD(FileSource::_playbackStartTime)) {
+	if(field == PROPERTY_FIELD(adjustAnimationIntervalEnabled) ||
+			field == PROPERTY_FIELD(playbackSpeedNumerator) ||
+			field == PROPERTY_FIELD(playbackSpeedDenominator) ||
+			field == PROPERTY_FIELD(playbackStartTime)) {
 		adjustAnimationInterval();
 	}
 	CompoundObject::propertyChanged(field);

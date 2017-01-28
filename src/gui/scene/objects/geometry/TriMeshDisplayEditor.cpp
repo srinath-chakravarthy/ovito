@@ -44,11 +44,11 @@ void TriMeshDisplayEditor::createUI(const RolloutInsertionParameters& rolloutPar
 	layout->setSpacing(4);
 	layout->setColumnStretch(1, 1);
 
-	ColorParameterUI* colorUI = new ColorParameterUI(this, PROPERTY_FIELD(TriMeshDisplay::_color));
+	ColorParameterUI* colorUI = new ColorParameterUI(this, PROPERTY_FIELD(TriMeshDisplay::color));
 	layout->addWidget(colorUI->label(), 0, 0);
 	layout->addWidget(colorUI->colorPicker(), 0, 1);
 
-	FloatParameterUI* transparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(TriMeshDisplay::_transparency));
+	FloatParameterUI* transparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(TriMeshDisplay::transparencyController));
 	layout->addWidget(new QLabel(tr("Transparency:")), 1, 0);
 	layout->addLayout(transparencyUI->createFieldLayout(), 1, 1);
 }

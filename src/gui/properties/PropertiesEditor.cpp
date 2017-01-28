@@ -26,7 +26,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 
 // Gives the class run-time type information.
 IMPLEMENT_OVITO_OBJECT(PropertiesEditor, RefMaker);
-DEFINE_FLAGS_REFERENCE_FIELD(PropertiesEditor, _editObject, "EditObject", RefTarget, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_WEAK_REF | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
+DEFINE_FLAGS_REFERENCE_FIELD(PropertiesEditor, editObject, "EditObject", RefTarget, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_WEAK_REF | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
 
 /******************************************************************************
 * Returns the global editor registry, which can be used to look up the editor 
@@ -68,7 +68,7 @@ OORef<PropertiesEditor> PropertiesEditor::create(RefTarget* obj)
 ******************************************************************************/
 PropertiesEditor::PropertiesEditor() : RefMaker(nullptr), _container(nullptr), _mainWindow(nullptr)
 {
-	INIT_PROPERTY_FIELD(PropertiesEditor::_editObject);
+	INIT_PROPERTY_FIELD(editObject);
 }
 
 /******************************************************************************
@@ -144,7 +144,7 @@ bool PropertiesEditor::referenceEvent(RefTarget* source, ReferenceEvent* event)
 ******************************************************************************/
 void PropertiesEditor::referenceReplaced(const PropertyFieldDescriptor& field, RefTarget* oldTarget, RefTarget* newTarget)
 {
-	if(field == PROPERTY_FIELD(PropertiesEditor::_editObject)) {
+	if(field == PROPERTY_FIELD(editObject)) {
 		setDataset(editObject() ? editObject()->dataset() : nullptr);
 		if(oldTarget) oldTarget->unsetObjectEditingFlag();
 		if(newTarget) newTarget->setObjectEditingFlag();

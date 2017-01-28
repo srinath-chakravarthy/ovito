@@ -53,12 +53,12 @@ void CoordinationNumberModifierEditor::createUI(const RolloutInsertionParameters
 	gridlayout->setColumnStretch(1, 1);
 
 	// Cutoff parameter.
-	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(CoordinationNumberModifier::_cutoff));
+	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(CoordinationNumberModifier::cutoff));
 	gridlayout->addWidget(cutoffRadiusPUI->label(), 0, 0);
 	gridlayout->addLayout(cutoffRadiusPUI->createFieldLayout(), 0, 1);
 
 	// Number of bins parameter.
-	IntegerParameterUI* numBinsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(CoordinationNumberModifier::_numberOfBins));
+	IntegerParameterUI* numBinsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(CoordinationNumberModifier::numberOfBins));
 	gridlayout->addWidget(numBinsPUI->label(), 1, 0);
 	gridlayout->addLayout(numBinsPUI->createFieldLayout(), 1, 1);
 

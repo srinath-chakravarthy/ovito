@@ -50,12 +50,12 @@ void CameraObjectEditor::createUI(const RolloutInsertionParameters& rolloutParam
 	layout->addLayout(sublayout);
 
 	// Camera projection parameter.
-	BooleanRadioButtonParameterUI* isPerspectivePUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(CameraObject::_isPerspective));
+	BooleanRadioButtonParameterUI* isPerspectivePUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(CameraObject::isPerspective));
 	isPerspectivePUI->buttonTrue()->setText(tr("Perspective camera:"));
 	sublayout->addWidget(isPerspectivePUI->buttonTrue(), 0, 0, 1, 3);
 
 	// FOV parameter.
-	FloatParameterUI* fovPUI = new FloatParameterUI(this, PROPERTY_FIELD(CameraObject::_fov));
+	FloatParameterUI* fovPUI = new FloatParameterUI(this, PROPERTY_FIELD(CameraObject::fovController));
 	sublayout->addWidget(fovPUI->label(), 1, 1);
 	sublayout->addLayout(fovPUI->createFieldLayout(), 1, 2);
 
@@ -63,7 +63,7 @@ void CameraObjectEditor::createUI(const RolloutInsertionParameters& rolloutParam
 	sublayout->addWidget(isPerspectivePUI->buttonFalse(), 2, 0, 1, 3);
 
 	// Zoom parameter.
-	FloatParameterUI* zoomPUI = new FloatParameterUI(this, PROPERTY_FIELD(CameraObject::_zoom));
+	FloatParameterUI* zoomPUI = new FloatParameterUI(this, PROPERTY_FIELD(CameraObject::zoomController));
 	sublayout->addWidget(zoomPUI->label(), 3, 1);
 	sublayout->addLayout(zoomPUI->createFieldLayout(), 3, 2);
 

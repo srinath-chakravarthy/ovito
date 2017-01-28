@@ -49,19 +49,6 @@ public:
 	/// \return The result object.
 	PipelineFlowState evaluatePipeline(TimePoint time, ModifierApplication* upToHere, bool including);
 
-	/// \brief Returns the object that provides the input data for this pipeline.
-	DataObject* sourceObject() const { return _sourceObject; }
-
-	/// \brief Replaces the object that provides the input data for this pipeline.
-	/// \param sourceObject The new source object.
-	/// \undoable
-	void setSourceObject(DataObject* sourceObject) { _sourceObject = sourceObject; }
-
-	/// \brief Returns the list of modifier applications.
-	/// \return The list of applications of modifiers that make up the data flow pipeline.
-	///         The modifiers in this list are applied to the input object in ascending order.
-	const QVector<ModifierApplication*>& modifierApplications() const { return _modApps; }
-
 	/// \brief Inserts a modifier into the data flow pipeline.
 	/// \param modifier The modifier to be inserted.
 	/// \param index Specifies the position in the pipeline where the modifier should be inserted.
@@ -116,11 +103,11 @@ private:
 private:
 
 	/// The object providing the input data that is processed by the modifiers.
-	ReferenceField<DataObject> _sourceObject;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(DataObject, sourceObject, setSourceObject);
 
 	/// The ordered list of modifiers that are applied to the input object.
 	/// The modifiers are applied to the input object in the reverse order of this list.
-	VectorReferenceField<ModifierApplication> _modApps;
+	DECLARE_VECTOR_REFERENCE_FIELD(ModifierApplication, modifierApplications);
 
 	/// The state of the input object from the last evaluation of the pipeline.
 	PipelineFlowState _lastInput;
@@ -134,9 +121,6 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_sourceObject);
-	DECLARE_VECTOR_REFERENCE_FIELD(_modApps);
 };
 
 OVITO_END_INLINE_NAMESPACE

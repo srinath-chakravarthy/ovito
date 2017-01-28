@@ -52,7 +52,7 @@ void SimulationCellEditor::createUI(const RolloutInsertionParameters& rolloutPar
 		layout2->setContentsMargins(4,4,4,4);
 		layout2->setSpacing(2);
 
-		BooleanRadioButtonParameterUI* is2dPUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(SimulationCellObject::_is2D));
+		BooleanRadioButtonParameterUI* is2dPUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(SimulationCellObject::is2D));
 		is2dPUI->buttonTrue()->setText("2D");
 		is2dPUI->buttonFalse()->setText("3D");
 		layout2->addWidget(is2dPUI->buttonTrue(), 0, 0);
@@ -67,15 +67,15 @@ void SimulationCellEditor::createUI(const RolloutInsertionParameters& rolloutPar
 		layout2->setContentsMargins(4,4,4,4);
 		layout2->setSpacing(2);
 
-		BooleanParameterUI* pbcxPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SimulationCellObject::_pbcX));
+		BooleanParameterUI* pbcxPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SimulationCellObject::pbcX));
 		pbcxPUI->checkBox()->setText("X");
 		layout2->addWidget(pbcxPUI->checkBox(), 0, 0);
 
-		BooleanParameterUI* pbcyPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SimulationCellObject::_pbcY));
+		BooleanParameterUI* pbcyPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SimulationCellObject::pbcY));
 		pbcyPUI->checkBox()->setText("Y");
 		layout2->addWidget(pbcyPUI->checkBox(), 0, 1);
 
-		pbczPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SimulationCellObject::_pbcZ));
+		pbczPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SimulationCellObject::pbcZ));
 		pbczPUI->checkBox()->setText("Z");
 		layout2->addWidget(pbczPUI->checkBox(), 0, 2);
 	}
@@ -139,7 +139,7 @@ void SimulationCellEditor::createUI(const RolloutInsertionParameters& rolloutPar
 			layout2->setSpacing(0);
 			sublayout->addLayout(layout2);
 			for(int i = 0; i < 3; i++) {
-				Vector3ParameterUI* vPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SimulationCellObject::_cellVector1), i);
+				Vector3ParameterUI* vPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SimulationCellObject::cellVector1), i);
 				layout2->addLayout(vPUI->createFieldLayout(), 0, i*2);
 				layout2->setColumnStretch(i*2, 1);
 				if(i != 2)
@@ -155,7 +155,7 @@ void SimulationCellEditor::createUI(const RolloutInsertionParameters& rolloutPar
 			layout2->setSpacing(0);
 			sublayout->addLayout(layout2);
 			for(int i = 0; i < 3; i++) {
-				Vector3ParameterUI* vPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SimulationCellObject::_cellVector2), i);
+				Vector3ParameterUI* vPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SimulationCellObject::cellVector2), i);
 				layout2->addLayout(vPUI->createFieldLayout(), 0, i*2);
 				layout2->setColumnStretch(i*2, 1);
 				if(i != 2)
@@ -171,7 +171,7 @@ void SimulationCellEditor::createUI(const RolloutInsertionParameters& rolloutPar
 			layout2->setSpacing(0);
 			sublayout->addLayout(layout2);
 			for(int i = 0; i < 3; i++) {
-				Vector3ParameterUI* vPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SimulationCellObject::_cellVector3), i);
+				Vector3ParameterUI* vPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SimulationCellObject::cellVector3), i);
 				zvectorPUI[i] = vPUI;
 				layout2->addLayout(vPUI->createFieldLayout(), 0, i*2);
 				layout2->setColumnStretch(i*2, 1);
@@ -188,7 +188,7 @@ void SimulationCellEditor::createUI(const RolloutInsertionParameters& rolloutPar
 			layout2->setSpacing(0);
 			sublayout->addLayout(layout2);
 			for(int i = 0; i < 3; i++) {
-				Vector3ParameterUI* vPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SimulationCellObject::_cellOrigin), i);
+				Vector3ParameterUI* vPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SimulationCellObject::cellOrigin), i);
 				if(i == 2) zoriginPUI = vPUI;
 				layout2->addLayout(vPUI->createFieldLayout(), 0, i*2);
 				layout2->setColumnStretch(i*2, 1);

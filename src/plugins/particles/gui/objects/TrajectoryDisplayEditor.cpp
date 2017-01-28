@@ -47,24 +47,24 @@ void TrajectoryDisplayEditor::createUI(const RolloutInsertionParameters& rollout
 	layout->setColumnStretch(1, 1);
 
 	// Shading mode.
-	VariantComboBoxParameterUI* shadingModeUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(TrajectoryDisplay::_shadingMode));
+	VariantComboBoxParameterUI* shadingModeUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(TrajectoryDisplay::shadingMode));
 	shadingModeUI->comboBox()->addItem(tr("Normal"), qVariantFromValue(ArrowPrimitive::NormalShading));
 	shadingModeUI->comboBox()->addItem(tr("Flat"), qVariantFromValue(ArrowPrimitive::FlatShading));
 	layout->addWidget(new QLabel(tr("Shading:")), 0, 0);
 	layout->addWidget(shadingModeUI->comboBox(), 0, 1);
 
 	// Line width.
-	FloatParameterUI* lineWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(TrajectoryDisplay::_lineWidth));
+	FloatParameterUI* lineWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(TrajectoryDisplay::lineWidth));
 	layout->addWidget(lineWidthUI->label(), 1, 0);
 	layout->addLayout(lineWidthUI->createFieldLayout(), 1, 1);
 
 	// Line color.
-	ColorParameterUI* lineColorUI = new ColorParameterUI(this, PROPERTY_FIELD(TrajectoryDisplay::_lineColor));
+	ColorParameterUI* lineColorUI = new ColorParameterUI(this, PROPERTY_FIELD(TrajectoryDisplay::lineColor));
 	layout->addWidget(lineColorUI->label(), 2, 0);
 	layout->addWidget(lineColorUI->colorPicker(), 2, 1);
 
 	// Up to current time.
-	BooleanParameterUI* showUpToCurrentTimeUI = new BooleanParameterUI(this, PROPERTY_FIELD(TrajectoryDisplay::_showUpToCurrentTime));
+	BooleanParameterUI* showUpToCurrentTimeUI = new BooleanParameterUI(this, PROPERTY_FIELD(TrajectoryDisplay::showUpToCurrentTime));
 	layout->addWidget(showUpToCurrentTimeUI->checkBox(), 3, 0, 1, 2);
 }
 

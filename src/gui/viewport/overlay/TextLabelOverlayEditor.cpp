@@ -108,13 +108,13 @@ void TextLabelOverlayEditor::createUI(const RolloutInsertionParameters& rolloutP
 	layout->addWidget(sourcePUI->widget(), 0, 1, 1, 2);
 
 	// Label text.
-	StringParameterUI* labelTextPUI = new StringParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::_labelText));
+	StringParameterUI* labelTextPUI = new StringParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::labelText));
 	layout->addWidget(new QLabel(tr("Text:")), 1, 0);
 	_textEdit = new AutocompleteTextEdit();
 	labelTextPUI->setTextBox(_textEdit);
 	layout->addWidget(labelTextPUI->textBox(), 1, 1, 1, 2);
 
-	VariantComboBoxParameterUI* alignmentPUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::_alignment));
+	VariantComboBoxParameterUI* alignmentPUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::alignment));
 	layout->addWidget(new QLabel(tr("Position:")), 2, 0);
 	layout->addWidget(alignmentPUI->comboBox(), 2, 1);
 	alignmentPUI->comboBox()->addItem(tr("Top"), QVariant::fromValue((int)(Qt::AlignTop | Qt::AlignHCenter)));
@@ -126,11 +126,11 @@ void TextLabelOverlayEditor::createUI(const RolloutInsertionParameters& rolloutP
 	alignmentPUI->comboBox()->addItem(tr("Left"), QVariant::fromValue((int)(Qt::AlignVCenter | Qt::AlignLeft)));
 	alignmentPUI->comboBox()->addItem(tr("Right"), QVariant::fromValue((int)(Qt::AlignVCenter | Qt::AlignRight)));
 
-	FloatParameterUI* offsetXPUI = new FloatParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::_offsetX));
+	FloatParameterUI* offsetXPUI = new FloatParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::offsetX));
 	layout->addWidget(offsetXPUI->label(), 3, 0);
 	layout->addLayout(offsetXPUI->createFieldLayout(), 3, 1, 1, 2);
 
-	FloatParameterUI* offsetYPUI = new FloatParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::_offsetY));
+	FloatParameterUI* offsetYPUI = new FloatParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::offsetY));
 	layout->addWidget(offsetYPUI->label(), 4, 0);
 	layout->addLayout(offsetYPUI->createFieldLayout(), 4, 1, 1, 2);
 
@@ -138,21 +138,21 @@ void TextLabelOverlayEditor::createUI(const RolloutInsertionParameters& rolloutP
 	ViewportModeAction* moveOverlayAction = new ViewportModeAction(mainWindow(), tr("Move using mouse"), this, moveOverlayMode);
 	layout->addWidget(moveOverlayAction->createPushButton(), 5, 1, 1, 2);
 
-	FloatParameterUI* fontSizePUI = new FloatParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::_fontSize));
+	FloatParameterUI* fontSizePUI = new FloatParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::fontSize));
 	layout->addWidget(new QLabel(tr("Text size/color:")), 6, 0);
 	layout->addLayout(fontSizePUI->createFieldLayout(), 6, 1);
 
 	// Text color.
-	ColorParameterUI* textColorPUI = new ColorParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::_textColor));
+	ColorParameterUI* textColorPUI = new ColorParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::textColor));
 	layout->addWidget(textColorPUI->colorPicker(), 6, 2);
 
-	BooleanParameterUI* outlineEnabledPUI = new BooleanParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::_outlineEnabled));
+	BooleanParameterUI* outlineEnabledPUI = new BooleanParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::outlineEnabled));
 	layout->addWidget(outlineEnabledPUI->checkBox(), 7, 1);
 
-	ColorParameterUI* outlineColorPUI = new ColorParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::_outlineColor));
+	ColorParameterUI* outlineColorPUI = new ColorParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::outlineColor));
 	layout->addWidget(outlineColorPUI->colorPicker(), 7, 2);
 
-	FontParameterUI* labelFontPUI = new FontParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::_font));
+	FontParameterUI* labelFontPUI = new FontParameterUI(this, PROPERTY_FIELD(TextLabelOverlay::font));
 	layout->addWidget(labelFontPUI->label(), 8, 0);
 	layout->addWidget(labelFontPUI->fontPicker(), 8, 1, 1, 2);
 

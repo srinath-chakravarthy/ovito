@@ -55,23 +55,23 @@ void DislocationDisplayEditor::createUI(const RolloutInsertionParameters& rollou
 	layout->addWidget(linesGroupBox);
 
 	// Shading mode.
-	VariantComboBoxParameterUI* shadingModeUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_shadingMode));
+	VariantComboBoxParameterUI* shadingModeUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(DislocationDisplay::shadingMode));
 	shadingModeUI->comboBox()->addItem(tr("Normal"), qVariantFromValue(ArrowPrimitive::NormalShading));
 	shadingModeUI->comboBox()->addItem(tr("Flat"), qVariantFromValue(ArrowPrimitive::FlatShading));
 	sublayout->addWidget(new QLabel(tr("Shading mode:")), 0, 0);
 	sublayout->addWidget(shadingModeUI->comboBox(), 0, 1);
 
 	// Line width parameter.
-	FloatParameterUI* lineWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_lineWidth));
+	FloatParameterUI* lineWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(DislocationDisplay::lineWidth));
 	sublayout->addWidget(lineWidthUI->label(), 1, 0);
 	sublayout->addLayout(lineWidthUI->createFieldLayout(), 1, 1);
 
 	// Show line directions.
-	BooleanParameterUI* showLineDirectionsUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_showLineDirections));
+	BooleanParameterUI* showLineDirectionsUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationDisplay::showLineDirections));
 	sublayout->addWidget(showLineDirectionsUI->checkBox(), 2, 0, 1, 2);
 
 	// Show Burgers vectors.
-	BooleanGroupBoxParameterUI* showBurgersVectorsGroupUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_showBurgersVectors));
+	BooleanGroupBoxParameterUI* showBurgersVectorsGroupUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(DislocationDisplay::showBurgersVectors));
 	showBurgersVectorsGroupUI->groupBox()->setTitle(tr("Burgers vectors"));
 	sublayout = new QGridLayout(showBurgersVectorsGroupUI->childContainer());
 	sublayout->setContentsMargins(4,4,4,4);
@@ -80,17 +80,17 @@ void DislocationDisplayEditor::createUI(const RolloutInsertionParameters& rollou
 	layout->addWidget(showBurgersVectorsGroupUI->groupBox());
 
 	// Arrow scaling.
-	FloatParameterUI* burgersVectorScalingUI = new FloatParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_burgersVectorScaling));
+	FloatParameterUI* burgersVectorScalingUI = new FloatParameterUI(this, PROPERTY_FIELD(DislocationDisplay::burgersVectorScaling));
 	sublayout->addWidget(new QLabel(tr("Scaling factor:")), 0, 0);
 	sublayout->addLayout(burgersVectorScalingUI->createFieldLayout(), 0, 1);
 
 	// Arrow width.
-	FloatParameterUI* burgersVectorWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_burgersVectorWidth));
+	FloatParameterUI* burgersVectorWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(DislocationDisplay::burgersVectorWidth));
 	sublayout->addWidget(new QLabel(tr("Width:")), 1, 0);
 	sublayout->addLayout(burgersVectorWidthUI->createFieldLayout(), 1, 1);
 
 	// Arrow color.
-	ColorParameterUI* burgersVectorColorUI = new ColorParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_burgersVectorColor));
+	ColorParameterUI* burgersVectorColorUI = new ColorParameterUI(this, PROPERTY_FIELD(DislocationDisplay::burgersVectorColor));
 	sublayout->addWidget(new QLabel(tr("Color:")), 2, 0);
 	sublayout->addWidget(burgersVectorColorUI->colorPicker(), 2, 1);
 
@@ -102,7 +102,7 @@ void DislocationDisplayEditor::createUI(const RolloutInsertionParameters& rollou
 	sublayout->setColumnStretch(1, 1);
 	layout->addWidget(coloringGroupBox);
 
-	IntegerRadioButtonParameterUI* coloringModeUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(DislocationDisplay::_lineColoringMode));
+	IntegerRadioButtonParameterUI* coloringModeUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(DislocationDisplay::lineColoringMode));
 	sublayout->addWidget(coloringModeUI->addRadioButton(DislocationDisplay::ColorByDislocationType, tr("Dislocation type")), 0, 0, 1, 2);
 	sublayout->addWidget(coloringModeUI->addRadioButton(DislocationDisplay::ColorByBurgersVector, tr("Burgers vector")), 1, 0, 1, 2);
 	sublayout->addWidget(coloringModeUI->addRadioButton(DislocationDisplay::ColorByCharacter, tr("Local character")), 2, 0);

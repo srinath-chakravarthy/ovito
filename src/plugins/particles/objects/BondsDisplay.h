@@ -51,38 +51,8 @@ public:
 	/// \brief Computes the display bounding box of the data object.
 	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
 
-	/// \brief Returns the display width of bonds.
-	FloatType bondWidth() const { return _bondWidth; }
-
-	/// \brief Sets the display width of bonds.
-	void setBondWidth(FloatType newWidth) { _bondWidth = newWidth; }
-
-	/// \brief Returns the selected shading mode for bonds.
-	ArrowPrimitive::ShadingMode shadingMode() const { return _shadingMode; }
-
-	/// \brief Sets the shading mode for bonds.
-	void setShadingMode(ArrowPrimitive::ShadingMode mode) { _shadingMode = mode; }
-
-	/// \brief Returns the selected rendering quality mode for bonds.
-	ArrowPrimitive::RenderingQuality renderingQuality() const { return _renderingQuality; }
-
-	/// \brief Sets the rendering quality mode for bonds.
-	void setRenderingQuality(ArrowPrimitive::RenderingQuality quality) { _renderingQuality = quality; }
-
-	/// Returns the display color for bonds.
-	const Color& bondColor() const { return _bondColor; }
-
-	/// Sets the display color for bonds.
-	void setBondColor(const Color& color) { _bondColor = color; }
-
 	/// Returns the display color used for selected bonds.
 	Color selectionBondColor() const { return Color(1,0,0); }
-
-	/// Returns whether bonds colors are derived from particle colors.
-	bool useParticleColors() const { return _useParticleColors; }
-
-	/// Controls whether bonds colors are derived from particle colors.
-	void setUseParticleColors(bool enable) { _useParticleColors = enable; }
 
 	/// Determines the display colors of bonds.
 	void bondColors(std::vector<Color>& output, size_t particleCount, BondsObject* bondsObject,
@@ -97,19 +67,19 @@ public:
 protected:
 
 	/// Controls the display width of bonds.
-	PropertyField<FloatType> _bondWidth;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, bondWidth, setBondWidth);
 
 	/// Controls the color of the bonds.
-	PropertyField<Color, QColor> _bondColor;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Color, bondColor, setBondColor);
 
 	/// Controls whether bonds colors are derived from particle colors.
-	PropertyField<bool> _useParticleColors;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, useParticleColors, setUseParticleColors);
 
 	/// Controls the shading mode for bonds.
-	PropertyField<ArrowPrimitive::ShadingMode, int> _shadingMode;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ArrowPrimitive::ShadingMode, shadingMode, setShadingMode);
 
 	/// Controls the rendering quality mode for bonds.
-	PropertyField<ArrowPrimitive::RenderingQuality, int> _renderingQuality;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ArrowPrimitive::RenderingQuality, renderingQuality, setRenderingQuality);
 
 	/// The buffered geometry used to render the bonds.
 	std::shared_ptr<ArrowPrimitive> _buffer;
@@ -148,12 +118,6 @@ private:
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Bonds");
-
-	DECLARE_PROPERTY_FIELD(_bondWidth);
-	DECLARE_PROPERTY_FIELD(_bondColor);
-	DECLARE_PROPERTY_FIELD(_useParticleColors);
-	DECLARE_PROPERTY_FIELD(_shadingMode);
-	DECLARE_PROPERTY_FIELD(_renderingQuality);
 };
 
 /**

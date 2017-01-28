@@ -44,18 +44,6 @@ public:
 	/// \brief Returns the title of this object.
 	virtual QString objectTitle() override { return tr("Camera"); }
 
-	/// Returns whether this camera uses a perspective or an orthogonal projection.
-	bool isPerspective() const { return _isPerspective; }
-
-	/// Sets whether this camera uses a perspective or an orthogonal projection.
-	void setIsPerspective(bool perspective) { _isPerspective = perspective; }
-
-	/// Returns the controller that controls the field-of-view angle of the camera with perspective projection.
-	Controller* fovController() const { return _fov; }
-
-	/// Returns the controller that controls the zoom of the camera with orthogonal projection.
-	Controller* zoomController() const { return _zoom; }
-
 	/// Returns whether this camera is a target camera directory at a target object.
 	bool isTargetCamera() const;
 
@@ -91,20 +79,16 @@ public:
 private:
 
 	/// Determines if this camera uses a perspective projection.
-	PropertyField<bool> _isPerspective;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, isPerspective, setIsPerspective);
 
 	/// This controller stores the field of view of the camera if it uses a perspective projection.
-	ReferenceField<Controller> _fov;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, fovController, setFovController);
 
 	/// This controller stores the field of view of the camera if it uses an orthogonal projection.
-	ReferenceField<Controller> _zoom;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, zoomController, setZoomController);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_isPerspective);
-	DECLARE_REFERENCE_FIELD(_fov);
-	DECLARE_REFERENCE_FIELD(_zoom);
 };
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)

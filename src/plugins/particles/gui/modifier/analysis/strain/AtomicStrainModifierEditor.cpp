@@ -51,20 +51,20 @@ void AtomicStrainModifierEditor::createUI(const RolloutInsertionParameters& roll
 	gridlayout->setColumnStretch(1, 1);
 
 	// Cutoff parameter.
-	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_cutoff));
+	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::cutoff));
 	gridlayout->addWidget(cutoffRadiusPUI->label(), 0, 0);
 	gridlayout->addLayout(cutoffRadiusPUI->createFieldLayout(), 0, 1);
 
 	layout->addLayout(gridlayout);
 
-	BooleanParameterUI* eliminateCellDeformationUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_eliminateCellDeformation));
+	BooleanParameterUI* eliminateCellDeformationUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::eliminateCellDeformation));
 	layout->addWidget(eliminateCellDeformationUI->checkBox());
 
-	BooleanParameterUI* assumeUnwrappedUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_assumeUnwrappedCoordinates));
+	BooleanParameterUI* assumeUnwrappedUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::assumeUnwrappedCoordinates));
 	layout->addWidget(assumeUnwrappedUI->checkBox());
 
 #if 0
-	BooleanParameterUI* showReferenceUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_referenceShown));
+	BooleanParameterUI* showReferenceUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::referenceShown));
 	layout->addWidget(showReferenceUI->checkBox());
 #endif
 
@@ -78,22 +78,22 @@ void AtomicStrainModifierEditor::createUI(const RolloutInsertionParameters& roll
 	calculateVolumetricStrainsBox->setChecked(true);
 	layout->addWidget(calculateVolumetricStrainsBox);
 
-	BooleanParameterUI* calculateDeformationGradientsUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_calculateDeformationGradients));
+	BooleanParameterUI* calculateDeformationGradientsUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::calculateDeformationGradients));
 	layout->addWidget(calculateDeformationGradientsUI->checkBox());
 
-	BooleanParameterUI* calculateStrainTensorsUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_calculateStrainTensors));
+	BooleanParameterUI* calculateStrainTensorsUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::calculateStrainTensors));
 	layout->addWidget(calculateStrainTensorsUI->checkBox());
 
-	BooleanParameterUI* calculateNonaffineSquaredDisplacementsUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_calculateNonaffineSquaredDisplacements));
+	BooleanParameterUI* calculateNonaffineSquaredDisplacementsUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::calculateNonaffineSquaredDisplacements));
 	layout->addWidget(calculateNonaffineSquaredDisplacementsUI->checkBox());
 
-	BooleanParameterUI* calculateRotationsUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_calculateRotations));
+	BooleanParameterUI* calculateRotationsUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::calculateRotations));
 	layout->addWidget(calculateRotationsUI->checkBox());
 
-	BooleanParameterUI* calculateStretchTensorsUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_calculateStretchTensors));
+	BooleanParameterUI* calculateStretchTensorsUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::calculateStretchTensors));
 	layout->addWidget(calculateStretchTensorsUI->checkBox());
 
-	BooleanParameterUI* selectInvalidParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_selectInvalidParticles));
+	BooleanParameterUI* selectInvalidParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::selectInvalidParticles));
 	layout->addWidget(selectInvalidParticlesUI->checkBox());
 
 	QGroupBox* referenceFrameGroupBox = new QGroupBox(tr("Reference frame"));
@@ -106,12 +106,12 @@ void AtomicStrainModifierEditor::createUI(const RolloutInsertionParameters& roll
 	sublayout->setColumnStretch(2, 95);
 
 	// Add box for selection between absolute and relative reference frames.
-	BooleanRadioButtonParameterUI* useFrameOffsetUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_useReferenceFrameOffset));
+	BooleanRadioButtonParameterUI* useFrameOffsetUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::useReferenceFrameOffset));
 	useFrameOffsetUI->buttonTrue()->setText(tr("Relative to current frame"));
 	useFrameOffsetUI->buttonFalse()->setText(tr("Fixed reference configuration"));
 	sublayout->addWidget(useFrameOffsetUI->buttonFalse(), 0, 0, 1, 3);
 
-	IntegerParameterUI* frameNumberUI = new IntegerParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_referenceFrameNumber));
+	IntegerParameterUI* frameNumberUI = new IntegerParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::referenceFrameNumber));
 	frameNumberUI->label()->setText(tr("Frame number:"));
 	sublayout->addWidget(frameNumberUI->label(), 1, 1, 1, 1);
 	sublayout->addLayout(frameNumberUI->createFieldLayout(), 1, 2, 1, 1);
@@ -119,7 +119,7 @@ void AtomicStrainModifierEditor::createUI(const RolloutInsertionParameters& roll
 	connect(useFrameOffsetUI->buttonFalse(), &QRadioButton::toggled, frameNumberUI, &IntegerParameterUI::setEnabled);
 
 	sublayout->addWidget(useFrameOffsetUI->buttonTrue(), 2, 0, 1, 3);
-	IntegerParameterUI* frameOffsetUI = new IntegerParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_referenceFrameOffset));
+	IntegerParameterUI* frameOffsetUI = new IntegerParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::referenceFrameOffset));
 	frameOffsetUI->label()->setText(tr("Frame offset:"));
 	sublayout->addWidget(frameOffsetUI->label(), 3, 1, 1, 1);
 	sublayout->addLayout(frameOffsetUI->createFieldLayout(), 3, 2, 1, 1);
@@ -131,7 +131,7 @@ void AtomicStrainModifierEditor::createUI(const RolloutInsertionParameters& roll
 	layout->addWidget(statusLabel());
 
 	// Open a sub-editor for the reference object.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::_referenceObject), RolloutInsertionParameters().setTitle(tr("Reference")));
+	new SubObjectParameterUI(this, PROPERTY_FIELD(AtomicStrainModifier::referenceConfiguration), RolloutInsertionParameters().setTitle(tr("Reference")));
 }
 
 OVITO_END_INLINE_NAMESPACE

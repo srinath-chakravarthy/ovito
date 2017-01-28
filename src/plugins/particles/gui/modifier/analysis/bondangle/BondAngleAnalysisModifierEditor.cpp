@@ -44,7 +44,7 @@ void BondAngleAnalysisModifierEditor::createUI(const RolloutInsertionParameters&
 	layout1->setSpacing(4);
 
 	// Use only selected particles.
-	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::_onlySelectedParticles));
+	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::onlySelectedParticles));
 	layout1->addWidget(onlySelectedParticlesUI->checkBox());
 
 	// Status label.

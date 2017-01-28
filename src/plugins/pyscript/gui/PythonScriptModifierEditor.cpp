@@ -50,7 +50,7 @@ void PythonScriptModifierEditor::createUI(const RolloutInsertionParameters& roll
 	sublayout->setContentsMargins(0,0,0,0);
 	sublayout->setSpacing(10);
 
-	StringParameterUI* namePUI = new StringParameterUI(this, PROPERTY_FIELD(Modifier::_title));
+	StringParameterUI* namePUI = new StringParameterUI(this, PROPERTY_FIELD(Modifier::title));
 	layout->addWidget(new QLabel(tr("User-defined modifier name:")), row++, 0);
 	static_cast<QLineEdit*>(namePUI->textBox())->setPlaceholderText(PythonScriptModifier::OOType.displayName());
 	sublayout->addWidget(namePUI->textBox(), 1);

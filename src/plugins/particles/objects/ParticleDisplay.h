@@ -68,29 +68,11 @@ public:
 	/// \brief Returns the display color used for selected particles.
 	Color selectionParticleColor() const { return Color(1,0,0); }
 
-	/// \brief Returns the default display radius of particles.
-	FloatType defaultParticleRadius() const { return _defaultParticleRadius; }
-
-	/// \brief Sets the default display radius of particles.
-	void setDefaultParticleRadius(FloatType newRadius) { _defaultParticleRadius = newRadius; }
-
-	/// \brief Returns the selected rendering quality mode for particles.
-	ParticlePrimitive::RenderingQuality renderingQuality() const { return _renderingQuality; }
-
-	/// \brief Returns the actual rendering quality used to render the given particles.
-	ParticlePrimitive::RenderingQuality effectiveRenderingQuality(SceneRenderer* renderer, ParticlePropertyObject* positionProperty) const;
-
-	/// \brief Sets the rendering quality mode for particles.
-	void setRenderingQuality(ParticlePrimitive::RenderingQuality quality) { _renderingQuality = quality; }
-
-	/// \brief Returns the display shape of particles.
-	ParticleShape particleShape() const { return _particleShape; }
-
 	/// \brief Returns the actual particle shape used to render the particles.
 	ParticlePrimitive::ParticleShape effectiveParticleShape(ParticlePropertyObject* shapeProperty, ParticlePropertyObject* orientationProperty) const;
 
-	/// \brief Sets the display shape of particles.
-	void setParticleShape(ParticleShape shape) { _particleShape = shape; }
+	/// \brief Returns the actual rendering quality used to render the particles.
+	ParticlePrimitive::RenderingQuality effectiveRenderingQuality(SceneRenderer* renderer, ParticlePropertyObject* positionProperty) const;
 
 	/// \brief Determines the display particle colors.
 	void particleColors(std::vector<Color>& output, ParticlePropertyObject* colorProperty, ParticleTypeProperty* typeProperty, ParticlePropertyObject* selectionProperty = nullptr);
@@ -117,26 +99,17 @@ public:
 
     Q_PROPERTY(Ovito::ParticlePrimitive::RenderingQuality renderingQuality READ renderingQuality WRITE setRenderingQuality);
     Q_PROPERTY(Ovito::Particles::ParticleDisplay::ParticleShape particleShape READ particleShape WRITE setParticleShape);
-
-protected:
-
-    /// Loads the data of this class from an input stream.
-	virtual void loadFromStream(ObjectLoadStream& stream) override;
-
+	
 private:
 
 	/// Controls the default display radius of atomic particles.
-	PropertyField<FloatType> _defaultParticleRadius;
-
-	/// Controls the shading mode for particles.
-	/// DEPRECATED: This field is for backward-compatibility with OVITO 2.5.0
-	PropertyField<ParticlePrimitive::ShadingMode, int> _shadingMode;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, defaultParticleRadius, setDefaultParticleRadius);
 
 	/// Controls the rendering quality mode for particles.
-	PropertyField<ParticlePrimitive::RenderingQuality, int> _renderingQuality;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ParticlePrimitive::RenderingQuality, renderingQuality, setRenderingQuality);
 
 	/// Controls the display shape of particles.
-	PropertyField<ParticleShape, int> _particleShape;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ParticleShape, particleShape, setParticleShape);
 
 	/// The buffered particle geometry used to render the particles.
 	std::shared_ptr<ParticlePrimitive> _particleBuffer;
@@ -209,11 +182,6 @@ private:
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Particles");
-
-	DECLARE_PROPERTY_FIELD(_defaultParticleRadius);
-	DECLARE_PROPERTY_FIELD(_shadingMode);
-	DECLARE_PROPERTY_FIELD(_renderingQuality);
-	DECLARE_PROPERTY_FIELD(_particleShape);
 };
 
 /**

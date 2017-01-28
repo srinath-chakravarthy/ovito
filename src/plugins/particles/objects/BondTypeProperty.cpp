@@ -25,8 +25,8 @@
 namespace Ovito { namespace Particles {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(BondTypeProperty, BondPropertyObject);
-DEFINE_VECTOR_REFERENCE_FIELD(BondTypeProperty, _bondTypes, "BondTypes", BondType);
-SET_PROPERTY_FIELD_LABEL(BondTypeProperty, _bondTypes, "Bond Types");
+DEFINE_VECTOR_REFERENCE_FIELD(BondTypeProperty, bondTypes, "BondTypes", BondType);
+SET_PROPERTY_FIELD_LABEL(BondTypeProperty, bondTypes, "Bond Types");
 
 /******************************************************************************
 * Constructor.
@@ -34,7 +34,7 @@ SET_PROPERTY_FIELD_LABEL(BondTypeProperty, _bondTypes, "Bond Types");
 BondTypeProperty::BondTypeProperty(DataSet* dataset, BondProperty* storage)
 	: BondPropertyObject(dataset, storage)
 {
-	INIT_PROPERTY_FIELD(BondTypeProperty::_bondTypes);
+	INIT_PROPERTY_FIELD(bondTypes);
 }
 
 /******************************************************************************

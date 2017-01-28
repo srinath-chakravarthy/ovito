@@ -31,7 +31,7 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SceneRoot, SceneNode);
 ******************************************************************************/
 SceneRoot::SceneRoot(DataSet* dataset) : SceneNode(dataset)
 {
-	setName("Scene");
+	setNodeName("Scene");
 
 	// The root node does not need a transformation controller.
 	setTransformationController(nullptr);
@@ -44,7 +44,7 @@ SceneNode* SceneRoot::getNodeByName(const QString& nodeName) const
 {
 	SceneNode* result = nullptr;
 	visitChildren([nodeName, &result](SceneNode* node) -> bool {
-		if(node->name() == nodeName) {
+		if(node->nodeName() == nodeName) {
 			result = node;
 			return false;
 		}

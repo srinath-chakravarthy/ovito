@@ -86,12 +86,10 @@ protected Q_SLOTS:
 private:
 
 	/// The modifier whose results are being displayed.
-	ReferenceField<DislocationAnalysisModifier> _modifier;
+	DECLARE_REFERENCE_FIELD(DislocationAnalysisModifier, modifier);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_modifier);
 };
 
 /**

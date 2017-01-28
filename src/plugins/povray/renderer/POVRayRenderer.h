@@ -88,66 +88,6 @@ public:
 		_outputStream.setDevice(device);
 	}
 
-	/// Returns the path to the external POV-Ray executable.
-	const QString& povrayExecutable() const { return _povrayExecutable; }
-
-	///Sets  the path to the external POV-Ray executable.
-	void setPovrayExecutable(const QString& path) { _povrayExecutable = path; }
-
-	/// Returns the POV-Ray quality level to use for rendering (0 <= level <= 11).
-	int qualityLevel() const { return _qualityLevel; }
-
-	/// Sets the POV-Ray quality level to use for rendering (0 <= level <= 11).
-	void setQualityLevel(int level) { _qualityLevel = level; }
-
-	/// Returns whether anti-aliasing is turned on.
-	bool antialiasingEnabled() const { return _enableAntialiasing; }
-
-	/// Turns anti-aliasing on/off
-	void setAntialiasingEnabled(bool enable) { _enableAntialiasing = enable; }
-
-	/// Returns whether the POV-Ray rendering window is shown.
-	bool povrayDisplayEnabled() const { return _povrayDisplayEnabled; }
-
-	/// Turns the POV-Ray rendering window on or off.
-	void setPovrayDisplayEnabled(bool enable) { _povrayDisplayEnabled = enable; }
-
-	/// Returns whether radiosity is turned on.
-	bool radiosityEnabled() const { return _enableRadiosity; }
-
-	/// Turns radiosity on or off.
-	void setRadiosityEnabled(bool enable) { _enableRadiosity = enable; }
-
-	/// Returns the number of rays that are sent out whenever a new radiosity value has to be calculated.
-	int radiosityRayCount() const { return _radiosityRayCount; }
-
-	/// Sets the number of rays that are sent out whenever a new radiosity value has to be calculated.
-	void setRadiosityRayCount(int count) { _radiosityRayCount = count; }
-	
-	/// Returns whether depth-of-field rendering is enabled.
-	bool depthOfFieldEnabled() const { return _depthOfFieldEnabled; }
-
-	/// Enables/disables depth-of-field rendering.
-	void setDepthOfFieldEnabled(bool enabled) { _depthOfFieldEnabled = enabled; }
-
-	/// Returns the camera's focal length, which is used for depth-of-field rendering.
-	FloatType dofFocalLength() const { return _dofFocalLength; }
-
-	/// Sets the camera's focal length, which is used for depth-of-field rendering.
-	void setDofFocalLength(FloatType length) { _dofFocalLength = length; }
-
-	/// Returns the camera's aperture, which is used for depth-of-field rendering.
-	FloatType dofAperture() const { return _dofAperture; }
-
-	/// Sets the camera's aperture, which is used for depth-of-field rendering.
-	void setDofAperture(FloatType aperture) { _dofAperture = aperture; }
-
-	/// Returns the number of sampling rays used for focal blur.
-	int dofSampleCount() const { return _dofSampleCount; }
-
-	/// Sets the number of sampling rays used for focal blur.
-	void setDofSampleCount(int count) { _dofSampleCount = count; }
-
 private:
 
     /// Writes a 3d vector to the output stream in POV-Ray format.
@@ -199,74 +139,57 @@ private:
 
 	/// The POV-Ray quality level to use for rendering (0 <= level <= 11).
 	/// See POV-Ray documentation for details.
-	PropertyField<int> _qualityLevel;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, qualityLevel, setQualityLevel);
 
 	/// Turns anti-aliasing on/off
-	PropertyField<bool> _enableAntialiasing;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, antialiasingEnabled, setAntialiasingEnabled);
 
 	/// Controls the AA sampling method (only 1 or 2 are valid).
-	PropertyField<int> _samplingMethod;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, samplingMethod, setSamplingMethod);
 
 	/// Controls the anti-aliasing threshold.
-	PropertyField<FloatType> _AAThreshold;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, AAThreshold, setAAThreshold);
 
 	/// Controls the number of AA samples.
-	PropertyField<int> _antialiasDepth;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, antialiasDepth, setAntialiasDepth);
 
 	/// Turns on AA-jitter.
-	PropertyField<bool> _enableJitter;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, jitterEnabled, setJitterEnabled);
 
 	/// Shows or supresses the POV-Ray rendering window.
-	PropertyField<bool> _povrayDisplayEnabled;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, povrayDisplayEnabled, setPovrayDisplayEnabled);
 
 	/// Turns on radiosity.
-	PropertyField<bool> _enableRadiosity;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, radiosityEnabled, setRadiosityEnabled);
 
 	/// Controls the number of rays that are sent out whenever a new radiosity value has to be calculated.
-	PropertyField<int> _radiosityRayCount;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, radiosityRayCount, setRadiosityRayCount);
 
 	/// Determines how many recursion levels are used to calculate the diffuse inter-reflection.
-	PropertyField<int> _radiosityRecursionLimit;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, radiosityRecursionLimit, setRadiosityRecursionLimit);
 
 	/// Controls the fraction of error tolerated for the radiosity calculation.
-	PropertyField<FloatType> _radiosityErrorBound;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, radiosityErrorBound, setRadiosityErrorBound);
 
 	/// Enables depth-of-field rendering.
-	PropertyField<bool> _depthOfFieldEnabled;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, depthOfFieldEnabled, setDepthOfFieldEnabled);
 
 	/// Controls the camera's focal length, which is used for depth-of-field rendering.
-	PropertyField<FloatType> _dofFocalLength;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, dofFocalLength, setDofFocalLength);
 
 	/// Controls the camera's aperture, which is used for depth-of-field rendering.
-	PropertyField<FloatType> _dofAperture;	
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, dofAperture, setDofAperture);	
 
 	/// Controls the number of sampling rays used for focal blur.
-	PropertyField<int> _dofSampleCount;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, dofSampleCount, setDofSampleCount);
 
 	/// Path to the external POV-Ray executable.
-	PropertyField<QString> _povrayExecutable;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QString, povrayExecutable, setPovrayExecutable);
 
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "POV-Ray renderer");
-
-	DECLARE_PROPERTY_FIELD(_qualityLevel);
-	DECLARE_PROPERTY_FIELD(_enableAntialiasing);
-	DECLARE_PROPERTY_FIELD(_samplingMethod);
-	DECLARE_PROPERTY_FIELD(_AAThreshold);
-	DECLARE_PROPERTY_FIELD(_antialiasDepth);
-	DECLARE_PROPERTY_FIELD(_enableJitter);
-	DECLARE_PROPERTY_FIELD(_povrayDisplayEnabled);
-	DECLARE_PROPERTY_FIELD(_enableRadiosity);
-	DECLARE_PROPERTY_FIELD(_radiosityRayCount);
-	DECLARE_PROPERTY_FIELD(_radiosityRecursionLimit);
-	DECLARE_PROPERTY_FIELD(_radiosityErrorBound);
-	DECLARE_PROPERTY_FIELD(_depthOfFieldEnabled);
-	DECLARE_PROPERTY_FIELD(_dofFocalLength);
-	DECLARE_PROPERTY_FIELD(_dofAperture);
-	DECLARE_PROPERTY_FIELD(_dofSampleCount);
-	DECLARE_PROPERTY_FIELD(_povrayExecutable);
 
 	friend class POVRayExporter;
 };

@@ -26,7 +26,7 @@
 namespace Ovito { namespace Particles {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SurfaceMesh, DataObject);
-DEFINE_PROPERTY_FIELD(SurfaceMesh, _isCompletelySolid, "IsCompletelySolid");
+DEFINE_PROPERTY_FIELD(SurfaceMesh, isCompletelySolid, "IsCompletelySolid");
 
 /******************************************************************************
 * Constructs an empty surface mesh object.
@@ -34,7 +34,7 @@ DEFINE_PROPERTY_FIELD(SurfaceMesh, _isCompletelySolid, "IsCompletelySolid");
 SurfaceMesh::SurfaceMesh(DataSet* dataset, HalfEdgeMesh<>* mesh) : DataObjectWithSharedStorage(dataset, mesh ? mesh : new HalfEdgeMesh<>()),
 		_isCompletelySolid(false)
 {
-	INIT_PROPERTY_FIELD(SurfaceMesh::_isCompletelySolid);
+	INIT_PROPERTY_FIELD(isCompletelySolid);
 }
 
 /******************************************************************************

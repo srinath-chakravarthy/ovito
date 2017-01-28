@@ -27,7 +27,7 @@
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ParticleSelectionSet, RefTarget);
-DEFINE_PROPERTY_FIELD(ParticleSelectionSet, _useIdentifiers, "UseIdentifiers");
+DEFINE_PROPERTY_FIELD(ParticleSelectionSet, useIdentifiers, "UseIdentifiers");
 
 /* Undo record that can restore an old particle selection state. */
 class ReplaceSelectionOperation : public UndoableOperation

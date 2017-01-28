@@ -62,7 +62,7 @@ public:
 
 	/// \brief Constructs a new instance of this class.
 	Q_INVOKABLE LAMMPSDataImporter(DataSet* dataset) : ParticleImporter(dataset), _atomStyle(AtomStyle_Unknown) {
-		INIT_PROPERTY_FIELD(LAMMPSDataImporter::_atomStyle);
+		INIT_PROPERTY_FIELD(atomStyle);
 	}
 
 	/// \brief Returns the file filter that specifies the files that can be imported by this service.
@@ -78,12 +78,6 @@ public:
 
 	/// Returns the title of this object.
 	virtual QString objectTitle() override { return tr("LAMMPS Data"); }
-
-	/// Returns the LAMMPS atom style used in the data file.
-	LAMMPSAtomStyle atomStyle() const { return _atomStyle; }
-
-	/// Specifies the LAMMPS atom style used in the data file.
-	void setAtomStyle(LAMMPSAtomStyle atomStyle) { _atomStyle = atomStyle; }
 
 	/// Creates an asynchronous loader object that loads the data for the given frame from the external file.
 	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame, bool isNewlySelectedFile) override {
@@ -123,12 +117,10 @@ private:
 	};
 
 	/// The LAMMPS atom style used by the data format.
-	PropertyField<LAMMPSAtomStyle, int> _atomStyle;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(LAMMPSAtomStyle, atomStyle, setAtomStyle);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_atomStyle);
 };
 
 OVITO_END_INLINE_NAMESPACE

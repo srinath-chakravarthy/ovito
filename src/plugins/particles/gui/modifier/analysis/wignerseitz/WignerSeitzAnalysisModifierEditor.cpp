@@ -45,10 +45,10 @@ void WignerSeitzAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	layout->setContentsMargins(4,4,4,4);
 	layout->setSpacing(4);
 
-	BooleanParameterUI* eliminateCellDeformationUI = new BooleanParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::_eliminateCellDeformation));
+	BooleanParameterUI* eliminateCellDeformationUI = new BooleanParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::eliminateCellDeformation));
 	layout->addWidget(eliminateCellDeformationUI->checkBox());
 
-	BooleanParameterUI* perTypeOccupancyUI = new BooleanParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::_perTypeOccupancy));
+	BooleanParameterUI* perTypeOccupancyUI = new BooleanParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::perTypeOccupancy));
 	layout->addWidget(perTypeOccupancyUI->checkBox());
 
 	QGroupBox* referenceFrameGroupBox = new QGroupBox(tr("Reference frame"));
@@ -61,12 +61,12 @@ void WignerSeitzAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	sublayout->setColumnStretch(2, 95);
 
 	// Add box for selection between absolute and relative reference frames.
-	BooleanRadioButtonParameterUI* useFrameOffsetUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::_useReferenceFrameOffset));
+	BooleanRadioButtonParameterUI* useFrameOffsetUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::useReferenceFrameOffset));
 	useFrameOffsetUI->buttonTrue()->setText(tr("Relative to current frame"));
 	useFrameOffsetUI->buttonFalse()->setText(tr("Fixed reference configuration"));
 	sublayout->addWidget(useFrameOffsetUI->buttonFalse(), 0, 0, 1, 3);
 
-	IntegerParameterUI* frameNumberUI = new IntegerParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::_referenceFrameNumber));
+	IntegerParameterUI* frameNumberUI = new IntegerParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::referenceFrameNumber));
 	frameNumberUI->label()->setText(tr("Frame number:"));
 	sublayout->addWidget(frameNumberUI->label(), 1, 1, 1, 1);
 	sublayout->addLayout(frameNumberUI->createFieldLayout(), 1, 2, 1, 1);
@@ -74,7 +74,7 @@ void WignerSeitzAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	connect(useFrameOffsetUI->buttonFalse(), &QRadioButton::toggled, frameNumberUI, &IntegerParameterUI::setEnabled);
 
 	sublayout->addWidget(useFrameOffsetUI->buttonTrue(), 2, 0, 1, 3);
-	IntegerParameterUI* frameOffsetUI = new IntegerParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::_referenceFrameOffset));
+	IntegerParameterUI* frameOffsetUI = new IntegerParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::referenceFrameOffset));
 	frameOffsetUI->label()->setText(tr("Frame offset:"));
 	sublayout->addWidget(frameOffsetUI->label(), 3, 1, 1, 1);
 	sublayout->addLayout(frameOffsetUI->createFieldLayout(), 3, 2, 1, 1);
@@ -86,7 +86,7 @@ void WignerSeitzAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	layout->addWidget(statusLabel());
 
 	// Open a sub-editor for the reference object.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::_referenceObject), RolloutInsertionParameters().setTitle(tr("Reference")));
+	new SubObjectParameterUI(this, PROPERTY_FIELD(WignerSeitzAnalysisModifier::referenceConfiguration), RolloutInsertionParameters().setTitle(tr("Reference")));
 }
 
 OVITO_END_INLINE_NAMESPACE

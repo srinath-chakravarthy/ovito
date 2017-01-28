@@ -106,7 +106,7 @@ void TachyonRendererEditor::createUI(const RolloutInsertionParameters& rolloutPa
 	mainLayout->setContentsMargins(4,4,4,4);
 
 	// Antialiasing
-	BooleanGroupBoxParameterUI* enableAntialiasingUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(TachyonRenderer::_antialiasingEnabled));
+	BooleanGroupBoxParameterUI* enableAntialiasingUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(TachyonRenderer::antialiasingEnabled));
 	QGroupBox* aaGroupBox = enableAntialiasingUI->groupBox();
 	mainLayout->addWidget(aaGroupBox);
 
@@ -115,11 +115,11 @@ void TachyonRendererEditor::createUI(const RolloutInsertionParameters& rolloutPa
 	layout->setSpacing(4);
 	layout->setColumnStretch(1, 1);
 
-	IntegerParameterUI* aaSamplesUI = new IntegerParameterUI(this, PROPERTY_FIELD(TachyonRenderer::_antialiasingSamples));
+	IntegerParameterUI* aaSamplesUI = new IntegerParameterUI(this, PROPERTY_FIELD(TachyonRenderer::antialiasingSamples));
 	layout->addWidget(aaSamplesUI->label(), 0, 0);
 	layout->addLayout(aaSamplesUI->createFieldLayout(), 0, 1);
 
-	BooleanGroupBoxParameterUI* enableDirectLightUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(TachyonRenderer::_directLightSourceEnabled));
+	BooleanGroupBoxParameterUI* enableDirectLightUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(TachyonRenderer::directLightSourceEnabled));
 	QGroupBox* lightsGroupBox = enableDirectLightUI->groupBox();
 	mainLayout->addWidget(lightsGroupBox);
 
@@ -129,17 +129,17 @@ void TachyonRendererEditor::createUI(const RolloutInsertionParameters& rolloutPa
 	layout->setColumnStretch(1, 1);
 
 	// Default light brightness.
-	FloatParameterUI* defaultLightIntensityUI = new FloatParameterUI(this, PROPERTY_FIELD(TachyonRenderer::_defaultLightSourceIntensity));
+	FloatParameterUI* defaultLightIntensityUI = new FloatParameterUI(this, PROPERTY_FIELD(TachyonRenderer::defaultLightSourceIntensity));
 	defaultLightIntensityUI->label()->setText(tr("Brightness:"));
 	layout->addWidget(defaultLightIntensityUI->label(), 0, 0);
 	layout->addLayout(defaultLightIntensityUI->createFieldLayout(), 0, 1);
 
 	// Shadows.
-	BooleanParameterUI* enableShadowsUI = new BooleanParameterUI(this, PROPERTY_FIELD(TachyonRenderer::_shadowsEnabled));
+	BooleanParameterUI* enableShadowsUI = new BooleanParameterUI(this, PROPERTY_FIELD(TachyonRenderer::shadowsEnabled));
 	layout->addWidget(enableShadowsUI->checkBox(), 1, 0, 1, 2);
 
 	// Ambient occlusion.
-	BooleanGroupBoxParameterUI* enableAmbientOcclusionUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(TachyonRenderer::_ambientOcclusionEnabled));
+	BooleanGroupBoxParameterUI* enableAmbientOcclusionUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(TachyonRenderer::ambientOcclusionEnabled));
 	QGroupBox* aoGroupBox = enableAmbientOcclusionUI->groupBox();
 	mainLayout->addWidget(aoGroupBox);
 
@@ -149,19 +149,19 @@ void TachyonRendererEditor::createUI(const RolloutInsertionParameters& rolloutPa
 	layout->setColumnStretch(1, 1);
 
 	// Ambient occlusion brightness.
-	FloatParameterUI* aoBrightnessUI = new FloatParameterUI(this, PROPERTY_FIELD(TachyonRenderer::_ambientOcclusionBrightness));
+	FloatParameterUI* aoBrightnessUI = new FloatParameterUI(this, PROPERTY_FIELD(TachyonRenderer::ambientOcclusionBrightness));
 	aoBrightnessUI->label()->setText(tr("Brightness:"));
 	layout->addWidget(aoBrightnessUI->label(), 0, 0);
 	layout->addLayout(aoBrightnessUI->createFieldLayout(), 0, 1);
 
 	// Ambient occlusion samples.
-	IntegerParameterUI* aoSamplesUI = new IntegerParameterUI(this, PROPERTY_FIELD(TachyonRenderer::_ambientOcclusionSamples));
+	IntegerParameterUI* aoSamplesUI = new IntegerParameterUI(this, PROPERTY_FIELD(TachyonRenderer::ambientOcclusionSamples));
 	aoSamplesUI->label()->setText(tr("Sample count:"));
 	layout->addWidget(aoSamplesUI->label(), 1, 0);
 	layout->addLayout(aoSamplesUI->createFieldLayout(), 1, 1);
 
 	// Depth of field
-	BooleanGroupBoxParameterUI* enableDepthOfFieldUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(TachyonRenderer::_depthOfFieldEnabled));
+	BooleanGroupBoxParameterUI* enableDepthOfFieldUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(TachyonRenderer::depthOfFieldEnabled));
 	QGroupBox* dofGroupBox = enableDepthOfFieldUI->groupBox();
 	mainLayout->addWidget(dofGroupBox);
 
@@ -171,7 +171,7 @@ void TachyonRendererEditor::createUI(const RolloutInsertionParameters& rolloutPa
 	layout->setColumnStretch(1, 1);
 
 	// Focal length
-	FloatParameterUI* focalLengthUI = new FloatParameterUI(this, PROPERTY_FIELD(TachyonRenderer::_dofFocalLength));
+	FloatParameterUI* focalLengthUI = new FloatParameterUI(this, PROPERTY_FIELD(TachyonRenderer::dofFocalLength));
 	layout->addWidget(focalLengthUI->label(), 0, 0);
 	layout->addLayout(focalLengthUI->createFieldLayout(), 0, 1);
 
@@ -181,7 +181,7 @@ void TachyonRendererEditor::createUI(const RolloutInsertionParameters& rolloutPa
 	layout->addWidget(modeAction->createPushButton(), 0, 2);
 
 	// Aperture
-	FloatParameterUI* apertureUI = new FloatParameterUI(this, PROPERTY_FIELD(TachyonRenderer::_dofAperture));
+	FloatParameterUI* apertureUI = new FloatParameterUI(this, PROPERTY_FIELD(TachyonRenderer::dofAperture));
 	layout->addWidget(apertureUI->label(), 1, 0);
 	layout->addLayout(apertureUI->createFieldLayout(), 1, 1, 1, 2);
 

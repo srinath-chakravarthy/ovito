@@ -48,12 +48,12 @@ void StructuralClusteringModifierEditor::createUI(const RolloutInsertionParamete
 	gridlayout->setColumnStretch(1, 1);
 
 	// Voronoi face threshold parameter.
-	FloatParameterUI* faceThresholdPUI = new FloatParameterUI(this, PROPERTY_FIELD(StructuralClusteringModifier::_faceThreshold));
+	FloatParameterUI* faceThresholdPUI = new FloatParameterUI(this, PROPERTY_FIELD(StructuralClusteringModifier::faceThreshold));
 	gridlayout->addWidget(faceThresholdPUI->label(), 0, 0);
 	gridlayout->addLayout(faceThresholdPUI->createFieldLayout(), 0, 1);
 
 	// RMSD threshold parameter.
-	FloatParameterUI* rmsdThresholdPUI = new FloatParameterUI(this, PROPERTY_FIELD(StructuralClusteringModifier::_rmsdThreshold));
+	FloatParameterUI* rmsdThresholdPUI = new FloatParameterUI(this, PROPERTY_FIELD(StructuralClusteringModifier::rmsdThreshold));
 	gridlayout->addWidget(rmsdThresholdPUI->label(), 1, 0);
 	gridlayout->addLayout(rmsdThresholdPUI->createFieldLayout(), 1, 1);
 

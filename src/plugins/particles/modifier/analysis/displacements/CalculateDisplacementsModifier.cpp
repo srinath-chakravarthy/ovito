@@ -29,23 +29,23 @@
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CalculateDisplacementsModifier, ParticleModifier);
-DEFINE_FLAGS_REFERENCE_FIELD(CalculateDisplacementsModifier, _referenceObject, "Reference Configuration", DataObject, PROPERTY_FIELD_NO_SUB_ANIM);
-DEFINE_PROPERTY_FIELD(CalculateDisplacementsModifier, _referenceShown, "ShowReferenceConfiguration");
-DEFINE_FLAGS_PROPERTY_FIELD(CalculateDisplacementsModifier, _eliminateCellDeformation, "EliminateCellDeformation", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(CalculateDisplacementsModifier, _assumeUnwrappedCoordinates, "AssumeUnwrappedCoordinates");
-DEFINE_PROPERTY_FIELD(CalculateDisplacementsModifier, _useReferenceFrameOffset, "UseReferenceFrameOffet");
-DEFINE_PROPERTY_FIELD(CalculateDisplacementsModifier, _referenceFrameNumber, "ReferenceFrameNumber");
-DEFINE_FLAGS_PROPERTY_FIELD(CalculateDisplacementsModifier, _referenceFrameOffset, "ReferenceFrameOffset", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_REFERENCE_FIELD(CalculateDisplacementsModifier, _vectorDisplay, "VectorDisplay", VectorDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, _referenceObject, "Reference Configuration");
-SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, _referenceShown, "Show reference configuration");
-SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, _eliminateCellDeformation, "Eliminate homogeneous cell deformation");
-SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, _assumeUnwrappedCoordinates, "Assume unwrapped coordinates");
-SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, _useReferenceFrameOffset, "Use reference frame offset");
-SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, _referenceFrameNumber, "Reference frame number");
-SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, _referenceFrameOffset, "Reference frame offset");
-SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, _vectorDisplay, "Vector display");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CalculateDisplacementsModifier, _referenceFrameNumber, IntegerParameterUnit, 0);
+DEFINE_FLAGS_REFERENCE_FIELD(CalculateDisplacementsModifier, referenceConfiguration, "Reference Configuration", DataObject, PROPERTY_FIELD_NO_SUB_ANIM);
+DEFINE_PROPERTY_FIELD(CalculateDisplacementsModifier, referenceShown, "ShowReferenceConfiguration");
+DEFINE_FLAGS_PROPERTY_FIELD(CalculateDisplacementsModifier, eliminateCellDeformation, "EliminateCellDeformation", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(CalculateDisplacementsModifier, assumeUnwrappedCoordinates, "AssumeUnwrappedCoordinates");
+DEFINE_PROPERTY_FIELD(CalculateDisplacementsModifier, useReferenceFrameOffset, "UseReferenceFrameOffet");
+DEFINE_PROPERTY_FIELD(CalculateDisplacementsModifier, referenceFrameNumber, "ReferenceFrameNumber");
+DEFINE_FLAGS_PROPERTY_FIELD(CalculateDisplacementsModifier, referenceFrameOffset, "ReferenceFrameOffset", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(CalculateDisplacementsModifier, vectorDisplay, "VectorDisplay", VectorDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, referenceConfiguration, "Reference Configuration");
+SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, referenceShown, "Show reference configuration");
+SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, eliminateCellDeformation, "Eliminate homogeneous cell deformation");
+SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, assumeUnwrappedCoordinates, "Assume unwrapped coordinates");
+SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, useReferenceFrameOffset, "Use reference frame offset");
+SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, referenceFrameNumber, "Reference frame number");
+SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, referenceFrameOffset, "Reference frame offset");
+SET_PROPERTY_FIELD_LABEL(CalculateDisplacementsModifier, vectorDisplay, "Vector display");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CalculateDisplacementsModifier, referenceFrameNumber, IntegerParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -55,14 +55,14 @@ CalculateDisplacementsModifier::CalculateDisplacementsModifier(DataSet* dataset)
     _useReferenceFrameOffset(false), _referenceFrameNumber(0), _referenceFrameOffset(-1),
     _assumeUnwrappedCoordinates(false)
 {
-	INIT_PROPERTY_FIELD(CalculateDisplacementsModifier::_referenceObject);
-	INIT_PROPERTY_FIELD(CalculateDisplacementsModifier::_referenceShown);
-	INIT_PROPERTY_FIELD(CalculateDisplacementsModifier::_eliminateCellDeformation);
-	INIT_PROPERTY_FIELD(CalculateDisplacementsModifier::_assumeUnwrappedCoordinates);
-	INIT_PROPERTY_FIELD(CalculateDisplacementsModifier::_useReferenceFrameOffset);
-	INIT_PROPERTY_FIELD(CalculateDisplacementsModifier::_referenceFrameNumber);
-	INIT_PROPERTY_FIELD(CalculateDisplacementsModifier::_referenceFrameOffset);
-	INIT_PROPERTY_FIELD(CalculateDisplacementsModifier::_vectorDisplay);
+	INIT_PROPERTY_FIELD(referenceConfiguration);
+	INIT_PROPERTY_FIELD(referenceShown);
+	INIT_PROPERTY_FIELD(eliminateCellDeformation);
+	INIT_PROPERTY_FIELD(assumeUnwrappedCoordinates);
+	INIT_PROPERTY_FIELD(useReferenceFrameOffset);
+	INIT_PROPERTY_FIELD(referenceFrameNumber);
+	INIT_PROPERTY_FIELD(referenceFrameOffset);
+	INIT_PROPERTY_FIELD(vectorDisplay);
 
 	// Create the file source object, which will be responsible for loading
 	// and storing the reference configuration.
@@ -75,17 +75,17 @@ CalculateDisplacementsModifier::CalculateDisplacementsModifier(DataSet* dataset)
 	setReferenceConfiguration(linkedFileObj);
 
 	// Create display object for vectors.
-	_vectorDisplay = new VectorDisplay(dataset);
-	_vectorDisplay->setObjectTitle(tr("Displacements"));
+	setVectorDisplay(new VectorDisplay(dataset));
+	vectorDisplay()->setObjectTitle(tr("Displacements"));
 
 	// Don't show vectors by default, because too many vectors can make the
 	// program freeze. User has to enable the display manually.
-	_vectorDisplay->setEnabled(false);
+	vectorDisplay()->setEnabled(false);
 
 	// Configure vector display such that arrows point from the reference particle positions
 	// to the current particle positions.
-	_vectorDisplay->setReverseArrowDirection(false);
-	_vectorDisplay->setArrowPosition(VectorDisplay::Head);
+	vectorDisplay()->setReverseArrowDirection(false);
+	vectorDisplay()->setArrowPosition(VectorDisplay::Head);
 }
 /******************************************************************************
 * Handles reference events sent by reference targets of this object.
@@ -93,7 +93,7 @@ CalculateDisplacementsModifier::CalculateDisplacementsModifier(DataSet* dataset)
 bool CalculateDisplacementsModifier::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
 	// Do not propagate messages sent by the attached display object.
-	if(source == _vectorDisplay)
+	if(source == vectorDisplay())
 		return false;
 
 	return ParticleModifier::referenceEvent(source, event);
@@ -110,21 +110,21 @@ PipelineStatus CalculateDisplacementsModifier::modifyParticles(TimePoint time, T
 
 	// What is the reference frame number to use?
 	int referenceFrame;
-	if(_useReferenceFrameOffset) {
+	if(useReferenceFrameOffset()) {
 		// Determine the current frame, preferably from the attributes stored with the pipeline flow state.
 		// If the "SourceFrame" attribute is not present, infer it from the current animation time.
 		int currentFrame = input().attributes().value(QStringLiteral("SourceFrame"),
 				dataset()->animationSettings()->timeToFrame(time)).toInt();
 
 		// Use frame offset relative to current configuration.
-		referenceFrame = currentFrame + _referenceFrameOffset;
+		referenceFrame = currentFrame + referenceFrameOffset();
 
 		// Results are only valid for current frame.
 		validityInterval.intersect(time);
 	}
 	else {
 		// Always use the same, user-specified frame as reference configuration.
-		referenceFrame = _referenceFrameNumber;
+		referenceFrame = referenceFrameNumber();
 	}
 
 	// Get the reference configuration.

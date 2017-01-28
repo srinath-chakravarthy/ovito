@@ -45,12 +45,12 @@ void BurgersVectorFamilyEditor::createUI(const RolloutInsertionParameters& rollo
 	layout1->setColumnStretch(1, 1);
 	
 	// Text box for the name of atom type.
-	StringParameterUI* namePUI = new StringParameterUI(this, PROPERTY_FIELD(BurgersVectorFamily::_name));
+	StringParameterUI* namePUI = new StringParameterUI(this, PROPERTY_FIELD(BurgersVectorFamily::name));
 	layout1->addWidget(new QLabel(tr("Name:")), 0, 0);
 	layout1->addWidget(namePUI->textBox(), 0, 1);
 	
 	// Color parameter.
-	ColorParameterUI* colorPUI = new ColorParameterUI(this, PROPERTY_FIELD(BurgersVectorFamily::_color));
+	ColorParameterUI* colorPUI = new ColorParameterUI(this, PROPERTY_FIELD(BurgersVectorFamily::color));
 	layout1->addWidget(colorPUI->label(), 1, 0);
 	layout1->addWidget(colorPUI->colorPicker(), 1, 1);
 }

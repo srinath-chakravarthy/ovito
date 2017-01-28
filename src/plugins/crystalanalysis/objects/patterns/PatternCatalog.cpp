@@ -25,15 +25,15 @@
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PatternCatalog, DataObject);
-DEFINE_VECTOR_REFERENCE_FIELD(PatternCatalog, _patterns, "Patterns", StructurePattern);
-SET_PROPERTY_FIELD_LABEL(PatternCatalog, _patterns, "Structure patterns");
+DEFINE_VECTOR_REFERENCE_FIELD(PatternCatalog, patterns, "Patterns", StructurePattern);
+SET_PROPERTY_FIELD_LABEL(PatternCatalog, patterns, "Structure patterns");
 
 /******************************************************************************
 * Constructs the PatternCatalog object.
 ******************************************************************************/
 PatternCatalog::PatternCatalog(DataSet* dataset) : DataObject(dataset)
 {
-	INIT_PROPERTY_FIELD(PatternCatalog::_patterns);
+	INIT_PROPERTY_FIELD(patterns);
 
 	// Create the "undefined" structure.
 	OORef<StructurePattern> undefinedAtomType(new StructurePattern(dataset));

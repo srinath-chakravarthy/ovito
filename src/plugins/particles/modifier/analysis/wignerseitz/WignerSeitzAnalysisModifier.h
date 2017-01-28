@@ -39,44 +39,6 @@ public:
 	/// Constructor.
 	Q_INVOKABLE WignerSeitzAnalysisModifier(DataSet* dataset);
 
-	/// Returns the object that contains the reference configuration of the particles
-	/// used for the Wigner-Seitz analysis.
-	DataObject* referenceConfiguration() const { return _referenceObject; }
-
-	/// Sets the object that contains the reference configuration of the particles
-	/// used for the Wigner-Seitz analysis.
-	void setReferenceConfiguration(DataObject* refConf) { _referenceObject = refConf; }
-
-	/// Returns true if the homogeneous deformation of the simulation cell is eliminated before performing the analysis.
-	bool eliminateCellDeformation() const { return _eliminateCellDeformation; }
-
-	/// Sets whether the homogeneous deformation of the simulation cell is eliminated before performing the analysis.
-	void setEliminateCellDeformation(bool enable) { _eliminateCellDeformation = enable; }
-
-	/// Returns whether to use a reference frame relative to current frame.
-	bool useReferenceFrameOffset() const { return _useReferenceFrameOffset; }
-
-	/// Sets whether to use a reference frame relative to current frame.
-	void setUseReferenceFrameOffset(bool useOffset) { _useReferenceFrameOffset = useOffset; }
-
-	/// Returns the absolute frame number from reference file to use for the analysis.
-	int referenceFrameNumber() const { return _referenceFrameNumber; }
-
-	/// Sets the absolute frame number from reference file to use for the analysis.
-	void setReferenceFrameNumber(int frame) { _referenceFrameNumber = frame; }
-
-	/// Returns the relative frame offset to use.
-	int referenceFrameOffset() const { return _referenceFrameOffset; }
-
-	/// Sets the relative frame offset to use.
-	void setReferenceFrameOffset(int frameOffset) { _referenceFrameOffset = frameOffset; }
-
-	/// Returns whether per-type occupancy numbers are computed by the modifier.
-	bool perTypeOccupancy() const { return _perTypeOccupancy; }
-
-	/// Sets whether per-type occupancy numbers are computed by the modifier.
-	void setPerTypeOccupancy(bool enable) { _perTypeOccupancy = enable; }
-
 	/// Returns the number of vacant sites found during the last analysis run.
 	int vacancyCount() const { return _vacancyCount; }
 
@@ -166,22 +128,22 @@ private:
 	QExplicitlySharedDataPointer<ParticleProperty> _occupancyNumbers;
 
 	/// The reference configuration.
-	ReferenceField<DataObject> _referenceObject;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(DataObject, referenceConfiguration, setReferenceConfiguration);
 
 	/// Controls the whether the homogeneous deformation of the simulation cell is eliminated from the calculated displacement vectors.
-	PropertyField<bool> _eliminateCellDeformation;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, eliminateCellDeformation, setEliminateCellDeformation);
 
 	/// Specify reference frame relative to current frame.
-	PropertyField<bool> _useReferenceFrameOffset;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, useReferenceFrameOffset, setUseReferenceFrameOffset);
 
 	/// Absolute frame number from reference file to use when calculating displacement vectors.
-	PropertyField<int> _referenceFrameNumber;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, referenceFrameNumber, setReferenceFrameNumber);
 
 	/// Relative frame offset for reference coordinates.
-	PropertyField<int> _referenceFrameOffset;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, referenceFrameOffset, setReferenceFrameOffset);
 
 	/// Enable per-type occupancy numbers.
-	PropertyField<bool> _perTypeOccupancy;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, perTypeOccupancy, setPerTypeOccupancy)
 
 	/// The number of vacant sites found during the last analysis run.
 	int _vacancyCount;
@@ -189,20 +151,11 @@ private:
 	/// The number of interstitial atoms found during the last analysis run.
 	int _interstitialCount;
 
-private:
-
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Wigner-Seitz defect analysis");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
-
-	DECLARE_REFERENCE_FIELD(_referenceObject);
-	DECLARE_PROPERTY_FIELD(_eliminateCellDeformation);
-	DECLARE_PROPERTY_FIELD(_useReferenceFrameOffset);
-	DECLARE_PROPERTY_FIELD(_referenceFrameNumber);
-	DECLARE_PROPERTY_FIELD(_referenceFrameOffset);
-	DECLARE_PROPERTY_FIELD(_perTypeOccupancy);
 };
 
 OVITO_END_INLINE_NAMESPACE

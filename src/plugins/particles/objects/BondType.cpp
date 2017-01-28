@@ -25,25 +25,26 @@
 namespace Ovito { namespace Particles {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(BondType, RefTarget);
-DEFINE_PROPERTY_FIELD(BondType, _id, "Identifier");
-DEFINE_PROPERTY_FIELD(BondType, _color, "Color");
-DEFINE_PROPERTY_FIELD(BondType, _radius, "Radius");
-DEFINE_PROPERTY_FIELD(BondType, _name, "Name");
-SET_PROPERTY_FIELD_LABEL(BondType, _id, "Id");
-SET_PROPERTY_FIELD_LABEL(BondType, _color, "Color");
-SET_PROPERTY_FIELD_LABEL(BondType, _radius, "Radius");
-SET_PROPERTY_FIELD_LABEL(BondType, _name, "Name");
-SET_PROPERTY_FIELD_UNITS(BondType, _radius, WorldParameterUnit);
+DEFINE_PROPERTY_FIELD(BondType, id, "Identifier");
+DEFINE_PROPERTY_FIELD(BondType, color, "Color");
+DEFINE_PROPERTY_FIELD(BondType, radius, "Radius");
+DEFINE_PROPERTY_FIELD(BondType, name, "Name");
+SET_PROPERTY_FIELD_LABEL(BondType, id, "Id");
+SET_PROPERTY_FIELD_LABEL(BondType, color, "Color");
+SET_PROPERTY_FIELD_LABEL(BondType, radius, "Radius");
+SET_PROPERTY_FIELD_LABEL(BondType, name, "Name");
+SET_PROPERTY_FIELD_UNITS(BondType, radius, WorldParameterUnit);
+SET_PROPERTY_FIELD_CHANGE_EVENT(BondType, name, ReferenceEvent::TitleChanged);
 
 /******************************************************************************
 * Constructs a new BondType.
 ******************************************************************************/
 BondType::BondType(DataSet* dataset) : RefTarget(dataset), _color(1,1,1), _radius(0), _id(0)
 {
-	INIT_PROPERTY_FIELD(BondType::_id);
-	INIT_PROPERTY_FIELD(BondType::_color);
-	INIT_PROPERTY_FIELD(BondType::_radius);
-	INIT_PROPERTY_FIELD(BondType::_name);
+	INIT_PROPERTY_FIELD(id);
+	INIT_PROPERTY_FIELD(color);
+	INIT_PROPERTY_FIELD(radius);
+	INIT_PROPERTY_FIELD(name);
 }
 
 }	// End of namespace

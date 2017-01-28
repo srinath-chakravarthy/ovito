@@ -51,17 +51,17 @@ void ParticleTypeEditor::createUI(const RolloutInsertionParameters& rolloutParam
 	layout1->setColumnStretch(1, 1);
 	
 	// Text box for the name of particle type.
-	StringParameterUI* namePUI = new StringParameterUI(this, PROPERTY_FIELD(ParticleType::_name));
+	StringParameterUI* namePUI = new StringParameterUI(this, PROPERTY_FIELD(ParticleType::name));
 	layout1->addWidget(new QLabel(tr("Name:")), 0, 0);
 	layout1->addWidget(namePUI->textBox(), 0, 1);
 	
 	// Display color parameter.
-	ColorParameterUI* colorPUI = new ColorParameterUI(this, PROPERTY_FIELD(ParticleType::_color));
+	ColorParameterUI* colorPUI = new ColorParameterUI(this, PROPERTY_FIELD(ParticleType::color));
 	layout1->addWidget(colorPUI->label(), 1, 0);
 	layout1->addWidget(colorPUI->colorPicker(), 1, 1);
    
 	// Display radius parameter.
-	FloatParameterUI* radiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(ParticleType::_radius));
+	FloatParameterUI* radiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(ParticleType::radius));
 	layout1->addWidget(radiusPUI->label(), 2, 0);
 	layout1->addLayout(radiusPUI->createFieldLayout(), 2, 1);
 

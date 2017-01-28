@@ -28,18 +28,18 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(DataObject, RefTarget);
-DEFINE_PROPERTY_FIELD(DataObject, _saveWithScene, "SaveWithScene");
-DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(DataObject, _displayObjects, "DisplayObjects", DisplayObject, PROPERTY_FIELD_NEVER_CLONE_TARGET);
-SET_PROPERTY_FIELD_LABEL(DataObject, _saveWithScene, "Save data with scene");
-SET_PROPERTY_FIELD_LABEL(DataObject, _displayObjects, "Display objects");
+DEFINE_PROPERTY_FIELD(DataObject, saveWithScene, "SaveWithScene");
+DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(DataObject, displayObjects, "DisplayObjects", DisplayObject, PROPERTY_FIELD_NEVER_CLONE_TARGET);
+SET_PROPERTY_FIELD_LABEL(DataObject, saveWithScene, "Save data with scene");
+SET_PROPERTY_FIELD_LABEL(DataObject, displayObjects, "Display objects");
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
 DataObject::DataObject(DataSet* dataset) : RefTarget(dataset), _revisionNumber(0), _saveWithScene(true)
 {
-	INIT_PROPERTY_FIELD(DataObject::_saveWithScene);
-	INIT_PROPERTY_FIELD(DataObject::_displayObjects);
+	INIT_PROPERTY_FIELD(saveWithScene);
+	INIT_PROPERTY_FIELD(displayObjects);
 }
 
 /******************************************************************************

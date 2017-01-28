@@ -38,15 +38,6 @@ public:
 	/// \brief Constructs a new instance of this class.
 	Q_INVOKABLE ComputePropertyModifier(DataSet* dataset);
 
-	/// \brief Sets the math expressions that are used to calculate the values of the new property's components.
-	/// \param expressions The mathematical formulas, one for each component of the property to create.
-	/// \undoable
-	void setExpressions(const QStringList& expressions) { _expressions = expressions; }
-
-	/// \brief Returns the math expressions that are used to calculate the values of the new property's component.
-	/// \return The math formulas.
-	const QStringList& expressions() const { return _expressions; }
-
 	/// \brief Sets the math expression that is used to calculate the values of one of the new property's components.
 	/// \param index The property component for which the expression should be set.
 	/// \param expression The math formula.
@@ -69,12 +60,6 @@ public:
 		return expressions()[index];
 	}
 
-	/// \brief Sets the output particle property that receives the computed per-particle values.
-	void setOutputProperty(const ParticlePropertyReference& prop) { _outputProperty = prop; }
-
-	/// \brief Returns the output particle property that receives the computed per-particle values.
-	const ParticlePropertyReference& outputProperty() const { return _outputProperty; }
-
 	/// \brief Returns the number of vector components of the property to create.
 	/// \return The number of vector components.
 	/// \sa setPropertyComponentCount()
@@ -84,36 +69,6 @@ public:
 	/// \param newComponentCount The number of vector components.
 	/// \undoable
 	void setPropertyComponentCount(int newComponentCount);
-
-	/// \brief Returns whether the math expression is only evaluated for selected particles.
-	/// \return \c true if the expression is only evaluated for selected particles; \c false if it is calculated for all particles.
-	bool onlySelectedParticles() const { return _onlySelectedParticles; }
-
-	/// \brief Sets whether the math expression is only evaluated for selected particles.
-	/// \param enable Specifies the restriction to selected particles.
-	/// \undoable
-	void setOnlySelectedParticles(bool enable) { _onlySelectedParticles = enable; }
-
-	/// Returns whether the contributions from neighbor terms are included in the computation.
-	bool neighborModeEnabled() const { return _neighborModeEnabled; }
-
-	/// Sets whether the contributions from neighbor terms are included in the computation.
-	void setNeighborModeEnabled(bool enable) { _neighborModeEnabled = enable; }
-
-	/// Returns the cutoff radius used to build the neighbor lists for the computation.
-	FloatType cutoff() const { return _cutoff; }
-
-	/// \brief Sets the cutoff radius used to build the neighbor lists for the computation.
-	void setCutoff(FloatType newCutoff) { _cutoff = newCutoff; }
-
-	/// \brief Sets the math expressions that are used to compute the neighbor-terms of the property function.
-	/// \param expressions The formulas, one for each component of the property to create.
-	/// \undoable
-	void setNeighborExpressions(const QStringList& expressions) { _neighborExpressions = expressions; }
-
-	/// \brief Returns the math expressions that are used to compute the neighbor-terms of the property function.
-	/// \return The math formulas.
-	const QStringList& neighborExpressions() const { return _neighborExpressions; }
 
 	/// \brief Sets the math expression that is used to compute the neighbor-terms of the property function.
 	/// \param index The property component for which the expression should be set.
@@ -235,22 +190,22 @@ protected:
 	};
 
 	/// The math expressions for calculating the property values. One for every vector component.
-	PropertyField<QStringList> _expressions;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QStringList, expressions, setExpressions);
 
 	/// Specifies the output property that will receive the computed per-particles values.
-	PropertyField<ParticlePropertyReference> _outputProperty;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ParticlePropertyReference, outputProperty, setOutputProperty);
 
 	/// Controls whether the math expression is evaluated and output only for selected particles.
-	PropertyField<bool> _onlySelectedParticles;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, onlySelectedParticles, setOnlySelectedParticles);
 
 	/// Controls whether the contributions from neighbor terms are included in the computation.
-	PropertyField<bool> _neighborModeEnabled;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, neighborModeEnabled, setNeighborModeEnabled);
 
 	/// The math expressions for calculating the neighbor-terms of the property function.
-	PropertyField<QStringList> _neighborExpressions;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QStringList, neighborExpressions, setNeighborExpressions);
 
 	/// Controls the cutoff radius for the neighbor lists.
-	PropertyField<FloatType> _cutoff;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, cutoff, setCutoff);
 
 	/// The list of input variables during the last evaluation.
 	QStringList _inputVariableNames;
@@ -262,7 +217,7 @@ protected:
 	QExplicitlySharedDataPointer<ParticleProperty> _computedProperty;
 
 	/// The cached display objects that are attached to the output particle property.
-	VectorReferenceField<DisplayObject> _cachedDisplayObjects;
+	DECLARE_VECTOR_REFERENCE_FIELD(DisplayObject, cachedDisplayObjects);
 
 private:
 
@@ -272,14 +227,6 @@ private:
 	Q_CLASSINFO("DisplayName", "Compute property");
 	Q_CLASSINFO("ModifierCategory", "Modification");
 	Q_CLASSINFO("ClassNameAlias", "CreateExpressionPropertyModifier");	// This for backward compatibility with files written by Ovito 2.4 and older.
-
-	DECLARE_PROPERTY_FIELD(_expressions);
-	DECLARE_PROPERTY_FIELD(_outputProperty);
-	DECLARE_PROPERTY_FIELD(_onlySelectedParticles);
-	DECLARE_PROPERTY_FIELD(_neighborModeEnabled);
-	DECLARE_PROPERTY_FIELD(_neighborExpressions);
-	DECLARE_PROPERTY_FIELD(_cutoff);
-	DECLARE_VECTOR_REFERENCE_FIELD(_cachedDisplayObjects);
 };
 
 OVITO_END_INLINE_NAMESPACE

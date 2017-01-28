@@ -46,7 +46,7 @@ bool FHIAimsExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePo
 	Point3 origin = Point3::Origin();
 	SimulationCellObject* simulationCell = state.findObject<SimulationCellObject>();
 	if(simulationCell) {
-		origin = simulationCell->origin();
+		origin = simulationCell->cellOrigin();
 		if(simulationCell->pbcX() || simulationCell->pbcY() || simulationCell->pbcZ()) {
 			AffineTransformation cell = simulationCell->cellMatrix();
 			for(size_t i = 0; i < 3; i++)

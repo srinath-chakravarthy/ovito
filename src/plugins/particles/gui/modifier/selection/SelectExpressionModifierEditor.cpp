@@ -43,7 +43,7 @@ void SelectExpressionModifierEditor::createUI(const RolloutInsertionParameters& 
 	layout->setSpacing(0);
 
 	layout->addWidget(new QLabel(tr("Boolean expression:")));
-	StringParameterUI* expressionUI = new StringParameterUI(this, PROPERTY_FIELD(SelectExpressionModifier::_expression));
+	StringParameterUI* expressionUI = new StringParameterUI(this, PROPERTY_FIELD(SelectExpressionModifier::expression));
 	expressionEdit = new AutocompleteTextEdit();
 	expressionUI->setTextBox(expressionEdit);
 	layout->addWidget(expressionUI->textBox());

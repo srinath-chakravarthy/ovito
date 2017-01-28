@@ -25,16 +25,16 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Anim)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(FloatSplineAnimationKey, FloatAnimationKey);
-DEFINE_PROPERTY_FIELD(FloatSplineAnimationKey, _inTangent, "InTangent");
-DEFINE_PROPERTY_FIELD(FloatSplineAnimationKey, _outTangent, "OutTangent");
-SET_PROPERTY_FIELD_LABEL(FloatSplineAnimationKey, _inTangent, "In Tangent");
-SET_PROPERTY_FIELD_LABEL(FloatSplineAnimationKey, _outTangent, "Out Tangent");
+DEFINE_PROPERTY_FIELD(FloatSplineAnimationKey, inTangent, "InTangent");
+DEFINE_PROPERTY_FIELD(FloatSplineAnimationKey, outTangent, "OutTangent");
+SET_PROPERTY_FIELD_LABEL(FloatSplineAnimationKey, inTangent, "In Tangent");
+SET_PROPERTY_FIELD_LABEL(FloatSplineAnimationKey, outTangent, "Out Tangent");
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PositionSplineAnimationKey, PositionAnimationKey);
-DEFINE_PROPERTY_FIELD(PositionSplineAnimationKey, _inTangent, "InTangent");
-DEFINE_PROPERTY_FIELD(PositionSplineAnimationKey, _outTangent, "OutTangent");
-SET_PROPERTY_FIELD_LABEL(PositionSplineAnimationKey, _inTangent, "In Tangent");
-SET_PROPERTY_FIELD_LABEL(PositionSplineAnimationKey, _outTangent, "Out Tangent");
+DEFINE_PROPERTY_FIELD(PositionSplineAnimationKey, inTangent, "InTangent");
+DEFINE_PROPERTY_FIELD(PositionSplineAnimationKey, outTangent, "OutTangent");
+SET_PROPERTY_FIELD_LABEL(PositionSplineAnimationKey, inTangent, "In Tangent");
+SET_PROPERTY_FIELD_LABEL(PositionSplineAnimationKey, outTangent, "Out Tangent");
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SplinePositionController, KeyframeController);
 

@@ -45,14 +45,6 @@ public:
 		clearAllReferences();
 	}
 
-	/// \brief Returns the current dataset being edited by the user.
-	/// \return The active dataset.
-	DataSet* currentSet() const { return _currentSet; }
-	
-	/// \brief Sets the current dataset being edited by the user.
-	/// \param set The dataset that should be shown in the main window.
-	void setCurrentSet(DataSet* set) { _currentSet = set; }
-
 	/// \brief Returns the manager of background tasks.
 	/// \return Reference to the task manager, which is part of this dataset manager.
 	///
@@ -138,7 +130,7 @@ protected Q_SLOTS:
 private:
 
 	/// The current dataset being edited by the user.
-    ReferenceField<DataSet> _currentSet;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(DataSet, currentSet, setCurrentSet);
 
 	/// The list of running compute tasks.
 	TaskManager _taskManager;
@@ -156,8 +148,6 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_currentSet);
 };
 
 OVITO_END_INLINE_NAMESPACE

@@ -46,16 +46,16 @@ void SimulationCellDisplayEditor::createUI(const RolloutInsertionParameters& rol
 	layout->setColumnStretch(1, 1);
 
 	// Render cell
-	BooleanParameterUI* renderCellUI = new BooleanParameterUI(this, PROPERTY_FIELD(SimulationCellDisplay::_renderSimulationCell));
+	BooleanParameterUI* renderCellUI = new BooleanParameterUI(this, PROPERTY_FIELD(SimulationCellDisplay::renderCellEnabled));
 	layout->addWidget(renderCellUI->checkBox(), 0, 0, 1, 2);
 
 	// Line width
-	FloatParameterUI* lineWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(SimulationCellDisplay::_simulationCellLineWidth));
+	FloatParameterUI* lineWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(SimulationCellDisplay::cellLineWidth));
 	layout->addWidget(lineWidthUI->label(), 1, 0);
 	layout->addLayout(lineWidthUI->createFieldLayout(), 1, 1);
 
 	// Line color
-	ColorParameterUI* lineColorUI = new ColorParameterUI(this, PROPERTY_FIELD(SimulationCellDisplay::_simulationCellColor));
+	ColorParameterUI* lineColorUI = new ColorParameterUI(this, PROPERTY_FIELD(SimulationCellDisplay::cellColor));
 	layout->addWidget(lineColorUI->label(), 2, 0);
 	layout->addWidget(lineColorUI->colorPicker(), 2, 1);
 }

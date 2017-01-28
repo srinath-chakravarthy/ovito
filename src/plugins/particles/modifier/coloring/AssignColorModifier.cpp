@@ -26,21 +26,21 @@
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(AssignColorModifier, ParticleModifier);
-DEFINE_FLAGS_REFERENCE_FIELD(AssignColorModifier, _colorCtrl, "Color", Controller, PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(AssignColorModifier, _keepSelection, "KeepSelection");
-SET_PROPERTY_FIELD_LABEL(AssignColorModifier, _colorCtrl, "Color");
-SET_PROPERTY_FIELD_LABEL(AssignColorModifier, _keepSelection, "Keep selection");
+DEFINE_FLAGS_REFERENCE_FIELD(AssignColorModifier, colorController, "Color", Controller, PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(AssignColorModifier, keepSelection, "KeepSelection");
+SET_PROPERTY_FIELD_LABEL(AssignColorModifier, colorController, "Color");
+SET_PROPERTY_FIELD_LABEL(AssignColorModifier, keepSelection, "Keep selection");
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
 AssignColorModifier::AssignColorModifier(DataSet* dataset) : ParticleModifier(dataset), _keepSelection(false)
 {
-	INIT_PROPERTY_FIELD(AssignColorModifier::_colorCtrl);
-	INIT_PROPERTY_FIELD(AssignColorModifier::_keepSelection);
+	INIT_PROPERTY_FIELD(colorController);
+	INIT_PROPERTY_FIELD(keepSelection);
 
-	_colorCtrl = ControllerManager::instance().createColorController(dataset);
-	_colorCtrl->setColorValue(0, Color(0.3f, 0.3f, 1.0f));
+	setColorController(ControllerManager::instance().createColorController(dataset));
+	colorController()->setColorValue(0, Color(0.3f, 0.3f, 1.0f));
 }
 
 /******************************************************************************
@@ -49,7 +49,7 @@ AssignColorModifier::AssignColorModifier(DataSet* dataset) : ParticleModifier(da
 TimeInterval AssignColorModifier::modifierValidity(TimePoint time)
 {
 	TimeInterval interval = Modifier::modifierValidity(time);
-	interval.intersect(_colorCtrl->validityInterval(time));
+	if(colorController()) interval.intersect(colorController()->validityInterval(time));
 	return interval;
 }
 
@@ -66,8 +66,8 @@ PipelineStatus AssignColorModifier::modifyParticles(TimePoint time, TimeInterval
 
 	// Get the color to be assigned.
 	Color color(1,1,1);
-	if(_colorCtrl)
-		_colorCtrl->getColorValue(time, color, validityInterval);
+	if(colorController())
+		colorController()->getColorValue(time, color, validityInterval);
 
 	if(selProperty) {
 		OVITO_ASSERT(colorProperty->size() == selProperty->size());

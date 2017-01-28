@@ -63,32 +63,6 @@ public:
 	/// \brief Constructor that initializes the object with default values.
 	/// \param dataset The context dataset.
 	Q_INVOKABLE AnimationSettings(DataSet* dataset);
-
-	/// \brief Gets the current animation time.
-	/// \return The current time.
-	/// 
-	/// The state of the scene at this time is shown in the viewports.
-	/// \sa setTime()
-	TimePoint time() const { return _time; }
-
-	/// \brief Sets the current animation time.
-	/// \param time The new animation time.
-	///
-	/// The state of the scene at the given time will be shown in the viewports.
-	/// \undoable
-	/// \sa time()
-	void setTime(TimePoint time) { _time = time; }
-
-	/// \brief Gets the animation interval.
-	/// \return The time interval of the animation.
-	/// \sa setAnimationInterval() 
-	const TimeInterval& animationInterval() const { return _animationInterval; }
-
-	/// \brief Sets the animation interval.
-	/// \param interval The new animation interval for the scene.
-	/// \undoable
-	/// \sa animationInterval()
-	void setAnimationInterval(const TimeInterval& interval) { _animationInterval = interval; }
 	
 	/// \brief Returns the number of frames per second.
 	/// \return The number of frames per second.
@@ -96,7 +70,7 @@ public:
 	/// This setting controls the playback speed of the animation.
 	///
 	/// \sa setFramesPerSecond()
-	int framesPerSecond() const { return TICKS_PER_SECOND / _ticksPerFrame; }
+	int framesPerSecond() const { return TICKS_PER_SECOND / ticksPerFrame(); }
 
 	/// \brief Sets the number of frames per second.
 	/// \param fps The number of frames per second. Please note that not all
@@ -109,23 +83,6 @@ public:
 	/// \sa framesPerSecond()
 	/// \sa setTicksPerFrame()
 	void setFramesPerSecond(int fps) { setTicksPerFrame(TICKS_PER_SECOND / fps); } 	
-
-	/// \brief Returns the number of time ticks per frame.
-	/// \return The number of time ticks per animation frame. One tick is 1/4800 of a second.
-	/// 
-	/// This setting controls the playback speed of the animation.
-	///
-	/// \sa setTicksPerFrame()
-	int ticksPerFrame() const { return _ticksPerFrame; }
-
-	/// \brief Sets the number of time ticks per frame.
-	/// \param ticksPerFrame The number of time tick units per animation frame.
-	///                      This must be a positive value.
-	/// \undoable
-	/// 
-	/// This setting controls the playback speed of the animation.
-	/// \sa ticksPerFrame()
-	void setTicksPerFrame(int ticksPerFrame) { _ticksPerFrame = ticksPerFrame; }
 
 	/// \brief Gets the current animation frame.
 	/// \return The current frame.
@@ -162,19 +119,6 @@ public:
 	TimePoint snapTime(TimePoint time) const {
 		return frameToTime(timeToFrame(time + ticksPerFrame()/(time >= 0 ? 2 : -2)));
 	}
-
-	/// \brief Returns the playback speed factor that is used for animation playback in the viewports.
-	/// \return The playback speed factor. A value greater than 1 means that the animation is played at a speed higher
-	///         than realtime whereas a value smaller than -1 means that the animation is played at a speed lower than realtime.
-	/// \sa setPlaybackSpeed()
-	int playbackSpeed() const { return _playbackSpeed; }
-
-	/// \brief Sets the playback speed factor that is used for animation playback in the viewport.
-	/// \param factor A value greater than 1 means that the animation is played at a speed higher
-	///               than realtime. A value smaller than -1 that the animation is played at a speed lower than realtime.
-	/// \undoable
-	/// \sa playbackSpeed()
-	void setPlaybackSpeed(int factor) { _playbackSpeed = factor; }
 	
     /// \brief Returns the list of names assigned to animation frames.
     const QMap<int,QString>& namedFrames() const { return _namedFrames; }
@@ -231,9 +175,6 @@ public:
 	/// \brief Indicates that the animation time has recently been changed via setTime(), and the scene
 	///        is still being prepared for displaying the new frame.
 	bool isTimeChanging() const { return _timeIsChanging != 0; }
-
-	/// Returns whether the animation is played back in a loop in the interactive viewports.
-    bool loopPlayback() const { return _loopPlayback; }
 
 	/// Returns whether the animation is currently being played back in the viewports.
 	bool isPlaybackActive() const { return _isPlaybackActive; }
@@ -325,20 +266,20 @@ protected:
 private:
 
 	/// The current animation time.
-    PropertyField<TimePoint> _time;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(TimePoint, time, setTime);
 
 	/// The start and end times of the animation.
-    PropertyField<TimeInterval> _animationInterval;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(TimeInterval, animationInterval, setAnimationInterval);
 
 	/// The number of time ticks per frame.
 	/// This controls the animation speed.
-    PropertyField<int> _ticksPerFrame;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, ticksPerFrame, setTicksPerFrame);
 	
 	/// The playback speed factor that is used for animation playback in the viewport.
 	/// A value greater than 1 means that the animation is played at a speed higher
 	/// than realtime.
 	/// A value smaller than -1 that the animation is played at a speed lower than realtime.	
-    PropertyField<int> _playbackSpeed;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, playbackSpeed, setPlaybackSpeed);
 
     /// List of names assigned to animation frames.
     QMap<int,QString> _namedFrames;
@@ -356,18 +297,10 @@ private:
 	bool _isPlaybackActive;
 
 	/// Controls whether the animation is played back in a loop in the interactive viewports.
-    PropertyField<bool> _loopPlayback;
-
-private:
+	DECLARE_PROPERTY_FIELD(bool, loopPlayback);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_time);
-	DECLARE_PROPERTY_FIELD(_animationInterval);
-	DECLARE_PROPERTY_FIELD(_ticksPerFrame);
-	DECLARE_PROPERTY_FIELD(_playbackSpeed);
-	DECLARE_PROPERTY_FIELD(_loopPlayback);
 };
 
 /**

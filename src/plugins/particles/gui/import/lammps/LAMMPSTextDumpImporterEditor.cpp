@@ -80,7 +80,7 @@ void LAMMPSTextDumpImporterEditor::createUI(const RolloutInsertionParameters& ro
 	layout->addWidget(animFramesBox);
 
 	// Multi-timestep file
-	BooleanParameterUI* multitimestepUI = new BooleanParameterUI(this, PROPERTY_FIELD(ParticleImporter::_isMultiTimestepFile));
+	BooleanParameterUI* multitimestepUI = new BooleanParameterUI(this, PROPERTY_FIELD(ParticleImporter::isMultiTimestepFile));
 	sublayout->addWidget(multitimestepUI->checkBox());
 
 	QGroupBox* columnMappingBox = new QGroupBox(tr("File columns"), rollout);
@@ -88,7 +88,7 @@ void LAMMPSTextDumpImporterEditor::createUI(const RolloutInsertionParameters& ro
 	sublayout->setContentsMargins(4,4,4,4);
 	layout->addWidget(columnMappingBox);
 
-	BooleanRadioButtonParameterUI* useCustomMappingUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(LAMMPSTextDumpImporter::_useCustomColumnMapping));
+	BooleanRadioButtonParameterUI* useCustomMappingUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(LAMMPSTextDumpImporter::useCustomColumnMapping));
 	useCustomMappingUI->buttonFalse()->setText(tr("Automatic mapping"));
 	sublayout->addWidget(useCustomMappingUI->buttonFalse());
 	useCustomMappingUI->buttonTrue()->setText(tr("User-defined mapping to particle properties"));

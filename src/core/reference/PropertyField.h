@@ -82,12 +82,17 @@ private:
 /**
  * \brief Stores a non-animatable property of a RefTarget derived class.
  */
-template<typename property_data_type, typename qvariant_data_type = property_data_type, int additionalChangeMessage = 0>
+template<typename property_data_type>
 class PropertyField : public PropertyFieldBase
 {
 public:
-	typedef property_data_type property_type;
-	typedef qvariant_data_type qvariant_type;
+	using property_type = property_data_type;
+
+	// Pick the QVariant data type used to wrap the property type.
+	// If the property type is an enum, then use int.
+	// If the property is Color, then use QColor. 
+	using qvariant_type = typename std::conditional<std::is_enum<property_data_type>::value, int, 
+		typename std::conditional<std::is_same<property_data_type, Color>::value, QColor, property_data_type>::type>::type;
 
 	/// Forwarding constructor.
 	template<class... Args>
@@ -98,8 +103,9 @@ public:
 		PropertyFieldBase::init(owner, descriptor);
 
 		// For enum types, the QVariant data type must always be set to 'int'.
-		static_assert(!std::is_enum<property_data_type>::value || std::is_same<qvariant_data_type, int>::value,
-				"When using PropertyField<> with an enum type, the QVariant data type must always be set to 'int'. For example: PropertyField<MyEnumType, int>");
+		static_assert(!std::is_enum<property_type>::value || std::is_same<qvariant_type, int>::value, "QVariant data type must be 'int' for enum property types.");
+		// For color properties, the QVariant data type must always be set to 'QColor'.
+		static_assert(!std::is_same<property_type, Color>::value || std::is_same<qvariant_type, QColor>::value, "QVariant data type must be 'QColor' for color property types.");
 	}
 
 	/// Cast the property field to the property value.
@@ -146,8 +152,8 @@ private:
 		_value = newValue;
 		generatePropertyChangedEvent();
 		generateTargetChangedEvent();
-		if(additionalChangeMessage != 0)
-			generateTargetChangedEvent((ReferenceEvent::Type)additionalChangeMessage);
+		if(descriptor()->extraChangeEventType() != 0)
+			generateTargetChangedEvent(static_cast<ReferenceEvent::Type>(descriptor()->extraChangeEventType()));
 	}
 
 	// This undo class records a change to the property value.

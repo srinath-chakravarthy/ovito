@@ -86,26 +86,6 @@ public:
 	/// Constructor.
 	Q_INVOKABLE CreateBondsModifier(DataSet* dataset);
 
-	/// Returns the mode of choosing the cutoff radius.
-	CutoffMode cutoffMode() const { return _cutoffMode; }
-
-	/// Sets the mode of choosing the cutoff radius.
-	void setCutoffMode(CutoffMode mode) { _cutoffMode = mode; }
-
-	/// \brief Returns the uniform cutoff radius used to determine which particles are bonded.
-	/// \return The uniform cutoff radius.
-	FloatType uniformCutoff() const { return _uniformCutoff; }
-
-	/// \brief Sets the cutoff radius that is used for generating bonds.
-	/// \param newCutoff The new cutoff radius.
-	void setUniformCutoff(FloatType newCutoff) { _uniformCutoff = newCutoff; }
-
-	/// \brief Returns the minimum length of bonds to create.
-	FloatType minimumCutoff() const { return _minCutoff; }
-
-	/// \brief Sets the minimum length of bonds to create.
-	void setMinimumCutoff(FloatType cutoff) { _minCutoff = cutoff; }
-
 	/// Returns the cutoff radii for pairs of particle types.
 	const PairCutoffsList& pairCutoffs() const { return _pairCutoffs; }
 
@@ -117,15 +97,6 @@ public:
 
 	/// Returns the pair-wise cutoff radius for a pair of particle types.
 	FloatType getPairCutoff(const QString& typeA, const QString& typeB) const;
-
-	/// \brief Returns the display object that is responsible for rendering the bonds.
-	BondsDisplay* bondsDisplay() const { return _bondsDisplay; }
-
-	/// Returns whether bonds will only be created between atoms from the same molecule.
-	bool onlyIntraMoleculeBonds() const { return _onlyIntraMoleculeBonds; }
-
-	/// Sets whether bonds will only be created between atoms from the same molecule.
-	void setOnlyIntraMoleculeBonds(bool enable) { _onlyIntraMoleculeBonds = enable; }
 
 protected:
 
@@ -162,39 +133,31 @@ protected:
 private:
 
 	/// The mode of choosing the cutoff radius.
-	PropertyField<CutoffMode, int> _cutoffMode;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(CutoffMode, cutoffMode, setCutoffMode);
 
 	/// The cutoff radius for bond generation.
-	PropertyField<FloatType> _uniformCutoff;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, uniformCutoff, setUniformCutoff);
 
 	/// The minimum bond length.
-	PropertyField<FloatType> _minCutoff;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, minimumCutoff, setMinimumCutoff);
 
 	/// The cutoff radii for pairs of particle types.
 	PairCutoffsList _pairCutoffs;
 
 	/// If true, bonds will only be created between atoms from the same molecule.
-	PropertyField<bool> _onlyIntraMoleculeBonds;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, onlyIntraMoleculeBonds, setOnlyIntraMoleculeBonds);
 
 	/// The display object for rendering the bonds.
-	ReferenceField<BondsDisplay> _bondsDisplay;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(BondsDisplay, bondsDisplay, setBondsDisplay);
 
 	/// This stores the cached results of the modifier, i.e. the list of created bonds.
 	QExplicitlySharedDataPointer<BondsStorage> _bonds;
-
-private:
 
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Create bonds");
 	Q_CLASSINFO("ModifierCategory", "Modification");
-
-	DECLARE_PROPERTY_FIELD(_cutoffMode);
-	DECLARE_PROPERTY_FIELD(_uniformCutoff);
-	DECLARE_PROPERTY_FIELD(_onlyIntraMoleculeBonds);
-	DECLARE_PROPERTY_FIELD(_minCutoff);
-	DECLARE_REFERENCE_FIELD(_bondsDisplay);
 };
 
 OVITO_END_INLINE_NAMESPACE

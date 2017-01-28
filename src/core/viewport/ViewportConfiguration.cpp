@@ -29,11 +29,11 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ViewportConfiguration, RefTarget);
-DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(ViewportConfiguration, _viewports, "Viewports", Viewport, PROPERTY_FIELD_NO_UNDO|PROPERTY_FIELD_ALWAYS_CLONE);
-DEFINE_FLAGS_REFERENCE_FIELD(ViewportConfiguration, _activeViewport, "ActiveViewport", Viewport, PROPERTY_FIELD_NO_UNDO);
-DEFINE_FLAGS_REFERENCE_FIELD(ViewportConfiguration, _maximizedViewport, "MaximizedViewport", Viewport, PROPERTY_FIELD_NO_UNDO);
-DEFINE_FLAGS_PROPERTY_FIELD(ViewportConfiguration, _orbitCenterMode, "OrbitCenterMode", PROPERTY_FIELD_NO_UNDO);
-DEFINE_FLAGS_PROPERTY_FIELD(ViewportConfiguration, _userOrbitCenter, "UserOrbitCenter", PROPERTY_FIELD_NO_UNDO);
+DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(ViewportConfiguration, viewports, "Viewports", Viewport, PROPERTY_FIELD_NO_UNDO|PROPERTY_FIELD_ALWAYS_CLONE);
+DEFINE_FLAGS_REFERENCE_FIELD(ViewportConfiguration, activeViewport, "ActiveViewport", Viewport, PROPERTY_FIELD_NO_UNDO);
+DEFINE_FLAGS_REFERENCE_FIELD(ViewportConfiguration, maximizedViewport, "MaximizedViewport", Viewport, PROPERTY_FIELD_NO_UNDO);
+DEFINE_FLAGS_PROPERTY_FIELD(ViewportConfiguration, orbitCenterMode, "OrbitCenterMode", PROPERTY_FIELD_NO_UNDO);
+DEFINE_FLAGS_PROPERTY_FIELD(ViewportConfiguration, userOrbitCenter, "UserOrbitCenter", PROPERTY_FIELD_NO_UNDO);
 
 /******************************************************************************
 * Constructor.
@@ -41,11 +41,11 @@ DEFINE_FLAGS_PROPERTY_FIELD(ViewportConfiguration, _userOrbitCenter, "UserOrbitC
 ViewportConfiguration::ViewportConfiguration(DataSet* dataset) : RefTarget(dataset),
 	_orbitCenterMode(ORBIT_SELECTION_CENTER), _userOrbitCenter(Point3::Origin()), _viewportSuspendCount(0)
 {
-	INIT_PROPERTY_FIELD(ViewportConfiguration::_viewports);
-	INIT_PROPERTY_FIELD(ViewportConfiguration::_activeViewport);
-	INIT_PROPERTY_FIELD(ViewportConfiguration::_maximizedViewport);
-	INIT_PROPERTY_FIELD(ViewportConfiguration::_orbitCenterMode);
-	INIT_PROPERTY_FIELD(ViewportConfiguration::_userOrbitCenter);
+	INIT_PROPERTY_FIELD(viewports);
+	INIT_PROPERTY_FIELD(activeViewport);
+	INIT_PROPERTY_FIELD(maximizedViewport);
+	INIT_PROPERTY_FIELD(orbitCenterMode);
+	INIT_PROPERTY_FIELD(userOrbitCenter);
 
 	// Repaint viewports when the camera orbit center changed.
 	connect(this, &ViewportConfiguration::cameraOrbitCenterChanged, this, &ViewportConfiguration::updateViewports);
@@ -56,10 +56,10 @@ ViewportConfiguration::ViewportConfiguration(DataSet* dataset) : RefTarget(datas
 ******************************************************************************/
 void ViewportConfiguration::referenceReplaced(const PropertyFieldDescriptor& field, RefTarget* oldTarget, RefTarget* newTarget)
 {
-	if(field == PROPERTY_FIELD(ViewportConfiguration::_activeViewport)) {
+	if(field == PROPERTY_FIELD(activeViewport)) {
 		Q_EMIT activeViewportChanged(_activeViewport);
 	}
-	else if(field == PROPERTY_FIELD(ViewportConfiguration::_maximizedViewport)) {
+	else if(field == PROPERTY_FIELD(maximizedViewport)) {
 		Q_EMIT maximizedViewportChanged(_maximizedViewport);
 	}
 	RefTarget::referenceReplaced(field, oldTarget, newTarget);
@@ -70,7 +70,7 @@ void ViewportConfiguration::referenceReplaced(const PropertyFieldDescriptor& fie
 ******************************************************************************/
 void ViewportConfiguration::propertyChanged(const PropertyFieldDescriptor& field)
 {
-	if(field == PROPERTY_FIELD(ViewportConfiguration::_orbitCenterMode) || field == PROPERTY_FIELD(ViewportConfiguration::_userOrbitCenter)) {
+	if(field == PROPERTY_FIELD(orbitCenterMode) || field == PROPERTY_FIELD(userOrbitCenter)) {
 		Q_EMIT cameraOrbitCenterChanged();
 	}
 	RefTarget::propertyChanged(field);

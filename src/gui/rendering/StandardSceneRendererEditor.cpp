@@ -44,7 +44,7 @@ void StandardSceneRendererEditor::createUI(const RolloutInsertionParameters& rol
 	layout->setColumnStretch(1, 1);
 	
 	// Antialiasing level	
-	IntegerParameterUI* antialiasingLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(StandardSceneRenderer::_antialiasingLevel));
+	IntegerParameterUI* antialiasingLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(StandardSceneRenderer::antialiasingLevel));
 	layout->addWidget(antialiasingLevelUI->label(), 0, 0);
 	layout->addLayout(antialiasingLevelUI->createFieldLayout(), 0, 1);
 }

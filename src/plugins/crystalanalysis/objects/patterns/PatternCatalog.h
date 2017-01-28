@@ -38,9 +38,6 @@ public:
 	/// \brief Constructor.
 	Q_INVOKABLE PatternCatalog(DataSet* dataset);
 
-	/// Returns the list of structure patterns in this catalog.
-	const QVector<StructurePattern*>& patterns() const { return _patterns; }
-
 	/// Adds a new patterns to the catalog.
 	void addPattern(StructurePattern* pattern) { _patterns.push_back(pattern); }
 
@@ -61,12 +58,10 @@ public:
 private:
 
 	/// List of structure patterns.
-	VectorReferenceField<StructurePattern> _patterns;
+	DECLARE_MODIFIABLE_VECTOR_REFERENCE_FIELD(StructurePattern, patterns, setPatterns);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_VECTOR_REFERENCE_FIELD(_patterns);
 };
 
 }	// End of namespace

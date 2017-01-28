@@ -26,18 +26,18 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PipelineObject, DataObject);
-DEFINE_REFERENCE_FIELD(PipelineObject, _sourceObject, "InputObject", DataObject);
-DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(PipelineObject, _modApps, "ModifierApplications", ModifierApplication, PROPERTY_FIELD_ALWAYS_CLONE);
-SET_PROPERTY_FIELD_LABEL(PipelineObject, _sourceObject, "Input");
-SET_PROPERTY_FIELD_LABEL(PipelineObject, _modApps, "Modifier Applications");
+DEFINE_REFERENCE_FIELD(PipelineObject, sourceObject, "InputObject", DataObject);
+DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(PipelineObject, modifierApplications, "ModifierApplications", ModifierApplication, PROPERTY_FIELD_ALWAYS_CLONE);
+SET_PROPERTY_FIELD_LABEL(PipelineObject, sourceObject, "Input");
+SET_PROPERTY_FIELD_LABEL(PipelineObject, modifierApplications, "Modifier Applications");
 
 /******************************************************************************
 * Default constructor.
 ******************************************************************************/
 PipelineObject::PipelineObject(DataSet* dataset) : DataObject(dataset), _cachedIndex(-1)
 {
-	INIT_PROPERTY_FIELD(PipelineObject::_sourceObject);
-	INIT_PROPERTY_FIELD(PipelineObject::_modApps);
+	INIT_PROPERTY_FIELD(sourceObject);
+	INIT_PROPERTY_FIELD(modifierApplications);
 }
 
 /******************************************************************************
@@ -177,7 +177,7 @@ void PipelineObject::insertModifierApplication(int index, ModifierApplication* m
 {
 	OVITO_ASSERT(index >= 0 && index <= modifierApplications().size());
 	OVITO_CHECK_OBJECT_POINTER(modApp);
-	_modApps.insert(index, modApp);
+	_modifierApplications.insert(index, modApp);
 
 	if(modApp->modifier())
 		modApp->modifier()->initializeModifier(this, modApp);
@@ -190,7 +190,7 @@ void PipelineObject::removeModifierApplication(int index)
 {
 	OVITO_ASSERT(index >= 0 && index < modifierApplications().size());
 	OVITO_ASSERT(modifierApplications()[index]->pipelineObject() == this);
-	_modApps.remove(index);
+	_modifierApplications.remove(index);
 }
 
 /******************************************************************************
@@ -214,7 +214,7 @@ bool PipelineObject::referenceEvent(RefTarget* source, ReferenceEvent* event)
 			event->type() == ReferenceEvent::PendingStateChanged) {
 			// If one of the modifiers has changed, then all subsequent
 			// modifiers in the pipeline need to be informed (unless it's from a disabled modifier).
-			int index = _modApps.indexOf(source);
+			int index = _modifierApplications.indexOf(source);
 			if(index != -1) {
 				Modifier* mod = modifierApplications()[index]->modifier();
 				if(mod && mod->isEnabled())
@@ -224,7 +224,7 @@ bool PipelineObject::referenceEvent(RefTarget* source, ReferenceEvent* event)
 		else if(event->type() == ReferenceEvent::TargetEnabledOrDisabled) {
 			// If one of the modifiers gets enabled/disabled, then all subsequent
 			// modifiers in the pipeline need to be informed.
-			int index = _modApps.indexOf(source);
+			int index = _modifierApplications.indexOf(source);
 			if(index != -1) {
 				modifierChanged(index);
 				// We also consider this a change of the modification pipeline itself.
@@ -244,7 +244,7 @@ void PipelineObject::referenceInserted(const PropertyFieldDescriptor& field, Ref
 {
 	// If a new modifier has been inserted into the pipeline, then all
 	// following modifiers need to be informed.
-	if(field == PROPERTY_FIELD(PipelineObject::_modApps)) {
+	if(field == PROPERTY_FIELD(modifierApplications)) {
 
 		// Also inform the new modifier itself that its input has changed
 		// because it is being inserted into a pipeline.
@@ -266,7 +266,7 @@ void PipelineObject::referenceInserted(const PropertyFieldDescriptor& field, Ref
 ******************************************************************************/
 void PipelineObject::referenceRemoved(const PropertyFieldDescriptor& field, RefTarget* oldTarget, int listIndex)
 {
-	if(field == PROPERTY_FIELD(PipelineObject::_modApps)) {
+	if(field == PROPERTY_FIELD(modifierApplications)) {
 		// If a modifier is being removed from the pipeline, then all
 		// modifiers following it need to be informed.
 		modifierChanged(listIndex - 1);
@@ -281,7 +281,7 @@ void PipelineObject::referenceRemoved(const PropertyFieldDescriptor& field, RefT
 ******************************************************************************/
 void PipelineObject::referenceReplaced(const PropertyFieldDescriptor& field, RefTarget* oldTarget, RefTarget* newTarget)
 {
-	if(field == PROPERTY_FIELD(PipelineObject::_sourceObject)) {
+	if(field == PROPERTY_FIELD(sourceObject)) {
 		// Invalidate cache if input object has been replaced.
 		modifierChanged(-1);
 	}

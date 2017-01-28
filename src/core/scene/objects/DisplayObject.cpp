@@ -25,18 +25,20 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(DisplayObject, RefTarget);
-DEFINE_PROPERTY_FIELD(DisplayObject, _isEnabled, "IsEnabled");
-SET_PROPERTY_FIELD_LABEL(DisplayObject, _isEnabled, "Enabled");
-DEFINE_PROPERTY_FIELD(DisplayObject, _title, "Name");
-SET_PROPERTY_FIELD_LABEL(DisplayObject, _title, "Name");
+DEFINE_PROPERTY_FIELD(DisplayObject, isEnabled, "IsEnabled");
+SET_PROPERTY_FIELD_LABEL(DisplayObject, isEnabled, "Enabled");
+SET_PROPERTY_FIELD_CHANGE_EVENT(DisplayObject, isEnabled, ReferenceEvent::TargetEnabledOrDisabled);
+DEFINE_PROPERTY_FIELD(DisplayObject, title, "Name");
+SET_PROPERTY_FIELD_LABEL(DisplayObject, title, "Name");
+SET_PROPERTY_FIELD_CHANGE_EVENT(DisplayObject, title, ReferenceEvent::TitleChanged);
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
 DisplayObject::DisplayObject(DataSet* dataset) : RefTarget(dataset), _isEnabled(true)
 {
-	INIT_PROPERTY_FIELD(DisplayObject::_isEnabled);
-	INIT_PROPERTY_FIELD(DisplayObject::_title);
+	INIT_PROPERTY_FIELD(isEnabled);
+	INIT_PROPERTY_FIELD(title);
 }
 
 OVITO_END_INLINE_NAMESPACE

@@ -64,7 +64,7 @@ void BondTypePropertyEditor::createUI(const RolloutInsertionParameters& rolloutP
 	sublayout->setContentsMargins(0,0,0,0);
 	layout->addWidget(subEditorContainer);
 
-	RefTargetListParameterUI* bondTypesListUI = new CustomRefTargetListParameterUI(this, PROPERTY_FIELD(BondTypeProperty::_bondTypes), RolloutInsertionParameters().insertInto(subEditorContainer));
+	RefTargetListParameterUI* bondTypesListUI = new CustomRefTargetListParameterUI(this, PROPERTY_FIELD(BondTypeProperty::bondTypes), RolloutInsertionParameters().insertInto(subEditorContainer));
 	layout->insertWidget(0, bondTypesListUI->listWidget());
 }
 

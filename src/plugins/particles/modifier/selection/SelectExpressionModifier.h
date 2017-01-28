@@ -36,16 +36,8 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE SelectExpressionModifier(DataSet* dataset) : ParticleModifier(dataset) {
-		INIT_PROPERTY_FIELD(SelectExpressionModifier::_expression);
+		INIT_PROPERTY_FIELD(expression);
 	}
-
-	/////////////////////////// specific methods ///////////////////////////////
-
-	/// Sets the expression that is used to select particles.
-	void setExpression(const QString& expression) { _expression = expression; }
-
-	/// Returns the expression that is used to select particles.
-	const QString& expression() const { return _expression; }
 
 	/// \brief Returns the list of available input variables.
 	const QStringList& inputVariableNames() const { return _variableNames; }
@@ -62,7 +54,7 @@ protected:
 	virtual PipelineStatus modifyParticles(TimePoint time, TimeInterval& validityInterval) override;
 
 	/// The expression that is used to select atoms.
-	PropertyField<QString> _expression;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QString, expression, setExpression);
 
 	/// The list of input variables during the last evaluation.
 	QStringList _variableNames;
@@ -70,15 +62,11 @@ protected:
 	/// Human-readable text listing the input variables during the last evaluation.
 	QString _variableTable;
 
-private:
-
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Expression select");
 	Q_CLASSINFO("ModifierCategory", "Selection");
-
-	DECLARE_PROPERTY_FIELD(_expression);
 };
 
 OVITO_END_INLINE_NAMESPACE

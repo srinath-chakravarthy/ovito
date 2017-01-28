@@ -61,7 +61,7 @@ public:
 	/// \brief Returns the point that defines the outgoing direction.
 	value_type outPoint() const { return this->value() + outTangent(); }
 
-protected:
+public:
 
 	/// The tangent that defines the left derivative at the key point.
 	PropertyField<tangent_type> _inTangent;
@@ -80,8 +80,8 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE FloatSplineAnimationKey(DataSet* dataset, TimePoint time = 0, FloatType value = 0) : SplineAnimationKey<FloatAnimationKey>(dataset, time, value) {
-		INIT_PROPERTY_FIELD(FloatSplineAnimationKey::_inTangent);
-		INIT_PROPERTY_FIELD(FloatSplineAnimationKey::_outTangent);
+		INIT_PROPERTY_FIELD(inTangent);
+		INIT_PROPERTY_FIELD(outTangent);
 	}
 
 private:
@@ -89,8 +89,8 @@ private:
 	Q_OBJECT
 	OVITO_OBJECT
 
-	DECLARE_PROPERTY_FIELD(_inTangent);
-	DECLARE_PROPERTY_FIELD(_outTangent);
+	DECLARE_PROPERTY_FIELD_DESCRIPTOR(inTangent);
+	DECLARE_PROPERTY_FIELD_DESCRIPTOR(outTangent);
 };
 
 /**
@@ -102,8 +102,8 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE PositionSplineAnimationKey(DataSet* dataset, TimePoint time = 0, const Vector3& value = Vector3::Zero()) : SplineAnimationKey<PositionAnimationKey>(dataset, time, value) {
-		INIT_PROPERTY_FIELD(PositionSplineAnimationKey::_inTangent);
-		INIT_PROPERTY_FIELD(PositionSplineAnimationKey::_outTangent);
+		INIT_PROPERTY_FIELD(inTangent);
+		INIT_PROPERTY_FIELD(outTangent);
 	}
 
 private:
@@ -111,8 +111,8 @@ private:
 	Q_OBJECT
 	OVITO_OBJECT
 
-	DECLARE_PROPERTY_FIELD(_inTangent);
-	DECLARE_PROPERTY_FIELD(_outTangent);
+	DECLARE_PROPERTY_FIELD_DESCRIPTOR(inTangent);
+	DECLARE_PROPERTY_FIELD_DESCRIPTOR(outTangent);
 };
 
 /**

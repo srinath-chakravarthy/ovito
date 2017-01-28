@@ -46,30 +46,6 @@ public:
 	/// \brief Computes the display bounding box of the data object.
 	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
 
-	/// \brief Returns the display width of trajectory lines.
-	FloatType lineWidth() const { return _lineWidth; }
-
-	/// \brief Sets the display width of trajectory lines.
-	void setLineWidth(FloatType newWidth) { _lineWidth = newWidth; }
-
-	/// \brief Returns the selected shading mode for trajectory lines.
-	ArrowPrimitive::ShadingMode shadingMode() const { return _shadingMode; }
-
-	/// \brief Sets the shading mode for trajectory lines.
-	void setShadingMode(ArrowPrimitive::ShadingMode mode) { _shadingMode = mode; }
-
-	/// Returns the display color for trajectory lines.
-	const Color& lineColor() const { return _lineColor; }
-
-	/// Sets the display color for trajectory lines.
-	void setLineColor(const Color& color) { _lineColor = color; }
-
-	/// Returns the whether the trajectory lines are rendered only up to the current animation time.
-	bool showUpToCurrentTime() const { return _showUpToCurrentTime; }
-
-	/// Sets the whether the trajectory lines are rendered only up to the current animation time.
-	void setShowUpToCurrentTime(bool enable) { _showUpToCurrentTime = enable; }
-
 public:
 
     Q_PROPERTY(Ovito::ArrowPrimitive::ShadingMode shadingMode READ shadingMode WRITE setShadingMode);
@@ -77,16 +53,16 @@ public:
 protected:
 
 	/// Controls the display width of trajectory lines.
-	PropertyField<FloatType> _lineWidth;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, lineWidth, setLineWidth);
 
 	/// Controls the color of the trajectory lines.
-	PropertyField<Color, QColor> _lineColor;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Color, lineColor, setLineColor);
 
 	/// Controls the whether the trajectory lines are rendered only up to the current animation time.
-	PropertyField<bool> _showUpToCurrentTime;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, showUpToCurrentTime, setShowUpToCurrentTime);
 
 	/// Controls the shading mode for lines.
-	PropertyField<ArrowPrimitive::ShadingMode, int> _shadingMode;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ArrowPrimitive::ShadingMode, shadingMode, setShadingMode);
 
 	/// The buffered geometry used to render the trajectory lines.
 	std::shared_ptr<ArrowPrimitive> _segmentBuffer;
@@ -119,11 +95,6 @@ private:
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Trajectory lines");
-
-	DECLARE_PROPERTY_FIELD(_lineWidth);
-	DECLARE_PROPERTY_FIELD(_lineColor);
-	DECLARE_PROPERTY_FIELD(_shadingMode);
-	DECLARE_PROPERTY_FIELD(_showUpToCurrentTime);
 };
 
 }	// End of namespace

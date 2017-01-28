@@ -45,14 +45,14 @@ void CalculateDisplacementsModifierEditor::createUI(const RolloutInsertionParame
 	layout->setContentsMargins(4,4,4,4);
 	layout->setSpacing(4);
 
-	BooleanParameterUI* eliminateCellDeformationUI = new BooleanParameterUI(this, PROPERTY_FIELD(CalculateDisplacementsModifier::_eliminateCellDeformation));
+	BooleanParameterUI* eliminateCellDeformationUI = new BooleanParameterUI(this, PROPERTY_FIELD(CalculateDisplacementsModifier::eliminateCellDeformation));
 	layout->addWidget(eliminateCellDeformationUI->checkBox());
 
-	BooleanParameterUI* assumeUnwrappedUI = new BooleanParameterUI(this, PROPERTY_FIELD(CalculateDisplacementsModifier::_assumeUnwrappedCoordinates));
+	BooleanParameterUI* assumeUnwrappedUI = new BooleanParameterUI(this, PROPERTY_FIELD(CalculateDisplacementsModifier::assumeUnwrappedCoordinates));
 	layout->addWidget(assumeUnwrappedUI->checkBox());
 
 #if 0
-	BooleanParameterUI* showReferenceUI = new BooleanParameterUI(this, PROPERTY_FIELD(CalculateDisplacementsModifier::_referenceShown));
+	BooleanParameterUI* showReferenceUI = new BooleanParameterUI(this, PROPERTY_FIELD(CalculateDisplacementsModifier::referenceShown));
 	layout->addWidget(showReferenceUI->checkBox());
 #endif
 
@@ -66,12 +66,12 @@ void CalculateDisplacementsModifierEditor::createUI(const RolloutInsertionParame
 	sublayout->setColumnStretch(2, 95);
 
 	// Add box for selection between absolute and relative reference frames.
-	BooleanRadioButtonParameterUI* useFrameOffsetUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(CalculateDisplacementsModifier::_useReferenceFrameOffset));
+	BooleanRadioButtonParameterUI* useFrameOffsetUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(CalculateDisplacementsModifier::useReferenceFrameOffset));
 	useFrameOffsetUI->buttonTrue()->setText(tr("Relative to current frame"));
 	useFrameOffsetUI->buttonFalse()->setText(tr("Fixed reference configuration"));
 	sublayout->addWidget(useFrameOffsetUI->buttonFalse(), 0, 0, 1, 3);
 
-	IntegerParameterUI* frameNumberUI = new IntegerParameterUI(this, PROPERTY_FIELD(CalculateDisplacementsModifier::_referenceFrameNumber));
+	IntegerParameterUI* frameNumberUI = new IntegerParameterUI(this, PROPERTY_FIELD(CalculateDisplacementsModifier::referenceFrameNumber));
 	frameNumberUI->label()->setText(tr("Frame number:"));
 	sublayout->addWidget(frameNumberUI->label(), 1, 1, 1, 1);
 	sublayout->addLayout(frameNumberUI->createFieldLayout(), 1, 2, 1, 1);
@@ -79,7 +79,7 @@ void CalculateDisplacementsModifierEditor::createUI(const RolloutInsertionParame
 	connect(useFrameOffsetUI->buttonFalse(), &QRadioButton::toggled, frameNumberUI, &IntegerParameterUI::setEnabled);
 
 	sublayout->addWidget(useFrameOffsetUI->buttonTrue(), 2, 0, 1, 3);
-	IntegerParameterUI* frameOffsetUI = new IntegerParameterUI(this, PROPERTY_FIELD(CalculateDisplacementsModifier::_referenceFrameOffset));
+	IntegerParameterUI* frameOffsetUI = new IntegerParameterUI(this, PROPERTY_FIELD(CalculateDisplacementsModifier::referenceFrameOffset));
 	frameOffsetUI->label()->setText(tr("Frame offset:"));
 	sublayout->addWidget(frameOffsetUI->label(), 3, 1, 1, 1);
 	sublayout->addLayout(frameOffsetUI->createFieldLayout(), 3, 2, 1, 1);
@@ -91,10 +91,10 @@ void CalculateDisplacementsModifierEditor::createUI(const RolloutInsertionParame
 	layout->addWidget(statusLabel());
 
 	// Open a sub-editor for the vector display object.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(CalculateDisplacementsModifier::_vectorDisplay), rolloutParams.after(rollout));
+	new SubObjectParameterUI(this, PROPERTY_FIELD(CalculateDisplacementsModifier::vectorDisplay), rolloutParams.after(rollout));
 
 	// Open a sub-editor for the reference object.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(CalculateDisplacementsModifier::_referenceObject), RolloutInsertionParameters().setTitle(tr("Reference")));
+	new SubObjectParameterUI(this, PROPERTY_FIELD(CalculateDisplacementsModifier::referenceConfiguration), RolloutInsertionParameters().setTitle(tr("Reference")));
 }
 
 OVITO_END_INLINE_NAMESPACE

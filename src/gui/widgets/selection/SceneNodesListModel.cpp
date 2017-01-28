@@ -100,7 +100,7 @@ void SceneNodesListModel::onNodeNotificationEvent(RefTarget* source, ReferenceEv
 	// Whenever a new node is being inserted into the scene, add it to our internal list.
 	if(event->type() == ReferenceEvent::ReferenceAdded) {
 		ReferenceFieldEvent* refEvent = static_cast<ReferenceFieldEvent*>(event);
-		if(refEvent->field() == PROPERTY_FIELD(SceneNode::_children)) {
+		if(refEvent->field() == PROPERTY_FIELD(SceneNode::children)) {
 			if(SceneNode* node = dynamic_object_cast<SceneNode>(refEvent->newTarget())) {
 				beginInsertRows(QModelIndex(), _nodeListener.targets().size(), _nodeListener.targets().size());
 				_nodeListener.push_back(node);

@@ -55,34 +55,34 @@ inline apivector tvec(const Point_3<T>& p) {
 }
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(TachyonRenderer, NonInteractiveSceneRenderer);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _antialiasingEnabled, "EnableAntialiasing", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _directLightSourceEnabled, "EnableDirectLightSource", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _shadowsEnabled, "EnableShadows", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _antialiasingSamples, "AntialiasingSamples", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _defaultLightSourceIntensity, "DefaultLightSourceIntensity", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _ambientOcclusionEnabled, "EnableAmbientOcclusion", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _ambientOcclusionSamples, "AmbientOcclusionSamples", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _ambientOcclusionBrightness, "AmbientOcclusionBrightness", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _depthOfFieldEnabled, "DepthOfFieldEnabled", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _dofFocalLength, "DOFFocalLength", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _dofAperture, "DOFAperture", PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _antialiasingEnabled, "Enable anti-aliasing");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _antialiasingSamples, "Anti-aliasing samples");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _directLightSourceEnabled, "Direct light");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _shadowsEnabled, "Shadows");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _defaultLightSourceIntensity, "Direct light intensity");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _ambientOcclusionEnabled, "Ambient occlusion");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _ambientOcclusionSamples, "Ambient occlusion samples");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _ambientOcclusionBrightness, "Ambient occlusion brightness");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _depthOfFieldEnabled, "Depth of field");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _dofFocalLength, "Focal length");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _dofAperture, "Aperture");
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, _antialiasingSamples, IntegerParameterUnit, 1, 500);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TachyonRenderer, _defaultLightSourceIntensity, FloatParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TachyonRenderer, _ambientOcclusionBrightness, FloatParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TachyonRenderer, _dofFocalLength, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, _dofAperture, FloatParameterUnit, 0, 1);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, _ambientOcclusionSamples, IntegerParameterUnit, 1, 100);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, antialiasingEnabled, "EnableAntialiasing", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, directLightSourceEnabled, "EnableDirectLightSource", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, shadowsEnabled, "EnableShadows", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, antialiasingSamples, "AntialiasingSamples", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, defaultLightSourceIntensity, "DefaultLightSourceIntensity", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, ambientOcclusionEnabled, "EnableAmbientOcclusion", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, ambientOcclusionSamples, "AmbientOcclusionSamples", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, ambientOcclusionBrightness, "AmbientOcclusionBrightness", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, depthOfFieldEnabled, "DepthOfFieldEnabled", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, dofFocalLength, "DOFFocalLength", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, dofAperture, "DOFAperture", PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, antialiasingEnabled, "Enable anti-aliasing");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, antialiasingSamples, "Anti-aliasing samples");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, directLightSourceEnabled, "Direct light");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, shadowsEnabled, "Shadows");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, defaultLightSourceIntensity, "Direct light intensity");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, ambientOcclusionEnabled, "Ambient occlusion");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, ambientOcclusionSamples, "Ambient occlusion samples");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, ambientOcclusionBrightness, "Ambient occlusion brightness");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, depthOfFieldEnabled, "Depth of field");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, dofFocalLength, "Focal length");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, dofAperture, "Aperture");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, antialiasingSamples, IntegerParameterUnit, 1, 500);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TachyonRenderer, defaultLightSourceIntensity, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TachyonRenderer, ambientOcclusionBrightness, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TachyonRenderer, dofFocalLength, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, dofAperture, FloatParameterUnit, 0, 1);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, ambientOcclusionSamples, IntegerParameterUnit, 1, 100);
 
 /******************************************************************************
 * Default constructor.
@@ -93,17 +93,17 @@ TachyonRenderer::TachyonRenderer(DataSet* dataset) : NonInteractiveSceneRenderer
 	  _defaultLightSourceIntensity(0.90f), _ambientOcclusionBrightness(0.80f), _depthOfFieldEnabled(false),
 	  _dofFocalLength(40), _dofAperture(1e-2f)
 {
-	INIT_PROPERTY_FIELD(TachyonRenderer::_antialiasingEnabled);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_antialiasingSamples);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_directLightSourceEnabled);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_shadowsEnabled);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_defaultLightSourceIntensity);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_ambientOcclusionEnabled);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_ambientOcclusionSamples);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_ambientOcclusionBrightness);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_depthOfFieldEnabled);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_dofFocalLength);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_dofAperture);
+	INIT_PROPERTY_FIELD(antialiasingEnabled);
+	INIT_PROPERTY_FIELD(antialiasingSamples);
+	INIT_PROPERTY_FIELD(directLightSourceEnabled);
+	INIT_PROPERTY_FIELD(shadowsEnabled);
+	INIT_PROPERTY_FIELD(defaultLightSourceIntensity);
+	INIT_PROPERTY_FIELD(ambientOcclusionEnabled);
+	INIT_PROPERTY_FIELD(ambientOcclusionSamples);
+	INIT_PROPERTY_FIELD(ambientOcclusionBrightness);
+	INIT_PROPERTY_FIELD(depthOfFieldEnabled);
+	INIT_PROPERTY_FIELD(dofFocalLength);
+	INIT_PROPERTY_FIELD(dofAperture);
 }
 
 /******************************************************************************

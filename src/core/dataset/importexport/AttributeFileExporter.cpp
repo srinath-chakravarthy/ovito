@@ -28,14 +28,14 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(AttributeFileExporter, FileExporter);
-DEFINE_PROPERTY_FIELD(AttributeFileExporter, _attributesToExport, "AttributesToExport");
+DEFINE_PROPERTY_FIELD(AttributeFileExporter, attributesToExport, "AttributesToExport");
 
 /******************************************************************************
 * Constructs a new instance of the class.
 ******************************************************************************/
 AttributeFileExporter::AttributeFileExporter(DataSet* dataset) : FileExporter(dataset)
 {
-	INIT_PROPERTY_FIELD(AttributeFileExporter::_attributesToExport);
+	INIT_PROPERTY_FIELD(attributesToExport);
 }
 
 /******************************************************************************

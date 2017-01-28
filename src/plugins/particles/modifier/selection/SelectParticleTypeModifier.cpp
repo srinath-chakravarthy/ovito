@@ -29,10 +29,10 @@
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Selection)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SelectParticleTypeModifier, ParticleModifier);
-DEFINE_PROPERTY_FIELD(SelectParticleTypeModifier, _sourceProperty, "SourceProperty");
-DEFINE_PROPERTY_FIELD(SelectParticleTypeModifier, _selectedParticleTypes, "SelectedParticleTypes");
-SET_PROPERTY_FIELD_LABEL(SelectParticleTypeModifier, _sourceProperty, "Property");
-SET_PROPERTY_FIELD_LABEL(SelectParticleTypeModifier, _selectedParticleTypes, "Selected types");
+DEFINE_PROPERTY_FIELD(SelectParticleTypeModifier, sourceProperty, "SourceProperty");
+DEFINE_PROPERTY_FIELD(SelectParticleTypeModifier, selectedParticleTypes, "SelectedParticleTypes");
+SET_PROPERTY_FIELD_LABEL(SelectParticleTypeModifier, sourceProperty, "Property");
+SET_PROPERTY_FIELD_LABEL(SelectParticleTypeModifier, selectedParticleTypes, "Selected types");
 
 /******************************************************************************
 * This modifies the input object.

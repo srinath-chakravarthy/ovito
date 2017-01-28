@@ -66,12 +66,6 @@ public:
 	/// Sets the status returned by the modifier and generates a ReferenceEvent::ObjectStatusChanged event.
 	void setStatus(const PipelineStatus& status);
 
-	/// Returns the Python script.
-	const QString& script() const { return _script; }
-
-	/// Sets the Python script.
-	void setScript(const QString& script) { _script = script; }
-
 	/// Returns the Python script function executed by the modifier.
 	py::object scriptFunction() {
 		if(_modifyScriptFunction)
@@ -127,7 +121,7 @@ private Q_SLOTS:
 private:
 
 	/// The Python script.
-	PropertyField<QString> _script;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QString, script, setScript);
 
 	/// The Python engine.
 	std::unique_ptr<ScriptEngine> _scriptEngine;
@@ -170,8 +164,6 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_script);
 };
 
 }	// End of namespace

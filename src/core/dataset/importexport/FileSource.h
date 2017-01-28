@@ -39,21 +39,13 @@ public:
 
 	/// Constructs an empty file source which is not referring to an external file.
 	Q_INVOKABLE FileSource(DataSet* dataset);
-
-	/// Returns the object that is responsible for loading data from the external file referenced by this FileSource.
-	/// \return The importer owned by this FileSource; or \c nullptr if this FileSource is currently not referring to an external file.
-	/// The importer can be replaced by calling setSource().
-	FileSourceImporter* importer() const { return _importer; }
-
+	
 	/// \brief Sets the source location for importing data.
 	/// \param sourceUrl The new source location.
 	/// \param importer The importer object that will parse the input file.
 	/// \param autodetectFileSequences Enables the automatic detection of file sequences.
 	/// \return false if the operation has been canceled by the user.
 	bool setSource(QUrl sourceUrl, FileSourceImporter* importer, bool autodetectFileSequences);
-
-	/// \brief Returns the source location of the data.
-	const QUrl& sourceUrl() const { return _sourceUrl; }
 
 	/// \brief This reloads the input data from the external file.
 	/// \param frameIndex The animation frame to reload from the external file.
@@ -79,12 +71,6 @@ public:
 
 	/// \brief Given an input frame index, returns the animation time at which it is shown.
 	Q_INVOKABLE TimePoint inputFrameToAnimationTime(int frame) const;
-
-	/// \brief Returns whether the scene's animation interval is being adjusted to the number of frames reported by the file parser.
-	bool adjustAnimationIntervalEnabled() const { return _adjustAnimationIntervalEnabled; }
-
-	/// \brief Controls whether the scene's animation interval should be adjusted to the number of frames reported by the file parser.
-	void setAdjustAnimationIntervalEnabled(bool enabled) { _adjustAnimationIntervalEnabled = enabled; }
 
 	/// \brief Adjusts the animation interval of the current data set to the number of frames in the data source.
 	void adjustAnimationInterval(int gotoFrameIndex = -1);
@@ -126,22 +112,22 @@ protected:
 private:
 
 	/// The associated importer object that is responsible for parsing the input file.
-	ReferenceField<FileSourceImporter> _importer;
+	DECLARE_REFERENCE_FIELD(FileSourceImporter, importer);
 
 	/// Controls whether the scene's animation interval is adjusted to the number of frames found in the input file.
-	PropertyField<bool> _adjustAnimationIntervalEnabled;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, adjustAnimationIntervalEnabled, setAdjustAnimationIntervalEnabled);
 
 	/// The source file (may include a wild-card pattern).
-	PropertyField<QUrl, QUrl, ReferenceEvent::TitleChanged> _sourceUrl;
+	DECLARE_PROPERTY_FIELD(QUrl, sourceUrl);
 
 	/// Controls the mapping of input file frames to animation frames (i.e. the numerator of the playback rate for the file sequence).
-	PropertyField<int> _playbackSpeedNumerator;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, playbackSpeedNumerator, setPlaybackSpeedNumerator);
 
 	/// Controls the mapping of input file frames to animation frames (i.e. the denominator of the playback rate for the file sequence).
-	PropertyField<int> _playbackSpeedDenominator;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, playbackSpeedDenominator, setPlaybackSpeedDenominator);
 
 	/// Specifies the starting animation frame to which the first frame of the file sequence is mapped.
-	PropertyField<int> _playbackStartTime;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, playbackStartTime, setPlaybackStartTime);
 
 	/// Stores the list of frames of the time series.
 	QVector<FileSourceImporter::Frame> _frames;
@@ -174,19 +160,10 @@ private:
 	/// The status returned by the parser during its last call.
 	PipelineStatus _importStatus;
 
-private:
-
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("ClassNameAlias", "LinkedFileObject");	// This for backward compatibility with files written by Ovito 2.4 and older.
-
-	DECLARE_REFERENCE_FIELD(_importer);
-	DECLARE_PROPERTY_FIELD(_adjustAnimationIntervalEnabled);
-	DECLARE_PROPERTY_FIELD(_sourceUrl);
-	DECLARE_PROPERTY_FIELD(_playbackSpeedNumerator);
-	DECLARE_PROPERTY_FIELD(_playbackSpeedDenominator);
-	DECLARE_PROPERTY_FIELD(_playbackStartTime);
 };
 
 OVITO_END_INLINE_NAMESPACE

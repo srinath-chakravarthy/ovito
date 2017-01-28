@@ -39,98 +39,12 @@ public:
 	/// Constructor.
 	Q_INVOKABLE AtomicStrainModifier(DataSet* dataset);
 
-	/// Returns the object that contains the reference configuration of the particles
-	/// used for calculating the displacement vectors.
-	DataObject* referenceConfiguration() const { return _referenceObject; }
-
-	/// Sets the object that contains the reference configuration of the particles
-	/// used for calculating the displacement vectors.
-	void setReferenceConfiguration(DataObject* refConf) { _referenceObject = refConf; }
-
-	/// Returns whether the reference configuration is shown instead of the current configuration.
-	bool referenceShown() const { return _referenceShown; }
-
-	/// Sets whether the reference configuration is shown instead of the current configuration.
-	void setReferenceShown(bool show) { _referenceShown = show; }
-
-	/// Returns true if the homogeneous deformation of the simulation cell is eliminated from the calculated displacement vectors.
-	bool eliminateCellDeformation() const { return _eliminateCellDeformation; }
-
-	/// Sets whether the homogeneous deformation of the simulation cell is eliminated from the calculated displacement vectors.
-	void setEliminateCellDeformation(bool enable) { _eliminateCellDeformation = enable; }
-
-	/// Returns true if we assume the particle coordinates are unwrapped when calculating the displacement vectors.
-	bool assumeUnwrappedCoordinates() const { return _assumeUnwrappedCoordinates; }
-
-	/// Sets we assume the particle coordinates are unwrapped when calculating the displacement vectors.
-	void setAssumeUnwrappedCoordinates(bool enable) { _assumeUnwrappedCoordinates = enable; }
-
-	/// Returns the cutoff radius used to build the neighbor lists for the analysis.
-	FloatType cutoff() const { return _cutoff; }
-
-	/// \brief Sets the cutoff radius used to build the neighbor lists for the analysis.
-	void setCutoff(FloatType newCutoff) { _cutoff = newCutoff; }
-
-	/// Returns whether atomic deformation gradient tensors should be computed and stored.
-	bool calculateDeformationGradients() const { return _calculateDeformationGradients; }
-
-	/// Sets whether atomic deformation gradient tensors should be computed and stored.
-	void setCalculateDeformationGradients(bool enableCalculation) { _calculateDeformationGradients = enableCalculation; }
-
-	/// Returns whether atomic strain tensors should be computed and stored.
-	bool calculateStrainTensors() const { return _calculateStrainTensors; }
-
-	/// Sets whether atomic strain tensors should be computed and stored.
-	void setCalculateStrainTensors(bool enableCalculation) { _calculateStrainTensors = enableCalculation; }
-
-	/// Returns whether non-affine displacements should be computed and stored.
-	bool calculateNonaffineSquaredDisplacements() const { return _calculateNonaffineSquaredDisplacements; }
-
-	/// Sets whether non-affine displacements should be computed and stored.
-	void setCalculateNonaffineSquaredDisplacements(bool enableCalculation) { _calculateNonaffineSquaredDisplacements = enableCalculation; }
-
-	/// Returns whether atomic stretch tensors should be computed and stored.
-	bool calculateStretchTensors() const { return _calculateStretchTensors; }
-
-	/// Sets whether atomic stretch tensors should be computed and stored.
-	void setCalculateStretchTensors(bool enableCalculation) { _calculateStretchTensors = enableCalculation; }
-
-	/// Returns whether atomic rotations should be computed and stored.
-	bool calculateRotations() const { return _calculateRotations; }
-
-	/// Sets whether atomic rotations should be computed and stored.
-	void setCalculateRotations(bool enableCalculation) { _calculateRotations = enableCalculation; }
-
-	/// Returns whether particles, for which the strain tensor could not be computed, are selected.
-	bool selectInvalidParticles() const { return _selectInvalidParticles; }
-
-	/// Sets whether particles, for which the strain tensor could not be computed, are selected.
-	void setSelectInvalidParticles(bool enableSelection) { _selectInvalidParticles = enableSelection; }
-
 	/// Returns the computed von Mises shear strain values.
 	const ParticleProperty& shearStrainValues() const { OVITO_CHECK_POINTER(_shearStrainValues.constData()); return *_shearStrainValues; }
 
 	/// After a successful evaluation of the modifier, this returns the number of invalid particles for which
 	/// the strain tensor could not be computed.
 	size_t invalidParticleCount() const { return _numInvalidParticles; }
-
-	/// Returns whether to use a reference frame relative to current frame.
-	bool useReferenceFrameOffset() const { return _useReferenceFrameOffset; }
-
-	/// Sets whether to use a reference frame relative to current frame.
-	void setUseReferenceFrameOffset(bool useOffset) { _useReferenceFrameOffset = useOffset; }
-
-	/// Returns the absolute frame number from reference file to use when calculating displacement vectors.
-	int referenceFrameNumber() const { return _referenceFrameNumber; }
-
-	/// Sets the absolute frame number from reference file to use when calculating displacement vectors.
-	void setReferenceFrameNumber(int frame) { _referenceFrameNumber = frame; }
-
-	/// Returns the relative frame offset to use.
-	int referenceFrameOffset() const { return _referenceFrameOffset; }
-
-	/// Sets the relative frame offset to use.
-	void setReferenceFrameOffset(int frameOffset) { _referenceFrameOffset = frameOffset; }
 
 protected:
 
@@ -271,72 +185,55 @@ private:
 	QExplicitlySharedDataPointer<ParticleProperty> _stretchTensors;
 
 	/// The reference configuration.
-	ReferenceField<DataObject> _referenceObject;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(DataObject, referenceConfiguration, setReferenceConfiguration);
 
 	/// Controls the whether the reference configuration is shown instead of the current configuration.
-	PropertyField<bool> _referenceShown;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, referenceShown, setReferenceShown);
 
 	/// Controls the whether the homogeneous deformation of the simulation cell is eliminated from the calculated displacement vectors.
-	PropertyField<bool> _eliminateCellDeformation;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, eliminateCellDeformation, setEliminateCellDeformation);
 
 	/// Controls the whether we assume the particle coordinates are unwrapped when calculating the displacement vectors.
-	PropertyField<bool> _assumeUnwrappedCoordinates;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, assumeUnwrappedCoordinates, setAssumeUnwrappedCoordinates);
 
 	/// Controls the cutoff radius for the neighbor lists.
-	PropertyField<FloatType> _cutoff;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, cutoff, setCutoff);
 
 	/// Controls the whether atomic deformation gradient tensors should be computed and stored.
-	PropertyField<bool> _calculateDeformationGradients;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, calculateDeformationGradients, setCalculateDeformationGradients);
 
 	/// Controls the whether atomic strain tensors should be computed and stored.
-	PropertyField<bool> _calculateStrainTensors;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, calculateStrainTensors, setCalculateStrainTensors);
 
 	/// Controls the whether non-affine displacements should be computed and stored.
-	PropertyField<bool> _calculateNonaffineSquaredDisplacements;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, calculateNonaffineSquaredDisplacements, setCalculateNonaffineSquaredDisplacements);
 
 	/// Controls the whether local rotations should be computed and stored.
-	PropertyField<bool> _calculateRotations;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, calculateRotations, setCalculateRotations);
 
 	/// Controls the whether atomic stretch tensors should be computed and stored.
-	PropertyField<bool> _calculateStretchTensors;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, calculateStretchTensors, setCalculateStretchTensors);
 
 	/// Controls the whether particles, for which the strain tensor could not be computed, are selected.
-	PropertyField<bool> _selectInvalidParticles;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, selectInvalidParticles, setSelectInvalidParticles);
 
 	/// Specify reference frame relative to current frame.
-	PropertyField<bool> _useReferenceFrameOffset;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, useReferenceFrameOffset, setUseReferenceFrameOffset);
 
 	/// Absolute frame number from reference file to use when calculating displacement vectors.
-	PropertyField<int> _referenceFrameNumber;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, referenceFrameNumber, setReferenceFrameNumber);
 
 	/// Relative frame offset for reference coordinates.
-	PropertyField<int> _referenceFrameOffset;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, referenceFrameOffset, setReferenceFrameOffset);
 
 	/// Counts the number of invalid particles for which the strain tensor could not be computed.
 	size_t _numInvalidParticles;
-
-private:
 
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Atomic strain");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
-
-	DECLARE_REFERENCE_FIELD(_referenceObject);
-	DECLARE_PROPERTY_FIELD(_referenceShown);
-	DECLARE_PROPERTY_FIELD(_eliminateCellDeformation);
-	DECLARE_PROPERTY_FIELD(_assumeUnwrappedCoordinates);
-	DECLARE_PROPERTY_FIELD(_cutoff);
-	DECLARE_PROPERTY_FIELD(_calculateDeformationGradients);
-	DECLARE_PROPERTY_FIELD(_calculateStrainTensors);
-	DECLARE_PROPERTY_FIELD(_calculateNonaffineSquaredDisplacements);
-	DECLARE_PROPERTY_FIELD(_selectInvalidParticles);
-	DECLARE_PROPERTY_FIELD(_useReferenceFrameOffset);
-	DECLARE_PROPERTY_FIELD(_referenceFrameNumber);
-	DECLARE_PROPERTY_FIELD(_referenceFrameOffset);
-	DECLARE_PROPERTY_FIELD(_calculateRotations);
-	DECLARE_PROPERTY_FIELD(_calculateStretchTensors);
 };
 
 OVITO_END_INLINE_NAMESPACE

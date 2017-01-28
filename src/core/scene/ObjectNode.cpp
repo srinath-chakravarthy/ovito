@@ -29,17 +29,17 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ObjectNode, SceneNode);
-DEFINE_REFERENCE_FIELD(ObjectNode, _dataProvider, "SceneObject", DataObject);
-DEFINE_VECTOR_REFERENCE_FIELD(ObjectNode, _displayObjects, "DisplayObjects", DisplayObject);
-SET_PROPERTY_FIELD_LABEL(ObjectNode, _dataProvider, "Object");
+DEFINE_REFERENCE_FIELD(ObjectNode, dataProvider, "SceneObject", DataObject);
+DEFINE_VECTOR_REFERENCE_FIELD(ObjectNode, displayObjects, "DisplayObjects", DisplayObject);
+SET_PROPERTY_FIELD_LABEL(ObjectNode, dataProvider, "Object");
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
 ObjectNode::ObjectNode(DataSet* dataset) : SceneNode(dataset)
 {
-	INIT_PROPERTY_FIELD(ObjectNode::_dataProvider);
-	INIT_PROPERTY_FIELD(ObjectNode::_displayObjects);
+	INIT_PROPERTY_FIELD(dataProvider);
+	INIT_PROPERTY_FIELD(displayObjects);
 }
 
 /******************************************************************************
@@ -166,7 +166,7 @@ bool ObjectNode::referenceEvent(RefTarget* source, ReferenceEvent* event)
 ******************************************************************************/
 void ObjectNode::referenceReplaced(const PropertyFieldDescriptor& field, RefTarget* oldTarget, RefTarget* newTarget)
 {
-	if(field == PROPERTY_FIELD(ObjectNode::_dataProvider)) {
+	if(field == PROPERTY_FIELD(dataProvider)) {
 		invalidatePipelineCache();
 
 		// When the data object is being replaced, the pending state of the node might change.
@@ -224,8 +224,8 @@ void ObjectNode::loadFromStream(ObjectLoadStream& stream)
 QString ObjectNode::objectTitle()
 {
 	// If a name has been assigned to this node, return it as the node's display title.
-	if(!name().isEmpty())
-		return name();
+	if(!nodeName().isEmpty())
+		return nodeName();
 
 	// Otherwise, use the title of the node's data source object.
 	if(DataObject* sourceObj = sourceObject())

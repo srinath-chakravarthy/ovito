@@ -29,16 +29,16 @@
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ConstructSurfaceModifier, AsynchronousParticleModifier);
-DEFINE_FLAGS_PROPERTY_FIELD(ConstructSurfaceModifier, _smoothingLevel, "SmoothingLevel", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(ConstructSurfaceModifier, _probeSphereRadius, "Radius", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_REFERENCE_FIELD(ConstructSurfaceModifier, _surfaceMeshDisplay, "SurfaceMeshDisplay", SurfaceMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(ConstructSurfaceModifier, _onlySelectedParticles, "OnlySelectedParticles");
-SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, _smoothingLevel, "Smoothing level");
-SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, _probeSphereRadius, "Probe sphere radius");
-SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, _surfaceMeshDisplay, "Surface mesh display");
-SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, _onlySelectedParticles, "Use only selected particles");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ConstructSurfaceModifier, _probeSphereRadius, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ConstructSurfaceModifier, _smoothingLevel, IntegerParameterUnit, 0);
+DEFINE_FLAGS_PROPERTY_FIELD(ConstructSurfaceModifier, smoothingLevel, "SmoothingLevel", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(ConstructSurfaceModifier, probeSphereRadius, "Radius", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(ConstructSurfaceModifier, surfaceMeshDisplay, "SurfaceMeshDisplay", SurfaceMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(ConstructSurfaceModifier, onlySelectedParticles, "OnlySelectedParticles");
+SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, smoothingLevel, "Smoothing level");
+SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, probeSphereRadius, "Probe sphere radius");
+SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, surfaceMeshDisplay, "Surface mesh display");
+SET_PROPERTY_FIELD_LABEL(ConstructSurfaceModifier, onlySelectedParticles, "Use only selected particles");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ConstructSurfaceModifier, probeSphereRadius, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ConstructSurfaceModifier, smoothingLevel, IntegerParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -47,10 +47,10 @@ ConstructSurfaceModifier::ConstructSurfaceModifier(DataSet* dataset) : Asynchron
 	_smoothingLevel(8), _probeSphereRadius(4), _onlySelectedParticles(false),
 	_solidVolume(0), _totalVolume(0), _surfaceArea(0)
 {
-	INIT_PROPERTY_FIELD(ConstructSurfaceModifier::_smoothingLevel);
-	INIT_PROPERTY_FIELD(ConstructSurfaceModifier::_probeSphereRadius);
-	INIT_PROPERTY_FIELD(ConstructSurfaceModifier::_surfaceMeshDisplay);
-	INIT_PROPERTY_FIELD(ConstructSurfaceModifier::_onlySelectedParticles);
+	INIT_PROPERTY_FIELD(smoothingLevel);
+	INIT_PROPERTY_FIELD(probeSphereRadius);
+	INIT_PROPERTY_FIELD(surfaceMeshDisplay);
+	INIT_PROPERTY_FIELD(onlySelectedParticles);
 
 	// Create the display object.
 	_surfaceMeshDisplay = new SurfaceMeshDisplay(dataset);
@@ -64,9 +64,9 @@ void ConstructSurfaceModifier::propertyChanged(const PropertyFieldDescriptor& fi
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Recompute results when the parameters have changed.
-	if(field == PROPERTY_FIELD(ConstructSurfaceModifier::_smoothingLevel)
-			|| field == PROPERTY_FIELD(ConstructSurfaceModifier::_probeSphereRadius)
-			|| field == PROPERTY_FIELD(ConstructSurfaceModifier::_onlySelectedParticles))
+	if(field == PROPERTY_FIELD(smoothingLevel)
+			|| field == PROPERTY_FIELD(probeSphereRadius)
+			|| field == PROPERTY_FIELD(onlySelectedParticles))
 		invalidateCachedResults();
 }
 
@@ -133,7 +133,7 @@ PipelineStatus ConstructSurfaceModifier::applyComputationResults(TimePoint time,
 
 	// Create the output data object.
 	OORef<SurfaceMesh> meshObj(new SurfaceMesh(dataset(), _surfaceMesh.data()));
-	meshObj->setCompletelySolid(_isCompletelySolid);
+	meshObj->setIsCompletelySolid(_isCompletelySolid);
 	meshObj->addDisplayObject(_surfaceMeshDisplay);
 
 	// Insert output object into the pipeline.

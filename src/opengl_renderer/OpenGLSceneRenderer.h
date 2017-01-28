@@ -105,9 +105,6 @@ public:
 	/// Renders a 2d polyline in the viewport.
 	void render2DPolyline(const Point2* points, int count, const ColorA& color, bool closed);
 
-	/// Returns the supersampling level.
-	virtual int antialiasingLevel() const { return 1; }
-
 	/// Returns the OpenGL context this renderer uses.
 	QOpenGLContext* glcontext() const { return _glcontext; }
 
@@ -217,6 +214,9 @@ protected:
 	/// \brief This virtual method is responsible for rendering additional content that is only
 	///       visible in the interactive viewports.
 	virtual void renderInteractiveContent() {}
+
+	/// Returns the supersampling level to use.
+	virtual int antialiasingLevelInternal() { return 1; }
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 3, 0)
 

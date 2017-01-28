@@ -29,30 +29,30 @@
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(GrainSegmentationModifier, StructureIdentificationModifier);
-DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _inputCrystalStructure, "CrystalStructure", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _misorientationThreshold, "MisorientationThreshold", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _fluctuationTolerance, "FluctuationTolerance", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _minGrainAtomCount, "MinGrainAtomCount", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_REFERENCE_FIELD(GrainSegmentationModifier, _patternCatalog, "PatternCatalog", PatternCatalog, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _smoothingLevel, "SmoothingLevel", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, _probeSphereRadius, "Radius", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_REFERENCE_FIELD(GrainSegmentationModifier, _meshDisplay, "MeshDisplay", PartitionMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(GrainSegmentationModifier, _onlySelectedParticles, "OnlySelectedParticles");
-DEFINE_PROPERTY_FIELD(GrainSegmentationModifier, _outputPartitionMesh, "OutputPartitionMesh");
-SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _inputCrystalStructure, "Input crystal structure");
-SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _misorientationThreshold, "Misorientation threshold");
-SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _fluctuationTolerance, "Tolerance");
-SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _minGrainAtomCount, "Minimum grain size");
-SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _smoothingLevel, "Smoothing level");
-SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _probeSphereRadius, "Probe sphere radius");
-SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _meshDisplay, "Surface mesh display");
-SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _onlySelectedParticles, "Use only selected particles");
-SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, _outputPartitionMesh, "Generate mesh");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _misorientationThreshold, AngleParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _fluctuationTolerance, AngleParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _probeSphereRadius, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _minGrainAtomCount, IntegerParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, _smoothingLevel, IntegerParameterUnit, 0);
+DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, inputCrystalStructure, "CrystalStructure", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, misorientationThreshold, "MisorientationThreshold", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, fluctuationTolerance, "FluctuationTolerance", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, minGrainAtomCount, "MinGrainAtomCount", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(GrainSegmentationModifier, patternCatalog, "PatternCatalog", PatternCatalog, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, smoothingLevel, "SmoothingLevel", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, probeSphereRadius, "Radius", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(GrainSegmentationModifier, meshDisplay, "MeshDisplay", PartitionMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(GrainSegmentationModifier, onlySelectedParticles, "OnlySelectedParticles");
+DEFINE_PROPERTY_FIELD(GrainSegmentationModifier, outputPartitionMesh, "OutputPartitionMesh");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, inputCrystalStructure, "Input crystal structure");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, misorientationThreshold, "Misorientation threshold");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, fluctuationTolerance, "Tolerance");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, minGrainAtomCount, "Minimum grain size");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, smoothingLevel, "Smoothing level");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, probeSphereRadius, "Probe sphere radius");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, meshDisplay, "Surface mesh display");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, onlySelectedParticles, "Use only selected particles");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, outputPartitionMesh, "Generate mesh");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, misorientationThreshold, AngleParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, fluctuationTolerance, AngleParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, probeSphereRadius, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, minGrainAtomCount, IntegerParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, smoothingLevel, IntegerParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -67,16 +67,16 @@ GrainSegmentationModifier::GrainSegmentationModifier(DataSet* dataset) : Structu
 		_onlySelectedParticles(false),
 		_outputPartitionMesh(false)
 {
-	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_inputCrystalStructure);
-	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_misorientationThreshold);
-	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_fluctuationTolerance);
-	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_minGrainAtomCount);
-	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_patternCatalog);
-	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_smoothingLevel);
-	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_probeSphereRadius);
-	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_meshDisplay);
-	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_onlySelectedParticles);
-	INIT_PROPERTY_FIELD(GrainSegmentationModifier::_outputPartitionMesh);
+	INIT_PROPERTY_FIELD(inputCrystalStructure);
+	INIT_PROPERTY_FIELD(misorientationThreshold);
+	INIT_PROPERTY_FIELD(fluctuationTolerance);
+	INIT_PROPERTY_FIELD(minGrainAtomCount);
+	INIT_PROPERTY_FIELD(patternCatalog);
+	INIT_PROPERTY_FIELD(smoothingLevel);
+	INIT_PROPERTY_FIELD(probeSphereRadius);
+	INIT_PROPERTY_FIELD(meshDisplay);
+	INIT_PROPERTY_FIELD(onlySelectedParticles);
+	INIT_PROPERTY_FIELD(outputPartitionMesh);
 
 	// Create the display object.
 	_meshDisplay = new PartitionMeshDisplay(dataset);
@@ -116,14 +116,14 @@ void GrainSegmentationModifier::propertyChanged(const PropertyFieldDescriptor& f
 	StructureIdentificationModifier::propertyChanged(field);
 
 	// Recompute results when the parameters have changed.
-	if(field == PROPERTY_FIELD(GrainSegmentationModifier::_inputCrystalStructure) ||
-			field == PROPERTY_FIELD(GrainSegmentationModifier::_misorientationThreshold) ||
-			field == PROPERTY_FIELD(GrainSegmentationModifier::_fluctuationTolerance) ||
-			field == PROPERTY_FIELD(GrainSegmentationModifier::_minGrainAtomCount) ||
-			field == PROPERTY_FIELD(GrainSegmentationModifier::_smoothingLevel) ||
-			field == PROPERTY_FIELD(GrainSegmentationModifier::_probeSphereRadius) ||
-			field == PROPERTY_FIELD(GrainSegmentationModifier::_onlySelectedParticles) ||
-			field == PROPERTY_FIELD(GrainSegmentationModifier::_outputPartitionMesh))
+	if(field == PROPERTY_FIELD(inputCrystalStructure) ||
+			field == PROPERTY_FIELD(misorientationThreshold) ||
+			field == PROPERTY_FIELD(fluctuationTolerance) ||
+			field == PROPERTY_FIELD(minGrainAtomCount) ||
+			field == PROPERTY_FIELD(smoothingLevel) ||
+			field == PROPERTY_FIELD(probeSphereRadius) ||
+			field == PROPERTY_FIELD(onlySelectedParticles) ||
+			field == PROPERTY_FIELD(outputPartitionMesh))
 		invalidateCachedResults();
 }
 

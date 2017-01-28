@@ -32,20 +32,20 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(FileExporter, RefTarget);
-DEFINE_PROPERTY_FIELD(FileExporter, _outputFilename, "OutputFile");
-DEFINE_PROPERTY_FIELD(FileExporter, _exportAnimation, "ExportAnimation");
-DEFINE_PROPERTY_FIELD(FileExporter, _useWildcardFilename, "UseWildcardFilename");
-DEFINE_PROPERTY_FIELD(FileExporter, _wildcardFilename, "WildcardFilename");
-DEFINE_PROPERTY_FIELD(FileExporter, _startFrame, "StartFrame");
-DEFINE_PROPERTY_FIELD(FileExporter, _endFrame, "EndFrame");
-DEFINE_PROPERTY_FIELD(FileExporter, _everyNthFrame, "EveryNthFrame");
-SET_PROPERTY_FIELD_LABEL(FileExporter, _outputFilename, "Output filename");
-SET_PROPERTY_FIELD_LABEL(FileExporter, _exportAnimation, "Export animation");
-SET_PROPERTY_FIELD_LABEL(FileExporter, _useWildcardFilename, "Use wildcard filename");
-SET_PROPERTY_FIELD_LABEL(FileExporter, _wildcardFilename, "Wildcard filename");
-SET_PROPERTY_FIELD_LABEL(FileExporter, _startFrame, "Start frame");
-SET_PROPERTY_FIELD_LABEL(FileExporter, _endFrame, "End frame");
-SET_PROPERTY_FIELD_LABEL(FileExporter, _everyNthFrame, "Every Nth frame");
+DEFINE_PROPERTY_FIELD(FileExporter, outputFilename, "OutputFile");
+DEFINE_PROPERTY_FIELD(FileExporter, exportAnimation, "ExportAnimation");
+DEFINE_PROPERTY_FIELD(FileExporter, useWildcardFilename, "UseWildcardFilename");
+DEFINE_PROPERTY_FIELD(FileExporter, wildcardFilename, "WildcardFilename");
+DEFINE_PROPERTY_FIELD(FileExporter, startFrame, "StartFrame");
+DEFINE_PROPERTY_FIELD(FileExporter, endFrame, "EndFrame");
+DEFINE_PROPERTY_FIELD(FileExporter, everyNthFrame, "EveryNthFrame");
+SET_PROPERTY_FIELD_LABEL(FileExporter, outputFilename, "Output filename");
+SET_PROPERTY_FIELD_LABEL(FileExporter, exportAnimation, "Export animation");
+SET_PROPERTY_FIELD_LABEL(FileExporter, useWildcardFilename, "Use wildcard filename");
+SET_PROPERTY_FIELD_LABEL(FileExporter, wildcardFilename, "Wildcard filename");
+SET_PROPERTY_FIELD_LABEL(FileExporter, startFrame, "Start frame");
+SET_PROPERTY_FIELD_LABEL(FileExporter, endFrame, "End frame");
+SET_PROPERTY_FIELD_LABEL(FileExporter, everyNthFrame, "Every Nth frame");
 
 /******************************************************************************
 * Constructs a new instance of the class.
@@ -55,13 +55,13 @@ FileExporter::FileExporter(DataSet* dataset) : RefTarget(dataset),
 	_useWildcardFilename(false), _startFrame(0), _endFrame(-1),
 	_everyNthFrame(1)
 {
-	INIT_PROPERTY_FIELD(FileExporter::_outputFilename);
-	INIT_PROPERTY_FIELD(FileExporter::_exportAnimation);
-	INIT_PROPERTY_FIELD(FileExporter::_useWildcardFilename);
-	INIT_PROPERTY_FIELD(FileExporter::_wildcardFilename);
-	INIT_PROPERTY_FIELD(FileExporter::_startFrame);
-	INIT_PROPERTY_FIELD(FileExporter::_endFrame);
-	INIT_PROPERTY_FIELD(FileExporter::_everyNthFrame);
+	INIT_PROPERTY_FIELD(outputFilename);
+	INIT_PROPERTY_FIELD(exportAnimation);
+	INIT_PROPERTY_FIELD(useWildcardFilename);
+	INIT_PROPERTY_FIELD(wildcardFilename);
+	INIT_PROPERTY_FIELD(startFrame);
+	INIT_PROPERTY_FIELD(endFrame);
+	INIT_PROPERTY_FIELD(everyNthFrame);
 
 	// Use the entire animation interval as default export interval.
 	setStartFrame(0);

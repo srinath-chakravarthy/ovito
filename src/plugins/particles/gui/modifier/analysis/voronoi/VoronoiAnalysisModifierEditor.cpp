@@ -53,12 +53,12 @@ void VoronoiAnalysisModifierEditor::createUI(const RolloutInsertionParameters& r
 	int row = 0;
 
 	// Face threshold.
-	FloatParameterUI* faceThresholdPUI = new FloatParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::_faceThreshold));
+	FloatParameterUI* faceThresholdPUI = new FloatParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::faceThreshold));
 	gridlayout->addWidget(faceThresholdPUI->label(), row, 0);
 	gridlayout->addLayout(faceThresholdPUI->createFieldLayout(), row++, 1);
 
 	// Compute indices.
-	BooleanGroupBoxParameterUI* computeIndicesPUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::_computeIndices));
+	BooleanGroupBoxParameterUI* computeIndicesPUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::computeIndices));
 	gridlayout->addWidget(computeIndicesPUI->groupBox(), row++, 0, 1, 2);
 	sublayout = new QGridLayout(computeIndicesPUI->childContainer());
 	sublayout->setContentsMargins(4,4,4,4);
@@ -66,25 +66,25 @@ void VoronoiAnalysisModifierEditor::createUI(const RolloutInsertionParameters& r
 	sublayout->setColumnStretch(1, 1);
 
 	// Edge count parameter.
-	IntegerParameterUI* edgeCountPUI = new IntegerParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::_edgeCount));
+	IntegerParameterUI* edgeCountPUI = new IntegerParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::edgeCount));
 	sublayout->addWidget(edgeCountPUI->label(), 0, 0);
 	sublayout->addLayout(edgeCountPUI->createFieldLayout(), 0, 1);
 
 	// Edge threshold.
-	FloatParameterUI* edgeThresholdPUI = new FloatParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::_edgeThreshold));
+	FloatParameterUI* edgeThresholdPUI = new FloatParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::edgeThreshold));
 	sublayout->addWidget(edgeThresholdPUI->label(), 1, 0);
 	sublayout->addLayout(edgeThresholdPUI->createFieldLayout(), 1, 1);
 
 	// Generate bonds.
-	BooleanParameterUI* computeBondsPUI = new BooleanParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::_computeBonds));
+	BooleanParameterUI* computeBondsPUI = new BooleanParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::computeBonds));
 	gridlayout->addWidget(computeBondsPUI->checkBox(), row++, 0, 1, 2);
 
 	// Atomic radii.
-	BooleanParameterUI* useRadiiPUI = new BooleanParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::_useRadii));
+	BooleanParameterUI* useRadiiPUI = new BooleanParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::useRadii));
 	gridlayout->addWidget(useRadiiPUI->checkBox(), row++, 0, 1, 2);
 
 	// Only selected particles.
-	BooleanParameterUI* onlySelectedPUI = new BooleanParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::_onlySelected));
+	BooleanParameterUI* onlySelectedPUI = new BooleanParameterUI(this, PROPERTY_FIELD(VoronoiAnalysisModifier::onlySelected));
 	gridlayout->addWidget(onlySelectedPUI->checkBox(), row++, 0, 1, 2);
 
 	layout->addLayout(gridlayout);

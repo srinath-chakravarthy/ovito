@@ -47,7 +47,7 @@ void CombineParticleSetsModifierEditor::createUI(const RolloutInsertionParameter
 	layout->addWidget(statusLabel());
 
 	// Open a sub-editor for the source object.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(CombineParticleSetsModifier::_secondarySource), RolloutInsertionParameters().setTitle(tr("Secondary Source")));
+	new SubObjectParameterUI(this, PROPERTY_FIELD(CombineParticleSetsModifier::secondaryDataSource), RolloutInsertionParameters().setTitle(tr("Secondary Source")));
 }
 
 OVITO_END_INLINE_NAMESPACE

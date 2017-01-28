@@ -28,16 +28,16 @@
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SmoothSurfaceModifier, Modifier);
-DEFINE_FLAGS_PROPERTY_FIELD(SmoothSurfaceModifier, _smoothingLevel, "SmoothingLevel", PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(SmoothSurfaceModifier, _smoothingLevel, "Smoothing level");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(SmoothSurfaceModifier, _smoothingLevel, IntegerParameterUnit, 0);
+DEFINE_FLAGS_PROPERTY_FIELD(SmoothSurfaceModifier, smoothingLevel, "SmoothingLevel", PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(SmoothSurfaceModifier, smoothingLevel, "Smoothing level");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(SmoothSurfaceModifier, smoothingLevel, IntegerParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
 SmoothSurfaceModifier::SmoothSurfaceModifier(DataSet* dataset) : Modifier(dataset), _smoothingLevel(8)
 {
-	INIT_PROPERTY_FIELD(SmoothSurfaceModifier::_smoothingLevel);
+	INIT_PROPERTY_FIELD(smoothingLevel);
 }
 
 /******************************************************************************

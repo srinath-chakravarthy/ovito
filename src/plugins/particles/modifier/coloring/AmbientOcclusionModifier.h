@@ -71,24 +71,6 @@ public:
 	/// Constructor.
 	Q_INVOKABLE AmbientOcclusionModifier(DataSet* dataset);
 
-	/// Returns the intensity of the shading.
-	FloatType intensity() const { return _intensity; }
-
-	/// Sets the intensity of the shading.
-	void setIntensity(FloatType newIntensity) { _intensity = newIntensity; }
-
-	/// Returns the amount of spherical sampling points used in the shading computation.
-	int samplingCount() const { return _samplingCount; }
-
-	/// Sets the amount of spherical sampling points used in the shading computation.
-	void setSamplingCount(int count) { _samplingCount = count; }
-
-	/// Returns the buffer resolution level.
-	int bufferResolution() const { return _bufferResolution; }
-
-	/// Sets the buffer resolution level.
-	void setBufferResolution(int res) { _bufferResolution = res; }
-
 protected:
 
 	/// Is called when the value of a property of this object has changed.
@@ -109,13 +91,13 @@ private:
 	QExplicitlySharedDataPointer<ParticleProperty> _brightnessValues;
 
 	/// This controls the intensity of the shading effect.
-	PropertyField<FloatType> _intensity;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, intensity, setIntensity);
 
 	/// Controls the quality of the lighting computation.
-	PropertyField<int> _samplingCount;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, samplingCount, setSamplingCount);
 
 	/// Controls the resolution of the offscreen rendering buffer.
-	PropertyField<int> _bufferResolution;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, bufferResolution, setBufferResolution);
 
 private:
 
@@ -124,10 +106,6 @@ private:
 
 	Q_CLASSINFO("DisplayName", "Ambient occlusion");
 	Q_CLASSINFO("ModifierCategory", "Coloring");
-
-	DECLARE_PROPERTY_FIELD(_intensity);
-	DECLARE_PROPERTY_FIELD(_samplingCount);
-	DECLARE_PROPERTY_FIELD(_bufferResolution);
 };
 
 OVITO_END_INLINE_NAMESPACE

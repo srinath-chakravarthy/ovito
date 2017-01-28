@@ -56,12 +56,12 @@ void PolyhedralTemplateMatchingModifierEditor::createUI(const RolloutInsertionPa
 	layout1->addWidget(paramsBox);
 
 	// RMSD cutoff parameter.
-	FloatParameterUI* rmsdCutoffPUI = new FloatParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_rmsdCutoff));
+	FloatParameterUI* rmsdCutoffPUI = new FloatParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::rmsdCutoff));
 	gridlayout->addWidget(rmsdCutoffPUI->label(), 0, 0);
 	gridlayout->addLayout(rmsdCutoffPUI->createFieldLayout(), 0, 1);
 
 	// Use only selected particles.
-	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::_onlySelectedParticles));
+	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::onlySelectedParticles));
 	gridlayout->addWidget(onlySelectedParticlesUI->checkBox(), 1, 0, 1, 2);
 
 	QGroupBox* outputBox = new QGroupBox(tr("Output"), rollout);
@@ -70,19 +70,19 @@ void PolyhedralTemplateMatchingModifierEditor::createUI(const RolloutInsertionPa
 	layout1->addWidget(outputBox);
 
 	// Output controls.
-	BooleanParameterUI* outputRmsdUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputRmsd));
+	BooleanParameterUI* outputRmsdUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::outputRmsd));
 	sublayout->addWidget(outputRmsdUI->checkBox());
 	outputRmsdUI->checkBox()->setText(tr("RMSD value"));
-	BooleanParameterUI* outputInteratomicDistanceUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputInteratomicDistance));
+	BooleanParameterUI* outputInteratomicDistanceUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::outputInteratomicDistance));
 	sublayout->addWidget(outputInteratomicDistanceUI->checkBox());
 	outputInteratomicDistanceUI->checkBox()->setText(tr("Interatomic distance"));
-	BooleanParameterUI* outputOrientationUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputOrientation));
+	BooleanParameterUI* outputOrientationUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::outputOrientation));
 	sublayout->addWidget(outputOrientationUI->checkBox());
 	outputOrientationUI->checkBox()->setText(tr("Lattice orientation"));
-	BooleanParameterUI* outputDeformationGradientUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputDeformationGradient));
+	BooleanParameterUI* outputDeformationGradientUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::outputDeformationGradient));
 	sublayout->addWidget(outputDeformationGradientUI->checkBox());
 	outputDeformationGradientUI->checkBox()->setText(tr("Elastic deformation gradient"));
-	BooleanParameterUI* outputAlloyTypesUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputAlloyTypes));
+	BooleanParameterUI* outputAlloyTypesUI = new BooleanParameterUI(this, PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::outputAlloyTypes));
 	sublayout->addWidget(outputAlloyTypesUI->checkBox());
 	outputAlloyTypesUI->checkBox()->setText(tr("Alloy type"));
 

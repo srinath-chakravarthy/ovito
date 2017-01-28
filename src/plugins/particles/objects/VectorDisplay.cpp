@@ -31,22 +31,22 @@ namespace Ovito { namespace Particles {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(VectorDisplay, DisplayObject);
 IMPLEMENT_OVITO_OBJECT(VectorPickInfo, ObjectPickInfo);
-DEFINE_PROPERTY_FIELD(VectorDisplay, _reverseArrowDirection, "ReverseArrowDirection");
-DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _arrowPosition, "ArrowPosition", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _arrowColor, "ArrowColor", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _arrowWidth, "ArrowWidth", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _scalingFactor, "ScalingFactor", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, _shadingMode, "ShadingMode", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(VectorDisplay, _renderingQuality, "RenderingQuality");
-SET_PROPERTY_FIELD_LABEL(VectorDisplay, _arrowColor, "Arrow color");
-SET_PROPERTY_FIELD_LABEL(VectorDisplay, _arrowWidth, "Arrow width");
-SET_PROPERTY_FIELD_LABEL(VectorDisplay, _scalingFactor, "Scaling factor");
-SET_PROPERTY_FIELD_LABEL(VectorDisplay, _reverseArrowDirection, "Reverse direction");
-SET_PROPERTY_FIELD_LABEL(VectorDisplay, _arrowPosition, "Position");
-SET_PROPERTY_FIELD_LABEL(VectorDisplay, _shadingMode, "Shading mode");
-SET_PROPERTY_FIELD_LABEL(VectorDisplay, _renderingQuality, "RenderingQuality");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(VectorDisplay, _arrowWidth, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(VectorDisplay, _scalingFactor, FloatParameterUnit, 0);
+DEFINE_PROPERTY_FIELD(VectorDisplay, reverseArrowDirection, "ReverseArrowDirection");
+DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, arrowPosition, "ArrowPosition", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, arrowColor, "ArrowColor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, arrowWidth, "ArrowWidth", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, scalingFactor, "ScalingFactor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(VectorDisplay, shadingMode, "ShadingMode", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(VectorDisplay, renderingQuality, "RenderingQuality");
+SET_PROPERTY_FIELD_LABEL(VectorDisplay, arrowColor, "Arrow color");
+SET_PROPERTY_FIELD_LABEL(VectorDisplay, arrowWidth, "Arrow width");
+SET_PROPERTY_FIELD_LABEL(VectorDisplay, scalingFactor, "Scaling factor");
+SET_PROPERTY_FIELD_LABEL(VectorDisplay, reverseArrowDirection, "Reverse direction");
+SET_PROPERTY_FIELD_LABEL(VectorDisplay, arrowPosition, "Position");
+SET_PROPERTY_FIELD_LABEL(VectorDisplay, shadingMode, "Shading mode");
+SET_PROPERTY_FIELD_LABEL(VectorDisplay, renderingQuality, "RenderingQuality");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(VectorDisplay, arrowWidth, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(VectorDisplay, scalingFactor, FloatParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.
@@ -56,13 +56,13 @@ VectorDisplay::VectorDisplay(DataSet* dataset) : DisplayObject(dataset),
 	_shadingMode(ArrowPrimitive::FlatShading),
 	_renderingQuality(ArrowPrimitive::LowQuality)
 {
-	INIT_PROPERTY_FIELD(VectorDisplay::_arrowColor);
-	INIT_PROPERTY_FIELD(VectorDisplay::_arrowWidth);
-	INIT_PROPERTY_FIELD(VectorDisplay::_scalingFactor);
-	INIT_PROPERTY_FIELD(VectorDisplay::_reverseArrowDirection);
-	INIT_PROPERTY_FIELD(VectorDisplay::_arrowPosition);
-	INIT_PROPERTY_FIELD(VectorDisplay::_shadingMode);
-	INIT_PROPERTY_FIELD(VectorDisplay::_renderingQuality);
+	INIT_PROPERTY_FIELD(arrowColor);
+	INIT_PROPERTY_FIELD(arrowWidth);
+	INIT_PROPERTY_FIELD(scalingFactor);
+	INIT_PROPERTY_FIELD(reverseArrowDirection);
+	INIT_PROPERTY_FIELD(arrowPosition);
+	INIT_PROPERTY_FIELD(shadingMode);
+	INIT_PROPERTY_FIELD(renderingQuality);
 }
 
 /******************************************************************************

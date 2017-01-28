@@ -33,9 +33,9 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(StandardSceneRenderer, OpenGLSceneRenderer);
 SET_OVITO_OBJECT_EDITOR(StandardSceneRenderer, StandardSceneRendererEditor);
-DEFINE_PROPERTY_FIELD(StandardSceneRenderer, _antialiasingLevel, "AntialiasingLevel");
-SET_PROPERTY_FIELD_LABEL(StandardSceneRenderer, _antialiasingLevel, "Antialiasing level");
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(StandardSceneRenderer, _antialiasingLevel, IntegerParameterUnit, 1, 6);
+DEFINE_PROPERTY_FIELD(StandardSceneRenderer, antialiasingLevel, "AntialiasingLevel");
+SET_PROPERTY_FIELD_LABEL(StandardSceneRenderer, antialiasingLevel, "Antialiasing level");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(StandardSceneRenderer, antialiasingLevel, IntegerParameterUnit, 1, 6);
 
 /******************************************************************************
 * Prepares the renderer for rendering and sets the data set that is being rendered.

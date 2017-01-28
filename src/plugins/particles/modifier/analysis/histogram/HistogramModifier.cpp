@@ -27,35 +27,35 @@
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(HistogramModifier, ParticleModifier);
-DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, _numberOfBins, "NumberOfBins", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(HistogramModifier, _selectInRange, "SelectInRange");
-DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, _selectionRangeStart, "SelectionRangeStart", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, _selectionRangeEnd, "SelectionRangeEnd", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(HistogramModifier, _fixXAxisRange, "FixXAxisRange");
-DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, _xAxisRangeStart, "XAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, _xAxisRangeEnd, "XAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(HistogramModifier, _fixYAxisRange, "FixYAxisRange");
-DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, _yAxisRangeStart, "YAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, _yAxisRangeEnd, "YAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(HistogramModifier, _sourceParticleProperty, "SourceProperty");
-DEFINE_PROPERTY_FIELD(HistogramModifier, _sourceBondProperty, "SourceBondProperty");
-DEFINE_PROPERTY_FIELD(HistogramModifier, _onlySelected, "OnlySelected");
-DEFINE_PROPERTY_FIELD(HistogramModifier, _dataSourceType, "DataSourceType");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _numberOfBins, "Number of histogram bins");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _selectInRange, "Select value range");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _selectionRangeStart, "Selection range start");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _selectionRangeEnd, "Selection range end");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _fixXAxisRange, "Fix x-range");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _xAxisRangeStart, "X-range start");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _xAxisRangeEnd, "X-range end");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _fixYAxisRange, "Fix y-range");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _yAxisRangeStart, "Y-range start");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _yAxisRangeEnd, "Y-range end");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _sourceParticleProperty, "Source property");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _sourceBondProperty, "Source property");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _onlySelected, "Use only selected particles/bonds");
-SET_PROPERTY_FIELD_LABEL(HistogramModifier, _dataSourceType, "Source type");
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(HistogramModifier, _numberOfBins, IntegerParameterUnit, 1, 100000);
+DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, numberOfBins, "NumberOfBins", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(HistogramModifier, selectInRange, "SelectInRange");
+DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, selectionRangeStart, "SelectionRangeStart", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, selectionRangeEnd, "SelectionRangeEnd", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(HistogramModifier, fixXAxisRange, "FixXAxisRange");
+DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, xAxisRangeStart, "XAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, xAxisRangeEnd, "XAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(HistogramModifier, fixYAxisRange, "FixYAxisRange");
+DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, yAxisRangeStart, "YAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(HistogramModifier, yAxisRangeEnd, "YAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(HistogramModifier, sourceParticleProperty, "SourceProperty");
+DEFINE_PROPERTY_FIELD(HistogramModifier, sourceBondProperty, "SourceBondProperty");
+DEFINE_PROPERTY_FIELD(HistogramModifier, onlySelected, "OnlySelected");
+DEFINE_PROPERTY_FIELD(HistogramModifier, dataSourceType, "DataSourceType");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, numberOfBins, "Number of histogram bins");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, selectInRange, "Select value range");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, selectionRangeStart, "Selection range start");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, selectionRangeEnd, "Selection range end");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, fixXAxisRange, "Fix x-range");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, xAxisRangeStart, "X-range start");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, xAxisRangeEnd, "X-range end");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, fixYAxisRange, "Fix y-range");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, yAxisRangeStart, "Y-range start");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, yAxisRangeEnd, "Y-range end");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, sourceParticleProperty, "Source property");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, sourceBondProperty, "Source property");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, onlySelected, "Use only selected particles/bonds");
+SET_PROPERTY_FIELD_LABEL(HistogramModifier, dataSourceType, "Source type");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(HistogramModifier, numberOfBins, IntegerParameterUnit, 1, 100000);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -67,20 +67,20 @@ HistogramModifier::HistogramModifier(DataSet* dataset) : ParticleModifier(datase
 	_fixYAxisRange(false), _yAxisRangeStart(0), _yAxisRangeEnd(0),
 	_onlySelected(false), _dataSourceType(Particles)
 {
-	INIT_PROPERTY_FIELD(HistogramModifier::_numberOfBins);
-	INIT_PROPERTY_FIELD(HistogramModifier::_selectInRange);
-	INIT_PROPERTY_FIELD(HistogramModifier::_selectionRangeStart);
-	INIT_PROPERTY_FIELD(HistogramModifier::_selectionRangeEnd);
-	INIT_PROPERTY_FIELD(HistogramModifier::_fixXAxisRange);
-	INIT_PROPERTY_FIELD(HistogramModifier::_xAxisRangeStart);
-	INIT_PROPERTY_FIELD(HistogramModifier::_xAxisRangeEnd);
-	INIT_PROPERTY_FIELD(HistogramModifier::_fixYAxisRange);
-	INIT_PROPERTY_FIELD(HistogramModifier::_yAxisRangeStart);
-	INIT_PROPERTY_FIELD(HistogramModifier::_yAxisRangeEnd);
-	INIT_PROPERTY_FIELD(HistogramModifier::_sourceParticleProperty);
-	INIT_PROPERTY_FIELD(HistogramModifier::_sourceBondProperty);
-	INIT_PROPERTY_FIELD(HistogramModifier::_onlySelected);
-	INIT_PROPERTY_FIELD(HistogramModifier::_dataSourceType);
+	INIT_PROPERTY_FIELD(numberOfBins);
+	INIT_PROPERTY_FIELD(selectInRange);
+	INIT_PROPERTY_FIELD(selectionRangeStart);
+	INIT_PROPERTY_FIELD(selectionRangeEnd);
+	INIT_PROPERTY_FIELD(fixXAxisRange);
+	INIT_PROPERTY_FIELD(xAxisRangeStart);
+	INIT_PROPERTY_FIELD(xAxisRangeEnd);
+	INIT_PROPERTY_FIELD(fixYAxisRange);
+	INIT_PROPERTY_FIELD(yAxisRangeStart);
+	INIT_PROPERTY_FIELD(yAxisRangeEnd);
+	INIT_PROPERTY_FIELD(sourceParticleProperty);
+	INIT_PROPERTY_FIELD(sourceBondProperty);
+	INIT_PROPERTY_FIELD(onlySelected);
+	INIT_PROPERTY_FIELD(dataSourceType);
 }
 
 /******************************************************************************
@@ -301,12 +301,10 @@ PipelineStatus HistogramModifier::modifyParticles(TimePoint time, TimeInterval& 
 		statusMessage += tr("%1 bonds selected (%2%)").arg(numSelected).arg((FloatType)numSelected * 100 / std::max(1,(int)outputBondSelectionObj->size()), 0, 'f', 1);
 	}
 
-	_xAxisRangeStart = intervalStart;
-	_xAxisRangeEnd = intervalEnd;
+	setXAxisRange(intervalStart, intervalEnd);
 
 	if(!fixYAxisRange()) {
-		_yAxisRangeStart = 0.0;
-		_yAxisRangeEnd = *std::max_element(_histogramData.begin(), _histogramData.end());
+		setYAxisRange(0, *std::max_element(_histogramData.begin(), _histogramData.end()));
 	}
 
 	// Inform the editor component that the stored histogram data has changed

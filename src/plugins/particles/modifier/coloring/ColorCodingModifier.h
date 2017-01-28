@@ -244,7 +244,7 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE ColorCodingImageGradient(DataSet* dataset) : ColorCodingGradient(dataset) {
-		INIT_PROPERTY_FIELD(ColorCodingImageGradient::_image);
+		INIT_PROPERTY_FIELD(image);
 	}
 
 	/// \brief Converts a scalar value to a color value.
@@ -252,25 +252,17 @@ public:
 	/// \return The color that visualizes the given scalar value.
 	virtual Color valueToColor(FloatType t) override;
 
-	/// Changes the image to be used for mapping values to colors.
-	void setImage(const QImage& image) { _image = image; }
-
 	/// Loads the given image file from disk.
 	void loadImage(const QString& filename);
-
-	/// Returns the image being used for mapping values to colors.
-	const QImage& image() const { return _image; }
 
 private:
 
 	/// The user-defined color map image.
-	PropertyField<QImage> _image;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QImage, image, setImage);
 
 	Q_OBJECT
 	OVITO_OBJECT
 	Q_CLASSINFO("DisplayName", "User image");
-
-	DECLARE_PROPERTY_FIELD(_image);
 };
 
 
@@ -301,65 +293,17 @@ public:
 	/// Asks the modifier for its validity interval at the given time.
 	virtual TimeInterval modifierValidity(TimePoint time) override;
 
-	/// Sets the source particle property that is used for coloring of particles.
-	void setSourceParticleProperty(const ParticlePropertyReference& prop) { _sourceParticleProperty = prop; }
-
-	/// Returns the source particle property that is used for coloring of particles.
-	const ParticlePropertyReference& sourceParticleProperty() const { return _sourceParticleProperty; }
-
-	/// Sets the source bond property that is used for coloring of bonds.
-	void setSourceBondProperty(const BondPropertyReference& prop) { _sourceBondProperty = prop; }
-
-	/// Returns the source bond property that is used for coloring of bonds.
-	const BondPropertyReference& sourceBondProperty() const { return _sourceBondProperty; }
-
 	/// Returns the range start value.
-	FloatType startValue() const { return _startValueCtrl ? _startValueCtrl->currentFloatValue() : 0; }
+	FloatType startValue() const { return startValueController() ? startValueController()->currentFloatValue() : 0; }
 
 	/// Sets the range start value.
-	void setStartValue(FloatType value) { if(_startValueCtrl) _startValueCtrl->setCurrentFloatValue(value); }
-
-	/// Returns the controller for the range start value.
-	Controller* startValueController() const { return _startValueCtrl; }
-
-	/// Sets the controller for the range start value.
-	void setStartValueController(Controller* ctrl) { _startValueCtrl = ctrl; }
+	void setStartValue(FloatType value) { if(startValueController()) startValueController()->setCurrentFloatValue(value); }
 
 	/// Returns the range end value.
-	FloatType endValue() const { return _endValueCtrl ? _endValueCtrl->currentFloatValue() : 0; }
+	FloatType endValue() const { return endValueController() ? endValueController()->currentFloatValue() : 0; }
 
 	/// Sets the range end value.
-	void setEndValue(FloatType value) { if(_endValueCtrl) _endValueCtrl->setCurrentFloatValue(value); }
-
-	/// Returns the controller for the range end value.
-	Controller* endValueController() const { return _endValueCtrl; }
-
-	/// Sets the controller for the range end value.
-	void setEndValueController(Controller* ctrl) { _endValueCtrl = ctrl; }
-
-	/// Returns the color gradient used by the modifier to convert scalar atom properties to colors.
-	ColorCodingGradient* colorGradient() const { return _colorGradient; }
-
-	/// Sets the color gradient for the modifier to convert scalar atom properties to colors.
-	void setColorGradient(ColorCodingGradient* gradient) { _colorGradient = gradient; }
-
-	/// Returns whether the modifier assigns a color only to selected particles.
-	bool colorOnlySelected() const { return _colorOnlySelected; }
-
-	/// Sets whether the modifier should assign a color only to selected particles.
-	void setColorOnlySelected(bool colorOnlySelected) { _colorOnlySelected = colorOnlySelected; }
-
-	/// Returns whether the input particle selection is preserved by the modifier.
-	bool keepSelection() const { return _keepSelection; }
-
-	/// Sets whether the input particle selection should be preserved by the modifier.
-	void setKeepSelection(bool keepSel) { _keepSelection = keepSel; }
-
-	/// Returns what is being assigned colors by the modifier.
-	ColorApplicationMode colorApplicationMode() const { return _colorApplicationMode; }
-
-	/// Sets what is being assigned colors by the modifier.
-	void setColorApplicationMode(ColorApplicationMode mode) { _colorApplicationMode = mode; }
+	void setEndValue(FloatType value) { if(endValueController()) endValueController()->setCurrentFloatValue(value); }
 
 public Q_SLOTS:
 
@@ -384,46 +328,35 @@ protected:
 	virtual PipelineStatus modifyParticles(TimePoint time, TimeInterval& validityInterval) override;
 
 	/// This controller stores the start value of the color scale.
-	ReferenceField<Controller> _startValueCtrl;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, startValueController, setStartValueController);
 
 	/// This controller stores the end value of the color scale.
-	ReferenceField<Controller> _endValueCtrl;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, endValueController, setEndValueController);
 
 	/// This object converts scalar atom properties to colors.
-	ReferenceField<ColorCodingGradient> _colorGradient;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(ColorCodingGradient, colorGradient, setColorGradient);
 
 	/// The particle type property that is used as source for the coloring.
-	PropertyField<ParticlePropertyReference> _sourceParticleProperty;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ParticlePropertyReference, sourceParticleProperty, setSourceParticleProperty);
 
 	/// The bond type property that is used as source for the coloring.
-	PropertyField<BondPropertyReference> _sourceBondProperty;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(BondPropertyReference, sourceBondProperty, setSourceBondProperty);
 
 	/// Controls whether the modifier assigns a color only to selected particles.
-	PropertyField<bool> _colorOnlySelected;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, colorOnlySelected, setColorOnlySelected);
 
 	/// Controls whether the input particle selection is preserved.
 	/// If false, the selection is cleared by the modifier.
-	PropertyField<bool> _keepSelection;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, keepSelection, setKeepSelection);
 
 	/// Controls what is being assigned colors by the modifier.
-	PropertyField<ColorApplicationMode, int> _colorApplicationMode;
-
-private:
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ColorApplicationMode, colorApplicationMode, setColorApplicationMode);
 
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Color coding");
 	Q_CLASSINFO("ModifierCategory", "Coloring");
-
-	DECLARE_REFERENCE_FIELD(_startValueCtrl);
-	DECLARE_REFERENCE_FIELD(_endValueCtrl);
-	DECLARE_REFERENCE_FIELD(_colorGradient);
-	DECLARE_PROPERTY_FIELD(_colorOnlySelected);
-	DECLARE_PROPERTY_FIELD(_keepSelection);
-	DECLARE_PROPERTY_FIELD(_sourceParticleProperty);
-	DECLARE_PROPERTY_FIELD(_sourceBondProperty);
-	DECLARE_PROPERTY_FIELD(_colorApplicationMode);
 };
 
 OVITO_END_INLINE_NAMESPACE

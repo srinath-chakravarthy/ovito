@@ -29,29 +29,25 @@ namespace Ovito { namespace Particles {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ParticleDisplay, DisplayObject);
 IMPLEMENT_OVITO_OBJECT(ParticlePickInfo, ObjectPickInfo);
-DEFINE_FLAGS_PROPERTY_FIELD(ParticleDisplay, _defaultParticleRadius, "DefaultParticleRadius", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(ParticleDisplay, _shadingMode, "ShadingMode");
-DEFINE_PROPERTY_FIELD(ParticleDisplay, _renderingQuality, "RenderingQuality");
-DEFINE_PROPERTY_FIELD(ParticleDisplay, _particleShape, "ParticleShape");
-SET_PROPERTY_FIELD_LABEL(ParticleDisplay, _defaultParticleRadius, "Default particle radius");
-SET_PROPERTY_FIELD_LABEL(ParticleDisplay, _shadingMode, "Shading mode");
-SET_PROPERTY_FIELD_LABEL(ParticleDisplay, _renderingQuality, "Rendering quality");
-SET_PROPERTY_FIELD_LABEL(ParticleDisplay, _particleShape, "Shape");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ParticleDisplay, _defaultParticleRadius, WorldParameterUnit, 0);
+DEFINE_FLAGS_PROPERTY_FIELD(ParticleDisplay, defaultParticleRadius, "DefaultParticleRadius", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(ParticleDisplay, renderingQuality, "RenderingQuality");
+DEFINE_PROPERTY_FIELD(ParticleDisplay, particleShape, "ParticleShape");
+SET_PROPERTY_FIELD_LABEL(ParticleDisplay, defaultParticleRadius, "Default particle radius");
+SET_PROPERTY_FIELD_LABEL(ParticleDisplay, renderingQuality, "Rendering quality");
+SET_PROPERTY_FIELD_LABEL(ParticleDisplay, particleShape, "Shape");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ParticleDisplay, defaultParticleRadius, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
 ParticleDisplay::ParticleDisplay(DataSet* dataset) : DisplayObject(dataset),
 	_defaultParticleRadius(1.2),
-	_shadingMode(ParticlePrimitive::NormalShading),
 	_renderingQuality(ParticlePrimitive::AutoQuality),
 	_particleShape(Sphere)
 {
-	INIT_PROPERTY_FIELD(ParticleDisplay::_defaultParticleRadius);
-	INIT_PROPERTY_FIELD(ParticleDisplay::_shadingMode);
-	INIT_PROPERTY_FIELD(ParticleDisplay::_renderingQuality);
-	INIT_PROPERTY_FIELD(ParticleDisplay::_particleShape);
+	INIT_PROPERTY_FIELD(defaultParticleRadius);
+	INIT_PROPERTY_FIELD(renderingQuality);
+	INIT_PROPERTY_FIELD(particleShape);
 }
 
 /******************************************************************************
@@ -792,23 +788,6 @@ Box3 ParticleDisplay::highlightParticleBoundingBox(int particleIndex, const Pipe
 		return Box3();
 
 	return Box3(pos, radius + viewport->nonScalingSize(tm * pos) * 1e-1f);
-}
-
-/******************************************************************************
-* Loads the data of this class from an input stream.
-******************************************************************************/
-void ParticleDisplay::loadFromStream(ObjectLoadStream& stream)
-{
-	DisplayObject::loadFromStream(stream);
-
-	// This is for backward-compatibility with files written by OVITO 2.5.0.
-	if(_shadingMode == ParticlePrimitive::FlatShading) {
-		_shadingMode = ParticlePrimitive::NormalShading;
-		if(particleShape() == Sphere)
-			setParticleShape(Circle);
-		else if(particleShape() == Box)
-			setParticleShape(Square);
-	}
 }
 
 /******************************************************************************

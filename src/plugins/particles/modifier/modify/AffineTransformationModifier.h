@@ -40,50 +40,6 @@ public:
 	/// \brief Constructor.
 	Q_INVOKABLE AffineTransformationModifier(DataSet* dataset);
 
-	// Property access functions:
-
-	/// Returns the affine transformation matrix.
-	const AffineTransformation& transformation() const { return _transformationTM; }
-
-	/// Sets the affine transformation.
-	void setTransformation(const AffineTransformation& tm) { _transformationTM = tm; }
-
-	/// Returns the target cell matrix matrix for absolute transformation mode.
-	const AffineTransformation& targetCell() const { return _targetCell; }
-
-	/// Sets the target cell matrix for absolute transformation mode.
-	void setTargetCell(const AffineTransformation& cell) { _targetCell = cell; }
-
-	/// Returns true if relative transformation mode is selected; returns false if absolute transformation mode is active.
-	bool relativeMode() const { return _relativeMode; }
-
-	/// Switches between relative and absolute transformation mode.
-	void setRelativeMode(bool relative) { _relativeMode = relative; }
-
-	/// Returns whether the transformation is applied to the particles.
-	bool applyToParticles() const { return _applyToParticles; }
-
-	/// Sets whether the transformation is applied to the particles.
-	void setApplyToParticles(bool apply) { _applyToParticles = apply; }
-
-	/// Returns whether the transformation is applied only to the selected particles.
-	bool selectionOnly() const { return _toSelectionOnly; }
-
-	/// Sets whether the transformation is applied only to the selected particles.
-	void setSelectionOnly(bool onlySelected) { _toSelectionOnly = onlySelected; }
-
-	/// Returns whether the transformation is applied to the simulation box.
-	bool applyToSimulationBox() const { return _applyToSimulationBox; }
-
-	/// Sets whether the transformation is applied to the simulation box.
-	void setApplyToSimulationBox(bool apply) { _applyToSimulationBox = apply; }
-
-	/// Returns whether the transformation is applied to a surface mesh.
-	bool applyToSurfaceMesh() const { return _applyToSurfaceMesh; }
-
-	/// Sets whether the transformation is applied to a surface mesh.
-	void setApplyToSurfaceMesh(bool apply) { _applyToSurfaceMesh = apply; }
-
 protected:
 
 	/// \brief This virtual method is called by the system when the modifier has been inserted into a PipelineObject.
@@ -93,42 +49,32 @@ protected:
 	virtual PipelineStatus modifyParticles(TimePoint time, TimeInterval& validityInterval) override;
 
 	/// This property fields stores the transformation matrix (used in 'relative' mode).
-	PropertyField<AffineTransformation> _transformationTM;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(AffineTransformation, transformationTM, setTransformationTM);
 
 	/// This property fields stores the simulation cell geometry (used in 'absolute' mode).
-	PropertyField<AffineTransformation> _targetCell;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(AffineTransformation, targetCell, setTargetCell);
 
 	/// This controls whether the transformation is applied to the particles.
-	PropertyField<bool> _applyToParticles;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, applyToParticles, setApplyToParticles);
 
 	/// This controls whether the transformation is applied only to the selected particles.
-	PropertyField<bool> _toSelectionOnly;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, selectionOnly, setSelectionOnly);
 
 	/// This controls whether the transformation is applied to the simulation box.
-	PropertyField<bool> _applyToSimulationBox;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, applyToSimulationBox, setApplyToSimulationBox);
 
 	/// This controls whether a relative transformation is applied to the simulation box or
 	/// the absolute cell geometry has been specified.
-	PropertyField<bool> _relativeMode;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, relativeMode, setRelativeMode);
 
 	/// This controls whether the transformation is applied to surface meshes.
-	PropertyField<bool> _applyToSurfaceMesh;
-
-private:
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, applyToSurfaceMesh, setApplyToSurfaceMesh);
 
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Affine transformation");
 	Q_CLASSINFO("ModifierCategory", "Modification");
-
-	DECLARE_PROPERTY_FIELD(_transformationTM);
-	DECLARE_PROPERTY_FIELD(_applyToParticles);
-	DECLARE_PROPERTY_FIELD(_toSelectionOnly);
-	DECLARE_PROPERTY_FIELD(_applyToSimulationBox);
-	DECLARE_PROPERTY_FIELD(_targetCell);
-	DECLARE_PROPERTY_FIELD(_relativeMode);
-	DECLARE_PROPERTY_FIELD(_applyToSurfaceMesh);
 };
 
 OVITO_END_INLINE_NAMESPACE

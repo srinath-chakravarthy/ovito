@@ -45,7 +45,7 @@ void LAMMPSDataExporterEditor::createUI(const RolloutInsertionParameters& rollou
 	layout->setColumnStretch(1,1);
 	layout->addWidget(new QLabel(tr("LAMMPS atom style:")), 0, 0);
 
-	VariantComboBoxParameterUI* atomStyleUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(LAMMPSDataExporter::_atomStyle));
+	VariantComboBoxParameterUI* atomStyleUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(LAMMPSDataExporter::atomStyle));
 	atomStyleUI->comboBox()->addItem("angle", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Angle));
 	atomStyleUI->comboBox()->addItem("atomic", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Atomic));
 	atomStyleUI->comboBox()->addItem("bond", QVariant::fromValue(LAMMPSDataImporter::AtomStyle_Bond));

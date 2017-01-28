@@ -36,21 +36,21 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SliceModifier, ParticleModifier);
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SliceModifierFunction, RefTarget);
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SliceParticlesFunction, SliceModifierFunction);
-DEFINE_REFERENCE_FIELD(SliceModifier, _normalCtrl, "PlaneNormal", Controller);
-DEFINE_REFERENCE_FIELD(SliceModifier, _distanceCtrl, "PlaneDistance", Controller);
-DEFINE_REFERENCE_FIELD(SliceModifier, _widthCtrl, "SliceWidth", Controller);
-DEFINE_PROPERTY_FIELD(SliceModifier, _createSelection, "CreateSelection");
-DEFINE_PROPERTY_FIELD(SliceModifier, _inverse, "Inverse");
-DEFINE_PROPERTY_FIELD(SliceModifier, _applyToSelection, "ApplyToSelection");
-SET_PROPERTY_FIELD_LABEL(SliceModifier, _normalCtrl, "Normal");
-SET_PROPERTY_FIELD_LABEL(SliceModifier, _distanceCtrl, "Distance");
-SET_PROPERTY_FIELD_LABEL(SliceModifier, _widthCtrl, "Slice width");
-SET_PROPERTY_FIELD_LABEL(SliceModifier, _createSelection, "Create selection (do not delete)");
-SET_PROPERTY_FIELD_LABEL(SliceModifier, _inverse, "Reverse orientation");
-SET_PROPERTY_FIELD_LABEL(SliceModifier, _applyToSelection, "Apply to selection only");
-SET_PROPERTY_FIELD_UNITS(SliceModifier, _normalCtrl, WorldParameterUnit);
-SET_PROPERTY_FIELD_UNITS(SliceModifier, _distanceCtrl, WorldParameterUnit);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(SliceModifier, _widthCtrl, WorldParameterUnit, 0);
+DEFINE_REFERENCE_FIELD(SliceModifier, normalController, "PlaneNormal", Controller);
+DEFINE_REFERENCE_FIELD(SliceModifier, distanceController, "PlaneDistance", Controller);
+DEFINE_REFERENCE_FIELD(SliceModifier, widthController, "SliceWidth", Controller);
+DEFINE_PROPERTY_FIELD(SliceModifier, createSelection, "CreateSelection");
+DEFINE_PROPERTY_FIELD(SliceModifier, inverse, "Inverse");
+DEFINE_PROPERTY_FIELD(SliceModifier, applyToSelection, "ApplyToSelection");
+SET_PROPERTY_FIELD_LABEL(SliceModifier, normalController, "Normal");
+SET_PROPERTY_FIELD_LABEL(SliceModifier, distanceController, "Distance");
+SET_PROPERTY_FIELD_LABEL(SliceModifier, widthController, "Slice width");
+SET_PROPERTY_FIELD_LABEL(SliceModifier, createSelection, "Create selection (do not delete)");
+SET_PROPERTY_FIELD_LABEL(SliceModifier, inverse, "Reverse orientation");
+SET_PROPERTY_FIELD_LABEL(SliceModifier, applyToSelection, "Apply to selection only");
+SET_PROPERTY_FIELD_UNITS(SliceModifier, normalController, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS(SliceModifier, distanceController, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(SliceModifier, widthController, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -60,17 +60,17 @@ SliceModifier::SliceModifier(DataSet* dataset) : ParticleModifier(dataset),
 	_inverse(false),
 	_applyToSelection(false)
 {
-	INIT_PROPERTY_FIELD(SliceModifier::_normalCtrl);
-	INIT_PROPERTY_FIELD(SliceModifier::_distanceCtrl);
-	INIT_PROPERTY_FIELD(SliceModifier::_widthCtrl);
-	INIT_PROPERTY_FIELD(SliceModifier::_createSelection);
-	INIT_PROPERTY_FIELD(SliceModifier::_inverse);
-	INIT_PROPERTY_FIELD(SliceModifier::_applyToSelection);
+	INIT_PROPERTY_FIELD(normalController);
+	INIT_PROPERTY_FIELD(distanceController);
+	INIT_PROPERTY_FIELD(widthController);
+	INIT_PROPERTY_FIELD(createSelection);
+	INIT_PROPERTY_FIELD(inverse);
+	INIT_PROPERTY_FIELD(applyToSelection);
 
-	_normalCtrl = ControllerManager::instance().createVector3Controller(dataset);
-	_distanceCtrl = ControllerManager::instance().createFloatController(dataset);
-	_widthCtrl = ControllerManager::instance().createFloatController(dataset);
-	if(_normalCtrl) _normalCtrl->setVector3Value(0, Vector3(1,0,0));
+	setNormalController(ControllerManager::instance().createVector3Controller(dataset));
+	setDistanceController(ControllerManager::instance().createFloatController(dataset));
+	setWidthController(ControllerManager::instance().createFloatController(dataset));
+	if(normalController()) normalController()->setVector3Value(0, Vector3(1,0,0));
 }
 
 /******************************************************************************
@@ -79,9 +79,9 @@ SliceModifier::SliceModifier(DataSet* dataset) : ParticleModifier(dataset),
 TimeInterval SliceModifier::modifierValidity(TimePoint time)
 {
 	TimeInterval interval = ParticleModifier::modifierValidity(time);
-	interval.intersect(_normalCtrl->validityInterval(time));
-	interval.intersect(_distanceCtrl->validityInterval(time));
-	interval.intersect(_widthCtrl->validityInterval(time));
+	if(normalController()) interval.intersect(normalController()->validityInterval(time));
+	if(distanceController()) interval.intersect(distanceController()->validityInterval(time));
+	if(widthController()) interval.intersect(widthController()->validityInterval(time));
 	return interval;
 }
 
@@ -110,10 +110,10 @@ bool SliceModifier::isApplicableTo(const PipelineFlowState& input)
 Plane3 SliceModifier::slicingPlane(TimePoint time, TimeInterval& validityInterval)
 {
 	Plane3 plane;
-	_normalCtrl->getVector3Value(time, plane.normal, validityInterval);
+	if(normalController()) normalController()->getVector3Value(time, plane.normal, validityInterval);
 	if(plane.normal == Vector3::Zero()) plane.normal = Vector3(0,0,1);
 	else plane.normal.normalize();
-	plane.dist = _distanceCtrl->getFloatValue(time, validityInterval);
+	if(distanceController()) plane.dist = distanceController()->getFloatValue(time, validityInterval);
 	if(inverse())
 		return -plane;
 	else
@@ -127,7 +127,7 @@ PipelineStatus SliceModifier::modifyParticles(TimePoint time, TimeInterval& vali
 {
 	// Retrieve modifier parameters.
 	FloatType sliceWidth = 0;
-	if(_widthCtrl) sliceWidth = _widthCtrl->getFloatValue(time, validityInterval);
+	if(widthController()) sliceWidth = widthController()->getFloatValue(time, validityInterval);
 	Plane3 plane = slicingPlane(time, validityInterval);
 
 	// Apply all registered and activated slice functions to the input data.
@@ -287,7 +287,7 @@ Box3 SliceModifier::renderVisual(TimePoint time, ObjectNode* contextNode, SceneR
 	Plane3 plane = slicingPlane(time, interval);
 
 	FloatType sliceWidth = 0;
-	if(_widthCtrl) sliceWidth = _widthCtrl->getFloatValue(time, interval);
+	if(widthController()) sliceWidth = widthController()->getFloatValue(time, interval);
 
 	ColorA color(0.8f, 0.3f, 0.3f);
 	if(sliceWidth <= 0) {

@@ -39,23 +39,11 @@ public:
 	/// Constructor.
 	Q_INVOKABLE CoordinationNumberModifier(DataSet* dataset);
 
-	/// Returns the cutoff radius used to build the neighbor lists for the analysis.
-	FloatType cutoff() const { return _cutoff; }
-
-	/// \brief Sets the cutoff radius used to build the neighbor lists for the analysis.
-	void setCutoff(FloatType newCutoff) { _cutoff = newCutoff; }
-
 	/// Returns the X coordinates of the RDF data points.
 	const QVector<double>& rdfX() const { return _rdfX; }
 
 	/// Returns the Y coordinates of the RDF data points.
 	const QVector<double>& rdfY() const { return _rdfY; }
-
-	/// Returns the number of bins in the computed RDF histogram.
-	int numberOfBins() const { return _numberOfBins; }
-
-	/// Sets the number of bins in the computed RDF histogram.
-	void setNumberOfBins(int n) { _numberOfBins = n; }
 
 private:
 
@@ -118,10 +106,10 @@ private:
 	QExplicitlySharedDataPointer<ParticleProperty> _coordinationNumbers;
 
 	/// Controls the cutoff radius for the neighbor lists.
-	PropertyField<FloatType> _cutoff;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, cutoff, setCutoff);
 
 	/// Controls the number of RDF histogram bins.
-	PropertyField<FloatType> _numberOfBins;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, numberOfBins, setNumberOfBins);
 
 	/// The X coordinates of the RDF data points.
 	QVector<double> _rdfX;
@@ -134,9 +122,6 @@ private:
 
 	Q_CLASSINFO("DisplayName", "Coordination analysis");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
-
-	DECLARE_PROPERTY_FIELD(_cutoff);
-	DECLARE_PROPERTY_FIELD(_numberOfBins);
 };
 
 OVITO_END_INLINE_NAMESPACE

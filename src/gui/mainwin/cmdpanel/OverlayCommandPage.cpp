@@ -174,7 +174,7 @@ void OverlayCommandPage::viewportEvent(ReferenceEvent* event)
 {
 	if(event->type() == ReferenceEvent::ReferenceAdded) {
 		ReferenceFieldEvent* refEvent = static_cast<ReferenceFieldEvent*>(event);
-		if(refEvent->field() == PROPERTY_FIELD(Viewport::_overlays)) {
+		if(refEvent->field() == PROPERTY_FIELD(Viewport::overlays)) {
 			ViewportOverlay* overlay = static_object_cast<ViewportOverlay>(refEvent->newTarget());
 			QListWidgetItem* item = new OverlayListItem(overlay);
 			_overlayListWidget->insertItem(refEvent->index(), item);
@@ -183,7 +183,7 @@ void OverlayCommandPage::viewportEvent(ReferenceEvent* event)
 	}
 	else if(event->type() == ReferenceEvent::ReferenceRemoved) {
 		ReferenceFieldEvent* refEvent = static_cast<ReferenceFieldEvent*>(event);
-		if(refEvent->field() == PROPERTY_FIELD(Viewport::_overlays)) {
+		if(refEvent->field() == PROPERTY_FIELD(Viewport::overlays)) {
 			delete _overlayListWidget->item(refEvent->index());
 		}
 	}

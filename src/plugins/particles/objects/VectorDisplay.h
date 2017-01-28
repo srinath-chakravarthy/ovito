@@ -57,48 +57,6 @@ public:
 	/// \brief Computes the bounding box of the object.
 	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
 
-	/// \brief Returns the selected shading mode for arrows.
-	ArrowPrimitive::ShadingMode shadingMode() const { return _shadingMode; }
-
-	/// \brief Sets the shading mode for arrows.
-	void setShadingMode(ArrowPrimitive::ShadingMode mode) { _shadingMode = mode; }
-
-	/// \brief Returns the selected rendering quality mode for arrows.
-	ArrowPrimitive::RenderingQuality renderingQuality() const { return _renderingQuality; }
-
-	/// \brief Sets the rendering quality mode for arrows.
-	void setRenderingQuality(ArrowPrimitive::RenderingQuality quality) { _renderingQuality = quality; }
-
-	/// Returns whether the arrow pointing direction is reversed.
-	bool reverseArrowDirection() const { return _reverseArrowDirection; }
-
-	/// Sets whether the arrow pointing direction should be reversed.
-	void setReverseArrowDirection(bool reverse) { _reverseArrowDirection = reverse; }
-
-	/// Returns how the arrows are positioned relative to the particles.
-	ArrowPosition arrowPosition() const { return _arrowPosition; }
-
-	/// Sets how the arrows are positioned relative to the particles.
-	void setArrowPosition(ArrowPosition posMode) { _arrowPosition = posMode; }
-
-	/// Returns the display color of the arrows.
-	const Color& arrowColor() const { return _arrowColor; }
-
-	/// Sets the display color of the arrows.
-	void setArrowColor(const Color& color) { _arrowColor = color; }
-
-	/// Returns the display width of the arrows.
-	FloatType arrowWidth() const { return _arrowWidth; }
-
-	/// Sets the display width of the arrows.
-	void setArrowWidth(FloatType width) { _arrowWidth = width; }
-
-	/// Returns the scaling factor that is applied to the vectors.
-	FloatType scalingFactor() const { return _scalingFactor; }
-
-	/// Sets the scaling factor that is applied to the vectors.
-	void setScalingFactor(FloatType factor) { _scalingFactor = factor; }
-
 public:
 
     Q_PROPERTY(Ovito::ArrowPrimitive::ShadingMode shadingMode READ shadingMode WRITE setShadingMode);
@@ -117,26 +75,26 @@ protected:
 
 protected:
 
-	/// Enables the reversal of the arrow pointing direction.
-	PropertyField<bool> _reverseArrowDirection;
+	/// Reverses of the arrow pointing direction.
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, reverseArrowDirection, setReverseArrowDirection);
 
 	/// Controls how the arrows are positioned relative to the particles.
-	PropertyField<ArrowPosition, int> _arrowPosition;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ArrowPosition, arrowPosition, setArrowPosition);
 
 	/// Controls the color of the arrows.
-	PropertyField<Color, QColor> _arrowColor;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Color, arrowColor, setArrowColor);
 
 	/// Controls the width of the arrows in world units.
-	PropertyField<FloatType> _arrowWidth;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, arrowWidth, setArrowWidth);
 
 	/// Controls the scaling factor applied to the vectors.
-	PropertyField<FloatType> _scalingFactor;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, scalingFactor, setScalingFactor);
 
 	/// Controls the shading mode for arrows.
-	PropertyField<ArrowPrimitive::ShadingMode, int> _shadingMode;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ArrowPrimitive::ShadingMode, shadingMode, setShadingMode);
 
 	/// Controls the rendering quality mode for arrows.
-	PropertyField<ArrowPrimitive::RenderingQuality, int> _renderingQuality;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ArrowPrimitive::RenderingQuality, renderingQuality, setRenderingQuality);
 
 	/// The buffered geometry used to render the arrows.
 	std::shared_ptr<ArrowPrimitive> _buffer;
@@ -175,14 +133,6 @@ private:
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Vectors");
-
-	DECLARE_PROPERTY_FIELD(_reverseArrowDirection);
-	DECLARE_PROPERTY_FIELD(_arrowPosition);
-	DECLARE_PROPERTY_FIELD(_arrowColor);
-	DECLARE_PROPERTY_FIELD(_arrowWidth);
-	DECLARE_PROPERTY_FIELD(_scalingFactor);
-	DECLARE_PROPERTY_FIELD(_shadingMode);
-	DECLARE_PROPERTY_FIELD(_renderingQuality);
 };
 
 /**

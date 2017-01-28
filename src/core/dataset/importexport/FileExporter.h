@@ -66,51 +66,7 @@ public:
 
 	/// \brief Sets the name of the output file that should be written by this exporter.
 	virtual void setOutputFilename(const QString& filename);
-
-	/// \brief Returns the path of the output file written by this exporter.
-	const QString& outputFilename() const { return _outputFilename; }
-
-	/// Returns whether only the current animation frame or an entire animation interval should be exported.
-	bool exportAnimation() const { return _exportAnimation; }
-
-	/// Sets whether only the current animation frame or an entire animation interval should be exported.
-	void setExportAnimation(bool exportAnim) { _exportAnimation = exportAnim; }
-
-	/// \brief Controls whether the exporter should produce separate files for each exported frame.
-	void setUseWildcardFilename(bool enable) { _useWildcardFilename = enable; }
-
-	/// \brief Returns whether the exporter produces separate files for each exported frame.
-	bool useWildcardFilename() const { return _useWildcardFilename; }
-
-	/// \brief Sets the wildcard pattern used to generate filenames when writing
-	///        a separate file for each exported frame.
-	///
-	/// The wildcard filename must contain the character '*', which will be replaced by the
-	/// frame number.
-	void setWildcardFilename(const QString& filename) { _wildcardFilename = filename; }
-
-	/// \brief Returns the wild-card pattern used to generate filenames when writing
-	///        a separate file for each exported frame.
-	const QString& wildcardFilename() const { return _wildcardFilename; }
-
-	/// \brief Sets the start of the animation interval that should be exported to the output file.
-	void setStartFrame(int frame) { _startFrame = frame; }
-
-	/// \brief Returns the first frame of the animation interval that will be exported to the output file.
-	TimePoint startFrame() const { return _startFrame; }
-
-	/// \brief Sets the end of the animation interval that should be exported to the output file.
-	void setEndFrame(int frame) { _endFrame = frame; }
-
-	/// \brief Returns the last frame of the animation interval that will be exported to the output file.
-	TimePoint endFrame() const { return _endFrame; }
-
-	/// \brief Returns the interval between exported frames.
-	int everyNthFrame() const { return _everyNthFrame; }
-
-	/// \brief Sets the interval between exported frames.
-	void setEveryNthFrame(int n) { _everyNthFrame = n; }
-
+	
 	/// \brief Exports the scene objects to the output file(s).
 	/// \param progressDisplay Optional callback object which is used by the function to report progress.
 	/// \return \c true if the output file has been successfully written;
@@ -135,39 +91,31 @@ protected:
 private:
 
 	/// The output file path.
-	PropertyField<QString> _outputFilename;
+	DECLARE_PROPERTY_FIELD(QString, outputFilename);
 
 	/// Controls whether only the current animation frame or an entire animation interval should be exported.
-	PropertyField<bool> _exportAnimation;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, exportAnimation, setExportAnimation);
 
 	/// Indicates that the exporter should produce a separate file for each timestep.
-	PropertyField<bool> _useWildcardFilename;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, useWildcardFilename, setUseWildcardFilename);
 
 	/// The wildcard name that is used to generate the output filenames.
-	PropertyField<QString> _wildcardFilename;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QString, wildcardFilename, setWildcardFilename);
 
 	/// The first animation frame that should be exported.
-	PropertyField<int> _startFrame;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, startFrame, setStartFrame);
 
 	/// The last animation frame that should be exported.
-	PropertyField<int> _endFrame;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, endFrame, setEndFrame);
 
 	/// Controls the interval between exported frames.
-	PropertyField<int> _everyNthFrame;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, everyNthFrame, setEveryNthFrame);
 
 	/// Holds the scene objects to be exported.
 	QVector<OORef<SceneNode>> _nodesToExport;
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_outputFilename);
-	DECLARE_PROPERTY_FIELD(_exportAnimation);
-	DECLARE_PROPERTY_FIELD(_useWildcardFilename);
-	DECLARE_PROPERTY_FIELD(_wildcardFilename);
-	DECLARE_PROPERTY_FIELD(_startFrame);
-	DECLARE_PROPERTY_FIELD(_endFrame);
-	DECLARE_PROPERTY_FIELD(_everyNthFrame);
 };
 
 OVITO_END_INLINE_NAMESPACE

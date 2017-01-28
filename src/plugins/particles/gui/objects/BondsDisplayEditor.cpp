@@ -47,14 +47,14 @@ void BondsDisplayEditor::createUI(const RolloutInsertionParameters& rolloutParam
 	layout->setColumnStretch(1, 1);
 
 	// Shading mode.
-	VariantComboBoxParameterUI* shadingModeUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(BondsDisplay::_shadingMode));
+	VariantComboBoxParameterUI* shadingModeUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(BondsDisplay::shadingMode));
 	shadingModeUI->comboBox()->addItem(tr("Normal"), qVariantFromValue(ArrowPrimitive::NormalShading));
 	shadingModeUI->comboBox()->addItem(tr("Flat"), qVariantFromValue(ArrowPrimitive::FlatShading));
 	layout->addWidget(new QLabel(tr("Shading mode:")), 0, 0);
 	layout->addWidget(shadingModeUI->comboBox(), 0, 1);
 
 	// Rendering quality.
-	VariantComboBoxParameterUI* renderingQualityUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(BondsDisplay::_renderingQuality));
+	VariantComboBoxParameterUI* renderingQualityUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(BondsDisplay::renderingQuality));
 	renderingQualityUI->comboBox()->addItem(tr("Low"), qVariantFromValue(ArrowPrimitive::LowQuality));
 	renderingQualityUI->comboBox()->addItem(tr("Medium"), qVariantFromValue(ArrowPrimitive::MediumQuality));
 	renderingQualityUI->comboBox()->addItem(tr("High"), qVariantFromValue(ArrowPrimitive::HighQuality));
@@ -62,17 +62,17 @@ void BondsDisplayEditor::createUI(const RolloutInsertionParameters& rolloutParam
 	layout->addWidget(renderingQualityUI->comboBox(), 1, 1);
 
 	// Bond width.
-	FloatParameterUI* bondWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(BondsDisplay::_bondWidth));
+	FloatParameterUI* bondWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(BondsDisplay::bondWidth));
 	layout->addWidget(bondWidthUI->label(), 2, 0);
 	layout->addLayout(bondWidthUI->createFieldLayout(), 2, 1);
 
 	// Bond color.
-	ColorParameterUI* bondColorUI = new ColorParameterUI(this, PROPERTY_FIELD(BondsDisplay::_bondColor));
+	ColorParameterUI* bondColorUI = new ColorParameterUI(this, PROPERTY_FIELD(BondsDisplay::bondColor));
 	layout->addWidget(bondColorUI->label(), 3, 0);
 	layout->addWidget(bondColorUI->colorPicker(), 3, 1);
 
 	// Use particle colors.
-	BooleanParameterUI* useParticleColorsUI = new BooleanParameterUI(this, PROPERTY_FIELD(BondsDisplay::_useParticleColors));
+	BooleanParameterUI* useParticleColorsUI = new BooleanParameterUI(this, PROPERTY_FIELD(BondsDisplay::useParticleColors));
 	layout->addWidget(useParticleColorsUI->checkBox(), 4, 0, 1, 2);
 }
 

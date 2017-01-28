@@ -32,22 +32,22 @@
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingModifier, ParticleModifier);
-DEFINE_REFERENCE_FIELD(ColorCodingModifier, _startValueCtrl, "StartValue", Controller);
-DEFINE_REFERENCE_FIELD(ColorCodingModifier, _endValueCtrl, "EndValue", Controller);
-DEFINE_REFERENCE_FIELD(ColorCodingModifier, _colorGradient, "ColorGradient", ColorCodingGradient);
-DEFINE_PROPERTY_FIELD(ColorCodingModifier, _colorOnlySelected, "SelectedOnly");
-DEFINE_PROPERTY_FIELD(ColorCodingModifier, _keepSelection, "KeepSelection");
-DEFINE_PROPERTY_FIELD(ColorCodingModifier, _sourceParticleProperty, "SourceProperty");
-DEFINE_PROPERTY_FIELD(ColorCodingModifier, _sourceBondProperty, "SourceBondProperty");
-DEFINE_PROPERTY_FIELD(ColorCodingModifier, _colorApplicationMode, "ColorApplicationMode");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _startValueCtrl, "Start value");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _endValueCtrl, "End value");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _colorGradient, "Color gradient");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _colorOnlySelected, "Color only selected particles/bonds");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _keepSelection, "Keep selection");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _sourceParticleProperty, "Source property");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _sourceBondProperty, "Source property");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _colorApplicationMode, "Target");
+DEFINE_REFERENCE_FIELD(ColorCodingModifier, startValueController, "StartValue", Controller);
+DEFINE_REFERENCE_FIELD(ColorCodingModifier, endValueController, "EndValue", Controller);
+DEFINE_REFERENCE_FIELD(ColorCodingModifier, colorGradient, "ColorGradient", ColorCodingGradient);
+DEFINE_PROPERTY_FIELD(ColorCodingModifier, colorOnlySelected, "SelectedOnly");
+DEFINE_PROPERTY_FIELD(ColorCodingModifier, keepSelection, "KeepSelection");
+DEFINE_PROPERTY_FIELD(ColorCodingModifier, sourceParticleProperty, "SourceProperty");
+DEFINE_PROPERTY_FIELD(ColorCodingModifier, sourceBondProperty, "SourceBondProperty");
+DEFINE_PROPERTY_FIELD(ColorCodingModifier, colorApplicationMode, "ColorApplicationMode");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, startValueController, "Start value");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, endValueController, "End value");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, colorGradient, "Color gradient");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, colorOnlySelected, "Color only selected particles/bonds");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, keepSelection, "Keep selection");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, sourceParticleProperty, "Source property");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, sourceBondProperty, "Source property");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, colorApplicationMode, "Target");
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingGradient, RefTarget);
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingHSVGradient, ColorCodingGradient);
@@ -58,7 +58,7 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingBlueWhiteRedGradient, ColorCoding
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingViridisGradient, ColorCodingGradient);
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingMagmaGradient, ColorCodingGradient);
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingImageGradient, ColorCodingGradient);
-DEFINE_PROPERTY_FIELD(ColorCodingImageGradient, _image, "Image");
+DEFINE_PROPERTY_FIELD(ColorCodingImageGradient, image, "Image");
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -66,18 +66,18 @@ DEFINE_PROPERTY_FIELD(ColorCodingImageGradient, _image, "Image");
 ColorCodingModifier::ColorCodingModifier(DataSet* dataset) : ParticleModifier(dataset),
 	_colorOnlySelected(false), _keepSelection(false), _colorApplicationMode(Particles)
 {
-	INIT_PROPERTY_FIELD(ColorCodingModifier::_startValueCtrl);
-	INIT_PROPERTY_FIELD(ColorCodingModifier::_endValueCtrl);
-	INIT_PROPERTY_FIELD(ColorCodingModifier::_colorGradient);
-	INIT_PROPERTY_FIELD(ColorCodingModifier::_colorOnlySelected);
-	INIT_PROPERTY_FIELD(ColorCodingModifier::_keepSelection);
-	INIT_PROPERTY_FIELD(ColorCodingModifier::_sourceParticleProperty);
-	INIT_PROPERTY_FIELD(ColorCodingModifier::_sourceBondProperty);
-	INIT_PROPERTY_FIELD(ColorCodingModifier::_colorApplicationMode);
+	INIT_PROPERTY_FIELD(startValueController);
+	INIT_PROPERTY_FIELD(endValueController);
+	INIT_PROPERTY_FIELD(colorGradient);
+	INIT_PROPERTY_FIELD(colorOnlySelected);
+	INIT_PROPERTY_FIELD(keepSelection);
+	INIT_PROPERTY_FIELD(sourceParticleProperty);
+	INIT_PROPERTY_FIELD(sourceBondProperty);
+	INIT_PROPERTY_FIELD(colorApplicationMode);
 
-	_colorGradient = new ColorCodingHSVGradient(dataset);
-	_startValueCtrl = ControllerManager::instance().createFloatController(dataset);
-	_endValueCtrl = ControllerManager::instance().createFloatController(dataset);
+	setColorGradient(new ColorCodingHSVGradient(dataset));
+	setStartValueController(ControllerManager::instance().createFloatController(dataset));
+	setEndValueController(ControllerManager::instance().createFloatController(dataset));
 }
 
 /******************************************************************************
@@ -92,7 +92,7 @@ void ColorCodingModifier::loadUserDefaults()
 	QSettings settings;
 	settings.beginGroup(ColorCodingModifier::OOType.plugin()->pluginId());
 	settings.beginGroup(ColorCodingModifier::OOType.name());
-	QString typeString = settings.value(PROPERTY_FIELD(ColorCodingModifier::_colorGradient).identifier()).toString();
+	QString typeString = settings.value(PROPERTY_FIELD(colorGradient).identifier()).toString();
 	if(!typeString.isEmpty()) {
 		try {
 			OvitoObjectType* gradientType = OvitoObjectType::decodeFromString(typeString);
@@ -111,8 +111,8 @@ void ColorCodingModifier::loadUserDefaults()
 TimeInterval ColorCodingModifier::modifierValidity(TimePoint time)
 {
 	TimeInterval interval = ParticleModifier::modifierValidity(time);
-	if(_startValueCtrl) interval.intersect(_startValueCtrl->validityInterval(time));
-	if(_endValueCtrl) interval.intersect(_endValueCtrl->validityInterval(time));
+	if(startValueController()) interval.intersect(startValueController()->validityInterval(time));
+	if(endValueController()) interval.intersect(endValueController()->validityInterval(time));
 	return interval;
 }
 
@@ -226,8 +226,8 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 
 	// Get modifier's parameter values.
 	FloatType startValue = 0, endValue = 0;
-	if(_startValueCtrl) startValue = _startValueCtrl->getFloatValue(time, validityInterval);
-	if(_endValueCtrl) endValue = _endValueCtrl->getFloatValue(time, validityInterval);
+	if(startValueController()) startValue = startValueController()->getFloatValue(time, validityInterval);
+	if(endValueController()) endValue = endValueController()->getFloatValue(time, validityInterval);
 
 	// Clamp to finite range.
 	if(!std::isfinite(startValue)) startValue = std::numeric_limits<FloatType>::min();

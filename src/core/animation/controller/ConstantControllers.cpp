@@ -30,12 +30,12 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ConstVectorController, Controller);
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ConstPositionController, Controller);
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ConstRotationController, Controller);
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ConstScalingController, Controller);
-DEFINE_PROPERTY_FIELD(ConstFloatController, _value, "Value");
-DEFINE_PROPERTY_FIELD(ConstIntegerController, _value, "Value");
-DEFINE_PROPERTY_FIELD(ConstVectorController, _value, "Value");
-DEFINE_PROPERTY_FIELD(ConstPositionController, _value, "Value");
-DEFINE_PROPERTY_FIELD(ConstRotationController, _value, "Value");
-DEFINE_PROPERTY_FIELD(ConstScalingController, _value, "Value");
+DEFINE_PROPERTY_FIELD(ConstFloatController, value, "Value");
+DEFINE_PROPERTY_FIELD(ConstIntegerController, value, "Value");
+DEFINE_PROPERTY_FIELD(ConstVectorController, value, "Value");
+DEFINE_PROPERTY_FIELD(ConstPositionController, value, "Value");
+DEFINE_PROPERTY_FIELD(ConstRotationController, value, "Value");
+DEFINE_PROPERTY_FIELD(ConstScalingController, value, "Value");
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

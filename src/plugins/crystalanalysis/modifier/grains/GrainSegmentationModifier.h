@@ -42,60 +42,6 @@ public:
 	/// Constructor.
 	Q_INVOKABLE GrainSegmentationModifier(DataSet* dataset);
 
-	/// Return the catalog of structure patterns.
-	PatternCatalog* patternCatalog() const { return _patternCatalog; }
-
-	/// Returns the type of crystal to be analyzed.
-	StructureAnalysis::LatticeStructureType inputCrystalStructure() const { return static_cast<StructureAnalysis::LatticeStructureType>(_inputCrystalStructure.value()); }
-
-	/// Sets the type of crystal to be analyzed.
-	void setInputCrystalStructure(StructureAnalysis::LatticeStructureType structureType) { _inputCrystalStructure = structureType; }
-
-	/// Returns the minimum misorientation angle between adjacent grains.
-	FloatType misorientationThreshold() const { return _misorientationThreshold; }
-
-	/// Sets the minimum misorientation angle between adjacent grains.
-	void setMisorientationThreshold(FloatType threshold) { _misorientationThreshold = threshold; }
-
-	/// Returns the amount of noise tolerated within a grain.
-	FloatType fluctuationTolerance() const { return _fluctuationTolerance; }
-
-	/// Sets the amount of noise tolerated within a grain.
-	void setFluctuationTolerance(FloatType tolerance) { _fluctuationTolerance = tolerance; }
-
-	/// Returns the minimum number of crystalline atoms per grain.
-	int minGrainAtomCount() const { return _minGrainAtomCount; }
-
-	/// Sets the minimum number of crystalline atoms per grain.
-	void setMinGrainAtomCount(int minAtoms) { _minGrainAtomCount = minAtoms; }
-
-	/// \brief Returns the radius parameter used during construction of the free surface.
-	FloatType probeSphereRadius() const { return _probeSphereRadius; }
-
-	/// \brief Sets the radius parameter used during construction of the free surface.
-	void setProbeSphereRadius(FloatType radius) { _probeSphereRadius = radius; }
-
-	/// \brief Returns the level of smoothing applied to the constructed partition mesh.
-	int smoothingLevel() const { return _smoothingLevel; }
-
-	/// \brief Sets the level of smoothing applied to the constructed partition mesh.
-	void setSmoothingLevel(int level) { _smoothingLevel = level; }
-
-	/// Returns whether only selected particles are taken into account.
-	bool onlySelectedParticles() const { return _onlySelectedParticles; }
-
-	/// Sets whether only selected particles should be taken into account.
-	void setOnlySelectedParticles(bool onlySelected) { _onlySelectedParticles = onlySelected; }
-
-	/// Returns whether the generation of the partition mesh is enabled.
-	bool outputPartitionMesh() const { return _outputPartitionMesh; }
-
-	/// Enables the generation of the partition mesh.
-	void setOutputPartitionMesh(bool enable) { _outputPartitionMesh = enable; }
-
-	/// \brief Returns the display object that is responsible for rendering the grain boundary mesh.
-	PartitionMeshDisplay* meshDisplay() const { return _meshDisplay; }
-
 	/// Resets the modifier's result cache.
 	virtual void invalidateCachedResults() override;
 
@@ -119,31 +65,31 @@ protected:
 private:
 
 	/// The type of crystal to be analyzed.
-	PropertyField<int> _inputCrystalStructure;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(StructureAnalysis::LatticeStructureType, inputCrystalStructure, setInputCrystalStructure);
 
 	/// The minimum misorientation angle between adjacent grains.
-	PropertyField<FloatType> _misorientationThreshold;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, misorientationThreshold, setMisorientationThreshold);
 
 	/// Controls the amount of noise allowed inside a grain.
-	PropertyField<FloatType> _fluctuationTolerance;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, fluctuationTolerance, setFluctuationTolerance);
 
 	/// The minimum number of crystalline atoms per grain.
-	PropertyField<int> _minGrainAtomCount;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, minGrainAtomCount, setMinGrainAtomCount);
 
 	/// Enables the generation of the partition mesh.
-	PropertyField<bool> _outputPartitionMesh;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, outputPartitionMesh, setOutputPartitionMesh);
 
 	/// Controls the radius of the probe sphere used when constructing the free surfaces.
-	PropertyField<FloatType> _probeSphereRadius;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, probeSphereRadius, setProbeSphereRadius);
 
 	/// Controls the amount of smoothing applied to the mesh.
-	PropertyField<int> _smoothingLevel;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, smoothingLevel, setSmoothingLevel);
 
 	/// Controls whether only selected particles should be taken into account.
-	PropertyField<bool> _onlySelectedParticles;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, onlySelectedParticles, setOnlySelectedParticles);
 
 	/// The display object for rendering the mesh.
-	ReferenceField<PartitionMeshDisplay> _meshDisplay;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(PartitionMeshDisplay, meshDisplay, setMeshDisplay);
 
 	/// This stores the cached mesh produced by the modifier.
 	QExplicitlySharedDataPointer<PartitionMeshData> _partitionMesh;
@@ -152,7 +98,7 @@ private:
 	int _spaceFillingRegion;
 
 	/// The catalog of structure patterns.
-	ReferenceField<PatternCatalog> _patternCatalog;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(PatternCatalog, patternCatalog, setPatternCatalog);
 
 	/// This stores the cached atom-to-cluster assignments computed by the modifier.
 	QExplicitlySharedDataPointer<ParticleProperty> _atomClusters;
@@ -165,17 +111,6 @@ private:
 
 	Q_CLASSINFO("DisplayName", "Grain segmentation");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
-
-	DECLARE_PROPERTY_FIELD(_inputCrystalStructure);
-	DECLARE_PROPERTY_FIELD(_misorientationThreshold);
-	DECLARE_PROPERTY_FIELD(_fluctuationTolerance);
-	DECLARE_PROPERTY_FIELD(_minGrainAtomCount);
-	DECLARE_PROPERTY_FIELD(_outputPartitionMesh);
-	DECLARE_PROPERTY_FIELD(_probeSphereRadius);
-	DECLARE_PROPERTY_FIELD(_smoothingLevel);
-	DECLARE_PROPERTY_FIELD(_onlySelectedParticles);
-	DECLARE_REFERENCE_FIELD(_patternCatalog);
-	DECLARE_REFERENCE_FIELD(_meshDisplay);
 };
 
 }	// End of namespace

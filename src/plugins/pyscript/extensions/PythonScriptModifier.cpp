@@ -29,8 +29,8 @@
 namespace PyScript {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PythonScriptModifier, Modifier);
-DEFINE_PROPERTY_FIELD(PythonScriptModifier, _script, "Script");
-SET_PROPERTY_FIELD_LABEL(PythonScriptModifier, _script, "Script");
+DEFINE_PROPERTY_FIELD(PythonScriptModifier, script, "Script");
+SET_PROPERTY_FIELD_LABEL(PythonScriptModifier, script, "Script");
 
 /******************************************************************************
 * Constructor.
@@ -39,7 +39,7 @@ PythonScriptModifier::PythonScriptModifier(DataSet* dataset) : Modifier(dataset)
 		_scriptExecutionQueued(false),
 		_computingInterval(TimeInterval::empty())
 {
-	INIT_PROPERTY_FIELD(PythonScriptModifier::_script);
+	INIT_PROPERTY_FIELD(script);
 
 	// Load example script.
 	setScript("from ovito.data import *\n\n"
@@ -65,7 +65,7 @@ void PythonScriptModifier::propertyChanged(const PropertyFieldDescriptor& field)
 	Modifier::propertyChanged(field);
 
 	// Recompute results when script has been changed.
-	if(field == PROPERTY_FIELD(PythonScriptModifier::_script)) {
+	if(field == PROPERTY_FIELD(script)) {
 		_modifyScriptFunction = py::object();
 		invalidateCachedResults(false);
 	}

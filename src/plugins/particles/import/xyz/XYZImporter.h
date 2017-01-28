@@ -37,7 +37,7 @@ public:
 
 	/// \brief Constructs a new instance of this class.
 	Q_INVOKABLE XYZImporter(DataSet* dataset) : ParticleImporter(dataset), _autoRescaleCoordinates(true) {
-		INIT_PROPERTY_FIELD(XYZImporter::_autoRescaleCoordinates);	
+		INIT_PROPERTY_FIELD(autoRescaleCoordinates);	
 	}
 
 	/// \brief Returns the file filter that specifies the files that can be imported by this service.
@@ -72,12 +72,6 @@ public:
 
 	/// Inspects the header of the given file and returns the number of file columns.
 	InputColumnMapping inspectFileHeader(const Frame& frame);
-
-	/// Returns whether reduced atom coordinates in the input file should be automatically detected.
-	bool autoRescaleCoordinates() const { return _autoRescaleCoordinates; }
-
-	/// Sets whether reduced atom coordinates in the input file should be automatically detected.
-	void setAutoRescaleCoordinates(bool enable) { _autoRescaleCoordinates = enable; }
 
 public:
 
@@ -134,12 +128,10 @@ private:
 	InputColumnMapping _columnMapping;
 
 	/// Controls the automatic detection of reduced atom coordinates in the input file.
-	PropertyField<bool> _autoRescaleCoordinates;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, autoRescaleCoordinates, setAutoRescaleCoordinates);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_autoRescaleCoordinates);	
 };
 
 OVITO_END_INLINE_NAMESPACE

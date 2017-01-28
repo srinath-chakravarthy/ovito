@@ -53,26 +53,6 @@ public:
 	/// \brief Destructor.
 	virtual ~DataSet();
 
-	/// \brief Returns a reference to the viewport configuration associated with this dataset.
-	/// \return The internal object managing the viewports.
-	ViewportConfiguration* viewportConfig() const { return _viewportConfig; }
-
-	/// \brief Returns the animation settings.
-	/// \return The internal object storing the animation settings of the scene.
-	AnimationSettings* animationSettings() { return _animSettings; }
-
-	/// \brief Returns this dataset's root scene node.
-	/// \return The root node of the scene tree.
-	SceneRoot* sceneRoot() const { return _sceneRoot; }
-
-	/// \brief Returns the selection set.
-	/// \return The current selection set storing the list of selected scene nodes.
-	SelectionSet* selection() const { return _selection; }
-
-	/// \brief Returns the rendering settings for this scene.
-	/// \return The current rendering settings.
-	RenderSettings* renderSettings() const { return _renderSettings; }
-
 	/// \brief Returns the path where this dataset is stored on disk.
 	/// \return The location where the dataset is stored or will be stored on disk.
 	const QString& filePath() const { return _filePath; }
@@ -198,19 +178,19 @@ private:
 private:
 
 	/// The configuration of the viewports.
-	ReferenceField<ViewportConfiguration> _viewportConfig;
+	DECLARE_REFERENCE_FIELD(ViewportConfiguration, viewportConfig);
 
 	/// Current animation settings.
-	ReferenceField<AnimationSettings> _animSettings;
+	DECLARE_REFERENCE_FIELD(AnimationSettings, animationSettings);
 
 	/// Root node of the scene node tree.
-	ReferenceField<SceneRoot> _sceneRoot;
+	DECLARE_REFERENCE_FIELD(SceneRoot, sceneRoot);
 
 	/// The current node selection set.
-	ReferenceField<SelectionSet> _selection;
+	DECLARE_REFERENCE_FIELD(SelectionSet, selection);
 
 	/// The settings used when rendering the scene.
-	ReferenceField<RenderSettings> _renderSettings;
+	DECLARE_REFERENCE_FIELD(RenderSettings, renderSettings);
 
 	/// The file path this DataSet has been saved to.
 	QString _filePath;
@@ -229,12 +209,6 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_viewportConfig);
-	DECLARE_REFERENCE_FIELD(_animSettings);
-	DECLARE_REFERENCE_FIELD(_sceneRoot);
-	DECLARE_REFERENCE_FIELD(_selection);
-	DECLARE_REFERENCE_FIELD(_renderSettings);
 };
 
 OVITO_END_INLINE_NAMESPACE

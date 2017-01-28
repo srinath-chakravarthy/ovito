@@ -32,8 +32,8 @@
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(LAMMPSTextDumpImporter, ParticleImporter);
-DEFINE_PROPERTY_FIELD(LAMMPSTextDumpImporter, _useCustomColumnMapping, "UseCustomColumnMaspping");
-SET_PROPERTY_FIELD_LABEL(LAMMPSTextDumpImporter, _useCustomColumnMapping, "Custom file column mapping");
+DEFINE_PROPERTY_FIELD(LAMMPSTextDumpImporter, useCustomColumnMapping, "UseCustomColumnMaspping");
+SET_PROPERTY_FIELD_LABEL(LAMMPSTextDumpImporter, useCustomColumnMapping, "Custom file column mapping");
 
 /******************************************************************************
  * Sets the user-defined mapping between data columns in the input file and

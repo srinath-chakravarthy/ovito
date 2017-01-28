@@ -42,11 +42,11 @@ void CAImporterEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 	layout->setContentsMargins(4,4,4,4);
 	layout->setSpacing(4);
 
-	BooleanParameterUI* loadParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(CAImporter::_loadParticles));
+	BooleanParameterUI* loadParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(CAImporter::loadParticles));
 	layout->addWidget(loadParticlesUI->checkBox());
 
 	// Multi-timestep file
-	BooleanParameterUI* multitimestepUI = new BooleanParameterUI(this, PROPERTY_FIELD(ParticleImporter::_isMultiTimestepFile));
+	BooleanParameterUI* multitimestepUI = new BooleanParameterUI(this, PROPERTY_FIELD(ParticleImporter::isMultiTimestepFile));
 	layout->addWidget(multitimestepUI->checkBox());
 }
 

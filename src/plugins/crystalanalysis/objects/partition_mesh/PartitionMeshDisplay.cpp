@@ -30,20 +30,20 @@
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PartitionMeshDisplay, AsynchronousDisplayObject);
-DEFINE_FLAGS_PROPERTY_FIELD(PartitionMeshDisplay, _surfaceColor, "SurfaceColor", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(PartitionMeshDisplay, _showCap, "ShowCap", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(PartitionMeshDisplay, _smoothShading, "SmoothShading");
-DEFINE_PROPERTY_FIELD(PartitionMeshDisplay, _flipOrientation, "FlipOrientation");
-DEFINE_REFERENCE_FIELD(PartitionMeshDisplay, _surfaceTransparency, "SurfaceTransparency", Controller);
-DEFINE_REFERENCE_FIELD(PartitionMeshDisplay, _capTransparency, "CapTransparency", Controller);
-SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _surfaceColor, "Free surface color");
-SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _showCap, "Show cap polygons");
-SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _smoothShading, "Smooth shading");
-SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _surfaceTransparency, "Surface transparency");
-SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _capTransparency, "Cap transparency");
-SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _flipOrientation, "Flip surface orientation");
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(PartitionMeshDisplay, _surfaceTransparency, PercentParameterUnit, 0, 1);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(PartitionMeshDisplay, _capTransparency, PercentParameterUnit, 0, 1);
+DEFINE_FLAGS_PROPERTY_FIELD(PartitionMeshDisplay, surfaceColor, "SurfaceColor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(PartitionMeshDisplay, showCap, "ShowCap", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(PartitionMeshDisplay, smoothShading, "SmoothShading");
+DEFINE_PROPERTY_FIELD(PartitionMeshDisplay, flipOrientation, "FlipOrientation");
+DEFINE_REFERENCE_FIELD(PartitionMeshDisplay, surfaceTransparencyController, "SurfaceTransparency", Controller);
+DEFINE_REFERENCE_FIELD(PartitionMeshDisplay, capTransparencyController, "CapTransparency", Controller);
+SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, surfaceColor, "Free surface color");
+SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, showCap, "Show cap polygons");
+SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, smoothShading, "Smooth shading");
+SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, surfaceTransparencyController, "Surface transparency");
+SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, capTransparencyController, "Cap transparency");
+SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, flipOrientation, "Flip surface orientation");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(PartitionMeshDisplay, surfaceTransparencyController, PercentParameterUnit, 0, 1);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(PartitionMeshDisplay, capTransparencyController, PercentParameterUnit, 0, 1);
 
 /******************************************************************************
 * Constructor.
@@ -51,15 +51,15 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(PartitionMeshDisplay, _capTransparency, Perce
 PartitionMeshDisplay::PartitionMeshDisplay(DataSet* dataset) : AsynchronousDisplayObject(dataset),
 	_surfaceColor(1, 1, 1), _showCap(true), _smoothShading(true), _flipOrientation(false), _trimeshUpdate(true)
 {
-	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_surfaceColor);
-	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_showCap);
-	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_smoothShading);
-	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_surfaceTransparency);
-	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_capTransparency);
-	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_flipOrientation);
+	INIT_PROPERTY_FIELD(surfaceColor);
+	INIT_PROPERTY_FIELD(showCap);
+	INIT_PROPERTY_FIELD(smoothShading);
+	INIT_PROPERTY_FIELD(surfaceTransparencyController);
+	INIT_PROPERTY_FIELD(capTransparencyController);
+	INIT_PROPERTY_FIELD(flipOrientation);
 
-	_surfaceTransparency = ControllerManager::instance().createFloatController(dataset);
-	_capTransparency = ControllerManager::instance().createFloatController(dataset);
+	setSurfaceTransparencyController(ControllerManager::instance().createFloatController(dataset));
+	setCapTransparencyController(ControllerManager::instance().createFloatController(dataset));
 }
 
 /******************************************************************************
@@ -155,13 +155,13 @@ void PartitionMeshDisplay::render(TimePoint time, DataObject* dataObject, const 
 	FloatType transp_surface = 0;
 	FloatType transp_cap = 0;
 	TimeInterval iv;
-	if(_surfaceTransparency) transp_surface = _surfaceTransparency->getFloatValue(time, iv);
-	if(_capTransparency) transp_cap = _capTransparency->getFloatValue(time, iv);
-	ColorA color_surface(surfaceColor(), 1.0f - transp_surface);
+	if(surfaceTransparencyController()) transp_surface = surfaceTransparencyController()->getFloatValue(time, iv);
+	if(capTransparencyController()) transp_cap = capTransparencyController()->getFloatValue(time, iv);
+	ColorA color_surface(surfaceColor(), FloatType(1) - transp_surface);
 
 	// Do we have to re-create the render primitives from scratch?
 	bool recreateSurfaceBuffer = !_surfaceBuffer || !_surfaceBuffer->isValid(renderer);
-	bool recreateCapBuffer = _showCap && (!_capBuffer || !_capBuffer->isValid(renderer));
+	bool recreateCapBuffer = showCap() && (!_capBuffer || !_capBuffer->isValid(renderer));
 
 	// Do we have to update the render primitives?
 	bool updateContents = _geometryCacheHelper.updateState(color_surface, smoothShading(), clusterGraph)
@@ -177,7 +177,7 @@ void PartitionMeshDisplay::render(TimePoint time, DataObject* dataObject, const 
 	if(updateContents) {
 
 		// Assign smoothing group to faces to interpolate normals.
-		const quint32 smoothingGroup = _smoothShading ? 1 : 0;
+		const quint32 smoothingGroup = smoothShading() ? 1 : 0;
 		for(auto& face : _surfaceMesh.faces()) {
 			face.setSmoothingGroups(smoothingGroup);
 		}
@@ -202,7 +202,7 @@ void PartitionMeshDisplay::render(TimePoint time, DataObject* dataObject, const 
 		_surfaceBuffer->setMesh(_surfaceMesh, color_surface);
 		_surfaceBuffer->setCullFaces(true);
 
-		if(_showCap)
+		if(showCap())
 			_capBuffer->setMesh(_capPolygonsMesh, color_surface);
 
 		// Reset update flag.
@@ -212,7 +212,7 @@ void PartitionMeshDisplay::render(TimePoint time, DataObject* dataObject, const 
 	// Handle picking of triangles.
 	renderer->beginPickObject(contextNode);
 	_surfaceBuffer->render(renderer);
-	if(_showCap)
+	if(showCap())
 		_capBuffer->render(renderer);
 	else
 		_capBuffer.reset();

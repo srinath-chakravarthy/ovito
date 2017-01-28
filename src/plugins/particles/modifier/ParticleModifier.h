@@ -218,8 +218,6 @@ protected:
 	/// The status returned by the modifier.
 	PipelineStatus _modifierStatus;
 
-private:
-
 	Q_OBJECT
 	OVITO_OBJECT
 };

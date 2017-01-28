@@ -29,15 +29,15 @@
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(AmbientOcclusionModifier, AsynchronousParticleModifier);
-DEFINE_PROPERTY_FIELD(AmbientOcclusionModifier, _intensity, "Intensity");
-DEFINE_PROPERTY_FIELD(AmbientOcclusionModifier, _samplingCount, "SamplingCount");
-DEFINE_PROPERTY_FIELD(AmbientOcclusionModifier, _bufferResolution, "BufferResolution");
-SET_PROPERTY_FIELD_LABEL(AmbientOcclusionModifier, _intensity, "Shading intensity");
-SET_PROPERTY_FIELD_LABEL(AmbientOcclusionModifier, _samplingCount, "Number of exposure samples");
-SET_PROPERTY_FIELD_LABEL(AmbientOcclusionModifier, _bufferResolution, "Render buffer resolution");
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(AmbientOcclusionModifier, _intensity, PercentParameterUnit, 0, 1);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(AmbientOcclusionModifier, _samplingCount, IntegerParameterUnit, 3, 2000);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(AmbientOcclusionModifier, _bufferResolution, IntegerParameterUnit, 1, AmbientOcclusionModifier::MAX_AO_RENDER_BUFFER_RESOLUTION);
+DEFINE_PROPERTY_FIELD(AmbientOcclusionModifier, intensity, "Intensity");
+DEFINE_PROPERTY_FIELD(AmbientOcclusionModifier, samplingCount, "SamplingCount");
+DEFINE_PROPERTY_FIELD(AmbientOcclusionModifier, bufferResolution, "BufferResolution");
+SET_PROPERTY_FIELD_LABEL(AmbientOcclusionModifier, intensity, "Shading intensity");
+SET_PROPERTY_FIELD_LABEL(AmbientOcclusionModifier, samplingCount, "Number of exposure samples");
+SET_PROPERTY_FIELD_LABEL(AmbientOcclusionModifier, bufferResolution, "Render buffer resolution");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(AmbientOcclusionModifier, intensity, PercentParameterUnit, 0, 1);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(AmbientOcclusionModifier, samplingCount, IntegerParameterUnit, 3, 2000);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(AmbientOcclusionModifier, bufferResolution, IntegerParameterUnit, 1, AmbientOcclusionModifier::MAX_AO_RENDER_BUFFER_RESOLUTION);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -45,9 +45,9 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(AmbientOcclusionModifier, _bufferResolution, 
 AmbientOcclusionModifier::AmbientOcclusionModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
 	_intensity(0.7f), _samplingCount(40), _bufferResolution(3)
 {
-	INIT_PROPERTY_FIELD(AmbientOcclusionModifier::_intensity);
-	INIT_PROPERTY_FIELD(AmbientOcclusionModifier::_samplingCount);
-	INIT_PROPERTY_FIELD(AmbientOcclusionModifier::_bufferResolution);
+	INIT_PROPERTY_FIELD(intensity);
+	INIT_PROPERTY_FIELD(samplingCount);
+	INIT_PROPERTY_FIELD(bufferResolution);
 }
 
 /******************************************************************************
@@ -257,8 +257,8 @@ void AmbientOcclusionModifier::propertyChanged(const PropertyFieldDescriptor& fi
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Recompute brightness values when the AO parameters have been changed.
-	if(field == PROPERTY_FIELD(AmbientOcclusionModifier::_samplingCount) ||
-		field == PROPERTY_FIELD(AmbientOcclusionModifier::_bufferResolution))
+	if(field == PROPERTY_FIELD(samplingCount) ||
+		field == PROPERTY_FIELD(bufferResolution))
 		invalidateCachedResults();
 }
 

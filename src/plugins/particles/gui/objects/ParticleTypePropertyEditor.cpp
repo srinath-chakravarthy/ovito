@@ -64,7 +64,7 @@ void ParticleTypePropertyEditor::createUI(const RolloutInsertionParameters& roll
 	sublayout->setContentsMargins(0,0,0,0);
 	layout->addWidget(subEditorContainer);
 
-	RefTargetListParameterUI* particleTypesListUI = new CustomRefTargetListParameterUI(this, PROPERTY_FIELD(ParticleTypeProperty::_particleTypes), RolloutInsertionParameters().insertInto(subEditorContainer));
+	RefTargetListParameterUI* particleTypesListUI = new CustomRefTargetListParameterUI(this, PROPERTY_FIELD(ParticleTypeProperty::particleTypes), RolloutInsertionParameters().insertInto(subEditorContainer));
 	layout->insertWidget(0, particleTypesListUI->listWidget());
 }
 

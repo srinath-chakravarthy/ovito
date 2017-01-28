@@ -37,50 +37,8 @@ public:
 	/// \brief Constructor.
 	Q_INVOKABLE TrajectoryGeneratorObject(DataSet* dataset);
 
-	/// Returns the object node providing the input particle data.
-	ObjectNode* source() const { return _source; }
-
-	/// Sets the object node providing the input particle data.
-	void setSource(ObjectNode* source) { _source = source; }
-
-	/// Returns which particles trajectories are created for.
-	bool onlySelectedParticles() const { return _onlySelectedParticles; }
-
-	/// Controls which particles trajectories are created for.
-	void setOnlySelectedParticles(bool onlySelected) { _onlySelectedParticles = onlySelected; }
-
-	/// Returns whether the created trajectories span the entire animation interval or a sub-interval.
-	bool useCustomInterval() { return _useCustomInterval; }
-
-	/// Controls whether the created trajectories span the entire animation interval or a sub-interval.
-	void setUseCustomInterval(bool customInterval) { _useCustomInterval = customInterval; }
-
 	/// Returns the the custom time interval.
 	TimeInterval customInterval() const { return TimeInterval(_customIntervalStart, _customIntervalEnd); }
-
-	/// Returns the start of the custom time interval.
-	TimePoint customIntervalStart() const { return _customIntervalStart; }
-
-	/// Sets the start of the custom time interval.
-	void setCustomIntervalStart(TimePoint start) { _customIntervalStart = start; }
-
-	/// Returns the end of the custom time interval.
-	TimePoint customIntervalEnd() const { return _customIntervalEnd; }
-
-	/// Sets the end of the custom time interval.
-	void setCustomIntervalEnd(TimePoint end) { _customIntervalEnd = end; }
-
-	/// Returns the sampling frequency for creating trajectories.
-	int everyNthFrame() const { return _everyNthFrame; }
-
-	/// Sets the sampling frequency for creating trajectories.
-	void setEveryNthFrame(int n) { _everyNthFrame = n; }
-
-	/// Returns whether trajectories are unwrapped when crossing periodic boundaries.
-	bool unwrapTrajectories() const { return _unwrapTrajectories; }
-
-	/// Sets whether trajectories should be unwrapped when crossing periodic boundaries.
-	void setUnwrapTrajectories(bool unwrap) { _unwrapTrajectories = unwrap; }
 
 	/// Updates the stored trajectories from the source particle object.
 	bool generateTrajectories(AbstractProgressDisplay* progressDisplay = nullptr);
@@ -88,36 +46,28 @@ public:
 private:
 
 	/// The object node providing the input particles.
-	ReferenceField<ObjectNode> _source;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(ObjectNode, source, setSource);
 
 	/// Controls which particles trajectories are created for.
-	PropertyField<bool> _onlySelectedParticles;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, onlySelectedParticles, setOnlySelectedParticles);
 
 	/// Controls whether the created trajectories span the entire animation interval or a sub-interval.
-	PropertyField<bool> _useCustomInterval;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, useCustomInterval, setUseCustomInterval);
 
 	/// The start of the custom time interval.
-	PropertyField<TimePoint> _customIntervalStart;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(TimePoint, customIntervalStart, setCustomIntervalStart);
 
 	/// The end of the custom time interval.
-	PropertyField<TimePoint> _customIntervalEnd;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(TimePoint, customIntervalEnd, setCustomIntervalEnd);
 
 	/// The sampling frequency for creating trajectories.
-	PropertyField<int> _everyNthFrame;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, everyNthFrame, setEveryNthFrame);
 
 	/// Controls whether trajectories are unwrapped when crossing periodic boundaries.
-	PropertyField<bool> _unwrapTrajectories;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, unwrapTrajectories, setUnwrapTrajectories);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_source);
-	DECLARE_PROPERTY_FIELD(_onlySelectedParticles);
-	DECLARE_PROPERTY_FIELD(_useCustomInterval);
-	DECLARE_PROPERTY_FIELD(_customIntervalStart);
-	DECLARE_PROPERTY_FIELD(_customIntervalEnd);
-	DECLARE_PROPERTY_FIELD(_everyNthFrame);
-	DECLARE_PROPERTY_FIELD(_unwrapTrajectories);
 };
 
 }	// End of namespace

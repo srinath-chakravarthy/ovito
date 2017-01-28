@@ -77,7 +77,7 @@ void TrajectoryGeneratorObjectEditor::createUI(const RolloutInsertionParameters&
 
 		layout2->addWidget(new QLabel(tr("Generate trajectories for:")), 2, 0, 1, 2);
 
-		BooleanRadioButtonParameterUI* onlySelectedParticlesUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::_onlySelectedParticles));
+		BooleanRadioButtonParameterUI* onlySelectedParticlesUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::onlySelectedParticles));
 
 		QRadioButton* allParticlesButton = onlySelectedParticlesUI->buttonFalse();
 		allParticlesButton->setText(tr("All particles"));
@@ -97,7 +97,7 @@ void TrajectoryGeneratorObjectEditor::createUI(const RolloutInsertionParameters&
 		layout2->setContentsMargins(4,4,4,4);
 		layout2->setSpacing(2);
 
-		BooleanParameterUI* unwrapTrajectoriesUI = new BooleanParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::_unwrapTrajectories));
+		BooleanParameterUI* unwrapTrajectoriesUI = new BooleanParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::unwrapTrajectories));
 		layout2->addWidget(unwrapTrajectoriesUI->checkBox(), 0, 0);
 	}
 
@@ -114,7 +114,7 @@ void TrajectoryGeneratorObjectEditor::createUI(const RolloutInsertionParameters&
 		layout2c->setSpacing(2);
 		layout2->addLayout(layout2c);
 
-		BooleanRadioButtonParameterUI* useCustomIntervalUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::_useCustomInterval));
+		BooleanRadioButtonParameterUI* useCustomIntervalUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::useCustomInterval));
 
 		QRadioButton* animationIntervalButton = useCustomIntervalUI->buttonFalse();
 		animationIntervalButton->setText(tr("Complete trajectory"));
@@ -124,11 +124,11 @@ void TrajectoryGeneratorObjectEditor::createUI(const RolloutInsertionParameters&
 		customIntervalButton->setText(tr("Frame interval:"));
 		layout2c->addWidget(customIntervalButton, 1, 0, 1, 5);
 
-		IntegerParameterUI* customRangeStartUI = new IntegerParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::_customIntervalStart));
+		IntegerParameterUI* customRangeStartUI = new IntegerParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::customIntervalStart));
 		customRangeStartUI->setEnabled(false);
 		layout2c->addLayout(customRangeStartUI->createFieldLayout(), 2, 1);
 		layout2c->addWidget(new QLabel(tr("to")), 2, 2);
-		IntegerParameterUI* customRangeEndUI = new IntegerParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::_customIntervalEnd));
+		IntegerParameterUI* customRangeEndUI = new IntegerParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::customIntervalEnd));
 		customRangeEndUI->setEnabled(false);
 		layout2c->addLayout(customRangeEndUI->createFieldLayout(), 2, 3);
 		layout2c->setColumnMinimumWidth(0, 30);
@@ -140,7 +140,7 @@ void TrajectoryGeneratorObjectEditor::createUI(const RolloutInsertionParameters&
 		layout2a->setContentsMargins(0,6,0,0);
 		layout2a->setSpacing(2);
 		layout2->addLayout(layout2a);
-		IntegerParameterUI* everyNthFrameUI = new IntegerParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::_everyNthFrame));
+		IntegerParameterUI* everyNthFrameUI = new IntegerParameterUI(this, PROPERTY_FIELD(TrajectoryGeneratorObject::everyNthFrame));
 		layout2a->addWidget(everyNthFrameUI->label(), 0, 0);
 		layout2a->addLayout(everyNthFrameUI->createFieldLayout(), 0, 1);
 		layout2a->setColumnStretch(2, 1);

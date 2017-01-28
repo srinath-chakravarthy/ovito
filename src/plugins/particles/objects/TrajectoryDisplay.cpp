@@ -27,15 +27,15 @@
 namespace Ovito { namespace Particles {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(TrajectoryDisplay, DisplayObject);
-DEFINE_FLAGS_PROPERTY_FIELD(TrajectoryDisplay, _lineWidth, "LineWidth", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TrajectoryDisplay, _lineColor, "LineColor", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TrajectoryDisplay, _shadingMode, "ShadingMode", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(TrajectoryDisplay, _showUpToCurrentTime, "ShowUpToCurrentTime");
-SET_PROPERTY_FIELD_LABEL(TrajectoryDisplay, _lineWidth, "Line width");
-SET_PROPERTY_FIELD_LABEL(TrajectoryDisplay, _lineColor, "Line color");
-SET_PROPERTY_FIELD_LABEL(TrajectoryDisplay, _shadingMode, "Shading mode");
-SET_PROPERTY_FIELD_LABEL(TrajectoryDisplay, _showUpToCurrentTime, "Show up to current time only");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TrajectoryDisplay, _lineWidth, WorldParameterUnit, 0);
+DEFINE_FLAGS_PROPERTY_FIELD(TrajectoryDisplay, lineWidth, "LineWidth", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TrajectoryDisplay, lineColor, "LineColor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TrajectoryDisplay, shadingMode, "ShadingMode", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(TrajectoryDisplay, showUpToCurrentTime, "ShowUpToCurrentTime");
+SET_PROPERTY_FIELD_LABEL(TrajectoryDisplay, lineWidth, "Line width");
+SET_PROPERTY_FIELD_LABEL(TrajectoryDisplay, lineColor, "Line color");
+SET_PROPERTY_FIELD_LABEL(TrajectoryDisplay, shadingMode, "Shading mode");
+SET_PROPERTY_FIELD_LABEL(TrajectoryDisplay, showUpToCurrentTime, "Show up to current time only");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TrajectoryDisplay, lineWidth, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.
@@ -44,10 +44,10 @@ TrajectoryDisplay::TrajectoryDisplay(DataSet* dataset) : DisplayObject(dataset),
 	_lineWidth(0.2), _lineColor(0.6, 0.6, 0.6),
 	_shadingMode(ArrowPrimitive::FlatShading), _showUpToCurrentTime(false)
 {
-	INIT_PROPERTY_FIELD(TrajectoryDisplay::_lineWidth);
-	INIT_PROPERTY_FIELD(TrajectoryDisplay::_lineColor);
-	INIT_PROPERTY_FIELD(TrajectoryDisplay::_shadingMode);
-	INIT_PROPERTY_FIELD(TrajectoryDisplay::_showUpToCurrentTime);
+	INIT_PROPERTY_FIELD(lineWidth);
+	INIT_PROPERTY_FIELD(lineColor);
+	INIT_PROPERTY_FIELD(shadingMode);
+	INIT_PROPERTY_FIELD(showUpToCurrentTime);
 }
 
 /******************************************************************************

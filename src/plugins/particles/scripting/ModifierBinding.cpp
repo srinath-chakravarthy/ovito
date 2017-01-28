@@ -461,18 +461,15 @@ PYBIND11_PLUGIN(ParticlesModify)
 				"The distance of the slicing plane from the origin (along its normal vector)."
 				"\n\n"
 				":Default: 0.0\n")
-		.def_property("distance_ctrl", &SliceModifier::distanceController, &SliceModifier::setDistanceController)
 		.def_property("normal", &SliceModifier::normal, &SliceModifier::setNormal,
 				"The normal vector of the slicing plane. Does not have to be a unit vector."
 				"\n\n"
 				":Default: ``(1,0,0)``\n")
-		.def_property("normal_ctrl", &SliceModifier::normalController, &SliceModifier::setNormalController)
 		.def_property("slice_width", &SliceModifier::sliceWidth, &SliceModifier::setSliceWidth,
 				"The width of the slab to cut. If zero, the modifier cuts all particles on one "
 				"side of the slicing plane."
 				"\n\n"
 				":Default: 0.0\n")
-		.def_property("slice_width_ctrl", &SliceModifier::sliceWidthController, &SliceModifier::setSliceWidthController)
 		.def_property("inverse", &SliceModifier::inverse, &SliceModifier::setInverse,
 				"Reverses the sense of the slicing plane."
 				"\n\n"
@@ -503,8 +500,8 @@ PYBIND11_PLUGIN(ParticlesModify)
 			"                                [0,       1,0,0],\n"
 			"                                [0,       0,1,0]])\n"
 			"\n")
-		.def_property("transformation", MatrixGetter<AffineTransformationModifier, AffineTransformation, &AffineTransformationModifier::transformation>(), 
-										MatrixSetter<AffineTransformationModifier, AffineTransformation, &AffineTransformationModifier::setTransformation>(),
+		.def_property("transformation", MatrixGetter<AffineTransformationModifier, AffineTransformation, &AffineTransformationModifier::transformationTM>(), 
+										MatrixSetter<AffineTransformationModifier, AffineTransformation, &AffineTransformationModifier::setTransformationTM>(),
 				"The 3x4 transformation matrix being applied to particle positions and/or the simulation cell. "
 				"The first three matrix columns define the linear part of the transformation, while the fourth "
 				"column specifies the translation vector. "

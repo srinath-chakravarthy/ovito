@@ -37,24 +37,6 @@ public:
 	/// \brief Constructs a new BurgersVectorFamily.
 	Q_INVOKABLE BurgersVectorFamily(DataSet* dataset, const QString& name = QString(), const Vector3& burgersVector = Vector3::Zero(), const Color& color = Color(0,0,0));
 
-	/// Returns the family's display name.
-	const QString& name() const { return _name; }
-
-	/// Sets the family's display name.
-	void setName(const QString& name) { _name = name; }
-
-	/// Returns the color that is used to display dislocation of this family.
-	const Color& color() const { return _color; }
-
-	/// Sets the color that is used to display dislocation of this family.
-	void setColor(const Color& color) { _color = color; }
-
-	/// Returns the prototype Burgers vector of this family.
-	const Vector3& burgersVector() const { return _burgersVector; }
-
-	/// Sets the prototype Burgers vector of this family.
-	void setBurgersVector(const Vector3& v) { _burgersVector = v; }
-
 	/// Checks if the given Burgers vector is a member of this family.
 	bool isMember(const Vector3& v, StructurePattern* latticeStructure) const;
 
@@ -66,25 +48,19 @@ public:
 	Q_PROPERTY(QString name READ name WRITE setName);
 	Q_PROPERTY(Color color READ color WRITE setColor);
 
-protected:
+private:
 
 	/// The name of this atom type.
-	PropertyField<QString, QString, ReferenceEvent::TitleChanged> _name;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QString, name, setName);
 
 	/// This visualization color of this family.
-	PropertyField<Color> _color;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Color, color, setColor);
 
 	/// This prototype Burgers vector of this family.
-	PropertyField<Vector3> _burgersVector;
-
-private:
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Vector3, burgersVector, setBurgersVector);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_name);
-	DECLARE_PROPERTY_FIELD(_color);
-	DECLARE_PROPERTY_FIELD(_burgersVector);
 };
 
 }	// End of namespace

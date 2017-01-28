@@ -28,8 +28,8 @@
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(XYZExporter, FileColumnParticleExporter);
-DEFINE_FLAGS_PROPERTY_FIELD(XYZExporter, _subFormat, "XYZSubFormat", PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(XYZExporter, _subFormat, "Format style");
+DEFINE_FLAGS_PROPERTY_FIELD(XYZExporter, subFormat, "XYZSubFormat", PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(XYZExporter, subFormat, "Format style");
 
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.

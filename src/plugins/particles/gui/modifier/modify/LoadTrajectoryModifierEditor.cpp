@@ -47,7 +47,7 @@ void LoadTrajectoryModifierEditor::createUI(const RolloutInsertionParameters& ro
 	layout->addWidget(statusLabel());
 
 	// Open a sub-editor for the source object.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(LoadTrajectoryModifier::_trajectorySource), RolloutInsertionParameters().setTitle(tr("Trajectory Source")));
+	new SubObjectParameterUI(this, PROPERTY_FIELD(LoadTrajectoryModifier::trajectorySource), RolloutInsertionParameters().setTitle(tr("Trajectory Source")));
 }
 
 OVITO_END_INLINE_NAMESPACE

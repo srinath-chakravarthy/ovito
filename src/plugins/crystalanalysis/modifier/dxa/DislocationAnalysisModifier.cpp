@@ -34,26 +34,26 @@
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(DislocationAnalysisModifier, StructureIdentificationModifier);
-DEFINE_FLAGS_PROPERTY_FIELD(DislocationAnalysisModifier, _inputCrystalStructure, "CrystalStructure", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _maxTrialCircuitSize, "MaxTrialCircuitSize");
-DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _circuitStretchability, "CircuitStretchability");
-DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _outputInterfaceMesh, "OutputInterfaceMesh");
-DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _reconstructEdgeVectors, "ReconstructEdgeVectors");
-DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, _onlyPerfectDislocations, "OnlyPerfectDislocations");
-DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _patternCatalog, "PatternCatalog", PatternCatalog, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _dislocationDisplay, "DislocationDisplay", DislocationDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _defectMeshDisplay, "DefectMeshDisplay", SurfaceMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _interfaceMeshDisplay, "InterfaceMeshDisplay", SurfaceMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _smoothDislocationsModifier, "SmoothDislocationsModifier", SmoothDislocationsModifier, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, _smoothSurfaceModifier, "SmoothSurfaceModifier", SmoothSurfaceModifier, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _inputCrystalStructure, "Input crystal structure");
-SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _maxTrialCircuitSize, "Trial circuit length");
-SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _circuitStretchability, "Circuit stretchability");
-SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _outputInterfaceMesh, "Output interface mesh");
-SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _reconstructEdgeVectors, "Reconstruct edge vectors");
-SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, _onlyPerfectDislocations, "Generate perfect dislocations");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(DislocationAnalysisModifier, _maxTrialCircuitSize, IntegerParameterUnit, 3);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(DislocationAnalysisModifier, _circuitStretchability, IntegerParameterUnit, 0);
+DEFINE_FLAGS_PROPERTY_FIELD(DislocationAnalysisModifier, inputCrystalStructure, "CrystalStructure", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, maxTrialCircuitSize, "MaxTrialCircuitSize");
+DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, circuitStretchability, "CircuitStretchability");
+DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, outputInterfaceMesh, "OutputInterfaceMesh");
+DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, reconstructEdgeVectors, "ReconstructEdgeVectors");
+DEFINE_PROPERTY_FIELD(DislocationAnalysisModifier, onlyPerfectDislocations, "OnlyPerfectDislocations");
+DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, patternCatalog, "PatternCatalog", PatternCatalog, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, dislocationDisplay, "DislocationDisplay", DislocationDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, defectMeshDisplay, "DefectMeshDisplay", SurfaceMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, interfaceMeshDisplay, "InterfaceMeshDisplay", SurfaceMeshDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, smoothDislocationsModifier, "SmoothDislocationsModifier", SmoothDislocationsModifier, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(DislocationAnalysisModifier, smoothSurfaceModifier, "SmoothSurfaceModifier", SmoothSurfaceModifier, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, inputCrystalStructure, "Input crystal structure");
+SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, maxTrialCircuitSize, "Trial circuit length");
+SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, circuitStretchability, "Circuit stretchability");
+SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, outputInterfaceMesh, "Output interface mesh");
+SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, reconstructEdgeVectors, "Reconstruct edge vectors");
+SET_PROPERTY_FIELD_LABEL(DislocationAnalysisModifier, onlyPerfectDislocations, "Generate perfect dislocations");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(DislocationAnalysisModifier, maxTrialCircuitSize, IntegerParameterUnit, 3);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(DislocationAnalysisModifier, circuitStretchability, IntegerParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -62,42 +62,42 @@ DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : Str
 		_inputCrystalStructure(StructureAnalysis::LATTICE_FCC), _maxTrialCircuitSize(14), _circuitStretchability(9), _outputInterfaceMesh(false),
 		_reconstructEdgeVectors(false), _onlyPerfectDislocations(false)
 {
-	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_inputCrystalStructure);
-	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_maxTrialCircuitSize);
-	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_circuitStretchability);
-	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_outputInterfaceMesh);
-	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_reconstructEdgeVectors);
-	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_onlyPerfectDislocations);
-	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_patternCatalog);
-	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_dislocationDisplay);
-	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_defectMeshDisplay);
-	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_interfaceMeshDisplay);
-	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_smoothDislocationsModifier);
-	INIT_PROPERTY_FIELD(DislocationAnalysisModifier::_smoothSurfaceModifier);
+	INIT_PROPERTY_FIELD(inputCrystalStructure);
+	INIT_PROPERTY_FIELD(maxTrialCircuitSize);
+	INIT_PROPERTY_FIELD(circuitStretchability);
+	INIT_PROPERTY_FIELD(outputInterfaceMesh);
+	INIT_PROPERTY_FIELD(reconstructEdgeVectors);
+	INIT_PROPERTY_FIELD(onlyPerfectDislocations);
+	INIT_PROPERTY_FIELD(patternCatalog);
+	INIT_PROPERTY_FIELD(dislocationDisplay);
+	INIT_PROPERTY_FIELD(defectMeshDisplay);
+	INIT_PROPERTY_FIELD(interfaceMeshDisplay);
+	INIT_PROPERTY_FIELD(smoothDislocationsModifier);
+	INIT_PROPERTY_FIELD(smoothSurfaceModifier);
 
 	// Create the display objects.
-	_dislocationDisplay = new DislocationDisplay(dataset);
+	setDislocationDisplay(new DislocationDisplay(dataset));
 
-	_defectMeshDisplay = new SurfaceMeshDisplay(dataset);
-	_defectMeshDisplay->setShowCap(true);
-	_defectMeshDisplay->setSmoothShading(true);
-	_defectMeshDisplay->setCapTransparency(0.5);
-	_defectMeshDisplay->setObjectTitle(tr("Defect mesh"));
+	setDefectMeshDisplay(new SurfaceMeshDisplay(dataset));
+	defectMeshDisplay()->setShowCap(true);
+	defectMeshDisplay()->setSmoothShading(true);
+	defectMeshDisplay()->setCapTransparency(0.5);
+	defectMeshDisplay()->setObjectTitle(tr("Defect mesh"));
 
-	_interfaceMeshDisplay = new SurfaceMeshDisplay(dataset);
-	_interfaceMeshDisplay->setShowCap(false);
-	_interfaceMeshDisplay->setSmoothShading(false);
-	_interfaceMeshDisplay->setCapTransparency(0.5);
-	_interfaceMeshDisplay->setObjectTitle(tr("Interface mesh"));
+	setInterfaceMeshDisplay(new SurfaceMeshDisplay(dataset));
+	interfaceMeshDisplay()->setShowCap(false);
+	interfaceMeshDisplay()->setSmoothShading(false);
+	interfaceMeshDisplay()->setCapTransparency(0.5);
+	interfaceMeshDisplay()->setObjectTitle(tr("Interface mesh"));
 
 	// Create the internal modifiers.
-	_smoothDislocationsModifier = new SmoothDislocationsModifier(dataset);
-	_smoothSurfaceModifier = new SmoothSurfaceModifier(dataset);
+	setSmoothDislocationsModifier(new SmoothDislocationsModifier(dataset));
+	setSmoothSurfaceModifier(new SmoothSurfaceModifier(dataset));
 
 	// Create pattern catalog.
-	_patternCatalog = new PatternCatalog(dataset);
-	while(_patternCatalog->patterns().empty() == false)
-		_patternCatalog->removePattern(0);
+	setPatternCatalog(new PatternCatalog(dataset));
+	while(patternCatalog()->patterns().empty() == false)
+		patternCatalog()->removePattern(0);
 
 	// Create the structure types.
 	ParticleTypeProperty::PredefinedStructureType predefTypes[] = {
@@ -110,12 +110,12 @@ DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : Str
 	};
 	OVITO_STATIC_ASSERT(sizeof(predefTypes)/sizeof(predefTypes[0]) == StructureAnalysis::NUM_LATTICE_TYPES);
 	for(int id = 0; id < StructureAnalysis::NUM_LATTICE_TYPES; id++) {
-		OORef<StructurePattern> stype = _patternCatalog->structureById(id);
+		OORef<StructurePattern> stype = patternCatalog()->structureById(id);
 		if(!stype) {
 			stype = new StructurePattern(dataset);
 			stype->setId(id);
 			stype->setStructureType(StructurePattern::Lattice);
-			_patternCatalog->addPattern(stype);
+			patternCatalog()->addPattern(stype);
 		}
 		stype->setName(ParticleTypeProperty::getPredefinedStructureTypeName(predefTypes[id]));
 		stype->setColor(ParticleTypeProperty::getDefaultParticleColor(ParticleProperty::StructureTypeProperty, stype->name(), id));
@@ -124,7 +124,7 @@ DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : Str
 
 	// Create Burgers vector families.
 
-	StructurePattern* fccPattern = _patternCatalog->structureById(StructureAnalysis::LATTICE_FCC);
+	StructurePattern* fccPattern = patternCatalog()->structureById(StructureAnalysis::LATTICE_FCC);
 	fccPattern->setSymmetryType(StructurePattern::CubicSymmetry);
 	fccPattern->setShortName(QStringLiteral("fcc"));
 	fccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/2<110> (Perfect)"), Vector3(1.0f/2.0f, 1.0f/2.0f, 0.0f), Color(0.2f,0.2f,1)));
@@ -133,14 +133,14 @@ DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : Str
 	fccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/3<001> (Hirth)"), Vector3(1.0f/3.0f, 0.0f, 0.0f), Color(1,1,0)));
 	fccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/3<111> (Frank)"), Vector3(1.0f/3.0f, 1.0f/3.0f, 1.0f/3.0f), Color(0,1,1)));
 
-	StructurePattern* bccPattern = _patternCatalog->structureById(StructureAnalysis::LATTICE_BCC);
+	StructurePattern* bccPattern = patternCatalog()->structureById(StructureAnalysis::LATTICE_BCC);
 	bccPattern->setSymmetryType(StructurePattern::CubicSymmetry);
 	bccPattern->setShortName(QStringLiteral("bcc"));
 	bccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/2<111>"), Vector3(1.0f/2.0f, 1.0f/2.0f, 1.0f/2.0f), Color(0,1,0)));
 	bccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("<100>"), Vector3(1.0f, 0.0f, 0.0f), Color(1, 0.3f, 0.8f)));
 	bccPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("<110>"), Vector3(1.0f, 1.0f, 0.0f), Color(0.2f, 0.5f, 1.0f)));
 
-	StructurePattern* hcpPattern = _patternCatalog->structureById(StructureAnalysis::LATTICE_HCP);
+	StructurePattern* hcpPattern = patternCatalog()->structureById(StructureAnalysis::LATTICE_HCP);
 	hcpPattern->setShortName(QStringLiteral("hcp"));
 	hcpPattern->setSymmetryType(StructurePattern::HexagonalSymmetry);
 	hcpPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/3<1-210>"), Vector3(sqrt(0.5f), 0.0f, 0.0f), Color(0,1,0)));
@@ -149,7 +149,7 @@ DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : Str
 	hcpPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/3<1-100>"), Vector3(0.0f, sqrt(3.0f/2.0f)/3.0f, 0.0f), Color(1,0.5f,0)));
 	hcpPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/3<1-213>"), Vector3(sqrt(0.5f), 0.0f, sqrt(4.0f/3.0f)), Color(1,1,0)));
 
-	StructurePattern* cubicDiaPattern = _patternCatalog->structureById(StructureAnalysis::LATTICE_CUBIC_DIAMOND);
+	StructurePattern* cubicDiaPattern = patternCatalog()->structureById(StructureAnalysis::LATTICE_CUBIC_DIAMOND);
 	cubicDiaPattern->setShortName(QStringLiteral("diamond"));
 	cubicDiaPattern->setSymmetryType(StructurePattern::CubicSymmetry);
 	cubicDiaPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/2<110>"), Vector3(1.0f/2.0f, 1.0f/2.0f, 0.0f), Color(0.2f,0.2f,1)));
@@ -157,7 +157,7 @@ DislocationAnalysisModifier::DislocationAnalysisModifier(DataSet* dataset) : Str
 	cubicDiaPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/6<110>"), Vector3(1.0f/6.0f, 1.0f/6.0f, 0.0f), Color(1,0,1)));
 	cubicDiaPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/3<111>"), Vector3(1.0f/3.0f, 1.0f/3.0f, 1.0f/3.0f), Color(0,1,1)));
 
-	StructurePattern* hexDiaPattern = _patternCatalog->structureById(StructureAnalysis::LATTICE_HEX_DIAMOND);
+	StructurePattern* hexDiaPattern = patternCatalog()->structureById(StructureAnalysis::LATTICE_HEX_DIAMOND);
 	hexDiaPattern->setShortName(QStringLiteral("hex_diamond"));
 	hexDiaPattern->setSymmetryType(StructurePattern::HexagonalSymmetry);
 	hexDiaPattern->addBurgersVectorFamily(new BurgersVectorFamily(dataset, tr("1/3<1-210>"), Vector3(sqrt(0.5f), 0.0f, 0.0f), Color(0,1,0)));
@@ -174,12 +174,12 @@ void DislocationAnalysisModifier::propertyChanged(const PropertyFieldDescriptor&
 	StructureIdentificationModifier::propertyChanged(field);
 
 	// Recompute results when the parameters have changed.
-	if(field == PROPERTY_FIELD(DislocationAnalysisModifier::_inputCrystalStructure)
-			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_maxTrialCircuitSize)
-			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_circuitStretchability)
-			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_outputInterfaceMesh)
-			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_reconstructEdgeVectors)
-			|| field == PROPERTY_FIELD(DislocationAnalysisModifier::_onlyPerfectDislocations))
+	if(field == PROPERTY_FIELD(inputCrystalStructure)
+			|| field == PROPERTY_FIELD(maxTrialCircuitSize)
+			|| field == PROPERTY_FIELD(circuitStretchability)
+			|| field == PROPERTY_FIELD(outputInterfaceMesh)
+			|| field == PROPERTY_FIELD(reconstructEdgeVectors)
+			|| field == PROPERTY_FIELD(onlyPerfectDislocations))
 		invalidateCachedResults();
 }
 
@@ -287,7 +287,7 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 
 	// Output defect mesh.
 	OORef<SurfaceMesh> defectMeshObj(new SurfaceMesh(dataset(), _defectMesh.data()));
-	defectMeshObj->setCompletelySolid(_isBadEverywhere);
+	defectMeshObj->setIsCompletelySolid(_isBadEverywhere);
 	if(smoothSurfaceModifier() && smoothSurfaceModifier()->isEnabled() && smoothSurfaceModifier()->smoothingLevel() > 0)
 		defectMeshObj->smoothMesh(_simCell, smoothSurfaceModifier()->smoothingLevel());
 	defectMeshObj->setDisplayObject(_defectMeshDisplay);
@@ -296,7 +296,7 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 	// Output interface mesh.
 	if(_interfaceMesh) {
 		OORef<SurfaceMesh> interfaceMeshObj(new SurfaceMesh(dataset(), _interfaceMesh.data()));
-		interfaceMeshObj->setCompletelySolid(_isBadEverywhere);
+		interfaceMeshObj->setIsCompletelySolid(_isBadEverywhere);
 		interfaceMeshObj->setDisplayObject(_interfaceMeshDisplay);
 		output().addObject(interfaceMeshObj);
 	}
