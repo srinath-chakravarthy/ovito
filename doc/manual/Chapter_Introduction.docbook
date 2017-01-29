@@ -125,6 +125,10 @@
           </listitem>
           
           <listitem>
+            <para><link linkend="particles.modifiers.correlation_function">Spatial correlation function</link></para>
+          </listitem>
+
+          <listitem>
             <para><link linkend="particles.modifiers.dislocation_analysis">Automated dislocation line identification (DXA)</link></para>
           </listitem>
 

@@ -49,6 +49,10 @@
               <entry>Constructs a polyhedral mesh representing the surface of an atomistic solid.</entry>
             </row>          
             <row>
+              <entry><link linkend="particles.modifiers.correlation_function">Correlation function</link></entry>
+              <entry>Calculates the spatial cross-correlation function between two particle properties.</entry>
+            </row>
+            <row>
               <entry><link linkend="particles.modifiers.dislocation_analysis">Dislocation analysis (DXA)</link></entry>
               <entry>Detects dislocation lines in a crystal.</entry>
             </row>          
@@ -235,6 +239,8 @@
   <xi:include href="particles/construct_surface_mesh.docbook"/>
 
   <xi:include href="particles/coordination_analysis.docbook"/>
+
+  <xi:include href="particles/correlation_function.docbook"/>
 
   <xi:include href="particles/create_bonds.docbook"/>
 

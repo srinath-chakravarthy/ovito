@@ -162,7 +162,6 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CorrelationFunction
 	// Get simulation cell.
 	SimulationCellObject* inputCell = expectSimulationCell();
 
-
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<CorrelationAnalysisEngine>(validityInterval,
 													   posProperty->storage(),
