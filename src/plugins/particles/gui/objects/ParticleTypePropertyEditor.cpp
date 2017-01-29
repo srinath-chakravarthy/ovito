@@ -27,7 +27,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, ParticleTypePropertyEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(ParticleTypePropertyEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(ParticleTypeProperty, ParticleTypePropertyEditor);
 
 /******************************************************************************
@@ -64,7 +64,7 @@ void ParticleTypePropertyEditor::createUI(const RolloutInsertionParameters& roll
 	sublayout->setContentsMargins(0,0,0,0);
 	layout->addWidget(subEditorContainer);
 
-	RefTargetListParameterUI* particleTypesListUI = new CustomRefTargetListParameterUI(this, PROPERTY_FIELD(ParticleTypeProperty::_particleTypes), RolloutInsertionParameters().insertInto(subEditorContainer));
+	RefTargetListParameterUI* particleTypesListUI = new CustomRefTargetListParameterUI(this, PROPERTY_FIELD(ParticleTypeProperty::particleTypes), RolloutInsertionParameters().insertInto(subEditorContainer));
 	layout->insertWidget(0, particleTypesListUI->listWidget());
 }
 

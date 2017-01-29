@@ -63,15 +63,6 @@ public:
 	/// Assigns a long name to this pattern.
 	void setLongName(const QString& name) { setName(name); }
 
-	/// Returns the short name of this pattern.
-	const QString& shortName() const { return _shortName; }
-
-	/// Sets the short name to this pattern.
-	void setShortName(const QString& name) { _shortName = name; }
-
-	/// Returns the list of Burgers vector families defined for this lattice pattern.
-	const QVector<BurgersVectorFamily*>& burgersVectorFamilies() const { return _burgersVectorFamilies; }
-
 	/// Adds a new family to this lattice pattern's list of Burgers vector families.
 	void addBurgersVectorFamily(BurgersVectorFamily* family) { _burgersVectorFamilies.push_back(family); }
 
@@ -82,42 +73,25 @@ public:
 	/// don't belong to any family.
 	BurgersVectorFamily* defaultBurgersVectorFamily() const { return _burgersVectorFamilies.front(); }
 
-	/// Returns the type of structure described by this pattern.
-	StructureType structureType() const { return _structureType; }
-
-	/// Sets the type of structure described by this pattern.
-	void setStructureType(StructureType type) { _structureType = type; }
-
-	/// Returns the symmetry type of lattice structure described by this pattern.
-	SymmetryType symmetryType() const { return _symmetryType; }
-
-	/// Sets the symmetry type of lattice structure described by this pattern.
-	void setSymmetryType(SymmetryType type) { _symmetryType = type; }
-
 	/// Returns the display color to be used for a given Burgers vector.
 	static Color getBurgersVectorColor(const QString& latticeName, const Vector3& b);
 
 private:
 
 	/// The short name of this pattern.
-	PropertyField<QString> _shortName;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QString, shortName, setShortName);
 
 	/// The type of structure described by this pattern.
-	PropertyField<StructureType, int> _structureType;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(StructureType, structureType, setStructureType);
 
 	/// The type of crystal symmetry of the lattice.
-	PropertyField<SymmetryType, int> _symmetryType;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(SymmetryType, symmetryType, setSymmetryType);
 
 	/// List of Burgers vector families.
-	VectorReferenceField<BurgersVectorFamily> _burgersVectorFamilies;
+	DECLARE_MODIFIABLE_VECTOR_REFERENCE_FIELD(BurgersVectorFamily, burgersVectorFamilies, setBurgersVectorFamilies);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_shortName);
-	DECLARE_PROPERTY_FIELD(_structureType);
-	DECLARE_PROPERTY_FIELD(_symmetryType);
-	DECLARE_VECTOR_REFERENCE_FIELD(_burgersVectorFamilies);
 };
 
 }	// End of namespace

@@ -27,7 +27,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, IdentifyDiamondModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(IdentifyDiamondModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(IdentifyDiamondModifier, IdentifyDiamondModifierEditor);
 
 /******************************************************************************
@@ -44,7 +44,7 @@ void IdentifyDiamondModifierEditor::createUI(const RolloutInsertionParameters& r
 	layout1->setSpacing(6);
 
 	// Use only selected particles.
-	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::_onlySelectedParticles));
+	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::onlySelectedParticles));
 	layout1->addWidget(onlySelectedParticlesUI->checkBox());
 
 	// Status label.

@@ -78,17 +78,8 @@ public:
 	/// Constructor.
 	StructureIdentificationModifier(DataSet* dataset);
 
-	/// Returns the array of structure types that are assigned to the particles by this modifier.
-	const QVector<ParticleType*>& structureTypes() const { return _structureTypes; }
-
 	/// Returns an array that contains the number of matching particles for each structure type.
 	const QList<int>& structureCounts() const { return _structureCounts; }
-
-	/// Returns whether analysis takes only selected particles into account.
-	bool onlySelectedParticles() const { return _onlySelectedParticles; }
-
-	/// Sets whether analysis only selected particles are taken into account.
-	void setOnlySelectedParticles(bool onlySelected) { _onlySelectedParticles = onlySelected; }
 
 	/// Returns the cached results of the modifier, i.e. the structures assigned to the particles.
 	ParticleProperty* structureData() const { return _structureData.data(); }
@@ -131,21 +122,16 @@ private:
 	QExplicitlySharedDataPointer<ParticleProperty> _structureData;
 
 	/// Contains the list of structure types recognized by this analysis modifier.
-	VectorReferenceField<ParticleType> _structureTypes;
+	DECLARE_MODIFIABLE_VECTOR_REFERENCE_FIELD(ParticleType, structureTypes, setStructureTypes);
+
+	/// Controls whether analysis should take into account only selected particles.
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, onlySelectedParticles, setOnlySelectedParticles);
 
 	/// The number of matching particles for each structure type.
 	QList<int> _structureCounts;
 
-	/// Controls whether analysis should take into account only selected particles.
-	PropertyField<bool> _onlySelectedParticles;
-
-private:
-
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_VECTOR_REFERENCE_FIELD(_structureTypes);
-	DECLARE_PROPERTY_FIELD(_onlySelectedParticles);
 };
 
 OVITO_END_INLINE_NAMESPACE

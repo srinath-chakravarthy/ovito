@@ -26,20 +26,20 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, ModifierApplication, RefTarget);
-DEFINE_REFERENCE_FIELD(ModifierApplication, _modifier, "Modifier", Modifier);
-DEFINE_FLAGS_REFERENCE_FIELD(ModifierApplication, _modifierData, "ModifierData", RefTarget, PROPERTY_FIELD_ALWAYS_CLONE);
-SET_PROPERTY_FIELD_LABEL(ModifierApplication, _modifier, "Modifier");
-SET_PROPERTY_FIELD_LABEL(ModifierApplication, _modifierData, "Modifier data");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ModifierApplication, RefTarget);
+DEFINE_REFERENCE_FIELD(ModifierApplication, modifier, "Modifier", Modifier);
+DEFINE_FLAGS_REFERENCE_FIELD(ModifierApplication, modifierData, "ModifierData", RefTarget, PROPERTY_FIELD_ALWAYS_CLONE);
+SET_PROPERTY_FIELD_LABEL(ModifierApplication, modifier, "Modifier");
+SET_PROPERTY_FIELD_LABEL(ModifierApplication, modifierData, "Modifier data");
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
 ModifierApplication::ModifierApplication(DataSet* dataset, Modifier* mod) : RefTarget(dataset)
 {
-	INIT_PROPERTY_FIELD(ModifierApplication::_modifier);
-	INIT_PROPERTY_FIELD(ModifierApplication::_modifierData);
-	_modifier = mod;
+	INIT_PROPERTY_FIELD(modifier);
+	INIT_PROPERTY_FIELD(modifierData);
+	setModifier(mod);
 }
 
 /******************************************************************************

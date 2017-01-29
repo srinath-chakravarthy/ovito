@@ -37,7 +37,7 @@ public:
 
 	/// \brief Constructs a new instance of this class.
 	Q_INVOKABLE LAMMPSTextDumpImporter(DataSet* dataset) : ParticleImporter(dataset), _useCustomColumnMapping(false) {
-		INIT_PROPERTY_FIELD(LAMMPSTextDumpImporter::_useCustomColumnMapping);
+		INIT_PROPERTY_FIELD(useCustomColumnMapping);
 	}
 
 	/// \brief Returns the file filter that specifies the files that can be imported by this service.
@@ -61,14 +61,6 @@ public:
 	/// \brief Sets the user-defined mapping between data columns in the input file and
 	///        the internal particle properties.
 	void setCustomColumnMapping(const InputColumnMapping& mapping);
-
-	/// Returns whether the mapping between input file columns and particle
-	/// properties is done automatically or by the user.
-	bool useCustomColumnMapping() const { return _useCustomColumnMapping; }
-
-	/// Sets whether the mapping between input file columns and particle
-	/// properties is done automatically or by the user.
-	void setUseCustomColumnMapping(bool useCustomMapping) { _useCustomColumnMapping = useCustomMapping; }
 
 	/// Creates an asynchronous loader object that loads the data for the given frame from the external file.
 	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame, bool isNewlySelectedFile) override {
@@ -140,7 +132,7 @@ private:
 
 	/// Controls whether the mapping between input file columns and particle
 	/// properties is done automatically or by the user.
-	PropertyField<bool> _useCustomColumnMapping;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, useCustomColumnMapping, setUseCustomColumnMapping);
 
 	/// Stores the user-defined mapping between data columns in the input file and
 	/// the internal particle properties.
@@ -148,8 +140,6 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_useCustomColumnMapping);
 };
 
 OVITO_END_INLINE_NAMESPACE

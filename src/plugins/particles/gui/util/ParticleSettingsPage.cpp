@@ -25,7 +25,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, ParticleSettingsPage, ApplicationSettingsDialogPage);
+IMPLEMENT_OVITO_OBJECT(ParticleSettingsPage, ApplicationSettingsDialogPage);
 
 class NameColumnDelegate : public QStyledItemDelegate
 {

@@ -75,6 +75,14 @@ Unresolved bugs:
 - Particle trajectory creation doesn't work if new particles are created over time.
 - WebM video export not working on Windows & Linux (stefan.parviainen@iki.fi). 
 
+- On Windows: Program crash at File->Load File when previous accessed path does not exist anymore.
+  Changing the file selection dialog to the alternative solves the problem.
+  After changing back to the normal file selection dialog, this one also works for me but opening the selection box takes about 10 seconds, 
+  while the programm does not receive any feedback ('Keine Rückmeldung').
+  After changing the preferred file path to a local path in the registry, the selection box opens immediately. 
+  Changing the preferred file path back to the non existing server, i can reproduce the 10 seconds of no response, 
+  but without any crash.
+
 New analysis features:
 
 - Create Bonds modifier: Add 'lower bound' parameter such that, when using the mothod todifier several times, bonds with different lengths can be assigned different colors (jerome.dequeker@ed.univ-lille1.fr).

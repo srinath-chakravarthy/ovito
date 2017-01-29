@@ -45,7 +45,7 @@ public:
 
 	/// \brief Constructs a new instance of this class.
 	Q_INVOKABLE XYZExporter(DataSet* dataset) : FileColumnParticleExporter(dataset), _subFormat(ExtendedFormat) {
-		INIT_PROPERTY_FIELD(XYZExporter::_subFormat);
+		INIT_PROPERTY_FIELD(subFormat);
 	}
 
 	/// \brief Returns the file filter that specifies the files that can be exported by this service.
@@ -53,12 +53,6 @@ public:
 
 	/// \brief Returns the filter description that is displayed in the drop-down box of the file dialog.
 	virtual QString fileFilterDescription() override { return tr("XYZ File"); }
-
-	/// Returns the format variant being written by this XYZ file exporter.
-	XYZSubFormat subFormat() const { return _subFormat; }
-
-	/// Sets the kind of XYZ file to write.
-	void setSubFormat(XYZSubFormat subFormat) { _subFormat = subFormat; }
 
 protected:
 
@@ -68,12 +62,10 @@ protected:
 private:
 
 	/// Selects the kind of XYZ file to write.
-	PropertyField<XYZSubFormat, int> _subFormat;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(XYZSubFormat, subFormat, setSubFormat);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_subFormat);
 };
 
 OVITO_END_INLINE_NAMESPACE

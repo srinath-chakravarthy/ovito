@@ -27,7 +27,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, AssignColorModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(AssignColorModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(AssignColorModifier, AssignColorModifierEditor);
 
 /******************************************************************************
@@ -45,12 +45,12 @@ void AssignColorModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	layout->setColumnStretch(1, 1);
 
 	// Color parameter.
-	ColorParameterUI* constColorPUI = new ColorParameterUI(this, PROPERTY_FIELD(AssignColorModifier::_colorCtrl));
+	ColorParameterUI* constColorPUI = new ColorParameterUI(this, PROPERTY_FIELD(AssignColorModifier::colorController));
 	layout->addWidget(constColorPUI->label(), 0, 0);
 	layout->addWidget(constColorPUI->colorPicker(), 0, 1);
 
 	// Keep selection parameter.
-	BooleanParameterUI* keepSelectionPUI = new BooleanParameterUI(this, PROPERTY_FIELD(AssignColorModifier::_keepSelection));
+	BooleanParameterUI* keepSelectionPUI = new BooleanParameterUI(this, PROPERTY_FIELD(AssignColorModifier::keepSelection));
 	layout->addWidget(keepSelectionPUI->checkBox(), 1, 0, 1, 2);
 }
 

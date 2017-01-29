@@ -121,20 +121,6 @@ public:
 	/// This method can be used to work with the input object outside of a normal call to modifyObject().
 	PipelineFlowState getModifierInput(ModifierApplication* modApp = nullptr) const;
 
-	/// \brief Returns whether this modifier is currently enabled.
-	/// \return \c true if it is currently enabled, i.e. applied.
-	///         \c false if it is disabled and skipped in the geometry pipeline.
-	bool isEnabled() const { return _isEnabled; }
-
-	/// \brief Enables or disables this modifier.
-	/// \param enabled Controls the state of the modifier.
-	///
-	/// A disabled modifier is skipped in the geometry pipeline
-	/// and is not applied to the input object.
-	///
-	/// \undoable
-	void setEnabled(bool enabled) { _isEnabled = enabled; }
-
 	/// \brief Asks the modifier whether it can be applied to the given input data.
 	/// \param input The pipeline state at the point of the pipeline where the modifier is going to be inserted.
 	/// \return true if the modifier can operate on the provided input data; false otherwise.
@@ -144,13 +130,13 @@ public:
 
 	/// \brief Returns the title of this modifier object.
 	virtual QString objectTitle() override {
-		if(_title.value().isEmpty()) return RefTarget::objectTitle();
-		else return _title;
+		if(title().isEmpty()) return RefTarget::objectTitle();
+		else return title();
 	}
 
 	/// \brief Changes the title of this modifier.
 	/// \undoable
-	void setObjectTitle(const QString& title) { _title = title; }
+	void setObjectTitle(const QString& title) { setTitle(title); }
 
 protected:
 
@@ -174,16 +160,13 @@ protected:
 private:
 
 	/// Flag that indicates whether the modifier is enabled.
-	PropertyField<bool, bool, ReferenceEvent::TargetEnabledOrDisabled> _isEnabled;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, isEnabled, setEnabled);
 
 	/// The user-defined title of this modifier.
-	PropertyField<QString, QString, ReferenceEvent::TitleChanged> _title;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QString, title, setTitle);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_isEnabled);
-	DECLARE_PROPERTY_FIELD(_title);
 
 	friend class PipelineObject;
 };

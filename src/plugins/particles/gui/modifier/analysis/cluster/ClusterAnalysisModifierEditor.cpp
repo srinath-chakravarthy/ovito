@@ -27,7 +27,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, ClusterAnalysisModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(ClusterAnalysisModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(ClusterAnalysisModifier, ClusterAnalysisModifierEditor);
 
 /******************************************************************************
@@ -48,16 +48,16 @@ void ClusterAnalysisModifierEditor::createUI(const RolloutInsertionParameters& r
 	gridlayout->setColumnStretch(1, 1);
 
 	// Cutoff parameter.
-	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(ClusterAnalysisModifier::_cutoff));
+	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(ClusterAnalysisModifier::cutoff));
 	gridlayout->addWidget(cutoffRadiusPUI->label(), 0, 0);
 	gridlayout->addLayout(cutoffRadiusPUI->createFieldLayout(), 0, 1);
 
 	// Sort by size
-	BooleanParameterUI* sortBySizeUI = new BooleanParameterUI(this, PROPERTY_FIELD(ClusterAnalysisModifier::_sortBySize));
+	BooleanParameterUI* sortBySizeUI = new BooleanParameterUI(this, PROPERTY_FIELD(ClusterAnalysisModifier::sortBySize));
 	gridlayout->addWidget(sortBySizeUI->checkBox(), 1, 0, 1, 2);
 
 	// Use only selected particles.
-	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(ClusterAnalysisModifier::_onlySelectedParticles));
+	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(ClusterAnalysisModifier::onlySelectedParticles));
 	gridlayout->addWidget(onlySelectedParticlesUI->checkBox(), 2, 0, 1, 2);
 
 	layout->addLayout(gridlayout);

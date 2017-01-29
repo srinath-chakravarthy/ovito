@@ -31,75 +31,75 @@
 
 namespace Ovito { namespace POVRay {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(POVRay, POVRayRenderer, NonInteractiveSceneRenderer);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _qualityLevel, "QualityLevel", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _enableAntialiasing, "EnableAntialiasing", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _samplingMethod, "SamplingMethod", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _AAThreshold, "AAThreshold", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _antialiasDepth, "AntialiasDepth", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _enableJitter, "EnableJitter", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _povrayDisplayEnabled, "ShowPOVRayDisplay", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _enableRadiosity, "EnableRadiosity", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _radiosityRayCount, "RadiosityRayCount", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _radiosityRecursionLimit, "RadiosityRecursionLimit", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _radiosityErrorBound, "RadiosityErrorBound", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _povrayExecutable, "ExecutablePath", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _depthOfFieldEnabled, "DepthOfFieldEnabled", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _dofFocalLength, "DOFFocalLength", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _dofAperture, "DOFAperture", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _dofSampleCount, "DOFSampleCount", PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _qualityLevel, "Quality level");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _enableAntialiasing, "Anti-aliasing");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _samplingMethod, "Sampling method");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _AAThreshold, "Anti-aliasing threshold");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _antialiasDepth, "Anti-aliasing depth");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _enableJitter, "Enable jitter");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _povrayDisplayEnabled, "Show POV-Ray window");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _enableRadiosity, "Radiosity");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _radiosityRayCount, "Ray count");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _radiosityRecursionLimit, "Recursion limit");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _radiosityErrorBound, "Error bound");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _povrayExecutable, "POV-Ray executable path");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _depthOfFieldEnabled, "Focal blur");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _dofFocalLength, "Focal length");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _dofAperture, "Aperture");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _dofSampleCount, "Blur samples");
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _qualityLevel, IntegerParameterUnit, 0, 11);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _samplingMethod, IntegerParameterUnit, 1, 2);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _AAThreshold, FloatParameterUnit, 0, 1);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _antialiasDepth, IntegerParameterUnit, 1, 9);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _radiosityRayCount, IntegerParameterUnit, 1, 1600);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _radiosityRecursionLimit, IntegerParameterUnit, 1, 20);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _radiosityErrorBound, FloatParameterUnit, FloatType(1e-5), 100);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(POVRayRenderer, _dofFocalLength, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _dofAperture, FloatParameterUnit, 0, 1);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(POVRayRenderer, _dofSampleCount, IntegerParameterUnit, 0);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(POVRayRenderer, NonInteractiveSceneRenderer);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, qualityLevel, "QualityLevel", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, antialiasingEnabled, "EnableAntialiasing", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, samplingMethod, "SamplingMethod", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, AAThreshold, "AAThreshold", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, antialiasDepth, "AntialiasDepth", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, jitterEnabled, "EnableJitter", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, povrayDisplayEnabled, "ShowPOVRayDisplay", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, radiosityEnabled, "EnableRadiosity", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, radiosityRayCount, "RadiosityRayCount", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, radiosityRecursionLimit, "RadiosityRecursionLimit", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, radiosityErrorBound, "RadiosityErrorBound", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, povrayExecutable, "ExecutablePath", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, depthOfFieldEnabled, "DepthOfFieldEnabled", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, dofFocalLength, "DOFFocalLength", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, dofAperture, "DOFAperture", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, dofSampleCount, "DOFSampleCount", PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, qualityLevel, "Quality level");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, antialiasingEnabled, "Anti-aliasing");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, samplingMethod, "Sampling method");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, AAThreshold, "Anti-aliasing threshold");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, antialiasDepth, "Anti-aliasing depth");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, jitterEnabled, "Enable jitter");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, povrayDisplayEnabled, "Show POV-Ray window");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, radiosityEnabled, "Radiosity");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, radiosityRayCount, "Ray count");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, radiosityRecursionLimit, "Recursion limit");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, radiosityErrorBound, "Error bound");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, povrayExecutable, "POV-Ray executable path");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, depthOfFieldEnabled, "Focal blur");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, dofFocalLength, "Focal length");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, dofAperture, "Aperture");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, dofSampleCount, "Blur samples");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, qualityLevel, IntegerParameterUnit, 0, 11);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, samplingMethod, IntegerParameterUnit, 1, 2);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, AAThreshold, FloatParameterUnit, 0, 1);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, antialiasDepth, IntegerParameterUnit, 1, 9);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, radiosityRayCount, IntegerParameterUnit, 1, 1600);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, radiosityRecursionLimit, IntegerParameterUnit, 1, 20);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, radiosityErrorBound, FloatParameterUnit, FloatType(1e-5), 100);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(POVRayRenderer, dofFocalLength, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, dofAperture, FloatParameterUnit, 0, 1);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(POVRayRenderer, dofSampleCount, IntegerParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
 POVRayRenderer::POVRayRenderer(DataSet* dataset) : NonInteractiveSceneRenderer(dataset),
-	_qualityLevel(9), _enableAntialiasing(true), _samplingMethod(1), _AAThreshold(0.3f),
-	_antialiasDepth(3), _enableJitter(true), _povrayDisplayEnabled(true), _enableRadiosity(false),
+	_qualityLevel(9), _antialiasingEnabled(true), _samplingMethod(1), _AAThreshold(0.3f),
+	_antialiasDepth(3), _jitterEnabled(true), _povrayDisplayEnabled(true), _radiosityEnabled(false),
 	_radiosityRayCount(50), _radiosityRecursionLimit(2), _radiosityErrorBound(0.8f),
 	_depthOfFieldEnabled(false), _dofFocalLength(40), _dofAperture(1.0f), _dofSampleCount(80)
 {
-	INIT_PROPERTY_FIELD(POVRayRenderer::_qualityLevel);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_enableAntialiasing);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_samplingMethod);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_AAThreshold);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_antialiasDepth);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_enableJitter);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_povrayDisplayEnabled);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_enableRadiosity);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_radiosityRayCount);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_radiosityRecursionLimit);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_radiosityErrorBound);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_povrayExecutable);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_depthOfFieldEnabled);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_dofFocalLength);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_dofAperture);	
-	INIT_PROPERTY_FIELD(POVRayRenderer::_dofSampleCount);
+	INIT_PROPERTY_FIELD(qualityLevel);
+	INIT_PROPERTY_FIELD(antialiasingEnabled);
+	INIT_PROPERTY_FIELD(samplingMethod);
+	INIT_PROPERTY_FIELD(AAThreshold);
+	INIT_PROPERTY_FIELD(antialiasDepth);
+	INIT_PROPERTY_FIELD(jitterEnabled);
+	INIT_PROPERTY_FIELD(povrayDisplayEnabled);
+	INIT_PROPERTY_FIELD(radiosityEnabled);
+	INIT_PROPERTY_FIELD(radiosityRayCount);
+	INIT_PROPERTY_FIELD(radiosityRecursionLimit);
+	INIT_PROPERTY_FIELD(radiosityErrorBound);
+	INIT_PROPERTY_FIELD(povrayExecutable);
+	INIT_PROPERTY_FIELD(depthOfFieldEnabled);
+	INIT_PROPERTY_FIELD(dofFocalLength);
+	INIT_PROPERTY_FIELD(dofAperture);	
+	INIT_PROPERTY_FIELD(dofSampleCount);
 }
 
 /******************************************************************************
@@ -139,13 +139,13 @@ void POVRayRenderer::beginFrame(TimePoint time, const ViewProjectionParameters& 
 	_outputStream << "#version 3.5;\n";
 	_outputStream << "#include \"transforms.inc\"\n";
 
-	if(_enableRadiosity) {
+	if(radiosityEnabled()) {
 		_outputStream << "global_settings {\n";
 		_outputStream << "radiosity {\n";
-		_outputStream << "count " << _radiosityRayCount.value() << "\n";
+		_outputStream << "count " << radiosityRayCount() << "\n";
 		_outputStream << "always_sample on\n";		
-		_outputStream << "recursion_limit " << _radiosityRecursionLimit.value() << "\n";
-		_outputStream << "error_bound " << _radiosityErrorBound.value() << "\n";
+		_outputStream << "recursion_limit " << radiosityRecursionLimit() << "\n";
+		_outputStream << "error_bound " << radiosityErrorBound() << "\n";
 		_outputStream << "}\n";
 		_outputStream << "}\n";
 	}
@@ -213,7 +213,7 @@ void POVRayRenderer::beginFrame(TimePoint time, const ViewProjectionParameters& 
 	// Write a light source.
 	_outputStream << "light_source {\n";
 	_outputStream << "  <0, 0, 0>\n";
-	if(!_enableRadiosity)
+	if(!radiosityEnabled())
 		_outputStream << "  color <1.5, 1.5, 1.5>\n";
 	else
 		_outputStream << "  color <0.5, 0.5, 0.5>\n";
@@ -295,31 +295,28 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 		else
 			parameters << "Output_Alpha=off";		// No alpha channel
 
-		if(_povrayDisplayEnabled)
+		if(povrayDisplayEnabled())
 			parameters << "Display=on";
 		else
 			parameters << "Display=off";
 
 		// Pass quality settings to POV-Ray.
-		if(_qualityLevel)
-			parameters << QString("+Q%1").arg(_qualityLevel);
-		if(_enableAntialiasing) {
-			if(_enableAntialiasing) {
-				if(_AAThreshold)
-					parameters << QString("+A%1").arg(_AAThreshold);
-				else
-					parameters << "+A";
-			}
-			else {
-				parameters << "-A";
-			}
+		if(qualityLevel())
+			parameters << QString("+Q%1").arg(qualityLevel());
+		if(antialiasingEnabled()) {
+			if(AAThreshold())
+				parameters << QString("+A%1").arg(AAThreshold());
+			else
+				parameters << "+A";
 		}
-		if(_samplingMethod)
-			parameters << QString("+AM%1").arg(_samplingMethod);
-		if(_antialiasDepth)
-			parameters << QString("+R%1").arg(_antialiasDepth);
-		if(_enableJitter)
-			parameters << (_enableJitter ? "+J" : "-J");		
+		else {
+			parameters << "-A";
+		}
+		if(samplingMethod())
+			parameters << QString("+AM%1").arg(samplingMethod());
+		if(antialiasingEnabled() && antialiasDepth())
+			parameters << QString("+R%1").arg(antialiasDepth());
+		parameters << (jitterEnabled() ? "+J" : "-J");		
 
 		QProcess povrayProcess;
 		QString executablePath = povrayExecutable().isEmpty() ? QString("povray") : povrayExecutable();

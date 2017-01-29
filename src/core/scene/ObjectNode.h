@@ -42,15 +42,6 @@ public:
 	/// \brief Destructor.
 	virtual ~ObjectNode();
 
-	/// \brief Returns this node's data provider, i.e. the object
-	///        that generates the data displayed by this scene node.
-	DataObject* dataProvider() const { return _dataProvider; }
-
-	/// \brief Sets the data provider object of this node.
-	/// \param pipeline An object that generates data, which will be displayed by this ObjectNode.
-	/// \undoable
-	void setDataProvider(DataObject* dataProvider) { _dataProvider = dataProvider; }
-
 	/// \brief Returns the data source of this node's pipeline, i.e., the object that provides the
 	///        input data entering the pipeline.
 	DataObject* sourceObject() const;
@@ -77,10 +68,6 @@ public:
 	/// \param mod The modifier to be inserted into the data flow pipeline.
 	/// \undoable
 	Q_INVOKABLE void applyModifier(Modifier* mod);
-
-	/// \brief Returns the list of display objects that are responsible for displaying
-	///        the node's data in the viewports.
-	const QVector<DisplayObject*>& displayObjects() const { return _displayObjects; }
 
 	/// \brief Returns the bounding box of the node's object in local coordinates.
 	/// \param time The time at which the bounding box should be computed.
@@ -113,17 +100,17 @@ protected:
 private:
 
 	/// The object which generates the data to be displayed by this ObjectNode.
-	ReferenceField<DataObject> _dataProvider;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(DataObject, dataProvider, setDataProvider);
+
+	/// The list of display objects that are responsible for displaying
+	/// the node's data in the viewports.
+	DECLARE_VECTOR_REFERENCE_FIELD(DisplayObject, displayObjects);
 
 	/// The cached results from the last data pipeline evaluation.
 	PipelineFlowState _pipelineCache;
 
 	/// The cached results from the display preparation stage.
 	PipelineFlowState _displayCache;
-
-	/// The list of display objects that are responsible for displaying
-	/// the node's data in the viewports.
-	VectorReferenceField<DisplayObject> _displayObjects;
 
 	/// This method invalidates the data pipeline cache of the object node.
 	void invalidatePipelineCache() {
@@ -136,9 +123,6 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_dataProvider);
-	DECLARE_VECTOR_REFERENCE_FIELD(_displayObjects);
 };
 
 OVITO_END_INLINE_NAMESPACE

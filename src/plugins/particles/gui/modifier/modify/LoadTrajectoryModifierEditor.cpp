@@ -26,7 +26,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, LoadTrajectoryModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(LoadTrajectoryModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(LoadTrajectoryModifier, LoadTrajectoryModifierEditor);
 
 /******************************************************************************
@@ -47,7 +47,7 @@ void LoadTrajectoryModifierEditor::createUI(const RolloutInsertionParameters& ro
 	layout->addWidget(statusLabel());
 
 	// Open a sub-editor for the source object.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(LoadTrajectoryModifier::_trajectorySource), RolloutInsertionParameters().setTitle(tr("Trajectory Source")));
+	new SubObjectParameterUI(this, PROPERTY_FIELD(LoadTrajectoryModifier::trajectorySource), RolloutInsertionParameters().setTitle(tr("Trajectory Source")));
 }
 
 OVITO_END_INLINE_NAMESPACE

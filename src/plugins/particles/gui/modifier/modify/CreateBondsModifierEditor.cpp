@@ -30,7 +30,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, CreateBondsModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(CreateBondsModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(CreateBondsModifier, CreateBondsModifierEditor);
 
 /******************************************************************************
@@ -50,11 +50,11 @@ void CreateBondsModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	gridlayout->setContentsMargins(0,0,0,0);
 	gridlayout->setColumnStretch(1, 1);
 
-	IntegerRadioButtonParameterUI* cutoffModePUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(CreateBondsModifier::_cutoffMode));
+	IntegerRadioButtonParameterUI* cutoffModePUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(CreateBondsModifier::cutoffMode));
 	QRadioButton* uniformCutoffModeBtn = cutoffModePUI->addRadioButton(CreateBondsModifier::UniformCutoff, tr("Uniform cutoff radius"));
 
 	// Cutoff parameter.
-	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(CreateBondsModifier::_uniformCutoff));
+	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(CreateBondsModifier::uniformCutoff));
 	gridlayout->addWidget(uniformCutoffModeBtn, 0, 0);
 	gridlayout->addLayout(cutoffRadiusPUI->createFieldLayout(), 0, 1);
 	cutoffRadiusPUI->setEnabled(false);
@@ -73,14 +73,14 @@ void CreateBondsModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	connect(pairCutoffModeBtn,&QRadioButton::toggled, _pairCutoffTable, &QTableView::setEnabled);
 	layout1->addWidget(_pairCutoffTable);
 
-	BooleanParameterUI* onlyIntraMoleculeBondsUI = new BooleanParameterUI(this, PROPERTY_FIELD(CreateBondsModifier::_onlyIntraMoleculeBonds));
+	BooleanParameterUI* onlyIntraMoleculeBondsUI = new BooleanParameterUI(this, PROPERTY_FIELD(CreateBondsModifier::onlyIntraMoleculeBonds));
 	layout1->addWidget(onlyIntraMoleculeBondsUI->checkBox());
 
 	// Lower cutoff parameter.
 	gridlayout = new QGridLayout();
 	gridlayout->setContentsMargins(0,0,0,0);
 	gridlayout->setColumnStretch(1, 1);
-	FloatParameterUI* minCutoffPUI = new FloatParameterUI(this, PROPERTY_FIELD(CreateBondsModifier::_minCutoff));
+	FloatParameterUI* minCutoffPUI = new FloatParameterUI(this, PROPERTY_FIELD(CreateBondsModifier::minimumCutoff));
 	gridlayout->addWidget(minCutoffPUI->label(), 0, 0);
 	gridlayout->addLayout(minCutoffPUI->createFieldLayout(), 0, 1);
 	layout1->addLayout(gridlayout);
@@ -90,7 +90,7 @@ void CreateBondsModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	layout1->addWidget(statusLabel());
 
 	// Open a sub-editor for the bonds display object.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(CreateBondsModifier::_bondsDisplay), rolloutParams.after(rollout));
+	new SubObjectParameterUI(this, PROPERTY_FIELD(CreateBondsModifier::bondsDisplay), rolloutParams.after(rollout));
 
 	// Update pair-wise cutoff table whenever a modifier has been loaded into the editor.
 	connect(this, &CreateBondsModifierEditor::contentsReplaced, this, &CreateBondsModifierEditor::updatePairCutoffList);

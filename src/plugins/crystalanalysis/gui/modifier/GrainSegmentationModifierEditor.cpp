@@ -32,7 +32,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysisGui, GrainSegmentationModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(GrainSegmentationModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(GrainSegmentationModifier, GrainSegmentationModifierEditor);
 
 /******************************************************************************
@@ -53,7 +53,7 @@ void GrainSegmentationModifierEditor::createUI(const RolloutInsertionParameters&
 	sublayout1->setContentsMargins(4,4,4,4);
 	sublayout1->setSpacing(4);
 	sublayout1->setColumnStretch(1,1);
-	VariantComboBoxParameterUI* crystalStructureUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_inputCrystalStructure));
+	VariantComboBoxParameterUI* crystalStructureUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::inputCrystalStructure));
 
 	crystalStructureUI->comboBox()->addItem(tr("Face-centered cubic (FCC)"), QVariant::fromValue((int)StructureAnalysis::LATTICE_FCC));
 	crystalStructureUI->comboBox()->addItem(tr("Hexagonal close-packed (HCP)"), QVariant::fromValue((int)StructureAnalysis::LATTICE_HCP));
@@ -62,7 +62,7 @@ void GrainSegmentationModifierEditor::createUI(const RolloutInsertionParameters&
 	crystalStructureUI->comboBox()->addItem(tr("Diamond hexagonal / Wurtzite"), QVariant::fromValue((int)StructureAnalysis::LATTICE_HEX_DIAMOND));
 	sublayout1->addWidget(crystalStructureUI->comboBox(), 0, 0, 1, 2);
 
-	BooleanParameterUI* onlySelectedUI = new BooleanParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_onlySelectedParticles));
+	BooleanParameterUI* onlySelectedUI = new BooleanParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::onlySelectedParticles));
 	sublayout1->addWidget(onlySelectedUI->checkBox(), 1, 0, 1, 2);
 
 	QGroupBox* paramsBox = new QGroupBox(tr("Parameters"));
@@ -72,30 +72,30 @@ void GrainSegmentationModifierEditor::createUI(const RolloutInsertionParameters&
 	sublayout2->setSpacing(4);
 	sublayout2->setColumnStretch(1, 1);
 
-	FloatParameterUI* misorientationThresholdUI = new FloatParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_misorientationThreshold));
+	FloatParameterUI* misorientationThresholdUI = new FloatParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::misorientationThreshold));
 	sublayout2->addWidget(misorientationThresholdUI->label(), 0, 0);
 	sublayout2->addLayout(misorientationThresholdUI->createFieldLayout(), 0, 1);
 
-	FloatParameterUI* fluctuationToleranceUI = new FloatParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_fluctuationTolerance));
+	FloatParameterUI* fluctuationToleranceUI = new FloatParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::fluctuationTolerance));
 	sublayout2->addWidget(fluctuationToleranceUI->label(), 1, 0);
 	sublayout2->addLayout(fluctuationToleranceUI->createFieldLayout(), 1, 1);
 
-	IntegerParameterUI* minGrainAtomCountUI = new IntegerParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_minGrainAtomCount));
+	IntegerParameterUI* minGrainAtomCountUI = new IntegerParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::minGrainAtomCount));
 	sublayout2->addWidget(minGrainAtomCountUI->label(), 2, 0);
 	sublayout2->addLayout(minGrainAtomCountUI->createFieldLayout(), 2, 1);
 
-	BooleanGroupBoxParameterUI* generateMeshUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_outputPartitionMesh));
+	BooleanGroupBoxParameterUI* generateMeshUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::outputPartitionMesh));
 	generateMeshUI->groupBox()->setTitle(tr("Generate boundary mesh"));
 	sublayout2 = new QGridLayout(generateMeshUI->childContainer());
 	sublayout2->setContentsMargins(4,4,4,4);
 	sublayout2->setColumnStretch(1, 1);
 	layout->addWidget(generateMeshUI->groupBox());
 
-	FloatParameterUI* radiusUI = new FloatParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_probeSphereRadius));
+	FloatParameterUI* radiusUI = new FloatParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::probeSphereRadius));
 	sublayout2->addWidget(radiusUI->label(), 0, 0);
 	sublayout2->addLayout(radiusUI->createFieldLayout(), 0, 1);
 
-	IntegerParameterUI* smoothingLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_smoothingLevel));
+	IntegerParameterUI* smoothingLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::smoothingLevel));
 	sublayout2->addWidget(smoothingLevelUI->label(), 1, 0);
 	sublayout2->addLayout(smoothingLevelUI->createFieldLayout(), 1, 1);
 
@@ -108,7 +108,7 @@ void GrainSegmentationModifierEditor::createUI(const RolloutInsertionParameters&
 	layout->addWidget(structureTypesPUI->tableWidget());
 
 	// Open a sub-editor for the mesh display object.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::_meshDisplay), rolloutParams.after(rollout));
+	new SubObjectParameterUI(this, PROPERTY_FIELD(GrainSegmentationModifier::meshDisplay), rolloutParams.after(rollout));
 }
 
 }	// End of namespace

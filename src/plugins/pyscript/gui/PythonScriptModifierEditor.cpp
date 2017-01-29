@@ -29,7 +29,7 @@
 
 namespace PyScript { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(PyScriptGui, PythonScriptModifierEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(PythonScriptModifierEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(PythonScriptModifier, PythonScriptModifierEditor);
 
 /******************************************************************************
@@ -50,7 +50,7 @@ void PythonScriptModifierEditor::createUI(const RolloutInsertionParameters& roll
 	sublayout->setContentsMargins(0,0,0,0);
 	sublayout->setSpacing(10);
 
-	StringParameterUI* namePUI = new StringParameterUI(this, PROPERTY_FIELD(Modifier::_title));
+	StringParameterUI* namePUI = new StringParameterUI(this, PROPERTY_FIELD(Modifier::title));
 	layout->addWidget(new QLabel(tr("User-defined modifier name:")), row++, 0);
 	static_cast<QLineEdit*>(namePUI->textBox())->setPlaceholderText(PythonScriptModifier::OOType.displayName());
 	sublayout->addWidget(namePUI->textBox(), 1);

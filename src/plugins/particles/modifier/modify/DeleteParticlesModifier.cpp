@@ -24,7 +24,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, DeleteParticlesModifier, ParticleModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(DeleteParticlesModifier, ParticleModifier);
 
 /******************************************************************************
 * Modifies the particle object.

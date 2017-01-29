@@ -27,7 +27,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Selection) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, SelectExpressionModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(SelectExpressionModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(SelectExpressionModifier, SelectExpressionModifierEditor);
 
 /******************************************************************************
@@ -43,7 +43,7 @@ void SelectExpressionModifierEditor::createUI(const RolloutInsertionParameters& 
 	layout->setSpacing(0);
 
 	layout->addWidget(new QLabel(tr("Boolean expression:")));
-	StringParameterUI* expressionUI = new StringParameterUI(this, PROPERTY_FIELD(SelectExpressionModifier::_expression));
+	StringParameterUI* expressionUI = new StringParameterUI(this, PROPERTY_FIELD(SelectExpressionModifier::expression));
 	expressionEdit = new AutocompleteTextEdit();
 	expressionUI->setTextBox(expressionEdit);
 	layout->addWidget(expressionUI->textBox());

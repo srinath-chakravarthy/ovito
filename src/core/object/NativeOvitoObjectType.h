@@ -90,19 +90,19 @@ private:
 
 ///////////////////////////////////// Macros //////////////////////////////////////////
 
-/// This macro must be included in the class definition of a OvitoObject-derived class.
+/// This macro must be included in the class definition of any OvitoObject-derived class.
 #define OVITO_OBJECT													\
 	public:																\
 		static const Ovito::NativeOvitoObjectType OOType;				\
 		virtual const Ovito::OvitoObjectType& getOOType() const override { return OOType; }
 
 /// This macro must be included in the .cpp file for a OvitoObject-derived class.
-#define IMPLEMENT_OVITO_OBJECT(plugin, name, basename)							\
-	const Ovito::NativeOvitoObjectType name::OOType(QStringLiteral(#name), #plugin, &basename::OOType, &name::staticMetaObject, false);
+#define IMPLEMENT_OVITO_OBJECT(name, basename)							\
+	const Ovito::NativeOvitoObjectType name::OOType(QStringLiteral(#name), OVITO_PLUGIN_NAME, &basename::OOType, &name::staticMetaObject, false);
 
-/// This macro must be included in the .cpp file for a OvitoObject-derived class.
-#define IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(plugin, name, basename)				\
-	const Ovito::NativeOvitoObjectType name::OOType(QStringLiteral(#name), #plugin, &basename::OOType, &name::staticMetaObject, true);
+/// This macro must be included in the .cpp file for a OvitoObject-derived class that supports serialization.
+#define IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(name, basename)				\
+	const Ovito::NativeOvitoObjectType name::OOType(QStringLiteral(#name), OVITO_PLUGIN_NAME, &basename::OOType, &name::staticMetaObject, true);
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE

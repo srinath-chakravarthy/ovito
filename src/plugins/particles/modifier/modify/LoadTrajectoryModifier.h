@@ -37,29 +37,19 @@ public:
 	/// Constructor.
 	Q_INVOKABLE LoadTrajectoryModifier(DataSet* dataset);
 
-	/// Returns the data object that provides the particle trajectories.
-	DataObject* trajectorySource() const { return _trajectorySource; }
-
-	/// Sets the object that will provide the particle trajectories.
-	void setTrajectorySource(DataObject* refConf) { _trajectorySource = refConf; }
-
 protected:
 
 	/// Modifies the particle object.
 	virtual PipelineStatus modifyParticles(TimePoint time, TimeInterval& validityInterval) override;
 
 	/// The source for trajectory data.
-	ReferenceField<DataObject> _trajectorySource;
-
-private:
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(DataObject, trajectorySource, setTrajectorySource);
 
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Load trajectory");
 	Q_CLASSINFO("ModifierCategory", "Modification");
-
-	DECLARE_REFERENCE_FIELD(_trajectorySource);
 };
 
 OVITO_END_INLINE_NAMESPACE

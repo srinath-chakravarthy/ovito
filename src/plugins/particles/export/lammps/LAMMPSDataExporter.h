@@ -37,7 +37,7 @@ public:
 
 	/// \brief Constructs a new instance of this class.
 	Q_INVOKABLE LAMMPSDataExporter(DataSet* dataset) : ParticleExporter(dataset), _atomStyle(LAMMPSDataImporter::AtomStyle_Atomic) {
-		INIT_PROPERTY_FIELD(LAMMPSDataExporter::_atomStyle);
+		INIT_PROPERTY_FIELD(atomStyle);
 	}
 
 	/// \brief Returns the file filter that specifies the files that can be exported by this service.
@@ -45,12 +45,6 @@ public:
 
 	/// \brief Returns the filter description that is displayed in the drop-down box of the file dialog.
 	virtual QString fileFilterDescription() override { return tr("LAMMPS Data File"); }
-
-	/// Returns the format variant being written by this data file exporter.
-	LAMMPSDataImporter::LAMMPSAtomStyle atomStyle() const { return _atomStyle; }
-
-	/// Sets the kind of data file to write.
-	void setAtomStyle(LAMMPSDataImporter::LAMMPSAtomStyle style) { _atomStyle = style; }
 
 protected:
 
@@ -60,12 +54,10 @@ protected:
 private:
 
 	/// Selects the kind of data file to write.
-	PropertyField<LAMMPSDataImporter::LAMMPSAtomStyle, int> _atomStyle;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(LAMMPSDataImporter::LAMMPSAtomStyle, atomStyle, setAtomStyle);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_atomStyle);
 };
 
 OVITO_END_INLINE_NAMESPACE

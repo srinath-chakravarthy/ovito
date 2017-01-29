@@ -36,7 +36,7 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE ConstFloatController(DataSet* dataset) : Controller(dataset), _value(0) {
-		INIT_PROPERTY_FIELD(ConstFloatController::_value);
+		INIT_PROPERTY_FIELD(value);
 	}
 
 	/// \brief Returns the value type of the controller.
@@ -57,12 +57,10 @@ public:
 private:
 
 	/// Stores the constant value of the controller.
-	PropertyField<FloatType> _value;
+	DECLARE_PROPERTY_FIELD(FloatType, value);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_value);
 };
 
 /**
@@ -74,7 +72,7 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE ConstIntegerController(DataSet* dataset) : Controller(dataset), _value(0) {
-		INIT_PROPERTY_FIELD(ConstIntegerController::_value);
+		INIT_PROPERTY_FIELD(value);
 	}
 
 	/// \brief Returns the value type of the controller.
@@ -95,12 +93,10 @@ public:
 private:
 
 	/// Stores the constant value of the controller.
-	PropertyField<int> _value;
+	DECLARE_PROPERTY_FIELD(int, value);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_value);
 };
 
 /**
@@ -112,7 +108,7 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE ConstVectorController(DataSet* dataset) : Controller(dataset), _value(Vector3::Zero()) {
-		INIT_PROPERTY_FIELD(ConstVectorController::_value);
+		INIT_PROPERTY_FIELD(value);
 	}
 
 	/// \brief Returns the value type of the controller.
@@ -133,12 +129,10 @@ public:
 private:
 
 	/// Stores the constant value of the controller.
-	PropertyField<Vector3> _value;
+	DECLARE_PROPERTY_FIELD(Vector3, value);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_value);
 };
 
 /**
@@ -150,7 +144,7 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE ConstPositionController(DataSet* dataset) : Controller(dataset), _value(Vector3::Zero()) {
-		INIT_PROPERTY_FIELD(ConstPositionController::_value);
+		INIT_PROPERTY_FIELD(value);
 	}
 
 	/// \brief Returns the value type of the controller.
@@ -174,12 +168,10 @@ public:
 private:
 
 	/// Stores the constant value of the controller.
-	PropertyField<Vector3> _value;
+	DECLARE_PROPERTY_FIELD(Vector3, value);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_value);
 };
 
 /**
@@ -191,7 +183,7 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE ConstRotationController(DataSet* dataset) : Controller(dataset), _value(Rotation::Identity()) {
-		INIT_PROPERTY_FIELD(ConstRotationController::_value);
+		INIT_PROPERTY_FIELD(value);
 	}
 
 	/// \brief Returns the value type of the controller.
@@ -215,12 +207,10 @@ public:
 private:
 
 	/// Stores the constant value of the controller.
-	PropertyField<Rotation> _value;
+	DECLARE_PROPERTY_FIELD(Rotation, value);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_value);
 };
 
 /**
@@ -232,7 +222,7 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE ConstScalingController(DataSet* dataset) : Controller(dataset), _value(Scaling::Identity()) {
-		INIT_PROPERTY_FIELD(ConstScalingController::_value);
+		INIT_PROPERTY_FIELD(value);
 	}
 
 	/// \brief Returns the value type of the controller.
@@ -256,12 +246,10 @@ public:
 private:
 
 	/// Stores the constant value of the controller.
-	PropertyField<Scaling> _value;
+	DECLARE_PROPERTY_FIELD(Scaling, value);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_value);
 };
 
 OVITO_END_INLINE_NAMESPACE

@@ -36,14 +36,8 @@ public:
 
 	/// Default constructor.
 	Q_INVOKABLE StandardSceneRenderer(DataSet* dataset) : OpenGLSceneRenderer(dataset), _antialiasingLevel(3) {
-		INIT_PROPERTY_FIELD(StandardSceneRenderer::_antialiasingLevel);
+		INIT_PROPERTY_FIELD(antialiasingLevel);
 	}
-
-	/// Returns the number of sub-pixels to render.
-	virtual int antialiasingLevel() const override { return _antialiasingLevel; }
-
-	/// Sets the number of sub-pixels to render.
-	void setAntialiasingLevel(int newLevel) { _antialiasingLevel = newLevel; }
 
 	/// Prepares the renderer for rendering and sets the data set that is being rendered.
 	virtual bool startRender(DataSet* dataset, RenderSettings* settings) override;
@@ -61,14 +55,15 @@ public:
 	/// \return true if rendering a real-time viewport; false if rendering an output image.
 	virtual bool isInteractive() const override { return false; }
 
-public:
+protected:
 
-	Q_PROPERTY(int antialiasingLevel READ antialiasingLevel WRITE setAntialiasingLevel);
+	/// Returns the supersampling level to use.
+	virtual int antialiasingLevelInternal() override { return antialiasingLevel(); }
 
 private:
 
 	/// Controls the number of sub-pixels to render.
-	PropertyField<int> _antialiasingLevel;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, antialiasingLevel, setAntialiasingLevel);
 
 	/// The offscreen surface used to render into an image buffer using OpenGL.
 	QScopedPointer<QOffscreenSurface> _offscreenSurface;
@@ -86,8 +81,6 @@ private:
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "OpenGL renderer");
-
-	DECLARE_PROPERTY_FIELD(_antialiasingLevel);
 };
 
 OVITO_END_INLINE_NAMESPACE

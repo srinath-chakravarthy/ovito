@@ -31,24 +31,24 @@
 
 namespace Ovito { namespace Particles {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, TrajectoryGeneratorObject, TrajectoryObject);
-DEFINE_FLAGS_REFERENCE_FIELD(TrajectoryGeneratorObject, _source, "ParticleSource", ObjectNode, PROPERTY_FIELD_NEVER_CLONE_TARGET | PROPERTY_FIELD_NO_SUB_ANIM);
-DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, _onlySelectedParticles, "OnlySelectedParticles");
-DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, _useCustomInterval, "UseCustomInterval");
-DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, _customIntervalStart, "CustomIntervalStart");
-DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, _customIntervalEnd, "CustomIntervalEnd");
-DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, _everyNthFrame, "EveryNthFrame");
-DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, _unwrapTrajectories, "UnwrapTrajectories");
-SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, _source, "Source");
-SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, _onlySelectedParticles, "Only selected particles");
-SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, _useCustomInterval, "Custom time interval");
-SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, _customIntervalStart, "Custom interval start");
-SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, _customIntervalEnd, "Custom interval end");
-SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, _everyNthFrame, "Every Nth frame");
-SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, _unwrapTrajectories, "Unwrap trajectories");
-SET_PROPERTY_FIELD_UNITS(TrajectoryGeneratorObject, _customIntervalStart, TimeParameterUnit);
-SET_PROPERTY_FIELD_UNITS(TrajectoryGeneratorObject, _customIntervalEnd, TimeParameterUnit);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TrajectoryGeneratorObject, _everyNthFrame, IntegerParameterUnit, 1);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(TrajectoryGeneratorObject, TrajectoryObject);
+DEFINE_FLAGS_REFERENCE_FIELD(TrajectoryGeneratorObject, source, "ParticleSource", ObjectNode, PROPERTY_FIELD_NEVER_CLONE_TARGET | PROPERTY_FIELD_NO_SUB_ANIM);
+DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, onlySelectedParticles, "OnlySelectedParticles");
+DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, useCustomInterval, "UseCustomInterval");
+DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, customIntervalStart, "CustomIntervalStart");
+DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, customIntervalEnd, "CustomIntervalEnd");
+DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, everyNthFrame, "EveryNthFrame");
+DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, unwrapTrajectories, "UnwrapTrajectories");
+SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, source, "Source");
+SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, onlySelectedParticles, "Only selected particles");
+SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, useCustomInterval, "Custom time interval");
+SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, customIntervalStart, "Custom interval start");
+SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, customIntervalEnd, "Custom interval end");
+SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, everyNthFrame, "Every Nth frame");
+SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, unwrapTrajectories, "Unwrap trajectories");
+SET_PROPERTY_FIELD_UNITS(TrajectoryGeneratorObject, customIntervalStart, TimeParameterUnit);
+SET_PROPERTY_FIELD_UNITS(TrajectoryGeneratorObject, customIntervalEnd, TimeParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TrajectoryGeneratorObject, everyNthFrame, IntegerParameterUnit, 1);
 
 /******************************************************************************
 * Default constructor.
@@ -59,13 +59,13 @@ TrajectoryGeneratorObject::TrajectoryGeneratorObject(DataSet* dataset) : Traject
 		_customIntervalEnd(dataset->animationSettings()->animationInterval().end()),
 		_everyNthFrame(1), _unwrapTrajectories(true)
 {
-	INIT_PROPERTY_FIELD(TrajectoryGeneratorObject::_source);
-	INIT_PROPERTY_FIELD(TrajectoryGeneratorObject::_onlySelectedParticles);
-	INIT_PROPERTY_FIELD(TrajectoryGeneratorObject::_useCustomInterval);
-	INIT_PROPERTY_FIELD(TrajectoryGeneratorObject::_customIntervalStart);
-	INIT_PROPERTY_FIELD(TrajectoryGeneratorObject::_customIntervalEnd);
-	INIT_PROPERTY_FIELD(TrajectoryGeneratorObject::_everyNthFrame);
-	INIT_PROPERTY_FIELD(TrajectoryGeneratorObject::_unwrapTrajectories);
+	INIT_PROPERTY_FIELD(source);
+	INIT_PROPERTY_FIELD(onlySelectedParticles);
+	INIT_PROPERTY_FIELD(useCustomInterval);
+	INIT_PROPERTY_FIELD(customIntervalStart);
+	INIT_PROPERTY_FIELD(customIntervalEnd);
+	INIT_PROPERTY_FIELD(everyNthFrame);
+	INIT_PROPERTY_FIELD(unwrapTrajectories);
 }
 
 /******************************************************************************

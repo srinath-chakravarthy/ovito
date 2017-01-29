@@ -27,7 +27,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Properties)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ComputeBondLengthsModifier, ParticleModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ComputeBondLengthsModifier, ParticleModifier);
 
 /******************************************************************************
 * Constructs the modifier object.

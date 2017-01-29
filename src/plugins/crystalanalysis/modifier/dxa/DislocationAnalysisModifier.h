@@ -46,54 +46,6 @@ public:
 	/// Constructor.
 	Q_INVOKABLE DislocationAnalysisModifier(DataSet* dataset);
 
-	/// \brief Returns the display object that is responsible for rendering the defect mesh.
-	SurfaceMeshDisplay* defectMeshDisplay() const { return _defectMeshDisplay; }
-
-	/// \brief Returns the display object that is responsible for rendering the interface mesh.
-	SurfaceMeshDisplay* interfaceMeshDisplay() const { return _interfaceMeshDisplay; }
-
-	/// \brief Returns the display object that is responsible for rendering the dislocations.
-	DislocationDisplay* dislocationDisplay() const { return _dislocationDisplay; }
-
-	/// \brief Returns the internal modifier that smoothes the extracted dislocation lines.
-	SmoothDislocationsModifier* smoothDislocationsModifier() const { return _smoothDislocationsModifier; }
-
-	/// \brief Returns the internal modifier that smoothes the defect surface mesh.
-	SmoothSurfaceModifier* smoothSurfaceModifier() const { return _smoothSurfaceModifier; }
-
-	/// Return the catalog of structure patterns.
-	PatternCatalog* patternCatalog() const { return _patternCatalog; }
-
-	/// Returns the maximum length of trial circuits.
-	int maxTrialCircuitSize() const { return _maxTrialCircuitSize; }
-
-	/// Sets the maximum length of trial circuits.
-	void setMaxTrialCircuitSize(int maxLength) { _maxTrialCircuitSize = maxLength; }
-
-	/// Returns the maximum elongation of Burgers circuits while they are being advanced.
-	int circuitStretchability() const { return _circuitStretchability; }
-
-	/// Sets maximum elongation of Burgers circuits while they are being advanced.
-	void setCircuitStretchability(int stretchability) { _circuitStretchability = stretchability; }
-
-	/// Returns the type of crystal to be analyzed.
-	StructureAnalysis::LatticeStructureType inputCrystalStructure() const { return static_cast<StructureAnalysis::LatticeStructureType>(_inputCrystalStructure.value()); }
-
-	/// Sets the type of crystal to be analyzed.
-	void setInputCrystalStructure(StructureAnalysis::LatticeStructureType structureType) { _inputCrystalStructure = structureType; }
-
-	/// Returns whether the interface mesh is output.
-	bool outputInterfaceMesh() const { return _outputInterfaceMesh; }
-
-	/// Controls whether the interface mesh is output.
-	void setOutputInterfaceMesh(bool enable) { _outputInterfaceMesh = enable; }
-
-	/// Returns whether the reconstruction of missing tessellation edge lattice vectors is enabled.
-	bool reconstructEdgeVectors() const { return _reconstructEdgeVectors; }
-
-	/// Sets whether the reconstruction of missing tessellation edge lattice vectors is enabled.
-	void setReconstructEdgeVectors(bool enable) { _reconstructEdgeVectors = enable; }
-
 	/// Returns the number of segments found per dislocation type.
 	const std::map<BurgersVectorFamily*,int>& segmentCounts() const { return _segmentCounts; }
 
@@ -133,12 +85,6 @@ public:
 	/// Sets the surface smoothing strength for the defect mesh.
 	void setDefectMeshSmoothingLevel(int level) { smoothSurfaceModifier()->setSmoothingLevel(level); }
 
-	/// Returns whether identification is restricted to perfect lattice dislocations.
-	bool onlyPerfectDislocations() const { return _onlyPerfectDislocations; }
-
-	/// Controls whether identification is restricted to perfect lattice dislocations.
-	void setOnlyPerfectDislocations(bool onlyPerfect) { _onlyPerfectDislocations = onlyPerfect; }
-
 protected:
 
 	/// Handles reference events sent by reference targets of this object.
@@ -159,40 +105,40 @@ protected:
 private:
 
 	/// The type of crystal to be analyzed.
-	PropertyField<int> _inputCrystalStructure;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(StructureAnalysis::LatticeStructureType, inputCrystalStructure, setInputCrystalStructure);
 
 	/// The maximum length of trial circuits.
-	PropertyField<int> _maxTrialCircuitSize;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, maxTrialCircuitSize, setMaxTrialCircuitSize);
 
 	/// The maximum elongation of Burgers circuits while they are being advanced.
-	PropertyField<int> _circuitStretchability;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, circuitStretchability, setCircuitStretchability);
 
 	/// Controls the output of the interface mesh.
-	PropertyField<bool> _outputInterfaceMesh;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, outputInterfaceMesh, setOutputInterfaceMesh);
 
 	/// Enables the reconstruction of missing tessellation edge lattice vectors.
-	PropertyField<bool> _reconstructEdgeVectors;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, reconstructEdgeVectors, setReconstructEdgeVectors);
 
 	/// Restricts the identification to perfect lattice dislocations.
-	PropertyField<bool> _onlyPerfectDislocations;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, onlyPerfectDislocations, setOnlyPerfectDislocations);
 
 	/// The catalog of structure patterns.
-	ReferenceField<PatternCatalog> _patternCatalog;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(PatternCatalog, patternCatalog, setPatternCatalog);
 
 	/// The display object for rendering the defect mesh.
-	ReferenceField<SurfaceMeshDisplay> _defectMeshDisplay;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(SurfaceMeshDisplay, defectMeshDisplay, setDefectMeshDisplay);
 
 	/// The display object for rendering the interface mesh.
-	ReferenceField<SurfaceMeshDisplay> _interfaceMeshDisplay;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(SurfaceMeshDisplay, interfaceMeshDisplay, setInterfaceMeshDisplay);
 
 	/// The display object for rendering the dislocations.
-	ReferenceField<DislocationDisplay> _dislocationDisplay;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(DislocationDisplay, dislocationDisplay, setDislocationDisplay);
 
 	/// The internal modifier that smoothes the extracted dislocation lines.
-	ReferenceField<SmoothDislocationsModifier> _smoothDislocationsModifier;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(SmoothDislocationsModifier, smoothDislocationsModifier, setSmoothDislocationsModifier);
 
 	/// The internal modifier that smoothes the defect surface mesh.
-	ReferenceField<SmoothSurfaceModifier> _smoothSurfaceModifier;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(SmoothSurfaceModifier, smoothSurfaceModifier, setSmoothSurfaceModifier);
 
 	/// This stores the cached defect mesh produced by the modifier.
 	QExplicitlySharedDataPointer<HalfEdgeMesh<>> _defectMesh;
@@ -238,19 +184,6 @@ private:
 
 	Q_CLASSINFO("DisplayName", "Dislocation analysis (DXA)");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
-
-	DECLARE_PROPERTY_FIELD(_inputCrystalStructure);
-	DECLARE_PROPERTY_FIELD(_maxTrialCircuitSize);
-	DECLARE_PROPERTY_FIELD(_circuitStretchability);
-	DECLARE_PROPERTY_FIELD(_outputInterfaceMesh);
-	DECLARE_PROPERTY_FIELD(_reconstructEdgeVectors);
-	DECLARE_PROPERTY_FIELD(_onlyPerfectDislocations);
-	DECLARE_REFERENCE_FIELD(_patternCatalog);
-	DECLARE_REFERENCE_FIELD(_dislocationDisplay);
-	DECLARE_REFERENCE_FIELD(_defectMeshDisplay);
-	DECLARE_REFERENCE_FIELD(_interfaceMeshDisplay);
-	DECLARE_REFERENCE_FIELD(_smoothDislocationsModifier);
-	DECLARE_REFERENCE_FIELD(_smoothSurfaceModifier);
 };
 
 }	// End of namespace

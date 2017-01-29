@@ -111,11 +111,12 @@ void OpenGLImagePrimitive::renderWindow(SceneRenderer* renderer, const Point2& p
 	// Transform rectangle to normalized device coordinates.
 	FloatType x = pos.x(), y = pos.y();
 	FloatType w = size.x(), h = size.y();
-	if(vpRenderer->antialiasingLevel() > 1) {
-		x = (int)(x / vpRenderer->antialiasingLevel()) * vpRenderer->antialiasingLevel();
-		y = (int)(y / vpRenderer->antialiasingLevel()) * vpRenderer->antialiasingLevel();
-		int x2 = (int)((x + w) / vpRenderer->antialiasingLevel()) * vpRenderer->antialiasingLevel();
-		int y2 = (int)((y + h) / vpRenderer->antialiasingLevel()) * vpRenderer->antialiasingLevel();
+    int aaLevel = vpRenderer->antialiasingLevelInternal();
+	if(aaLevel > 1) {
+		x = (int)(x / aaLevel) * aaLevel;
+		y = (int)(y / aaLevel) * aaLevel;
+		int x2 = (int)((x + w) / aaLevel) * aaLevel;
+		int y2 = (int)((y + h) / aaLevel) * aaLevel;
 		w = x2 - x;
 		h = y2 - y;
 	}

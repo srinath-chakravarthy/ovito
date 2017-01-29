@@ -39,14 +39,11 @@ public:
 
 	/// Constructor.
 	KeyframeController(DataSet* dataset) : Controller(dataset) {
-		INIT_PROPERTY_FIELD(KeyframeController::_keys);
+		INIT_PROPERTY_FIELD(keys);
 	}
 
 	/// \brief Returns whether the value of this controller is changing over time.
 	virtual bool isAnimated() const override { return keys().size() >= 2; }
-
-	/// Returns the controller's list of animation keys.
-	const QVector<AnimationKey*>& keys() const { return _keys; }
 
 	/// Maps all keys from the old animation interval to the new interval.
 	virtual void rescaleTime(const TimeInterval& oldAnimationInterval, const TimeInterval& newAnimationInterval) override;
@@ -83,12 +80,10 @@ protected:
 private:
 
 	/// Stores the list of animation keys.
-	VectorReferenceField<AnimationKey> _keys;
+	DECLARE_VECTOR_REFERENCE_FIELD(AnimationKey, keys);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_VECTOR_REFERENCE_FIELD(_keys);
 };
 
 /**

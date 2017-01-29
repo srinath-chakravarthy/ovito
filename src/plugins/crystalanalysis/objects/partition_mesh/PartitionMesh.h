@@ -68,12 +68,6 @@ public:
 	/// Return false because this object cannot be edited.
 	virtual bool isSubObjectEditable() const override { return false; }
 
-	/// Indicates whether the entire simulation cell is filled with one region that has no boundaries.
-	int spaceFillingRegion() const { return _spaceFillingRegion; }
-
-	/// Specifies that the entire simulation cell filled with one region that has no boundaries.
-	void setSpaceFillingRegion(int regionId) { _spaceFillingRegion = regionId; }
-
 	/// Returns the planar cuts applied to this mesh.
 	const QVector<Plane3>& cuttingPlanes() const { return _cuttingPlanes; }
 
@@ -97,15 +91,13 @@ protected:
 private:
 
 	/// Indicates that the entire simulation cell is part of one region without boundaries.
-	PropertyField<int> _spaceFillingRegion;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, spaceFillingRegion, setSpaceFillingRegion);
 
 	/// The planar cuts applied to this mesh.
 	QVector<Plane3> _cuttingPlanes;
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_spaceFillingRegion);
 };
 
 }	// End of namespace

@@ -28,7 +28,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, AffineTransformationModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(AffineTransformationModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(AffineTransformationModifier, AffineTransformationModifierEditor);
 
 /******************************************************************************
@@ -45,13 +45,13 @@ void AffineTransformationModifierEditor::createUI(const RolloutInsertionParamete
 	layout->setColumnStretch(0, 5);
 	layout->setColumnStretch(1, 95);
 
-	BooleanParameterUI* applyToSimulationBoxUI = new BooleanParameterUI(this, PROPERTY_FIELD(AffineTransformationModifier::_applyToSimulationBox));
+	BooleanParameterUI* applyToSimulationBoxUI = new BooleanParameterUI(this, PROPERTY_FIELD(AffineTransformationModifier::applyToSimulationBox));
 	layout->addWidget(applyToSimulationBoxUI->checkBox(), 0, 0, 1, 2);
 
-	BooleanParameterUI* applyToParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(AffineTransformationModifier::_applyToParticles));
+	BooleanParameterUI* applyToParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(AffineTransformationModifier::applyToParticles));
 	layout->addWidget(applyToParticlesUI->checkBox(), 1, 0, 1, 2);
 
-	BooleanRadioButtonParameterUI* selectionUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(AffineTransformationModifier::_toSelectionOnly));
+	BooleanRadioButtonParameterUI* selectionUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(AffineTransformationModifier::selectionOnly));
 
 	selectionUI->buttonFalse()->setText(tr("All particles"));
 	selectionUI->buttonFalse()->setEnabled(false);
@@ -63,7 +63,7 @@ void AffineTransformationModifierEditor::createUI(const RolloutInsertionParamete
 	layout->addWidget(selectionUI->buttonTrue(), 3, 1);
 	connect(applyToParticlesUI->checkBox(), &QCheckBox::toggled, selectionUI->buttonTrue(), &QRadioButton::setEnabled);
 
-	BooleanParameterUI* applyToSurfaceMeshUI = new BooleanParameterUI(this, PROPERTY_FIELD(AffineTransformationModifier::_applyToSurfaceMesh));
+	BooleanParameterUI* applyToSurfaceMeshUI = new BooleanParameterUI(this, PROPERTY_FIELD(AffineTransformationModifier::applyToSurfaceMesh));
 	layout->addWidget(applyToSurfaceMeshUI->checkBox(), 4, 0, 1, 2);
 
 	// Create the second rollout.
@@ -73,7 +73,7 @@ void AffineTransformationModifierEditor::createUI(const RolloutInsertionParamete
 	topLayout->setContentsMargins(8,8,8,8);
 	topLayout->setSpacing(4);
 
-	BooleanRadioButtonParameterUI* relativeModeUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(AffineTransformationModifier::_relativeMode));
+	BooleanRadioButtonParameterUI* relativeModeUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(AffineTransformationModifier::relativeMode));
 
 	relativeModeUI->buttonTrue()->setText(tr("Transformation matrix:"));
 	topLayout->addWidget(relativeModeUI->buttonTrue());
@@ -151,7 +151,7 @@ void AffineTransformationModifierEditor::createUI(const RolloutInsertionParamete
 	for(size_t v = 0; v < 3; v++) {
 		layout->addWidget(new QLabel(tr("Cell vector %1:").arg(v+1)), v*2, 0, 1, 8);
 		for(size_t r = 0; r < 3; r++) {
-			destinationCellUI = new AffineTransformationParameterUI(this, PROPERTY_FIELD(AffineTransformationModifier::_targetCell), r, v);
+			destinationCellUI = new AffineTransformationParameterUI(this, PROPERTY_FIELD(AffineTransformationModifier::targetCell), r, v);
 			destinationCellUI->setEnabled(false);
 			layout->addLayout(destinationCellUI->createFieldLayout(), v*2+1, r*2);
 			connect(relativeModeUI->buttonFalse(), &QRadioButton::toggled, destinationCellUI, &AffineTransformationParameterUI::setEnabled);
@@ -160,7 +160,7 @@ void AffineTransformationModifierEditor::createUI(const RolloutInsertionParamete
 
 	layout->addWidget(new QLabel(tr("Cell origin:")), 6, 0, 1, 8);
 	for(size_t r = 0; r < 3; r++) {
-		destinationCellUI = new AffineTransformationParameterUI(this, PROPERTY_FIELD(AffineTransformationModifier::_targetCell), r, 3);
+		destinationCellUI = new AffineTransformationParameterUI(this, PROPERTY_FIELD(AffineTransformationModifier::targetCell), r, 3);
 		destinationCellUI->setEnabled(false);
 		layout->addLayout(destinationCellUI->createFieldLayout(), 7, r*2);
 		connect(relativeModeUI->buttonFalse(), &QRadioButton::toggled, destinationCellUI, &AffineTransformationParameterUI::setEnabled);
@@ -178,7 +178,7 @@ void AffineTransformationModifierEditor::updateUI()
 	AffineTransformationModifier* mod = dynamic_object_cast<AffineTransformationModifier>(editObject());
 	if(!mod) return;
 
-	const AffineTransformation& tm = mod->transformation();
+	const AffineTransformation& tm = mod->transformationTM();
 
 	for(int row = 0; row < 3; row++) {
 		for(int column = 0; column < 4; column++) {
@@ -216,13 +216,13 @@ void AffineTransformationModifierEditor::updateParameterValue()
 	SpinnerWidget* spinner = qobject_cast<SpinnerWidget*>(sender());
 	OVITO_CHECK_POINTER(spinner);
 
-	AffineTransformation tm = mod->transformation();
+	AffineTransformation tm = mod->transformationTM();
 
 	int column = spinner->property("column").toInt();
 	int row = spinner->property("row").toInt();
 
 	tm(row, column) = spinner->floatValue();
-	mod->setTransformation(tm);
+	mod->setTransformationTM(tm);
 }
 
 /******************************************************************************
@@ -325,12 +325,12 @@ void AffineTransformationModifierEditor::onEnterRotation()
 	layout->addWidget(centerSpinnerZ, 5, 7);
 	mainLayout->addLayout(layout);
 
-	Rotation rot(mod->transformation());
+	Rotation rot(mod->transformationTM());
 	angleSpinner->setFloatValue(rot.angle());
 	axisSpinnerX->setFloatValue(rot.axis().x());
 	axisSpinnerY->setFloatValue(rot.axis().y());
 	axisSpinnerZ->setFloatValue(rot.axis().z());
-	Matrix3 r = mod->transformation().linear();
+	Matrix3 r = mod->transformationTM().linear();
 	r(0,0) -= 1;
 	r(1,1) -= 1;
 	r(2,2) -= 1;
@@ -338,20 +338,20 @@ void AffineTransformationModifierEditor::onEnterRotation()
 	size_t i = 0;
 	for(i = 0; i < 3; i++)
 		if(!r.row(i).isZero()) {
-			p1 = Plane3(r.row(i), -mod->transformation()(i, 3));
+			p1 = Plane3(r.row(i), -mod->transformationTM()(i, 3));
 			i++;
 			break;
 		}
 	for(; i < 3; i++)
 		if(!r.row(i).isZero()) {
-			p2 = Plane3(r.row(i), -mod->transformation()(i, 3));
+			p2 = Plane3(r.row(i), -mod->transformationTM()(i, 3));
 			break;
 		}
 	if(i != 3) {
 		p1.normalizePlane();
 		p2.normalizePlane();
 		FloatType d = p1.normal.dot(p2.normal);
-		FloatType denom = (1.0f - d*d);
+		FloatType denom = (FloatType(1) - d*d);
 		if(fabs(denom) > FLOATTYPE_EPSILON) {
 			FloatType c1 = (p1.dist  - p2.dist * d) / denom;
 			FloatType c2 = (p2.dist  - p1.dist * d) / denom;
@@ -369,7 +369,7 @@ void AffineTransformationModifierEditor::onEnterRotation()
 		Rotation rot(axis, angleSpinner->floatValue());
 		AffineTransformation tm = AffineTransformation::translation(center) * AffineTransformation::rotation(rot) * AffineTransformation::translation(-center);
 		mod->dataset()->undoStack().resetCurrentCompoundOperation();
-		mod->setTransformation(tm);
+		mod->setTransformationTM(tm);
 	};
 
 	connect(angleSpinner, &SpinnerWidget::spinnerValueChanged, updateMatrix);

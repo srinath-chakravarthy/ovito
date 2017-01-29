@@ -24,14 +24,14 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ClusterAnalysisModifier, AsynchronousParticleModifier);
-DEFINE_FLAGS_PROPERTY_FIELD(ClusterAnalysisModifier, _cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(ClusterAnalysisModifier, _onlySelectedParticles, "OnlySelectedParticles");
-DEFINE_PROPERTY_FIELD(ClusterAnalysisModifier, _sortBySize, "SortBySize");
-SET_PROPERTY_FIELD_LABEL(ClusterAnalysisModifier, _cutoff, "Cutoff distance");
-SET_PROPERTY_FIELD_LABEL(ClusterAnalysisModifier, _onlySelectedParticles, "Use only selected particles");
-SET_PROPERTY_FIELD_LABEL(ClusterAnalysisModifier, _sortBySize, "Sort clusters by size");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ClusterAnalysisModifier, _cutoff, WorldParameterUnit, 0);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ClusterAnalysisModifier, AsynchronousParticleModifier);
+DEFINE_FLAGS_PROPERTY_FIELD(ClusterAnalysisModifier, cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(ClusterAnalysisModifier, onlySelectedParticles, "OnlySelectedParticles");
+DEFINE_PROPERTY_FIELD(ClusterAnalysisModifier, sortBySize, "SortBySize");
+SET_PROPERTY_FIELD_LABEL(ClusterAnalysisModifier, cutoff, "Cutoff distance");
+SET_PROPERTY_FIELD_LABEL(ClusterAnalysisModifier, onlySelectedParticles, "Use only selected particles");
+SET_PROPERTY_FIELD_LABEL(ClusterAnalysisModifier, sortBySize, "Sort clusters by size");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ClusterAnalysisModifier, cutoff, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -39,9 +39,9 @@ SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ClusterAnalysisModifier, _cutoff, WorldPara
 ClusterAnalysisModifier::ClusterAnalysisModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
 	_cutoff(3.2), _onlySelectedParticles(false), _sortBySize(false), _numClusters(0), _largestClusterSize(0)
 {
-	INIT_PROPERTY_FIELD(ClusterAnalysisModifier::_cutoff);
-	INIT_PROPERTY_FIELD(ClusterAnalysisModifier::_onlySelectedParticles);
-	INIT_PROPERTY_FIELD(ClusterAnalysisModifier::_sortBySize);
+	INIT_PROPERTY_FIELD(cutoff);
+	INIT_PROPERTY_FIELD(onlySelectedParticles);
+	INIT_PROPERTY_FIELD(sortBySize);
 }
 
 /******************************************************************************
@@ -190,9 +190,9 @@ void ClusterAnalysisModifier::propertyChanged(const PropertyFieldDescriptor& fie
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Recompute modifier results when the parameters have been changed.
-	if(field == PROPERTY_FIELD(ClusterAnalysisModifier::_cutoff) ||
-			field == PROPERTY_FIELD(ClusterAnalysisModifier::_onlySelectedParticles) ||
-			field == PROPERTY_FIELD(ClusterAnalysisModifier::_sortBySize))
+	if(field == PROPERTY_FIELD(cutoff) ||
+			field == PROPERTY_FIELD(onlySelectedParticles) ||
+			field == PROPERTY_FIELD(sortBySize))
 		invalidateCachedResults();
 }
 

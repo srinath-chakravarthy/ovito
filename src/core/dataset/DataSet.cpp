@@ -37,31 +37,31 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, DataSet, RefTarget);
-DEFINE_FLAGS_REFERENCE_FIELD(DataSet, _viewportConfig, "ViewportConfiguration", ViewportConfiguration, PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_REFERENCE_FIELD(DataSet, _animSettings, "AnimationSettings", AnimationSettings, PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_REFERENCE_FIELD(DataSet, _sceneRoot, "SceneRoot", SceneRoot, PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_ALWAYS_DEEP_COPY);
-DEFINE_FLAGS_REFERENCE_FIELD(DataSet, _selection, "CurrentSelection", SelectionSet, PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_ALWAYS_DEEP_COPY);
-DEFINE_FLAGS_REFERENCE_FIELD(DataSet, _renderSettings, "RenderSettings", RenderSettings, PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(DataSet, _viewportConfig, "Viewport Configuration");
-SET_PROPERTY_FIELD_LABEL(DataSet, _animSettings, "Animation Settings");
-SET_PROPERTY_FIELD_LABEL(DataSet, _sceneRoot, "Scene");
-SET_PROPERTY_FIELD_LABEL(DataSet, _selection, "Selection");
-SET_PROPERTY_FIELD_LABEL(DataSet, _renderSettings, "Render Settings");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(DataSet, RefTarget);
+DEFINE_FLAGS_REFERENCE_FIELD(DataSet, viewportConfig, "ViewportConfiguration", ViewportConfiguration, PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(DataSet, animationSettings, "AnimationSettings", AnimationSettings, PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(DataSet, sceneRoot, "SceneRoot", SceneRoot, PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_ALWAYS_DEEP_COPY);
+DEFINE_FLAGS_REFERENCE_FIELD(DataSet, selection, "CurrentSelection", SelectionSet, PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_ALWAYS_DEEP_COPY);
+DEFINE_FLAGS_REFERENCE_FIELD(DataSet, renderSettings, "RenderSettings", RenderSettings, PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(DataSet, viewportConfig, "Viewport Configuration");
+SET_PROPERTY_FIELD_LABEL(DataSet, animationSettings, "Animation Settings");
+SET_PROPERTY_FIELD_LABEL(DataSet, sceneRoot, "Scene");
+SET_PROPERTY_FIELD_LABEL(DataSet, selection, "Selection");
+SET_PROPERTY_FIELD_LABEL(DataSet, renderSettings, "Render Settings");
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
 DataSet::DataSet(DataSet* self) : RefTarget(this), _unitsManager(this)
 {
-	INIT_PROPERTY_FIELD(DataSet::_viewportConfig);
-	INIT_PROPERTY_FIELD(DataSet::_animSettings);
-	INIT_PROPERTY_FIELD(DataSet::_sceneRoot);
-	INIT_PROPERTY_FIELD(DataSet::_selection);
-	INIT_PROPERTY_FIELD(DataSet::_renderSettings);
+	INIT_PROPERTY_FIELD(viewportConfig);
+	INIT_PROPERTY_FIELD(animationSettings);
+	INIT_PROPERTY_FIELD(sceneRoot);
+	INIT_PROPERTY_FIELD(selection);
+	INIT_PROPERTY_FIELD(renderSettings);
 
 	_viewportConfig = createDefaultViewportConfiguration();
-	_animSettings = new AnimationSettings(this);
+	_animationSettings = new AnimationSettings(this);
 	_sceneRoot = new SceneRoot(this);
 	_selection = new SelectionSet(this);
 	_renderSettings = new RenderSettings(this);
@@ -134,25 +134,25 @@ bool DataSet::referenceEvent(RefTarget* source, ReferenceEvent* event)
 ******************************************************************************/
 void DataSet::referenceReplaced(const PropertyFieldDescriptor& field, RefTarget* oldTarget, RefTarget* newTarget)
 {
-	if(field == PROPERTY_FIELD(DataSet::_viewportConfig)) {
+	if(field == PROPERTY_FIELD(viewportConfig)) {
 		Q_EMIT viewportConfigReplaced(viewportConfig());
 	}
-	else if(field == PROPERTY_FIELD(DataSet::_animSettings)) {
+	else if(field == PROPERTY_FIELD(animationSettings)) {
 		// Stop animation playback when animation settings are being replaced.
 		if(AnimationSettings* oldAnimSettings = static_object_cast<AnimationSettings>(oldTarget))
 			oldAnimSettings->stopAnimationPlayback();
 
 		Q_EMIT animationSettingsReplaced(animationSettings());
 	}
-	else if(field == PROPERTY_FIELD(DataSet::_renderSettings)) {
+	else if(field == PROPERTY_FIELD(renderSettings)) {
 		Q_EMIT renderSettingsReplaced(renderSettings());
 	}
-	else if(field == PROPERTY_FIELD(DataSet::_selection)) {
+	else if(field == PROPERTY_FIELD(selection)) {
 		Q_EMIT selectionSetReplaced(selection());
 	}
 
 	// Install a signal/slot connection that updates the viewports every time the animation time changes.
-	if(field == PROPERTY_FIELD(DataSet::_viewportConfig) || field == PROPERTY_FIELD(DataSet::_animSettings)) {
+	if(field == PROPERTY_FIELD(viewportConfig) || field == PROPERTY_FIELD(animationSettings)) {
 		disconnect(_updateViewportOnTimeChangeConnection);
 		if(animationSettings() && viewportConfig()) {
 			_updateViewportOnTimeChangeConnection = connect(animationSettings(), &AnimationSettings::timeChangeComplete, viewportConfig(), &ViewportConfiguration::updateViewports);

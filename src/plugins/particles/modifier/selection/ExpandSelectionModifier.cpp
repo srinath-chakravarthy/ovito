@@ -28,29 +28,29 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Selection)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ExpandSelectionModifier, ParticleModifier);
-DEFINE_FLAGS_PROPERTY_FIELD(ExpandSelectionModifier, _mode, "Mode", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(ExpandSelectionModifier, _cutoffRange, "Cutoff", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(ExpandSelectionModifier, _numNearestNeighbors, "NumNearestNeighbors", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(ExpandSelectionModifier, _numIterations, "NumIterations");
-SET_PROPERTY_FIELD_LABEL(ExpandSelectionModifier, _mode, "Mode");
-SET_PROPERTY_FIELD_LABEL(ExpandSelectionModifier, _cutoffRange, "Cutoff distance");
-SET_PROPERTY_FIELD_LABEL(ExpandSelectionModifier, _numNearestNeighbors, "N");
-SET_PROPERTY_FIELD_LABEL(ExpandSelectionModifier, _numIterations, "Number of iterations");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ExpandSelectionModifier, _cutoffRange, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(ExpandSelectionModifier, _numNearestNeighbors, IntegerParameterUnit, 1, ExpandSelectionModifier::MAX_NEAREST_NEIGHBORS);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ExpandSelectionModifier, _numIterations, IntegerParameterUnit, 1);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ExpandSelectionModifier, ParticleModifier);
+DEFINE_FLAGS_PROPERTY_FIELD(ExpandSelectionModifier, mode, "Mode", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(ExpandSelectionModifier, cutoffRange, "Cutoff", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(ExpandSelectionModifier, numNearestNeighbors, "NumNearestNeighbors", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(ExpandSelectionModifier, numberOfIterations, "NumIterations");
+SET_PROPERTY_FIELD_LABEL(ExpandSelectionModifier, mode, "Mode");
+SET_PROPERTY_FIELD_LABEL(ExpandSelectionModifier, cutoffRange, "Cutoff distance");
+SET_PROPERTY_FIELD_LABEL(ExpandSelectionModifier, numNearestNeighbors, "N");
+SET_PROPERTY_FIELD_LABEL(ExpandSelectionModifier, numberOfIterations, "Number of iterations");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ExpandSelectionModifier, cutoffRange, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(ExpandSelectionModifier, numNearestNeighbors, IntegerParameterUnit, 1, ExpandSelectionModifier::MAX_NEAREST_NEIGHBORS);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ExpandSelectionModifier, numberOfIterations, IntegerParameterUnit, 1);
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
 ExpandSelectionModifier::ExpandSelectionModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
-	_mode(CutoffRange), _cutoffRange(3.2), _numNearestNeighbors(1), _numIterations(1)
+	_mode(CutoffRange), _cutoffRange(3.2), _numNearestNeighbors(1), _numberOfIterations(1)
 {
-	INIT_PROPERTY_FIELD(ExpandSelectionModifier::_mode);
-	INIT_PROPERTY_FIELD(ExpandSelectionModifier::_cutoffRange);
-	INIT_PROPERTY_FIELD(ExpandSelectionModifier::_numNearestNeighbors);
-	INIT_PROPERTY_FIELD(ExpandSelectionModifier::_numIterations);
+	INIT_PROPERTY_FIELD(mode);
+	INIT_PROPERTY_FIELD(cutoffRange);
+	INIT_PROPERTY_FIELD(numNearestNeighbors);
+	INIT_PROPERTY_FIELD(numberOfIterations);
 }
 
 /******************************************************************************
@@ -216,10 +216,10 @@ void ExpandSelectionModifier::propertyChanged(const PropertyFieldDescriptor& fie
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Recompute modifier results when the parameters have been changed.
-	if(field == PROPERTY_FIELD(ExpandSelectionModifier::_mode)
-			|| field == PROPERTY_FIELD(ExpandSelectionModifier::_cutoffRange)
-			|| field == PROPERTY_FIELD(ExpandSelectionModifier::_numNearestNeighbors)
-			|| field == PROPERTY_FIELD(ExpandSelectionModifier::_numIterations))
+	if(field == PROPERTY_FIELD(mode)
+			|| field == PROPERTY_FIELD(cutoffRange)
+			|| field == PROPERTY_FIELD(numNearestNeighbors)
+			|| field == PROPERTY_FIELD(numberOfIterations))
 		invalidateCachedResults();
 }
 

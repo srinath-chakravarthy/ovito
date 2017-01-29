@@ -24,7 +24,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, ViewportOverlay, RefTarget);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ViewportOverlay, RefTarget);
 
 /******************************************************************************
 * Constructor.

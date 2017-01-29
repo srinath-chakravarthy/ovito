@@ -29,7 +29,7 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) 
 * Constructor.
 ******************************************************************************/
 StructureListParameterUI::StructureListParameterUI(PropertiesEditor* parentEditor, bool showCheckBoxes)
-	: RefTargetListParameterUI(parentEditor, PROPERTY_FIELD(StructureIdentificationModifier::_structureTypes)),
+	: RefTargetListParameterUI(parentEditor, PROPERTY_FIELD(StructureIdentificationModifier::structureTypes)),
 	  _showCheckBoxes(showCheckBoxes)
 {
 	connect(tableWidget(220), &QTableWidget::doubleClicked, this, &StructureListParameterUI::onDoubleClickStructureType);
@@ -73,7 +73,7 @@ QVariant StructureListParameterUI::getItemData(RefTarget* target, const QModelIn
 		}
 		else if(role == Qt::CheckStateRole && _showCheckBoxes) {
 			if(index.column() == 0)
-				return stype->isEnabled() ? Qt::Checked : Qt::Unchecked;
+				return stype->enabled() ? Qt::Checked : Qt::Unchecked;
 		}
 	}
 	return QVariant();

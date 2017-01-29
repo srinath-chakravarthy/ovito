@@ -26,12 +26,12 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene) OVITO_BEGIN_INLINE_NAMESPACE(StdObj)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, TriMeshDisplay, DisplayObject);
-DEFINE_FLAGS_PROPERTY_FIELD(TriMeshDisplay, _color, "Color", PROPERTY_FIELD_MEMORIZE);
-DEFINE_REFERENCE_FIELD(TriMeshDisplay, _transparency, "Transparency", Controller);
-SET_PROPERTY_FIELD_LABEL(TriMeshDisplay, _color, "Display color");
-SET_PROPERTY_FIELD_LABEL(TriMeshDisplay, _transparency, "Transparency");
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(TriMeshDisplay, _transparency, PercentParameterUnit, 0, 1);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(TriMeshDisplay, DisplayObject);
+DEFINE_FLAGS_PROPERTY_FIELD(TriMeshDisplay, color, "Color", PROPERTY_FIELD_MEMORIZE);
+DEFINE_REFERENCE_FIELD(TriMeshDisplay, transparencyController, "Transparency", Controller);
+SET_PROPERTY_FIELD_LABEL(TriMeshDisplay, color, "Display color");
+SET_PROPERTY_FIELD_LABEL(TriMeshDisplay, transparencyController, "Transparency");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(TriMeshDisplay, transparencyController, PercentParameterUnit, 0, 1);
 
 /******************************************************************************
 * Constructor.
@@ -39,10 +39,10 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(TriMeshDisplay, _transparency, PercentParamet
 TriMeshDisplay::TriMeshDisplay(DataSet* dataset) : DisplayObject(dataset),
 	_color(0.85, 0.85, 1)
 {
-	INIT_PROPERTY_FIELD(TriMeshDisplay::_color);
-	INIT_PROPERTY_FIELD(TriMeshDisplay::_transparency);
+	INIT_PROPERTY_FIELD(color);
+	INIT_PROPERTY_FIELD(transparencyController);
 
-	_transparency = ControllerManager::instance().createFloatController(dataset);
+	setTransparencyController(ControllerManager::instance().createFloatController(dataset));
 }
 
 /******************************************************************************
@@ -72,8 +72,8 @@ void TriMeshDisplay::render(TimePoint time, DataObject* dataObject, const Pipeli
 
 	FloatType transp = 0;
 	TimeInterval iv;
-	if(_transparency) transp = _transparency->getFloatValue(time, iv);
-	ColorA color_mesh(color(), 1.0f - transp);
+	if(transparencyController()) transp = transparencyController()->getFloatValue(time, iv);
+	ColorA color_mesh(color(), FloatType(1) - transp);
 
 	// Do we have to update contents of the geometry buffer?
 	bool updateContents = _geometryCacheHelper.updateState(dataObject, color_mesh) || recreateBuffer;

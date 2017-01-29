@@ -28,9 +28,9 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ParticleImporter, FileSourceImporter);
-DEFINE_PROPERTY_FIELD(ParticleImporter, _isMultiTimestepFile, "IsMultiTimestepFile");
-SET_PROPERTY_FIELD_LABEL(ParticleImporter, _isMultiTimestepFile, "File contains time series");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ParticleImporter, FileSourceImporter);
+DEFINE_PROPERTY_FIELD(ParticleImporter, isMultiTimestepFile, "IsMultiTimestepFile");
+SET_PROPERTY_FIELD_LABEL(ParticleImporter, isMultiTimestepFile, "File contains time series");
 
 /******************************************************************************
 * Scans the given external path (which may be a directory and a wild-card pattern,
@@ -109,7 +109,7 @@ void ParticleImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface
 ******************************************************************************/
 void ParticleImporter::propertyChanged(const PropertyFieldDescriptor& field)
 {
-	if(field == PROPERTY_FIELD(ParticleImporter::_isMultiTimestepFile)) {
+	if(field == PROPERTY_FIELD(isMultiTimestepFile)) {
 		// Automatically rescan input file for animation frames when this option has been activated.
 		requestFramesUpdate();
 	}

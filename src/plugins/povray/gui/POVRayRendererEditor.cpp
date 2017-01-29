@@ -36,7 +36,7 @@
 
 namespace Ovito { namespace POVRay { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(POVRayGui, POVRayRendererEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(POVRayRendererEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(POVRayRenderer, POVRayRendererEditor);
 
 /**
@@ -116,12 +116,12 @@ void POVRayRendererEditor::createUI(const RolloutInsertionParameters& rolloutPar
 	layout->setColumnStretch(1, 1);
 
 	// Quality level
-	IntegerParameterUI* qualityLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_qualityLevel));
+	IntegerParameterUI* qualityLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(POVRayRenderer::qualityLevel));
 	layout->addWidget(qualityLevelUI->label(), 0, 0);
 	layout->addLayout(qualityLevelUI->createFieldLayout(), 0, 1);
 	
 	// Antialiasing
-	BooleanGroupBoxParameterUI* enableAntialiasingUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_enableAntialiasing));
+	BooleanGroupBoxParameterUI* enableAntialiasingUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(POVRayRenderer::antialiasingEnabled));
 	QGroupBox* aaGroupBox = enableAntialiasingUI->groupBox();
 	mainLayout->addWidget(aaGroupBox);
 
@@ -131,26 +131,26 @@ void POVRayRendererEditor::createUI(const RolloutInsertionParameters& rolloutPar
 	layout->setColumnStretch(1, 1);
 
 	// Sampling Method
-	IntegerRadioButtonParameterUI* samplingMethodUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_samplingMethod));
+	IntegerRadioButtonParameterUI* samplingMethodUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(POVRayRenderer::samplingMethod));
 	layout->addWidget(samplingMethodUI->addRadioButton(1, tr("Non-recursive sampling")), 1, 0, 1, 2);
 	layout->addWidget(samplingMethodUI->addRadioButton(2, tr("Recursive sampling")), 2, 0, 1, 2);
 
 	// AA Threshold
-	FloatParameterUI* AAThresholdUI = new FloatParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_AAThreshold));
+	FloatParameterUI* AAThresholdUI = new FloatParameterUI(this, PROPERTY_FIELD(POVRayRenderer::AAThreshold));
 	layout->addWidget(AAThresholdUI->label(), 3, 0);
 	layout->addLayout(AAThresholdUI->createFieldLayout(), 3, 1);
 
 	// AA Depth
-	IntegerParameterUI* AADepthUI = new IntegerParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_antialiasDepth));
+	IntegerParameterUI* AADepthUI = new IntegerParameterUI(this, PROPERTY_FIELD(POVRayRenderer::antialiasDepth));
 	layout->addWidget(AADepthUI->label(), 4, 0);
 	layout->addLayout(AADepthUI->createFieldLayout(), 4, 1);
 
 	// Jitter
-	BooleanParameterUI* enableJitterUI = new BooleanParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_enableJitter));
+	BooleanParameterUI* enableJitterUI = new BooleanParameterUI(this, PROPERTY_FIELD(POVRayRenderer::jitterEnabled));
 	layout->addWidget(enableJitterUI->checkBox(), 5, 0, 1, 2);
 
 	// Radiosity
-	BooleanGroupBoxParameterUI* enableRadiosityUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_enableRadiosity));
+	BooleanGroupBoxParameterUI* enableRadiosityUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(POVRayRenderer::radiosityEnabled));
 	QGroupBox* radiosityGroupBox = enableRadiosityUI->groupBox();
 	mainLayout->addWidget(radiosityGroupBox);
 
@@ -160,22 +160,22 @@ void POVRayRendererEditor::createUI(const RolloutInsertionParameters& rolloutPar
 	layout->setColumnStretch(1, 1);
 
 	// Ray count
-	IntegerParameterUI* radiosityRayCountUI = new IntegerParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_radiosityRayCount));
+	IntegerParameterUI* radiosityRayCountUI = new IntegerParameterUI(this, PROPERTY_FIELD(POVRayRenderer::radiosityRayCount));
 	layout->addWidget(radiosityRayCountUI->label(), 0, 0);
 	layout->addLayout(radiosityRayCountUI->createFieldLayout(), 0, 1);
 
 	// Recursion limit
-	IntegerParameterUI* radiosityRecursionLimitUI = new IntegerParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_radiosityRecursionLimit));
+	IntegerParameterUI* radiosityRecursionLimitUI = new IntegerParameterUI(this, PROPERTY_FIELD(POVRayRenderer::radiosityRecursionLimit));
 	layout->addWidget(radiosityRecursionLimitUI->label(), 1, 0);
 	layout->addLayout(radiosityRecursionLimitUI->createFieldLayout(), 1, 1);
 
 	// Error bound
-	FloatParameterUI* radiosityErrorBoundUI = new FloatParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_radiosityErrorBound));
+	FloatParameterUI* radiosityErrorBoundUI = new FloatParameterUI(this, PROPERTY_FIELD(POVRayRenderer::radiosityErrorBound));
 	layout->addWidget(radiosityErrorBoundUI->label(), 2, 0);
 	layout->addLayout(radiosityErrorBoundUI->createFieldLayout(), 2, 1);
 
 	// Focal blur
-	BooleanGroupBoxParameterUI* enableDepthOfFieldUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_depthOfFieldEnabled));
+	BooleanGroupBoxParameterUI* enableDepthOfFieldUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(POVRayRenderer::depthOfFieldEnabled));
 	QGroupBox* dofGroupBox = enableDepthOfFieldUI->groupBox();
 	mainLayout->addWidget(dofGroupBox);
 
@@ -185,7 +185,7 @@ void POVRayRendererEditor::createUI(const RolloutInsertionParameters& rolloutPar
 	layout->setColumnStretch(1, 1);
 
 	// Focal length
-	FloatParameterUI* focalLengthUI = new FloatParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_dofFocalLength));
+	FloatParameterUI* focalLengthUI = new FloatParameterUI(this, PROPERTY_FIELD(POVRayRenderer::dofFocalLength));
 	layout->addWidget(focalLengthUI->label(), 0, 0);
 	layout->addLayout(focalLengthUI->createFieldLayout(), 0, 1);
 
@@ -195,12 +195,12 @@ void POVRayRendererEditor::createUI(const RolloutInsertionParameters& rolloutPar
 	layout->addWidget(modeAction->createPushButton(), 0, 2);
 
 	// Aperture
-	FloatParameterUI* apertureUI = new FloatParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_dofAperture));
+	FloatParameterUI* apertureUI = new FloatParameterUI(this, PROPERTY_FIELD(POVRayRenderer::dofAperture));
 	layout->addWidget(apertureUI->label(), 1, 0);
 	layout->addLayout(apertureUI->createFieldLayout(), 1, 1);
 
 	// Sample count
-	IntegerParameterUI* dofSampleCountUI = new IntegerParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_dofSampleCount));
+	IntegerParameterUI* dofSampleCountUI = new IntegerParameterUI(this, PROPERTY_FIELD(POVRayRenderer::dofSampleCount));
 	layout->addWidget(dofSampleCountUI->label(), 2, 0);
 	layout->addLayout(dofSampleCountUI->createFieldLayout(), 2, 1);
 
@@ -215,7 +215,7 @@ void POVRayRendererEditor::createUI(const RolloutInsertionParameters& rolloutPar
 	// POV-Ray executable path
 	layout->addWidget(new QLabel(tr("POV-Ray executable:")), 0, 0, 1, 2);
 	
-	StringParameterUI* povrayExecutablePUI = new StringParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_povrayExecutable));
+	StringParameterUI* povrayExecutablePUI = new StringParameterUI(this, PROPERTY_FIELD(POVRayRenderer::povrayExecutable));
 	layout->addWidget(new QLabel(tr("POV-Ray executable:")), 0, 0);
 	static_cast<QLineEdit*>(povrayExecutablePUI->textBox())->setPlaceholderText(QStringLiteral("povray"));
 	layout->addWidget(povrayExecutablePUI->textBox(), 1, 0);
@@ -238,7 +238,7 @@ void POVRayRendererEditor::createUI(const RolloutInsertionParameters& rolloutPar
 	layout->addWidget(selectExecutablePathButton, 1, 1);
 
 	// Show POV-Ray window
-	BooleanParameterUI* povrayDisplayEnabledUI = new BooleanParameterUI(this, PROPERTY_FIELD(POVRayRenderer::_povrayDisplayEnabled));
+	BooleanParameterUI* povrayDisplayEnabledUI = new BooleanParameterUI(this, PROPERTY_FIELD(POVRayRenderer::povrayDisplayEnabled));
 	layout->addWidget(povrayDisplayEnabledUI->checkBox(), 2, 0, 1, 2);
 }
 

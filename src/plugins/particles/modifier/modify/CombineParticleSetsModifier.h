@@ -37,29 +37,19 @@ public:
 	/// Constructor.
 	Q_INVOKABLE CombineParticleSetsModifier(DataSet* dataset);
 
-	/// Returns the data object that provides the particles to be merged into the pipeline.
-	DataObject* secondaryDataSource() const { return _secondarySource; }
-
-	/// Sets the object that will provide the particles to be merged into the pipeline.
-	void setSecondaryDataSource(DataObject* source) { _secondarySource = source; }
-
 protected:
 
 	/// Modifies the particle object.
 	virtual PipelineStatus modifyParticles(TimePoint time, TimeInterval& validityInterval) override;
 
 	/// The source for particle data to be merged into the pipeline.
-	ReferenceField<DataObject> _secondarySource;
-
-private:
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(DataObject, secondaryDataSource, setSecondaryDataSource);
 
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Combine particle sets");
 	Q_CLASSINFO("ModifierCategory", "Modification");
-
-	DECLARE_REFERENCE_FIELD(_secondarySource);
 };
 
 OVITO_END_INLINE_NAMESPACE

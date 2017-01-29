@@ -26,42 +26,42 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, CoordinateTripodOverlay, ViewportOverlay);
-DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, _alignment, "Alignment", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, _tripodSize, "Size", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, _lineWidth, "LineWidth", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, _font, "Font", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, _fontSize, "FontSize", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, _offsetX, "OffsetX", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, _offsetY, "OffsetY", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, _axis1Enabled, "Axis1Enabled");
-DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, _axis2Enabled, "Axis2Enabled");
-DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, _axis3Enabled, "Axis3Enabled");
-DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, _axis4Enabled, "Axis4Enabled");
-DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, _axis1Label, "Axis1Label");
-DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, _axis2Label, "Axis2Label");
-DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, _axis3Label, "Axis3Label");
-DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, _axis4Label, "Axis4Label");
-DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, _axis1Dir, "Axis1Dir");
-DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, _axis2Dir, "Axis2Dir");
-DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, _axis3Dir, "Axis3Dir");
-DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, _axis4Dir, "Axis4Dir");
-DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, _axis1Color, "Axis1Color", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, _axis2Color, "Axis2Color", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, _axis3Color, "Axis3Color", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, _axis4Color, "Axis4Color", PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(CoordinateTripodOverlay, _alignment, "Position");
-SET_PROPERTY_FIELD_LABEL(CoordinateTripodOverlay, _tripodSize, "Size factor");
-SET_PROPERTY_FIELD_LABEL(CoordinateTripodOverlay, _lineWidth, "Line width");
-SET_PROPERTY_FIELD_LABEL(CoordinateTripodOverlay, _font, "Font");
-SET_PROPERTY_FIELD_LABEL(CoordinateTripodOverlay, _fontSize, "Label size");
-SET_PROPERTY_FIELD_LABEL(CoordinateTripodOverlay, _offsetX, "Offset X");
-SET_PROPERTY_FIELD_LABEL(CoordinateTripodOverlay, _offsetY, "Offset Y");
-SET_PROPERTY_FIELD_UNITS(CoordinateTripodOverlay, _offsetX, PercentParameterUnit);
-SET_PROPERTY_FIELD_UNITS(CoordinateTripodOverlay, _offsetY, PercentParameterUnit);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CoordinateTripodOverlay, _tripodSize, FloatParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CoordinateTripodOverlay, _lineWidth, FloatParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CoordinateTripodOverlay, _fontSize, FloatParameterUnit, 0);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CoordinateTripodOverlay, ViewportOverlay);
+DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, alignment, "Alignment", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, tripodSize, "Size", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, lineWidth, "LineWidth", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, font, "Font", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, fontSize, "FontSize", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, offsetX, "OffsetX", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, offsetY, "OffsetY", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, axis1Enabled, "Axis1Enabled");
+DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, axis2Enabled, "Axis2Enabled");
+DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, axis3Enabled, "Axis3Enabled");
+DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, axis4Enabled, "Axis4Enabled");
+DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, axis1Label, "Axis1Label");
+DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, axis2Label, "Axis2Label");
+DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, axis3Label, "Axis3Label");
+DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, axis4Label, "Axis4Label");
+DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, axis1Dir, "Axis1Dir");
+DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, axis2Dir, "Axis2Dir");
+DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, axis3Dir, "Axis3Dir");
+DEFINE_PROPERTY_FIELD(CoordinateTripodOverlay, axis4Dir, "Axis4Dir");
+DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, axis1Color, "Axis1Color", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, axis2Color, "Axis2Color", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, axis3Color, "Axis3Color", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CoordinateTripodOverlay, axis4Color, "Axis4Color", PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(CoordinateTripodOverlay, alignment, "Position");
+SET_PROPERTY_FIELD_LABEL(CoordinateTripodOverlay, tripodSize, "Size factor");
+SET_PROPERTY_FIELD_LABEL(CoordinateTripodOverlay, lineWidth, "Line width");
+SET_PROPERTY_FIELD_LABEL(CoordinateTripodOverlay, font, "Font");
+SET_PROPERTY_FIELD_LABEL(CoordinateTripodOverlay, fontSize, "Label size");
+SET_PROPERTY_FIELD_LABEL(CoordinateTripodOverlay, offsetX, "Offset X");
+SET_PROPERTY_FIELD_LABEL(CoordinateTripodOverlay, offsetY, "Offset Y");
+SET_PROPERTY_FIELD_UNITS(CoordinateTripodOverlay, offsetX, PercentParameterUnit);
+SET_PROPERTY_FIELD_UNITS(CoordinateTripodOverlay, offsetY, PercentParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CoordinateTripodOverlay, tripodSize, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CoordinateTripodOverlay, lineWidth, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CoordinateTripodOverlay, fontSize, FloatParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.
@@ -75,29 +75,29 @@ CoordinateTripodOverlay::CoordinateTripodOverlay(DataSet* dataset) : ViewportOve
 		_axis1Dir(1,0,0), _axis2Dir(0,1,0), _axis3Dir(0,0,1), _axis4Dir(sqrt(0.5),sqrt(0.5),0),
 		_axis1Color(1,0,0), _axis2Color(0,0.8,0), _axis3Color(0.2,0.2,1), _axis4Color(1,0,1)
 {
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_alignment);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_tripodSize);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_lineWidth);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_offsetX);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_offsetY);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_font);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_fontSize);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_axis1Enabled);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_axis2Enabled);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_axis3Enabled);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_axis4Enabled);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_axis1Label);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_axis2Label);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_axis3Label);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_axis4Label);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_axis1Dir);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_axis2Dir);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_axis3Dir);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_axis4Dir);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_axis1Color);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_axis2Color);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_axis3Color);
-	INIT_PROPERTY_FIELD(CoordinateTripodOverlay::_axis4Color);
+	INIT_PROPERTY_FIELD(alignment);
+	INIT_PROPERTY_FIELD(tripodSize);
+	INIT_PROPERTY_FIELD(lineWidth);
+	INIT_PROPERTY_FIELD(offsetX);
+	INIT_PROPERTY_FIELD(offsetY);
+	INIT_PROPERTY_FIELD(font);
+	INIT_PROPERTY_FIELD(fontSize);
+	INIT_PROPERTY_FIELD(axis1Enabled);
+	INIT_PROPERTY_FIELD(axis2Enabled);
+	INIT_PROPERTY_FIELD(axis3Enabled);
+	INIT_PROPERTY_FIELD(axis4Enabled);
+	INIT_PROPERTY_FIELD(axis1Label);
+	INIT_PROPERTY_FIELD(axis2Label);
+	INIT_PROPERTY_FIELD(axis3Label);
+	INIT_PROPERTY_FIELD(axis4Label);
+	INIT_PROPERTY_FIELD(axis1Dir);
+	INIT_PROPERTY_FIELD(axis2Dir);
+	INIT_PROPERTY_FIELD(axis3Dir);
+	INIT_PROPERTY_FIELD(axis4Dir);
+	INIT_PROPERTY_FIELD(axis1Color);
+	INIT_PROPERTY_FIELD(axis2Color);
+	INIT_PROPERTY_FIELD(axis3Color);
+	INIT_PROPERTY_FIELD(axis4Color);
 }
 
 /******************************************************************************
@@ -111,18 +111,18 @@ void CoordinateTripodOverlay::render(Viewport* viewport, QPainter& painter, cons
 	FloatType lineWidth = _lineWidth.value() * tripodSize;
 	if(lineWidth <= 0) return;
 
-	FloatType arrowSize = 0.17f;
+	FloatType arrowSize = FloatType(0.17);
 
 	QPointF origin(_offsetX.value() * renderSettings->outputImageWidth(), -_offsetY.value() * renderSettings->outputImageHeight());
 	FloatType margin = tripodSize + lineWidth;
 
 	if(_alignment.value() & Qt::AlignLeft) origin.rx() += margin;
 	else if(_alignment.value() & Qt::AlignRight) origin.rx() += renderSettings->outputImageWidth() - margin;
-	else if(_alignment.value() & Qt::AlignHCenter) origin.rx() += 0.5 * renderSettings->outputImageWidth();
+	else if(_alignment.value() & Qt::AlignHCenter) origin.rx() += FloatType(0.5) * renderSettings->outputImageWidth();
 
 	if(_alignment.value() & Qt::AlignTop) origin.ry() += margin;
 	else if(_alignment.value() & Qt::AlignBottom) origin.ry() += renderSettings->outputImageHeight() - margin;
-	else if(_alignment.value() & Qt::AlignVCenter) origin.ry() += 0.5 * renderSettings->outputImageHeight();
+	else if(_alignment.value() & Qt::AlignVCenter) origin.ry() += FloatType(0.5) * renderSettings->outputImageHeight();
 
 	// Project axes to screen.
 	Vector3 axisDirs[4] = {

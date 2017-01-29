@@ -276,7 +276,7 @@ PYBIND11_PLUGIN(PyScriptScene)
 									  PipelineObject_py, "modifier_applications", "PipelineObjectModifierApplicationList");
 
 	auto SceneNode_py = ovito_abstract_class<SceneNode, RefTarget>(m)
-		.def_property("name", &SceneNode::name, &SceneNode::setName)
+		.def_property("name", &SceneNode::nodeName, &SceneNode::setNodeName)
 		.def_property("display_color", &SceneNode::displayColor, &SceneNode::setDisplayColor)
 		.def_property_readonly("parent_node", &SceneNode::parentNode)
 		.def_property_readonly("lookat_node", &SceneNode::lookatTargetNode)

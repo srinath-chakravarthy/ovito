@@ -51,12 +51,6 @@ public:
  	/// \brief Selects the natural scene nodes to be exported by this exporter under normal circumstances.
 	virtual void selectStandardOutputData() override; 	
 
-	/// Returns the list of global attributes to be exported.
-	const QStringList& attributesToExport() const { return _attributesToExport; }
-
-	/// Sets the list of global attributes to be exported.
-	void setAttributesToExport(const QStringList& attrList) { _attributesToExport = attrList; }
-
 	/// \brief Evaluates the pipeline of an ObjectNode and returns the computed attributes.
 	QVariantMap getAttributes(SceneNode* sceneNode, TimePoint time);
 
@@ -86,12 +80,10 @@ private:
 	std::unique_ptr<CompressedTextWriter> _outputStream;
 
 	/// The list of global attributes to export.
-	PropertyField<QStringList> _attributesToExport;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QStringList, attributesToExport, setAttributesToExport);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_attributesToExport);
 };
 
 OVITO_END_INLINE_NAMESPACE

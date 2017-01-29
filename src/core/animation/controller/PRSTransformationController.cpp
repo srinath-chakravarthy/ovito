@@ -27,28 +27,28 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Anim)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, PRSTransformationController, Controller);
-DEFINE_REFERENCE_FIELD(PRSTransformationController, _position, "Position", Controller);
-DEFINE_REFERENCE_FIELD(PRSTransformationController, _rotation, "Rotation", Controller);
-DEFINE_REFERENCE_FIELD(PRSTransformationController, _scaling, "Scaling", Controller);
-SET_PROPERTY_FIELD_LABEL(PRSTransformationController, _position, "Position");
-SET_PROPERTY_FIELD_LABEL(PRSTransformationController, _rotation, "Rotation");
-SET_PROPERTY_FIELD_LABEL(PRSTransformationController, _scaling, "Scaling");
-SET_PROPERTY_FIELD_UNITS(PRSTransformationController, _position, WorldParameterUnit);
-SET_PROPERTY_FIELD_UNITS(PRSTransformationController, _rotation, AngleParameterUnit);
-SET_PROPERTY_FIELD_UNITS(PRSTransformationController, _scaling, PercentParameterUnit);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PRSTransformationController, Controller);
+DEFINE_REFERENCE_FIELD(PRSTransformationController, positionController, "Position", Controller);
+DEFINE_REFERENCE_FIELD(PRSTransformationController, rotationController, "Rotation", Controller);
+DEFINE_REFERENCE_FIELD(PRSTransformationController, scalingController, "Scaling", Controller);
+SET_PROPERTY_FIELD_LABEL(PRSTransformationController, positionController, "Position");
+SET_PROPERTY_FIELD_LABEL(PRSTransformationController, rotationController, "Rotation");
+SET_PROPERTY_FIELD_LABEL(PRSTransformationController, scalingController, "Scaling");
+SET_PROPERTY_FIELD_UNITS(PRSTransformationController, positionController, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS(PRSTransformationController, rotationController, AngleParameterUnit);
+SET_PROPERTY_FIELD_UNITS(PRSTransformationController, scalingController, PercentParameterUnit);
 
 /******************************************************************************
 * Default constructor.
 ******************************************************************************/
 PRSTransformationController::PRSTransformationController(DataSet* dataset) : Controller(dataset)
 {
-	INIT_PROPERTY_FIELD(PRSTransformationController::_position);
-	INIT_PROPERTY_FIELD(PRSTransformationController::_rotation);
-	INIT_PROPERTY_FIELD(PRSTransformationController::_scaling);
-	_position = ControllerManager::instance().createPositionController(dataset);
-	_rotation = ControllerManager::instance().createRotationController(dataset);
-	_scaling = ControllerManager::instance().createScalingController(dataset);
+	INIT_PROPERTY_FIELD(positionController);
+	INIT_PROPERTY_FIELD(rotationController);
+	INIT_PROPERTY_FIELD(scalingController);
+	setPositionController(ControllerManager::instance().createPositionController(dataset));
+	setRotationController(ControllerManager::instance().createRotationController(dataset));
+	setScalingController(ControllerManager::instance().createScalingController(dataset));
 }
 
 /******************************************************************************

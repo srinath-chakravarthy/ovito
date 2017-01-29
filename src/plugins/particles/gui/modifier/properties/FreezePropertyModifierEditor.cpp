@@ -27,7 +27,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Properties) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, FreezePropertyModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(FreezePropertyModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(FreezePropertyModifier, FreezePropertyModifierEditor);
 
 /******************************************************************************
@@ -42,13 +42,13 @@ void FreezePropertyModifierEditor::createUI(const RolloutInsertionParameters& ro
 	layout->setContentsMargins(4,4,4,4);
 	layout->setSpacing(2);
 
-	ParticlePropertyParameterUI* sourcePropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(FreezePropertyModifier::_sourceProperty), false, true);
+	ParticlePropertyParameterUI* sourcePropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(FreezePropertyModifier::sourceProperty), false, true);
 	layout->addWidget(new QLabel(tr("Property to freeze:"), rollout));
 	layout->addWidget(sourcePropertyUI->comboBox());
 	connect(sourcePropertyUI, &ParticlePropertyParameterUI::valueEntered, this, &FreezePropertyModifierEditor::onSourcePropertyChanged);
 	layout->addSpacing(8);
 
-	ParticlePropertyParameterUI* destPropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(FreezePropertyModifier::_destinationProperty), false, false);
+	ParticlePropertyParameterUI* destPropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(FreezePropertyModifier::destinationProperty), false, false);
 	layout->addWidget(new QLabel(tr("Output property:"), rollout));
 	layout->addWidget(destPropertyUI->comboBox());
 	layout->addSpacing(8);

@@ -30,23 +30,23 @@
 
 namespace Ovito { namespace Particles {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SurfaceMeshDisplay, AsynchronousDisplayObject);
-DEFINE_FLAGS_PROPERTY_FIELD(SurfaceMeshDisplay, _surfaceColor, "SurfaceColor", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(SurfaceMeshDisplay, _capColor, "CapColor", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(SurfaceMeshDisplay, _showCap, "ShowCap", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(SurfaceMeshDisplay, _smoothShading, "SmoothShading");
-DEFINE_PROPERTY_FIELD(SurfaceMeshDisplay, _reverseOrientation, "ReverseOrientation");
-DEFINE_REFERENCE_FIELD(SurfaceMeshDisplay, _surfaceTransparency, "SurfaceTransparency", Controller);
-DEFINE_REFERENCE_FIELD(SurfaceMeshDisplay, _capTransparency, "CapTransparency", Controller);
-SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _surfaceColor, "Surface color");
-SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _capColor, "Cap color");
-SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _showCap, "Show cap polygons");
-SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _smoothShading, "Smooth shading");
-SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _surfaceTransparency, "Surface transparency");
-SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _capTransparency, "Cap transparency");
-SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _reverseOrientation, "Inside out");
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(SurfaceMeshDisplay, _surfaceTransparency, PercentParameterUnit, 0, 1);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(SurfaceMeshDisplay, _capTransparency, PercentParameterUnit, 0, 1);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SurfaceMeshDisplay, AsynchronousDisplayObject);
+DEFINE_FLAGS_PROPERTY_FIELD(SurfaceMeshDisplay, surfaceColor, "SurfaceColor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(SurfaceMeshDisplay, capColor, "CapColor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(SurfaceMeshDisplay, showCap, "ShowCap", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(SurfaceMeshDisplay, smoothShading, "SmoothShading");
+DEFINE_PROPERTY_FIELD(SurfaceMeshDisplay, reverseOrientation, "ReverseOrientation");
+DEFINE_REFERENCE_FIELD(SurfaceMeshDisplay, surfaceTransparencyController, "SurfaceTransparency", Controller);
+DEFINE_REFERENCE_FIELD(SurfaceMeshDisplay, capTransparencyController, "CapTransparency", Controller);
+SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, surfaceColor, "Surface color");
+SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, capColor, "Cap color");
+SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, showCap, "Show cap polygons");
+SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, smoothShading, "Smooth shading");
+SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, surfaceTransparencyController, "Surface transparency");
+SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, capTransparencyController, "Cap transparency");
+SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, reverseOrientation, "Inside out");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(SurfaceMeshDisplay, surfaceTransparencyController, PercentParameterUnit, 0, 1);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(SurfaceMeshDisplay, capTransparencyController, PercentParameterUnit, 0, 1);
 
 /******************************************************************************
 * Constructor.
@@ -54,16 +54,16 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(SurfaceMeshDisplay, _capTransparency, Percent
 SurfaceMeshDisplay::SurfaceMeshDisplay(DataSet* dataset) : AsynchronousDisplayObject(dataset),
 	_surfaceColor(1, 1, 1), _capColor(0.8, 0.8, 1.0), _showCap(true), _smoothShading(true), _trimeshUpdate(true), _reverseOrientation(false)
 {
-	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_surfaceColor);
-	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_capColor);
-	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_showCap);
-	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_smoothShading);
-	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_surfaceTransparency);
-	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_capTransparency);
-	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_reverseOrientation);
+	INIT_PROPERTY_FIELD(surfaceColor);
+	INIT_PROPERTY_FIELD(capColor);
+	INIT_PROPERTY_FIELD(showCap);
+	INIT_PROPERTY_FIELD(smoothShading);
+	INIT_PROPERTY_FIELD(surfaceTransparencyController);
+	INIT_PROPERTY_FIELD(capTransparencyController);
+	INIT_PROPERTY_FIELD(reverseOrientation);
 
-	_surfaceTransparency = ControllerManager::instance().createFloatController(dataset);
-	_capTransparency = ControllerManager::instance().createFloatController(dataset);
+	setSurfaceTransparencyController(ControllerManager::instance().createFloatController(dataset));
+	setCapTransparencyController(ControllerManager::instance().createFloatController(dataset));
 }
 
 /******************************************************************************
@@ -155,17 +155,17 @@ void SurfaceMeshDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 	FloatType transp_surface = 0;
 	FloatType transp_cap = 0;
 	TimeInterval iv;
-	if(_surfaceTransparency) transp_surface = _surfaceTransparency->getFloatValue(time, iv);
-	if(_capTransparency) transp_cap = _capTransparency->getFloatValue(time, iv);
-	ColorA color_surface(surfaceColor(), 1.0f - transp_surface);
-	ColorA color_cap(capColor(), 1.0f - transp_cap);
+	if(surfaceTransparencyController()) transp_surface = surfaceTransparencyController()->getFloatValue(time, iv);
+	if(capTransparencyController()) transp_cap = capTransparencyController()->getFloatValue(time, iv);
+	ColorA color_surface(surfaceColor(), FloatType(1) - transp_surface);
+	ColorA color_cap(capColor(), FloatType(1) - transp_cap);
 
 	// Do we have to re-create the render primitives from scratch?
 	bool recreateSurfaceBuffer = !_surfaceBuffer || !_surfaceBuffer->isValid(renderer);
-	bool recreateCapBuffer = _showCap && (!_capBuffer || !_capBuffer->isValid(renderer));
+	bool recreateCapBuffer = showCap() && (!_capBuffer || !_capBuffer->isValid(renderer));
 
 	// Do we have to update the render primitives?
-	bool updateContents = _geometryCacheHelper.updateState(color_surface, color_cap, _smoothShading)
+	bool updateContents = _geometryCacheHelper.updateState(color_surface, color_cap, smoothShading())
 					|| recreateSurfaceBuffer || recreateCapBuffer || _trimeshUpdate;
 
 	// Re-create the render primitives if necessary.
@@ -178,12 +178,12 @@ void SurfaceMeshDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 	if(updateContents) {
 
 		// Assign smoothing group to faces to interpolate normals.
-		const quint32 smoothingGroup = _smoothShading ? 1 : 0;
+		const quint32 smoothingGroup = smoothShading() ? 1 : 0;
 		for(auto& face : _surfaceMesh.faces())
 			face.setSmoothingGroups(smoothingGroup);
 
 		_surfaceBuffer->setMesh(_surfaceMesh, color_surface);
-		if(_showCap)
+		if(showCap())
 			_capBuffer->setMesh(_capPolygonsMesh, color_cap);
 
 		// Reset update flag.
@@ -193,7 +193,7 @@ void SurfaceMeshDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 	// Handle picking of triangles.
 	renderer->beginPickObject(contextNode);
 	_surfaceBuffer->render(renderer);
-	if(_showCap)
+	if(showCap())
 		_capBuffer->render(renderer);
 	else
 		_capBuffer.reset();

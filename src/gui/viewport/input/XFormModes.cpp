@@ -376,7 +376,7 @@ void MoveMode::onAnimateTransformationButton()
 		if(prs_ctrl) {
 			KeyframeController* ctrl = dynamic_object_cast<KeyframeController>(prs_ctrl->positionController());
 			if(ctrl) {
-				AnimationKeyEditorDialog dlg(ctrl, &PROPERTY_FIELD(PRSTransformationController::_position), inputManager()->mainWindow(), inputManager()->mainWindow());
+				AnimationKeyEditorDialog dlg(ctrl, &PROPERTY_FIELD(PRSTransformationController::positionController), inputManager()->mainWindow(), inputManager()->mainWindow());
 				dlg.exec();
 			}
 		}
@@ -497,7 +497,7 @@ void RotateMode::onAnimateTransformationButton()
 		if(prs_ctrl) {
 			KeyframeController* ctrl = dynamic_object_cast<KeyframeController>(prs_ctrl->rotationController());
 			if(ctrl) {
-				AnimationKeyEditorDialog dlg(ctrl, &PROPERTY_FIELD(PRSTransformationController::_rotation), inputManager()->mainWindow(), inputManager()->mainWindow());
+				AnimationKeyEditorDialog dlg(ctrl, &PROPERTY_FIELD(PRSTransformationController::rotationController), inputManager()->mainWindow(), inputManager()->mainWindow());
 				dlg.exec();
 			}
 		}

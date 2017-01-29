@@ -52,12 +52,6 @@ public:
 		_bondTypes.insert(index, type);
 	}
 
-	/// Returns the list of bond types.
-	const QVector<BondType*>& bondTypes() const { return _bondTypes; }
-
-	/// Replaces the list of bond types.
-	void setBondTypes(const QVector<BondType*>& types) { _bondTypes = types; }
-
 	/// Returns the bond type with the given ID, or NULL if no such type exists.
 	BondType* bondType(int id) const {
 		for(BondType* type : bondTypes())
@@ -117,17 +111,13 @@ public:
 	/// Returns the default radius for a named bond type.
 	static FloatType getDefaultBondRadius(BondProperty::Type typeClass, const QString& bondTypeName, int bondTypeId, bool userDefaults = true);
 
-protected:
+private:
 
 	/// Contains the bond types.
-	VectorReferenceField<BondType> _bondTypes;
-
-private:
+	DECLARE_MODIFIABLE_VECTOR_REFERENCE_FIELD(BondType, bondTypes, setBondTypes);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_VECTOR_REFERENCE_FIELD(_bondTypes);
 };
 
 }	// End of namespace

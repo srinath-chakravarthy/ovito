@@ -30,7 +30,7 @@
 
 namespace Ovito { namespace POVRay {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(POVRay, POVRayExporter, FileExporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(POVRayExporter, FileExporter);
 
 /******************************************************************************
 * Constructs a new instance of the class.

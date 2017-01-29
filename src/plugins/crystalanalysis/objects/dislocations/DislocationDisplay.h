@@ -112,54 +112,6 @@ public:
 	/// \brief Computes the bounding box of the object.
 	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
 
-	/// \brief Returns the line width used for dislocation rendering.
-	FloatType lineWidth() const { return _lineWidth; }
-
-	/// \brief Sets the line width used for dislocation rendering.
-	void setLineWidth(FloatType width) { _lineWidth = width; }
-
-	/// \brief Returns the selected shading mode for dislocation lines.
-	ArrowPrimitive::ShadingMode shadingMode() const { return _shadingMode; }
-
-	/// \brief Sets the shading mode for dislocation lines.
-	void setShadingMode(ArrowPrimitive::ShadingMode mode) { _shadingMode = mode; }
-
-	/// Returns the rendering width for Burgers vectors.
-	FloatType burgersVectorWidth() const { return _burgersVectorWidth; }
-
-	/// Sets the rendering width for Burgers vectors.
-	void setBurgersVectorWidth(FloatType width) { _burgersVectorWidth = width; }
-
-	/// Returns the scaling factor Burgers vectors.
-	FloatType burgersVectorScaling() const { return _burgersVectorScaling; }
-
-	/// Sets the scaling factor Burgers vectors.
-	void setBurgersVectorScaling(FloatType factor) { _burgersVectorScaling = factor; }
-
-	/// Returns the display color for Burgers vector arrows.
-	const Color& burgersVectorColor() const { return _burgersVectorColor; }
-
-	/// Sets the display color for Burgers vector arrows.
-	void setBurgersVectorColor(const Color& color) { _burgersVectorColor = color; }
-
-	/// Returns whether the display of Burgers vector arrows is enabled.
-	bool showBurgersVectors() const { return _showBurgersVectors; }
-
-	/// Controls the display of Burgers vector arrows.
-	void setShowBurgersVectors(bool enabled) { _showBurgersVectors = enabled; }
-
-	/// Returns whether line directions are indicated.
-	bool showLineDirections() const { return _showLineDirections; }
-
-	/// Sets whether line directions should be indicated.
-	void setShowLineDirections(bool enabled) { _showLineDirections = enabled; }
-
-	/// Returns how the display color of dislocation lines is chosen.
-	LineColoringMode lineColoringMode() const { return _lineColoringMode; }
-
-	/// Sets how the display color of dislocation lines is chosen.
-	void setLineColoringMode(LineColoringMode mode) { _lineColoringMode = mode; }
-
 	/// \brief Renders an overlay marker for a single dislocation segment.
 	void renderOverlayMarker(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState, int segmentIndex, SceneRenderer* renderer, ObjectNode* contextNode);
 
@@ -168,7 +120,6 @@ public:
 
 public:
 
-	Q_PROPERTY(FloatType lineWidth READ lineWidth WRITE setLineWidth);
 	Q_PROPERTY(Ovito::ArrowPrimitive::ShadingMode shadingMode READ shadingMode WRITE setShadingMode);
 
 protected:
@@ -216,47 +167,36 @@ protected:
 		> _boundingBoxCacheHelper;
 
 	/// The rendering width for dislocation lines.
-	PropertyField<FloatType> _lineWidth;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, lineWidth, setLineWidth);
 
 	/// The shading mode for dislocation lines.
-	PropertyField<ArrowPrimitive::ShadingMode, int> _shadingMode;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ArrowPrimitive::ShadingMode, shadingMode, setShadingMode);
 
 	/// The rendering width for Burgers vectors.
-	PropertyField<FloatType> _burgersVectorWidth;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, burgersVectorWidth, setBurgersVectorWidth);
 
 	/// The scaling factor Burgers vectors.
-	PropertyField<FloatType> _burgersVectorScaling;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, burgersVectorScaling, setBurgersVectorScaling);
 
 	/// Display color for Burgers vectors.
-	PropertyField<Color, QColor> _burgersVectorColor;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Color, burgersVectorColor, setBurgersVectorColor);
 
 	/// Controls the display of Burgers vectors.
-	PropertyField<bool> _showBurgersVectors;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, showBurgersVectors, setShowBurgersVectors);
 
 	/// Controls the display of the line directions.
-	PropertyField<bool> _showLineDirections;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, showLineDirections, setShowLineDirections);
 
 	/// Controls how the display color of dislocation lines is chosen.
-	PropertyField<LineColoringMode, int> _lineColoringMode;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(LineColoringMode, lineColoringMode, setLineColoringMode);
 
 	/// The data record used for picking dislocations in the viewports.
 	OORef<DislocationPickInfo> _pickInfo;
-
-private:
 
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Dislocations");
-
-	DECLARE_PROPERTY_FIELD(_lineWidth);
-	DECLARE_PROPERTY_FIELD(_shadingMode);
-	DECLARE_PROPERTY_FIELD(_burgersVectorWidth);
-	DECLARE_PROPERTY_FIELD(_burgersVectorScaling);
-	DECLARE_PROPERTY_FIELD(_burgersVectorColor);
-	DECLARE_PROPERTY_FIELD(_showBurgersVectors);
-	DECLARE_PROPERTY_FIELD(_showLineDirections);
-	DECLARE_PROPERTY_FIELD(_lineColoringMode);
 };
 
 }	// End of namespace

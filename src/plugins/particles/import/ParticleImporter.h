@@ -39,14 +39,8 @@ public:
 
 	/// \brief Constructs a new instance of this class.
 	ParticleImporter(DataSet* dataset) : FileSourceImporter(dataset), _isMultiTimestepFile(false) {
-		INIT_PROPERTY_FIELD(ParticleImporter::_isMultiTimestepFile);
+		INIT_PROPERTY_FIELD(isMultiTimestepFile);
 	}
-
-	/// \brief Returns true if the input file contains multiple timesteps.
-	bool isMultiTimestepFile() const { return _isMultiTimestepFile; }
-
-	/// \brief Tells the importer that the input file contains multiple timesteps.
-	void setMultiTimestepFile(bool enable) { _isMultiTimestepFile = enable; }
 
 	/// Scans the given external path (which may be a directory and a wild-card pattern,
 	/// or a single file containing multiple frames) to find all available animation frames.
@@ -78,12 +72,10 @@ private:
 	QVector<FileSourceImporter::Frame> discoverFramesInFile(const QUrl sourceUrl, FutureInterfaceBase& futureInterface);
 
 	/// Indicates that the input file contains multiple timesteps.
-	PropertyField<bool> _isMultiTimestepFile;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, isMultiTimestepFile, setMultiTimestepFile);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_isMultiTimestepFile);
 };
 
 OVITO_END_INLINE_NAMESPACE

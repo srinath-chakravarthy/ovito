@@ -182,7 +182,7 @@ protected:
 	ListViewModel* _model;
 
 	/// The list of items in the list view.
-	VectorReferenceField<RefTarget> _targets;
+	DECLARE_VECTOR_REFERENCE_FIELD(RefTarget, targets);
 
 	/// Maps reference field indices to row indices.
 	QVector<int> _targetToRow;
@@ -196,12 +196,8 @@ protected:
 	/// Controls where the sub-editor is opened and whether the sub-editor is opened in a collapsed state.
 	RolloutInsertionParameters _rolloutParams;
 	
-private:
-
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_VECTOR_REFERENCE_FIELD(_targets);
 };
 
 OVITO_END_INLINE_NAMESPACE

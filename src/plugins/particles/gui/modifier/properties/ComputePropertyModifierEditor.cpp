@@ -34,7 +34,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Properties) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, ComputePropertyModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(ComputePropertyModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(ComputePropertyModifier, ComputePropertyModifierEditor);
 
 /******************************************************************************
@@ -55,11 +55,11 @@ void ComputePropertyModifierEditor::createUI(const RolloutInsertionParameters& r
 	propertiesLayout->setSpacing(4);
 
 	// Output property
-	ParticlePropertyParameterUI* outputPropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(ComputePropertyModifier::_outputProperty), false, false);
+	ParticlePropertyParameterUI* outputPropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(ComputePropertyModifier::outputProperty), false, false);
 	propertiesLayout->addWidget(outputPropertyUI->comboBox());
 
 	// Create the check box for the selection flag.
-	BooleanParameterUI* selectionFlagUI = new BooleanParameterUI(this, PROPERTY_FIELD(ComputePropertyModifier::_onlySelectedParticles));
+	BooleanParameterUI* selectionFlagUI = new BooleanParameterUI(this, PROPERTY_FIELD(ComputePropertyModifier::onlySelectedParticles));
 	propertiesLayout->addWidget(selectionFlagUI->checkBox());
 
 	expressionsGroupBox = new QGroupBox(tr("Expression"));
@@ -78,7 +78,7 @@ void ComputePropertyModifierEditor::createUI(const RolloutInsertionParameters& r
 	mainLayout = new QVBoxLayout(neighorRollout);
 	mainLayout->setContentsMargins(4,4,4,4);
 
-	BooleanGroupBoxParameterUI* neighborModeUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(ComputePropertyModifier::_neighborModeEnabled));
+	BooleanGroupBoxParameterUI* neighborModeUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(ComputePropertyModifier::neighborModeEnabled));
 	mainLayout->addWidget(neighborModeUI->groupBox());
 
 	QGridLayout* gridlayout = new QGridLayout(neighborModeUI->childContainer());
@@ -87,7 +87,7 @@ void ComputePropertyModifierEditor::createUI(const RolloutInsertionParameters& r
 	gridlayout->setRowStretch(1, 1);
 
 	// Cutoff parameter.
-	FloatParameterUI* cutoffRadiusUI = new FloatParameterUI(this, PROPERTY_FIELD(ComputePropertyModifier::_cutoff));
+	FloatParameterUI* cutoffRadiusUI = new FloatParameterUI(this, PROPERTY_FIELD(ComputePropertyModifier::cutoff));
 	gridlayout->addWidget(cutoffRadiusUI->label(), 0, 0);
 	gridlayout->addLayout(cutoffRadiusUI->createFieldLayout(), 0, 1);
 

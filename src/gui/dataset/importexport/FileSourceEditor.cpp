@@ -37,7 +37,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Gui, FileSourceEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(FileSourceEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(FileSource, FileSourceEditor);
 
 /******************************************************************************
@@ -135,30 +135,26 @@ void FileSourceEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 	QHBoxLayout* subsublayout = new QHBoxLayout();
 	subsublayout->setContentsMargins(0,0,0,0);
 	subsublayout->setSpacing(2);
-	IntegerParameterUI* playbackSpeedNumeratorUI = new IntegerParameterUI(this, PROPERTY_FIELD(FileSource::_playbackSpeedNumerator));
+	IntegerParameterUI* playbackSpeedNumeratorUI = new IntegerParameterUI(this, PROPERTY_FIELD(FileSource::playbackSpeedNumerator));
 	subsublayout->addWidget(new QLabel(tr("Playback rate:")));
 	subsublayout->addLayout(playbackSpeedNumeratorUI->createFieldLayout());
 	subsublayout->addWidget(new QLabel(tr("/")));
-	IntegerParameterUI* playbackSpeedDenominatorUI = new IntegerParameterUI(this, PROPERTY_FIELD(FileSource::_playbackSpeedDenominator));
+	IntegerParameterUI* playbackSpeedDenominatorUI = new IntegerParameterUI(this, PROPERTY_FIELD(FileSource::playbackSpeedDenominator));
 	subsublayout->addLayout(playbackSpeedDenominatorUI->createFieldLayout());
 	layout->addLayout(subsublayout);
 
 	subsublayout = new QHBoxLayout();
 	subsublayout->setContentsMargins(0,0,0,0);
-	IntegerParameterUI* playbackStartUI = new IntegerParameterUI(this, PROPERTY_FIELD(FileSource::_playbackStartTime));
+	IntegerParameterUI* playbackStartUI = new IntegerParameterUI(this, PROPERTY_FIELD(FileSource::playbackStartTime));
 	subsublayout->addWidget(new QLabel(tr("Start at animation frame:")));
 	subsublayout->addLayout(playbackStartUI->createFieldLayout());
 	layout->addLayout(subsublayout);
 
-	BooleanParameterUI* adjustAnimIntervalUI = new BooleanParameterUI(this, PROPERTY_FIELD(FileSource::_adjustAnimationIntervalEnabled));
+	BooleanParameterUI* adjustAnimIntervalUI = new BooleanParameterUI(this, PROPERTY_FIELD(FileSource::adjustAnimationIntervalEnabled));
 	layout->addWidget(adjustAnimIntervalUI->checkBox());
 
 	// Show settings editor of importer class.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(FileSource::_importer), rolloutParams.after(rollout));
-
-#if 0
-	_subEditorRolloutParams = rolloutParams.collapse();
-#endif
+	new SubObjectParameterUI(this, PROPERTY_FIELD(FileSource::importer), rolloutParams.after(rollout));
 }
 
 /******************************************************************************
@@ -167,23 +163,6 @@ void FileSourceEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 void FileSourceEditor::onEditorContentsReplaced(RefTarget* newObject)
 {
 	updateInformationLabel();
-
-#if 0
-	// Close old sub-editors.
-	_subEditors.clear();
-	if(newObject) {
-		FileSource* obj = static_object_cast<FileSource>(newObject);
-		// Open new sub-editors.
-		for(DataObject* dataObj : obj->dataObjects()) {
-			OORef<PropertiesEditor> subEditor = dataObj->createPropertiesEditor();
-			if(subEditor) {
-				subEditor->initialize(container(), mainWindow(), _subEditorRolloutParams);
-				subEditor->setEditObject(dataObj);
-				_subEditors.push_back(subEditor);
-			}
-		}
-	}
-#endif
 }
 
 /******************************************************************************
@@ -482,32 +461,6 @@ bool FileSourceEditor::referenceEvent(RefTarget* source, ReferenceEvent* event)
 		if(event->type() == ReferenceEvent::ObjectStatusChanged || event->type() == ReferenceEvent::TitleChanged) {
 			updateInformationLabel();
 		}
-#if 0
-		else if(event->type() == ReferenceEvent::ReferenceAdded || event->type() == ReferenceEvent::ReferenceRemoved) {
-			ReferenceFieldEvent* refEvent = static_cast<ReferenceFieldEvent*>(event);
-			if(refEvent->field() == PROPERTY_FIELD(FileSource::_dataObjects)) {
-				DataObject* dataObj = dynamic_object_cast<DataObject>(event->type() == ReferenceEvent::ReferenceAdded ? refEvent->newTarget() : refEvent->oldTarget());
-				if(dataObj) {
-					if(event->type() == ReferenceEvent::ReferenceAdded) {
-						// Open a new sub-editor.
-						OORef<PropertiesEditor> subEditor = dataObj->createPropertiesEditor();
-						if(subEditor) {
-							subEditor->initialize(container(), mainWindow(), _subEditorRolloutParams);
-							subEditor->setEditObject(dataObj);
-							_subEditors.push_back(subEditor);
-						}
-					}
-					else {
-						// Close sub-editor.
-						for(int i = (int)_subEditors.size() - 1; i >= 0; i--) {
-							if(_subEditors[i]->editObject() == dataObj)
-								_subEditors.erase(_subEditors.begin() + i);
-						}
-					}
-				}
-			}
-		}
-#endif
 	}
 	return PropertiesEditor::referenceEvent(source, event);
 }

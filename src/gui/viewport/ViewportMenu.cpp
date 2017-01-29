@@ -126,7 +126,7 @@ void ViewportMenu::onShowViewTypeMenu()
 		OORef<AbstractCameraObject> camera = state.convertObject<AbstractCameraObject>(_viewport->dataset()->animationSettings()->time());
 		if(camera) {
 			// Add a menu entry for this camera node.
-			QAction* action = viewNodeGroup->addAction(node->name());
+			QAction* action = viewNodeGroup->addAction(node->nodeName());
 			action->setCheckable(true);
 			action->setChecked(_viewport->viewNode() == node);
 			action->setData(qVariantFromValue((void*)node));
@@ -227,7 +227,7 @@ void ViewportMenu::onCreateCamera()
 			cameraNode->setDataProvider(cameraObj);
 
 			// Give the new node a name.
-			cameraNode->setName(scene->makeNameUnique(tr("Camera")));
+			cameraNode->setNodeName(scene->makeNameUnique(tr("Camera")));
 
 			// Position camera node to match the current view.
 			AffineTransformation tm = _viewport->projectionParams().inverseViewMatrix;

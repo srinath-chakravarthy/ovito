@@ -75,72 +75,6 @@ public:
 	/// Renders the triangle mesh stored in the given buffer.
 	virtual void renderMesh(const DefaultMeshPrimitive& meshBuffer) override;
 
-	/// Returns whether anti-aliasing is enabled.
-	bool antialiasingEnabled() const { return _antialiasingEnabled; }
-
-	/// Enables/disables anti-aliasing.
-	void setAntialiasingEnabled(bool on) { _antialiasingEnabled = on; }
-
-	/// Returns the quality level of anti-aliasing.
-	int antialiasingSamples() const { return _antialiasingSamples; }
-
-	/// Sets the quality level of anti-aliasing.
-	void setAntialiasingSamples(int sampleCount) { _antialiasingSamples = sampleCount; }
-
-	/// Returns whether the default direct light source is enabled.
-	bool directLightSourceEnabled() const { return _directLightSourceEnabled; }
-
-	/// Enables/disables the default direct light source.
-	void setDirectLightSourceEnabled(bool on) { _directLightSourceEnabled = on; }
-
-	/// Returns the brightness of the default direct light source.
-	FloatType defaultLightSourceIntensity() const { return _defaultLightSourceIntensity; }
-
-	/// Sets the brightness of the default direct light source.
-	void setDefaultLightSourceIntensity(FloatType brightness) { _defaultLightSourceIntensity = brightness; }
-
-	/// Returns whether the calculation of shadows is enabled.
-	bool shadowsEnabled() const { return _shadowsEnabled; }
-
-	/// Enables/disables the calculation of shadows.
-	void setShadowsEnabled(bool on) { _shadowsEnabled = on; }
-
-	/// Returns whether the calculation of ambient occlusion is enabled.
-	bool ambientOcclusionEnabled() const { return _ambientOcclusionEnabled; }
-
-	/// Enables/disables the calculation of ambient occlusion.
-	void setAmbientOcclusionEnabled(bool on) { _ambientOcclusionEnabled = on; }
-
-	/// Returns the brightness of the ambient occlusion sky light source.
-	FloatType ambientOcclusionBrightness() const { return _ambientOcclusionBrightness; }
-
-	/// Sets the brightness of the ambient occlusion sky light source.
-	void setAmbientOcclusionBrightness(FloatType brightness) { _ambientOcclusionBrightness = brightness; }
-
-	/// Returns the number of AO samples to compute.
-	int ambientOcclusionSamples() const { return _ambientOcclusionSamples; }
-
-	/// Sets the number of AO samples to compute.
-	void setAmbientOcclusionSamples(int sampleCount) { _ambientOcclusionSamples = sampleCount; }
-
-	/// Returns whether depth-of-field rendering is enabled.
-	bool depthOfFieldEnabled() const { return _depthOfFieldEnabled; }
-
-	/// Enables/disables depth-of-field rendering.
-	void setDepthOfFieldEnabled(bool enabled) { _depthOfFieldEnabled = enabled; }
-
-	/// Returns the camera's focal length, which is used for depth-of-field rendering.
-	FloatType dofFocalLength() const { return _dofFocalLength; }
-
-	/// Sets the camera's focal length, which is used for depth-of-field rendering.
-	void setDofFocalLength(FloatType length) { _dofFocalLength = length; }
-
-	/// Returns the camera's aperture, which is used for depth-of-field rendering.
-	FloatType dofAperture() const { return _dofAperture; }
-
-	/// Sets the camera's aperture, which is used for depth-of-field rendering.
-	void setDofAperture(FloatType aperture) { _dofAperture = aperture; }
-
 private:
 
 	/// Creates a texture with the given color.
@@ -149,37 +83,37 @@ private:
 private:
 
 	/// Controls anti-aliasing.
-	PropertyField<bool> _antialiasingEnabled;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, antialiasingEnabled, setAntialiasingEnabled);
 
 	/// Controls quality of anti-aliasing.
-	PropertyField<int> _antialiasingSamples;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, antialiasingSamples, setAntialiasingSamples);
 
 	/// Enables direct light source.
-	PropertyField<bool> _directLightSourceEnabled;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, directLightSourceEnabled, setDirectLightSourceEnabled);
 
 	/// Enables shadows for the direct light source.
-	PropertyField<bool> _shadowsEnabled;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, shadowsEnabled, setShadowsEnabled);
 
 	/// Controls the brightness of the default direct light source.
-	PropertyField<FloatType> _defaultLightSourceIntensity;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, defaultLightSourceIntensity, setDefaultLightSourceIntensity);
 
 	/// Enables ambient occlusion lighting.
-	PropertyField<bool> _ambientOcclusionEnabled;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, ambientOcclusionEnabled, setAmbientOcclusionEnabled);
 
 	/// Controls quality of ambient occlusion.
-	PropertyField<int> _ambientOcclusionSamples;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, ambientOcclusionSamples, setAmbientOcclusionSamples);
 
 	/// Controls the brightness of the sky light source used for ambient occlusion.
-	PropertyField<FloatType> _ambientOcclusionBrightness;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, ambientOcclusionBrightness, setAmbientOcclusionBrightness);
 
 	/// Enables depth-of-field rendering.
-	PropertyField<bool> _depthOfFieldEnabled;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, depthOfFieldEnabled, setDepthOfFieldEnabled);
 
 	/// Controls the camera's focal length, which is used for depth-of-field rendering.
-	PropertyField<FloatType> _dofFocalLength;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, dofFocalLength, setDofFocalLength);
 
 	/// Controls the camera's aperture, which is used for depth-of-field rendering.
-	PropertyField<FloatType> _dofAperture;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, dofAperture, setDofAperture);
 
 	/// The Tachyon internal scene handle.
 	SceneHandle _rtscene;
@@ -194,18 +128,6 @@ private:
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Tachyon renderer");
-
-	DECLARE_PROPERTY_FIELD(_antialiasingEnabled);
-	DECLARE_PROPERTY_FIELD(_antialiasingSamples);
-	DECLARE_PROPERTY_FIELD(_directLightSourceEnabled);
-	DECLARE_PROPERTY_FIELD(_shadowsEnabled);
-	DECLARE_PROPERTY_FIELD(_defaultLightSourceIntensity);
-	DECLARE_PROPERTY_FIELD(_ambientOcclusionEnabled);
-	DECLARE_PROPERTY_FIELD(_ambientOcclusionSamples);
-	DECLARE_PROPERTY_FIELD(_ambientOcclusionBrightness);
-	DECLARE_PROPERTY_FIELD(_depthOfFieldEnabled);
-	DECLARE_PROPERTY_FIELD(_dofFocalLength);
-	DECLARE_PROPERTY_FIELD(_dofAperture);
 };
 
 }	// End of namespace

@@ -34,7 +34,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Selection) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, ManualSelectionModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(ManualSelectionModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(ManualSelectionModifier, ManualSelectionModifierEditor);
 
 /**

@@ -31,9 +31,9 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, LAMMPSDataImporter, ParticleImporter);
-DEFINE_PROPERTY_FIELD(LAMMPSDataImporter, _atomStyle, "AtomStyle");
-SET_PROPERTY_FIELD_LABEL(LAMMPSDataImporter, _atomStyle, "Atom style");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(LAMMPSDataImporter, ParticleImporter);
+DEFINE_PROPERTY_FIELD(LAMMPSDataImporter, atomStyle, "AtomStyle");
+SET_PROPERTY_FIELD_LABEL(LAMMPSDataImporter, atomStyle, "Atom style");
 
 /******************************************************************************
 * Checks if the given file has format that can be read by this importer.

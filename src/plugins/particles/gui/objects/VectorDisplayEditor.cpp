@@ -29,7 +29,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, VectorDisplayEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(VectorDisplayEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(VectorDisplay, VectorDisplayEditor);
 
 /******************************************************************************
@@ -48,44 +48,34 @@ void VectorDisplayEditor::createUI(const RolloutInsertionParameters& rolloutPara
 	int row = 0;
 
 	// Shading mode.
-	VariantComboBoxParameterUI* shadingModeUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(VectorDisplay::_shadingMode));
+	VariantComboBoxParameterUI* shadingModeUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(VectorDisplay::shadingMode));
 	shadingModeUI->comboBox()->addItem(tr("Normal"), QVariant::fromValue(ArrowPrimitive::NormalShading));
 	shadingModeUI->comboBox()->addItem(tr("Flat"), QVariant::fromValue(ArrowPrimitive::FlatShading));
 	layout->addWidget(new QLabel(tr("Shading mode:")), row, 0);
 	layout->addWidget(shadingModeUI->comboBox(), row++, 1);
 
-#if 0
-	// Rendering quality.
-	VariantComboBoxParameterUI* renderingQualityUI = new VariantComboBoxParameterUI(this, "renderingQuality");
-	renderingQualityUI->comboBox()->addItem(tr("Low"), qVariantFromValue(ArrowPrimitive::LowQuality));
-	renderingQualityUI->comboBox()->addItem(tr("Medium"), qVariantFromValue(ArrowPrimitive::MediumQuality));
-	renderingQualityUI->comboBox()->addItem(tr("High"), qVariantFromValue(ArrowPrimitive::HighQuality));
-	layout->addWidget(new QLabel(tr("Rendering quality:")), row, 0);
-	layout->addWidget(renderingQualityUI->comboBox(), row++, 1);
-#endif
-
 	// Scaling factor.
-	FloatParameterUI* scalingFactorUI = new FloatParameterUI(this, PROPERTY_FIELD(VectorDisplay::_scalingFactor));
+	FloatParameterUI* scalingFactorUI = new FloatParameterUI(this, PROPERTY_FIELD(VectorDisplay::scalingFactor));
 	layout->addWidget(scalingFactorUI->label(), row, 0);
 	layout->addLayout(scalingFactorUI->createFieldLayout(), row++, 1);
 
 	// Arrow width factor.
-	FloatParameterUI* arrowWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(VectorDisplay::_arrowWidth));
+	FloatParameterUI* arrowWidthUI = new FloatParameterUI(this, PROPERTY_FIELD(VectorDisplay::arrowWidth));
 	layout->addWidget(arrowWidthUI->label(), row, 0);
 	layout->addLayout(arrowWidthUI->createFieldLayout(), row++, 1);
 
-	VariantComboBoxParameterUI* arrowPositionUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(VectorDisplay::_arrowPosition));
+	VariantComboBoxParameterUI* arrowPositionUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(VectorDisplay::arrowPosition));
 	arrowPositionUI->comboBox()->addItem(QIcon(":/particles/icons/arrow_alignment_base.png"), tr("Base"), QVariant::fromValue(VectorDisplay::Base));
 	arrowPositionUI->comboBox()->addItem(QIcon(":/particles/icons/arrow_alignment_center.png"), tr("Center"), QVariant::fromValue(VectorDisplay::Center));
 	arrowPositionUI->comboBox()->addItem(QIcon(":/particles/icons/arrow_alignment_head.png"), tr("Head"), QVariant::fromValue(VectorDisplay::Head));
 	layout->addWidget(new QLabel(tr("Alignment:")), row, 0);
 	layout->addWidget(arrowPositionUI->comboBox(), row++, 1);
 
-	ColorParameterUI* arrowColorUI = new ColorParameterUI(this, PROPERTY_FIELD(VectorDisplay::_arrowColor));
+	ColorParameterUI* arrowColorUI = new ColorParameterUI(this, PROPERTY_FIELD(VectorDisplay::arrowColor));
 	layout->addWidget(arrowColorUI->label(), row, 0);
 	layout->addWidget(arrowColorUI->colorPicker(), row++, 1);
 
-	BooleanParameterUI* reverseArrowDirectionUI = new BooleanParameterUI(this, PROPERTY_FIELD(VectorDisplay::_reverseArrowDirection));
+	BooleanParameterUI* reverseArrowDirectionUI = new BooleanParameterUI(this, PROPERTY_FIELD(VectorDisplay::reverseArrowDirection));
 	layout->addWidget(reverseArrowDirectionUI->checkBox(), row++, 1, 1, 1);
 }
 

@@ -50,11 +50,6 @@ public:
 	/// \brief Destructor.
 	virtual ~ParameterUI() { clearAllReferences(); }	
 	
-	/// \brief Gets the object whose parameter is being edited/shown in this parameter UI.
-	/// \return The current object being edited.
-	/// \sa setEditObject()
-	RefTarget* editObject() const { return _editObject; }
-	
 	/// \brief Returns a pointer to the properties editor this parameter UI belongs to.
 	/// \return The editor in which this parameter UI is used or NULL if the parameter UI is used outside of a PropertiesEditor.
 	PropertiesEditor* editor() const { return qobject_cast<PropertiesEditor*>(this->parent()); }
@@ -135,15 +130,13 @@ public Q_SLOTS:
 private:
 
 	/// The object whose parameter is being edited.
-	ReferenceField<RefTarget> _editObject;
+	DECLARE_REFERENCE_FIELD(RefTarget, editObject);
 
 	/// Stores whether this UI is enabled.
 	bool _enabled;
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_editObject);
 };
 
 /**
@@ -188,11 +181,6 @@ public:
 	/// \brief Indicates whether this parameter UI is representing a Qt property.
 	bool isQtPropertyUI() const { return _propField == nullptr; }
 
-	/// \brief Returns the sub-object that is bound to this parameter UI.
-	/// \return The object stored in the reference field. This may be \c NULL either when there is no editable object selected in the parent editor
-	///         or if the editable object's reference field is currently empty.
-	RefTarget* parameterObject() const { return _parameterObject; }
-
 	/// \brief This method is called when parameter object has been assigned to the reference field of the editable object
 	/// this parameter UI is bound to.
 	///
@@ -225,7 +213,9 @@ protected:
 private:
 	
 	/// The controller or sub-object whose value is being edited.
-	ReferenceField<RefTarget> _parameterObject;
+	/// This may be \c NULL either when there is no editable object selected in the parent editor
+	/// or if the editable object's reference field is currently empty.
+	DECLARE_REFERENCE_FIELD(RefTarget, parameterObject);
 
 	/// The property or reference field being edited or NULL if bound to a Qt property.
 	const PropertyFieldDescriptor* _propField;
@@ -235,8 +225,6 @@ private:
 	
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_parameterObject);
 };
 
 OVITO_END_INLINE_NAMESPACE

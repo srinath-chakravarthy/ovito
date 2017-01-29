@@ -119,8 +119,6 @@ private:
 	/// The status returned by the compute engine.
 	PipelineStatus _computationStatus;
 
-private:
-
 	Q_OBJECT
 	OVITO_OBJECT
 };

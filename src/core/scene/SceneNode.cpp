@@ -32,17 +32,18 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, SceneNode, RefTarget);
-DEFINE_FLAGS_REFERENCE_FIELD(SceneNode, _transformation, "Transform", Controller, PROPERTY_FIELD_ALWAYS_DEEP_COPY);
-DEFINE_FLAGS_REFERENCE_FIELD(SceneNode, _lookatTargetNode, "TargetNode", SceneNode, PROPERTY_FIELD_ALWAYS_CLONE | PROPERTY_FIELD_NO_SUB_ANIM);
-DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(SceneNode, _children, "Children", SceneNode, PROPERTY_FIELD_ALWAYS_CLONE | PROPERTY_FIELD_NO_SUB_ANIM);
-DEFINE_PROPERTY_FIELD(SceneNode, _nodeName, "NodeName");
-DEFINE_PROPERTY_FIELD(SceneNode, _displayColor, "DisplayColor");
-SET_PROPERTY_FIELD_LABEL(SceneNode, _transformation, "Transformation");
-SET_PROPERTY_FIELD_LABEL(SceneNode, _lookatTargetNode, "Target");
-SET_PROPERTY_FIELD_LABEL(SceneNode, _children, "Children");
-SET_PROPERTY_FIELD_LABEL(SceneNode, _nodeName, "Name");
-SET_PROPERTY_FIELD_LABEL(SceneNode, _displayColor, "Display color");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SceneNode, RefTarget);
+DEFINE_FLAGS_REFERENCE_FIELD(SceneNode, transformationController, "Transform", Controller, PROPERTY_FIELD_ALWAYS_DEEP_COPY);
+DEFINE_FLAGS_REFERENCE_FIELD(SceneNode, lookatTargetNode, "TargetNode", SceneNode, PROPERTY_FIELD_ALWAYS_CLONE | PROPERTY_FIELD_NO_SUB_ANIM);
+DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(SceneNode, children, "Children", SceneNode, PROPERTY_FIELD_ALWAYS_CLONE | PROPERTY_FIELD_NO_SUB_ANIM);
+DEFINE_PROPERTY_FIELD(SceneNode, nodeName, "NodeName");
+DEFINE_PROPERTY_FIELD(SceneNode, displayColor, "DisplayColor");
+SET_PROPERTY_FIELD_LABEL(SceneNode, transformationController, "Transformation");
+SET_PROPERTY_FIELD_LABEL(SceneNode, lookatTargetNode, "Target");
+SET_PROPERTY_FIELD_LABEL(SceneNode, children, "Children");
+SET_PROPERTY_FIELD_LABEL(SceneNode, nodeName, "Name");
+SET_PROPERTY_FIELD_LABEL(SceneNode, displayColor, "Display color");
+SET_PROPERTY_FIELD_CHANGE_EVENT(SceneNode, nodeName, ReferenceEvent::TitleChanged);
 
 /******************************************************************************
 * Default constructor.
@@ -50,18 +51,18 @@ SET_PROPERTY_FIELD_LABEL(SceneNode, _displayColor, "Display color");
 SceneNode::SceneNode(DataSet* dataset) : RefTarget(dataset), _parentNode(nullptr), _worldTransform(AffineTransformation::Identity()),
 	_worldTransformValidity(TimeInterval::empty()), _worldBBTime(TimeNegativeInfinity()), _displayColor(0,0,0)
 {
-	INIT_PROPERTY_FIELD(SceneNode::_transformation);
-	INIT_PROPERTY_FIELD(SceneNode::_lookatTargetNode);
-	INIT_PROPERTY_FIELD(SceneNode::_children);
-	INIT_PROPERTY_FIELD(SceneNode::_nodeName);
-	INIT_PROPERTY_FIELD(SceneNode::_displayColor);
+	INIT_PROPERTY_FIELD(transformationController);
+	INIT_PROPERTY_FIELD(lookatTargetNode);
+	INIT_PROPERTY_FIELD(children);
+	INIT_PROPERTY_FIELD(nodeName);
+	INIT_PROPERTY_FIELD(displayColor);
 
 	// Assign random color to node.
 	static std::default_random_engine rng;
-	_displayColor = Color::fromHSV(std::uniform_real_distribution<FloatType>()(rng), 1, 1);
+	setDisplayColor(Color::fromHSV(std::uniform_real_distribution<FloatType>()(rng), 1, 1));
 
 	// Create a transformation controller for the node.
-	_transformation = ControllerManager::instance().createTransformationController(dataset);
+	setTransformationController(ControllerManager::instance().createTransformationController(dataset));
 }
 
 /******************************************************************************
@@ -217,7 +218,7 @@ bool SceneNode::referenceEvent(RefTarget* source, ReferenceEvent* event)
 ******************************************************************************/
 void SceneNode::referenceReplaced(const PropertyFieldDescriptor& field, RefTarget* oldTarget, RefTarget* newTarget)
 {
-	if(field == PROPERTY_FIELD(SceneNode::_transformation)) {
+	if(field == PROPERTY_FIELD(transformationController)) {
 		// TM controller has changed -> rebuild world tm cache.
 		invalidateWorldTransformation();
 	}
@@ -229,7 +230,7 @@ void SceneNode::referenceReplaced(const PropertyFieldDescriptor& field, RefTarge
 ******************************************************************************/
 void SceneNode::referenceInserted(const PropertyFieldDescriptor& field, RefTarget* newTarget, int listIndex)
 {
-	if(field == PROPERTY_FIELD(SceneNode::_children)) {
+	if(field == PROPERTY_FIELD(children)) {
 		// A new child node has been added.
 		SceneNode* child = static_object_cast<SceneNode>(newTarget);
 		OVITO_CHECK_OBJECT_POINTER(child);
@@ -247,7 +248,7 @@ void SceneNode::referenceInserted(const PropertyFieldDescriptor& field, RefTarge
 ******************************************************************************/
 void SceneNode::referenceRemoved(const PropertyFieldDescriptor& field, RefTarget* oldTarget, int listIndex)
 {
-	if(field == PROPERTY_FIELD(SceneNode::_children)) {
+	if(field == PROPERTY_FIELD(children)) {
 		// A child node has been removed.
 		SceneNode* child = static_object_cast<SceneNode>(oldTarget);
 		OVITO_ASSERT(child->parentNode() == this);

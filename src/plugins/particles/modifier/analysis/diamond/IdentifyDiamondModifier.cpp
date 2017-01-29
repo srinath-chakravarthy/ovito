@@ -27,7 +27,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, IdentifyDiamondModifier, StructureIdentificationModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(IdentifyDiamondModifier, StructureIdentificationModifier);
 
 /******************************************************************************
 * Constructs the modifier object.

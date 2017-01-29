@@ -37,11 +37,8 @@ public:
 
 	/// Constructor.
 	AnimationKey(DataSet* dataset, TimePoint time = 0) : RefTarget(dataset), _time(time) {
-		INIT_PROPERTY_FIELD(AnimationKey::_time);
+		INIT_PROPERTY_FIELD(time);
 	}
-
-	/// Returns the animation time at which the key is set.
-	TimePoint time() const { return _time; }
 
 	/// Returns the value of this animation key as a QVariant.
 	virtual QVariant valueQVariant() const = 0;
@@ -51,47 +48,32 @@ public:
 
 private:
 
-	/// Changes the key's time position.
-	void setTime(TimePoint newTime) { _time = newTime; }
-
 	/// The animation time at which the key is positioned.
-	PropertyField<TimePoint> _time;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(TimePoint, time, setTime);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_time);
-
-	friend class KeyframeController;
 };
 
 /**
- * \brief Base template class for animation keys.
+ * \brief Animation key class for float controllers.
  */
-template<typename ValueType, typename NullValue = ValueType, typename TangentType = ValueType>
-class TypedAnimationKey : public AnimationKey
+class OVITO_CORE_EXPORT FloatAnimationKey : public AnimationKey
 {
 public:
 
 	/// The type of value stored by this animation key.
-	typedef ValueType value_type;
+	using value_type = FloatType;
 
 	/// The type used to initialize default values of this key.
-	typedef NullValue nullvalue_type;
+	using nullvalue_type = FloatType;
 
 	/// The type used for derivatives/tangents.
-	typedef TangentType tangent_type;
+	using tangent_type = FloatType;
 
 	/// Constructor.
-	TypedAnimationKey(DataSet* dataset, TimePoint time = 0, const value_type& value = nullvalue_type()) : AnimationKey(dataset, time), _value(value) {}
-
-	/// Returns the value of this animation key.
-	const value_type& value() const { return _value; }
-
-	/// Changes the key's value.
-	bool setValue(const value_type& newValue) {
-		_value = newValue;
-		return true;
+	Q_INVOKABLE FloatAnimationKey(DataSet* dataset, TimePoint time = 0, FloatType value = 0) : AnimationKey(dataset, time), _value(value) {
+		INIT_PROPERTY_FIELD(value);
 	}
 
 	/// Returns the value of this animation key as a QVariant.
@@ -102,28 +84,8 @@ public:
 	/// Sets the value of the key.
 	virtual bool setValueQVariant(const QVariant& v) override {
 		if(!v.canConvert<value_type>()) return false;
-		return setValue(v.value<value_type>());
-	}
-
-protected:
-
-	/// The key's value.
-	PropertyField<value_type> _value;
-
-	friend class KeyframeController;
-};
-
-
-/**
- * \brief Animation key class for float controllers.
- */
-class OVITO_CORE_EXPORT FloatAnimationKey : public TypedAnimationKey<FloatType>
-{
-public:
-
-	/// Constructor.
-	Q_INVOKABLE FloatAnimationKey(DataSet* dataset, TimePoint time = 0, FloatType value = 0) : TypedAnimationKey<FloatType>(dataset, time, value) {
-		INIT_PROPERTY_FIELD(FloatAnimationKey::_value);
+		setValue(v.value<value_type>());
+		return true;
 	}
 
 private:
@@ -131,19 +93,41 @@ private:
 	Q_OBJECT
 	OVITO_OBJECT
 
-	DECLARE_PROPERTY_FIELD(_value);
+	/// Stores the value of the key.
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(value_type, value, setValue);
 };
 
 /**
  * \brief Animation key class for integer controllers.
  */
-class OVITO_CORE_EXPORT IntegerAnimationKey : public TypedAnimationKey<int>
+class OVITO_CORE_EXPORT IntegerAnimationKey : public AnimationKey
 {
 public:
 
+	/// The type of value stored by this animation key.
+	using value_type = int;
+
+	/// The type used to initialize default values of this key.
+	using nullvalue_type = int;
+
+	/// The type used for derivatives/tangents.
+	using tangent_type = int;
+
 	/// Constructor.
-	Q_INVOKABLE IntegerAnimationKey(DataSet* dataset, TimePoint time = 0, int value = 0) : TypedAnimationKey<int>(dataset, time, value) {
-		INIT_PROPERTY_FIELD(IntegerAnimationKey::_value);
+	Q_INVOKABLE IntegerAnimationKey(DataSet* dataset, TimePoint time = 0, int value = 0) : AnimationKey(dataset, time), _value(value) {
+		INIT_PROPERTY_FIELD(value);
+	}
+
+	/// Returns the value of this animation key as a QVariant.
+	virtual QVariant valueQVariant() const override {
+		return QVariant::fromValue(value());
+	}
+
+	/// Sets the value of the key.
+	virtual bool setValueQVariant(const QVariant& v) override {
+		if(!v.canConvert<value_type>()) return false;
+		setValue(v.value<value_type>());
+		return true;
 	}
 
 private:
@@ -151,19 +135,41 @@ private:
 	Q_OBJECT
 	OVITO_OBJECT
 
-	DECLARE_PROPERTY_FIELD(_value);
+	/// Stores the value of the key.
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(value_type, value, setValue);
 };
 
 /**
  * \brief Animation key class for Vector3 controllers.
  */
-class OVITO_CORE_EXPORT Vector3AnimationKey : public TypedAnimationKey<Ovito::Vector3, Ovito::Vector3::Zero>
+class OVITO_CORE_EXPORT Vector3AnimationKey : public AnimationKey
 {
 public:
 
+	/// The type of value stored by this animation key.
+	using value_type = Vector3;
+
+	/// The type used to initialize default values of this key.
+	using nullvalue_type = Vector3::Zero;
+
+	/// The type used for derivatives/tangents.
+	using tangent_type = Vector3;
+
 	/// Constructor.
-	Q_INVOKABLE Vector3AnimationKey(DataSet* dataset, TimePoint time = 0, const Vector3& value = Vector3::Zero()) : TypedAnimationKey<Vector3, Vector3::Zero>(dataset, time, value) {
-		INIT_PROPERTY_FIELD(Vector3AnimationKey::_value);
+	Q_INVOKABLE Vector3AnimationKey(DataSet* dataset, TimePoint time = 0, const Vector3& value = Vector3::Zero()) : AnimationKey(dataset, time), _value(value) {
+		INIT_PROPERTY_FIELD(value);
+	}
+
+	/// Returns the value of this animation key as a QVariant.
+	virtual QVariant valueQVariant() const override {
+		return QVariant::fromValue(value());
+	}
+
+	/// Sets the value of the key.
+	virtual bool setValueQVariant(const QVariant& v) override {
+		if(!v.canConvert<value_type>()) return false;
+		setValue(v.value<value_type>());
+		return true;
 	}
 
 private:
@@ -171,67 +177,134 @@ private:
 	Q_OBJECT
 	OVITO_OBJECT
 
-	DECLARE_PROPERTY_FIELD(_value);
+	/// Stores the value of the key.
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(value_type, value, setValue);
 };
 
 /**
  * \brief Animation key class for position controllers.
  */
-class OVITO_CORE_EXPORT PositionAnimationKey : public TypedAnimationKey<Ovito::Vector3, Ovito::Vector3::Zero>
+class OVITO_CORE_EXPORT PositionAnimationKey : public AnimationKey
 {
 public:
 
+	/// The type of value stored by this animation key.
+	using value_type = Vector3;
+
+	/// The type used to initialize default values of this key.
+	using nullvalue_type = Vector3::Zero;
+
+	/// The type used for derivatives/tangents.
+	using tangent_type = Vector3;
+
 	/// Constructor.
-	Q_INVOKABLE PositionAnimationKey(DataSet* dataset, TimePoint time = 0, const Vector3& value = Vector3::Zero()) : TypedAnimationKey<Vector3, Vector3::Zero>(dataset, time, value) {
-		INIT_PROPERTY_FIELD(PositionAnimationKey::_value);
+	Q_INVOKABLE PositionAnimationKey(DataSet* dataset, TimePoint time = 0, const Vector3& value = Vector3::Zero()) : AnimationKey(dataset, time), _value(value) {
+		INIT_PROPERTY_FIELD(value);
 	}
+
+	/// Returns the value of this animation key as a QVariant.
+	virtual QVariant valueQVariant() const override {
+		return QVariant::fromValue(value());
+	}
+
+	/// Sets the value of the key.
+	virtual bool setValueQVariant(const QVariant& v) override {
+		if(!v.canConvert<value_type>()) return false;
+		setValue(v.value<value_type>());
+		return true;
+	}	
 
 private:
 
 	Q_OBJECT
 	OVITO_OBJECT
 
-	DECLARE_PROPERTY_FIELD(_value);
+	/// Stores the value of the key.
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(value_type, value, setValue);
 };
 
 /**
  * \brief Animation key class for rotation controllers.
  */
-class OVITO_CORE_EXPORT RotationAnimationKey : public TypedAnimationKey<Ovito::Rotation, Ovito::Rotation::Identity>
+class OVITO_CORE_EXPORT RotationAnimationKey : public AnimationKey
 {
 public:
 
+	/// The type of value stored by this animation key.
+	using value_type = Rotation;
+
+	/// The type used to initialize default values of this key.
+	using nullvalue_type = Rotation::Identity;
+
+	/// The type used for derivatives/tangents.
+	using tangent_type = Rotation;
+
 	/// Constructor.
-	Q_INVOKABLE RotationAnimationKey(DataSet* dataset, TimePoint time = 0, const Rotation& value = Rotation::Identity()) : TypedAnimationKey<Rotation, Rotation::Identity>(dataset, time, value) {
-		INIT_PROPERTY_FIELD(RotationAnimationKey::_value);
+	Q_INVOKABLE RotationAnimationKey(DataSet* dataset, TimePoint time = 0, const Rotation& value = Rotation::Identity()) : AnimationKey(dataset, time), _value(value) {
+		INIT_PROPERTY_FIELD(value);
 	}
+
+	/// Returns the value of this animation key as a QVariant.
+	virtual QVariant valueQVariant() const override {
+		return QVariant::fromValue(value());
+	}
+
+	/// Sets the value of the key.
+	virtual bool setValueQVariant(const QVariant& v) override {
+		if(!v.canConvert<value_type>()) return false;
+		setValue(v.value<value_type>());
+		return true;
+	}	
 
 private:
 
 	Q_OBJECT
 	OVITO_OBJECT
 
-	DECLARE_PROPERTY_FIELD(_value);
+	/// Stores the value of the key.
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(value_type, value, setValue);
 };
 
 /**
  * \brief Animation key class for scaling controllers.
  */
-class OVITO_CORE_EXPORT ScalingAnimationKey : public TypedAnimationKey<Ovito::Scaling, Ovito::Scaling::Identity>
+class OVITO_CORE_EXPORT ScalingAnimationKey : public AnimationKey
 {
 public:
 
+	/// The type of value stored by this animation key.
+	using value_type = Scaling;
+
+	/// The type used to initialize default values of this key.
+	using nullvalue_type = Scaling::Identity;
+
+	/// The type used for derivatives/tangents.
+	using tangent_type = Scaling;
+
 	/// Constructor.
-	Q_INVOKABLE ScalingAnimationKey(DataSet* dataset, TimePoint time = 0, const Scaling& value = Scaling::Identity()) : TypedAnimationKey<Scaling, Scaling::Identity>(dataset, time, value) {
-		INIT_PROPERTY_FIELD(ScalingAnimationKey::_value);
+	Q_INVOKABLE ScalingAnimationKey(DataSet* dataset, TimePoint time = 0, const Scaling& value = Scaling::Identity()) : AnimationKey(dataset, time), _value(value) {
+		INIT_PROPERTY_FIELD(value);
 	}
 
+	/// Returns the value of this animation key as a QVariant.
+	virtual QVariant valueQVariant() const override {
+		return QVariant::fromValue(value());
+	}
+
+	/// Sets the value of the key.
+	virtual bool setValueQVariant(const QVariant& v) override {
+		if(!v.canConvert<value_type>()) return false;
+		setValue(v.value<value_type>());
+		return true;
+	}
+	
 private:
 
 	Q_OBJECT
 	OVITO_OBJECT
 
-	DECLARE_PROPERTY_FIELD(_value);
+	/// Stores the value of the key.
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(value_type, value, setValue);
 };
 
 /**

@@ -43,6 +43,9 @@ QT5_ADD_RESOURCES(ResourceFiles resources/resources.qrc)
 # Build library
 ADD_LIBRARY(OpenGLRenderer SHARED ${SourceFiles} ${ResourceFiles})
 
+# Pass name of gui plugin to the code. This library is part of the gui plugin.
+TARGET_COMPILE_DEFINITIONS(OpenGLRenderer PRIVATE "OVITO_PLUGIN_NAME=\"Gui\"")
+
 # Set default include directory.
 TARGET_INCLUDE_DIRECTORIES(OpenGLRenderer PUBLIC "$<BUILD_INTERFACE:${OVITO_SOURCE_BASE_DIR}/src>")
 

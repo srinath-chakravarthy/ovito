@@ -27,7 +27,7 @@
 
 namespace PyScript { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(PyScriptGui, PythonViewportOverlayEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(PythonViewportOverlayEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(PythonViewportOverlay, PythonViewportOverlayEditor);
 
 /******************************************************************************

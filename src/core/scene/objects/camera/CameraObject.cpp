@@ -30,19 +30,19 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene) OVITO_BEGIN_INLINE_NAMESPACE(StdObj)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, AbstractCameraObject, DataObject);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, CameraObject, AbstractCameraObject);
-DEFINE_PROPERTY_FIELD(CameraObject, _isPerspective, "IsPerspective");
-DEFINE_REFERENCE_FIELD(CameraObject, _fov, "FOV", Controller);
-DEFINE_REFERENCE_FIELD(CameraObject, _zoom, "Zoom", Controller);
-SET_PROPERTY_FIELD_LABEL(CameraObject, _isPerspective, "Perspective projection");
-SET_PROPERTY_FIELD_LABEL(CameraObject, _fov, "FOV angle");
-SET_PROPERTY_FIELD_LABEL(CameraObject, _zoom, "FOV size");
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(CameraObject, _fov, AngleParameterUnit, FloatType(1e-3), FLOATTYPE_PI - FloatType(1e-2));
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CameraObject, _zoom, WorldParameterUnit, 0);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(AbstractCameraObject, DataObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CameraObject, AbstractCameraObject);
+DEFINE_PROPERTY_FIELD(CameraObject, isPerspective, "IsPerspective");
+DEFINE_REFERENCE_FIELD(CameraObject, fovController, "FOV", Controller);
+DEFINE_REFERENCE_FIELD(CameraObject, zoomController, "Zoom", Controller);
+SET_PROPERTY_FIELD_LABEL(CameraObject, isPerspective, "Perspective projection");
+SET_PROPERTY_FIELD_LABEL(CameraObject, fovController, "FOV angle");
+SET_PROPERTY_FIELD_LABEL(CameraObject, zoomController, "FOV size");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(CameraObject, fovController, AngleParameterUnit, FloatType(1e-3), FLOATTYPE_PI - FloatType(1e-2));
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CameraObject, zoomController, WorldParameterUnit, 0);
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, CameraDisplayObject, DisplayObject);
+	IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CameraDisplayObject, DisplayObject);
 OVITO_END_INLINE_NAMESPACE
 
 /******************************************************************************
@@ -50,14 +50,14 @@ OVITO_END_INLINE_NAMESPACE
 ******************************************************************************/
 CameraObject::CameraObject(DataSet* dataset) : AbstractCameraObject(dataset), _isPerspective(true)
 {
-	INIT_PROPERTY_FIELD(CameraObject::_isPerspective);
-	INIT_PROPERTY_FIELD(CameraObject::_fov);
-	INIT_PROPERTY_FIELD(CameraObject::_zoom);
+	INIT_PROPERTY_FIELD(isPerspective);
+	INIT_PROPERTY_FIELD(fovController);
+	INIT_PROPERTY_FIELD(zoomController);
 
-	_fov = ControllerManager::instance().createFloatController(dataset);
-	_fov->setFloatValue(0, FLOATTYPE_PI/4);
-	_zoom = ControllerManager::instance().createFloatController(dataset);
-	_zoom->setFloatValue(0, 200);
+	setFovController(ControllerManager::instance().createFloatController(dataset));
+	fovController()->setFloatValue(0, FLOATTYPE_PI/4);
+	setZoomController(ControllerManager::instance().createFloatController(dataset));
+	zoomController()->setFloatValue(0, 200);
 
 	addDisplayObject(new CameraDisplayObject(dataset));
 }
@@ -68,8 +68,8 @@ CameraObject::CameraObject(DataSet* dataset) : AbstractCameraObject(dataset), _i
 TimeInterval CameraObject::objectValidity(TimePoint time)
 {
 	TimeInterval interval = DataObject::objectValidity(time);
-	if(isPerspective() && _fov) interval.intersect(_fov->validityInterval(time));
-	if(!isPerspective() && _zoom) interval.intersect(_zoom->validityInterval(time));
+	if(isPerspective() && fovController()) interval.intersect(fovController()->validityInterval(time));
+	if(!isPerspective() && zoomController()) interval.intersect(zoomController()->validityInterval(time));
 	return interval;
 }
 
@@ -95,7 +95,7 @@ void CameraObject::projectionParameters(TimePoint time, ViewProjectionParameters
 		params.zfar = std::max(params.zfar, params.znear * FloatType(1.01));
 
 		// Get the camera angle.
-		params.fieldOfView = _fov->getFloatValue(time, params.validityInterval);
+		params.fieldOfView = fovController() ? fovController()->getFloatValue(time, params.validityInterval) : 0;
 		if(params.fieldOfView < FLOATTYPE_EPSILON) params.fieldOfView = FLOATTYPE_EPSILON;
 		if(params.fieldOfView > FLOATTYPE_PI - FLOATTYPE_EPSILON) params.fieldOfView = FLOATTYPE_PI - FLOATTYPE_EPSILON;
 
@@ -112,7 +112,7 @@ void CameraObject::projectionParameters(TimePoint time, ViewProjectionParameters
 		}
 
 		// Get the camera zoom.
-		params.fieldOfView = _zoom->getFloatValue(time, params.validityInterval);
+		params.fieldOfView = zoomController() ? zoomController()->getFloatValue(time, params.validityInterval) : 0;
 		if(params.fieldOfView < FLOATTYPE_EPSILON) params.fieldOfView = FLOATTYPE_EPSILON;
 
 		params.projectionMatrix = Matrix4::ortho(-params.fieldOfView / params.aspectRatio, params.fieldOfView / params.aspectRatio,
@@ -127,9 +127,9 @@ void CameraObject::projectionParameters(TimePoint time, ViewProjectionParameters
 FloatType CameraObject::fieldOfView(TimePoint time, TimeInterval& validityInterval)
 {
 	if(isPerspective())
-		return _fov->getFloatValue(time, validityInterval);
+		return fovController() ? fovController()->getFloatValue(time, validityInterval) : 0;
 	else
-		return _zoom->getFloatValue(time, validityInterval);
+		return zoomController() ? zoomController()->getFloatValue(time, validityInterval) : 0;
 }
 
 /******************************************************************************
@@ -137,10 +137,12 @@ FloatType CameraObject::fieldOfView(TimePoint time, TimeInterval& validityInterv
 ******************************************************************************/
 void CameraObject::setFieldOfView(TimePoint time, FloatType newFOV)
 {
-	if(isPerspective())
-		_fov->setFloatValue(time, newFOV);
-	else
-		_zoom->setFloatValue(time, newFOV);
+	if(isPerspective()) {
+		if(fovController()) fovController()->setFloatValue(time, newFOV);
+	}
+	else {
+		if(zoomController()) zoomController()->setFloatValue(time, newFOV);
+	}
 }
 
 /******************************************************************************
@@ -169,7 +171,7 @@ void CameraObject::setIsTargetCamera(bool enable)
 				OORef<TargetObject> targetObj = new TargetObject(dataset());
 				OORef<ObjectNode> targetNode = new ObjectNode(dataset());
 				targetNode->setDataProvider(targetObj);
-				targetNode->setName(tr("%1.target").arg(node->name()));
+				targetNode->setNodeName(tr("%1.target").arg(node->nodeName()));
 				parentNode->addChildNode(targetNode);
 				// Position the new target to match the current orientation of the camera.
 				TimeInterval iv;
@@ -207,7 +209,7 @@ FloatType CameraObject::targetDistance() const
 	}
 
 	// That's the fixed target distance of a free camera:
-	return 50.0f;
+	return FloatType(50);
 }
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -228,7 +230,7 @@ Box3 CameraDisplayObject::viewDependentBoundingBox(TimePoint time, Viewport* vie
 {
 	TimeInterval iv;
 	Point3 cameraPos = Point3::Origin() + contextNode->getWorldTransform(time, iv).translation();
-	FloatType size = 1.0f * viewport->nonScalingSize(cameraPos);
+	FloatType size = viewport->nonScalingSize(cameraPos);
 	Box3 bbox(Point3::Origin(), size);
 
 	// Add the camera cone to the bounding box.
@@ -249,7 +251,7 @@ Box3 CameraDisplayObject::viewDependentBoundingBox(TimePoint time, Viewport* vie
 					FloatType aspectRatio = renderSettings->outputImageAspectRatio();
 
 					FloatType coneAngle = camera->fieldOfView(time, iv);
-					FloatType sizeY = tan(0.5f * coneAngle) * targetDistance;
+					FloatType sizeY = tan(FloatType(0.5) * coneAngle) * targetDistance;
 					FloatType sizeX = sizeY / aspectRatio;
 					bbox.addPoint(Point3(sizeX, sizeY, -targetDistance));
 					bbox.addPoint(Point3(-sizeX, sizeY, -targetDistance));
@@ -380,7 +382,7 @@ void CameraDisplayObject::render(TimePoint time, DataObject* dataObject, const P
 				targetLineVertices.push_back(Point3(0,0,-targetDistance));
 			}
 			if(aspectRatio != 0 && coneAngle != 0) {
-				FloatType sizeY = tan(0.5f * coneAngle) * targetDistance;
+				FloatType sizeY = tan(FloatType(0.5) * coneAngle) * targetDistance;
 				FloatType sizeX = sizeY / aspectRatio;
 				targetLineVertices.push_back(Point3::Origin());
 				targetLineVertices.push_back(Point3(sizeX, sizeY, -targetDistance));

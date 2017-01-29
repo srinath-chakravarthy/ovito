@@ -28,7 +28,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Selection) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, ExpandSelectionModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(ExpandSelectionModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(ExpandSelectionModifier, ExpandSelectionModifierEditor);
 
 /******************************************************************************
@@ -48,13 +48,13 @@ void ExpandSelectionModifierEditor::createUI(const RolloutInsertionParameters& r
 	label->setWordWrap(true);
 	layout->addWidget(label);
 
-	IntegerRadioButtonParameterUI* modePUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(ExpandSelectionModifier::_mode));
+	IntegerRadioButtonParameterUI* modePUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(ExpandSelectionModifier::mode));
 	QRadioButton* cutoffModeBtn = modePUI->addRadioButton(ExpandSelectionModifier::CutoffRange, tr("... within the range:"));
 	layout->addSpacing(10);
 	layout->addWidget(cutoffModeBtn);
 
 	// Cutoff parameter.
-	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(ExpandSelectionModifier::_cutoffRange));
+	FloatParameterUI* cutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(ExpandSelectionModifier::cutoffRange));
 	QHBoxLayout* sublayout = new QHBoxLayout();
 	sublayout->setContentsMargins(0,0,0,0);
 	sublayout->addSpacing(20);
@@ -69,7 +69,7 @@ void ExpandSelectionModifierEditor::createUI(const RolloutInsertionParameters& r
 	layout->addWidget(nearestNeighborsModeBtn);
 
 	// Number of nearest neighbors.
-	IntegerParameterUI* numNearestNeighborsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(ExpandSelectionModifier::_numNearestNeighbors));
+	IntegerParameterUI* numNearestNeighborsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(ExpandSelectionModifier::numNearestNeighbors));
 	sublayout = new QHBoxLayout();
 	sublayout->setContentsMargins(0,0,0,0);
 	sublayout->addSpacing(20);
@@ -84,7 +84,7 @@ void ExpandSelectionModifierEditor::createUI(const RolloutInsertionParameters& r
 	layout->addWidget(bondModeBtn);
 
 	layout->addSpacing(10);
-	IntegerParameterUI* numIterationsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(ExpandSelectionModifier::_numIterations));
+	IntegerParameterUI* numIterationsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(ExpandSelectionModifier::numberOfIterations));
 	sublayout = new QHBoxLayout();
 	sublayout->setContentsMargins(0,0,0,0);
 	sublayout->addWidget(numIterationsPUI->label());

@@ -81,8 +81,6 @@ private:
 	/// The stream object used to write into the output file.
 	std::unique_ptr<CompressedTextWriter> _outputStream;
 
-private:
-
 	Q_OBJECT
 	OVITO_OBJECT
 };

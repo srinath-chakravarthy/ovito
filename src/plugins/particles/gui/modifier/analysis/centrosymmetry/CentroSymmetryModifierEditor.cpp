@@ -26,7 +26,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, CentroSymmetryModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(CentroSymmetryModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(CentroSymmetryModifier, CentroSymmetryModifierEditor);
 
 /******************************************************************************
@@ -49,7 +49,7 @@ void CentroSymmetryModifierEditor::createUI(const RolloutInsertionParameters& ro
 	layout1->addLayout(layout2);
 
 	// Num neighbors parameter.
-	IntegerParameterUI* numNeighborsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(CentroSymmetryModifier::_numNeighbors));
+	IntegerParameterUI* numNeighborsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(CentroSymmetryModifier::numNeighbors));
 	layout2->addWidget(numNeighborsPUI->label(), 0, 0);
 	layout2->addLayout(numNeighborsPUI->createFieldLayout(), 0, 1);
 

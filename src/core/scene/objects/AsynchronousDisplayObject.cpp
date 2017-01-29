@@ -27,7 +27,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, AsynchronousDisplayObject, DisplayObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(AsynchronousDisplayObject, DisplayObject);
 
 /******************************************************************************
 * Constructs the display object.

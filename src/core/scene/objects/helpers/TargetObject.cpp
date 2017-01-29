@@ -26,8 +26,8 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene) OVITO_BEGIN_INLINE_NAMESPACE(StdObj)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, TargetObject, DataObject);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, TargetDisplayObject, DisplayObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(TargetObject, DataObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(TargetDisplayObject, DisplayObject);
 
 /******************************************************************************
 * Constructs a target object.

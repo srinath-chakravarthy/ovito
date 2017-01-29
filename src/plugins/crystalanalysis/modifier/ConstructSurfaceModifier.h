@@ -39,27 +39,6 @@ public:
 	/// Constructor.
 	Q_INVOKABLE ConstructSurfaceModifier(DataSet* dataset);
 
-	/// \brief Returns the display object that is responsible for rendering the surface mesh.
-	SurfaceMeshDisplay* surfaceMeshDisplay() const { return _surfaceMeshDisplay; }
-
-	/// \brief Returns the radius parameter used during construction of the surface.
-	FloatType probeSphereRadius() const { return _probeSphereRadius; }
-
-	/// \brief Sets the radius parameter used during construction of the surface.
-	void setProbeSphereRadius(FloatType radius) { _probeSphereRadius = radius; }
-
-	/// \brief Returns the level of smoothing applied to the constructed surface mesh.
-	int smoothingLevel() const { return _smoothingLevel; }
-
-	/// \brief Sets the level of smoothing applied to the constructed surface mesh.
-	void setSmoothingLevel(int level) { _smoothingLevel = level; }
-
-	/// Returns whether only selected particles are taken into account.
-	bool onlySelectedParticles() const { return _onlySelectedParticles; }
-
-	/// Sets whether only selected particles should be taken into account.
-	void setOnlySelectedParticles(bool onlySelected) { _onlySelectedParticles = onlySelected; }
-
 	/// Returns the solid volume computed during the last evaluation of the modifier.
 	FloatType solidVolume() const { return _solidVolume; }
 
@@ -138,16 +117,16 @@ private:
 	};
 
 	/// Controls the radius of the probe sphere.
-	PropertyField<FloatType> _probeSphereRadius;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, probeSphereRadius, setProbeSphereRadius);
 
 	/// Controls the amount of smoothing.
-	PropertyField<int> _smoothingLevel;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, smoothingLevel, setSmoothingLevel);
 
 	/// Controls whether only selected particles should be taken into account.
-	PropertyField<bool> _onlySelectedParticles;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, onlySelectedParticles, setOnlySelectedParticles);
 
 	/// The display object for rendering the surface mesh.
-	ReferenceField<SurfaceMeshDisplay> _surfaceMeshDisplay;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(SurfaceMeshDisplay, surfaceMeshDisplay, setSurfaceMeshDisplay);
 
 	/// This stores the cached surface mesh produced by the modifier.
 	QExplicitlySharedDataPointer<HalfEdgeMesh<>> _surfaceMesh;
@@ -169,11 +148,6 @@ private:
 
 	Q_CLASSINFO("DisplayName", "Construct surface mesh");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
-
-	DECLARE_PROPERTY_FIELD(_probeSphereRadius);
-	DECLARE_PROPERTY_FIELD(_smoothingLevel);
-	DECLARE_PROPERTY_FIELD(_onlySelectedParticles);
-	DECLARE_REFERENCE_FIELD(_surfaceMeshDisplay);
 };
 
 }	// End of namespace

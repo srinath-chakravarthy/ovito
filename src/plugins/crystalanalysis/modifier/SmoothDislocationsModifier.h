@@ -47,30 +47,6 @@ public:
 	/// Smoothes the given dislocation lines.
 	void smoothDislocationLines(DislocationNetworkObject* dislocationsObj);
 
-	/// Returns whether smoothing is enabled.
-	bool smoothingEnabled() const { return _smoothingEnabled; }
-
-	/// Enables/disables smoothing.
-	void setSmoothingEnabled(bool enable) { _smoothingEnabled = enable; }
-
-	/// Returns the smoothing strength.
-	int smoothingLevel() const { return _smoothingLevel; }
-
-	/// Sets the smoothing strength.
-	void setSmoothingLevel(int level) { _smoothingLevel = level; }
-
-	/// Returns whether coarsening of dislocation line points is enabled.
-	bool coarseningEnabled() const { return _coarseningEnabled; }
-
-	/// Enables/disables coarsening of dislocation line points.
-	void setCoarseningEnabled(bool enable) { _coarseningEnabled = enable; }
-
-	/// Returns the target distance between successive line points after coarsening.
-	FloatType linePointInterval() const { return _linePointInterval; }
-
-	/// Sets the target distance between successive line points after coarsening.
-	void setLinePointInterval(FloatType d) { _linePointInterval = d; }
-
 protected:
 
 	/// Removes some of the sampling points from a dislocation line.
@@ -82,27 +58,22 @@ protected:
 private:
 
 	/// Stores whether smoothing is enabled.
-	PropertyField<bool> _smoothingEnabled;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, smoothingEnabled, setSmoothingEnabled);
 
 	/// Controls the degree of smoothing.
-	PropertyField<int> _smoothingLevel;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, smoothingLevel, setSmoothingLevel);
 
 	/// Stores whether coarsening is enabled.
-	PropertyField<bool> _coarseningEnabled;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, coarseningEnabled, setCoarseningEnabled);
 
 	/// Controls the coarsening of dislocation lines.
-	PropertyField<FloatType> _linePointInterval;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, linePointInterval, setLinePointInterval);
 
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Smooth dislocations");
 	Q_CLASSINFO("ModifierCategory", "Crystal analysis");
-
-	DECLARE_PROPERTY_FIELD(_smoothingEnabled);
-	DECLARE_PROPERTY_FIELD(_smoothingLevel);
-	DECLARE_PROPERTY_FIELD(_coarseningEnabled);
-	DECLARE_PROPERTY_FIELD(_linePointInterval);
 };
 
 }	// End of namespace

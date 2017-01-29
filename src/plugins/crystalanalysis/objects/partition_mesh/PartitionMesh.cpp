@@ -25,8 +25,8 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, PartitionMesh, DataObject);
-DEFINE_PROPERTY_FIELD(PartitionMesh, _spaceFillingRegion, "SpaceFillingRegion");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PartitionMesh, DataObject);
+DEFINE_PROPERTY_FIELD(PartitionMesh, spaceFillingRegion, "SpaceFillingRegion");
 
 /******************************************************************************
 * Constructs an empty surface mesh object.
@@ -34,7 +34,7 @@ DEFINE_PROPERTY_FIELD(PartitionMesh, _spaceFillingRegion, "SpaceFillingRegion");
 PartitionMesh::PartitionMesh(DataSet* dataset, PartitionMeshData* mesh) : DataObjectWithSharedStorage(dataset, mesh ? mesh : new PartitionMeshData()),
 		_spaceFillingRegion(0)
 {
-	INIT_PROPERTY_FIELD(PartitionMesh::_spaceFillingRegion);
+	INIT_PROPERTY_FIELD(spaceFillingRegion);
 }
 
 /******************************************************************************
@@ -62,7 +62,7 @@ void PartitionMesh::smoothMesh(PartitionMeshData& mesh, const SimulationCell& ce
 	// A Signal Processing Approach To Fair Surface Design
 	// In SIGGRAPH 95 Conference Proceedings, pages 351-358 (1995)
 
-	FloatType mu = 1.0f / (k_PB - 1.0f/lambda);
+	FloatType mu = FloatType(1) / (k_PB - FloatType(1)/lambda);
 	if(progress) progress->setProgressRange(numIterations);
 
 	for(int iteration = 0; iteration < numIterations; iteration++) {

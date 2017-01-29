@@ -118,7 +118,7 @@ PYBIND11_PLUGIN(ParticlesModify)
 				"This can be one of the :ref:`standard particle properties <particle-types-list>` or a custom particle property. "
 				"When using vector properties the component must be included in the name, e.g. ``\"Velocity.X\"``. "
 				"\n\n"
-				"This field is only used if :py:attr:`.bond_mode` is not set to ``Bonds``. ")
+				"This field is only used if :py:attr:`.assign_to` is not set to ``Bonds``. ")
 		.def_property("bond_property", &ColorCodingModifier::sourceBondProperty, &ColorCodingModifier::setSourceBondProperty,
 				"The name of the input bond property that should be used to color bonds. "
 				"This can be one of the :ref:`standard bond properties <bond-types-list>` or a custom bond property. "
@@ -461,18 +461,15 @@ PYBIND11_PLUGIN(ParticlesModify)
 				"The distance of the slicing plane from the origin (along its normal vector)."
 				"\n\n"
 				":Default: 0.0\n")
-		.def_property("distance_ctrl", &SliceModifier::distanceController, &SliceModifier::setDistanceController)
 		.def_property("normal", &SliceModifier::normal, &SliceModifier::setNormal,
 				"The normal vector of the slicing plane. Does not have to be a unit vector."
 				"\n\n"
 				":Default: ``(1,0,0)``\n")
-		.def_property("normal_ctrl", &SliceModifier::normalController, &SliceModifier::setNormalController)
 		.def_property("slice_width", &SliceModifier::sliceWidth, &SliceModifier::setSliceWidth,
 				"The width of the slab to cut. If zero, the modifier cuts all particles on one "
 				"side of the slicing plane."
 				"\n\n"
 				":Default: 0.0\n")
-		.def_property("slice_width_ctrl", &SliceModifier::sliceWidthController, &SliceModifier::setSliceWidthController)
 		.def_property("inverse", &SliceModifier::inverse, &SliceModifier::setInverse,
 				"Reverses the sense of the slicing plane."
 				"\n\n"
@@ -503,8 +500,8 @@ PYBIND11_PLUGIN(ParticlesModify)
 			"                                [0,       1,0,0],\n"
 			"                                [0,       0,1,0]])\n"
 			"\n")
-		.def_property("transformation", MatrixGetter<AffineTransformationModifier, AffineTransformation, &AffineTransformationModifier::transformation>(), 
-										MatrixSetter<AffineTransformationModifier, AffineTransformation, &AffineTransformationModifier::setTransformation>(),
+		.def_property("transformation", MatrixGetter<AffineTransformationModifier, AffineTransformation, &AffineTransformationModifier::transformationTM>(), 
+										MatrixSetter<AffineTransformationModifier, AffineTransformation, &AffineTransformationModifier::setTransformationTM>(),
 				"The 3x4 transformation matrix being applied to particle positions and/or the simulation cell. "
 				"The first three matrix columns define the linear part of the transformation, while the fourth "
 				"column specifies the translation vector. "
@@ -1034,7 +1031,7 @@ PYBIND11_PLUGIN(ParticlesModify)
 				"\n")
 	;
 
-	ovito_class<HistogramModifier, ParticleModifier>(m,
+	auto HistogramModifier_py = ovito_class<HistogramModifier, ParticleModifier>(m,
 			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Generates a histogram from the values of a particle property. "
 			"\n\n"
@@ -1045,24 +1042,33 @@ PYBIND11_PLUGIN(ParticlesModify)
 			"Example::"
 			"\n\n"
 			"    from ovito.modifiers import *\n"
-			"    modifier = HistogramModifier(bin_count=100, property=\"Potential Energy\")\n"
+			"    modifier = HistogramModifier(bin_count=100, particle_property=\"Potential Energy\")\n"
 			"    node.modifiers.append(modifier)\n"
 			"    node.compute()\n"
 			"    \n"
 			"    import numpy\n"
 			"    numpy.savetxt(\"histogram.txt\", modifier.histogram)\n"
 			"\n")
-		.def_property("property", &HistogramModifier::sourceProperty, &HistogramModifier::setSourceProperty,
+		.def_property("particle_property", &HistogramModifier::sourceParticleProperty, &HistogramModifier::setSourceParticleProperty,
 				"The name of the input particle property for which to compute the histogram. "
 				"This can be one of the :ref:`standard particle properties <particle-types-list>` or a custom particle property. "
-				"For vector properties a specific component name must be included in the string, e.g. ``\"Velocity.X\"``. ")
+				"When using vector properties the component must be included in the name, e.g. ``\"Velocity.X\"``. "
+				"\n\n"
+				"This field is only used if :py:attr:`.source_mode` is set to ``Particles``. ")
+		// For backward compatibility with OVITO 2.8.1:
+		.def_property("property", &HistogramModifier::sourceParticleProperty, &HistogramModifier::setSourceParticleProperty)
+		.def_property("bond_property", &HistogramModifier::sourceBondProperty, &HistogramModifier::setSourceBondProperty,
+				"The name of the input bond property for which to compute the histogram. "
+				"This can be one of the :ref:`standard bond properties <bond-types-list>` or a custom bond property. "
+				"\n\n"
+				"This field is only used if :py:attr:`.source_mode` is set to ``Bonds``. ")
 		.def_property("bin_count", &HistogramModifier::numberOfBins, &HistogramModifier::setNumberOfBins,
 				"The number of histogram bins."
 				"\n\n"
 				":Default: 200\n")
 		.def_property("fix_xrange", &HistogramModifier::fixXAxisRange, &HistogramModifier::setFixXAxisRange,
 				"Controls how the value range of the histogram is determined. If false, the range is chosen automatically by the modifier to include "
-				"all particle property values. If true, the range is specified manually using the :py:attr:`.xrange_start` and :py:attr:`.xrange_end` attributes."
+				"all input values. If true, the range is specified manually using the :py:attr:`.xrange_start` and :py:attr:`.xrange_end` attributes."
 				"\n\n"
 				":Default: ``False``\n")
 		.def_property("xrange_start", &HistogramModifier::xAxisRangeStart, &HistogramModifier::setXAxisRangeStart,
@@ -1074,10 +1080,20 @@ PYBIND11_PLUGIN(ParticlesModify)
 				"\n\n"
 				":Default: 0.0\n")
 		.def_property("only_selected", &HistogramModifier::onlySelected, &HistogramModifier::setOnlySelected,
-				"If ``True``, the histogram is computed only on the basis of currently selected particles. "
-				"You can use this to restrict histogram calculation to a subset of particles. "
+				"If ``True``, the histogram is computed only on the basis of currently selected particles or bonds. "
+				"You can use this to restrict histogram calculation to a subset of particles/bonds. "
 				"\n\n"
 				":Default: ``False``\n")
+		.def_property("source_mode", &HistogramModifier::dataSourceType, &HistogramModifier::setDataSourceType,
+				"Determines where this modifier takes its input values from. "
+				"This must be one of the following constants:\n"
+				" * ``HistogramModifier.SourceMode.Particles``\n"
+				" * ``HistogramModifier.SourceMode.Bonds``\n"
+				"\n"
+				"If this is set to ``Bonds``, then the histogram is computed from the bond property selected by :py:attr:`.bond_property`. "
+				"Otherwise it is computed from the particle property selected by :py:attr:`.particle_property`. "
+				"\n\n"
+				":Default: ``HistogramModifier.SourceMode.Particles``\n")
 		.def_property_readonly("_histogram_data", py::cpp_function([](HistogramModifier& mod) {
 					py::array_t<int> array((size_t)mod.histogramData().size(), mod.histogramData().data(), py::cast(&mod));
 					// Mark array as read-only.
@@ -1085,6 +1101,12 @@ PYBIND11_PLUGIN(ParticlesModify)
 					return array;
 				}))
 	;
+
+	py::enum_<HistogramModifier::DataSourceType>(HistogramModifier_py, "SourceMode")
+		.value("Particles", HistogramModifier::Particles)
+		.value("Bonds", HistogramModifier::Bonds)
+	;
+	
 
 	ovito_class<ScatterPlotModifier, ParticleModifier>{m}
 	;

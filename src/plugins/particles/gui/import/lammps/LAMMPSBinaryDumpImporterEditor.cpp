@@ -30,7 +30,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, LAMMPSBinaryDumpImporterEditor, FileImporterEditor);
+IMPLEMENT_OVITO_OBJECT(LAMMPSBinaryDumpImporterEditor, FileImporterEditor);
 SET_OVITO_OBJECT_EDITOR(LAMMPSBinaryDumpImporter, LAMMPSBinaryDumpImporterEditor);
 
 /******************************************************************************
@@ -116,7 +116,7 @@ void LAMMPSBinaryDumpImporterEditor::createUI(const RolloutInsertionParameters& 
 	layout->addWidget(animFramesBox);
 
 	// Multi-timestep file
-	BooleanParameterUI* multitimestepUI = new BooleanParameterUI(this, PROPERTY_FIELD(ParticleImporter::_isMultiTimestepFile));
+	BooleanParameterUI* multitimestepUI = new BooleanParameterUI(this, PROPERTY_FIELD(ParticleImporter::isMultiTimestepFile));
 	sublayout->addWidget(multitimestepUI->checkBox());
 
 	QGroupBox* columnMappingBox = new QGroupBox(tr("File columns"), rollout);

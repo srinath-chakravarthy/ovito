@@ -107,23 +107,6 @@ public:
 	/// Constructor.
 	Q_INVOKABLE CommonNeighborAnalysisModifier(DataSet* dataset);
 
-	/// \brief Returns the cutoff radius used in the conventional common neighbor analysis.
-	/// \return The cutoff radius in world units.
-	/// \sa setCutoff()
-	FloatType cutoff() const { return _cutoff; }
-
-	/// \brief Sets the cutoff radius used in the conventional common neighbor analysis.
-	/// \param newCutoff The new cutoff radius in world units.
-	/// \undoable
-	/// \sa cutoff()
-	void setCutoff(FloatType newCutoff) { _cutoff = newCutoff; }
-
-	/// Returns the selected mode of operation.
-	CNAMode mode() const { return _cnaMode; }
-
-	/// Sets the mode of operation.
-	void setMode(CNAMode mode) { _cnaMode = mode; }
-
 	/// Find all atoms that are nearest neighbors of the given pair of atoms.
 	static int findCommonNeighbors(const NeighborBondArray& neighborArray, int neighborIndex, unsigned int& commonNeighbors, int numNeighbors);
 
@@ -216,10 +199,10 @@ private:
 	static StructureType determineStructureFixed(CutoffNeighborFinder& neighList, size_t particleIndex, const QVector<bool>& typesToIdentify);
 
 	/// The cutoff radius used for the conventional CNA.
-	PropertyField<FloatType> _cutoff;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, cutoff, setCutoff);
 
 	/// Controls how the CNA is performed.
-	PropertyField<CNAMode, int> _cnaMode;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(CNAMode, mode, setMode);
 
 	/// This stores the computed CNA bond indices.
 	QExplicitlySharedDataPointer<BondProperty> _cnaIndicesData;
@@ -231,9 +214,6 @@ private:
 
 	Q_CLASSINFO("DisplayName", "Common neighbor analysis");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
-
-	DECLARE_PROPERTY_FIELD(_cutoff);
-	DECLARE_PROPERTY_FIELD(_cnaMode);
 };
 
 OVITO_END_INLINE_NAMESPACE

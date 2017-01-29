@@ -39,15 +39,15 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem)
 
-IMPLEMENT_OVITO_OBJECT(Core, DataSetContainer, RefMaker);
-DEFINE_FLAGS_REFERENCE_FIELD(DataSetContainer, _currentSet, "CurrentSet", DataSet, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
+IMPLEMENT_OVITO_OBJECT(DataSetContainer, RefMaker);
+DEFINE_FLAGS_REFERENCE_FIELD(DataSetContainer, currentSet, "CurrentSet", DataSet, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
 
 /******************************************************************************
 * Initializes the dataset manager.
 ******************************************************************************/
 DataSetContainer::DataSetContainer() : RefMaker(nullptr), _taskManager()
 {
-	INIT_PROPERTY_FIELD(DataSetContainer::_currentSet);
+	INIT_PROPERTY_FIELD(currentSet);
 }
 
 /******************************************************************************
@@ -55,7 +55,7 @@ DataSetContainer::DataSetContainer() : RefMaker(nullptr), _taskManager()
 ******************************************************************************/
 void DataSetContainer::referenceReplaced(const PropertyFieldDescriptor& field, RefTarget* oldTarget, RefTarget* newTarget)
 {
-	if(field == PROPERTY_FIELD(DataSetContainer::_currentSet)) {
+	if(field == PROPERTY_FIELD(currentSet)) {
 
 		if(oldTarget) {
 			DataSet* oldDataSet = static_object_cast<DataSet>(oldTarget);

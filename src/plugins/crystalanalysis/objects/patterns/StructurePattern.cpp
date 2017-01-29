@@ -24,15 +24,15 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, StructurePattern, ParticleType);
-DEFINE_PROPERTY_FIELD(StructurePattern, _shortName, "ShortName");
-DEFINE_PROPERTY_FIELD(StructurePattern, _structureType, "StructureType");
-DEFINE_PROPERTY_FIELD(StructurePattern, _symmetryType, "SymmetryType");
-DEFINE_VECTOR_REFERENCE_FIELD(StructurePattern, _burgersVectorFamilies, "BurgersVectorFamilies", BurgersVectorFamily);
-SET_PROPERTY_FIELD_LABEL(StructurePattern, _shortName, "Short name");
-SET_PROPERTY_FIELD_LABEL(StructurePattern, _structureType, "Structure type");
-SET_PROPERTY_FIELD_LABEL(StructurePattern, _symmetryType, "Symmetry type");
-SET_PROPERTY_FIELD_LABEL(StructurePattern, _burgersVectorFamilies, "Burgers vector families");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(StructurePattern, ParticleType);
+DEFINE_PROPERTY_FIELD(StructurePattern, shortName, "ShortName");
+DEFINE_PROPERTY_FIELD(StructurePattern, structureType, "StructureType");
+DEFINE_PROPERTY_FIELD(StructurePattern, symmetryType, "SymmetryType");
+DEFINE_VECTOR_REFERENCE_FIELD(StructurePattern, burgersVectorFamilies, "BurgersVectorFamilies", BurgersVectorFamily);
+SET_PROPERTY_FIELD_LABEL(StructurePattern, shortName, "Short name");
+SET_PROPERTY_FIELD_LABEL(StructurePattern, structureType, "Structure type");
+SET_PROPERTY_FIELD_LABEL(StructurePattern, symmetryType, "Symmetry type");
+SET_PROPERTY_FIELD_LABEL(StructurePattern, burgersVectorFamilies, "Burgers vector families");
 
 /******************************************************************************
 * Constructs the StructurePattern object.
@@ -40,10 +40,10 @@ SET_PROPERTY_FIELD_LABEL(StructurePattern, _burgersVectorFamilies, "Burgers vect
 StructurePattern::StructurePattern(DataSet* dataset) : ParticleType(dataset),
 		_structureType(OtherStructure), _symmetryType(OtherSymmetry)
 {
-	INIT_PROPERTY_FIELD(StructurePattern::_shortName);
-	INIT_PROPERTY_FIELD(StructurePattern::_structureType);
-	INIT_PROPERTY_FIELD(StructurePattern::_symmetryType);
-	INIT_PROPERTY_FIELD(StructurePattern::_burgersVectorFamilies);
+	INIT_PROPERTY_FIELD(shortName);
+	INIT_PROPERTY_FIELD(structureType);
+	INIT_PROPERTY_FIELD(symmetryType);
+	INIT_PROPERTY_FIELD(burgersVectorFamilies);
 
 	// Create "unknown" Burgers vector family.
 	BurgersVectorFamily* family = new BurgersVectorFamily(dataset);

@@ -121,6 +121,9 @@ QT5_ADD_RESOURCES(ResourceFiles resources/core.qrc)
 # Build library
 ADD_LIBRARY(Core SHARED Core.cpp ${SourceFiles} ${ResourceFiles})
 
+# Pass name of core plugin to the code.
+TARGET_COMPILE_DEFINITIONS(Core PRIVATE "OVITO_PLUGIN_NAME=\"Core\"")
+
 # Set default include directory.
 TARGET_INCLUDE_DIRECTORIES(Core PUBLIC "$<BUILD_INTERFACE:${OVITO_SOURCE_BASE_DIR}/src>")
 

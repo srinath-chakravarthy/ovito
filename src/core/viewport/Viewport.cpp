@@ -40,19 +40,17 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(View)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, Viewport, RefTarget);
-DEFINE_FLAGS_REFERENCE_FIELD(Viewport, _viewNode, "ViewNode", ObjectNode, PROPERTY_FIELD_NEVER_CLONE_TARGET | PROPERTY_FIELD_NO_SUB_ANIM);
-DEFINE_FLAGS_PROPERTY_FIELD(Viewport, _viewType, "ViewType", PROPERTY_FIELD_NO_UNDO);
-DEFINE_FLAGS_PROPERTY_FIELD(Viewport, _gridMatrix, "GridMatrix", PROPERTY_FIELD_NO_UNDO);
-DEFINE_FLAGS_PROPERTY_FIELD(Viewport, _fieldOfView, "FieldOfView", PROPERTY_FIELD_NO_UNDO);
-DEFINE_FLAGS_PROPERTY_FIELD(Viewport, _cameraPosition, "CameraPosition", PROPERTY_FIELD_NO_UNDO);
-DEFINE_FLAGS_PROPERTY_FIELD(Viewport, _cameraDirection, "CameraDirection", PROPERTY_FIELD_NO_UNDO);
-DEFINE_FLAGS_PROPERTY_FIELD(Viewport, _renderPreviewMode, "ShowRenderFrame", PROPERTY_FIELD_NO_UNDO);
-DEFINE_FLAGS_PROPERTY_FIELD(Viewport, _viewportTitle, "Title", PROPERTY_FIELD_NO_UNDO);
-DEFINE_FLAGS_PROPERTY_FIELD(Viewport, _cameraTM, "CameraTransformation", PROPERTY_FIELD_NO_UNDO);
-DEFINE_FLAGS_PROPERTY_FIELD(Viewport, _showGrid, "ShowGrid", PROPERTY_FIELD_NO_UNDO);
-DEFINE_FLAGS_PROPERTY_FIELD(Viewport, _stereoscopicMode, "StereoscopicMode", PROPERTY_FIELD_NO_UNDO);
-DEFINE_VECTOR_REFERENCE_FIELD(Viewport, _overlays, "Overlays", ViewportOverlay);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Viewport, RefTarget);
+DEFINE_FLAGS_REFERENCE_FIELD(Viewport, viewNode, "ViewNode", ObjectNode, PROPERTY_FIELD_NEVER_CLONE_TARGET | PROPERTY_FIELD_NO_SUB_ANIM);
+DEFINE_FLAGS_PROPERTY_FIELD(Viewport, viewType, "ViewType", PROPERTY_FIELD_NO_UNDO);
+DEFINE_FLAGS_PROPERTY_FIELD(Viewport, gridMatrix, "GridMatrix", PROPERTY_FIELD_NO_UNDO);
+DEFINE_FLAGS_PROPERTY_FIELD(Viewport, fieldOfView, "FieldOfView", PROPERTY_FIELD_NO_UNDO);
+DEFINE_FLAGS_PROPERTY_FIELD(Viewport, renderPreviewMode, "ShowRenderFrame", PROPERTY_FIELD_NO_UNDO);
+DEFINE_FLAGS_PROPERTY_FIELD(Viewport, viewportTitle, "Title", PROPERTY_FIELD_NO_UNDO);
+DEFINE_FLAGS_PROPERTY_FIELD(Viewport, cameraTransformation, "CameraTransformation", PROPERTY_FIELD_NO_UNDO);
+DEFINE_FLAGS_PROPERTY_FIELD(Viewport, isGridVisible, "ShowGrid", PROPERTY_FIELD_NO_UNDO);
+DEFINE_FLAGS_PROPERTY_FIELD(Viewport, stereoscopicMode, "StereoscopicMode", PROPERTY_FIELD_NO_UNDO);
+DEFINE_VECTOR_REFERENCE_FIELD(Viewport, overlays, "Overlays", ViewportOverlay);
 
 /******************************************************************************
 * Constructor.
@@ -62,25 +60,22 @@ Viewport::Viewport(DataSet* dataset) : RefTarget(dataset),
 		_fieldOfView(100),
 		_renderPreviewMode(false),
 		_isRendering(false),
-		_cameraPosition(Point3::Origin()), _cameraDirection(Vector3::Zero()),
-		_cameraTM(AffineTransformation::Identity()),
+		_cameraTransformation(AffineTransformation::Identity()),
 		_gridMatrix(AffineTransformation::Identity()),
-		_showGrid(false),
+		_isGridVisible(false),
 		_stereoscopicMode(false),
 		_window(nullptr)
 {
-	INIT_PROPERTY_FIELD(Viewport::_viewNode);
-	INIT_PROPERTY_FIELD(Viewport::_viewType);
-	INIT_PROPERTY_FIELD(Viewport::_gridMatrix);
-	INIT_PROPERTY_FIELD(Viewport::_fieldOfView);
-	INIT_PROPERTY_FIELD(Viewport::_cameraPosition);
-	INIT_PROPERTY_FIELD(Viewport::_cameraDirection);
-	INIT_PROPERTY_FIELD(Viewport::_renderPreviewMode);
-	INIT_PROPERTY_FIELD(Viewport::_viewportTitle);
-	INIT_PROPERTY_FIELD(Viewport::_cameraTM);
-	INIT_PROPERTY_FIELD(Viewport::_showGrid);
-	INIT_PROPERTY_FIELD(Viewport::_overlays);
-	INIT_PROPERTY_FIELD(Viewport::_stereoscopicMode);
+	INIT_PROPERTY_FIELD(viewNode);
+	INIT_PROPERTY_FIELD(viewType);
+	INIT_PROPERTY_FIELD(gridMatrix);
+	INIT_PROPERTY_FIELD(fieldOfView);
+	INIT_PROPERTY_FIELD(renderPreviewMode);
+	INIT_PROPERTY_FIELD(viewportTitle);
+	INIT_PROPERTY_FIELD(cameraTransformation);
+	INIT_PROPERTY_FIELD(isGridVisible);
+	INIT_PROPERTY_FIELD(overlays);
+	INIT_PROPERTY_FIELD(stereoscopicMode);
 
 	connect(&ViewportSettings::getSettings(), &ViewportSettings::settingsChanged, this, &Viewport::viewportSettingsChanged);
 }
@@ -377,7 +372,7 @@ bool Viewport::referenceEvent(RefTarget* source, ReferenceEvent* event)
 ******************************************************************************/
 void Viewport::referenceReplaced(const PropertyFieldDescriptor& field, RefTarget* oldTarget, RefTarget* newTarget)
 {
-	if(field == PROPERTY_FIELD(Viewport::_viewNode)) {
+	if(field == PROPERTY_FIELD(viewNode)) {
 		if(viewType() == VIEW_SCENENODE && newTarget == nullptr) {
 			// If the camera node has been deleted, switch to Orthographic or Perspective view type.
 			// Keep current camera orientation.
@@ -400,7 +395,7 @@ void Viewport::referenceReplaced(const PropertyFieldDescriptor& field, RefTarget
 ******************************************************************************/
 void Viewport::referenceInserted(const PropertyFieldDescriptor& field, RefTarget* newTarget, int listIndex)
 {
-	if(field == PROPERTY_FIELD(Viewport::_overlays)) {
+	if(field == PROPERTY_FIELD(overlays)) {
 		updateViewport();
 	}
 	RefTarget::referenceInserted(field, newTarget, listIndex);
@@ -411,31 +406,10 @@ void Viewport::referenceInserted(const PropertyFieldDescriptor& field, RefTarget
 ******************************************************************************/
 void Viewport::referenceRemoved(const PropertyFieldDescriptor& field, RefTarget* oldTarget, int listIndex)
 {
-	if(field == PROPERTY_FIELD(Viewport::_overlays)) {
+	if(field == PROPERTY_FIELD(overlays)) {
 		updateViewport();
 	}
 	RefTarget::referenceRemoved(field, oldTarget, listIndex);
-}
-
-/******************************************************************************
-* Loads the class' contents from an input stream.
-******************************************************************************/
-void Viewport::loadFromStream(ObjectLoadStream& stream)
-{
-	RefTarget::loadFromStream(stream);
-
-	// The old OVITO versions stored the camera transformation not as a matrix but
-	// as a position and a direction vector. After loading an old OVITO file, we
-	// have to convert the position/direction representation to a matrix representation.
-	if(_cameraDirection.value() != Vector3::Zero()) {
-		setCameraPosition(_cameraPosition);
-		setCameraDirection(_cameraDirection);
-		_cameraDirection = Vector3(Vector3::Zero());
-	}
-
-	// The global viewport settings may have changed.
-	// Adjust camera orientation according to new settings.
-	setCameraDirection(cameraDirection());
 }
 
 /******************************************************************************
@@ -444,7 +418,7 @@ void Viewport::loadFromStream(ObjectLoadStream& stream)
 void Viewport::propertyChanged(const PropertyFieldDescriptor& field)
 {
 	RefTarget::propertyChanged(field);
-	if(field == PROPERTY_FIELD(Viewport::_viewType)) {
+	if(field == PROPERTY_FIELD(viewType)) {
 		updateViewportTitle();
 	}
 	updateViewport();
@@ -455,7 +429,7 @@ void Viewport::propertyChanged(const PropertyFieldDescriptor& field)
 ******************************************************************************/
 void Viewport::viewportSettingsChanged(ViewportSettings* newSettings)
 {
-	// Update camera TM if up axis ha changed.
+	// Update camera TM if up axis has changed.
 	setCameraDirection(cameraDirection());
 
 	// Redraw viewport.
@@ -479,7 +453,7 @@ void Viewport::updateViewportTitle()
 		case VIEW_PERSPECTIVE: _viewportTitle = tr("Perspective"); break;
 		case VIEW_SCENENODE:
 			if(viewNode() != nullptr)
-				_viewportTitle = viewNode()->name();
+				_viewportTitle = viewNode()->nodeName();
 			else
 				_viewportTitle = tr("No view node");
 		break;

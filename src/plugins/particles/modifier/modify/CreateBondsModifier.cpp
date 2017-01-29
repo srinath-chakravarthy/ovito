@@ -28,34 +28,34 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, CreateBondsModifier, AsynchronousParticleModifier);
-DEFINE_PROPERTY_FIELD(CreateBondsModifier, _cutoffMode, "CutoffMode");
-DEFINE_FLAGS_PROPERTY_FIELD(CreateBondsModifier, _uniformCutoff, "UniformCutoff", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(CreateBondsModifier, _minCutoff, "MinimumCutoff");
-DEFINE_FLAGS_PROPERTY_FIELD(CreateBondsModifier, _onlyIntraMoleculeBonds, "OnlyIntraMoleculeBonds", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_REFERENCE_FIELD(CreateBondsModifier, _bondsDisplay, "BondsDisplay", BondsDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(CreateBondsModifier, _cutoffMode, "Cutoff mode");
-SET_PROPERTY_FIELD_LABEL(CreateBondsModifier, _uniformCutoff, "Cutoff radius");
-SET_PROPERTY_FIELD_LABEL(CreateBondsModifier, _minCutoff, "Lower cutoff");
-SET_PROPERTY_FIELD_LABEL(CreateBondsModifier, _onlyIntraMoleculeBonds, "No bonds between different molecules");
-SET_PROPERTY_FIELD_LABEL(CreateBondsModifier, _bondsDisplay, "Bonds display");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CreateBondsModifier, _uniformCutoff, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CreateBondsModifier, _minCutoff, WorldParameterUnit, 0);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CreateBondsModifier, AsynchronousParticleModifier);
+DEFINE_PROPERTY_FIELD(CreateBondsModifier, cutoffMode, "CutoffMode");
+DEFINE_FLAGS_PROPERTY_FIELD(CreateBondsModifier, uniformCutoff, "UniformCutoff", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(CreateBondsModifier, minimumCutoff, "MinimumCutoff");
+DEFINE_FLAGS_PROPERTY_FIELD(CreateBondsModifier, onlyIntraMoleculeBonds, "OnlyIntraMoleculeBonds", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(CreateBondsModifier, bondsDisplay, "BondsDisplay", BondsDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(CreateBondsModifier, cutoffMode, "Cutoff mode");
+SET_PROPERTY_FIELD_LABEL(CreateBondsModifier, uniformCutoff, "Cutoff radius");
+SET_PROPERTY_FIELD_LABEL(CreateBondsModifier, minimumCutoff, "Lower cutoff");
+SET_PROPERTY_FIELD_LABEL(CreateBondsModifier, onlyIntraMoleculeBonds, "No bonds between different molecules");
+SET_PROPERTY_FIELD_LABEL(CreateBondsModifier, bondsDisplay, "Bonds display");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CreateBondsModifier, uniformCutoff, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CreateBondsModifier, minimumCutoff, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
 CreateBondsModifier::CreateBondsModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
-	_cutoffMode(UniformCutoff), _uniformCutoff(3.2), _onlyIntraMoleculeBonds(false), _minCutoff(0)
+	_cutoffMode(UniformCutoff), _uniformCutoff(3.2), _onlyIntraMoleculeBonds(false), _minimumCutoff(0)
 {
-	INIT_PROPERTY_FIELD(CreateBondsModifier::_cutoffMode);
-	INIT_PROPERTY_FIELD(CreateBondsModifier::_uniformCutoff);
-	INIT_PROPERTY_FIELD(CreateBondsModifier::_onlyIntraMoleculeBonds);
-	INIT_PROPERTY_FIELD(CreateBondsModifier::_bondsDisplay);
-	INIT_PROPERTY_FIELD(CreateBondsModifier::_minCutoff);
+	INIT_PROPERTY_FIELD(cutoffMode);
+	INIT_PROPERTY_FIELD(uniformCutoff);
+	INIT_PROPERTY_FIELD(onlyIntraMoleculeBonds);
+	INIT_PROPERTY_FIELD(bondsDisplay);
+	INIT_PROPERTY_FIELD(minimumCutoff);
 
 	// Create the display object for bonds rendering and assign it to the data object.
-	_bondsDisplay = new BondsDisplay(dataset);
+	setBondsDisplay(new BondsDisplay(dataset));
 }
 
 /******************************************************************************
@@ -66,9 +66,9 @@ void CreateBondsModifier::propertyChanged(const PropertyFieldDescriptor& field)
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Recompute results when the parameters have been changed.
-	if(field == PROPERTY_FIELD(CreateBondsModifier::_uniformCutoff) || field == PROPERTY_FIELD(CreateBondsModifier::_cutoffMode)
-			 || field == PROPERTY_FIELD(CreateBondsModifier::_onlyIntraMoleculeBonds)
-			 || field == PROPERTY_FIELD(CreateBondsModifier::_minCutoff))
+	if(field == PROPERTY_FIELD(uniformCutoff) || field == PROPERTY_FIELD(cutoffMode)
+			 || field == PROPERTY_FIELD(onlyIntraMoleculeBonds)
+			 || field == PROPERTY_FIELD(minimumCutoff))
 		invalidateCachedResults();
 }
 

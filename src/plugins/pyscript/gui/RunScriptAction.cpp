@@ -30,7 +30,7 @@
 
 namespace PyScript {
 
-IMPLEMENT_OVITO_OBJECT(PyScriptGui, RunScriptAction, GuiAutoStartObject);
+IMPLEMENT_OVITO_OBJECT(RunScriptAction, GuiAutoStartObject);
 
 /******************************************************************************
 * Is called when a new main window is created.

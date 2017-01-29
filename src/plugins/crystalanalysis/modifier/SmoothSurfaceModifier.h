@@ -44,24 +44,16 @@ public:
 	/// This modifies the input object.
 	virtual PipelineStatus modifyObject(TimePoint time, ModifierApplication* modApp, PipelineFlowState& state) override;
 
-	/// Returns the smoothing strength.
-	int smoothingLevel() const { return _smoothingLevel; }
-
-	/// Sets the smoothing strength.
-	void setSmoothingLevel(int level) { _smoothingLevel = level; }
-
 private:
 
 	/// Controls the amount of smoothing.
-	PropertyField<int> _smoothingLevel;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, smoothingLevel, setSmoothingLevel);
 
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Smooth surface");
 	Q_CLASSINFO("ModifierCategory", "Crystal analysis");
-
-	DECLARE_PROPERTY_FIELD(_smoothingLevel);
 };
 
 }	// End of namespace

@@ -26,41 +26,41 @@
 
 namespace Ovito { namespace Particles {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SimulationCellObject, DataObject);
-DEFINE_PROPERTY_FIELD(SimulationCellObject, _cellVector1, "CellVector1");
-DEFINE_PROPERTY_FIELD(SimulationCellObject, _cellVector2, "CellVector2");
-DEFINE_PROPERTY_FIELD(SimulationCellObject, _cellVector3, "CellVector3");
-DEFINE_PROPERTY_FIELD(SimulationCellObject, _cellOrigin, "CellTranslation");
-DEFINE_PROPERTY_FIELD(SimulationCellObject, _pbcX, "PeriodicX");
-DEFINE_PROPERTY_FIELD(SimulationCellObject, _pbcY, "PeriodicY");
-DEFINE_PROPERTY_FIELD(SimulationCellObject, _pbcZ, "PeriodicZ");
-DEFINE_PROPERTY_FIELD(SimulationCellObject, _is2D, "Is2D");
-SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _cellVector1, "Cell vector 1");
-SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _cellVector2, "Cell vector 2");
-SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _cellVector3, "Cell vector 3");
-SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _cellOrigin, "Cell origin");
-SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _pbcX, "Periodic boundary conditions (X)");
-SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _pbcY, "Periodic boundary conditions (Y)");
-SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _pbcZ, "Periodic boundary conditions (Z)");
-SET_PROPERTY_FIELD_LABEL(SimulationCellObject, _is2D, "2D");
-SET_PROPERTY_FIELD_UNITS(SimulationCellObject, _cellVector1, WorldParameterUnit);
-SET_PROPERTY_FIELD_UNITS(SimulationCellObject, _cellVector2, WorldParameterUnit);
-SET_PROPERTY_FIELD_UNITS(SimulationCellObject, _cellVector3, WorldParameterUnit);
-SET_PROPERTY_FIELD_UNITS(SimulationCellObject, _cellOrigin, WorldParameterUnit);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SimulationCellObject, DataObject);
+DEFINE_PROPERTY_FIELD(SimulationCellObject, cellVector1, "CellVector1");
+DEFINE_PROPERTY_FIELD(SimulationCellObject, cellVector2, "CellVector2");
+DEFINE_PROPERTY_FIELD(SimulationCellObject, cellVector3, "CellVector3");
+DEFINE_PROPERTY_FIELD(SimulationCellObject, cellOrigin, "CellTranslation");
+DEFINE_PROPERTY_FIELD(SimulationCellObject, pbcX, "PeriodicX");
+DEFINE_PROPERTY_FIELD(SimulationCellObject, pbcY, "PeriodicY");
+DEFINE_PROPERTY_FIELD(SimulationCellObject, pbcZ, "PeriodicZ");
+DEFINE_PROPERTY_FIELD(SimulationCellObject, is2D, "Is2D");
+SET_PROPERTY_FIELD_LABEL(SimulationCellObject, cellVector1, "Cell vector 1");
+SET_PROPERTY_FIELD_LABEL(SimulationCellObject, cellVector2, "Cell vector 2");
+SET_PROPERTY_FIELD_LABEL(SimulationCellObject, cellVector3, "Cell vector 3");
+SET_PROPERTY_FIELD_LABEL(SimulationCellObject, cellOrigin, "Cell origin");
+SET_PROPERTY_FIELD_LABEL(SimulationCellObject, pbcX, "Periodic boundary conditions (X)");
+SET_PROPERTY_FIELD_LABEL(SimulationCellObject, pbcY, "Periodic boundary conditions (Y)");
+SET_PROPERTY_FIELD_LABEL(SimulationCellObject, pbcZ, "Periodic boundary conditions (Z)");
+SET_PROPERTY_FIELD_LABEL(SimulationCellObject, is2D, "2D");
+SET_PROPERTY_FIELD_UNITS(SimulationCellObject, cellVector1, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS(SimulationCellObject, cellVector2, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS(SimulationCellObject, cellVector3, WorldParameterUnit);
+SET_PROPERTY_FIELD_UNITS(SimulationCellObject, cellOrigin, WorldParameterUnit);
 
 /******************************************************************************
 * Creates the storage for the internal parameters.
 ******************************************************************************/
 void SimulationCellObject::init(DataSet* dataset)
 {
-	INIT_PROPERTY_FIELD(SimulationCellObject::_cellVector1);
-	INIT_PROPERTY_FIELD(SimulationCellObject::_cellVector2);
-	INIT_PROPERTY_FIELD(SimulationCellObject::_cellVector3);
-	INIT_PROPERTY_FIELD(SimulationCellObject::_cellOrigin);
-	INIT_PROPERTY_FIELD(SimulationCellObject::_pbcX);
-	INIT_PROPERTY_FIELD(SimulationCellObject::_pbcY);
-	INIT_PROPERTY_FIELD(SimulationCellObject::_pbcZ);
-	INIT_PROPERTY_FIELD(SimulationCellObject::_is2D);
+	INIT_PROPERTY_FIELD(cellVector1);
+	INIT_PROPERTY_FIELD(cellVector2);
+	INIT_PROPERTY_FIELD(cellVector3);
+	INIT_PROPERTY_FIELD(cellOrigin);
+	INIT_PROPERTY_FIELD(pbcX);
+	INIT_PROPERTY_FIELD(pbcY);
+	INIT_PROPERTY_FIELD(pbcZ);
+	INIT_PROPERTY_FIELD(is2D);
 
 	// Attach a display object.
 	addDisplayObject(new SimulationCellDisplay(dataset));

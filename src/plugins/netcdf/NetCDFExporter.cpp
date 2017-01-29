@@ -54,7 +54,7 @@ const char NC_SCALE_FACTOR_STR[]  = "scale_factor";
 	#define NC_OVITO_FLOATTYPE NC_DOUBLE
 #endif
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(NetCDFPlugin, NetCDFExporter, FileColumnParticleExporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(NetCDFExporter, FileColumnParticleExporter);
 
 /******************************************************************************
 * Check for NetCDF error and throw exception

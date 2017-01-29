@@ -377,7 +377,7 @@ PYBIND11_PLUGIN(Particles)
 		.def_property("pbc_x", &SimulationCellObject::pbcX, &SimulationCellObject::setPbcX)
 		.def_property("pbc_y", &SimulationCellObject::pbcY, &SimulationCellObject::setPbcY)
 		.def_property("pbc_z", &SimulationCellObject::pbcZ, &SimulationCellObject::setPbcZ)
-		.def_property("is2D", &SimulationCellObject::is2D, &SimulationCellObject::set2D,
+		.def_property("is2D", &SimulationCellObject::is2D, &SimulationCellObject::setIs2D,
 				"Specifies whether the system is two-dimensional (true) or three-dimensional (false). "
 				"For two-dimensional systems the PBC flag in the third direction (z) and the third cell vector are ignored. "
 				"\n\n"
@@ -386,10 +386,10 @@ PYBIND11_PLUGIN(Particles)
 								MatrixSetter<SimulationCellObject, AffineTransformation, &SimulationCellObject::setCellMatrix>(),
 				"A 3x4 matrix containing the three edge vectors of the cell (matrix columns 0 to 2) "
         		"and the cell origin (matrix column 3).")
-		.def_property("vector1", &SimulationCellObject::edgeVector1, &SimulationCellObject::setEdgeVector1)
-		.def_property("vector2", &SimulationCellObject::edgeVector2, &SimulationCellObject::setEdgeVector2)
-		.def_property("vector3", &SimulationCellObject::edgeVector3, &SimulationCellObject::setEdgeVector3)
-		.def_property("origin", &SimulationCellObject::origin, &SimulationCellObject::setOrigin)
+		.def_property("vector1", &SimulationCellObject::cellVector1, &SimulationCellObject::setCellVector1)
+		.def_property("vector2", &SimulationCellObject::cellVector2, &SimulationCellObject::setCellVector2)
+		.def_property("vector3", &SimulationCellObject::cellVector3, &SimulationCellObject::setCellVector3)
+		.def_property("origin", &SimulationCellObject::cellOrigin, &SimulationCellObject::setCellOrigin)
 		.def_property_readonly("volume", &SimulationCellObject::volume3D,
 				"Returns the volume of the three-dimensional simulation cell.\n"
 				"It is the absolute value of the determinant of the cell matrix.")
@@ -587,16 +587,16 @@ PYBIND11_PLUGIN(Particles)
 			"The following script demonstrates how to change the line width of the simulation cell:"
 			"\n\n"
 			".. literalinclude:: ../example_snippets/simulation_cell_display.py\n")
-		.def_property("line_width", &SimulationCellDisplay::simulationCellLineWidth, &SimulationCellDisplay::setSimulationCellLineWidth,
+		.def_property("line_width", &SimulationCellDisplay::cellLineWidth, &SimulationCellDisplay::setCellLineWidth,
 				"The width of the simulation cell line (in simulation units of length)."
 				"\n\n"
 				":Default: 0.14% of the simulation box diameter\n")
-		.def_property("render_cell", &SimulationCellDisplay::renderSimulationCell, &SimulationCellDisplay::setRenderSimulationCell,
+		.def_property("render_cell", &SimulationCellDisplay::renderCellEnabled, &SimulationCellDisplay::setRenderCellEnabled,
 				"Boolean flag controlling the cell's visibility in rendered images. "
 				"If ``False``, the cell will only be visible in the interactive viewports. "
 				"\n\n"
 				":Default: ``True``\n")
-		.def_property("rendering_color", &SimulationCellDisplay::simulationCellRenderingColor, &SimulationCellDisplay::setSimulationCellRenderingColor,
+		.def_property("rendering_color", &SimulationCellDisplay::cellColor, &SimulationCellDisplay::setCellColor,
 				"The line color used when rendering the cell."
 				"\n\n"
 				":Default: ``(0, 0, 0)``\n")
@@ -676,7 +676,7 @@ PYBIND11_PLUGIN(Particles)
 			".. literalinclude:: ../example_snippets/surface_mesh.py\n"
 			"   :lines: 4-\n"
 		)
-		.def_property("is_completely_solid", &SurfaceMesh::isCompletelySolid, &SurfaceMesh::setCompletelySolid)
+		.def_property("is_completely_solid", &SurfaceMesh::isCompletelySolid, &SurfaceMesh::setIsCompletelySolid)
 		.def("export_vtk", [](SurfaceMesh& mesh, const QString& filename, SimulationCellObject* simCellObj) {
 				if(!simCellObj)
 					throw Exception("A simulation cell is required to generate non-periodic mesh for export.");

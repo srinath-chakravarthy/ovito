@@ -25,7 +25,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, SlipSurface, DataObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SlipSurface, DataObject);
 
 /******************************************************************************
 * Constructor.

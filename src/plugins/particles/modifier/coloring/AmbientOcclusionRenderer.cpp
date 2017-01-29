@@ -25,7 +25,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Particles, AmbientOcclusionRenderer, OpenGLSceneRenderer);
+IMPLEMENT_OVITO_OBJECT(AmbientOcclusionRenderer, OpenGLSceneRenderer);
 
 /******************************************************************************
 * Prepares the renderer for rendering and sets the data set that is being rendered.

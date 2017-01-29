@@ -26,7 +26,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, FileColumnParticleExporterEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(FileColumnParticleExporterEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(FileColumnParticleExporter, FileColumnParticleExporterEditor);
 
 /******************************************************************************

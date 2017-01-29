@@ -28,7 +28,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, FHIAimsExporter, ParticleExporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(FHIAimsExporter, ParticleExporter);
 
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.
@@ -46,7 +46,7 @@ bool FHIAimsExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePo
 	Point3 origin = Point3::Origin();
 	SimulationCellObject* simulationCell = state.findObject<SimulationCellObject>();
 	if(simulationCell) {
-		origin = simulationCell->origin();
+		origin = simulationCell->cellOrigin();
 		if(simulationCell->pbcX() || simulationCell->pbcY() || simulationCell->pbcZ()) {
 			AffineTransformation cell = simulationCell->cellMatrix();
 			for(size_t i = 0; i < 3; i++)

@@ -29,7 +29,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, FileImporter, RefTarget);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(FileImporter, RefTarget);
 
 /******************************************************************************
 * Return the list of available import services.

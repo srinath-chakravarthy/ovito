@@ -25,6 +25,7 @@
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/ParticleProperty.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
+#include <plugins/particles/objects/BondPropertyObject.h>
 #include "../../ParticleModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
@@ -36,71 +37,26 @@ class OVITO_PARTICLES_EXPORT HistogramModifier : public ParticleModifier
 {
 public:
 
+	/// The data sources supported by the histogram modifier.
+	enum DataSourceType {
+		Particles,	//< Particle property values
+		Bonds,		//< Bond property values
+	};
+	Q_ENUMS(DataSourceType);
+
+public:
+
 	/// Constructor.
 	Q_INVOKABLE HistogramModifier(DataSet* dataset);
-
-	/// Sets the source particle property for which the histogram should be computed.
-	void setSourceProperty(const ParticlePropertyReference& prop) { _sourceProperty = prop; }
-
-	/// Returns the source particle property for which the histogram is computed.
-	const ParticlePropertyReference& sourceProperty() const { return _sourceProperty; }
-
-	/// Returns the number of bins in the computed histogram.
-	int numberOfBins() const { return _numberOfBins; }
-
-	/// Sets the number of bins in the computed histogram.
-	void setNumberOfBins(int n) { _numberOfBins = n; }
 
 	/// Returns the stored histogram data.
 	const QVector<int>& histogramData() const { return _histogramData; }
 
-	/// Returns whether particles within the specified range should be selected.
-	bool selectInRange() const { return _selectInRange; }
-
-	/// Sets whether particles within the specified range should be selected.
-	void setSelectInRange(bool select) { _selectInRange = select; }
-
-	/// Returns the start value of the selection interval.
-	FloatType selectionRangeStart() const { return _selectionRangeStart; }
-
-	/// Returns the end value of the selection interval.
-	FloatType selectionRangeEnd() const { return _selectionRangeEnd; }
-
-	/// Set whether the range of the x-axis of the scatter plot should be fixed.
-	void setFixXAxisRange(bool fix) { _fixXAxisRange = fix; }
-
-	/// Returns whether the range of the x-axis of the histogram should be fixed.
-	bool fixXAxisRange() const { return _fixXAxisRange; }
-
 	/// Set start and end value of the x-axis.
 	void setXAxisRange(FloatType start, FloatType end) { _xAxisRangeStart = start; _xAxisRangeEnd = end; }
 
-	/// Set start value of the x-axis.
-	void setXAxisRangeStart(FloatType start) { _xAxisRangeStart = start; }
-
-	/// Set end value of the x-axis.
-	void setXAxisRangeEnd(FloatType end) { _xAxisRangeEnd = end; }
-
-	/// Returns the start value of the x-axis.
-	FloatType xAxisRangeStart() const { return _xAxisRangeStart; }
-
-	/// Returns the end value of the x-axis.
-	FloatType xAxisRangeEnd() const { return _xAxisRangeEnd; }
-
-	/// Returns whether the range of the y-axis of the histogram should be fixed.
-	bool fixYAxisRange() const { return _fixYAxisRange; }
-
-	/// Returns the start value of the y-axis.
-	FloatType yAxisRangeStart() const { return _yAxisRangeStart; }
-
-	/// Returns the end value of the y-axis.
-	FloatType yAxisRangeEnd() const { return _yAxisRangeEnd; }
-
-	/// Returns whether analysis takes only selected particles into account.
-	bool onlySelected() const { return _onlySelected; }
-
-	/// Sets whether analysis only selected particles are taken into account.
-	void setOnlySelected(bool onlySelected) { _onlySelected = onlySelected; }
+	/// Set start and end value of the y-axis.
+	void setYAxisRange(FloatType start, FloatType end) { _yAxisRangeStart = start; _yAxisRangeEnd = end; }
 
 protected:
 
@@ -113,40 +69,46 @@ protected:
 private:
 
 	/// The particle property that serves as data source of the histogram.
-	PropertyField<ParticlePropertyReference> _sourceProperty;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ParticlePropertyReference, sourceParticleProperty, setSourceParticleProperty);
+
+	/// The bond property that serves as data source of the histogram.
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(BondPropertyReference, sourceBondProperty, setSourceBondProperty);
 
 	/// Controls the number of histogram bins.
-	PropertyField<int> _numberOfBins;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, numberOfBins, setNumberOfBins);
 
 	/// Controls the whether particles within the specified range should be selected.
-	PropertyField<bool> _selectInRange;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, selectInRange, setSelectInRange);
 
 	/// Controls the start value of the selection interval.
-	PropertyField<FloatType> _selectionRangeStart;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, selectionRangeStart, setSelectionRangeStart);
 
 	/// Controls the end value of the selection interval.
-	PropertyField<FloatType> _selectionRangeEnd;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, selectionRangeEnd, setSelectionRangeEnd);
 
 	/// Controls the whether the range of the x-axis of the histogram should be fixed.
-	PropertyField<bool> _fixXAxisRange;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, fixXAxisRange, setFixXAxisRange);
 
 	/// Controls the start value of the x-axis.
-	PropertyField<FloatType> _xAxisRangeStart;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, xAxisRangeStart, setXAxisRangeStart);
 
 	/// Controls the end value of the x-axis.
-	PropertyField<FloatType> _xAxisRangeEnd;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, xAxisRangeEnd, setXAxisRangeEnd);
 
 	/// Controls the whether the range of the y-axis of the histogram should be fixed.
-	PropertyField<bool> _fixYAxisRange;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, fixYAxisRange, setFixYAxisRange);
 
 	/// Controls the start value of the y-axis.
-	PropertyField<FloatType> _yAxisRangeStart;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, yAxisRangeStart, setYAxisRangeStart);
 
 	/// Controls the end value of the y-axis.
-	PropertyField<FloatType> _yAxisRangeEnd;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, yAxisRangeEnd, setYAxisRangeEnd);
 
 	/// Controls whether the modifier should take into account only selected particles.
-	PropertyField<bool> _onlySelected;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, onlySelected, setOnlySelected);
+
+	/// Controls where this modifier takes its input values from.
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(DataSourceType, dataSourceType, setDataSourceType);
 
 	/// Stores the histogram data.
 	QVector<int> _histogramData;
@@ -156,19 +118,6 @@ private:
 
 	Q_CLASSINFO("DisplayName", "Histogram");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
-
-	DECLARE_PROPERTY_FIELD(_numberOfBins);
-	DECLARE_PROPERTY_FIELD(_selectInRange);
-	DECLARE_PROPERTY_FIELD(_selectionRangeStart);
-	DECLARE_PROPERTY_FIELD(_selectionRangeEnd);
-	DECLARE_PROPERTY_FIELD(_fixXAxisRange);
-	DECLARE_PROPERTY_FIELD(_xAxisRangeStart);
-	DECLARE_PROPERTY_FIELD(_xAxisRangeEnd);
-	DECLARE_PROPERTY_FIELD(_fixYAxisRange);
-	DECLARE_PROPERTY_FIELD(_yAxisRangeStart);
-	DECLARE_PROPERTY_FIELD(_yAxisRangeEnd);
-	DECLARE_PROPERTY_FIELD(_sourceProperty);
-	DECLARE_PROPERTY_FIELD(_onlySelected);
 };
 
 OVITO_END_INLINE_NAMESPACE

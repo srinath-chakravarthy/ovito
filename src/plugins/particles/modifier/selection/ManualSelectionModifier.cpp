@@ -29,7 +29,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Selection)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ManualSelectionModifier, ParticleModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ManualSelectionModifier, ParticleModifier);
 
 /******************************************************************************
 * This modifies the input object.

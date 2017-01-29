@@ -49,19 +49,8 @@ public:
 	/// Constructor.
 	Q_INVOKABLE ViewportConfiguration(DataSet* dataset);
 
-	/// Returns the list of viewports.
-	const QVector<Viewport*>& viewports() const { return _viewports; }
-
 	/// Add a record for a new viewport.
 	void addViewport(const OORef<Viewport>& vp) { _viewports.push_back(vp); }
-
-	/// \brief Returns the active viewport.
-	/// \return The active Viewport or \c NULL if no viewport is currently active.
-	Viewport* activeViewport() { return _activeViewport; }
-
-	/// \brief Returns the maximized viewport.
-	/// \return The maximized viewport or \c NULL if no one is currently maximized.
-	Viewport* maximizedViewport() { return _maximizedViewport; }
 
 	/// \brief Immediately repaints all viewports that have been scheduled for an update using updateViewports().
 	/// \sa updateViewports()
@@ -99,12 +88,6 @@ public:
 
 	/// Returns the current center of orbit mode.
 	OrbitCenterMode orbitCenterMode() { return _orbitCenterMode; }
-
-	/// Sets the user-defined location around which the camera orbits.
-	void setUserOrbitCenter(const Point3& center) { _userOrbitCenter = center; }
-
-	/// Returns the user-defined location around which the camera orbits.
-	const Point3& userOrbitCenter() const { return _userOrbitCenter; }
 
 	/// Returns the current location around which the viewport camera orbits.
 	Point3 orbitCenter();
@@ -173,13 +156,13 @@ Q_SIGNALS:
 private:
 
 	/// The list of viewports.
-	VectorReferenceField<Viewport> _viewports;
+	DECLARE_VECTOR_REFERENCE_FIELD(Viewport, viewports);
 
 	/// The active viewport. May be NULL.
-	ReferenceField<Viewport> _activeViewport;
+	DECLARE_REFERENCE_FIELD(Viewport, activeViewport);
 
 	/// The maximized viewport or NULL.
-	ReferenceField<Viewport> _maximizedViewport;
+	DECLARE_REFERENCE_FIELD(Viewport, maximizedViewport);
 
 	/// This counter is for suspending the viewport updates.
 	int _viewportSuspendCount;
@@ -188,19 +171,13 @@ private:
 	bool _viewportsNeedUpdate;
 
 	/// Controls around which point the viewport camera should orbit.
-    PropertyField<OrbitCenterMode, int> _orbitCenterMode;
+	DECLARE_PROPERTY_FIELD(OrbitCenterMode, orbitCenterMode);
 
 	/// Position of the orbiting center picked by the user.
-	PropertyField<Point3> _userOrbitCenter;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Point3, userOrbitCenter, setUserOrbitCenter);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_VECTOR_REFERENCE_FIELD(_viewports);
-	DECLARE_REFERENCE_FIELD(_activeViewport);
-	DECLARE_REFERENCE_FIELD(_maximizedViewport);
-	DECLARE_PROPERTY_FIELD(_orbitCenterMode);
-	DECLARE_PROPERTY_FIELD(_userOrbitCenter);
 };
 
 

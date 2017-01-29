@@ -27,9 +27,9 @@
 
 namespace PyScript {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PyScript, PythonViewportOverlay, ViewportOverlay);
-DEFINE_PROPERTY_FIELD(PythonViewportOverlay, _script, "Script");
-SET_PROPERTY_FIELD_LABEL(PythonViewportOverlay, _script, "Script");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PythonViewportOverlay, ViewportOverlay);
+DEFINE_PROPERTY_FIELD(PythonViewportOverlay, script, "Script");
+SET_PROPERTY_FIELD_LABEL(PythonViewportOverlay, script, "Script");
 
 /******************************************************************************
 * Constructor.
@@ -37,7 +37,7 @@ SET_PROPERTY_FIELD_LABEL(PythonViewportOverlay, _script, "Script");
 PythonViewportOverlay::PythonViewportOverlay(DataSet* dataset) : ViewportOverlay(dataset),
 		_scriptEngine(dataset, nullptr, false)
 {
-	INIT_PROPERTY_FIELD(PythonViewportOverlay::_script);
+	INIT_PROPERTY_FIELD(script);
 
 	connect(&_scriptEngine, &ScriptEngine::scriptOutput, this, &PythonViewportOverlay::onScriptOutput);
 	connect(&_scriptEngine, &ScriptEngine::scriptError, this, &PythonViewportOverlay::onScriptOutput);
@@ -70,7 +70,7 @@ PythonViewportOverlay::PythonViewportOverlay(DataSet* dataset) : ViewportOverlay
 void PythonViewportOverlay::propertyChanged(const PropertyFieldDescriptor& field)
 {
 	ViewportOverlay::propertyChanged(field);
-	if(field == PROPERTY_FIELD(PythonViewportOverlay::_script)) {
+	if(field == PROPERTY_FIELD(script)) {
 		compileScript();
 	}
 }

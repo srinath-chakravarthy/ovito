@@ -26,26 +26,26 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ShowPeriodicImagesModifier, ParticleModifier);
-DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, _showImageX, "ShowImageX");
-DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, _showImageY, "ShowImageY");
-DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, _showImageZ, "ShowImageZ");
-DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, _numImagesX, "NumImagesX");
-DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, _numImagesY, "NumImagesY");
-DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, _numImagesZ, "NumImagesZ");
-DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, _adjustBoxSize, "AdjustBoxSize");
-DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, _uniqueIdentifiers, "UniqueIdentifiers");
-SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, _showImageX, "Periodic images X");
-SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, _showImageY, "Periodic images Y");
-SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, _showImageZ, "Periodic images Z");
-SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, _numImagesX, "Number of periodic images - X");
-SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, _numImagesY, "Number of periodic images - Y");
-SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, _numImagesZ, "Number of periodic images - Z");
-SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, _adjustBoxSize, "Adjust simulation box size");
-SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, _uniqueIdentifiers, "Assign unique particle IDs");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ShowPeriodicImagesModifier, _numImagesX, IntegerParameterUnit, 1);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ShowPeriodicImagesModifier, _numImagesY, IntegerParameterUnit, 1);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ShowPeriodicImagesModifier, _numImagesZ, IntegerParameterUnit, 1);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ShowPeriodicImagesModifier, ParticleModifier);
+DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, showImageX, "ShowImageX");
+DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, showImageY, "ShowImageY");
+DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, showImageZ, "ShowImageZ");
+DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, numImagesX, "NumImagesX");
+DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, numImagesY, "NumImagesY");
+DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, numImagesZ, "NumImagesZ");
+DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, adjustBoxSize, "AdjustBoxSize");
+DEFINE_PROPERTY_FIELD(ShowPeriodicImagesModifier, uniqueIdentifiers, "UniqueIdentifiers");
+SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, showImageX, "Periodic images X");
+SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, showImageY, "Periodic images Y");
+SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, showImageZ, "Periodic images Z");
+SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, numImagesX, "Number of periodic images - X");
+SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, numImagesY, "Number of periodic images - Y");
+SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, numImagesZ, "Number of periodic images - Z");
+SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, adjustBoxSize, "Adjust simulation box size");
+SET_PROPERTY_FIELD_LABEL(ShowPeriodicImagesModifier, uniqueIdentifiers, "Assign unique particle IDs");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ShowPeriodicImagesModifier, numImagesX, IntegerParameterUnit, 1);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ShowPeriodicImagesModifier, numImagesY, IntegerParameterUnit, 1);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ShowPeriodicImagesModifier, numImagesZ, IntegerParameterUnit, 1);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -54,14 +54,14 @@ ShowPeriodicImagesModifier::ShowPeriodicImagesModifier(DataSet* dataset) : Parti
 	_showImageX(false), _showImageY(false), _showImageZ(false),
 	_numImagesX(3), _numImagesY(3), _numImagesZ(3), _adjustBoxSize(false), _uniqueIdentifiers(true)
 {
-	INIT_PROPERTY_FIELD(ShowPeriodicImagesModifier::_showImageX);
-	INIT_PROPERTY_FIELD(ShowPeriodicImagesModifier::_showImageY);
-	INIT_PROPERTY_FIELD(ShowPeriodicImagesModifier::_showImageZ);
-	INIT_PROPERTY_FIELD(ShowPeriodicImagesModifier::_numImagesX);
-	INIT_PROPERTY_FIELD(ShowPeriodicImagesModifier::_numImagesY);
-	INIT_PROPERTY_FIELD(ShowPeriodicImagesModifier::_numImagesZ);
-	INIT_PROPERTY_FIELD(ShowPeriodicImagesModifier::_adjustBoxSize);
-	INIT_PROPERTY_FIELD(ShowPeriodicImagesModifier::_uniqueIdentifiers);
+	INIT_PROPERTY_FIELD(showImageX);
+	INIT_PROPERTY_FIELD(showImageY);
+	INIT_PROPERTY_FIELD(showImageZ);
+	INIT_PROPERTY_FIELD(numImagesX);
+	INIT_PROPERTY_FIELD(numImagesY);
+	INIT_PROPERTY_FIELD(numImagesZ);
+	INIT_PROPERTY_FIELD(adjustBoxSize);
+	INIT_PROPERTY_FIELD(uniqueIdentifiers);
 }
 
 /******************************************************************************

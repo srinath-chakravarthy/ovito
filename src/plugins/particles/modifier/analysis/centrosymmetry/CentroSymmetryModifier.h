@@ -42,12 +42,6 @@ public:
 	/// Constructor.
 	Q_INVOKABLE CentroSymmetryModifier(DataSet* dataset);
 
-	/// Returns the number of nearest neighbors to take into account when computing the CSP.
-	int numNeighbors() const { return _numNeighbors; }
-
-	/// Sets the number of nearest neighbors to take into account when computing the CSP.
-	void setNumNeighbors(int count) { _numNeighbors = count; }
-
 protected:
 
 	/// Is called when the value of a property of this object has changed.
@@ -104,15 +98,13 @@ private:
 	QExplicitlySharedDataPointer<ParticleProperty> _cspValues;
 
 	/// Specifies the number of nearest neighbors to take into account when computing the CSP.
-	PropertyField<int> _numNeighbors;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, numNeighbors, setNumNeighbors);
 
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Centrosymmetry parameter");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
-
-	DECLARE_PROPERTY_FIELD(_numNeighbors);
 };
 
 OVITO_END_INLINE_NAMESPACE

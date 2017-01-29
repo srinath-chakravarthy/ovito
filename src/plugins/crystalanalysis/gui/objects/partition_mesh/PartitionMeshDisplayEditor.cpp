@@ -29,7 +29,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysisGui, PartitionMeshDisplayEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(PartitionMeshDisplayEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(PartitionMeshDisplay, PartitionMeshDisplayEditor);
 
 /******************************************************************************
@@ -52,21 +52,21 @@ void PartitionMeshDisplayEditor::createUI(const RolloutInsertionParameters& roll
 	sublayout->setColumnStretch(1, 1);
 	layout->addWidget(surfaceGroupBox);
 
-	ColorParameterUI* surfaceColorUI = new ColorParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_surfaceColor));
+	ColorParameterUI* surfaceColorUI = new ColorParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::surfaceColor));
 	sublayout->addWidget(surfaceColorUI->label(), 0, 0);
 	sublayout->addWidget(surfaceColorUI->colorPicker(), 0, 1);
 
-	FloatParameterUI* surfaceTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_surfaceTransparency));
+	FloatParameterUI* surfaceTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::surfaceTransparencyController));
 	sublayout->addWidget(new QLabel(tr("Transparency:")), 1, 0);
 	sublayout->addLayout(surfaceTransparencyUI->createFieldLayout(), 1, 1);
 
-	BooleanParameterUI* smoothShadingUI = new BooleanParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_smoothShading));
+	BooleanParameterUI* smoothShadingUI = new BooleanParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::smoothShading));
 	sublayout->addWidget(smoothShadingUI->checkBox(), 2, 0, 1, 2);
 
-	BooleanParameterUI* flipOrientationUI = new BooleanParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_flipOrientation));
+	BooleanParameterUI* flipOrientationUI = new BooleanParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::flipOrientation));
 	sublayout->addWidget(flipOrientationUI->checkBox(), 3, 0, 1, 2);
 
-	BooleanGroupBoxParameterUI* capGroupUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_showCap));
+	BooleanGroupBoxParameterUI* capGroupUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::showCap));
 	capGroupUI->groupBox()->setTitle(tr("Cap polygons"));
 	sublayout = new QGridLayout(capGroupUI->childContainer());
 	sublayout->setContentsMargins(4,4,4,4);
@@ -74,7 +74,7 @@ void PartitionMeshDisplayEditor::createUI(const RolloutInsertionParameters& roll
 	sublayout->setColumnStretch(1, 1);
 	layout->addWidget(capGroupUI->groupBox());
 
-	FloatParameterUI* capTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::_capTransparency));
+	FloatParameterUI* capTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(PartitionMeshDisplay::capTransparencyController));
 	sublayout->addWidget(new QLabel(tr("Transparency:")), 0, 0);
 	sublayout->addLayout(capTransparencyUI->createFieldLayout(), 0, 1);
 }

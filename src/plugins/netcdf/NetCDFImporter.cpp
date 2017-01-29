@@ -53,9 +53,11 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(NetCDFPlugin, NetCDFImporter, ParticleImporter);
-DEFINE_PROPERTY_FIELD(NetCDFImporter, _useCustomColumnMapping, "UseCustomColumnMapping");
-SET_PROPERTY_FIELD_LABEL(NetCDFImporter, _useCustomColumnMapping, "Custom file column mapping");
+QMutex NetCDFImporter::_netcdfMutex;
+
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(NetCDFImporter, ParticleImporter);
+DEFINE_PROPERTY_FIELD(NetCDFImporter, useCustomColumnMapping, "UseCustomColumnMapping");
+SET_PROPERTY_FIELD_LABEL(NetCDFImporter, useCustomColumnMapping, "Custom file column mapping");
 
 // Convert full tensor to Voigt tensor
 template<typename T>
@@ -106,6 +108,9 @@ bool NetCDFImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceLocat
 {
 	QString filename = QDir::toNativeSeparators(input.fileName());
 
+	// Only serial access to NetCDF functions allowed because they are not thread-safe.
+	QMutexLocker locker(&netcdfMutex());
+
 	// Check if we can open the input file for reading.
 	int tmp_ncid;
 	int err = nc_open(filename.toLocal8Bit().constData(), NC_NOWRITE, &tmp_ncid);
@@ -134,6 +139,9 @@ InputColumnMapping NetCDFImporter::inspectFileHeader(const Frame& frame)
 ******************************************************************************/
 void NetCDFImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
 {
+	// Only serial access to NetCDF functions allowed because they are not thread-safe.
+	QMutexLocker locker(&netcdfMutex());
+
 	QString filename = QDir::toNativeSeparators(stream.device().fileName());
 
 	// Open the input NetCDF file.
@@ -338,6 +346,8 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 	// Get frame number.
 	size_t movieFrame = frame().lineNumber;
 
+	// Only serial access to NetCDF functions allowed because they are not thread-safe.
+	QMutexLocker locker(&netcdfMutex());
 
 	try {
 		openNetCDF(filename);

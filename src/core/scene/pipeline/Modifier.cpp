@@ -27,19 +27,21 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, Modifier, RefTarget);
-DEFINE_PROPERTY_FIELD(Modifier, _isEnabled, "IsEnabled");
-SET_PROPERTY_FIELD_LABEL(Modifier, _isEnabled, "Enabled");
-DEFINE_PROPERTY_FIELD(Modifier, _title, "Name");
-SET_PROPERTY_FIELD_LABEL(Modifier, _title, "Name");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Modifier, RefTarget);
+DEFINE_PROPERTY_FIELD(Modifier, isEnabled, "IsEnabled");
+SET_PROPERTY_FIELD_LABEL(Modifier, isEnabled, "Enabled");
+SET_PROPERTY_FIELD_CHANGE_EVENT(Modifier, isEnabled, ReferenceEvent::TargetEnabledOrDisabled);
+DEFINE_PROPERTY_FIELD(Modifier, title, "Name");
+SET_PROPERTY_FIELD_LABEL(Modifier, title, "Name");
+SET_PROPERTY_FIELD_CHANGE_EVENT(Modifier, title, ReferenceEvent::TitleChanged);
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
 Modifier::Modifier(DataSet* dataset) : RefTarget(dataset), _isEnabled(true)
 {
-	INIT_PROPERTY_FIELD(Modifier::_isEnabled);
-	INIT_PROPERTY_FIELD(Modifier::_title);
+	INIT_PROPERTY_FIELD(isEnabled);
+	INIT_PROPERTY_FIELD(title);
 }
 
 /******************************************************************************

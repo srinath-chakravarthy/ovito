@@ -69,26 +69,6 @@ public:
 	///		contextNode - The node to which this controller is assigned to
 	virtual void changeParent(TimePoint time, const AffineTransformation& oldParentTM, const AffineTransformation& newParentTM, SceneNode* contextNode) override {}
 
-	/// \brief Returns the target node to look at.
-	/// \return The target this rotation controller is looking at or \c NULL if it
-	///         has not been set yet.
-	SceneNode* targetNode() const { return _targetNode; }
-
-	/// \brief Sets the target node to look at.
-	/// \param target The new target this rotation controller should use for its
-	///               calculation of the rotation matrix.
-	/// \undoable
-	void setTargetNode(SceneNode* target) { _targetNode = target; }
-
-	/// \brief Returns the sub-controller that controls the rolling parameter.
-	/// \return The sub-controller for the rolling angle.
-	Controller* rollController() const { return _rollCtrl; }
-
-	/// \brief Sets the sub-controller that controls the rolling parameter.
-	/// \param ctrl The new roll angle controller. 
-	/// \undoable
-	void setRollController(Controller* ctrl) { _rollCtrl = ctrl; }
-
 	/// \brief Returns whether the value of this controller is changing over time.
 	virtual bool isAnimated() const override {
 		return (rollController() && rollController()->isAnimated())
@@ -98,10 +78,10 @@ public:
 private:
 
 	/// The sub-controller for rolling.
-	ReferenceField<Controller> _rollCtrl;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, rollController, setRollController);
 
 	/// The target scene node to look at.
-	ReferenceField<SceneNode> _targetNode;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(SceneNode, targetNode, setTargetNode);
 
 	/// Stores the cached position of the source node.
 	Vector3 _sourcePos;
@@ -113,9 +93,6 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_rollCtrl);
-	DECLARE_REFERENCE_FIELD(_targetNode);
 };
 
 OVITO_END_INLINE_NAMESPACE

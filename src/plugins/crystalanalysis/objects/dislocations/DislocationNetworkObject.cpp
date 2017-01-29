@@ -24,7 +24,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, DislocationNetworkObject, DataObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(DislocationNetworkObject, DataObject);
 
 /******************************************************************************
 * Constructor.

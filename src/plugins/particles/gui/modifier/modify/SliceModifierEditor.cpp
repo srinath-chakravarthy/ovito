@@ -38,14 +38,12 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, SliceModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(SliceModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(SliceModifier, SliceModifierEditor);
 
 /******************************************************************************
 * Sets up the UI widgets of the editor.
-************************************************axisLabelPUI = new StringParameterUI(this, PROPERTY_FIELD(CoordinateTripodOverlay::_axis1Label));
-	sublayout->addWidget(new QLabel(tr("Label:")), 0, 0);
-	sublayout->addWidget(axisLabelPUI->textBox(), 0, 1, 1, 2);******************************/
+*******************************************************************************/
 void SliceModifierEditor::createUI(const RolloutInsertionParameters& rolloutParams)
 {
 	// Create a rollout.
@@ -61,14 +59,14 @@ void SliceModifierEditor::createUI(const RolloutInsertionParameters& rolloutPara
 	gridlayout->setColumnStretch(1, 1);
 
 	// Distance parameter.
-	FloatParameterUI* distancePUI = new FloatParameterUI(this, PROPERTY_FIELD(SliceModifier::_distanceCtrl));
+	FloatParameterUI* distancePUI = new FloatParameterUI(this, PROPERTY_FIELD(SliceModifier::distanceController));
 	gridlayout->addWidget(distancePUI->label(), 0, 0);
 	gridlayout->addLayout(distancePUI->createFieldLayout(), 0, 1);
 
 	// Normal parameter.
 	static const QString axesNames[3] = { QStringLiteral("X"), QStringLiteral("Y"), QStringLiteral("Z") };
 	for(int i = 0; i < 3; i++) {
-		Vector3ParameterUI* normalPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SliceModifier::_normalCtrl), i);
+		Vector3ParameterUI* normalPUI = new Vector3ParameterUI(this, PROPERTY_FIELD(SliceModifier::normalController), i);
 		normalPUI->label()->setTextFormat(Qt::RichText);
 		normalPUI->label()->setTextInteractionFlags(Qt::LinksAccessibleByMouse);
 		normalPUI->label()->setText(QStringLiteral("<a href=\"%1\">%2</a>").arg(i).arg(normalPUI->label()->text()));
@@ -79,7 +77,7 @@ void SliceModifierEditor::createUI(const RolloutInsertionParameters& rolloutPara
 	}
 
 	// Slice width parameter.
-	FloatParameterUI* widthPUI = new FloatParameterUI(this, PROPERTY_FIELD(SliceModifier::_widthCtrl));
+	FloatParameterUI* widthPUI = new FloatParameterUI(this, PROPERTY_FIELD(SliceModifier::widthController));
 	gridlayout->addWidget(widthPUI->label(), 4, 0);
 	gridlayout->addLayout(widthPUI->createFieldLayout(), 4, 1);
 
@@ -87,15 +85,15 @@ void SliceModifierEditor::createUI(const RolloutInsertionParameters& rolloutPara
 	layout->addSpacing(8);
 
 	// Invert parameter.
-	BooleanParameterUI* invertPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SliceModifier::_inverse));
+	BooleanParameterUI* invertPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SliceModifier::inverse));
 	layout->addWidget(invertPUI->checkBox());
 
 	// Create selection parameter.
-	BooleanParameterUI* createSelectionPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SliceModifier::_createSelection));
+	BooleanParameterUI* createSelectionPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SliceModifier::createSelection));
 	layout->addWidget(createSelectionPUI->checkBox());
 
 	// Apply to selection only parameter.
-	BooleanParameterUI* applyToSelectionPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SliceModifier::_applyToSelection));
+	BooleanParameterUI* applyToSelectionPUI = new BooleanParameterUI(this, PROPERTY_FIELD(SliceModifier::applyToSelection));
 	layout->addWidget(applyToSelectionPUI->checkBox());
 
 	layout->addSpacing(8);

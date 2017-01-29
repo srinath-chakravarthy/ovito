@@ -28,20 +28,20 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, WignerSeitzAnalysisModifier, AsynchronousParticleModifier);
-DEFINE_REFERENCE_FIELD(WignerSeitzAnalysisModifier, _referenceObject, "Reference Configuration", DataObject);
-DEFINE_FLAGS_PROPERTY_FIELD(WignerSeitzAnalysisModifier, _eliminateCellDeformation, "EliminateCellDeformation", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(WignerSeitzAnalysisModifier, _useReferenceFrameOffset, "UseReferenceFrameOffet");
-DEFINE_PROPERTY_FIELD(WignerSeitzAnalysisModifier, _referenceFrameNumber, "ReferenceFrameNumber");
-DEFINE_FLAGS_PROPERTY_FIELD(WignerSeitzAnalysisModifier, _referenceFrameOffset, "ReferenceFrameOffset", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(WignerSeitzAnalysisModifier, _perTypeOccupancy, "PerTypeOccupancy", PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _referenceObject, "Reference Configuration");
-SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _eliminateCellDeformation, "Eliminate homogeneous cell deformation");
-SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _useReferenceFrameOffset, "Use reference frame offset");
-SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _referenceFrameNumber, "Reference frame number");
-SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _referenceFrameOffset, "Reference frame offset");
-SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, _perTypeOccupancy, "Output per-type occupancies");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(WignerSeitzAnalysisModifier, _referenceFrameNumber, IntegerParameterUnit, 0);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(WignerSeitzAnalysisModifier, AsynchronousParticleModifier);
+DEFINE_REFERENCE_FIELD(WignerSeitzAnalysisModifier, referenceConfiguration, "Reference Configuration", DataObject);
+DEFINE_FLAGS_PROPERTY_FIELD(WignerSeitzAnalysisModifier, eliminateCellDeformation, "EliminateCellDeformation", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(WignerSeitzAnalysisModifier, useReferenceFrameOffset, "UseReferenceFrameOffet");
+DEFINE_PROPERTY_FIELD(WignerSeitzAnalysisModifier, referenceFrameNumber, "ReferenceFrameNumber");
+DEFINE_FLAGS_PROPERTY_FIELD(WignerSeitzAnalysisModifier, referenceFrameOffset, "ReferenceFrameOffset", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(WignerSeitzAnalysisModifier, perTypeOccupancy, "PerTypeOccupancy", PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, referenceConfiguration, "Reference Configuration");
+SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, eliminateCellDeformation, "Eliminate homogeneous cell deformation");
+SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, useReferenceFrameOffset, "Use reference frame offset");
+SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, referenceFrameNumber, "Reference frame number");
+SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, referenceFrameOffset, "Reference frame offset");
+SET_PROPERTY_FIELD_LABEL(WignerSeitzAnalysisModifier, perTypeOccupancy, "Output per-type occupancies");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(WignerSeitzAnalysisModifier, referenceFrameNumber, IntegerParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -52,12 +52,12 @@ WignerSeitzAnalysisModifier::WignerSeitzAnalysisModifier(DataSet* dataset) : Asy
 	_vacancyCount(0), _interstitialCount(0),
 	_perTypeOccupancy(false)
 {
-	INIT_PROPERTY_FIELD(WignerSeitzAnalysisModifier::_referenceObject);
-	INIT_PROPERTY_FIELD(WignerSeitzAnalysisModifier::_eliminateCellDeformation);
-	INIT_PROPERTY_FIELD(WignerSeitzAnalysisModifier::_useReferenceFrameOffset);
-	INIT_PROPERTY_FIELD(WignerSeitzAnalysisModifier::_referenceFrameNumber);
-	INIT_PROPERTY_FIELD(WignerSeitzAnalysisModifier::_referenceFrameOffset);
-	INIT_PROPERTY_FIELD(WignerSeitzAnalysisModifier::_perTypeOccupancy);
+	INIT_PROPERTY_FIELD(referenceConfiguration);
+	INIT_PROPERTY_FIELD(eliminateCellDeformation);
+	INIT_PROPERTY_FIELD(useReferenceFrameOffset);
+	INIT_PROPERTY_FIELD(referenceFrameNumber);
+	INIT_PROPERTY_FIELD(referenceFrameOffset);
+	INIT_PROPERTY_FIELD(perTypeOccupancy);
 
 	// Create the file source object that will be responsible for loading
 	// and storing the reference configuration.
@@ -313,11 +313,11 @@ void WignerSeitzAnalysisModifier::propertyChanged(const PropertyFieldDescriptor&
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Recompute modifier results when the parameters have changed.
-	if(field == PROPERTY_FIELD(WignerSeitzAnalysisModifier::_eliminateCellDeformation)
-			|| field == PROPERTY_FIELD(WignerSeitzAnalysisModifier::_perTypeOccupancy)
-			|| field == PROPERTY_FIELD(WignerSeitzAnalysisModifier::_useReferenceFrameOffset)
-			|| field == PROPERTY_FIELD(WignerSeitzAnalysisModifier::_referenceFrameNumber)
-			|| field == PROPERTY_FIELD(WignerSeitzAnalysisModifier::_referenceFrameOffset))
+	if(field == PROPERTY_FIELD(eliminateCellDeformation)
+			|| field == PROPERTY_FIELD(perTypeOccupancy)
+			|| field == PROPERTY_FIELD(useReferenceFrameOffset)
+			|| field == PROPERTY_FIELD(referenceFrameNumber)
+			|| field == PROPERTY_FIELD(referenceFrameOffset))
 		invalidateCachedResults();
 }
 

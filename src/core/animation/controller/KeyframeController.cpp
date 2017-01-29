@@ -24,9 +24,9 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Anim)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, KeyframeController, Controller);
-DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(KeyframeController, _keys, "Keys", AnimationKey, PROPERTY_FIELD_ALWAYS_CLONE | PROPERTY_FIELD_NO_SUB_ANIM);
-SET_PROPERTY_FIELD_LABEL(KeyframeController, _keys, "Keys");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(KeyframeController, Controller);
+DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(KeyframeController, keys, "Keys", AnimationKey, PROPERTY_FIELD_ALWAYS_CLONE | PROPERTY_FIELD_NO_SUB_ANIM);
+SET_PROPERTY_FIELD_LABEL(KeyframeController, keys, "Keys");
 
 /******************************************************************************
 * Maps all keys from the old animation interval to the new interval.

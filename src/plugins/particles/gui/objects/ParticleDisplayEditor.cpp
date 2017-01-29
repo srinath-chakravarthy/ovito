@@ -27,7 +27,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, ParticleDisplayEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(ParticleDisplayEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(ParticleDisplay, ParticleDisplayEditor);
 
 /******************************************************************************
@@ -45,7 +45,7 @@ void ParticleDisplayEditor::createUI(const RolloutInsertionParameters& rolloutPa
 	layout->setColumnStretch(1, 1);
 
 	// Shape.
-	VariantComboBoxParameterUI* particleShapeUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(ParticleDisplay::_particleShape));
+	VariantComboBoxParameterUI* particleShapeUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(ParticleDisplay::particleShape));
 	particleShapeUI->comboBox()->addItem(QIcon(":/particles/icons/particle_shape_sphere.png"), tr("Sphere/Ellipsoid"), QVariant::fromValue(ParticleDisplay::Sphere));
 	particleShapeUI->comboBox()->addItem(QIcon(":/particles/icons/particle_shape_circle.png"), tr("Circle"), QVariant::fromValue(ParticleDisplay::Circle));
 	particleShapeUI->comboBox()->addItem(QIcon(":/particles/icons/particle_shape_cube.png"), tr("Cube/Box"), QVariant::fromValue(ParticleDisplay::Box));
@@ -56,7 +56,7 @@ void ParticleDisplayEditor::createUI(const RolloutInsertionParameters& rolloutPa
 	layout->addWidget(particleShapeUI->comboBox(), 1, 1);
 
 	// Default radius.
-	FloatParameterUI* radiusUI = new FloatParameterUI(this, PROPERTY_FIELD(ParticleDisplay::_defaultParticleRadius));
+	FloatParameterUI* radiusUI = new FloatParameterUI(this, PROPERTY_FIELD(ParticleDisplay::defaultParticleRadius));
 	layout->addWidget(radiusUI->label(), 2, 0);
 	layout->addLayout(radiusUI->createFieldLayout(), 2, 1);
 
@@ -70,7 +70,7 @@ void ParticleDisplayEditor::createUI(const RolloutInsertionParameters& rolloutPa
 	layout->setColumnStretch(1, 1);
 
 	// Rendering quality.
-	VariantComboBoxParameterUI* renderingQualityUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(ParticleDisplay::_renderingQuality));
+	VariantComboBoxParameterUI* renderingQualityUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(ParticleDisplay::renderingQuality));
 	renderingQualityUI->comboBox()->addItem(tr("Low"), QVariant::fromValue(ParticlePrimitive::LowQuality));
 	renderingQualityUI->comboBox()->addItem(tr("Medium"), QVariant::fromValue(ParticlePrimitive::MediumQuality));
 	renderingQualityUI->comboBox()->addItem(tr("High"), QVariant::fromValue(ParticlePrimitive::HighQuality));

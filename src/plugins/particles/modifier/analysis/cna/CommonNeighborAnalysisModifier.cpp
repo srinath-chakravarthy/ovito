@@ -30,21 +30,21 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, CommonNeighborAnalysisModifier, StructureIdentificationModifier);
-DEFINE_FLAGS_PROPERTY_FIELD(CommonNeighborAnalysisModifier, _cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CommonNeighborAnalysisModifier, _cnaMode, "CNAMode", PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(CommonNeighborAnalysisModifier, _cutoff, "Cutoff radius");
-SET_PROPERTY_FIELD_LABEL(CommonNeighborAnalysisModifier, _cnaMode, "Mode");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CommonNeighborAnalysisModifier, _cutoff, WorldParameterUnit, 0);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CommonNeighborAnalysisModifier, StructureIdentificationModifier);
+DEFINE_FLAGS_PROPERTY_FIELD(CommonNeighborAnalysisModifier, cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CommonNeighborAnalysisModifier, mode, "CNAMode", PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(CommonNeighborAnalysisModifier, cutoff, "Cutoff radius");
+SET_PROPERTY_FIELD_LABEL(CommonNeighborAnalysisModifier, mode, "Mode");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CommonNeighborAnalysisModifier, cutoff, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
 CommonNeighborAnalysisModifier::CommonNeighborAnalysisModifier(DataSet* dataset) : StructureIdentificationModifier(dataset),
-	_cutoff(3.2), _cnaMode(AdaptiveCutoffMode)
+	_cutoff(3.2), _mode(AdaptiveCutoffMode)
 {
-	INIT_PROPERTY_FIELD(CommonNeighborAnalysisModifier::_cutoff);
-	INIT_PROPERTY_FIELD(CommonNeighborAnalysisModifier::_cnaMode);
+	INIT_PROPERTY_FIELD(cutoff);
+	INIT_PROPERTY_FIELD(mode);
 
 	// Create the structure types.
 	createStructureType(OTHER, ParticleTypeProperty::PredefinedStructureType::OTHER);
@@ -62,8 +62,8 @@ void CommonNeighborAnalysisModifier::propertyChanged(const PropertyFieldDescript
 	StructureIdentificationModifier::propertyChanged(field);
 
 	// Recompute results when the parameters have been changed.
-	if(field == PROPERTY_FIELD(CommonNeighborAnalysisModifier::_cutoff) ||
-		field == PROPERTY_FIELD(CommonNeighborAnalysisModifier::_cnaMode))
+	if(field == PROPERTY_FIELD(cutoff) ||
+		field == PROPERTY_FIELD(mode))
 		invalidateCachedResults();
 }
 

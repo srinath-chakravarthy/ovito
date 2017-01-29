@@ -29,7 +29,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, IMDExporter, FileColumnParticleExporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(IMDExporter, FileColumnParticleExporter);
 
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.

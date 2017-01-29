@@ -26,17 +26,17 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Properties)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, FreezePropertyModifier, ParticleModifier);
-DEFINE_PROPERTY_FIELD(FreezePropertyModifier, _sourceProperty, "SourceProperty");
-DEFINE_PROPERTY_FIELD(FreezePropertyModifier, _destinationProperty, "DestinationProperty");
-DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(FreezePropertyModifier, _cachedDisplayObjects, "CachedDisplayObjects", DisplayObject, PROPERTY_FIELD_NEVER_CLONE_TARGET|PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_NO_UNDO|PROPERTY_FIELD_NO_SUB_ANIM);
-SET_PROPERTY_FIELD_LABEL(FreezePropertyModifier, _sourceProperty, "Property");
-SET_PROPERTY_FIELD_LABEL(FreezePropertyModifier, _destinationProperty, "Destination property");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(FreezePropertyModifier, ParticleModifier);
+DEFINE_PROPERTY_FIELD(FreezePropertyModifier, sourceProperty, "SourceProperty");
+DEFINE_PROPERTY_FIELD(FreezePropertyModifier, destinationProperty, "DestinationProperty");
+DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(FreezePropertyModifier, cachedDisplayObjects, "CachedDisplayObjects", DisplayObject, PROPERTY_FIELD_NEVER_CLONE_TARGET|PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_NO_UNDO|PROPERTY_FIELD_NO_SUB_ANIM);
+SET_PROPERTY_FIELD_LABEL(FreezePropertyModifier, sourceProperty, "Property");
+SET_PROPERTY_FIELD_LABEL(FreezePropertyModifier, destinationProperty, "Destination property");
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SavedParticleProperty, RefTarget);
-	DEFINE_REFERENCE_FIELD(SavedParticleProperty, _property, "Property", ParticlePropertyObject);
-	DEFINE_REFERENCE_FIELD(SavedParticleProperty, _identifiers, "Identifiers", ParticlePropertyObject);
+	IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SavedParticleProperty, RefTarget);
+	DEFINE_REFERENCE_FIELD(SavedParticleProperty, property, "Property", ParticlePropertyObject);
+	DEFINE_REFERENCE_FIELD(SavedParticleProperty, identifiers, "Identifiers", ParticlePropertyObject);
 OVITO_END_INLINE_NAMESPACE
 
 /******************************************************************************
@@ -44,9 +44,9 @@ OVITO_END_INLINE_NAMESPACE
 ******************************************************************************/
 FreezePropertyModifier::FreezePropertyModifier(DataSet* dataset) : ParticleModifier(dataset)
 {
-	INIT_PROPERTY_FIELD(FreezePropertyModifier::_sourceProperty);
-	INIT_PROPERTY_FIELD(FreezePropertyModifier::_destinationProperty);
-	INIT_PROPERTY_FIELD(FreezePropertyModifier::_cachedDisplayObjects);
+	INIT_PROPERTY_FIELD(sourceProperty);
+	INIT_PROPERTY_FIELD(destinationProperty);
+	INIT_PROPERTY_FIELD(cachedDisplayObjects);
 }
 
 /******************************************************************************

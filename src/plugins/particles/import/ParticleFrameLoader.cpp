@@ -135,7 +135,7 @@ void ParticleFrameLoader::handOver(CompoundObject* container)
 						simulationCell().matrix().column(0) +
 						simulationCell().matrix().column(1) +
 						simulationCell().matrix().column(2)).length();
-				cellDisplay->setSimulationCellLineWidth(cellDiameter * 1.4e-3f);
+				cellDisplay->setCellLineWidth(cellDiameter * FloatType(1.4e-3));
 			}
 		}
 

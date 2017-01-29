@@ -30,19 +30,19 @@
 
 namespace Ovito { namespace Particles {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, BondsDisplay, DisplayObject);
-IMPLEMENT_OVITO_OBJECT(Particles, BondPickInfo, ObjectPickInfo);
-DEFINE_FLAGS_PROPERTY_FIELD(BondsDisplay, _bondWidth, "BondWidth", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(BondsDisplay, _bondColor, "BondColor", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(BondsDisplay, _useParticleColors, "UseParticleColors", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(BondsDisplay, _shadingMode, "ShadingMode", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(BondsDisplay, _renderingQuality, "RenderingQuality");
-SET_PROPERTY_FIELD_LABEL(BondsDisplay, _bondWidth, "Bond width");
-SET_PROPERTY_FIELD_LABEL(BondsDisplay, _bondColor, "Bond color");
-SET_PROPERTY_FIELD_LABEL(BondsDisplay, _useParticleColors, "Use particle colors");
-SET_PROPERTY_FIELD_LABEL(BondsDisplay, _shadingMode, "Shading mode");
-SET_PROPERTY_FIELD_LABEL(BondsDisplay, _renderingQuality, "RenderingQuality");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(BondsDisplay, _bondWidth, WorldParameterUnit, 0);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(BondsDisplay, DisplayObject);
+IMPLEMENT_OVITO_OBJECT(BondPickInfo, ObjectPickInfo);
+DEFINE_FLAGS_PROPERTY_FIELD(BondsDisplay, bondWidth, "BondWidth", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(BondsDisplay, bondColor, "BondColor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(BondsDisplay, useParticleColors, "UseParticleColors", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(BondsDisplay, shadingMode, "ShadingMode", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(BondsDisplay, renderingQuality, "RenderingQuality");
+SET_PROPERTY_FIELD_LABEL(BondsDisplay, bondWidth, "Bond width");
+SET_PROPERTY_FIELD_LABEL(BondsDisplay, bondColor, "Bond color");
+SET_PROPERTY_FIELD_LABEL(BondsDisplay, useParticleColors, "Use particle colors");
+SET_PROPERTY_FIELD_LABEL(BondsDisplay, shadingMode, "Shading mode");
+SET_PROPERTY_FIELD_LABEL(BondsDisplay, renderingQuality, "RenderingQuality");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(BondsDisplay, bondWidth, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.
@@ -52,11 +52,11 @@ BondsDisplay::BondsDisplay(DataSet* dataset) : DisplayObject(dataset),
 	_shadingMode(ArrowPrimitive::NormalShading),
 	_renderingQuality(ArrowPrimitive::HighQuality)
 {
-	INIT_PROPERTY_FIELD(BondsDisplay::_bondWidth);
-	INIT_PROPERTY_FIELD(BondsDisplay::_bondColor);
-	INIT_PROPERTY_FIELD(BondsDisplay::_useParticleColors);
-	INIT_PROPERTY_FIELD(BondsDisplay::_shadingMode);
-	INIT_PROPERTY_FIELD(BondsDisplay::_renderingQuality);
+	INIT_PROPERTY_FIELD(bondWidth);
+	INIT_PROPERTY_FIELD(bondColor);
+	INIT_PROPERTY_FIELD(useParticleColors);
+	INIT_PROPERTY_FIELD(shadingMode);
+	INIT_PROPERTY_FIELD(renderingQuality);
 }
 
 /******************************************************************************

@@ -27,7 +27,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, BondAngleAnalysisModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(BondAngleAnalysisModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(BondAngleAnalysisModifier, BondAngleAnalysisModifierEditor);
 
 /******************************************************************************
@@ -44,7 +44,7 @@ void BondAngleAnalysisModifierEditor::createUI(const RolloutInsertionParameters&
 	layout1->setSpacing(4);
 
 	// Use only selected particles.
-	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::_onlySelectedParticles));
+	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::onlySelectedParticles));
 	layout1->addWidget(onlySelectedParticlesUI->checkBox());
 
 	// Status label.

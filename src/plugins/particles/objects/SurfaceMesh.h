@@ -49,12 +49,6 @@ public:
 	/// Return false because this object cannot be edited.
 	virtual bool isSubObjectEditable() const override { return false; }
 
-	/// Indicates whether the entire simulation cell is part of the solid region.
-	bool isCompletelySolid() const { return _isCompletelySolid; }
-
-	/// Sets whether the entire simulation cell is part of the solid region.
-	void setCompletelySolid(bool flag) { _isCompletelySolid = flag; }
-
 	/// Returns the planar cuts applied to this mesh.
 	const QVector<Plane3>& cuttingPlanes() const { return _cuttingPlanes; }
 
@@ -84,15 +78,13 @@ protected:
 private:
 
 	/// Indicates that the entire simulation cell is part of the solid region.
-	PropertyField<bool> _isCompletelySolid;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, isCompletelySolid, setIsCompletelySolid);
 
 	/// The planar cuts applied to this mesh.
 	QVector<Plane3> _cuttingPlanes;
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_isCompletelySolid);
 };
 
 }	// End of namespace

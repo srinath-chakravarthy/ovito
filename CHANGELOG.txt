@@ -1,3 +1,11 @@
+Release 2.8.2 (22-Jan-17):
+
+- The Histogram modifier can now operate on bond properties too.
+- Modifiers now report out-of-memory conditions. 
+  Before, Ovito simply crashed when a memory allocation failed during modifier evaluation.
+- Added Python script interface for trajectory line visualization.
+- Fixed viewport rendering and other issues for datasets with a very small length scale (~10^-10).
+
 Release 2.8.1 (17-Dec-16):
 
  - Bug fix: Segmentation fault after applying a Color Coding modifier with Viridis color map to 

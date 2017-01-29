@@ -32,7 +32,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, AsynchronousParticleModifier, ParticleModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(AsynchronousParticleModifier, ParticleModifier);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -226,7 +226,7 @@ void AsynchronousParticleModifier::propertyChanged(const PropertyFieldDescriptor
 	ParticleModifier::propertyChanged(field);
 
 	// Stop compute engine when modifier is disbaled.
-	if(field == PROPERTY_FIELD(Modifier::_isEnabled) && !isEnabled())
+	if(field == PROPERTY_FIELD(Modifier::isEnabled) && !isEnabled())
 		stopRunningEngine();
 }
 

@@ -26,12 +26,12 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Anim)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, AnimationSettings, RefTarget);
-DEFINE_FLAGS_PROPERTY_FIELD(AnimationSettings, _time, "Time", PROPERTY_FIELD_NO_UNDO);
-DEFINE_PROPERTY_FIELD(AnimationSettings, _animationInterval, "AnimationInterval");
-DEFINE_PROPERTY_FIELD(AnimationSettings, _ticksPerFrame, "TicksPerFrame");
-DEFINE_PROPERTY_FIELD(AnimationSettings, _playbackSpeed, "PlaybackSpeed");
-DEFINE_PROPERTY_FIELD(AnimationSettings, _loopPlayback, "LoopPlayback");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(AnimationSettings, RefTarget);
+DEFINE_FLAGS_PROPERTY_FIELD(AnimationSettings, time, "Time", PROPERTY_FIELD_NO_UNDO);
+DEFINE_PROPERTY_FIELD(AnimationSettings, animationInterval, "AnimationInterval");
+DEFINE_PROPERTY_FIELD(AnimationSettings, ticksPerFrame, "TicksPerFrame");
+DEFINE_PROPERTY_FIELD(AnimationSettings, playbackSpeed, "PlaybackSpeed");
+DEFINE_PROPERTY_FIELD(AnimationSettings, loopPlayback, "LoopPlayback");
 
 /******************************************************************************
 * Constructor.
@@ -41,11 +41,11 @@ AnimationSettings::AnimationSettings(DataSet* dataset) : RefTarget(dataset),
 		_animationInterval(0, 0), _time(0), _animSuspendCount(0),  _autoKeyMode(false), _timeIsChanging(0),
 		_isPlaybackActive(false), _loopPlayback(true)
 {
-	INIT_PROPERTY_FIELD(AnimationSettings::_time);
-	INIT_PROPERTY_FIELD(AnimationSettings::_animationInterval);
-	INIT_PROPERTY_FIELD(AnimationSettings::_ticksPerFrame);
-	INIT_PROPERTY_FIELD(AnimationSettings::_playbackSpeed);
-	INIT_PROPERTY_FIELD(AnimationSettings::_loopPlayback);
+	INIT_PROPERTY_FIELD(time);
+	INIT_PROPERTY_FIELD(animationInterval);
+	INIT_PROPERTY_FIELD(ticksPerFrame);
+	INIT_PROPERTY_FIELD(playbackSpeed);
+	INIT_PROPERTY_FIELD(loopPlayback);
 
 	// Call our own listener when the current animation time changes.
 	connect(this, &AnimationSettings::timeChanged, this, &AnimationSettings::onTimeChanged);
@@ -56,11 +56,11 @@ AnimationSettings::AnimationSettings(DataSet* dataset) : RefTarget(dataset),
 ******************************************************************************/
 void AnimationSettings::propertyChanged(const PropertyFieldDescriptor& field)
 {
-	if(field == PROPERTY_FIELD(AnimationSettings::_time))
+	if(field == PROPERTY_FIELD(time))
 		Q_EMIT timeChanged(time());
-	else if(field == PROPERTY_FIELD(AnimationSettings::_animationInterval))
+	else if(field == PROPERTY_FIELD(animationInterval))
 		Q_EMIT intervalChanged(animationInterval());
-	else if(field == PROPERTY_FIELD(AnimationSettings::_ticksPerFrame))
+	else if(field == PROPERTY_FIELD(ticksPerFrame))
 		Q_EMIT speedChanged(ticksPerFrame());
 }
 

@@ -26,23 +26,23 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Anim)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, LookAtController, Controller);
-DEFINE_REFERENCE_FIELD(LookAtController, _rollCtrl, "Roll", Controller);
-DEFINE_FLAGS_REFERENCE_FIELD(LookAtController, _targetNode, "Target", SceneNode, PROPERTY_FIELD_NEVER_CLONE_TARGET | PROPERTY_FIELD_NO_SUB_ANIM);
-SET_PROPERTY_FIELD_LABEL(LookAtController, _rollCtrl, "Roll");
-SET_PROPERTY_FIELD_LABEL(LookAtController, _targetNode, "Target");
-SET_PROPERTY_FIELD_UNITS(LookAtController, _rollCtrl, AngleParameterUnit);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(LookAtController, Controller);
+DEFINE_REFERENCE_FIELD(LookAtController, rollController, "Roll", Controller);
+DEFINE_FLAGS_REFERENCE_FIELD(LookAtController, targetNode, "Target", SceneNode, PROPERTY_FIELD_NEVER_CLONE_TARGET | PROPERTY_FIELD_NO_SUB_ANIM);
+SET_PROPERTY_FIELD_LABEL(LookAtController, rollController, "Roll");
+SET_PROPERTY_FIELD_LABEL(LookAtController, targetNode, "Target");
+SET_PROPERTY_FIELD_UNITS(LookAtController, rollController, AngleParameterUnit);
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
 LookAtController::LookAtController(DataSet* dataset) : Controller(dataset)
 {
-	INIT_PROPERTY_FIELD(LookAtController::_rollCtrl);
-	INIT_PROPERTY_FIELD(LookAtController::_targetNode);
+	INIT_PROPERTY_FIELD(rollController);
+	INIT_PROPERTY_FIELD(targetNode);
 
 	// Create sub-controller.
-	_rollCtrl = ControllerManager::instance().createFloatController(dataset);
+	setRollController(ControllerManager::instance().createFloatController(dataset));
 }
 
 /******************************************************************************

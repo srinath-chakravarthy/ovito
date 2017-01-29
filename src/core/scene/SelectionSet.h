@@ -154,15 +154,13 @@ protected:
 private:
 
 	/// Holds the references to the selected scene nodes.
-	VectorReferenceField<SceneNode> _selection;
+	DECLARE_VECTOR_REFERENCE_FIELD(SceneNode, selection);
 
 	/// Indicates that there is a pending change event in the event queue.
 	bool _selectionChangeInProgress;
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_VECTOR_REFERENCE_FIELD(_selection);
 };
 
 OVITO_END_INLINE_NAMESPACE
