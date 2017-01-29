@@ -70,20 +70,31 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	gridlayout->addWidget(fftGridSpacingRadiusPUI->label(), 0, 0);
 	gridlayout->addLayout(fftGridSpacingRadiusPUI->createFieldLayout(), 0, 1);
 
-	// Neighbor cutoff parameter.
-	FloatParameterUI *neighCutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::neighCutoff));
-	gridlayout->addWidget(neighCutoffRadiusPUI->label(), 1, 0);
-	gridlayout->addLayout(neighCutoffRadiusPUI->createFieldLayout(), 1, 1);
-
-	// Number of bins parameter.
-	IntegerParameterUI* numberOfNeighBinsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::numberOfNeighBins));
-	gridlayout->addWidget(numberOfNeighBinsPUI->label(), 2, 0);
-	gridlayout->addLayout(numberOfNeighBinsPUI->createFieldLayout(), 2, 1);
-
 	layout->addLayout(gridlayout);
 
 	QGroupBox* realSpaceGroupBox = new QGroupBox(tr("Real-space correlation function"));
 	layout->addWidget(realSpaceGroupBox);
+
+	BooleanParameterUI* computeDirectSumUI = new BooleanParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::computeDirectSum));
+
+	QGridLayout* realSpaceGridLayout = new QGridLayout();
+	realSpaceGridLayout->setContentsMargins(4,4,4,4);
+	realSpaceGridLayout->setColumnStretch(1, 1);
+
+	// Neighbor cutoff parameter.
+	FloatParameterUI *neighCutoffRadiusPUI = new FloatParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::neighCutoff));
+	neighCutoffRadiusPUI->setEnabled(false);
+	realSpaceGridLayout->addWidget(neighCutoffRadiusPUI->label(), 1, 0);
+	realSpaceGridLayout->addLayout(neighCutoffRadiusPUI->createFieldLayout(), 1, 1);
+
+	// Number of bins parameter.
+	IntegerParameterUI* numberOfNeighBinsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::numberOfNeighBins));
+	numberOfNeighBinsPUI->setEnabled(false);
+	realSpaceGridLayout->addWidget(numberOfNeighBinsPUI->label(), 2, 0);
+	realSpaceGridLayout->addLayout(numberOfNeighBinsPUI->createFieldLayout(), 2, 1);
+
+	connect(computeDirectSumUI->checkBox(), &QCheckBox::toggled, neighCutoffRadiusPUI, &FloatParameterUI::setEnabled);
+	connect(computeDirectSumUI->checkBox(), &QCheckBox::toggled, numberOfNeighBinsPUI, &IntegerParameterUI::setEnabled);
 
 	BooleanParameterUI* normalizeRealSpaceUI = new BooleanParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::normalizeRealSpace));
 
@@ -146,6 +157,8 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	}
 
 	QVBoxLayout* realSpaceLayout = new QVBoxLayout(realSpaceGroupBox);
+	realSpaceLayout->addWidget(computeDirectSumUI->checkBox());
+	realSpaceLayout->addLayout(realSpaceGridLayout);
 	realSpaceLayout->addWidget(normalizeRealSpaceUI->checkBox());
 	realSpaceLayout->addLayout(typeOfRealSpacePlotLayout);
 	realSpaceLayout->addWidget(_realSpacePlot);
@@ -313,7 +326,8 @@ void CorrelationFunctionModifierEditor::plotAllData()
 	}
 
 	if(!modifier->neighCorrelationX().empty() &&
-	   !modifier->neighCorrelation().empty()) {
+	   !modifier->neighCorrelation().empty() &&
+	   modifier->computeDirectSum()) {
 		if(!_neighCurve) {
 			_neighCurve = new QwtPlotCurve();
 			_neighCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);
@@ -333,6 +347,14 @@ void CorrelationFunctionModifierEditor::plotAllData()
 			plotData[i].ry() = yValue;
 		}
 		_neighCurve->setSamples(plotData);
+	}
+	else {
+		// Remove curve from plot if it exists.
+		if (_neighCurve) {
+			_neighCurve->detach();
+			delete _neighCurve;
+			_neighCurve = nullptr;
+		}
 	}
 
 	// Plot reciprocal-space correlation function

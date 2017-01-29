@@ -88,14 +88,21 @@ private:
 								  size_t vecComponent2,
 								  const SimulationCell& simCell,
 								  FloatType fftGridSpacing,
+								  bool computeDirectSum,
 								  FloatType neighCutoff,
 								  int numberOfNeighBins) :
 			ComputeEngine(validityInterval), _positions(positions),
 			_sourceProperty1(sourceProperty1), _vecComponent1(vecComponent1),
 			_sourceProperty2(sourceProperty2), _vecComponent2(vecComponent2),
-			_simCell(simCell), _fftGridSpacing(fftGridSpacing), _neighCutoff(neighCutoff),
+			_simCell(simCell), _fftGridSpacing(fftGridSpacing),
+			_neighCutoff(neighCutoff),
 			_neighCorrelation(numberOfNeighBins, 0.0),
-			_neighCorrelationX(numberOfNeighBins) {}
+			_neighCorrelationX(numberOfNeighBins) {
+				if (!computeDirectSum) {
+					_neighCorrelation.clear();
+					_neighCorrelationX.clear();
+				}
+			}
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;
@@ -237,6 +244,8 @@ private:
 	DECLARE_MODIFIABLE_PROPERTY_FIELD(ParticlePropertyReference, sourceProperty2, setSourceProperty2);
 	/// Controls the cutoff radius for the FFT grid.
 	DECLARE_PROPERTY_FIELD(FloatType, fftGridSpacing);
+	/// Controls whether the real-space correlation should be computed by direct summation.
+	DECLARE_PROPERTY_FIELD(bool, computeDirectSum);
 	/// Controls the cutoff radius for the neighbor lists.
 	DECLARE_PROPERTY_FIELD(FloatType, neighCutoff);
 	/// Controls the number of bins for the neighbor part of the real-space correlation function.
