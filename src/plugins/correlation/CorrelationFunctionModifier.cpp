@@ -283,17 +283,10 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::c2rFFT(int nX, int 
 }
 
 /******************************************************************************
-* Performs the actual computation. This method is executed in a worker thread.
+* Compute real and reciprocal space correlation function via FFT.
 ******************************************************************************/
-void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
+void CorrelationFunctionModifier::CorrelationAnalysisEngine::computeFftCorrelation()
 {
-	setProgressText(tr("Computing correlation function"));
-	setProgressValue(0);
-	if (_neighCorrelation.empty())
-		setProgressRange(7);
-	else
-		setProgressRange(9);		
-
 	// Get reciprocal cell.
 	AffineTransformation cellMatrix = cell().matrix(); 
 	AffineTransformation reciprocalCellMatrix = cell().inverseMatrix();
@@ -310,14 +303,17 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 					 reciprocalCellMatrix,
 					 nX, nY, nZ,
 					 gridProperty1);
+
 	incrementProgressValue();
 	if (isCanceled())
 		return;
+
 	mapToSpatialGrid(sourceProperty2(),
 					 _vecComponent2,
 					 reciprocalCellMatrix,
 					 nX, nY, nZ,
 					 gridProperty2);
+
 	incrementProgressValue();
 	if (isCanceled())
 		return;
@@ -329,11 +325,14 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	// Compute Fourier transform of spatial grid.
 	QVector<std::complex<FloatType>> ftProperty1;
 	r2cFFT(nX, nY, nZ, gridProperty1, ftProperty1);
+
 	incrementProgressValue();
 	if (isCanceled())
 		return;
+
 	QVector<std::complex<FloatType>> ftProperty2(nX*nY*(nZ/2+1));
 	r2cFFT(nX, nY, nZ, gridProperty2, ftProperty2);
+
 	incrementProgressValue();
 	if (isCanceled())
 		return;
@@ -416,6 +415,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 
 	// Computer inverse Fourier transform of correlation function.
 	c2rFFT(nX, nY, nZ, ftProperty1, gridProperty1);
+
 	incrementProgressValue();
 	if (isCanceled())
 		return;
@@ -470,7 +470,14 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		}
 	}
 
+	incrementProgressValue();
+}
 
+/******************************************************************************
+* Compute real space correlation function via direction summation over neighbors.
+******************************************************************************/
+void CorrelationFunctionModifier::CorrelationAnalysisEngine::computeNeighCorrelation()
+{
 	// Get number of particles.
 	size_t particleCount = positions()->size();
 
@@ -492,86 +499,98 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 		intData2 = sourceProperty2()->constDataInt();
 	}
 
-	// Compute short-ranged part of the real-space correlation function from a direct loop over particle neighbors.
+	// Prepare the neighbor list.
+	CutoffNeighborFinder neighborListBuilder;
+	if (!neighborListBuilder.prepare(_neighCutoff, positions(), cell(), nullptr, this))
+		return;
 
-	if (!_neighCorrelation.empty()) {
-		incrementProgressValue();
-		if (isCanceled())
-			return;
-
-		// Prepare the neighbor list.
-		CutoffNeighborFinder neighborListBuilder;
-		if (!neighborListBuilder.prepare(_neighCutoff, positions(), cell(), nullptr, this))
-			return;
-
-		// Perform analysis on each particle in parallel.
-		std::vector<std::thread> workers;
-		size_t num_threads = Application::instance().idealThreadCount();
-		size_t chunkSize = particleCount / num_threads;
-		size_t startIndex = 0;
-		size_t endIndex = chunkSize;
-		size_t vecComponent1 = _vecComponent1;
-		size_t vecComponent2 = _vecComponent2;
-		std::mutex mutex;
-		for (size_t t = 0; t < num_threads; t++) {
-			if (t == num_threads - 1) {
-				endIndex += particleCount % num_threads;
-			}
-			workers.push_back(std::thread([&neighborListBuilder, startIndex, endIndex,
-									   	   floatData1, intData1, componentCount1, vecComponent1,
-									   	   floatData2, intData2, componentCount2, vecComponent2,
-									   	   &mutex, this]() {
-				FloatType gridSpacing = (_neighCutoff + FLOATTYPE_EPSILON) / _neighCorrelation.size();
-				std::vector<double> threadLocalCorrelation(_neighCorrelation.size(), 0);
-				for (size_t i = startIndex; i < endIndex;) {
-
+	// Perform analysis on each particle in parallel.
+	std::vector<std::thread> workers;
+	size_t num_threads = Application::instance().idealThreadCount();
+	size_t chunkSize = particleCount / num_threads;
+	size_t startIndex = 0;
+	size_t endIndex = chunkSize;
+	size_t vecComponent1 = _vecComponent1;
+	size_t vecComponent2 = _vecComponent2;
+	std::mutex mutex;
+	for (size_t t = 0; t < num_threads; t++) {
+		if (t == num_threads - 1) {
+			endIndex += particleCount % num_threads;
+		}
+		workers.push_back(std::thread([&neighborListBuilder, startIndex, endIndex,
+								   	   floatData1, intData1, componentCount1, vecComponent1,
+								   	   floatData2, intData2, componentCount2, vecComponent2,
+								   	   &mutex, this]() {
+			FloatType gridSpacing = (_neighCutoff + FLOATTYPE_EPSILON) / _neighCorrelation.size();
+			std::vector<double> threadLocalCorrelation(_neighCorrelation.size(), 0);
+			for (size_t i = startIndex; i < endIndex;) {
 					for (CutoffNeighborFinder::Query neighQuery(neighborListBuilder, i); !neighQuery.atEnd(); neighQuery.next()) {
-						size_t distanceBinIndex = (size_t)(sqrt(neighQuery.distanceSquared()) / gridSpacing);
-						distanceBinIndex = std::min(distanceBinIndex, threadLocalCorrelation.size() - 1);
-						FloatType data1 = 0.0, data2 = 0.0;
-						if (floatData1)
-							data1 = floatData1[i*componentCount1 + vecComponent1];
-						else if (intData1)
-							data1 = intData1[i*componentCount1 + vecComponent1];
-						if (floatData2)
-							data2 = floatData2[neighQuery.current() * componentCount2 + vecComponent2];
-						else if (intData2)
-							data2 = intData2[neighQuery.current() * componentCount2 + vecComponent2];
-						threadLocalCorrelation[distanceBinIndex] += data1*data2;
-					}
-
-					i++;
-
-					// Abort loop when operation was canceled by the user.
-					if (isCanceled())
-						return;
+					size_t distanceBinIndex = (size_t)(sqrt(neighQuery.distanceSquared()) / gridSpacing);
+					distanceBinIndex = std::min(distanceBinIndex, threadLocalCorrelation.size() - 1);
+					FloatType data1 = 0.0, data2 = 0.0;
+					if (floatData1)
+						data1 = floatData1[i*componentCount1 + vecComponent1];
+					else if (intData1)
+						data1 = intData1[i*componentCount1 + vecComponent1];
+					if (floatData2)
+						data2 = floatData2[neighQuery.current() * componentCount2 + vecComponent2];
+					else if (intData2)
+						data2 = intData2[neighQuery.current() * componentCount2 + vecComponent2];
+					threadLocalCorrelation[distanceBinIndex] += data1*data2;
 				}
-				std::lock_guard<std::mutex> lock(mutex);
-				auto iter_out = _neighCorrelation.begin();
-				for (auto iter = threadLocalCorrelation.cbegin(); iter != threadLocalCorrelation.cend(); ++iter, ++iter_out)
-					*iter_out += *iter;
-			}));
-			startIndex = endIndex;
-			endIndex += chunkSize;
-		}
+					i++;
+					// Abort loop when operation was canceled by the user.
+				if (isCanceled())
+					return;
+			}
+			std::lock_guard<std::mutex> lock(mutex);
+			auto iter_out = _neighCorrelation.begin();
+			for (auto iter = threadLocalCorrelation.cbegin(); iter != threadLocalCorrelation.cend(); ++iter, ++iter_out)
+				*iter_out += *iter;
+		}));
+		startIndex = endIndex;
+		endIndex += chunkSize;
+	}
 
-		for (auto& t: workers)
-			t.join();
+	for (auto& t: workers)
+		t.join();
+	incrementProgressValue();
 
-		incrementProgressValue();
-
-		// Normalize short-ranged real-space correlation function and populate x-array.
-		gridSpacing = (_neighCutoff + FLOATTYPE_EPSILON) / _neighCorrelation.size();
-		normalizationFactor = 3.0*cell().volume3D()/(4.0*FLOATTYPE_PI*sourceProperty1()->size()*sourceProperty2()->size());
-		for (int distanceBinIndex = 0; distanceBinIndex < _neighCorrelation.size(); distanceBinIndex++) {
-			FloatType distance = distanceBinIndex*gridSpacing;
-			FloatType distance2 = (distanceBinIndex+1)*gridSpacing;
-			_neighCorrelationX[distanceBinIndex] = (distance+distance2)/2;
-			_neighCorrelation[distanceBinIndex] *= normalizationFactor/(distance2*distance2*distance2-distance*distance*distance);
-		}
+	// Normalize short-ranged real-space correlation function and populate x-array.
+	FloatType gridSpacing = (_neighCutoff + FLOATTYPE_EPSILON) / _neighCorrelation.size();
+	FloatType normalizationFactor = 3.0*cell().volume3D()/(4.0*FLOATTYPE_PI*sourceProperty1()->size()*sourceProperty2()->size());
+	for (int distanceBinIndex = 0; distanceBinIndex < _neighCorrelation.size(); distanceBinIndex++) {
+		FloatType distance = distanceBinIndex*gridSpacing;
+		FloatType distance2 = (distanceBinIndex+1)*gridSpacing;
+		_neighCorrelationX[distanceBinIndex] = (distance+distance2)/2;
+		_neighCorrelation[distanceBinIndex] *= normalizationFactor/(distance2*distance2*distance2-distance*distance*distance);
 	}
 
 	incrementProgressValue();
+}
+
+/******************************************************************************
+* Compute means and covariance.
+******************************************************************************/
+void CorrelationFunctionModifier::CorrelationAnalysisEngine::computeLimits()
+{
+	// Get pointers to data.
+	const FloatType *floatData1 = nullptr, *floatData2 = nullptr;
+	const int *intData1 = nullptr, *intData2 = nullptr; 
+	size_t componentCount1 = sourceProperty1()->componentCount();
+	size_t componentCount2 = sourceProperty2()->componentCount();
+	if(sourceProperty1()->dataType() == qMetaTypeId<FloatType>()) {
+		floatData1 = sourceProperty1()->constDataFloat();
+	}
+	else if (sourceProperty1()->dataType() == qMetaTypeId<int>()) {
+		intData1 = sourceProperty1()->constDataInt();
+	}
+	if(sourceProperty2()->dataType() == qMetaTypeId<FloatType>()) {
+		floatData2 = sourceProperty2()->constDataFloat();
+	}
+	else if (sourceProperty2()->dataType() == qMetaTypeId<int>()) {
+		intData2 = sourceProperty2()->constDataInt();
+	}
 
 	// Compute mean and covariance values.
 	_mean1 = _mean2 = _covariance = 0.0;
@@ -594,6 +613,36 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 	_mean1 /= sourceProperty1()->size();
 	_mean2 /= sourceProperty2()->size();
 	_covariance /= sourceProperty1()->size();
+
+	incrementProgressValue();
+}
+
+/******************************************************************************
+* Performs the actual computation. This method is executed in a worker thread.
+******************************************************************************/
+void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
+{
+	setProgressText(tr("Computing correlation function"));
+	setProgressValue(0);
+	if (_neighCorrelation.empty())
+		setProgressRange(7);
+	else
+		setProgressRange(9);
+
+	// Compute reciprocal space correlation function and long-ranged part of
+	// the real-space correlation function from an FFT.
+	computeFftCorrelation();
+	if (isCanceled())
+		return;
+
+	// Compute short-ranged part of the real-space correlation function from a direct loop over particle neighbors.
+	if (!_neighCorrelation.empty()) {
+		if (isCanceled())
+			return;
+		computeNeighCorrelation();
+	}
+
+	computeLimits();
 }
 
 /******************************************************************************

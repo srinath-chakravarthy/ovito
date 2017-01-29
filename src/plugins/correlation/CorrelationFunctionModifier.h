@@ -104,6 +104,15 @@ private:
 				}
 			}
 
+		/// Compute real and reciprocal space correlation function via FFT.
+		void computeFftCorrelation();
+
+		/// Compute real space correlation function via direction summation over neighbors.
+		void computeNeighCorrelation();
+
+		/// Compute means and covariance.
+		void computeLimits();
+
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;
 
