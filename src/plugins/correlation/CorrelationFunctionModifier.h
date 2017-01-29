@@ -32,18 +32,6 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
-#define DECLARE_PROPERTY_FIELD_EX(name, type) 						\
-	public:															\
-		const type name() const { return _##name; }					\
-	private:														\
-		PropertyField<type> _##name;								\
-	DECLARE_PROPERTY_FIELD(_##name)
-
-#define DECLARE_PROPERTY_FIELD_EX_SETTER(name, type, setter)		\
-	DECLARE_PROPERTY_FIELD_EX(name, type)							\
-	public:															\
-		void setter(type x) { _##name = x; }
-
 /**
  * \brief This modifier computes the coordination number of each particle (i.e. the number of neighbors within a given cutoff radius).
  */
@@ -244,47 +232,47 @@ private:
 	Q_CLASSINFO("ModifierCategory", "Analysis");
 
 	/// The particle property that serves as the first data source for the correlation function.
-	DECLARE_PROPERTY_FIELD_EX_SETTER(sourceProperty1, ParticlePropertyReference, setSourceProperty1);
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ParticlePropertyReference, sourceProperty1, setSourceProperty1);
 	/// The particle property that serves as the second data source for the correlation function.
-	DECLARE_PROPERTY_FIELD_EX_SETTER(sourceProperty2, ParticlePropertyReference, setSourceProperty2);
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ParticlePropertyReference, sourceProperty2, setSourceProperty2);
 	/// Controls the cutoff radius for the FFT grid.
-	DECLARE_PROPERTY_FIELD_EX(fftGridSpacing, FloatType);
+	DECLARE_PROPERTY_FIELD(FloatType, fftGridSpacing);
 	/// Controls the cutoff radius for the neighbor lists.
-	DECLARE_PROPERTY_FIELD_EX(neighCutoff, FloatType);
+	DECLARE_PROPERTY_FIELD(FloatType, neighCutoff);
 	/// Controls the number of bins for the neighbor part of the real-space correlation function.
-	DECLARE_PROPERTY_FIELD_EX(numberOfNeighBins, int);
+	DECLARE_PROPERTY_FIELD(int, numberOfNeighBins);
 	/// Controls the normalization of the real-space correlation function.
-	DECLARE_PROPERTY_FIELD_EX(normalizeRealSpace, bool);
+	DECLARE_PROPERTY_FIELD(bool, normalizeRealSpace);
 	/// Type of real-space plot (lin-lin, log-lin or log-log)
-	DECLARE_PROPERTY_FIELD_EX(typeOfRealSpacePlot, int);
+	DECLARE_PROPERTY_FIELD(int, typeOfRealSpacePlot);
 	/// Controls the whether the range of the x-axis of the plot should be fixed.
-	DECLARE_PROPERTY_FIELD_EX(fixRealSpaceXAxisRange, bool);
+	DECLARE_PROPERTY_FIELD(bool, fixRealSpaceXAxisRange);
 	/// Controls the start value of the x-axis.
-	DECLARE_PROPERTY_FIELD_EX(realSpaceXAxisRangeStart, FloatType);
+	DECLARE_PROPERTY_FIELD(FloatType, realSpaceXAxisRangeStart);
 	/// Controls the end value of the x-axis.
-	DECLARE_PROPERTY_FIELD_EX(realSpaceXAxisRangeEnd, FloatType);
+	DECLARE_PROPERTY_FIELD(FloatType, realSpaceXAxisRangeEnd);
 	/// Controls the whether the range of the y-axis of the plot should be fixed.
-	DECLARE_PROPERTY_FIELD_EX(fixRealSpaceYAxisRange, bool);
+	DECLARE_PROPERTY_FIELD(bool, fixRealSpaceYAxisRange);
 	/// Controls the start value of the y-axis.
-	DECLARE_PROPERTY_FIELD_EX(realSpaceYAxisRangeStart, FloatType);
+	DECLARE_PROPERTY_FIELD(FloatType, realSpaceYAxisRangeStart);
 	/// Controls the end value of the y-axis.
-	DECLARE_PROPERTY_FIELD_EX(realSpaceYAxisRangeEnd, FloatType);
+	DECLARE_PROPERTY_FIELD(FloatType, realSpaceYAxisRangeEnd);
 	/// Controls the normalization of the reciprocal-space correlation function.
-	DECLARE_PROPERTY_FIELD_EX(normalizeReciprocalSpace, bool);
+	DECLARE_PROPERTY_FIELD(bool, normalizeReciprocalSpace);
 	/// Type of reciprocal-space plot (lin-lin, log-lin or log-log)
-	DECLARE_PROPERTY_FIELD_EX(typeOfReciprocalSpacePlot, int);
+	DECLARE_PROPERTY_FIELD(int, typeOfReciprocalSpacePlot);
 	/// Controls the whether the range of the x-axis of the plot should be fixed.
-	DECLARE_PROPERTY_FIELD_EX(fixReciprocalSpaceXAxisRange, bool);
+	DECLARE_PROPERTY_FIELD(bool, fixReciprocalSpaceXAxisRange);
 	/// Controls the start value of the x-axis.
-	DECLARE_PROPERTY_FIELD_EX(reciprocalSpaceXAxisRangeStart, FloatType);
+	DECLARE_PROPERTY_FIELD(FloatType, reciprocalSpaceXAxisRangeStart);
 	/// Controls the end value of the x-axis.
-	DECLARE_PROPERTY_FIELD_EX(reciprocalSpaceXAxisRangeEnd, FloatType);
+	DECLARE_PROPERTY_FIELD(FloatType, reciprocalSpaceXAxisRangeEnd);
 	/// Controls the whether the range of the y-axis of the plot should be fixed.
-	DECLARE_PROPERTY_FIELD_EX(fixReciprocalSpaceYAxisRange, bool);
+	DECLARE_PROPERTY_FIELD(bool, fixReciprocalSpaceYAxisRange);
 	/// Controls the start value of the y-axis.
-	DECLARE_PROPERTY_FIELD_EX(reciprocalSpaceYAxisRangeStart, FloatType);
+	DECLARE_PROPERTY_FIELD(FloatType, reciprocalSpaceYAxisRangeStart);
 	/// Controls the end value of the y-axis.
-	DECLARE_PROPERTY_FIELD_EX(reciprocalSpaceYAxisRangeEnd, FloatType);
+	DECLARE_PROPERTY_FIELD(FloatType, reciprocalSpaceYAxisRangeEnd);
 };
 
 OVITO_END_INLINE_NAMESPACE

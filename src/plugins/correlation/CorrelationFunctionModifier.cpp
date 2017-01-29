@@ -31,50 +31,50 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CorrelationFunctionModifierPlugin, CorrelationFunctionModifier, AsynchronousParticleModifier);
-DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _sourceProperty1, "SourceProperty1");
-DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _sourceProperty2, "SourceProperty2");
-DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _fftGridSpacing, "FftGridSpacing");
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _neighCutoff, "NeighCutoff", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _numberOfNeighBins, "NumberOfNeighBins", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _normalizeRealSpace, "NormalizeRealSpace", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _typeOfRealSpacePlot, "TypeOfRealSpacePlot");
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _normalizeReciprocalSpace, "NormalizeReciprocalSpace", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _typeOfReciprocalSpacePlot, "TypeOfReciprocalSpacePlot");
-DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _fixRealSpaceXAxisRange, "FixRealSpaceXAxisRange");
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _realSpaceXAxisRangeStart, "RealSpaceXAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _realSpaceXAxisRangeEnd, "RealSpaceXAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _fixRealSpaceYAxisRange, "FixRealSpaceYAxisRange");
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _realSpaceYAxisRangeStart, "RealSpaceYAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _realSpaceYAxisRangeEnd, "RealSpaceYAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _fixReciprocalSpaceXAxisRange, "FixReciprocalSpaceXAxisRange");
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _reciprocalSpaceXAxisRangeStart, "ReciprocalSpaceXAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _reciprocalSpaceXAxisRangeEnd, "ReciprocalSpaceXAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _fixReciprocalSpaceYAxisRange, "FixReciprocalSpaceYAxisRange");
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _reciprocalSpaceYAxisRangeStart, "ReciprocalSpaceYAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _reciprocalSpaceYAxisRangeEnd, "ReciprocalSpaceYAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty1, "First property");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty2, "Second property");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _fftGridSpacing, "FFT grid spacing");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _neighCutoff, "Neighbor cutoff radius");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _numberOfNeighBins, "Number of neighbor bins");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _normalizeRealSpace, "Normalize correlation function");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _normalizeReciprocalSpace, "Normalize correlation function");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, _fftGridSpacing, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, _neighCutoff, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(CorrelationFunctionModifier, _numberOfNeighBins, IntegerParameterUnit, 4, 100000);
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _fixRealSpaceXAxisRange, "Fix x-range");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _realSpaceXAxisRangeStart, "X-range start");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _realSpaceXAxisRangeEnd, "X-range end");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _fixRealSpaceYAxisRange, "Fix y-range");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _realSpaceYAxisRangeStart, "Y-range start");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _realSpaceYAxisRangeEnd, "Y-range end");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _fixReciprocalSpaceXAxisRange, "Fix x-range");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _reciprocalSpaceXAxisRangeStart, "X-range start");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _reciprocalSpaceXAxisRangeEnd, "X-range end");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _fixReciprocalSpaceYAxisRange, "Fix y-range");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _reciprocalSpaceYAxisRangeStart, "Y-range start");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _reciprocalSpaceYAxisRangeEnd, "Y-range end");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CorrelationFunctionModifier, AsynchronousParticleModifier);
+DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, sourceProperty1, "SourceProperty1");
+DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, sourceProperty2, "SourceProperty2");
+DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, fftGridSpacing, "FftGridSpacing");
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, neighCutoff, "NeighCutoff", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, numberOfNeighBins, "NumberOfNeighBins", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, normalizeRealSpace, "NormalizeRealSpace", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, typeOfRealSpacePlot, "TypeOfRealSpacePlot");
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, normalizeReciprocalSpace, "NormalizeReciprocalSpace", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, typeOfReciprocalSpacePlot, "TypeOfReciprocalSpacePlot");
+DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, fixRealSpaceXAxisRange, "FixRealSpaceXAxisRange");
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, realSpaceXAxisRangeStart, "RealSpaceXAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, realSpaceXAxisRangeEnd, "RealSpaceXAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, fixRealSpaceYAxisRange, "FixRealSpaceYAxisRange");
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, realSpaceYAxisRangeStart, "RealSpaceYAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, realSpaceYAxisRangeEnd, "RealSpaceYAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, fixReciprocalSpaceXAxisRange, "FixReciprocalSpaceXAxisRange");
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, reciprocalSpaceXAxisRangeStart, "ReciprocalSpaceXAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, reciprocalSpaceXAxisRangeEnd, "ReciprocalSpaceXAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, fixReciprocalSpaceYAxisRange, "FixReciprocalSpaceYAxisRange");
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, reciprocalSpaceYAxisRangeStart, "ReciprocalSpaceYAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, reciprocalSpaceYAxisRangeEnd, "ReciprocalSpaceYAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, sourceProperty1, "First property");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, sourceProperty2, "Second property");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, fftGridSpacing, "FFT grid spacing");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, neighCutoff, "Neighbor cutoff radius");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, numberOfNeighBins, "Number of neighbor bins");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, normalizeRealSpace, "Normalize correlation function");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, normalizeReciprocalSpace, "Normalize correlation function");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, fftGridSpacing, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, neighCutoff, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(CorrelationFunctionModifier, numberOfNeighBins, IntegerParameterUnit, 4, 100000);
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, fixRealSpaceXAxisRange, "Fix x-range");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, realSpaceXAxisRangeStart, "X-range start");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, realSpaceXAxisRangeEnd, "X-range end");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, fixRealSpaceYAxisRange, "Fix y-range");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, realSpaceYAxisRangeStart, "Y-range start");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, realSpaceYAxisRangeEnd, "Y-range end");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, fixReciprocalSpaceXAxisRange, "Fix x-range");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, reciprocalSpaceXAxisRangeStart, "X-range start");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, reciprocalSpaceXAxisRangeEnd, "X-range end");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, fixReciprocalSpaceYAxisRange, "Fix y-range");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, reciprocalSpaceYAxisRangeStart, "Y-range start");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, reciprocalSpaceYAxisRangeEnd, "Y-range end");
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -87,27 +87,27 @@ CorrelationFunctionModifier::CorrelationFunctionModifier(DataSet* dataset) : Asy
 	_fixReciprocalSpaceXAxisRange(false), _reciprocalSpaceXAxisRangeStart(0.0), _reciprocalSpaceXAxisRangeEnd(1.0),
 	_fixReciprocalSpaceYAxisRange(false), _reciprocalSpaceYAxisRangeStart(0.0), _reciprocalSpaceYAxisRangeEnd(1.0)
 {
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty1);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty2);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_fftGridSpacing);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_neighCutoff);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfNeighBins);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_normalizeRealSpace);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_typeOfRealSpacePlot);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_normalizeReciprocalSpace);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_typeOfReciprocalSpacePlot);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_fixRealSpaceXAxisRange);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_realSpaceXAxisRangeStart);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_realSpaceXAxisRangeEnd);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_fixRealSpaceYAxisRange);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_realSpaceYAxisRangeStart);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_realSpaceYAxisRangeEnd);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_fixReciprocalSpaceXAxisRange);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_reciprocalSpaceXAxisRangeStart);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_reciprocalSpaceXAxisRangeEnd);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_fixReciprocalSpaceYAxisRange);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_reciprocalSpaceYAxisRangeStart);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_reciprocalSpaceYAxisRangeEnd);
+	INIT_PROPERTY_FIELD(sourceProperty1);
+	INIT_PROPERTY_FIELD(sourceProperty2);
+	INIT_PROPERTY_FIELD(fftGridSpacing);
+	INIT_PROPERTY_FIELD(neighCutoff);
+	INIT_PROPERTY_FIELD(numberOfNeighBins);
+	INIT_PROPERTY_FIELD(normalizeRealSpace);
+	INIT_PROPERTY_FIELD(typeOfRealSpacePlot);
+	INIT_PROPERTY_FIELD(normalizeReciprocalSpace);
+	INIT_PROPERTY_FIELD(typeOfReciprocalSpacePlot);
+	INIT_PROPERTY_FIELD(fixRealSpaceXAxisRange);
+	INIT_PROPERTY_FIELD(realSpaceXAxisRangeStart);
+	INIT_PROPERTY_FIELD(realSpaceXAxisRangeEnd);
+	INIT_PROPERTY_FIELD(fixRealSpaceYAxisRange);
+	INIT_PROPERTY_FIELD(realSpaceYAxisRangeStart);
+	INIT_PROPERTY_FIELD(realSpaceYAxisRangeEnd);
+	INIT_PROPERTY_FIELD(fixReciprocalSpaceXAxisRange);
+	INIT_PROPERTY_FIELD(reciprocalSpaceXAxisRangeStart);
+	INIT_PROPERTY_FIELD(reciprocalSpaceXAxisRangeEnd);
+	INIT_PROPERTY_FIELD(fixReciprocalSpaceYAxisRange);
+	INIT_PROPERTY_FIELD(reciprocalSpaceYAxisRangeStart);
+	INIT_PROPERTY_FIELD(reciprocalSpaceYAxisRangeEnd);
 }
 
 
@@ -656,11 +656,11 @@ void CorrelationFunctionModifier::propertyChanged(const PropertyFieldDescriptor&
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Recompute modifier results when the parameters have been changed.
-	if (field == PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty1) ||
-		field == PROPERTY_FIELD(CorrelationFunctionModifier::_sourceProperty2) ||
-		field == PROPERTY_FIELD(CorrelationFunctionModifier::_fftGridSpacing) ||
-		field == PROPERTY_FIELD(CorrelationFunctionModifier::_neighCutoff) ||
-	    field == PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfNeighBins))
+	if (field == PROPERTY_FIELD(sourceProperty1) ||
+		field == PROPERTY_FIELD(sourceProperty2) ||
+		field == PROPERTY_FIELD(fftGridSpacing) ||
+		field == PROPERTY_FIELD(neighCutoff) ||
+	    field == PROPERTY_FIELD(numberOfNeighBins))
 		invalidateCachedResults();
 }
 
