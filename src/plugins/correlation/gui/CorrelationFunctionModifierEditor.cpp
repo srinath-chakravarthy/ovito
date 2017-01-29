@@ -85,7 +85,7 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	QGroupBox* realSpaceGroupBox = new QGroupBox(tr("Real-space correlation function"));
 	layout->addWidget(realSpaceGroupBox);
 
-	BooleanParameterUI* normalizeUI = new BooleanParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_normalize));
+	BooleanParameterUI* normalizeRealSpaceUI = new BooleanParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_normalizeRealSpace));
 
 	QGridLayout* typeOfRealSpacePlotLayout = new QGridLayout();
 	IntegerRadioButtonParameterUI *typeOfRealSpacePlotPUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_typeOfRealSpacePlot));
@@ -146,13 +146,15 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	}
 
 	QVBoxLayout* realSpaceLayout = new QVBoxLayout(realSpaceGroupBox);
-	realSpaceLayout->addWidget(normalizeUI->checkBox());
+	realSpaceLayout->addWidget(normalizeRealSpaceUI->checkBox());
 	realSpaceLayout->addLayout(typeOfRealSpacePlotLayout);
 	realSpaceLayout->addWidget(_realSpacePlot);
 	realSpaceLayout->addWidget(axesBox);
 
 	QGroupBox* reciprocalSpaceGroupBox = new QGroupBox(tr("Reciprocal-space correlation function"));
 	layout->addWidget(reciprocalSpaceGroupBox);
+
+	BooleanParameterUI* normalizeReciprocalSpaceUI = new BooleanParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_normalizeReciprocalSpace));
 
 	QGridLayout* typeOfReciprocalSpacePlotLayout = new QGridLayout();
 	IntegerRadioButtonParameterUI *typeOfReciprocalSpacePlotPUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::_typeOfReciprocalSpacePlot));
@@ -213,6 +215,7 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	}
 
 	QVBoxLayout* reciprocalSpaceLayout = new QVBoxLayout(reciprocalSpaceGroupBox);
+	reciprocalSpaceLayout->addWidget(normalizeReciprocalSpaceUI->checkBox());
 	reciprocalSpaceLayout->addLayout(typeOfReciprocalSpacePlotLayout);
 	reciprocalSpaceLayout->addWidget(_reciprocalSpacePlot);
 	reciprocalSpaceLayout->addWidget(axesBox);
@@ -288,12 +291,16 @@ void CorrelationFunctionModifierEditor::plotAllData()
 
 	FloatType offset = 0.0;
 	FloatType fac = 1.0;
-	if (modifier->normalize()) {
+	if (modifier->normalizeRealSpace()) {
 		offset = modifier->mean1()*modifier->mean2();
 		fac = 1.0/(modifier->covariance()-offset);
 	}
+	FloatType rfac = 1.0;
+	if (modifier->normalizeReciprocalSpace()) {
+		rfac = 1.0/(modifier->covariance()-modifier->mean1()*modifier->mean2());
+	}
 
-	modifier->updateRanges(offset, fac);
+	modifier->updateRanges(offset, fac, rfac);
 
 	// Plot real-space correlation function
 	if(!modifier->realSpaceCorrelationX().empty() &&
@@ -334,7 +341,8 @@ void CorrelationFunctionModifierEditor::plotAllData()
 		plotData(modifier->reciprocalSpaceCorrelationX(),
 				 modifier->reciprocalSpaceCorrelation(),
 				 _reciprocalSpacePlot,
-				 _reciprocalSpaceCurve);
+				 _reciprocalSpaceCurve,
+				 0.0, rfac);
 	}
 
 	// Set type of plot.

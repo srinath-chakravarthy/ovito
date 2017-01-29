@@ -37,8 +37,9 @@ DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _sourceProperty2, "SourceProp
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _fftGridSpacing, "FftGridSpacing");
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _neighCutoff, "NeighCutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _numberOfNeighBins, "NumberOfNeighBins", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _normalize, "Normalize", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _normalizeRealSpace, "NormalizeRealSpace", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _typeOfRealSpacePlot, "TypeOfRealSpacePlot");
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _normalizeReciprocalSpace, "NormalizeReciprocalSpace", PROPERTY_FIELD_MEMORIZE);
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _typeOfReciprocalSpacePlot, "TypeOfReciprocalSpacePlot");
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, _fixRealSpaceXAxisRange, "FixRealSpaceXAxisRange");
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, _realSpaceXAxisRangeStart, "RealSpaceXAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
@@ -57,7 +58,8 @@ SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _sourceProperty2, "Second 
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _fftGridSpacing, "FFT grid spacing");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _neighCutoff, "Neighbor cutoff radius");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _numberOfNeighBins, "Number of neighbor bins");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _normalize, "Normalize correlation function");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _normalizeRealSpace, "Normalize correlation function");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _normalizeReciprocalSpace, "Normalize correlation function");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, _fftGridSpacing, WorldParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CorrelationFunctionModifier, _neighCutoff, WorldParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(CorrelationFunctionModifier, _numberOfNeighBins, IntegerParameterUnit, 4, 100000);
@@ -78,8 +80,8 @@ SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, _reciprocalSpaceYAxisRange
 * Constructs the modifier object.
 ******************************************************************************/
 CorrelationFunctionModifier::CorrelationFunctionModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
-	_fftGridSpacing(3.0), _neighCutoff(5.0), _numberOfNeighBins(50), _normalize(false),
-	_typeOfRealSpacePlot(0), _typeOfReciprocalSpacePlot(0),
+	_fftGridSpacing(3.0), _neighCutoff(5.0), _numberOfNeighBins(50),
+	_normalizeRealSpace(false), _typeOfRealSpacePlot(0), _normalizeReciprocalSpace(false), _typeOfReciprocalSpacePlot(0),
 	_fixRealSpaceXAxisRange(false), _realSpaceXAxisRangeStart(0.0), _realSpaceXAxisRangeEnd(1.0),
 	_fixRealSpaceYAxisRange(false), _realSpaceYAxisRangeStart(0.0), _realSpaceYAxisRangeEnd(1.0),
 	_fixReciprocalSpaceXAxisRange(false), _reciprocalSpaceXAxisRangeStart(0.0), _reciprocalSpaceXAxisRangeEnd(1.0),
@@ -90,8 +92,9 @@ CorrelationFunctionModifier::CorrelationFunctionModifier(DataSet* dataset) : Asy
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_fftGridSpacing);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_neighCutoff);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_numberOfNeighBins);
-	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_normalize);
+	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_normalizeRealSpace);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_typeOfRealSpacePlot);
+	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_normalizeReciprocalSpace);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_typeOfReciprocalSpacePlot);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_fixRealSpaceXAxisRange);
 	INIT_PROPERTY_FIELD(CorrelationFunctionModifier::_realSpaceXAxisRangeStart);
@@ -585,7 +588,7 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::perform()
 /******************************************************************************
 * Update plot ranges.
 ******************************************************************************/
-void CorrelationFunctionModifier::updateRanges(FloatType offset, FloatType fac)
+void CorrelationFunctionModifier::updateRanges(FloatType offset, FloatType fac, FloatType reciprocalFac)
 {
 	// Compute data ranges
 	if (!_fixRealSpaceXAxisRange) {
@@ -614,8 +617,8 @@ void CorrelationFunctionModifier::updateRanges(FloatType offset, FloatType fac)
 	}
 	if (!_fixReciprocalSpaceYAxisRange && !_reciprocalSpaceCorrelation.empty()) {
 		auto reciprocalSpace = std::minmax_element(_reciprocalSpaceCorrelation.begin(), _reciprocalSpaceCorrelation.end());
-		_reciprocalSpaceYAxisRangeStart = *reciprocalSpace.first;
-		_reciprocalSpaceYAxisRangeEnd = *reciprocalSpace.second;
+		_reciprocalSpaceYAxisRangeStart = reciprocalFac*(*reciprocalSpace.first);
+		_reciprocalSpaceYAxisRangeEnd = reciprocalFac*(*reciprocalSpace.second);
 	}
 }
 

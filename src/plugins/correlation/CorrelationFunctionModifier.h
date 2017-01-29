@@ -82,7 +82,7 @@ public:
 	FloatType covariance() const { return _covariance; }
 
 	/// Update plot ranges.
-	virtual void updateRanges(FloatType offset, FloatType fac);
+	virtual void updateRanges(FloatType offset, FloatType fac, FloatType reciprocalFac);
 
 private:
 
@@ -254,7 +254,7 @@ private:
 	/// Controls the number of bins for the neighbor part of the real-space correlation function.
 	DECLARE_PROPERTY_FIELD_EX(numberOfNeighBins, int);
 	/// Controls the normalization of the real-space correlation function.
-	DECLARE_PROPERTY_FIELD_EX(normalize, bool);
+	DECLARE_PROPERTY_FIELD_EX(normalizeRealSpace, bool);
 	/// Type of real-space plot (lin-lin, log-lin or log-log)
 	DECLARE_PROPERTY_FIELD_EX(typeOfRealSpacePlot, int);
 	/// Controls the whether the range of the x-axis of the plot should be fixed.
@@ -269,6 +269,8 @@ private:
 	DECLARE_PROPERTY_FIELD_EX(realSpaceYAxisRangeStart, FloatType);
 	/// Controls the end value of the y-axis.
 	DECLARE_PROPERTY_FIELD_EX(realSpaceYAxisRangeEnd, FloatType);
+	/// Controls the normalization of the reciprocal-space correlation function.
+	DECLARE_PROPERTY_FIELD_EX(normalizeReciprocalSpace, bool);
 	/// Type of reciprocal-space plot (lin-lin, log-lin or log-log)
 	DECLARE_PROPERTY_FIELD_EX(typeOfReciprocalSpacePlot, int);
 	/// Controls the whether the range of the x-axis of the plot should be fixed.
