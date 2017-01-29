@@ -83,6 +83,8 @@ Unresolved bugs:
   Changing the preferred file path back to the non existing server, i can reproduce the 10 seconds of no response, 
   but without any crash.
 
+- libstdc++.so needs to be removed from Linux package.
+
 New analysis features:
 
 - Create Bonds modifier: Add 'lower bound' parameter such that, when using the mothod todifier several times, bonds with different lengths can be assigned different colors (jerome.dequeker@ed.univ-lille1.fr).

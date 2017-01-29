@@ -146,10 +146,6 @@ void GSDImporter::GSDImportTask::parseFile(CompressedTextReader& stream)
 	ParticleProperty* massProperty = readOptionalParticleProperty(gsd, "particles/mass", frameNumber, numParticles, ParticleProperty::MassProperty);
 	readOptionalParticleProperty(gsd, "particles/charge", frameNumber, numParticles, ParticleProperty::ChargeProperty);
 	ParticleProperty* velocityProperty = readOptionalParticleProperty(gsd, "particles/velocity", frameNumber, numParticles, ParticleProperty::VelocityProperty);
-	if(!velocityProperty && nFrames > 1 && gsd.hasChunk("particles/velocity", 1)) {
-		velocityProperty = new ParticleProperty(numParticles, ParticleProperty::VelocityProperty, 0, true);
-		addParticleProperty(velocityProperty);
-	}
 	ParticleProperty* radiusProperty = readOptionalParticleProperty(gsd, "particles/diameter", frameNumber, numParticles, ParticleProperty::RadiusProperty);
 	if(radiusProperty) {
 		// Convert particle diameter to radius by dividing by 2.
