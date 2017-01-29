@@ -35,7 +35,7 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CorrelationFunctionModifier, AsynchronousPar
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, sourceProperty1, "SourceProperty1");
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, sourceProperty2, "SourceProperty2");
 DEFINE_PROPERTY_FIELD(CorrelationFunctionModifier, fftGridSpacing, "FftGridSpacing");
-DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, computeDirectSum, "ComputeDirectSum", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, doComputeNeighCorrelation, "doComputeNeighCorrelation", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, neighCutoff, "NeighCutoff", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, numberOfNeighBins, "NumberOfNeighBins", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, normalizeRealSpace, "NormalizeRealSpace", PROPERTY_FIELD_MEMORIZE);
@@ -57,7 +57,7 @@ DEFINE_FLAGS_PROPERTY_FIELD(CorrelationFunctionModifier, reciprocalSpaceYAxisRan
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, sourceProperty1, "First property");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, sourceProperty2, "Second property");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, fftGridSpacing, "FFT grid spacing");
-SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, computeDirectSum, "Direct summation");
+SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, doComputeNeighCorrelation, "Direct summation");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, neighCutoff, "Neighbor cutoff radius");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, numberOfNeighBins, "Number of neighbor bins");
 SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, normalizeRealSpace, "Normalize correlation function");
@@ -82,7 +82,7 @@ SET_PROPERTY_FIELD_LABEL(CorrelationFunctionModifier, reciprocalSpaceYAxisRangeE
 * Constructs the modifier object.
 ******************************************************************************/
 CorrelationFunctionModifier::CorrelationFunctionModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
-	_fftGridSpacing(3.0), _computeDirectSum(false), _neighCutoff(5.0), _numberOfNeighBins(50),
+	_fftGridSpacing(3.0), _doComputeNeighCorrelation(false), _neighCutoff(5.0), _numberOfNeighBins(50),
 	_normalizeRealSpace(false), _typeOfRealSpacePlot(0), _normalizeReciprocalSpace(false), _typeOfReciprocalSpacePlot(0),
 	_fixRealSpaceXAxisRange(false), _realSpaceXAxisRangeStart(0.0), _realSpaceXAxisRangeEnd(1.0),
 	_fixRealSpaceYAxisRange(false), _realSpaceYAxisRangeStart(0.0), _realSpaceYAxisRangeEnd(1.0),
@@ -92,7 +92,7 @@ CorrelationFunctionModifier::CorrelationFunctionModifier(DataSet* dataset) : Asy
 	INIT_PROPERTY_FIELD(sourceProperty1);
 	INIT_PROPERTY_FIELD(sourceProperty2);
 	INIT_PROPERTY_FIELD(fftGridSpacing);
-	INIT_PROPERTY_FIELD(computeDirectSum);
+	INIT_PROPERTY_FIELD(doComputeNeighCorrelation);
 	INIT_PROPERTY_FIELD(neighCutoff);
 	INIT_PROPERTY_FIELD(numberOfNeighBins);
 	INIT_PROPERTY_FIELD(normalizeRealSpace);
@@ -172,7 +172,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CorrelationFunction
 													   std::max(0, sourceProperty2().vectorComponent()),
 													   inputCell->data(),
 													   fftGridSpacing(),
-													   computeDirectSum(),
+													   doComputeNeighCorrelation(),
 													   neighCutoff(),
 													   numberOfNeighBins());
 }
@@ -652,7 +652,7 @@ void CorrelationFunctionModifier::updateRanges(FloatType offset, FloatType fac, 
 {
 	// Compute data ranges
 	if (!_fixRealSpaceXAxisRange) {
-		if (!_realSpaceCorrelationX.empty() && !_neighCorrelationX.empty() && _computeDirectSum) {
+		if (!_realSpaceCorrelationX.empty() && !_neighCorrelationX.empty() && _doComputeNeighCorrelation) {
 			_realSpaceXAxisRangeStart = std::min(_realSpaceCorrelationX.first(), _neighCorrelationX.first());
 			_realSpaceXAxisRangeEnd = std::max(_realSpaceCorrelationX.last(), _neighCorrelationX.last());
 		}
@@ -660,13 +660,13 @@ void CorrelationFunctionModifier::updateRanges(FloatType offset, FloatType fac, 
 			_realSpaceXAxisRangeStart = _realSpaceCorrelationX.first();
 			_realSpaceXAxisRangeEnd = _realSpaceCorrelationX.last();
 		}
-		else if (!_neighCorrelationX.empty() && _computeDirectSum) {
+		else if (!_neighCorrelationX.empty() && _doComputeNeighCorrelation) {
 			_realSpaceXAxisRangeStart = _neighCorrelationX.first();
 			_realSpaceXAxisRangeEnd = _neighCorrelationX.last();
 		}
 	}
 	if (!_fixRealSpaceYAxisRange) {
-		if (!_realSpaceCorrelation.empty() && !_neighCorrelation.empty() && _computeDirectSum) {
+		if (!_realSpaceCorrelation.empty() && !_neighCorrelation.empty() && _doComputeNeighCorrelation) {
 			auto realSpace = std::minmax_element(_realSpaceCorrelation.begin(), _realSpaceCorrelation.end());
 			auto neigh = std::minmax_element(_neighCorrelation.begin(), _neighCorrelation.end());
 			_realSpaceYAxisRangeStart = fac*(std::min(*realSpace.first, *neigh.first)-offset);
@@ -677,7 +677,7 @@ void CorrelationFunctionModifier::updateRanges(FloatType offset, FloatType fac, 
 			_realSpaceYAxisRangeStart = fac*(*realSpace.first-offset);
 			_realSpaceYAxisRangeEnd = fac*(*realSpace.second-offset);
 		}
-		else if (!_neighCorrelation.empty() && _computeDirectSum) {
+		else if (!_neighCorrelation.empty() && _doComputeNeighCorrelation) {
 			auto neigh = std::minmax_element(_neighCorrelation.begin(), _neighCorrelation.end());
 			_realSpaceYAxisRangeStart = fac*(*neigh.first-offset);
 			_realSpaceYAxisRangeEnd = fac*(*neigh.second-offset);
@@ -731,7 +731,7 @@ void CorrelationFunctionModifier::propertyChanged(const PropertyFieldDescriptor&
 	if (field == PROPERTY_FIELD(sourceProperty1) ||
 		field == PROPERTY_FIELD(sourceProperty2) ||
 		field == PROPERTY_FIELD(fftGridSpacing) ||
-		field == PROPERTY_FIELD(computeDirectSum) ||
+		field == PROPERTY_FIELD(doComputeNeighCorrelation) ||
 		field == PROPERTY_FIELD(neighCutoff) ||
 	    field == PROPERTY_FIELD(numberOfNeighBins))
 		invalidateCachedResults();

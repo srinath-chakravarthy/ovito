@@ -75,7 +75,7 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	QGroupBox* realSpaceGroupBox = new QGroupBox(tr("Real-space correlation function"));
 	layout->addWidget(realSpaceGroupBox);
 
-	BooleanParameterUI* computeDirectSumUI = new BooleanParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::computeDirectSum));
+	BooleanParameterUI* doComputeNeighCorrelationUI = new BooleanParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::doComputeNeighCorrelation));
 
 	QGridLayout* realSpaceGridLayout = new QGridLayout();
 	realSpaceGridLayout->setContentsMargins(4,4,4,4);
@@ -93,8 +93,8 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	realSpaceGridLayout->addWidget(numberOfNeighBinsPUI->label(), 2, 0);
 	realSpaceGridLayout->addLayout(numberOfNeighBinsPUI->createFieldLayout(), 2, 1);
 
-	connect(computeDirectSumUI->checkBox(), &QCheckBox::toggled, neighCutoffRadiusPUI, &FloatParameterUI::setEnabled);
-	connect(computeDirectSumUI->checkBox(), &QCheckBox::toggled, numberOfNeighBinsPUI, &IntegerParameterUI::setEnabled);
+	connect(doComputeNeighCorrelationUI->checkBox(), &QCheckBox::toggled, neighCutoffRadiusPUI, &FloatParameterUI::setEnabled);
+	connect(doComputeNeighCorrelationUI->checkBox(), &QCheckBox::toggled, numberOfNeighBinsPUI, &IntegerParameterUI::setEnabled);
 
 	BooleanParameterUI* normalizeRealSpaceUI = new BooleanParameterUI(this, PROPERTY_FIELD(CorrelationFunctionModifier::normalizeRealSpace));
 
@@ -157,7 +157,7 @@ void CorrelationFunctionModifierEditor::createUI(const RolloutInsertionParameter
 	}
 
 	QVBoxLayout* realSpaceLayout = new QVBoxLayout(realSpaceGroupBox);
-	realSpaceLayout->addWidget(computeDirectSumUI->checkBox());
+	realSpaceLayout->addWidget(doComputeNeighCorrelationUI->checkBox());
 	realSpaceLayout->addLayout(realSpaceGridLayout);
 	realSpaceLayout->addWidget(normalizeRealSpaceUI->checkBox());
 	realSpaceLayout->addLayout(typeOfRealSpacePlotLayout);
@@ -327,7 +327,7 @@ void CorrelationFunctionModifierEditor::plotAllData()
 
 	if(!modifier->neighCorrelationX().empty() &&
 	   !modifier->neighCorrelation().empty() &&
-	   modifier->computeDirectSum()) {
+	   modifier->doComputeNeighCorrelation()) {
 		if(!_neighCurve) {
 			_neighCurve = new QwtPlotCurve();
 			_neighCurve->setRenderHint(QwtPlotItem::RenderAntialiased, true);

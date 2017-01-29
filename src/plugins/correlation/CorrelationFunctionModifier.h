@@ -88,7 +88,7 @@ private:
 								  size_t vecComponent2,
 								  const SimulationCell& simCell,
 								  FloatType fftGridSpacing,
-								  bool computeDirectSum,
+								  bool doComputeNeighCorrelation,
 								  FloatType neighCutoff,
 								  int numberOfNeighBins) :
 			ComputeEngine(validityInterval), _positions(positions),
@@ -98,7 +98,7 @@ private:
 			_neighCutoff(neighCutoff),
 			_neighCorrelation(numberOfNeighBins, 0.0),
 			_neighCorrelationX(numberOfNeighBins) {
-				if (!computeDirectSum) {
+				if (!doComputeNeighCorrelation) {
 					_neighCorrelation.clear();
 					_neighCorrelationX.clear();
 				}
@@ -254,7 +254,7 @@ private:
 	/// Controls the cutoff radius for the FFT grid.
 	DECLARE_PROPERTY_FIELD(FloatType, fftGridSpacing);
 	/// Controls whether the real-space correlation should be computed by direct summation.
-	DECLARE_PROPERTY_FIELD(bool, computeDirectSum);
+	DECLARE_PROPERTY_FIELD(bool, doComputeNeighCorrelation);
 	/// Controls the cutoff radius for the neighbor lists.
 	DECLARE_PROPERTY_FIELD(FloatType, neighCutoff);
 	/// Controls the number of bins for the neighbor part of the real-space correlation function.
