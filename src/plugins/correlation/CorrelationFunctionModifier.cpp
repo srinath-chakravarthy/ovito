@@ -598,13 +598,13 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::computeLimits()
 	for (int particleIndex = 0; particleIndex < sourceProperty1()->size(); particleIndex++) {
 		FloatType data1, data2;
 		if (floatData1)
-			data1 = floatData1[particleIndex];
+			data1 = floatData1[particleIndex*componentCount1 + _vecComponent1];
 		else if (intData1)
-			data1 = intData1[particleIndex];
+			data1 = intData1[particleIndex*componentCount1 + _vecComponent1];
 		if (floatData2)
-			data2 = floatData2[particleIndex];
+			data2 = floatData2[particleIndex*componentCount2 + _vecComponent2];
 		else if (intData2)
-			data2 = intData2[particleIndex];
+			data2 = intData2[particleIndex*componentCount2 + _vecComponent2];
 		_mean1 += data1;
 		_mean2 += data2;
 		_covariance += data1*data2;
