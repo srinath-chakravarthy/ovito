@@ -186,6 +186,12 @@ private:
 	/// Path to the external POV-Ray executable.
 	DECLARE_MODIFIABLE_PROPERTY_FIELD(QString, povrayExecutable, setPovrayExecutable);
 
+	/// Enables omni­directional stereo projection.
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, odsEnabled, setODSEnabled);
+
+	/// The interpupillary distance for stereo projection.
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, interpupillaryDistance, setInterpupillaryDistance);
+
 	Q_OBJECT
 	OVITO_OBJECT
 

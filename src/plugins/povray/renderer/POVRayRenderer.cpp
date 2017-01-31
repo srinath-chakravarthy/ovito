@@ -48,6 +48,8 @@ DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, depthOfFieldEnabled, "DepthOfFieldEn
 DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, dofFocalLength, "DOFFocalLength", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, dofAperture, "DOFAperture", PROPERTY_FIELD_MEMORIZE);
 DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, dofSampleCount, "DOFSampleCount", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, odsEnabled, "ODSEnabled", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, interpupillaryDistance, "InterpupillaryDistance", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, qualityLevel, "Quality level");
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, antialiasingEnabled, "Anti-aliasing");
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, samplingMethod, "Sampling method");
@@ -64,6 +66,8 @@ SET_PROPERTY_FIELD_LABEL(POVRayRenderer, depthOfFieldEnabled, "Focal blur");
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, dofFocalLength, "Focal length");
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, dofAperture, "Aperture");
 SET_PROPERTY_FIELD_LABEL(POVRayRenderer, dofSampleCount, "Blur samples");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, odsEnabled, "Omni­directional stereo projection");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, interpupillaryDistance, "Interpupillary distance");
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, qualityLevel, IntegerParameterUnit, 0, 11);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, samplingMethod, IntegerParameterUnit, 1, 2);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, AAThreshold, FloatParameterUnit, 0, 1);
@@ -74,6 +78,7 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, radiosityErrorBound, FloatPar
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(POVRayRenderer, dofFocalLength, WorldParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, dofAperture, FloatParameterUnit, 0, 1);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(POVRayRenderer, dofSampleCount, IntegerParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(POVRayRenderer, interpupillaryDistance, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.
@@ -82,7 +87,8 @@ POVRayRenderer::POVRayRenderer(DataSet* dataset) : NonInteractiveSceneRenderer(d
 	_qualityLevel(9), _antialiasingEnabled(true), _samplingMethod(1), _AAThreshold(0.3f),
 	_antialiasDepth(3), _jitterEnabled(true), _povrayDisplayEnabled(true), _radiosityEnabled(false),
 	_radiosityRayCount(50), _radiosityRecursionLimit(2), _radiosityErrorBound(0.8f),
-	_depthOfFieldEnabled(false), _dofFocalLength(40), _dofAperture(1.0f), _dofSampleCount(80)
+	_depthOfFieldEnabled(false), _dofFocalLength(40), _dofAperture(1.0f), _dofSampleCount(80),
+	_odsEnabled(false), _interpupillaryDistance(0.5)
 {
 	INIT_PROPERTY_FIELD(qualityLevel);
 	INIT_PROPERTY_FIELD(antialiasingEnabled);
@@ -100,6 +106,8 @@ POVRayRenderer::POVRayRenderer(DataSet* dataset) : NonInteractiveSceneRenderer(d
 	INIT_PROPERTY_FIELD(dofFocalLength);
 	INIT_PROPERTY_FIELD(dofAperture);	
 	INIT_PROPERTY_FIELD(dofSampleCount);
+	INIT_PROPERTY_FIELD(odsEnabled);
+	INIT_PROPERTY_FIELD(interpupillaryDistance);
 }
 
 /******************************************************************************
@@ -158,53 +166,83 @@ void POVRayRenderer::beginFrame(TimePoint time, const ViewProjectionParameters& 
 
 	// Write camera.
 	_outputStream << "camera {\n";
-	// Write projection transformation
-	if(projParams().isPerspective) {
-		_outputStream << "  perspective\n";
+	if(!odsEnabled()) {
+		// Write projection transformation
+		if(projParams().isPerspective) {
+			_outputStream << "  perspective\n";
 
-		Point3 p0 = projParams().inverseProjectionMatrix * Point3(0,0,0);
-		Point3 px = projParams().inverseProjectionMatrix * Point3(1,0,0);
-		Point3 py = projParams().inverseProjectionMatrix * Point3(0,1,0);
-		Point3 lookat = projParams().inverseProjectionMatrix * Point3(0,0,0);
-		Vector3 direction = (lookat - Point3::Origin()).normalized();
-		Vector3 right = px - p0;
-		Vector3 up = right.cross(direction).normalized();
-		right = direction.cross(up).normalized() * (up.length() / projParams().aspectRatio);
+			Point3 p0 = projParams().inverseProjectionMatrix * Point3(0,0,0);
+			Point3 px = projParams().inverseProjectionMatrix * Point3(1,0,0);
+			Point3 py = projParams().inverseProjectionMatrix * Point3(0,1,0);
+			Point3 lookat = projParams().inverseProjectionMatrix * Point3(0,0,0);
+			Vector3 direction = (lookat - Point3::Origin()).normalized();
+			Vector3 right = px - p0;
+			Vector3 up = right.cross(direction).normalized();
+			right = direction.cross(up).normalized() * (up.length() / projParams().aspectRatio);
 
-		_outputStream << "  location <0, 0, 0>\n";
-		_outputStream << "  direction "; write(direction); _outputStream << "\n";
-		_outputStream << "  right "; write(right); _outputStream << "\n";
-		_outputStream << "  up "; write(up); _outputStream << "\n";
-		_outputStream << "  angle " << (atan(tan(projParams().fieldOfView * 0.5) / projParams().aspectRatio) * 2.0 * 180.0 / FLOATTYPE_PI) << "\n";
+			_outputStream << "  location <0, 0, 0>\n";
+			_outputStream << "  direction "; write(direction); _outputStream << "\n";
+			_outputStream << "  right "; write(right); _outputStream << "\n";
+			_outputStream << "  up "; write(up); _outputStream << "\n";
+			_outputStream << "  angle " << (atan(tan(projParams().fieldOfView * 0.5) / projParams().aspectRatio) * 2.0 * 180.0 / FLOATTYPE_PI) << "\n";
 
-		if(depthOfFieldEnabled()) {
-			_outputStream << "  aperture " << dofAperture() << "\n";
-			_outputStream << "  focal_point "; write(p0 + dofFocalLength() * direction); _outputStream << "\n";
-			_outputStream << "  blur_samples " << dofSampleCount() << "\n";	
-		}		
+			if(depthOfFieldEnabled()) {
+				_outputStream << "  aperture " << dofAperture() << "\n";
+				_outputStream << "  focal_point "; write(p0 + dofFocalLength() * direction); _outputStream << "\n";
+				_outputStream << "  blur_samples " << dofSampleCount() << "\n";	
+			}		
+		}
+		else {
+			_outputStream << "  orthographic\n";
+
+			Point3 px = projParams().inverseProjectionMatrix * Point3(1,0,0);
+			Point3 py = projParams().inverseProjectionMatrix * Point3(0,1,0);
+			Vector3 direction = projParams().inverseProjectionMatrix * Point3(0,0,1) - Point3::Origin();
+			Vector3 up = (py - Point3::Origin()) * 2;
+			Vector3 right = px - Point3::Origin();
+
+			right = direction.cross(up).normalized() * (up.length() / projParams().aspectRatio);
+
+			_outputStream << "  location "; write(-(direction*2)); _outputStream << "\n";
+			_outputStream << "  direction "; write(direction); _outputStream << "\n";
+			_outputStream << "  right "; write(right); _outputStream << "\n";
+			_outputStream << "  up "; write(up); _outputStream << "\n";
+			_outputStream << "  sky "; write(up); _outputStream << "\n";
+			_outputStream << "  look_at "; write(-direction); _outputStream << "\n";
+		}	
+		// Write camera transformation.
+		Rotation rot(projParams().viewMatrix);
+		_outputStream << "  Axis_Rotate_Trans("; write(rot.axis()); _outputStream << ", " << (rot.angle() * 180.0f / FLOATTYPE_PI) << ")\n";
+		_outputStream << "  translate "; write(projParams().inverseViewMatrix.translation()); _outputStream << "\n";
 	}
 	else {
-		_outputStream << "  orthographic\n";
+		if(!projParams().isPerspective)
+			throwException(tr("Omni­directional stereo projection requires a perspective viewport camera."));
+		if(depthOfFieldEnabled())
+			throwException(tr("Depth of field does not work with omni­directional stereo projection."));
 
-		Point3 px = projParams().inverseProjectionMatrix * Point3(1,0,0);
-		Point3 py = projParams().inverseProjectionMatrix * Point3(0,1,0);
-		Vector3 direction = projParams().inverseProjectionMatrix * Point3(0,0,1) - Point3::Origin();
-		Vector3 up = (py - Point3::Origin()) * 2;
-		Vector3 right = px - Point3::Origin();
+		Point3 p0 = projParams().inverseProjectionMatrix * Point3(0,0,0);
 
-		right = direction.cross(up).normalized() * (up.length() / projParams().aspectRatio);
-
-		_outputStream << "  location "; write(-(direction*2)); _outputStream << "\n";
-		_outputStream << "  direction "; write(direction); _outputStream << "\n";
-		_outputStream << "  right "; write(right); _outputStream << "\n";
-		_outputStream << "  up "; write(up); _outputStream << "\n";
-		_outputStream << "  sky "; write(up); _outputStream << "\n";
-		_outputStream << "  look_at "; write(-direction); _outputStream << "\n";
-	}	
-	// Write camera transformation.
-	Rotation rot(projParams().viewMatrix);
-	_outputStream << "  Axis_Rotate_Trans("; write(rot.axis()); _outputStream << ", " << (rot.angle() * 180.0f / FLOATTYPE_PI) << ")\n";
-	_outputStream << "  translate "; write(projParams().inverseViewMatrix.translation()); _outputStream << "\n";
+		_outputStream << "  // ODS Top/Bottom\n";
+		_outputStream << "  #declare odsIPD = " << interpupillaryDistance() << "; // Interpupillary distance\n";
+		_outputStream << "  #declare odsVerticalModulation = 0.2; // Use 0.0001 if you don't care about Zenith & Nadir zones.\n";
+		_outputStream << "  #declare odsLocationX = " << p0.x() << ";\n";
+		_outputStream << "  #declare odsLocationY = " << p0.z() << ";\n";
+		_outputStream << "  #declare odsLocationZ = " << p0.y() << ";\n";
+		_outputStream << "  #declare odsHandedness = -1; // -1 for left-handed or 1 for right-handed\n";
+		_outputStream << "  #declare odsAngle = 0; // Rotation, clockwise, in degree.\n";
+		_outputStream << "  user_defined\n";
+		_outputStream << "  location {\n";
+		_outputStream << "  	function { odsLocationX + cos(((x+0.5+odsAngle/360)) * 2 * pi - pi)*(odsIPD/2*pow(sin(select(y, 1-2*(y+0.5), 1-2*y)*pi), odsVerticalModulation))*select(-y,-1,+1) }\n";
+		_outputStream << "  	function { odsLocationY }\n";
+		_outputStream << "  	function { odsLocationZ + sin(((x+0.5+odsAngle/360)) * 2 * pi - pi)*(odsIPD/2*pow(sin(select(y, 1-2*(y+0.5), 1-2*y)*pi), odsVerticalModulation))*select(-y,-1,+1) * odsHandedness }\n";
+		_outputStream << "  }\n";
+		_outputStream << "  direction {\n";
+		_outputStream << "  	function { sin(((x+0.5+odsAngle/360)) * 2 * pi - pi) * cos(pi / 2 -select(y, 1-2*(y+0.5), 1-2*y) * pi) }\n";
+		_outputStream << "  	function { sin(pi / 2 - select(y, 1-2*(y+0.5), 1-2*y) * pi) }\n";
+		_outputStream << "  	function { -cos(((x+0.5+odsAngle/360)) * 2 * pi - pi) * cos(pi / 2 -select(y, 1-2*(y+0.5), 1-2*y) * pi) * odsHandedness }\n";
+		_outputStream << "  }\n";
+	}
 	_outputStream << "}\n";
 	Vector3 viewingDirection = projParams().inverseViewMatrix.column(2);
 	Vector3 screen_x = projParams().inverseViewMatrix.column(0).normalized();
