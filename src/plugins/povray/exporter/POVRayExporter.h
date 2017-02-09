@@ -56,7 +56,7 @@ public:
 		return QStringLiteral("*.pov");
 #else 
 		// Workaround for bug in Windows file selection dialog (https://bugreports.qt.io/browse/QTBUG-45759)
-		return QStringLiteral("*"); }
+		return QStringLiteral("*");
 #endif
 	}
 
