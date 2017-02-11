@@ -21,9 +21,12 @@
 
 #include <plugins/pyscript/PyScript.h>
 #include <core/app/Application.h>
+#include <core/plugins/PluginManager.h>
 #include "PythonBinding.h"
 
 namespace PyScript {
+
+void defineAppModule(py::module parentModule);	// Defined in AppBinding.cpp
 
 using namespace Ovito;
 
@@ -33,14 +36,44 @@ PYBIND11_PLUGIN(PyScript)
 	options.disable_function_signatures();
 
 	py::module m("PyScript");
+	qDebug() << "PyScript module initialization";
+
+	// Install Ovito to Python exception translator.
+	py::register_exception_translator([](std::exception_ptr p) {
+		try {
+			if(p) std::rethrow_exception(p);
+		}
+		catch(const Exception& ex) {
+			PyErr_SetString(PyExc_RuntimeError, ex.messages().join(QChar('\n')).toUtf8().constData());
+		}
+	});
+
+	// Initialize an ad-hoc environment when not running as a standalone app. 
+	// Otherwise this has already been done by the StandaloneApplication class.
+	if(!Application::instance()) {
+		try {
+			Application* app = new Application(); // This will leak, but it doesn't matter because this Python module will never be unloaded.
+			if(!app->initialize())
+				throw Exception("Application object could not be initialized.");
+			PluginManager::initialize();
+		}
+		catch(const Exception& ex) {
+			ex.logError();
+			throw std::runtime_error("Error while initializing OVITO environment.");
+		}
+		OVITO_ASSERT(Application::instance() != nullptr);
+	}
 
 	// Make Ovito program version number available to script.
 	m.attr("version") = py::make_tuple(Application::applicationVersionMajor(), Application::applicationVersionMinor(), Application::applicationVersionRevision());
 	m.attr("version_string") = py::cast(QCoreApplication::applicationVersion());
 
 	// Make environment information available to the script.
-	m.attr("gui_mode") = py::cast(Application::instance().guiMode());
-	m.attr("headless_mode") = py::cast(Application::instance().headlessMode());
+	m.attr("gui_mode") = py::cast(Application::instance()->guiMode());
+	m.attr("headless_mode") = py::cast(Application::instance()->headlessMode());
+
+	// Register submodules.
+	defineAppModule(m);
 
 	return m.ptr();
 }

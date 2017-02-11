@@ -25,6 +25,7 @@
 #include <plugins/pyscript/PyScript.h>
 #include <plugins/pyscript/engine/ScriptEngine.h>
 #include <core/utilities/io/FileManager.h>
+#include <core/app/Application.h>
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, Ovito::OORef<T>, true);
 
@@ -72,7 +73,7 @@ namespace pybind11 { namespace detail {
 			if(!src) return false;
 			try {
 				QString str = src.cast<QString>();
-				value = Ovito::FileManager::instance().urlFromUserInput(str);
+				value = Ovito::Application::instance()->fileManager()->urlFromUserInput(str);
 				return true;
 			}
 			catch(const cast_error&) {}
@@ -321,8 +322,13 @@ namespace PyScript {
 using namespace Ovito;
 namespace py = pybind11;
 
-/// \brief Adds the initXXX() function of a plugin to an internal list so that the scripting engine can discover and register all internal modules.
+/// Registers the initXXX() function of a plugin so that the scripting engine can discover and load all internal modules.
 /// Use the OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE macro to create an instance of this structure on application startup.
+///
+/// This helper class makes our internal script modules available by registering their initXXX functions with the Python interpreter.
+/// This is required for static builds where all Ovito plugins are linked into the main executable file.
+/// On Windows this is also needed, because OVITO plugins have an .dll extension and the Python interpreter 
+/// only looks for modules that have a .pyd extension.
 struct OVITO_PYSCRIPT_EXPORT PythonPluginRegistration
 {
 #if PY_MAJOR_VERSION >= 3
@@ -331,20 +337,8 @@ struct OVITO_PYSCRIPT_EXPORT PythonPluginRegistration
 	typedef void (*InitFuncPointer)();
 #endif
 
-	/// The identifier of the plugin to register.
-	const char* _moduleName;
-	/// The initXXX() function to be registered with the Python interpreter.
-	InitFuncPointer _initFunc;
-	/// Next structure in linked list.
-	PythonPluginRegistration* _next;
-
-	PythonPluginRegistration(const char* moduleName, InitFuncPointer initFunc) : _moduleName(moduleName), _initFunc(initFunc) {
-		_next = linkedlist;
-		linkedlist = this;
+	PythonPluginRegistration(const char* moduleName, InitFuncPointer initFunc) {
 	}
-
-	/// The initXXX() functions for each of the registered plugins.
-	static PythonPluginRegistration* linkedlist;
 };
 
 /// This macro must be used exactly once by every plugin that contains a Python scripting interface.

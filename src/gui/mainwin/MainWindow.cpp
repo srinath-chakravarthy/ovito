@@ -71,7 +71,7 @@ MainWindow::MainWindow() : _datasetContainer(this)
 	_actionManager = new ActionManager(this);
 
 	// Let GUI auto-start objects register their actions.
-	for(const auto& obj : Application::instance().autostartObjects()) {
+	for(const auto& obj : Application::instance()->autostartObjects()) {
 		if(auto gui_obj = dynamic_object_cast<GuiAutoStartObject>(obj))
 			gui_obj->registerActions(*_actionManager);
 	}

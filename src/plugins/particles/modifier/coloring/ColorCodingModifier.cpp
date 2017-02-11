@@ -76,8 +76,8 @@ ColorCodingModifier::ColorCodingModifier(DataSet* dataset) : ParticleModifier(da
 	INIT_PROPERTY_FIELD(colorApplicationMode);
 
 	setColorGradient(new ColorCodingHSVGradient(dataset));
-	setStartValueController(ControllerManager::instance().createFloatController(dataset));
-	setEndValueController(ControllerManager::instance().createFloatController(dataset));
+	setStartValueController(ControllerManager::createFloatController(dataset));
+	setEndValueController(ControllerManager::createFloatController(dataset));
 }
 
 /******************************************************************************

@@ -31,9 +31,6 @@ namespace PyScript {
 /// Points to the script engine that is currently active (i.e. which is executing a script).
 ScriptEngine* ScriptEngine::_activeEngine = nullptr;
 
-/// Head of linked list containing all initXXX functions.
-PythonPluginRegistration* PythonPluginRegistration::linkedlist = nullptr;
-
 /******************************************************************************
 * Initializes the scripting engine and sets up the environment.
 ******************************************************************************/
@@ -116,23 +113,13 @@ void ScriptEngine::initializeInterpreter()
 		static QByteArray programName = QDir::toNativeSeparators(QCoreApplication::applicationFilePath()).toLocal8Bit();
 		Py_SetProgramName(programName.data());
 #endif
-
-		// Make our internal script modules available by registering their initXXX functions with the Python interpreter.
-		// This is required for static builds where all Ovito plugins are linked into the main executable file.
-		// On Windows this is needed, because OVITO plugins have an .dll extension and the Python interpreter 
-		// only looks for modules that have a .pyd extension.
-		for(PythonPluginRegistration* r = PythonPluginRegistration::linkedlist; r != nullptr; r = r->_next) {
-			// Note: "const_cast" is for backward compatibility with Python 2.6.
-			PyImport_AppendInittab(const_cast<char*>(r->_moduleName), r->_initFunc);
-		}
-
 		// Initialize the Python interpreter.
 		Py_Initialize();
 
 		py::object sys_module = py::module::import("sys");
 
 		// Install output redirection (don't do this in console mode as it interferes with the interactive interpreter).
-		if(Application::instance().guiMode()) {
+		if(Application::instance()->guiMode()) {
 			// Register the output redirector class.
 			py::class_<InterpreterStdOutputRedirector>(sys_module, "__StdOutStreamRedirectorHelper")
 					.def("write", &InterpreterStdOutputRedirector::write)
@@ -144,16 +131,6 @@ void ScriptEngine::initializeInterpreter()
 			sys_module.attr("stdout") = py::cast(new InterpreterStdOutputRedirector(), py::return_value_policy::take_ownership);
 			sys_module.attr("stderr") = py::cast(new InterpreterStdErrorRedirector(), py::return_value_policy::take_ownership);
 		}
-
-		// Install Ovito to Python exception translator.
-		py::register_exception_translator([](std::exception_ptr p) {
-			try {
-				if(p) std::rethrow_exception(p);
-			}
-			catch(const Exception& ex) {
-				PyErr_SetString(PyExc_RuntimeError, ex.messages().join(QChar('\n')).toUtf8().constData());
-			}
-		});
 
 		// Prepend directories containing OVITO's Python modules to sys.path.
 		py::object sys_path = sys_module.attr("path");
@@ -351,7 +328,7 @@ int ScriptEngine::handlePythonException(py::error_already_set& ex, ScriptEngine*
 		tr("The Python script '%1' has exited with an error.").arg(filename), dataset());
 
 	// Retrieve Python error message and traceback.
-	if(Application::instance().guiMode()) {
+	if(Application::instance()->guiMode()) {
 		PyObject* extype;
 		PyObject* value;
 		PyObject* traceback;

@@ -31,9 +31,6 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Anim)
 
-/// The singleton instance of the manager class.
-ControllerManager* ControllerManager::_instance = nullptr;
-
 IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Controller, RefTarget);
 
 /******************************************************************************
@@ -86,14 +83,6 @@ void Controller::setCurrentIntValue(int newValue)
 void Controller::setCurrentVector3Value(const Vector3& newValue)
 {
 	setVector3Value(dataset()->animationSettings()->time(), newValue);
-}
-
-/******************************************************************************
-* Initializes the controller manager.
-******************************************************************************/
-ControllerManager::ControllerManager()
-{
-	OVITO_ASSERT_MSG(!_instance, "ControllerManager constructor", "Multiple instances of this singleton class have been created.");
 }
 
 /******************************************************************************

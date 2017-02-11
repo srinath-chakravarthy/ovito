@@ -78,7 +78,7 @@ RenderSettings::RenderSettings(DataSet* dataset) : RefTarget(dataset),
 	INIT_PROPERTY_FIELD(fileNumberBase);
 
 	// Setup default background color.
-	setBackgroundColorController(ControllerManager::instance().createColorController(dataset));
+	setBackgroundColorController(ControllerManager::createColorController(dataset));
 	setBackgroundColor(Color(1,1,1));
 
 	// Create an instance of the default renderer class.

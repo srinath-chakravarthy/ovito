@@ -42,7 +42,7 @@ LookAtController::LookAtController(DataSet* dataset) : Controller(dataset)
 	INIT_PROPERTY_FIELD(targetNode);
 
 	// Create sub-controller.
-	setRollController(ControllerManager::instance().createFloatController(dataset));
+	setRollController(ControllerManager::createFloatController(dataset));
 }
 
 /******************************************************************************

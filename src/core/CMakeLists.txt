@@ -39,6 +39,7 @@ SET(SourceFiles
 	plugins/PluginManager.cpp
 	plugins/autostart/AutoStartObject.cpp
 	app/Application.cpp
+	app/StandaloneApplication.cpp
 	reference/CloneHelper.cpp
 	reference/PropertyFieldDescriptor.cpp
 	reference/PropertyField.cpp
@@ -161,9 +162,9 @@ IF(OVITO_BUILD_APPSTORE_VERSION)
 ENDIF()
 
 # Pass version information to source code.
-SET_SOURCE_FILES_PROPERTIES("app/Application.cpp" PROPERTIES COMPILE_DEFINITIONS 
+SET_SOURCE_FILES_PROPERTIES(app/Application.cpp app/StandaloneApplication.cpp PROPERTIES COMPILE_DEFINITIONS 
     "OVITO_VERSION_MAJOR=${OVITO_VERSION_MAJOR};OVITO_VERSION_MINOR=${OVITO_VERSION_MINOR};OVITO_VERSION_REVISION=${OVITO_VERSION_REVISION};OVITO_VERSION_STRING=\"${OVITO_VERSION_STRING}\"")
-SET_SOURCE_FILES_PROPERTIES("utilities/io/SaveStream.cpp" "utilities/io/LoadStream.cpp" PROPERTIES COMPILE_DEFINITIONS 
+SET_SOURCE_FILES_PROPERTIES(utilities/io/SaveStream.cpp utilities/io/LoadStream.cpp PROPERTIES COMPILE_DEFINITIONS 
     "OVITO_FILE_FORMAT_VERSION=${OVITO_FILE_FORMAT_VERSION}")
 
 # Speed up compilation by using precompiled headers.

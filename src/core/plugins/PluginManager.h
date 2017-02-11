@@ -36,6 +36,15 @@ class OVITO_CORE_EXPORT PluginManager : public QObject
 
 public:
 
+	/// Create the singleton instance of this class.
+	static void initialize() {
+		_instance = new PluginManager();
+		_instance->registerPlugins();
+	}
+
+	/// Deletes the singleton instance of this class.
+	static void shutdown() { delete _instance; _instance = nullptr; }
+
 	/// \brief Returns the one and only instance of this class.
 	/// \return The predefined instance of the PluginManager singleton class.
 	inline static PluginManager& instance() {
@@ -87,19 +96,9 @@ private:
 	/// This is a singleton class; no public instances are allowed.
 	PluginManager();
 
-	/// Create the singleton instance of this class.
-	static void initialize() {
-		_instance = new PluginManager();
-		_instance->registerPlugins();
-	}
-
-	/// Deletes the singleton instance of this class.
-	static void shutdown() { delete _instance; _instance = nullptr; }
-
 	/// The singleton instance of this class.
 	static PluginManager* _instance;
 
-	friend class Application;
 	friend class Plugin;
 };
 

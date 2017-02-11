@@ -28,6 +28,7 @@
 #include <core/animation/AnimationSettings.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/utilities/io/FileManager.h>
+#include <core/app/Application.h>
 #include "FileSourceImporter.h"
 #include "FileSource.h"
 
@@ -242,7 +243,7 @@ Future<QVector<FileSourceImporter::Frame>> FileSourceImporter::findWildcardMatch
 
 			try {
 				// Retrieve list of files in remote directory.
-				Future<QStringList> fileListFuture = FileManager::instance().listDirectoryContents(directoryUrl);
+				Future<QStringList> fileListFuture = Application::instance()->fileManager()->listDirectoryContents(directoryUrl);
 				if(!datasetContainer->taskManager().waitForTask(fileListFuture))
 					return Future<QVector<Frame>>::createCanceled();
 

@@ -37,12 +37,9 @@ namespace PyScript {
 
 using namespace Ovito;
 
-PYBIND11_PLUGIN(PyScriptApp)
+void defineAppModule(py::module parentModule)
 {
-	py::options options;
-	options.disable_function_signatures();
-
-	py::module m("PyScriptApp");
+	py::module m = parentModule.def_submodule("App");
 
 	py::class_<OvitoObject, OORef<OvitoObject>>(m, "OvitoObject")
 		.def("__str__", [](py::object& pyobj) {
@@ -60,6 +57,8 @@ PYBIND11_PLUGIN(PyScriptApp)
 			catch(const py::cast_error&) { return true; }
 		})
 	;
+
+	qDebug() << "Class name: " << RefMaker::OOType.className();
 
 	ovito_abstract_class<RefMaker, OvitoObject>{m}
 		.def_property_readonly("dataset", py::cpp_function(&RefMaker::dataset, py::return_value_policy::reference))
@@ -131,10 +130,6 @@ PYBIND11_PLUGIN(PyScriptApp)
 		else
 			return nullptr;
 	}, py::return_value_policy::reference);
-
-	return m.ptr();
 }
-
-OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScriptApp);
 
 };

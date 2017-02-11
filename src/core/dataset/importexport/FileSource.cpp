@@ -24,6 +24,7 @@
 #include <core/utilities/io/ObjectLoadStream.h>
 #include <core/utilities/io/ObjectSaveStream.h>
 #include <core/utilities/io/FileManager.h>
+#include <core/app/Application.h>
 #include <core/viewport/Viewport.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/scene/ObjectNode.h>
@@ -411,7 +412,7 @@ void FileSource::refreshFromSource(int frameIndex)
 	// Remove external file from local file cache so that it will be fetched from the
 	// remote server again.
 	if(frameIndex >= 0 && frameIndex < frames().size())
-		FileManager::instance().removeFromCache(frames()[frameIndex].sourceFile);
+		Application::instance()->fileManager()->removeFromCache(frames()[frameIndex].sourceFile);
 
 	if(frameIndex == loadedFrameIndex() || frameIndex == -1) {
 		_loadedFrameIndex = -1;

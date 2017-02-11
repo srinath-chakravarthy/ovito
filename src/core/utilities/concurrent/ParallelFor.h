@@ -41,7 +41,7 @@ bool parallelFor(
 	futureInterface.setProgressValue(0);
 
 	std::vector<std::future<void>> workers;
-	size_t num_threads = Application::instance().idealThreadCount();
+	size_t num_threads = Application::instance()->idealThreadCount();
 	T chunkSize = loopCount / num_threads;
 	T startIndex = 0;
 	T endIndex = chunkSize;
@@ -81,7 +81,7 @@ template<class Function, typename T>
 void parallelFor(T loopCount, Function kernel)
 {
 	std::vector<std::future<void>> workers;
-	size_t num_threads = Application::instance().idealThreadCount();
+	size_t num_threads = Application::instance()->idealThreadCount();
 	if(num_threads > loopCount) {
 		if(loopCount <= 0) return;
 		num_threads = loopCount;
@@ -119,7 +119,7 @@ template<class Function>
 bool parallelForChunks(size_t loopCount, FutureInterfaceBase& futureInterface, Function kernel)
 {
 	std::vector<std::future<void>> workers;
-	size_t num_threads = Application::instance().idealThreadCount();
+	size_t num_threads = Application::instance()->idealThreadCount();
 	if(num_threads > loopCount) {
 		if(loopCount <= 0) return true;
 		num_threads = loopCount;
@@ -152,7 +152,7 @@ template<class Function>
 void parallelForChunks(size_t loopCount, Function kernel)
 {
 	std::vector<std::future<void>> workers;
-	size_t num_threads = Application::instance().idealThreadCount();
+	size_t num_threads = Application::instance()->idealThreadCount();
 	if(num_threads > loopCount) {
 		if(loopCount <= 0) return;
 		num_threads = loopCount;

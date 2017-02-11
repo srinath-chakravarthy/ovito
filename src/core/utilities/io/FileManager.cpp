@@ -27,17 +27,6 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(IO)
 
-/// The singleton instance of the class.
-FileManager* FileManager::_instance = nullptr;
-
-/******************************************************************************
-* Constructor.
-******************************************************************************/
-FileManager::FileManager() : _mutex(QMutex::Recursive)
-{
-	OVITO_ASSERT_MSG(!_instance, "FileManager constructor", "Multiple instances of this singleton class have been created.");
-}
-
 /******************************************************************************
 * Makes a file available on this computer.
 ******************************************************************************/

@@ -22,6 +22,7 @@
 #include <plugins/particles/Particles.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/utilities/io/FileManager.h>
+#include <core/app/Application.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/particles/objects/SimulationCellDisplay.h>
 #include <plugins/particles/objects/BondsObject.h>
@@ -48,7 +49,7 @@ void ParticleFrameLoader::perform()
 	setProgressText(ParticleImporter::tr("Reading file %1").arg(frame().sourceFile.toString(QUrl::RemovePassword | QUrl::PreferLocalFile | QUrl::PrettyDecoded)));
 
 	// Fetch file.
-	Future<QString> fetchFileFuture = FileManager::instance().fetchUrl(datasetContainer(), frame().sourceFile);
+	Future<QString> fetchFileFuture = Application::instance()->fileManager()->fetchUrl(datasetContainer(), frame().sourceFile);
 	if(!waitForSubTask(fetchFileFuture))
 		return;
 	OVITO_ASSERT(fetchFileFuture.isCanceled() == false);

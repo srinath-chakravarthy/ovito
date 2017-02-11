@@ -34,11 +34,9 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)
 ******************************************************************************/
 void GuiApplication::registerCommandLineParameters(QCommandLineParser& parser)
 {
-	Application::registerCommandLineParameters(parser);
+	StandaloneApplication::registerCommandLineParameters(parser);
 
 	parser.addOption(QCommandLineOption(QStringList{{"nogui"}}, tr("Run in console mode without showing the graphical user interface.")));
-	parser.addOption(QCommandLineOption(QStringList{{"glversion"}}, tr("Selects a specific version of the OpenGL standard."), tr("VERSION")));
-	parser.addOption(QCommandLineOption(QStringList{{"glcompatprofile"}}, tr("Request the OpenGL compatibility profile instead of the core profile.")));
 }
 
 /******************************************************************************
@@ -46,7 +44,7 @@ void GuiApplication::registerCommandLineParameters(QCommandLineParser& parser)
 ******************************************************************************/
 bool GuiApplication::processCommandLineParameters()
 {
-	if(!Application::processCommandLineParameters())
+	if(!StandaloneApplication::processCommandLineParameters())
 		return false;
 
 	// Check if program was started in console mode.
@@ -82,7 +80,7 @@ bool GuiApplication::processCommandLineParameters()
 void GuiApplication::createQtApplication(int& argc, char** argv)
 {
 	if(headlessMode()) {
-		Application::createQtApplication(argc, argv);
+		StandaloneApplication::createQtApplication(argc, argv);
 	}
 	else {
 		new QApplication(argc, argv);
@@ -168,7 +166,7 @@ bool GuiApplication::startupApplication()
 	if(cmdLineParser().positionalArguments().empty() == false) {
 		QString importFilename = cmdLineParser().positionalArguments().front();
 		if(!importFilename.endsWith(".ovito", Qt::CaseInsensitive)) {
-			QUrl importURL = FileManager::instance().urlFromUserInput(importFilename);
+			QUrl importURL = Application::instance()->fileManager()->urlFromUserInput(importFilename);
 			container->importFile(importURL);
 			container->currentSet()->undoStack().setClean();
 		}

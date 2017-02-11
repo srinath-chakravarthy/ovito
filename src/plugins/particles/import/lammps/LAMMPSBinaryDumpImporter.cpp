@@ -80,7 +80,7 @@ void LAMMPSBinaryDumpImporter::setColumnMapping(const InputColumnMapping& mappin
 {
 	_columnMapping = mapping;
 
-	if(Application::instance().guiMode()) {
+	if(Application::instance()->guiMode()) {
 		// Remember the mapping for the next time.
 		QSettings settings;
 		settings.beginGroup("viz/importer/lammps_binary_dump/");

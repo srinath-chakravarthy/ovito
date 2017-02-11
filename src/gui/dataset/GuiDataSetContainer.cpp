@@ -222,7 +222,7 @@ bool GuiDataSetContainer::importFile(const QUrl& url, const OvitoObjectType* imp
 	if(!importerType) {
 
 		// Download file so we can determine its format.
-		Future<QString> fetchFileFuture = FileManager::instance().fetchUrl(*this, url);
+		Future<QString> fetchFileFuture = Application::instance()->fileManager()->fetchUrl(*this, url);
 		if(!taskManager().waitForTask(fetchFileFuture))
 			return false;
 
@@ -329,7 +329,7 @@ bool GuiDataSetContainer::waitUntil(const std::function<bool()>& callback, const
 	// If yes, it's not a good idea to display a progress dialog.
 	bool isRendering = currentSet() ? currentSet()->viewportConfig()->isRendering() : false;
 
-	if(!isRendering && Application::instance().guiMode()) {
+	if(!isRendering && Application::instance()->guiMode()) {
 
 		// Show a modal progress dialog to block user interface while waiting.
 		std::unique_ptr<QProgressDialog> localDialog;
@@ -358,7 +358,7 @@ bool GuiDataSetContainer::waitUntil(const std::function<bool()>& callback, const
 #if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
 		// Disable viewport repaints while processing events to
 		// avoid recursive calls to repaint().
-		if(Application::instance().guiMode()) {
+		if(Application::instance()->guiMode()) {
 			mainWindow()->viewportsPanel()->setUpdatesEnabled(false);
 		}
 #endif
@@ -367,7 +367,7 @@ bool GuiDataSetContainer::waitUntil(const std::function<bool()>& callback, const
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
 			// Resume repainting the viewports.
-			if(Application::instance().guiMode()) {
+			if(Application::instance()->guiMode()) {
 				mainWindow()->viewportsPanel()->setUpdatesEnabled(true);
 			}
 #endif
@@ -377,7 +377,7 @@ bool GuiDataSetContainer::waitUntil(const std::function<bool()>& callback, const
 		catch(...) {
 #if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
 			// Resume repainting the viewports.
-			if(Application::instance().guiMode())
+			if(Application::instance()->guiMode())
 				mainWindow()->viewportsPanel()->setUpdatesEnabled(true);
 #endif
 			throw;

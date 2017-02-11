@@ -62,7 +62,7 @@ SceneNode::SceneNode(DataSet* dataset) : RefTarget(dataset), _parentNode(nullptr
 	setDisplayColor(Color::fromHSV(std::uniform_real_distribution<FloatType>()(rng), 1, 1));
 
 	// Create a transformation controller for the node.
-	setTransformationController(ControllerManager::instance().createTransformationController(dataset));
+	setTransformationController(ControllerManager::createTransformationController(dataset));
 }
 
 /******************************************************************************
@@ -170,7 +170,7 @@ LookAtController* SceneNode::setLookatTargetNode(SceneNode* targetNode)
 			prs->rotationController()->getRotationValue(time, rotation, iv);
 
 			// Reset to default rotation controller.
-			OORef<Controller> controller = ControllerManager::instance().createRotationController(dataset());
+			OORef<Controller> controller = ControllerManager::createRotationController(dataset());
 			controller->setRotationValue(time, rotation, true);
 			prs->setRotationController(controller);
 		}

@@ -36,13 +36,6 @@ class OVITO_CORE_EXPORT FileManager : public QObject
 
 public:
 
-	/// \brief Returns the one and only instance of this class.
-	/// \return The predefined instance of the UnitsManager singleton class.
-	inline static FileManager& instance() {
-		OVITO_ASSERT_MSG(_instance != nullptr, "FileManager::instance", "Singleton object is not initialized yet.");
-		return *_instance;
-	}
-
 	/// \brief Makes a file available on this computer.
 	/// \return A QFuture that will provide the local file name of the downloaded file.
 	Future<QString> fetchUrl(DataSetContainer& container, const QUrl& url);
@@ -90,26 +83,11 @@ private:
 	QMap<QUrl, QTemporaryFile*> _cachedFiles;
 
 	/// The mutex to synchronize access to above data structures.
-	QMutex _mutex;
+	QMutex _mutex{QMutex::Recursive};
 
 	/// Cache of login/password information for remote machines.
 	QMap<QString, QPair<QString,QString>> _credentialCache;
 
-protected:
-    
-	/// This is a singleton class. No public instances allowed.
-	FileManager();
-
-	/// Create the singleton instance of this class.
-	static void initialize(FileManager* manager) { _instance = manager; }
-
-	/// Deletes the singleton instance of this class.
-	static void shutdown() { delete _instance; _instance = nullptr; }
-
-	/// The singleton instance of this class.
-	static FileManager* _instance;
-
-	friend class Application;
 	friend class SftpDownloadJob;
 };
 

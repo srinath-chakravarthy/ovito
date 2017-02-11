@@ -222,7 +222,7 @@ void ParticleExpressionEvaluator::evaluate(const std::function<void(size_t,size_
 	OVITO_ASSERT(!_inputVariables.empty());
 
 	// Determine the number of parallel threads to use.
-	size_t nthreads = Application::instance().idealThreadCount();
+	size_t nthreads = Application::instance()->idealThreadCount();
 	if(_particleCount == 0)
 		return;
 	else if(_particleCount < 100)

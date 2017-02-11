@@ -80,7 +80,7 @@ void CoordinationNumberModifier::CoordinationAnalysisEngine::perform()
 
 	// Perform analysis on each particle in parallel.
 	std::vector<std::thread> workers;
-	size_t num_threads = Application::instance().idealThreadCount();
+	size_t num_threads = Application::instance()->idealThreadCount();
 	size_t chunkSize = particleCount / num_threads;
 	size_t startIndex = 0;
 	size_t endIndex = chunkSize;

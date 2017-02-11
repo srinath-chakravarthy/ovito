@@ -42,7 +42,7 @@ TriMeshDisplay::TriMeshDisplay(DataSet* dataset) : DisplayObject(dataset),
 	INIT_PROPERTY_FIELD(color);
 	INIT_PROPERTY_FIELD(transparencyController);
 
-	setTransparencyController(ControllerManager::instance().createFloatController(dataset));
+	setTransparencyController(ControllerManager::createFloatController(dataset));
 }
 
 /******************************************************************************

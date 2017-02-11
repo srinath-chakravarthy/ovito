@@ -82,7 +82,7 @@ void OpenGLSceneRenderer::determineOpenGLInfo()
 		tempContext.setFormat(getDefaultSurfaceFormat());
 		if(!tempContext.create())
 			throw Exception(tr("Failed to create temporary OpenGL context."));
-		if(Application::instance().headlessMode() == false) {
+		if(Application::instance()->headlessMode() == false) {
 			// Create a hidden, temporary window to make the GL context current.
 			window.reset(new QWindow());
 			window->setSurfaceType(QSurface::OpenGLSurface);
@@ -191,7 +191,7 @@ bool OpenGLSceneRenderer::geometryShadersEnabled(bool forceDefaultSetting)
 		return false;
 #endif
 	
-	if(Application::instance().guiMode())
+	if(Application::instance()->guiMode())
 		return geometryShadersSupported();
 	else if(QOpenGLContext::currentContext())
 		return QOpenGLShader::hasOpenGLShaders(QOpenGLShader::Geometry);
@@ -212,22 +212,7 @@ QSurfaceFormat OpenGLSceneRenderer::getDefaultSurfaceFormat()
 #endif
 	format.setMajorVersion(OVITO_OPENGL_REQUESTED_VERSION_MAJOR);
 	format.setMinorVersion(OVITO_OPENGL_REQUESTED_VERSION_MINOR);
-	if(Application::instance().cmdLineParser().isSet(QStringLiteral("glversion"))) {
-		QStringList tokens = Application::instance().cmdLineParser().value(QStringLiteral("glversion")).split(QChar('.'));
-		if(tokens.size() == 2) {
-			int majorVersion = tokens[0].toInt();
-			int minorVersion = tokens[1].toInt();
-			if(majorVersion >= 1) {
-				format.setMajorVersion(majorVersion);
-				format.setMinorVersion(minorVersion);
-			}
-		}
-	}
 	format.setProfile(QSurfaceFormat::CoreProfile);
-	if(Application::instance().cmdLineParser().isSet(QStringLiteral("glcompatprofile"))) {
-		format.setProfile(QSurfaceFormat::CompatibilityProfile);
-		format.setOption(QSurfaceFormat::DeprecatedFunctions);
-	}
 #ifdef Q_OS_WIN
 	// Always request deprecated functions to be included in the context profile on Windows
 	// to work around a compatibility issue between Qt 5.4.1 and the Intel OpenGL driver.
@@ -245,7 +230,7 @@ void OpenGLSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParamet
 {
 	SceneRenderer::beginFrame(time, params, vp);
 
-	if(Application::instance().headlessMode())
+	if(Application::instance()->headlessMode())
 		throwException(tr("Cannot use OpenGL renderer in headless mode."));
 
 	_glcontext = QOpenGLContext::currentContext();

@@ -22,6 +22,7 @@
 #include <core/Core.h>
 #include <core/utilities/concurrent/Future.h>
 #include <core/utilities/io/FileManager.h>
+#include <core/app/Application.h>
 
 #include "SftpJob.h"
 
@@ -80,7 +81,7 @@ void SftpJob::start()
 	connectionParams.userName = _url.userName();
 	connectionParams.password = _url.password();
 	if(connectionParams.userName.isEmpty() || connectionParams.password.isEmpty()) {
-		QPair<QString,QString> credentials = FileManager::instance().findCredentials(connectionParams.host);
+		QPair<QString,QString> credentials = Application::instance()->fileManager()->findCredentials(connectionParams.host);
 		if(credentials.first.isEmpty() == false) {
 			connectionParams.userName = credentials.first;
 			connectionParams.password = credentials.second;
@@ -159,7 +160,7 @@ void SftpJob::onSshConnectionError(QSsh::SshError error)
 	// If authentication failed, ask the user to re-enter username/password.
 	if(error == QSsh::SshAuthenticationError && !_futureInterface->isCanceled()) {
 		OVITO_ASSERT(!_sftpChannel);
-		if(FileManager::instance().askUserForCredentials(_url)) {
+		if(Application::instance()->fileManager()->askUserForCredentials(_url)) {
 			// Start over with new login information.
 			QObject::disconnect(_connection, 0, this, 0);
 			QSsh::releaseConnection(_connection);
@@ -195,7 +196,7 @@ void SftpJob::onSshConnectionEstablished()
 
 	// After successful login, store login information in cache.
 	QSsh::SshConnectionParameters connectionParams = _connection->connectionParameters();
-	FileManager::instance().cacheCredentials(connectionParams.host, connectionParams.userName, connectionParams.password);
+	Application::instance()->fileManager()->cacheCredentials(connectionParams.host, connectionParams.userName, connectionParams.password);
 
 	_futureInterface->setProgressText(tr("Opening SFTP file transfer channel."));
 
@@ -234,7 +235,7 @@ void SftpDownloadJob::shutdown(bool success)
 
 	SftpJob::shutdown(success);
 
-	FileManager::instance().fileFetched(_url, _localFile.take());
+	Application::instance()->fileManager()->fileFetched(_url, _localFile.take());
 }
 
 /******************************************************************************

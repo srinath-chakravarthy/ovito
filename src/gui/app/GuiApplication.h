@@ -24,14 +24,14 @@
 
 #include <gui/GUI.h>
 #include <core/utilities/Exception.h>
-#include <core/app/Application.h>
+#include <core/app/StandaloneApplication.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)
 
 /**
  * \brief The main application with a graphical user interface.
  */
-class OVITO_GUI_EXPORT GuiApplication : public Application
+class OVITO_GUI_EXPORT GuiApplication : public StandaloneApplication
 {
 	Q_OBJECT
 

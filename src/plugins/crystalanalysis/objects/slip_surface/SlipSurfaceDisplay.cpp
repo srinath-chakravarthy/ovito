@@ -46,7 +46,7 @@ SlipSurfaceDisplay::SlipSurfaceDisplay(DataSet* dataset) : AsynchronousDisplayOb
 	INIT_PROPERTY_FIELD(smoothShading);
 	INIT_PROPERTY_FIELD(surfaceTransparencyController);
 
-	setSurfaceTransparencyController(ControllerManager::instance().createFloatController(dataset));
+	setSurfaceTransparencyController(ControllerManager::createFloatController(dataset));
 }
 
 /******************************************************************************

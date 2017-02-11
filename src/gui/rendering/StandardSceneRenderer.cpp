@@ -42,7 +42,7 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(StandardSceneRenderer, antialiasingLevel, Int
 ******************************************************************************/
 bool StandardSceneRenderer::startRender(DataSet* dataset, RenderSettings* settings)
 {
-	if(Application::instance().headlessMode())
+	if(Application::instance()->headlessMode())
 		throwException(tr("Cannot use OpenGL renderer when program is running in headless mode. "
 				"Please use a different rendering engine or start program on a machine where access to "
 				"graphics hardware is possible."));
@@ -53,7 +53,7 @@ bool StandardSceneRenderer::startRender(DataSet* dataset, RenderSettings* settin
 	int sampling = std::max(1, antialiasingLevel());
 
 	QOpenGLContext* glcontext;
-	if(Application::instance().guiMode()) {
+	if(Application::instance()->guiMode()) {
 #if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
 		// in GUI mode, use the OpenGL context managed by the main window to render to the offscreen buffer.
 		glcontext = MainWindow::fromDataset(renderDataset())->getOpenGLContext();

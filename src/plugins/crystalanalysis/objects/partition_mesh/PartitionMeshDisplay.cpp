@@ -58,8 +58,8 @@ PartitionMeshDisplay::PartitionMeshDisplay(DataSet* dataset) : AsynchronousDispl
 	INIT_PROPERTY_FIELD(capTransparencyController);
 	INIT_PROPERTY_FIELD(flipOrientation);
 
-	setSurfaceTransparencyController(ControllerManager::instance().createFloatController(dataset));
-	setCapTransparencyController(ControllerManager::instance().createFloatController(dataset));
+	setSurfaceTransparencyController(ControllerManager::createFloatController(dataset));
+	setCapTransparencyController(ControllerManager::createFloatController(dataset));
 }
 
 /******************************************************************************

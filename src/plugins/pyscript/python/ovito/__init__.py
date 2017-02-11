@@ -8,8 +8,8 @@ except ImportError:
     import collections
 
 # Load the native module with the core bindings
-from PyScript import *
-from PyScriptApp import *
+from PyScript import version, version_string, gui_mode, headless_mode
+from PyScript.App import *
 
 # Load sub-modules (in the right order because there are dependencies between them)
 import ovito.anim

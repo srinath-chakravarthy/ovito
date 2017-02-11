@@ -55,7 +55,7 @@ AmbientOcclusionModifier::AmbientOcclusionModifier(DataSet* dataset) : Asynchron
 ******************************************************************************/
 std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> AmbientOcclusionModifier::createEngine(TimePoint time, TimeInterval validityInterval)
 {
-	if(Application::instance().headlessMode())
+	if(Application::instance()->headlessMode())
 		throwException(tr("Ambient occlusion modifier requires OpenGL support and cannot be used when program is running in headless mode. "
 						  "Please run program on a machine where access to graphics hardware is possible."));
 

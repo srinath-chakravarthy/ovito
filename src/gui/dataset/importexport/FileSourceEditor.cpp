@@ -32,6 +32,7 @@
 #include <core/animation/AnimationSettings.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/utilities/io/FileManager.h>
+#include <core/app/Application.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include "FileSourceEditor.h"
 
@@ -258,7 +259,7 @@ bool FileSourceEditor::importNewFile(FileSource* fileSource, const QUrl& url, co
 	if(!importerType) {
 
 		// Download file so we can determine its format.
-		Future<QString> fetchFileFuture = FileManager::instance().fetchUrl(*fileSource->dataset()->container(), url);
+		Future<QString> fetchFileFuture = Application::instance()->fileManager()->fetchUrl(*fileSource->dataset()->container(), url);
 		if(!fileSource->dataset()->container()->taskManager().waitForTask(fetchFileFuture))
 			return false;
 

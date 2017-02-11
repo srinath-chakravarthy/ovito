@@ -22,6 +22,7 @@
 #include <plugins/particles/Particles.h>
 #include <core/utilities/io/FileManager.h>
 #include <core/utilities/concurrent/Future.h>
+#include <core/app/Application.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/importexport/FileSource.h>
 #include "ParticleImporter.h"
@@ -70,7 +71,7 @@ QVector<FileSourceImporter::Frame> ParticleImporter::discoverFramesInFile(const 
 	futureInterface.setProgressText(tr("Scanning file %1").arg(sourceUrl.toString(QUrl::RemovePassword | QUrl::PreferLocalFile | QUrl::PrettyDecoded)));
 
 	// Fetch file.
-	Future<QString> fetchFileFuture = FileManager::instance().fetchUrl(*dataset()->container(), sourceUrl);
+	Future<QString> fetchFileFuture = Application::instance()->fileManager()->fetchUrl(*dataset()->container(), sourceUrl);
 	if(!futureInterface.waitForSubTask(fetchFileFuture))
 		return result;
 
