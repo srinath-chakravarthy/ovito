@@ -51,7 +51,14 @@ public:
 	QFile& outputFile() { return _outputFile; }
 
 	/// \brief Returns the file filter that specifies the files that can be exported by this service.
-	virtual QString fileFilter() override { return QStringLiteral("*.pov"); }
+	virtual QString fileFilter() override { 
+#ifndef Q_OS_WIN
+		return QStringLiteral("*.pov");
+#else 
+		// Workaround for bug in Windows file selection dialog (https://bugreports.qt.io/browse/QTBUG-45759)
+		return QStringLiteral("*");
+#endif
+	}
 
 	/// \brief Returns the filter description that is displayed in the drop-down box of the file dialog.
 	virtual QString fileFilterDescription() override { return tr("POV-Ray scene"); }

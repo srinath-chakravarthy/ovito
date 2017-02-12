@@ -918,7 +918,7 @@ PYBIND11_PLUGIN(Particles)
 				},
 				"The animation frame interval over which the particle positions are sampled to generate the trajectory lines. "
 				"Set this to a tuple of two integers to specify the first and the last animation frame; or use ``None`` to generate trajectory lines "
-				"over the entire animation interval of the currect :py:class:`~ovito.DataSet`."
+				"over the entire input sequence."
 				"\n\n"
 				":Default: ``None``\n")
 		.def("generate", [](TrajectoryGeneratorObject& obj) {

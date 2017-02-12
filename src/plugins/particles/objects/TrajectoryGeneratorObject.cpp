@@ -23,6 +23,7 @@
 #include <core/animation/AnimationSettings.h>
 #include <core/scene/ObjectNode.h>
 #include <core/app/Application.h>
+#include <core/dataset/importexport/FileSource.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/utilities/concurrent/ProgressDisplay.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
@@ -126,8 +127,16 @@ bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* pr
 		}
 	}
 
-	// Iterate over the simulation frames.
-	TimeInterval interval = useCustomInterval() ? customInterval() : dataset()->animationSettings()->animationInterval();
+	// Determine time interval over which trajectories should be generated.
+	TimeInterval interval;
+	if(useCustomInterval())
+		interval = customInterval();
+	else if(FileSource* fs = dynamic_object_cast<FileSource>(source()->sourceObject()))
+		interval = TimeInterval(0, dataset()->animationSettings()->frameToTime(fs->numberOfFrames() - 1));
+	else 
+		interval = dataset()->animationSettings()->animationInterval();
+
+	// Generate list of simulation frames at which particle positions should be sampled.
 	QVector<TimePoint> sampleTimes;
 	for(TimePoint time = interval.start(); time <= interval.end(); time += everyNthFrame() * dataset()->animationSettings()->ticksPerFrame()) {
 		sampleTimes.push_back(time);
@@ -137,6 +146,7 @@ bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* pr
 		progressDisplay->setValue(0);
 	}
 
+	// Sample particle positions to generate trajectory points.
 	QVector<Point3> points;
 	points.reserve(particleCount * sampleTimes.size());
 	for(TimePoint time : sampleTimes) {
@@ -198,9 +208,10 @@ bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* pr
 		}
 	}
 
+	// Store generated trajectory lines.
 	setTrajectories(particleCount, points, sampleTimes);
 
-	// Jump back to current animation time.
+	// Jump back to original animation time.
 	if(!source()->waitUntilReady(currentTime, tr("Going back to original frame."), progressDisplay))
 		return false;
 
