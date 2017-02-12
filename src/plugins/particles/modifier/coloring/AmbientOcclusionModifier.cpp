@@ -161,10 +161,10 @@ void AmbientOcclusionModifier::AmbientOcclusionEngine::perform()
 				particleBuffer->render(renderer);
 			}
 			catch(...) {
-				renderer->endFrame();
+				renderer->endFrame(false);
 				throw;
 			}
-			renderer->endFrame();
+			renderer->endFrame(true);
 
 			// Extract brightness values from rendered image.
 			const QImage image = renderer->image();

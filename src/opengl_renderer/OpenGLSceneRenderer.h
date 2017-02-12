@@ -64,7 +64,7 @@ public:
 	virtual void beginFrame(TimePoint time, const ViewProjectionParameters& params, Viewport* vp) override;
 
 	/// This method is called after renderFrame() has been called.
-	virtual void endFrame() override;
+	virtual void endFrame(bool renderSuccessful) override;
 
 	/// Changes the current local to world transformation matrix.
 	virtual void setWorldTransform(const AffineTransformation& tm) override;

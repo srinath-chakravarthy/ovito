@@ -244,6 +244,7 @@ void POVRayRendererEditor::createUI(const RolloutInsertionParameters& rolloutPar
 			if(!path.isEmpty()) {
 				UndoableTransaction::handleExceptions(renderer->dataset()->undoStack(), tr("Set executable path"), [renderer, &path]() {
 					renderer->setPovrayExecutable(path);
+					PROPERTY_FIELD(POVRayRenderer::povrayExecutable).memorizeDefaultValue(renderer);
 				});
 			}
 		}

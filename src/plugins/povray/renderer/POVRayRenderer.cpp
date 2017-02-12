@@ -164,6 +164,19 @@ void POVRayRenderer::beginFrame(TimePoint time, const ViewProjectionParameters& 
 	renderSettings()->backgroundColorController()->getColorValue(time, backgroundColor, iv);
 	_outputStream << "background { color "; write(backgroundColor); _outputStream << "}\n";
 
+	// Create a white sphere around the scene to be independent of background color.
+	if(radiosityEnabled()) {
+		FloatType skySphereRadius = params.boundingBox.size().length() * 10;
+		_outputStream << "sphere { "; write(params.boundingBox.center()); _outputStream << ", " << skySphereRadius << "\n";
+		_outputStream << "         texture {\n";
+		_outputStream << "             pigment { color rgb 1.0 }\n";
+		_outputStream << "             finish { emission 0.8 }\n";
+		_outputStream << "         }\n";
+		_outputStream << "         no_image\n";
+		_outputStream << "         no_shadow\n";
+		_outputStream << "}\n";
+	}
+
 	// Write camera.
 	_outputStream << "camera {\n";
 	if(!odsEnabled()) {
@@ -221,26 +234,29 @@ void POVRayRenderer::beginFrame(TimePoint time, const ViewProjectionParameters& 
 		if(depthOfFieldEnabled())
 			throwException(tr("Depth of field does not work with omni­directional stereo projection."));
 
-		Point3 p0 = projParams().inverseProjectionMatrix * Point3(0,0,0);
+		const AffineTransformation& camTM = projParams().inverseViewMatrix * AffineTransformation::rotationY(FLOATTYPE_PI);
 
 		_outputStream << "  // ODS Top/Bottom\n";
 		_outputStream << "  #declare odsIPD = " << interpupillaryDistance() << "; // Interpupillary distance\n";
 		_outputStream << "  #declare odsVerticalModulation = 0.2; // Use 0.0001 if you don't care about Zenith & Nadir zones.\n";
-		_outputStream << "  #declare odsLocationX = " << p0.x() << ";\n";
-		_outputStream << "  #declare odsLocationY = " << p0.z() << ";\n";
-		_outputStream << "  #declare odsLocationZ = " << p0.y() << ";\n";
 		_outputStream << "  #declare odsHandedness = -1; // -1 for left-handed or 1 for right-handed\n";
 		_outputStream << "  #declare odsAngle = 0; // Rotation, clockwise, in degree.\n";
+		_outputStream << "  #declare odslocx = function(x,y) { cos(((x+0.5+odsAngle/360)) * 2 * pi - pi)*(odsIPD/2*pow(sin(select(y, 1-2*(y+0.5), 1-2*y)*pi), odsVerticalModulation))*select(-y,-1,+1) }\n";
+		_outputStream << "  #declare odslocy = function(x,y) { 0 }\n";
+		_outputStream << "  #declare odslocz = function(x,y) { sin(((x+0.5+odsAngle/360)) * 2 * pi - pi)*(odsIPD/2*pow(sin(select(y, 1-2*(y+0.5), 1-2*y)*pi), odsVerticalModulation))*select(-y,-1,+1) * odsHandedness }\n";
+		_outputStream << "  #declare odsdirx = function(x,y) { sin(((x+0.5+odsAngle/360)) * 2 * pi - pi) * cos(pi / 2 -select(y, 1-2*(y+0.5), 1-2*y) * pi) }\n";
+		_outputStream << "  #declare odsdiry = function(x,y) { sin(pi / 2 - select(y, 1-2*(y+0.5), 1-2*y) * pi) }\n";
+		_outputStream << "  #declare odsdirz = function(x,y) { -cos(((x+0.5+odsAngle/360)) * 2 * pi - pi) * cos(pi / 2 -select(y, 1-2*(y+0.5), 1-2*y) * pi) * odsHandedness }\n";
 		_outputStream << "  user_defined\n";
 		_outputStream << "  location {\n";
-		_outputStream << "  	function { odsLocationX + cos(((x+0.5+odsAngle/360)) * 2 * pi - pi)*(odsIPD/2*pow(sin(select(y, 1-2*(y+0.5), 1-2*y)*pi), odsVerticalModulation))*select(-y,-1,+1) }\n";
-		_outputStream << "  	function { odsLocationY }\n";
-		_outputStream << "  	function { odsLocationZ + sin(((x+0.5+odsAngle/360)) * 2 * pi - pi)*(odsIPD/2*pow(sin(select(y, 1-2*(y+0.5), 1-2*y)*pi), odsVerticalModulation))*select(-y,-1,+1) * odsHandedness }\n";
+		_outputStream << "  	function { " << camTM(0,0) << "*odslocx(x,y) + " << camTM(0,1) << "*odslocy(x,y) + " << camTM(0,2) << "*odslocz(x,y) + " << camTM(0,3) << " }\n";
+		_outputStream << "  	function { " << camTM(2,0) << "*odslocx(x,y) + " << camTM(2,1) << "*odslocy(x,y) + " << camTM(2,2) << "*odslocz(x,y) + " << camTM(2,3) << " }\n";
+		_outputStream << "  	function { " << camTM(1,0) << "*odslocx(x,y) + " << camTM(1,1) << "*odslocy(x,y) + " << camTM(1,2) << "*odslocz(x,y) + " << camTM(1,3) << " }\n";
 		_outputStream << "  }\n";
 		_outputStream << "  direction {\n";
-		_outputStream << "  	function { sin(((x+0.5+odsAngle/360)) * 2 * pi - pi) * cos(pi / 2 -select(y, 1-2*(y+0.5), 1-2*y) * pi) }\n";
-		_outputStream << "  	function { sin(pi / 2 - select(y, 1-2*(y+0.5), 1-2*y) * pi) }\n";
-		_outputStream << "  	function { -cos(((x+0.5+odsAngle/360)) * 2 * pi - pi) * cos(pi / 2 -select(y, 1-2*(y+0.5), 1-2*y) * pi) * odsHandedness }\n";
+		_outputStream << "  	function { " << camTM(0,0) << "*odsdirx(x,y) + " << camTM(0,1) << "*odsdiry(x,y) + " << camTM(0,2) << "*odsdirz(x,y) }\n";
+		_outputStream << "  	function { " << camTM(2,0) << "*odsdirx(x,y) + " << camTM(2,1) << "*odsdiry(x,y) + " << camTM(2,2) << "*odsdirz(x,y) }\n";
+		_outputStream << "  	function { " << camTM(1,0) << "*odsdirx(x,y) + " << camTM(1,1) << "*odsdiry(x,y) + " << camTM(1,2) << "*odsdirz(x,y) }\n";
 		_outputStream << "  }\n";
 	}
 	_outputStream << "}\n";
@@ -249,15 +265,22 @@ void POVRayRenderer::beginFrame(TimePoint time, const ViewProjectionParameters& 
 	Vector3 screen_y = projParams().inverseViewMatrix.column(1).normalized();
 
 	// Write a light source.
-	_outputStream << "light_source {\n";
-	_outputStream << "  <0, 0, 0>\n";
+	_outputStream << "light_source {\n";	
+	if(!odsEnabled()) { // Create parallel light for normal cameras.
+		_outputStream << "  <0, 0, 0>\n";
+	}
+	else { // Create point light for panoramic camera.
+		_outputStream << "  "; write(projParams().inverseViewMatrix.translation() + Vector3(7, 0, 10) * interpupillaryDistance()); _outputStream << "\n";
+	}
 	if(!radiosityEnabled())
 		_outputStream << "  color <1.5, 1.5, 1.5>\n";
 	else
-		_outputStream << "  color <0.5, 0.5, 0.5>\n";
-	_outputStream << "  parallel\n";
+		_outputStream << "  color <0.25, 0.25, 0.25>\n";
 	_outputStream << "  shadowless\n";
-	_outputStream << "  point_at "; write(projParams().inverseViewMatrix * Vector3(0,0,-1)); _outputStream << "\n";
+	if(!odsEnabled()) {
+		_outputStream << "  parallel\n";
+		_outputStream << "  point_at "; write(projParams().inverseViewMatrix * Vector3(0,0,-1)); _outputStream << "\n";
+	}
 	_outputStream << "}\n";
 
 	// Define macro for particle primitives in the POV-Ray file to reduce file size.
@@ -286,6 +309,12 @@ void POVRayRenderer::beginFrame(TimePoint time, const ViewProjectionParameters& 
 	_outputStream << "pos+"; write(-screen_x-screen_y); _outputStream << "*particleRadius, ";
 	_outputStream << "pos+"; write(-screen_x+screen_y); _outputStream << "*particleRadius\n";
 	_outputStream << "         texture { pigment { color particleColor } }\n";
+	_outputStream << "}\n";
+	_outputStream << "#end\n";
+
+	_outputStream << "#macro CYL(base, dir, cylRadius, cylColor) // Macro for cylinders\n";
+	_outputStream << "cylinder { base, base + dir, cylRadius\n";
+	_outputStream << "         texture { pigment { color cylColor } }\n";
 	_outputStream << "}\n";
 	_outputStream << "#end\n";
 }
@@ -383,9 +412,9 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 		}
 
 		OVITO_ASSERT(povrayProcess.exitStatus() == QProcess::NormalExit);
-		//qDebug() << "POV-Ray console output:";
-		//std::cout << povrayProcess.readAllStandardError().constData(); 
-		//qDebug() << "POV-Ray program returned with exit code" << povrayProcess.exitCode();
+		qDebug() << "POV-Ray console output:";
+		std::cout << povrayProcess.readAllStandardError().constData(); 
+		qDebug() << "POV-Ray program returned with exit code" << povrayProcess.exitCode();
 		if(povrayProcess.exitCode() != 0)
 			throwException(tr("POV-Ray program returned with error code %1.").arg(povrayProcess.exitCode()));
 
@@ -439,12 +468,12 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 /******************************************************************************
 * This method is called after renderFrame() has been called.
 ******************************************************************************/
-void POVRayRenderer::endFrame()
+void POVRayRenderer::endFrame(bool renderSuccessful)
 {
 	_sceneFile.reset();
 	_imageFile.reset();
 	_outputStream.setDevice(nullptr);
-	NonInteractiveSceneRenderer::endFrame();	
+	NonInteractiveSceneRenderer::endFrame(renderSuccessful);	
 }
 
 /******************************************************************************
@@ -580,15 +609,11 @@ void POVRayRenderer::renderArrows(const DefaultArrowPrimitive& arrowBuffer)
 	const AffineTransformation tm = modelTM();
 	if(arrowBuffer.shape() == ArrowPrimitive::CylinderShape) {
 		for(const DefaultArrowPrimitive::ArrowElement& element : arrowBuffer.elements()) {
-			_outputStream << "cylinder { ";
-			write(tm * element.pos);	// base point
-			_outputStream << ", ";
-			write(tm * (element.pos + element.dir));	// cap point
-			_outputStream << ", " << element.width << "\n";
-			_outputStream << "         texture { pigment { color ";
-			write(element.color);
-			_outputStream << " } }\n";
-			_outputStream << "}\n";
+			if(element.dir.isZero() || element.width <= 0) continue;
+			_outputStream << "CYL("; write(tm * element.pos); 
+			_outputStream << ", "; write(tm * element.dir);
+			_outputStream << ", " << element.width << ", "; write(element.color);
+			_outputStream << ")\n";
 		}
 	}
 	else if(arrowBuffer.shape() == ArrowPrimitive::ArrowShape) {
@@ -596,7 +621,7 @@ void POVRayRenderer::renderArrows(const DefaultArrowPrimitive& arrowBuffer)
 			FloatType arrowHeadRadius = element.width * FloatType(2.5);
 			FloatType arrowHeadLength = arrowHeadRadius * FloatType(1.8);
 			FloatType length = element.dir.length();
-			if(length == 0)
+			if(length == 0 || element.width <= 0)
 				continue;
 
 			if(length > arrowHeadLength) {

@@ -142,11 +142,11 @@ bool PickingSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRendering
 /******************************************************************************
 * This method is called after renderFrame() has been called.
 ******************************************************************************/
-void PickingSceneRenderer::endFrame()
+void PickingSceneRenderer::endFrame(bool renderSuccessful)
 {
 	endPickObject();
 	_framebufferObject.reset();
-	ViewportSceneRenderer::endFrame();
+	ViewportSceneRenderer::endFrame(renderSuccessful);
 
 	// Reactivate old GL context.
 	if(_oldSurface && _oldContext)
