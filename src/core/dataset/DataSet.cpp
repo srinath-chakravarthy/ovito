@@ -407,12 +407,18 @@ bool DataSet::renderFrame(TimePoint renderTime, int frameNumber, RenderSettings*
 
 	// Render one frame.
 	frameBuffer->clear();
-	renderer->beginFrame(renderTime, projParams, viewport);
-	if(!renderer->renderFrame(frameBuffer, SceneRenderer::NonStereoscopic, progressDisplay) || (progressDisplay && progressDisplay->wasCanceled())) {
-		renderer->endFrame();
-		return false;
+	try {
+		renderer->beginFrame(renderTime, projParams, viewport);
+		if(!renderer->renderFrame(frameBuffer, SceneRenderer::NonStereoscopic, progressDisplay) || (progressDisplay && progressDisplay->wasCanceled())) {
+			renderer->endFrame(false);
+			return false;
+		}
+		renderer->endFrame(true);
 	}
-	renderer->endFrame();
+	catch(...) {
+		renderer->endFrame(false);
+		throw;
+	}
 
 	// Apply viewport overlays.
 	for(ViewportOverlay* overlay : viewport->overlays()) {
