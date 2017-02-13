@@ -25,6 +25,7 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import)
 
@@ -217,7 +218,13 @@ InputColumnReader::InputColumnReader(const InputColumnMapping& mapping, Particle
  *****************************************************************************/
 inline bool parseFloatType(const char* s, const char* s_end, float& f)
 {
-	return boost::spirit::qi::parse(s, s_end, boost::spirit::qi::float_, f);
+	const char* s_orig = s; // Make a copy, because parse() modifies its argument.
+	if(!boost::spirit::qi::parse(s, s_end, boost::spirit::qi::float_, f)) {
+		// Fall back to Boost's lexical cast if Boost.Spirit parser fails (e.g. for very small numbers like 1e-204).
+		if(!boost::conversion::try_lexical_convert(boost::make_iterator_range(s_orig, s_end), f))
+			return false;
+	}
+	return true;
 }
 
 /******************************************************************************
@@ -225,7 +232,13 @@ inline bool parseFloatType(const char* s, const char* s_end, float& f)
  *****************************************************************************/
 inline bool parseFloatType(const char* s, const char* s_end, double& f)
 {
-	return boost::spirit::qi::parse(s, s_end, boost::spirit::qi::double_, f);
+	const char* s_orig = s; // Make a copy, because parse() modifies its argument.
+	if(!boost::spirit::qi::parse(s, s_end, boost::spirit::qi::double_, f)) {
+		// Fall back to Boost's lexical cast if Boost.Spirit parser fails (e.g. for very small numbers like 1e-204).
+		if(!boost::conversion::try_lexical_convert(boost::make_iterator_range(s_orig, s_end), f))
+			return false;
+	}
+	return true;
 }
 
 /******************************************************************************
