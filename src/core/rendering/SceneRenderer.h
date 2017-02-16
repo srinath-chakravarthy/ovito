@@ -137,7 +137,7 @@ public:
 	virtual bool renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress) = 0;
 
 	/// This method is called after renderFrame() has been called.
-	virtual void endFrame() {}
+	virtual void endFrame(bool renderSuccessful) {}
 
 	/// Changes the current local-to-world transformation matrix.
 	virtual void setWorldTransform(const AffineTransformation& tm) = 0;

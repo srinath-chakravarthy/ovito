@@ -324,13 +324,13 @@ void OpenGLSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParamet
 /******************************************************************************
 * This method is called after renderFrame() has been called.
 ******************************************************************************/
-void OpenGLSceneRenderer::endFrame()
+void OpenGLSceneRenderer::endFrame(bool renderSuccessful)
 {
     OVITO_REPORT_OPENGL_ERRORS();
 	OVITO_CHECK_OPENGL(_vertexArrayObject.reset());
 	_glcontext = nullptr;
 
-	SceneRenderer::endFrame();
+	SceneRenderer::endFrame(renderSuccessful);
 }
 
 /******************************************************************************

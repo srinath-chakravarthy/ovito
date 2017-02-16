@@ -106,23 +106,25 @@ void AmbientOcclusionRenderer::beginFrame(TimePoint time, const ViewProjectionPa
 /******************************************************************************
 * This method is called after renderFrame() has been called.
 ******************************************************************************/
-void AmbientOcclusionRenderer::endFrame()
+void AmbientOcclusionRenderer::endFrame(bool renderSuccessful)
 {
-	// Flush the contents to the FBO before extracting image.
-	_offscreenContext->swapBuffers(&_offscreenSurface);
+	if(renderSuccessful) {
+		// Flush the contents to the FBO before extracting image.
+		_offscreenContext->swapBuffers(&_offscreenSurface);
 
-	// Fetch rendered image from OpenGL framebuffer.
-	QSize size = _framebufferObject->size();
-	if(_image.isNull() || _image.size() != size)
-		_image = QImage(size, QImage::Format_ARGB32);
-	while(glGetError() != GL_NO_ERROR);
-	glReadPixels(0, 0, size.width(), size.height(), GL_BGRA, GL_UNSIGNED_BYTE, _image.bits());
-	if(glGetError() != GL_NO_ERROR) {
-		glReadPixels(0, 0, size.width(), size.height(), GL_RGBA, GL_UNSIGNED_BYTE, _image.bits());
-		_image = _image.rgbSwapped();
+		// Fetch rendered image from OpenGL framebuffer.
+		QSize size = _framebufferObject->size();
+		if(_image.isNull() || _image.size() != size)
+			_image = QImage(size, QImage::Format_ARGB32);
+		while(glGetError() != GL_NO_ERROR);
+		glReadPixels(0, 0, size.width(), size.height(), GL_BGRA, GL_UNSIGNED_BYTE, _image.bits());
+		if(glGetError() != GL_NO_ERROR) {
+			glReadPixels(0, 0, size.width(), size.height(), GL_RGBA, GL_UNSIGNED_BYTE, _image.bits());
+			_image = _image.rgbSwapped();
+		}
 	}
 
-	OpenGLSceneRenderer::endFrame();
+	OpenGLSceneRenderer::endFrame(renderSuccessful);
 }
 
 /******************************************************************************

@@ -614,7 +614,7 @@ void Viewport::renderInteractive(SceneRenderer* renderer)
 		}
 
 		// Finish rendering.
-		renderer->endFrame();
+		renderer->endFrame(true);
 		renderer->endRender();
 
 		_isRendering = false;
