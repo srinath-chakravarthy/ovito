@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2016) Alexander Stukowski
+//  Copyright (2017) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,33 +19,31 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_GUI_AUTO_START_OBJECT_H
-#define __OVITO_GUI_AUTO_START_OBJECT_H
+#ifndef __OVITO_VR_ACTIONS_H
+#define __OVITO_VR_ACTIONS_H
 
 #include <gui/GUI.h>
-#include <core/plugins/autostart/AutoStartObject.h>
+#include <gui/plugins/autostart/GuiAutoStartObject.h>
 
-namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(PluginSystem)
+namespace VRPlugin {
+
+using namespace Ovito;
 
 /**
- * \brief Base class that allows plugins to execute code on application startup.
- *
- * Derive a sub-class from this class if you want to perform something on application startup.
+ * \brief An auto-start object that is automatically invoked on application startup.
  */
-class OVITO_GUI_EXPORT GuiAutoStartObject : public AutoStartObject
+class StartVRAction : public GuiAutoStartObject
 {
-protected:
-
-	/// \brief The default constructor.
-	GuiAutoStartObject() {}
-
 public:
 
+	/// \brief Default constructor.
+	Q_INVOKABLE StartVRAction() {}
+
 	/// \brief Is called when a new main window is created.
-	virtual void registerActions(ActionManager& actionManager) {}
+	virtual void registerActions(ActionManager& actionManager) override;
 
 	/// \brief Is called when the main menu is created.
-	virtual void addActionsToMenu(ActionManager& actionManager, QMenuBar* menuBar) {}
+	virtual void addActionsToMenu(ActionManager& actionManager, QMenuBar* menuBar) override;
 
 private:
 
@@ -53,7 +51,6 @@ private:
 	OVITO_OBJECT
 };
 
-OVITO_END_INLINE_NAMESPACE
-}	// End of namespace
+};	// End of namespace
 
-#endif // __OVITO_GUI_AUTO_START_OBJECT_H
+#endif

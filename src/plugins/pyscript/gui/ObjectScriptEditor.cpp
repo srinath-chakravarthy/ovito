@@ -91,6 +91,9 @@ ObjectScriptEditor::ObjectScriptEditor(QWidget* parentWidget, RefTarget* scripta
 	// Disable context menu in toolbar.
 	setContextMenuPolicy(Qt::NoContextMenu);
 
+    // Delete window when it is being closed by the user.
+    setAttribute(Qt::WA_DeleteOnClose);
+
 	// Make the input widget active.
 	_codeEditor->setFocus();
 

@@ -112,7 +112,7 @@ public:
 
 	/// Returns the viewport whose contents are currently being rendered.
 	/// This may be NULL.
-	Viewport* viewport() const { OVITO_CHECK_OBJECT_POINTER(_viewport); return _viewport; }
+	Viewport* viewport() const { return _viewport; }
 
 	/// Returns the final size of the rendered image in pixels.
 	virtual QSize outputSize() const;

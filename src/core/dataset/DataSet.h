@@ -130,6 +130,27 @@ public:
 	/// Note that this method does NOT invoke setFilePath().
 	void saveToFile(const QString& filePath);
 
+	/// \brief Appends an object to this dataset's list of global objects.
+	void addGlobalObject(RefTarget* target) {
+		if(!_globalObjects.contains(target))
+			_globalObjects.push_back(target);
+	}
+
+	/// \brief Removes an object from this dataset's list of global objects.
+	void removeGlobalObject(int index) {
+		_globalObjects.remove(index);
+	}
+
+	/// \brief Looks for a global object of the given type.
+	template<class T>
+	T* findGlobalObject() const {
+		for(RefTarget* obj : globalObjects()) {
+			T* castObj = dynamic_object_cast<T>(obj);
+			if(castObj) return castObj;
+		}
+		return nullptr;
+	}	
+
 Q_SIGNALS:
 
 	/// \brief This signal is emitted whenever the current viewport configuration of this dataset
@@ -191,6 +212,9 @@ private:
 
 	/// The settings used when rendering the scene.
 	DECLARE_REFERENCE_FIELD(RenderSettings, renderSettings);
+
+	/// Global data managed by plugins.
+	DECLARE_MODIFIABLE_VECTOR_REFERENCE_FIELD(RefTarget, globalObjects, setGlobalObjects);
 
 	/// The file path this DataSet has been saved to.
 	QString _filePath;
