@@ -28,7 +28,7 @@ FIND_PACKAGE(NetCDF REQUIRED)
 
 SET(SourceFiles
 	NetCDFImporter.cpp
-	#NetCDFExporter.cpp
+	NetCDFExporter.cpp
 )
 
 IF(OVITO_BUILD_PLUGIN_PYSCRIPT)

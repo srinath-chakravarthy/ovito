@@ -801,7 +801,7 @@ int ParticlePickInfo::particleIndexFromSubObjectID(quint32 subobjID) const
 		return subobjID;
 	}
 	else {
-		if(subobjID < _particleCount)
+		if(subobjID < (quint32)_particleCount)
 			return subobjID;
 		else
 			return (subobjID - _particleCount) / 2;

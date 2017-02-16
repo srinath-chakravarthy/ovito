@@ -35,7 +35,7 @@ IMPLEMENT_OVITO_OBJECT(StartVRAction, GuiAutoStartObject);
 void StartVRAction::registerActions(ActionManager& actionManager)
 {
 	// Register an action, which allows the user to run a Python script file.
-	QAction* startVRAction = actionManager.createCommandAction("StartVR", tr("Open VR window..."));
+	QAction* startVRAction = actionManager.createCommandAction("StartVR", tr("Start VR module..."));
 
 	connect(startVRAction, &QAction::triggered, [&actionManager]() {
 		try {
@@ -56,7 +56,7 @@ void StartVRAction::addActionsToMenu(ActionManager& actionManager, QMenuBar* men
 	QAction* startVRAction = actionManager.findAction("StartVR");
 	if(!startVRAction) return;
 
-	QMenu* vrMenu = menuBar->addMenu(tr("&VR"));
+	QMenu* vrMenu = menuBar->addMenu(tr("&Virtual Reality"));
 	vrMenu->setObjectName(QStringLiteral("VRMenu"));
 	vrMenu->addAction(startVRAction);
 }

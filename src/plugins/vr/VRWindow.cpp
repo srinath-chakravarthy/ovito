@@ -40,7 +40,7 @@ VRWindow::VRWindow(QWidget* parentWidget, GuiDataSetContainer* datasetContainer)
 	setWindowTitle(tr("Ovito - Virtual Reality Module"));
 
     // Create the widget for rendering.
-	_glWidget = new VRGLWidget(this, datasetContainer->currentSet());
+	_glWidget = new VRRenderingWidget(this, datasetContainer->currentSet());
 	setCentralWidget(_glWidget);
 
     // Create settings panel.

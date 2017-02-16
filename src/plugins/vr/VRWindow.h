@@ -45,7 +45,7 @@ public:
 private:
 
 	/// The OpenGL widget used for rendering.
- 	VRGLWidget* _glWidget;
+ 	VRRenderingWidget* _glWidget;
 };
 
 };	// End of namespace

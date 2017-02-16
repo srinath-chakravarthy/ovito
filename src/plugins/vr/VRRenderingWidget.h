@@ -33,17 +33,17 @@ namespace VRPlugin {
 
 using namespace Ovito;
 
-class VRGLWidget : public QOpenGLWidget, protected QOpenGLFunctions
+class VRRenderingWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
     Q_OBJECT
 
 public:
 
 	/// Constructor.	
-    VRGLWidget(QWidget* parent, DataSet* dataset);
+    VRRenderingWidget(QWidget* parent, DataSet* dataset);
 
 	/// Destructor.
-    ~VRGLWidget();
+    ~VRRenderingWidget();
 
 	/// Returns the dataset that is being shown in the VR window.
 	DataSet* dataset() const { return _sceneRenderer->dataset(); }

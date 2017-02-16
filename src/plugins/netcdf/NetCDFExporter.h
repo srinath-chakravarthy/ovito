@@ -94,6 +94,9 @@ private:
 	QMap<QString, int> _attributes_vars;
 
 	struct NCOutputColumn {
+		NCOutputColumn(const ParticlePropertyReference& p, int dt, size_t cc, int ncv) :
+			property(p), dataType(dt), componentCount(cc), ncvar(ncv) {}
+
 		ParticlePropertyReference property;
 		int dataType;
 		size_t componentCount;

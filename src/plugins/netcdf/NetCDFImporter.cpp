@@ -486,7 +486,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 				NCERR( nc_inq_varid(_ncid, columnName.toLocal8Bit().constData(), &varId) );
 				NCERR( nc_inq_var(_ncid, varId, NULL, &type, &nDims, dimIds, NULL) );
 
-				if (nDims > 0 && type == NC_FLOAT) {
+				if(nDims > 0 && type == NC_FLOAT) {
 					// Detect dims
 					int nDimsDetected = -1, componentCount = 1, nativeComponentCount = 1;
 					detectDims(movieFrame, particleCount, nDims, dimIds, nDimsDetected, componentCount, nativeComponentCount, startp, countp);
@@ -571,7 +571,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 							for(int j = 0; j < (int)particleProperties().size(); j++) {
 								const auto& p = particleProperties()[j];
 								if(p->name() == propertyName) {
-									if(property->dataType() == dataType)
+									if(p->dataType() == dataType)
 										property = p.get();
 									else
 										removeParticleProperty(j);
@@ -761,6 +761,7 @@ InputColumnInfo NetCDFImporter::mapVariableToColumn(const QString& name, int dat
 	else if(loweredName == "type" || loweredName == "element" || loweredName == "atom_types" || loweredName == "species") column.mapStandardColumn(ParticleProperty::ParticleTypeProperty);
 	else if(loweredName == "mass") column.mapStandardColumn(ParticleProperty::MassProperty);
 	else if(loweredName == "radius") column.mapStandardColumn(ParticleProperty::RadiusProperty);
+	else if(loweredName == "color") column.mapStandardColumn(ParticleProperty::ColorProperty);
 	else if(loweredName == "c_cna" || loweredName == "pattern") column.mapStandardColumn(ParticleProperty::StructureTypeProperty);
 	else if(loweredName == "c_epot") column.mapStandardColumn(ParticleProperty::PotentialEnergyProperty);
 	else if(loweredName == "c_kpot") column.mapStandardColumn(ParticleProperty::KineticEnergyProperty);

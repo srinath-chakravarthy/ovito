@@ -72,7 +72,10 @@ void VRSettingsObject::recenter()
     else {
         FloatType offset = bbox.size().length() * scaleFactor() / 2;
         setTranslation(Vector3(0, 0, 0));
-        setViewerTM(AffineTransformation::translation(Vector3(offset, 0, 0)));
+        setViewerTM(AffineTransformation::translation(
+            (ViewportSettings::getSettings().coordinateSystemOrientation() *
+            AffineTransformation::rotationX(FLOATTYPE_PI/2)).inverse() *
+            Vector3(0, -offset, 0)));
     }
 }
 

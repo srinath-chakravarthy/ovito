@@ -33,7 +33,7 @@ namespace VRPlugin {
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-VRGLWidget::VRGLWidget(QWidget *parent, DataSet* dataset) : QOpenGLWidget(parent)
+VRRenderingWidget::VRRenderingWidget(QWidget *parent, DataSet* dataset) : QOpenGLWidget(parent)
 {
     _sceneRenderer = new VRSceneRenderer(dataset);
 
@@ -76,7 +76,7 @@ VRGLWidget::VRGLWidget(QWidget *parent, DataSet* dataset) : QOpenGLWidget(parent
 /******************************************************************************
 * Destructor.
 ******************************************************************************/
-VRGLWidget::~VRGLWidget()
+VRRenderingWidget::~VRRenderingWidget()
 {
     cleanup();
 
@@ -89,7 +89,7 @@ VRGLWidget::~VRGLWidget()
 /******************************************************************************
 * Called when the GL context is destroyed.
 ******************************************************************************/
-void VRGLWidget::cleanup()
+void VRRenderingWidget::cleanup()
 {
     makeCurrent();
     _floorMesh.reset();
@@ -100,16 +100,16 @@ void VRGLWidget::cleanup()
 /******************************************************************************
 * Called when the GL context is initialized.
 ******************************************************************************/
-void VRGLWidget::initializeGL()
+void VRRenderingWidget::initializeGL()
 {    
-    connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &VRGLWidget::cleanup);
+    connect(context(), &QOpenGLContext::aboutToBeDestroyed, this, &VRRenderingWidget::cleanup);
     initializeOpenGLFunctions();
 }
 
 /******************************************************************************
 * Computes the projection and transformation matrices for each of the two eyes.
 ******************************************************************************/
-ViewProjectionParameters VRGLWidget::projectionParameters(int eye, FloatType aspectRatio, const AffineTransformation& bodyToWorldTM, const Box3& sceneBoundingBox)
+ViewProjectionParameters VRRenderingWidget::projectionParameters(int eye, FloatType aspectRatio, const AffineTransformation& bodyToWorldTM, const Box3& sceneBoundingBox)
 {
 	OVITO_ASSERT(aspectRatio > FLOATTYPE_EPSILON);
 	OVITO_ASSERT(!sceneBoundingBox.isEmpty());
@@ -150,7 +150,7 @@ ViewProjectionParameters VRGLWidget::projectionParameters(int eye, FloatType asp
 /******************************************************************************
 * Called when the VR window contents are rendered.
 ******************************************************************************/
-void VRGLWidget::paintGL()
+void VRRenderingWidget::paintGL()
 {
     // Queue up another repaint event.
     update();
@@ -303,7 +303,7 @@ void VRGLWidget::paintGL()
 
             // Render VR controllers.
             for(const AffineTransformation& controllerTM : controllerTMs) {
-                if(!_controllerGeometry) {
+                if(!_controllerGeometry || !_controllerGeometry->isValid(_sceneRenderer)) {
                     _controllerGeometry = _sceneRenderer->createArrowPrimitive(ArrowPrimitive::ArrowShape, ArrowPrimitive::NormalShading, ArrowPrimitive::HighQuality);
                     _controllerGeometry->startSetElements(1);
                     _controllerGeometry->setElement(0, Point3(0,0,_controllerSize), Vector3(0,0,-_controllerSize), ColorA(1.0f, 0.0f, 0.0f, 1.0f), 0.02f);
@@ -314,7 +314,7 @@ void VRGLWidget::paintGL()
             }
 
             // Cleanup
-            _sceneRenderer->endFrame();
+            _sceneRenderer->endFrame(true);
             _sceneRenderer->endRender();
 
             // Submit rendered image to VR compositor.
@@ -355,7 +355,7 @@ void VRGLWidget::paintGL()
 /******************************************************************************
 * Called when the VR display window is resized.
 ******************************************************************************/
-void VRGLWidget::resizeGL(int w, int h)
+void VRRenderingWidget::resizeGL(int w, int h)
 {
     _windowWidth = w;
     _windowHeight = h;
