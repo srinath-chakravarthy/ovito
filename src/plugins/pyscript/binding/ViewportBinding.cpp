@@ -33,12 +33,9 @@ namespace PyScript {
 
 using namespace Ovito;
 
-PYBIND11_PLUGIN(PyScriptViewport)
+void defineViewportSubmodule(py::module parentModule)
 {
-	py::options options;
-	options.disable_function_signatures();
-
-	py::module m("PyScriptViewport");
+	py::module m = parentModule.def_submodule("Viewport");
 
 	auto Viewport_py = ovito_class<Viewport, RefTarget>(m,
 			"A viewport defines the view on the three-dimensional scene. "
@@ -305,10 +302,6 @@ PYBIND11_PLUGIN(PyScriptViewport)
 				"The output text generated when compiling/running the Python function. "
 				"Contain the error message when the most recent execution of the custom rendering function failed.")
 	;
-
-	return m.ptr();
 }
-
-OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScriptViewport);
 
 };

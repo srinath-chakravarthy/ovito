@@ -60,5 +60,5 @@ Python class name                              User interface name
 """
 
 # Load the native module.
-from PyScriptScene import Modifier
-from PyScriptScene import PythonScriptModifier
+from PyScript.Scene import Modifier
+from PyScript.Scene import PythonScriptModifier

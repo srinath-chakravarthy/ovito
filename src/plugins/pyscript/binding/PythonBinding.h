@@ -337,8 +337,20 @@ struct OVITO_PYSCRIPT_EXPORT PythonPluginRegistration
 	typedef void (*InitFuncPointer)();
 #endif
 
-	PythonPluginRegistration(const char* moduleName, InitFuncPointer initFunc) {
+	/// The identifier of the plugin to register.
+	const char* _moduleName;
+	/// The initXXX() function to be registered with the Python interpreter.
+	InitFuncPointer _initFunc;
+	/// Next structure in linked list.
+	PythonPluginRegistration* _next;
+
+	PythonPluginRegistration(const char* moduleName, InitFuncPointer initFunc) : _moduleName(moduleName), _initFunc(initFunc) {
+		_next = linkedlist;
+		linkedlist = this;
 	}
+
+	/// Head of linked list of initXXX() functions.
+	static PythonPluginRegistration* linkedlist;
 };
 
 /// This macro must be used exactly once by every plugin that contains a Python scripting interface.

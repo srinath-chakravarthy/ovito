@@ -34,12 +34,9 @@ namespace PyScript {
 
 using namespace Ovito;
 
-PYBIND11_PLUGIN(PyScriptRendering)
+void defineRenderingSubmodule(py::module parentModule)
 {
-	py::options options;
-	options.disable_function_signatures();
-
-	py::module m("PyScriptRendering");
+	py::module m = parentModule.def_submodule("Rendering");
 
 	py::class_<FrameBuffer, std::shared_ptr<FrameBuffer>>(m, "FrameBuffer")
 		.def(py::init<>())
@@ -174,11 +171,6 @@ PYBIND11_PLUGIN(PyScriptRendering)
 		.value("CylinderShape", ArrowPrimitive::CylinderShape)
 		.value("ArrowShape", ArrowPrimitive::ArrowShape)
 	;
-
-	return m.ptr();
 }
-
-OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScriptRendering);
-
 
 };

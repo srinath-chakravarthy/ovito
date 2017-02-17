@@ -24,6 +24,7 @@
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/viewport/ViewportWindowInterface.h>
 #include <core/app/Application.h>
+#include <core/app/StandaloneApplication.h>
 #include <gui/actions/ActionManager.h>
 #include <gui/widgets/animation/AnimationTimeSpinner.h>
 #include <gui/widgets/animation/AnimationFramesToolButton.h>
@@ -327,7 +328,7 @@ void MainWindow::createMainMenu()
 	helpMenu->addAction(actionManager()->getAction(ACTION_HELP_ABOUT));
 
 	// Let GUI auto-start objects add their actions to the main menu.
-	for(const auto& obj : Application::instance().autostartObjects()) {
+	for(const auto& obj : StandaloneApplication::instance()->autostartObjects()) {
 		if(auto gui_obj = dynamic_object_cast<GuiAutoStartObject>(obj))
 			gui_obj->addActionsToMenu(*_actionManager, menuBar);
 	}

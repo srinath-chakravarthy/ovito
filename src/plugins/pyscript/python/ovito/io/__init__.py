@@ -11,10 +11,10 @@ that reads its input data from an external file.
 """
 
 import ovito.data
-import PyScriptScene
+import PyScript.Scene
 
 # Load the native module.
-from PyScriptFileIO import *
+from PyScript.IO import *
 
 def import_file(location, **params):
     """ This high-level function imports external data from a file. 

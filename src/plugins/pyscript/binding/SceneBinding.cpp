@@ -38,12 +38,9 @@ namespace PyScript {
 
 using namespace Ovito;
 
-PYBIND11_PLUGIN(PyScriptScene)
+void defineSceneSubmodule(py::module parentModule)
 {
-	py::options options;
-	options.disable_function_signatures();
-
-	py::module m("PyScriptScene");
+	py::module m = parentModule.def_submodule("Scene");
 
 	auto PipelineStatus_py = py::class_<PipelineStatus>(m, "PipelineStatus")
 		.def(py::init<>())
@@ -392,10 +389,6 @@ PYBIND11_PLUGIN(PyScriptScene)
 
 	ovito_class<TriMeshObject, DataObject>{m}
 	;
-
-	return m.ptr();
 }
-
-OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScriptScene);
 
 };

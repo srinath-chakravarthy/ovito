@@ -26,7 +26,12 @@
 
 namespace PyScript {
 
-void defineAppModule(py::module parentModule);	// Defined in AppBinding.cpp
+void defineAppSubmodule(py::module parentModule);	// Defined in AppBinding.cpp
+void defineSceneSubmodule(py::module parentModule);	// Defined in SceneBinding.cpp
+void defineIOSubmodule(py::module parentModule);	// Defined in FileIOBinding.cpp
+void defineViewportSubmodule(py::module parentModule);	// Defined in ViewportBinding.cpp
+void defineAnimationSubmodule(py::module parentModule);	// Defined in AnimationBinding.cpp
+void defineRenderingSubmodule(py::module parentModule);	// Defined in RenderingBinding.cpp
 
 using namespace Ovito;
 
@@ -35,8 +40,9 @@ PYBIND11_PLUGIN(PyScript)
 	py::options options;
 	options.disable_function_signatures();
 
+	qDebug() << "Initializing PyScript module 1.";
 	py::module m("PyScript");
-	qDebug() << "PyScript module initialization";
+	qDebug() << "Initializing PyScript module 2.";
 
 	// Install Ovito to Python exception translator.
 	py::register_exception_translator([](std::exception_ptr p) {
@@ -52,6 +58,7 @@ PYBIND11_PLUGIN(PyScript)
 	// Otherwise this has already been done by the StandaloneApplication class.
 	if(!Application::instance()) {
 		try {
+			qDebug() << "Creating OVITO ad-hoc application object.";
 			Application* app = new Application(); // This will leak, but it doesn't matter because this Python module will never be unloaded.
 			if(!app->initialize())
 				throw Exception("Application object could not be initialized.");
@@ -73,7 +80,14 @@ PYBIND11_PLUGIN(PyScript)
 	m.attr("headless_mode") = py::cast(Application::instance()->headlessMode());
 
 	// Register submodules.
-	defineAppModule(m);
+	defineAppSubmodule(m);
+	defineSceneSubmodule(m);
+	defineAnimationSubmodule(m);
+	defineIOSubmodule(m);
+	defineViewportSubmodule(m);
+	defineRenderingSubmodule(m);
+
+	qDebug() << "PyScript module initalization finished.";
 
 	return m.ptr();
 }

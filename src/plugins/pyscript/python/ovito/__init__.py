@@ -7,9 +7,13 @@ except ImportError:
     # Python 2.x
     import collections
 
+print("OVITO module __init__.py")
+
 # Load the native module with the core bindings
 from PyScript import version, version_string, gui_mode, headless_mode
 from PyScript.App import *
+
+print("OVITO module loading submodule")
 
 # Load sub-modules (in the right order because there are dependencies between them)
 import ovito.anim
@@ -18,10 +22,10 @@ import ovito.vis
 import ovito.io
 import ovito.modifiers
 
-from PyScriptScene import ObjectNode
-from PyScriptScene import SceneRoot
-from PyScriptScene import PipelineObject     
-from PyScriptScene import PipelineStatus
+from PyScript.Scene import ObjectNode
+from PyScript.Scene import SceneRoot
+from PyScript.Scene import PipelineObject     
+from PyScript.Scene import PipelineStatus
 
 # Load all OVITO modules packages. This is required
 # to make all Python bindings available.

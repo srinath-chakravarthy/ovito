@@ -38,9 +38,9 @@ except ImportError:
     import collections
 
 # Load the native module.
-from PyScriptScene import DataCollection
-from PyScriptScene import DataObject
-from PyScriptApp import CloneHelper
+from PyScript.Scene import DataCollection
+from PyScript.Scene import DataObject
+from PyScript.App import CloneHelper
 
 # Give the DataCollection class a dict-like interface.
 DataCollection.__len__ = lambda self: len(self.objects)

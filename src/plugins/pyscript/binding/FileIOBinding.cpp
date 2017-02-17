@@ -33,12 +33,9 @@ namespace PyScript {
 
 using namespace Ovito;
 
-PYBIND11_PLUGIN(PyScriptFileIO)
+void defineIOSubmodule(py::module parentModule)
 {
-	py::options options;
-	options.disable_function_signatures();
-
-	py::module m("PyScriptFileIO");
+	py::module m = parentModule.def_submodule("IO");
 
 	ovito_abstract_class<FileImporter, RefTarget>{m}
 		// These are needed by ovito.io.import_file():
@@ -142,10 +139,6 @@ PYBIND11_PLUGIN(PyScriptFileIO)
 		//.def("animationTimeToInputFrame", &FileSource::animationTimeToInputFrame)
 		//.def("inputFrameToAnimationTime", &FileSource::inputFrameToAnimationTime)
 	;
-
-	return m.ptr();
 }
-
-OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScriptFileIO);
 
 };

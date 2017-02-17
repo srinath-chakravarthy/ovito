@@ -37,7 +37,7 @@ namespace PyScript {
 
 using namespace Ovito;
 
-void defineAppModule(py::module parentModule)
+void defineAppSubmodule(py::module parentModule)
 {
 	py::module m = parentModule.def_submodule("App");
 
@@ -57,8 +57,6 @@ void defineAppModule(py::module parentModule)
 			catch(const py::cast_error&) { return true; }
 		})
 	;
-
-	qDebug() << "Class name: " << RefMaker::OOType.className();
 
 	ovito_abstract_class<RefMaker, OvitoObject>{m}
 		.def_property_readonly("dataset", py::cpp_function(&RefMaker::dataset, py::return_value_policy::reference))

@@ -35,12 +35,9 @@ namespace PyScript {
 using namespace Ovito;
 namespace py = pybind11;
 
-PYBIND11_PLUGIN(PyScriptAnimation)
+void defineAnimationSubmodule(py::module parentModule)
 {
-	py::options options;
-	options.disable_function_signatures();
-
-	py::module m("PyScriptAnimation");
+	py::module m = parentModule.def_submodule("Animation");
 
 	py::class_<TimeInterval>(m, "TimeInterval", py::metaclass())
 		.def(py::init<>())
@@ -175,10 +172,6 @@ PYBIND11_PLUGIN(PyScriptAnimation)
 
 	ovito_class<LookAtController, Controller>{m}
 	;
-
-	return m.ptr();
 }
-
-OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScriptAnimation);
 
 };
