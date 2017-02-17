@@ -229,6 +229,7 @@ QSurfaceFormat OpenGLSceneRenderer::getDefaultSurfaceFormat()
 void OpenGLSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParameters& params, Viewport* vp)
 {
 	SceneRenderer::beginFrame(time, params, vp);
+	OVITO_REPORT_OPENGL_ERRORS();
 
 	if(Application::instance()->headlessMode())
 		throwException(tr("Cannot use OpenGL renderer in headless mode."));
@@ -308,13 +309,13 @@ void OpenGLSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParamet
 /******************************************************************************
 * This method is called after renderFrame() has been called.
 ******************************************************************************/
-void OpenGLSceneRenderer::endFrame()
+void OpenGLSceneRenderer::endFrame(bool renderSuccessful)
 {
     OVITO_REPORT_OPENGL_ERRORS();
 	OVITO_CHECK_OPENGL(_vertexArrayObject.reset());
 	_glcontext = nullptr;
 
-	SceneRenderer::endFrame();
+	SceneRenderer::endFrame(renderSuccessful);
 }
 
 /******************************************************************************
@@ -343,12 +344,15 @@ bool OpenGLSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingT
 
 	// Clear background.
 	clearFrameBuffer();
+	OVITO_REPORT_OPENGL_ERRORS();
 
 	// Render the 3D scene objects.
 	renderScene();
+	OVITO_REPORT_OPENGL_ERRORS();
 
 	// Call subclass to render additional content that is only visible in the interactive viewports.
 	renderInteractiveContent();
+	OVITO_REPORT_OPENGL_ERRORS();
 
 	// Render translucent objects in a second pass.
 	_translucentPass = true;
@@ -360,6 +364,7 @@ bool OpenGLSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingT
 
 	// Restore default OpenGL state.
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	OVITO_REPORT_OPENGL_ERRORS();
 
 	return true;
 }
@@ -489,6 +494,8 @@ QOpenGLShaderProgram* OpenGLSceneRenderer::loadShaderProgram(const QString& id, 
 	}
 
 	OVITO_ASSERT(contextGroup->findChild<QOpenGLShaderProgram*>(id) == program.data());
+	OVITO_REPORT_OPENGL_ERRORS();
+
 	return program.take();
 }
 
@@ -568,6 +575,8 @@ void OpenGLSceneRenderer::loadShader(QOpenGLShaderProgram* program, QOpenGLShade
 		ex.appendDetailMessage(shaderSource);
 		throw ex;
 	}
+
+	OVITO_REPORT_OPENGL_ERRORS();
 }
 
 /******************************************************************************

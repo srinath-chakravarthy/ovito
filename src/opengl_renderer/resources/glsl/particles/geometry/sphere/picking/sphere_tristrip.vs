@@ -25,6 +25,7 @@ uniform mat4 projection_matrix;
 uniform mat4 modelviewprojection_matrix;
 uniform int pickingBaseID;
 uniform vec3 cubeVerts[14];
+uniform float radius_scalingfactor;
 
 #if __VERSION__ >= 130
 
@@ -54,7 +55,7 @@ void main()
 {
 #if __VERSION__ >= 130
 
-	particle_radius_squared_fs = particle_radius * particle_radius;
+	particle_radius_squared_fs = particle_radius * particle_radius * radius_scalingfactor * radius_scalingfactor;
 	particle_view_pos_fs = vec3(modelview_matrix * vec4(position, 1));
 
 	// Compute color from object ID.
@@ -66,11 +67,11 @@ void main()
 		float((objectID >> 24) & 0xFF) / 255.0);
 		
 	// Transform and project vertex.
-	gl_Position = modelviewprojection_matrix * vec4(position + cubeVerts[gl_VertexID % 14] * particle_radius, 1);
+	gl_Position = modelviewprojection_matrix * vec4(position + cubeVerts[gl_VertexID % 14] * particle_radius * radius_scalingfactor, 1);
 	
 #else
 
-	particle_radius_squared_fs = particle_radius * particle_radius;
+	particle_radius_squared_fs = particle_radius * particle_radius * radius_scalingfactor * radius_scalingfactor;
 	particle_view_pos_fs = vec3(modelview_matrix * gl_Vertex);
 
 	// Compute color from object ID.
@@ -83,7 +84,7 @@ void main()
 		
 	// Transform and project vertex.
 	int cubeCorner = int(mod(vertexID+0.5, 14.0));
-	gl_Position = modelviewprojection_matrix * (gl_Vertex + vec4(cubeVerts[cubeCorner] * particle_radius, 0));
+	gl_Position = modelviewprojection_matrix * (gl_Vertex + vec4(cubeVerts[cubeCorner] * particle_radius * radius_scalingfactor, 0));
 	
 #endif
 }

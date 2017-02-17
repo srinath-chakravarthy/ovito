@@ -59,7 +59,7 @@ public:
 	virtual bool renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress) override;
 
 	/// This method is called after renderFrame() has been called.
-	virtual void endFrame() override;
+	virtual void endFrame(bool renderSuccessful) override;
 
 	///	Finishes the rendering pass. This is called after all animation frames have been rendered
 	/// or when the rendering operation has been aborted.

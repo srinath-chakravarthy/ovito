@@ -43,11 +43,13 @@ DEFINE_FLAGS_REFERENCE_FIELD(DataSet, animationSettings, "AnimationSettings", An
 DEFINE_FLAGS_REFERENCE_FIELD(DataSet, sceneRoot, "SceneRoot", SceneRoot, PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_ALWAYS_DEEP_COPY);
 DEFINE_FLAGS_REFERENCE_FIELD(DataSet, selection, "CurrentSelection", SelectionSet, PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_ALWAYS_DEEP_COPY);
 DEFINE_FLAGS_REFERENCE_FIELD(DataSet, renderSettings, "RenderSettings", RenderSettings, PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(DataSet, globalObjects, "GlobalObjects", RefTarget, PROPERTY_FIELD_ALWAYS_CLONE|PROPERTY_FIELD_ALWAYS_DEEP_COPY);
 SET_PROPERTY_FIELD_LABEL(DataSet, viewportConfig, "Viewport Configuration");
 SET_PROPERTY_FIELD_LABEL(DataSet, animationSettings, "Animation Settings");
 SET_PROPERTY_FIELD_LABEL(DataSet, sceneRoot, "Scene");
 SET_PROPERTY_FIELD_LABEL(DataSet, selection, "Selection");
 SET_PROPERTY_FIELD_LABEL(DataSet, renderSettings, "Render Settings");
+SET_PROPERTY_FIELD_LABEL(DataSet, globalObjects, "Global objects");
 
 /******************************************************************************
 * Constructor.
@@ -59,6 +61,7 @@ DataSet::DataSet(DataSet* self) : RefTarget(this), _unitsManager(this)
 	INIT_PROPERTY_FIELD(sceneRoot);
 	INIT_PROPERTY_FIELD(selection);
 	INIT_PROPERTY_FIELD(renderSettings);
+	INIT_PROPERTY_FIELD(globalObjects);
 
 	_viewportConfig = createDefaultViewportConfiguration();
 	_animationSettings = new AnimationSettings(this);
@@ -116,7 +119,7 @@ bool DataSet::referenceEvent(RefTarget* source, ReferenceEvent* event)
 	if(event->type() == ReferenceEvent::TargetChanged || event->type() == ReferenceEvent::PendingStateChanged) {
 
 		// Update the viewports whenever something has changed in the current data set.
-		if(source != viewportConfig() && source != animationSettings()) {
+		if(source == sceneRoot() || source == selection() || source == renderSettings()) {
 			// Do not automatically update while in the process of jumping to a new animation frame.
 			if(!animationSettings()->isTimeChanging())
 				viewportConfig()->updateViewports();
@@ -407,12 +410,18 @@ bool DataSet::renderFrame(TimePoint renderTime, int frameNumber, RenderSettings*
 
 	// Render one frame.
 	frameBuffer->clear();
-	renderer->beginFrame(renderTime, projParams, viewport);
-	if(!renderer->renderFrame(frameBuffer, SceneRenderer::NonStereoscopic, progressDisplay) || (progressDisplay && progressDisplay->wasCanceled())) {
-		renderer->endFrame();
-		return false;
+	try {
+		renderer->beginFrame(renderTime, projParams, viewport);
+		if(!renderer->renderFrame(frameBuffer, SceneRenderer::NonStereoscopic, progressDisplay) || (progressDisplay && progressDisplay->wasCanceled())) {
+			renderer->endFrame(false);
+			return false;
+		}
+		renderer->endFrame(true);
 	}
-	renderer->endFrame();
+	catch(...) {
+		renderer->endFrame(false);
+		throw;
+	}
 
 	// Apply viewport overlays.
 	for(ViewportOverlay* overlay : viewport->overlays()) {

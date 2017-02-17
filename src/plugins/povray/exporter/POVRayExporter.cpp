@@ -113,11 +113,17 @@ bool POVRayExporter::exportFrame(int frameNumber, TimePoint time, const QString&
 	OVITO_ASSERT(_renderer);
 	Box3 boundingBox = _renderer->sceneBoundingBox(time);
 	ViewProjectionParameters projParams = vp->projectionParameters(time, _renderer->renderSettings()->outputImageAspectRatio(), boundingBox);
-	_renderer->beginFrame(time, projParams, vp);
-	for(SceneNode* node : outputData()) {
-		_renderer->renderNode(node);
+	try {
+		_renderer->beginFrame(time, projParams, vp);
+		for(SceneNode* node : outputData()) {
+			_renderer->renderNode(node);
+		}
+		_renderer->endFrame(true);
 	}
-	_renderer->endFrame();
+	catch(...) {
+		_renderer->endFrame(false);
+		throw;
+	}
 
 	return true;
 }

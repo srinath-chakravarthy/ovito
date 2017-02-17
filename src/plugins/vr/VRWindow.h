@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2016) Alexander Stukowski
+//  Copyright (2017) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,41 +19,35 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_GUI_AUTO_START_OBJECT_H
-#define __OVITO_GUI_AUTO_START_OBJECT_H
+#ifndef __OVITO_VR_WINDOW_H
+#define __OVITO_VR_WINDOW_H
 
 #include <gui/GUI.h>
-#include <core/plugins/autostart/AutoStartObject.h>
+#include <gui/dataset/GuiDataSetContainer.h>
+#include "VRRenderingWidget.h"
 
-namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(PluginSystem)
+namespace VRPlugin {
+
+using namespace Ovito;
 
 /**
- * \brief Base class that allows plugins to execute code on application startup.
- *
- * Derive a sub-class from this class if you want to perform something on application startup.
+ * \brief A window that renders the scene for VR visualization.
  */
-class OVITO_GUI_EXPORT GuiAutoStartObject : public AutoStartObject
+class VRWindow : public QMainWindow
 {
-protected:
-
-	/// \brief The default constructor.
-	GuiAutoStartObject() {}
+	Q_OBJECT
 
 public:
 
-	/// \brief Is called when a new main window is created.
-	virtual void registerActions(ActionManager& actionManager) {}
-
-	/// \brief Is called when the main menu is created.
-	virtual void addActionsToMenu(ActionManager& actionManager, QMenuBar* menuBar) {}
+	/// Constructor.
+	VRWindow(QWidget* parentWidget, GuiDataSetContainer* datasetContainer);
 
 private:
 
-	Q_OBJECT
-	OVITO_OBJECT
+	/// The OpenGL widget used for rendering.
+ 	VRRenderingWidget* _glWidget;
 };
 
-OVITO_END_INLINE_NAMESPACE
-}	// End of namespace
+};	// End of namespace
 
-#endif // __OVITO_GUI_AUTO_START_OBJECT_H
+#endif

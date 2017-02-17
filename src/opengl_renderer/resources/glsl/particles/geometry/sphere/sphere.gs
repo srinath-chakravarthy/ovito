@@ -24,6 +24,7 @@ layout(triangle_strip, max_vertices=24) out;
 
 // Inputs from calling program:
 uniform mat4 projection_matrix;
+uniform float radius_scalingfactor;
 
 // Inputs from vertex shader
 in vec4 particle_color_gs[1];
@@ -36,7 +37,8 @@ flat out vec3 particle_view_pos_fs;
 
 void main()
 {
-	float rsq = particle_radius_gs[0] * particle_radius_gs[0];
+	float radius = radius_scalingfactor * particle_radius_gs[0];
+	float rsq = radius * radius;
 
 #if 0
 	// This code leads, which generates a single triangle strip for the cube, seems to be 
@@ -144,10 +146,10 @@ void main()
 
 	// Generate 6 triangle strips to be compatible with the Intel graphics driver on Linux.
 
-	vec4 corner = projection_matrix * (gl_in[0].gl_Position - vec4(particle_radius_gs[0], particle_radius_gs[0], particle_radius_gs[0], 0));
-	vec4 dx = projection_matrix * vec4(2 * particle_radius_gs[0], 0, 0, 0);
-	vec4 dy = projection_matrix * vec4(0, 2 * particle_radius_gs[0], 0, 0);
-	vec4 dz = projection_matrix * vec4(0, 0, 2 * particle_radius_gs[0], 0);
+	vec4 corner = projection_matrix * (gl_in[0].gl_Position - vec4(radius, radius, radius, 0));
+	vec4 dx = projection_matrix * vec4(2 * radius, 0, 0, 0);
+	vec4 dy = projection_matrix * vec4(0, 2 * radius, 0, 0);
+	vec4 dz = projection_matrix * vec4(0, 0, 2 * radius, 0);
 
 	// -X
 	particle_color_fs = particle_color_gs[0];

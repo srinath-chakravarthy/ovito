@@ -34,10 +34,11 @@ modifier.particle_property = "Position.X"
 node.compute()
 
 modifier = ColorCodingModifier(
-    particle_property="Position.Z",
-    start_value=0.0,
-    end_value=0.0,
-    only_selected=True,
-    gradient=ColorCodingModifier.Grayscale()
+    particle_property = "Position.Z",
+    bond_property = "Length",
+    start_value = 0.0,
+    end_value = 0.0,
+    only_selected = True,
+    gradient = ColorCodingModifier.Grayscale(),
+    assign_to = ColorCodingModifier.AssignmentMode.Bonds
 )
-print(modifier)

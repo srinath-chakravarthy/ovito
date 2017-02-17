@@ -54,7 +54,7 @@ public:
 	virtual bool renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress) override;
 
 	/// This method is called after renderFrame() has been called.
-	virtual void endFrame() override;
+	virtual void endFrame(bool renderSuccessful) override;
 
 	/// When picking mode is active, this registers an object being rendered.
 	virtual quint32 beginPickObject(ObjectNode* objNode, ObjectPickInfo* pickInfo = nullptr) override;

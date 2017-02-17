@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
-//
-//  Copyright (2016) Alexander Stukowski
+// 
+//  Copyright (2017) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,41 +19,47 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_GUI_AUTO_START_OBJECT_H
-#define __OVITO_GUI_AUTO_START_OBJECT_H
+#ifndef __OVITO_VR_SETTINGS_EDITOR_H
+#define __OVITO_VR_SETTINGS_EDITOR_H
 
 #include <gui/GUI.h>
-#include <core/plugins/autostart/AutoStartObject.h>
+#include <gui/properties/PropertiesEditor.h>
+#include <core/viewport/ViewportConfiguration.h>
 
-namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(PluginSystem)
+namespace VRPlugin {
 
-/**
- * \brief Base class that allows plugins to execute code on application startup.
- *
- * Derive a sub-class from this class if you want to perform something on application startup.
+using namespace Ovito;	
+/*
+ * \brief The UI component for the VRSettingsObject class.
  */
-class OVITO_GUI_EXPORT GuiAutoStartObject : public AutoStartObject
+class VRSettingsObjectEditor : public PropertiesEditor
 {
-protected:
-
-	/// \brief The default constructor.
-	GuiAutoStartObject() {}
-
 public:
 
-	/// \brief Is called when a new main window is created.
-	virtual void registerActions(ActionManager& actionManager) {}
+	/// Default constructor.
+	Q_INVOKABLE VRSettingsObjectEditor() {}
 
-	/// \brief Is called when the main menu is created.
-	virtual void addActionsToMenu(ActionManager& actionManager, QMenuBar* menuBar) {}
+protected:
+	
+	/// Creates the user interface controls for the editor.
+	virtual void createUI(const RolloutInsertionParameters& rolloutParams) override;
 
+private Q_SLOTS:	
+
+	/// Disables rendering of the normal viewports.
+	void disableViewportRendering(bool disable) {
+		_viewportSuspender.reset(disable ? new ViewportSuspender(dataset()) : nullptr);
+	}
+	
 private:
+
+	/// Used to disable viewport rendering.
+	std::unique_ptr<ViewportSuspender> _viewportSuspender;
 
 	Q_OBJECT
 	OVITO_OBJECT
 };
 
-OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_GUI_AUTO_START_OBJECT_H
+#endif
