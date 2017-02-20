@@ -23,8 +23,6 @@
 #include <core/viewport/Viewport.h>
 #include "ViewportWindow.h"
 
-#include <QtGlobal>
-
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**

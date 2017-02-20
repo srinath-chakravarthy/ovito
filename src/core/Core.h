@@ -52,11 +52,6 @@
 #include <numeric>
 
 /******************************************************************************
-* Boost Library
-******************************************************************************/
-#include <boost/dynamic_bitset.hpp>
-
-/******************************************************************************
 * QT Library
 ******************************************************************************/
 #include <QCoreApplication>
@@ -87,6 +82,12 @@
 #if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
 #  error "OVITO requires at least Qt 5.2"
 #endif
+
+/******************************************************************************
+* Boost Library
+******************************************************************************/
+#include <boost/dynamic_bitset.hpp>
+
 
 #ifdef Core_EXPORTS		// This is defined by CMake when building the Core library.
 #  define OVITO_CORE_EXPORT Q_DECL_EXPORT

@@ -28,8 +28,6 @@
 #include <core/rendering/ImagePrimitive.h>
 #include <core/rendering/LinePrimitive.h>
 
-#include <QtGlobal>
-
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /******************************************************************************
