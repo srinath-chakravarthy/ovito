@@ -23,7 +23,6 @@
 #include <plugins/pyscript/binding/PythonBinding.h>
 #include <core/plugins/PluginManager.h>
 #include <core/app/Application.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
 #include "ScriptEngine.h"
 
 namespace PyScript {
@@ -35,45 +34,59 @@ ScriptEngine* ScriptEngine::_activeEngine = nullptr;
 PythonPluginRegistration* PythonPluginRegistration::linkedlist = nullptr;
 
 /******************************************************************************
+* Sets the dataset that is currently active in the Python interpreter.
+******************************************************************************/
+void ScriptEngine::setActiveDataset(DataSet* dataset)
+{
+	// Add an attribute to the ovito module that provides access to the active dataset.
+	py::module ovito_module = py::module::import("ovito");
+	py::setattr(ovito_module, "dataset", py::cast(dataset, py::return_value_policy::reference));
+}
+
+/******************************************************************************
+* Returns the dataset that is currently active in the Python interpreter.
+******************************************************************************/
+DataSet* ScriptEngine::activeDataset()
+{
+	// Read the ovito module's attribute that provides access to the active dataset.
+	py::module ovito_module = py::module::import("ovito");
+	return py::cast<DataSet*>(py::getattr(ovito_module, "dataset", py::none()));
+}
+
+/******************************************************************************
 * Initializes the scripting engine and sets up the environment.
 ******************************************************************************/
-ScriptEngine::ScriptEngine(DataSet* dataset, QObject* parent, bool redirectOutputToConsole)
+ScriptEngine::ScriptEngine(DataSet* dataset, bool privateContext, QObject* parent)
 	: QObject(parent), _dataset(dataset)
 {
 	try {
-		// Initialize the underlying Python interpreter if it isn't initialized already.
-		initializeInterpreter();
-	}
-	catch(Exception& ex) {
-		ex.setContext(dataset);
-		throw;
-	}
-
-	// Install default signal handlers for Python script output, which forward the script output to the host application's stdout/stderr.
-	if(redirectOutputToConsole) {
-		connect(this, &ScriptEngine::scriptOutput, [](const QString& str) { std::cout << str.toLocal8Bit().constData(); });
-		connect(this, &ScriptEngine::scriptError, [](const QString& str) { std::cerr << str.toLocal8Bit().constData(); });
-	}
-
-	// Initialize state of the script engine.
-	try {
+		// Initialize our embedded Python interpreter if it isn't running already.
+		if(!Py_IsInitialized())
+			initializeEmbeddedInterpreter();
+		
 		// Import the main module and get a reference to the main namespace.
-		// Make a local copy of the global main namespace for this engine.
+		// Make a local copy of the global main namespace for this execution context.
 		// The original namespace dictionary is not touched.
 		py::object main_module = py::module::import("__main__");
-		_mainNamespace = main_module.attr("__dict__").attr("copy")();
-
-		// Add a reference to the current dataset to the namespace.
-        PyObject* mod = PyImport_ImportModule("ovito");
-        if(!mod) throw py::error_already_set();
-		py::module ovito_module = py::reinterpret_steal<py::module>(mod);
-        py::setattr(ovito_module, "dataset", py::cast(dataset, py::return_value_policy::reference));
+		if(privateContext) {
+			_mainNamespace = py::getattr(main_module, "__dict__").attr("copy")();
+		}
+		else {
+			_mainNamespace = py::getattr(main_module, "__dict__");
+		}
+		
+		// Add an attribute to the ovito module that provides access to the active dataset.
+		setActiveDataset(dataset);
 	}
 	catch(py::error_already_set& ex) {
 		ex.restore();
 		if(PyErr_Occurred())
 			PyErr_PrintEx(0);
 		throw Exception(tr("Failed to initialize Python interpreter."), dataset);
+	}
+	catch(Exception& ex) {
+		ex.setContext(dataset);
+		throw;
 	}
 	catch(const std::exception& ex) {
 		throw Exception(tr("Failed to initialize Python interpreter. %1").arg(ex.what()), dataset);
@@ -87,7 +100,7 @@ ScriptEngine::~ScriptEngine()
 {
 	try {
 		// Explicitly release all objects created by Python scripts.
-		_mainNamespace.clear();
+		if(_mainNamespace) _mainNamespace.clear();
 	}
 	catch(py::error_already_set& ex) {
 		ex.restore();
@@ -96,9 +109,9 @@ ScriptEngine::~ScriptEngine()
 }
 
 /******************************************************************************
-* Initializes the Python interpreter and sets up the global namespace.
+* Initializes the embedded Python interpreter and sets up the global namespace.
 ******************************************************************************/
-void ScriptEngine::initializeInterpreter()
+void ScriptEngine::initializeEmbeddedInterpreter()
 {
 	// This is a one-time global initialization.
 	static bool isInterpreterInitialized = false; 
@@ -123,13 +136,13 @@ void ScriptEngine::initializeInterpreter()
 		// only looks for modules that have a .pyd extension.
 		for(PythonPluginRegistration* r = PythonPluginRegistration::linkedlist; r != nullptr; r = r->_next) {
 			// Note: const_cast<> is for backward compatibility with Python 2.6.
-			PyImport_AppendInittab(const_cast<char*>(r->_moduleName), r->_initFunc);
+			PyImport_AppendInittab(const_cast<char*>(r->_moduleName.c_str()), r->_initFunc);
 		}
 
 		// Initialize the Python interpreter.
 		Py_Initialize();
 
-		py::object sys_module = py::module::import("sys");
+		py::module sys_module = py::module::import("sys");
 
 		// Install output redirection (don't do this in console mode as it interferes with the interactive interpreter).
 		if(Application::instance()->guiMode()) {
@@ -148,13 +161,21 @@ void ScriptEngine::initializeInterpreter()
 		// Prepend directories containing OVITO's Python modules to sys.path.
 		py::object sys_path = sys_module.attr("path");
 
+		// Also create a builtin list of plugin paths where C++ plugin modules are loaded from.
+		py::list native_plugin_paths;
+
 		for(const QDir& pluginDir : PluginManager::instance().pluginDirs()) {
 			py::object path = py::cast(QDir::toNativeSeparators(pluginDir.absolutePath() + "/python"));
 			PyList_Insert(sys_path.ptr(), 0, path.ptr());
+			native_plugin_paths.append(py::cast(QDir::toNativeSeparators(pluginDir.absolutePath())));
 		}
 
 		// Prepend current directory to sys.path.
-		sys_path.attr("insert")(0, "");
+		PyList_Insert(sys_path.ptr(), 0, py::str().ptr());
+
+		// Make the list of plugin paths accessible to the 'ovito.plugins' Python module.
+		py::module builtins_module = py::module::import("builtins");
+		builtins_module.attr("__ovito_plugin_paths") = native_plugin_paths;
 	}
 	catch(const Exception&) {
 		throw;
@@ -182,9 +203,6 @@ int ScriptEngine::executeCommands(const QString& commands, const QStringList& sc
 {
 	if(QThread::currentThread() != QCoreApplication::instance()->thread())
 		throw Exception(tr("Can run Python scripts only from the main thread."));
-
-	if(!_mainNamespace)
-		throw Exception(tr("Python script engine is not initialized."), dataset());
 
 	// Remember the script engine that was active so we can restore it later.
 	ScriptEngine* previousEngine = _activeEngine;
@@ -233,9 +251,6 @@ void ScriptEngine::execute(const std::function<void()>& func)
 	if(QThread::currentThread() != QCoreApplication::instance()->thread())
 		throw Exception(tr("Can run Python scripts only from the main thread."));
 
-	if(!_mainNamespace)
-		throw Exception(tr("Python script engine is not initialized."), dataset());
-
 	// Remember the script engine that was active so we can restore it later.
 	ScriptEngine* previousEngine = _activeEngine;
 	_activeEngine = this;
@@ -281,9 +296,6 @@ int ScriptEngine::executeFile(const QString& filename, const QStringList& script
 {
 	if(QThread::currentThread() != QCoreApplication::instance()->thread())
 		throw Exception(tr("Can run Python scripts only from the main thread."));
-
-	if(!_mainNamespace)
-		throw Exception(tr("Python script engine is not initialized."), dataset());
 
 	// Remember the script engine that was active so we can restore it later.
 	ScriptEngine* previousEngine = _activeEngine;

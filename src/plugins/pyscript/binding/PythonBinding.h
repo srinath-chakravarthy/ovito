@@ -338,15 +338,16 @@ struct OVITO_PYSCRIPT_EXPORT PythonPluginRegistration
 #endif
 
 	/// The identifier of the plugin to register.
-	const char* _moduleName;
+	std::string _moduleName;
 	/// The initXXX() function to be registered with the Python interpreter.
 	InitFuncPointer _initFunc;
 	/// Next structure in linked list.
 	PythonPluginRegistration* _next;
 
-	PythonPluginRegistration(const char* moduleName, InitFuncPointer initFunc) : _moduleName(moduleName), _initFunc(initFunc) {
+	PythonPluginRegistration(const char* moduleName, InitFuncPointer initFunc) : _initFunc(initFunc) {
 		_next = linkedlist;
 		linkedlist = this;
+		_moduleName = std::string("ovito.plugins.") + moduleName;
 	}
 
 	/// Head of linked list of initXXX() functions.
@@ -406,9 +407,7 @@ private:
 
 	/// Constructs the object instance in place and passes the current DataSet to the C++ constructor.
 	static void constructInstance(OvitoObjectClass& instance) {
-		ScriptEngine* engine = ScriptEngine::activeEngine();
-		if(!engine) throw Exception("Invalid interpreter state. There is no active script engine.");
-		DataSet* dataset = engine->dataset();
+		DataSet* dataset = ScriptEngine::activeDataset();
 		if(!dataset) throw Exception("Invalid interpreter state. There is no active dataset.");			
 		new (&instance) OvitoObjectClass(dataset);
 	}

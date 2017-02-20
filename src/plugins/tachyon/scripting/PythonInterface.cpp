@@ -22,6 +22,7 @@
 #include <plugins/pyscript/PyScript.h>
 #include <plugins/pyscript/binding/PythonBinding.h>
 #include <plugins/tachyon/renderer/TachyonRenderer.h>
+#include <core/plugins/PluginManager.h>
 
 namespace Ovito { namespace Tachyon { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -30,6 +31,9 @@ using namespace PyScript;
 
 PYBIND11_PLUGIN(Tachyon)
 {
+	// Register the classes of this plugin with the global PluginManager.
+	PluginManager::instance().registerLoadedPluginClasses();
+	
 	py::options options;
 	options.disable_function_signatures();
 

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2014) Alexander Stukowski
+//  Copyright (2017) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,32 +19,30 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <plugins/mesh/Mesh.h>
-#include <plugins/mesh/import/VTKFileImporter.h>
-#include <plugins/pyscript/binding/PythonBinding.h>
+#include <core/Core.h>
+#include <core/dataset/DataSetContainer.h>
 #include <core/plugins/PluginManager.h>
+#include "AdhocApplication.h"
 
-namespace Mesh {
+namespace PyScript {
 
-using namespace Ovito;
-using namespace PyScript;
-
-PYBIND11_PLUGIN(Mesh)
+/******************************************************************************
+* Initializes the application object.
+******************************************************************************/
+bool AdhocApplication::initialize()
 {
-	// Register the classes of this plugin with the global PluginManager.
-	PluginManager::instance().registerLoadedPluginClasses();
-	
-	py::options options;
-	options.disable_function_signatures();
+	if(!Application::initialize())
+		return false;
 
-	py::module m("Mesh");
+	// Initialize application state.
+	PluginManager::initialize();
 
-	ovito_class<VTKFileImporter, FileSourceImporter>{m}
-	;
+	// Create a DataSetContainer and a default DataSet.
+	_datasetContainer = new DataSetContainer();
+	_datasetContainer->setParent(this);
+	_datasetContainer->setCurrentSet(new DataSet());
 
-	return m.ptr();
+	return true;
 }
 
-OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(Mesh);
-
-};
+}	// End of namespace

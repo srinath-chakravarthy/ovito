@@ -35,7 +35,6 @@ SET(SourceFiles
 	object/OvitoObjectType.cpp
 	object/NativeOvitoObjectType.cpp
 	plugins/Plugin.cpp
-	plugins/NativePlugin.cpp
 	plugins/PluginManager.cpp
 	plugins/autostart/AutoStartObject.cpp
 	app/Application.cpp

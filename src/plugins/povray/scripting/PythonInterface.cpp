@@ -23,6 +23,7 @@
 #include <plugins/pyscript/binding/PythonBinding.h>
 #include <plugins/povray/renderer/POVRayRenderer.h>
 #include <plugins/povray/exporter/POVRayExporter.h>
+#include <core/plugins/PluginManager.h>
 
 namespace Ovito { namespace POVRay { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -31,6 +32,9 @@ using namespace PyScript;
 
 PYBIND11_PLUGIN(POVRay)
 {
+	// Register the classes of this plugin with the global PluginManager.
+	PluginManager::instance().registerLoadedPluginClasses();
+
 	py::options options;
 	options.disable_function_signatures();
 

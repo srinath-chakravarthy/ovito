@@ -39,7 +39,7 @@ public:
 	/// Create the singleton instance of this class.
 	static void initialize() {
 		_instance = new PluginManager();
-		_instance->registerPlugins();
+		_instance->registerLoadedPluginClasses();
 	}
 
 	/// Deletes the singleton instance of this class.
@@ -51,6 +51,9 @@ public:
 		OVITO_ASSERT_MSG(_instance != nullptr, "PluginManager::instance", "Singleton object is not initialized yet.");
 		return *_instance;
 	}
+
+	/// Searches the plugin directories for installed plugins and loads them.
+	void loadAllPlugins();
 
 	/// \brief Returns the plugin with a given identifier.
 	/// \param pluginId The identifier of the plugin to return.
@@ -74,6 +77,9 @@ public:
 	///       delete it on application shutdown.
 	void registerPlugin(Plugin* plugin);
 
+	/// Registers all classes of already loaded plugins.
+	void registerLoadedPluginClasses();
+
 	/// \brief Returns the list of directories containing the Ovito plugins.
 	QList<QDir> pluginDirs();
 
@@ -87,14 +93,14 @@ private:
 	/// The list of installed plugins.
 	QVector<Plugin*> _plugins;
 
-	/// Searches the plugin directories for installed plugins and loads their XML manifests.
-	void registerPlugins();
-
 	/////////////////////////// Maintenance ////////////////////////////////
 
 	/// Private constructor.
 	/// This is a singleton class; no public instances are allowed.
 	PluginManager();
+
+	/// The position in the global linked list of native object types up to which classes have already been registered.
+	NativeOvitoObjectType* _lastRegisteredClass = nullptr;
 
 	/// The singleton instance of this class.
 	static PluginManager* _instance;

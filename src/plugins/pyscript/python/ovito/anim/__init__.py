@@ -1,2 +1,2 @@
 # Load the native module.
-from PyScript.Animation import *
+from ..plugins.PyScript.Animation import *

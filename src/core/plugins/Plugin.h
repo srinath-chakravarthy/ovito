@@ -41,17 +41,8 @@ public:
 	/// \brief Destructor
 	virtual ~Plugin();
 
-	/// \brief Returns the plugin's metadata.
-	const QJsonDocument& metadata() const { return _metadata; }
-
 	/// \brief Returns the unique identifier of the plugin.
 	const QString& pluginId() const { return _pluginId; }
-
-	/// \brief Returns the plugin's vendor string.
-	const QString& pluginVendor() const { return _pluginVendor; }
-
-	/// \brief Returns the plugin's version string.
-	const QString& pluginVersion() const { return _pluginVersion; }
 
 	/// \brief Finds the plugin class with the given name defined by the plugin.
 	/// \param name The class name.
@@ -62,7 +53,7 @@ public:
 
 	/// \brief Returns whether the plugin's dynamic library has been loaded.
 	/// \sa loadPlugin()
-	bool isLoaded() const { return _isLoaded; }
+	bool isLoaded() const { return true; }
 
 	/// \brief Loads the plugin's dynamic link library into memory.
 	/// \throw Exception if an error occurs.
@@ -70,26 +61,16 @@ public:
 	/// This method may load other plugins first if this plugin
 	/// depends on them.
 	/// \sa isLoaded()
-	void loadPlugin();
+	void loadPlugin() {}
 
 	/// \brief Returns all classes defined by the plugin.
 	/// \sa findClass()
 	const QVector<OvitoObjectType*>& classes() const { return _classes; }
 
-	/// \brief Returns all other plugins this plugin (directly) depends on.
-	QSet<Plugin*> dependencies() const;
-
 protected:
 
-	/// \brief Constructor that loads the given manifest file.
-	/// \param manifestFile Path to the plugin's JSON manifest file.
-	/// \param builtinPlugin Indicates whether this plugin is statically linked into the executable.
-	/// \throw Exception If a parsing error occurred.
-	Plugin(const QString& manifestFile, bool builtinPlugin);
-
-	/// \brief Implementation method that loads the plugin.
-	/// \throw Exception if an error occurred.
-	virtual void loadPluginImpl() = 0;
+	/// \brief Constructor.
+	Plugin(const QString& pluginId);
 
 	/// \brief Adds a class to the list of plugin classes.
 	void registerClass(OvitoObjectType* clazz) { _classes.push_back(clazz); }
@@ -99,26 +80,8 @@ private:
 	/// The unique identifier of the plugin.
 	QString _pluginId;
 
-	/// The vendor of the plugin.
-	QString _pluginVendor;
-
-	/// The version string of the plugin.
-	QString _pluginVersion;
-
 	/// The classes provided by the plugin.
 	QVector<OvitoObjectType*> _classes;
-
-	/// The plugins this plugin explicitly depends on.
-	QVector<QString> _dependencies;
-
-	/// The plugins this plugin implicitly depends on.
-	QSet<Plugin*> _implicitDependencies;
-
-	/// The plugin's metadata.
-	QJsonDocument _metadata;
-
-	/// Indicates whether the plugin dynamic library has been loaded.
-	bool _isLoaded;
 
 	friend class PluginManager;
 };

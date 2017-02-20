@@ -2,7 +2,7 @@
 import ovito.vis
 
 # Load the native code module
-import POVRay
+import ovito.plugins.POVRay
 
 # Inject POVRayRenderer class into parent module.
-ovito.vis.POVRayRenderer = POVRay.POVRayRenderer
+ovito.vis.POVRayRenderer = ovito.plugins.POVRay.POVRayRenderer

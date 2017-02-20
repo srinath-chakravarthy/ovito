@@ -20,8 +20,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/pyscript/PyScript.h>
-#include <core/app/Application.h>
-#include <core/plugins/PluginManager.h>
+#include <plugins/pyscript/engine/AdhocApplication.h>
+#include <core/dataset/DataSetContainer.h>
 #include "PythonBinding.h"
 
 namespace PyScript {
@@ -40,11 +40,9 @@ PYBIND11_PLUGIN(PyScript)
 	py::options options;
 	options.disable_function_signatures();
 
-	qDebug() << "Initializing PyScript module 1.";
 	py::module m("PyScript");
-	qDebug() << "Initializing PyScript module 2.";
 
-	// Install Ovito to Python exception translator.
+	// Register Ovito-to-Python exception translator.
 	py::register_exception_translator([](std::exception_ptr p) {
 		try {
 			if(p) std::rethrow_exception(p);
@@ -54,30 +52,20 @@ PYBIND11_PLUGIN(PyScript)
 		}
 	});
 
-	// Initialize an ad-hoc environment when not running as a standalone app. 
-	// Otherwise this has already been done by the StandaloneApplication class.
+	// Initialize an ad-hoc environment when this module has been imported by an external Python interpreter and is not running as a standalone app. 
+	// Otherwise an environment is already provided by the StandaloneApplication class.
 	if(!Application::instance()) {
 		try {
-			qDebug() << "Creating OVITO ad-hoc application object.";
-			Application* app = new Application(); // This will leak, but it doesn't matter because this Python module will never be unloaded.
+			AdhocApplication* app = new AdhocApplication(); // This will leak, but it doesn't matter because this Python module will never be unloaded.
 			if(!app->initialize())
 				throw Exception("Application object could not be initialized.");
-			PluginManager::initialize();
+			OVITO_ASSERT(Application::instance() == app);
 		}
 		catch(const Exception& ex) {
 			ex.logError();
-			throw std::runtime_error("Error while initializing OVITO environment.");
+			throw std::runtime_error("Error during OVITO runtime environment initialization.");
 		}
-		OVITO_ASSERT(Application::instance() != nullptr);
 	}
-
-	// Make Ovito program version number available to script.
-	m.attr("version") = py::make_tuple(Application::applicationVersionMajor(), Application::applicationVersionMinor(), Application::applicationVersionRevision());
-	m.attr("version_string") = py::cast(QCoreApplication::applicationVersion());
-
-	// Make environment information available to the script.
-	m.attr("gui_mode") = py::cast(Application::instance()->guiMode());
-	m.attr("headless_mode") = py::cast(Application::instance()->headlessMode());
 
 	// Register submodules.
 	defineAppSubmodule(m);
@@ -87,7 +75,17 @@ PYBIND11_PLUGIN(PyScript)
 	defineViewportSubmodule(m);
 	defineRenderingSubmodule(m);
 
-	qDebug() << "PyScript module initalization finished.";
+	// Make Ovito program version number available to script.
+	m.attr("version") = py::make_tuple(Application::applicationVersionMajor(), Application::applicationVersionMinor(), Application::applicationVersionRevision());
+	m.attr("version_string") = py::cast(QCoreApplication::applicationVersion());
+
+	// Make environment information available to the script.
+	m.attr("gui_mode") = py::cast(Application::instance()->guiMode());
+	m.attr("headless_mode") = py::cast(Application::instance()->headlessMode());
+
+	// Add an attribute to the ovito module that provides access to the active dataset.
+	DataSet* activeDataset = Application::instance()->datasetContainer()->currentSet();
+	m.attr("dataset") = py::cast(activeDataset, py::return_value_policy::reference);
 
 	return m.ptr();
 }

@@ -39,9 +39,9 @@ public:
 
 	/// \brief Initializes the scripting engine and sets up the environment.
 	/// \param dataset The engine will execute scripts in the context of this dataset.
-	/// \param parent The owner of this QObject.
-	/// \param redirectOutputToConsole Controls whether the Python script output should be forwarded to the terminal.
-	ScriptEngine(DataSet* dataset, QObject* parent = nullptr, bool redirectOutputToConsole = true);
+	/// \param privateContext If true, then changes made by the script will not be visible on the global scope.
+	/// \param parent The owner of this engine object.
+	ScriptEngine(DataSet* dataset, bool privateContext, QObject* parent = nullptr);
 
 	/// \brief Destructor
 	virtual ~ScriptEngine();
@@ -92,6 +92,12 @@ public:
 	/// performed by a script.
 	void setProgressDisplay(AbstractProgressDisplay* progressDisplay) { _progressDisplay = progressDisplay; }
 
+	/// \brief Returns the dataset that is currently active in the Python interpreter.
+	static DataSet* activeDataset();
+
+	/// \brief Sets the dataset that is currently active in the Python interpreter.
+	static void setActiveDataset(DataSet* dataset);
+
 Q_SIGNALS:
 
 	/// This signal is emitted when the Python script writes to the sys.stdout stream.
@@ -102,8 +108,8 @@ Q_SIGNALS:
 
 private:
 
-	/// Initializes the Python interpreter and sets up the global namespace.
-	void initializeInterpreter();
+	/// Initializes the embedded Python interpreter and sets up the global namespace.
+	void initializeEmbeddedInterpreter();
 
 	/// Handles a call to sys.exit() in the Python interpreter.
 	/// Returns the program exit code.

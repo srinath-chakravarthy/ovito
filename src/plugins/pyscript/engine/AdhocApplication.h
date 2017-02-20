@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2014) Alexander Stukowski
+//  Copyright (2017) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,32 +19,31 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <plugins/mesh/Mesh.h>
-#include <plugins/mesh/import/VTKFileImporter.h>
-#include <plugins/pyscript/binding/PythonBinding.h>
-#include <core/plugins/PluginManager.h>
+#ifndef __OVITO_ADHOC_APPLICATION_H
+#define __OVITO_ADHOC_APPLICATION_H
 
-namespace Mesh {
+#include <core/Core.h>
+#include <core/app/Application.h>
+
+namespace PyScript {
 
 using namespace Ovito;
-using namespace PyScript;
 
-PYBIND11_PLUGIN(Mesh)
+/**
+ * \brief The application object that is created when the OVITO Python module is loaded by an external interpreter.
+ */
+class AdhocApplication : public Application
 {
-	// Register the classes of this plugin with the global PluginManager.
-	PluginManager::instance().registerLoadedPluginClasses();
-	
-	py::options options;
-	options.disable_function_signatures();
+public:
 
-	py::module m("Mesh");
+	/// \brief Initializes the application object.
+	bool initialize();
 
-	ovito_class<VTKFileImporter, FileSourceImporter>{m}
-	;
+private:
 
-	return m.ptr();
-}
-
-OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(Mesh);
-
+	Q_OBJECT
 };
+
+}	// End of namespace
+
+#endif // __OVITO_ADHOC_APPLICATION_H

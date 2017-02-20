@@ -25,17 +25,21 @@
 #include <gui/mainwin/MainWindow.h>
 #include <gui/dataset/GuiDataSetContainer.h>
 #include <plugins/pyscript/binding/PythonBinding.h>
+#include <core/plugins/PluginManager.h>
 
 namespace PyScript {
 
 using namespace Ovito;
 
-PYBIND11_PLUGIN(PyScriptGUI)
+PYBIND11_PLUGIN(PyScriptGui)
 {
+	// Register the classes of this plugin with the global PluginManager.
+	PluginManager::instance().registerLoadedPluginClasses();
+	
 	py::options options;
 	options.disable_function_signatures();
 
-	py::module m("PyScriptGUI");
+	py::module m("PyScriptGui");
 
 	py::class_<MainWindow>(m, "MainWindow")
 		.def_property_readonly("frame_buffer_window", &MainWindow::frameBufferWindow, py::return_value_policy::reference)
@@ -72,6 +76,6 @@ PYBIND11_PLUGIN(PyScriptGUI)
 	return m.ptr();
 }
 
-OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScriptGUI);
+OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScriptGui);
 
 };

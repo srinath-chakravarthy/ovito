@@ -35,7 +35,7 @@ SET_PROPERTY_FIELD_LABEL(PythonViewportOverlay, script, "Script");
 * Constructor.
 ******************************************************************************/
 PythonViewportOverlay::PythonViewportOverlay(DataSet* dataset) : ViewportOverlay(dataset),
-		_scriptEngine(dataset, nullptr, false)
+		_scriptEngine(dataset, true, nullptr)
 {
 	INIT_PROPERTY_FIELD(script);
 

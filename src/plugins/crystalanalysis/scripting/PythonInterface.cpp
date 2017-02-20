@@ -39,6 +39,7 @@
 #include <plugins/crystalanalysis/exporter/CAExporter.h>
 #include <plugins/pyscript/binding/PythonBinding.h>
 #include <plugins/particles/scripting/PythonBinding.h>
+#include <core/plugins/PluginManager.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -46,6 +47,9 @@ using namespace PyScript;
 
 PYBIND11_PLUGIN(CrystalAnalysis)
 {
+	// Register the classes of this plugin with the global PluginManager.
+	PluginManager::instance().registerLoadedPluginClasses();
+	
 	py::options options;
 	options.disable_function_signatures();
 

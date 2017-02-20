@@ -1,5 +1,7 @@
 import os.path
 import sys
+import pkgutil
+import importlib
 try:
     # Python 3.x
     import collections.abc as collections
@@ -7,36 +9,35 @@ except ImportError:
     # Python 2.x
     import collections
 
-print("OVITO module __init__.py")
+# Allow OVITO plugins and C++ extension modules to be spread over several installation directories.
+_package_source_path = __path__ # Make a copy of the original path, which will be used below to automatically import all submodules.
+__path__ = pkgutil.extend_path(__path__, __name__)
 
 # Load the native module with the core bindings
-from PyScript import version, version_string, gui_mode, headless_mode
-from PyScript.App import *
+import ovito.plugins.PyScript
+from .plugins.PyScript import version, version_string, gui_mode, headless_mode, dataset
+from .plugins.PyScript.App import *
 
-print("OVITO module loading submodule")
-
-# Load sub-modules (in the right order because there are dependencies between them)
+# Load sub-modules (in the right order because there are dependencies among them)
 import ovito.anim
 import ovito.data
 import ovito.vis
 import ovito.io
 import ovito.modifiers
 
-from PyScript.Scene import ObjectNode
-from PyScript.Scene import SceneRoot
-from PyScript.Scene import PipelineObject     
-from PyScript.Scene import PipelineStatus
+from .plugins.PyScript.Scene import ObjectNode
+from .plugins.PyScript.Scene import SceneRoot
+from .plugins.PyScript.Scene import PipelineObject     
+from .plugins.PyScript.Scene import PipelineStatus
 
-# Load all OVITO modules packages. This is required
-# to make all Python bindings available.
-import pkgutil
-import importlib
-for _, _name, _ in pkgutil.walk_packages(__path__, __name__ + '.'):
-    if _name == "ovito.linalg": continue  # For backward compatibility with OVITO 2.7.1
+# Load the whole OVITO package. This is required to make all Python bindings available.
+for _, _name, _ in pkgutil.walk_packages(_package_source_path, __name__ + '.'):
+    if _name.startswith("ovito.linalg"): continue  # For backward compatibility with OVITO 2.7.1. The old 'ovito.linalg' module has been deprecated but may still be present in some existing OVITO installations.
+    if _name.startswith("ovito.plugins"): continue  # Do not load C++ plugin modules here, only Python modules
     try:
         importlib.import_module(_name)
     except:
-        print("Error while loading submodule %s:" % _name, sys.exc_info()[0])
+        print("Error while loading OVITO submodule %s:" % _name, sys.exc_info()[0])
         raise
 
 def _DataSet_scene_nodes(self):

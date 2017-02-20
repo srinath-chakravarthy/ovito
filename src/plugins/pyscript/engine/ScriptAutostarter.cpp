@@ -73,7 +73,7 @@ void ScriptAutostarter::applicationStarted()
 		UndoSuspender noUndo(dataset);
 
 		// Set up script engine.
-		ScriptEngine engine(dataset);
+		ScriptEngine engine(dataset, false);
 
 		// Pass command line parameters to the script.
 		QStringList scriptArguments = StandaloneApplication::instance()->cmdLineParser().values("scriptarg");

@@ -52,7 +52,7 @@ void RunScriptAction::registerActions(ActionManager& actionManager)
 		// Keep undo records so that script actions can be undone.
 		dataset->undoStack().beginCompoundOperation(tr("Script actions"));
 		try {
-			ScriptEngine engine(dataset);
+			ScriptEngine engine(dataset, true);
 
 			// Show a progress dialog while script is running.
 			QProgressDialog progressDialog(actionManager.mainWindow());

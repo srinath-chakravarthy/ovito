@@ -30,6 +30,7 @@ ENDIF()
 SET(SourceFiles
 	engine/ScriptEngine.cpp
 	engine/ScriptAutostarter.cpp
+	engine/AdhocApplication.cpp
 	binding/PythonInterface.cpp
 	binding/ViewportBinding.cpp
 	binding/AnimationBinding.cpp

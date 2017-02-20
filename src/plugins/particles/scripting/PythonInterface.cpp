@@ -41,11 +41,16 @@
 #include <plugins/particles/util/NearestNeighborFinder.h>
 #include <core/utilities/io/CompressedTextWriter.h>
 #include <core/animation/AnimationSettings.h>
+#include <core/plugins/PluginManager.h>
 #include "PythonBinding.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 using namespace PyScript;
+
+void defineModifiersSubmodule(py::module parentModule);	// Defined in ModifierBinding.cpp
+void defineImportersSubmodule(py::module parentModule);	// Defined in ImporterBinding.cpp
+void defineExportersSubmodule(py::module parentModule);	// Defined in ExporterBinding.cpp
 
 template<class PropertyClass, bool ReadOnly>
 py::dict PropertyObject__array_interface__(PropertyClass& p)
@@ -147,6 +152,9 @@ py::dict BondsObject__pbc_vectors(const BondsObject& p)
 
 PYBIND11_PLUGIN(Particles)
 {
+	// Register the classes of this plugin with the global PluginManager.
+	PluginManager::instance().registerLoadedPluginClasses();
+	
 	py::options options;
 	options.disable_function_signatures();
 
@@ -953,6 +961,11 @@ PYBIND11_PLUGIN(Particles)
 				"\n\n"
 				":Default: ``False``\n")
 	;
+
+	// Register submodules.
+	defineModifiersSubmodule(m);	// Defined in ModifierBinding.cpp
+	defineImportersSubmodule(m);	// Defined in ImporterBinding.cpp
+	defineExportersSubmodule(m);	// Defined in ExporterBinding.cpp
 
 	return m.ptr();
 }

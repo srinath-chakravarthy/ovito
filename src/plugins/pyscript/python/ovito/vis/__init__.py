@@ -36,8 +36,8 @@ import sip
 import PyQt5.QtGui
 
 # Load the native modules.
-from PyScript.Rendering import *
-from PyScript.Viewport import *
+from ..plugins.PyScript.Rendering import *
+from ..plugins.PyScript.Viewport import *
 
 import ovito
 

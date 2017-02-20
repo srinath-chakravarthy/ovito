@@ -93,6 +93,7 @@ bool StandaloneApplication::initialize(int& argc, char** argv)
 	try {
 		// Load plugins.
 		PluginManager::initialize();
+		PluginManager::instance().loadAllPlugins();
 
 		// Load auto-start objects and let them register their custom command line options.
 		for(const OvitoObjectType* clazz : PluginManager::instance().listClasses(AutoStartObject::OOType)) {

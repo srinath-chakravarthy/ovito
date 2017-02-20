@@ -68,12 +68,9 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 using namespace PyScript;
 
-PYBIND11_PLUGIN(ParticlesModify)
+void defineModifiersSubmodule(py::module parentModule)
 {
-	py::options options;
-	options.disable_function_signatures();
-
-	py::module m("ParticlesModify");
+	py::module m = parentModule.def_submodule("Modifiers");
 	
 	ovito_abstract_class<ParticleModifier, Modifier>{m}
 	;
@@ -1498,11 +1495,7 @@ PYBIND11_PLUGIN(ParticlesModify)
 		.value("L12_AU", PolyhedralTemplateMatchingModifier::ALLOY_L12_AU)
 		.value("B2", PolyhedralTemplateMatchingModifier::ALLOY_B2)
 	;
-
-	return m.ptr();
 }
-
-OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(ParticlesModify);
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
