@@ -120,9 +120,9 @@ IF(UNIX)
 		# The directory where the auxiliary files go to.
 		SET(OVITO_RELATIVE_SHARE_DIRECTORY "${MACOSX_BUNDLE_NAME}.app/Contents/Resources")
 		# The directory where the compiled plugins go to.
-		SET(OVITO_RELATIVE_PLUGINS_DIRECTORY "${MACOSX_BUNDLE_NAME}.app/Contents/PlugIns")	
-		# The directory where the plugins' Python files go to.
-		SET(OVITO_RELATIVE_PLUGIN_PYTHON_DIRECTORY "${MACOSX_BUNDLE_NAME}.app/Contents/Resources/plugins/python")	
+		SET(OVITO_RELATIVE_PLUGINS_DIRECTORY "${MACOSX_BUNDLE_NAME}.app/Contents/PlugIns/ovito/plugins")	
+		# The directory where the Python source modules go to.
+		SET(OVITO_RELATIVE_PYTHON_DIRECTORY "${MACOSX_BUNDLE_NAME}.app/Contents/Resources/python")	
 	ELSE()
 		# The directory where the main executable goes to.
 		SET(OVITO_RELATIVE_BINARY_DIRECTORY "bin")
@@ -132,8 +132,8 @@ IF(UNIX)
 		SET(OVITO_RELATIVE_SHARE_DIRECTORY "share/ovito")
 		# The directory where the compiled plugins go to.
 		SET(OVITO_RELATIVE_PLUGINS_DIRECTORY "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins")
-		# The directory where the plugins' Python files go to.
-		SET(OVITO_RELATIVE_PLUGIN_PYTHON_DIRECTORY "${OVITO_RELATIVE_PLUGINS_DIRECTORY}/python")	
+		# The directory where the Python source modules go to.
+		SET(OVITO_RELATIVE_PYTHON_DIRECTORY "${OVITO_RELATIVE_PLUGINS_DIRECTORY}/python")
 	ENDIF()
 ELSE()
 	# The directory where the main executable goes to.
@@ -144,8 +144,8 @@ ELSE()
 	SET(OVITO_RELATIVE_SHARE_DIRECTORY ".")
 	# The directory where the compiled plugins go to.
 	SET(OVITO_RELATIVE_PLUGINS_DIRECTORY "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/plugins")
-	# The directory where the plugins' Python files go to.
-	SET(OVITO_RELATIVE_PLUGIN_PYTHON_DIRECTORY "${OVITO_RELATIVE_PLUGINS_DIRECTORY}/python")	
+		# The directory where the Python source modules go to.
+	SET(OVITO_RELATIVE_PYTHON_DIRECTORY "${OVITO_RELATIVE_PLUGINS_DIRECTORY}/python")	
 ENDIF()
 
 # Controls whether a static or a shared OVITO executable is built.
@@ -172,8 +172,8 @@ SET(OVITO_BINARY_DIRECTORY "${${PROJECT_NAME}_BINARY_DIR}/${OVITO_RELATIVE_BINAR
 SET(OVITO_LIBRARY_DIRECTORY "${${PROJECT_NAME}_BINARY_DIR}/${OVITO_RELATIVE_LIBRARY_DIRECTORY}")
 # The directory where the compiled plugins go to.
 SET(OVITO_PLUGINS_DIRECTORY "${${PROJECT_NAME}_BINARY_DIR}/${OVITO_RELATIVE_PLUGINS_DIRECTORY}")
-# The directory where the plugins' Python files go to.
-SET(OVITO_PLUGIN_PYTHON_DIRECTORY "${${PROJECT_NAME}_BINARY_DIR}/${OVITO_RELATIVE_PLUGIN_PYTHON_DIRECTORY}")
+# The directory where the Python source files go to.
+SET(OVITO_PYTHON_DIRECTORY "${${PROJECT_NAME}_BINARY_DIR}/${OVITO_RELATIVE_PYTHON_DIRECTORY}")
 # The directory where the auxiliary files go to.
 SET(OVITO_SHARE_DIRECTORY "${${PROJECT_NAME}_BINARY_DIR}/${OVITO_RELATIVE_SHARE_DIRECTORY}")
 

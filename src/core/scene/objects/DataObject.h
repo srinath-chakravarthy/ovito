@@ -27,6 +27,7 @@
 #include <core/animation/TimeInterval.h>
 #include <core/scene/pipeline/PipelineFlowState.h>
 #include <core/scene/objects/DisplayObject.h>
+#include <core/utilities/concurrent/FutureInterface.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
@@ -199,6 +200,10 @@ protected:
 
 private:
 
+	/// Checks if the data pipeline is ready (i.e. result status is not pending).
+	/// If so, it signals this to the waitUntilReady() method, which will return.
+	void signalIfPipelineIsReady();
+
 	/// The revision counter of this object.
 	/// The counter is increment every time the object changes.
 	unsigned int _revisionNumber;
@@ -210,6 +215,12 @@ private:
 
 	/// The attached display objects that are responsible for rendering this object's data.
 	DECLARE_MODIFIABLE_VECTOR_REFERENCE_FIELD(DisplayObject, displayObjects, setDisplayObjects);
+
+	/// Used by waitUntilReady() implementation.
+	std::shared_ptr<FutureInterface<void>> _waitUntilReadySignal;
+
+	/// Used by waitUntilReady() implementation. Determines the animation time at which the pipeline is to be evaluated.
+	TimePoint _waitUntilReadyTime;	
 
 	Q_OBJECT
 	OVITO_OBJECT

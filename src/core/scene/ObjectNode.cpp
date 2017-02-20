@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2013) Alexander Stukowski
+//  Copyright (2017) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -149,6 +149,8 @@ bool ObjectNode::referenceEvent(RefTarget* source, ReferenceEvent* event)
 		else if(event->type() == ReferenceEvent::TitleChanged) {
 			notifyDependents(ReferenceEvent::TitleChanged);
 		}
+		// If input object has changed, the pipeline might have become ready.
+		signalIfPipelineIsReady();
 	}
 	else if(_displayObjects.contains(source)) {
 		if(event->type() == ReferenceEvent::TargetChanged || event->type() == ReferenceEvent::PendingStateChanged) {
@@ -172,6 +174,7 @@ void ObjectNode::referenceReplaced(const PropertyFieldDescriptor& field, RefTarg
 		// When the data object is being replaced, the pending state of the node might change.
 		// Even though we don't know for sure if the state has really changed, we send a notification event here.
 		notifyDependents(ReferenceEvent::PendingStateChanged);
+		signalIfPipelineIsReady();
 	}
 
 	SceneNode::referenceReplaced(field, oldTarget, newTarget);
@@ -298,9 +301,36 @@ void ObjectNode::setSourceObject(DataObject* sourceObject)
 ******************************************************************************/
 bool ObjectNode::waitUntilReady(TimePoint time, const QString& message, AbstractProgressDisplay* progressDisplay)
 {
-	return dataset()->container()->waitUntil([this, time]() {
-		return evalPipeline(time).status().type() != PipelineStatus::Pending;
-	}, message, progressDisplay);
+	OVITO_ASSERT_MSG(!QCoreApplication::instance() || QThread::currentThread() == QCoreApplication::instance()->thread(), "ObjectNode::waitUntilReady", "Function can only be called from the main thread.");
+
+	// Do a first quick check if pipeline is already up to date.
+	if(evalPipeline(time).status().type() != PipelineStatus::Pending) 
+		return true;
+
+	// If not ready yet, create a future.
+	if(!_waitUntilReadySignal) {
+		_waitUntilReadySignal = std::make_shared<FutureInterface<void>>();
+		_waitUntilReadySignal->reportStarted();
+	}
+	_waitUntilReadySignal->setProgressText(message);
+	_waitUntilReadyTime = time;
+
+	// Wait until future is ready.
+	return dataset()->container()->taskManager().waitForTask(_waitUntilReadySignal, progressDisplay);
+}
+
+/******************************************************************************
+* Checks if the data pipeline is ready (i.e. result status is not pending).
+* If so, it signals this to the waitUntilReady() method, which will return.
+******************************************************************************/
+void ObjectNode::signalIfPipelineIsReady()
+{
+	if(_waitUntilReadySignal) {
+		if(evalPipeline(_waitUntilReadyTime).status().type() != PipelineStatus::Pending) {
+			_waitUntilReadySignal->reportFinished();
+			_waitUntilReadySignal.reset();
+		}
+	}
 }
 
 OVITO_END_INLINE_NAMESPACE

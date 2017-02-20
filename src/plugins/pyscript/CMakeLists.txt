@@ -55,8 +55,8 @@ TARGET_INCLUDE_DIRECTORIES(PyScript PUBLIC ${PYTHON_INCLUDE_PATH})
 ADD_PRECOMPILED_HEADER(PyScript plugins/pyscript/PyScript.h)
 
 # Install the Python source files that belong to the plugin and which provide the scripting interface.
-INSTALL(DIRECTORY "${OVITO_PLUGIN_PYTHON_DIRECTORY}/" 
-		DESTINATION "${OVITO_RELATIVE_PLUGIN_PYTHON_DIRECTORY}/"
+INSTALL(DIRECTORY "${OVITO_PYTHON_DIRECTORY}/" 
+		DESTINATION "${OVITO_RELATIVE_PYTHON_DIRECTORY}/"
 		REGEX "__pycache__" EXCLUDE)
 
 # Build corresponding GUI plugin.

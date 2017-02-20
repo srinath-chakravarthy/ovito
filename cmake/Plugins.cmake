@@ -70,9 +70,9 @@ MACRO(OVITO_STANDARD_PLUGIN target_name)
 		SET_TARGET_PROPERTIES(${target_name} PROPERTIES LINK_FLAGS "-headerpad_max_install_names")
 	ENDIF(APPLE)
 
-    # Enable the use of @rpath on OSX.
+    # Enable the use of @rpath on macOS.
     SET_TARGET_PROPERTIES(${target_name} PROPERTIES MACOSX_RPATH TRUE)
-    SET_TARGET_PROPERTIES(${target_name} PROPERTIES INSTALL_RPATH "@loader_path/;@executable_path/")
+    SET_TARGET_PROPERTIES(${target_name} PROPERTIES INSTALL_RPATH "@loader_path/;@executable_path/;@loader_path/../../../MacOS/")
     
 	IF(APPLE)
 	    # The build tree target should have rpath of install tree target.
@@ -88,7 +88,7 @@ MACRO(OVITO_STANDARD_PLUGIN target_name)
 	# Install Python wrapper files.
 	IF(python_wrappers)
 		# Install the Python source files that belong to the plugin, which provide the scripting interface.
-		ADD_CUSTOM_COMMAND(TARGET ${target_name} POST_BUILD COMMAND ${CMAKE_COMMAND} "-E" copy_directory "${python_wrappers}" "${OVITO_PLUGIN_PYTHON_DIRECTORY}/")
+		ADD_CUSTOM_COMMAND(TARGET ${target_name} POST_BUILD COMMAND ${CMAKE_COMMAND} "-E" copy_directory "${python_wrappers}" "${OVITO_PYTHON_DIRECTORY}/")
 	ENDIF()
 
 	# This plugin will be part of the installation package.

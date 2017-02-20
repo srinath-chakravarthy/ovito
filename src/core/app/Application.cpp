@@ -136,7 +136,7 @@ bool Application::initialize()
 	QMetaType::registerConverter<QColor, ColorA>();
 	QMetaType::registerConverter<ColorA, QColor>();
 
-	// Create global file manager object.
+	// Create global FileManager object.
 	_fileManager.reset(createFileManager());
 
 	return true;

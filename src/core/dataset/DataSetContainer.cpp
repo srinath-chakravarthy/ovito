@@ -147,7 +147,7 @@ void DataSetContainer::onAnimationSettingsReplaced(AnimationSettings* newAnimati
 ******************************************************************************/
 bool DataSetContainer::waitUntil(const std::function<bool()>& callback, const QString& message, AbstractProgressDisplay* progressDisplay)
 {
-	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSetContainer::waitUntil()", "This function may only be called from the main thread.");
+	OVITO_ASSERT_MSG(!QCoreApplication::instance() || QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSetContainer::waitUntil()", "This function may only be called from the main thread.");
 
 	// Check if operation is already completed.
 	if(callback())
@@ -166,6 +166,7 @@ bool DataSetContainer::waitUntil(const std::function<bool()>& callback, const QS
 
 	try {
 
+	qDebug() << "Enerting polling loop";
 		// Poll callback function until it returns true.
 #ifdef Q_OS_UNIX		
 		while(!callback() && !_userInterrupt.loadAcquire()) {
@@ -175,6 +176,7 @@ bool DataSetContainer::waitUntil(const std::function<bool()>& callback, const QS
 			QCoreApplication::processEvents();
 			QThread::msleep(20);
 		}
+	qDebug() << "Leaving polling loop";
 
 #ifdef Q_OS_UNIX
 		::signal(SIGINT, oldSignalHandler);

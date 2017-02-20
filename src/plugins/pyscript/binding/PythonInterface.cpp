@@ -52,6 +52,14 @@ PYBIND11_PLUGIN(PyScript)
 		}
 	});
 
+	// Create a global QApplication object if there isn't one already.
+	// This application object is needed for event processing (e.g. QEventLoop).
+	if(!QCoreApplication::instance()) {
+		static int argc = 1;
+		static char* argv[] = { const_cast<char*>("") };
+		new QCoreApplication(argc, argv);
+	}
+
 	// Initialize an ad-hoc environment when this module has been imported by an external Python interpreter and is not running as a standalone app. 
 	// Otherwise an environment is already provided by the StandaloneApplication class.
 	if(!Application::instance()) {

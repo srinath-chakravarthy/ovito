@@ -23,6 +23,7 @@
 #define __OVITO_OBJECT_NODE_H
 
 #include <core/Core.h>
+#include <core/utilities/concurrent/FutureInterface.h>
 #include "SceneNode.h"
 #include "objects/DataObject.h"
 #include "objects/DisplayObject.h"
@@ -99,6 +100,10 @@ protected:
 
 private:
 
+	/// Checks if the data pipeline is ready (i.e. result status is not pending).
+	/// If so, it signals this to the waitUntilReady() method, which will return.
+	void signalIfPipelineIsReady();
+
 	/// The object which generates the data to be displayed by this ObjectNode.
 	DECLARE_MODIFIABLE_REFERENCE_FIELD(DataObject, dataProvider, setDataProvider);
 
@@ -120,6 +125,12 @@ private:
 		// Also mark the cached bounding box of this scene node as invalid.
 		invalidateBoundingBox();
 	}
+
+	/// Used by waitUntilReady() implementation.
+	std::shared_ptr<FutureInterface<void>> _waitUntilReadySignal;
+
+	/// Used by waitUntilReady() implementation. Determines the animation time at which the pipeline is to be evaluated.
+	TimePoint _waitUntilReadyTime;
 
 	Q_OBJECT
 	OVITO_OBJECT

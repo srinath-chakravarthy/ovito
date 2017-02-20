@@ -25,8 +25,6 @@
 #include <core/Core.h>
 #include <core/object/OvitoObject.h>
 
-#include <QJsonDocument>
-
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(PluginSystem)
 
 /**

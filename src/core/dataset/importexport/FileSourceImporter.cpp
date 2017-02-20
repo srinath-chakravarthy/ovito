@@ -263,7 +263,7 @@ Future<QVector<FileSourceImporter::Frame>> FileSourceImporter::findWildcardMatch
 		// A file called "abc9.xyz" must come before a file named "abc10.xyz", which is not
 		// the default lexicographic ordering.
 		QMap<QString, QString> sortedFilenames;
-		Q_FOREACH(QString oldName, entries) {
+		for(const QString& oldName : entries) {
 			// Generate a new name from the original filename that yields the correct ordering.
 			QString newName;
 			QString number;

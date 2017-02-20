@@ -122,7 +122,7 @@ public:
 	///
 	/// This function is thread-safe.
 	void registerTask(const std::shared_ptr<FutureInterfaceBase>& futureInterface) {
-		// Execute the function call in the GUI thread.
+		// Execute the function call in the main thread.
 		QMetaObject::invokeMethod(this, "addTaskInternal", Q_ARG(std::shared_ptr<FutureInterfaceBase>, futureInterface));
 	}
 
@@ -130,15 +130,14 @@ public:
 	///        to show the task's progress.
 	/// \return False if the task has been cancelled by the user.
 	///
-	/// This function must be called from the GUI thread.
+	/// This function must be called from the main thread.
 	template<typename R>
 	bool waitForTask(const Future<R>& future) {
 		return waitForTask(future.getinterface());
 	}
 
-	/// \brief Waits for the given task to finish and displays a modal progress dialog
-	///        to show the task's progress.
-	bool waitForTask(const std::shared_ptr<FutureInterfaceBase>& futureInterface);
+	/// \brief Waits for the given task to finish.
+	bool waitForTask(const std::shared_ptr<FutureInterfaceBase>& futureInterface, AbstractProgressDisplay* progressDisplay = nullptr);
 
 public Q_SLOTS:
 

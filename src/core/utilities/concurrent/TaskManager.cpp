@@ -21,6 +21,7 @@
 
 #include <core/Core.h>
 #include <core/utilities/concurrent/TaskManager.h>
+#include <core/utilities/concurrent/ProgressDisplay.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
 
@@ -104,18 +105,24 @@ void TaskManager::waitForAll()
 }
 
 /******************************************************************************
-* Waits for the given task to finish and displays a modal progress dialog
-* to show the task's progress.
+* Waits for the given task to finish.
 ******************************************************************************/
-bool TaskManager::waitForTask(const std::shared_ptr<FutureInterfaceBase>& futureInterface)
+bool TaskManager::waitForTask(const std::shared_ptr<FutureInterfaceBase>& futureInterface, AbstractProgressDisplay* progressDisplay)
 {
-	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "TaskManager::waitForTask", "Function can only be called from the main thread.");
+	OVITO_ASSERT_MSG(!QCoreApplication::instance() || QThread::currentThread() == QCoreApplication::instance()->thread(), "TaskManager::waitForTask", "Function can only be called from the main thread.");
+
+	// Check if operation has been canceled by the user already.
+	if(progressDisplay && progressDisplay->wasCanceled()) {
+		futureInterface->cancel();
+		return false;
+	}
 
 	// Before entering the local event loop, check if task has already finished.
-	if(futureInterface->isFinished())
+	if(futureInterface->isFinished()) {
 		return !futureInterface->isCanceled();
+	}
 
-	// Start a local event loop and wait for the task to generate the finished signal.
+	// Start a local event loop and wait for the task to generate the signal.
 	FutureWatcher watcher;
 	QEventLoop eventLoop;
 	watcher.setFutureInterface(futureInterface);

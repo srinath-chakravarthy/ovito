@@ -75,7 +75,7 @@ ScriptEngine::ScriptEngine(DataSet* dataset, bool privateContext, QObject* paren
 			_mainNamespace = py::getattr(main_module, "__dict__");
 		}
 		
-		// Add an attribute to the ovito module that provides access to the active dataset.
+		// Add the 'dataset' attribute to the ovito module that provides access to the active dataset.
 		setActiveDataset(dataset);
 	}
 	catch(py::error_already_set& ex) {
@@ -158,24 +158,32 @@ void ScriptEngine::initializeEmbeddedInterpreter()
 			sys_module.attr("stderr") = py::cast(new InterpreterStdErrorRedirector(), py::return_value_policy::take_ownership);
 		}
 
-		// Prepend directories containing OVITO's Python modules to sys.path.
-		py::object sys_path = sys_module.attr("path");
-
-		// Also create a builtin list of plugin paths where C++ plugin modules are loaded from.
+		// Create a list of paths where C++ plugin modules are loaded from.
 		py::list native_plugin_paths;
-
 		for(const QDir& pluginDir : PluginManager::instance().pluginDirs()) {
-			py::object path = py::cast(QDir::toNativeSeparators(pluginDir.absolutePath() + "/python"));
-			PyList_Insert(sys_path.ptr(), 0, path.ptr());
 			native_plugin_paths.append(py::cast(QDir::toNativeSeparators(pluginDir.absolutePath())));
 		}
 
-		// Prepend current directory to sys.path.
-		PyList_Insert(sys_path.ptr(), 0, py::str().ptr());
-
-		// Make the list of plugin paths accessible to the 'ovito.plugins' Python module.
+		// Pass the list of plugin paths to the 'ovito.plugins' Python source module.
 		py::module builtins_module = py::module::import("builtins");
 		builtins_module.attr("__ovito_plugin_paths") = native_plugin_paths;
+
+		// Determine path where Python source files are located.
+		QDir prefixDir(QCoreApplication::applicationDirPath());
+#if defined(Q_OS_WIN)
+		QString pythonModulePath = prefixDir.absolutePath() + QStringLiteral("/plugins/python");
+#elif defined(Q_OS_MAC)
+		QString pythonModulePath = prefixDir.absolutePath() + QStringLiteral("/../Resources/python");
+#else
+		QString pythonModulePath = prefixDir.absolutePath() + QStringLiteral("/lib/ovito/plugins/python");
+#endif
+
+		// Prepend directory containing OVITO's Python source files to sys.path.
+		py::object sys_path = sys_module.attr("path");
+		PyList_Insert(sys_path.ptr(), 0, py::cast(QDir::toNativeSeparators(pythonModulePath)).ptr());
+
+		// Prepend current directory to sys.path.
+		PyList_Insert(sys_path.ptr(), 0, py::str().ptr());
 	}
 	catch(const Exception&) {
 		throw;
@@ -201,7 +209,7 @@ void ScriptEngine::initializeEmbeddedInterpreter()
 ******************************************************************************/
 int ScriptEngine::executeCommands(const QString& commands, const QStringList& scriptArguments)
 {
-	if(QThread::currentThread() != QCoreApplication::instance()->thread())
+	if(QCoreApplication::instance() && QThread::currentThread() != QCoreApplication::instance()->thread())
 		throw Exception(tr("Can run Python scripts only from the main thread."));
 
 	// Remember the script engine that was active so we can restore it later.
@@ -248,7 +256,7 @@ int ScriptEngine::executeCommands(const QString& commands, const QStringList& sc
 ******************************************************************************/
 void ScriptEngine::execute(const std::function<void()>& func)
 {
-	if(QThread::currentThread() != QCoreApplication::instance()->thread())
+	if(QCoreApplication::instance() && QThread::currentThread() != QCoreApplication::instance()->thread())
 		throw Exception(tr("Can run Python scripts only from the main thread."));
 
 	// Remember the script engine that was active so we can restore it later.
@@ -294,7 +302,7 @@ py::object ScriptEngine::callObject(const py::object& callable, const py::tuple&
 ******************************************************************************/
 int ScriptEngine::executeFile(const QString& filename, const QStringList& scriptArguments)
 {
-	if(QThread::currentThread() != QCoreApplication::instance()->thread())
+	if(QCoreApplication::instance() && QThread::currentThread() != QCoreApplication::instance()->thread())
 		throw Exception(tr("Can run Python scripts only from the main thread."));
 
 	// Remember the script engine that was active so we can restore it later.

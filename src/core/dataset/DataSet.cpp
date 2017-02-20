@@ -114,7 +114,7 @@ OORef<ViewportConfiguration> DataSet::createDefaultViewportConfiguration()
 ******************************************************************************/
 bool DataSet::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
-	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSet::referenceEvent", "Reference events may only be processed in the main thread.");
+	OVITO_ASSERT_MSG(!QCoreApplication::instance() || QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSet::referenceEvent", "Reference events may only be processed in the main thread.");
 
 	if(event->type() == ReferenceEvent::TargetChanged || event->type() == ReferenceEvent::PendingStateChanged) {
 
@@ -208,7 +208,7 @@ void DataSet::rescaleTime(const TimeInterval& oldAnimationInterval, const TimeIn
 ******************************************************************************/
 bool DataSet::isSceneReady(TimePoint time) const
 {
-	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSet::isSceneReady", "This function may only be called from the main thread.");
+	OVITO_ASSERT_MSG(!QCoreApplication::instance() || QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSet::isSceneReady", "This function may only be called from the main thread.");
 	OVITO_CHECK_OBJECT_POINTER(sceneRoot());
 
 	// Iterate over all object nodes and request an evaluation of their geometry pipeline.
@@ -220,12 +220,35 @@ bool DataSet::isSceneReady(TimePoint time) const
 }
 
 /******************************************************************************
+* This function blocks until the scene has become ready.
+******************************************************************************/
+bool DataSet::waitUntilSceneIsReady(const QString& message, AbstractProgressDisplay* progressDisplay)
+{
+	// Perform a first quick check if scene is already ready.
+	if(isSceneReady(animationSettings()->time()))
+		return true;
+
+	// If not ready yet, create a future.
+	std::shared_ptr<FutureInterface<void>> future = std::make_shared<FutureInterface<void>>();
+	future->reportStarted();
+	future->setProgressText(message);
+
+	// Send signal when scene becomes ready.
+	runWhenSceneIsReady([future]() {
+		future->reportFinished();
+	});
+
+	// Wait until future is set.
+	return dataset()->container()->taskManager().waitForTask(future, progressDisplay);
+}
+
+/******************************************************************************
 * Calls the given slot as soon as the geometry pipelines of all scene nodes has been
 * completely evaluated.
 ******************************************************************************/
 void DataSet::runWhenSceneIsReady(const std::function<void()>& fn)
 {
-	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSet::runWhenSceneIsReady", "This function may only be called from the main thread.");
+	OVITO_ASSERT_MSG(!QCoreApplication::instance() || QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSet::runWhenSceneIsReady", "This function may only be called from the main thread.");
 	OVITO_CHECK_OBJECT_POINTER(sceneRoot());
 
 	TimePoint time = animationSettings()->time();
@@ -250,7 +273,12 @@ void DataSet::notifySceneReadyListeners()
 		auto oldListenerList = _sceneReadyListeners;
 		_sceneReadyListeners.clear();
 		for(const auto& listener : oldListenerList) {
-			listener();
+			try {
+				listener();
+			}
+			catch(...) {
+				qWarning() << "Exception swallowed in DataSet::notifySceneReadyListeners()";
+			}
 		}
 	}
 }
@@ -447,20 +475,6 @@ bool DataSet::renderFrame(TimePoint renderTime, int frameNumber, RenderSettings*
 	}
 
 	return true;
-}
-
-/******************************************************************************
-* This function blocks until the scene has become ready.
-******************************************************************************/
-bool DataSet::waitUntilSceneIsReady(const QString& message, AbstractProgressDisplay* progressDisplay)
-{
-	std::atomic_flag keepWaiting;
-	keepWaiting.test_and_set();
-	runWhenSceneIsReady( [&keepWaiting]() { keepWaiting.clear(); } );
-
-	return container()->waitUntil([&keepWaiting]() {
-		return !keepWaiting.test_and_set();
-	}, message, progressDisplay);
 }
 
 /******************************************************************************

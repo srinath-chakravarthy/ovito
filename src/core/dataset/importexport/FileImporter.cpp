@@ -50,6 +50,7 @@ OORef<FileImporter> FileImporter::autodetectFileFormat(DataSet* dataset, const Q
 
 	try {
 		DataSetContainer* container = dataset->container();
+		OVITO_ASSERT(container != nullptr);
 
 		// Resolve filename if it contains a wildcard.
 		Future<QVector<FileSourceImporter::Frame>> framesFuture = FileSourceImporter::findWildcardMatches(url, container);
