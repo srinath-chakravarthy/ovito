@@ -19,7 +19,7 @@
 #
 ###############################################################################
 
-SET(Python_ADDITIONAL_VERSIONS "3.4" "3.5" "3.6")
+SET(Python_ADDITIONAL_VERSIONS 3.4 3.5 3.6 3.7)
 FIND_PACKAGE(PythonLibs REQUIRED)
 
 IF(MSVC)

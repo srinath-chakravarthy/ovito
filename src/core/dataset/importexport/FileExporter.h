@@ -68,11 +68,10 @@ public:
 	virtual void setOutputFilename(const QString& filename);
 	
 	/// \brief Exports the scene objects to the output file(s).
-	/// \param progressDisplay Optional callback object which is used by the function to report progress.
 	/// \return \c true if the output file has been successfully written;
 	///         \c false if the export operation has been canceled by the user.
 	/// \throws Util::Exception if the export operation has failed due to an error.
-	virtual bool exportNodes(AbstractProgressDisplay* progressDisplay);
+	virtual bool exportNodes(TaskManager* taskManager);
 
 protected:
 
@@ -86,7 +85,7 @@ protected:
 	virtual void closeOutputFile(bool exportCompleted) = 0;
 
 	/// \brief Exports a single animation frame to the current output file.
-	virtual bool exportFrame(int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay);
+	virtual bool exportFrame(int frameNumber, TimePoint time, const QString& filePath, TaskManager* taskManager);
 
 private:
 

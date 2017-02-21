@@ -175,7 +175,7 @@ void ScriptEngine::initializeEmbeddedInterpreter()
 #elif defined(Q_OS_MAC)
 		QString pythonModulePath = prefixDir.absolutePath() + QStringLiteral("/../Resources/python");
 #else
-		QString pythonModulePath = prefixDir.absolutePath() + QStringLiteral("/lib/ovito/plugins/python");
+		QString pythonModulePath = prefixDir.absolutePath() + QStringLiteral("/../lib/ovito/plugins/python");
 #endif
 
 		// Prepend directory containing OVITO's Python source files to sys.path.

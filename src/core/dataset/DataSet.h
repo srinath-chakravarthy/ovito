@@ -26,6 +26,7 @@
 #include <core/reference/RefTarget.h>
 #include <core/animation/TimeInterval.h>
 #include <core/utilities/units/UnitsManager.h>
+#include <core/utilities/concurrent/Future.h>
 #include "UndoStack.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem)
@@ -117,12 +118,9 @@ public:
 	///        completely evaluated.
 	void runWhenSceneIsReady(const std::function<void()>& fn);
 
-	/// \brief This function blocks until the scene has become ready.
-	/// \param message The text to be shown to the user while waiting.
-	/// \param progressDisplay The progress display/dialog to be use to show the message.
-	///                       If NULL, the function will show its own progress dialog box.
-	/// \return true on success; false if the operation has been canceled by the user.
-	bool waitUntilSceneIsReady(const QString& message, AbstractProgressDisplay* progressDisplay = nullptr);
+	/// \brief This function returns a future that is triggered once all data pipelines in the scene become ready.
+	/// \param message An optional messge text to be shown to the user while waiting.
+	Future<void> makeSceneReady(const QString& message = QString());
 
 	/// \brief Saves the dataset to the given file.
 	/// \throw Exception on error.

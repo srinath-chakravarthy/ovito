@@ -222,24 +222,23 @@ bool DataSet::isSceneReady(TimePoint time) const
 /******************************************************************************
 * This function blocks until the scene has become ready.
 ******************************************************************************/
-bool DataSet::waitUntilSceneIsReady(const QString& message, AbstractProgressDisplay* progressDisplay)
+Future<void> DataSet::makeSceneReady(const QString& message)
 {
 	// Perform a first quick check if scene is already ready.
 	if(isSceneReady(animationSettings()->time()))
-		return true;
+		return Future<void>::createImmediate(message);
 
 	// If not ready yet, create a future.
-	std::shared_ptr<FutureInterface<void>> future = std::make_shared<FutureInterface<void>>();
-	future->reportStarted();
-	future->setProgressText(message);
+	std::shared_ptr<FutureInterface<void>> futureInterface = std::make_shared<FutureInterface<void>>();
+	futureInterface->reportStarted();
+	futureInterface->setProgressText(message);
 
 	// Send signal when scene becomes ready.
-	runWhenSceneIsReady([future]() {
-		future->reportFinished();
+	runWhenSceneIsReady([futureInterface]() {
+		futureInterface->reportFinished();
 	});
 
-	// Wait until future is set.
-	return dataset()->container()->taskManager().waitForTask(future, progressDisplay);
+	return Future<void>(futureInterface);
 }
 
 /******************************************************************************
@@ -287,7 +286,7 @@ void DataSet::notifySceneReadyListeners()
 * This is the high-level rendering function, which invokes the renderer to generate one or more
 * output images of the scene. All rendering parameters are specified in the RenderSettings object.
 ******************************************************************************/
-bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuffer* frameBuffer, AbstractProgressDisplay* progressDisplay)
+bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuffer* frameBuffer, TaskManager* taskManager)
 {
 	OVITO_CHECK_OBJECT_POINTER(settings);
 	OVITO_CHECK_OBJECT_POINTER(viewport);
@@ -400,7 +399,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuf
 * Renders a single frame and saves the output file.
 ******************************************************************************/
 bool DataSet::renderFrame(TimePoint renderTime, int frameNumber, RenderSettings* settings, SceneRenderer* renderer, Viewport* viewport,
-		FrameBuffer* frameBuffer, VideoEncoder* videoEncoder, AbstractProgressDisplay* progressDisplay)
+		FrameBuffer* frameBuffer, VideoEncoder* videoEncoder, TaskManager* taskManager)
 {
 	// Determine output filename for this frame.
 	QString imageFilename;
@@ -424,7 +423,8 @@ bool DataSet::renderFrame(TimePoint renderTime, int frameNumber, RenderSettings*
 	animationSettings()->setTime(renderTime);
 
 	// Wait until the scene is ready.
-	if(!waitUntilSceneIsReady(tr("Preparing frame %1").arg(frameNumber), progressDisplay))
+	Future<void> sceneReadyFuture = makeSceneReady(tr("Preparing frame %1").arg(frameNumber));
+	if(!taskManager->waitForTask(sceneReadyFuture))
 		return false;
 
 	if(progressDisplay)

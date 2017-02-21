@@ -116,8 +116,29 @@ public:
 template<>
 class Future<void> : public FutureBase {
 public:
+	typedef FutureInterface<void> Interface;
+
 	Future() {}
-	explicit Future(const std::shared_ptr<FutureInterface<void>>& p) : FutureBase(p) {}
+	explicit Future(const std::shared_ptr<Interface>& p) : FutureBase(p) {}
+
+	/// Create a Future that is already complete.
+	static Future createImmediate(const QString& text = QString()) {
+		auto iface = std::make_shared<Interface>();
+		iface->reportStarted();
+		if(text.isEmpty() == false)
+			iface->setProgressText(text);
+		iface->reportFinished();
+		return Future(iface);
+	}
+
+	/// Create a Future without results that is in the canceled state.
+	static Future createCanceled() {
+		auto iface = std::make_shared<Interface>();
+		iface->reportStarted();
+		iface->cancel();
+		iface->reportFinished();
+		return Future(iface);
+	}
 
 	void result() const {
 		getinterface()->waitForResult();

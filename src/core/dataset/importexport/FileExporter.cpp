@@ -196,13 +196,14 @@ bool FileExporter::exportNodes(AbstractProgressDisplay* progressDisplay)
 /******************************************************************************
  * Exports a single animation frame to the current output file.
  *****************************************************************************/
-bool FileExporter::exportFrame(int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay)
+bool FileExporter::exportFrame(int frameNumber, TimePoint time, const QString& filePath, TaskManager* taskManager)
 {
 	// Jump to animation time.
 	dataset()->animationSettings()->setTime(time);
 
-	// Wait until the scene is ready.
-	if(!dataset()->waitUntilSceneIsReady(tr("Preparing frame %1 for export...").arg(frameNumber), progressDisplay))
+	// Wait until the whole scene is ready.
+	Future<void> sceneReadyFuture = makeSceneReady(tr("Preparing frame %1 for export").arg(frameNumber));
+	if(!taskManager->waitForTask(sceneReadyFuture))
 		return false;
 
 	// Also make sure nodes to be exported are ready, in case they are not part of the scene.
