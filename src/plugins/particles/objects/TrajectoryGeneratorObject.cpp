@@ -25,7 +25,8 @@
 #include <core/app/Application.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/viewport/ViewportConfiguration.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/Task.h>
+#include <core/utilities/concurrent/TaskManager.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include "TrajectoryGeneratorObject.h"
@@ -72,21 +73,23 @@ TrajectoryGeneratorObject::TrajectoryGeneratorObject(DataSet* dataset) : Traject
 /******************************************************************************
 * Updates the stored trajectories from the source particle object.
 ******************************************************************************/
-bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* progressDisplay)
+bool TrajectoryGeneratorObject::generateTrajectories(TaskManager& taskManager)
 {
 	// Suspend viewports while loading simulation frames.
 	ViewportSuspender noVPUpdates(this);
+
+	SynchronousTask trajectoryTask(taskManager);
 
 	TimePoint currentTime = dataset()->animationSettings()->time();
 
 	// Get input particles.
 	if(!source())
 		throwException(tr("No input particle data object is selected from which trajectory lines can be generated."));
-
-	if(!source()->waitUntilReady(currentTime, tr("Waiting for input particles to become ready."), progressDisplay))
+	Future<PipelineFlowState> stateFuture = source()->evalPipelineAsync(currentTime);
+	if(!taskManager.waitForTask(stateFuture))
 		return false;
 
-	const PipelineFlowState& state = source()->evalPipeline(currentTime);
+	const PipelineFlowState& state = stateFuture.result();
 	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
 	ParticlePropertyObject* selectionProperty = ParticlePropertyObject::findInState(state, ParticleProperty::SelectionProperty);
 	ParticlePropertyObject* identifierProperty = ParticlePropertyObject::findInState(state, ParticleProperty::IdentifierProperty);
@@ -141,18 +144,20 @@ bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* pr
 	for(TimePoint time = interval.start(); time <= interval.end(); time += everyNthFrame() * dataset()->animationSettings()->ticksPerFrame()) {
 		sampleTimes.push_back(time);
 	}
-	if(progressDisplay) {
-		progressDisplay->setMaximum(sampleTimes.size());
-		progressDisplay->setValue(0);
-	}
+	trajectoryTask.setMaximum(sampleTimes.size());
+	trajectoryTask.setValue(0);
 
 	// Sample particle positions to generate trajectory points.
 	QVector<Point3> points;
 	points.reserve(particleCount * sampleTimes.size());
 	for(TimePoint time : sampleTimes) {
-		if(!source()->waitUntilReady(time, tr("Loading frame %1.").arg(dataset()->animationSettings()->timeToFrame(time)), progressDisplay))
+		trajectoryTask.setStatusText(tr("Loading frame %1.").arg(dataset()->animationSettings()->timeToFrame(time)));
+
+		Future<PipelineFlowState> stateFuture = source()->evalPipelineAsync(time);
+		if(!taskManager.waitForTask(stateFuture))
 			return false;
-		const PipelineFlowState& state = source()->evalPipeline(time);
+	
+		const PipelineFlowState& state = stateFuture.result();
 		ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
 		if(!posProperty)
 			throwException(tr("Input particle set is empty at frame %1.").arg(dataset()->animationSettings()->timeToFrame(time)));
@@ -202,20 +207,18 @@ bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* pr
 			}
 		}
 
-		if(progressDisplay) {
-			progressDisplay->setValue(progressDisplay->value() + 1);
-			if(progressDisplay->wasCanceled()) return false;
-		}
+		trajectoryTask.setValue(trajectoryTask.value() + 1);
+		if(trajectoryTask.wasCanceled()) 
+			return false;
 	}
 
 	// Store generated trajectory lines.
 	setTrajectories(particleCount, points, sampleTimes);
 
 	// Jump back to original animation time.
-	if(!source()->waitUntilReady(currentTime, tr("Going back to original frame."), progressDisplay))
-		return false;
+	source()->evalPipeline(currentTime);
 
-	return true;
+	return !trajectoryTask.wasCanceled();
 }
 
 }	// End of namespace

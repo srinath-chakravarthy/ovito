@@ -41,7 +41,7 @@ public:
 	TimeInterval customInterval() const { return TimeInterval(_customIntervalStart, _customIntervalEnd); }
 
 	/// Updates the stored trajectories from the source particle object.
-	bool generateTrajectories(AbstractProgressDisplay* progressDisplay = nullptr);
+	bool generateTrajectories(TaskManager& taskManager);
 
 private:
 

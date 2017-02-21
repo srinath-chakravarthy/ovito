@@ -24,6 +24,7 @@
 
 #include <core/Core.h>
 #include <core/scene/objects/DataObject.h>
+#include <core/utilities/concurrent/Future.h>
 #include "ModifierApplication.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
@@ -40,14 +41,35 @@ public:
 	Q_INVOKABLE PipelineObject(DataSet* dataset);
 
 	/// \brief Asks the object for the result of the geometry pipeline at the given time
-	///        up to a given point in the modifier stack.
+	///        up to a given point in the modifier stack. The result may be incomplete (i.e. status pending)
+	///        if the results are not immediately available.
 	/// \param time The animation at which the geometry pipeline should be evaluated.
 	/// \param upToHere If \a upToHere is \c NULL then the complete modifier stack will be evaluated.
 	///                 Otherwise only the modifiers in the pipeline before the given point will be applied to the
 	///                 input object. \a upToHere must be one of the application objects returned by modifierApplications().
 	/// \param including Specifies whether the last modifier given by \a upToHere will also be applied to the input object.
 	/// \return The result object.
-	PipelineFlowState evaluatePipeline(TimePoint time, ModifierApplication* upToHere, bool including);
+	PipelineFlowState evaluatePipeline(TimePoint time, ModifierApplication* upToHere, bool including) {
+		// Determine the position in the pipeline up to which it should be evaluated.
+		int upToHereIndex;
+		if(upToHere != nullptr) {
+			upToHereIndex = modifierApplications().indexOf(upToHere);
+			OVITO_ASSERT(upToHereIndex != -1);
+			if(including) upToHereIndex++;
+		}
+		else upToHereIndex = modifierApplications().size();
+		return evaluatePipeline(time, upToHereIndex);
+	}
+
+	/// \brief Asks the object for the result of the geometry pipeline at the given time
+	///        up to a given point in the modifier stack. 
+	/// \param time The animation at which the geometry pipeline should be evaluated.
+	/// \param upToHere If \a upToHere is \c NULL then the complete modifier stack will be evaluated.
+	///                 Otherwise only the modifiers in the pipeline before the given point will be applied to the
+	///                 input object. \a upToHere must be one of the application objects returned by modifierApplications().
+	/// \param including Specifies whether the last modifier given by \a upToHere will also be applied to the input object.
+	/// \return The future result object.
+	Future<PipelineFlowState> evaluatePipelineAsync(TimePoint time, ModifierApplication* upToHere, bool including);
 
 	/// \brief Inserts a modifier into the data flow pipeline.
 	/// \param modifier The modifier to be inserted.
@@ -80,6 +102,11 @@ public:
 		return evaluatePipeline(time, nullptr, true);
 	}
 
+	/// Asks the object for the result of the geometry pipeline at the given time.
+	virtual Future<PipelineFlowState> evaluateAsync(TimePoint time) override {
+		return evaluatePipelineAsync(time, nullptr, true);
+	}
+
 protected:
 
 	/// This method is called when a reference target changes.
@@ -100,6 +127,14 @@ private:
 	/// Notifies all modifiers starting at the given index that their input has changed.
 	void modifierChanged(int changedIndex);
 
+	/// Asks the object for the result of the geometry pipeline at the given time
+	/// up to a given point in the modifier stack. The result may be incomplete (i.e. status pending)
+	/// if the results are not immediately available.
+	PipelineFlowState evaluatePipeline(TimePoint time, int upToHereIndex);
+
+	/// Checks if the data pipeline evaluation is completed.
+	void serveEvaluationRequests();
+
 private:
 
 	/// The object providing the input data that is processed by the modifiers.
@@ -118,6 +153,9 @@ private:
 	/// Indicates which pipeline stage has been stored in the cache.
 	/// If the cache is empty, then this is -1.
 	int _cachedIndex;
+
+	/// List active asynchronous pipeline evaluation requests.
+	std::vector<std::tuple<TimePoint, int, std::shared_ptr<FutureInterface<PipelineFlowState>>>> _evaluationRequests;
 
 	Q_OBJECT
 	OVITO_OBJECT

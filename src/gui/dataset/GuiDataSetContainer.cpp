@@ -31,9 +31,7 @@
 #include <core/utilities/io/ObjectSaveStream.h>
 #include <core/utilities/io/ObjectLoadStream.h>
 #include <core/utilities/io/FileManager.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
 #include <gui/mainwin/MainWindow.h>
-#include <gui/utilities/concurrent/ProgressDialogAdapter.h>
 #include <gui/dataset/importexport/FileImporterEditor.h>
 #include "GuiDataSetContainer.h"
 
@@ -311,6 +309,7 @@ bool GuiDataSetContainer::importFile(const QUrl& url, const OvitoObjectType* imp
 	return importer->importFile(url, importMode, true);
 }
 
+#if 0
 /******************************************************************************
 * This function blocks execution until some operation has been completed.
 ******************************************************************************/
@@ -384,6 +383,7 @@ bool GuiDataSetContainer::waitUntil(const std::function<bool()>& callback, const
 		}
 	}
 }
+#endif
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

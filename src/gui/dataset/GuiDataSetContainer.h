@@ -80,17 +80,6 @@ public:
 	/// If yes, then the dataset is saved by calling fileSave().
 	bool askForSaveChanges();
 
-	/// \brief This function blocks execution until some operation has been completed.
-	///        The function displays a progress dialog to block access to the application main window.
-	///        The dialog allows the user to cancel the operation.
-	/// \param callback This callback function will be polled to check whether the operation has finished.
-	///                 The callback function should return true to indicate that the operation has finished.
-	/// \param message The text to be shown to the user while waiting.
-	/// \param progressDisplay The progress display/dialog to be used for showing the message.
-	///                       If NULL, the function will create and show its own progress dialog box.
-	/// \return true on success; false if the operation has been canceled by the user.
-	virtual bool waitUntil(const std::function<bool()>& callback, const QString& message, AbstractProgressDisplay* progressDisplay = nullptr) override;
-
 private:
 
 	/// The window this dataset container is linked to (may be NULL).

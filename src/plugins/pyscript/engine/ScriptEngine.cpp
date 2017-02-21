@@ -23,6 +23,7 @@
 #include <plugins/pyscript/binding/PythonBinding.h>
 #include <core/plugins/PluginManager.h>
 #include <core/app/Application.h>
+#include <core/dataset/DataSetContainer.h>
 #include "ScriptEngine.h"
 
 namespace PyScript {
@@ -38,9 +39,15 @@ PythonPluginRegistration* PythonPluginRegistration::linkedlist = nullptr;
 ******************************************************************************/
 void ScriptEngine::setActiveDataset(DataSet* dataset)
 {
+	OVITO_ASSERT(dataset);
+	OVITO_ASSERT(dataset->container());
+
 	// Add an attribute to the ovito module that provides access to the active dataset.
 	py::module ovito_module = py::module::import("ovito");
 	py::setattr(ovito_module, "dataset", py::cast(dataset, py::return_value_policy::reference));
+
+	// Add an attribute to the ovito module that provides access to the global task manager.
+	py::setattr(ovito_module, "task_manager", py::cast(&dataset->container()->taskManager(), py::return_value_policy::reference));
 }
 
 /******************************************************************************
@@ -54,10 +61,22 @@ DataSet* ScriptEngine::activeDataset()
 }
 
 /******************************************************************************
+* Returns the task manager that is currently active in the Python interpreter.
+******************************************************************************/
+TaskManager& ScriptEngine::activeTaskManager()
+{
+	// Read the ovito module's attribute that provides access to the active dataset.
+	py::module ovito_module = py::module::import("ovito");
+	TaskManager* taskManager = py::cast<TaskManager*>(py::getattr(ovito_module, "task_manager", py::none()));
+	if(!taskManager) throw Exception(tr("Invalid OVITO context state: There is no active task manager. This should not happen. Please contact the developer."));
+	return *taskManager;
+}
+
+/******************************************************************************
 * Initializes the scripting engine and sets up the environment.
 ******************************************************************************/
-ScriptEngine::ScriptEngine(DataSet* dataset, bool privateContext, QObject* parent)
-	: QObject(parent), _dataset(dataset)
+ScriptEngine::ScriptEngine(DataSet* dataset, TaskManager& taskManager, bool privateContext, QObject* parent)
+	: QObject(parent), _dataset(dataset), _taskManager(&taskManager)
 {
 	try {
 		// Initialize our embedded Python interpreter if it isn't running already.
@@ -210,11 +229,10 @@ void ScriptEngine::initializeEmbeddedInterpreter()
 int ScriptEngine::executeCommands(const QString& commands, const QStringList& scriptArguments)
 {
 	if(QCoreApplication::instance() && QThread::currentThread() != QCoreApplication::instance()->thread())
-		throw Exception(tr("Can run Python scripts only from the main thread."));
+		throw Exception(tr("Can run Python scripts only from the main thread."), dataset());
 
-	// Remember the script engine that was active so we can restore it later.
-	ScriptEngine* previousEngine = _activeEngine;
-	_activeEngine = this;
+	// Activate this engine.
+	ActiveScriptEngineSetter engineSetter(this);
 
 	try {
 		// Pass command line parameters to the script.
@@ -229,23 +247,19 @@ int ScriptEngine::executeCommands(const QString& commands, const QStringList& sc
 		if(!result) throw py::error_already_set();
 		Py_XDECREF(result);
 
-		_activeEngine = previousEngine;
 		return 0;
 	}
 	catch(py::error_already_set& ex) {
-		return handlePythonException(ex, previousEngine);
+		return handlePythonException(ex);
 	}
 	catch(Exception& ex) {
-	    _activeEngine = previousEngine;
 	    ex.setContext(dataset());
 		throw;
 	}
 	catch(const std::exception& ex) {
-	    _activeEngine = previousEngine;
 		throw Exception(tr("Script execution error: %1").arg(ex.what()), dataset());
 	}
 	catch(...) {
-	    _activeEngine = previousEngine;
 		throw Exception(tr("Unhandled exception thrown by Python interpreter."), dataset());
 	}
 }
@@ -257,30 +271,25 @@ int ScriptEngine::executeCommands(const QString& commands, const QStringList& sc
 void ScriptEngine::execute(const std::function<void()>& func)
 {
 	if(QCoreApplication::instance() && QThread::currentThread() != QCoreApplication::instance()->thread())
-		throw Exception(tr("Can run Python scripts only from the main thread."));
+		throw Exception(tr("Can run Python scripts only from the main thread."), dataset());
 
-	// Remember the script engine that was active so we can restore it later.
-	ScriptEngine* previousEngine = _activeEngine;
-	_activeEngine = this;
+	// Activate this engine.
+	ActiveScriptEngineSetter engineSetter(this);
 
 	try {
 		func();
-	    _activeEngine = previousEngine;
 	}
 	catch(py::error_already_set& ex) {
-		handlePythonException(ex, previousEngine);
+		handlePythonException(ex);
 	}
 	catch(Exception& ex) {
-	    _activeEngine = previousEngine;
 	    ex.setContext(dataset());
 		throw;
 	}
 	catch(const std::exception& ex) {
-	    _activeEngine = previousEngine;
 		throw Exception(tr("Script execution error: %1").arg(ex.what()), dataset());
 	}
 	catch(...) {
-	    _activeEngine = previousEngine;
 		throw Exception(tr("Unhandled exception thrown by Python interpreter."), dataset());
 	}
 }
@@ -302,12 +311,11 @@ py::object ScriptEngine::callObject(const py::object& callable, const py::tuple&
 ******************************************************************************/
 int ScriptEngine::executeFile(const QString& filename, const QStringList& scriptArguments)
 {
-	if(QCoreApplication::instance() && QThread::currentThread() != QCoreApplication::instance()->thread())
-		throw Exception(tr("Can run Python scripts only from the main thread."));
+	if(QThread::currentThread() != QCoreApplication::instance()->thread())
+		throw Exception(tr("Can run Python scripts only from the main thread."), dataset());
 
-	// Remember the script engine that was active so we can restore it later.
-	ScriptEngine* previousEngine = _activeEngine;
-	_activeEngine = this;
+	// Activate this engine.
+	ActiveScriptEngineSetter engineSetter(this);
 
 	try {
 		// Pass command line parameters to the script.
@@ -321,23 +329,19 @@ int ScriptEngine::executeFile(const QString& filename, const QStringList& script
 		_mainNamespace["__file__"] = nativeFilename;
 		py::eval_file(nativeFilename, _mainNamespace, _mainNamespace);
 
-	    _activeEngine = previousEngine;
 	    return 0;
 	}
 	catch(py::error_already_set& ex) {
-		return handlePythonException(ex, previousEngine, filename);
+		return handlePythonException(ex, filename);
 	}
 	catch(Exception& ex) {
-	    _activeEngine = previousEngine;
 	    ex.setContext(dataset());
 		throw;
 	}
 	catch(const std::exception& ex) {
-	    _activeEngine = previousEngine;
 		throw Exception(tr("Script execution error: %1").arg(ex.what()), dataset());
 	}
 	catch(...) {
-	    _activeEngine = previousEngine;
 		throw Exception(tr("Unhandled exception thrown by Python interpreter."), dataset());
 	}
 }
@@ -345,13 +349,12 @@ int ScriptEngine::executeFile(const QString& filename, const QStringList& script
 /******************************************************************************
 * Handles an exception raised by the Python side.
 ******************************************************************************/
-int ScriptEngine::handlePythonException(py::error_already_set& ex, ScriptEngine* previousEngine, const QString& filename)
+int ScriptEngine::handlePythonException(py::error_already_set& ex, const QString& filename)
 {
 	ex.restore();
 
 	// Handle calls to sys.exit()
 	if(PyErr_ExceptionMatches(PyExc_SystemExit)) {
-		_activeEngine = previousEngine;
 		return handleSystemExit();
 	}
 
@@ -397,8 +400,6 @@ int ScriptEngine::handlePythonException(py::error_already_set& ex, ScriptEngine*
 		// Print error message to the console.
 		PyErr_PrintEx(0);
 	}
-	// Deactivate script engine.
-	_activeEngine = previousEngine;
 
 	// Raise C++ exception.
 	throw exception;

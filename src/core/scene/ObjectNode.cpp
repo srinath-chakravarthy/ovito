@@ -118,6 +118,31 @@ const PipelineFlowState& ObjectNode::evalPipeline(TimePoint time)
 }
 
 /******************************************************************************
+* Asks the object for the result of the geometry pipeline at the given time.
+******************************************************************************/
+Future<PipelineFlowState> ObjectNode::evalPipelineAsync(TimePoint time)
+{
+	// Check if there is already an active request pending for the same animation time.
+	for(const auto& req : _evaluationRequests) {
+		if(req.first == time)
+			return Future<PipelineFlowState>(req.second);
+	}
+
+	// Check if we can directly satisfy the request.
+	if(_evaluationRequests.empty()) {
+		const PipelineFlowState& state = evalPipeline(time);
+		if(state.status().type() != PipelineStatus::Pending)
+			return Future<PipelineFlowState>::createImmediate(state);
+	}
+
+	// Create a new record for this evaulation request.
+	auto futureInterface = std::make_shared<FutureInterface<PipelineFlowState>>();
+	_evaluationRequests.emplace_back(time, futureInterface);
+	futureInterface->reportStarted();
+	return Future<PipelineFlowState>(futureInterface);
+}
+
+/******************************************************************************
 * Renders the node's data.
 ******************************************************************************/
 void ObjectNode::render(TimePoint time, SceneRenderer* renderer)
@@ -150,7 +175,7 @@ bool ObjectNode::referenceEvent(RefTarget* source, ReferenceEvent* event)
 			notifyDependents(ReferenceEvent::TitleChanged);
 		}
 		// If input object has changed, the pipeline might have become ready.
-		signalIfPipelineIsReady();
+		serveEvaluationRequests();
 	}
 	else if(_displayObjects.contains(source)) {
 		if(event->type() == ReferenceEvent::TargetChanged || event->type() == ReferenceEvent::PendingStateChanged) {
@@ -174,7 +199,7 @@ void ObjectNode::referenceReplaced(const PropertyFieldDescriptor& field, RefTarg
 		// When the data object is being replaced, the pending state of the node might change.
 		// Even though we don't know for sure if the state has really changed, we send a notification event here.
 		notifyDependents(ReferenceEvent::PendingStateChanged);
-		signalIfPipelineIsReady();
+		serveEvaluationRequests();
 	}
 
 	SceneNode::referenceReplaced(field, oldTarget, newTarget);
@@ -296,39 +321,22 @@ void ObjectNode::setSourceObject(DataObject* sourceObject)
 }
 
 /******************************************************************************
-* This function blocks execution until the node's modification
-* pipeline has been fully evaluated.
+* Checks if the data pipeline evaluation is completed.
 ******************************************************************************/
-bool ObjectNode::waitUntilReady(TimePoint time, const QString& message, AbstractProgressDisplay* progressDisplay)
+void ObjectNode::serveEvaluationRequests()
 {
-	OVITO_ASSERT_MSG(!QCoreApplication::instance() || QThread::currentThread() == QCoreApplication::instance()->thread(), "ObjectNode::waitUntilReady", "Function can only be called from the main thread.");
-
-	// Do a first quick check if pipeline is already up to date.
-	if(evalPipeline(time).status().type() != PipelineStatus::Pending) 
-		return true;
-
-	// If not ready yet, create a future.
-	if(!_waitUntilReadySignal) {
-		_waitUntilReadySignal = std::make_shared<FutureInterface<void>>();
-		_waitUntilReadySignal->reportStarted();
-	}
-	_waitUntilReadySignal->setProgressText(message);
-	_waitUntilReadyTime = time;
-
-	// Wait until future is ready.
-	return dataset()->container()->taskManager().waitForTask(_waitUntilReadySignal, progressDisplay);
-}
-
-/******************************************************************************
-* Checks if the data pipeline is ready (i.e. result status is not pending).
-* If so, it signals this to the waitUntilReady() method, which will return.
-******************************************************************************/
-void ObjectNode::signalIfPipelineIsReady()
-{
-	if(_waitUntilReadySignal) {
-		if(evalPipeline(_waitUntilReadyTime).status().type() != PipelineStatus::Pending) {
-			_waitUntilReadySignal->reportFinished();
-			_waitUntilReadySignal.reset();
+	while(!_evaluationRequests.empty()) {
+		// Check if we can now satisfy the oldest request.
+		const PipelineFlowState& state = evalPipeline(_evaluationRequests.front().first);
+		if(state.status().type() != PipelineStatus::Pending) {
+			std::shared_ptr<FutureInterface<PipelineFlowState>> future = std::move(_evaluationRequests.front().second); 
+			_evaluationRequests.erase(_evaluationRequests.begin());
+			future->setResult(state);
+			future->reportFinished();
+		}
+		else {
+			// Check back again later.
+			break;
 		}
 	}
 }

@@ -22,7 +22,7 @@
 #include <core/Core.h>
 #include <core/plugins/PluginManager.h>
 #include <core/utilities/io/FileManager.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/Task.h>
 #include <core/dataset/DataSet.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/scene/ObjectNode.h>
@@ -104,7 +104,7 @@ void FileExporter::setOutputFilename(const QString& filename)
 /******************************************************************************
  * Exports the data of the scene nodes to one or more output files.
  *****************************************************************************/
-bool FileExporter::exportNodes(AbstractProgressDisplay* progressDisplay)
+bool FileExporter::exportNodes(TaskManager& taskManager)
 {
 	if(outputFilename().isEmpty())
 		throwException(tr("The output filename not been set for the file exporter."));
@@ -139,7 +139,9 @@ bool FileExporter::exportNodes(AbstractProgressDisplay* progressDisplay)
 			throwException(tr("Cannot write animation frames to separate files. The filename must contain the '*' wildcard character, which gets replaced by the frame number."));
 	}
 
-	if(progressDisplay) progressDisplay->setMaximum(numberOfFrames * 100);
+	SynchronousTask exportTask(taskManager);
+	exportTask.setMaximum(numberOfFrames);
+
 	QDir dir = QFileInfo(outputFilename()).dir();
 	QString filename = outputFilename();
 
@@ -153,8 +155,7 @@ bool FileExporter::exportNodes(AbstractProgressDisplay* progressDisplay)
 
 		// Export animation frames.
 		for(int frameIndex = 0; frameIndex < numberOfFrames; frameIndex++) {
-			if(progressDisplay)
-				progressDisplay->setValue(frameIndex * 100);
+			exportTask.setValue(frameIndex);
 
 			int frameNumber = firstFrameNumber + frameIndex * everyNthFrame();
 
@@ -167,13 +168,15 @@ bool FileExporter::exportNodes(AbstractProgressDisplay* progressDisplay)
 					return false;
 			}
 
-			if(!exportFrame(frameNumber, exportTime, filename, progressDisplay) && progressDisplay)
-				progressDisplay->cancel();
+			exportTask.setStatusText(tr("Exporting frame %1 to file '%2'.").arg(frameNumber).arg(filename));
+
+			if(!exportFrame(frameNumber, exportTime, filename, taskManager))
+				exportTask.cancel();
 
 			if(exportAnimation() && useWildcardFilename())
-				closeOutputFile(!progressDisplay || !progressDisplay->wasCanceled());
+				closeOutputFile(!exportTask.wasCanceled());
 
-			if(progressDisplay && progressDisplay->wasCanceled())
+			if(exportTask.wasCanceled())
 				break;
 
 			// Go to next animation frame.
@@ -187,20 +190,21 @@ bool FileExporter::exportNodes(AbstractProgressDisplay* progressDisplay)
 
 	// Close output file.
 	if(!exportAnimation() || !useWildcardFilename()) {
-		closeOutputFile(!progressDisplay || !progressDisplay->wasCanceled());
+		closeOutputFile(!exportTask.wasCanceled());
 	}
 
-	return !progressDisplay || !progressDisplay->wasCanceled();
+	return !exportTask.wasCanceled();
 }
 
 /******************************************************************************
  * Exports a single animation frame to the current output file.
  *****************************************************************************/
-bool FileExporter::exportFrame(int frameNumber, TimePoint time, const QString& filePath, TaskManager* taskManager)
+bool FileExporter::exportFrame(int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager)
 {
 	// Jump to animation time.
 	dataset()->animationSettings()->setTime(time);
 
+#if 0
 	// Wait until the whole scene is ready.
 	Future<void> sceneReadyFuture = makeSceneReady(tr("Preparing frame %1 for export").arg(frameNumber));
 	if(!taskManager->waitForTask(sceneReadyFuture))
@@ -220,6 +224,9 @@ bool FileExporter::exportFrame(int frameNumber, TimePoint time, const QString& f
 			throw;
 		}
 	}
+#else
+	throwException("File export not implemented yet.");
+#endif
 	
 	return true;
 }

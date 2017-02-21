@@ -26,7 +26,7 @@
 #include <core/dataset/importexport/FileSource.h>
 #include <core/dataset/importexport/AttributeFileExporter.h>
 #include <core/utilities/io/FileManager.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/TaskManager.h>
 #include "PythonBinding.h"
 
 namespace PyScript {

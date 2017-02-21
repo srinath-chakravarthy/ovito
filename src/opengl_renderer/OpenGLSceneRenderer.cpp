@@ -321,7 +321,7 @@ void OpenGLSceneRenderer::endFrame(bool renderSuccessful)
 /******************************************************************************
 * Renders the current animation frame.
 ******************************************************************************/
-bool OpenGLSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress)
+bool OpenGLSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, TaskManager& taskManager)
 {
 	OVITO_ASSERT(_glcontext == QOpenGLContext::currentContext());
 

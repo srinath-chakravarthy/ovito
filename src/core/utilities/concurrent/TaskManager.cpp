@@ -21,7 +21,6 @@
 
 #include <core/Core.h>
 #include <core/utilities/concurrent/TaskManager.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
 
@@ -38,7 +37,13 @@ TaskManager::TaskManager()
 ******************************************************************************/
 void TaskManager::addTaskInternal(std::shared_ptr<FutureInterfaceBase> futureInterface)
 {
-	// Create a task watcher which will generate start/stop notification signals.
+	// Check if task is already registered.
+	for(FutureWatcher* watcher : runningTasks()) {
+		if(watcher->futureInterface() == futureInterface)
+			return;
+	}
+
+	// Create a task watcher, which will generate start/stop notification signals.
 	FutureWatcher* watcher = new FutureWatcher(this);
 	connect(watcher, &FutureWatcher::started, this, &TaskManager::taskStartedInternal);
 	connect(watcher, &FutureWatcher::finished, this, &TaskManager::taskFinishedInternal);
@@ -107,20 +112,17 @@ void TaskManager::waitForAll()
 /******************************************************************************
 * Waits for the given task to finish.
 ******************************************************************************/
-bool TaskManager::waitForTask(const std::shared_ptr<FutureInterfaceBase>& futureInterface, AbstractProgressDisplay* progressDisplay)
+bool TaskManager::waitForTask(const std::shared_ptr<FutureInterfaceBase>& futureInterface)
 {
 	OVITO_ASSERT_MSG(!QCoreApplication::instance() || QThread::currentThread() == QCoreApplication::instance()->thread(), "TaskManager::waitForTask", "Function can only be called from the main thread.");
-
-	// Check if operation has been canceled by the user already.
-	if(progressDisplay && progressDisplay->wasCanceled()) {
-		futureInterface->cancel();
-		return false;
-	}
 
 	// Before entering the local event loop, check if task has already finished.
 	if(futureInterface->isFinished()) {
 		return !futureInterface->isCanceled();
 	}
+
+	// Register the task in cases it hasn't been registered with this TaskManager yet.
+	addTaskInternal(futureInterface); 
 
 	// Start a local event loop and wait for the task to generate the signal.
 	FutureWatcher watcher;
@@ -130,6 +132,47 @@ bool TaskManager::waitForTask(const std::shared_ptr<FutureInterfaceBase>& future
 	eventLoop.exec();
 
 	return !futureInterface->isCanceled();
+}
+
+/******************************************************************************
+* Constructor.
+******************************************************************************/
+SynchronousTask::SynchronousTask(TaskManager& taskManager) : _futureInterface(std::make_shared<FutureInterface<void>>()) 
+{
+	taskManager.registerTask(_futureInterface);
+	_futureInterface->reportStarted();
+}
+
+/******************************************************************************
+* Destructor.
+******************************************************************************/
+SynchronousTask::~SynchronousTask() 
+{
+	_futureInterface->reportFinished();
+}
+
+/******************************************************************************
+* Sets the status text to be displayed.
+******************************************************************************/
+void SynchronousTask::setStatusText(const QString& text)
+{
+	_futureInterface->setProgressText(text);
+
+	// Yield control to the event loop to process user interface events.
+	// This is necessary so that the user can interrupt the running opertion.
+	QCoreApplication::processEvents();
+}
+
+/******************************************************************************
+* Sets the value displayed by the progress bar.
+******************************************************************************/
+void SynchronousTask::setValue(int v) 
+{
+	_futureInterface->setProgressValue(v);
+
+	// Yield control to the event loop to process user interface events.
+	// This is necessary so that the user can interrupt the running opertion.
+	QCoreApplication::processEvents();
 }
 
 OVITO_END_INLINE_NAMESPACE

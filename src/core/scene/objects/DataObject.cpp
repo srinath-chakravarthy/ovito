@@ -51,10 +51,6 @@ void DataObject::notifyDependents(ReferenceEvent& event)
 	if(event.type() == ReferenceEvent::TargetChanged)
 		_revisionNumber++;
 
-	// If the object's pending status has changed, the pipeline might have become ready.
-	if(event.type() == ReferenceEvent::PendingStateChanged || event.type() == ReferenceEvent::TargetChanged)
-		signalIfPipelineIsReady();
-
 	RefTarget::notifyDependents(event);
 }
 
@@ -137,42 +133,6 @@ QSet<ObjectNode*> DataObject::dependentNodes() const
 		}
 	}
 	return nodeList;
-}
-
-/******************************************************************************
-* This function blocks execution until the object is able ready to
-* provide data via its evaluate() function.
-******************************************************************************/
-bool DataObject::waitUntilReady(TimePoint time, const QString& message, AbstractProgressDisplay* progressDisplay)
-{
-	// Do a first quick check if object is already up to date.
-	if(evaluate(time).status().type() != PipelineStatus::Pending) 
-		return true;
-
-	// If not ready yet, create a future.
-	if(!_waitUntilReadySignal) {
-		_waitUntilReadySignal = std::make_shared<FutureInterface<void>>();
-		_waitUntilReadySignal->reportStarted();
-	}
-	_waitUntilReadySignal->setProgressText(message);
-	_waitUntilReadyTime = time;
-
-	// Wait until future is ready.
-	return dataset()->container()->taskManager().waitForTask(_waitUntilReadySignal, progressDisplay);
-}
-
-/******************************************************************************
-* Checks if the data pipeline is ready (i.e. result status is not pending).
-* If so, it signals this to the waitUntilReady() method, which will return.
-******************************************************************************/
-void DataObject::signalIfPipelineIsReady()
-{
-	if(_waitUntilReadySignal) {
-		if(evaluate(_waitUntilReadyTime).status().type() != PipelineStatus::Pending) {
-			_waitUntilReadySignal->reportFinished();
-			_waitUntilReadySignal.reset();
-		}
-	}
 }
 
 OVITO_END_INLINE_NAMESPACE

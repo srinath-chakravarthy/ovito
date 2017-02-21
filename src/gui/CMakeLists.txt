@@ -112,6 +112,7 @@ SET(SourceFiles
 	scene/objects/camera/CameraObjectEditor.cpp
 	scene/objects/geometry/TriMeshDisplayEditor.cpp
 	utilities/io/GuiFileManager.cpp
+	utilities/concurrent/ProgressDialog.cpp
 	animation/controller/TCBInterpolationControllerEditor.cpp
 )
 

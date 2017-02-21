@@ -89,6 +89,17 @@ public:
 		return Future(iface);
 	}
 
+	/// Create a Future with immediate results.
+	static Future createImmediate(R&& result, const QString& text = QString()) {
+		auto iface = std::make_shared<Interface>();
+		iface->reportStarted();
+		if(text.isEmpty() == false)
+			iface->setProgressText(text);
+		iface->setResult(std::move(result));
+		iface->reportFinished();
+		return Future(iface);
+	}
+
 	/// Create a Future with a thrown exception.
 	static Future createFailed(const Exception& ex) {
 		auto iface = std::make_shared<Interface>();

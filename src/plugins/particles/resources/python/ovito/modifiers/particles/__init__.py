@@ -97,5 +97,6 @@ def _FreezePropertyModifier_take_snapshot(self, frame = None):
         time = self.dataset.anim.frameToTime(frame)
     else:
         time = self.dataset.anim.time
-    self._take_snapshot(time, True)
+    if not self._take_snapshot(time, ovito.task_manager, True):
+        raise RuntimeError("Operation has been canceled by the user.")
 ovito.modifiers.FreezePropertyModifier.take_snapshot = _FreezePropertyModifier_take_snapshot

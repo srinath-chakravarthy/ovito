@@ -22,6 +22,7 @@
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/particles/export/FileColumnParticleExporter.h>
 #include <core/animation/AnimationSettings.h>
+#include <gui/utilities/concurrent/ProgressDialog.h>
 #include "FileColumnParticleExporterEditor.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export)
@@ -101,7 +102,10 @@ void FileColumnParticleExporterEditor::onContentsReplaced(Ovito::RefTarget* newE
 
 	for(SceneNode* node : particleExporter->outputData()) {
 		try {
-			const PipelineFlowState& state = particleExporter->getParticleData(node, node->dataset()->animationSettings()->time());
+			ProgressDialog progressDialog(container());
+			PipelineFlowState state;
+			if(!particleExporter->getParticleData(node, node->dataset()->animationSettings()->time(), state, progressDialog.taskManager()))
+				continue;
 			bool hasParticleIdentifiers = false;
 			for(DataObject* o : state.objects()) {
 				ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(o);

@@ -23,7 +23,7 @@
 #include <core/rendering/FrameBuffer.h>
 #include <core/rendering/RenderSettings.h>
 #include <core/scene/ObjectNode.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/Task.h>
 #include "POVRayRenderer.h"
 
 #include <QTemporaryFile>
@@ -322,9 +322,10 @@ void POVRayRenderer::beginFrame(TimePoint time, const ViewProjectionParameters& 
 /******************************************************************************
 * Renders a single animation frame into the given frame buffer.
 ******************************************************************************/
-bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress)
+bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, TaskManager& taskManager)
 {
-	if(progress) progress->setStatusText(tr("Writing scene to temporary POV-Ray file."));
+	SynchronousTask renderTask(taskManager);
+	renderTask.setStatusText(tr("Writing scene to temporary POV-Ray file"));
 
 	// Export Ovito data objects to POV-Ray scene.
 	renderScene();
@@ -341,10 +342,9 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 		_imageFile->close();
 
 		// Start POV-Ray sub-process.
-		if(progress) {
-			progress->setStatusText(tr("Starting external POV-Ray program."));
-			if(progress->wasCanceled()) return false;
-		}
+		renderTask.setStatusText(tr("Starting external POV-Ray program."));
+		if(renderTask.wasCanceled()) 
+			return false;
 
 		// Specify POV-Ray options:
 		QStringList parameters;
@@ -399,16 +399,13 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 		}
 
 		// Wait until POV-Ray has finished rendering.
-		if(progress) {
-			progress->setStatusText(tr("Waiting for external POV-Ray program..."));
-			if(progress->wasCanceled()) return false;
-		}
+		renderTask.setStatusText(tr("Waiting for external POV-Ray program..."));
+		if(renderTask.wasCanceled()) 
+			return false;
 		while(!povrayProcess.waitForFinished(100)) {
-			if(progress) {
-				QCoreApplication::processEvents();
-				if(progress->wasCanceled())
-					return false;
-			}
+			renderTask.setValue(0);
+			if(renderTask.wasCanceled())
+				return false;
 		}
 
 		OVITO_ASSERT(povrayProcess.exitStatus() == QProcess::NormalExit);
@@ -419,10 +416,9 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 			throwException(tr("POV-Ray program returned with error code %1.").arg(povrayProcess.exitCode()));
 
 		// Get rendered image from POV-Ray process.
-		if(progress) {
-			progress->setStatusText(tr("Getting rendered image from POV-Ray."));
-			if(progress->wasCanceled()) return false;
-		}
+		renderTask.setStatusText(tr("Getting rendered image from POV-Ray."));
+		if(renderTask.wasCanceled()) 
+			return false;
 
 		QImage povrayImage;
 		if(!povrayImage.load(_imageFile->fileName(), "PNG")) {
@@ -462,7 +458,7 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 		}		
 	}
 
-	return (!progress || progress->wasCanceled() == false);
+	return !renderTask.wasCanceled();
 }
 
 /******************************************************************************

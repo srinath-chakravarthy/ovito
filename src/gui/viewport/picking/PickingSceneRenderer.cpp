@@ -88,13 +88,13 @@ void PickingSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParame
 /******************************************************************************
 * Renders the current animation frame.
 ******************************************************************************/
-bool PickingSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress)
+bool PickingSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, TaskManager& taskManager)
 {
 	// Clear previous object records.
 	reset();
 
 	// Let the base class do the main rendering work.
-	if(!ViewportSceneRenderer::renderFrame(frameBuffer, stereoTask, progress))
+	if(!ViewportSceneRenderer::renderFrame(frameBuffer, stereoTask, taskManager))
 		return false;
 
 	// Clear OpenGL error state, so we start fresh for the glReadPixels() call below.

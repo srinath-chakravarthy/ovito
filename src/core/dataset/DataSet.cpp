@@ -30,7 +30,6 @@
 #include <core/rendering/RenderSettings.h>
 #include <core/rendering/FrameBuffer.h>
 #include <core/rendering/SceneRenderer.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
 #ifdef OVITO_VIDEO_OUTPUT_SUPPORT
 	#include <core/utilities/io/video/VideoEncoder.h>
 #endif
@@ -286,7 +285,7 @@ void DataSet::notifySceneReadyListeners()
 * This is the high-level rendering function, which invokes the renderer to generate one or more
 * output images of the scene. All rendering parameters are specified in the RenderSettings object.
 ******************************************************************************/
-bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuffer* frameBuffer, TaskManager* taskManager)
+bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuffer* frameBuffer, TaskManager& taskManager)
 {
 	OVITO_CHECK_OBJECT_POINTER(settings);
 	OVITO_CHECK_OBJECT_POINTER(viewport);
@@ -296,7 +295,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuf
 	SceneRenderer* renderer = settings->renderer();
 	if(!renderer) throwException(tr("No rendering engine has been selected."));
 
-	bool wasCanceled = false;
+	SynchronousTask renderTask(taskManager);
 	try {
 
 		// Resize output frame buffer.
@@ -330,8 +329,8 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuf
 				// Render a single frame.
 				TimePoint renderTime = animationSettings()->time();
 				int frameNumber = animationSettings()->timeToFrame(renderTime);
-				if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer, videoEncoder, progressDisplay))
-					wasCanceled = true;
+				if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer, videoEncoder, taskManager))
+					renderTask.cancel();
 			}
 			else if(settings->renderingRangeType() == RenderSettings::ANIMATION_INTERVAL || settings->renderingRangeType() == RenderSettings::CUSTOM_INTERVAL) {
 				// Render an animation interval.
@@ -350,20 +349,18 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuf
 				numberOfFrames = (numberOfFrames + settings->everyNthFrame() - 1) / settings->everyNthFrame();
 				if(numberOfFrames < 1)
 					throwException(tr("Invalid rendering range: Frame %1 to %2").arg(settings->customRangeStart()).arg(settings->customRangeEnd()));
-				if(progressDisplay)
-					progressDisplay->setMaximum(numberOfFrames);
+				renderTask.setMaximum(numberOfFrames);
 
 				// Render frames, one by one.
 				for(int frameIndex = 0; frameIndex < numberOfFrames; frameIndex++) {
-					if(progressDisplay)
-						progressDisplay->setValue(frameIndex);
-
 					int frameNumber = firstFrameNumber + frameIndex * settings->everyNthFrame() + settings->fileNumberBase();
-					if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer, videoEncoder, progressDisplay)) {
-						wasCanceled = true;
-						break;
-					}
-					if(progressDisplay && progressDisplay->wasCanceled())
+
+					renderTask.setValue(frameIndex);
+					renderTask.setStatusText(tr("Rendering animation frame %1 (%2 of %3)").arg(frameNumber).arg(frameIndex+1).arg(numberOfFrames));
+
+					if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer, videoEncoder, taskManager))
+						renderTask.cancel();
+					if(renderTask.wasCanceled())
 						break;
 
 					// Go to next animation frame.
@@ -380,9 +377,6 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuf
 
 		// Shutdown renderer.
 		renderer->endRender();
-
-		if(progressDisplay && progressDisplay->wasCanceled())
-			wasCanceled = true;
 	}
 	catch(Exception& ex) {
 		// Shutdown renderer.
@@ -392,21 +386,21 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuf
 		throw;
 	}
 
-	return !wasCanceled;
+	return !renderTask.wasCanceled();
 }
 
 /******************************************************************************
 * Renders a single frame and saves the output file.
 ******************************************************************************/
 bool DataSet::renderFrame(TimePoint renderTime, int frameNumber, RenderSettings* settings, SceneRenderer* renderer, Viewport* viewport,
-		FrameBuffer* frameBuffer, VideoEncoder* videoEncoder, TaskManager* taskManager)
+		FrameBuffer* frameBuffer, VideoEncoder* videoEncoder, TaskManager& taskManager)
 {
 	// Determine output filename for this frame.
 	QString imageFilename;
 	if(settings->saveToFile() && !videoEncoder) {
 		imageFilename = settings->imageFilename();
 		if(imageFilename.isEmpty())
-			throwException(tr("Cannot save rendered image to file. Output filename has not been specified."));
+			throwException(tr("Cannot save rendered image to file, because no output filename has been specified."));
 
 		if(settings->renderingRangeType() != RenderSettings::CURRENT_FRAME) {
 			// Append frame number to file name if rendering an animation.
@@ -424,11 +418,8 @@ bool DataSet::renderFrame(TimePoint renderTime, int frameNumber, RenderSettings*
 
 	// Wait until the scene is ready.
 	Future<void> sceneReadyFuture = makeSceneReady(tr("Preparing frame %1").arg(frameNumber));
-	if(!taskManager->waitForTask(sceneReadyFuture))
+	if(!taskManager.waitForTask(sceneReadyFuture))
 		return false;
-
-	if(progressDisplay)
-		progressDisplay->setStatusText(tr("Rendering frame %1").arg(frameNumber));
 
 	// Request scene bounding box.
 	Box3 boundingBox = renderer->sceneBoundingBox(renderTime);
@@ -440,7 +431,7 @@ bool DataSet::renderFrame(TimePoint renderTime, int frameNumber, RenderSettings*
 	frameBuffer->clear();
 	try {
 		renderer->beginFrame(renderTime, projParams, viewport);
-		if(!renderer->renderFrame(frameBuffer, SceneRenderer::NonStereoscopic, progressDisplay) || (progressDisplay && progressDisplay->wasCanceled())) {
+		if(!renderer->renderFrame(frameBuffer, SceneRenderer::NonStereoscopic, taskManager)) {
 			renderer->endFrame(false);
 			return false;
 		}

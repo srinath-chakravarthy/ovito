@@ -63,6 +63,45 @@ private:
 	}
 };
 
+class OVITO_CORE_EXPORT SynchronousTask
+{
+public:
+
+	/// Constructor.
+	SynchronousTask(TaskManager& taskManager);
+
+	/// Destructor.
+	~SynchronousTask();
+
+	/// Returns whether the operation has been canceled by the user.
+	bool wasCanceled() const { return _futureInterface->isCanceled(); }
+
+	/// Cancels the operation.
+	void cancel() { _futureInterface->cancel(); }
+
+	/// Sets the status text to be displayed.
+	void setStatusText(const QString& text);
+
+	/// Return the current status text.
+	QString statusText() const { return _futureInterface->progressText(); }
+
+	/// Returns the highest value represented by the progress bar.
+	int maximum() const { return _futureInterface->progressMaximum(); }
+
+	/// Sets the highest value represented by the progress bar.
+	void setMaximum(int max) { _futureInterface->setProgressRange(max); }
+
+	/// Returns the value displayed by the progress bar.
+	int value() const { return _futureInterface->progressValue(); }
+
+	/// Sets the value displayed by the progress bar.
+	void setValue(int v);
+
+private:
+
+	std::shared_ptr<FutureInterface<void>> _futureInterface;
+};
+
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

@@ -28,6 +28,7 @@
 #include <core/scene/SelectionSet.h>
 #include <core/scene/SceneRoot.h>
 #include <core/scene/objects/camera/AbstractCameraObject.h>
+#include <core/dataset/DataSetContainer.h>
 
 /// The default field of view in world units used for orthogonal view types when the scene is empty.
 #define DEFAULT_ORTHOGONAL_FIELD_OF_VIEW		FloatType(200)
@@ -542,8 +543,7 @@ void Viewport::renderInteractive(SceneRenderer* renderer)
 			renderer->setProjParams(projectionParams());
 
 			// Call the viewport renderer to render the scene objects.
-			renderer->renderFrame(nullptr, SceneRenderer::NonStereoscopic, nullptr);
-
+			renderer->renderFrame(nullptr, SceneRenderer::NonStereoscopic, dataset()->container()->taskManager());
 		}
 		else {
 
@@ -568,7 +568,7 @@ void Viewport::renderInteractive(SceneRenderer* renderer)
 			renderer->setProjParams(params);
 
 			// Render image of left eye.
-			renderer->renderFrame(nullptr, SceneRenderer::StereoscopicLeft, nullptr);
+			renderer->renderFrame(nullptr, SceneRenderer::StereoscopicLeft, dataset()->container()->taskManager());
 
 			// Setup project of right eye.
 			left = -c * params.znear / convergence;
@@ -580,7 +580,7 @@ void Viewport::renderInteractive(SceneRenderer* renderer)
 			renderer->setProjParams(params);
 
 			// Render image of right eye.
-			renderer->renderFrame(nullptr, SceneRenderer::StereoscopicRight, nullptr);
+			renderer->renderFrame(nullptr, SceneRenderer::StereoscopicRight, dataset()->container()->taskManager());
 		}
 
 		// Render viewport overlays.

@@ -930,7 +930,7 @@ PYBIND11_PLUGIN(Particles)
 				"\n\n"
 				":Default: ``None``\n")
 		.def("generate", [](TrajectoryGeneratorObject& obj) {
-				return obj.generateTrajectories(ScriptEngine::activeEngine() ? ScriptEngine::activeEngine()->progressDisplay() : nullptr);
+				return obj.generateTrajectories(ScriptEngine::activeTaskManager());
 			},
 			"Generates the trajectory lines by sampling the positions of the particles in the :py:attr:`.source_node` at regular time intervals. "
 			"The trajectory line data is cached by the :py:class:`!TrajectoryLineGenerator`.")

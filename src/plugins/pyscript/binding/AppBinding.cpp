@@ -30,7 +30,7 @@
 #include <core/animation/AnimationSettings.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/rendering/RenderSettings.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/TaskManager.h>
 #include "PythonBinding.h"
 
 namespace PyScript {
@@ -117,17 +117,9 @@ void defineAppSubmodule(py::module parentModule)
 		.def("clone", static_cast<OORef<RefTarget> (CloneHelper::*)(RefTarget*, bool)>(&CloneHelper::cloneObject<RefTarget>))
 	;
 
-	py::class_<AbstractProgressDisplay>(m, "AbstractProgressDisplay")
-		.def_property_readonly("canceled", &AbstractProgressDisplay::wasCanceled)
+	py::class_<TaskManager>(m, "TaskManager")
+		//.def_property_readonly("canceled", &AbstractProgressDisplay::wasCanceled)
 	;
-
-	// Let scripts access the current progress display.
-	m.def("get_progress_display", []() -> AbstractProgressDisplay* {
-		if(ScriptEngine::activeEngine())
-			return ScriptEngine::activeEngine()->progressDisplay();
-		else
-			return nullptr;
-	}, py::return_value_policy::reference);
 }
 
 };

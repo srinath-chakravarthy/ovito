@@ -62,6 +62,7 @@
 #include <plugins/particles/modifier/analysis/voronoi/VoronoiAnalysisModifier.h>
 #include <plugins/particles/modifier/analysis/diamond/IdentifyDiamondModifier.h>
 #include <core/scene/pipeline/ModifierApplication.h>
+#include <core/utilities/concurrent/TaskManager.h>
 #include "PythonBinding.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -340,7 +341,7 @@ void defineModifiersSubmodule(py::module parentModule)
 		.def_property("destination_property", &FreezePropertyModifier::destinationProperty, &FreezePropertyModifier::setDestinationProperty,
 				"The name of the output particle property that should be written to by the modifier. "
 				"It can be one of the :ref:`standard particle properties <particle-types-list>` or a custom particle property. ")
-		.def("_take_snapshot", static_cast<void (FreezePropertyModifier::*)(TimePoint,bool)>(&FreezePropertyModifier::takePropertySnapshot))
+		.def("_take_snapshot", static_cast<bool (FreezePropertyModifier::*)(TimePoint,TaskManager&,bool)>(&FreezePropertyModifier::takePropertySnapshot))
 	;
 
 	ovito_class<ClearSelectionModifier, ParticleModifier>(m,

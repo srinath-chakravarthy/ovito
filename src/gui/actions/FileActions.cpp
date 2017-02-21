@@ -26,7 +26,7 @@
 #include <gui/dialogs/ImportFileDialog.h>
 #include <gui/dialogs/ImportRemoteFileDialog.h>
 #include <gui/dialogs/FileExporterSettingsDialog.h>
-#include <gui/utilities/concurrent/ProgressDialogAdapter.h>
+#include <gui/utilities/concurrent/ProgressDialog.h>
 #include <opengl_renderer/OpenGLSceneRenderer.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/importexport/FileImporter.h>
@@ -355,8 +355,11 @@ void ActionManager::on_FileExport_triggered()
 		exporter->setOutputFilename(exportFile);
 
 		// Wait until the scene is ready.
-		if(!_dataset->waitUntilSceneIsReady(tr("Waiting for running tasks to complete.")))
-			return;
+		{
+			ProgressDialog progressDialog(mainWindow());
+			if(!progressDialog.taskManager().waitForTask(_dataset->makeSceneReady(tr("Waiting for running tasks to complete."))))
+				return;
+		}
 
 		// Choose the scene nodes to be exported.
 		exporter->selectStandardOutputData();
@@ -367,16 +370,10 @@ void ActionManager::on_FileExport_triggered()
 			return;
 
 		// Show progress dialog.
-		QProgressDialog progressDialog(mainWindow());
-		progressDialog.setWindowModality(Qt::WindowModal);
-		progressDialog.setAutoClose(false);
-		progressDialog.setAutoReset(false);
-		progressDialog.setMinimumDuration(0);
-		progressDialog.setValue(0);
-		ProgressDialogAdapter progressDisplay(&progressDialog);
+		ProgressDialog progressDialog(mainWindow());
 
 		// Let the exporter do its work.
-		exporter->exportNodes(&progressDisplay);
+		exporter->exportNodes(progressDialog.taskManager());
 	}
 	catch(const Exception& ex) {
 		ex.showError();

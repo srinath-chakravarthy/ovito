@@ -137,10 +137,10 @@ void StandardSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParam
 /******************************************************************************
 * Renders the current animation frame.
 ******************************************************************************/
-bool StandardSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress)
+bool StandardSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, TaskManager& taskManager)
 {
 	// Let the base class do the main rendering work.
-	if(!OpenGLSceneRenderer::renderFrame(frameBuffer, stereoTask, progress))
+	if(!OpenGLSceneRenderer::renderFrame(frameBuffer, stereoTask, taskManager))
 		return false;
 
 	// Flush the contents to the FBO before extracting image.

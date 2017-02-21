@@ -23,6 +23,7 @@
 #include <plugins/pyscript/binding/PythonBinding.h>
 #include <core/viewport/Viewport.h>
 #include <core/rendering/RenderSettings.h>
+#include <core/dataset/DataSetContainer.h>
 #include "PythonViewportOverlay.h"
 
 namespace PyScript {
@@ -35,7 +36,7 @@ SET_PROPERTY_FIELD_LABEL(PythonViewportOverlay, script, "Script");
 * Constructor.
 ******************************************************************************/
 PythonViewportOverlay::PythonViewportOverlay(DataSet* dataset) : ViewportOverlay(dataset),
-		_scriptEngine(dataset, true, nullptr)
+		_scriptEngine(dataset, dataset->container()->taskManager(), true, nullptr)
 {
 	INIT_PROPERTY_FIELD(script);
 

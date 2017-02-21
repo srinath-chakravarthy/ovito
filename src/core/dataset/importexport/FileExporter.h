@@ -71,7 +71,7 @@ public:
 	/// \return \c true if the output file has been successfully written;
 	///         \c false if the export operation has been canceled by the user.
 	/// \throws Util::Exception if the export operation has failed due to an error.
-	virtual bool exportNodes(TaskManager* taskManager);
+	virtual bool exportNodes(TaskManager& taskManager);
 
 protected:
 
@@ -85,7 +85,7 @@ protected:
 	virtual void closeOutputFile(bool exportCompleted) = 0;
 
 	/// \brief Exports a single animation frame to the current output file.
-	virtual bool exportFrame(int frameNumber, TimePoint time, const QString& filePath, TaskManager* taskManager);
+	virtual bool exportFrame(int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager);
 
 private:
 

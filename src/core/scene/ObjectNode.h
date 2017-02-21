@@ -51,19 +51,15 @@ public:
 	///        input data entering the pipeline.
 	void setSourceObject(DataObject* sourceObject);
 
-	/// \brief Evaluates the data flow pipeline of this object node at the given animation time.
+	/// \brief Evaluates the data pipeline of this node at the given animation time.
+	///        If the pipeline results aer not available yet, the method can react by returning an incomplete state (pending status).
 	/// \param time The animation time at which the pipeline of the node should be evaluated.
-	/// \return The output of the pipeline.
+	/// \return The output of the pipeline (may be status pending).
 	const PipelineFlowState& evalPipeline(TimePoint time);
 
-	/// \brief This function blocks execution until the node's modification
-	///        pipeline has been fully evaluated.
-	/// \param time The animation time at which the modification pipeline should be evaluated.
-	/// \param message The text to be shown to the user while waiting.
-	/// \param progressDisplay The progress display/dialog to be used to show the message.
-	///                       If NULL, the function will show its own progress dialog box.
-	/// \return true on success; false if the operation has been canceled by the user.
-	bool waitUntilReady(TimePoint time, const QString& message, AbstractProgressDisplay* progressDisplay = nullptr);
+	/// \brief Asks the object for the result of the geometry pipeline at the given time.
+	/// \param time The animation time at which the object should be evaluated.
+	Future<PipelineFlowState> evalPipelineAsync(TimePoint time);
 
 	/// \brief Applies a modifier by appending it to the end of the node's data pipeline.
 	/// \param mod The modifier to be inserted into the data flow pipeline.
@@ -100,9 +96,8 @@ protected:
 
 private:
 
-	/// Checks if the data pipeline is ready (i.e. result status is not pending).
-	/// If so, it signals this to the waitUntilReady() method, which will return.
-	void signalIfPipelineIsReady();
+	/// Checks if the data pipeline evaluation is completed.
+	void serveEvaluationRequests();
 
 	/// The object which generates the data to be displayed by this ObjectNode.
 	DECLARE_MODIFIABLE_REFERENCE_FIELD(DataObject, dataProvider, setDataProvider);
@@ -126,11 +121,8 @@ private:
 		invalidateBoundingBox();
 	}
 
-	/// Used by waitUntilReady() implementation.
-	std::shared_ptr<FutureInterface<void>> _waitUntilReadySignal;
-
-	/// Used by waitUntilReady() implementation. Determines the animation time at which the pipeline is to be evaluated.
-	TimePoint _waitUntilReadyTime;
+	/// List active asynchronous pipeline evaluation requests.
+	std::vector<std::pair<TimePoint, std::shared_ptr<FutureInterface<PipelineFlowState>>>> _evaluationRequests;
 
 	Q_OBJECT
 	OVITO_OBJECT

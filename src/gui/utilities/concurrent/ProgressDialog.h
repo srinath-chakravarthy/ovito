@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (2016) Alexander Stukowski
+//  Copyright (2017) Alexander Stukowski
 //
 //  This file is part of OVITO (Open Visualization Tool).
 //
@@ -19,44 +19,37 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PROGRESS_DISPLAY_H
-#define __OVITO_PROGRESS_DISPLAY_H
+#ifndef __OVITO_PROGRESS_DIALOG_H
+#define __OVITO_PROGRESS_DIALOG_H
 
-#include <core/Core.h>
+#include <gui/GUI.h>
+#include <core/utilities/concurrent/TaskManager.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
 
-class AbstractProgressDisplay
+class ProgressDialog : public QDialog
 {
 public:
 
-	/// Returns whether the operation has been canceled by the user.
-	virtual bool wasCanceled() = 0;
+	/// Constructor.
+	ProgressDialog(QWidget* parent);
 
-	/// Cancels the operation.
-	virtual void cancel() = 0;
+	/// Returns the TaskManager that manages the running task displayed in this progress dialog.
+	TaskManager& taskManager() { return _taskManager; }
 
-	/// Sets the status text to be displayed.
-	virtual void setStatusText(const QString& text) = 0;
+private Q_SLOTS:
 
-	/// Return the current status text.
-	virtual QString statusText() = 0;
+	/// Is called whenever one of the tasks was canceled.
+	void onTaskCanceled();
 
-	/// Returns the highest value represented by the progress bar.
-	virtual int maximum() = 0;
+private:
 
-	/// Sets the highest value represented by the progress bar.
-	virtual void setMaximum(int max) = 0;
-
-	/// Returns the value displayed by the progress bar.
-	virtual int value() = 0;
-
-	/// Sets the value displayed by the progress bar.
-	virtual void setValue(int v) = 0;
+	/// The internal task manager.
+	TaskManager _taskManager;
 };
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_PROGRESS_DISPLAY_H
+#endif // __OVITO_PROGRESS_DIALOG_H

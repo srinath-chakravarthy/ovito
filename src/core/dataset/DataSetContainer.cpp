@@ -31,7 +31,6 @@
 #include <core/utilities/io/ObjectSaveStream.h>
 #include <core/utilities/io/ObjectLoadStream.h>
 #include <core/utilities/io/FileManager.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
 
 #ifdef Q_OS_UNIX
 	#include <signal.h>
@@ -142,6 +141,7 @@ void DataSetContainer::onAnimationSettingsReplaced(AnimationSettings* newAnimati
 }
 
 
+#if 0
 /******************************************************************************
 * This function blocks execution until some operation has been completed.
 ******************************************************************************/
@@ -194,6 +194,7 @@ bool DataSetContainer::waitUntil(const std::function<bool()>& callback, const QS
 	}
 	return true;
 }
+#endif
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

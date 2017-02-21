@@ -43,12 +43,8 @@ PipelineObject::PipelineObject(DataSet* dataset) : DataObject(dataset), _cachedI
 /******************************************************************************
 * Asks the object for the result of the geometry pipeline at the given time
 * up to a given point in the modifier stack.
-* If upToHere is NULL then the complete modifier stack will be evaluated.
-* Otherwise only the modifiers in the pipeline before the given point will be
-* applied to the input object. The 'include' parameter specifies whether the
-* last modifier given by 'upToHere' will be applied.
 ******************************************************************************/
-PipelineFlowState PipelineObject::evaluatePipeline(TimePoint time, ModifierApplication* upToHere, bool including)
+PipelineFlowState PipelineObject::evaluatePipeline(TimePoint time, int upToHereIndex)
 {
 	// Prevent the recoding of transient operations while evaluating the pipeline.
 	UndoSuspender undoSuspender(dataset()->undoStack());
@@ -57,14 +53,7 @@ PipelineFlowState PipelineObject::evaluatePipeline(TimePoint time, ModifierAppli
 	if(!sourceObject())
 		return PipelineFlowState();
 
-	// Determine the position in the pipeline up to which it should be evaluated.
-	int upToHereIndex;
-	if(upToHere != nullptr) {
-		upToHereIndex = modifierApplications().indexOf(upToHere);
-		OVITO_ASSERT(upToHereIndex != -1);
-		if(including) upToHereIndex++;
-	}
-	else upToHereIndex = modifierApplications().size();
+	OVITO_ASSERT(upToHereIndex >= 0 && upToHereIndex <= modifierApplications().size());
 
 	// Receive the input data from the source object.
 	PipelineFlowState inputState = sourceObject()->evaluate(time);
@@ -154,6 +143,64 @@ PipelineFlowState PipelineObject::evaluatePipeline(TimePoint time, ModifierAppli
 	}
 
 	return flowState;
+}
+
+/******************************************************************************
+* Asks the object for the result of the geometry pipeline at the given time
+* up to a given point in the modifier stack. 
+******************************************************************************/
+Future<PipelineFlowState> PipelineObject::evaluatePipelineAsync(TimePoint time, ModifierApplication* upToHere, bool including)
+{
+	// Determine the position in the pipeline up to which it should be evaluated.
+	int upToHereIndex;
+	if(upToHere != nullptr) {
+		upToHereIndex = modifierApplications().indexOf(upToHere);
+		OVITO_ASSERT(upToHereIndex != -1);
+		if(including) upToHereIndex++;
+	}
+	else upToHereIndex = modifierApplications().size();
+	
+	// Check if there is already an active request pending for the same animation time and pipeline position.
+	for(const auto& req : _evaluationRequests) {
+		if(std::get<0>(req) == time && std::get<1>(req) == upToHereIndex)
+			return Future<PipelineFlowState>(std::get<2>(req));
+	}
+
+	// Check if we can directly satisfy the request.
+	if(_evaluationRequests.empty()) {
+		const PipelineFlowState& state = evaluatePipeline(time, upToHere, including);
+		if(state.status().type() != PipelineStatus::Pending)
+			return Future<PipelineFlowState>::createImmediate(state);
+	}
+
+	// Create a new record for this evaulation request.
+	auto futureInterface = std::make_shared<FutureInterface<PipelineFlowState>>();
+	_evaluationRequests.emplace_back(time, upToHereIndex, futureInterface);
+	futureInterface->reportStarted();
+	return Future<PipelineFlowState>(futureInterface);
+}
+
+/******************************************************************************
+* Checks if the data pipeline evaluation is completed.
+******************************************************************************/
+void PipelineObject::serveEvaluationRequests()
+{
+	while(!_evaluationRequests.empty()) {
+		// Check if we can now satisfy the oldest request.
+		TimePoint time = std::get<0>(_evaluationRequests.front());
+		int upToHereIndex = std::get<1>(_evaluationRequests.front());
+		const PipelineFlowState& state = evaluatePipeline(time, std::min(upToHereIndex, (int)modifierApplications().size()));
+		if(state.status().type() != PipelineStatus::Pending) {
+			std::shared_ptr<FutureInterface<PipelineFlowState>> future = std::move(std::get<2>(_evaluationRequests.front())); 
+			_evaluationRequests.erase(_evaluationRequests.begin());
+			future->setResult(state);
+			future->reportFinished();
+		}
+		else {
+			// Check back again later.
+			break;
+		}
+	}
 }
 
 /******************************************************************************
@@ -315,6 +362,9 @@ void PipelineObject::modifierChanged(int changedIndex)
 		if(app && app->modifier())
 			app->modifier()->upstreamPipelineChanged(app);
 	}
+
+	// If input object or pipeline have changed, the pipeline might have become ready.
+	serveEvaluationRequests();
 }
 
 OVITO_END_INLINE_NAMESPACE

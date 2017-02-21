@@ -22,7 +22,7 @@
 #include <core/Core.h>
 #include <core/scene/SceneRoot.h>
 #include <core/animation/AnimationSettings.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/Task.h>
 #include <core/rendering/RenderSettings.h>
 #include <core/viewport/Viewport.h>
 #include <core/viewport/ViewportConfiguration.h>
@@ -99,13 +99,13 @@ void POVRayExporter::closeOutputFile(bool exportCompleted)
 /******************************************************************************
  * Exports a single animation frame to the current output file.
  *****************************************************************************/
-bool POVRayExporter::exportFrame(int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay)
+bool POVRayExporter::exportFrame(int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager)
 {
-	if(!FileExporter::exportFrame(frameNumber, time, filePath, progressDisplay))
+	if(!FileExporter::exportFrame(frameNumber, time, filePath, taskManager))
 		return false;
 
-	if(progressDisplay)
-		progressDisplay->setStatusText(tr("Exporting frame %1 to file '%2'.").arg(frameNumber).arg(filePath));
+	SynchronousTask exportTask(taskManager);
+	exportTask.setStatusText(tr("Exporting frame %1 to file '%2'.").arg(frameNumber).arg(filePath));
 
 	Viewport* vp = dataset()->viewportConfig()->activeViewport();
 	if(!vp) throwException(tr("POV-Ray exporter requires an active viewport."));
@@ -117,15 +117,16 @@ bool POVRayExporter::exportFrame(int frameNumber, TimePoint time, const QString&
 		_renderer->beginFrame(time, projParams, vp);
 		for(SceneNode* node : outputData()) {
 			_renderer->renderNode(node);
+			if(exportTask.wasCanceled()) break;
 		}
-		_renderer->endFrame(true);
+		_renderer->endFrame(!exportTask.wasCanceled());
 	}
 	catch(...) {
 		_renderer->endFrame(false);
 		throw;
 	}
 
-	return true;
+	return !exportTask.wasCanceled();
 }
 
 OVITO_END_INLINE_NAMESPACE

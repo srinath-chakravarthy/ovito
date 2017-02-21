@@ -59,6 +59,8 @@ public:
 
 	void waitForFinished() const;
 
+	const std::shared_ptr<FutureInterfaceBase>& futureInterface() const { return _futureInterface; }
+
 protected:
 
 	class CallOutEvent : public QEvent

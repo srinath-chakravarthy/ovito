@@ -137,7 +137,7 @@ public:
 	}
 
 	/// \brief Waits for the given task to finish.
-	bool waitForTask(const std::shared_ptr<FutureInterfaceBase>& futureInterface, AbstractProgressDisplay* progressDisplay = nullptr);
+	bool waitForTask(const std::shared_ptr<FutureInterfaceBase>& futureInterface);
 
 public Q_SLOTS:
 

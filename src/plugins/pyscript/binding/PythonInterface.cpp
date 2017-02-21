@@ -95,6 +95,10 @@ PYBIND11_PLUGIN(PyScript)
 	DataSet* activeDataset = Application::instance()->datasetContainer()->currentSet();
 	m.attr("dataset") = py::cast(activeDataset, py::return_value_policy::reference);
 
+	// Add an attribute to the ovito module that provides access to the global task manager.
+	TaskManager* activeTaskManager = &Application::instance()->datasetContainer()->taskManager();
+	m.attr("task_manager") = py::cast(activeTaskManager, py::return_value_policy::reference);
+
 	return m.ptr();
 }
 
