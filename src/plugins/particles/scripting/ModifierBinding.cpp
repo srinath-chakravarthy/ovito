@@ -189,7 +189,7 @@ void defineModifiersSubmodule(py::module parentModule)
 		.def("load_image", &ColorCodingImageGradient::loadImage)
 	;
 	ColorCodingModifier_py.def_static("Custom", [](const QString& filename) {
-	    OORef<ColorCodingImageGradient> gradient(new ColorCodingImageGradient(ScriptEngine::activeEngine()->dataset()));
+	    OORef<ColorCodingImageGradient> gradient(new ColorCodingImageGradient(ScriptEngine::activeDataset()));
     	gradient->loadImage(filename);
     	return gradient;
 	});

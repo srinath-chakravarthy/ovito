@@ -20,6 +20,7 @@
 ###############################################################################
 
 SET(Python_ADDITIONAL_VERSIONS 3.4 3.5 3.6 3.7)
+FIND_PACKAGE(PythonInterp REQUIRED)
 FIND_PACKAGE(PythonLibs REQUIRED)
 
 IF(MSVC)
@@ -164,6 +165,7 @@ ELSEIF(WIN32)
 		PATTERN "*.pyc" EXCLUDE 
 		PATTERN "*.pyo" EXCLUDE
 		PATTERN "__pycache__" EXCLUDE)
+
 	# Also install the compiled modules that are shipped with Python.
 	INSTALL(DIRECTORY "${PYTHON_LIBRARY_PATH}/../DLLs"
 		DESTINATION "${OVITO_RELATIVE_BINARY_DIRECTORY}")
@@ -179,7 +181,10 @@ ENDIF()
 SET(PYTHON_TEST_SCRIPTS_DIR "${CMAKE_SOURCE_DIR}/tests/scripts/test_suite")
 FILE(GLOB_RECURSE PYTHON_TEST_SCRIPTS RELATIVE "${PYTHON_TEST_SCRIPTS_DIR}" "${PYTHON_TEST_SCRIPTS_DIR}/*.py")
 FOREACH(test_script ${PYTHON_TEST_SCRIPTS})
+	# Run each test case both with 'ovitos' and a second time with the system Python interpreter.
 	ADD_TEST(NAME "${test_script}" WORKING_DIRECTORY "${PYTHON_TEST_SCRIPTS_DIR}" COMMAND "${OVITOS_EXECUTABLE}" "${test_script}")
+	ADD_TEST(NAME "sys_python_${test_script}" WORKING_DIRECTORY "${PYTHON_TEST_SCRIPTS_DIR}" COMMAND "${PYTHON_EXECUTABLE}" "${test_script}")
+	SET_PROPERTY(TEST "sys_python_${test_script}" PROPERTY ENVIRONMENT "PYTHONPATH=${OVITO_PYTHON_DIRECTORY}:${OVITO_PLUGINS_DIRECTORY}/../..")
 ENDFOREACH()
 
 # Also test example snippets that are part of user documentation.

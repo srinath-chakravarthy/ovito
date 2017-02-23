@@ -109,6 +109,9 @@ public:
 	/// Returns the revision version number of the application.
 	static int applicationVersionRevision();
 
+	/// Create the global instance of the right QCoreApplication derived class.
+	virtual void createQtApplication(int& argc, char** argv);
+
 private:
 
 	/// Executes the functions registered with the runOnceLater() function.

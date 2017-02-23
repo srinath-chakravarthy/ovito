@@ -33,7 +33,10 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)
  */
 class OVITO_GUI_EXPORT GuiApplication : public StandaloneApplication
 {
-	Q_OBJECT
+public:
+
+	/// Create the global instance of the right QCoreApplication derived class.
+	virtual void createQtApplication(int& argc, char** argv) override;
 
 protected:
 
@@ -42,9 +45,6 @@ protected:
 
 	/// Interprets the command line parameters provided to the application.
 	virtual bool processCommandLineParameters() override;
-
-	/// Create the global instance of the right QCoreApplication derived class.
-	virtual void createQtApplication(int& argc, char** argv) override;
 
 	/// Prepares application to start running.
 	virtual bool startupApplication() override;
@@ -61,6 +61,8 @@ private:
 
 	/// Handler function for exceptions used in GUI mode.
 	static void guiExceptionHandler(const Exception& exception);
+
+	Q_OBJECT
 };
 
 OVITO_END_INLINE_NAMESPACE

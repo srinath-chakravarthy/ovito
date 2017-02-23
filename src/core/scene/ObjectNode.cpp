@@ -99,7 +99,6 @@ const PipelineFlowState& ObjectNode::evaluatePipelineImmediately(const PipelineE
 			_displayObjects.clear();
 		}
 	}
-	OVITO_ASSERT(_pipelineCache.stateValidity().contains(request.time()));
 
 	// If no display objects are requested, then we are done now.
 	if(!request.prepareDisplayObjects())

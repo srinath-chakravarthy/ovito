@@ -72,9 +72,6 @@ protected:
 	/// Interprets the command line parameters provided to the application.
 	virtual bool processCommandLineParameters();
 
-	/// Create the global instance of the right QCoreApplication derived class.
-	virtual void createQtApplication(int& argc, char** argv);
-
 	/// Prepares application to start running.
 	virtual bool startupApplication() = 0;
 

@@ -142,6 +142,37 @@ bool Application::initialize()
 	return true;
 }
 
+
+/******************************************************************************
+* Create the global instance of the right QCoreApplication derived class.
+******************************************************************************/
+void Application::createQtApplication(int& argc, char** argv)
+{
+	if(headlessMode()) {
+#if defined(Q_OS_LINUX)
+		// Determine font directory path.
+		std::string applicationPath = argv[0];
+		auto sepIndex = applicationPath.rfind('/');
+		if(sepIndex != std::string::npos)
+			applicationPath.resize(sepIndex + 1);
+		std::string fontPath = applicationPath + "../share/ovito/fonts";
+		if(!QDir(QString::fromStdString(fontPath)).exists())
+			fontPath = "/usr/share/fonts";
+
+		// On Linux, use the 'minimal' QPA platform plugin instead of the standard XCB plugin when no X server is available.
+		// Still create a Qt GUI application object, because otherwise we cannot use (offscreen) font rendering functions.
+		qputenv("QT_QPA_PLATFORM", "minimal");
+		// Enable rudimentary font rendering support, which is implemented by the 'minimal' platform plugin:
+		qputenv("QT_DEBUG_BACKINGSTORE", "1");
+		qputenv("QT_QPA_FONTDIR", fontPath.c_str());
+
+		new QGuiApplication(argc, argv);
+#else
+		new QCoreApplication(argc, argv);
+#endif
+	}
+}
+
 /******************************************************************************
 * Returns a pointer to the main dataset container.
 ******************************************************************************/

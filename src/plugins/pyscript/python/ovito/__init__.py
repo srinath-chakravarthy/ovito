@@ -15,7 +15,7 @@ __path__ = pkgutil.extend_path(__path__, __name__)
 
 # Load the native module with the core bindings
 import ovito.plugins.PyScript
-from .plugins.PyScript import version, version_string, gui_mode, headless_mode, dataset
+from .plugins.PyScript import (version, version_string, gui_mode, headless_mode, dataset, task_manager)
 from .plugins.PyScript.App import *
 
 # Load sub-modules (in the right order because there are dependencies among them)

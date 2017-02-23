@@ -52,14 +52,6 @@ PYBIND11_PLUGIN(PyScript)
 		}
 	});
 
-	// Create a global QApplication object if there isn't one already.
-	// This application object is needed for event processing (e.g. QEventLoop).
-	if(!QCoreApplication::instance()) {
-		static int argc = 1;
-		static char* argv[] = { const_cast<char*>("") };
-		new QCoreApplication(argc, argv);
-	}
-
 	// Initialize an ad-hoc environment when this module has been imported by an external Python interpreter and is not running as a standalone app. 
 	// Otherwise an environment is already provided by the StandaloneApplication class.
 	if(!Application::instance()) {
@@ -68,12 +60,21 @@ PYBIND11_PLUGIN(PyScript)
 			if(!app->initialize())
 				throw Exception("Application object could not be initialized.");
 			OVITO_ASSERT(Application::instance() == app);
+
+			// Create a global QCoreApplication object if there isn't one already.
+			// This application object is needed for event processing (e.g. QEventLoop).
+			if(!QCoreApplication::instance()) {
+				static int argc = 1;
+				static char* argv[] = { const_cast<char*>("") };
+				app->createQtApplication(argc, argv);
+			}
 		}
 		catch(const Exception& ex) {
 			ex.logError();
 			throw std::runtime_error("Error during OVITO runtime environment initialization.");
 		}
 	}
+	OVITO_ASSERT(QCoreApplication::instance() != nullptr);
 
 	// Register submodules.
 	defineAppSubmodule(m);
