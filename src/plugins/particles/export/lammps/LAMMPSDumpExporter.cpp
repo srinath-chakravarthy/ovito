@@ -146,18 +146,18 @@ bool LAMMPSDumpExporter::exportObject(SceneNode* sceneNode, int frameNumber, Tim
 	textStream() << '\n';
 
 	OutputColumnWriter columnWriter(mapping, state);
-	exportTask.setMaximum(1000);
+	exportTask.setProgressMaximum(1000);
 	for(size_t i = 0; i < atomsCount; i++) {
 		columnWriter.writeParticle(i, textStream());
 
 		if((i % 4096) == 0) {
-			exportTask.setValue((quint64)i * 1000 / atomsCount);
-			if(exportTask.wasCanceled())
+			exportTask.setProgressValue((quint64)i * 1000 / atomsCount);
+			if(exportTask.isCanceled())
 				return false;
 		}
 	}
 
-	return !exportTask.wasCanceled();
+	return !exportTask.isCanceled();
 }
 
 OVITO_END_INLINE_NAMESPACE

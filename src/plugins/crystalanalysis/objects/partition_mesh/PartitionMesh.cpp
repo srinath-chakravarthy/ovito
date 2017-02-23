@@ -54,7 +54,7 @@ OORef<RefTarget> PartitionMesh::clone(bool deepCopy, CloneHelper& cloneHelper)
 /******************************************************************************
 * Fairs a closed triangle mesh.
 ******************************************************************************/
-void PartitionMesh::smoothMesh(PartitionMeshData& mesh, const SimulationCell& cell, int numIterations, FutureInterfaceBase* progress, FloatType k_PB, FloatType lambda)
+bool PartitionMesh::smoothMesh(PartitionMeshData& mesh, const SimulationCell& cell, int numIterations, PromiseBase& promise, FloatType k_PB, FloatType lambda)
 {
 	// This is the implementation of the mesh smoothing algorithm:
 	//
@@ -63,14 +63,16 @@ void PartitionMesh::smoothMesh(PartitionMeshData& mesh, const SimulationCell& ce
 	// In SIGGRAPH 95 Conference Proceedings, pages 351-358 (1995)
 
 	FloatType mu = FloatType(1) / (k_PB - FloatType(1)/lambda);
-	if(progress) progress->setProgressRange(numIterations);
+	promise.setProgressMaximum(numIterations);
 
 	for(int iteration = 0; iteration < numIterations; iteration++) {
+		if(!promise.setProgressValue(iteration)) 
+			return false;
 		smoothMeshIteration(mesh, lambda, cell);
 		smoothMeshIteration(mesh, mu, cell);
-		if(progress && !progress->setProgressValue(iteration+1))
-			return;
 	}
+
+	return !promise.isCanceled();
 }
 
 /******************************************************************************

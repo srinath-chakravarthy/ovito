@@ -187,7 +187,7 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 	// Generate Delaunay tessellation.
 	DelaunayTessellation tessellation;
 	if(!tessellation.generateTessellation(_simCell, positions()->constDataPoint3(), positions()->size(), ghostLayerSize,
-			selection() ? selection()->constDataInt() : nullptr, this))
+			selection() ? selection()->constDataInt() : nullptr, *this))
 		return;
 
 	nextProgressSubStep();
@@ -206,7 +206,7 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 	};
 
 	ManifoldConstructionHelper<HalfEdgeMesh<>, true> manifoldConstructor(tessellation, *mesh(), alpha, positions());
-	if(!manifoldConstructor.construct(tetrahedronRegion, this))
+	if(!manifoldConstructor.construct(tetrahedronRegion, *this))
 		return;
 	_isCompletelySolid = (manifoldConstructor.spaceFillingRegion() == 1);
 
@@ -216,7 +216,8 @@ void ConstructSurfaceModifier::ConstructSurfaceEngine::perform()
 	_mesh->duplicateSharedVertices();
 
 	nextProgressSubStep();
-	SurfaceMesh::smoothMesh(*_mesh, _simCell, _smoothingLevel, this);
+	if(!SurfaceMesh::smoothMesh(*_mesh, _simCell, _smoothingLevel, *this))
+		return;
 
 	// Compute surface area.
 	for(const HalfEdgeMesh<>::Face* facet : _mesh->faces()) {

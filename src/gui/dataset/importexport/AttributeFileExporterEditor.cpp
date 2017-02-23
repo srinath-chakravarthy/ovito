@@ -21,6 +21,7 @@
 
 #include <gui/GUI.h>
 #include <core/dataset/importexport/AttributeFileExporter.h>
+#include <core/dataset/DataSetContainer.h>
 #include <core/animation/AnimationSettings.h>
 #include <gui/utilities/concurrent/ProgressDialog.h>
 #include "AttributeFileExporterEditor.h"
@@ -103,7 +104,7 @@ void AttributeFileExporterEditor::onContentsReplaced(Ovito::RefTarget* newEditOb
 	for(SceneNode* node : exporter->outputData()) {
 		try {
 			QVariantMap attrMap;
-			ProgressDialog progressDialog(container());
+			ProgressDialog progressDialog(container(), exporter->dataset()->container()->taskManager());
 			if(!exporter->getAttributes(node, node->dataset()->animationSettings()->time(), attrMap, progressDialog.taskManager()))
 				continue;
 			for(const QString& attrName : attrMap.keys())

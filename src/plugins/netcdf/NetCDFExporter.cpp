@@ -368,7 +368,7 @@ bool NetCDFExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoi
 	}
 
 	_frameCounter++;
-	return !exportTask.wasCanceled();
+	return !exportTask.isCanceled();
 }
 
 OVITO_END_INLINE_NAMESPACE

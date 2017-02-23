@@ -61,7 +61,7 @@ bool FHIAimsExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePo
 	}
 
 	// Output atoms.
-	exportTask.setMaximum(100);
+	exportTask.setProgressMaximum(100);
 	for(size_t i = 0; i < posProperty->size(); i++) {
 		const Point3& p = posProperty->getPoint3(i);
 		const ParticleType* type = particleTypeProperty->particleType(particleTypeProperty->getInt(i));
@@ -76,13 +76,13 @@ bool FHIAimsExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePo
 		}
 
 		if((i % 1000) == 0) {
-			exportTask.setValue((qint64)i * 100 / posProperty->size());
-			if(exportTask.wasCanceled())
+			exportTask.setProgressValue((qint64)i * 100 / posProperty->size());
+			if(exportTask.isCanceled())
 				return false;
 		}
 	}
 
-	return !exportTask.wasCanceled();
+	return !exportTask.isCanceled();
 }
 
 OVITO_END_INLINE_NAMESPACE

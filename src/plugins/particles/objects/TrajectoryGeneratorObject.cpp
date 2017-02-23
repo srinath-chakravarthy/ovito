@@ -144,14 +144,14 @@ bool TrajectoryGeneratorObject::generateTrajectories(TaskManager& taskManager)
 	for(TimePoint time = interval.start(); time <= interval.end(); time += everyNthFrame() * dataset()->animationSettings()->ticksPerFrame()) {
 		sampleTimes.push_back(time);
 	}
-	trajectoryTask.setMaximum(sampleTimes.size());
-	trajectoryTask.setValue(0);
+	trajectoryTask.setProgressMaximum(sampleTimes.size());
+	trajectoryTask.setProgressValue(0);
 
 	// Sample particle positions to generate trajectory points.
 	QVector<Point3> points;
 	points.reserve(particleCount * sampleTimes.size());
 	for(TimePoint time : sampleTimes) {
-		trajectoryTask.setStatusText(tr("Loading frame %1.").arg(dataset()->animationSettings()->timeToFrame(time)));
+		trajectoryTask.setProgressText(tr("Loading frame %1").arg(dataset()->animationSettings()->timeToFrame(time)));
 
 		Future<PipelineFlowState> stateFuture = source()->evalPipelineAsync(time);
 		if(!taskManager.waitForTask(stateFuture))
@@ -207,8 +207,8 @@ bool TrajectoryGeneratorObject::generateTrajectories(TaskManager& taskManager)
 			}
 		}
 
-		trajectoryTask.setValue(trajectoryTask.value() + 1);
-		if(trajectoryTask.wasCanceled()) 
+		trajectoryTask.setProgressValue(trajectoryTask.progressValue() + 1);
+		if(trajectoryTask.isCanceled()) 
 			return false;
 	}
 
@@ -218,7 +218,7 @@ bool TrajectoryGeneratorObject::generateTrajectories(TaskManager& taskManager)
 	// Jump back to original animation time.
 	source()->evalPipeline(currentTime);
 
-	return !trajectoryTask.wasCanceled();
+	return !trajectoryTask.isCanceled();
 }
 
 }	// End of namespace

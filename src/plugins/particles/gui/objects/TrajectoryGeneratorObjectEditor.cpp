@@ -162,7 +162,7 @@ void TrajectoryGeneratorObjectEditor::onRegenerateTrajectory()
 	undoableTransaction(tr("Generate trajectory"), [this,trajObj]() {
 
 		// Show progress dialog.
-		ProgressDialog progressDialog(container());
+		ProgressDialog progressDialog(container(), trajObj->dataset()->container()->taskManager(), tr("Generating trajectory lines"));
 
 		trajObj->generateTrajectories(progressDialog.taskManager());
 	});

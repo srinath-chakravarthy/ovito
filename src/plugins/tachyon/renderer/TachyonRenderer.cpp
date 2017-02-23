@@ -125,7 +125,7 @@ bool TachyonRenderer::startRender(DataSet* dataset, RenderSettings* settings)
 bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, TaskManager& taskManager)
 {
 	SynchronousTask renderTask(taskManager);
-	renderTask.setStatusText(tr("Handing scene data to Tachyon renderer"));
+	renderTask.setProgressText(tr("Handing scene data to Tachyon renderer"));
 
 	// Create new scene and set up parameters.
 	_rtscene = rt_newscene();
@@ -233,8 +233,8 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 	renderModifiers(true);
 
 	// Render scene.
-	renderTask.setMaximum(renderSettings()->outputImageWidth() * renderSettings()->outputImageHeight());
-	renderTask.setStatusText(tr("Rendering image"));
+	renderTask.setProgressMaximum(renderSettings()->outputImageWidth() * renderSettings()->outputImageHeight());
+	renderTask.setProgressText(tr("Rendering image"));
 
 	scenedef * scene = (scenedef *)_rtscene;
 
@@ -288,12 +288,12 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 			}
 			frameBuffer->update(QRect(xstart, frameBuffer->image().height() - ystop, xstop - xstart, ystop - ystart));
 
-			renderTask.setValue(renderTask.value() + (xstop - xstart) * (ystop - ystart));
-			if(renderTask.wasCanceled())
+			renderTask.setProgressValue(renderTask.progressValue() + (xstop - xstart) * (ystop - ystart));
+			if(renderTask.isCanceled())
 				break;
 		}
 
-		if(renderTask.wasCanceled())
+		if(renderTask.isCanceled())
 			break;
 	}
 
@@ -316,7 +316,7 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 	// Clean up.
 	rt_deletescene(_rtscene);
 
-	return !renderTask.wasCanceled();
+	return !renderTask.isCanceled();
 }
 
 /******************************************************************************

@@ -137,6 +137,9 @@ private:
 	/// The temporary file for receiving the rendered image from POV-Ray. 
 	std::unique_ptr<QTemporaryFile> _imageFile;
 
+	/// This is used by the POVRayExporter class to make the export process interruptable.
+	SynchronousTask* _exportTask = nullptr;
+
 	/// The POV-Ray quality level to use for rendering (0 <= level <= 11).
 	/// See POV-Ray documentation for details.
 	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, qualityLevel, setQualityLevel);

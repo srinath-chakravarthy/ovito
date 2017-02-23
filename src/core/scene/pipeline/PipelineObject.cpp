@@ -95,7 +95,7 @@ PipelineFlowState PipelineObject::evaluatePipeline(TimePoint time, int upToHereI
 
 	// Flag that indicates whether the output of the pipeline is considered incomplete.
 	bool isPending = (flowState.status().type() == PipelineStatus::Pending);
-	
+
     // Apply the modifiers one by one.
 	for(int stackIndex = fromHereIndex; stackIndex < upToHereIndex; stackIndex++) {
 
@@ -174,10 +174,10 @@ Future<PipelineFlowState> PipelineObject::evaluatePipelineAsync(TimePoint time, 
 	}
 
 	// Create a new record for this evaulation request.
-	auto futureInterface = std::make_shared<FutureInterface<PipelineFlowState>>();
-	_evaluationRequests.emplace_back(time, upToHereIndex, futureInterface);
-	futureInterface->reportStarted();
-	return Future<PipelineFlowState>(futureInterface);
+	auto future = Future<PipelineFlowState>::createWithPromise();
+	_evaluationRequests.emplace_back(time, upToHereIndex, future.promise());
+	future.promise()->setStarted();
+	return future;
 }
 
 /******************************************************************************
@@ -186,15 +186,28 @@ Future<PipelineFlowState> PipelineObject::evaluatePipelineAsync(TimePoint time, 
 void PipelineObject::serveEvaluationRequests()
 {
 	while(!_evaluationRequests.empty()) {
+		// Sort out canceled requests.
+		Promise<PipelineFlowState>* promise = std::get<2>(_evaluationRequests.front()).get(); 
+		if(promise->isCanceled()) {
+			promise->setFinished();
+			_evaluationRequests.erase(_evaluationRequests.begin());
+			continue;
+		}
+
 		// Check if we can now satisfy the oldest request.
 		TimePoint time = std::get<0>(_evaluationRequests.front());
 		int upToHereIndex = std::get<1>(_evaluationRequests.front());
 		const PipelineFlowState& state = evaluatePipeline(time, std::min(upToHereIndex, (int)modifierApplications().size()));
+
+		// The call above might have lead to another call of this function.
+		// Thus, we have to handle re-entrant behavior.
+		if(_evaluationRequests.empty() || promise != std::get<2>(_evaluationRequests.front()).get())
+			break;
+		
 		if(state.status().type() != PipelineStatus::Pending) {
-			std::shared_ptr<FutureInterface<PipelineFlowState>> future = std::move(std::get<2>(_evaluationRequests.front())); 
+			promise->setResult(state);
+			promise->setFinished();
 			_evaluationRequests.erase(_evaluationRequests.begin());
-			future->setResult(state);
-			future->reportFinished();
 		}
 		else {
 			// Check back again later.

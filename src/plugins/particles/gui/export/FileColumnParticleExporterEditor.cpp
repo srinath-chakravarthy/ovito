@@ -22,6 +22,7 @@
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/particles/export/FileColumnParticleExporter.h>
 #include <core/animation/AnimationSettings.h>
+#include <core/dataset/DataSetContainer.h>
 #include <gui/utilities/concurrent/ProgressDialog.h>
 #include "FileColumnParticleExporterEditor.h"
 
@@ -102,7 +103,7 @@ void FileColumnParticleExporterEditor::onContentsReplaced(Ovito::RefTarget* newE
 
 	for(SceneNode* node : particleExporter->outputData()) {
 		try {
-			ProgressDialog progressDialog(container());
+			ProgressDialog progressDialog(container(), particleExporter->dataset()->container()->taskManager());
 			PipelineFlowState state;
 			if(!particleExporter->getParticleData(node, node->dataset()->animationSettings()->time(), state, progressDialog.taskManager()))
 				continue;

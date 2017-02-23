@@ -128,7 +128,7 @@ Future<PipelineFlowState> ObjectNode::evalPipelineAsync(TimePoint time)
 			return Future<PipelineFlowState>(req.second);
 	}
 
-	// Check if we can directly satisfy the request.
+	// Check if we can immediately satisfy the request.
 	if(_evaluationRequests.empty()) {
 		const PipelineFlowState& state = evalPipeline(time);
 		if(state.status().type() != PipelineStatus::Pending)
@@ -136,10 +136,10 @@ Future<PipelineFlowState> ObjectNode::evalPipelineAsync(TimePoint time)
 	}
 
 	// Create a new record for this evaulation request.
-	auto futureInterface = std::make_shared<FutureInterface<PipelineFlowState>>();
-	_evaluationRequests.emplace_back(time, futureInterface);
-	futureInterface->reportStarted();
-	return Future<PipelineFlowState>(futureInterface);
+	auto future = Future<PipelineFlowState>::createWithPromise();
+	_evaluationRequests.emplace_back(time, future.promise());
+	future.promise()->setStarted();
+	return future;
 }
 
 /******************************************************************************
@@ -183,6 +183,8 @@ bool ObjectNode::referenceEvent(RefTarget* source, ReferenceEvent* event)
 			_displayCache.clear();
 			// Update cached bounding box when display settings change.
 			invalidateBoundingBox();
+			// If display object status has changed, the pipeline might have become ready.
+			serveEvaluationRequests();			
 		}
 	}
 	return SceneNode::referenceEvent(source, event);
@@ -326,13 +328,26 @@ void ObjectNode::setSourceObject(DataObject* sourceObject)
 void ObjectNode::serveEvaluationRequests()
 {
 	while(!_evaluationRequests.empty()) {
+		// Sort out canceled requests.
+		Promise<PipelineFlowState>* promise = _evaluationRequests.front().second.get(); 
+		if(promise->isCanceled()) {
+			promise->setFinished();
+			_evaluationRequests.erase(_evaluationRequests.begin());
+			continue;
+		}
+		
 		// Check if we can now satisfy the oldest request.
 		const PipelineFlowState& state = evalPipeline(_evaluationRequests.front().first);
+
+		// The call above might have led to re-entrant call to this function; detect this kind of situation.
+		if(_evaluationRequests.empty() || promise != _evaluationRequests.front().second.get())
+			break;
+
 		if(state.status().type() != PipelineStatus::Pending) {
-			std::shared_ptr<FutureInterface<PipelineFlowState>> future = std::move(_evaluationRequests.front().second); 
+			promise->setResult(state);
+			promise->setFinished();
+			OVITO_ASSERT(promise == _evaluationRequests.front().second.get());
 			_evaluationRequests.erase(_evaluationRequests.begin());
-			future->setResult(state);
-			future->reportFinished();
 		}
 		else {
 			// Check back again later.

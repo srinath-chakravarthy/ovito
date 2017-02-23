@@ -109,7 +109,7 @@ void PartitionMeshDisplay::PrepareMeshEngine::perform()
 {
 	setProgressText(tr("Preparing microstructure mesh for display"));
 
-	if(!buildMesh(*_inputMesh, _simCell, _cuttingPlanes, _surfaceMesh, this))
+	if(!buildMesh(*_inputMesh, _simCell, _cuttingPlanes, _surfaceMesh, *this))
 		throw Exception(tr("Failed to generate non-periodic version of microstructure mesh for display. Simulation cell might be too small."));
 
 	if(_flipOrientation)
@@ -222,7 +222,7 @@ void PartitionMeshDisplay::render(TimePoint time, DataObject* dataObject, const 
 /******************************************************************************
 * Generates the final triangle mesh, which will be rendered.
 ******************************************************************************/
-bool PartitionMeshDisplay::buildMesh(const PartitionMeshData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress)
+bool PartitionMeshDisplay::buildMesh(const PartitionMeshData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, PromiseBase& promise)
 {
 	// Convert half-edge mesh to triangle mesh.
 	input.convertToTriMesh(output);
@@ -237,8 +237,7 @@ bool PartitionMeshDisplay::buildMesh(const PartitionMeshData& input, const Simul
 	}
 	OVITO_ASSERT(fout == output.faces().end());
 
-	// Check for early abortion.
-	if(progress && progress->isCanceled())
+	if(promise.isCanceled())
 		return false;
 
 	// Convert vertex positions to reduced coordinates.
@@ -251,7 +250,7 @@ bool PartitionMeshDisplay::buildMesh(const PartitionMeshData& input, const Simul
 	for(size_t dim = 0; dim < 3; dim++) {
 		if(cell.pbcFlags()[dim] == false) continue;
 
-		if(progress && progress->isCanceled())
+		if(promise.isCanceled())
 			return false;
 
 		// Make sure all vertices are located inside the periodic box.
@@ -277,7 +276,7 @@ bool PartitionMeshDisplay::buildMesh(const PartitionMeshData& input, const Simul
 	}
 
 	// Check for early abortion.
-	if(progress && progress->isCanceled())
+	if(promise.isCanceled())
 		return false;
 
 	// Convert vertex positions back from reduced coordinates to absolute coordinates.
@@ -287,7 +286,7 @@ bool PartitionMeshDisplay::buildMesh(const PartitionMeshData& input, const Simul
 
 	// Clip mesh at cutting planes.
 	for(const Plane3& plane : cuttingPlanes) {
-		if(progress && progress->isCanceled())
+		if(promise.isCanceled())
 			return false;
 
 		output.clipAtPlane(plane);
@@ -296,7 +295,7 @@ bool PartitionMeshDisplay::buildMesh(const PartitionMeshData& input, const Simul
 	output.invalidateVertices();
 	output.invalidateFaces();
 
-	return true;
+	return !promise.isCanceled();
 }
 
 /******************************************************************************

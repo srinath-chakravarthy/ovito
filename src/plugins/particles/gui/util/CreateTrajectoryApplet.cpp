@@ -178,7 +178,7 @@ void CreateTrajectoryApplet::onCreateTrajectory()
 
 	try {
 		// Show progress dialog.
-		ProgressDialog progressDialog(_panel);
+		ProgressDialog progressDialog(_panel, dataset->container()->taskManager(), tr("Generating trajectory lines"));
 
 		UndoableTransaction transaction(dataset->undoStack(), tr("Create trajectory lines"));
 		AnimationSuspender noAnim(dataset->animationSettings());
@@ -257,13 +257,14 @@ void CreateTrajectoryApplet::onCreateTrajectory()
 
 		// Commit actions.
 		transaction.commit();
-
-		// Switch to the modify tab to show the newly created trajectory object.
-		_mainWindow->setCurrentCommandPanelPage(MainWindow::MODIFY_PAGE);
 	}
 	catch(const Exception& ex) {
 		ex.showError();
+		return;
 	}
+
+	// Switch to the modify tab to show the newly created trajectory object.
+	_mainWindow->setCurrentCommandPanelPage(MainWindow::MODIFY_PAGE);	
 }
 
 OVITO_END_INLINE_NAMESPACE

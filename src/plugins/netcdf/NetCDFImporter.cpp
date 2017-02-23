@@ -137,7 +137,7 @@ InputColumnMapping NetCDFImporter::inspectFileHeader(const Frame& frame)
 /******************************************************************************
 * Scans the input file for simulation timesteps.
 ******************************************************************************/
-void NetCDFImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
+void NetCDFImporter::scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
 {
 	// Only serial access to NetCDF functions allowed because they are not thread-safe.
 	QMutexLocker locker(&netcdfMutex());
@@ -652,7 +652,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 											size_t totalCount = countp[1];
 											size_t remaining = totalCount;
 											countp[1] = 1000000;
-											setProgressRange(totalCount / countp[1] + 1);
+											setProgressMaximum(totalCount / countp[1] + 1);
 											OVITO_ASSERT(totalCount <= property->size());
 											for(size_t chunk = 0; chunk < totalCount; chunk += countp[1], startp[1] += countp[1]) {
 												countp[1] = std::min(countp[1], remaining);
@@ -684,7 +684,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 								size_t totalCount = countp[1];
 								size_t remaining = totalCount;
 								countp[1] = 1000000;
-								setProgressRange(totalCount / countp[1] + 1);
+								setProgressMaximum(totalCount / countp[1] + 1);
 								for(size_t chunk = 0; chunk < totalCount; chunk += countp[1], startp[1] += countp[1]) {
 									countp[1] = std::min(countp[1], remaining);
 									remaining -= countp[1];

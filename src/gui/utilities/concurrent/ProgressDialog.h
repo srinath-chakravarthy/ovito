@@ -32,10 +32,21 @@ class ProgressDialog : public QDialog
 public:
 
 	/// Constructor.
-	ProgressDialog(QWidget* parent);
+	ProgressDialog(MainWindow* mainWindow, const QString& dialogTitle = QString());
+
+	/// Constructor.
+	ProgressDialog(QWidget* parent, TaskManager& taskManager, const QString& dialogTitle = QString());
 
 	/// Returns the TaskManager that manages the running task displayed in this progress dialog.
 	TaskManager& taskManager() { return _taskManager; }
+
+protected:
+
+	/// Is called when the user tries to close the dialog.
+	virtual void closeEvent(QCloseEvent* event) override;
+
+	/// Is called when the user tries to close the dialog.
+	virtual void reject() override;
 
 private Q_SLOTS:
 
@@ -44,8 +55,8 @@ private Q_SLOTS:
 
 private:
 
-	/// The internal task manager.
-	TaskManager _taskManager;
+	/// The task manager.
+	TaskManager& _taskManager;
 };
 
 OVITO_END_INLINE_NAMESPACE

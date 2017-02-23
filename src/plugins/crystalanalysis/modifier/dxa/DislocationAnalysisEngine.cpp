@@ -106,7 +106,7 @@ void DislocationAnalysisEngine::perform()
 	nextProgressSubStep();
 	FloatType ghostLayerSize = 3.0f * _structureAnalysis.maximumNeighborDistance();
 	if(!_tessellation.generateTessellation(_structureAnalysis.cell(), _structureAnalysis.positions()->constDataPoint3(),
-			_structureAnalysis.atomCount(), ghostLayerSize, selection() ? selection()->constDataInt() : nullptr, this))
+			_structureAnalysis.atomCount(), ghostLayerSize, selection() ? selection()->constDataInt() : nullptr, *this))
 		return;
 
 	// Build list of edges in the tessellation.

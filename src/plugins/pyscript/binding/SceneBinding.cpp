@@ -30,6 +30,7 @@
 #include <core/scene/pipeline/Modifier.h>
 #include <core/scene/pipeline/ModifierApplication.h>
 #include <core/scene/pipeline/PipelineObject.h>
+#include <core/utilities/concurrent/TaskManager.h>
 #include <plugins/pyscript/extensions/PythonScriptModifier.h>
 #include "PythonBinding.h"
 
@@ -84,7 +85,10 @@ void defineSceneSubmodule(py::module parentModule)
 		//.def("setDisplayObject", &DataObject::setDisplayObject)
 		//.def_property("saveWithScene", &DataObject::saveWithScene, &DataObject::setSaveWithScene)
 		// Required by FileSource.load():
-		//.def("wait_until_ready", &DataObject::waitUntilReady, py::arg("time"), py::arg("message"), py::arg("progress_display") = (AbstractProgressDisplay*)nullptr)
+		.def("wait_until_ready", [](DataObject* obj, TimePoint time) {
+			Future<PipelineFlowState> future = obj->evaluateAsync(time);
+			return ScriptEngine::activeTaskManager().waitForTask(future);
+		})
 		.def_property("display", &DataObject::displayObject, &DataObject::setDisplayObject,
 			"The :py:class:`~ovito.vis.Display` object associated with this data object, which is responsible for "
         	"displaying the data. If this field is ``None``, the data is non-visual and doesn't appear in the viewports or rendered images.")
@@ -329,7 +333,10 @@ void defineSceneSubmodule(py::module parentModule)
 		//.def_property_readonly("displayObjects", &ObjectNode::displayObjects)		
 		// Required by ObjectNode.wait() and ObjectNode.compute():
 		.def("eval_pipeline", &ObjectNode::evalPipeline)
-		//.def("wait_until_ready", &ObjectNode::waitUntilReady, py::arg("time"), py::arg("message"), py::arg("progress_display") = (AbstractProgressDisplay*)nullptr)
+		.def("wait_until_ready", [](ObjectNode* node, TimePoint time) {
+			Future<PipelineFlowState> future = node->evalPipelineAsync(time);
+			return ScriptEngine::activeTaskManager().waitForTask(future);
+		})
 		// Required by ObjectNode.modifiers sequence:
 		.def("apply_modifier", &ObjectNode::applyModifier)
 	;

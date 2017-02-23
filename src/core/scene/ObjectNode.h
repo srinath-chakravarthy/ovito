@@ -23,7 +23,7 @@
 #define __OVITO_OBJECT_NODE_H
 
 #include <core/Core.h>
-#include <core/utilities/concurrent/FutureInterface.h>
+#include <core/utilities/concurrent/Promise.h>
 #include "SceneNode.h"
 #include "objects/DataObject.h"
 #include "objects/DisplayObject.h"
@@ -122,7 +122,7 @@ private:
 	}
 
 	/// List active asynchronous pipeline evaluation requests.
-	std::vector<std::pair<TimePoint, std::shared_ptr<FutureInterface<PipelineFlowState>>>> _evaluationRequests;
+	std::vector<std::pair<TimePoint, PromisePtr<PipelineFlowState>>> _evaluationRequests;
 
 	Q_OBJECT
 	OVITO_OBJECT

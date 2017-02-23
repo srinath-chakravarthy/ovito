@@ -34,7 +34,7 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(AsynchronousDisplayObject, DisplayObject);
 ******************************************************************************/
 AsynchronousDisplayObject::AsynchronousDisplayObject(DataSet* dataset) : DisplayObject(dataset)
 {
-	connect(&_engineWatcher, &FutureWatcher::finished, this, &AsynchronousDisplayObject::computeEngineFinished);
+	connect(&_engineWatcher, &PromiseWatcher::finished, this, &AsynchronousDisplayObject::computeEngineFinished);
 }
 
 /******************************************************************************
@@ -56,7 +56,7 @@ void AsynchronousDisplayObject::stopRunningEngine()
 		return;
 
 	try {
-		_engineWatcher.unsetFuture();
+		_engineWatcher.unsetPromise();
 		_runningEngine->cancel();
 		_runningEngine->waitForFinished();
 	} catch(...) {}
@@ -84,7 +84,7 @@ void AsynchronousDisplayObject::prepare(TimePoint time, DataObject* dataObject, 
 		// Start new compute engine.
 		_runningEngine = engine;
 		dataset()->container()->taskManager().runTaskAsync(_runningEngine);
-		_engineWatcher.setFutureInterface(_runningEngine);
+		_engineWatcher.setPromise(_runningEngine);
 	}
 
 	// Mark the pipeline output as pending as long as we are preparing the data for display.
@@ -124,7 +124,7 @@ void AsynchronousDisplayObject::computeEngineFinished()
 	}
 
 	// Reset everything.
-	_engineWatcher.unsetFuture();
+	_engineWatcher.unsetPromise();
 	_runningEngine.reset();
 
 	// Set the new status.

@@ -41,10 +41,10 @@ public:
 private Q_SLOTS:
 
 	/// \brief Is called when a task has started to run.
-	void taskStarted(FutureWatcher* taskWatcher);
+	void taskStarted(PromiseWatcher* taskWatcher);
 
 	/// \brief Is called when a task has finished.
-	void taskFinished(FutureWatcher* taskWatcher);
+	void taskFinished(PromiseWatcher* taskWatcher);
 
 	/// \brief Is called when the progress or status of a task has changed.
 	void taskProgressChanged();

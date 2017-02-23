@@ -117,7 +117,7 @@ def _Viewport_render(self, settings = None):
     else:
         # Create a temporary off-screen frame buffer.
         fb = FrameBuffer(settings.size[0], settings.size[1])
-    if not self.dataset.render_scene(settings, self, fb, ovito.get_progress_display()):
+    if not self.dataset.render_scene(settings, self, fb, ovito.task_manager):
         return None
     return fb.image
 Viewport.render = _Viewport_render

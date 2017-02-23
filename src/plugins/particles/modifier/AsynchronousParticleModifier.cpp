@@ -40,7 +40,7 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(AsynchronousParticleModifier, ParticleModifi
 AsynchronousParticleModifier::AsynchronousParticleModifier(DataSet* dataset) : ParticleModifier(dataset),
 		_cacheValidity(TimeInterval::empty())
 {
-	connect(&_engineWatcher, &FutureWatcher::finished, this, &AsynchronousParticleModifier::computeEngineFinished);
+	connect(&_engineWatcher, &PromiseWatcher::finished, this, &AsynchronousParticleModifier::computeEngineFinished);
 }
 
 /******************************************************************************
@@ -72,7 +72,7 @@ void AsynchronousParticleModifier::stopRunningEngine()
 		return;
 
 	try {
-		_engineWatcher.unsetFuture();
+		_engineWatcher.unsetPromise();
 		_runningEngine->cancel();
 		_runningEngine->waitForFinished();
 	} catch(...) {}
@@ -103,7 +103,7 @@ PipelineStatus AsynchronousParticleModifier::modifyParticles(TimePoint time, Tim
 				}
 				// Start compute engine.
 				dataset()->container()->taskManager().runTaskAsync(_runningEngine);
-				_engineWatcher.setFutureInterface(_runningEngine);
+				_engineWatcher.setPromise(_runningEngine);
 			}
 		}
 	}
@@ -175,7 +175,7 @@ void AsynchronousParticleModifier::computeEngineFinished()
 	}
 
 	// Reset everything.
-	_engineWatcher.unsetFuture();
+	_engineWatcher.unsetPromise();
 	_runningEngine.reset();
 
 	// Set the new modifier status.

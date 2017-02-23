@@ -66,8 +66,8 @@ FileSource::FileSource(DataSet* dataset) : CompoundObject(dataset),
 	INIT_PROPERTY_FIELD(playbackSpeedDenominator);
 	INIT_PROPERTY_FIELD(playbackStartTime);
 
-	connect(&_frameLoaderWatcher, &FutureWatcher::finished, this, &FileSource::loadOperationFinished);
-	connect(&_frameDiscoveryWatcher, &FutureWatcher::finished, this, &FileSource::frameDiscoveryFinished);
+	connect(&_frameLoaderWatcher, &PromiseWatcher::finished, this, &FileSource::loadOperationFinished);
+	connect(&_frameDiscoveryWatcher, &PromiseWatcher::finished, this, &FileSource::frameDiscoveryFinished);
 
 	// Do not save a copy of the linked external data in state file by default.
 	setSaveWithScene(false);
@@ -183,7 +183,7 @@ void FileSource::cancelLoadOperation()
 	if(_frameBeingLoaded != -1) {
 		try {
 			// This will suppress any pending notification events.
-			_frameLoaderWatcher.unsetFuture();
+			_frameLoaderWatcher.unsetPromise();
 			OVITO_ASSERT(_activeFrameLoader);
 			_activeFrameLoader->cancel();
 			_activeFrameLoader->waitForFinished();
@@ -257,7 +257,7 @@ PipelineFlowState FileSource::requestFrame(int frame)
 			// Cancel pending loading operation first.
 			try {
 				// This will suppress any pending notification events.
-				_frameLoaderWatcher.unsetFuture();
+				_frameLoaderWatcher.unsetPromise();
 				OVITO_ASSERT(_activeFrameLoader);
 				_activeFrameLoader->cancel();
 				_activeFrameLoader->waitForFinished();
@@ -297,7 +297,7 @@ PipelineFlowState FileSource::requestFrame(int frame)
 		_frameBeingLoaded = frame;
 		_activeFrameLoader = importer()->createFrameLoader(frames()[frame], _isNewFile);
 		_isNewFile = false;
-		_frameLoaderWatcher.setFutureInterface(_activeFrameLoader);
+		_frameLoaderWatcher.setPromise(_activeFrameLoader);
 		dataset()->container()->taskManager().runTaskAsync(_activeFrameLoader);
 		setStatus(PipelineStatus::Pending);
 		if(oldLoadingTaskWasCanceled)
@@ -343,7 +343,7 @@ void FileSource::loadOperationFinished()
 	}
 
 	// Reset everything.
-	_frameLoaderWatcher.unsetFuture();
+	_frameLoaderWatcher.unsetPromise();
 	_activeFrameLoader.reset();
 
 	// Set the new object status.
@@ -394,11 +394,12 @@ void FileSource::frameDiscoveryFinished()
 	}
 
 	// Reset everything.
-	_frameDiscoveryWatcher.unsetFuture();
+	_frameDiscoveryWatcher.unsetPromise();
 	_frameDiscoveryFuture.reset();
 
 	// Notify dependents that the evaluation request was completed.
 	notifyDependents(ReferenceEvent::TargetChanged);
+	notifyDependents(ReferenceEvent::PendingStateChanged);
 }
 
 /******************************************************************************
@@ -565,6 +566,77 @@ void FileSource::propertyChanged(const PropertyFieldDescriptor& field)
 	}
 	CompoundObject::propertyChanged(field);
 }
+
+/******************************************************************************
+* Sends an event to all dependents of this RefTarget.
+******************************************************************************/
+void FileSource::notifyDependents(ReferenceEvent& event)
+{
+	if(event.type() == ReferenceEvent::PendingStateChanged)
+		serveEvaluationRequests();
+
+	DataObject::notifyDependents(event);
+}
+
+/******************************************************************************
+* Asks the object for the complete results at the given time.
+******************************************************************************/
+Future<PipelineFlowState> FileSource::evaluateAsync(TimePoint time)
+{
+	// Check if there is already an active request pending for the same animation time.
+	for(const auto& req : _evaluationRequests) {
+		if(req.first == time)
+			return Future<PipelineFlowState>(req.second);
+	}
+
+	// Check if we can directly satisfy the request.
+	if(_evaluationRequests.empty()) {
+		const PipelineFlowState& state = evaluate(time);
+		if(state.status().type() != PipelineStatus::Pending)
+			return Future<PipelineFlowState>::createImmediate(state);
+	}
+
+	// Create a new record for this evaulation request.
+	Future<PipelineFlowState> future = Future<PipelineFlowState>::createWithPromise();
+	_evaluationRequests.emplace_back(time, future.promise());
+	future.promise()->setStarted();
+	return future;
+}
+
+/******************************************************************************
+* Checks if the data pipeline evaluation is completed.
+******************************************************************************/
+void FileSource::serveEvaluationRequests()
+{
+	while(!_evaluationRequests.empty()) {
+		// Sort out canceled requests.
+		Promise<PipelineFlowState>* promise = _evaluationRequests.front().second.get(); 
+		if(promise->isCanceled()) {
+			promise->setFinished();
+			_evaluationRequests.erase(_evaluationRequests.begin());
+			continue;
+		}
+		
+		// Check if we can now satisfy the oldest request.
+		const PipelineFlowState& state = evaluate(_evaluationRequests.front().first);
+
+		// The call above might have lead to another call of this function.
+		// Thus, we have to handle re-entrant behavior.
+		if(_evaluationRequests.empty() || promise != _evaluationRequests.front().second.get())
+			break;
+		
+		if(state.status().type() != PipelineStatus::Pending) {
+			promise->setResult(state);
+			promise->setFinished();
+			_evaluationRequests.erase(_evaluationRequests.begin());
+		}
+		else {
+			// Check back again later.
+			break;
+		}
+	}
+}
+
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

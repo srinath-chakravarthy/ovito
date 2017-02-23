@@ -58,9 +58,9 @@ ForwardIterator most_common(ForwardIterator first, ForwardIterator last)
 /******************************************************************************
 * Creates the mesh facets separating good and bad tetrahedra.
 ******************************************************************************/
-bool InterfaceMesh::createMesh(FloatType maximumNeighborDistance, ParticleProperty* crystalClusters, FutureInterfaceBase& progress)
+bool InterfaceMesh::createMesh(FloatType maximumNeighborDistance, ParticleProperty* crystalClusters, PromiseBase& promise)
 {
-	progress.beginProgressSubSteps(2);
+	promise.beginProgressSubSteps(2);
 
 	_isCompletelyGood = true;
 	_isCompletelyBad = true;
@@ -110,10 +110,10 @@ bool InterfaceMesh::createMesh(FloatType maximumNeighborDistance, ParticleProper
 	double alpha = 5.0 * maximumNeighborDistance;
 
 	ManifoldConstructionHelper<InterfaceMesh> manifoldConstructor(tessellation(), *this, alpha, structureAnalysis().positions());
-	if(!manifoldConstructor.construct(tetrahedronRegion, &progress, prepareMeshFace))
+	if(!manifoldConstructor.construct(tetrahedronRegion, promise, prepareMeshFace))
 		return false;
 
-	progress.nextProgressSubStep();
+	promise.nextProgressSubStep();
 
 	// Make sure each vertex is only part of a single manifold.
 	duplicateSharedVertices();
@@ -150,14 +150,14 @@ bool InterfaceMesh::createMesh(FloatType maximumNeighborDistance, ParticleProper
 	}
 #endif
 
-	progress.endProgressSubSteps();
-	return true;
+	promise.endProgressSubSteps();
+	return !promise.isCanceled();
 }
 
 /******************************************************************************
 * Generates the nodes and facets of the defect mesh based on the interface mesh.
 ******************************************************************************/
-bool InterfaceMesh::generateDefectMesh(const DislocationTracer& tracer, HalfEdgeMesh<>& defectMesh, FutureInterfaceBase& progress)
+bool InterfaceMesh::generateDefectMesh(const DislocationTracer& tracer, HalfEdgeMesh<>& defectMesh, PromiseBase& progress)
 {
 	// Copy vertices.
 	defectMesh.reserveVertices(vertexCount());

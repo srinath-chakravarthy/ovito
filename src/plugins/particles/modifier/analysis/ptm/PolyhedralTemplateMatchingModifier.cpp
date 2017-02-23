@@ -121,17 +121,17 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 
 	// Prepare the neighbor list.
 	NearestNeighborFinder neighFinder(MAX_NEIGHBORS);
-	if(!neighFinder.prepare(positions(), cell(), selection(), this))
+	if(!neighFinder.prepare(positions(), cell(), selection(), *this))
 		return;
 
 	// Create output storage.
 	ParticleProperty* output = structures();
 
-	setProgressRange(positions()->size());
 	setProgressValue(0);
+	setProgressMaximum(positions()->size());
 
 	// Perform analysis on each particle.
-	parallelForChunks(positions()->size(), *this, [this, &neighFinder, output](size_t startIndex, size_t count, FutureInterfaceBase& progress) {
+	parallelForChunks(positions()->size(), *this, [this, &neighFinder, output](size_t startIndex, size_t count, PromiseBase& promise) {
 
 		// Initialize thread-local storage for PTM routine.
 		ptm_local_handle_t ptm_local_handle = ptm_initialize_local();
@@ -141,10 +141,10 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 
 			// Update progress indicator.
 			if((index % 256) == 0)
-				progress.incrementProgressValue(256);
+				promise.incrementProgressValue(256);
 
 			// Break out of loop when operation was canceled.
-			if(progress.isCanceled())
+			if(promise.isCanceled())
 				break;
 
 			// Skip particles that are not included in the analysis.

@@ -57,7 +57,7 @@ void ActionManager::on_RenderActiveViewport_triggered()
 		frameBufferWindow->showAndActivateWindow();
 
 		// Show progress dialog.
-		ProgressDialog progressDialog(frameBufferWindow);
+		ProgressDialog progressDialog(frameBufferWindow, mainWindow()->datasetContainer().taskManager(), tr("Rendering"));
 
 		// Call high-level rendering function, which will take care of the rest.
 		_dataset->renderScene(settings, viewport, frameBuffer.get(), progressDialog.taskManager());

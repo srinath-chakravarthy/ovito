@@ -24,6 +24,8 @@
 
 #include <core/Core.h>
 #include <core/scene/objects/CompoundObject.h>
+#include <core/utilities/concurrent/Promise.h>
+#include <core/utilities/concurrent/PromiseWatcher.h>
 #include "FileSourceImporter.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO)
@@ -81,8 +83,20 @@ public:
 	/// \brief Asks the object for the result of the geometry pipeline at the given time.
 	virtual PipelineFlowState evaluate(TimePoint time) override;
 
+	/// Asks the object for the complete results at the given time.
+	virtual Future<PipelineFlowState> evaluateAsync(TimePoint time) override;
+
 	/// Returns the title of this object.
 	virtual QString objectTitle() override;
+
+	/// Sends an event to all dependents of this RefTarget.
+	virtual void notifyDependents(ReferenceEvent& event) override;
+
+	/// \brief Sends an event to all dependents of this RefTarget.
+	/// \param eventType The event type passed to the ReferenceEvent constructor.
+	inline void notifyDependents(ReferenceEvent::Type eventType) {
+		DataObject::notifyDependents(eventType);
+	}	
 
 protected Q_SLOTS:
 
@@ -108,6 +122,9 @@ protected:
 
 	/// \brief Cancels the current load operation if there is any in progress.
 	void cancelLoadOperation();
+
+	/// Checks if the data pipeline evaluation is completed.
+	void serveEvaluationRequests();
 
 private:
 
@@ -149,16 +166,19 @@ private:
 	std::shared_ptr<FileSourceImporter::FrameLoader> _activeFrameLoader;
 
 	/// The watcher object that is used to monitor the background operation.
-	FutureWatcher _frameLoaderWatcher;
+	PromiseWatcher _frameLoaderWatcher;
 
 	/// The active Future that provides the discovered input frames.
 	Future<QVector<FileSourceImporter::Frame>> _frameDiscoveryFuture;
 
 	/// The watcher object that is used to monitor the background operation.
-	FutureWatcher _frameDiscoveryWatcher;
+	PromiseWatcher _frameDiscoveryWatcher;
 
 	/// The status returned by the parser during its last call.
 	PipelineStatus _importStatus;
+
+	/// List active asynchronous pipeline evaluation requests.
+	std::vector<std::pair<TimePoint, PromisePtr<PipelineFlowState>>> _evaluationRequests;
 
 	Q_OBJECT
 	OVITO_OBJECT

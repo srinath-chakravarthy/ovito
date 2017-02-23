@@ -191,11 +191,12 @@ bool FileSourceImporter::importFile(const QUrl& sourceUrl, ImportMode importMode
 	dataset()->selection()->setNode(node);
 
 	if(importMode != ReplaceSelected) {
-		// Adjust views to completely show the newly imported object.
-		OORef<DataSet> ds(dataset());
-		ds->runWhenSceneIsReady([ds]() {
-			ds->viewportConfig()->zoomToSelectionExtents();
-		});
+		// Adjust viewports to completely show the newly imported object.
+		// This needs to be done after the data has been completely loaded.
+		PromiseWatcher* watcher = new PromiseWatcher(this);
+		connect(watcher, &PromiseWatcher::finished, dataset()->viewportConfig(), &ViewportConfiguration::zoomToSelectionExtents);
+		connect(watcher, &PromiseWatcher::finished, watcher, &QObject::deleteLater);	// Self-destruct watcher object when it's no longer needed.
+		watcher->setFuture(dataset()->makeSceneReady());
 	}
 
 	transaction.commit();

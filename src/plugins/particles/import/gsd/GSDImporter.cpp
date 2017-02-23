@@ -46,7 +46,7 @@ bool GSDImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceLocation
 /******************************************************************************
 * Scans the input file for simulation timesteps.
 ******************************************************************************/
-void GSDImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
+void GSDImporter::scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
 {
 	// First close text stream, we don't need it here.
 	QFileDevice& file = stream.device();

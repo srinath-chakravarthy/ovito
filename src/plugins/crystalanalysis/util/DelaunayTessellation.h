@@ -25,7 +25,7 @@
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/data/SimulationCell.h>
 #include <plugins/particles/data/ParticleProperty.h>
-#include <core/utilities/concurrent/FutureInterface.h>
+#include <core/utilities/concurrent/Promise.h>
 
 #include <geogram/delaunay/delaunay_3d.h>
 
@@ -115,7 +115,7 @@ public:
 	};
 
 	/// Generates the Delaunay tessellation.
-	bool generateTessellation(const SimulationCell& simCell, const Point3* positions, size_t numPoints, FloatType ghostLayerSize, const int* selectedPoints = nullptr, FutureInterfaceBase* progress = nullptr);
+	bool generateTessellation(const SimulationCell& simCell, const Point3* positions, size_t numPoints, FloatType ghostLayerSize, const int* selectedPoints, PromiseBase& promise);
 
 	/// Returns the total number of tetrahedra in the tessellation.
 	size_type numberOfTetrahedra() const { return _dt->nb_cells(); }

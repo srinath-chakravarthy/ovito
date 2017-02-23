@@ -21,13 +21,15 @@
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/objects/SurfaceMesh.h>
-#include <core/scene/objects/geometry/TriMeshObject.h>
-#include <core/scene/objects/geometry/TriMeshDisplay.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/particles/objects/BondsObject.h>
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
 #include <plugins/crystalanalysis/objects/patterns/StructurePattern.h>
+#include <core/scene/objects/geometry/TriMeshObject.h>
+#include <core/scene/objects/geometry/TriMeshDisplay.h>
+#include <core/utilities/concurrent/Task.h>
+#include <core/dataset/DataSetContainer.h>
 #include "DislocationAnalysisModifier.h"
 #include "DislocationAnalysisEngine.h"
 
@@ -288,8 +290,10 @@ PipelineStatus DislocationAnalysisModifier::applyComputationResults(TimePoint ti
 	// Output defect mesh.
 	OORef<SurfaceMesh> defectMeshObj(new SurfaceMesh(dataset(), _defectMesh.data()));
 	defectMeshObj->setIsCompletelySolid(_isBadEverywhere);
-	if(smoothSurfaceModifier() && smoothSurfaceModifier()->isEnabled() && smoothSurfaceModifier()->smoothingLevel() > 0)
-		defectMeshObj->smoothMesh(_simCell, smoothSurfaceModifier()->smoothingLevel());
+	if(smoothSurfaceModifier() && smoothSurfaceModifier()->isEnabled() && smoothSurfaceModifier()->smoothingLevel() > 0) {
+		SynchronousTask smoothingTask(dataset()->container()->taskManager());
+		defectMeshObj->smoothMesh(_simCell, smoothSurfaceModifier()->smoothingLevel(), smoothingTask.promise());
+	}
 	defectMeshObj->setDisplayObject(_defectMeshDisplay);
 	output().addObject(defectMeshObj);
 

@@ -92,10 +92,10 @@ bool POSCARImporter::shouldScanFileForTimesteps(const QUrl& sourceUrl)
 /******************************************************************************
 * Scans the given input file to find all contained simulation frames.
 ******************************************************************************/
-void POSCARImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
+void POSCARImporter::scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
 {
-	futureInterface.setProgressText(tr("Scanning file %1").arg(stream.filename()));
-	futureInterface.setProgressRange(stream.underlyingSize() / 1000);
+	promise.setProgressText(tr("Scanning file %1").arg(stream.filename()));
+	promise.setProgressMaximum(stream.underlyingSize() / 1000);
 
 	// Regular expression for whitespace characters.
 	QRegularExpression ws_re(QStringLiteral("\\s+"));
@@ -123,7 +123,7 @@ void POSCARImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, 
 	Frame frame;
 	frame.sourceFile = sourceUrl;
 	frame.lastModificationTime = fileInfo.lastModified();
-	while(!stream.eof()) {
+	while(!stream.eof() && !promise.isCanceled()) {
 		frame.byteOffset = stream.byteOffset();
 		frame.lineNumber = stream.lineNumber();
 		frame.label = QString("%1 (Frame %2)").arg(filename).arg(frameNumber++);
@@ -136,8 +136,8 @@ void POSCARImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, 
 			}
 		}
 
-		futureInterface.setProgressValueIntermittent(stream.underlyingByteOffset() / 1000);
-		if(futureInterface.isCanceled())
+		promise.setProgressValueIntermittent(stream.underlyingByteOffset() / 1000);
+		if(promise.isCanceled())
 			return;
 	}
 }

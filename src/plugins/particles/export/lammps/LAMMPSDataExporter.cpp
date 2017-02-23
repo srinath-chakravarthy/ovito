@@ -151,7 +151,7 @@ bool LAMMPSDataExporter::exportObject(SceneNode* sceneNode, int frameNumber, Tim
 	}
 	textStream() << "\n\n";
 
-	exportTask.setMaximum(100);
+	exportTask.setProgressMaximum(100);
 	for(size_t i = 0; i < posProperty->size(); i++) {
 		// atom-ID
 		textStream() << (identifierProperty ? identifierProperty->getInt(i) : (i+1));
@@ -198,8 +198,8 @@ bool LAMMPSDataExporter::exportObject(SceneNode* sceneNode, int frameNumber, Tim
 
 		currentProgress++;
 		if((currentProgress % 4096) == 0) {
-			exportTask.setValue(currentProgress * 100 / totalProgressCount);
-			if(exportTask.wasCanceled())
+			exportTask.setProgressValue(currentProgress * 100 / totalProgressCount);
+			if(exportTask.isCanceled())
 				return false;
 		}
 	}
@@ -222,8 +222,8 @@ bool LAMMPSDataExporter::exportObject(SceneNode* sceneNode, int frameNumber, Tim
 
 			currentProgress++;
 			if((currentProgress % 4096) == 0) {
-				exportTask.setValue(currentProgress * 100 / totalProgressCount);
-				if(exportTask.wasCanceled())
+				exportTask.setProgressValue(currentProgress * 100 / totalProgressCount);
+				if(exportTask.isCanceled())
 					return false;
 			}
 		}
@@ -248,15 +248,15 @@ bool LAMMPSDataExporter::exportObject(SceneNode* sceneNode, int frameNumber, Tim
 
 			currentProgress++;
 			if((currentProgress % 4096) == 0) {
-				exportTask.setValue(currentProgress * 100 / totalProgressCount);
-				if(exportTask.wasCanceled())
+				exportTask.setProgressValue(currentProgress * 100 / totalProgressCount);
+				if(exportTask.isCanceled())
 					return false;
 			}
 		}
 		OVITO_ASSERT(bondIndex == bondsObj->storage()->size() / 2 + 1);
 	}
 
-	return !exportTask.wasCanceled();
+	return !exportTask.isCanceled();
 }
 
 OVITO_END_INLINE_NAMESPACE

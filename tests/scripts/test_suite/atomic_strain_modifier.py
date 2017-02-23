@@ -14,7 +14,6 @@ node.modifiers.append(AffineTransformationModifier(
 # Calculate the atomic strain.
 modifier = AtomicStrainModifier()
 node.modifiers.append(modifier)
-print(type(modifier.reference))
 print("Loading reference configuration")
 modifier.reference.load("../../files/CFG/shear.void.120.cfg")
 

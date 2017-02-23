@@ -720,7 +720,8 @@ PYBIND11_PLUGIN(Particles)
 	auto CutoffNeighborFinder_py = py::class_<CutoffNeighborFinder>(m, "CutoffNeighborFinder")
 		.def(py::init<>())
 		.def("prepare", [](CutoffNeighborFinder& finder, FloatType cutoff, ParticlePropertyObject& positions, SimulationCellObject& cell) {
-				finder.prepare(cutoff, positions.storage(), cell.data());
+				SynchronousTask task(ScriptEngine::activeTaskManager());
+				return finder.prepare(cutoff, positions.storage(), cell.data(), nullptr, task.promise());
 			})
 	;
 
@@ -738,7 +739,8 @@ PYBIND11_PLUGIN(Particles)
 	auto NearestNeighborFinder_py = py::class_<NearestNeighborFinder>(m, "NearestNeighborFinder")
 		.def(py::init<size_t>())
 		.def("prepare", [](NearestNeighborFinder& finder, ParticlePropertyObject& positions, SimulationCellObject& cell) {
-			finder.prepare(positions.storage(), cell.data());
+			SynchronousTask task(ScriptEngine::activeTaskManager());
+			return finder.prepare(positions.storage(), cell.data(), nullptr, task.promise());
 		})
 	;
 

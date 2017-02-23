@@ -25,6 +25,7 @@
 #include <core/Core.h>
 #include <core/scene/objects/DataObject.h>
 #include <core/utilities/concurrent/Future.h>
+#include <core/utilities/concurrent/Promise.h>
 #include "ModifierApplication.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
@@ -155,7 +156,7 @@ private:
 	int _cachedIndex;
 
 	/// List active asynchronous pipeline evaluation requests.
-	std::vector<std::tuple<TimePoint, int, std::shared_ptr<FutureInterface<PipelineFlowState>>>> _evaluationRequests;
+	std::vector<std::tuple<TimePoint, int, PromisePtr<PipelineFlowState>>> _evaluationRequests;
 
 	Q_OBJECT
 	OVITO_OBJECT

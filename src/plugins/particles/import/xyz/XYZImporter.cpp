@@ -101,10 +101,10 @@ InputColumnMapping XYZImporter::inspectFileHeader(const Frame& frame)
 /******************************************************************************
 * Scans the given input file to find all contained simulation frames.
 ******************************************************************************/
-void XYZImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
+void XYZImporter::scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
 {
-	futureInterface.setProgressText(tr("Scanning XYZ file %1").arg(stream.filename()));
-	futureInterface.setProgressRange(stream.underlyingSize() / 1000);
+	promise.setProgressText(tr("Scanning XYZ file %1").arg(stream.filename()));
+	promise.setProgressMaximum(stream.underlyingSize() / 1000);
 
 	// Regular expression for whitespace characters.
 	QRegularExpression ws_re(QStringLiteral("\\s+"));
@@ -115,7 +115,7 @@ void XYZImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVe
 	QDateTime lastModified = fileInfo.lastModified();
 	int frameNumber = 0;
 
-	while(!stream.eof()) {
+	while(!stream.eof() && !promise.isCanceled()) {
 		qint64 byteOffset = stream.byteOffset();
 
 		// Parse number of atoms.
@@ -142,8 +142,8 @@ void XYZImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVe
 		for(int i = 0; i < numParticles; i++) {
 			stream.readLine();
 			if((i % 4096) == 0)
-				futureInterface.setProgressValue(stream.underlyingByteOffset() / 1000);
-			if(futureInterface.isCanceled())
+				promise.setProgressValue(stream.underlyingByteOffset() / 1000);
+			if(promise.isCanceled())
 				return;
 		}
 	}
@@ -223,14 +223,13 @@ inline bool parseBool(const char* s, int& d)
 ******************************************************************************/
 void XYZImporter::XYZImportTask::parseFile(CompressedTextReader& stream)
 {
-	setProgressText(
-			tr("Reading XYZ file %1").arg(frame().sourceFile.toString(QUrl::RemovePassword | QUrl::PreferLocalFile | QUrl::PrettyDecoded)));
+	setProgressText(tr("Reading XYZ file %1").arg(frame().sourceFile.toString(QUrl::RemovePassword | QUrl::PreferLocalFile | QUrl::PrettyDecoded)));
 
 	// Parse number of atoms.
 	int numParticles;
 	if(sscanf(stream.readLine(), "%u", &numParticles) != 1 || numParticles < 0 || numParticles > 1e9)
 		throw Exception(tr("Invalid number of particles in line %1 of XYZ file: %2").arg(stream.lineNumber()).arg(stream.lineString()));
-	setProgressRange(numParticles);
+	setProgressMaximum(numParticles);
 	QString fileExcerpt = stream.lineString();
 
 	// Regular expression for whitespace characters.

@@ -60,11 +60,10 @@ Future<QString> FileManager::fetchUrl(DataSetContainer& container, const QUrl& u
 		}
 
 		// Start the background download job.
-		std::shared_ptr<FutureInterface<QString>> futureInterface = std::make_shared<FutureInterface<QString>>();
-		Future<QString> future(futureInterface);
+		Future<QString> future = Future<QString>::createWithPromise();
 		_pendingFiles.insert(normalizedUrl, future);
-		new SftpDownloadJob(url, futureInterface);
-		container.taskManager().registerTask(futureInterface);
+		new SftpDownloadJob(url, future.promise());
+		container.taskManager().registerTask(future);
 		return future;
 	}
 	else throw Exception(tr("URL scheme not supported. The program supports only the sftp:// scheme and local file paths."), &container);
@@ -76,9 +75,9 @@ Future<QString> FileManager::fetchUrl(DataSetContainer& container, const QUrl& u
 Future<QStringList> FileManager::listDirectoryContents(const QUrl& url)
 {
 	if(url.scheme() == QStringLiteral("sftp")) {
-		std::shared_ptr<FutureInterface<QStringList>> futureInterface = std::make_shared<FutureInterface<QStringList>>();
-		new SftpListDirectoryJob(url, futureInterface);
-		return Future<QStringList>(futureInterface);
+		Future<QStringList> future = Future<QStringList>::createWithPromise();
+		new SftpListDirectoryJob(url, future.promise());
+		return future;
 	}
 	else throw Exception(tr("URL scheme not supported. The program supports only the sftp:// scheme and local file paths."));
 }

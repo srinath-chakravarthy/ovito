@@ -23,14 +23,13 @@
 #define __OVITO_TASK_H
 
 #include <core/Core.h>
-#include "FutureInterface.h"
 #include "Future.h"
 
 #include <QRunnable>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
 
-class AsynchronousTask : public FutureInterface<void>, public QRunnable
+class AsynchronousTask : public Promise<void>, public QRunnable
 {
 public:
 
@@ -51,15 +50,15 @@ private:
 
 	/// Implementation of FutureInterface.
 	virtual void tryToRunImmediately() override {
-		if(!this->reportStarted())
+		if(!this->setStarted())
 			return;
 		try {
 			perform();
 		}
 		catch(...) {
-			this->reportException();
+			this->setException();
 		}
-		this->reportFinished();
+		this->setFinished();
 	}
 };
 
@@ -74,32 +73,35 @@ public:
 	~SynchronousTask();
 
 	/// Returns whether the operation has been canceled by the user.
-	bool wasCanceled() const { return _futureInterface->isCanceled(); }
+	bool isCanceled() const;
 
 	/// Cancels the operation.
-	void cancel() { _futureInterface->cancel(); }
+	void cancel() { _promise->cancel(); }
 
 	/// Sets the status text to be displayed.
-	void setStatusText(const QString& text);
+	void setProgressText(const QString& text);
 
 	/// Return the current status text.
-	QString statusText() const { return _futureInterface->progressText(); }
+	QString progressText() const { return _promise->progressText(); }
 
 	/// Returns the highest value represented by the progress bar.
-	int maximum() const { return _futureInterface->progressMaximum(); }
+	int progressMaximum() const { return _promise->progressMaximum(); }
 
 	/// Sets the highest value represented by the progress bar.
-	void setMaximum(int max) { _futureInterface->setProgressRange(max); }
+	void setProgressMaximum(int max) { _promise->setProgressMaximum(max); }
 
 	/// Returns the value displayed by the progress bar.
-	int value() const { return _futureInterface->progressValue(); }
+	int progressValue() const { return _promise->progressValue(); }
 
 	/// Sets the value displayed by the progress bar.
-	void setValue(int v);
+	void setProgressValue(int v);
+
+	/// Returns the internal promise managed by this object.
+	Promise<void>& promise() const { return *_promise.get(); }
 
 private:
 
-	std::shared_ptr<FutureInterface<void>> _futureInterface;
+	PromisePtr<void> _promise;
 };
 
 OVITO_END_INLINE_NAMESPACE

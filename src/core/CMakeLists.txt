@@ -86,8 +86,10 @@ SET(SourceFiles
 	utilities/io/SftpJob.cpp
 	utilities/io/CompressedTextReader.cpp
 	utilities/io/CompressedTextWriter.cpp
-	utilities/concurrent/Future.cpp
+	utilities/concurrent/PromiseWatcher.cpp
+	utilities/concurrent/Promise.cpp
 	utilities/concurrent/TaskManager.cpp
+	utilities/concurrent/Task.cpp
 	utilities/mesh/TriMesh.cpp
 	rendering/SceneRenderer.cpp
 	rendering/noninteractive/NonInteractiveSceneRenderer.cpp

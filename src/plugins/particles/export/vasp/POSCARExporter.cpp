@@ -98,7 +98,7 @@ bool POSCARExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoi
 	size_t totalProgressCount = posProperty->size();
 	if(velocityProperty) totalProgressCount += posProperty->size();
 	size_t currentProgress = 0;
-	exportTask.setMaximum(100);
+	exportTask.setProgressMaximum(100);
 
 	// Write atomic positions.
 	textStream() << "Cartesian\n";
@@ -112,8 +112,8 @@ bool POSCARExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoi
 			currentProgress++;
 
 			if((currentProgress % 1000) == 0) {
-				exportTask.setValue(currentProgress * 100 / totalProgressCount);
-				if(exportTask.wasCanceled())
+				exportTask.setProgressValue(currentProgress * 100 / totalProgressCount);
+				if(exportTask.isCanceled())
 					return false;
 			}
 		}
@@ -132,15 +132,15 @@ bool POSCARExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoi
 				currentProgress++;
 
 				if((currentProgress % 1000) == 0) {
-					exportTask.setValue(currentProgress * 100 / totalProgressCount);
-					if(exportTask.wasCanceled())
+					exportTask.setProgressValue(currentProgress * 100 / totalProgressCount);
+					if(exportTask.isCanceled())
 						return false;
 				}
 			}
 		}
 	}
 
-	return !exportTask.wasCanceled();
+	return !exportTask.isCanceled();
 }
 
 OVITO_END_INLINE_NAMESPACE

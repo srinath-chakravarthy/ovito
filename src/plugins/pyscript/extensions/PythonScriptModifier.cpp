@@ -192,10 +192,7 @@ void PythonScriptModifier::runScriptFunction()
 				int animationFrame = dataset()->animationSettings()->timeToFrame(_computingInterval.start());
 
 				// Construct progress callback object.
-				_runningTask = std::make_shared<ProgressHelper>();
-				// Register background task so user/system can cancel it.
-				dataset()->container()->taskManager().registerTask(_runningTask);
-				_runningTask->reportStarted();
+				_runningTask.reset(new SynchronousTask(dataset()->container()->taskManager()));
 				_runningTask->setProgressText(tr("Running modifier script"));
 
 				// Make sure the actions of the modify() function are not recorded on the undo stack.
@@ -269,11 +266,11 @@ void PythonScriptModifier::runScriptFunction()
 							if(PyFloat_Check(itemObj.ptr())) {
 								double progressValue = itemObj.cast<double>();
 								if(progressValue >= 0.0 && progressValue <= 1.0) {
-									_runningTask->setProgressRange(100);
+									_runningTask->setProgressMaximum(100);
 									_runningTask->setProgressValue((int)(progressValue * 100.0));
 								}
 								else {
-									_runningTask->setProgressRange(0);
+									_runningTask->setProgressMaximum(0);
 									_runningTask->setProgressValue(0);
 								}
 							}
@@ -343,10 +340,7 @@ void PythonScriptModifier::scriptCompleted()
 	setStatus(_outputCache.status());
 
 	// Signal completion of background task.
-	if(_runningTask) {
-		_runningTask->reportFinished();
-		_runningTask.reset();
-	}
+	_runningTask.reset();
 
 	// Notify pipeline system that the evaluation request was satisfied or not satisfied.
 	notifyDependents(ReferenceEvent::PendingStateChanged);
@@ -407,7 +401,6 @@ void PythonScriptModifier::stopRunningScript()
 	_dataCollection.reset();
 	if(_runningTask) {
 		_runningTask->cancel();
-		_runningTask->reportFinished();
 		_runningTask.reset();
 	}
 	// Discard active generator object.

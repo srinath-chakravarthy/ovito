@@ -246,8 +246,8 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 			}
 			if(!count) return;
 
-			setProgressRange(count);
 			setProgressValue(0);
+			setProgressMaximum(count);
 #if 1
 			voro::c_loop_all cl(voroContainer);
 			voro::voronoicell_neighbor v;
@@ -311,8 +311,8 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 			}
 
 			if(!count) return;
-			setProgressRange(count);
 			setProgressValue(0);
+			setProgressMaximum(count);
 
 			voro::c_loop_all cl(voroContainer);
 			voro::voronoicell_neighbor v;
@@ -375,7 +375,7 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 	else {
 		// Prepare the nearest neighbor list generator.
 		NearestNeighborFinder nearestNeighborFinder;
-		if(!nearestNeighborFinder.prepare(_positions.data(), _simCell, _selection.data(), this))
+		if(!nearestNeighborFinder.prepare(_positions.data(), _simCell, _selection.data(), *this))
 			return;
 
 		// Squared particle radii (input was just radii).

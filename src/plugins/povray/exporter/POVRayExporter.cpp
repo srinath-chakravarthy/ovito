@@ -23,6 +23,7 @@
 #include <core/scene/SceneRoot.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/utilities/concurrent/Task.h>
+#include <core/utilities/concurrent/TaskManager.h>
 #include <core/rendering/RenderSettings.h>
 #include <core/viewport/Viewport.h>
 #include <core/viewport/ViewportConfiguration.h>
@@ -104,29 +105,35 @@ bool POVRayExporter::exportFrame(int frameNumber, TimePoint time, const QString&
 	if(!FileExporter::exportFrame(frameNumber, time, filePath, taskManager))
 		return false;
 
-	SynchronousTask exportTask(taskManager);
-	exportTask.setStatusText(tr("Exporting frame %1 to file '%2'.").arg(frameNumber).arg(filePath));
+	// Wait until the scene is ready.
+	Future<void> sceneReadyFuture = dataset()->makeSceneReady();
+	if(!taskManager.waitForTask(sceneReadyFuture))
+		return false;
 
 	Viewport* vp = dataset()->viewportConfig()->activeViewport();
 	if(!vp) throwException(tr("POV-Ray exporter requires an active viewport."));
+
+	SynchronousTask exportTask(taskManager);
+	exportTask.setProgressText(tr("Writing data to POV-Ray file"));
 
 	OVITO_ASSERT(_renderer);
 	Box3 boundingBox = _renderer->sceneBoundingBox(time);
 	ViewProjectionParameters projParams = vp->projectionParameters(time, _renderer->renderSettings()->outputImageAspectRatio(), boundingBox);
 	try {
+		_renderer->_exportTask = &exportTask;
 		_renderer->beginFrame(time, projParams, vp);
 		for(SceneNode* node : outputData()) {
 			_renderer->renderNode(node);
-			if(exportTask.wasCanceled()) break;
+			if(exportTask.isCanceled()) break;
 		}
-		_renderer->endFrame(!exportTask.wasCanceled());
+		_renderer->endFrame(!exportTask.isCanceled());
 	}
 	catch(...) {
 		_renderer->endFrame(false);
 		throw;
 	}
 
-	return !exportTask.wasCanceled();
+	return !exportTask.isCanceled();
 }
 
 OVITO_END_INLINE_NAMESPACE

@@ -291,14 +291,15 @@ void ComputePropertyModifier::PropertyComputeEngine::perform()
 	CutoffNeighborFinder neighborFinder;
 	if(neighborMode()) {
 		// Prepare the neighbor list.
-		if(!neighborFinder.prepare(_cutoff, positions(), cell(), nullptr, this))
+		if(!neighborFinder.prepare(_cutoff, positions(), cell(), nullptr, *this))
 			return;
 	}
 
-	// Parallelized loop over all particles.
-	setProgressRange(positions()->size());
 	setProgressValue(0);
-	parallelForChunks(positions()->size(), *this, [this, &neighborFinder](size_t startIndex, size_t count, FutureInterfaceBase& futureInterface) {
+	setProgressMaximum(positions()->size());
+
+	// Parallelized loop over all particles.
+	parallelForChunks(positions()->size(), *this, [this, &neighborFinder](size_t startIndex, size_t count, PromiseBase& promise) {
 		ParticleExpressionEvaluator::Worker worker(_evaluator);
 		ParticleExpressionEvaluator::Worker neighborWorker(_neighborEvaluator);
 
@@ -326,10 +327,10 @@ void ComputePropertyModifier::PropertyComputeEngine::perform()
 
 			// Update progress indicator.
 			if((particleIndex % 1024) == 0)
-				futureInterface.incrementProgressValue(1024);
+				promise.incrementProgressValue(1024);
 
 			// Stop loop if canceled.
-			if(futureInterface.isCanceled())
+			if(promise.isCanceled())
 				return;
 
 			// Skip unselected particles if requested.

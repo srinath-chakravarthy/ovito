@@ -111,7 +111,7 @@ private:
 	std::shared_ptr<ComputeEngine> _runningEngine;
 
 	/// The watcher that is used to monitor the currently running compute engine.
-	FutureWatcher _engineWatcher;
+	PromiseWatcher _engineWatcher;
 
 	/// The validity interval of the cached computation results.
 	TimeInterval _cacheValidity;

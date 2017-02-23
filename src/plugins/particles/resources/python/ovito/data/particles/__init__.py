@@ -387,7 +387,8 @@ class CutoffNeighborFinder(ovito.plugins.Particles.CutoffNeighborFinder):
         if not hasattr(data_collection, 'cell'):
             raise KeyError("DataCollection does not contain simulation cell information.")
         self.particle_count = data_collection.number_of_particles
-        self.prepare(cutoff, data_collection.position, data_collection.cell)
+        if not self.prepare(cutoff, data_collection.position, data_collection.cell):
+            raise RuntimeError("Operation has been canceled by the user.")
         
     def find(self, index):
         """ 
@@ -452,7 +453,8 @@ class NearestNeighborFinder(ovito.plugins.Particles.NearestNeighborFinder):
         if not hasattr(data_collection, 'cell'):
             raise KeyError("DataCollection does not contain simulation cell information.")
         self.particle_count = data_collection.number_of_particles
-        self.prepare(data_collection.position, data_collection.cell)
+        if not self.prepare(data_collection.position, data_collection.cell):
+            raise RuntimeError("Operation has been canceled by the user.")
         
     def find(self, index):
         """ 

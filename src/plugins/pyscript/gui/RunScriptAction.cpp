@@ -53,7 +53,7 @@ void RunScriptAction::registerActions(ActionManager& actionManager)
 		dataset->undoStack().beginCompoundOperation(tr("Script actions"));
 		try {
 			// Show a progress dialog while script is running.
-			ProgressDialog progressDialog(actionManager.mainWindow());	
+			ProgressDialog progressDialog(actionManager.mainWindow(), tr("Script execution"));	
 
 			ScriptEngine engine(dataset, progressDialog.taskManager(), true);
 

@@ -55,7 +55,7 @@
    <entry>centOS</entry>
    <entry>
    <screen><command>sudo yum install epel-release</command></screen>
-   <screen><command>sudo yum install git gcc gcc-c++ cmake qt5-qtbase-devel qt5-qttools \
+   <screen><command>sudo yum install git gcc gcc-c++ cmake qt5-qtbase-devel qt5-qtsvg-devel qt5-qttools-devel \
                           muParser-devel boost-devel netcdf-devel hdf5-devel botan-devel</command></screen>
    These packages allow building only a basic version of OVITO without Python scripting and video encoding support and documentation.
    In order to build a more complete version, other <link linkend="development.requirements">dependencies</link> must be installed manually.

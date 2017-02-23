@@ -33,9 +33,10 @@ static const int edgeVertices[6][2] = {{0,1},{0,2},{0,3},{1,2},{1,3},{2,3}};
 /******************************************************************************
 * Builds the list of edges in the tetrahedral tessellation.
 ******************************************************************************/
-bool ElasticMapping::generateTessellationEdges(FutureInterfaceBase& progress)
+bool ElasticMapping::generateTessellationEdges(PromiseBase& promise)
 {
-	progress.setProgressRange(tessellation().numberOfPrimaryTetrahedra());
+	promise.setProgressValue(0);
+	promise.setProgressMaximum(tessellation().numberOfPrimaryTetrahedra());
 
 	// Generate list of tessellation edges.
 	for(DelaunayTessellation::CellIterator cell = tessellation().begin_cells(); cell != tessellation().end_cells(); ++cell) {
@@ -44,7 +45,7 @@ bool ElasticMapping::generateTessellationEdges(FutureInterfaceBase& progress)
 		if(tessellation().isGhostCell(cell)) continue;
 
 		// Update progress indicator.
-		if(!progress.setProgressValueIntermittent(tessellation().getCellIndex(cell)))
+		if(!promise.setProgressValueIntermittent(tessellation().getCellIndex(cell)))
 			return false;
 
 		// Create edge data structure for each of the six edges of the cell.
@@ -71,16 +72,17 @@ bool ElasticMapping::generateTessellationEdges(FutureInterfaceBase& progress)
 		}
 	}
 
-	return true;
+	return !promise.isCanceled();
 }
 
 /******************************************************************************
 * Assigns each tessellation vertex to a cluster.
 ******************************************************************************/
-bool ElasticMapping::assignVerticesToClusters(FutureInterfaceBase& progress)
+bool ElasticMapping::assignVerticesToClusters(PromiseBase& promise)
 {
 	// Unknown runtime length.
-	progress.setProgressRange(0);
+	promise.setProgressValue(0);
+	promise.setProgressMaximum(0);
 
 	// Assign a cluster to each vertex of the tessellation, which will be used to express
 	// reference vectors assigned to the edges leaving the vertex.
@@ -95,7 +97,7 @@ bool ElasticMapping::assignVerticesToClusters(FutureInterfaceBase& progress)
 	// from an already assigned vertex to all its unassigned neighbors.
 	bool notDone;
 	do {
-		if(progress.isCanceled())
+		if(promise.isCanceled())
 			return false;
 
 		notDone = false;
@@ -122,22 +124,23 @@ bool ElasticMapping::assignVerticesToClusters(FutureInterfaceBase& progress)
 	}
 	while(notDone);
 
-	return true;
+	return !promise.isCanceled();
 }
 
 /******************************************************************************
 * Determines the ideal vector corresponding to each edge of the tessellation.
 ******************************************************************************/
-bool ElasticMapping::assignIdealVectorsToEdges(bool reconstructEdgeVectors, int crystalPathSteps, FutureInterfaceBase& progress)
+bool ElasticMapping::assignIdealVectorsToEdges(bool reconstructEdgeVectors, int crystalPathSteps, PromiseBase& promise)
 {
 	CrystalPathFinder pathFinder(_structureAnalysis, crystalPathSteps);
 
 	// Try to assign a reference vector to the tessellation edges.
-	progress.setProgressRange(_vertexEdges.size());
+	promise.setProgressValue(0);
+	promise.setProgressMaximum(_vertexEdges.size());
 	int progressCounter = 0;
 	for(const auto& firstEdge : _vertexEdges) {
 
-		if(!progress.setProgressValueIntermittent(progressCounter++))
+		if(!promise.setProgressValueIntermittent(progressCounter++))
 			return false;
 
 		for(TessellationEdge* edge = firstEdge.first; edge != nullptr; edge = edge->nextLeavingEdge) {
@@ -194,14 +197,14 @@ bool ElasticMapping::assignIdealVectorsToEdges(bool reconstructEdgeVectors, int 
 	}
 #endif
 
-	return true;
+	return !promise.isCanceled();
 }
 
 /******************************************************************************
 * Tries to determine the ideal vectors of tessellation edges, which haven't
 * been assigned one during the first phase.
 ******************************************************************************/
-bool ElasticMapping::reconstructIdealEdgeVectors(FutureInterfaceBase& progress)
+bool ElasticMapping::reconstructIdealEdgeVectors(PromiseBase& promise)
 {
 #if 0
 	auto reconstructRecursive = [this](std::deque<TessellationEdge*>& toBeVisited) {

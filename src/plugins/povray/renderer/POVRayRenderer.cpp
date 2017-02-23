@@ -24,6 +24,7 @@
 #include <core/rendering/RenderSettings.h>
 #include <core/scene/ObjectNode.h>
 #include <core/utilities/concurrent/Task.h>
+#include <core/utilities/concurrent/TaskManager.h>
 #include "POVRayRenderer.h"
 
 #include <QTemporaryFile>
@@ -325,7 +326,7 @@ void POVRayRenderer::beginFrame(TimePoint time, const ViewProjectionParameters& 
 bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, TaskManager& taskManager)
 {
 	SynchronousTask renderTask(taskManager);
-	renderTask.setStatusText(tr("Writing scene to temporary POV-Ray file"));
+	renderTask.setProgressText(tr("Writing scene to temporary POV-Ray file"));
 
 	// Export Ovito data objects to POV-Ray scene.
 	renderScene();
@@ -342,8 +343,8 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 		_imageFile->close();
 
 		// Start POV-Ray sub-process.
-		renderTask.setStatusText(tr("Starting external POV-Ray program."));
-		if(renderTask.wasCanceled()) 
+		renderTask.setProgressText(tr("Starting external POV-Ray program."));
+		if(renderTask.isCanceled()) 
 			return false;
 
 		// Specify POV-Ray options:
@@ -399,12 +400,12 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 		}
 
 		// Wait until POV-Ray has finished rendering.
-		renderTask.setStatusText(tr("Waiting for external POV-Ray program..."));
-		if(renderTask.wasCanceled()) 
+		renderTask.setProgressText(tr("Waiting for external POV-Ray program..."));
+		if(renderTask.isCanceled()) 
 			return false;
 		while(!povrayProcess.waitForFinished(100)) {
-			renderTask.setValue(0);
-			if(renderTask.wasCanceled())
+			renderTask.setProgressValue(0);
+			if(renderTask.isCanceled())
 				return false;
 		}
 
@@ -416,8 +417,8 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 			throwException(tr("POV-Ray program returned with error code %1.").arg(povrayProcess.exitCode()));
 
 		// Get rendered image from POV-Ray process.
-		renderTask.setStatusText(tr("Getting rendered image from POV-Ray."));
-		if(renderTask.wasCanceled()) 
+		renderTask.setProgressText(tr("Getting rendered image from POV-Ray."));
+		if(renderTask.isCanceled()) 
 			return false;
 
 		QImage povrayImage;
@@ -455,10 +456,10 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 			QRectF boundingRect;
 			painter.drawText(pos, std::get<4>(textCall) | Qt::TextSingleLine | Qt::TextDontClip, std::get<0>(textCall), &boundingRect);
 			frameBuffer->update(boundingRect.toAlignedRect());
-		}		
+		}
 	}
 
-	return !renderTask.wasCanceled();
+	return !renderTask.isCanceled();
 }
 
 /******************************************************************************
@@ -469,6 +470,7 @@ void POVRayRenderer::endFrame(bool renderSuccessful)
 	_sceneFile.reset();
 	_imageFile.reset();
 	_outputStream.setDevice(nullptr);
+	_exportTask = nullptr;
 	NonInteractiveSceneRenderer::endFrame(renderSuccessful);	
 }
 
@@ -513,6 +515,7 @@ void POVRayRenderer::renderParticles(const DefaultParticlePrimitive& particleBuf
 					_outputStream << "SPRTCLE("; write(tm * (*p)); 
 					_outputStream << ", " << (*r) << ", "; write(*c);
 					_outputStream << ")\n";
+					if(_exportTask && _exportTask->isCanceled()) return;
 				}
 			}
 		}
@@ -523,6 +526,7 @@ void POVRayRenderer::renderParticles(const DefaultParticlePrimitive& particleBuf
 					_outputStream << "DPRTCLE("; write(tm * (*p)); 
 					_outputStream << ", " << (*r) << ", "; write(*c);
 					_outputStream << ")\n";
+					if(_exportTask && _exportTask->isCanceled()) return;
 				}
 			}
 		}
@@ -535,6 +539,7 @@ void POVRayRenderer::renderParticles(const DefaultParticlePrimitive& particleBuf
 					_outputStream << "CPRTCLE("; write(tm * (*p)); 
 					_outputStream << ", " << (*r) << ", "; write(*c);
 					_outputStream << ")\n";
+					if(_exportTask && _exportTask->isCanceled()) return;
 				}
 			}
 		}
@@ -545,6 +550,7 @@ void POVRayRenderer::renderParticles(const DefaultParticlePrimitive& particleBuf
 					_outputStream << "SQPRTCLE("; write(tm * (*p)); 
 					_outputStream << ", " << (*r) << ", "; write(*c);
 					_outputStream << ")\n";
+					if(_exportTask && _exportTask->isCanceled()) return;
 				}
 			}
 		}
@@ -592,6 +598,7 @@ void POVRayRenderer::renderParticles(const DefaultParticlePrimitive& particleBuf
 						 0,0,s.z(),0)); _outputStream << "\n";
 				_outputStream << "}\n";
 			}
+			if(_exportTask && _exportTask->isCanceled()) return;
 		}
 	}	
 	else throwException(tr("Particle shape not supported by POV-Ray renderer: %1").arg(particleBuffer.particleShape()));
@@ -610,6 +617,7 @@ void POVRayRenderer::renderArrows(const DefaultArrowPrimitive& arrowBuffer)
 			_outputStream << ", "; write(tm * element.dir);
 			_outputStream << ", " << element.width << ", "; write(element.color);
 			_outputStream << ")\n";
+			if(_exportTask && _exportTask->isCanceled()) return;
 		}
 	}
 	else if(arrowBuffer.shape() == ArrowPrimitive::ArrowShape) {
@@ -661,6 +669,7 @@ void POVRayRenderer::renderArrows(const DefaultArrowPrimitive& arrowBuffer)
 				_outputStream << " } }\n";
 				_outputStream << "}\n";
 			}
+			if(_exportTask && _exportTask->isCanceled()) return;
 		}
 	}
 	else throwException(tr("Arrow shape not supported by POV-Ray renderer: %1").arg(arrowBuffer.shape()));
@@ -773,6 +782,7 @@ void POVRayRenderer::renderMesh(const DefaultMeshPrimitive& meshBuffer)
 		++rv;
 		write(rv->pos); _outputStream << ", "; write(rv->normal); _outputStream << " }\n";
 		++rv;
+		if(_exportTask && _exportTask->isCanceled()) return;
 	}
 
 	// Write material

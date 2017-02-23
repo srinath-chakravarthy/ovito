@@ -155,19 +155,19 @@ bool IMDExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint 
 	textStream() << "## IMD file written by " << QCoreApplication::applicationName() << "\n";
 	textStream() << "#E\n";
 
-	exportTask.setMaximum(100);
+	exportTask.setProgressMaximum(100);
 	OutputColumnWriter columnWriter(colMapping, state);
 	for(size_t i = 0; i < atomsCount; i++) {
 		columnWriter.writeParticle(i, textStream());
 
 		if((i % 4096) == 0) {
-			exportTask.setValue((quint64)i * 100 / atomsCount);
-			if(exportTask.wasCanceled())
+			exportTask.setProgressValue((quint64)i * 100 / atomsCount);
+			if(exportTask.isCanceled())
 				return false;
 		}
 	}
 
-	return !exportTask.wasCanceled();
+	return !exportTask.isCanceled();
 }
 
 OVITO_END_INLINE_NAMESPACE

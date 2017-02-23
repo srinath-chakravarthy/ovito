@@ -20,6 +20,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <gui/GUI.h>
+#include <gui/mainwin/MainWindow.h>
+#include <gui/widgets/general/ElidedTextLabel.h>
 #include "ProgressDialog.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
@@ -27,33 +29,62 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPAC
 /******************************************************************************
 * Initializes the dialog window.
 ******************************************************************************/
-ProgressDialog::ProgressDialog(QWidget* parent) : QDialog(parent) 
+ProgressDialog::ProgressDialog(MainWindow* mainWindow, const QString& dialogTitle) : ProgressDialog(mainWindow, mainWindow->datasetContainer().taskManager(), dialogTitle)
+{
+}
+
+/******************************************************************************
+* Initializes the dialog window.
+******************************************************************************/
+ProgressDialog::ProgressDialog(QWidget* parent, TaskManager& taskManager, const QString& dialogTitle) : QDialog(parent), _taskManager(taskManager)
 {
 	setWindowModality(Qt::WindowModal);
+	setWindowTitle(dialogTitle);
 
 	QVBoxLayout* layout = new QVBoxLayout(this);
+	layout->addStretch(1);
+
 	QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Cancel, this);
 	layout->addWidget(buttonBox);
 
 	// Cancel all running tasks when user presses the cancel button.
-	connect(buttonBox, &QDialogButtonBox::rejected, &taskManager(), &TaskManager::cancelAll);
+	connect(buttonBox, &QDialogButtonBox::rejected, &taskManager, &TaskManager::cancelAll);
 
-	// Create a separate progress bar for every active task.
-	connect(&taskManager(), &TaskManager::taskStarted, this, [this, layout](FutureWatcher* taskWatcher) {
-		QLabel* statusLabel = new QLabel();
+	auto createUIForTask = [this, layout](PromiseWatcher* taskWatcher) {
+		QLabel* statusLabel = new ElidedTextLabel(taskWatcher->progressText());
 		QProgressBar* progressBar = new QProgressBar();
-		layout->insertWidget(layout->count() - 1, statusLabel);
-		layout->insertWidget(layout->count() - 1, progressBar);
-		connect(taskWatcher, &FutureWatcher::progressRangeChanged, progressBar, &QProgressBar::setMaximum);
-		connect(taskWatcher, &FutureWatcher::progressValueChanged, progressBar, &QProgressBar::setValue);
-		connect(taskWatcher, &FutureWatcher::progressTextChanged, statusLabel, &QLabel::setText);
-
+		progressBar->setMaximum(taskWatcher->progressMaximum());
+		progressBar->setValue(taskWatcher->progressValue());
+		if(statusLabel->text().isEmpty()) {
+			statusLabel->hide();
+			progressBar->hide();
+		}
+		layout->insertWidget(layout->count() - 2, statusLabel);
+		layout->insertWidget(layout->count() - 2, progressBar);
+		connect(taskWatcher, &PromiseWatcher::progressRangeChanged, progressBar, &QProgressBar::setMaximum);
+		connect(taskWatcher, &PromiseWatcher::progressValueChanged, progressBar, &QProgressBar::setValue);
+		connect(taskWatcher, &PromiseWatcher::progressTextChanged, statusLabel, &QLabel::setText);
+		connect(taskWatcher, &PromiseWatcher::progressTextChanged, statusLabel, [statusLabel, progressBar](const QString& text) {
+			statusLabel->setVisible(!text.isEmpty());
+			progressBar->setVisible(!text.isEmpty());
+		});
+		
 		// Remove progress display when task finished.
-		connect(taskWatcher, &FutureWatcher::finished, progressBar, &QObject::deleteLater);
-		connect(taskWatcher, &FutureWatcher::finished, statusLabel, &QObject::deleteLater);
-	});
+		connect(taskWatcher, &PromiseWatcher::finished, progressBar, &QObject::deleteLater);
+		connect(taskWatcher, &PromiseWatcher::finished, statusLabel, &QObject::deleteLater);
+	};
 
-	show();
+	// Create UI for every running task.
+	for(PromiseWatcher* watcher : taskManager.runningTasks()) {
+		createUIForTask(watcher);
+	}
+
+	// Create a separate progress bar for every new active task.
+	connect(&taskManager, &TaskManager::taskStarted, this, createUIForTask);
+
+	// Show the dialog with a short delay.
+	// This prevent the dialog from showing for tasks that terminate very quickly.
+	QTimer::singleShot(100, this, &QDialog::show);
 }
 
 /******************************************************************************
@@ -62,6 +93,25 @@ ProgressDialog::ProgressDialog(QWidget* parent) : QDialog(parent)
 void ProgressDialog::onTaskCanceled()
 {
 	// Cancel all tasks when one of the active tasks has been canceled.
+	taskManager().cancelAll();
+}
+
+/******************************************************************************
+* Is called when the user tries to close the dialog.
+******************************************************************************/
+void ProgressDialog::closeEvent(QCloseEvent* event)
+{
+	taskManager().cancelAll();
+	if(event->spontaneous())
+		event->ignore();
+	QDialog::closeEvent(event);
+}
+
+/******************************************************************************
+* Is called when the user tries to close the dialog.
+******************************************************************************/
+void ProgressDialog::reject()
+{
 	taskManager().cancelAll();
 }
 

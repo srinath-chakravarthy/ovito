@@ -124,7 +124,7 @@ bool DataSet::referenceEvent(RefTarget* source, ReferenceEvent* event)
 				viewportConfig()->updateViewports();
 
 			if(source == sceneRoot() && event->type() == ReferenceEvent::PendingStateChanged) {
-				notifySceneReadyListeners();
+				serveSceneReadyRequests();
 			}
 		}
 	}
@@ -223,60 +223,37 @@ bool DataSet::isSceneReady(TimePoint time) const
 ******************************************************************************/
 Future<void> DataSet::makeSceneReady(const QString& message)
 {
+	// Re-use existing request.
+	if(_sceneReadyRequest) {
+		if(!_sceneReadyRequest->isCanceled())
+			return Future<void>(_sceneReadyRequest);
+		else {
+			_sceneReadyRequest->setFinished();
+			_sceneReadyRequest.reset();
+		}
+	}
+
 	// Perform a first quick check if scene is already ready.
 	if(isSceneReady(animationSettings()->time()))
 		return Future<void>::createImmediate(message);
 
 	// If not ready yet, create a future.
-	std::shared_ptr<FutureInterface<void>> futureInterface = std::make_shared<FutureInterface<void>>();
-	futureInterface->reportStarted();
-	futureInterface->setProgressText(message);
-
-	// Send signal when scene becomes ready.
-	runWhenSceneIsReady([futureInterface]() {
-		futureInterface->reportFinished();
-	});
-
-	return Future<void>(futureInterface);
-}
-
-/******************************************************************************
-* Calls the given slot as soon as the geometry pipelines of all scene nodes has been
-* completely evaluated.
-******************************************************************************/
-void DataSet::runWhenSceneIsReady(const std::function<void()>& fn)
-{
-	OVITO_ASSERT_MSG(!QCoreApplication::instance() || QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSet::runWhenSceneIsReady", "This function may only be called from the main thread.");
-	OVITO_CHECK_OBJECT_POINTER(sceneRoot());
-
-	TimePoint time = animationSettings()->time();
-
-	// Iterate over all object nodes and request an evaluation of their geometry pipeline.
-	bool isReady = sceneRoot()->visitObjectNodes([time](ObjectNode* node) {
-		return (node->evalPipeline(time).status().type() != PipelineStatus::Pending);
-	});
-
-	if(isReady)
-		fn();
-	else
-		_sceneReadyListeners.push_back(fn);
+	Future<void> future = Future<void>::createWithPromise();
+	_sceneReadyRequest = future.promise();
+	_sceneReadyRequest->setStarted();
+	_sceneReadyRequest->setProgressText(message);
+	return future;
 }
 
 /******************************************************************************
 * Checks if the scene is ready and calls all registered listeners.
 ******************************************************************************/
-void DataSet::notifySceneReadyListeners()
+void DataSet::serveSceneReadyRequests()
 {
-	if(!_sceneReadyListeners.empty() && isSceneReady(animationSettings()->time())) {
-		auto oldListenerList = _sceneReadyListeners;
-		_sceneReadyListeners.clear();
-		for(const auto& listener : oldListenerList) {
-			try {
-				listener();
-			}
-			catch(...) {
-				qWarning() << "Exception swallowed in DataSet::notifySceneReadyListeners()";
-			}
+	if(_sceneReadyRequest) {
+		if(_sceneReadyRequest->isCanceled() || isSceneReady(animationSettings()->time())) {
+			_sceneReadyRequest->setFinished();
+			_sceneReadyRequest.reset();
 		}
 	}
 }
@@ -296,6 +273,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuf
 	if(!renderer) throwException(tr("No rendering engine has been selected."));
 
 	SynchronousTask renderTask(taskManager);
+	renderTask.setProgressText(tr("Initializing renderer"));
 	try {
 
 		// Resize output frame buffer.
@@ -329,6 +307,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuf
 				// Render a single frame.
 				TimePoint renderTime = animationSettings()->time();
 				int frameNumber = animationSettings()->timeToFrame(renderTime);
+				renderTask.setProgressText(QString());
 				if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer, videoEncoder, taskManager))
 					renderTask.cancel();
 			}
@@ -349,18 +328,18 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuf
 				numberOfFrames = (numberOfFrames + settings->everyNthFrame() - 1) / settings->everyNthFrame();
 				if(numberOfFrames < 1)
 					throwException(tr("Invalid rendering range: Frame %1 to %2").arg(settings->customRangeStart()).arg(settings->customRangeEnd()));
-				renderTask.setMaximum(numberOfFrames);
+				renderTask.setProgressMaximum(numberOfFrames);
 
 				// Render frames, one by one.
 				for(int frameIndex = 0; frameIndex < numberOfFrames; frameIndex++) {
 					int frameNumber = firstFrameNumber + frameIndex * settings->everyNthFrame() + settings->fileNumberBase();
 
-					renderTask.setValue(frameIndex);
-					renderTask.setStatusText(tr("Rendering animation frame %1 (%2 of %3)").arg(frameNumber).arg(frameIndex+1).arg(numberOfFrames));
+					renderTask.setProgressValue(frameIndex);
+					renderTask.setProgressText(tr("Rendering animation (frame %1 of %2)").arg(frameIndex+1).arg(numberOfFrames));
 
 					if(!renderFrame(renderTime, frameNumber, settings, renderer, viewport, frameBuffer, videoEncoder, taskManager))
 						renderTask.cancel();
-					if(renderTask.wasCanceled())
+					if(renderTask.isCanceled())
 						break;
 
 					// Go to next animation frame.
@@ -386,7 +365,7 @@ bool DataSet::renderScene(RenderSettings* settings, Viewport* viewport, FrameBuf
 		throw;
 	}
 
-	return !renderTask.wasCanceled();
+	return !renderTask.isCanceled();
 }
 
 /******************************************************************************

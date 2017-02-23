@@ -140,7 +140,7 @@ bool FileExporter::exportNodes(TaskManager& taskManager)
 	}
 
 	SynchronousTask exportTask(taskManager);
-	exportTask.setMaximum(numberOfFrames);
+	exportTask.setProgressText(tr("Opening output file"));
 
 	QDir dir = QFileInfo(outputFilename()).dir();
 	QString filename = outputFilename();
@@ -154,8 +154,9 @@ bool FileExporter::exportNodes(TaskManager& taskManager)
 	try {
 
 		// Export animation frames.
+		exportTask.setProgressMaximum(numberOfFrames);			
 		for(int frameIndex = 0; frameIndex < numberOfFrames; frameIndex++) {
-			exportTask.setValue(frameIndex);
+			exportTask.setProgressValue(frameIndex);
 
 			int frameNumber = firstFrameNumber + frameIndex * everyNthFrame();
 
@@ -168,15 +169,15 @@ bool FileExporter::exportNodes(TaskManager& taskManager)
 					return false;
 			}
 
-			exportTask.setStatusText(tr("Exporting frame %1 to file '%2'.").arg(frameNumber).arg(filename));
+			exportTask.setProgressText(tr("Exporting frame %1 to file '%2'").arg(frameNumber).arg(filename));
 
 			if(!exportFrame(frameNumber, exportTime, filename, taskManager))
 				exportTask.cancel();
 
 			if(exportAnimation() && useWildcardFilename())
-				closeOutputFile(!exportTask.wasCanceled());
+				closeOutputFile(!exportTask.isCanceled());
 
-			if(exportTask.wasCanceled())
+			if(exportTask.isCanceled())
 				break;
 
 			// Go to next animation frame.
@@ -190,10 +191,11 @@ bool FileExporter::exportNodes(TaskManager& taskManager)
 
 	// Close output file.
 	if(!exportAnimation() || !useWildcardFilename()) {
-		closeOutputFile(!exportTask.wasCanceled());
+		exportTask.setProgressText(tr("Closing output file"));
+		closeOutputFile(!exportTask.isCanceled());
 	}
 
-	return !exportTask.wasCanceled();
+	return !exportTask.isCanceled();
 }
 
 /******************************************************************************
@@ -204,30 +206,6 @@ bool FileExporter::exportFrame(int frameNumber, TimePoint time, const QString& f
 	// Jump to animation time.
 	dataset()->animationSettings()->setTime(time);
 
-#if 0
-	// Wait until the whole scene is ready.
-	Future<void> sceneReadyFuture = makeSceneReady(tr("Preparing frame %1 for export").arg(frameNumber));
-	if(!taskManager->waitForTask(sceneReadyFuture))
-		return false;
-
-	// Also make sure nodes to be exported are ready, in case they are not part of the scene.
-	for(SceneNode* sceneNode : outputData()) {
-		try {
-			if(ObjectNode* objNode = dynamic_object_cast<ObjectNode>(sceneNode)) {
-				if(!objNode->waitUntilReady(time, tr("Preparing frame %1 for export...").arg(frameNumber), progressDisplay))
-					return false;
-			}
-		}
-		catch(Exception& ex) {
-			// Provide a local context for errors that occurred during export.
-			if(ex.context() == nullptr) ex.setContext(dataset());
-			throw;
-		}
-	}
-#else
-	throwException("File export not implemented yet.");
-#endif
-	
 	return true;
 }
 

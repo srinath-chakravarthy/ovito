@@ -53,7 +53,7 @@ void DislocationTracer::discardCircuit(BurgersCircuit* circuit)
 * trial Burgers circuits. Identified dislocation segments are converted to
 * a continuous line representation.
 ******************************************************************************/
-bool DislocationTracer::traceDislocationSegments(FutureInterfaceBase& progress)
+bool DislocationTracer::traceDislocationSegments(PromiseBase& promise)
 {
 	if(_maxBurgersCircuitSize < 3 || _maxBurgersCircuitSize > _maxExtendedBurgersCircuitSize)
 		throw Exception("Invalid maximum circuit size parameter(s).");
@@ -63,7 +63,7 @@ bool DislocationTracer::traceDislocationSegments(FutureInterfaceBase& progress)
 	std::vector<int> subStepWeights(_maxExtendedBurgersCircuitSize - 2);
 	for(int i = 0; i < subStepWeights.size(); i++)
 		subStepWeights[i] = (i+3)*(i+3);
-	progress.beginProgressSubSteps(subStepWeights);
+	promise.beginProgressSubSteps(subStepWeights);
 
 	mesh().clearFaceFlag(0);
 
@@ -84,7 +84,7 @@ bool DislocationTracer::traceDislocationSegments(FutureInterfaceBase& progress)
 		// Find dislocation segments by generating trial Burgers circuits on the interface mesh
 		// and then moving them in both directions along the dislocation segment.
 		if(circuitLength <= _maxBurgersCircuitSize && (circuitLength % 2) != 0) {
-			if(!findPrimarySegments(circuitLength, progress))
+			if(!findPrimarySegments(circuitLength, promise))
 				return false;
 		}
 
@@ -104,14 +104,14 @@ bool DislocationTracer::traceDislocationSegments(FutureInterfaceBase& progress)
 		}
 
 		if(circuitLength < _maxExtendedBurgersCircuitSize)
-			progress.nextProgressSubStep();
+			promise.nextProgressSubStep();
 	}
 
 	//qDebug() << "Number of dislocation segments:" << network().segments().size();
 	//qDebug() << "Number of dislocation junctions:" << numJunctions;
 
-	progress.endProgressSubSteps();
-	return true;
+	promise.endProgressSubSteps();
+	return !promise.isCanceled();
 }
 
 /******************************************************************************
@@ -209,14 +209,15 @@ struct BurgersCircuitSearchStruct
 * Then moves the Burgers circuit in both directions along the dislocation
 * segment until the maximum circuit size has been reached.
 ******************************************************************************/
-bool DislocationTracer::findPrimarySegments(int maxBurgersCircuitSize, FutureInterfaceBase& progress)
+bool DislocationTracer::findPrimarySegments(int maxBurgersCircuitSize, PromiseBase& promise)
 {
 	int searchDepth =  (maxBurgersCircuitSize - 1) / 2;
 	OVITO_ASSERT(searchDepth >= 1);
 
 	MemoryPool<BurgersCircuitSearchStruct> structPool;
 
-	progress.setProgressRange(mesh().vertexCount());
+	promise.setProgressValue(0);
+	promise.setProgressMaximum(mesh().vertexCount());
 	int progressCounter = 0;
 
 	// Find an appropriate start node for the recursive search.
@@ -225,7 +226,7 @@ bool DislocationTracer::findPrimarySegments(int maxBurgersCircuitSize, FutureInt
 		OVITO_ASSERT(startNode->burgersSearchStruct == nullptr);
 
 		// Update progress indicator.
-		if(!progress.setProgressValueIntermittent(progressCounter++))
+		if(!promise.setProgressValueIntermittent(progressCounter++))
 			return false;
 
 		// The first node is the seed of our recursive walk.
@@ -319,7 +320,7 @@ bool DislocationTracer::findPrimarySegments(int maxBurgersCircuitSize, FutureInt
 		structPool.clear(true);
 	}
 
-	return true;
+	return !promise.isCanceled();
 }
 
 /******************************************************************************

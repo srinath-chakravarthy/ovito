@@ -117,7 +117,7 @@ void AmbientOcclusionModifier::AmbientOcclusionEngine::perform()
 		// The buffered particle geometry used to render the particles.
 		std::shared_ptr<ParticlePrimitive> particleBuffer;
 
-		setProgressRange(_samplingCount);
+		setProgressMaximum(_samplingCount);
 		for(int sample = 0; sample < _samplingCount; sample++) {
 			if(!setProgressValue(sample))
 				break;

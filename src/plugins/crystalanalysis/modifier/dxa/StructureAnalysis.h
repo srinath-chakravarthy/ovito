@@ -25,7 +25,7 @@
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/modifier/analysis/cna/CommonNeighborAnalysisModifier.h>
 #include <plugins/crystalanalysis/data/ClusterGraph.h>
-#include <core/utilities/concurrent/FutureInterface.h>
+#include <core/utilities/concurrent/Promise.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -103,16 +103,16 @@ public:
 			bool identifyPlanarDefects = true);
 
 	/// Identifies the atomic structures.
-	bool identifyStructures(FutureInterfaceBase& progress);
+	bool identifyStructures(PromiseBase& promise);
 
 	/// Combines adjacent atoms to clusters.
-	bool buildClusters(FutureInterfaceBase& progress);
+	bool buildClusters(PromiseBase& promise);
 
 	/// Determines the transition matrices between clusters.
-	bool connectClusters(FutureInterfaceBase& progress);
+	bool connectClusters(PromiseBase& promise);
 
 	/// Combines clusters to super clusters.
-	bool formSuperClusters(FutureInterfaceBase& progress);
+	bool formSuperClusters(PromiseBase& promise);
 
 	/// Returns the number of input atoms.
 	int atomCount() const { return positions()->size(); }

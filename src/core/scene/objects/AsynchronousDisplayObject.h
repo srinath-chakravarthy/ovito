@@ -24,6 +24,7 @@
 
 #include <core/Core.h>
 #include <core/utilities/concurrent/Task.h>
+#include <core/utilities/concurrent/PromiseWatcher.h>
 #include "DisplayObject.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
@@ -72,7 +73,7 @@ private:
 	std::shared_ptr<AsynchronousTask> _runningEngine;
 
 	/// The watcher that is used to monitor the currently running compute engine.
-	FutureWatcher _engineWatcher;
+	PromiseWatcher _engineWatcher;
 
 	/// The current status of the display object.
 	PipelineStatus _status;

@@ -20,11 +20,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <core/Core.h>
-#include "FutureWatcher.h"
-#include "FutureInterface.h"
+#include "Promise.h"
 #include "Future.h"
-#include "Task.h"
-#include "moc_FutureWatcher.cpp"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
 
@@ -32,11 +29,11 @@ enum {
     MaxProgressEmitsPerSecond = 20
 };
 
-FutureInterfaceBase::~FutureInterfaceBase()
+PromiseBase::~PromiseBase()
 {
 }
 
-void FutureInterfaceBase::cancel()
+void PromiseBase::cancel()
 {
 	QMutexLocker locker(&_mutex);
 
@@ -50,59 +47,64 @@ void FutureInterfaceBase::cancel()
 
 	_state = State(_state | Canceled);
 	_waitCondition.wakeAll();
-	sendCallOut(FutureWatcher::CallOutEvent::Canceled);
+	for(PromiseWatcher* watcher : _watchers)
+		QMetaObject::invokeMethod(watcher, "promiseCanceled", Qt::QueuedConnection);
 }
 
-bool FutureInterfaceBase::reportStarted()
+bool PromiseBase::setStarted()
 {
     QMutexLocker locker(&_mutex);
     if(isStarted())
         return false;	// It's already started. Don't run it again.
     OVITO_ASSERT(!isFinished() || isRunning());
     _state = State(Started | Running);
-    sendCallOut(FutureWatcher::CallOutEvent::Started);
+	for(PromiseWatcher* watcher : _watchers)
+		QMetaObject::invokeMethod(watcher, "promiseStarted", Qt::QueuedConnection);
 	return true;
 }
 
-void FutureInterfaceBase::reportFinished()
+void PromiseBase::setFinished()
 {
 	QMutexLocker locker(&_mutex);
     OVITO_ASSERT(isStarted());
     if(!isFinished()) {
         _state = State((_state & ~Running) | Finished);
         _waitCondition.wakeAll();
-        sendCallOut(FutureWatcher::CallOutEvent::Finished);
+		for(PromiseWatcher* watcher : _watchers)
+			QMetaObject::invokeMethod(watcher, "promiseFinished", Qt::QueuedConnection);
     }
 }
 
-void FutureInterfaceBase::reportException()
+void PromiseBase::setException()
 {
 	QMutexLocker locker(&_mutex);
 	if(isCanceled() || isFinished())
 		return;
 
-	reportException(std::current_exception());
+	setException(std::current_exception());
 }
 
-void FutureInterfaceBase::reportException(std::exception_ptr ex)
+void PromiseBase::setException(std::exception_ptr ex)
 {
 	_exceptionStore = ex;
 	_state = State(_state | ResultSet);
 	_waitCondition.wakeAll();
-	sendCallOut(FutureWatcher::CallOutEvent::ResultReady);
+	for(PromiseWatcher* watcher : _watchers)
+		QMetaObject::invokeMethod(watcher, "promiseResultReady", Qt::QueuedConnection);
 }
 
-void FutureInterfaceBase::reportResultReady()
+void PromiseBase::setResultReady()
 {
 	if(isCanceled() || isFinished())
 		return;
 
 	_state = State(_state | ResultSet);
     _waitCondition.wakeAll();
-    sendCallOut(FutureWatcher::CallOutEvent::ResultReady);
+	for(PromiseWatcher* watcher : _watchers)
+		QMetaObject::invokeMethod(watcher, "promiseResultReady", Qt::QueuedConnection);
 }
 
-void FutureInterfaceBase::waitForResult()
+void PromiseBase::waitForResult()
 {
 	throwPossibleException();
 
@@ -124,9 +126,14 @@ void FutureInterfaceBase::waitForResult()
 		_waitCondition.wait(&_mutex);
 
 	throwPossibleException();
+
+	if(isCanceled())
+		throw Exception("No result available, because promise has been canceled.");
+
+	OVITO_ASSERT(isResultSet());
 }
 
-void FutureInterfaceBase::waitForFinished()
+void PromiseBase::waitForFinished()
 {
 	QMutexLocker lock(&_mutex);
     const bool alreadyFinished = !isRunning() && isStarted();
@@ -142,32 +149,37 @@ void FutureInterfaceBase::waitForFinished()
     throwPossibleException();
 }
 
-void FutureInterfaceBase::registerWatcher(FutureWatcher* watcher)
+void PromiseBase::registerWatcher(PromiseWatcher* watcher)
 {
 	QMutexLocker locker(&_mutex);
 
 	if(isStarted())
-		watcher->postCallOutEvent(FutureWatcher::CallOutEvent::Started, this);
+		QMetaObject::invokeMethod(watcher, "promiseStarted", Qt::QueuedConnection);
 
 	if(isResultSet())
-		watcher->postCallOutEvent(FutureWatcher::CallOutEvent::ResultReady, this);
+		QMetaObject::invokeMethod(watcher, "promiseResultReady", Qt::QueuedConnection);
 
 	if(isCanceled())
-		watcher->postCallOutEvent(FutureWatcher::CallOutEvent::Canceled, this);
+		QMetaObject::invokeMethod(watcher, "promiseCanceled", Qt::QueuedConnection);
 
 	if(isFinished())
-		watcher->postCallOutEvent(FutureWatcher::CallOutEvent::Finished, this);
+		QMetaObject::invokeMethod(watcher, "promiseFinished", Qt::QueuedConnection);
 
 	_watchers.push_back(watcher);
 }
 
-void FutureInterfaceBase::unregisterWatcher(FutureWatcher* watcher)
+void PromiseBase::unregisterWatcher(PromiseWatcher* watcher)
 {
 	QMutexLocker locker(&_mutex);
 	_watchers.removeOne(watcher);
 }
 
-bool FutureInterfaceBase::waitForSubTask(const std::shared_ptr<FutureInterfaceBase>& subTask)
+bool PromiseBase::waitForSubTask(const FutureBase& subFuture) 
+{
+	return waitForSubTask(subFuture.promise());
+}
+
+bool PromiseBase::waitForSubTask(const PromiseBasePtr& subTask)
 {
 	QMutexLocker locker(&_mutex);
 	if(this->isCanceled()) {
@@ -182,9 +194,6 @@ bool FutureInterfaceBase::waitForSubTask(const std::shared_ptr<FutureInterfaceBa
 	this->_subTask = subTask.get();
 	locker.unlock();
 	try {
-#if 0
-		subTask->waitForFinished();
-#else
 		QMutexLocker subtaskLock(&subTask->_mutex);
 	    const bool subTaskAlreadyFinished = !subTask->isRunning() && subTask->isStarted();
 	    subtaskLock.unlock();
@@ -197,7 +206,6 @@ bool FutureInterfaceBase::waitForSubTask(const std::shared_ptr<FutureInterfaceBa
 	    }
 
 	    subTask->throwPossibleException();
-#endif
 	}
 	catch(...) {
 		locker.relock();
@@ -214,7 +222,7 @@ bool FutureInterfaceBase::waitForSubTask(const std::shared_ptr<FutureInterfaceBa
 	return true;
 }
 
-void FutureInterfaceBase::setProgressRange(int maximum)
+void PromiseBase::setProgressMaximum(int maximum)
 {
     QMutexLocker locker(&_mutex);
 
@@ -223,10 +231,11 @@ void FutureInterfaceBase::setProgressRange(int maximum)
 
     _progressMaximum = maximum;
     computeTotalProgress();
-    sendCallOut(FutureWatcher::CallOutEvent::ProgressRange, maximum);
+	for(PromiseWatcher* watcher : _watchers)
+		QMetaObject::invokeMethod(watcher, "promiseProgressRangeChanged", Qt::QueuedConnection, Q_ARG(int, totalProgressMaximum()));
 }
 
-bool FutureInterfaceBase::setProgressValue(int value)
+bool PromiseBase::setProgressValue(int value)
 {
     QMutexLocker locker(&_mutex);
 	_intermittentUpdateCounter = 0;
@@ -239,13 +248,14 @@ bool FutureInterfaceBase::setProgressValue(int value)
 
     if(!_progressTime.isValid() || _progressValue == _progressMaximum || _progressTime.elapsed() >= (1000 / MaxProgressEmitsPerSecond)) {
 		_progressTime.start();
-		sendCallOut(FutureWatcher::CallOutEvent::ProgressValue, progressValue());
+		for(PromiseWatcher* watcher : _watchers)
+			QMetaObject::invokeMethod(watcher, "promiseProgressValueChanged", Qt::QueuedConnection, Q_ARG(int, totalProgressValue()));
     }
 
     return !isCanceled();
 }
 
-bool FutureInterfaceBase::setProgressValueIntermittent(int progressValue, int updateEvery)
+bool PromiseBase::setProgressValueIntermittent(int progressValue, int updateEvery)
 {
 	if(_intermittentUpdateCounter == 0 || _intermittentUpdateCounter > updateEvery) {
 		setProgressValue(progressValue);
@@ -254,7 +264,7 @@ bool FutureInterfaceBase::setProgressValueIntermittent(int progressValue, int up
 	return !isCanceled();
 }
 
-bool FutureInterfaceBase::incrementProgressValue(int increment)
+bool PromiseBase::incrementProgressValue(int increment)
 {
     QMutexLocker locker(&_mutex);
 
@@ -266,13 +276,14 @@ bool FutureInterfaceBase::incrementProgressValue(int increment)
 
     if(!_progressTime.isValid() || _progressValue == _progressMaximum || _progressTime.elapsed() >= (1000 / MaxProgressEmitsPerSecond)) {
 		_progressTime.start();
-		sendCallOut(FutureWatcher::CallOutEvent::ProgressValue, progressValue());
+		for(PromiseWatcher* watcher : _watchers)
+			QMetaObject::invokeMethod(watcher, "promiseProgressValueChanged", Qt::QueuedConnection, Q_ARG(int, progressValue()));
     }
 
     return !isCanceled();
 }
 
-void FutureInterfaceBase::computeTotalProgress()
+void PromiseBase::computeTotalProgress()
 {
 	if(subStepsStack.empty()) {
 		_totalProgressMaximum = _progressMaximum;
@@ -295,7 +306,7 @@ void FutureInterfaceBase::computeTotalProgress()
 	}
 }
 
-void FutureInterfaceBase::beginProgressSubSteps(std::vector<int> weights)
+void PromiseBase::beginProgressSubSteps(std::vector<int> weights)
 {
     QMutexLocker locker(&_mutex);
     OVITO_ASSERT(std::accumulate(weights.cbegin(), weights.cend(), 0) > 0);
@@ -305,7 +316,7 @@ void FutureInterfaceBase::beginProgressSubSteps(std::vector<int> weights)
     computeTotalProgress();
 }
 
-void FutureInterfaceBase::nextProgressSubStep()
+void PromiseBase::nextProgressSubStep()
 {
 	QMutexLocker locker(&_mutex);
 	OVITO_ASSERT(!subStepsStack.empty());
@@ -316,7 +327,7 @@ void FutureInterfaceBase::nextProgressSubStep()
     computeTotalProgress();
 }
 
-void FutureInterfaceBase::endProgressSubSteps()
+void PromiseBase::endProgressSubSteps()
 {
 	QMutexLocker locker(&_mutex);
 	OVITO_ASSERT(!subStepsStack.empty());
@@ -326,7 +337,7 @@ void FutureInterfaceBase::endProgressSubSteps()
     computeTotalProgress();
 }
 
-void FutureInterfaceBase::setProgressText(const QString& progressText)
+void PromiseBase::setProgressText(const QString& progressText)
 {
     QMutexLocker locker(&_mutex);
 
@@ -334,103 +345,8 @@ void FutureInterfaceBase::setProgressText(const QString& progressText)
         return;
 
     _progressText = progressText;
-    sendCallOut(FutureWatcher::CallOutEvent::ProgressText, progressText);
-}
-
-void FutureWatcher::setFutureInterface(const std::shared_ptr<FutureInterfaceBase>& futureInterface, bool pendingAssignment)
-{
-	if(futureInterface == _futureInterface)
-		return;
-
-	if(_futureInterface) {
-		_futureInterface->unregisterWatcher(this);
-		if(pendingAssignment) {
-	        _finished = false;
-	        QCoreApplication::removePostedEvents(this);
-		}
-	}
-	_futureInterface = futureInterface;
-	if(_futureInterface)
-		_futureInterface->registerWatcher(this);
-}
-
-void FutureWatcher::customEvent(QEvent* event)
-{
-	if(_futureInterface) {
-    	OVITO_ASSERT(static_cast<CallOutEvent*>(event)->_source == _futureInterface.get());
-		if(event->type() == (QEvent::Type)CallOutEvent::Started)
-			Q_EMIT started();
-		else if(event->type() == (QEvent::Type)CallOutEvent::Finished) {
-			_finished = true;
-			Q_EMIT finished();
-		}
-		else if(event->type() == (QEvent::Type)CallOutEvent::Canceled)
-			Q_EMIT canceled();
-		else if(event->type() == (QEvent::Type)CallOutEvent::ResultReady) {
-			if(!_futureInterface->isCanceled()) {
-				Q_EMIT resultReady();
-			}
-		}
-		else if(event->type() == (QEvent::Type)CallOutEvent::ProgressValue) {
-			if(!_futureInterface->isCanceled())
-				Q_EMIT progressValueChanged(static_cast<CallOutEvent*>(event)->_value);
-		}
-		else if(event->type() == (QEvent::Type)CallOutEvent::ProgressText) {
-			if(!_futureInterface->isCanceled())
-				Q_EMIT progressTextChanged(static_cast<CallOutEvent*>(event)->_text);
-		}
-		else if(event->type() == (QEvent::Type)CallOutEvent::ProgressRange) {
-			Q_EMIT progressRangeChanged(static_cast<CallOutEvent*>(event)->_value);
-		}
-	}
-	QObject::customEvent(event);
-}
-
-void FutureWatcher::cancel()
-{
-	if(_futureInterface)
-		_futureInterface->cancel();
-}
-
-bool FutureWatcher::isCanceled() const
-{
-	return _futureInterface->isCanceled();
-}
-
-bool FutureWatcher::isFinished() const
-{
-	return _finished;
-}
-
-int FutureWatcher::progressMaximum() const
-{
-	return _futureInterface->progressMaximum();
-}
-
-int FutureWatcher::progressValue() const
-{
-	return _futureInterface->progressValue();
-}
-
-int FutureWatcher::totalProgressMaximum() const
-{
-	return _futureInterface->totalProgressMaximum();
-}
-
-int FutureWatcher::totalProgressValue() const
-{
-	return _futureInterface->totalProgressValue();
-}
-
-QString FutureWatcher::progressText() const
-{
-	return _futureInterface->progressText();
-}
-
-void FutureWatcher::waitForFinished() const
-{
-	if(_futureInterface)
-		_futureInterface->waitForFinished();
+	for(PromiseWatcher* watcher : _watchers)
+		QMetaObject::invokeMethod(watcher, "promiseProgressTextChanged", Qt::QueuedConnection, Q_ARG(QString, progressText));
 }
 
 OVITO_END_INLINE_NAMESPACE

@@ -157,7 +157,7 @@ def _FileSource_load(self, location, **params):
         raise RuntimeError("Operation has been canceled by the user.")
     
     # Block execution until data has been loaded. 
-    if not self.wait_until_ready(self.dataset.anim.time, "Script is waiting for I/O operation to finish.", ovito.get_progress_display()):
+    if not self.wait_until_ready(self.dataset.anim.time):
         raise RuntimeError("Operation has been canceled by the user.")
     
     # Raise Python error if loading failed.
@@ -295,7 +295,7 @@ def export_file(node, file, format, **params):
         raise ValueError("Invalid node parameter.")
 
     # Export data.
-    if not exporter.export_nodes(ovito.get_progress_display()):
+    if not exporter.export_nodes(ovito.task_manager):
         raise RuntimeError("Operation has been canceled by the user.")
 
 # This is the table of export formats used by the export_file() function

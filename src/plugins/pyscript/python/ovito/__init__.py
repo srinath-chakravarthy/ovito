@@ -152,17 +152,15 @@ def _get_ObjectNode_modifiers(self):
     return ObjectNodeModifierList(self)
 ObjectNode.modifiers = property(_get_ObjectNode_modifiers)
 
-def _ObjectNode_wait(self, signalError = True, msgText = None, time = None):
+def _ObjectNode_wait(self, signalError = True, time = None):
     # Blocks script execution until the node's modification pipeline is ready.
     #
-    #    :param str msgText: An optional text that will be shown to the user while waiting for the operation to finish.
     #    :param signalError: If ``True``, the function raises an exception when the modification pipeline could not be successfully evaluated.
     #                        This may be the case if the input file could not be loaded, or if one of the modifiers reported an error.   
     #    :returns: ``True`` if the pipeline evaluation is complete, ``False`` if the operation has been canceled by the user.
     #
-    if not msgText: msgText = "Data pipeline is being evaluated. Waiting for operation for complete."
     if time is None: time = self.dataset.anim.time 
-    if not self.wait_until_ready(time, msgText, ovito.get_progress_display()):
+    if not self.wait_until_ready(time):
         return False
     if signalError:
         state = self.eval_pipeline(time)

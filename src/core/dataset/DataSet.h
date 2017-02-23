@@ -27,6 +27,7 @@
 #include <core/animation/TimeInterval.h>
 #include <core/utilities/units/UnitsManager.h>
 #include <core/utilities/concurrent/Future.h>
+#include <core/utilities/concurrent/Promise.h>
 #include "UndoStack.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem)
@@ -114,10 +115,6 @@ public:
 	/// \brief Checks all scene nodes if their geometry pipeline is fully evaluated at the given animation time.
 	bool isSceneReady(TimePoint time) const;
 
-	/// \brief Calls the given slot as soon as the geometry pipelines of all scene nodes has been
-	///        completely evaluated.
-	void runWhenSceneIsReady(const std::function<void()>& fn);
-
 	/// \brief This function returns a future that is triggered once all data pipelines in the scene become ready.
 	/// \param message An optional messge text to be shown to the user while waiting.
 	Future<void> makeSceneReady(const QString& message = QString());
@@ -191,8 +188,8 @@ private:
 	/// Returns a viewport configuration that is used as template for new scenes.
 	OORef<ViewportConfiguration> createDefaultViewportConfiguration();
 
-	/// Checks if the scene is ready and calls all registered listeners.
-	void notifySceneReadyListeners();
+	/// Checks if the scene is ready and calls the registered listeners.
+	void serveSceneReadyRequests();
 
 private:
 
@@ -223,8 +220,8 @@ private:
 	/// The manager of ParameterUnit objects.
 	UnitsManager _unitsManager;
 
-	/// List of listener objects that want to get notified when the scene is ready.
-	QVector<std::function<void()>> _sceneReadyListeners;
+	/// Active request waiting for the scene to become ready.
+	PromisePtr<void> _sceneReadyRequest;
 
 	/// This signal/slot connection updates the viewports when the animation time changes.
 	QMetaObject::Connection _updateViewportOnTimeChangeConnection;

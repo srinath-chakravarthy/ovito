@@ -45,7 +45,7 @@ class SftpJob : public QObject
 public:
 
 	/// Constructor.
-	SftpJob(const QUrl& url, const std::shared_ptr<FutureInterfaceBase>& futureInterface);
+	SftpJob(const QUrl& url, const PromiseBasePtr& promise);
 
 	/// Destructor.
 	virtual ~SftpJob() {
@@ -93,7 +93,7 @@ protected:
     QSsh::SftpChannel::Ptr _sftpChannel;
 
     /// The associated future interface of the job.
-    std::shared_ptr<FutureInterfaceBase> _futureInterface;
+    PromiseBasePtr _promise;
 
     /// Indicates whether this SFTP job is currently active.
     bool _isActive;
@@ -115,8 +115,8 @@ class SftpDownloadJob : public SftpJob
 public:
 
 	/// Constructor.
-	SftpDownloadJob(const QUrl& url, const std::shared_ptr<FutureInterface<QString>>& futureInterface) :
-		SftpJob(url, futureInterface), _timerId(0) {}
+	SftpDownloadJob(const QUrl& url, const PromisePtr<QString>& promise) :
+		SftpJob(url, promise), _timerId(0) {}
 
 protected:
 
@@ -159,8 +159,8 @@ class SftpListDirectoryJob : public SftpJob
 public:
 
 	/// Constructor.
-	SftpListDirectoryJob(const QUrl& url, const std::shared_ptr<FutureInterface<QStringList>>& futureInterface) :
-		SftpJob(url, futureInterface) {}
+	SftpListDirectoryJob(const QUrl& url, const PromisePtr<QStringList>& promise) :
+		SftpJob(url, promise) {}
 
 protected:
 

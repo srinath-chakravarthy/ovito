@@ -356,7 +356,7 @@ void ActionManager::on_FileExport_triggered()
 
 		// Wait until the scene is ready.
 		{
-			ProgressDialog progressDialog(mainWindow());
+			ProgressDialog progressDialog(mainWindow(), tr("File export"));
 			if(!progressDialog.taskManager().waitForTask(_dataset->makeSceneReady(tr("Waiting for running tasks to complete."))))
 				return;
 		}
@@ -370,7 +370,7 @@ void ActionManager::on_FileExport_triggered()
 			return;
 
 		// Show progress dialog.
-		ProgressDialog progressDialog(mainWindow());
+		ProgressDialog progressDialog(mainWindow(), tr("File export"));
 
 		// Let the exporter do its work.
 		exporter->exportNodes(progressDialog.taskManager());
