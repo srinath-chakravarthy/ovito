@@ -48,9 +48,6 @@ public:
 	/// Returns the surface area computed during the last evaluation of the modifier.
 	FloatType surfaceArea() const { return _surfaceArea; }
 
-	/// Resets the modifier's result cache.
-	virtual void invalidateCachedResults() override;
-
 protected:
 
 	/// Handles reference events sent by reference targets of this object.

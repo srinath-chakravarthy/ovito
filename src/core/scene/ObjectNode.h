@@ -27,6 +27,7 @@
 #include "SceneNode.h"
 #include "objects/DataObject.h"
 #include "objects/DisplayObject.h"
+#include "pipeline/PipelineEvalRequest.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
@@ -51,15 +52,15 @@ public:
 	///        input data entering the pipeline.
 	void setSourceObject(DataObject* sourceObject);
 
-	/// \brief Evaluates the data pipeline of this node at the given animation time.
-	///        If the pipeline results aer not available yet, the method can react by returning an incomplete state (pending status).
-	/// \param time The animation time at which the pipeline of the node should be evaluated.
-	/// \return The output of the pipeline (may be status pending).
-	const PipelineFlowState& evalPipeline(TimePoint time);
+	/// \brief Evaluates the data pipeline of this node.
+	///        If the pipeline results are not immediately available, the method can react by returning an incomplete state (pending status).
+	/// \param request An object that describes when and how the pipeline should be evaluated.
+	/// \return The results of the pipeline (may be status pending).
+	const PipelineFlowState& evaluatePipelineImmediately(const PipelineEvalRequest& request);
 
-	/// \brief Asks the object for the result of the geometry pipeline at the given time.
-	/// \param time The animation time at which the object should be evaluated.
-	Future<PipelineFlowState> evalPipelineAsync(TimePoint time);
+	/// \brief Asks the object for the result of the data pipeline.
+	/// \param request An object that describes when and how the pipeline should be evaluated.
+	Future<PipelineFlowState> evaluatePipelineAsync(const PipelineEvalRequest& request);
 
 	/// \brief Applies a modifier by appending it to the end of the node's data pipeline.
 	/// \param mod The modifier to be inserted into the data flow pipeline.
@@ -99,11 +100,11 @@ private:
 	/// Checks if the data pipeline evaluation is completed.
 	void serveEvaluationRequests();
 
-	/// The object which generates the data to be displayed by this ObjectNode.
+	/// The object that generates the data to be displayed by this ObjectNode.
 	DECLARE_MODIFIABLE_REFERENCE_FIELD(DataObject, dataProvider, setDataProvider);
 
 	/// The list of display objects that are responsible for displaying
-	/// the node's data in the viewports.
+	/// the node's data in the viewports. This is for internal caching purposes only.
 	DECLARE_VECTOR_REFERENCE_FIELD(DisplayObject, displayObjects);
 
 	/// The cached results from the last data pipeline evaluation.
@@ -122,7 +123,7 @@ private:
 	}
 
 	/// List active asynchronous pipeline evaluation requests.
-	std::vector<std::pair<TimePoint, PromisePtr<PipelineFlowState>>> _evaluationRequests;
+	std::vector<std::pair<PipelineEvalRequest, PromisePtr<PipelineFlowState>>> _evaluationRequests;
 
 	Q_OBJECT
 	OVITO_OBJECT

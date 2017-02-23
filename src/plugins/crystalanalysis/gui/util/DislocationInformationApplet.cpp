@@ -93,7 +93,7 @@ void DislocationInformationApplet::updateInformationDisplay()
 
 	for(auto& pickedDislocation : _inputMode->_pickedDislocations) {
 		OVITO_ASSERT(pickedDislocation.objNode);
-		const PipelineFlowState& flowState = pickedDislocation.objNode->evalPipeline(dataset->animationSettings()->time());
+		const PipelineFlowState& flowState = pickedDislocation.objNode->evaluatePipelineImmediately(PipelineEvalRequest(dataset->animationSettings()->time(), false));
 		DislocationNetworkObject* dislocationObj = flowState.findObject<DislocationNetworkObject>();
 		if(!dislocationObj || pickedDislocation.segmentIndex >= dislocationObj->segments().size())
 			continue;
@@ -244,7 +244,7 @@ void DislocationInformationInputMode::renderOverlay3D(Viewport* vp, ViewportScen
 
 	for(const auto& pickedDislocation : _pickedDislocations) {
 
-		const PipelineFlowState& flowState = pickedDislocation.objNode->evalPipeline(vp->dataset()->animationSettings()->time());
+		const PipelineFlowState& flowState = pickedDislocation.objNode->evaluatePipelineImmediately(PipelineEvalRequest(vp->dataset()->animationSettings()->time(), true));
 		DislocationNetworkObject* dislocationObj = flowState.findObject<DislocationNetworkObject>();
 		if(!dislocationObj)
 			continue;

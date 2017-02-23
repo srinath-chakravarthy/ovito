@@ -21,6 +21,7 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DataObject.h>
+#include <core/scene/pipeline/PipelineEvalRequest.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/animation/AnimationSettings.h>
 #include <plugins/particles/objects/BondsObject.h>
@@ -59,7 +60,7 @@ PipelineStatus LoadTrajectoryModifier::modifyParticles(TimePoint time, TimeInter
 		throwException(tr("No trajectory data has been provided."));
 
 	// Get the trajectory frame.
-	PipelineFlowState trajState = trajectorySource()->evaluate(time);
+	PipelineFlowState trajState = trajectorySource()->evaluateImmediately(PipelineEvalRequest(time, false));
 
 	// Make sure the obtained configuration is valid and ready to use.
 	if(trajState.status().type() == PipelineStatus::Error) {

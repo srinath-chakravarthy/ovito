@@ -112,9 +112,6 @@ public:
 	/// \throw Exception on error.
 	bool renderScene(RenderSettings* settings, Viewport* viewport, FrameBuffer* frameBuffer, TaskManager& taskManager);
 
-	/// \brief Checks all scene nodes if their geometry pipeline is fully evaluated at the given animation time.
-	bool isSceneReady(TimePoint time) const;
-
 	/// \brief This function returns a future that is triggered once all data pipelines in the scene become ready.
 	/// \param message An optional messge text to be shown to the user while waiting.
 	Future<void> makeSceneReady(const QString& message = QString());
@@ -187,6 +184,9 @@ private:
 
 	/// Returns a viewport configuration that is used as template for new scenes.
 	OORef<ViewportConfiguration> createDefaultViewportConfiguration();
+
+	/// \brief Checks if all scene nodes are ready and their data pipelines can provide fully computed results.
+	bool isSceneReady(TimePoint time) const;
 
 	/// Checks if the scene is ready and calls the registered listeners.
 	void serveSceneReadyRequests();

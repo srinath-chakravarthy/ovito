@@ -114,11 +114,11 @@ bool AttributeFileExporter::getAttributes(SceneNode* sceneNode, TimePoint time, 
 		throwException(tr("The scene node to be exported is not an object node."));
 
 	// Evaluate pipeline of object node.
-	auto evalRequest = objectNode->evalPipelineAsync(time);
-	if(!taskManager.waitForTask(evalRequest))
+	auto evalFuture = objectNode->evaluatePipelineAsync(PipelineEvalRequest(time, false));
+	if(!taskManager.waitForTask(evalFuture))
 		return false;
 
-	const PipelineFlowState& state = evalRequest.result();
+	const PipelineFlowState& state = evalFuture.result();
 	if(state.isEmpty())
 		throwException(tr("The object to be exported does not contain any data."));
 

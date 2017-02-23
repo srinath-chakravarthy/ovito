@@ -122,7 +122,7 @@ void ViewportMenu::onShowViewTypeMenu()
 
 	// Find all camera nodes in the scene.
 	_viewport->dataset()->sceneRoot()->visitObjectNodes([this, viewNodeGroup](ObjectNode* node) -> bool {
-		PipelineFlowState state = node->evalPipeline(_viewport->dataset()->animationSettings()->time());
+		const PipelineFlowState& state = node->evaluatePipelineImmediately(PipelineEvalRequest(_viewport->dataset()->animationSettings()->time(), false));
 		OORef<AbstractCameraObject> camera = state.convertObject<AbstractCameraObject>(_viewport->dataset()->animationSettings()->time());
 		if(camera) {
 			// Add a menu entry for this camera node.

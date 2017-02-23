@@ -22,6 +22,7 @@
 #include <plugins/particles/Particles.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/scene/pipeline/PipelineObject.h>
+#include <core/scene/pipeline/PipelineEvalRequest.h>
 #include <core/utilities/concurrent/TaskManager.h>
 #include "FreezePropertyModifier.h"
 
@@ -207,13 +208,13 @@ bool FreezePropertyModifier::takePropertySnapshot(TimePoint time, TaskManager& t
 		if(PipelineObject* pipelineObj = modApp->pipelineObject()) {
 			PipelineFlowState state;
 			if(waitUntilReady) {
-				Future<PipelineFlowState> stateFuture = pipelineObj->evaluatePipelineAsync(time, modApp, false);
+				Future<PipelineFlowState> stateFuture = pipelineObj->evaluateAsync(PipelineEvalRequest(time, false, modApp, false));
 				if(!taskManager.waitForTask(stateFuture))
 					return false;
 				state = stateFuture.result();
 			}
 			else {
-				state = pipelineObj->evaluatePipeline(time, modApp, false);
+				state = pipelineObj->evaluateImmediately(PipelineEvalRequest(time, false, modApp, false));
 			}
 			takePropertySnapshot(modApp, state);
 		}

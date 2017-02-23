@@ -83,15 +83,6 @@ bool ConstructSurfaceModifier::referenceEvent(RefTarget* source, ReferenceEvent*
 }
 
 /******************************************************************************
-* Resets the modifier's result cache.
-******************************************************************************/
-void ConstructSurfaceModifier::invalidateCachedResults()
-{
-	AsynchronousParticleModifier::invalidateCachedResults();
-	_surfaceMesh.reset();
-}
-
-/******************************************************************************
 * Creates and initializes a computation engine that will compute the modifier's results.
 ******************************************************************************/
 std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> ConstructSurfaceModifier::createEngine(TimePoint time, TimeInterval validityInterval)

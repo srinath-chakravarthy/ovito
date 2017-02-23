@@ -221,7 +221,7 @@ ViewProjectionParameters Viewport::projectionParameters(TimePoint time, FloatTyp
 		params.inverseViewMatrix = viewNode()->getWorldTransform(time, params.validityInterval);
 		params.viewMatrix = params.inverseViewMatrix.inverse();
 
-		PipelineFlowState state = viewNode()->evalPipeline(time);
+		PipelineFlowState state = viewNode()->evaluatePipelineImmediately(PipelineEvalRequest(time, true));
 		if(OORef<AbstractCameraObject> camera = state.convertObject<AbstractCameraObject>(time)) {
 
 			// Get remaining parameters from camera object.

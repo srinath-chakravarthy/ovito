@@ -101,6 +101,7 @@ namespace Ovito {
 			class Modifier;
 			class ModifierApplication;
 			class ObjectNode;
+			class PipelineEvalRequest;
 			class PipelineFlowState;
 			class PipelineObject;
 			class DisplayObject;

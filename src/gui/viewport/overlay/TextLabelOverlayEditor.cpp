@@ -190,7 +190,7 @@ void TextLabelOverlayEditor::updateEditorFields()
 	QString str;
 	QStringList variableNames;
 	if(ObjectNode* node = overlay->sourceNode()) {
-		const PipelineFlowState& flowState = node->evalPipeline(node->dataset()->animationSettings()->time());
+		const PipelineFlowState& flowState = node->evaluatePipelineImmediately(PipelineEvalRequest(node->dataset()->animationSettings()->time(), false));
 		str.append(tr("<p>Dynamic variables that can be referenced in the label text:</b><ul>"));
 		for(const QString& attrName : flowState.attributes().keys()) {
 			str.append(QStringLiteral("<li>[%1]</li>").arg(attrName.toHtmlEscaped()));

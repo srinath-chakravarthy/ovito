@@ -79,14 +79,14 @@ void defineSceneSubmodule(py::module parentModule)
 			"displaying the data in the viewports and in rendered images. "
 			"The :py:attr:`.display` attribute provides access to the attached display object and "
 			"allows controlling the visual appearance of the data.")
-		.def("evaluate", &DataObject::evaluate)
+		//.def("evaluate", &DataObject::evaluate)
 		//.def("objectValidity", &DataObject::objectValidity)
 		//.def("addDisplayObject", &DataObject::addDisplayObject)
 		//.def("setDisplayObject", &DataObject::setDisplayObject)
 		//.def_property("saveWithScene", &DataObject::saveWithScene, &DataObject::setSaveWithScene)
 		// Required by FileSource.load():
 		.def("wait_until_ready", [](DataObject* obj, TimePoint time) {
-			Future<PipelineFlowState> future = obj->evaluateAsync(time);
+			Future<PipelineFlowState> future = obj->evaluateAsync(PipelineEvalRequest(time, false));
 			return ScriptEngine::activeTaskManager().waitForTask(future);
 		})
 		.def_property("display", &DataObject::displayObject, &DataObject::setDisplayObject,
@@ -330,11 +330,12 @@ void defineSceneSubmodule(py::module parentModule)
 		.def_property("source", &ObjectNode::sourceObject, &ObjectNode::setSourceObject,
 				"The object that provides or generates the data that enters the node's modification pipeline. "
 				"This typically is a :py:class:`~ovito.io.FileSource` instance if the node was created by a call to :py:func:`~ovito.io.import_file`.")
-		//.def_property_readonly("displayObjects", &ObjectNode::displayObjects)		
 		// Required by ObjectNode.wait() and ObjectNode.compute():
-		.def("eval_pipeline", &ObjectNode::evalPipeline)
+		.def("eval_pipeline", [](ObjectNode* node, TimePoint time) {
+			return node->evaluatePipelineImmediately(PipelineEvalRequest(time, false));
+		})
 		.def("wait_until_ready", [](ObjectNode* node, TimePoint time) {
-			Future<PipelineFlowState> future = node->evalPipelineAsync(time);
+			Future<PipelineFlowState> future = node->evaluatePipelineAsync(PipelineEvalRequest(time, false));
 			return ScriptEngine::activeTaskManager().waitForTask(future);
 		})
 		// Required by ObjectNode.modifiers sequence:

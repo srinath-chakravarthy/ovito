@@ -60,7 +60,7 @@ PipelineStatus CombineParticleSetsModifier::modifyParticles(TimePoint time, Time
 		throwException(tr("No particle data to be merged has been provided."));
 
 	// Get the data to be merged into the pipeline.
-	PipelineFlowState secondaryState = secondaryDataSource()->evaluate(time);
+	PipelineFlowState secondaryState = secondaryDataSource()->evaluateImmediately(PipelineEvalRequest(time, false));
 
 	// Make sure the obtained dataset is valid and ready to use.
 	if(secondaryState.status().type() == PipelineStatus::Error) {

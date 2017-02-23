@@ -39,7 +39,7 @@ CompoundObject::CompoundObject(DataSet* dataset) : DataObject(dataset)
 /******************************************************************************
 * Asks the object for the result of the geometry pipeline at the given time.
 ******************************************************************************/
-PipelineFlowState CompoundObject::evaluate(TimePoint time)
+PipelineFlowState CompoundObject::evaluateImmediately(const PipelineEvalRequest& request)
 {
 	return PipelineFlowState(PipelineStatus::Success, dataObjects(), TimeInterval::infinite(), attributes());
 }

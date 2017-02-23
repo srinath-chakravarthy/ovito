@@ -202,17 +202,20 @@ void DataSet::rescaleTime(const TimeInterval& oldAnimationInterval, const TimeIn
 }
 
 /******************************************************************************
-* Checks all scene nodes if their geometry pipeline is fully evaluated at the
+* Checks all scene nodes if their data pipeline is fully evaluated at the
 * given animation time.
 ******************************************************************************/
 bool DataSet::isSceneReady(TimePoint time) const
 {
-	OVITO_ASSERT_MSG(!QCoreApplication::instance() || QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSet::isSceneReady", "This function may only be called from the main thread.");
+	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSet::isSceneReady", "This function may only be called from the main thread.");
 	OVITO_CHECK_OBJECT_POINTER(sceneRoot());
 
-	// Iterate over all object nodes and request an evaluation of their geometry pipeline.
-	bool isReady = sceneRoot()->visitObjectNodes([time](ObjectNode* node) {
-		return (node->evalPipeline(time).status().type() != PipelineStatus::Pending);
+	PipelineEvalRequest pipelineRequest(time, true); // Request display objects to be ready as well.
+
+	// Iterate over all object nodes and make an attempt to request results from their data pipelines.
+	// The scene is ready if none of the results has status 'pending'.
+	bool isReady = sceneRoot()->visitObjectNodes([&pipelineRequest](ObjectNode* node) {
+		return (node->evaluatePipelineImmediately(pipelineRequest).status().type() != PipelineStatus::Pending);
 	});
 
 	return isReady;

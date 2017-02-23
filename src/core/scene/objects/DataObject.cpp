@@ -43,6 +43,22 @@ DataObject::DataObject(DataSet* dataset) : RefTarget(dataset), _revisionNumber(0
 }
 
 /******************************************************************************
+* Asks the object for the result of the data pipeline.
+******************************************************************************/
+PipelineFlowState DataObject::evaluateImmediately(const PipelineEvalRequest& request) 
+{
+	return PipelineFlowState(this, objectValidity(request.time()));
+}
+
+/******************************************************************************
+* Asks the object for the result of the data pipeline.
+******************************************************************************/
+Future<PipelineFlowState> DataObject::evaluateAsync(const PipelineEvalRequest& request) 
+{
+	return Future<PipelineFlowState>::createImmediate(PipelineFlowState(this, objectValidity(request.time())));
+}
+
+/******************************************************************************
 * Sends an event to all dependents of this RefTarget.
 ******************************************************************************/
 void DataObject::notifyDependents(ReferenceEvent& event)

@@ -189,7 +189,7 @@ void CreateTrajectoryApplet::onCreateTrajectory()
 		OORef<ParticlePropertyObject> selectionProperty;
 		ObjectNode* inputNode = dynamic_object_cast<ObjectNode>(dataset->selection()->front());
 		if(inputNode) {
-			Future<PipelineFlowState> stateFuture = inputNode->evalPipelineAsync(time);
+			Future<PipelineFlowState> stateFuture = inputNode->evaluatePipelineAsync(PipelineEvalRequest(time, false));
 			if(!progressDialog.taskManager().waitForTask(stateFuture))
 				return;
 			const PipelineFlowState& state = stateFuture.result();

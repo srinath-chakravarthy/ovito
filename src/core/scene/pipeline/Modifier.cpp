@@ -23,6 +23,7 @@
 #include <core/scene/pipeline/Modifier.h>
 #include <core/scene/pipeline/ModifierApplication.h>
 #include <core/scene/pipeline/PipelineObject.h>
+#include <core/scene/pipeline/PipelineEvalRequest.h>
 #include <core/animation/AnimationSettings.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
@@ -72,7 +73,7 @@ QVector<QPair<ModifierApplication*, PipelineFlowState>> Modifier::getModifierInp
         ModifierApplication* modApp = dynamic_object_cast<ModifierApplication>(dependent);
 		if(modApp != nullptr && modApp->modifier() == this) {
 			if(PipelineObject* pipelineObj = modApp->pipelineObject())
-				results.push_back(qMakePair(modApp, pipelineObj->evaluatePipeline(time, modApp, false)));
+				results.push_back(qMakePair(modApp, pipelineObj->evaluateImmediately(PipelineEvalRequest(time, false, modApp, false))));
 		}
 	}
 
@@ -88,7 +89,7 @@ PipelineFlowState Modifier::getModifierInput(ModifierApplication* modApp) const
 {
 	if(modApp != nullptr && modApp->modifier() == this) {
 		if(PipelineObject* pipelineObj = modApp->pipelineObject()) {
-			return pipelineObj->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+			return pipelineObj->evaluateImmediately(PipelineEvalRequest(dataset()->animationSettings()->time(), false, modApp, false));
 		}
 	}
 	else {
@@ -96,7 +97,7 @@ PipelineFlowState Modifier::getModifierInput(ModifierApplication* modApp) const
 			ModifierApplication* modApp = dynamic_object_cast<ModifierApplication>(dependent);
 			if(modApp != nullptr && modApp->modifier() == this) {
 				if(PipelineObject* pipelineObj = modApp->pipelineObject()) {
-					return pipelineObj->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+					return pipelineObj->evaluateImmediately(PipelineEvalRequest(dataset()->animationSettings()->time(), false, modApp, false));
 				}
 			}
 		}

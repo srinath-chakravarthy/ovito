@@ -79,6 +79,7 @@ SET(SourceFiles
 	scene/pipeline/PipelineObject.cpp
 	scene/pipeline/Modifier.cpp
 	scene/pipeline/ModifierApplication.cpp
+	scene/pipeline/AsyncPipelineEvaluationHelper
 	utilities/units/UnitsManager.cpp
 	utilities/io/ObjectSaveStream.cpp
 	utilities/io/ObjectLoadStream.cpp

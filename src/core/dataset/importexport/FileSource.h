@@ -24,6 +24,7 @@
 
 #include <core/Core.h>
 #include <core/scene/objects/CompoundObject.h>
+#include <core/scene/pipeline/AsyncPipelineEvaluationHelper.h>
 #include <core/utilities/concurrent/Promise.h>
 #include <core/utilities/concurrent/PromiseWatcher.h>
 #include "FileSourceImporter.h"
@@ -80,11 +81,13 @@ public:
 	/// \brief Requests a frame of the input file sequence.
 	PipelineFlowState requestFrame(int frameIndex);
 
-	/// \brief Asks the object for the result of the geometry pipeline at the given time.
-	virtual PipelineFlowState evaluate(TimePoint time) override;
+	/// \brief Asks the object for the results of the data pipeline.
+	virtual PipelineFlowState evaluateImmediately(const PipelineEvalRequest& request) override;
 
-	/// Asks the object for the complete results at the given time.
-	virtual Future<PipelineFlowState> evaluateAsync(TimePoint time) override;
+	/// Asks the object for the complete results of the data pipeline.
+	virtual Future<PipelineFlowState> evaluateAsync(const PipelineEvalRequest& request) override {
+		return _evaluationRequestHelper.createRequest(this, request);
+	}
 
 	/// Returns the title of this object.
 	virtual QString objectTitle() override;
@@ -96,7 +99,7 @@ public:
 	/// \param eventType The event type passed to the ReferenceEvent constructor.
 	inline void notifyDependents(ReferenceEvent::Type eventType) {
 		DataObject::notifyDependents(eventType);
-	}	
+	}
 
 protected Q_SLOTS:
 
@@ -122,9 +125,6 @@ protected:
 
 	/// \brief Cancels the current load operation if there is any in progress.
 	void cancelLoadOperation();
-
-	/// Checks if the data pipeline evaluation is completed.
-	void serveEvaluationRequests();
 
 private:
 
@@ -177,8 +177,8 @@ private:
 	/// The status returned by the parser during its last call.
 	PipelineStatus _importStatus;
 
-	/// List active asynchronous pipeline evaluation requests.
-	std::vector<std::pair<TimePoint, PromisePtr<PipelineFlowState>>> _evaluationRequests;
+	/// Manages pending asynchronous pipeline requests.
+	AsyncPipelineEvaluationHelper _evaluationRequestHelper;
 
 	Q_OBJECT
 	OVITO_OBJECT

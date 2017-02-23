@@ -93,7 +93,7 @@ void ScatterPlotModifier::initializeModifier(PipelineObject* pipeline, ModifierA
 	ParticlePropertyReference bestProperty;
 	if(xAxisProperty().isNull() || yAxisProperty().isNull()) {
 		// Select the first available particle property from the input state.
-		PipelineFlowState input = pipeline->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+		PipelineFlowState input = getModifierInput(modApp);
 		for(DataObject* o : input.objects()) {
 			ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(o);
 			if(property && (property->dataType() == qMetaTypeId<int>() || property->dataType() == qMetaTypeId<FloatType>())) {

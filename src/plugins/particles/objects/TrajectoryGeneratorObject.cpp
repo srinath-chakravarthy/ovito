@@ -85,7 +85,7 @@ bool TrajectoryGeneratorObject::generateTrajectories(TaskManager& taskManager)
 	// Get input particles.
 	if(!source())
 		throwException(tr("No input particle data object is selected from which trajectory lines can be generated."));
-	Future<PipelineFlowState> stateFuture = source()->evalPipelineAsync(currentTime);
+	Future<PipelineFlowState> stateFuture = source()->evaluatePipelineAsync(PipelineEvalRequest(currentTime, false));
 	if(!taskManager.waitForTask(stateFuture))
 		return false;
 
@@ -153,7 +153,7 @@ bool TrajectoryGeneratorObject::generateTrajectories(TaskManager& taskManager)
 	for(TimePoint time : sampleTimes) {
 		trajectoryTask.setProgressText(tr("Loading frame %1").arg(dataset()->animationSettings()->timeToFrame(time)));
 
-		Future<PipelineFlowState> stateFuture = source()->evalPipelineAsync(time);
+		Future<PipelineFlowState> stateFuture = source()->evaluatePipelineAsync(PipelineEvalRequest(time, false));
 		if(!taskManager.waitForTask(stateFuture))
 			return false;
 	
@@ -216,7 +216,7 @@ bool TrajectoryGeneratorObject::generateTrajectories(TaskManager& taskManager)
 	setTrajectories(particleCount, points, sampleTimes);
 
 	// Jump back to original animation time.
-	source()->evalPipeline(currentTime);
+	source()->evaluatePipelineImmediately(PipelineEvalRequest(currentTime, true));
 
 	return !trajectoryTask.isCanceled();
 }

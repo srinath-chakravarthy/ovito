@@ -129,18 +129,18 @@ void ModifierListBox::updateAvailableModifiers()
 		for(ModifierApplication* modApp : currentItem->modifierApplications()) {
 			PipelineObject* pipelineObj = modApp->pipelineObject();
 			OVITO_CHECK_OBJECT_POINTER(pipelineObj);
-			inputState = pipelineObj->evaluatePipeline(dataset->animationSettings()->time(), modApp, true);
+			inputState = pipelineObj->evaluateImmediately(PipelineEvalRequest(dataset->animationSettings()->time(), false, modApp, true));
 			break;
 		}
 	}
 	else if(dynamic_object_cast<DataObject>(currentItem->object())) {
 		DataObject* dataObj = static_object_cast<DataObject>(currentItem->object());
 		OVITO_CHECK_OBJECT_POINTER(dataObj);
-		inputState = dataObj->evaluate(dataset->animationSettings()->time());
+		inputState = dataObj->evaluateImmediately(PipelineEvalRequest(dataset->animationSettings()->time(), false));
 	}
 	else {
 		for(RefTarget* objNode : _modificationList->selectedNodes()) {
-			inputState = static_object_cast<ObjectNode>(objNode)->evalPipeline(dataset->animationSettings()->time());
+			inputState = static_object_cast<ObjectNode>(objNode)->evaluatePipelineImmediately(PipelineEvalRequest(dataset->animationSettings()->time(), false));
 			break;
 		}
 	}

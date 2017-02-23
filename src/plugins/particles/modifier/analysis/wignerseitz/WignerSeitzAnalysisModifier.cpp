@@ -24,6 +24,7 @@
 #include <plugins/particles/objects/ParticleTypeProperty.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/animation/AnimationSettings.h>
+#include <core/scene/pipeline/PipelineEvalRequest.h>
 #include "WignerSeitzAnalysisModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
@@ -153,7 +154,7 @@ PipelineFlowState WignerSeitzAnalysisModifier::getReferenceState(TimePoint time)
 			refState = linkedFileObj->requestFrame(referenceFrame);
 		}
 	}
-	else refState = referenceConfiguration()->evaluate(dataset()->animationSettings()->frameToTime(referenceFrame));
+	else refState = referenceConfiguration()->evaluateImmediately(PipelineEvalRequest(dataset()->animationSettings()->frameToTime(referenceFrame), false));
 
 	// Make sure the obtained reference configuration is valid and ready to use.
 	if(refState.status().type() == PipelineStatus::Error)

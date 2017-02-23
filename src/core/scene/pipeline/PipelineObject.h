@@ -24,6 +24,7 @@
 
 #include <core/Core.h>
 #include <core/scene/objects/DataObject.h>
+#include <core/scene/pipeline/AsyncPipelineEvaluationHelper.h>
 #include <core/utilities/concurrent/Future.h>
 #include <core/utilities/concurrent/Promise.h>
 #include "ModifierApplication.h"
@@ -40,37 +41,6 @@ public:
 
 	/// \brief Constructor that creates an empty pipeline.
 	Q_INVOKABLE PipelineObject(DataSet* dataset);
-
-	/// \brief Asks the object for the result of the geometry pipeline at the given time
-	///        up to a given point in the modifier stack. The result may be incomplete (i.e. status pending)
-	///        if the results are not immediately available.
-	/// \param time The animation at which the geometry pipeline should be evaluated.
-	/// \param upToHere If \a upToHere is \c NULL then the complete modifier stack will be evaluated.
-	///                 Otherwise only the modifiers in the pipeline before the given point will be applied to the
-	///                 input object. \a upToHere must be one of the application objects returned by modifierApplications().
-	/// \param including Specifies whether the last modifier given by \a upToHere will also be applied to the input object.
-	/// \return The result object.
-	PipelineFlowState evaluatePipeline(TimePoint time, ModifierApplication* upToHere, bool including) {
-		// Determine the position in the pipeline up to which it should be evaluated.
-		int upToHereIndex;
-		if(upToHere != nullptr) {
-			upToHereIndex = modifierApplications().indexOf(upToHere);
-			OVITO_ASSERT(upToHereIndex != -1);
-			if(including) upToHereIndex++;
-		}
-		else upToHereIndex = modifierApplications().size();
-		return evaluatePipeline(time, upToHereIndex);
-	}
-
-	/// \brief Asks the object for the result of the geometry pipeline at the given time
-	///        up to a given point in the modifier stack. 
-	/// \param time The animation at which the geometry pipeline should be evaluated.
-	/// \param upToHere If \a upToHere is \c NULL then the complete modifier stack will be evaluated.
-	///                 Otherwise only the modifiers in the pipeline before the given point will be applied to the
-	///                 input object. \a upToHere must be one of the application objects returned by modifierApplications().
-	/// \param including Specifies whether the last modifier given by \a upToHere will also be applied to the input object.
-	/// \return The future result object.
-	Future<PipelineFlowState> evaluatePipelineAsync(TimePoint time, ModifierApplication* upToHere, bool including);
 
 	/// \brief Inserts a modifier into the data flow pipeline.
 	/// \param modifier The modifier to be inserted.
@@ -98,14 +68,21 @@ public:
 
 	/////////////////////////////////////// from DataObject /////////////////////////////////////////
 
-	/// Asks the object for the result of the geometry pipeline at the given time.
-	virtual PipelineFlowState evaluate(TimePoint time) override {
-		return evaluatePipeline(time, nullptr, true);
+	/// Asks the object for the result of the data pipeline.
+	virtual PipelineFlowState evaluateImmediately(const PipelineEvalRequest& request) override;
+
+	/// Asks the object for the result of the data pipeline.
+	virtual Future<PipelineFlowState> evaluateAsync(const PipelineEvalRequest& request) override {
+		return _evaluationRequestHelper.createRequest(this, request);
 	}
 
-	/// Asks the object for the result of the geometry pipeline at the given time.
-	virtual Future<PipelineFlowState> evaluateAsync(TimePoint time) override {
-		return evaluatePipelineAsync(time, nullptr, true);
+	/// Sends an event to all dependents of this RefTarget.
+	virtual void notifyDependents(ReferenceEvent& event) override;
+
+	/// \brief Sends an event to all dependents of this RefTarget.
+	/// \param eventType The event type passed to the ReferenceEvent constructor.
+	inline void notifyDependents(ReferenceEvent::Type eventType) {
+		DataObject::notifyDependents(eventType);
 	}
 
 protected:
@@ -133,9 +110,6 @@ private:
 	/// if the results are not immediately available.
 	PipelineFlowState evaluatePipeline(TimePoint time, int upToHereIndex);
 
-	/// Checks if the data pipeline evaluation is completed.
-	void serveEvaluationRequests();
-
 private:
 
 	/// The object providing the input data that is processed by the modifiers.
@@ -155,8 +129,8 @@ private:
 	/// If the cache is empty, then this is -1.
 	int _cachedIndex;
 
-	/// List active asynchronous pipeline evaluation requests.
-	std::vector<std::tuple<TimePoint, int, PromisePtr<PipelineFlowState>>> _evaluationRequests;
+	/// Manages pending asynchronous pipeline requests.
+	AsyncPipelineEvaluationHelper _evaluationRequestHelper;
 
 	Q_OBJECT
 	OVITO_OBJECT

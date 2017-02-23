@@ -219,9 +219,9 @@ TimePoint FileSource::inputFrameToAnimationTime(int frame) const
 /******************************************************************************
 * Asks the object for the result of the geometry pipeline at the given time.
 ******************************************************************************/
-PipelineFlowState FileSource::evaluate(TimePoint time)
+PipelineFlowState FileSource::evaluateImmediately(const PipelineEvalRequest& request)
 {
-	return requestFrame(animationTimeToInputFrame(time));
+	return requestFrame(animationTimeToInputFrame(request.time()));
 }
 
 /******************************************************************************
@@ -573,70 +573,10 @@ void FileSource::propertyChanged(const PropertyFieldDescriptor& field)
 void FileSource::notifyDependents(ReferenceEvent& event)
 {
 	if(event.type() == ReferenceEvent::PendingStateChanged)
-		serveEvaluationRequests();
+		_evaluationRequestHelper.serveRequests(this);
 
 	DataObject::notifyDependents(event);
 }
-
-/******************************************************************************
-* Asks the object for the complete results at the given time.
-******************************************************************************/
-Future<PipelineFlowState> FileSource::evaluateAsync(TimePoint time)
-{
-	// Check if there is already an active request pending for the same animation time.
-	for(const auto& req : _evaluationRequests) {
-		if(req.first == time)
-			return Future<PipelineFlowState>(req.second);
-	}
-
-	// Check if we can directly satisfy the request.
-	if(_evaluationRequests.empty()) {
-		const PipelineFlowState& state = evaluate(time);
-		if(state.status().type() != PipelineStatus::Pending)
-			return Future<PipelineFlowState>::createImmediate(state);
-	}
-
-	// Create a new record for this evaulation request.
-	Future<PipelineFlowState> future = Future<PipelineFlowState>::createWithPromise();
-	_evaluationRequests.emplace_back(time, future.promise());
-	future.promise()->setStarted();
-	return future;
-}
-
-/******************************************************************************
-* Checks if the data pipeline evaluation is completed.
-******************************************************************************/
-void FileSource::serveEvaluationRequests()
-{
-	while(!_evaluationRequests.empty()) {
-		// Sort out canceled requests.
-		Promise<PipelineFlowState>* promise = _evaluationRequests.front().second.get(); 
-		if(promise->isCanceled()) {
-			promise->setFinished();
-			_evaluationRequests.erase(_evaluationRequests.begin());
-			continue;
-		}
-		
-		// Check if we can now satisfy the oldest request.
-		const PipelineFlowState& state = evaluate(_evaluationRequests.front().first);
-
-		// The call above might have lead to another call of this function.
-		// Thus, we have to handle re-entrant behavior.
-		if(_evaluationRequests.empty() || promise != _evaluationRequests.front().second.get())
-			break;
-		
-		if(state.status().type() != PipelineStatus::Pending) {
-			promise->setResult(state);
-			promise->setFinished();
-			_evaluationRequests.erase(_evaluationRequests.begin());
-		}
-		else {
-			// Check back again later.
-			break;
-		}
-	}
-}
-
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
