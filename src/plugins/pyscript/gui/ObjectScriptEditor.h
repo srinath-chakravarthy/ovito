@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_OBJECT_SCRIPT_EDITOR_H
-#define __OVITO_OBJECT_SCRIPT_EDITOR_H
+#pragma once
+
 
 #include <plugins/pyscript/PyScript.h>
 #include <core/reference/RefTargetListener.h>
@@ -113,4 +113,4 @@ protected:
 
 };
 
-#endif // __OVITO_OBJECT_SCRIPT_EDITOR_H
+

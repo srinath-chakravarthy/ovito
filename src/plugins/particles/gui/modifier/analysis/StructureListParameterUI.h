@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_STRUCTURE_LIST_PARAMETER_UI_H
-#define __OVITO_STRUCTURE_LIST_PARAMETER_UI_H
+#pragma once
+
 
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <gui/properties/RefTargetListParameterUI.h>
@@ -99,4 +99,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_STRUCTURE_LIST_PARAMETER_UI_H
+

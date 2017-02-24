@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_INTEGER_PARAMETER_UI_H
-#define __OVITO_INTEGER_PARAMETER_UI_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include "NumericalParameterUI.h"
@@ -78,4 +78,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_INTEGER_PARAMETER_UI_H
+

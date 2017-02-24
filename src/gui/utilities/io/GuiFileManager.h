@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_GUI_FILE_MANAGER_H
-#define __OVITO_GUI_FILE_MANAGER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/io/FileManager.h>
@@ -45,4 +45,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_GUI_FILE_MANAGER_H
+

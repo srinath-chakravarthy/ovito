@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PROMISE_WATCHER_H
-#define __OVITO_PROMISE_WATCHER_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -129,4 +129,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_PROMISE_WATCHER_H
+

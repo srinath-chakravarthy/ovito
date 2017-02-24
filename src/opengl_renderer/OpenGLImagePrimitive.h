@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_OPENGL_IMAGE_PRIMITIVE_H
-#define __OVITO_OPENGL_IMAGE_PRIMITIVE_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/rendering/ImagePrimitive.h>
@@ -80,4 +80,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_OPENGL_IMAGE_PRIMITIVE_H
+

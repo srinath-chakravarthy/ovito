@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_IMD_FILE_EXPORTER_H
-#define __OVITO_IMD_FILE_EXPORTER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include "../FileColumnParticleExporter.h"
@@ -59,4 +59,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_IMD_FILE_EXPORTER_H
+

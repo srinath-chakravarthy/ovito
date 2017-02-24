@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_CLUSTER_GRAPH_OBJECT_H
-#define __OVITO_CA_CLUSTER_GRAPH_OBJECT_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/crystalanalysis/data/ClusterGraph.h>
@@ -63,5 +63,5 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CA_CLUSTER_GRAPH_OBJECT_H
+
 

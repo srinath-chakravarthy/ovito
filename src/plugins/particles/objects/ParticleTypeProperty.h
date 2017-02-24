@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_TYPE_PROPERTY_H
-#define __OVITO_PARTICLE_TYPE_PROPERTY_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include "ParticlePropertyObject.h"
@@ -175,4 +175,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTICLE_TYPE_PROPERTY_H
+

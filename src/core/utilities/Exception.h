@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::Exception class.
  */
 
-#ifndef __OVITO_EXCEPTION_H
-#define __OVITO_EXCEPTION_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -175,4 +175,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_EXCEPTION_H
+

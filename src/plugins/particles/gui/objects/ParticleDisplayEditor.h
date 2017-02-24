@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_DISPLAY_EDITOR_H
-#define __OVITO_PARTICLE_DISPLAY_EDITOR_H
+#pragma once
+
 
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <gui/properties/PropertiesEditor.h>
@@ -53,4 +53,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTICLE_DISPLAY_EDITOR_H
+

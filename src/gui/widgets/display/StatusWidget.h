@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_STATUS_WIDGET_H
-#define __OVITO_STATUS_WIDGET_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/scene/pipeline/PipelineStatus.h>
@@ -77,4 +77,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_STATUS_WIDGET_H
+

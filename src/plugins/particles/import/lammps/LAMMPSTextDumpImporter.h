@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_LAMMPS_TEXT_DUMP_IMPORTER_H
-#define __OVITO_LAMMPS_TEXT_DUMP_IMPORTER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/import/InputColumnMapping.h>
@@ -147,4 +147,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_LAMMPS_TEXT_DUMP_IMPORTER_H
+

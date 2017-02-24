@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_MAIN_WINDOW_H
-#define __OVITO_MAIN_WINDOW_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <gui/dataset/GuiDataSetContainer.h>
@@ -175,4 +175,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_MAIN_WINDOW_H
+

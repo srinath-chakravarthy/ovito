@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTITION_MESH_H
-#define __OVITO_PARTITION_MESH_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/scene/objects/DataObjectWithSharedStorage.h>
@@ -104,4 +104,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTITION_MESH_H
+

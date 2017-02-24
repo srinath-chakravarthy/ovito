@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_ANIM_SETTINGS_DIALOG_H
-#define __OVITO_ANIM_SETTINGS_DIALOG_H
+#pragma once
+
 
 #include <core/animation/AnimationSettings.h>
 #include <core/dataset/UndoStack.h>
@@ -73,4 +73,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_ANIM_SETTINGS_DIALOG_H
+

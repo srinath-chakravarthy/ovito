@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CRYSTALANALYSIS_IMPORTER_H
-#define __OVITO_CRYSTALANALYSIS_IMPORTER_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/crystalanalysis/objects/patterns/StructurePattern.h>
@@ -147,4 +147,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CRYSTALANALYSIS_IMPORTER_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_ATTRIBUTE_FILE_EXPORTER_H
-#define __OVITO_ATTRIBUTE_FILE_EXPORTER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/dataset/importexport/FileExporter.h>
@@ -89,4 +89,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_ATTRIBUTE_FILE_EXPORTER_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PROPERTY_BASE_H
-#define __OVITO_PROPERTY_BASE_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 
@@ -508,4 +508,4 @@ protected:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PROPERTY_BASE_H
+

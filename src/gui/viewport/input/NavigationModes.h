@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_NAVIGATION_MODES_H
-#define __OVITO_NAVIGATION_MODES_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/rendering/ArrowPrimitive.h>
@@ -246,4 +246,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_NAVIGATION_MODES_H
+

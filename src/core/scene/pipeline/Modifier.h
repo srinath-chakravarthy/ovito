@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_MODIFIER_H
-#define __OVITO_MODIFIER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/reference/RefTarget.h>
@@ -178,4 +178,4 @@ OVITO_END_INLINE_NAMESPACE
 Q_DECLARE_METATYPE(Ovito::Modifier*);
 Q_DECLARE_TYPEINFO(Ovito::Modifier*, Q_MOVABLE_TYPE);
 
-#endif // __OVITO_MODIFIER_H
+

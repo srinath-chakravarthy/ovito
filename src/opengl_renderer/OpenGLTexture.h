@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_OPENGL_TEXTURE_H
-#define __OVITO_OPENGL_TEXTURE_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "OpenGLSharedResource.h"
@@ -96,4 +96,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_OPENGL_TEXTURE_H
+

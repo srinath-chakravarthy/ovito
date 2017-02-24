@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_AUTO_START_OBJECT_H
-#define __OVITO_AUTO_START_OBJECT_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -55,4 +55,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_AUTO_START_OBJECT_H
+

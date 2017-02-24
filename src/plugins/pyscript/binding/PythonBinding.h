@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PYSCRIPT_BINDING_H
-#define __OVITO_PYSCRIPT_BINDING_H
+#pragma once
+
 
 #include <plugins/pyscript/PyScript.h>
 #include <plugins/pyscript/engine/ScriptEngine.h>
@@ -785,6 +785,4 @@ py::cpp_function MatrixSetter()
 	});
 }
 
-};	// End of namespace
-
-#endif
+}	// End of namespace

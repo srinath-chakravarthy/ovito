@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_ASYNC_PIPELINE_EVAL_HELPER_H
-#define __OVITO_ASYNC_PIPELINE_EVAL_HELPER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/scene/pipeline/PipelineEvalRequest.h>
@@ -54,4 +54,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_ASYNC_PIPELINE_EVAL_HELPER_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_REFMAKER_H
-#define __OVITO_REFMAKER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "ReferenceEvent.h"
@@ -337,4 +337,4 @@ OVITO_END_INLINE_NAMESPACE
 
 #include "NativePropertyFieldDescriptor.h"
 
-#endif // __OVITO_REFMAKER_H
+

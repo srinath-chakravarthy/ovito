@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SCENEROOT_H
-#define __OVITO_SCENEROOT_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/animation/TimeInterval.h>
@@ -63,4 +63,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_SCENEROOT_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_EXPRESSION_EVALUATOR_H
-#define __OVITO_PARTICLE_EXPRESSION_EVALUATOR_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/pipeline/PipelineFlowState.h>
@@ -207,4 +207,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTICLE_EXPRESSION_EVALUATOR_H
+

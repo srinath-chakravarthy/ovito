@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_DELAUNAY_TESSELLATION_H
-#define __OVITO_DELAUNAY_TESSELLATION_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/data/SimulationCell.h>
@@ -234,4 +234,4 @@ private:
 }	// End of namespace
 
 
-#endif // __OVITO_DELAUNAY_TESSELLATION_H
+

@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::SceneRenderer class.
  */
 
-#ifndef __OVITO_SCENE_RENDERER_H
-#define __OVITO_SCENE_RENDERER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/animation/TimeInterval.h>
@@ -262,4 +262,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_SCENE_RENDERER_H
+

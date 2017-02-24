@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VR_SCENE_RENDERER_H
-#define __OVITO_VR_SCENE_RENDERER_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <opengl_renderer/OpenGLSceneRenderer.h>
@@ -57,4 +57,4 @@ private:
 
 }	// End of namespace
 
-#endif // __OVITO_VR_SCENE_RENDERER_H
+

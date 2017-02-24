@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SURFACE_MESH_DISPLAY_H
-#define __OVITO_SURFACE_MESH_DISPLAY_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/AsynchronousDisplayObject.h>
@@ -184,4 +184,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_SURFACE_MESH_DISPLAY_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_FILE_SOURCE_H
-#define __OVITO_FILE_SOURCE_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/scene/objects/CompoundObject.h>
@@ -189,4 +189,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_FILE_SOURCE_H
+

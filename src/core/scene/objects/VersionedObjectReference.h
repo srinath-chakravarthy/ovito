@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VERSIONED_OBJECT_REFERENCE_H
-#define __OVITO_VERSIONED_OBJECT_REFERENCE_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -187,4 +187,4 @@ template<class T> QDebug operator<<(QDebug debug, const VersionedOORef<T>& p) {
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_VERSIONED_OBJECT_REFERENCE_H
+

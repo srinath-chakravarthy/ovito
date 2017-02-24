@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_MODIFIER_LIST_BOX_H
-#define __OVITO_MODIFIER_LIST_BOX_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/object/OvitoObjectType.h>
@@ -82,4 +82,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_MODIFIER_LIST_BOX_H
+

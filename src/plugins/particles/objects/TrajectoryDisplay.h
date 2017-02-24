@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_TRAJECTORY_DISPLAY_H
-#define __OVITO_TRAJECTORY_DISPLAY_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DisplayObject.h>
@@ -100,4 +100,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_TRAJECTORY_DISPLAY_H
+

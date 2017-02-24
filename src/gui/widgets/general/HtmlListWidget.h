@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_HTML_LIST_WIDGET_H
-#define __OVITO_HTML_LIST_WIDGET_H
+#pragma once
+
 
 #include <gui/GUI.h>
 
@@ -47,4 +47,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_ELIDED_TEXT_LABEL_H
+

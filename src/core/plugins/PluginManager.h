@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PLUGIN_MANAGER_H
-#define __OVITO_PLUGIN_MANAGER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "Plugin.h"
@@ -111,4 +111,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_PLUGIN_MANAGER_H
+

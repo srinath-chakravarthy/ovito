@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::Plane_3 class template.
  */
 
-#ifndef __OVITO_PLANE_H
-#define __OVITO_PLANE_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/io/SaveStream.h>
@@ -321,4 +321,4 @@ Q_DECLARE_METATYPE(Ovito::Plane3*);
 Q_DECLARE_TYPEINFO(Ovito::Plane3, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::Plane3*, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_PLANE_H
+

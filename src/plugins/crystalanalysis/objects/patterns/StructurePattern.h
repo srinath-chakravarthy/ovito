@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_STRUCTURE_PATTERN_H
-#define __OVITO_CA_STRUCTURE_PATTERN_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/objects/ParticleType.h>
@@ -103,4 +103,4 @@ Q_DECLARE_TYPEINFO(Ovito::Plugins::CrystalAnalysis::StructurePattern::StructureT
 Q_DECLARE_METATYPE(Ovito::Plugins::CrystalAnalysis::StructurePattern::SymmetryType);
 Q_DECLARE_TYPEINFO(Ovito::Plugins::CrystalAnalysis::StructurePattern::SymmetryType, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_CA_STRUCTURE_PATTERN_H
+

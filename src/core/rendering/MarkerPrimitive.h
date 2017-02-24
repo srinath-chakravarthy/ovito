@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_MARKER_PRIMITIVE_H
-#define __OVITO_MARKER_PRIMITIVE_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "PrimitiveBase.h"
@@ -71,4 +71,4 @@ OVITO_END_INLINE_NAMESPACE
 Q_DECLARE_METATYPE(Ovito::MarkerPrimitive::MarkerShape);
 Q_DECLARE_TYPEINFO(Ovito::MarkerPrimitive::MarkerShape, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_MARKER_PRIMITIVE_H
+

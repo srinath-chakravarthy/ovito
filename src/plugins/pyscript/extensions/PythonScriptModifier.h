@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PYTHON_SCRIPT_MODIFIER_H
-#define __OVITO_PYTHON_SCRIPT_MODIFIER_H
+#pragma once
+
 
 #include <plugins/pyscript/PyScript.h>
 #include <core/utilities/concurrent/Task.h>
@@ -153,4 +153,4 @@ private:
 
 }	// End of namespace
 
-#endif // __OVITO_PYTHON_SCRIPT_MODIFIER_H
+

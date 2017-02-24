@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_PLANAR_DEFECT_IDENTIFICATION_H
-#define __OVITO_CA_PLANAR_DEFECT_IDENTIFICATION_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/utilities/MemoryPool.h>
@@ -78,4 +78,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CA_PLANAR_DEFECT_IDENTIFICATION_H
+

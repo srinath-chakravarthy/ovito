@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARALLEL_FOR_H
-#define __OVITO_PARALLEL_FOR_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/app/Application.h>
@@ -182,4 +182,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_PARALLEL_FOR_H
+

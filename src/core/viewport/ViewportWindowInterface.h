@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VIEWPORT_WINDOW_INTERFACE_H
-#define __OVITO_VIEWPORT_WINDOW_INTERFACE_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -62,4 +62,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_VIEWPORT_WINDOW_INTERFACE_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SLIP_SURFACE_DISPLAY_H
-#define __OVITO_SLIP_SURFACE_DISPLAY_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/scene/objects/AsynchronousDisplayObject.h>
@@ -142,4 +142,4 @@ protected:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_SLIP_SURFACE_DISPLAY_H
+

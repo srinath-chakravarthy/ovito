@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_TACHYON_RENDERER_EDITOR_H
-#define __OVITO_TACHYON_RENDERER_EDITOR_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <gui/properties/PropertiesEditor.h>
@@ -53,4 +53,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_TACHYON_RENDERER_EDITOR_H
+

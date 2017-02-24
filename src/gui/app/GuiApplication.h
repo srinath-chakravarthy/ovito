@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_GUI_APPLICATION_H
-#define __OVITO_GUI_APPLICATION_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/utilities/Exception.h>
@@ -68,4 +68,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_GUI_APPLICATION_H
+

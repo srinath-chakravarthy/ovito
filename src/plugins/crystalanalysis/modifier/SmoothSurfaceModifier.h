@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_SMOOTH_SURFACE_MODIFIER_H
-#define __OVITO_CA_SMOOTH_SURFACE_MODIFIER_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/scene/pipeline/Modifier.h>
@@ -60,4 +60,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CA_SMOOTH_SURFACE_MODIFIER_H
+

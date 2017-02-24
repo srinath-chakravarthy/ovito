@@ -19,8 +19,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_ANIMATION_KEYS_H
-#define __OVITO_ANIMATION_KEYS_H
+#pragma once
 
 #include <core/Core.h>
 #include <core/reference/RefTarget.h>
@@ -488,5 +487,3 @@ struct SplineValueInterpolator<Scaling> {
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
-
-#endif // __OVITO_KEYED_CONTROLLERS_H

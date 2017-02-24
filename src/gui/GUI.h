@@ -24,8 +24,8 @@
  * \brief This file includes third-party library headers required by OVITO's GUI.
  */
 
-#ifndef __OVITO_GUI_H
-#define __OVITO_GUI_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -70,4 +70,4 @@
 #include "ForwardDecl.h"
 
 
-#endif // __OVITO_CORE_H
+

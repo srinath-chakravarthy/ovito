@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_HISTORY_FILE_DIALOG_H
-#define __OVITO_HISTORY_FILE_DIALOG_H
+#pragma once
+
 
 #include <gui/GUI.h>
 
@@ -61,4 +61,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_HISTORY_FILE_DIALOG_H
+

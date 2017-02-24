@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CRYSTALANALYSIS_EXPORTER_H
-#define __OVITO_CRYSTALANALYSIS_EXPORTER_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/dataset/importexport/FileExporter.h>
@@ -89,4 +89,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CRYSTALANALYSIS_EXPORTER_H
+

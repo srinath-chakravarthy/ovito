@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_FRAME_LOADER_H
-#define __OVITO_PARTICLE_FRAME_LOADER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/dataset/importexport/FileSourceImporter.h>
@@ -330,4 +330,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTICLE_FRAME_LOADER_H
+

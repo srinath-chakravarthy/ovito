@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SELECT_EXPRESSION_MODIFIER_H
-#define __OVITO_SELECT_EXPRESSION_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include "../ParticleModifier.h"
@@ -74,4 +74,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_SELECT_EXPRESSION_MODIFIER_H
+

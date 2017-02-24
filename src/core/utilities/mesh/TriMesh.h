@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_TRI_MESH_H
-#define __OVITO_TRI_MESH_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -471,4 +471,4 @@ OVITO_END_INLINE_NAMESPACE
 
 Q_DECLARE_TYPEINFO(Ovito::TriMeshFace, Q_MOVABLE_TYPE);
 
-#endif // __OVITO_TRI_MESH_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_XYZ_EXPORTER_EDITOR_H
-#define __OVITO_XYZ_EXPORTER_EDITOR_H
+#pragma once
+
 
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/particles/gui/export/FileColumnParticleExporterEditor.h>
@@ -54,4 +54,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_XYZ_EXPORTER_EDITOR_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_DATASET_CONTAINER_H
-#define __OVITO_DATASET_CONTAINER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/concurrent/TaskManager.h>
@@ -142,4 +142,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_DATASET_CONTAINER_H
+

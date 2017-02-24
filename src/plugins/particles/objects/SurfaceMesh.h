@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SURFACE_MESH_H
-#define __OVITO_SURFACE_MESH_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/SimulationCell.h>
@@ -92,4 +92,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_SURFACE_MESH_H
+

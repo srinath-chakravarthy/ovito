@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_TCB_INTERPOLATION_CONTROLLERS_H
-#define __OVITO_TCB_INTERPOLATION_CONTROLLERS_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "KeyframeController.h"
@@ -200,4 +200,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_TCB_INTERPOLATION_CONTROLLERS_H
+

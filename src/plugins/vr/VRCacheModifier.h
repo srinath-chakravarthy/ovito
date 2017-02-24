@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VR_CACHE_MODIFIER_H
-#define __OVITO_VR_CACHE_MODIFIER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/scene/pipeline/Modifier.h>

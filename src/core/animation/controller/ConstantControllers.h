@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CONSTANT_CONTROLLERS_H
-#define __OVITO_CONSTANT_CONTROLLERS_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "Controller.h"
@@ -254,5 +254,3 @@ private:
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
-
-#endif // __OVITO_CONSTANT_CONTROLLERS_H

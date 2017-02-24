@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_NETCDF_IMPORTER_EDITOR_H
-#define __OVITO_NETCDF_IMPORTER_EDITOR_H
+#pragma once
+
 
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/netcdf/NetCDFImporter.h>
@@ -63,4 +63,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_NETCDF_IMPORTER_EDITOR_H
+

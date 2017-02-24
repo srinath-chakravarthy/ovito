@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_NETCDF_FILE_EXPORTER_H
-#define __OVITO_NETCDF_FILE_EXPORTER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/export/FileColumnParticleExporter.h>
@@ -117,4 +117,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_NETCDF_FILE_EXPORTER_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VR_WINDOW_H
-#define __OVITO_VR_WINDOW_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <gui/dataset/GuiDataSetContainer.h>

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_GUI_DATASET_CONTAINER_H
-#define __OVITO_GUI_DATASET_CONTAINER_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/dataset/DataSetContainer.h>
@@ -92,4 +92,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_GUI_DATASET_CONTAINER_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_ROLLOUT_CONTAINER_H
-#define __OVITO_ROLLOUT_CONTAINER_H
+#pragma once
+
 
 #include <gui/GUI.h>
 
@@ -243,4 +243,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_ROLLOUT_CONTAINER_H
+

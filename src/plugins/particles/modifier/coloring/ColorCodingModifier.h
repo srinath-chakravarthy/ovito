@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_COLOR_CODING_MODIFIER_H
-#define __OVITO_COLOR_CODING_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
@@ -367,4 +367,4 @@ OVITO_END_INLINE_NAMESPACE
 Q_DECLARE_METATYPE(Ovito::Particles::ColorCodingModifier::ColorApplicationMode);
 Q_DECLARE_TYPEINFO(Ovito::Particles::ColorCodingModifier::ColorApplicationMode, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_COLOR_CODING_MODIFIER_H
+

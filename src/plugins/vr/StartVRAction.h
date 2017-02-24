@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VR_ACTIONS_H
-#define __OVITO_VR_ACTIONS_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <gui/plugins/autostart/GuiAutoStartObject.h>

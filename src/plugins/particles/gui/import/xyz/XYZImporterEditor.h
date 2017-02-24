@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_XYZ_IMPORTER_EDITOR_H
-#define __OVITO_XYZ_IMPORTER_EDITOR_H
+#pragma once
+
 
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/particles/import/xyz/XYZImporter.h>
@@ -66,4 +66,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_XYZ_IMPORTER_EDITOR_H
+

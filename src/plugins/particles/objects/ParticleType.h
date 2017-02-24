@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_TYPE_H
-#define __OVITO_PARTICLE_TYPE_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/reference/RefTarget.h>
@@ -67,4 +67,4 @@ protected:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTICLE_TYPE_H
+

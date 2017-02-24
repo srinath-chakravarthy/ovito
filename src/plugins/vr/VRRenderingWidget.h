@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VR_RENDER_WIDGET_H
-#define __OVITO_VR_RENDER_WIDGET_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/utilities/mesh/TriMesh.h>

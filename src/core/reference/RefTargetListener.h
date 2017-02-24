@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_REFTARGET_LISTENER_H
-#define __OVITO_REFTARGET_LISTENER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "RefTarget.h"
@@ -199,5 +199,5 @@ public:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_REFTARGET_LISTENER_H
+
 

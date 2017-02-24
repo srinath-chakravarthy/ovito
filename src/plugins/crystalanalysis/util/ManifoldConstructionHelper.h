@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_MANIFOLD_CONSTRUCTION_HELPER_H
-#define __OVITO_MANIFOLD_CONSTRUCTION_HELPER_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/data/SimulationCell.h>
@@ -416,4 +416,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_MANIFOLD_CONSTRUCTION_HELPER_H
+

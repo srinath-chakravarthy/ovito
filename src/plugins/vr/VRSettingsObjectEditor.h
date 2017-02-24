@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VR_SETTINGS_EDITOR_H
-#define __OVITO_VR_SETTINGS_EDITOR_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <gui/properties/PropertiesEditor.h>

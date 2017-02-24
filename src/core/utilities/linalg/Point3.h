@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::Point_3 class template.
  */
 
-#ifndef __OVITO_POINT3_H
-#define __OVITO_POINT3_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/io/SaveStream.h>
@@ -375,4 +375,4 @@ Q_DECLARE_TYPEINFO(Ovito::Point3I, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::Point3*, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::Point3I*, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_POINT3_H
+

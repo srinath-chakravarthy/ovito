@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_BOND_PROPERTY_OBJECT_H
-#define __OVITO_BOND_PROPERTY_OBJECT_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DataObjectWithSharedStorage.h>
@@ -593,4 +593,4 @@ inline LoadStream& operator>>(LoadStream& stream, BondPropertyReference& r)
 
 Q_DECLARE_METATYPE(Ovito::Particles::BondPropertyReference);
 
-#endif // __OVITO_BOND_PROPERTY_OBJECT_H
+

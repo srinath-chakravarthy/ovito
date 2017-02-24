@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_BOND_PROPERTY_H
-#define __OVITO_BOND_PROPERTY_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include "PropertyBase.h"
@@ -137,4 +137,4 @@ protected:
 Q_DECLARE_METATYPE(Ovito::Particles::BondProperty::Type);
 Q_DECLARE_TYPEINFO(Ovito::Particles::BondProperty::Type, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_BOND_PROPERTY_H
+

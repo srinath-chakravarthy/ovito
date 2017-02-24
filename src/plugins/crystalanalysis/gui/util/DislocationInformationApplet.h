@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_DISLOCATION_INFORMATION_APPLET_H
-#define __OVITO_DISLOCATION_INFORMATION_APPLET_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <gui/plugins/utility/UtilityApplet.h>
@@ -124,4 +124,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_DISLOCATION_INFORMATION_APPLET_H
+

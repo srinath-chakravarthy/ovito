@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_ANIMATION_KEY_EDITOR_DIALOG_H
-#define __OVITO_ANIMATION_KEY_EDITOR_DIALOG_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/dataset/UndoStack.h>
@@ -69,4 +69,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_ANIMATION_KEY_EDITOR_DIALOG_H
+

@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::BoundedPriorityQueue class template.
  */
 
-#ifndef __OVITO_BOUNDED_PRIORITY_QUEUE_H
-#define __OVITO_BOUNDED_PRIORITY_QUEUE_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -130,5 +130,5 @@ protected:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_BOUNDED_PRIORITY_QUEUE_H
+
 

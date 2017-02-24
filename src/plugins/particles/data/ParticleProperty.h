@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_PROPERTY_H
-#define __OVITO_PARTICLE_PROPERTY_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include "PropertyBase.h"
@@ -174,4 +174,4 @@ protected:
 Q_DECLARE_METATYPE(Ovito::Particles::ParticleProperty::Type);
 Q_DECLARE_TYPEINFO(Ovito::Particles::ParticleProperty::Type, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_PARTICLE_PROPERTY_H
+

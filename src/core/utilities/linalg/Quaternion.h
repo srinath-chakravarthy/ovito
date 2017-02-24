@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::QuaternionT class template.
  */
 
-#ifndef __OVITO_QUATERNION_H
-#define __OVITO_QUATERNION_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/io/SaveStream.h>
@@ -490,4 +490,4 @@ Q_DECLARE_METATYPE(Ovito::Quaternion*);
 Q_DECLARE_TYPEINFO(Ovito::Quaternion, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::Quaternion*, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_QUATERNION_H
+

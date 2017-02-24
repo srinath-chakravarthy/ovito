@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_ADHOC_APPLICATION_H
-#define __OVITO_ADHOC_APPLICATION_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/app/Application.h>
@@ -46,4 +46,4 @@ private:
 
 }	// End of namespace
 
-#endif // __OVITO_ADHOC_APPLICATION_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VR_SETTINGS_OBJECT_H
-#define __OVITO_VR_SETTINGS_OBJECT_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/reference/RefTarget.h>

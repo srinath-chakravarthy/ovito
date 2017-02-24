@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_POVRAY_RENDERER_H
-#define __OVITO_POVRAY_RENDERER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/rendering/noninteractive/NonInteractiveSceneRenderer.h>
@@ -206,4 +206,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_POVRAY_RENDERER_H
+

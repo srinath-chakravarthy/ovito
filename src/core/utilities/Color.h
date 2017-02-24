@@ -24,8 +24,8 @@
  * \brief Contains the definitions of the Ovito::ColorT and Ovito::ColorAT class templates.
  */
 
-#ifndef __OVITO_COLOR_H
-#define __OVITO_COLOR_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/linalg/Vector3.h>
@@ -610,4 +610,4 @@ Q_DECLARE_TYPEINFO(Ovito::ColorA, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::Color*, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::ColorA*, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_COLOR_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_FILENAME_PARAMETER_UI_H
-#define __OVITO_FILENAME_PARAMETER_UI_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include "ParameterUI.h"
@@ -85,4 +85,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_FILENAME_PARAMETER_UI_H
+

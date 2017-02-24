@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_BURGERS_CIRCUIT_H
-#define __OVITO_CA_BURGERS_CIRCUIT_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/crystalanalysis/data/ClusterVector.h>
@@ -147,4 +147,4 @@ struct BurgersCircuit
 }	// End of namespace
 
 
-#endif // __OVITO_CA_BURGERS_CIRCUIT_H
+

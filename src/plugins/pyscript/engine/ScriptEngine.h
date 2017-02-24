@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PYSCRIPT_ENGINE_H
-#define __OVITO_PYSCRIPT_ENGINE_H
+#pragma once
+
 
 #include <plugins/pyscript/PyScript.h>
 #include <core/dataset/DataSet.h>
@@ -165,6 +165,4 @@ private:
 	Q_OBJECT
 };
 
-};	// End of namespace
-
-#endif
+}	// End of namespace

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PICKING_SCENE_RENDERER_H
-#define __OVITO_PICKING_SCENE_RENDERER_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <gui/rendering/ViewportSceneRenderer.h>
@@ -117,4 +117,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_PICKING_SCENE_RENDERER_H
+

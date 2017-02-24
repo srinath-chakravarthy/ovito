@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLES_PYTHON_BINDING_H
-#define __OVITO_PARTICLES_PYTHON_BINDING_H
+#pragma once
+
 
 #include <plugins/pyscript/PyScript.h>
 #include <plugins/pyscript/binding/PythonBinding.h>
@@ -238,4 +238,4 @@ namespace pybind11 { namespace detail {
 
 }} // namespace pybind11::detail
 
-#endif	// __OVITO_PARTICLES_PYTHON_BINDING_H
+

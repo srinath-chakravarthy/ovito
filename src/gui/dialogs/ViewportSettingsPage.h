@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VIEWPORT_SETTINGS_PAGE_H
-#define __OVITO_VIEWPORT_SETTINGS_PAGE_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <gui/dialogs/ApplicationSettingsDialog.h>
@@ -62,4 +62,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_VIEWPORT_SETTINGS_PAGE_H
+

@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::MemoryPool class template.
  */
 
-#ifndef __OVITO_MEMORY_POOL_H
-#define __OVITO_MEMORY_POOL_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -124,5 +124,5 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_MEMORY_POOL_H
+
 

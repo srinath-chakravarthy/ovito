@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_MODIFIER_APPLICATION_H
-#define __OVITO_MODIFIER_APPLICATION_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "Modifier.h"
@@ -84,4 +84,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_MODIFIER_APPLICATION_H
+

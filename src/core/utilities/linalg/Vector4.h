@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::Vector_4 class template.
  */
 
-#ifndef __OVITO_VECTOR4_H
-#define __OVITO_VECTOR4_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/io/SaveStream.h>
@@ -382,4 +382,4 @@ Q_DECLARE_TYPEINFO(Ovito::Vector4I, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::Vector4*, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::Vector4I*, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_VECTOR4_H
+

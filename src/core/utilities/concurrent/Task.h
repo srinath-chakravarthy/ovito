@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_TASK_H
-#define __OVITO_TASK_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "Future.h"
@@ -108,4 +108,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_TASK_H
+

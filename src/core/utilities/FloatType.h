@@ -24,8 +24,8 @@
  * \brief This header file defines the default floating-point type and numeric constants used throughout the program.
  */
 
-#ifndef __OVITO_FLOATTYPE_H
-#define __OVITO_FLOATTYPE_H
+#pragma once
+
 
 namespace Ovito {
 
@@ -65,4 +65,4 @@ namespace Ovito {
 
 }	// End of namespace
 
-#endif // __OVITO_FLOATTYPE_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CREATE_BONDS_MODIFIER_H
-#define __OVITO_CREATE_BONDS_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/objects/BondsDisplay.h>
@@ -168,4 +168,4 @@ OVITO_END_INLINE_NAMESPACE
 Q_DECLARE_METATYPE(Ovito::Particles::CreateBondsModifier::CutoffMode);
 Q_DECLARE_TYPEINFO(Ovito::Particles::CreateBondsModifier::CutoffMode, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_CREATE_BONDS_MODIFIER_H
+

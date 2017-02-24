@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CAP_POLY_TESSELLATOR_H
-#define __OVITO_CAP_POLY_TESSELLATOR_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/utilities/mesh/TriMesh.h>
@@ -171,4 +171,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CAP_POLY_TESSELLATOR_H
+

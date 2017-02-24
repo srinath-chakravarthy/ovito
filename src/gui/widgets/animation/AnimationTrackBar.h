@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_ANIMATION_TRACK_BAR_H
-#define __OVITO_ANIMATION_TRACK_BAR_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/reference/RefTargetListener.h>
@@ -149,4 +149,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_ANIMATION_TRACK_BAR_H
+

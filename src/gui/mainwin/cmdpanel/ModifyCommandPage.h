@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_MODIFY_COMMAND_PAGE_H
-#define __OVITO_MODIFY_COMMAND_PAGE_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <gui/properties/PropertiesPanel.h>
@@ -124,4 +124,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif	// __OVITO_MODIFY_COMMAND_PAGE_H
+

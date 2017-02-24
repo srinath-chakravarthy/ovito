@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_TASK_DISPLAY_WIDGET_H
-#define __OVITO_TASK_DISPLAY_WIDGET_H
+#pragma once
+
 
 #include <gui/GUI.h>
 
@@ -74,4 +74,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_TASK_DISPLAY_WIDGET_H
+

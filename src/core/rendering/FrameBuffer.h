@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_FRAME_BUFFER_H
-#define __OVITO_FRAME_BUFFER_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -188,4 +188,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_FRAME_BUFFER_H
+

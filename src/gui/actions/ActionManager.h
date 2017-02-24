@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_ACTION_MANAGER_H
-#define __OVITO_ACTION_MANAGER_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/animation/TimeInterval.h>
@@ -244,4 +244,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_ACTION_MANAGER_H
+

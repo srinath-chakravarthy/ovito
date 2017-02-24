@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VIEWPORT_INPUT_MODE_H
-#define __OVITO_VIEWPORT_INPUT_MODE_H
+#pragma once
+
 
 #include <gui/GUI.h>
 
@@ -198,4 +198,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_VIEWPORT_INPUT_MODE_H
+

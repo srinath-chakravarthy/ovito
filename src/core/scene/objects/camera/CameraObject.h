@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CAMERA_OBJECT_H
-#define __OVITO_CAMERA_OBJECT_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/scene/objects/camera/AbstractCameraObject.h>
@@ -156,4 +156,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_CAMERA_OBJECT_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_PRIMITIVE_H
-#define __OVITO_PARTICLE_PRIMITIVE_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "PrimitiveBase.h"
@@ -148,4 +148,4 @@ Q_DECLARE_TYPEINFO(Ovito::ParticlePrimitive::ShadingMode, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::ParticlePrimitive::RenderingQuality, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::ParticlePrimitive::ParticleShape, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_PARTICLE_PRIMITIVE_H
+

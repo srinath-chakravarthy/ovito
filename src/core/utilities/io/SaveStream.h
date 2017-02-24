@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::IO::SaveStream class.
  */
 
-#ifndef __OVITO_SAVESTREAM_H
-#define __OVITO_SAVESTREAM_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -228,4 +228,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_SAVESTREAM_H
+

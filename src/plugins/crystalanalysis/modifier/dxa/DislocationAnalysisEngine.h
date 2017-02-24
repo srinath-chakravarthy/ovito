@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_DISLOCATION_ANALYSIS_ENGINE_H
-#define __OVITO_DISLOCATION_ANALYSIS_ENGINE_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/modifier/analysis/StructureIdentificationModifier.h>
@@ -107,4 +107,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_DISLOCATION_ANALYSIS_ENGINE_H
+

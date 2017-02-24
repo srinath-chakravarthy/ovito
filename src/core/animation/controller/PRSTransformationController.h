@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::PRSTransformationController class.
  */
 
-#ifndef __OVITO_PRS_TRANSFORMATION_CONTROLLER_H
-#define __OVITO_PRS_TRANSFORMATION_CONTROLLER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "Controller.h"
@@ -161,4 +161,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_PRS_TRANSFORMATION_CONTROLLER_H
+

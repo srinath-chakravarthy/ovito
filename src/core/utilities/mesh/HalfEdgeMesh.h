@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_HALF_EDGE_MESH_H
-#define __OVITO_HALF_EDGE_MESH_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/MemoryPool.h>
@@ -672,4 +672,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_HALF_EDGE_MESH_H
+

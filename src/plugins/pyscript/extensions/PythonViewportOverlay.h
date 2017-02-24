@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PYTHON_VIEWPORT_OVERLAY_H
-#define __OVITO_PYTHON_VIEWPORT_OVERLAY_H
+#pragma once
+
 
 #include <plugins/pyscript/PyScript.h>
 #include <plugins/pyscript/engine/ScriptEngine.h>
@@ -106,4 +106,4 @@ private:
 
 }	// End of namespace
 
-#endif // __OVITO_PYTHON_VIEWPORT_OVERLAY_H
+

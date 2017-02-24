@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_UTILITY_APPLET_H
-#define __OVITO_UTILITY_APPLET_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/reference/RefMaker.h>
@@ -60,4 +60,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_UTILITY_APPLET_H
+

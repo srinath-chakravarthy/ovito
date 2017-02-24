@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_PROPERTY_OBJECT_H
-#define __OVITO_PARTICLE_PROPERTY_OBJECT_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DataObjectWithSharedStorage.h>
@@ -601,4 +601,4 @@ inline LoadStream& operator>>(LoadStream& stream, ParticlePropertyReference& r)
 
 Q_DECLARE_METATYPE(Ovito::Particles::ParticlePropertyReference);
 
-#endif // __OVITO_PARTICLE_PROPERTY_OBJECT_H
+

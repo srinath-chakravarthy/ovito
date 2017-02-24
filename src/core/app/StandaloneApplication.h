@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_STANDALONE_APPLICATION_H
-#define __OVITO_STANDALONE_APPLICATION_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "Application.h"
@@ -83,4 +83,4 @@ protected:
 
 }	// End of namespace
 
-#endif // __OVITO_STANDALONE_APPLICATION_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_POVRAY_EXPORTER_H
-#define __OVITO_POVRAY_EXPORTER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/dataset/importexport/FileExporter.h>
@@ -83,4 +83,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_POVRAY_EXPORTER_H
+

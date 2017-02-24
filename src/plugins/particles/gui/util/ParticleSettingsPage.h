@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_SETTINGS_PAGE_H
-#define __OVITO_PARTICLE_SETTINGS_PAGE_H
+#pragma once
+
 
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <gui/dialogs/ApplicationSettingsDialog.h>
@@ -63,4 +63,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTICLE_SETTINGS_PAGE_H
+

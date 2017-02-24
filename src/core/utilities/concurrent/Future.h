@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_FUTURE_H
-#define __OVITO_FUTURE_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "Promise.h"
@@ -220,4 +220,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_FUTURE_H
+

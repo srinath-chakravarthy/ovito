@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PROPERTY_FIELD_DESCRIPTOR_H
-#define __OVITO_PROPERTY_FIELD_DESCRIPTOR_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/object/OvitoObject.h>
@@ -236,4 +236,4 @@ protected:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_PROPERTY_FIELD_DESCRIPTOR_H
+

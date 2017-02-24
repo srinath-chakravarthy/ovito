@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SLICE_MODIFIER_H
-#define __OVITO_SLICE_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/animation/controller/Controller.h>
@@ -168,4 +168,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_SLICE_MODIFIER_H
+

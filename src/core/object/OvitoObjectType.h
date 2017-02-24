@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_OBJECT_TYPE_H
-#define __OVITO_OBJECT_TYPE_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "OvitoObjectReference.h"
@@ -180,4 +180,4 @@ OVITO_END_INLINE_NAMESPACE
 Q_DECLARE_METATYPE(const Ovito::OvitoObjectType*);
 Q_DECLARE_TYPEINFO(const Ovito::OvitoObjectType*, Q_MOVABLE_TYPE);
 
-#endif // __OVITO_OBJECT_TYPE_H
+

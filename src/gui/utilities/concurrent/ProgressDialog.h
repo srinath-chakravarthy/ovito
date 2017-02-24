@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PROGRESS_DIALOG_H
-#define __OVITO_PROGRESS_DIALOG_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/utilities/concurrent/TaskManager.h>
@@ -63,4 +63,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_PROGRESS_DIALOG_H
+

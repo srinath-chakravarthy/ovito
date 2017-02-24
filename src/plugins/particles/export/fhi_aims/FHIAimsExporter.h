@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_FHI_AIMS_EXPORTER_H
-#define __OVITO_FHI_AIMS_EXPORTER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include "../ParticleExporter.h"
@@ -59,4 +59,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_FHI_AIMS_EXPORTER_H
+
