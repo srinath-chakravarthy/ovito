@@ -42,6 +42,15 @@ bool AdhocApplication::initialize()
 	_datasetContainer->setParent(this);
 	_datasetContainer->setCurrentSet(new DataSet());
 
+#if defined(Q_OS_LINUX)
+	// On Unix/Linux, use headless mode if no X server is available.
+	if(!qEnvironmentVariableIsEmpty("DISPLAY"))
+		_headlessMode = false;
+#elif defined(Q_OS_OSX) || defined(Q_OS_WIN)
+	// On Windows and macOS, there is always an OpenGL implementation available for background rendering.
+	_headlessMode = false;
+#endif
+
 	return true;
 }
 

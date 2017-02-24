@@ -142,6 +142,7 @@ bool Application::initialize()
 	return true;
 }
 
+void test_func() {}
 
 /******************************************************************************
 * Create the global instance of the right QCoreApplication derived class.
@@ -167,9 +168,14 @@ void Application::createQtApplication(int& argc, char** argv)
 		qputenv("QT_QPA_FONTDIR", fontPath.c_str());
 
 		new QGuiApplication(argc, argv);
+#elif defined(Q_OS_MAC)
+		new QGuiApplication(argc, argv);
 #else
 		new QCoreApplication(argc, argv);
 #endif
+	}
+	else {
+		new QGuiApplication(argc, argv);
 	}
 }
 
