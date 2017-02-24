@@ -69,25 +69,25 @@ py::dict PropertyObject__array_interface__(PropertyClass& p)
 	if(p.dataType() == qMetaTypeId<int>()) {
 		OVITO_STATIC_ASSERT(sizeof(int) == 4);
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-		ai["typestr"] = py::cast("<i4");
+		ai["typestr"] = py::bytes("<i4");
 #else
-		ai["typestr"] = py::cast(">i4");
+		ai["typestr"] = py::bytes(">i4");
 #endif
 	}
 	else if(p.dataType() == qMetaTypeId<FloatType>()) {
 #ifdef FLOATTYPE_FLOAT		
 		OVITO_STATIC_ASSERT(sizeof(FloatType) == 4);
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-		ai["typestr"] = py::cast("<f4");
+		ai["typestr"] = py::bytes("<f4");
 #else
-		ai["typestr"] = py::cast(">f4");
+		ai["typestr"] = py::bytes(">f4");
 #endif
 #else
 		OVITO_STATIC_ASSERT(sizeof(FloatType) == 8);
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-		ai["typestr"] = py::cast("<f8");
+		ai["typestr"] = py::bytes("<f8");
 #else
-		ai["typestr"] = py::cast(">f8");
+		ai["typestr"] = py::bytes(">f8");
 #endif
 #endif
 	}
@@ -108,9 +108,9 @@ py::dict BondsObject__array_interface__(const BondsObject& p)
 	ai["shape"] = py::make_tuple(p.storage()->size(), 2);
 	OVITO_STATIC_ASSERT(sizeof(unsigned int) == 4);
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-	ai["typestr"] = py::cast("<u4");
+	ai["typestr"] = py::bytes("<u4");
 #else
-	ai["typestr"] = py::cast(">u4");
+	ai["typestr"] = py::bytes(">u4");
 #endif
 	const unsigned int* data;
 	if(!p.storage()->empty()) {
@@ -132,9 +132,9 @@ py::dict BondsObject__pbc_vectors(const BondsObject& p)
 	ai["shape"] = py::make_tuple(p.storage()->size(), 3);
 	OVITO_STATIC_ASSERT(sizeof(int8_t) == 1);
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-	ai["typestr"] = py::cast("<i1");
+	ai["typestr"] = py::bytes("<i1");
 #else
-	ai["typestr"] = py::cast(">i1");
+	ai["typestr"] = py::bytes(">i1");
 #endif
 	const int8_t* data;
 	if(!p.storage()->empty()) {
