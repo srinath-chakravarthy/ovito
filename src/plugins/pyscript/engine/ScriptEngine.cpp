@@ -184,7 +184,11 @@ void ScriptEngine::initializeEmbeddedInterpreter()
 		}
 
 		// Pass the list of plugin paths to the 'ovito.plugins' Python source module.
+#if PY_MAJOR_VERSION >= 3		
 		py::module builtins_module = py::module::import("builtins");
+#else
+		py::module builtins_module = py::module::import("__builtin__");
+#endif
 		builtins_module.attr("__ovito_plugin_paths") = native_plugin_paths;
 
 		// Determine path where Python source files are located.

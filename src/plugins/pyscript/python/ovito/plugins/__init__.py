@@ -1,4 +1,8 @@
-import builtins
+import sys
+if sys.version_info[0] >= 3:
+    import builtins
+else:
+    import __builtin__ as builtins
 import pkgutil
 
 if hasattr(builtins, "__ovito_plugin_paths"):
@@ -7,5 +11,3 @@ if hasattr(builtins, "__ovito_plugin_paths"):
 else:
     # Load C++ extension modules from a directory in sys.path when running in an external interpreter.
     __path__ = pkgutil.extend_path(__path__, __name__)
-
-
