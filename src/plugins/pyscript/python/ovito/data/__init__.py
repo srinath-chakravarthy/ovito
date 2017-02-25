@@ -182,21 +182,15 @@ def _DataCollection_attributes(self):
             return len(self._data_collection.attribute_names)
         
         def __getitem__(self, key):
-            if not isinstance(key, str):
-                raise TypeError("Attribute key is not a string.")
             v = self._data_collection.get_attribute(key)
             if v is not None:
                 return v
             raise KeyError("DataCollection contains no attribute named '%s'." % key)
 
         def __setitem__(self, key, value):
-            if not isinstance(key, str):
-                raise TypeError("Attribute key is not a string.")
             self._data_collection.set_attribute(key, value)
 
         def __delitem__(self, key):
-            if not isinstance(key, str):
-                raise TypeError("Attribute key is not a string.")
             v = self._data_collection.get_attribute(key)
             if v is None:
                 raise KeyError("DataCollection contains no attribute named '%s'." % key)

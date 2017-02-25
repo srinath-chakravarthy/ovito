@@ -63,8 +63,6 @@ def _DataCollection_particle_properties(self):
             return sum(isinstance(obj, ovito.data.ParticleProperty) for obj in self._objects)
 
         def __getitem__(self, key):
-            if not isinstance(key, str):
-                raise TypeError("Property name key is not a string.")
             for obj in self._objects:
                 if isinstance(obj, ovito.data.ParticleProperty): 
                     if obj.name == key:
@@ -107,8 +105,6 @@ def _DataCollection_bond_properties(self):
             return sum(isinstance(obj, ovito.data.BondProperty) for obj in self._objects)
         
         def __getitem__(self, key):
-            if not isinstance(key, str):
-                raise TypeError("Property name key is not a string.")
             for obj in self._objects:
                 if isinstance(obj, ovito.data.BondProperty): 
                     if obj.name == key:
