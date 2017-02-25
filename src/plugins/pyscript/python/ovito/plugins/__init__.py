@@ -1,13 +1,23 @@
 import sys
-if sys.version_info[0] >= 3:
-    import builtins
-else:
-    import __builtin__ as builtins
-import pkgutil
 
-if hasattr(builtins, "__ovito_plugin_paths"):
-    # Load C++ extension modules from the native plugins path when running in the embedded interpreter.
-    __path__ += builtins.__ovito_plugin_paths
+# This is the ovito.plugins Python package. It contains the native C++ plugin libraries of OVITO.
+
+# Our C++ extension modules are, however, located in a different directory of the OVITO installation.
+# For the time being, we use hardcoded relative paths to find them.
+
+# Platform-dependent paths where this Python module is located:
+
+  # Linux:   lib/ovito/plugins/python/ovito/plugins/
+  # Windows: plugins/python/ovito/plugins/
+  # macOS:   Ovito.app/Contents/Resources/python/ovito/plugins/
+
+# Platform-dependent paths where the native C++ plugins are located:
+
+  # Linux:   lib/ovito/plugins/
+  # Windows: plugins/
+  # macOS:   Ovito.app/Contents/PlugIns/
+
+if sys.platform.startswith('darwin'):  # macOS
+    __path__[0] += "/../../../../PlugIns"
 else:
-    # Load C++ extension modules from a directory in sys.path when running in an external interpreter.
-    __path__ = pkgutil.extend_path(__path__, __name__)
+    __path__[0] += "/../../.."

@@ -177,20 +177,6 @@ void ScriptEngine::initializeEmbeddedInterpreter()
 			sys_module.attr("stderr") = py::cast(new InterpreterStdErrorRedirector(), py::return_value_policy::take_ownership);
 		}
 
-		// Create a list of paths where C++ plugin modules are loaded from.
-		py::list native_plugin_paths;
-		for(const QDir& pluginDir : PluginManager::instance().pluginDirs()) {
-			native_plugin_paths.append(py::cast(QDir::toNativeSeparators(pluginDir.absolutePath())));
-		}
-
-		// Pass the list of plugin paths to the 'ovito.plugins' Python source module.
-#if PY_MAJOR_VERSION >= 3		
-		py::module builtins_module = py::module::import("builtins");
-#else
-		py::module builtins_module = py::module::import("__builtin__");
-#endif
-		builtins_module.attr("__ovito_plugin_paths") = native_plugin_paths;
-
 		// Determine path where Python source files are located.
 		QDir prefixDir(QCoreApplication::applicationDirPath());
 #if defined(Q_OS_WIN)

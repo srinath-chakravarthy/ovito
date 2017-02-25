@@ -120,7 +120,7 @@ IF(UNIX)
 		# The directory where the auxiliary files go to.
 		SET(OVITO_RELATIVE_SHARE_DIRECTORY "${MACOSX_BUNDLE_NAME}.app/Contents/Resources")
 		# The directory where the compiled plugins go to.
-		SET(OVITO_RELATIVE_PLUGINS_DIRECTORY "${MACOSX_BUNDLE_NAME}.app/Contents/PlugIns/ovito/plugins")	
+		SET(OVITO_RELATIVE_PLUGINS_DIRECTORY "${MACOSX_BUNDLE_NAME}.app/Contents/PlugIns")	
 		# The directory where the Python source modules go to.
 		SET(OVITO_RELATIVE_PYTHON_DIRECTORY "${MACOSX_BUNDLE_NAME}.app/Contents/Resources/python")	
 	ELSE()

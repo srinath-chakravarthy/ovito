@@ -72,7 +72,7 @@ MACRO(OVITO_STANDARD_PLUGIN target_name)
 
     # Enable the use of @rpath on macOS.
     SET_TARGET_PROPERTIES(${target_name} PROPERTIES MACOSX_RPATH TRUE)
-    SET_TARGET_PROPERTIES(${target_name} PROPERTIES INSTALL_RPATH "@loader_path/;@executable_path/;@loader_path/../../../MacOS/")
+    SET_TARGET_PROPERTIES(${target_name} PROPERTIES INSTALL_RPATH "@loader_path/;@executable_path/;@loader_path/../MacOS/")
     
 	IF(APPLE)
 	    # The build tree target should have rpath of install tree target.
