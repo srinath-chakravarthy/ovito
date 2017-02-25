@@ -1,4 +1,3 @@
-from ovito import *
 from ovito.io import import_file
 
 node = import_file("../../files/LAMMPS/animation.dump.gz")

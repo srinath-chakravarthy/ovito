@@ -13,6 +13,7 @@ import ovito.plugins.CrystalAnalysis
 ovito.data.DislocationNetwork = ovito.plugins.CrystalAnalysis.DislocationNetwork
 ovito.data.DislocationSegment = ovito.plugins.CrystalAnalysis.DislocationSegment
 ovito.data.PartitionMesh = ovito.plugins.CrystalAnalysis.PartitionMesh
+ovito.data.__all__ += ['DislocationNetwork', 'DislocationSegment', 'PartitionMesh']
 
 # Implement 'dislocations' attribute of DataCollection class.
 def _DataCollection_dislocations(self):

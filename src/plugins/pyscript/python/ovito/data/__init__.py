@@ -42,6 +42,8 @@ from ..plugins.PyScript.Scene import DataCollection
 from ..plugins.PyScript.Scene import DataObject
 from ..plugins.PyScript.App import CloneHelper
 
+__all__ = ['DataCollection', 'DataObject']
+
 # Give the DataCollection class a dict-like interface.
 DataCollection.__len__ = lambda self: len(self.objects)
 

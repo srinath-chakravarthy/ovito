@@ -44,6 +44,15 @@ ovito.modifiers.LoadTrajectoryModifier = ovito.plugins.Particles.Modifiers.LoadT
 ovito.modifiers.CombineParticleSetsModifier = ovito.plugins.Particles.Modifiers.CombineParticleSetsModifier
 ovito.modifiers.ComputeBondLengthsModifier = ovito.plugins.Particles.Modifiers.ComputeBondLengthsModifier
 ovito.modifiers.PolyhedralTemplateMatchingModifier = ovito.plugins.Particles.Modifiers.PolyhedralTemplateMatchingModifier
+ovito.modifiers.__all__ += ['ColorCodingModifier', 'AssignColorModifier', 'AmbientOcclusionModifier', 'DeleteSelectedParticlesModifier',
+            'ShowPeriodicImagesModifier', 'WrapPeriodicImagesModifier', 'ComputePropertyModifier', 'FreezePropertyModifier',
+            'ClearSelectionModifier', 'InvertSelectionModifier', 'ManualSelectionModifier', 'ExpandSelectionModifier',
+            'SelectExpressionModifier', 'SelectParticleTypeModifier', 'SliceModifier', 'AffineTransformationModifier', 'BinAndReduceModifier',
+            'StructureIdentificationModifier', 'CommonNeighborAnalysisModifier', 'BondAngleAnalysisModifier',
+            'CreateBondsModifier', 'CentroSymmetryModifier', 'ClusterAnalysisModifier', 'CoordinationNumberModifier',
+            'CalculateDisplacementsModifier', 'HistogramModifier', 'ScatterPlotModifier', 'AtomicStrainModifier',
+            'WignerSeitzAnalysisModifier', 'VoronoiAnalysisModifier', 'IdentifyDiamondModifier', 'LoadTrajectoryModifier',
+            'CombineParticleSetsModifier', 'ComputeBondLengthsModifier', 'PolyhedralTemplateMatchingModifier']
 
 # Implement the 'rdf' attribute of the CoordinationNumberModifier class.
 def _CoordinationNumberModifier_rdf(self):

@@ -291,10 +291,7 @@ public:
 	///////////////////////////// DataSet access ///////////////////////////////
 
 	/// \brief Returns the dataset this object belongs to.
-	DataSet* dataset() const {
-		OVITO_ASSERT_MSG(_dataset != nullptr, "RefMaker::dataset()", "Tried to access non-existing parent dataset of RefMaker.");
-		return _dataset;
-	}
+	DataSet* dataset() const { return _dataset; }
 
 	/// \brief Changes the dataset this object belongs to.
 	void setDataset(DataSet* dataset) { _dataset = dataset; }
@@ -321,7 +318,7 @@ private:
 	static void walkNode(QSet<RefTarget*>& nodes, const RefMaker* node);
 
 	/// The dataset this object belongs to.
-	DataSet* _dataset;
+	QPointer<DataSet> _dataset;
 
 	friend class RefTarget;
 	friend class SingleReferenceFieldBase;

@@ -27,6 +27,9 @@ ovito.data.BondProperty = ovito.plugins.Particles.BondProperty
 ovito.data.BondTypeProperty = ovito.plugins.Particles.BondTypeProperty
 ovito.data.BondType = ovito.plugins.Particles.BondType
 ovito.data.TrajectoryLineGenerator = ovito.plugins.Particles.TrajectoryLineGenerator
+ovito.data.__all__ += ['SimulationCell', 'ParticleProperty', 'Bonds', 'SurfaceMesh', 'ParticleTypeProperty', 'ParticleType',
+            'BondProperty', 'BondTypeProperty', 'BondType', 'TrajectoryLineGenerator', 'CutoffNeighborFinder',
+            'NearestNeighborFinder']
 
 # For backward-compatibility with OVITO 2.5.1:
 def _ParticleProperty_data_attribute_name(self):

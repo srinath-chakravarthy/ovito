@@ -11,6 +11,8 @@ ovito.vis.VectorDisplay = ovito.plugins.Particles.VectorDisplay
 ovito.vis.BondsDisplay = ovito.plugins.Particles.BondsDisplay
 ovito.vis.SurfaceMeshDisplay = ovito.plugins.Particles.SurfaceMeshDisplay
 ovito.vis.TrajectoryLineDisplay = ovito.plugins.Particles.TrajectoryLineDisplay
+ovito.vis.__all__ += ['SimulationCellDisplay', 'ParticleDisplay', 'VectorDisplay', 'BondsDisplay',
+                      'SurfaceMeshDisplay', 'TrajectoryLineDisplay']
 
 # Inject enum types.
 ovito.vis.VectorDisplay.Shading = ovito.vis.ArrowShadingMode

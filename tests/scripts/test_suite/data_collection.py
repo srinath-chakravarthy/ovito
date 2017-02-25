@@ -1,4 +1,3 @@
-from ovito import *
 from ovito.io import *
 from ovito.data import *
 

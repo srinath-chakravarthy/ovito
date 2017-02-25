@@ -1,4 +1,4 @@
-from ovito import *
+import ovito
 from ovito.data import *
 
 # The number of particles we are going to create.
@@ -47,11 +47,11 @@ data.add(cell)
 data.add(bonds)
 
 # Create a node and insert it into the scene.
-node = ObjectNode()
+node = ovito.ObjectNode()
 node.source = data
 node.add_to_scene()
 
 # Select the new node and adjust cameras of all viewports to show it.
-dataset.selected_node = node
-for vp in dataset.viewports:
+ovito.dataset.selected_node = node
+for vp in ovito.dataset.viewports:
     vp.zoom_all()

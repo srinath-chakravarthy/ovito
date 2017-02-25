@@ -4,15 +4,14 @@
     You should run this script from within the graphical user interface
     using the Scripting->Run Script File menu option.
 """
-from ovito import *
+import ovito
 from ovito.data import *
 
 # Open output file for writing:
 fout = open("outputfile.txt", "w")
 
-for frame in range(dataset.anim.first_frame, dataset.anim.last_frame+1):
-	dataset.anim.current_frame = frame
-	data = dataset.selected_node.compute()
+for frame in range(ovito.dataset.anim.first_frame, dataset.anim.last_frame+1):
+	data = dataset.selected_node.compute(frame)
 	num_bonds = len(data.bonds.array) // 2   # Divide by 2 because each bond is represented by two half-bonds.
 	print(frame, num_bonds, file = fout)
 

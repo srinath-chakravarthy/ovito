@@ -16,7 +16,7 @@ __path__ = pkgutil.extend_path(__path__, __name__)
 # Load the native module with the core bindings
 import ovito.plugins.PyScript
 from .plugins.PyScript import (version, version_string, gui_mode, headless_mode, dataset, task_manager)
-from .plugins.PyScript.App import *
+from .plugins.PyScript.App import (DataSet)
 
 # Load sub-modules (in the right order because there are dependencies among them)
 import ovito.anim
@@ -25,16 +25,17 @@ import ovito.vis
 import ovito.io
 import ovito.modifiers
 
-from .plugins.PyScript.Scene import ObjectNode
-from .plugins.PyScript.Scene import SceneRoot
-from .plugins.PyScript.Scene import PipelineObject     
-from .plugins.PyScript.Scene import PipelineStatus
+from .plugins.PyScript.Scene import (ObjectNode, SceneRoot, PipelineObject, PipelineStatus)
+
+__all__ = ['version', 'version_string', 'gui_mode', 'headless_mode', 'dataset', 'task_manager',
+    'DataSet', 'ObjectNode']
 
 # Load the whole OVITO package. This is required to make all Python bindings available.
 for _, _name, _ in pkgutil.walk_packages(_package_source_path, __name__ + '.'):
     if _name.startswith("ovito.linalg"): continue  # For backward compatibility with OVITO 2.7.1. The old 'ovito.linalg' module has been deprecated but may still be present in some existing OVITO installations.
-    if _name.startswith("ovito.plugins"): continue  # Do not load C++ plugin modules here, only Python modules
+    if _name.startswith("ovito.plugins"): continue  # Do not load C++ plugin modules at this point, only Python modules
     try:
+        #print("Loading submodule ", _name)
         importlib.import_module(_name)
     except:
         print("Error while loading OVITO submodule %s:" % _name, sys.exc_info()[0])
@@ -203,6 +204,12 @@ def _ObjectNode_compute(self, frame = None):
     
     self.__output = ovito.data.DataCollection()
     self.__output.set_data_objects(state)
+
+    # Wait for worker threads to finish.
+    # This is to avoid warning messages 'QThreadStorage: Thread exited after QThreadStorage destroyed'
+    # during Python program exit.
+    import PyQt5.QtCore
+    PyQt5.QtCore.QThreadPool.globalInstance().waitForDone(0)
         
     return self.__output
    

@@ -8,3 +8,4 @@ import ovito.plugins.PyScriptGui
 
 # Inject selected classes into parent module.
 ovito.vis.OpenGLRenderer = ovito.plugins.PyScriptGui.OpenGLRenderer
+ovito.vis.__all__ += ['OpenGLRenderer']

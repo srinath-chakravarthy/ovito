@@ -62,3 +62,5 @@ Python class name                              User interface name
 # Load the native module.
 from ..plugins.PyScript.Scene import Modifier
 from ..plugins.PyScript.Scene import PythonScriptModifier
+
+__all__ = ['Modifier', 'PythonScriptModifier']

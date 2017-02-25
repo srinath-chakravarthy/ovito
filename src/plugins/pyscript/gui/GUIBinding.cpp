@@ -46,11 +46,11 @@ PYBIND11_PLUGIN(PyScriptGui)
 	;
 
 	py::class_<GuiDataSetContainer, DataSetContainer>(m, "GuiDataSetContainer")
-		.def("fileNew", &GuiDataSetContainer::fileNew)
-		.def("fileLoad", &GuiDataSetContainer::fileLoad)
-		.def("fileSave", &GuiDataSetContainer::fileSave)
-		.def("fileSaveAs", &GuiDataSetContainer::fileSaveAs)
-		.def("askForSaveChanges", &GuiDataSetContainer::askForSaveChanges)
+		//.def("fileNew", &GuiDataSetContainer::fileNew)
+		//.def("fileLoad", &GuiDataSetContainer::fileLoad)
+		//.def("fileSave", &GuiDataSetContainer::fileSave)
+		//.def("fileSaveAs", &GuiDataSetContainer::fileSaveAs)
+		//.def("askForSaveChanges", &GuiDataSetContainer::askForSaveChanges)
 		.def_property_readonly("window", &GuiDataSetContainer::mainWindow, py::return_value_policy::reference)
 	;
 

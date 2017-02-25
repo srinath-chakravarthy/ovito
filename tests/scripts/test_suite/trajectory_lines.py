@@ -1,4 +1,4 @@
-from ovito import *
+import ovito
 from ovito.io import *
 from ovito.data import *
 from ovito.vis import *
@@ -8,7 +8,7 @@ node.add_to_scene()
 node.source.particle_properties.position.display.radius = 0.1
 print(node.source.num_frames)
 
-traj_node = ObjectNode()
+traj_node = ovito.ObjectNode()
 traj_node.add_to_scene()
 traj_node.source = TrajectoryLineGenerator()
 

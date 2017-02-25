@@ -21,6 +21,7 @@
 
 #include <core/Core.h>
 #include <core/dataset/DataSetContainer.h>
+#include <core/dataset/UndoStack.h>
 #include <core/plugins/PluginManager.h>
 #include "AdhocApplication.h"
 
@@ -41,6 +42,8 @@ bool AdhocApplication::initialize()
 	_datasetContainer = new DataSetContainer();
 	_datasetContainer->setParent(this);
 	_datasetContainer->setCurrentSet(new DataSet());
+	// Do not record operations for undo.
+	_datasetContainer->currentSet()->undoStack().suspend();
 
 #if defined(Q_OS_LINUX)
 	// On Unix/Linux, use headless mode if no X server is available.

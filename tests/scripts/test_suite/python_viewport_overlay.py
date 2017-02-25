@@ -1,4 +1,4 @@
-from ovito import *
+import ovito
 from ovito.io import *
 from ovito.modifiers import *
 from ovito.vis import *
@@ -8,9 +8,9 @@ import numpy
 node = import_file("../../files/CFG/fcc_coherent_twin.0.cfg")
 node.modifiers.append(CommonNeighborAnalysisModifier())
 
-vp = dataset.viewports.active_vp
+vp = ovito.dataset.viewports.active_vp
 
-new_overlay = ovito.vis.PythonViewportOverlay()
+new_overlay = PythonViewportOverlay()
 new_overlay.script = """
 def render(painter, **args):
     painter.drawText(10, 10, "Hello world")
@@ -21,7 +21,7 @@ assert(len(vp.overlays) == 1)
 assert(vp.overlays[0] == new_overlay)
 assert(new_overlay.output == "")
 
-overlay2 = ovito.vis.PythonViewportOverlay()
+overlay2 = PythonViewportOverlay()
 overlay2.script = "This is an intentionally invalid Python script."
 vp.overlays.append(overlay2)
 

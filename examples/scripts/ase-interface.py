@@ -2,7 +2,7 @@ import sys
 
 import numpy as np
 
-from ovito import *
+import ovito
 from ovito.data import *
 from ovito.modifiers import *
 
@@ -29,13 +29,13 @@ data = DataCollection.create_from_ase_atoms(atoms)
 # Create a node and insert it into the scene
 node = ObjectNode()
 node.source = data
-dataset.scene_nodes.append(node)
+ovito.dataset.scene_nodes.append(node)
 
 new_data = node.compute()
 
 # Select the new node and adjust viewport cameras to show everything.
-dataset.selected_node = node
-for vp in dataset.viewports:
+ovito.dataset.selected_node = node
+for vp in ovito.dataset.viewports:
     vp.zoom_all()
 
 # Do the reverse conversion, after pipeline has been applied

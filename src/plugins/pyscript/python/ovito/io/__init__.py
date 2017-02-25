@@ -16,6 +16,8 @@ import ovito.plugins.PyScript.Scene
 # Load the native module.
 from ..plugins.PyScript.IO import *
 
+__all__ = ['import_file', 'export_file', 'FileSource']
+
 def import_file(location, **params):
     """ This high-level function imports external data from a file. 
     

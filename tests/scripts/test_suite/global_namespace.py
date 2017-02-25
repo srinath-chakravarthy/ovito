@@ -1,4 +1,4 @@
-from ovito import *
+import ovito
 
 assert(len(ovito.version) == 3)
 print("version_string=", ovito.version_string)
