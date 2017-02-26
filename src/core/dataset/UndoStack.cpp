@@ -57,8 +57,6 @@ void UndoStack::push(std::unique_ptr<UndoableOperation> operation)
 	OVITO_ASSERT_MSG(isUndoingOrRedoing() == false, "UndoStack::push()", "Cannot record an operation while undoing or redoing another operation.");
 	OVITO_ASSERT_MSG(!isSuspended(), "UndoStack::push()", "Not in recording state.");
 
-	qDebug() << "Pushing operation" << operation->displayName();
-
 	UndoSuspender noUndo(*this);
 
 	// Discard previously undone operations.

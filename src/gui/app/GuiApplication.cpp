@@ -95,11 +95,9 @@ void GuiApplication::createQtApplication(int& argc, char** argv)
 	if(guiMode())
 		Exception::setExceptionHandler(guiExceptionHandler);
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
 	// Set the global default OpenGL surface format.
 	// This will let Qt use core profile contexts.
 	QSurfaceFormat::setDefaultFormat(ViewportSceneRenderer::getDefaultSurfaceFormat());
-#endif
 }
 
 /******************************************************************************

@@ -77,6 +77,9 @@ public:
 	/// Returns whether the modifier can be applied to the given input data.
 	virtual bool isApplicableTo(const PipelineFlowState& input) override { return true; }
 
+	/// Loads the default values of this object's parameter fields.
+	virtual void loadUserDefaults() override;
+
 protected:
 
 	/// This method is called by the system when the upstream modification pipeline has changed.

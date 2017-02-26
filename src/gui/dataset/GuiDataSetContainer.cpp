@@ -45,6 +45,8 @@ IMPLEMENT_OVITO_OBJECT(GuiDataSetContainer, DataSetContainer);
 GuiDataSetContainer::GuiDataSetContainer(MainWindow* mainWindow) : DataSetContainer(),
 	_mainWindow(mainWindow)
 {
+	connect(&taskManager(), &TaskManager::localEventLoopEnter, this, &GuiDataSetContainer::localEventLoopEntered);
+	connect(&taskManager(), &TaskManager::localEventLoopExit, this, &GuiDataSetContainer::localEventLoopExited);
 }
 
 /******************************************************************************
@@ -309,81 +311,41 @@ bool GuiDataSetContainer::importFile(const QUrl& url, const OvitoObjectType* imp
 	return importer->importFile(url, importMode, true);
 }
 
-#if 0
 /******************************************************************************
-* This function blocks execution until some operation has been completed.
+* Is called whenever a local event loop is entered to wait for a task to finish.
 ******************************************************************************/
-bool GuiDataSetContainer::waitUntil(const std::function<bool()>& callback, const QString& message, AbstractProgressDisplay* progressDisplay)
+void GuiDataSetContainer::localEventLoopEntered()
 {
-	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "GuiDataSetContainer::waitUntil()", "This function may only be called from the main thread.");
-
-	// Check if operation is already completed.
-	if(callback())
-		return true;
+	if(!currentSet() || !Application::instance()->guiMode()) return;
 
 	// Suspend viewport updates while waiting.
-	ViewportSuspender viewportSuspender(currentSet());
+	currentSet()->viewportConfig()->suspendViewportUpdates();
 
-	// Check if viewports are currently being rendered.
-	// If yes, it's not a good idea to display a progress dialog.
-	bool isRendering = currentSet() ? currentSet()->viewportConfig()->isRendering() : false;
-
-	if(!isRendering && Application::instance()->guiMode()) {
-
-		// Show a modal progress dialog to block user interface while waiting.
-		std::unique_ptr<QProgressDialog> localDialog;
-		std::unique_ptr<ProgressDialogAdapter> dialogAdapter;
-		if(!progressDisplay) {
-			localDialog.reset(new QProgressDialog(mainWindow()));
-			localDialog->setWindowModality(Qt::WindowModal);
-			localDialog->setAutoClose(false);
-			localDialog->setAutoReset(false);
-			localDialog->setMinimumDuration(0);
-			localDialog->setValue(0);
-			dialogAdapter.reset(new ProgressDialogAdapter(localDialog.get()));
-			progressDisplay = dialogAdapter.get();
-		}
-		progressDisplay->setStatusText(message);
-
-		// Poll callback function until it returns true.
-		while(!callback() && !progressDisplay->wasCanceled()) {
-			QCoreApplication::processEvents();
-			QThread::msleep(10);
-		}
-
-		return !progressDisplay->wasCanceled();
-	}
-	else {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-		// Disable viewport repaints while processing events to
-		// avoid recursive calls to repaint().
-		if(Application::instance()->guiMode()) {
+	// Disable viewport repaints while processing events to
+	// avoid recursive calls to repaint().
+	if(currentSet()->viewportConfig()->isRendering()) {
+		if(!_viewportRepaintsDisabled)
 			mainWindow()->viewportsPanel()->setUpdatesEnabled(false);
-		}
-#endif
-		try {
-			bool result = DataSetContainer::waitUntil(callback, message, progressDisplay);
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-			// Resume repainting the viewports.
-			if(Application::instance()->guiMode()) {
-				mainWindow()->viewportsPanel()->setUpdatesEnabled(true);
-			}
-#endif
-
-			return result;
-		}
-		catch(...) {
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-			// Resume repainting the viewports.
-			if(Application::instance()->guiMode())
-				mainWindow()->viewportsPanel()->setUpdatesEnabled(true);
-#endif
-			throw;
-		}
+		_viewportRepaintsDisabled++;
 	}
 }
-#endif
+
+/******************************************************************************
+* Is called whenever a local event loop was exited after waiting for a task to finish.
+******************************************************************************/
+void GuiDataSetContainer::localEventLoopExited()
+{
+	if(!currentSet() || !Application::instance()->guiMode()) return;
+
+	// Handle viewport updates again.
+	currentSet()->viewportConfig()->resumeViewportUpdates();
+
+	// Re-enable viewport repaints.
+	if(currentSet()->viewportConfig()->isRendering()) {
+		if(--_viewportRepaintsDisabled == 0)
+			mainWindow()->viewportsPanel()->setUpdatesEnabled(true);
+	}
+}
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

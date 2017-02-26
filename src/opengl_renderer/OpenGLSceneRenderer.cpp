@@ -103,17 +103,10 @@ void OpenGLSceneRenderer::determineOpenGLInfo()
 		OVITO_ASSERT(QOpenGLContext::currentContext() == &tempContext);
 	}
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 3, 0)
-	_openGLVendor = reinterpret_cast<const char*>(::glGetString(GL_VENDOR));
-	_openGLRenderer = reinterpret_cast<const char*>(::glGetString(GL_RENDERER));
-	_openGLVersion = reinterpret_cast<const char*>(::glGetString(GL_VERSION));
-	_openGLSLVersion = reinterpret_cast<const char*>(::glGetString(GL_SHADING_LANGUAGE_VERSION));
-#else
 	_openGLVendor = reinterpret_cast<const char*>(tempContext.functions()->glGetString(GL_VENDOR));
 	_openGLRenderer = reinterpret_cast<const char*>(tempContext.functions()->glGetString(GL_RENDERER));
 	_openGLVersion = reinterpret_cast<const char*>(tempContext.functions()->glGetString(GL_VERSION));
 	_openGLSLVersion = reinterpret_cast<const char*>(tempContext.functions()->glGetString(GL_SHADING_LANGUAGE_VERSION));
-#endif
 	_openglSupportsGeomShaders = QOpenGLShader::hasOpenGLShaders(QOpenGLShader::Geometry);
 	_openglSurfaceFormat = QOpenGLContext::currentContext()->format();
 }
@@ -207,9 +200,7 @@ QSurfaceFormat OpenGLSceneRenderer::getDefaultSurfaceFormat()
 {
 	QSurfaceFormat format;
 	format.setDepthBufferSize(24);
-#if QT_VERSION >= QT_VERSION_CHECK(5, 3, 0)
 	format.setSwapInterval(0);
-#endif
 	format.setMajorVersion(OVITO_OPENGL_REQUESTED_VERSION_MAJOR);
 	format.setMinorVersion(OVITO_OPENGL_REQUESTED_VERSION_MINOR);
 	format.setProfile(QSurfaceFormat::CoreProfile);
@@ -763,20 +754,6 @@ void OpenGLSceneRenderer::setHighlightMode(int pass)
 		glDisable(GL_STENCIL_TEST);
 	}
 }
-
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 3, 0)
-void OpenGLSceneRenderer::glEnable(GLenum cap) { ::glEnable(cap); }
-void OpenGLSceneRenderer::glDisable(GLenum cap) { ::glDisable(cap); }
-void OpenGLSceneRenderer::glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices) { ::glDrawElements(mode, count, type, indices); }
-void OpenGLSceneRenderer::glGetIntegerv(GLenum pname, GLint * params) { ::glGetIntegerv(pname, params); }
-void OpenGLSceneRenderer::glCullFace(GLenum mode) { ::glCullFace(mode); }
-void OpenGLSceneRenderer::glDrawArrays(GLenum mode, GLint first, GLsizei count) { ::glDrawArrays(mode, first, count); }
-void OpenGLSceneRenderer::glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid * pixels) { ::glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels); }
-void OpenGLSceneRenderer::glTexParameteri(GLenum target, GLenum pname, GLint param) { ::glTexParameteri(target, pname, param); }
-GLboolean OpenGLSceneRenderer::glIsEnabled(GLenum cap) { return ::glIsEnabled(cap); }
-void OpenGLSceneRenderer::glBlendFunc(GLenum sfactor, GLenum dfactor) { ::glBlendFunc(sfactor, dfactor); }
-#endif
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 

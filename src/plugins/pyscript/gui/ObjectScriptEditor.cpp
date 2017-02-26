@@ -38,11 +38,7 @@ namespace PyScript {
 * Constructs the editor frame.
 ******************************************************************************/
 ObjectScriptEditor::ObjectScriptEditor(QWidget* parentWidget, RefTarget* scriptableObject) :
-#if !defined(Q_OS_MAC) || QT_VERSION >= QT_VERSION_CHECK(5, 3, 1)
 	QMainWindow(parentWidget, (Qt::WindowFlags)(Qt::Tool | Qt::CustomizeWindowHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint))
-#else
-	QMainWindow(parentWidget, (Qt::WindowFlags)(Qt::Window | Qt::CustomizeWindowHint | Qt::WindowMinMaxButtonsHint | Qt::WindowCloseButtonHint))
-#endif
 {
 	// Create the central editor component.
 	QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);

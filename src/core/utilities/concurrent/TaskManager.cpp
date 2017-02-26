@@ -21,6 +21,12 @@
 
 #include <core/Core.h>
 #include <core/utilities/concurrent/TaskManager.h>
+#include <core/viewport/ViewportConfiguration.h>
+#include <core/dataset/DataSetContainer.h>
+
+#ifdef Q_OS_UNIX
+	#include <signal.h>
+#endif
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
 
@@ -84,7 +90,7 @@ void TaskManager::taskFinishedInternal()
 ******************************************************************************/
 void TaskManager::cancelAll()
 {
-	for(PromiseWatcher* watcher : _runningTaskStack) {
+	for(PromiseWatcher* watcher : runningTasks()) {
 		watcher->cancel();
 	}
 }
@@ -103,7 +109,7 @@ void TaskManager::cancelAllAndWait()
 ******************************************************************************/
 void TaskManager::waitForAll()
 {
-	for(PromiseWatcher* watcher : _runningTaskStack) {
+	for(PromiseWatcher* watcher : runningTasks()) {
 		try {
 			watcher->waitForFinished();
 		}
@@ -129,9 +135,52 @@ bool TaskManager::waitForTask(const PromiseBasePtr& promise)
 	// Start a local event loop and wait for the task to generate a signal when it finishes.
 	QEventLoop eventLoop;
 	connect(watcher, &PromiseWatcher::finished, &eventLoop, &QEventLoop::quit);
+
+#ifdef Q_OS_UNIX
+	// Boolean flag which is set by the POSIX signal handler when user
+	// presses Ctrl+C to interrupt the program.
+	static QAtomicInt userInterrupt;
+	userInterrupt.storeRelease(0);
+
+	// Install POSIX signal handler to catch Ctrl+C key signal.
+	static QEventLoop* activeEventLoop = nullptr; 
+	activeEventLoop = &eventLoop;
+	auto oldSignalHandler = ::signal(SIGINT, [](int) {
+		userInterrupt.storeRelease(1);
+		if(activeEventLoop)
+			QMetaObject::invokeMethod(activeEventLoop, "quit");
+	});
+#endif
+	
+	_inLocalEventLoop++;
+	Q_EMIT localEventLoopEnter();
+
 	eventLoop.exec();
 
+	_inLocalEventLoop--;
+	Q_EMIT localEventLoopExit();
+
+#ifdef Q_OS_UNIX
+	::signal(SIGINT, oldSignalHandler);
+	activeEventLoop = nullptr;
+	if(userInterrupt.load()) {
+		cancelAll();
+		return false;
+	}
+#endif
+
 	return !promise->isCanceled();
+}
+
+/******************************************************************************
+* Process events from the event queue when the tasks manager has started
+*  a local event loop. Otherwise does nothing and lets the main event loop
+* do the processing. 
+******************************************************************************/
+void TaskManager::processEvents()
+{
+	if(_inLocalEventLoop)
+		QCoreApplication::processEvents();
 }
 
 OVITO_END_INLINE_NAMESPACE

@@ -21,12 +21,13 @@
 
 #include <gui/GUI.h>
 #include <gui/properties/IntegerParameterUI.h>
-#include "StandardSceneRenderer.h"
+#include <opengl_renderer/StandardSceneRenderer.h>
 #include "StandardSceneRendererEditor.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 IMPLEMENT_OVITO_OBJECT(StandardSceneRendererEditor, PropertiesEditor);
+SET_OVITO_OBJECT_EDITOR(StandardSceneRenderer, StandardSceneRendererEditor);
 
 /******************************************************************************
 * Constructor that creates the UI controls for the editor.

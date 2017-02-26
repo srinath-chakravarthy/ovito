@@ -102,6 +102,7 @@ public:
 private:
 
 	PromisePtr<void> _promise;
+	TaskManager& _taskManager;
 };
 
 OVITO_END_INLINE_NAMESPACE

@@ -22,15 +22,19 @@
 #pragma once
 
 
-#include <gui/GUI.h>
-#include <opengl_renderer/OpenGLSceneRenderer.h>
+#include <core/Core.h>
+#include "OpenGLSceneRenderer.h"
+
+#include <QOffscreenSurface>
+#include <QOpenGLContext>
+#include <QOpenGLFramebufferObject>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
 
 /**
  * \brief This is the default scene renderer used for high-quality image output.
  */
-class OVITO_GUI_EXPORT StandardSceneRenderer : public OpenGLSceneRenderer
+class OVITO_OPENGL_RENDERER_EXPORT StandardSceneRenderer : public OpenGLSceneRenderer
 {
 public:
 

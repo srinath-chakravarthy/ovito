@@ -24,6 +24,8 @@
 
 #include <core/Core.h>
 
+class QOpenGLContext;	// Defined in QtGui headers
+
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 /**
@@ -56,6 +58,9 @@ public:
 
 	/// Renders custom GUI elements in the viewport on top of the scene.
 	virtual void renderGui() = 0;
+
+	/// Provides access to the OpenGL context used by the viewport window for rendering.
+	virtual QOpenGLContext* glcontext() = 0;
 };
 
 OVITO_END_INLINE_NAMESPACE

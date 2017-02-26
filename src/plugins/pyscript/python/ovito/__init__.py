@@ -25,6 +25,10 @@ import ovito.vis
 import ovito.io
 import ovito.modifiers
 
+# Load the bindings for the GUI classes when running in gui mode.
+if ovito.gui_mode:
+    import ovito.plugins.PyScriptGui
+
 from .plugins.PyScript.Scene import (ObjectNode, SceneRoot, PipelineObject, PipelineStatus)
 
 __all__ = ['version', 'version_string', 'gui_mode', 'headless_mode', 'dataset', 'task_manager',

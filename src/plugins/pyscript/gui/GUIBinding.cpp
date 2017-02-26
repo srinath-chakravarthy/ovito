@@ -20,7 +20,6 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/pyscript/PyScript.h>
-#include <gui/rendering/StandardSceneRenderer.h>
 #include <gui/widgets/rendering/FrameBufferWindow.h>
 #include <gui/mainwin/MainWindow.h>
 #include <gui/dataset/GuiDataSetContainer.h>
@@ -58,19 +57,6 @@ PYBIND11_PLUGIN(PyScriptGui)
 		.def_property_readonly("frame_buffer", &FrameBufferWindow::frameBuffer)
 		.def("create_frame_buffer", &FrameBufferWindow::createFrameBuffer)
 		.def("show_and_activate", &FrameBufferWindow::showAndActivateWindow)
-	;
-
-	ovito_class<StandardSceneRenderer, SceneRenderer>(m,
-			"The standard OpenGL-based renderer."
-			"\n\n"
-			"This is the default built-in rendering engine that is also used by OVITO to render the contents of the interactive viewports. "
-			"Since it accelerates the generation of images by using the computer's graphics hardware, it is very fast.",
-			"OpenGLRenderer")
-		.def_property("antialiasing_level", &StandardSceneRenderer::antialiasingLevel, &StandardSceneRenderer::setAntialiasingLevel,
-				"A positive integer controlling the level of supersampling. If 1, no supersampling is performed. For larger values, "
-				"the image in rendered at a higher resolution and then scaled back to the output size to reduce aliasing artifacts."
-				"\n\n"
-				":Default: 3")
 	;
 
 	return m.ptr();

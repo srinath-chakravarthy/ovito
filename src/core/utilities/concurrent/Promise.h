@@ -142,11 +142,7 @@ public:
 protected:
 
 	/// Constructor.
-	PromiseBase(State initialState = NoState) : _state(initialState) {
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-		_progressTime.invalidate();
-#endif
-	}
+	PromiseBase(State initialState = NoState) : _state(initialState) {}
 
 	/// Returns true if the promise is in the 'running' state.
 	bool isRunning() const { return (_state & Running); }

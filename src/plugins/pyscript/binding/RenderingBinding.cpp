@@ -28,6 +28,7 @@
 #include <core/rendering/FrameBuffer.h>
 #include <core/scene/objects/DisplayObject.h>
 #include <core/scene/objects/geometry/TriMeshDisplay.h>
+#include <opengl_renderer/StandardSceneRenderer.h>
 #include "PythonBinding.h"
 
 namespace PyScript {
@@ -118,6 +119,19 @@ void defineRenderingSubmodule(py::module parentModule)
 	;
 
 	ovito_abstract_class<NonInteractiveSceneRenderer, SceneRenderer>{m}
+	;
+
+	ovito_class<StandardSceneRenderer, SceneRenderer>(m,
+			"The standard OpenGL-based renderer."
+			"\n\n"
+			"This is the default built-in rendering engine that is also used by OVITO to render the contents of the interactive viewports. "
+			"Since it accelerates the generation of images by using the computer's graphics hardware, it is very fast.",
+			"OpenGLRenderer")
+		.def_property("antialiasing_level", &StandardSceneRenderer::antialiasingLevel, &StandardSceneRenderer::setAntialiasingLevel,
+				"A positive integer controlling the level of supersampling. If 1, no supersampling is performed. For larger values, "
+				"the image in rendered at a higher resolution and then scaled back to the output size to reduce aliasing artifacts."
+				"\n\n"
+				":Default: 3")
 	;
 
 	ovito_abstract_class<DisplayObject, RefTarget>(m,

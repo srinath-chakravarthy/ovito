@@ -49,11 +49,7 @@ public:
 		QOpenGLContext::currentContext()->functions()->glActiveTexture(GL_TEXTURE0);
 
 		// Create OpenGL texture.
-#if QT_VERSION < QT_VERSION_CHECK(5, 3, 0)
-		::glGenTextures(1, &_id);
-#else
 		QOpenGLContext::currentContext()->functions()->glGenTextures(1, &_id);
-#endif
 
 		// Make sure texture gets deleted when this object is destroyed.
 		attachOpenGLResources();
@@ -65,11 +61,7 @@ public:
 	/// Makes this the active texture.
 	void bind() {
 		QOpenGLContext::currentContext()->functions()->glActiveTexture(GL_TEXTURE0);
-#if QT_VERSION < QT_VERSION_CHECK(5, 3, 0)
-		::glBindTexture(GL_TEXTURE_2D, _id);
-#else
 		QOpenGLContext::currentContext()->functions()->glBindTexture(GL_TEXTURE_2D, _id);
-#endif
 	}
 
 protected:
@@ -77,11 +69,7 @@ protected:
     /// This method that takes care of freeing the shared OpenGL resources owned by this class.
     virtual void freeOpenGLResources() override {
     	if(_id) {
-#if QT_VERSION < QT_VERSION_CHECK(5, 3, 0)
-    		glDeleteTextures(1, &_id);
-#else
     		QOpenGLContext::currentContext()->functions()->glDeleteTextures(1, &_id);
-#endif
 			_id = 0;
     	}
     }

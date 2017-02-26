@@ -228,14 +228,10 @@ void XFormMode::mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event)
 void XFormMode::mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event)
 {
 	if(_viewport == vpwin->viewport()) {
-#if 1
 		// Take the current mouse cursor position to make the input mode
 		// look more responsive. The cursor position recorded when the mouse event was
 		// generates may be too old.
-		_currentPoint = vpwin->widget()->mapFromGlobal(QCursor::pos());
-#else
-		_currentPoint = event->localPos();
-#endif
+		_currentPoint = vpwin->mapFromGlobal(QCursor::pos());
 
 		_viewport->dataset()->undoStack().resetCurrentCompoundOperation();
 		doXForm();

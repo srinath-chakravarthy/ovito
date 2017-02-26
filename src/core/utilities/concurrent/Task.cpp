@@ -28,7 +28,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPAC
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-SynchronousTask::SynchronousTask(TaskManager& taskManager) : _promise(std::make_shared<Promise<void>>()) 
+SynchronousTask::SynchronousTask(TaskManager& taskManager) : _promise(std::make_shared<Promise<void>>()), _taskManager(taskManager)
 {
 	taskManager.registerTask(_promise);
 	_promise->setStarted();
@@ -51,7 +51,7 @@ void SynchronousTask::setProgressText(const QString& text)
 
 	// Yield control to the event loop to process user interface events.
 	// This is necessary so that the user can interrupt the running opertion.
-	QCoreApplication::processEvents();
+	_taskManager.processEvents();
 }
 
 /******************************************************************************
@@ -63,7 +63,7 @@ void SynchronousTask::setProgressValue(int v)
 
 	// Yield control to the event loop to process user interface events.
 	// This is necessary so that the user can interrupt the running opertion.
-	QCoreApplication::processEvents();
+	_taskManager.processEvents();
 }
 
 /******************************************************************************
@@ -71,11 +71,14 @@ void SynchronousTask::setProgressValue(int v)
 ******************************************************************************/
 bool SynchronousTask::isCanceled() const 
 { 
+	// Note: The SynchronousTask may get destroyed during event processing. Better access it first.
+	bool result = _promise->isCanceled();
+
 	// Yield control to the event loop to process user interface events.
 	// This is necessary so that the user can interrupt the running opertion.
-	QCoreApplication::processEvents();
+	_taskManager.processEvents();
 	
-	return _promise->isCanceled(); 
+	return result; 
 }
 
 OVITO_END_INLINE_NAMESPACE

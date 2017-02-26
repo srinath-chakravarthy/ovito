@@ -80,10 +80,22 @@ public:
 	/// If yes, then the dataset is saved by calling fileSave().
 	bool askForSaveChanges();
 
+private Q_SLOTS:
+
+	/// Is called whenever a local event loop is entered to wait for a task to finish.
+	void localEventLoopEntered();
+
+	/// Is called whenever a local event loop was exited after waiting for a task to finish.
+	void localEventLoopExited();
+
 private:
 
 	/// The window this dataset container is linked to (may be NULL).
 	MainWindow* _mainWindow;
+
+	/// Counts how many times viewport repaints have been disabled so that we can
+	/// re-enable them again the same number of times.
+	int _viewportRepaintsDisabled = 0;
 
 	Q_OBJECT
 	OVITO_OBJECT

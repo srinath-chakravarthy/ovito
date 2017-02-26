@@ -40,6 +40,14 @@ PythonScriptModifier::PythonScriptModifier(DataSet* dataset) : Modifier(dataset)
 		_computingInterval(TimeInterval::empty())
 {
 	INIT_PROPERTY_FIELD(script);
+}
+
+/******************************************************************************
+* Loads the default values of this object's parameter fields.
+******************************************************************************/
+void PythonScriptModifier::loadUserDefaults()
+{
+	Modifier::loadUserDefaults();
 
 	// Load example script.
 	setScript("from ovito.data import *\n\n"
@@ -150,7 +158,7 @@ void PythonScriptModifier::runScriptFunction()
 	_scriptExecutionQueued = false;
 
 	do {
-		if(!_generatorObject) {
+		if(!_generatorObject || _generatorObject.is_none()) {
 
 			// Check if an evaluation request is still pending.
 			_computingInterval = _inputCache.stateValidity();
@@ -207,15 +215,12 @@ void PythonScriptModifier::runScriptFunction()
 				OORef<CompoundObject> inputDataCollection = new CompoundObject(dataset());
 				inputDataCollection->setDataObjects(_outputCache);
 
-				ScriptEngine* engine = ScriptEngine::activeEngine();
-				if(!engine) engine = _scriptEngine.get();
-
-				engine->execute([this,animationFrame,&inputDataCollection,engine]() {
+				_scriptEngine->execute([this,animationFrame,&inputDataCollection]() {
 					// Prepare arguments to be passed to the script function.
 					py::tuple arguments = py::make_tuple(animationFrame, inputDataCollection.get(), _dataCollection.get());
 
 					// Execute modify() script function.
-					_generatorObject = engine->callObject(_modifyScriptFunction, arguments);
+					_generatorObject = _scriptEngine->callObject(_modifyScriptFunction, arguments);
 				});
 			}
 			catch(const Exception& ex) {
@@ -242,25 +247,18 @@ void PythonScriptModifier::runScriptFunction()
 			// Perform one computation step by calling the generator object.
 			bool exhausted = false;
 			try {
-				// Make sure the actions of the modify() function are not recorded on the undo stack.
-				UndoSuspender noUndo(dataset());
-
-				// Get script engine to execute the script.
-				ScriptEngine* engine = ScriptEngine::activeEngine();
-				if(!engine) engine = _scriptEngine.get();
-
-				if(_runningTask->isCanceled()) {
-					_outputCache.setStateValidity(TimeInterval::empty());
-					throwException(tr("Modifier script execution has been canceled by the user."));
-				}
-
 				// Measure how long the script is running.
 				QTime time;
 				time.start();
 				do {
 
-					engine->execute([this, &exhausted]() {
-						py::handle item = PyIter_Next(_generatorObject.ptr());
+					_scriptEngine->execute([this, &exhausted]() {
+						py::handle item;
+						{
+							// Make sure the actions of the modify() function are not recorded on the undo stack.
+							UndoSuspender noUndo(dataset());
+							item = PyIter_Next(_generatorObject.ptr());
+						}
 						if(item) {
 							py::object itemObj = py::reinterpret_steal<py::object>(item);
 							if(PyFloat_Check(itemObj.ptr())) {
@@ -292,6 +290,11 @@ void PythonScriptModifier::runScriptFunction()
 					// 30 milliseconds have passed or until it is exhausted.
 				}
 				while(!exhausted && time.elapsed() < 30);
+
+				if(!_runningTask || _runningTask->isCanceled()) {
+					_outputCache.setStateValidity(TimeInterval::empty());
+					throwException(tr("Modifier script execution has been canceled by the user."));
+				}
 
 				if(!exhausted) {
 					// Keep calling this method in GUI mode. Otherwise stay in the outer while loop.

@@ -32,10 +32,6 @@
 #include <core/utilities/io/ObjectLoadStream.h>
 #include <core/utilities/io/FileManager.h>
 
-#ifdef Q_OS_UNIX
-	#include <signal.h>
-#endif
-
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem)
 
 IMPLEMENT_OVITO_OBJECT(DataSetContainer, RefMaker);
@@ -44,7 +40,7 @@ DEFINE_FLAGS_REFERENCE_FIELD(DataSetContainer, currentSet, "CurrentSet", DataSet
 /******************************************************************************
 * Initializes the dataset manager.
 ******************************************************************************/
-DataSetContainer::DataSetContainer() : RefMaker(nullptr), _taskManager()
+DataSetContainer::DataSetContainer() : RefMaker(nullptr)
 {
 	INIT_PROPERTY_FIELD(currentSet);
 }
@@ -139,62 +135,6 @@ void DataSetContainer::onAnimationSettingsReplaced(AnimationSettings* newAnimati
 		Q_EMIT timeChangeComplete();
 	}
 }
-
-
-#if 0
-/******************************************************************************
-* This function blocks execution until some operation has been completed.
-******************************************************************************/
-bool DataSetContainer::waitUntil(const std::function<bool()>& callback, const QString& message, AbstractProgressDisplay* progressDisplay)
-{
-	OVITO_ASSERT_MSG(!QCoreApplication::instance() || QThread::currentThread() == QCoreApplication::instance()->thread(), "DataSetContainer::waitUntil()", "This function may only be called from the main thread.");
-
-	// Check if operation is already completed.
-	if(callback())
-		return true;
-
-	// Boolean flag which is set by the POSIX signal handler when user
-	// presses Ctrl+C to interrupt the program. In console mode, the
-	// DataSetContainer::waitUntil() function breaks out of the waiting loop
-	// when this flag is set.
-	static QAtomicInt _userInterrupt;
-
-#ifdef Q_OS_UNIX
-	// Install POSIX signal handler to catch Ctrl+C key press in console mode.
-	auto oldSignalHandler = ::signal(SIGINT, [](int) { _userInterrupt.storeRelease(1); });
-#endif
-
-	try {
-
-	qDebug() << "Enerting polling loop";
-		// Poll callback function until it returns true.
-#ifdef Q_OS_UNIX		
-		while(!callback() && !_userInterrupt.loadAcquire()) {
-#else
-		while(!callback()) {
-#endif
-			QCoreApplication::processEvents();
-			QThread::msleep(20);
-		}
-	qDebug() << "Leaving polling loop";
-
-#ifdef Q_OS_UNIX
-		::signal(SIGINT, oldSignalHandler);
-#endif
-	}
-	catch(...) {
-#ifdef Q_OS_UNIX
-		::signal(SIGINT, oldSignalHandler);
-#endif
-		throw;
-	}
-	if(_userInterrupt.load()) {
-		taskManager().cancelAll();
-		return false;
-	}
-	return true;
-}
-#endif
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

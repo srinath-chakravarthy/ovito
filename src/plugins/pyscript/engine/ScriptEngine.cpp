@@ -117,6 +117,10 @@ ScriptEngine::ScriptEngine(DataSet* dataset, TaskManager& taskManager, bool priv
 ******************************************************************************/
 ScriptEngine::~ScriptEngine()
 {
+	if(_activeEngine == this) {
+		qWarning() << "Deleting active script engine.";
+		_activeEngine = nullptr;
+	}
 	try {
 		// Explicitly release all objects created by Python scripts.
 		if(_mainNamespace) _mainNamespace.clear();

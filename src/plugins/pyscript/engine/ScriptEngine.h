@@ -147,7 +147,7 @@ private:
 			ScriptEngine::_activeEngine = _previousEngine;
 		}
 	private:
-		ScriptEngine* _previousEngine;
+		QPointer<ScriptEngine> _previousEngine;
 	};
 
 	/// The dataset that provides the context for the script execution.

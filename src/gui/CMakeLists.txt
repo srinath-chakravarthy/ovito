@@ -95,8 +95,6 @@ SET(SourceFiles
 	properties/VariantComboBoxParameterUI.cpp
 	properties/Vector3ParameterUI.cpp
 	rendering/ViewportSceneRenderer.cpp
-	rendering/StandardSceneRenderer.cpp
-	rendering/StandardSceneRendererEditor.cpp
 	rendering/RenderSettingsEditor.cpp
 	viewport/ViewportWindow.cpp
 	viewport/ViewportMenu.cpp

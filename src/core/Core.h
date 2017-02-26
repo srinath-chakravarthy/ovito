@@ -79,8 +79,8 @@
 #include <QCommandLineParser>
 #include <QGuiApplication>
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
-#  error "OVITO requires at least Qt 5.2"
+#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
+#  error "OVITO requires Qt 5.4 or newer."
 #endif
 
 /******************************************************************************

@@ -96,7 +96,7 @@ void PromiseWatcher::cancel()
 
 bool PromiseWatcher::isCanceled() const
 {
-	return promise()->isCanceled();
+	return promise() ? promise()->isCanceled() : false;
 }
 
 bool PromiseWatcher::isFinished() const
@@ -106,17 +106,17 @@ bool PromiseWatcher::isFinished() const
 
 int PromiseWatcher::progressMaximum() const
 {
-	return promise()->totalProgressMaximum();
+	return promise() ? promise()->totalProgressMaximum() : 0;
 }
 
 int PromiseWatcher::progressValue() const
 {
-	return promise()->totalProgressValue();
+	return promise() ? promise()->totalProgressValue() : 0;
 }
 
 QString PromiseWatcher::progressText() const
 {
-	return promise()->progressText();
+	return promise() ? promise()->progressText() : QString();
 }
 
 void PromiseWatcher::waitForFinished() const
