@@ -44,7 +44,7 @@ public:
 	public:
 
 		/// Constructor.
-		AmbientOcclusionEngine(const TimeInterval& validityInterval, int resolution, int samplingCount, ParticleProperty* positions, const Box3& boundingBox, std::vector<FloatType>&& particleRadii);
+		AmbientOcclusionEngine(const TimeInterval& validityInterval, int resolution, int samplingCount, ParticleProperty* positions, const Box3& boundingBox, std::vector<FloatType>&& particleRadii, DataSet* dataset);
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;
@@ -57,6 +57,7 @@ public:
 
 	private:
 
+		DataSet* _dataset;
 		int _resolution;
 		int _samplingCount;
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;

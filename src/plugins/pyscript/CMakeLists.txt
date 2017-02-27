@@ -183,8 +183,8 @@ FILE(GLOB_RECURSE PYTHON_TEST_SCRIPTS RELATIVE "${PYTHON_TEST_SCRIPTS_DIR}" "${P
 FOREACH(test_script ${PYTHON_TEST_SCRIPTS})
 	# Run each test case both with 'ovitos' and a second time with the system Python interpreter.
 	ADD_TEST(NAME "${test_script}" WORKING_DIRECTORY "${PYTHON_TEST_SCRIPTS_DIR}" COMMAND "${OVITOS_EXECUTABLE}" "${test_script}")
-	ADD_TEST(NAME "sys_python_${test_script}" WORKING_DIRECTORY "${PYTHON_TEST_SCRIPTS_DIR}" COMMAND "${PYTHON_EXECUTABLE}" "${test_script}")
-	SET_PROPERTY(TEST "sys_python_${test_script}" PROPERTY ENVIRONMENT "PYTHONPATH=${OVITO_PYTHON_DIRECTORY}")
+	ADD_TEST(NAME "${test_script}_extern" WORKING_DIRECTORY "${PYTHON_TEST_SCRIPTS_DIR}" COMMAND "${PYTHON_EXECUTABLE}" "${test_script}")
+	SET_PROPERTY(TEST "${test_script}_extern" PROPERTY ENVIRONMENT "PYTHONPATH=${OVITO_PYTHON_DIRECTORY}")
 ENDFOREACH()
 
 # Also test example snippets that are part of user documentation.
@@ -192,6 +192,8 @@ SET(PYTHON_EXAMPLE_SNIPPETS_DIR "${CMAKE_SOURCE_DIR}/doc/python/example_snippets
 FILE(GLOB_RECURSE PYTHON_EXAMPLE_SNIPPETS RELATIVE "${PYTHON_EXAMPLE_SNIPPETS_DIR}" "${PYTHON_EXAMPLE_SNIPPETS_DIR}/*.py")
 FOREACH(test_script ${PYTHON_EXAMPLE_SNIPPETS})
 	ADD_TEST(NAME "snippet_${test_script}" WORKING_DIRECTORY "${PYTHON_EXAMPLE_SNIPPETS_DIR}" COMMAND "${OVITOS_EXECUTABLE}" "${test_script}")
+	ADD_TEST(NAME "snippet_${test_script}_extern" WORKING_DIRECTORY "${PYTHON_EXAMPLE_SNIPPETS_DIR}" COMMAND "${PYTHON_EXECUTABLE}" "${test_script}")
+	SET_PROPERTY(TEST "snippet_${test_script}_extern" PROPERTY ENVIRONMENT "PYTHONPATH=${OVITO_PYTHON_DIRECTORY}")
 ENDFOREACH()
 
 # Propagate list of plugins to parent scope.

@@ -79,20 +79,21 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> AmbientOcclusionMod
 
 	TimeInterval interval;
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
-	return std::make_shared<AmbientOcclusionEngine>(validityInterval, resolution, samplingCount(), posProperty->storage(), boundingBox, inputParticleRadii(time, interval));
+	return std::make_shared<AmbientOcclusionEngine>(validityInterval, resolution, samplingCount(), posProperty->storage(), boundingBox, inputParticleRadii(time, interval), dataset());
 }
 
 /******************************************************************************
 * Compute engine constructor.
 ******************************************************************************/
-AmbientOcclusionModifier::AmbientOcclusionEngine::AmbientOcclusionEngine(const TimeInterval& validityInterval, int resolution, int samplingCount, ParticleProperty* positions, const Box3& boundingBox, std::vector<FloatType>&& particleRadii) :
+AmbientOcclusionModifier::AmbientOcclusionEngine::AmbientOcclusionEngine(const TimeInterval& validityInterval, int resolution, int samplingCount, ParticleProperty* positions, const Box3& boundingBox, std::vector<FloatType>&& particleRadii, DataSet* dataset) :
 	ComputeEngine(validityInterval),
 	_resolution(resolution),
 	_samplingCount(samplingCount),
 	_positions(positions),
 	_boundingBox(boundingBox),
 	_brightness(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, tr("Brightness"), true)),
-	_particleRadii(particleRadii)
+	_particleRadii(particleRadii),
+	_dataset(dataset)
 {
 	_offscreenSurface.setFormat(OpenGLSceneRenderer::getDefaultSurfaceFormat());
 	_offscreenSurface.create();
@@ -105,10 +106,8 @@ void AmbientOcclusionModifier::AmbientOcclusionEngine::perform()
 {
 	setProgressText(tr("Computing ambient occlusion"));
 
-	// Create a temporary dataset, which is needed to host an instance of AmbientOcclusionRenderer.
-	OORef<DataSet> dataset(new DataSet());
 	// Create the AmbientOcclusionRenderer instance.
-	OORef<AmbientOcclusionRenderer> renderer(new AmbientOcclusionRenderer(dataset, QSize(_resolution, _resolution), _offscreenSurface));
+	OORef<AmbientOcclusionRenderer> renderer(new AmbientOcclusionRenderer(_dataset, QSize(_resolution, _resolution), _offscreenSurface));
 
 	renderer->startRender(nullptr, nullptr);
 	try {

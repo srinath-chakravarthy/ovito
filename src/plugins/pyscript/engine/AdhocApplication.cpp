@@ -23,6 +23,7 @@
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/UndoStack.h>
 #include <core/plugins/PluginManager.h>
+#include <opengl_renderer/OpenGLSceneRenderer.h>
 #include "AdhocApplication.h"
 
 namespace PyScript {
@@ -53,6 +54,10 @@ bool AdhocApplication::initialize()
 	// On Windows and macOS, there is always an OpenGL implementation available for background rendering.
 	_headlessMode = false;
 #endif
+
+	// Set the global default OpenGL surface format.
+	// This will let Qt use core profile contexts.
+	QSurfaceFormat::setDefaultFormat(OpenGLSceneRenderer::getDefaultSurfaceFormat());
 
 	return true;
 }

@@ -22,8 +22,8 @@
 #include <gui/GUI.h>
 #include <gui/mainwin/MainWindow.h>
 #include <gui/dataset/GuiDataSetContainer.h>
-#include <gui/rendering/ViewportSceneRenderer.h>
 #include <gui/utilities/io/GuiFileManager.h>
+#include <opengl_renderer/OpenGLSceneRenderer.h>
 #include <core/utilities/io/FileManager.h>
 #include "GuiApplication.h"
 
@@ -97,7 +97,7 @@ void GuiApplication::createQtApplication(int& argc, char** argv)
 
 	// Set the global default OpenGL surface format.
 	// This will let Qt use core profile contexts.
-	QSurfaceFormat::setDefaultFormat(ViewportSceneRenderer::getDefaultSurfaceFormat());
+	QSurfaceFormat::setDefaultFormat(OpenGLSceneRenderer::getDefaultSurfaceFormat());
 }
 
 /******************************************************************************
