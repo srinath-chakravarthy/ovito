@@ -104,16 +104,6 @@ cd ../netcdf/lib
 install_name_tool -id $PWD/libnetcdf.dylib libnetcdf.dylib
 
 **************************************************************************
-Remove unused Python.app bundle from Python framework, because 
-CMake's fixup_bundle() macro cannot fix it.
-**************************************************************************
-sudo mv /Library/Frameworks/Python.framework/Versions/3.5/Resources/Python.app /Library/Frameworks/Python.framework/Versions/
-
-# To undo this change:
-# sudo mv /Library/Frameworks/Python.framework/Versions/Python.app /Library/Frameworks/Python.framework/Versions/3.5/Resources/
-
-
-**************************************************************************
 Build OVITO:
 **************************************************************************
 export MACOSX_DEPLOYMENT_TARGET=10.8

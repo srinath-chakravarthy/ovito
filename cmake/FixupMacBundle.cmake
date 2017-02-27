@@ -56,9 +56,6 @@ IF(APPLE)
 			\"\${CMAKE_INSTALL_PREFIX}/${plugin_dest_dir}/imageformats\"
 			\"\${CMAKE_INSTALL_PREFIX}/${plugin_dest_dir}/platforms\"
 			/opt/local/lib)
-		IF(Qt5Core_VERSION VERSION_LESS \"5.4\")
-			LIST(APPEND DIRS \"\${CMAKE_INSTALL_PREFIX}/${plugin_dest_dir}/accessible\")
-		ENDIF()
 
 		# Returns the path that others should refer to the item by when the item is embedded inside a bundle.
 		# This ensures that all plugin libraries go into the plugins/ directory of the bundle.
@@ -85,7 +82,7 @@ IF(APPLE)
 		SET(BUNDLE_LIBS \${QTPLUGINS} \${OVITO_PLUGINS} \${PYTHON_DYNLIBS})
 		SET(BU_CHMOD_BUNDLE_ITEMS ON)	# Make copies of system libraries writable before install_name_tool tries to change them.
 		INCLUDE(BundleUtilities)
-		FIXUP_BUNDLE(\"\${APPS}\" \"\${BUNDLE_LIBS}\" \"\${DIRS}\")
+		FIXUP_BUNDLE(\"\${APPS}\" \"\${BUNDLE_LIBS}\" \"\${DIRS}\" IGNORE_ITEM \"Python\")
 		" COMPONENT Runtime)
 
 	IF(OVITO_BUILD_PLUGIN_PYSCRIPT)
@@ -139,7 +136,7 @@ IF(APPLE)
 		ENDIF()
 		LIST(APPEND FilesToBeSigned \"\${CMAKE_INSTALL_PREFIX}/${MACOSX_BUNDLE_NAME}.app\")
 
-		# Sign exeutable files one by one.
+		# Sign executable files one by one.
 		FOREACH(FILE_ENTRY \${FilesToBeSigned})
 			MESSAGE(\"Signing \${FILE_ENTRY}\")
 			EXECUTE_PROCESS(COMMAND codesign -s \"${SigningIdentity}\" --force \"\${FILE_ENTRY}\")
