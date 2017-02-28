@@ -90,7 +90,7 @@ IF(WIN32 AND OVITO_BUILD_APPSTORE_VERSION)
 		
 	ADD_CUSTOM_TARGET(appx
 					COMMAND "C:\\Program Files (x86)\\Windows Kits\\10\\bin\\x64\\MakeAppx.exe" pack /o /d "${CMAKE_INSTALL_PREFIX}" /p "${CMAKE_INSTALL_PREFIX}\\..\\ovito-${OVITO_VERSION_STRING}.appx"
-					COMMAND SignTool sign /fd SHA256 /a /f "${CMAKE_INSTALL_PREFIX}\\..\\..\\ovito.pfx" "${CMAKE_INSTALL_PREFIX}\\..\\ovito-${OVITO_VERSION_STRING}.appx"
+					#COMMAND SignTool sign /fd SHA256 /a /f "${CMAKE_INSTALL_PREFIX}\\..\\..\\ovito.pfx" "${CMAKE_INSTALL_PREFIX}\\..\\ovito-${OVITO_VERSION_STRING}.appx"
 					COMMENT "Creating AppX package")
 
 ENDIF()

@@ -333,6 +333,7 @@ void ActionManager::on_FileExport_triggered()
 	QStringList files = dialog.selectedFiles();
 	if(files.isEmpty())
 		return;
+	
 	QString exportFile = files.front();
 
 	// Remember directory for the next time...

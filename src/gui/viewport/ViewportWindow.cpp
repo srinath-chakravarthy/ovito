@@ -497,7 +497,8 @@ void ViewportWindow::renderNow()
 			QCoreApplication::removePostedEvents(nullptr, 0);
 			if(_mainWindow) _mainWindow->close();
 			ex.showError();
-			QCoreApplication::instance()->quit();
+			QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
+			QCoreApplication::exit();
 		}
 		return;
 	}
@@ -513,6 +514,7 @@ void ViewportWindow::renderNow()
 		catch(Exception& ex) {
 			if(ex.context() == nullptr) ex.setContext(viewport()->dataset());
 			ex.prependGeneralMessage(tr("An unexpected error occurred while rendering the viewport contents. The program will quit."));
+			viewport()->dataset()->viewportConfig()->suspendViewportUpdates();
 
 			QString openGLReport;
 			QTextStream stream(&openGLReport, QIODevice::WriteOnly | QIODevice::Text);
@@ -529,10 +531,11 @@ void ViewportWindow::renderNow()
 			stream << "Context sharing: " << OpenGLSceneRenderer::contextSharingEnabled() << endl;
 			ex.appendDetailMessage(openGLReport);
 
-			viewport()->dataset()->viewportConfig()->suspendViewportUpdates();
 			QCoreApplication::removePostedEvents(nullptr, 0);
+			if(_mainWindow) _mainWindow->close();
 			ex.showError();
-			QCoreApplication::instance()->quit();
+			QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
+			QCoreApplication::exit();
 		}
 	}
 	else {

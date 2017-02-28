@@ -101,6 +101,16 @@ QList<QDir> PluginManager::pluginDirs()
 ******************************************************************************/
 void PluginManager::loadAllPlugins()
 {
+#ifdef Q_OS_WIN
+	// Modify PATH enviroment variable so that Windows finds the plugin DLLs if 
+	// there are dependencies between them.
+	QByteArray path = qgetenv("PATH");
+	for(QDir pluginDir : pluginDirs()) {
+		path = QDir::toNativeSeparators(pluginDir.absolutePath()).toUtf8() + ";" + path;
+	}
+	qputenv("PATH", path);
+#endif
+	
 	// Scan the plugin directories for installed plugins.
 	// This only done in standalone mode.
 	// When OVITO is being used from an external Python interpreter, 

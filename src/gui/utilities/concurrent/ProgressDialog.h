@@ -27,7 +27,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
 
-class ProgressDialog : public QDialog
+class OVITO_GUI_EXPORT ProgressDialog : public QDialog
 {
 public:
 

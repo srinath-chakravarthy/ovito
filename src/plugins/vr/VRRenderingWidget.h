@@ -136,6 +136,4 @@ private:
 	OORef<VRSettingsObject> _settings;
 };
 
-};	// End of namespace
-
-#endif
+}	// End of namespace

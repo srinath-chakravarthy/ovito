@@ -3,10 +3,14 @@
    xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
    xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
    xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
-  <Identity Name="Ovito"
+  <Identity Name="11610ovito.org.Ovito"
     ProcessorArchitecture="x64"
-    Publisher="CN=ovito.org, O=ovito.org, L=Darmstadt, C=Germany"
+    Publisher="CN=9D003073-9E24-4398-93F1-D696ACD17307" 
     Version="${OVITO_VERSION_MAJOR}.${OVITO_VERSION_MINOR}.${OVITO_VERSION_REVISION}.0" />
+   <!-- 
+    Publisher="CN=ovito.org, O=ovito.org, L=Darmstadt, C=Germany"
+   Publisher="CN=9D003073-9E24-4398-93F1-D696ACD17307" 
+   -->
   <Properties>
     <DisplayName>Ovito</DisplayName>
     <PublisherDisplayName>ovito.org</PublisherDisplayName>
