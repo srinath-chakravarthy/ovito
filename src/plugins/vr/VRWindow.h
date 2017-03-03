@@ -48,6 +48,4 @@ private:
  	VRRenderingWidget* _glWidget;
 };
 
-};	// End of namespace
-
-#endif
+}	// End of namespace

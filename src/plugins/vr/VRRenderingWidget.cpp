@@ -288,7 +288,7 @@ void VRRenderingWidget::paintGL()
             _sceneRenderer->setRenderingViewport(0, 0, _renderResolution.width(), _renderResolution.height());
             
             // Call the viewport renderer to render the scene objects.
-            _sceneRenderer->renderFrame(nullptr, SceneRenderer::NonStereoscopic, nullptr);
+            _sceneRenderer->renderFrame(nullptr, SceneRenderer::NonStereoscopic, dataset()->container()->taskManager());
 
             // Render floor rectangle.
             if(settings()->showFloor()) {

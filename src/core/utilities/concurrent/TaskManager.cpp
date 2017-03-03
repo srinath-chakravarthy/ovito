@@ -118,6 +118,29 @@ void TaskManager::waitForAll()
 }
 
 /******************************************************************************
+* This should be called whenever a local event handling loop is entered.
+******************************************************************************/
+void TaskManager::startLocalEventHandling() 
+{
+	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "TaskManager::waitForTask", "Function may only be called from the main thread.");
+	
+	_inLocalEventLoop++;
+	Q_EMIT localEventLoopEntered();
+}
+
+/******************************************************************************
+* This should be called whenever a local event handling loop is left.
+******************************************************************************/
+void TaskManager::stopLocalEventHandling()
+{
+	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "TaskManager::waitForTask", "Function may only be called from the main thread.");
+	OVITO_ASSERT(_inLocalEventLoop > 0);
+
+	_inLocalEventLoop--;
+	Q_EMIT localEventLoopExited();
+}
+
+/******************************************************************************
 * Waits for the given task to finish.
 ******************************************************************************/
 bool TaskManager::waitForTask(const PromiseBasePtr& promise)
@@ -152,13 +175,9 @@ bool TaskManager::waitForTask(const PromiseBasePtr& promise)
 	});
 #endif
 	
-	_inLocalEventLoop++;
-	Q_EMIT localEventLoopEnter();
-
+	startLocalEventHandling();
 	eventLoop.exec();
-
-	_inLocalEventLoop--;
-	Q_EMIT localEventLoopExit();
+	stopLocalEventHandling();
 
 #ifdef Q_OS_UNIX
 	::signal(SIGINT, oldSignalHandler);

@@ -27,7 +27,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
 
-class ProgressDialog : public QDialog
+class OVITO_GUI_EXPORT ProgressDialog : public QDialog
 {
 public:
 
@@ -36,6 +36,9 @@ public:
 
 	/// Constructor.
 	ProgressDialog(QWidget* parent, TaskManager& taskManager, const QString& dialogTitle = QString());
+
+	/// ~Destructor.
+	~ProgressDialog();
 
 	/// Returns the TaskManager that manages the running task displayed in this progress dialog.
 	TaskManager& taskManager() { return _taskManager; }

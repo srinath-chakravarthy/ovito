@@ -51,6 +51,4 @@ private:
 	OVITO_OBJECT
 };
 
-};	// End of namespace
-
-#endif
+}	// End of namespace
