@@ -145,6 +145,12 @@ public:
 	///        do the processing. 
 	void processEvents();
 
+	/// \brief This should be called whenever a local event handling loop is entered.
+	void startLocalEventHandling();
+
+	/// \brief This should be called whenever a local event handling loop is left.
+	void stopLocalEventHandling();
+
 public Q_SLOTS:
 
 	/// Cancels all running tasks.
@@ -166,10 +172,10 @@ Q_SIGNALS:
 	void taskFinished(PromiseWatcher* taskWatcher);
 
 	/// \brief This signal is generated whenever a local event loop is entered to wait for a task to finish.
-	void localEventLoopEnter();
+	void localEventLoopEntered();
 
 	/// \brief This signal is generated whenever a local event loop was exited after waiting for a task to finish.
-	void localEventLoopExit();
+	void localEventLoopExited();
 
 private:
 

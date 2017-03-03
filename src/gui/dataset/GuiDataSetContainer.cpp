@@ -45,8 +45,8 @@ IMPLEMENT_OVITO_OBJECT(GuiDataSetContainer, DataSetContainer);
 GuiDataSetContainer::GuiDataSetContainer(MainWindow* mainWindow) : DataSetContainer(),
 	_mainWindow(mainWindow)
 {
-	connect(&taskManager(), &TaskManager::localEventLoopEnter, this, &GuiDataSetContainer::localEventLoopEntered);
-	connect(&taskManager(), &TaskManager::localEventLoopExit, this, &GuiDataSetContainer::localEventLoopExited);
+	connect(&taskManager(), &TaskManager::localEventLoopEntered, this, &GuiDataSetContainer::localEventLoopEntered);
+	connect(&taskManager(), &TaskManager::localEventLoopExited, this, &GuiDataSetContainer::localEventLoopExited);
 }
 
 /******************************************************************************

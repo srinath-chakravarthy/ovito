@@ -85,6 +85,17 @@ ProgressDialog::ProgressDialog(QWidget* parent, TaskManager& taskManager, const 
 	// Show the dialog with a short delay.
 	// This prevent the dialog from showing for tasks that terminate very quickly.
 	QTimer::singleShot(100, this, &QDialog::show);
+
+	// Activate local event handling to keep the dialog responsive.
+	taskManager.startLocalEventHandling();
+}
+
+/******************************************************************************
+* Destructor
+******************************************************************************/
+ProgressDialog::~ProgressDialog()
+{
+	_taskManager.stopLocalEventHandling();
 }
 
 /******************************************************************************

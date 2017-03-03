@@ -37,6 +37,9 @@ public:
 	/// Constructor.
 	ProgressDialog(QWidget* parent, TaskManager& taskManager, const QString& dialogTitle = QString());
 
+	/// ~Destructor.
+	~ProgressDialog();
+
 	/// Returns the TaskManager that manages the running task displayed in this progress dialog.
 	TaskManager& taskManager() { return _taskManager; }
 
