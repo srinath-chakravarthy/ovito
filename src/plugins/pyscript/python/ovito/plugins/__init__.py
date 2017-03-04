@@ -19,7 +19,7 @@ import sys
 
 if sys.platform.startswith('darwin'):  # macOS
     __path__[0] += "/../../../../PlugIns"
-if sys.platform.startswith('win32'):  # Windows
+elif sys.platform.startswith('win32'):  # Windows
     __path__[0] += "\\..\\..\\.."
 else:
     __path__[0] += "/../../.."
