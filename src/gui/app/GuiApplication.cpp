@@ -176,44 +176,62 @@ bool GuiApplication::startupApplication()
 /******************************************************************************
 * Handler function for exceptions used in GUI mode.
 ******************************************************************************/
-void GuiApplication::guiExceptionHandler(const Exception& exception)
+void GuiApplication::guiExceptionHandler(const Exception& ex)
 {
 	// Always display errors in the terminal window.
-	exception.logError();
+	ex.logError();
 
-	// Prepare a message box dialog.
-	QMessageBox msgbox;
-	msgbox.setWindowTitle(tr("Error - %1").arg(QCoreApplication::applicationName()));
-	msgbox.setStandardButtons(QMessageBox::Ok);
-	msgbox.setText(exception.message());
-	msgbox.setIcon(QMessageBox::Critical);
+	// While an exception dialog is shown, another exception may arrive.
+	// We cannot show the second dialog while the first one is still open. 
+	// So put exceptions in a waiting queue.
+	static std::deque<Exception> exceptionQueue;
+	if(exceptionQueue.empty()) {
+		exceptionQueue.push_back(ex);
+		do {
+			// Show next exception from queue.
+			Exception exception = exceptionQueue.front();
+			
+			// Prepare a message box dialog.
+			QMessageBox msgbox;
+			msgbox.setWindowTitle(tr("Error - %1").arg(QCoreApplication::applicationName()));
+			msgbox.setStandardButtons(QMessageBox::Ok);
+			msgbox.setText(exception.message());
+			msgbox.setIcon(QMessageBox::Critical);
 
-	// If the exception has been thrown within the context of a DataSet or a DataSetContainer,
-	// show the message box under the corresponding main window.
-	if(DataSet* dataset = qobject_cast<DataSet*>(exception.context())) {
-		if(MainWindow* window = MainWindow::fromDataset(dataset)) {
-			msgbox.setParent(window);
-			msgbox.setWindowModality(Qt::WindowModal);
+			// If the exception has been thrown within the context of a DataSet or a DataSetContainer,
+			// show the message box under the corresponding main window.
+			if(DataSet* dataset = qobject_cast<DataSet*>(exception.context())) {
+				if(MainWindow* window = MainWindow::fromDataset(dataset)) {
+					msgbox.setParent(window);
+					msgbox.setWindowModality(Qt::WindowModal);
+				}
+			}
+			if(GuiDataSetContainer* datasetContainer = qobject_cast<GuiDataSetContainer*>(exception.context())) {
+				if(MainWindow* window = datasetContainer->mainWindow()) {
+					msgbox.setParent(window);
+					msgbox.setWindowModality(Qt::WindowModal);
+				}
+			}
+
+			// If the exception is associated with additional message strings,
+			// show them in the Details section of the message box dialog.
+			if(exception.messages().size() > 1) {
+				QString detailText;
+				for(int i = 1; i < exception.messages().size(); i++)
+					detailText += exception.messages()[i] + "\n";
+				msgbox.setDetailedText(detailText);
+			}
+
+			// Show message box.
+			msgbox.exec();
+			exceptionQueue.pop_front();
 		}
+		while(!exceptionQueue.empty());
 	}
-	if(GuiDataSetContainer* datasetContainer = qobject_cast<GuiDataSetContainer*>(exception.context())) {
-		if(MainWindow* window = datasetContainer->mainWindow()) {
-			msgbox.setParent(window);
-			msgbox.setWindowModality(Qt::WindowModal);
-		}
+	else {
+		// Exceptions are queuing up.
+		exceptionQueue.push_back(ex);
 	}
-
-	// If the exception is associated with additional message strings,
-	// show them in the Details section of the message box dialog.
-	if(exception.messages().size() > 1) {
-		QString detailText;
-		for(int i = 1; i < exception.messages().size(); i++)
-			detailText += exception.messages()[i] + "\n";
-		msgbox.setDetailedText(detailText);
-	}
-
-	// Show message box.
-	msgbox.exec();
 }
 
 OVITO_END_INLINE_NAMESPACE
