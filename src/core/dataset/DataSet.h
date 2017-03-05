@@ -188,9 +188,6 @@ private:
 	/// \brief Checks if all scene nodes are ready and their data pipelines can provide fully computed results.
 	bool isSceneReady(TimePoint time) const;
 
-	/// Checks if the scene is ready and calls the registered listeners.
-	void serveSceneReadyRequests();
-
 private:
 
 	/// The configuration of the viewports.

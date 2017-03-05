@@ -201,9 +201,9 @@ FileManager* Application::createFileManager()
 ******************************************************************************/
 void Application::processRunOnceList()
 {
-	auto copy = _runOnceList;
-	_runOnceList.clear();
-	for(auto entry = copy.cbegin(); entry != copy.cend(); ++entry) {
+	QMap<QPointer<QObject>,std::function<void()>> listCopy;
+	_runOnceList.swap(listCopy);
+	for(auto entry = listCopy.cbegin(); entry != listCopy.cend(); ++entry) {
 		if(entry.key())
 			entry.value()();
 	}

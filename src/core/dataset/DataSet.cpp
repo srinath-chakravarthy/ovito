@@ -30,6 +30,7 @@
 #include <core/rendering/RenderSettings.h>
 #include <core/rendering/FrameBuffer.h>
 #include <core/rendering/SceneRenderer.h>
+#include <core/app/Application.h>
 #ifdef OVITO_VIDEO_OUTPUT_SUPPORT
 	#include <core/utilities/io/video/VideoEncoder.h>
 #endif
@@ -74,6 +75,11 @@ DataSet::DataSet(DataSet* self) : RefTarget(this), _unitsManager(this)
 ******************************************************************************/
 DataSet::~DataSet()
 {
+	if(_sceneReadyRequest) {
+		_sceneReadyRequest->cancel();
+		_sceneReadyRequest->setFinished();
+		_sceneReadyRequest.reset();
+	}
 }
 
 /******************************************************************************
@@ -124,7 +130,15 @@ bool DataSet::referenceEvent(RefTarget* source, ReferenceEvent* event)
 				viewportConfig()->updateViewports();
 
 			if(source == sceneRoot() && event->type() == ReferenceEvent::PendingStateChanged) {
-				serveSceneReadyRequests();
+				// Serve requests waiting for scene to become ready.
+				Application::instance()->runOnceLater(this, [this]() {
+					if(_sceneReadyRequest) {
+						if(_sceneReadyRequest->isCanceled() || isSceneReady(animationSettings()->time())) {
+							_sceneReadyRequest->setFinished();
+							_sceneReadyRequest.reset();
+						}
+					}
+				});
 			}
 		}
 	}
@@ -246,19 +260,6 @@ Future<void> DataSet::makeSceneReady(const QString& message)
 	_sceneReadyRequest->setStarted();
 	_sceneReadyRequest->setProgressText(message);
 	return future;
-}
-
-/******************************************************************************
-* Checks if the scene is ready and calls all registered listeners.
-******************************************************************************/
-void DataSet::serveSceneReadyRequests()
-{
-	if(_sceneReadyRequest) {
-		if(_sceneReadyRequest->isCanceled() || isSceneReady(animationSettings()->time())) {
-			_sceneReadyRequest->setFinished();
-			_sceneReadyRequest.reset();
-		}
-	}
 }
 
 /******************************************************************************

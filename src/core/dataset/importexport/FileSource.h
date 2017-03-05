@@ -101,6 +101,13 @@ public:
 		DataObject::notifyDependents(eventType);
 	}
 
+	/// This method is called after the reference counter of this object has reached zero
+	/// and before the object is being deleted.
+	virtual void aboutToBeDeleted() override {
+		cancelLoadOperation();
+		CompoundObject::aboutToBeDeleted();
+	}
+
 protected Q_SLOTS:
 
 	/// \brief This is called when the background loading operation has finished.

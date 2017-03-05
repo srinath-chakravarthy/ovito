@@ -316,19 +316,25 @@ void FileSource::loadOperationFinished()
 	OVITO_ASSERT(_frameBeingLoaded != -1);
 	OVITO_ASSERT(_activeFrameLoader);
 	bool wasCanceled = _activeFrameLoader->isCanceled();
+	int loadedFrame = _frameBeingLoaded;
 	_loadedFrameIndex = _frameBeingLoaded;
 	_frameBeingLoaded = -1;
 	PipelineStatus newStatus = status();
 
+	_frameLoaderWatcher.unsetPromise();
+	std::shared_ptr<FileSourceImporter::FrameLoader> frameLoader = std::move(_activeFrameLoader);
+	OVITO_ASSERT(!_activeFrameLoader);
+
 	if(!wasCanceled) {
 		try {
 			// Check for exceptions thrown by the frame loader.
-			_activeFrameLoader->waitForFinished();
+			frameLoader->waitForFinished();
 			// Adopt the data loaded by the frame loader.
-			_activeFrameLoader->handOver(this);
-			newStatus = _activeFrameLoader->status();
-			if(frames().count() > 1)
-				newStatus.setText(tr("Loaded frame %1 of %2\n").arg(_loadedFrameIndex+1).arg(frames().count()) + newStatus.text());
+			frameLoader->handOver(this);
+			newStatus = frameLoader->status();
+			if(frames().count() > 1) {
+				newStatus.setText(tr("Loaded frame %1 of %2\n").arg(loadedFrame+1).arg(frames().count()) + newStatus.text());
+			}
 		}
 		catch(Exception& ex) {
 			// Provide a context for this error.
@@ -342,16 +348,14 @@ void FileSource::loadOperationFinished()
 		newStatus = PipelineStatus(PipelineStatus::Error, tr("Load operation has been canceled by the user."));
 	}
 
-	// Reset everything.
-	_frameLoaderWatcher.unsetPromise();
-	_activeFrameLoader.reset();
+	if(_loadedFrameIndex == loadedFrame) {
+		// Set the new object status.
+		setStatus(newStatus);
 
-	// Set the new object status.
-	setStatus(newStatus);
-
-	// Notify dependents that the evaluation request was completed.
-	notifyDependents(ReferenceEvent::PendingStateChanged);
-	notifyDependents(ReferenceEvent::TitleChanged);
+		// Notify dependents that the evaluation request was completed.
+		notifyDependents(ReferenceEvent::PendingStateChanged);
+		notifyDependents(ReferenceEvent::TitleChanged);
+	}
 }
 
 /******************************************************************************
