@@ -248,6 +248,19 @@ void XFormMode::mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event)
 }
 
 /******************************************************************************
+* Is called when a viewport looses the input focus.
+******************************************************************************/
+void XFormMode::focusOutEvent(ViewportWindow* vpwin, QFocusEvent* event)
+{
+	if(_viewport) {
+		// Restore old state if change has not been committed.
+		_viewport->dataset()->undoStack().endCompoundOperation(false);
+		_viewport->dataset()->undoStack().endCompoundOperation(false);
+		_viewport = nullptr;
+	}
+}
+
+/******************************************************************************
 * Returns the origin of the transformation system to use for xform modes.
 ******************************************************************************/
 Point3 XFormMode::transformationCenter()

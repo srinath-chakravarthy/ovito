@@ -145,6 +145,9 @@ protected:
 	/// Handles mouse wheel events.
 	virtual void wheelEvent(QWheelEvent* event) override;
 
+	/// Is called when the widgets looses the input focus.
+	virtual void focusOutEvent(QFocusEvent* event) override;
+
 private:
 
 	/// Renders the contents of the viewport window.

@@ -49,7 +49,7 @@
   </simplesect> 
   
   <simplesect> 
-    <title>How to anlayse the computation results</title>
+    <title>How to analyze the computation results</title>
 
   <para>
     If you are interested in the indices computed by the modifier for a particular particle, you can use OVITO's

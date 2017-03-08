@@ -46,6 +46,7 @@ ViewportWindow::ViewportWindow(Viewport* owner, QWidget* parentWidget) : QOpenGL
 	owner->setWindow(this);
 
 	setMouseTracking(true);
+	setFocusPolicy(Qt::ClickFocus);
 
 	// Determine OpenGL vendor string so other parts of the code can decide
 	// which OpenGL features are save to use.
@@ -431,6 +432,23 @@ void ViewportWindow::leaveEvent(QEvent* event)
 	if(_cursorInContextMenuArea) {
 		_cursorInContextMenuArea = false;
 		viewport()->updateViewport();
+	}
+}
+
+/******************************************************************************
+* Is called when the widgets looses the input focus.
+******************************************************************************/
+void ViewportWindow::focusOutEvent(QFocusEvent* event)
+{
+	ViewportInputMode* mode = _mainWindow->viewportInputManager()->activeMode();
+	if(mode) {
+		try {
+			mode->focusOutEvent(this, event);
+		}
+		catch(const Exception& ex) {
+			qWarning() << "Uncaught exception in viewport event handler:";
+			ex.logError();
+		}
 	}
 }
 

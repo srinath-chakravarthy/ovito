@@ -98,6 +98,9 @@ public:
 	/// \brief Handles the mouse move event for the given viewport.
 	virtual void mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event) override;
 
+	/// Is called when a viewport looses the input focus.
+	virtual void focusOutEvent(ViewportWindow* vpwin, QFocusEvent* event) override;
+
 	/// \brief Returns the origin of the transformation system to use for xform modes.
 	Point3 transformationCenter();
 

@@ -101,6 +101,17 @@ void NavigationMode::mouseReleaseEvent(ViewportWindow* vpwin, QMouseEvent* event
 }
 
 /******************************************************************************
+* Is called when a viewport looses the input focus.
+******************************************************************************/
+void NavigationMode::focusOutEvent(ViewportWindow* vpwin, QFocusEvent* event)
+{
+	if(_viewport) {
+		if(_temporaryActivation)
+			inputManager()->removeInputMode(this);
+	}
+}
+
+/******************************************************************************
 * Handles the mouse move event for the given viewport.
 ******************************************************************************/
 void NavigationMode::mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event)

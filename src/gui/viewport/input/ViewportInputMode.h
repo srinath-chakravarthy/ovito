@@ -107,6 +107,11 @@ public:
 	/// \param event The mouse event.
 	virtual void mouseDoubleClickEvent(ViewportWindow* vpwin, QMouseEvent* event);
 
+	/// \brief Is called when a viewport looses the input focus.
+	/// \param vpwin The viewport window.
+	/// \param event The focus event.
+	virtual void focusOutEvent(ViewportWindow* vpwin, QFocusEvent* event);
+
 	/// \brief Return the mouse cursor shown in the viewport windows
 	///        while this input handler is active.
 	const QCursor& cursor() { return _cursor; }
