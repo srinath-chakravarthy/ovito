@@ -104,6 +104,9 @@ AmbientOcclusionModifier::AmbientOcclusionEngine::AmbientOcclusionEngine(const T
 ******************************************************************************/
 void AmbientOcclusionModifier::AmbientOcclusionEngine::perform()
 {
+	if(_boundingBox.isEmpty() || positions()->size() == 0)
+		throw Exception(tr("Modifier input is degenerate or contains no particles."));
+
 	setProgressText(tr("Computing ambient occlusion"));
 
 	// Create the AmbientOcclusionRenderer instance.
@@ -111,8 +114,6 @@ void AmbientOcclusionModifier::AmbientOcclusionEngine::perform()
 
 	renderer->startRender(nullptr, nullptr);
 	try {
-		OVITO_ASSERT(!_boundingBox.isEmpty());
-
 		// The buffered particle geometry used to render the particles.
 		std::shared_ptr<ParticlePrimitive> particleBuffer;
 
@@ -124,7 +125,7 @@ void AmbientOcclusionModifier::AmbientOcclusionEngine::perform()
 			// Generate lighting direction on unit sphere.
 			FloatType y = (FloatType)sample * 2 / _samplingCount - FloatType(1) + FloatType(1) / _samplingCount;
 			FloatType r = sqrt(FloatType(1) - y * y);
-			FloatType phi = (FloatType)sample * FLOATTYPE_PI * (3.0f - sqrt(5.0f));
+			FloatType phi = (FloatType)sample * FLOATTYPE_PI * (FloatType(3) - sqrt(FloatType(5)));
 			Vector3 dir(cos(phi), y, sin(phi));
 
 			// Set up view projection.
@@ -132,7 +133,7 @@ void AmbientOcclusionModifier::AmbientOcclusionEngine::perform()
 			projParams.viewMatrix = AffineTransformation::lookAlong(_boundingBox.center(), dir, Vector3(0,0,1));
 
 			// Transform bounding box to camera space.
-			Box3 bb = _boundingBox.transformed(projParams.viewMatrix).centerScale(1.01f);
+			Box3 bb = _boundingBox.transformed(projParams.viewMatrix).centerScale(FloatType(1.01));
 
 			// Complete projection parameters.
 			projParams.aspectRatio = 1;
@@ -238,7 +239,7 @@ PipelineStatus AmbientOcclusionModifier::applyComputationResults(TimePoint time,
 	auto c_in = existingColors.cbegin();
 	for(; c != c_end; ++b, ++c, ++c_in) {
 		FloatType factor = FloatType(1) - intens + (*b);
-		if(factor < 1.0f)
+		if(factor < FloatType(1))
 			*c = factor * (*c_in);
 		else
 			*c = *c_in;
