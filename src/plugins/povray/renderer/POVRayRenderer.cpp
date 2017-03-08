@@ -368,6 +368,11 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 		else
 			parameters << "Display=off";
 
+#ifdef Q_OS_WIN
+		// Let the Windows version of POV-Ray exit automatically after rendering is done.
+		parameters << "/EXIT";
+#endif
+
 		// Pass quality settings to POV-Ray.
 		if(qualityLevel())
 			parameters << QString("+Q%1").arg(qualityLevel());
