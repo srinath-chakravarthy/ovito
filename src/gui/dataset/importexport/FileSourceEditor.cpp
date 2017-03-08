@@ -202,7 +202,7 @@ void FileSourceEditor::onPickLocalInputFile()
 		importNewFile(obj, newSourceUrl, importerType);
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -244,7 +244,7 @@ void FileSourceEditor::onPickRemoteInputFile()
 		importNewFile(obj, newSourceUrl, importerType);
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 

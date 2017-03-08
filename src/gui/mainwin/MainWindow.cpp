@@ -44,9 +44,6 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)
 
-// The global list of all open main windows of the application.
-std::vector<MainWindow*> MainWindow::_windowList;
-
 /******************************************************************************
 * The constructor of the main window class.
 ******************************************************************************/
@@ -54,9 +51,6 @@ MainWindow::MainWindow() : _datasetContainer(this)
 {
 	setWindowTitle(tr("Ovito (Open Visualization Tool)"));
 	setAttribute(Qt::WA_DeleteOnClose);
-
-	// Register window in global list.
-	_windowList.push_back(this);
 
 	// Setup the layout of docking widgets.
 	setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
@@ -218,8 +212,6 @@ MainWindow::MainWindow() : _datasetContainer(this)
 ******************************************************************************/
 MainWindow::~MainWindow()
 {
-	// Unregister from global list.
-	_windowList.erase(std::find(_windowList.begin(), _windowList.end(), this));
 }
 
 /******************************************************************************
@@ -227,10 +219,8 @@ MainWindow::~MainWindow()
 ******************************************************************************/
 MainWindow* MainWindow::fromDataset(DataSet* dataset)
 {
-	for(MainWindow* win : _windowList) {
-		if(win->datasetContainer().currentSet() == dataset)
-			return win;
-	}
+	if(GuiDataSetContainer* container = qobject_cast<GuiDataSetContainer*>(dataset->container()))
+		return container->mainWindow();
 	return nullptr;
 }
 
@@ -402,7 +392,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
 	}
 	catch(const Exception& ex) {
 		event->ignore();
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -433,7 +423,7 @@ void MainWindow::openHelpTopic(const QString& page)
 	// Use the web browser to display online help.
 	QString fullPath = helpDir.absoluteFilePath(page.isEmpty() ? QStringLiteral("index.html") : page);
 	if(!QDesktopServices::openUrl(QUrl::fromLocalFile(fullPath))) {
-		Exception(tr("Could not launch web browser to display online manual. The requested file path is %1").arg(fullPath)).showError();
+		Exception(tr("Could not launch web browser to display online manual. The requested file path is %1").arg(fullPath)).reportError();
 	}
 }
 

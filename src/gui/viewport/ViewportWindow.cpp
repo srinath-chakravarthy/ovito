@@ -289,7 +289,7 @@ ViewportPickResult ViewportWindow::pick(const QPointF& pos)
 			}
 		}
 		catch(const Exception& ex) {
-			ex.showError();
+			ex.reportError();
 		}
 	}
 	return {};
@@ -496,7 +496,7 @@ void ViewportWindow::renderNow()
 				);
 			QCoreApplication::removePostedEvents(nullptr, 0);
 			if(_mainWindow) _mainWindow->close();
-			ex.showError();
+			ex.reportError();
 			QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
 			QCoreApplication::exit();
 		}
@@ -533,7 +533,7 @@ void ViewportWindow::renderNow()
 
 			QCoreApplication::removePostedEvents(nullptr, 0);
 			if(_mainWindow) _mainWindow->close();
-			ex.showError();
+			ex.reportError();
 			QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
 			QCoreApplication::exit();
 		}

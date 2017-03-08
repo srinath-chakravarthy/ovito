@@ -58,7 +58,7 @@ OORef<PropertiesEditor> PropertiesEditor::create(RefTarget* obj)
 	catch(Exception& ex) {
 		if(ex.context() == nullptr) ex.setContext(obj->dataset());
 		ex.prependGeneralMessage(tr("Could no create editor component for the %1 object.").arg(obj->objectTitle()));
-		ex.showError();
+		ex.reportError();
 	}
 	return nullptr;
 }

@@ -200,6 +200,7 @@ protected:
 	virtual void mouseReleaseEvent(QMouseEvent* event) override;
 	virtual void mouseMoveEvent(QMouseEvent* event) override;
 	virtual void changeEvent(QEvent* event) override;
+	virtual void focusOutEvent(QFocusEvent* event) override;
 };
 
 OVITO_END_INLINE_NAMESPACE

@@ -105,6 +105,10 @@ OORef<RefTarget> AnimationSettings::clone(bool deepCopy, CloneHelper& cloneHelpe
 ******************************************************************************/
 void AnimationSettings::onTimeChanged(TimePoint newTime)
 {
+	if(_isTimeChanging) {
+		dataset()->makeSceneReady();
+		return;
+	}
 	_isTimeChanging = true;
 
 	// Wait until scene is complete, then generate a timeChangeComplete event.

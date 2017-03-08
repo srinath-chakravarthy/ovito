@@ -249,7 +249,7 @@ void POVRayRendererEditor::createUI(const RolloutInsertionParameters& rolloutPar
 			}
 		}
 		catch(const Exception& ex) {
-			ex.showError();
+			ex.reportError();
 		}			
 	});
 	layout->addWidget(selectExecutablePathButton, 1, 1);

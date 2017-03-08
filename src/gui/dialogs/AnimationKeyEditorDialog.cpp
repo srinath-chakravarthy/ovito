@@ -199,7 +199,7 @@ public:
 					}
 				}
 				catch(const Exception& ex) {
-					ex.showError();
+					ex.reportError();
 				}
 			}
 		}
@@ -442,7 +442,7 @@ void AnimationKeyEditorDialog::onAddKey()
 			_tableWidget->selectRow(index);
 		}
 		catch(const Exception& ex) {
-			ex.showError();
+			ex.reportError();
 		}
 	}
 }
@@ -462,7 +462,7 @@ void AnimationKeyEditorDialog::onDeleteKey()
 		ctrl()->deleteKeys(keysToDelete);
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 

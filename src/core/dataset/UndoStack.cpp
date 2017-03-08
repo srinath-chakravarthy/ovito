@@ -140,7 +140,7 @@ void UndoStack::resetCurrentCompoundOperation()
 		cop->clear();
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 	_isUndoing = false;
 }
@@ -219,7 +219,7 @@ void UndoStack::undo()
 		curOp->undo();
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 	_isUndoing = false;
 	resume();
@@ -250,7 +250,7 @@ void UndoStack::redo()
 		nextOp->redo();
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 	_isRedoing = false;
 	resume();

@@ -306,7 +306,7 @@ void ColorCodingModifierEditor::onExportColorScale()
 		QString imageFilename = fileDialog.imageInfo().filename();
 		if(!image.scaled(legendWidth, legendHeight, Qt::IgnoreAspectRatio, Qt::FastTransformation).save(imageFilename, fileDialog.imageInfo().format())) {
 			Exception ex(tr("Failed to save image to file '%1'.").arg(imageFilename));
-			ex.showError();
+			ex.reportError();
 		}
 	}
 }

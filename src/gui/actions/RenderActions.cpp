@@ -64,7 +64,7 @@ void ActionManager::on_RenderActiveViewport_triggered()
 	}
 	catch(const Exception& ex) {
 		ex.logError();
-		ex.showError();
+		ex.reportError();
 	}
 }
 

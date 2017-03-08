@@ -77,7 +77,7 @@ bool StandaloneApplication::initialize(int& argc, char** argv)
 		}
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError(true);
 		return false;
 	}
 	
@@ -129,7 +129,7 @@ bool StandaloneApplication::initialize(int& argc, char** argv)
 			obj->applicationStarted();
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError(true);
 		shutdown();
 		return false;
 	}

@@ -43,7 +43,7 @@ void StartVRAction::registerActions(ActionManager& actionManager)
 			window->show();
 		}
 		catch(const Exception& ex) {
-			ex.showError();
+			ex.reportError();
 		}
 	});
 }

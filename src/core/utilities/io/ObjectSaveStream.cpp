@@ -37,8 +37,9 @@ ObjectSaveStream::~ObjectSaveStream()
 	try {
 		close();
 	}
-	catch(const Exception& ex) {
-		ex.showError();
+	catch(Exception& ex) {
+		if(!ex.context()) ex.setContext(_dataset);
+		ex.reportError();
 	}
 }
 

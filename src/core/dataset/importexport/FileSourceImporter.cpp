@@ -49,7 +49,7 @@ void FileSourceImporter::requestReload(int frame)
 				fileSource->refreshFromSource(frame);
 			}
 			catch(const Exception& ex) {
-				ex.showError();
+				ex.reportError();
 			}
 		}
 	}
@@ -84,7 +84,7 @@ void FileSourceImporter::requestFramesUpdate()
 				fileSource->updateFrames();
 			}
 			catch(const Exception& ex) {
-				ex.showError();
+				ex.reportError();
 			}
 		}
 	}

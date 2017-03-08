@@ -107,7 +107,7 @@ void UtilityCommandPage::onUtilityButton(QAbstractButton* button)
 		currentUtility->openUtility(_datasetContainer.mainWindow(), rolloutContainer, RolloutInsertionParameters().animate());
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 

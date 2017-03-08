@@ -324,7 +324,7 @@ void VRRenderingWidget::paintGL()
     }
     catch(const Exception& ex) {
         ex.logError();
-        ex.showError();
+        ex.reportError();
     }
 
     // Tell the compositor to begin work immediately instead of waiting for the next WaitGetPoses() call

@@ -348,6 +348,7 @@ void AnimationTrackBar::mousePressEvent(QMouseEvent* event)
 			_dragStartPos = event->pos().x();
 		}
 		_isDragging = false;
+		event->accept();
 		update();
 	}
 	else if(event->button() == Qt::RightButton) {
@@ -365,6 +366,7 @@ void AnimationTrackBar::mousePressEvent(QMouseEvent* event)
 			}
 			showKeyContextMenu(event->pos(), clickedKeys);
 		}
+		event->accept();
 	}
 }
 
@@ -413,6 +415,7 @@ void AnimationTrackBar::mouseMoveEvent(QMouseEvent* event)
 				ctrl->moveKeys(_selectedKeys.targets(), timeDelta);
 			}
 		}
+		event->accept();
 	}
 }
 
@@ -425,6 +428,7 @@ void AnimationTrackBar::mouseReleaseEvent(QMouseEvent* event)
 		_isDragging = false;
 		if(event->button() == Qt::LeftButton)
 			_animSettings->dataset()->undoStack().endCompoundOperation(true);
+		event->accept();
 	}
 }
 

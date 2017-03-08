@@ -101,9 +101,6 @@ bool Application::initialize()
 	// Install custom Qt error message handler to catch fatal errors in debug mode.
 	defaultQtMessageHandler = qInstallMessageHandler(qtMessageOutput);
 
-	// Install default exception handler.
-	Exception::setExceptionHandler(consoleExceptionHandler);
-
 	// Activate default "C" locale, which will be used to parse numbers in strings.
 	std::setlocale(LC_NUMERIC, "C");
 
@@ -210,9 +207,9 @@ void Application::processRunOnceList()
 }
 
 /******************************************************************************
-* Handler function for exceptions used in console mode.
+* Handler function for exceptions.
 ******************************************************************************/
-void Application::consoleExceptionHandler(const Exception& exception)
+void Application::reportError(const Exception& exception, bool blocking)
 {
 	for(int i = exception.messages().size() - 1; i >= 0; i--) {
 		std::cerr << "ERROR: " << qPrintable(exception.messages()[i]) << std::endl;

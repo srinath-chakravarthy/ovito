@@ -33,6 +33,7 @@ SpinnerWidget::SpinnerWidget(QWidget* parent, QLineEdit* textBox) : QWidget(pare
 	_upperBtnPressed(false), _lowerBtnPressed(false), _unit(nullptr)
 {
 	setSizePolicy(QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum, QSizePolicy::SpinBox));
+	setFocusPolicy(Qt::ClickFocus);
 	setTextBox(textBox);
 }
 
@@ -238,23 +239,26 @@ void SpinnerWidget::mousePressEvent(QMouseEvent* event)
 			_lowerBtnPressed = true;
 
 		_currentStepSize = unit() ? unit()->stepSize(floatValue(), _upperBtnPressed) : 1;
-		if(textBox()) textBox()->setFocus(Qt::OtherFocusReason);
 		
+		event->accept();
 		grabMouse();
 		repaint();
 	}
 	else if(event->button() == Qt::RightButton) {
 		
-		// restore old value
-		setFloatValue(_oldValue, true);
+		if(_upperBtnPressed || _lowerBtnPressed) {
+			// restore old value
+			setFloatValue(_oldValue, true);
+		}
 
-		if(_upperBtnPressed == _lowerBtnPressed) {
+		if(_upperBtnPressed && _lowerBtnPressed) {
 			Q_EMIT spinnerDragAbort();
 		}
 
 		_upperBtnPressed = false;
 		_lowerBtnPressed = false;
 
+		event->accept();
 		releaseMouse();
 		update();
 	}	
@@ -266,7 +270,7 @@ void SpinnerWidget::mousePressEvent(QMouseEvent* event)
 void SpinnerWidget::mouseReleaseEvent(QMouseEvent* event)
 {
 	if(_upperBtnPressed || _lowerBtnPressed) {
-		if(_upperBtnPressed == _lowerBtnPressed) {
+		if(_upperBtnPressed && _lowerBtnPressed) {
 			Q_EMIT spinnerDragStop();
 		}
 		else {
@@ -288,9 +292,11 @@ void SpinnerWidget::mouseReleaseEvent(QMouseEvent* event)
 
 		_upperBtnPressed = false;
 		_lowerBtnPressed = false;
+		if(textBox()) textBox()->setFocus(Qt::OtherFocusReason);
 
 		// Repaint spinner.
 		update();
+		event->accept();
 	}
 	releaseMouse();
 }
@@ -354,7 +360,23 @@ void SpinnerWidget::mouseMoveEvent(QMouseEvent* event)
 				}
 			}
 		}
+		event->accept();
 	}
+}
+
+/******************************************************************************
+* Is called when the widgets looses the input focus.
+******************************************************************************/
+void SpinnerWidget::focusOutEvent(QFocusEvent* event)
+{
+	if(_upperBtnPressed && _lowerBtnPressed) {
+		Q_EMIT spinnerDragAbort();
+	}
+	_upperBtnPressed = false;
+	_lowerBtnPressed = false;
+	releaseMouse();
+	
+	QWidget::focusOutEvent(event);
 }
 
 OVITO_END_INLINE_NAMESPACE

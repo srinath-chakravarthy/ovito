@@ -67,7 +67,7 @@ bool GuiDataSetContainer::fileSave()
 		currentSet()->undoStack().setClean();
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 		return false;
 	}
 

@@ -128,7 +128,7 @@ void PluginManager::loadAllPlugins()
 			library->setLoadHints(QLibrary::ExportExternalSymbolsHint);
 			if(!library->load()) {
 				Exception ex(QString("Failed to load native plugin library.\nLibrary file: %1\nError: %2").arg(filePath, library->errorString()));
-				ex.showError();
+				ex.reportError(true);
 			}
 		}
 	}

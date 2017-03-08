@@ -41,14 +41,14 @@ ApplicationSettingsDialog::ApplicationSettingsDialog(QWidget* parent) : QDialog(
 	layout1->addWidget(_tabWidget);
 
 	// Create an iterator that retrieves all ApplicationSettingsDialogPage derived classes.
-	Q_FOREACH(OvitoObjectType* clazz, PluginManager::instance().listClasses(ApplicationSettingsDialogPage::OOType)) {
+	for(OvitoObjectType* clazz : PluginManager::instance().listClasses(ApplicationSettingsDialogPage::OOType)) {
 		try {
 			OORef<ApplicationSettingsDialogPage> page = static_object_cast<ApplicationSettingsDialogPage>(clazz->createInstance(nullptr));
 			_pages.push_back(page);
 			page->insertSettingsDialogPage(this, _tabWidget);
 		}
 		catch(const Exception& ex) {
-			ex.showError();
+			ex.reportError();
 		}	
 	}
 	_tabWidget->setCurrentIndex(0);
@@ -84,8 +84,7 @@ void ApplicationSettingsDialog::onOk()
 		accept();
 	}
 	catch(const Exception& ex) {
-		ex.showError();
-		return;
+		ex.reportError();
 	}
 }
 

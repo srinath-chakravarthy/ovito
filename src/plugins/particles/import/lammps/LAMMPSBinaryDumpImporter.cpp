@@ -261,6 +261,9 @@ void LAMMPSBinaryDumpImporter::LAMMPSBinaryDumpImportTask::parseFile(CompressedT
 {
 	setProgressText(tr("Reading binary LAMMPS dump file %1").arg(frame().sourceFile.toString(QUrl::RemovePassword | QUrl::PreferLocalFile | QUrl::PrettyDecoded)));
 
+	if(frame().byteOffset > 10000)
+		throw Exception(tr("Failed to load byte offset %1").arg(frame().byteOffset));
+
 	// First close text stream so we can re-open it in binary mode.
 	QIODevice& file = stream.device();
 	file.close();

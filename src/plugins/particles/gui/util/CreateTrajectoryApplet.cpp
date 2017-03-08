@@ -259,7 +259,7 @@ void CreateTrajectoryApplet::onCreateTrajectory()
 		transaction.commit();
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 		return;
 	}
 

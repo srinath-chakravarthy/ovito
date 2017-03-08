@@ -341,7 +341,7 @@ void FileSource::loadOperationFinished()
 			ex.setContext(dataset());
 			// Transfer exception message to evaluation status.
 			newStatus = PipelineStatus(PipelineStatus::Error, ex.messages().join(QChar('\n')));
-			ex.showError();
+			ex.reportError();
 		}
 	}
 	else {
@@ -378,7 +378,7 @@ void FileSource::frameDiscoveryFinished()
 		catch(Exception& ex) {
 			// Provide a context for this error.
 			ex.setContext(dataset());
-			ex.showError();
+			ex.reportError();
 		}
 
 		// Jump to the right frame to show the originally selected file.

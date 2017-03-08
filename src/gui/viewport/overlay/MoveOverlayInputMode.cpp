@@ -114,7 +114,7 @@ void MoveOverlayInputMode::mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* ev
 			}
 			catch(const Exception& ex) {
 				inputManager()->removeInputMode(this);
-				ex.showError();
+				ex.reportError();
 			}
 
 			// Force immediate viewport repaints.

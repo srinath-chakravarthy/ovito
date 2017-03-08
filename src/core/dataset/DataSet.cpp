@@ -167,7 +167,7 @@ void DataSet::referenceReplaced(const PropertyFieldDescriptor& field, RefTarget*
 		Q_EMIT selectionSetReplaced(selection());
 	}
 
-	// Install a signal/slot connection that updates the viewports every time the animation time changes.
+	// Install a signal/slot connection that updates the viewports every time the animation time has changed.
 	if(field == PROPERTY_FIELD(viewportConfig) || field == PROPERTY_FIELD(animationSettings)) {
 		disconnect(_updateViewportOnTimeChangeConnection);
 		if(animationSettings() && viewportConfig()) {
@@ -240,6 +240,18 @@ bool DataSet::isSceneReady(TimePoint time) const
 ******************************************************************************/
 Future<void> DataSet::makeSceneReady(const QString& message)
 {
+	// Perform a first quick check if scene is already ready.
+	if(isSceneReady(animationSettings()->time())) {
+		if(!_sceneReadyRequest)
+			return Future<void>::createImmediate(message);
+		else {
+			_sceneReadyRequest->setFinished();
+			Future<void> future(_sceneReadyRequest);
+			_sceneReadyRequest.reset();
+			return future;
+		}
+	}
+
 	// Re-use existing request.
 	if(_sceneReadyRequest) {
 		if(!_sceneReadyRequest->isCanceled())
@@ -249,10 +261,6 @@ Future<void> DataSet::makeSceneReady(const QString& message)
 			_sceneReadyRequest.reset();
 		}
 	}
-
-	// Perform a first quick check if scene is already ready.
-	if(isSceneReady(animationSettings()->time()))
-		return Future<void>::createImmediate(message);
 
 	// If not ready yet, create a future.
 	Future<void> future = Future<void>::createWithPromise();

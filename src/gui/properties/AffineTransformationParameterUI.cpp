@@ -78,7 +78,7 @@ void AffineTransformationParameterUI::updatePropertyValue()
 			Q_EMIT valueEntered();
 		}
 		catch(const Exception& ex) {
-			ex.showError();
+			ex.reportError();
 		}
 	}
 }

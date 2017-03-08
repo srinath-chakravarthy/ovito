@@ -349,7 +349,7 @@ void BinAndReduceModifierEditor::onSaveData()
         }
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 

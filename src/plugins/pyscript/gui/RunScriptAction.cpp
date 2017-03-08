@@ -60,7 +60,7 @@ void RunScriptAction::registerActions(ActionManager& actionManager)
 			engine.executeFile(scriptFile);
 		}
 		catch(const Exception& ex) {
-			ex.showError();
+			ex.reportError();
 		}
 		dataset->undoStack().endCompoundOperation();
 	});

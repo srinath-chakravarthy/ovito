@@ -167,9 +167,6 @@ private:
 
 	/// The OpenGL context used for rendering the viewports.
 	QPointer<QOpenGLContext> _glcontext;
-
-	/// The global list of all open main windows of the application.
-	static std::vector<MainWindow*> _windowList;
 };
 
 OVITO_END_INLINE_NAMESPACE

@@ -38,6 +38,9 @@ public:
 	/// Create the global instance of the right QCoreApplication derived class.
 	virtual void createQtApplication(int& argc, char** argv) override;
 
+	/// Handler function for exceptions.
+	virtual void reportError(const Exception& exception, bool blocking) override;
+
 protected:
 
 	/// Defines the program's command line parameters.
@@ -52,15 +55,18 @@ protected:
 	/// Creates the global FileManager class instance.
 	virtual FileManager* createFileManager() override;
 
+private Q_SLOTS:
+
+	/// Displays an error message box. This slot is called by reportError().
+	void showErrorMessages();
+
 private:
 
 	/// Initializes the graphical user interface of the application.
 	void initializeGUI();
 
-private:
-
-	/// Handler function for exceptions used in GUI mode.
-	static void guiExceptionHandler(const Exception& exception);
+	/// List of errors to be displayed by showErrorMessages().
+	std::deque<Exception> _errorList;
 
 	Q_OBJECT
 };

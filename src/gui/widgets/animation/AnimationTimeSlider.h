@@ -69,6 +69,9 @@ protected:
 
 	/// Handles mouse move events.
 	virtual void mouseMoveEvent(QMouseEvent* event) override;
+
+	/// Is called when the widgets looses the input focus.
+	virtual void focusOutEvent(QFocusEvent* event) override;
 	
 	/// Returns the recommended size of the widget.
 	virtual QSize sizeHint() const override;

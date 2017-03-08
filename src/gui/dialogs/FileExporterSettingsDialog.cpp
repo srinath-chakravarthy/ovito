@@ -153,7 +153,7 @@ void FileExporterSettingsDialog::onOk()
 		accept();
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 

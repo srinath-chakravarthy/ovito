@@ -540,7 +540,7 @@ public:
 			return true;
 		}
 		catch(const Exception& ex) {
-			ex.showError();
+			ex.reportError();
 			return false;
 		}
 	}

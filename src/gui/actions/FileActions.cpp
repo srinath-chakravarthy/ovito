@@ -157,7 +157,7 @@ void ActionManager::on_FileNewWindow_triggered()
 		mainWin->datasetContainer().fileNew();
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -172,7 +172,7 @@ void ActionManager::on_FileNew_triggered()
 		}
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -207,7 +207,7 @@ void ActionManager::on_FileOpen_triggered()
 		mainWindow()->datasetContainer().fileLoad(filename);
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -224,7 +224,7 @@ void ActionManager::on_FileSave_triggered()
 		mainWindow()->datasetContainer().fileSave();
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -237,7 +237,7 @@ void ActionManager::on_FileSaveAs_triggered()
 		mainWindow()->datasetContainer().fileSaveAs();
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -265,7 +265,7 @@ void ActionManager::on_FileImport_triggered()
 		mainWindow()->datasetContainer().importFile(QUrl::fromLocalFile(dialog.fileToImport()), dialog.selectedFileImporterType());
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -284,7 +284,7 @@ void ActionManager::on_FileRemoteImport_triggered()
 		mainWindow()->datasetContainer().importFile(dialog.fileToImport(), dialog.selectedFileImporterType());
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -304,7 +304,7 @@ void ActionManager::on_FileExport_triggered()
 		catch(...) { filterStrings << QString(); }
 	}
 	if(filterStrings.isEmpty()) {
-		Exception(tr("This function is disabled, because there are no export services available."), _dataset).showError();
+		Exception(tr("This function is disabled, because there are no export services available."), _dataset).reportError();
 		return;
 	}
 
@@ -377,7 +377,7 @@ void ActionManager::on_FileExport_triggered()
 		exporter->exportNodes(progressDialog.taskManager());
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 
