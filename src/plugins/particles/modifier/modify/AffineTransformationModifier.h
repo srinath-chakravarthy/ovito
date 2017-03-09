@@ -70,6 +70,9 @@ protected:
 	/// This controls whether the transformation is applied to surface meshes.
 	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, applyToSurfaceMesh, setApplyToSurfaceMesh);
 
+	/// This controls whether the transformation is applied to vector particle and bond properties.
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, applyToVectorProperties, setApplyToVectorProperties);
+
 	Q_OBJECT
 	OVITO_OBJECT
 

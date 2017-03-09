@@ -58,13 +58,16 @@ void AffineTransformationModifierEditor::createUI(const RolloutInsertionParamete
 	layout->addWidget(selectionUI->buttonFalse(), 2, 1);
 	connect(applyToParticlesUI->checkBox(), &QCheckBox::toggled, selectionUI->buttonFalse(), &QRadioButton::setEnabled);
 
-	selectionUI->buttonTrue()->setText(tr("Only to selected particles"));
+	selectionUI->buttonTrue()->setText(tr("Only selected particles"));
 	selectionUI->buttonTrue()->setEnabled(false);
 	layout->addWidget(selectionUI->buttonTrue(), 3, 1);
 	connect(applyToParticlesUI->checkBox(), &QCheckBox::toggled, selectionUI->buttonTrue(), &QRadioButton::setEnabled);
 
+	BooleanParameterUI* applyToVectorPropertiesUI = new BooleanParameterUI(this, PROPERTY_FIELD(AffineTransformationModifier::applyToVectorProperties));
+	layout->addWidget(applyToVectorPropertiesUI->checkBox(), 4, 0, 1, 2);
+
 	BooleanParameterUI* applyToSurfaceMeshUI = new BooleanParameterUI(this, PROPERTY_FIELD(AffineTransformationModifier::applyToSurfaceMesh));
-	layout->addWidget(applyToSurfaceMeshUI->checkBox(), 4, 0, 1, 2);
+	layout->addWidget(applyToSurfaceMeshUI->checkBox(), 5, 0, 1, 2);
 
 	// Create the second rollout.
 	rollout = createRollout(tr("Transformation"), rolloutParams.after(rollout), "particles.modifiers.affine_transformation.html");
