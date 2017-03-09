@@ -168,6 +168,7 @@ cd ovito_release
 cmake -G "NMake Makefiles" ^
    -DCMAKE_BUILD_TYPE=Release ^
    -DCMAKE_INSTALL_PREFIX=../ovito_release_install ^
+   -DOVITO_REDISTRIBUTABLE_PACKAGE=ON ^
    -DZLIB_INCLUDE_DIR=%cd:\=/%/../zlib_install/include ^
    -DZLIB_LIBRARY=%cd:\=/%/../zlib_install/lib/zlib.lib ^
    -Dnetcdf_DIR=%cd:\=/%/../netcdf_install/lib/cmake/netCDF ^

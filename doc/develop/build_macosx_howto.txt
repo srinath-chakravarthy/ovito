@@ -109,6 +109,7 @@ Build OVITO:
 export MACOSX_DEPLOYMENT_TARGET=10.8
 cmake -DOVITO_BUILD_DOCUMENTATION=ON \
       -DCMAKE_BUILD_TYPE=Release \
+	  -DOVITO_REDISTRIBUTABLE_PACKAGE=ON \
       -DCMAKE_INSTALL_PREFIX=../release_install \
       -DCMAKE_PREFIX_PATH=$HOME/progs/Qt/5.7/clang_64/ \
       -DPYTHON_INCLUDE_DIR=/Library/Frameworks/Python.framework/Versions/3.5/include/python3.5m \

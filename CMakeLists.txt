@@ -148,14 +148,9 @@ ELSE()
 	SET(OVITO_RELATIVE_PYTHON_DIRECTORY "${OVITO_RELATIVE_PLUGINS_DIRECTORY}/python")	
 ENDIF()
 
-# Controls whether a static or a shared OVITO executable is built.
-# In a static build, all plugins (and most third-party libraries) are linked into one big executable,
-# which makes distribution easier. In a shared build, plugins are built as shared objects (dynamic link libraries)
-# and it becomes possible to add or remove plugins after distribution.
-IF(UNIX AND NOT APPLE AND CMAKE_COMPILER_IS_GNUCXX)
-	OPTION(OVITO_MONOLITHIC_BUILD "Create one big executable that contains all plugins and third-party libraries." "OFF")
-ENDIF()
-IF(NOT OVITO_MONOLITHIC_BUILD)
+# Controls whether a redistributable installation package of OVITO is built.
+OPTION(OVITO_REDISTRIBUTABLE_PACKAGE "Create a redistributable program package that includes third-party libraries." "OFF")
+IF(NOT OVITO_REDISTRIBUTABLE_PACKAGE)
     SET(OVITO_DEFAULT_LIBRARY_TYPE SHARED)
     
 	# Add the automatically determined parts of the RPATH,
