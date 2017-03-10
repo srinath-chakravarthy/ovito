@@ -68,10 +68,13 @@ protected Q_SLOTS:
 	/// Is called when the user selects a color gradient in the list box.
 	void onColorGradientSelected(int index);
 
-	/// Is called when the user presses the "Adjust Range" button.
+	/// Is called when the user presses the "Adjust range" button.
 	void onAdjustRange();
 
-	/// Is called when the user presses the "Reverse Range" button.
+	/// Is called when the user presses the "Adjust range over all frames" button.
+	void onAdjustRangeGlobal();
+
+	/// Is called when the user presses the "Reverse range" button.
 	void onReverseRange();
 
 	/// Is called when the user presses the "Export color scale" button.

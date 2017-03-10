@@ -215,7 +215,7 @@ void ManualSelectionModifierEditor::resetSelection()
 	if(!mod) return;
 
 	undoableTransaction(tr("Reset selection"), [mod]() {
-		for(const auto& modInput : mod->getModifierInputs())
+		for(const auto& modInput : mod->getModifierInputs(mod->dataset()->animationSettings()->time()))
 			mod->resetSelection(modInput.first, modInput.second);
 	});
 }
@@ -229,7 +229,7 @@ void ManualSelectionModifierEditor::selectAll()
 	if(!mod) return;
 
 	undoableTransaction(tr("Select all"), [mod]() {
-		for(const auto& modInput : mod->getModifierInputs())
+		for(const auto& modInput : mod->getModifierInputs(mod->dataset()->animationSettings()->time()))
 			mod->selectAll(modInput.first, modInput.second);
 	});
 }
@@ -243,7 +243,7 @@ void ManualSelectionModifierEditor::clearSelection()
 	if(!mod) return;
 
 	undoableTransaction(tr("Clear selection"), [mod]() {
-		for(const auto& modInput : mod->getModifierInputs())
+		for(const auto& modInput : mod->getModifierInputs(mod->dataset()->animationSettings()->time()))
 			mod->clearSelection(modInput.first, modInput.second);
 	});
 }
@@ -257,7 +257,7 @@ void ManualSelectionModifierEditor::onParticlePicked(const ParticlePickingHelper
 	if(!mod) return;
 
 	undoableTransaction(tr("Toggle particle selection"), [mod, &pickResult]() {
-		for(const auto& modInput : mod->getModifierInputs()) {
+		for(const auto& modInput : mod->getModifierInputs(mod->dataset()->animationSettings()->time())) {
 
 			// Lookup the right particle in the modifier's input.
 			// Since we cannot rely on the particle's index or identifier, we use the
@@ -286,7 +286,7 @@ void ManualSelectionModifierEditor::onFence(const QVector<Point2>& fence, Viewpo
 	if(!mod) return;
 
 	undoableTransaction(tr("Select particles"), [mod, &fence, viewport, mode]() {
-		for(const auto& modInput : mod->getModifierInputs()) {
+		for(const auto& modInput : mod->getModifierInputs(mod->dataset()->animationSettings()->time())) {
 
 			// Lookup the right particle in the modifier's input.
 			// Since we cannot rely on the particle's index or identifier, we use the

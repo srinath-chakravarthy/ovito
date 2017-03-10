@@ -131,14 +131,16 @@ bool DataSet::referenceEvent(RefTarget* source, ReferenceEvent* event)
 
 			if(source == sceneRoot() && event->type() == ReferenceEvent::PendingStateChanged) {
 				// Serve requests waiting for scene to become ready.
-				Application::instance()->runOnceLater(this, [this]() {
-					if(_sceneReadyRequest) {
-						if(_sceneReadyRequest->isCanceled() || isSceneReady(animationSettings()->time())) {
-							_sceneReadyRequest->setFinished();
-							_sceneReadyRequest.reset();
+				if(_sceneReadyRequest) {
+					Application::instance()->runOnceLater(this, [this]() {
+						if(_sceneReadyRequest) {
+							if(_sceneReadyRequest->isCanceled() || isSceneReady(animationSettings()->time())) {
+								_sceneReadyRequest->setFinished();
+								_sceneReadyRequest.reset();
+							}
 						}
-					}
-				});
+					});
+				}
 			}
 		}
 	}

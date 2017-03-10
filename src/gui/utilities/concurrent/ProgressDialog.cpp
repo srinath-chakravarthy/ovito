@@ -47,11 +47,13 @@ ProgressDialog::ProgressDialog(QWidget* parent, TaskManager& taskManager, const 
 	QDialogButtonBox* buttonBox = new QDialogButtonBox(QDialogButtonBox::Cancel, this);
 	layout->addWidget(buttonBox);
 
-	// Cancel all running tasks when user presses the cancel button.
+	// Cancel all currently running tasks when user presses the cancel button.
 	connect(buttonBox, &QDialogButtonBox::rejected, &taskManager, &TaskManager::cancelAll);
 
+	// Helper function that sets up the UI widgets in the dialog for a newly started task.
 	auto createUIForTask = [this, layout](PromiseWatcher* taskWatcher) {
-		QLabel* statusLabel = new ElidedTextLabel(taskWatcher->progressText());
+		QLabel* statusLabel = new QLabel(taskWatcher->progressText());
+		statusLabel->setMaximumWidth(400);
 		QProgressBar* progressBar = new QProgressBar();
 		progressBar->setMaximum(taskWatcher->progressMaximum());
 		progressBar->setValue(taskWatcher->progressValue());
@@ -69,7 +71,7 @@ ProgressDialog::ProgressDialog(QWidget* parent, TaskManager& taskManager, const 
 			progressBar->setVisible(!text.isEmpty());
 		});
 		
-		// Remove progress display when task finished.
+		// Remove progress display when this task finished.
 		connect(taskWatcher, &PromiseWatcher::finished, progressBar, &QObject::deleteLater);
 		connect(taskWatcher, &PromiseWatcher::finished, statusLabel, &QObject::deleteLater);
 	};
@@ -83,7 +85,7 @@ ProgressDialog::ProgressDialog(QWidget* parent, TaskManager& taskManager, const 
 	connect(&taskManager, &TaskManager::taskStarted, this, createUIForTask);
 
 	// Show the dialog with a short delay.
-	// This prevent the dialog from showing for tasks that terminate very quickly.
+	// This prevents the dialog from showing up for short tasks that terminate very quickly.
 	QTimer::singleShot(100, this, &QDialog::show);
 
 	// Activate local event handling to keep the dialog responsive.

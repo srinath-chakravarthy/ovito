@@ -65,9 +65,8 @@ QVector<ModifierApplication*> Modifier::modifierApplications() const
 * Note: This method might return empty result objects in some cases when the modifier stack
 * cannot be evaluated because of an invalid modifier.
 ******************************************************************************/
-QVector<QPair<ModifierApplication*, PipelineFlowState>> Modifier::getModifierInputs() const
+QVector<QPair<ModifierApplication*, PipelineFlowState>> Modifier::getModifierInputs(TimePoint time) const
 {
-	TimePoint time = dataset()->animationSettings()->time();
 	QVector<QPair<ModifierApplication*, PipelineFlowState>> results;
 	for(RefMaker* dependent : dependents()) {
         ModifierApplication* modApp = dynamic_object_cast<ModifierApplication>(dependent);
@@ -87,9 +86,10 @@ QVector<QPair<ModifierApplication*, PipelineFlowState>> Modifier::getModifierInp
 ******************************************************************************/
 PipelineFlowState Modifier::getModifierInput(ModifierApplication* modApp) const
 {
+	TimePoint time = dataset()->animationSettings()->time();
 	if(modApp != nullptr && modApp->modifier() == this) {
 		if(PipelineObject* pipelineObj = modApp->pipelineObject()) {
-			return pipelineObj->evaluateImmediately(PipelineEvalRequest(dataset()->animationSettings()->time(), false, modApp, false));
+			return pipelineObj->evaluateImmediately(PipelineEvalRequest(time, false, modApp, false));
 		}
 	}
 	else {
@@ -97,7 +97,7 @@ PipelineFlowState Modifier::getModifierInput(ModifierApplication* modApp) const
 			ModifierApplication* modApp = dynamic_object_cast<ModifierApplication>(dependent);
 			if(modApp != nullptr && modApp->modifier() == this) {
 				if(PipelineObject* pipelineObj = modApp->pipelineObject()) {
-					return pipelineObj->evaluateImmediately(PipelineEvalRequest(dataset()->animationSettings()->time(), false, modApp, false));
+					return pipelineObj->evaluateImmediately(PipelineEvalRequest(time, false, modApp, false));
 				}
 			}
 		}

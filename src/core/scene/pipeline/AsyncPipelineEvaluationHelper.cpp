@@ -21,6 +21,7 @@
 
 #include <core/Core.h>
 #include <core/scene/objects/DataObject.h>
+#include <core/app/Application.h>
 #include "AsyncPipelineEvaluationHelper.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
@@ -55,6 +56,18 @@ Future<PipelineFlowState> AsyncPipelineEvaluationHelper::createRequest(DataObjec
 * can be served.
 ******************************************************************************/
 void AsyncPipelineEvaluationHelper::serveRequests(DataObject* owner)
+{
+	if(_requests.empty()) return;
+	Application::instance()->runOnceLater(owner, [this,owner]() {
+		serveRequestsDeferred(owner);
+	});
+}
+
+/******************************************************************************
+* Checks if the data pipeline evaluation is completed and pending requests 
+* can be served.
+******************************************************************************/
+void AsyncPipelineEvaluationHelper::serveRequestsDeferred(DataObject* owner)
 {
 	while(!_requests.empty()) {
 		// Sort out canceled requests.

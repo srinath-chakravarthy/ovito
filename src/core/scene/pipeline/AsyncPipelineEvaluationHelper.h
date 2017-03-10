@@ -46,6 +46,9 @@ public:
 
 private:
 
+	/// Checks if the data pipeline evaluation is completed and pending requests can be served.
+	void serveRequestsDeferred(DataObject* owner);
+
 	/// List of pending pipeline requests and their corresponding promises.
 	std::vector<std::pair<PipelineEvalRequest, PromisePtr<PipelineFlowState>>> _requests;
 };

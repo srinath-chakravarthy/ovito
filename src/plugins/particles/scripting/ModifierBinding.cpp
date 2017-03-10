@@ -108,8 +108,8 @@ void defineModifiersSubmodule(py::module parentModule)
 			"    node.modifiers.append(modifier)\n"
 			"\n"
 			"If, as in the example above, the :py:attr:`.start_value` and :py:attr:`.end_value` parameters are not explicitly set, "
-			"then the modifier automatically adjusts them to the minimum and maximum values of the property when the modifier "
-			"is inserted into the modification pipeline.")
+			"then the modifier automatically adjusts them to the minimum and maximum values of the input property at the time the modifier "
+			"is inserted into the data pipeline.")
 		.def_property("property", &ColorCodingModifier::sourceParticleProperty, &ColorCodingModifier::setSourceParticleProperty)
 		.def_property("particle_property", &ColorCodingModifier::sourceParticleProperty, &ColorCodingModifier::setSourceParticleProperty,
 				"The name of the input particle property that should be used to color particles. "
