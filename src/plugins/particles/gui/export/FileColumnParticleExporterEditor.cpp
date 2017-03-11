@@ -133,6 +133,9 @@ void FileColumnParticleExporterEditor::onContentsReplaced(Ovito::RefTarget* newE
 			_columnMappingWidget->addItems(ex.messages());
 		}
 	}
+
+	// Update the settings stored in the exporter to match the current settings in the UI.
+	saveChanges(particleExporter);	
 }
 
 /******************************************************************************
@@ -170,13 +173,10 @@ void FileColumnParticleExporterEditor::insertPropertyItem(ParticlePropertyRefere
 }
 
 /******************************************************************************
-* Is called when the user checked/unchecked an item.
+* This writes the settings made in the UI back to the exporter.
 ******************************************************************************/
-void FileColumnParticleExporterEditor::onListChanged()
+void FileColumnParticleExporterEditor::saveChanges(FileColumnParticleExporter* particleExporter)
 {
-	FileColumnParticleExporter* particleExporter = dynamic_object_cast<FileColumnParticleExporter>(editObject());
-	if(!particleExporter) return;
-
 	OutputColumnMapping newMapping;
 	for(int index = 0; index < _columnMappingWidget->count(); index++) {
 		if(_columnMappingWidget->item(index)->checkState() == Qt::Checked) {
@@ -184,11 +184,23 @@ void FileColumnParticleExporterEditor::onListChanged()
 		}
 	}
 	particleExporter->setColumnMapping(newMapping);
+}
+
+/******************************************************************************
+* Is called when the user checked/unchecked an item.
+******************************************************************************/
+void FileColumnParticleExporterEditor::onListChanged()
+{
+	FileColumnParticleExporter* particleExporter = dynamic_object_cast<FileColumnParticleExporter>(editObject());
+	if(!particleExporter) return;
+
+	// Stores current settings in exporter object.
+	saveChanges(particleExporter);
 
 	// Remember the output column mapping for the next time.
 	QSettings settings;
 	settings.beginGroup("exporter/particles/");
-	settings.setValue("columnmapping", newMapping.toByteArray());
+	settings.setValue("columnmapping", particleExporter->columnMapping().toByteArray());
 	settings.endGroup();
 }
 
