@@ -50,9 +50,9 @@ public:
 	/// \return The maximum time interval that contains \a time and during which the object is valid.
 	///
 	/// When computing the validity interval of the object, an implementation of this method
-	/// should take validity intervals of all sub-objects and sub-controller into account.
+	/// should take validity intervals of all sub-objects and sub-controllers into account.
 	///
-	/// The default implementation return TimeInterval::infinite().
+	/// The default implementation returns TimeInterval::infinite().
 	virtual TimeInterval objectValidity(TimePoint time) { return TimeInterval::infinite(); }
 
 	/// \brief This asks the object whether it supports the conversion to another object type.

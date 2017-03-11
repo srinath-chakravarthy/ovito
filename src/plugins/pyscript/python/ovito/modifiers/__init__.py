@@ -33,6 +33,7 @@ Python class name                              User interface name
 :py:class:`ConstructSurfaceModifier`           :guilabel:`Construct surface mesh`
 :py:class:`CoordinationNumberModifier`         :guilabel:`Coordination analysis`
 :py:class:`CreateBondsModifier`                :guilabel:`Create bonds`
+:py:class:`CreateIsosurfaceModifier`           :guilabel:`Create isosurface`
 :py:class:`DeleteSelectedParticlesModifier`    :guilabel:`Delete selected particles`
 :py:class:`DislocationAnalysisModifier`        :guilabel:`Dislocation analysis (DXA)`
 :py:class:`ElasticStrainModifier`              :guilabel:`Elastic strain calculation`

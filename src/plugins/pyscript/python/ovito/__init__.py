@@ -189,7 +189,7 @@ def _ObjectNode_compute(self, frame = None):
         have been computed and their output fields are up to date.
 
         This function raises a ``RuntimeError`` when the modification pipeline could not be successfully evaluated for some reason.
-        This may happen due to invalid modifier parameters for example.
+        This may happen due to invalid modifier parameters, for example.
 
         :returns: A reference to the node's internal :py:class:`~ovito.data.DataCollection` containing the output of the modification pipeline.
                   It is also accessible via the :py:attr:`.output` attribute after calling :py:meth:`.compute`.
@@ -201,11 +201,11 @@ def _ObjectNode_compute(self, frame = None):
 
     if not self.wait(time = time):
         raise RuntimeError("Operation has been canceled by the user.")
-    
+
     state = self.eval_pipeline(time)
     assert(state.status.type != PipelineStatus.Type.Error)
     assert(state.status.type != PipelineStatus.Type.Pending)
-    
+
     self.__output = ovito.data.DataCollection()
     self.__output.set_data_objects(state)
 
@@ -214,9 +214,9 @@ def _ObjectNode_compute(self, frame = None):
     # during Python program exit.
     import PyQt5.QtCore
     PyQt5.QtCore.QThreadPool.globalInstance().waitForDone(0)
-        
+
     return self.__output
-   
+
 ObjectNode.compute = _ObjectNode_compute
 
 def _ObjectNode_output(self):

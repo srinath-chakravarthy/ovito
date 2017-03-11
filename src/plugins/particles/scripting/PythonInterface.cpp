@@ -33,6 +33,7 @@
 #include <plugins/particles/objects/BondsDisplay.h>
 #include <plugins/particles/objects/BondPropertyObject.h>
 #include <plugins/particles/objects/BondTypeProperty.h>
+#include <plugins/particles/objects/FieldQuantityObject.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/particles/objects/TrajectoryObject.h>
 #include <plugins/particles/objects/TrajectoryGeneratorObject.h>
@@ -874,6 +875,21 @@ PYBIND11_PLUGIN(Particles)
 				"The display name of this bond type.")
 	;
 
+	ovito_abstract_class<DataObjectWithSharedStorage<FieldQuantity>, DataObject>(m, nullptr, "DataObjectWithSharedFieldQuantityStorage");
+	auto FieldQuantityObject_py = ovito_abstract_class<FieldQuantityObject, DataObjectWithSharedStorage<FieldQuantity>>(m)
+		.def("changed", &FieldQuantityObject::changed,
+				"Informs the object that its stored data has changed. "
+				"This function must be called after each direct modification of the field data "
+				"through the :py:attr:`.marray` attribute.\n\n"
+				"Calling this method on an input field quantity is necessary to invalidate data caches down the data "
+				"pipeline. Forgetting to call this method may result in an incomplete re-evaluation of the data pipeline. "
+				"See :py:attr:`.marray` for more information.")
+		.def_property("name", &FieldQuantityObject::name, &FieldQuantityObject::setName,
+				"The human-readable name of the field quantitz.")
+		.def_property_readonly("components", &FieldQuantityObject::componentCount,
+				"The number of vector components (if this is a vector quantity); otherwise 1 (= scalar quantity).")
+	;
+	
 	ovito_class<TrajectoryObject, DataObject>{m};
 
 	ovito_class<TrajectoryGeneratorObject, TrajectoryObject>(m,

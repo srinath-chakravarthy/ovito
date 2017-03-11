@@ -318,14 +318,14 @@ bool PartitionMeshDisplay::splitFace(TriMesh& output, int faceIndex, int oldVert
 	OVITO_ASSERT(z[2] - z[1] == -(z[1] - z[2]));
 	OVITO_ASSERT(z[0] - z[2] == -(z[2] - z[0]));
 
-	if(std::abs(zd[0]) < 0.5f && std::abs(zd[1]) < 0.5f && std::abs(zd[2]) < 0.5f)
+	if(std::abs(zd[0]) < FloatType(0.5) && std::abs(zd[1]) < FloatType(0.5) && std::abs(zd[2]) < FloatType(0.5))
 		return true;	// Face is not crossing the periodic boundary.
 
 	// Create four new vertices (or use existing ones created during splitting of adjacent faces).
 	int properEdge = -1;
 	int newVertexIndices[3][2];
 	for(int i = 0; i < 3; i++) {
-		if(std::abs(zd[i]) < 0.5f) {
+		if(std::abs(zd[i]) < FloatType(0.5)) {
 			if(properEdge != -1)
 				return false;		// The simulation box may be too small or invalid.
 			properEdge = i;
@@ -334,7 +334,7 @@ bool PartitionMeshDisplay::splitFace(TriMesh& output, int faceIndex, int oldVert
 		int vi1 = face.vertex(i);
 		int vi2 = face.vertex((i+1)%3);
 		int oi1, oi2;
-		if(zd[i] <= -0.5f) {
+		if(zd[i] <= FloatType(-0.5)) {
 			std::swap(vi1, vi2);
 			oi1 = 1; oi2 = 0;
 		}
@@ -348,7 +348,7 @@ bool PartitionMeshDisplay::splitFace(TriMesh& output, int faceIndex, int oldVert
 		}
 		else {
 			Vector3 delta = output.vertex(vi2) - output.vertex(vi1);
-			delta[dim] -= 1.0f;
+			delta[dim] -= FloatType(1);
 			for(size_t d = dim + 1; d < 3; d++) {
 				if(cell.pbcFlags()[d])
 					delta[d] -= floor(delta[d] + FloatType(0.5));
@@ -357,14 +357,14 @@ bool PartitionMeshDisplay::splitFace(TriMesh& output, int faceIndex, int oldVert
 			if(delta[dim] != 0)
 				t = output.vertex(vi1)[dim] / (-delta[dim]);
 			else
-				t = 0.5f;
+				t = FloatType(0.5);
 			OVITO_ASSERT(std::isfinite(t));
 			Point3 p = delta * t + output.vertex(vi1);
 			newVertexIndices[i][oi1] = oldVertexCount + (int)newVertices.size();
 			newVertexIndices[i][oi2] = oldVertexCount + (int)newVertices.size() + 1;
 			newVertexLookupMap.insert(std::make_pair(std::pair<int,int>(vi1, vi2), std::pair<int,int>(newVertexIndices[i][oi1], newVertexIndices[i][oi2])));
 			newVertices.push_back(p);
-			p[dim] += 1.0f;
+			p[dim] += FloatType(1);
 			newVertices.push_back(p);
 		}
 	}

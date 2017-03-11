@@ -36,6 +36,7 @@
 #include <plugins/particles/objects/BondPropertyObject.h>
 #include <plugins/particles/objects/BondTypeProperty.h>
 #include <plugins/particles/objects/BondType.h>
+#include <plugins/particles/objects/FieldQuantityObject.h>
 #include "ParticleFrameLoader.h"
 #include "ParticleImporter.h"
 
@@ -224,6 +225,28 @@ void ParticleFrameLoader::handOver(CompoundObject* container)
 
 			activeObjects.insert(propertyObj);
 		}
+	}
+
+	// Transfer field quantities.
+	for(auto& fq : _fieldQuantities) {
+		OORef<FieldQuantityObject> fqObj;
+		for(const auto& dataObj : container->dataObjects()) {
+			FieldQuantityObject* po = dynamic_object_cast<FieldQuantityObject>(dataObj);
+			if(po != nullptr && po->name() == fq->name()) {
+				fqObj = po;
+				break;
+			}
+		}
+
+		if(fqObj) {
+			fqObj->setStorage(QSharedDataPointer<FieldQuantity>(fq.release()));
+		}
+		else {
+			fqObj = FieldQuantityObject::createFromStorage(container->dataset(), QSharedDataPointer<FieldQuantity>(fq.release()));
+			container->addDataObject(fqObj);
+		}
+
+		activeObjects.insert(fqObj);
 	}
 
 	// Pass timestep information and other metadata to modification pipeline.

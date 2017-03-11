@@ -567,7 +567,7 @@ void TachyonRenderer::renderMesh(const DefaultMeshPrimitive& meshBuffer)
 		Vector3 d2 = mesh.vertex(face->vertex(2)) - p0;
 		*faceNormal = normalTM * (Vector_3<float>)d2.cross(d1);
 		if(*faceNormal != Vector_3<float>::Zero()) {
-			faceNormal->normalize();
+			//faceNormal->normalize();
 			allMask |= face->smoothingGroups();
 		}
 	}

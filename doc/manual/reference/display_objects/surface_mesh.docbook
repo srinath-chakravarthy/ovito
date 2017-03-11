@@ -11,13 +11,21 @@
   <title>Surface mesh display</title>
 
   <para>
-      
     <informalfigure><screenshot><mediaobject><imageobject>
-       <imagedata fileref="images/display_objects/surface_mesh_panel.png" format="PNG" />
+       <imagedata fileref="images/display_objects/surface_mesh_panel.png" format="PNG" scale="50" />
     </imageobject></mediaobject></screenshot></informalfigure>
     
-    This display object is responsible for rendering the polyhedral mesh that is 
-    produced by a <link linkend="particles.modifiers.construct_surface_mesh">Construct surface mesh</link> modifier.    
+    This display object controls the rendering of triangulated surface meshes (two-dimensional manifolds)
+    as produced by, for example, the <link linkend="particles.modifiers.construct_surface_mesh">Construct surface mesh</link>,
+    <link linkend="particles.modifiers.create_isosurface">Create isosurface</link>, 
+    or <link linkend="particles.modifiers.dislocation_analysis">Dislocation analysis</link> modifiers.
+  </para>
+
+  <para>
+    Surfaces meshes in OVITO typically represent closed two-dimensional manifolds that may be periodic 
+    if periodic boundary conditions are active. For visualization purposes, a periodic mesh is first converted to a non-periodic
+    representation by cutting it at the simulation cell boundaries. OVITO can generate so called 
+    'cap polygons' to fill the holes that occur at the intersection of the closed surface with the periodic boundary.
   </para>
 
    <simplesect>
@@ -27,7 +35,7 @@
       <varlistentry>
         <term>Surface color</term>
         <listitem>
-          <para>The rendering color of the surface.</para>
+          <para>The rendering color for the surface.</para>
         </listitem>
       </varlistentry>
       <varlistentry>
@@ -46,8 +54,8 @@
       <varlistentry>
         <term>Cap polygons</term>
         <listitem>
-          <para>OVITO computes the intersection of the surface with the periodic boundaries of the simulation cell.
-          Cap polygons are created to close the cut mesh again. This option enables or disables the display of the cap polygons.</para>
+          <para>This option enables the display of the cap polygons at the intersection of a closed surface 
+          with periodic boundaries.</para>
         </listitem>
       </varlistentry>
 	</variablelist>

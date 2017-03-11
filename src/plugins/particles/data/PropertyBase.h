@@ -23,7 +23,6 @@
 
 
 #include <plugins/particles/Particles.h>
-
 #include <boost/range/iterator_range_core.hpp>
 
 namespace Ovito { namespace Particles {

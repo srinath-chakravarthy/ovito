@@ -120,13 +120,14 @@ private:
 	DECLARE_VECTOR_REFERENCE_FIELD(ModifierApplication, modifierApplications);
 
 	/// The state of the input object from the last evaluation of the pipeline.
+	/// This is used to detect changes in the input that require recalculation of the pipeline.
 	PipelineFlowState _lastInput;
 
 	/// The cached results from the last pipeline evaluation.
 	PipelineFlowState _cachedState;
 
 	/// Indicates which pipeline stage has been stored in the cache.
-	/// If the cache is empty, then this is -1.
+	/// If the cache is empty, then this is set to -1.
 	int _cachedIndex;
 
 	/// Manages pending asynchronous pipeline requests.

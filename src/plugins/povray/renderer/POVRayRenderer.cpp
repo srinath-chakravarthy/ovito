@@ -725,7 +725,7 @@ void POVRayRenderer::renderMesh(const DefaultMeshPrimitive& meshBuffer)
 		Vector3 d2 = mesh.vertex(face->vertex(2)) - p0;
 		*faceNormal = d2.cross(d1);
 		if(*faceNormal != Vector3::Zero()) {
-			faceNormal->normalize();
+			//faceNormal->normalize();
 			allMask |= face->smoothingGroups();
 		}
 	}

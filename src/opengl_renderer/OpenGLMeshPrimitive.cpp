@@ -69,81 +69,110 @@ void OpenGLMeshPrimitive::setMesh(const TriMesh& mesh, const ColorA& meshColor)
 
 	ColoredVertexWithNormal* renderVertices = _vertexBuffer.map(QOpenGLBuffer::ReadWrite);
 
-	quint32 allMask = 0;
+	if(!mesh.hasNormals()) {
+		quint32 allMask = 0;
 
-	// Compute face normals.
-	std::vector<Vector_3<float>> faceNormals(mesh.faceCount());
-	auto faceNormal = faceNormals.begin();
-	for(auto face = mesh.faces().constBegin(); face != mesh.faces().constEnd(); ++face, ++faceNormal) {
-		const Point3& p0 = mesh.vertex(face->vertex(0));
-		Vector3 d1 = mesh.vertex(face->vertex(1)) - p0;
-		Vector3 d2 = mesh.vertex(face->vertex(2)) - p0;
-		*faceNormal = (Vector_3<float>)d1.cross(d2);
-		if(*faceNormal != Vector_3<float>::Zero()) {
-			faceNormal->normalize();
-			allMask |= face->smoothingGroups();
-		}
-	}
-
-	// Initialize render vertices.
-	ColoredVertexWithNormal* rv = renderVertices;
-	faceNormal = faceNormals.begin();
-	ColorAT<float> defaultVertexColor = (ColorAT<float>)meshColor;
-	for(auto face = mesh.faces().constBegin(); face != mesh.faces().constEnd(); ++face, ++faceNormal) {
-
-		// Initialize render vertices for this face.
-		for(size_t v = 0; v < 3; v++, rv++) {
-			if(face->smoothingGroups())
-				rv->normal = Vector_3<float>::Zero();
-			else
-				rv->normal = *faceNormal;
-			rv->pos = (Point_3<float>)mesh.vertex(face->vertex(v));
-			if(mesh.hasVertexColors()) {
-				rv->color = (ColorAT<float>)mesh.vertexColor(face->vertex(v));
-				_hasAlpha |= (rv->color.a() != 1);
-			}
-			else if(mesh.hasFaceColors()) {
-				rv->color = (ColorAT<float>)mesh.faceColor(face - mesh.faces().constBegin());
-				_hasAlpha |= (rv->color.a() != 1);
-			}
-			else if(face->materialIndex() < materialColors().size() && face->materialIndex() >= 0) {
-				rv->color = (ColorAT<float>)materialColors()[face->materialIndex()];
-			}
-			else {
-				rv->color = defaultVertexColor;
+		// Compute face normals.
+		std::vector<Vector_3<float>> faceNormals(mesh.faceCount());
+		auto faceNormal = faceNormals.begin();
+		for(auto face = mesh.faces().constBegin(); face != mesh.faces().constEnd(); ++face, ++faceNormal) {
+			const Point3& p0 = mesh.vertex(face->vertex(0));
+			Vector3 d1 = mesh.vertex(face->vertex(1)) - p0;
+			Vector3 d2 = mesh.vertex(face->vertex(2)) - p0;
+			*faceNormal = (Vector_3<float>)d1.cross(d2);
+			if(*faceNormal != Vector_3<float>::Zero()) {
+				//faceNormal->normalize();
+				allMask |= face->smoothingGroups();
 			}
 		}
-	}
 
-	if(allMask) {
-		std::vector<Vector_3<float>> groupVertexNormals(mesh.vertexCount());
-		for(int group = 0; group < OVITO_MAX_NUM_SMOOTHING_GROUPS; group++) {
-			quint32 groupMask = quint32(1) << group;
-            if((allMask & groupMask) == 0)
-            	continue;	// Group is not used.
+		// Initialize render vertices.
+		ColoredVertexWithNormal* rv = renderVertices;
+		faceNormal = faceNormals.begin();
+		ColorAT<float> defaultVertexColor = (ColorAT<float>)meshColor;
+		for(auto face = mesh.faces().constBegin(); face != mesh.faces().constEnd(); ++face, ++faceNormal) {
 
-			// Reset work arrays.
-            std::fill(groupVertexNormals.begin(), groupVertexNormals.end(), Vector_3<float>::Zero());
-
-			// Compute vertex normals at original vertices for current smoothing group.
-            faceNormal = faceNormals.begin();
-			for(auto face = mesh.faces().constBegin(); face != mesh.faces().constEnd(); ++face, ++faceNormal) {
-				// Skip faces that do not belong to the current smoothing group.
-				if((face->smoothingGroups() & groupMask) == 0) continue;
-
-				// Add face's normal to vertex normals.
-				for(size_t fv = 0; fv < 3; fv++)
-					groupVertexNormals[face->vertex(fv)] += *faceNormal;
-			}
-
-			// Transfer vertex normals from original vertices to render vertices.
-			rv = renderVertices;
-			for(const auto& face : mesh.faces()) {
-				if(face.smoothingGroups() & groupMask) {
-					for(size_t fv = 0; fv < 3; fv++, ++rv)
-						rv->normal += groupVertexNormals[face.vertex(fv)];
+			// Initialize render vertices for this face.
+			for(size_t v = 0; v < 3; v++, rv++) {
+				if(face->smoothingGroups())
+					rv->normal = Vector_3<float>::Zero();
+				else
+					rv->normal = *faceNormal;
+				rv->pos = (Point_3<float>)mesh.vertex(face->vertex(v));
+				if(mesh.hasVertexColors()) {
+					rv->color = (ColorAT<float>)mesh.vertexColor(face->vertex(v));
+					_hasAlpha |= (rv->color.a() != 1);
 				}
-				else rv += 3;
+				else if(mesh.hasFaceColors()) {
+					rv->color = (ColorAT<float>)mesh.faceColor(face - mesh.faces().constBegin());
+					_hasAlpha |= (rv->color.a() != 1);
+				}
+				else if(face->materialIndex() < materialColors().size() && face->materialIndex() >= 0) {
+					rv->color = (ColorAT<float>)materialColors()[face->materialIndex()];
+				}
+				else {
+					rv->color = defaultVertexColor;
+				}
+			}
+		}
+
+		if(allMask) {
+			std::vector<Vector_3<float>> groupVertexNormals(mesh.vertexCount());
+			for(int group = 0; group < OVITO_MAX_NUM_SMOOTHING_GROUPS; group++) {
+				quint32 groupMask = quint32(1) << group;
+				if((allMask & groupMask) == 0)
+					continue;	// Group is not used.
+
+				// Reset work arrays.
+				std::fill(groupVertexNormals.begin(), groupVertexNormals.end(), Vector_3<float>::Zero());
+
+				// Compute vertex normals at original vertices for current smoothing group.
+				faceNormal = faceNormals.begin();
+				for(auto face = mesh.faces().constBegin(); face != mesh.faces().constEnd(); ++face, ++faceNormal) {
+					// Skip faces that do not belong to the current smoothing group.
+					if((face->smoothingGroups() & groupMask) == 0) continue;
+
+					// Add face's normal to vertex normals.
+					for(size_t fv = 0; fv < 3; fv++)
+						groupVertexNormals[face->vertex(fv)] += *faceNormal;
+				}
+
+				// Transfer vertex normals from original vertices to render vertices.
+				rv = renderVertices;
+				for(const auto& face : mesh.faces()) {
+					if(face.smoothingGroups() & groupMask) {
+						for(size_t fv = 0; fv < 3; fv++, ++rv)
+							rv->normal += groupVertexNormals[face.vertex(fv)];
+					}
+					else rv += 3;
+				}
+			}
+		}
+	}
+	else {
+		// Use normals stored in the mesh.
+		ColoredVertexWithNormal* rv = renderVertices;
+		const Vector3* faceNormal = mesh.normals().begin();
+		ColorAT<float> defaultVertexColor = (ColorAT<float>)meshColor;
+		for(auto face = mesh.faces().constBegin(); face != mesh.faces().constEnd(); ++face) {
+			// Initialize render vertices for this face.
+			for(size_t v = 0; v < 3; v++, rv++) {
+				rv->normal = *faceNormal++;
+				rv->pos = (Point_3<float>)mesh.vertex(face->vertex(v));
+				if(mesh.hasVertexColors()) {
+					rv->color = (ColorAT<float>)mesh.vertexColor(face->vertex(v));
+					_hasAlpha |= (rv->color.a() != 1);
+				}
+				else if(mesh.hasFaceColors()) {
+					rv->color = (ColorAT<float>)mesh.faceColor(face - mesh.faces().constBegin());
+					_hasAlpha |= (rv->color.a() != 1);
+				}
+				else if(face->materialIndex() < materialColors().size() && face->materialIndex() >= 0) {
+					rv->color = (ColorAT<float>)materialColors()[face->materialIndex()];
+				}
+				else {
+					rv->color = defaultVertexColor;
+				}
 			}
 		}
 	}

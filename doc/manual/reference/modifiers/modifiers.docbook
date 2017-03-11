@@ -118,6 +118,15 @@
               <entry>Colors particles or bonds based on a property.</entry>
             </row>
 
+		<!-- FIELDS -->
+            <row>
+              <entry namest="name" nameend="descr" align="center" role="subth">Fields</entry>
+            </row>
+            <row>
+              <entry><link linkend="particles.modifiers.create_isosurface">Create isosurface</link></entry>
+              <entry>Constructs isosurfaces from scalar field data.</entry>
+            </row>
+
 		<!-- MODIFICATION -->
             <row>
               <entry namest="name" nameend="descr" align="center" role="subth">Modification</entry>
@@ -237,6 +246,8 @@
   <xi:include href="particles/coordination_analysis.docbook"/>
 
   <xi:include href="particles/create_bonds.docbook"/>
+
+  <xi:include href="particles/create_isosurface.docbook"/>
 
   <xi:include href="particles/delete_selected_particles.docbook"/>
 

@@ -61,6 +61,7 @@
 #include <plugins/particles/modifier/analysis/ptm/PolyhedralTemplateMatchingModifier.h>
 #include <plugins/particles/modifier/analysis/voronoi/VoronoiAnalysisModifier.h>
 #include <plugins/particles/modifier/analysis/diamond/IdentifyDiamondModifier.h>
+#include <plugins/particles/modifier/fields/CreateIsosurfaceModifier.h>
 #include <core/scene/pipeline/ModifierApplication.h>
 #include <core/utilities/concurrent/TaskManager.h>
 #include "PythonBinding.h"
@@ -1502,6 +1503,23 @@ void defineModifiersSubmodule(py::module parentModule)
 		.value("L12_AU", PolyhedralTemplateMatchingModifier::ALLOY_L12_AU)
 		.value("B2", PolyhedralTemplateMatchingModifier::ALLOY_B2)
 	;
+
+	ovito_class<CreateIsosurfaceModifier, AsynchronousParticleModifier>(m,
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
+			"Generates an isosurface from a scalar field defined on a structure grid."
+			"\n\n"
+			"**Modifier outputs:**"
+			"\n\n"
+			" * :py:attr:`DataCollection.surface <ovito.data.DataCollection.surface>` (:py:class:`~ovito.data.SurfaceMesh`):\n"
+			"   The isosurface mesh computed by the modifier.\n"
+			)
+		.def_property("isolevel", &CreateIsosurfaceModifier::isolevel, &CreateIsosurfaceModifier::setIsolevel,
+				"The field value at which to create the isosurface."
+				"\n\n"
+				":Default: 0.0\n")
+		.def_property_readonly("mesh_display", &CreateIsosurfaceModifier::surfaceMeshDisplay,
+				"The :py:class:`~ovito.vis.SurfaceMeshDisplay` controlling the visual representation of the generated isosurface.\n")
+	;	
 }
 
 OVITO_END_INLINE_NAMESPACE

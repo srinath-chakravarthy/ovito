@@ -123,8 +123,8 @@ PipelineFlowState PipelineObject::evaluateImmediately(const PipelineEvalRequest&
 		if(mod->isEnabled() == false)
 			continue;
 
-		// Save current flow state in cache at this point of the pipeline
-		// if the next modifier is changing frequently (because it is currently being edited).
+		// Save the current flow state at this point of the pipeline in the cache
+		// if the next modifier is changing frequently (because of it being currently edited).
 		if(mod->modifierValidity(request.time()).isEmpty()) {
 			_cachedState = flowState;
 			_cachedState.updateRevisionNumbers();
@@ -146,7 +146,7 @@ PipelineFlowState PipelineObject::evaluateImmediately(const PipelineEvalRequest&
 	// Make sure the revision information in the output is up to date.
 	flowState.updateRevisionNumbers();
 
-	// Cache the pipeline output (if not already cached an intermediate state of the pipeline).
+	// Cache the pipeline output (if not already done for an intermediate state of the pipeline).
 	if(_cachedIndex < 0 && flowState.isEmpty() == false) {
 		_cachedState = flowState;
 		_cachedIndex = upToHereIndex;

@@ -116,7 +116,7 @@ public:
 
 	/// \brief Returns the number of bytes per value.
 	/// \return Number of bytes used to store a single value of the data type
-	///         specified by type().
+	///         specified by dataType().
 	size_t dataTypeSize() const { return storage()->dataTypeSize(); }
 
 	/// \brief Returns the number of bytes used per particle.

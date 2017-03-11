@@ -130,7 +130,7 @@ protected:
 	/// that require updating the geometry buffer.
 	SceneObjectCacheHelper<
 		WeakVersionedOORef<DataObject>,		// Camera object + revision number
-		Color									// Display color
+		Color								// Display color
 		> _geometryCacheHelper;
 
 	/// This helper structure is used to detect any changes in the input data

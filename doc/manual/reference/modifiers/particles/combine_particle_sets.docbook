@@ -33,8 +33,8 @@
   </para>
 
   <para>
-    The IDs of particles loaded from the second file are overwritten by the modifier to make sure they
-    do not conflict with any of the IDs in the current dataset.
+    The IDs of particles loaded from the second file are newly assigned by the modifier to ensure that they
+    do not conflict with the existing particle IDs in the current dataset.
   </para>
 
 </section>
