@@ -58,6 +58,7 @@ SET(SourceFiles
 	modifier/modify/CreateBondsModifier.cpp
 	modifier/modify/LoadTrajectoryModifier.cpp
 	modifier/modify/CombineParticleSetsModifier.cpp
+	modifier/modify/CoordinationPolyhedraModifier.cpp
 	modifier/analysis/StructureIdentificationModifier.cpp
 	modifier/analysis/binandreduce/BinAndReduceModifier.cpp
 	modifier/analysis/bondangle/BondAngleAnalysisModifier.cpp

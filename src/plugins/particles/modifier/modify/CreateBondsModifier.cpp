@@ -180,7 +180,7 @@ void CreateBondsModifier::invalidateCachedResults()
 ******************************************************************************/
 void CreateBondsModifier::initializeModifier(PipelineObject* pipeline, ModifierApplication* modApp)
 {
-	ParticleModifier::initializeModifier(pipeline, modApp);
+	AsynchronousParticleModifier::initializeModifier(pipeline, modApp);
 
 	// Adopt the upstream BondsDisplay object if there already is one.
 	PipelineFlowState input = getModifierInput(modApp);

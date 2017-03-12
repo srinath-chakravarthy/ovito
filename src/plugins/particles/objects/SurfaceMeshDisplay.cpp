@@ -807,6 +807,7 @@ bool SurfaceMeshDisplay::isCornerInside3DRegion(const HalfEdgeMesh<>& mesh, cons
 	// Check if any edge is closer to the test point than the closest vertex.
 	for(HalfEdgeMesh<>::Vertex* v : mesh.vertices()) {
 		for(HalfEdgeMesh<>::Edge* edge = v->edges(); edge != nullptr; edge = edge->nextVertexEdge()) {
+			OVITO_ASSERT_MSG(edge->oppositeEdge() != nullptr, "SurfaceMeshDisplay::isCornerInside3DRegion", "Surface mesh is not fully closed. This should not happen.");
 			const Point3& p1 = reducedPos[edge->vertex1()->index()];
 			const Point3& p2 = reducedPos[edge->vertex2()->index()];
 			Vector3 edgeDir = p2 - p1;

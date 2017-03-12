@@ -152,6 +152,10 @@
               <entry>Computes a new property for each particle based a user-defined formula.</entry>
             </row>
             <row>
+              <entry><link linkend="particles.modifiers.coordination_polyhedra">Coordination polyhedra</link></entry>
+              <entry>Shows coordination polyhedra</entry>
+            </row>
+            <row>
               <entry><link linkend="particles.modifiers.delete_selected_particles">Delete selected particles</link></entry>
               <entry>Deletes all selected particles.</entry>
             </row>
@@ -244,6 +248,8 @@
   <xi:include href="particles/construct_surface_mesh.docbook"/>
 
   <xi:include href="particles/coordination_analysis.docbook"/>
+
+  <xi:include href="particles/coordination_polyhedra.docbook"/>
 
   <xi:include href="particles/create_bonds.docbook"/>
 

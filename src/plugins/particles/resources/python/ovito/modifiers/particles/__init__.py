@@ -45,6 +45,7 @@ ovito.modifiers.CombineParticleSetsModifier = ovito.plugins.Particles.Modifiers.
 ovito.modifiers.ComputeBondLengthsModifier = ovito.plugins.Particles.Modifiers.ComputeBondLengthsModifier
 ovito.modifiers.PolyhedralTemplateMatchingModifier = ovito.plugins.Particles.Modifiers.PolyhedralTemplateMatchingModifier
 ovito.modifiers.CreateIsosurfaceModifier = ovito.plugins.Particles.Modifiers.CreateIsosurfaceModifier
+ovito.modifiers.CoordinationPolyhedraModifier = ovito.plugins.Particles.Modifiers.CoordinationPolyhedraModifier
 ovito.modifiers.__all__ += ['ColorCodingModifier', 'AssignColorModifier', 'AmbientOcclusionModifier', 'DeleteSelectedParticlesModifier',
             'ShowPeriodicImagesModifier', 'WrapPeriodicImagesModifier', 'ComputePropertyModifier', 'FreezePropertyModifier',
             'ClearSelectionModifier', 'InvertSelectionModifier', 'ManualSelectionModifier', 'ExpandSelectionModifier',
@@ -54,7 +55,7 @@ ovito.modifiers.__all__ += ['ColorCodingModifier', 'AssignColorModifier', 'Ambie
             'CalculateDisplacementsModifier', 'HistogramModifier', 'ScatterPlotModifier', 'AtomicStrainModifier',
             'WignerSeitzAnalysisModifier', 'VoronoiAnalysisModifier', 'IdentifyDiamondModifier', 'LoadTrajectoryModifier',
             'CombineParticleSetsModifier', 'ComputeBondLengthsModifier', 'PolyhedralTemplateMatchingModifier',
-            'CreateIsosurfaceModifier']
+            'CreateIsosurfaceModifier', 'CoordinationPolyhedraModifier']
 
 # Implement the 'rdf' attribute of the CoordinationNumberModifier class.
 def _CoordinationNumberModifier_rdf(self):

@@ -37,6 +37,7 @@
 #include <plugins/particles/modifier/modify/CreateBondsModifier.h>
 #include <plugins/particles/modifier/modify/LoadTrajectoryModifier.h>
 #include <plugins/particles/modifier/modify/CombineParticleSetsModifier.h>
+#include <plugins/particles/modifier/modify/CoordinationPolyhedraModifier.h>
 #include <plugins/particles/modifier/properties/ComputePropertyModifier.h>
 #include <plugins/particles/modifier/properties/FreezePropertyModifier.h>
 #include <plugins/particles/modifier/properties/ComputeBondLengthsModifier.h>
@@ -1506,20 +1507,31 @@ void defineModifiersSubmodule(py::module parentModule)
 
 	ovito_class<CreateIsosurfaceModifier, AsynchronousParticleModifier>(m,
 			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
-			"Generates an isosurface from a scalar field defined on a structure grid."
+			"Generates an isosurface from a scalar field defined on a structured data grid."
 			"\n\n"
 			"**Modifier outputs:**"
 			"\n\n"
 			" * :py:attr:`DataCollection.surface <ovito.data.DataCollection.surface>` (:py:class:`~ovito.data.SurfaceMesh`):\n"
-			"   The isosurface mesh computed by the modifier.\n"
+			"   The isosurface mesh generted by the modifier.\n"
 			)
 		.def_property("isolevel", &CreateIsosurfaceModifier::isolevel, &CreateIsosurfaceModifier::setIsolevel,
-				"The field value at which to create the isosurface."
+				"The value at which to create the isosurface."
 				"\n\n"
 				":Default: 0.0\n")
+		.def_property("field_quantity", &CreateIsosurfaceModifier::sourceQuantity, &CreateIsosurfaceModifier::setSourceQuantity,
+				"The name of the field quantity for which the isosurface should be constructed.")
 		.def_property_readonly("mesh_display", &CreateIsosurfaceModifier::surfaceMeshDisplay,
 				"The :py:class:`~ovito.vis.SurfaceMeshDisplay` controlling the visual representation of the generated isosurface.\n")
-	;	
+	;
+
+	ovito_class<CoordinationPolyhedraModifier, AsynchronousParticleModifier>(m,
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
+			"Constructs coordination polyhedra around currently selected particles. "
+			"A coordination polyhedron is the convex hull spanned by the bonded neighbors of a particle. ")
+		.def_property_readonly("polyhedra_display", &CoordinationPolyhedraModifier::surfaceMeshDisplay,
+				"A :py:class:`~ovito.vis.SurfaceMeshDisplay` instance controlling the visual representation of the generated polyhedra.\n")
+	;
+	
 }
 
 OVITO_END_INLINE_NAMESPACE

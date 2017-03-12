@@ -32,6 +32,7 @@ Python class name                              User interface name
 :py:class:`ComputePropertyModifier`            :guilabel:`Compute property`
 :py:class:`ConstructSurfaceModifier`           :guilabel:`Construct surface mesh`
 :py:class:`CoordinationNumberModifier`         :guilabel:`Coordination analysis`
+:py:class:`CoordinationPolyhedraModifier`      :guilabel:`Coordination polyhedra`
 :py:class:`CreateBondsModifier`                :guilabel:`Create bonds`
 :py:class:`CreateIsosurfaceModifier`           :guilabel:`Create isosurface`
 :py:class:`DeleteSelectedParticlesModifier`    :guilabel:`Delete selected particles`
