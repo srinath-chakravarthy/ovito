@@ -514,7 +514,7 @@ void ViewportWindow::renderNow()
 				);
 			QCoreApplication::removePostedEvents(nullptr, 0);
 			if(_mainWindow) _mainWindow->close();
-			ex.reportError();
+			ex.reportError(true);
 			QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
 			QCoreApplication::exit();
 		}
@@ -551,7 +551,7 @@ void ViewportWindow::renderNow()
 
 			QCoreApplication::removePostedEvents(nullptr, 0);
 			if(_mainWindow) _mainWindow->close();
-			ex.reportError();
+			ex.reportError(true);
 			QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
 			QCoreApplication::exit();
 		}
