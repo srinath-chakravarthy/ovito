@@ -150,15 +150,16 @@ ENDIF()
 
 # Controls whether a redistributable installation package of OVITO is built.
 OPTION(OVITO_REDISTRIBUTABLE_PACKAGE "Create a redistributable program package that includes third-party libraries." "OFF")
-IF(NOT OVITO_REDISTRIBUTABLE_PACKAGE)
-    SET(OVITO_DEFAULT_LIBRARY_TYPE SHARED)
+
+IF(APPLE OR WIN32 OR NOT OVITO_REDISTRIBUTABLE_PACKAGE)
+	SET(OVITO_DEFAULT_LIBRARY_TYPE SHARED)
     
 	# Add the automatically determined parts of the RPATH,
 	# which point to directories outside the build tree to the install RPATH
 	SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 	    
 ELSE()
-    SET(OVITO_DEFAULT_LIBRARY_TYPE STATIC)
+	SET(OVITO_DEFAULT_LIBRARY_TYPE STATIC)
 ENDIF()
 
 # The directory where the main executable goes to.
