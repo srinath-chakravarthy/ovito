@@ -231,7 +231,7 @@ def process_docstring(app, what, name, obj, options, lines):
 
 def process_signature(app, what, name, obj, options, signature, return_annotation):
     # Look for keyword "SIGNATURE:" in the docstring.
-    # TIt allows the C++ code to specify a custom function signature string for the Python documentation.
+    # This allows the C++ code to specify a custom function signature string for the Python documentation.
     if obj.__doc__:
         for line in obj.__doc__.splitlines():
             if line.strip().startswith("SIGNATURE:"):

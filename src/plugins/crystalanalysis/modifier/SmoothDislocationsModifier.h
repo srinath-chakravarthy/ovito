@@ -73,7 +73,7 @@ private:
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Smooth dislocations");
-	Q_CLASSINFO("ModifierCategory", "Crystal analysis");
+	Q_CLASSINFO("ModifierCategory", "Modification");
 };
 
 }	// End of namespace

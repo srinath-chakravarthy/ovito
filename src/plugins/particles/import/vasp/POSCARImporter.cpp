@@ -258,6 +258,7 @@ void POSCARImporter::POSCARImportTask::parseFile(CompressedTextReader& stream)
 				const char* s = stream.readLine();
 				FloatType* data = electronDensity->dataFloat();
 				setProgressMaximum(electronDensity->size());
+				FloatType cellVolume = simulationCell().volume3D();
 				for(size_t i = 0; i < electronDensity->size(); i++, ++data) {
 					const char* token;
 					for(;;) {
@@ -271,6 +272,7 @@ void POSCARImporter::POSCARImportTask::parseFile(CompressedTextReader& stream)
 					}
 					if(!parseFloatType(token, s, *data))
 						throw Exception(tr("Invalid value in charge density section (line %1): \"%2\"").arg(stream.lineNumber()).arg(QString::fromLocal8Bit(token, s - token)));
+					*data /= cellVolume;
 					if(*s != '\0')
 						s++;
 
