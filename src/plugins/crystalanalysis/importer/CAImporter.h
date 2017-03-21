@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CRYSTALANALYSIS_IMPORTER_H
-#define __OVITO_CRYSTALANALYSIS_IMPORTER_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/crystalanalysis/objects/patterns/StructurePattern.h>
@@ -132,7 +132,7 @@ protected:
 	virtual void propertyChanged(const PropertyFieldDescriptor& field) override;
 
 	/// \brief Scans the given input file to find all contained simulation frames.
-	virtual void scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream) override;
+	virtual void scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream) override;
 
 private:
 
@@ -147,4 +147,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CRYSTALANALYSIS_IMPORTER_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_GSD_FILE_H
-#define __OVITO_GSD_FILE_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include "GSDImporter.h"
@@ -78,13 +78,17 @@ public:
 
 	/// Returns whether a chunk with the given name exists.
 	bool hasChunk(const char* chunkName, uint64_t frame) {
-		return ::gsd_find_chunk(&_handle, frame, chunkName) != nullptr;
+		if(::gsd_find_chunk(&_handle, frame, chunkName) != nullptr) return true;
+		if(frame != 0 && ::gsd_find_chunk(&_handle, 0, chunkName) != nullptr) return true;
+		return false;
 	}
 
 	/// Reads a single unsigned 64-bit integer from the GSD file, or returns a default value if the chunk is not present in the file.
 	template<typename T>
 	T readOptionalScalar(const char* chunkName, uint64_t frame, T defaultValue) {
-		if(auto chunk = ::gsd_find_chunk(&_handle, frame, chunkName)) {
+		auto chunk = ::gsd_find_chunk(&_handle, frame, chunkName);
+		if(!chunk && frame != 0) chunk = ::gsd_find_chunk(&_handle, 0, chunkName);
+		if(chunk) {
 			if(chunk->N != 1 || chunk->M != 1)
 				throw Exception(GSDImporter::tr("GSD file I/O error: Chunk '%1' does not contain a scalar value.").arg(chunkName));
 			if(chunk->type != gsdDataType<T>())
@@ -104,7 +108,9 @@ public:
 	/// Reads an one-dimensional array from the GSD file if the data chunk is present.
 	template<typename T, size_t N>
 	void readOptional1DArray(const char* chunkName, uint64_t frame, std::array<T,N>& a) {
-		if(auto chunk = ::gsd_find_chunk(&_handle, frame, chunkName)) {
+		auto chunk = ::gsd_find_chunk(&_handle, frame, chunkName);
+		if(!chunk && frame != 0) chunk = ::gsd_find_chunk(&_handle, 0, chunkName);
+		if(chunk) {
 			if(chunk->N != a.size() || chunk->M != 1)
 				throw Exception(GSDImporter::tr("GSD file I/O error: Chunk '%1' does not contain a 1-dimensional array of the expected size.").arg(chunkName));
 			if(chunk->type != gsdDataType<T>())
@@ -123,7 +129,9 @@ public:
 	/// Reads an array of strings from the GSD file.
 	QStringList readStringTable(const char* chunkName, uint64_t frame) {
 		QStringList result;
-		if(auto chunk = ::gsd_find_chunk(&_handle, frame, chunkName)) {
+		auto chunk = ::gsd_find_chunk(&_handle, frame, chunkName);
+		if(!chunk && frame != 0) chunk = ::gsd_find_chunk(&_handle, 0, chunkName);
+		if(chunk) {
 			if(chunk->type != GSD_TYPE_INT8 && chunk->type != GSD_TYPE_UINT8)
 				throw Exception(GSDImporter::tr("GSD file I/O error: Data type of chunk '%1' is not GSD_TYPE_UINT8 but %2.").arg(chunkName).arg(chunk->type));
 			std::vector<char> buffer(chunk->N * chunk->M);
@@ -146,8 +154,9 @@ public:
 	template<typename T>
 	void readFloatArray(const char* chunkName, uint64_t frame, T* buffer, size_t numElements, size_t componentCount = 1) {
 		auto chunk = ::gsd_find_chunk(&_handle, frame, chunkName);
+		if(!chunk && frame != 0) chunk = ::gsd_find_chunk(&_handle, 0, chunkName);
 		if(!chunk)
-			throw Exception(GSDImporter::tr("GSD file I/O error: Chunk '%1' does not exist at frame %2.").arg(chunkName).arg(frame));
+			throw Exception(GSDImporter::tr("GSD file I/O error: Chunk '%1' does not exist at frame %2 (or the initial frame).").arg(chunkName).arg(frame));
 		if(chunk->type != GSD_TYPE_FLOAT)
 			throw Exception(GSDImporter::tr("GSD file I/O error: Data type of chunk '%1' is not GSD_TYPE_FLOAT but %2.").arg(chunkName).arg(chunk->type));
 		if(chunk->N != numElements)
@@ -175,8 +184,9 @@ public:
 
 	void readIntArray(const char* chunkName, uint64_t frame, int* buffer, size_t numElements, size_t intsPerElement = 1) {
 		auto chunk = ::gsd_find_chunk(&_handle, frame, chunkName);
+		if(!chunk && frame != 0) chunk = ::gsd_find_chunk(&_handle, 0, chunkName);
 		if(!chunk)
-			throw Exception(GSDImporter::tr("GSD file I/O error: Chunk '%1' does not exist at frame %2.").arg(chunkName).arg(frame));
+			throw Exception(GSDImporter::tr("GSD file I/O error: Chunk '%1' does not exist at frame %2 (or the initial frame).").arg(chunkName).arg(frame));
 		if(chunk->type != GSD_TYPE_INT32 && chunk->type != GSD_TYPE_UINT32)
 			throw Exception(GSDImporter::tr("GSD file I/O error: Data type of chunk '%1' is not GSD_TYPE_INT32 but %2.").arg(chunkName).arg(chunk->type));
 		if(chunk->N != numElements)
@@ -202,4 +212,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_GSD_FILE_H
+

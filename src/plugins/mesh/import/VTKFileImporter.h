@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VTK_FILE_IMPORTER_H
-#define __OVITO_VTK_FILE_IMPORTER_H
+#pragma once
+
 
 #include <core/dataset/importexport/FileSourceImporter.h>
 #include <plugins/mesh/Mesh.h>
@@ -83,4 +83,4 @@ private:
 
 };
 
-#endif // __OVITO_VTK_FILE_IMPORTER_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VIEWPORT_H
-#define __OVITO_VIEWPORT_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/reference/RefTarget.h>
@@ -354,4 +354,4 @@ Q_DECLARE_TYPEINFO(Ovito::Viewport::ViewType, Q_PRIMITIVE_TYPE);
 
 #include <core/rendering/SceneRenderer.h>
 
-#endif // __OVITO_VIEWPORT_H
+

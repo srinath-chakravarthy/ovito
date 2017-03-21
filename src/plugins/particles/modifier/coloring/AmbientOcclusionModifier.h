@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_AMBIENT_OCCLUSION_MODIFIER_H
-#define __OVITO_AMBIENT_OCCLUSION_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/modifier/AsynchronousParticleModifier.h>
@@ -44,7 +44,7 @@ public:
 	public:
 
 		/// Constructor.
-		AmbientOcclusionEngine(const TimeInterval& validityInterval, int resolution, int samplingCount, ParticleProperty* positions, const Box3& boundingBox, std::vector<FloatType>&& particleRadii);
+		AmbientOcclusionEngine(const TimeInterval& validityInterval, int resolution, int samplingCount, ParticleProperty* positions, const Box3& boundingBox, std::vector<FloatType>&& particleRadii, DataSet* dataset);
 
 		/// Computes the modifier's results and stores them in this object for later retrieval.
 		virtual void perform() override;
@@ -57,6 +57,7 @@ public:
 
 	private:
 
+		DataSet* _dataset;
 		int _resolution;
 		int _samplingCount;
 		QExplicitlySharedDataPointer<ParticleProperty> _positions;
@@ -113,4 +114,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_AMBIENT_OCCLUSION_MODIFIER_H
+

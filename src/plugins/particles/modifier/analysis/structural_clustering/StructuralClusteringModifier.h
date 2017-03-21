@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_STRUCTURAL_CLUSTERING_MODIFIER_H
-#define __OVITO_STRUCTURAL_CLUSTERING_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/ParticleProperty.h>
@@ -126,4 +126,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_STRUCTURAL_CLUSTERING_MODIFIER_H
+

@@ -28,6 +28,7 @@
 #include <core/animation/AnimationSettings.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/utilities/io/FileManager.h>
+#include <core/app/Application.h>
 #include "FileSourceImporter.h"
 #include "FileSource.h"
 
@@ -48,7 +49,7 @@ void FileSourceImporter::requestReload(int frame)
 				fileSource->refreshFromSource(frame);
 			}
 			catch(const Exception& ex) {
-				ex.showError();
+				ex.reportError();
 			}
 		}
 	}
@@ -83,7 +84,7 @@ void FileSourceImporter::requestFramesUpdate()
 				fileSource->updateFrames();
 			}
 			catch(const Exception& ex) {
-				ex.showError();
+				ex.reportError();
 			}
 		}
 	}
@@ -190,11 +191,12 @@ bool FileSourceImporter::importFile(const QUrl& sourceUrl, ImportMode importMode
 	dataset()->selection()->setNode(node);
 
 	if(importMode != ReplaceSelected) {
-		// Adjust views to completely show the newly imported object.
-		OORef<DataSet> ds(dataset());
-		ds->runWhenSceneIsReady([ds]() {
-			ds->viewportConfig()->zoomToSelectionExtents();
-		});
+		// Adjust viewports to completely show the newly imported object.
+		// This needs to be done after the data has been completely loaded.
+		PromiseWatcher* watcher = new PromiseWatcher(this);
+		connect(watcher, &PromiseWatcher::finished, dataset()->viewportConfig(), &ViewportConfiguration::zoomToSelectionExtents);
+		connect(watcher, &PromiseWatcher::finished, watcher, &QObject::deleteLater);	// Self-destruct watcher object when it's no longer needed.
+		watcher->setFuture(dataset()->makeSceneReady());
 	}
 
 	transaction.commit();
@@ -242,7 +244,7 @@ Future<QVector<FileSourceImporter::Frame>> FileSourceImporter::findWildcardMatch
 
 			try {
 				// Retrieve list of files in remote directory.
-				Future<QStringList> fileListFuture = FileManager::instance().listDirectoryContents(directoryUrl);
+				Future<QStringList> fileListFuture = Application::instance()->fileManager()->listDirectoryContents(directoryUrl);
 				if(!datasetContainer->taskManager().waitForTask(fileListFuture))
 					return Future<QVector<Frame>>::createCanceled();
 
@@ -262,7 +264,7 @@ Future<QVector<FileSourceImporter::Frame>> FileSourceImporter::findWildcardMatch
 		// A file called "abc9.xyz" must come before a file named "abc10.xyz", which is not
 		// the default lexicographic ordering.
 		QMap<QString, QString> sortedFilenames;
-		Q_FOREACH(QString oldName, entries) {
+		for(const QString& oldName : entries) {
 			// Generate a new name from the original filename that yields the correct ordering.
 			QString newName;
 			QString number;

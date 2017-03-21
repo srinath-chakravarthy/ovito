@@ -80,7 +80,7 @@ void LAMMPSBinaryDumpImporter::setColumnMapping(const InputColumnMapping& mappin
 {
 	_columnMapping = mapping;
 
-	if(Application::instance().guiMode()) {
+	if(Application::instance()->guiMode()) {
 		// Remember the mapping for the next time.
 		QSettings settings;
 		settings.beginGroup("viz/importer/lammps_binary_dump/");
@@ -119,10 +119,10 @@ InputColumnMapping LAMMPSBinaryDumpImporter::inspectFileHeader(const Frame& fram
 /******************************************************************************
 * Scans the given input file to find all contained simulation frames.
 ******************************************************************************/
-void LAMMPSBinaryDumpImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
+void LAMMPSBinaryDumpImporter::scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
 {
-	futureInterface.setProgressText(tr("Scanning binary LAMMPS dump file %1").arg(stream.filename()));
-	futureInterface.setProgressRange(stream.underlyingSize() / 1000);
+	promise.setProgressText(tr("Scanning binary LAMMPS dump file %1").arg(stream.filename()));
+	promise.setProgressMaximum(stream.underlyingSize() / 1000);
 
 	// First close text stream so we can re-open it in binary mode.
 	QIODevice& file = stream.device();
@@ -136,7 +136,7 @@ void LAMMPSBinaryDumpImporter::scanFileForTimesteps(FutureInterfaceBase& futureI
 	QString filename = fileInfo.fileName();
 	QDateTime lastModified = fileInfo.lastModified();
 
-	while(!file.atEnd()) {
+	while(!file.atEnd() && !promise.isCanceled()) {
 		qint64 byteOffset = file.pos();
 
 		// Parse file header.
@@ -158,8 +158,8 @@ void LAMMPSBinaryDumpImporter::scanFileForTimesteps(FutureInterfaceBase& futureI
 			if(!file.seek(filePos))
 				throw Exception(tr("Unexpected end of file."));
 
-			futureInterface.setProgressValue(filePos / 1000);
-			if(futureInterface.isCanceled())
+			promise.setProgressValue(filePos / 1000);
+			if(promise.isCanceled())
 				return;
 		}
 
@@ -284,7 +284,7 @@ void LAMMPSBinaryDumpImporter::LAMMPSBinaryDumpImportTask::parseFile(CompressedT
 		return;
 	}
 
-	setProgressRange(header.natoms);
+	setProgressMaximum(header.natoms);
 
 	// LAMMPS only stores the outer bounding box of the simulation cell in the dump file.
 	// We have to determine the size of the actual triclinic cell.

@@ -19,11 +19,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PROPERTY_BASE_H
-#define __OVITO_PROPERTY_BASE_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
-
 #include <boost/range/iterator_range_core.hpp>
 
 namespace Ovito { namespace Particles {
@@ -508,4 +507,4 @@ protected:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PROPERTY_BASE_H
+

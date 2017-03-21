@@ -38,8 +38,8 @@ void PickingSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParame
 	ViewportWindow* vpWindow = static_cast<ViewportWindow*>(vp->window());
 	if(!vpWindow)
 		throwException(tr("Viewport window has not been created."));
-	if(!vpWindow->isExposed())
-		throwException(tr("Viewport window is not exposed."));
+	if(!vpWindow->isVisible())
+		throwException(tr("Viewport window is not visible."));
 
 	// Get OpenGL context.
 	QOpenGLContext* context = vpWindow->context();
@@ -52,11 +52,7 @@ void PickingSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParame
 	_oldSurface = _oldContext ? _oldContext->surface() : nullptr;
 
 	// Make GL context current.
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-	if(!context->makeCurrent(vpWindow))
-#else
 	if(!context->makeCurrent(vpWindow->window()->windowHandle()))
-#endif
 		throwException(tr("Failed to make OpenGL context current."));
 
 	// Create OpenGL framebuffer.
@@ -66,11 +62,7 @@ void PickingSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParame
 	_framebufferObject.reset(new QOpenGLFramebufferObject(size.width(), size.height(), framebufferFormat));
 
 	// Clear OpenGL error state.
-#if QT_VERSION >= QT_VERSION_CHECK(5, 3, 0)
 	while(context->functions()->glGetError() != GL_NO_ERROR);
-#else
-	while(::glGetError() != GL_NO_ERROR);
-#endif
 	if(!_framebufferObject->isValid())
 		throwException(tr("Failed to create OpenGL framebuffer object for offscreen rendering."));
 
@@ -88,13 +80,13 @@ void PickingSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParame
 /******************************************************************************
 * Renders the current animation frame.
 ******************************************************************************/
-bool PickingSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress)
+bool PickingSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, TaskManager& taskManager)
 {
 	// Clear previous object records.
 	reset();
 
 	// Let the base class do the main rendering work.
-	if(!ViewportSceneRenderer::renderFrame(frameBuffer, stereoTask, progress))
+	if(!ViewportSceneRenderer::renderFrame(frameBuffer, stereoTask, taskManager))
 		return false;
 
 	// Clear OpenGL error state, so we start fresh for the glReadPixels() call below.
@@ -142,11 +134,11 @@ bool PickingSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRendering
 /******************************************************************************
 * This method is called after renderFrame() has been called.
 ******************************************************************************/
-void PickingSceneRenderer::endFrame()
+void PickingSceneRenderer::endFrame(bool renderSuccessful)
 {
 	endPickObject();
 	_framebufferObject.reset();
-	ViewportSceneRenderer::endFrame();
+	ViewportSceneRenderer::endFrame(renderSuccessful);
 
 	// Reactivate old GL context.
 	if(_oldSurface && _oldContext)

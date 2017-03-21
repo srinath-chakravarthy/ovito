@@ -19,11 +19,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PYTHON_SCRIPT_MODIFIER_H
-#define __OVITO_PYTHON_SCRIPT_MODIFIER_H
+#pragma once
+
 
 #include <plugins/pyscript/PyScript.h>
-#include <core/utilities/concurrent/FutureInterface.h>
+#include <core/utilities/concurrent/Task.h>
 #include <core/scene/pipeline/Modifier.h>
 #include <core/scene/objects/CompoundObject.h>
 #include <plugins/pyscript/engine/ScriptEngine.h>
@@ -37,21 +37,6 @@ using namespace Ovito;
  */
 class OVITO_PYSCRIPT_EXPORT PythonScriptModifier : public Modifier
 {
-public:
-
-	// A helper class that provides the progress callback interface for Python scripts.
-	class ProgressHelper : public FutureInterface<void>
-	{
-	public:
-
-		virtual void cancel() override {
-			FutureInterface<void>::cancel();
-			// Since this task runs in the main application thread, canceling it
-			// means immediate termination.
-			reportFinished();
-		}
-	};
-
 public:
 
 	/// \brief Constructor.
@@ -91,6 +76,9 @@ public:
 
 	/// Returns whether the modifier can be applied to the given input data.
 	virtual bool isApplicableTo(const PipelineFlowState& input) override { return true; }
+
+	/// Loads the default values of this object's parameter fields.
+	virtual void loadUserDefaults() override;
 
 protected:
 
@@ -148,7 +136,7 @@ private:
 	bool _scriptExecutionQueued;
 
 	/// The running script task.
-	std::shared_ptr<ProgressHelper> _runningTask;
+	std::unique_ptr<SynchronousTask> _runningTask;
 
 	/// The generator object returned by the script function.
 	py::object _generatorObject;
@@ -168,4 +156,4 @@ private:
 
 }	// End of namespace
 
-#endif // __OVITO_PYTHON_SCRIPT_MODIFIER_H
+

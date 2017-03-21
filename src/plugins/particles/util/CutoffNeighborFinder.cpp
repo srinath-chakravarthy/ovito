@@ -27,8 +27,9 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util)
 /******************************************************************************
 * Initialization function.
 ******************************************************************************/
-bool CutoffNeighborFinder::prepare(FloatType cutoffRadius, ParticleProperty* positions, const SimulationCell& cellData, ParticleProperty* selectionProperty, FutureInterfaceBase* progress)
+bool CutoffNeighborFinder::prepare(FloatType cutoffRadius, ParticleProperty* positions, const SimulationCell& cellData, ParticleProperty* selectionProperty, PromiseBase& promise)
 {
+	promise.setProgressMaximum(0);
 	OVITO_CHECK_POINTER(positions);
 
 	_cutoffRadius = cutoffRadius;
@@ -128,7 +129,7 @@ bool CutoffNeighborFinder::prepare(FloatType cutoffRadius, ParticleProperty* pos
 		for(int ix = -stencilRadiusX; ix <= stencilRadiusX; ix++) {
 			for(int iy = -stencilRadiusY; iy <= stencilRadiusY; iy++) {
 				for(int iz = -stencilRadiusZ; iz <= stencilRadiusZ; iz++) {
-					if(progress && progress->isCanceled())
+					if(promise.isCanceled())
 						return false;
 					if(std::abs(ix) < stencilRadius && std::abs(iy) < stencilRadius && std::abs(iz) < stencilRadius)
 						continue;
@@ -160,7 +161,7 @@ bool CutoffNeighborFinder::prepare(FloatType cutoffRadius, ParticleProperty* pos
 	const Point3* p = positions->constDataPoint3();
 	for(size_t pindex = 0; pindex < particles.size(); pindex++, ++p) {
 
-		if(progress && progress->isCanceled())
+		if(promise.isCanceled())
 			return false;
 
 		NeighborListParticle& a = particles[pindex];
@@ -203,7 +204,7 @@ bool CutoffNeighborFinder::prepare(FloatType cutoffRadius, ParticleProperty* pos
 		bins[binIndex] = &a;
 	}
 
-	return (!progress || !progress->isCanceled());
+	return !promise.isCanceled();
 }
 
 /******************************************************************************

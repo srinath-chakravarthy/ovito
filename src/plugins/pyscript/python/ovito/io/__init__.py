@@ -11,10 +11,12 @@ that reads its input data from an external file.
 """
 
 import ovito.data
-import PyScriptScene
+import ovito.plugins.PyScript.Scene
 
 # Load the native module.
-from PyScriptFileIO import *
+from ..plugins.PyScript.IO import *
+
+__all__ = ['import_file', 'export_file', 'FileSource']
 
 def import_file(location, **params):
     """ This high-level function imports external data from a file. 
@@ -157,11 +159,11 @@ def _FileSource_load(self, location, **params):
         raise RuntimeError("Operation has been canceled by the user.")
     
     # Block execution until data has been loaded. 
-    if not self.wait_until_ready(self.dataset.anim.time, "Script is waiting for I/O operation to finish.", ovito.get_progress_display()):
+    if not self.wait_until_ready(self.dataset.anim.time):
         raise RuntimeError("Operation has been canceled by the user.")
     
     # Raise Python error if loading failed.
-    if self.status.type == PyScriptScene.PipelineStatus.Type.Error:
+    if self.status.type == ovito.plugins.PyScript.Scene.PipelineStatus.Type.Error:
         raise RuntimeError(self.status.text)
     
 FileSource.load = _FileSource_load
@@ -295,7 +297,7 @@ def export_file(node, file, format, **params):
         raise ValueError("Invalid node parameter.")
 
     # Export data.
-    if not exporter.export_nodes(ovito.get_progress_display()):
+    if not exporter.export_nodes(ovito.task_manager):
         raise RuntimeError("Operation has been canceled by the user.")
 
 # This is the table of export formats used by the export_file() function

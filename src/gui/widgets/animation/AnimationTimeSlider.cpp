@@ -45,6 +45,7 @@ AnimationTimeSlider::AnimationTimeSlider(MainWindow* mainWindow, QWidget* parent
 	setFrameShape(QFrame::NoFrame);
 	setAutoFillBackground(true);
 	setMouseTracking(true);
+	setFocusPolicy(Qt::ClickFocus);
 
 	connect(&mainWindow->datasetContainer(), &DataSetContainer::animationSettingsReplaced, this, &AnimationTimeSlider::onAnimationSettingsReplaced);
 }
@@ -194,7 +195,17 @@ void AnimationTimeSlider::mousePressEvent(QMouseEvent* event)
 		_dragPos = thumbRect.width() / 2;
 		mouseMoveEvent(event);
 	}
+	event->accept();
 	update();
+}
+
+/******************************************************************************
+* Is called when the widgets looses the input focus.
+******************************************************************************/
+void AnimationTimeSlider::focusOutEvent(QFocusEvent* event)
+{
+	_dragPos = -1;
+	QFrame::focusOutEvent(event);
 }
 
 /******************************************************************************
@@ -203,6 +214,7 @@ void AnimationTimeSlider::mousePressEvent(QMouseEvent* event)
 void AnimationTimeSlider::mouseReleaseEvent(QMouseEvent* event)
 {
 	_dragPos = -1;
+	event->accept();
 	update();
 }
 
@@ -211,6 +223,8 @@ void AnimationTimeSlider::mouseReleaseEvent(QMouseEvent* event)
 ******************************************************************************/
 void AnimationTimeSlider::mouseMoveEvent(QMouseEvent* event)
 {
+	event->accept();
+
 	int newPos;
 	int thumbSize = thumbWidth();
 

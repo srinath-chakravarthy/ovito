@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_COLOR_CODING_MODIFIER_H
-#define __OVITO_COLOR_CODING_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
@@ -305,9 +305,14 @@ public:
 	/// Sets the range end value.
 	void setEndValue(FloatType value) { if(endValueController()) endValueController()->setCurrentFloatValue(value); }
 
+	/// Sets the start and end value to the minimum and maximum value of the selected particle or bond property
+	/// determined over the entire animation sequence.
+	bool adjustRangeGlobal(TaskManager& taskManager);
+
 public Q_SLOTS:
 
-	/// Sets the start and end value to the minimum and maximum value in the selected data channel.
+	/// Sets the start and end value to the minimum and maximum value of the selected particle or bond property.
+	/// Returns true if successful.
 	bool adjustRange();
 
 protected:
@@ -326,6 +331,11 @@ protected:
 
 	/// Modifies the particles.
 	virtual PipelineStatus modifyParticles(TimePoint time, TimeInterval& validityInterval) override;
+
+	/// Determines the range of values in the input data for the selected property.
+	bool determinePropertyValueRange(const PipelineFlowState& state, FloatType& min, FloatType& max);
+
+private:
 
 	/// This controller stores the start value of the color scale.
 	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, startValueController, setStartValueController);
@@ -367,4 +377,4 @@ OVITO_END_INLINE_NAMESPACE
 Q_DECLARE_METATYPE(Ovito::Particles::ColorCodingModifier::ColorApplicationMode);
 Q_DECLARE_TYPEINFO(Ovito::Particles::ColorCodingModifier::ColorApplicationMode, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_COLOR_CODING_MODIFIER_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_COMPRESSED_TEXT_READER_H
-#define __OVITO_COMPRESSED_TEXT_READER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/io/gzdevice/qtiocompressor.h>
@@ -174,4 +174,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_COMPRESSED_TEXT_READER_H
+

@@ -23,6 +23,7 @@
 #include <plugins/pyscript/binding/PythonBinding.h>
 #include <core/viewport/Viewport.h>
 #include <core/rendering/RenderSettings.h>
+#include <core/dataset/DataSetContainer.h>
 #include "PythonViewportOverlay.h"
 
 namespace PyScript {
@@ -34,13 +35,17 @@ SET_PROPERTY_FIELD_LABEL(PythonViewportOverlay, script, "Script");
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-PythonViewportOverlay::PythonViewportOverlay(DataSet* dataset) : ViewportOverlay(dataset),
-		_scriptEngine(dataset, nullptr, false)
+PythonViewportOverlay::PythonViewportOverlay(DataSet* dataset) : ViewportOverlay(dataset)
 {
 	INIT_PROPERTY_FIELD(script);
+}
 
-	connect(&_scriptEngine, &ScriptEngine::scriptOutput, this, &PythonViewportOverlay::onScriptOutput);
-	connect(&_scriptEngine, &ScriptEngine::scriptError, this, &PythonViewportOverlay::onScriptOutput);
+/******************************************************************************
+* Loads the default values of this object's parameter fields.
+******************************************************************************/
+void PythonViewportOverlay::loadUserDefaults()
+{
+	ViewportOverlay::loadUserDefaults();
 
 	// Load example script.
 	setScript("import ovito\n"
@@ -61,7 +66,7 @@ PythonViewportOverlay::PythonViewportOverlay(DataSet* dataset) : ViewportOverlay
 			"\n"
 			"\t# Print to the log window:\n"
 			"\tprint(text1)\n"
-			"\tprint(text2)\n");
+			"\tprint(text2)\n");	
 }
 
 /******************************************************************************
@@ -80,15 +85,26 @@ void PythonViewportOverlay::propertyChanged(const PropertyFieldDescriptor& field
 ******************************************************************************/
 void PythonViewportOverlay::compileScript()
 {
+	// Cannot execute scripts during file loading.
+	if(isBeingLoaded()) return;
+
 	_scriptOutput.clear();
 	_overlayScriptFunction = py::function();
 	try {
-		_scriptEngine.executeCommands(script());
+
+		// Initialize a local script engine.
+		if(!_scriptEngine) {
+			_scriptEngine.reset(new ScriptEngine(dataset(), dataset()->container()->taskManager(), true));
+			connect(_scriptEngine.get(), &ScriptEngine::scriptOutput, this, &PythonViewportOverlay::onScriptOutput);
+			connect(_scriptEngine.get(), &ScriptEngine::scriptError, this, &PythonViewportOverlay::onScriptOutput);
+		}
+		
+		_scriptEngine->executeCommands(script());
 
 		// Extract the render() function defined by the script.
-		_scriptEngine.execute([this]() {
+		_scriptEngine->execute([this]() {
 			try {
-				_overlayScriptFunction = py::function(_scriptEngine.mainNamespace()["render"]);
+				_overlayScriptFunction = py::function(_scriptEngine->mainNamespace()["render"]);
 				if(!py::isinstance<py::function>(_overlayScriptFunction)) {
 					_overlayScriptFunction = py::function();
 					throwException(tr("Invalid Python script. It does not define a callable function render()."));
@@ -119,19 +135,25 @@ void PythonViewportOverlay::onScriptOutput(const QString& text)
 ******************************************************************************/
 void PythonViewportOverlay::render(Viewport* viewport, QPainter& painter, const ViewProjectionParameters& projParams, RenderSettings* renderSettings)
 {
+	// When the overlay was loaded from a scene file, the script is not compiled yet.
+	// Let's do it now.
+	if(!_scriptEngine)
+		compileScript();
+
 	if(!compilationSucessful())
 		return;
 
+	// This object instance may be deleted while this method is being executed.
+	// This is to detect this situation.
+	QPointer<PythonViewportOverlay> thisPointer(this);
+	
 	_scriptOutput.clear();
 	try {
 		// Enable antialiasing for the QPainter by default.
 		painter.setRenderHint(QPainter::Antialiasing);
 		painter.setRenderHint(QPainter::TextAntialiasing);
 
-		ScriptEngine* engine = ScriptEngine::activeEngine();
-		if(!engine) engine = &_scriptEngine;
-
-		engine->execute([this,engine,viewport,&painter,&projParams,renderSettings]() {
+		_scriptEngine->execute([this,viewport,&painter,&projParams,renderSettings]() {
 
 			// Pass viewport, QPainter, and other information to the Python script function.
 			// The QPainter pointer has to be converted to the representation used by PyQt.
@@ -154,13 +176,15 @@ void PythonViewportOverlay::render(Viewport* viewport, QPainter& painter, const 
 			py::tuple arguments = py::make_tuple(sip_painter);
 
 			// Execute render() script function.
-			engine->callObject(_overlayScriptFunction, arguments, kwargs);
+			_scriptEngine->callObject(_overlayScriptFunction, arguments, kwargs);
 		});
 	}
 	catch(const Exception& ex) {
 		_scriptOutput += ex.messages().join('\n');
 	}
-	notifyDependents(ReferenceEvent::ObjectStatusChanged);
+
+	if(thisPointer)
+		thisPointer->notifyDependents(ReferenceEvent::ObjectStatusChanged);
 }
 
 }	// End of namespace

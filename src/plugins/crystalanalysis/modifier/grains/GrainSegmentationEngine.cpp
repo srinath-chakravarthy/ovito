@@ -585,7 +585,8 @@ bool GrainSegmentationEngine::buildPartitionMesh()
 	}
 
 	// Smooth the generated triangle mesh.
-	PartitionMesh::smoothMesh(*_mesh, cell(), _meshSmoothingLevel, this);
+	if(!PartitionMesh::smoothMesh(*_mesh, cell(), _meshSmoothingLevel, *this))
+		return false;
 
 	// Make sure every mesh vertex is only part of one surface manifold.
 	_mesh->duplicateSharedVertices();

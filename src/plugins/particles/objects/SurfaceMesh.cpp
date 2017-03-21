@@ -54,7 +54,7 @@ OORef<RefTarget> SurfaceMesh::clone(bool deepCopy, CloneHelper& cloneHelper)
 /******************************************************************************
 * Fairs a closed triangle mesh.
 ******************************************************************************/
-void SurfaceMesh::smoothMesh(HalfEdgeMesh<>& mesh, const SimulationCell& cell, int numIterations, FutureInterfaceBase* progress, FloatType k_PB, FloatType lambda)
+bool SurfaceMesh::smoothMesh(HalfEdgeMesh<>& mesh, const SimulationCell& cell, int numIterations, PromiseBase& promise, FloatType k_PB, FloatType lambda)
 {
 	// This is the implementation of the mesh smoothing algorithm:
 	//
@@ -62,15 +62,17 @@ void SurfaceMesh::smoothMesh(HalfEdgeMesh<>& mesh, const SimulationCell& cell, i
 	// A Signal Processing Approach To Fair Surface Design
 	// In SIGGRAPH 95 Conference Proceedings, pages 351-358 (1995)
 
-	FloatType mu = 1.0f / (k_PB - 1.0f/lambda);
-	if(progress) progress->setProgressRange(numIterations);
+	FloatType mu = FloatType(1) / (k_PB - FloatType(1)/lambda);
+	promise.setProgressMaximum(numIterations);
 
 	for(int iteration = 0; iteration < numIterations; iteration++) {
+		if(!promise.setProgressValue(iteration))
+			return false;
 		smoothMeshIteration(mesh, lambda, cell);
 		smoothMeshIteration(mesh, mu, cell);
-		if(progress && !progress->setProgressValue(iteration+1))
-			return;
 	}
+
+	return !promise.isCanceled();
 }
 
 /******************************************************************************
@@ -86,7 +88,7 @@ void SurfaceMesh::smoothMeshIteration(HalfEdgeMesh<>& mesh, FloatType prefactor,
 	parallelFor(mesh.vertexCount(), [&mesh, &displacements, prefactor, cell, absoluteToReduced](int index) {
 		HalfEdgeMesh<>::Vertex* vertex = mesh.vertex(index);
 		Vector3 d = Vector3::Zero();
-#if 1
+
 		// Go in positive direction around vertex, facet by facet.
 		HalfEdgeMesh<>::Edge* currentEdge = vertex->edges();
 		if(currentEdge != nullptr) {
@@ -100,13 +102,7 @@ void SurfaceMesh::smoothMeshIteration(HalfEdgeMesh<>& mesh, FloatType prefactor,
 			while(currentEdge != vertex->edges());
 			d *= (prefactor / numManifoldEdges);
 		}
-#else
-		for(HalfEdgeMesh<>::Edge* edge = vertex->edges(); edge != nullptr; edge = edge->nextVertexEdge()) {
-			d += cell.wrapVector(edge->vertex2()->pos() - vertex->pos());
-		}
-		if(vertex->edges() != nullptr)
-			d *= (prefactor / vertex->numEdges());
-#endif
+
 		displacements[index] = d;
 	});
 

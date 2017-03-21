@@ -22,6 +22,8 @@
 #include <plugins/particles/Particles.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/scene/pipeline/PipelineObject.h>
+#include <core/scene/pipeline/PipelineEvalRequest.h>
+#include <core/utilities/concurrent/TaskManager.h>
 #include "FreezePropertyModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Properties)
@@ -177,7 +179,8 @@ void FreezePropertyModifier::initializeModifier(PipelineObject* pipeline, Modifi
 }
 
 /******************************************************************************
-* Takes a snapshot of the source property for a specific ModifierApplication.
+* Takes a snapshot of the source property for a specific ModifierApplication
+* of this modifier.
 ******************************************************************************/
 void FreezePropertyModifier::takePropertySnapshot(ModifierApplication* modApp, const PipelineFlowState& state)
 {
@@ -196,19 +199,27 @@ void FreezePropertyModifier::takePropertySnapshot(ModifierApplication* modApp, c
 }
 
 /******************************************************************************
-* Takes a snapshot of the source property for all ModifierApplications.
+* Takes a snapshot of the source property for every ModifierApplication of 
+* this modifier.
 ******************************************************************************/
-void FreezePropertyModifier::takePropertySnapshot(TimePoint time, bool waitUntilReady)
+bool FreezePropertyModifier::takePropertySnapshot(TimePoint time, TaskManager& taskManager, bool waitUntilReady)
 {
 	for(ModifierApplication* modApp : modifierApplications()) {
 		if(PipelineObject* pipelineObj = modApp->pipelineObject()) {
+			PipelineFlowState state;
 			if(waitUntilReady) {
-				pipelineObj->waitUntilReady(time, tr("Waiting for pipeline evaluation to complete."));
+				Future<PipelineFlowState> stateFuture = pipelineObj->evaluateAsync(PipelineEvalRequest(time, false, modApp, false));
+				if(!taskManager.waitForTask(stateFuture))
+					return false;
+				state = stateFuture.result();
 			}
-			PipelineFlowState state = pipelineObj->evaluatePipeline(time, modApp, false);
+			else {
+				state = pipelineObj->evaluateImmediately(PipelineEvalRequest(time, false, modApp, false));
+			}
 			takePropertySnapshot(modApp, state);
 		}
 	}
+	return true;
 }
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)

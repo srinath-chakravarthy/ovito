@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_ANIMATION_SETTINGS_H
-#define __OVITO_ANIMATION_SETTINGS_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/reference/RefTarget.h>
@@ -174,7 +174,7 @@ public:
 
 	/// \brief Indicates that the animation time has recently been changed via setTime(), and the scene
 	///        is still being prepared for displaying the new frame.
-	bool isTimeChanging() const { return _timeIsChanging != 0; }
+	bool isTimeChanging() const { return _isTimeChanging; }
 
 	/// Returns whether the animation is currently being played back in the viewports.
 	bool isPlaybackActive() const { return _isPlaybackActive; }
@@ -246,6 +246,9 @@ private Q_SLOTS:
 	/// \brief Timer callback used during animation playback.
 	void onPlaybackTimer();
 
+	/// Starts a timer to show the next animation frame.
+	void scheduleNextAnimationFrame();
+
 protected:
 
 	/// \brief Is called when the value of a non-animatable property field of this RefMaker has changed.
@@ -260,8 +263,8 @@ protected:
 	/// \brief Creates a copy of this object.
 	virtual OORef<RefTarget> clone(bool deepCopy, CloneHelper& cloneHelper) override;
 
-	/// Starts a timer to show the next animation frame.
-	void scheduleNextAnimationFrame();
+	/// Jumps to the given animation time, then schedules the next frame as soon as the scene was completely shown.
+	void continuePlaybackAtTime(TimePoint time);
 
 private:
 
@@ -285,16 +288,16 @@ private:
     QMap<int,QString> _namedFrames;
 
 	/// Counts the number of times the animation modes has been suspended.
-	int _animSuspendCount;
+	int _animSuspendCount = 0;
 
 	/// Indicates whether animation recording mode is active.
-	bool _autoKeyMode;
+	bool _autoKeyMode = false;
 
 	/// Indicates that the animation has been changed, and the scene is still being prepared for display of the new frame.
-	int _timeIsChanging;
+	bool _isTimeChanging = false;
 
 	/// Indicates that the animation is currently being played back in the viewports.
-	bool _isPlaybackActive;
+	bool _isPlaybackActive = false;
 
 	/// Controls whether the animation is played back in a loop in the interactive viewports.
 	DECLARE_PROPERTY_FIELD(bool, loopPlayback);
@@ -338,4 +341,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_ANIMATION_SETTINGS_H
+

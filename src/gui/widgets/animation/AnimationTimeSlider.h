@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_ANIMATION_TIME_SLIDER_H
-#define __OVITO_ANIMATION_TIME_SLIDER_H
+#pragma once
+
 
 #include <gui/GUI.h>
 
@@ -69,6 +69,9 @@ protected:
 
 	/// Handles mouse move events.
 	virtual void mouseMoveEvent(QMouseEvent* event) override;
+
+	/// Is called when the widgets looses the input focus.
+	virtual void focusOutEvent(QFocusEvent* event) override;
 	
 	/// Returns the recommended size of the widget.
 	virtual QSize sizeHint() const override;
@@ -114,4 +117,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_ANIMATION_TIME_SLIDER_H
+

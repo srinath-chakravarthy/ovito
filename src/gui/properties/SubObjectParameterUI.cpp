@@ -67,7 +67,7 @@ void SubObjectParameterUI::resetUI()
 			subEditor()->setEditObject(parameterObject());
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 

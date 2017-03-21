@@ -35,7 +35,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /******************************************************************************
 * Initializes the menu.
 ******************************************************************************/
-ViewportMenu::ViewportMenu(ViewportWindow* vpWindow) : QMenu(vpWindow->widget()), _viewport(vpWindow->viewport()), _vpWindow(vpWindow)
+ViewportMenu::ViewportMenu(ViewportWindow* vpWindow) : QMenu(vpWindow), _viewport(vpWindow->viewport()), _vpWindow(vpWindow)
 {
 	QAction* action;
 
@@ -94,10 +94,6 @@ ViewportMenu::ViewportMenu(ViewportWindow* vpWindow) : QMenu(vpWindow->widget())
 
 	addSeparator();
 	addAction(tr("Adjust View..."), this, SLOT(onAdjustView()))->setEnabled(_viewport->viewType() != Viewport::VIEW_SCENENODE);
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0) && defined(Q_OS_MACX)
-	connect(static_cast<QGuiApplication*>(QGuiApplication::instance()), &QGuiApplication::focusWindowChanged, this, &ViewportMenu::onWindowFocusChanged);
-#endif
 }
 
 /******************************************************************************
@@ -109,7 +105,7 @@ void ViewportMenu::show(const QPoint& pos)
 	QCoreApplication::sendPostedEvents(nullptr, QEvent::DeferredDelete);
 
 	// Show context menu.
-	exec(_vpWindow->widget()->mapToGlobal(pos));
+	exec(_vpWindow->mapToGlobal(pos));
 }
 
 /******************************************************************************
@@ -122,7 +118,7 @@ void ViewportMenu::onShowViewTypeMenu()
 
 	// Find all camera nodes in the scene.
 	_viewport->dataset()->sceneRoot()->visitObjectNodes([this, viewNodeGroup](ObjectNode* node) -> bool {
-		PipelineFlowState state = node->evalPipeline(_viewport->dataset()->animationSettings()->time());
+		const PipelineFlowState& state = node->evaluatePipelineImmediately(PipelineEvalRequest(_viewport->dataset()->animationSettings()->time(), false));
 		OORef<AbstractCameraObject> camera = state.convertObject<AbstractCameraObject>(_viewport->dataset()->animationSettings()->time());
 		if(camera) {
 			// Add a menu entry for this camera node.
@@ -183,7 +179,7 @@ void ViewportMenu::onViewType(QAction* action)
 ******************************************************************************/
 void ViewportMenu::onAdjustView()
 {
-	AdjustCameraDialog dialog(_viewport, _vpWindow->widget()->window());
+	AdjustCameraDialog dialog(_viewport, _vpWindow->window());
 	dialog.exec();
 }
 

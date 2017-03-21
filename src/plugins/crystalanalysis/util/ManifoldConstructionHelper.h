@@ -19,13 +19,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_MANIFOLD_CONSTRUCTION_HELPER_H
-#define __OVITO_MANIFOLD_CONSTRUCTION_HELPER_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/data/SimulationCell.h>
 #include <plugins/particles/data/ParticleProperty.h>
-#include <core/utilities/concurrent/FutureInterface.h>
+#include <core/utilities/concurrent/Promise.h>
 #include <plugins/crystalanalysis/util/DelaunayTessellation.h>
 
 #include <boost/functional/hash.hpp>
@@ -62,32 +62,32 @@ public:
 
 	/// This is the main function, which constructs the manifold triangle mesh.
 	template<typename CellRegionFunc, typename PrepareMeshFaceFunc = DefaultPrepareMeshFaceFunc, typename LinkManifoldsFunc = DefaultLinkManifoldsFunc>
-	bool construct(CellRegionFunc&& determineCellRegion, FutureInterfaceBase* progress,
+	bool construct(CellRegionFunc&& determineCellRegion, PromiseBase& promise,
 			PrepareMeshFaceFunc&& prepareMeshFaceFunc = PrepareMeshFaceFunc(), LinkManifoldsFunc&& linkManifoldsFunc = LinkManifoldsFunc())
 	{
 		// Algorithm is divided into several sub-steps.
 		// Assign weights to sub-steps according to estimated runtime.
-		if(progress) progress->beginProgressSubSteps({ 1, 1, 1 });
+		promise.beginProgressSubSteps({ 1, 1, 1 });
 
 		/// Assign tetrahedra to regions.
-		if(!classifyTetrahedra(std::move(determineCellRegion), progress))
+		if(!classifyTetrahedra(std::move(determineCellRegion), promise))
 			return false;
 
-		if(progress) progress->nextProgressSubStep();
+		promise.nextProgressSubStep();
 
 		// Create triangle facets at interfaces between two different regions.
-		if(!createInterfaceFacets(std::move(prepareMeshFaceFunc), progress))
+		if(!createInterfaceFacets(std::move(prepareMeshFaceFunc), promise))
 			return false;
 
-		if(progress) progress->nextProgressSubStep();
+		promise.nextProgressSubStep();
 
 		// Connect triangles with one another to form a closed manifold.
-		if(!linkHalfedges(std::move(linkManifoldsFunc), progress))
+		if(!linkHalfedges(std::move(linkManifoldsFunc), promise))
 			return false;
 
-		if(progress) progress->endProgressSubSteps();
+		promise.endProgressSubSteps();
 
-		return true;
+		return !promise.isCanceled();
 	}
 
 	/// Returns the region to which all tetrahedra belong (or -1 if they belong to multiple regions).
@@ -97,10 +97,10 @@ private:
 
 	/// Assigns each tetrahedron to a region.
 	template<typename CellRegionFunc>
-	bool classifyTetrahedra(CellRegionFunc&& determineCellRegion, FutureInterfaceBase* progress)
+	bool classifyTetrahedra(CellRegionFunc&& determineCellRegion, PromiseBase& promise)
 	{
-		if(progress)
-			progress->setProgressRange(_tessellation.numberOfTetrahedra());
+		promise.setProgressValue(0);
+		promise.setProgressMaximum(_tessellation.numberOfTetrahedra());
 
 		_numSolidCells = 0;
 		_spaceFillingRegion = -2;
@@ -108,7 +108,7 @@ private:
 		for(DelaunayTessellation::CellIterator cell = _tessellation.begin_cells(); cell != _tessellation.end_cells(); ++cell) {
 
 			// Update progress indicator.
-			if(progress && !progress->setProgressValueIntermittent(progressCounter++))
+			if(!promise.setProgressValueIntermittent(progressCounter++))
 				return false;
 
 			// Alpha shape criterion: This determines whether the Delaunay tetrahedron is part of the solid region.
@@ -135,20 +135,20 @@ private:
 		}
 		if(_spaceFillingRegion == -2) _spaceFillingRegion = 0;
 
-		return true;
+		return !promise.isCanceled();
 	}
 
 	/// Constructs the triangle facets that separate different regions in the tetrahedral mesh.
 	template<typename PrepareMeshFaceFunc>
-	bool createInterfaceFacets(PrepareMeshFaceFunc&& prepareMeshFaceFunc, FutureInterfaceBase* progress)
+	bool createInterfaceFacets(PrepareMeshFaceFunc&& prepareMeshFaceFunc, PromiseBase& promise)
 	{
 		// Stores the triangle mesh vertices created for the vertices of the tetrahedral mesh.
 		std::vector<typename HalfEdgeStructureType::Vertex*> vertexMap(_positions->size(), nullptr);
 		_tetrahedraFaceList.clear();
 		_faceLookupMap.clear();
 
-		if(progress)
-			progress->setProgressRange(_numSolidCells);
+		promise.setProgressValue(0);
+		promise.setProgressMaximum(_numSolidCells);
 
 		for(DelaunayTessellation::CellIterator cell = _tessellation.begin_cells(); cell != _tessellation.end_cells(); ++cell) {
 
@@ -158,7 +158,7 @@ private:
 			OVITO_ASSERT(solidRegion != 0);
 
 			// Update progress indicator.
-			if(progress && !progress->setProgressValueIntermittent(_tessellation.getCellIndex(cell)))
+			if(!promise.setProgressValueIntermittent(_tessellation.getCellIndex(cell)))
 				return false;
 
 			Point3 unwrappedVerts[4];
@@ -240,7 +240,7 @@ private:
 			}
 		}
 
-		return true;
+		return !promise.isCanceled();
 	}
 
 	typename HalfEdgeStructureType::Face* findAdjacentFace(DelaunayTessellation::CellHandle cell, int f, int e)
@@ -282,9 +282,10 @@ private:
 	}
 
 	template<typename LinkManifoldsFunc>
-	bool linkHalfedges(LinkManifoldsFunc&& linkManifoldsFunc, FutureInterfaceBase* progress)
+	bool linkHalfedges(LinkManifoldsFunc&& linkManifoldsFunc, PromiseBase& promise)
 	{
-		if(progress) progress->setProgressRange(_tetrahedraFaceList.size());
+		promise.setProgressValue(0);
+		promise.setProgressMaximum(_tetrahedraFaceList.size());
 
 		auto tet = _tetrahedraFaceList.cbegin();
 		for(DelaunayTessellation::CellIterator cell = _tessellation.begin_cells(); cell != _tessellation.end_cells(); ++cell) {
@@ -293,7 +294,7 @@ private:
 			if(_tessellation.getCellIndex(cell) == -1) continue;
 
 			// Update progress indicator.
-			if(progress && !progress->setProgressValueIntermittent(_tessellation.getCellIndex(cell)))
+			if(!promise.setProgressValueIntermittent(_tessellation.getCellIndex(cell)))
 				return false;
 
 			for(int f = 0; f < 4; f++) {
@@ -353,7 +354,7 @@ private:
 		}
 		OVITO_ASSERT(tet == _tetrahedraFaceList.cend());
 		OVITO_ASSERT(_mesh.isClosed());
-		return true;
+		return !promise.isCanceled();
 	}
 
 	typename HalfEdgeStructureType::Face* findCellFace(const std::pair<DelaunayTessellation::CellHandle,int>& facet)
@@ -415,4 +416,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_MANIFOLD_CONSTRUCTION_HELPER_H
+

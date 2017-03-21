@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section version="5.0"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd"
+         xml:id="particles.modifiers.coordination_polyhedra"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:ns="http://docbook.org/ns/docbook">
+  <title>Coordination polyhedra</title>
+
+  <para>
+    <informalfigure><screenshot><mediaobject><imageobject>
+       <imagedata fileref="images/modifiers/coordination_polyhedra_example.png" format="PNG" scale="50" />
+    </imageobject></mediaobject></screenshot></informalfigure>
+    This modifier creates <emphasis>coordination polyhedra</emphasis> around selected atoms/particles for visualization purposes.
+    A coordination polyhedron is the convex hull spanned by the bonded neighbors of a central particle.
+  </para>
+  <para>
+    Note: The modifier creates coordination polyhedra only for currently selected particles. So you should select some
+    particles first, e.g. using the <link linkend="particles.modifiers.select_particle_type">Select particle type</link> modifier.
+  </para>
+  <para>
+    The modifier requires bonds to determine the neighbors of a particles. Thus, you should create
+    some bonds first using the <link linkend="particles.modifiers.create_bonds">Create bonds</link> modifier 
+    (unless they are already provided in the input file).
+  </para>
+     
+</section>

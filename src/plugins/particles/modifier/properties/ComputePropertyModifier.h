@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_COMPUTE_PROPERTY_MODIFIER_H
-#define __OVITO_COMPUTE_PROPERTY_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/util/ParticleExpressionEvaluator.h>
@@ -234,4 +234,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_COMPUTE_PROPERTY_MODIFIER_H
+

@@ -259,7 +259,7 @@ void ParcasFileImporter::ParcasFileImportTask::parseFile(CompressedTextReader& t
     if(!file.seek((qint64)atom_off))
     	throw Exception(tr("PARCAS file parsing error: Seek error: %1").arg(file.errorString()));
 
-	setProgressRange(numAtoms);
+	setProgressMaximum(numAtoms);
 
 	// Parse atoms.
 	for(int i = 0; i < numAtoms; i++) {

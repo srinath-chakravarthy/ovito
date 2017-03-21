@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_TIME_INTERVAL_H
-#define __OVITO_TIME_INTERVAL_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/io/SaveStream.h>
@@ -236,4 +236,4 @@ OVITO_END_INLINE_NAMESPACE
 Q_DECLARE_METATYPE(Ovito::TimeInterval);
 Q_DECLARE_TYPEINFO(Ovito::TimeInterval, Q_MOVABLE_TYPE);
 
-#endif // __OVITO_TIME_INTERVAL_H
+

@@ -27,7 +27,7 @@
 #include <core/scene/SceneRoot.h>
 #include <gui/widgets/general/SpinnerWidget.h>
 #include <gui/mainwin/MainWindow.h>
-#include <gui/utilities/concurrent/ProgressDialogAdapter.h>
+#include <gui/utilities/concurrent/ProgressDialog.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/TrajectoryGeneratorObject.h>
 #include "CreateTrajectoryApplet.h"
@@ -177,18 +177,22 @@ void CreateTrajectoryApplet::onCreateTrajectory()
 	if(!dataset) return;
 
 	try {
+		// Show progress dialog.
+		ProgressDialog progressDialog(_panel, dataset->container()->taskManager(), tr("Generating trajectory lines"));
+
 		UndoableTransaction transaction(dataset->undoStack(), tr("Create trajectory lines"));
 		AnimationSuspender noAnim(dataset->animationSettings());
 		TimePoint time = dataset->animationSettings()->time();
 
 		// Get input particles.
-		ParticlePropertyObject* posProperty = nullptr;
-		ParticlePropertyObject* selectionProperty = nullptr;
+		OORef<ParticlePropertyObject> posProperty;
+		OORef<ParticlePropertyObject> selectionProperty;
 		ObjectNode* inputNode = dynamic_object_cast<ObjectNode>(dataset->selection()->front());
 		if(inputNode) {
-			if(!inputNode->waitUntilReady(time, tr("Waiting for input particles to become ready.")))
+			Future<PipelineFlowState> stateFuture = inputNode->evaluatePipelineAsync(PipelineEvalRequest(time, false));
+			if(!progressDialog.taskManager().waitForTask(stateFuture))
 				return;
-			const PipelineFlowState& state = inputNode->evalPipeline(time);
+			const PipelineFlowState& state = stateFuture.result();
 			posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
 			selectionProperty = ParticlePropertyObject::findInState(state, ParticleProperty::SelectionProperty);
 		}
@@ -235,17 +239,8 @@ void CreateTrajectoryApplet::onCreateTrajectory()
 			if(interval.duration() <= 0)
 				dataset->throwException(tr("Loaded simulation sequence consists only of a single frame. No trajectory lines were created."));
 
-			// Show progress dialog.
-			QProgressDialog progressDialog(MainWindow::fromDataset(trajObj->dataset()));
-			progressDialog.setWindowModality(Qt::WindowModal);
-			progressDialog.setAutoClose(false);
-			progressDialog.setAutoReset(false);
-			progressDialog.setMinimumDuration(0);
-			progressDialog.setValue(0);
-			ProgressDialogAdapter progressDisplay(&progressDialog);
-
 			// Generate trajectories.
-			if(!trajObj->generateTrajectories(&progressDisplay))
+			if(!trajObj->generateTrajectories(progressDialog.taskManager()))
 				return;
 
 			// Create scene node.
@@ -262,13 +257,14 @@ void CreateTrajectoryApplet::onCreateTrajectory()
 
 		// Commit actions.
 		transaction.commit();
-
-		// Switch to the modify tab to show the newly created trajectory object.
-		_mainWindow->setCurrentCommandPanelPage(MainWindow::MODIFY_PAGE);
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
+		return;
 	}
+
+	// Switch to the modify tab to show the newly created trajectory object.
+	_mainWindow->setCurrentCommandPanelPage(MainWindow::MODIFY_PAGE);	
 }
 
 OVITO_END_INLINE_NAMESPACE

@@ -23,7 +23,7 @@
 #include <gui/actions/ActionManager.h>
 #include <gui/mainwin/MainWindow.h>
 #include <gui/widgets/rendering/FrameBufferWindow.h>
-#include <gui/utilities/concurrent/ProgressDialogAdapter.h>
+#include <gui/utilities/concurrent/ProgressDialog.h>
 #include <core/rendering/RenderSettings.h>
 #include <core/viewport/ViewportConfiguration.h>
 
@@ -57,20 +57,14 @@ void ActionManager::on_RenderActiveViewport_triggered()
 		frameBufferWindow->showAndActivateWindow();
 
 		// Show progress dialog.
-		QProgressDialog progressDialog(frameBufferWindow);
-		progressDialog.setWindowModality(Qt::WindowModal);
-		progressDialog.setAutoClose(false);
-		progressDialog.setAutoReset(false);
-		progressDialog.setMinimumDuration(0);
-		progressDialog.setValue(0);
-		ProgressDialogAdapter progressDisplay(&progressDialog);
+		ProgressDialog progressDialog(frameBufferWindow, mainWindow()->datasetContainer().taskManager(), tr("Rendering"));
 
 		// Call high-level rendering function, which will take care of the rest.
-		_dataset->renderScene(settings, viewport, frameBuffer.get(), &progressDisplay);
+		_dataset->renderScene(settings, viewport, frameBuffer.get(), progressDialog.taskManager());
 	}
 	catch(const Exception& ex) {
 		ex.logError();
-		ex.showError();
+		ex.reportError();
 	}
 }
 

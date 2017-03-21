@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CENTRO_SYMMETRY_MODIFIER_H
-#define __OVITO_CENTRO_SYMMETRY_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/modifier/AsynchronousParticleModifier.h>
@@ -112,4 +112,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CENTRO_SYMMETRY_MODIFIER_H
+

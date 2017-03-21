@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_TRAJECTORY_GENERATOR_OBJECT_H
-#define __OVITO_TRAJECTORY_GENERATOR_OBJECT_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include "TrajectoryObject.h"
@@ -41,7 +41,7 @@ public:
 	TimeInterval customInterval() const { return TimeInterval(_customIntervalStart, _customIntervalEnd); }
 
 	/// Updates the stored trajectories from the source particle object.
-	bool generateTrajectories(AbstractProgressDisplay* progressDisplay = nullptr);
+	bool generateTrajectories(TaskManager& taskManager);
 
 private:
 
@@ -73,4 +73,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_TRAJECTORY_GENERATOR_OBJECT_H
+

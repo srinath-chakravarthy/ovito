@@ -51,9 +51,7 @@ ViewportsPanel::ViewportsPanel(MainWindow* parent) : QWidget(parent)
 ******************************************************************************/
 QWidget* ViewportsPanel::viewportWidget(Viewport* vp)
 {
-	ViewportWindow* vpWindow = static_cast<ViewportWindow*>(vp->window());
-	if(!vpWindow) return nullptr;
-	return vpWindow->widget();
+	return static_cast<ViewportWindow*>(vp->window());
 }
 
 /******************************************************************************

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_XYZ_FILE_EXPORTER_H
-#define __OVITO_XYZ_FILE_EXPORTER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include "../FileColumnParticleExporter.h"
@@ -57,7 +57,7 @@ public:
 protected:
 
 	/// \brief Writes the particles of one animation frame to the current output file.
-	virtual bool exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) override;
+	virtual bool exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager) override;
 
 private:
 
@@ -76,4 +76,4 @@ OVITO_END_INLINE_NAMESPACE
 Q_DECLARE_METATYPE(Ovito::Particles::XYZExporter::XYZSubFormat);
 Q_DECLARE_TYPEINFO(Ovito::Particles::XYZExporter::XYZSubFormat, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_XYZ_FILE_EXPORTER_H
+

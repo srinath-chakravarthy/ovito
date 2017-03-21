@@ -25,7 +25,7 @@
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/particles/objects/BondsObject.h>
 #include <plugins/particles/objects/BondTypeProperty.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/Task.h>
 #include "LAMMPSDataExporter.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
@@ -37,10 +37,15 @@ SET_PROPERTY_FIELD_LABEL(LAMMPSDataExporter, atomStyle, "Atom style");
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.
 ******************************************************************************/
-bool LAMMPSDataExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
+bool LAMMPSDataExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager)
 {
-	// Get particle positions.
-	const PipelineFlowState& state = getParticleData(sceneNode, time);
+	// Get particle data to be exported.
+	PipelineFlowState state;
+	if(!getParticleData(sceneNode, time, state, taskManager))
+		return false;
+
+	SynchronousTask exportTask(taskManager);
+
 	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
 	ParticlePropertyObject* velocityProperty = ParticlePropertyObject::findInState(state, ParticleProperty::VelocityProperty);
 	ParticlePropertyObject* identifierProperty = ParticlePropertyObject::findInState(state, ParticleProperty::IdentifierProperty);
@@ -146,7 +151,7 @@ bool LAMMPSDataExporter::exportObject(SceneNode* sceneNode, int frameNumber, Tim
 	}
 	textStream() << "\n\n";
 
-	if(progress) progress->setMaximum(100);
+	exportTask.setProgressMaximum(100);
 	for(size_t i = 0; i < posProperty->size(); i++) {
 		// atom-ID
 		textStream() << (identifierProperty ? identifierProperty->getInt(i) : (i+1));
@@ -192,9 +197,9 @@ bool LAMMPSDataExporter::exportObject(SceneNode* sceneNode, int frameNumber, Tim
 		textStream() << '\n';
 
 		currentProgress++;
-		if(progress && (currentProgress % 4096) == 0) {
-			progress->setValue(currentProgress * 100 / totalProgressCount);
-			if(progress->wasCanceled())
+		if((currentProgress % 4096) == 0) {
+			exportTask.setProgressValue(currentProgress * 100 / totalProgressCount);
+			if(exportTask.isCanceled())
 				return false;
 		}
 	}
@@ -216,9 +221,9 @@ bool LAMMPSDataExporter::exportObject(SceneNode* sceneNode, int frameNumber, Tim
 			textStream() << '\n';
 
 			currentProgress++;
-			if(progress && (currentProgress % 4096) == 0) {
-				progress->setValue(currentProgress * 100 / totalProgressCount);
-				if(progress->wasCanceled())
+			if((currentProgress % 4096) == 0) {
+				exportTask.setProgressValue(currentProgress * 100 / totalProgressCount);
+				if(exportTask.isCanceled())
 					return false;
 			}
 		}
@@ -242,16 +247,16 @@ bool LAMMPSDataExporter::exportObject(SceneNode* sceneNode, int frameNumber, Tim
 			textStream() << '\n';
 
 			currentProgress++;
-			if(progress && (currentProgress % 4096) == 0) {
-				progress->setValue(currentProgress * 100 / totalProgressCount);
-				if(progress->wasCanceled())
+			if((currentProgress % 4096) == 0) {
+				exportTask.setProgressValue(currentProgress * 100 / totalProgressCount);
+				if(exportTask.isCanceled())
 					return false;
 			}
 		}
 		OVITO_ASSERT(bondIndex == bondsObj->storage()->size() / 2 + 1);
 	}
 
-	return true;
+	return !exportTask.isCanceled();
 }
 
 OVITO_END_INLINE_NAMESPACE

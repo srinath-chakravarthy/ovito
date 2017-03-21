@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CALCULATE_DISPLACEMENTS_MODIFIER_H
-#define __OVITO_CALCULATE_DISPLACEMENTS_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/objects/VectorDisplay.h>
@@ -83,4 +83,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CALCULATE_DISPLACEMENTS_MODIFIER_H
+

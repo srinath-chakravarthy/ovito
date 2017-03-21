@@ -24,6 +24,7 @@ uniform float basePointSize;
 uniform mat4 modelview_matrix;
 uniform mat4 projection_matrix;
 uniform int pickingBaseID;
+uniform float radius_scalingfactor;
 
 #if __VERSION__ >= 130
 
@@ -84,7 +85,7 @@ void main()
 	gl_PointSize = basePointSize * particle_radius / (eye_position.z * projection_matrix[2][3] + projection_matrix[3][3]);
 
 	// Forward particle radius to fragment shader.
-	particle_radius_fs = particle_radius;
+	particle_radius_fs = particle_radius * radius_scalingfactor;
 	
 	// Pass particle position in eye coordinates to fragment shader.
 	ze0 = eye_position.z;

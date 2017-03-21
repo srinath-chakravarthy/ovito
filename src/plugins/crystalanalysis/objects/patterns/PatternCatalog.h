@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_PATTERN_CATALOG_H
-#define __OVITO_CA_PATTERN_CATALOG_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/scene/objects/DataObject.h>
@@ -68,4 +68,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CA_PATTERN_CATALOG_H
+

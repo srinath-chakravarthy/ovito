@@ -23,6 +23,7 @@
 #include <core/scene/pipeline/Modifier.h>
 #include <core/scene/pipeline/ModifierApplication.h>
 #include <core/scene/pipeline/PipelineObject.h>
+#include <core/scene/pipeline/PipelineEvalRequest.h>
 #include <core/animation/AnimationSettings.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
@@ -64,15 +65,14 @@ QVector<ModifierApplication*> Modifier::modifierApplications() const
 * Note: This method might return empty result objects in some cases when the modifier stack
 * cannot be evaluated because of an invalid modifier.
 ******************************************************************************/
-QVector<QPair<ModifierApplication*, PipelineFlowState>> Modifier::getModifierInputs() const
+QVector<QPair<ModifierApplication*, PipelineFlowState>> Modifier::getModifierInputs(TimePoint time) const
 {
-	TimePoint time = dataset()->animationSettings()->time();
 	QVector<QPair<ModifierApplication*, PipelineFlowState>> results;
 	for(RefMaker* dependent : dependents()) {
         ModifierApplication* modApp = dynamic_object_cast<ModifierApplication>(dependent);
 		if(modApp != nullptr && modApp->modifier() == this) {
 			if(PipelineObject* pipelineObj = modApp->pipelineObject())
-				results.push_back(qMakePair(modApp, pipelineObj->evaluatePipeline(time, modApp, false)));
+				results.push_back(qMakePair(modApp, pipelineObj->evaluateImmediately(PipelineEvalRequest(time, false, modApp, false))));
 		}
 	}
 
@@ -86,9 +86,10 @@ QVector<QPair<ModifierApplication*, PipelineFlowState>> Modifier::getModifierInp
 ******************************************************************************/
 PipelineFlowState Modifier::getModifierInput(ModifierApplication* modApp) const
 {
+	TimePoint time = dataset()->animationSettings()->time();
 	if(modApp != nullptr && modApp->modifier() == this) {
 		if(PipelineObject* pipelineObj = modApp->pipelineObject()) {
-			return pipelineObj->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+			return pipelineObj->evaluateImmediately(PipelineEvalRequest(time, false, modApp, false));
 		}
 	}
 	else {
@@ -96,7 +97,7 @@ PipelineFlowState Modifier::getModifierInput(ModifierApplication* modApp) const
 			ModifierApplication* modApp = dynamic_object_cast<ModifierApplication>(dependent);
 			if(modApp != nullptr && modApp->modifier() == this) {
 				if(PipelineObject* pipelineObj = modApp->pipelineObject()) {
-					return pipelineObj->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+					return pipelineObj->evaluateImmediately(PipelineEvalRequest(time, false, modApp, false));
 				}
 			}
 		}

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_FILE_IMPORTER_EDITOR_H
-#define __OVITO_FILE_IMPORTER_EDITOR_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <gui/properties/PropertiesEditor.h>
@@ -49,4 +49,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_FILE_IMPORTER_EDITOR_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_BONDS_STORAGE_H
-#define __OVITO_BONDS_STORAGE_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <boost/iterator/iterator_facade.hpp>
@@ -148,4 +148,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_BONDS_STORAGE_H
+

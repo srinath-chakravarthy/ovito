@@ -45,12 +45,9 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 using namespace PyScript;
 
-PYBIND11_PLUGIN(ParticlesImporter)
+void defineImportersSubmodule(py::module parentModule)
 {
-	py::options options;
-	options.disable_function_signatures();
-
-	py::module m("ParticlesImporter");
+	py::module m = parentModule.def_submodule("Importers");
 
 	ovito_abstract_class<ParticleImporter, FileSourceImporter>(m)
 		.def_property("multiple_frames", &ParticleImporter::isMultiTimestepFile, &ParticleImporter::setMultiTimestepFile)
@@ -111,11 +108,7 @@ PYBIND11_PLUGIN(ParticlesImporter)
 
 	ovito_class<GSDImporter, ParticleImporter>{m}
 	;
-
-	return m.ptr(); 
 }
-
-OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(ParticlesImporter);
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

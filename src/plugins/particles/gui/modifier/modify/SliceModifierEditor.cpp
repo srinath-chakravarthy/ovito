@@ -329,7 +329,7 @@ void PickParticlePlaneInputMode::alignPlane(SliceModifier* mod)
 		});
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 

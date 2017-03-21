@@ -24,6 +24,7 @@
 #include <plugins/particles/objects/ParticleTypeProperty.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/animation/AnimationSettings.h>
+#include <core/scene/pipeline/PipelineEvalRequest.h>
 #include "WignerSeitzAnalysisModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
@@ -153,7 +154,7 @@ PipelineFlowState WignerSeitzAnalysisModifier::getReferenceState(TimePoint time)
 			refState = linkedFileObj->requestFrame(referenceFrame);
 		}
 	}
-	else refState = referenceConfiguration()->evaluate(dataset()->animationSettings()->frameToTime(referenceFrame));
+	else refState = referenceConfiguration()->evaluateImmediately(PipelineEvalRequest(dataset()->animationSettings()->frameToTime(referenceFrame), false));
 
 	// Make sure the obtained reference configuration is valid and ready to use.
 	if(refState.status().type() == PipelineStatus::Error)
@@ -185,7 +186,7 @@ void WignerSeitzAnalysisModifier::WignerSeitzAnalysisEngine::perform()
 
 	// Prepare the closest-point query structure.
 	NearestNeighborFinder neighborTree(0);
-	if(!neighborTree.prepare(refPositions(), refCell(), nullptr, this))
+	if(!neighborTree.prepare(refPositions(), refCell(), nullptr, *this))
 		return;
 
 	// Determine the number of components of the occupancy property.
@@ -218,7 +219,7 @@ void WignerSeitzAnalysisModifier::WignerSeitzAnalysisEngine::perform()
 	// Assign particles to reference sites.
 	FloatType closestDistanceSq;
 	int particleIndex = 0;
-	setProgressRange(particleCount);
+	setProgressMaximum(particleCount);
 	for(const Point3& p : positions()->constPoint3Range()) {
 
 		int closestIndex = neighborTree.findClosestParticle(_eliminateCellDeformation ? (tm * p) : p, closestDistanceSq);

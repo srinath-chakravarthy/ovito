@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_TASK_DISPLAY_WIDGET_H
-#define __OVITO_TASK_DISPLAY_WIDGET_H
+#pragma once
+
 
 #include <gui/GUI.h>
 
@@ -41,10 +41,10 @@ public:
 private Q_SLOTS:
 
 	/// \brief Is called when a task has started to run.
-	void taskStarted(FutureWatcher* taskWatcher);
+	void taskStarted(PromiseWatcher* taskWatcher);
 
 	/// \brief Is called when a task has finished.
-	void taskFinished(FutureWatcher* taskWatcher);
+	void taskFinished(PromiseWatcher* taskWatcher);
 
 	/// \brief Is called when the progress or status of a task has changed.
 	void taskProgressChanged();
@@ -74,4 +74,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_TASK_DISPLAY_WIDGET_H
+

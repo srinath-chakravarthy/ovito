@@ -95,8 +95,6 @@ SET(SourceFiles
 	properties/VariantComboBoxParameterUI.cpp
 	properties/Vector3ParameterUI.cpp
 	rendering/ViewportSceneRenderer.cpp
-	rendering/StandardSceneRenderer.cpp
-	rendering/StandardSceneRendererEditor.cpp
 	rendering/RenderSettingsEditor.cpp
 	viewport/ViewportWindow.cpp
 	viewport/ViewportMenu.cpp
@@ -112,6 +110,7 @@ SET(SourceFiles
 	scene/objects/camera/CameraObjectEditor.cpp
 	scene/objects/geometry/TriMeshDisplayEditor.cpp
 	utilities/io/GuiFileManager.cpp
+	utilities/concurrent/ProgressDialog.cpp
 	animation/controller/TCBInterpolationControllerEditor.cpp
 )
 
@@ -132,10 +131,6 @@ TARGET_LINK_LIBRARIES(Gui PUBLIC Core OpenGLRenderer)
 
 # Link Qt5.
 TARGET_LINK_LIBRARIES(Gui PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Network)
-
-# Pass version information to source code.
-SET_SOURCE_FILES_PROPERTIES("app/Application.cpp" PROPERTIES COMPILE_DEFINITIONS 
-    "OVITO_VERSION_MAJOR=${OVITO_VERSION_MAJOR};OVITO_VERSION_MINOR=${OVITO_VERSION_MINOR};OVITO_VERSION_REVISION=${OVITO_VERSION_REVISION};OVITO_VERSION_STRING=\"${OVITO_VERSION_STRING}\"")
 
 # Speed up compilation by using precompiled headers.
 ADD_PRECOMPILED_HEADER(Gui gui/GUI.h)

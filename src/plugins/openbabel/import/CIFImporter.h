@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CIF_IMPORTER_H
-#define __OVITO_CIF_IMPORTER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include "OpenBabelImporter.h"
@@ -65,4 +65,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CIF_IMPORTER_H
+

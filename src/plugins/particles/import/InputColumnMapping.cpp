@@ -20,11 +20,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <plugins/particles/Particles.h>
+#include <core/utilities/io/NumberParsing.h>
 #include "InputColumnMapping.h"
-
-#include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/phoenix_core.hpp>
-#include <boost/spirit/include/phoenix_operator.hpp>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import)
 
@@ -210,47 +207,6 @@ InputColumnReader::InputColumnReader(const InputColumnMapping& mapping, Particle
 			rec.stride = rec.property->stride();
 		}
 	}
-}
-
-/******************************************************************************
- * Helper function that converts a string to a floating-point number.
- *****************************************************************************/
-inline bool parseFloatType(const char* s, const char* s_end, float& f)
-{
-	return boost::spirit::qi::parse(s, s_end, boost::spirit::qi::float_, f);
-}
-
-/******************************************************************************
- * Helper function that converts a string to a floating-point number.
- *****************************************************************************/
-inline bool parseFloatType(const char* s, const char* s_end, double& f)
-{
-	return boost::spirit::qi::parse(s, s_end, boost::spirit::qi::double_, f);
-}
-
-/******************************************************************************
- * Helper function that converts a string to an integer number.
- *****************************************************************************/
-inline bool parseInt(const char* s, const char* s_end, int& i)
-{
-	return boost::spirit::qi::parse(s, s_end, boost::spirit::qi::int_, i);
-}
-
-/******************************************************************************
- * Helper function that converts a string repr. of a bool ('T' or 'F') to an int
- *****************************************************************************/
-inline bool parseBool(const char* s, const char* s_end, int& d)
-{
-	if(s_end != s + 1) return false;
-	if(s[0] == 'T') {
-		d = 1;
-		return true;
-	}
-	else if(s[0] == 'F') {
-		d = 0;
-		return true;
-	}
-	return false;
 }
 
 /******************************************************************************

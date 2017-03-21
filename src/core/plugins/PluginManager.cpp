@@ -22,7 +22,8 @@
 #include <core/Core.h>
 #include <core/plugins/PluginManager.h>
 #include <core/plugins/Plugin.h>
-#include <core/plugins/NativePlugin.h>
+
+#include <QLibrary>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(PluginSystem)
 
@@ -58,14 +59,6 @@ Plugin* PluginManager::plugin(const QString& pluginId)
 		if(plugin->pluginId() == pluginId)
 			return plugin;
 	}
-
-	// For backward compatibility with OVITO 2.1:
-	// The "Viz" plugin has been renamed to "Particles".
-	// To support loading of old state files in newer program versions,
-	// use "Viz" as an alias for the Particles plugin.
-	if(pluginId == QStringLiteral("Viz"))
-		return plugin(QStringLiteral("Particles"));
-
 	return nullptr;
 }
 
@@ -96,7 +89,7 @@ QList<QDir> PluginManager::pluginDirs()
 	return { QDir(prefixDir.absolutePath() + QStringLiteral("/plugins")) };
 #elif defined(Q_OS_MAC)
 	prefixDir.cdUp();
-	return { QDir(prefixDir.absolutePath() + QStringLiteral("/Resources/plugins")) };
+	return { QDir(prefixDir.absolutePath() + QStringLiteral("/PlugIns")) };
 #else
 	prefixDir.cdUp();
 	return { QDir(prefixDir.absolutePath() + QStringLiteral("/lib/ovito/plugins")) };
@@ -104,50 +97,61 @@ QList<QDir> PluginManager::pluginDirs()
 }
 
 /******************************************************************************
-* Searches the plugin directories for installed plugins and
-* loads their XML manifests.
+* Searches the plugin directories for installed plugins and loads them.
 ******************************************************************************/
-void PluginManager::registerPlugins()
+void PluginManager::loadAllPlugins()
 {
-	// Initialize all built-in classes.
-	for(NativeOvitoObjectType* clazz = NativeOvitoObjectType::_firstInfo; clazz != nullptr; clazz = clazz->_next) {
+#ifdef Q_OS_WIN
+	// Modify PATH enviroment variable so that Windows finds the plugin DLLs if 
+	// there are dependencies between them.
+	QByteArray path = qgetenv("PATH");
+	for(QDir pluginDir : pluginDirs()) {
+		path = QDir::toNativeSeparators(pluginDir.absolutePath()).toUtf8() + ";" + path;
+	}
+	qputenv("PATH", path);
+#endif
+	
+	// Scan the plugin directories for installed plugins.
+	// This only done in standalone mode.
+	// When OVITO is being used from an external Python interpreter, 
+	// then plugins are loaded via explicit import statements.
+	for(QDir pluginDir : pluginDirs()) {
+		if(!pluginDir.exists())
+			throw Exception(tr("Failed to scan the plugin directory. Path %1 does not exist.").arg(pluginDir.path()));
+
+		// List all plugin files.
+		pluginDir.setNameFilters(QStringList() << "*.so" << "*.dll");
+		pluginDir.setFilter(QDir::Files);
+		for(const QString& file : pluginDir.entryList()) {
+			QString filePath = pluginDir.absoluteFilePath(file);	
+			QLibrary* library = new QLibrary(filePath, this);
+			library->setLoadHints(QLibrary::ExportExternalSymbolsHint);
+			if(!library->load()) {
+				Exception ex(QString("Failed to load native plugin library.\nLibrary file: %1\nError: %2").arg(filePath, library->errorString()));
+				ex.reportError(true);
+			}
+		}
+	}
+
+	registerLoadedPluginClasses();
+}
+
+/******************************************************************************
+* Registers all classes of the already plugins.
+******************************************************************************/
+void PluginManager::registerLoadedPluginClasses()
+{
+	for(NativeOvitoObjectType* clazz = NativeOvitoObjectType::_firstInfo; clazz != _lastRegisteredClass; clazz = clazz->_next) {
 		Plugin* classPlugin = this->plugin(clazz->pluginId());
 		if(!classPlugin) {
-			classPlugin = new NativePlugin(QStringLiteral(":/%1/PluginManifest.json").arg(QString(clazz->pluginId()).toLower()), true);
+			classPlugin = new Plugin(clazz->pluginId());
 			registerPlugin(classPlugin);
 		}
 		OVITO_ASSERT(clazz->plugin() == nullptr);
 		clazz->initializeClassDescriptor(classPlugin);
 		classPlugin->registerClass(clazz);
 	}
-
-	// Scan the plugin directories for installed plugins.
-	for(QDir pluginDir : pluginDirs()) {
-		if(!pluginDir.exists())
-			throw Exception(tr("Failed to scan the plugin directory. Path %1 does not exist.").arg(pluginDir.path()));
-
-		// List all manifest files.
-		pluginDir.setNameFilters(QStringList("*.json"));
-		pluginDir.setFilter(QDir::Files);
-
-		// Load each manifest file in the plugin directory.
-		for(const QString& file : pluginDir.entryList()) {
-			QString filePath = pluginDir.absoluteFilePath(file);
-			try {
-				Plugin* plugin = new NativePlugin(filePath, false);
-				registerPlugin(plugin);
-			}
-			catch(Exception& ex) {
-				ex.prependGeneralMessage(tr("Failed to load plugin manifest:\n\n%1").arg(filePath));
-				ex.showError();
-			}
-		}
-	}
-
-	// Load all other plugins too.
-	for(Plugin* plugin : plugins()) {
-		plugin->loadPlugin();
-	}
+	_lastRegisteredClass = NativeOvitoObjectType::_firstInfo;
 }
 
 /******************************************************************************

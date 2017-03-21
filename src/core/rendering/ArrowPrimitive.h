@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_ARROW_PRIMITIVE_H
-#define __OVITO_ARROW_PRIMITIVE_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/object/OvitoObject.h>
@@ -112,4 +112,4 @@ Q_DECLARE_TYPEINFO(Ovito::ArrowPrimitive::ShadingMode, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::ArrowPrimitive::RenderingQuality, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::ArrowPrimitive::Shape, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_ARROW_PRIMITIVE_H
+

@@ -23,6 +23,7 @@
 #include <plugins/pyscript/binding/PythonBinding.h>
 #include <plugins/netcdf/NetCDFImporter.h>
 #include <plugins/particles/scripting/PythonBinding.h>
+#include <core/plugins/PluginManager.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -30,6 +31,9 @@ using namespace PyScript;
 
 PYBIND11_PLUGIN(NetCDFPlugin)
 {
+	// Register the classes of this plugin with the global PluginManager.
+	PluginManager::instance().registerLoadedPluginClasses();
+	
 	py::options options;
 	options.disable_function_signatures();
 

@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::Box_3 class template.
  */
 
-#ifndef __OVITO_BOX3_H
-#define __OVITO_BOX3_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/io/SaveStream.h>
@@ -355,4 +355,4 @@ Q_DECLARE_TYPEINFO(Ovito::Box3I, Q_MOVABLE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::Box3*, Q_MOVABLE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::Box3I*, Q_MOVABLE_TYPE);
 
-#endif // __OVITO_BOX3_H
+

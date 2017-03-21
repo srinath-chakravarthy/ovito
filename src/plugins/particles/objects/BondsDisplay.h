@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_BONDS_DISPLAY_H
-#define __OVITO_BONDS_DISPLAY_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DisplayObject.h>
@@ -152,4 +152,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_BONDS_DISPLAY_H
+

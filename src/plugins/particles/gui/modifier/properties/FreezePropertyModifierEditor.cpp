@@ -23,6 +23,8 @@
 #include <plugins/particles/modifier/properties/FreezePropertyModifier.h>
 #include <plugins/particles/gui/util/ParticlePropertyParameterUI.h>
 #include <core/animation/AnimationSettings.h>
+#include <core/dataset/DataSetContainer.h>
+#include <gui/utilities/concurrent/ProgressDialog.h>
 #include "FreezePropertyModifierEditor.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Properties) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
@@ -70,8 +72,9 @@ void FreezePropertyModifierEditor::takeSnapshot()
 	FreezePropertyModifier* mod = static_object_cast<FreezePropertyModifier>(editObject());
 	if(!mod) return;
 
-	undoableTransaction(tr("Take property snapshot"), [mod]() {
-		mod->takePropertySnapshot(mod->dataset()->animationSettings()->time(), true);
+	undoableTransaction(tr("Take property snapshot"), [this,mod]() {
+		ProgressDialog progressDialog(container(), mod->dataset()->container()->taskManager(), tr("Property snapshot"));
+		mod->takePropertySnapshot(mod->dataset()->animationSettings()->time(), progressDialog.taskManager(), true);
 	});
 }
 
@@ -83,11 +86,12 @@ void FreezePropertyModifierEditor::onSourcePropertyChanged()
 	FreezePropertyModifier* mod = static_object_cast<FreezePropertyModifier>(editObject());
 	if(!mod) return;
 
-	undoableTransaction(tr("Freeze property"), [mod]() {
+	undoableTransaction(tr("Freeze property"), [this,mod]() {
 		// When the user selects a different source property, adjust the destination property automatically.
 		mod->setDestinationProperty(mod->sourceProperty());
 		// Also take a current snapshot of the source property values.
-		mod->takePropertySnapshot(mod->dataset()->animationSettings()->time(), true);
+		ProgressDialog progressDialog(container(), mod->dataset()->container()->taskManager());
+		mod->takePropertySnapshot(mod->dataset()->animationSettings()->time(), progressDialog.taskManager(), true);
 	});
 }
 

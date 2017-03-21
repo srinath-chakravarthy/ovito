@@ -24,7 +24,7 @@
 #include <core/rendering/RenderSettings.h>
 #include <core/reference/CloneHelper.h>
 #include <core/scene/ObjectNode.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/Task.h>
 #include "TachyonRenderer.h"
 
 extern "C" {
@@ -122,9 +122,10 @@ bool TachyonRenderer::startRender(DataSet* dataset, RenderSettings* settings)
 /******************************************************************************
 * Renders a single animation frame into the given frame buffer.
 ******************************************************************************/
-bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress)
+bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, TaskManager& taskManager)
 {
-	if(progress) progress->setStatusText(tr("Preparing scene"));
+	SynchronousTask renderTask(taskManager);
+	renderTask.setProgressText(tr("Handing scene data to Tachyon renderer"));
 
 	// Create new scene and set up parameters.
 	_rtscene = rt_newscene();
@@ -232,10 +233,8 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 	renderModifiers(true);
 
 	// Render scene.
-	if(progress) {
-		progress->setMaximum(renderSettings()->outputImageWidth() * renderSettings()->outputImageHeight());
-		progress->setStatusText(tr("Rendering scene"));
-	}
+	renderTask.setProgressMaximum(renderSettings()->outputImageWidth() * renderSettings()->outputImageHeight());
+	renderTask.setProgressText(tr("Rendering image"));
 
 	scenedef * scene = (scenedef *)_rtscene;
 
@@ -289,14 +288,12 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 			}
 			frameBuffer->update(QRect(xstart, frameBuffer->image().height() - ystop, xstop - xstart, ystop - ystart));
 
-			if(progress) {
-				progress->setValue(progress->value() + (xstop - xstart) * (ystop - ystart));
-				if(progress->wasCanceled())
-					break;
-			}
+			renderTask.setProgressValue(renderTask.progressValue() + (xstop - xstart) * (ystop - ystart));
+			if(renderTask.isCanceled())
+				break;
 		}
 
-		if(progress && progress->wasCanceled())
+		if(renderTask.isCanceled())
 			break;
 	}
 
@@ -319,7 +316,7 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 	// Clean up.
 	rt_deletescene(_rtscene);
 
-	return (!progress || progress->wasCanceled() == false);
+	return !renderTask.isCanceled();
 }
 
 /******************************************************************************
@@ -570,7 +567,7 @@ void TachyonRenderer::renderMesh(const DefaultMeshPrimitive& meshBuffer)
 		Vector3 d2 = mesh.vertex(face->vertex(2)) - p0;
 		*faceNormal = normalTM * (Vector_3<float>)d2.cross(d1);
 		if(*faceNormal != Vector_3<float>::Zero()) {
-			faceNormal->normalize();
+			//faceNormal->normalize();
 			allMask |= face->smoothingGroups();
 		}
 	}

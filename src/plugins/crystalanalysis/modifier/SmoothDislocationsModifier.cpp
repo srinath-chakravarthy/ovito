@@ -197,7 +197,7 @@ void SmoothDislocationsModifier::coarsenDislocationLine(FloatType linePointInter
 			count++;
 			++inputPtr;
 		}
-		while(count*count < (int)(linePointInterval * sum) && count < input.size()/minNumPoints-1 && inputPtr != inputPtrEnd);
+		while(count*count < (int)(linePointInterval * sum) && count+1 < input.size()/minNumPoints && inputPtr != inputPtrEnd);
 		output.push_back(Point3::Origin() + com / count);
 		outputCoreSize.push_back(sum / count);
 	}

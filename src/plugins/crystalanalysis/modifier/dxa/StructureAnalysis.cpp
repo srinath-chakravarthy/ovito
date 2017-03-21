@@ -444,18 +444,18 @@ void StructureAnalysis::initializeListOfStructures()
 /******************************************************************************
 * Identifies the atomic structures.
 ******************************************************************************/
-bool StructureAnalysis::identifyStructures(FutureInterfaceBase& progress)
+bool StructureAnalysis::identifyStructures(PromiseBase& promise)
 {
 	// Prepare the neighbor list.
 	int maxNeighborListSize = std::min((int)_neighborLists->componentCount() + 1, (int)MAX_NEIGHBORS);
 	NearestNeighborFinder neighFinder(maxNeighborListSize);
-	if(!neighFinder.prepare(positions(), cell(), _particleSelection.data(), &progress))
+	if(!neighFinder.prepare(positions(), cell(), _particleSelection.data(), promise))
 		return false;
 
 	// Identify local structure around each particle.
 	_maximumNeighborDistance = 0;
 
-	return parallelFor(positions()->size(), progress, [this, &neighFinder](size_t index) {
+	return parallelFor(positions()->size(), promise, [this, &neighFinder](size_t index) {
 		determineLocalStructure(neighFinder, index);
 	});
 }
@@ -752,9 +752,10 @@ void StructureAnalysis::determineLocalStructure(NearestNeighborFinder& neighList
 /******************************************************************************
 * Combines adjacent atoms to clusters.
 ******************************************************************************/
-bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
+bool StructureAnalysis::buildClusters(PromiseBase& promise)
 {
-	progress.setProgressRange(positions()->size());
+	promise.setProgressValue(0);
+	promise.setProgressMaximum(positions()->size());
 	int progressCounter = 0;
 
 	// Iterate over atoms, looking for those that have not been visited yet.
@@ -788,7 +789,7 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 			atomsToVisit.pop_front();
 
 			// Update progress indicator.
-			if(!progress.setProgressValueIntermittent(++progressCounter))
+			if(!promise.setProgressValueIntermittent(++progressCounter))
 				return false;
 
 			// Look up symmetry permutation of current atom.
@@ -915,15 +916,16 @@ bool StructureAnalysis::buildClusters(FutureInterfaceBase& progress)
 
 	//qDebug() << "Number of clusters:" << (clusterGraph().clusters().size() - 1);
 
-	return true;
+	return !promise.isCanceled();
 }
 
 /******************************************************************************
 * Determines the transition matrices between clusters.
 ******************************************************************************/
-bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
+bool StructureAnalysis::connectClusters(PromiseBase& promise)
 {
-	progress.setProgressRange(positions()->size());
+	promise.setProgressValue(0);
+	promise.setProgressMaximum(positions()->size());
 
 	for(size_t atomIndex = 0; atomIndex < positions()->size(); atomIndex++) {
 		int clusterId = _atomClusters->getInt(atomIndex);
@@ -932,7 +934,7 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 		OVITO_ASSERT(cluster1);
 
 		// Update progress indicator.
-		if(!progress.setProgressValueIntermittent(atomIndex))
+		if(!promise.setProgressValueIntermittent(atomIndex))
 			return false;
 
 		// Look up symmetry permutation of current atom.
@@ -1019,13 +1021,13 @@ bool StructureAnalysis::connectClusters(FutureInterfaceBase& progress)
 
 	//qDebug() << "Number of cluster transitions:" << clusterGraph().clusterTransitions().size();
 
-	return true;
+	return !promise.isCanceled();
 }
 
 /******************************************************************************
 * Combines clusters to super clusters.
 ******************************************************************************/
-bool StructureAnalysis::formSuperClusters(FutureInterfaceBase& progress)
+bool StructureAnalysis::formSuperClusters(PromiseBase& promise)
 {
 	size_t oldTransitionCount = clusterGraph().clusterTransitions().size();
 
@@ -1034,7 +1036,7 @@ bool StructureAnalysis::formSuperClusters(FutureInterfaceBase& progress)
 		cluster->rank = 0;
 		if(cluster->id == 0) continue;
 
-		if(progress.isCanceled())
+		if(promise.isCanceled())
 			return false;
 
 		OVITO_ASSERT(cluster->parentTransition == nullptr);
@@ -1097,7 +1099,7 @@ bool StructureAnalysis::formSuperClusters(FutureInterfaceBase& progress)
 		Cluster* parentCluster2 = getParentGrain(t->cluster2);
 		if(parentCluster1 == parentCluster2) continue;
 
-		if(progress.isCanceled())
+		if(promise.isCanceled())
 			return false;
 
 		ClusterTransition* parentTransition = t;
@@ -1125,7 +1127,7 @@ bool StructureAnalysis::formSuperClusters(FutureInterfaceBase& progress)
 		getParentGrain(cluster);
 	}
 
-	return true;
+	return !promise.isCanceled();
 }
 
 }	// End of namespace

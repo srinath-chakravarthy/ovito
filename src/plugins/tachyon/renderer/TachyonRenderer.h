@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_TACHYON_RENDERER_H
-#define __OVITO_TACHYON_RENDERER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/rendering/noninteractive/NonInteractiveSceneRenderer.h>
@@ -51,7 +51,7 @@ public:
 
 	/// Renders a single animation frame into the given frame buffer.
 	/// Throws an exception on error. Returns false when the operation has been aborted by the user.
-	virtual bool renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress) override;
+	virtual bool renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, TaskManager& taskManager) override;
 
 	///	Finishes the rendering pass. This is called after all animation frames have been rendered
 	/// or when the rendering operation has been aborted.
@@ -133,4 +133,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_TACHYON_RENDERER_H
+

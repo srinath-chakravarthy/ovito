@@ -103,7 +103,7 @@ void ParticleInformationApplet::updateInformationDisplay()
 	QTextStream stream(&infoText, QIODevice::WriteOnly);
 	for(auto& pickedParticle : _inputMode->_pickedParticles) {
 		OVITO_ASSERT(pickedParticle.objNode);
-		const PipelineFlowState& flowState = pickedParticle.objNode->evalPipeline(dataset->animationSettings()->time());
+		const PipelineFlowState& flowState = pickedParticle.objNode->evaluatePipelineImmediately(PipelineEvalRequest(dataset->animationSettings()->time(), false));
 
 		// If selection is based on particle ID, update the stored particle index in case order has changed.
 		if(pickedParticle.particleId >= 0) {

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_DISLOCATION_DISPLAY_H
-#define __OVITO_CA_DISLOCATION_DISPLAY_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/scene/objects/DisplayObject.h>
@@ -203,4 +203,4 @@ protected:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CA_DISLOCATION_DISPLAY_H
+

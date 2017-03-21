@@ -145,6 +145,8 @@ std::vector<Point3> SceneRenderer::getNodeTrajectory(SceneNode* node)
 ******************************************************************************/
 void SceneRenderer::renderNodeTrajectory(SceneNode* node)
 {
+	if(viewport()->viewNode() == node) return;
+
 	std::vector<Point3> trajectory = getNodeTrajectory(node);
 	if(!trajectory.empty()) {
 		setWorldTransform(AffineTransformation::Identity());

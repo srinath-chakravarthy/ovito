@@ -22,7 +22,7 @@
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/Task.h>
 #include "XYZExporter.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
@@ -34,10 +34,16 @@ SET_PROPERTY_FIELD_LABEL(XYZExporter, subFormat, "Format style");
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.
 ******************************************************************************/
-bool XYZExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
+bool XYZExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager)
 {
+	// Get particle data to be exported.
+	PipelineFlowState state;
+	if(!getParticleData(sceneNode, time, state, taskManager))
+		return false;
+
+	SynchronousTask exportTask(taskManager);
+
 	// Get particle positions.
-	const PipelineFlowState& state = getParticleData(sceneNode, time);
 	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
 
 	size_t atomsCount = posProperty->size();
@@ -153,18 +159,18 @@ bool XYZExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint 
 	}
 	textStream() << '\n';
 
-	if(progress) progress->setMaximum(100);
+	exportTask.setProgressMaximum(100);
 	for(size_t i = 0; i < atomsCount; i++) {
 		columnWriter.writeParticle(i, textStream());
 
-		if(progress && (i % 4096) == 0) {
-			progress->setValue((quint64)i * 100 / atomsCount);
-			if(progress->wasCanceled())
+		if((i % 4096) == 0) {
+			exportTask.setProgressValue((quint64)i * 100 / atomsCount);
+			if(exportTask.isCanceled())
 				return false;
 		}
 	}
 
-	return true;
+	return !exportTask.isCanceled();
 }
 
 OVITO_END_INLINE_NAMESPACE

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SIMULATION_CELL_OBJECT_H
-#define __OVITO_SIMULATION_CELL_OBJECT_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/SimulationCell.h>
@@ -202,4 +202,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_SIMULATION_CELL_OBJECT_H
+

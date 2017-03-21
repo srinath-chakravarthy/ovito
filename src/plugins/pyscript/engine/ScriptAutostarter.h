@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PYSCRIPT_AUTOSTARTER_OBJECT_H
-#define __OVITO_PYSCRIPT_AUTOSTARTER_OBJECT_H
+#pragma once
+
 
 #include <plugins/pyscript/PyScript.h>
 #include <core/plugins/autostart/AutoStartObject.h>
@@ -55,6 +55,4 @@ private:
 	OVITO_OBJECT
 };
 
-};	// End of namespace
-
-#endif
+}	// End of namespace

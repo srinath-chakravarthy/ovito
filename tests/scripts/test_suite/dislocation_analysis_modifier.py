@@ -1,10 +1,9 @@
-import sys
-if "ovito.modifiers.crystalanalysis" not in sys.modules: sys.exit()
-
-from ovito import *
 from ovito.io import *
 from ovito.modifiers import *
 import numpy as np
+
+import sys
+if "ovito.plugins.CrystalAnalysis" not in sys.modules: sys.exit()
 
 node = import_file("../../files/LAMMPS/frank_read.dump.gz")
 

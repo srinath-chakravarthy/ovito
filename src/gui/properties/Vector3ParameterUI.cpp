@@ -102,7 +102,7 @@ void Vector3ParameterUI::updatePropertyValue()
 			Q_EMIT valueEntered();
 		}
 		catch(const Exception& ex) {
-			ex.showError();
+			ex.reportError();
 		}
 	}
 }

@@ -35,6 +35,7 @@ SET(SourceFiles
 	OpenGLMarkerPrimitive.cpp
 	OpenGLSharedResource.cpp
 	OpenGLSceneRenderer.cpp
+	StandardSceneRenderer.cpp
 )
 
 # Compile resources.
@@ -43,8 +44,8 @@ QT5_ADD_RESOURCES(ResourceFiles resources/resources.qrc)
 # Build library
 ADD_LIBRARY(OpenGLRenderer SHARED ${SourceFiles} ${ResourceFiles})
 
-# Pass name of gui plugin to the code. This library is part of the gui plugin.
-TARGET_COMPILE_DEFINITIONS(OpenGLRenderer PRIVATE "OVITO_PLUGIN_NAME=\"Gui\"")
+# Pass name of gui plugin to the code. 
+TARGET_COMPILE_DEFINITIONS(OpenGLRenderer PRIVATE "OVITO_PLUGIN_NAME=\"OpenGLRenderer\"")
 
 # Set default include directory.
 TARGET_INCLUDE_DIRECTORIES(OpenGLRenderer PUBLIC "$<BUILD_INTERFACE:${OVITO_SOURCE_BASE_DIR}/src>")
@@ -76,3 +77,11 @@ INSTALL(TARGETS OpenGLRenderer EXPORT OVITO
 IF(CMAKE_VERSION VERSION_LESS "3")
 	EXPORT(TARGETS OpenGLRenderer NAMESPACE "Ovito::" APPEND FILE "${${PROJECT_NAME}_BINARY_DIR}/OVITOTargets.cmake")
 ENDIF()
+
+# Build corresponding GUI plugin.
+IF(OVITO_BUILD_GUI)
+	ADD_SUBDIRECTORY(gui)
+ENDIF()
+
+# Propagate list of plugins to parent scope.
+SET(OVITO_PLUGIN_LIST ${OVITO_PLUGIN_LIST} PARENT_SCOPE)

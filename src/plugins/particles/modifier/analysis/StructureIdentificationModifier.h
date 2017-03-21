@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_STRUCTURE_IDENTIFICATION_MODIFIER_H
-#define __OVITO_STRUCTURE_IDENTIFICATION_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/modifier/AsynchronousParticleModifier.h>
@@ -139,4 +139,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_STRUCTURE_IDENTIFICATION_MODIFIER_H
+

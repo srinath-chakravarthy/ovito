@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_POVRAY_EXPORTER_H
-#define __OVITO_POVRAY_EXPORTER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/dataset/importexport/FileExporter.h>
@@ -51,7 +51,14 @@ public:
 	QFile& outputFile() { return _outputFile; }
 
 	/// \brief Returns the file filter that specifies the files that can be exported by this service.
-	virtual QString fileFilter() override { return QStringLiteral("*.pov"); }
+	virtual QString fileFilter() override { 
+#ifndef Q_OS_WIN
+		return QStringLiteral("*.pov");
+#else 
+		// Workaround for bug in Windows file selection dialog (https://bugreports.qt.io/browse/QTBUG-45759)
+		return QStringLiteral("*");
+#endif
+	}
 
 	/// \brief Returns the filter description that is displayed in the drop-down box of the file dialog.
 	virtual QString fileFilterDescription() override { return tr("POV-Ray scene"); }
@@ -59,7 +66,7 @@ public:
 protected:
 
 	/// \brief Exports a single animation frame to the current output file.
-	virtual bool exportFrame(int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) override;
+	virtual bool exportFrame(int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager) override;
 
 private:
 
@@ -76,4 +83,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_POVRAY_EXPORTER_H
+

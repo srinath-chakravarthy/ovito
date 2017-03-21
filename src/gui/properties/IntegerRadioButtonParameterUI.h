@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_INTEGER_RADIO_BUTTON_PARAMETER_UI_H
-#define __OVITO_INTEGER_RADIO_BUTTON_PARAMETER_UI_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include "ParameterUI.h"
@@ -97,4 +97,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_INTEGER_RADIO_BUTTON_PARAMETER_UI_H
+

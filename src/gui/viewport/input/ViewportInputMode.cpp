@@ -159,6 +159,14 @@ void ViewportInputMode::mouseDoubleClickEvent(ViewportWindow* vpwin, QMouseEvent
 }
 
 /******************************************************************************
+* Handles the mouse up event for the given viewport.
+******************************************************************************/
+void ViewportInputMode::focusOutEvent(ViewportWindow* vpwin, QFocusEvent* event)
+{
+	_lastMousePressEvent.reset();
+}
+
+/******************************************************************************
 * Lets the input mode render its overlay content in a viewport.
 ******************************************************************************/
 void ViewportInputMode::renderOverlay3D(Viewport* vp, ViewportSceneRenderer* renderer)

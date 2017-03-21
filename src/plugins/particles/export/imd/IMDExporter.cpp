@@ -23,7 +23,7 @@
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/Task.h>
 #include "IMDExporter.h"
 #include "../OutputColumnMapping.h"
 
@@ -34,10 +34,15 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(IMDExporter, FileColumnParticleExporter);
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.
 ******************************************************************************/
-bool IMDExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
+bool IMDExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager)
 {
-	// Get particle positions.
-	const PipelineFlowState& state = getParticleData(sceneNode, time);
+	// Get particle data to be exported.
+	PipelineFlowState state;
+	if(!getParticleData(sceneNode, time, state, taskManager))
+		return false;
+
+	SynchronousTask exportTask(taskManager);
+
 	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
 	ParticleTypeProperty* typeProperty = nullptr;
 	ParticlePropertyObject* identifierProperty = nullptr;
@@ -150,19 +155,19 @@ bool IMDExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint 
 	textStream() << "## IMD file written by " << QCoreApplication::applicationName() << "\n";
 	textStream() << "#E\n";
 
-	if(progress) progress->setMaximum(100);
+	exportTask.setProgressMaximum(100);
 	OutputColumnWriter columnWriter(colMapping, state);
 	for(size_t i = 0; i < atomsCount; i++) {
 		columnWriter.writeParticle(i, textStream());
 
-		if(progress && (i % 4096) == 0) {
-			progress->setValue((quint64)i * 100 / atomsCount);
-			if(progress->wasCanceled())
+		if((i % 4096) == 0) {
+			exportTask.setProgressValue((quint64)i * 100 / atomsCount);
+			if(exportTask.isCanceled())
 				return false;
 		}
 	}
 
-	return true;
+	return !exportTask.isCanceled();
 }
 
 OVITO_END_INLINE_NAMESPACE

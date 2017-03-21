@@ -156,8 +156,9 @@
                 </entry>
             </row>
             <row>
-              <entry>POSCAR / XDATCAR</entry>
-              <entry><para>File formats used by the <emphasis>ab initio</emphasis> simulation package <link xlink:href="http://www.vasp.at/">VASP</link>.</para></entry>
+              <entry>POSCAR / XDATCAR / CHGCAR</entry>
+              <entry><para>File formats used by the <emphasis>ab initio</emphasis> simulation package <link xlink:href="http://www.vasp.at/">VASP</link>.
+                    OVITO can read and visualize charge density data from CHGCAR files.</para></entry>
             </row>
             <row>
               <entry>IMD</entry>

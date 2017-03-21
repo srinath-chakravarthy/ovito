@@ -24,6 +24,7 @@
 #include <core/utilities/io/ObjectLoadStream.h>
 #include <core/utilities/io/ObjectSaveStream.h>
 #include <core/utilities/io/FileManager.h>
+#include <core/app/Application.h>
 #include <core/viewport/Viewport.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/scene/ObjectNode.h>
@@ -65,8 +66,8 @@ FileSource::FileSource(DataSet* dataset) : CompoundObject(dataset),
 	INIT_PROPERTY_FIELD(playbackSpeedDenominator);
 	INIT_PROPERTY_FIELD(playbackStartTime);
 
-	connect(&_frameLoaderWatcher, &FutureWatcher::finished, this, &FileSource::loadOperationFinished);
-	connect(&_frameDiscoveryWatcher, &FutureWatcher::finished, this, &FileSource::frameDiscoveryFinished);
+	connect(&_frameLoaderWatcher, &PromiseWatcher::finished, this, &FileSource::loadOperationFinished);
+	connect(&_frameDiscoveryWatcher, &PromiseWatcher::finished, this, &FileSource::frameDiscoveryFinished);
 
 	// Do not save a copy of the linked external data in state file by default.
 	setSaveWithScene(false);
@@ -182,7 +183,7 @@ void FileSource::cancelLoadOperation()
 	if(_frameBeingLoaded != -1) {
 		try {
 			// This will suppress any pending notification events.
-			_frameLoaderWatcher.unsetFuture();
+			_frameLoaderWatcher.unsetPromise();
 			OVITO_ASSERT(_activeFrameLoader);
 			_activeFrameLoader->cancel();
 			_activeFrameLoader->waitForFinished();
@@ -218,9 +219,9 @@ TimePoint FileSource::inputFrameToAnimationTime(int frame) const
 /******************************************************************************
 * Asks the object for the result of the geometry pipeline at the given time.
 ******************************************************************************/
-PipelineFlowState FileSource::evaluate(TimePoint time)
+PipelineFlowState FileSource::evaluateImmediately(const PipelineEvalRequest& request)
 {
-	return requestFrame(animationTimeToInputFrame(time));
+	return requestFrame(animationTimeToInputFrame(request.time()));
 }
 
 /******************************************************************************
@@ -256,7 +257,7 @@ PipelineFlowState FileSource::requestFrame(int frame)
 			// Cancel pending loading operation first.
 			try {
 				// This will suppress any pending notification events.
-				_frameLoaderWatcher.unsetFuture();
+				_frameLoaderWatcher.unsetPromise();
 				OVITO_ASSERT(_activeFrameLoader);
 				_activeFrameLoader->cancel();
 				_activeFrameLoader->waitForFinished();
@@ -296,7 +297,7 @@ PipelineFlowState FileSource::requestFrame(int frame)
 		_frameBeingLoaded = frame;
 		_activeFrameLoader = importer()->createFrameLoader(frames()[frame], _isNewFile);
 		_isNewFile = false;
-		_frameLoaderWatcher.setFutureInterface(_activeFrameLoader);
+		_frameLoaderWatcher.setPromise(_activeFrameLoader);
 		dataset()->container()->taskManager().runTaskAsync(_activeFrameLoader);
 		setStatus(PipelineStatus::Pending);
 		if(oldLoadingTaskWasCanceled)
@@ -315,42 +316,46 @@ void FileSource::loadOperationFinished()
 	OVITO_ASSERT(_frameBeingLoaded != -1);
 	OVITO_ASSERT(_activeFrameLoader);
 	bool wasCanceled = _activeFrameLoader->isCanceled();
+	int loadedFrame = _frameBeingLoaded;
 	_loadedFrameIndex = _frameBeingLoaded;
 	_frameBeingLoaded = -1;
 	PipelineStatus newStatus = status();
 
+	_frameLoaderWatcher.unsetPromise();
+	std::shared_ptr<FileSourceImporter::FrameLoader> frameLoader = std::move(_activeFrameLoader);
+	OVITO_ASSERT(!_activeFrameLoader);
+
 	if(!wasCanceled) {
 		try {
 			// Check for exceptions thrown by the frame loader.
-			_activeFrameLoader->waitForFinished();
+			frameLoader->waitForFinished();
 			// Adopt the data loaded by the frame loader.
-			_activeFrameLoader->handOver(this);
-			newStatus = _activeFrameLoader->status();
-			if(frames().count() > 1)
-				newStatus.setText(tr("Loaded frame %1 of %2\n").arg(_loadedFrameIndex+1).arg(frames().count()) + newStatus.text());
+			frameLoader->handOver(this);
+			newStatus = frameLoader->status();
+			if(frames().count() > 1) {
+				newStatus.setText(tr("Loaded frame %1 of %2\n").arg(loadedFrame+1).arg(frames().count()) + newStatus.text());
+			}
 		}
 		catch(Exception& ex) {
 			// Provide a context for this error.
 			ex.setContext(dataset());
 			// Transfer exception message to evaluation status.
 			newStatus = PipelineStatus(PipelineStatus::Error, ex.messages().join(QChar('\n')));
-			ex.showError();
+			ex.reportError();
 		}
 	}
 	else {
 		newStatus = PipelineStatus(PipelineStatus::Error, tr("Load operation has been canceled by the user."));
 	}
 
-	// Reset everything.
-	_frameLoaderWatcher.unsetFuture();
-	_activeFrameLoader.reset();
+	if(_loadedFrameIndex == loadedFrame) {
+		// Set the new object status.
+		setStatus(newStatus);
 
-	// Set the new object status.
-	setStatus(newStatus);
-
-	// Notify dependents that the evaluation request was completed.
-	notifyDependents(ReferenceEvent::PendingStateChanged);
-	notifyDependents(ReferenceEvent::TitleChanged);
+		// Notify dependents that the evaluation request was completed.
+		notifyDependents(ReferenceEvent::PendingStateChanged);
+		notifyDependents(ReferenceEvent::TitleChanged);
+	}
 }
 
 /******************************************************************************
@@ -373,7 +378,7 @@ void FileSource::frameDiscoveryFinished()
 		catch(Exception& ex) {
 			// Provide a context for this error.
 			ex.setContext(dataset());
-			ex.showError();
+			ex.reportError();
 		}
 
 		// Jump to the right frame to show the originally selected file.
@@ -393,11 +398,12 @@ void FileSource::frameDiscoveryFinished()
 	}
 
 	// Reset everything.
-	_frameDiscoveryWatcher.unsetFuture();
+	_frameDiscoveryWatcher.unsetPromise();
 	_frameDiscoveryFuture.reset();
 
 	// Notify dependents that the evaluation request was completed.
 	notifyDependents(ReferenceEvent::TargetChanged);
+	notifyDependents(ReferenceEvent::PendingStateChanged);
 }
 
 /******************************************************************************
@@ -411,7 +417,7 @@ void FileSource::refreshFromSource(int frameIndex)
 	// Remove external file from local file cache so that it will be fetched from the
 	// remote server again.
 	if(frameIndex >= 0 && frameIndex < frames().size())
-		FileManager::instance().removeFromCache(frames()[frameIndex].sourceFile);
+		Application::instance()->fileManager()->removeFromCache(frames()[frameIndex].sourceFile);
 
 	if(frameIndex == loadedFrameIndex() || frameIndex == -1) {
 		_loadedFrameIndex = -1;
@@ -563,6 +569,17 @@ void FileSource::propertyChanged(const PropertyFieldDescriptor& field)
 		adjustAnimationInterval();
 	}
 	CompoundObject::propertyChanged(field);
+}
+
+/******************************************************************************
+* Sends an event to all dependents of this RefTarget.
+******************************************************************************/
+void FileSource::notifyDependents(ReferenceEvent& event)
+{
+	if(event.type() == ReferenceEvent::PendingStateChanged)
+		_evaluationRequestHelper.serveRequests(this);
+
+	DataObject::notifyDependents(event);
 }
 
 OVITO_END_INLINE_NAMESPACE

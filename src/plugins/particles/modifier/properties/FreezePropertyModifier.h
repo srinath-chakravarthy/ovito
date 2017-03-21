@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_FREEZE_PROPERTY_MODIFIER_H
-#define __OVITO_FREEZE_PROPERTY_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include "../ParticleModifier.h"
@@ -40,11 +40,11 @@ public:
 	/// Asks the modifier for its validity interval at the given time.
 	virtual TimeInterval modifierValidity(TimePoint time) override { return TimeInterval::infinite(); }
 
-	/// Takes a snapshot of the source property for a specific ModifierApplication.
+	/// Takes a snapshot of the source property for a specific ModifierApplication of this modifier.
 	void takePropertySnapshot(ModifierApplication* modApp, const PipelineFlowState& state);
 
-	/// Takes a snapshot of the source property for all ModifierApplications.
-	void takePropertySnapshot(TimePoint time, bool waitUntilReady);
+	/// Takes a snapshot of the source property for every ModifierApplication of this modifier.
+	bool takePropertySnapshot(TimePoint time, TaskManager& taskManager, bool waitUntilReady);
 
 protected:
 
@@ -112,4 +112,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_FREEZE_PROPERTY_MODIFIER_H
+

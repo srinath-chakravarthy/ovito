@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_MODIFIER_H
-#define __OVITO_MODIFIER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/reference/RefTarget.h>
@@ -101,15 +101,15 @@ public:
 
 	/// \brief Returns the input object of this modifier for each application of the modifier.
 	/// \param time The animation for which the geometry pipelines should be evaluated.
-	/// \return A container that contains for each application of this modifier the
-	///         state of the geometry pipeline evaluation up to the modifier's application.
+	/// \return A list of applications of this modifier and the corresponding
+	///         computed state of the data pipeline up to the modifier's application.
 	///
-	/// This method evaluates the geometry pipeline up this modifier. It can be used to work with
+	/// This method evaluates the data pipeline up this modifier. It can be used to work with
 	/// the input objects outside of a normal call to modifyObject().
 	///
 	/// \note This method might return empty result objects in some cases when the modifier stack
 	///       cannot be evaluated because of an invalid modifier.
-	QVector<QPair<ModifierApplication*, PipelineFlowState>> getModifierInputs() const;
+	QVector<QPair<ModifierApplication*, PipelineFlowState>> getModifierInputs(TimePoint time) const;
 
 	/// \brief Returns the input object of the modifier assuming that it has been applied only in a single geometry pipeline.
 	/// \return The object that comes out of the geometry pipeline when it is evaluated up the application of this modifier.
@@ -178,4 +178,4 @@ OVITO_END_INLINE_NAMESPACE
 Q_DECLARE_METATYPE(Ovito::Modifier*);
 Q_DECLARE_TYPEINFO(Ovito::Modifier*, Q_MOVABLE_TYPE);
 
-#endif // __OVITO_MODIFIER_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_XFORM_VIEWPORT_MODES_H
-#define __OVITO_XFORM_VIEWPORT_MODES_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/reference/RefTargetListener.h>
@@ -97,6 +97,9 @@ public:
 
 	/// \brief Handles the mouse move event for the given viewport.
 	virtual void mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* event) override;
+
+	/// Is called when a viewport looses the input focus.
+	virtual void focusOutEvent(ViewportWindow* vpwin, QFocusEvent* event) override;
 
 	/// \brief Returns the origin of the transformation system to use for xform modes.
 	Point3 transformationCenter();
@@ -274,4 +277,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_XFORM_VIEWPORT_MODES_H
+

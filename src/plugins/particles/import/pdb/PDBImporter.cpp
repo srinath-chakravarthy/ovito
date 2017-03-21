@@ -110,7 +110,7 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 		}
 	}
 
-	setProgressRange(numAtoms);
+	setProgressMaximum(numAtoms);
 
 	// Jump back to beginning of file.
 	stream.seek(0);

@@ -77,10 +77,10 @@ bool CAImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceLocation)
 /******************************************************************************
 * Scans the given input file to find all contained simulation frames.
 ******************************************************************************/
-void CAImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
+void CAImporter::scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
 {
-	futureInterface.setProgressText(tr("Scanning CA file %1").arg(stream.filename()));
-	futureInterface.setProgressRange(stream.underlyingSize() / 1000);
+	promise.setProgressText(tr("Scanning CA file %1").arg(stream.filename()));
+	promise.setProgressMaximum(stream.underlyingSize() / 1000);
 
 	QFileInfo fileInfo(stream.device().fileName());
 	QString filename = fileInfo.fileName();
@@ -88,7 +88,7 @@ void CAImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVec
 	int frameNumber = 0;
 	qint64 byteOffset;
 
-	while(!stream.eof()) {
+	while(!stream.eof() && !promise.isCanceled()) {
 
 		if(frameNumber == 0) {
 			byteOffset = stream.byteOffset();
@@ -115,7 +115,7 @@ void CAImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVec
 			stream.readLineTrimLeft();
 			if(stream.lineStartsWith("CA_FILE_VERSION ")) break;
 			if((stream.lineNumber() % 4096) == 0)
-				futureInterface.setProgressValue(stream.underlyingByteOffset() / 1000);
+				promise.setProgressValue(stream.underlyingByteOffset() / 1000);
 		}
 	}
 }
@@ -249,7 +249,7 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 			if(sscanf(stream.line(), "CLUSTERS %i", &numClusters) != 1)
 				throw Exception(tr("Failed to parse file. Invalid number of clusters in line %1.").arg(stream.lineNumber()));
 			setProgressText(tr("Reading clusters"));
-			setProgressRange(numClusters);
+			setProgressMaximum(numClusters);
 			_clusterGraph = new ClusterGraph();
 			for(int index = 0; index < numClusters; index++) {
 				if(!setProgressValueIntermittent(index))
@@ -327,7 +327,7 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 			if(sscanf(stream.line(), "CLUSTER_TRANSITIONS %i", &numClusterTransitions) != 1)
 				throw Exception(tr("Failed to parse file. Invalid number of cluster transitions in line %1.").arg(stream.lineNumber()));
 			setProgressText(tr("Reading cluster transitions"));
-			setProgressRange(numClusterTransitions);
+			setProgressMaximum(numClusterTransitions);
 			for(int index = 0; index < numClusterTransitions; index++) {
 				if(!setProgressValueIntermittent(index))
 					return;
@@ -351,7 +351,7 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 			if(sscanf(stream.line(), "DISLOCATIONS %i", &numDislocationSegments) != 1)
 				throw Exception(tr("Failed to parse file. Invalid number of dislocation segments in line %1.").arg(stream.lineNumber()));
 			setProgressText(tr("Reading dislocations"));
-			setProgressRange(numDislocationSegments);
+			setProgressMaximum(numDislocationSegments);
 			_dislocations = new DislocationNetwork(_clusterGraph.data());
 			for(int index = 0; index < numDislocationSegments; index++) {
 				if(!setProgressValueIntermittent(index))
@@ -429,7 +429,7 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 			if(sscanf(stream.line(), "DEFECT_MESH_VERTICES %i", &numDefectMeshVertices) != 1)
 				throw Exception(tr("Failed to parse file. Invalid number of defect mesh vertices in line %1.").arg(stream.lineNumber()));
 			setProgressText(tr("Reading defect surface"));
-			setProgressRange(numDefectMeshVertices);
+			setProgressMaximum(numDefectMeshVertices);
 			_defectSurface = new HalfEdgeMesh<>();
 			_defectSurface->reserveVertices(numDefectMeshVertices);
 			for(int index = 0; index < numDefectMeshVertices; index++) {
@@ -445,7 +445,7 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 			int numDefectMeshFacets;
 			if(sscanf(stream.line(), "DEFECT_MESH_FACETS %i", &numDefectMeshFacets) != 1)
 				throw Exception(tr("Failed to parse file. Invalid number of defect mesh facets in line %1.").arg(stream.lineNumber()));
-			setProgressRange(numDefectMeshFacets * 2);
+			setProgressMaximum(numDefectMeshFacets * 2);
 			_defectSurface->reserveFaces(numDefectMeshFacets);
 			for(int index = 0; index < numDefectMeshFacets; index++) {
 				if(!setProgressValueIntermittent(index))
@@ -480,7 +480,7 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 			if(sscanf(stream.line(), "PARTITION_MESH_VERTICES %i", &numVertices) != 1)
 				throw Exception(tr("Failed to parse file. Invalid number of mesh vertices in line %1.").arg(stream.lineNumber()));
 			setProgressText(tr("Reading partition mesh"));
-			setProgressRange(numVertices);
+			setProgressMaximum(numVertices);
 			_partitionMesh = new PartitionMeshData();
 			_partitionMesh->reserveVertices(numVertices);
 			for(int index = 0; index < numVertices; index++) {
@@ -496,7 +496,7 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 			int numFacets;
 			if(sscanf(stream.line(), "PARTITION_MESH_FACETS %i", &numFacets) != 1)
 				throw Exception(tr("Failed to parse file. Invalid number of mesh facets in line %1.").arg(stream.lineNumber()));
-			setProgressRange(numFacets * 2);
+			setProgressMaximum(numFacets * 2);
 			_partitionMesh->reserveFaces(numFacets);
 			for(int index = 0; index < numFacets; index++) {
 				if(!setProgressValueIntermittent(index))
@@ -543,7 +543,7 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 			if(sscanf(stream.line(), "SLIP_SURFACE_VERTICES %i", &numVertices) != 1)
 				throw Exception(tr("Failed to parse file. Invalid number of mesh vertices in line %1.").arg(stream.lineNumber()));
 			setProgressText(tr("Reading slip surfaces"));
-			setProgressRange(numVertices);
+			setProgressMaximum(numVertices);
 			_slipSurface = new SlipSurfaceData();
 			_slipSurface->reserveVertices(numVertices);
 			for(int index = 0; index < numVertices; index++) {
@@ -559,7 +559,7 @@ void CAImporter::CrystalAnalysisFrameLoader::parseFile(CompressedTextReader& str
 			int numFacets;
 			if(sscanf(stream.line(), "SLIP_SURFACE_FACETS %i", &numFacets) != 1)
 				throw Exception(tr("Failed to parse file. Invalid number of mesh facets in line %1.").arg(stream.lineNumber()));
-			setProgressRange(numFacets);
+			setProgressMaximum(numFacets);
 			_slipSurface->reserveFaces(numFacets);
 			for(int index = 0; index < numFacets; index++) {
 				if(!setProgressValueIntermittent(index))

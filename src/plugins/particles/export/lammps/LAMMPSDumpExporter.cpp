@@ -22,7 +22,7 @@
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/Task.h>
 #include "LAMMPSDumpExporter.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
@@ -32,10 +32,16 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(LAMMPSDumpExporter, FileColumnParticleExport
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.
 ******************************************************************************/
-bool LAMMPSDumpExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
+bool LAMMPSDumpExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager)
 {
+	// Get particle data to be exported.
+	PipelineFlowState state;
+	if(!getParticleData(sceneNode, time, state, taskManager))
+		return false;
+
+	SynchronousTask exportTask(taskManager);
+
 	// Get particle positions.
-	const PipelineFlowState& state = getParticleData(sceneNode, time);
 	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
 
 	// Get simulation cell info.
@@ -140,18 +146,18 @@ bool LAMMPSDumpExporter::exportObject(SceneNode* sceneNode, int frameNumber, Tim
 	textStream() << '\n';
 
 	OutputColumnWriter columnWriter(mapping, state);
-	if(progress) progress->setMaximum(100);
+	exportTask.setProgressMaximum(1000);
 	for(size_t i = 0; i < atomsCount; i++) {
 		columnWriter.writeParticle(i, textStream());
 
-		if(progress && (i % 4096) == 0) {
-			progress->setValue((quint64)i * 100 / atomsCount);
-			if(progress->wasCanceled())
+		if((i % 4096) == 0) {
+			exportTask.setProgressValue((quint64)i * 1000 / atomsCount);
+			if(exportTask.isCanceled())
 				return false;
 		}
 	}
 
-	return true;
+	return !exportTask.isCanceled();
 }
 
 OVITO_END_INLINE_NAMESPACE

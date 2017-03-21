@@ -67,9 +67,9 @@ SliceModifier::SliceModifier(DataSet* dataset) : ParticleModifier(dataset),
 	INIT_PROPERTY_FIELD(inverse);
 	INIT_PROPERTY_FIELD(applyToSelection);
 
-	setNormalController(ControllerManager::instance().createVector3Controller(dataset));
-	setDistanceController(ControllerManager::instance().createFloatController(dataset));
-	setWidthController(ControllerManager::instance().createFloatController(dataset));
+	setNormalController(ControllerManager::createVector3Controller(dataset));
+	setDistanceController(ControllerManager::createFloatController(dataset));
+	setWidthController(ControllerManager::createFloatController(dataset));
 	if(normalController()) normalController()->setVector3Value(0, Vector3(1,0,0));
 }
 

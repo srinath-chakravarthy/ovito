@@ -27,6 +27,8 @@
 #include <core/rendering/SceneRenderer.h>
 #include <core/viewport/Viewport.h>
 #include <core/viewport/ViewportConfiguration.h>
+#include <core/utilities/concurrent/Task.h>
+#include <core/utilities/concurrent/TaskManager.h>
 #include "ColorCodingModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring)
@@ -76,8 +78,8 @@ ColorCodingModifier::ColorCodingModifier(DataSet* dataset) : ParticleModifier(da
 	INIT_PROPERTY_FIELD(colorApplicationMode);
 
 	setColorGradient(new ColorCodingHSVGradient(dataset));
-	setStartValueController(ControllerManager::instance().createFloatController(dataset));
-	setEndValueController(ControllerManager::instance().createFloatController(dataset));
+	setStartValueController(ControllerManager::createFloatController(dataset));
+	setEndValueController(ControllerManager::createFloatController(dataset));
 }
 
 /******************************************************************************
@@ -324,19 +326,14 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 }
 
 /******************************************************************************
-* Sets the start and end value to the minimum and maximum value
-* in the selected particle or bond property.
+* Determines the range of values in the input data for the selected property.
 ******************************************************************************/
-bool ColorCodingModifier::adjustRange()
+bool ColorCodingModifier::determinePropertyValueRange(const PipelineFlowState& state, FloatType& min, FloatType& max)
 {
-	// Determine the minimum and maximum values of the selected property.
-
-	// Get the input property.
-	PipelineFlowState inputState = getModifierInput();
 	PropertyBase* property;
 	int vecComponent;
 	if(colorApplicationMode() != ColorCodingModifier::Bonds) {
-		ParticlePropertyObject* propertyObj = sourceParticleProperty().findInState(inputState);
+		ParticlePropertyObject* propertyObj = sourceParticleProperty().findInState(state);
 		if(!propertyObj)
 			return false;
 		property = propertyObj->storage();
@@ -345,7 +342,7 @@ bool ColorCodingModifier::adjustRange()
 		vecComponent = std::max(0, sourceParticleProperty().vectorComponent());
 	}
 	else {
-		BondPropertyObject* propertyObj = sourceBondProperty().findInState(inputState);
+		BondPropertyObject* propertyObj = sourceBondProperty().findInState(state);
 		if(!propertyObj)
 			return false;
 		property = propertyObj->storage();
@@ -382,12 +379,83 @@ bool ColorCodingModifier::adjustRange()
 	if(!std::isfinite(minValue)) minValue = std::numeric_limits<FloatType>::min();
 	if(!std::isfinite(maxValue)) maxValue = std::numeric_limits<FloatType>::max();
 
+	if(minValue < min) min = minValue;
+	if(maxValue > min) max = maxValue;
+
+	return true;
+}
+
+/******************************************************************************
+* Sets the start and end value to the minimum and maximum value
+* in the selected particle or bond property.
+* Returns true if successful.
+******************************************************************************/
+bool ColorCodingModifier::adjustRange()
+{
+	// Get the input data.
+	PipelineFlowState inputState = getModifierInput();
+
+	// Determine the minimum and maximum values of the selected property.
+	FloatType minValue = std::numeric_limits<FloatType>::max();
+	FloatType maxValue = std::numeric_limits<FloatType>::min();
+	if(!determinePropertyValueRange(inputState, minValue, maxValue))
+		return false;
+
+	// Adjust range of color coding.
 	if(startValueController())
 		startValueController()->setCurrentFloatValue(minValue);
 	if(endValueController())
 		endValueController()->setCurrentFloatValue(maxValue);
 
 	return true;
+}
+
+/******************************************************************************
+* Sets the start and end value to the minimum and maximum value of the selected 
+* particle or bond property determined over the entire animation sequence.
+******************************************************************************/
+bool ColorCodingModifier::adjustRangeGlobal(TaskManager& taskManager)
+{
+	ViewportSuspender noVPUpdates(this);
+	SynchronousTask task(taskManager);
+
+	TimeInterval interval = dataset()->animationSettings()->animationInterval();
+	task.setProgressMaximum(interval.duration() / dataset()->animationSettings()->ticksPerFrame() + 1);
+
+	FloatType minValue = std::numeric_limits<FloatType>::max();
+	FloatType maxValue = std::numeric_limits<FloatType>::min();
+
+	TimePoint oldAnimTime = dataset()->animationSettings()->time();
+	for(TimePoint time = interval.start(); time <= interval.end(); time += dataset()->animationSettings()->ticksPerFrame()) {
+		if(task.isCanceled()) break;
+		task.setProgressText(tr("Analyzing frame %1").arg(dataset()->animationSettings()->timeToFrame(time)));
+		dataset()->animationSettings()->setTime(time);
+
+		for(ModifierApplication* modApp : modifierApplications()) {
+
+			PipelineObject* pipelineObj = modApp->pipelineObject();
+			if(!pipelineObj) continue;
+			
+			Future<PipelineFlowState> stateFuture = pipelineObj->evaluateAsync(PipelineEvalRequest(time, false, modApp, false));
+			if(!taskManager.waitForTask(stateFuture))
+				break;
+
+			determinePropertyValueRange(stateFuture.result(), minValue, maxValue);
+		}
+		task.setProgressValue(task.progressValue() + 1);
+	}
+	dataset()->animationSettings()->setTime(oldAnimTime);
+
+	if(!task.isCanceled()) {
+		// Adjust range of color coding.
+		if(startValueController() && minValue != std::numeric_limits<FloatType>::max())
+			startValueController()->setCurrentFloatValue(minValue);
+		if(endValueController() && maxValue != std::numeric_limits<FloatType>::min())
+			endValueController()->setCurrentFloatValue(maxValue);
+
+		return true;
+	}
+	return false;
 }
 
 /******************************************************************************

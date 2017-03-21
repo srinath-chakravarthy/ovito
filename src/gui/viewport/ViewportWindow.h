@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VIEWPORT_WINDOW_H
-#define __OVITO_VIEWPORT_WINDOW_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/viewport/ViewportWindowInterface.h>
@@ -54,11 +54,7 @@ struct OVITO_GUI_EXPORT ViewportPickResult
 /**
  * \brief The internal render window/widget used by the Viewport class.
  */
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-class OVITO_GUI_EXPORT ViewportWindow : public QWindow, public ViewportWindowInterface
-#else
 class OVITO_GUI_EXPORT ViewportWindow : public QOpenGLWidget, public ViewportWindowInterface
-#endif
 {
 public:
 
@@ -106,35 +102,12 @@ public:
 	/// Renders custom GUI elements in the viewport on top of the scene.
 	virtual void renderGui() override;
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-
-	/// Returns the window's OpenGL context used for rendering.
-	QOpenGLContext* context() const { return _context; }
-
-	/// Returns the QWidget that has been created for this QWindow.
-	QWidget* widget() { return _widget; }
-
-#else
-
-	/// Mimic isExposed() function of QWindow.
-	bool isExposed() const { return isVisible(); }
-
-	/// Returns this widget.
-	QWidget* widget() { return this; }
-
-#endif
+	/// Provides access to the OpenGL context used by the viewport window for rendering.
+	virtual QOpenGLContext* glcontext() override { return this->context(); }
 
 	/// If the return value is true, the viewport window receives all mouse events until
 	/// setMouseGrabEnabled(false) is called; other windows get no mouse events at all.
 	bool setMouseGrabEnabled(bool grab);
-
-	/// Sets the cursor shape for this viewport window.
-	/// The mouse cursor will assume this shape when it is over this viewport window,
-	/// unless an override cursor is set.
-	void setCursor(const QCursor& cursor);
-
-	/// Restores the default arrow cursor for this viewport window.
-	void unsetCursor();
 
 	/// \brief Determines the object that is visible under the given mouse cursor position.
 	ViewportPickResult pick(const QPointF& pos);
@@ -145,19 +118,6 @@ public:
 
 protected:
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-	/// Handles the expose events.
-	virtual void exposeEvent(QExposeEvent* event) override;
-
-	/// Handles the resize events.
-	virtual void resizeEvent(QResizeEvent* event) override;
-
-	/// Is called in periodic intervals.
-	virtual void timerEvent(QTimerEvent* event) override;
-
-	/// This internal method receives events to the viewport window.
-	virtual bool event(QEvent* event) override;
-#else
 	/// Is called whenever the widget needs to be painted.
 	virtual void paintGL() override;
 
@@ -169,7 +129,6 @@ protected:
 
 	/// Is called when the viewport becomes visible.
 	virtual void showEvent(QShowEvent* event) override;
-#endif
 
 	/// Handles double click events.
 	virtual void mouseDoubleClickEvent(QMouseEvent* event) override;
@@ -185,6 +144,9 @@ protected:
 
 	/// Handles mouse wheel events.
 	virtual void wheelEvent(QWheelEvent* event) override;
+
+	/// Is called when the widgets looses the input focus.
+	virtual void focusOutEvent(QFocusEvent* event) override;
 
 private:
 
@@ -208,17 +170,6 @@ private:
 
 	/// A flag that indicates that a viewport update has been requested.
 	bool _updateRequested;
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-	/// A flag that indicates that an update request event has been put on the event queue.
-	bool _updatePending;
-
-	/// The OpenGL context used for rendering.
-	QOpenGLContext* _context;
-
-	/// The QWidget that has been created for this QWindow.
-	QWidget* _widget;
-#endif
 
 	/// The zone in the upper left corner of the viewport where
 	/// the context menu can be activated by the user.
@@ -261,4 +212,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_VIEWPORT_WINDOW_H
+

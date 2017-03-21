@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VECTOR_DISPLAY_H
-#define __OVITO_VECTOR_DISPLAY_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DisplayObject.h>
@@ -180,4 +180,4 @@ Q_DECLARE_METATYPE(Ovito::Particles::VectorDisplay::ArrowPosition);
 Q_DECLARE_TYPEINFO(Ovito::Particles::VectorDisplay::ArrowPosition, Q_PRIMITIVE_TYPE);
 
 
-#endif // __OVITO_VECTOR_DISPLAY_H
+

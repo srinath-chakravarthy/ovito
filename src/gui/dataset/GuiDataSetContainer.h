@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_GUI_DATASET_CONTAINER_H
-#define __OVITO_GUI_DATASET_CONTAINER_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/dataset/DataSetContainer.h>
@@ -80,21 +80,22 @@ public:
 	/// If yes, then the dataset is saved by calling fileSave().
 	bool askForSaveChanges();
 
-	/// \brief This function blocks execution until some operation has been completed.
-	///        The function displays a progress dialog to block access to the application main window.
-	///        The dialog allows the user to cancel the operation.
-	/// \param callback This callback function will be polled to check whether the operation has finished.
-	///                 The callback function should return true to indicate that the operation has finished.
-	/// \param message The text to be shown to the user while waiting.
-	/// \param progressDisplay The progress display/dialog to be used for showing the message.
-	///                       If NULL, the function will create and show its own progress dialog box.
-	/// \return true on success; false if the operation has been canceled by the user.
-	virtual bool waitUntil(const std::function<bool()>& callback, const QString& message, AbstractProgressDisplay* progressDisplay = nullptr) override;
+private Q_SLOTS:
+
+	/// Is called whenever a local event loop is entered to wait for a task to finish.
+	void localEventLoopEntered();
+
+	/// Is called whenever a local event loop was exited after waiting for a task to finish.
+	void localEventLoopExited();
 
 private:
 
 	/// The window this dataset container is linked to (may be NULL).
 	MainWindow* _mainWindow;
+
+	/// Counts how many times viewport repaints have been disabled so that we can
+	/// re-enable them again the same number of times.
+	int _viewportRepaintsDisabled = 0;
 
 	Q_OBJECT
 	OVITO_OBJECT
@@ -103,4 +104,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_GUI_DATASET_CONTAINER_H
+

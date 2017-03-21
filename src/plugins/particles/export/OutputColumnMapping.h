@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_OUTPUT_COLUMN_MAPPING_H
-#define __OVITO_OUTPUT_COLUMN_MAPPING_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/pipeline/PipelineFlowState.h>
@@ -112,4 +112,4 @@ OVITO_END_INLINE_NAMESPACE
 
 Q_DECLARE_METATYPE(Ovito::Particles::OutputColumnMapping);
 
-#endif // __OVITO_OUTPUT_COLUMN_MAPPING_H
+

@@ -204,6 +204,22 @@ void POVRayRendererEditor::createUI(const RolloutInsertionParameters& rolloutPar
 	layout->addWidget(dofSampleCountUI->label(), 2, 0);
 	layout->addLayout(dofSampleCountUI->createFieldLayout(), 2, 1);
 
+	// Omnidiretional stereo
+	BooleanGroupBoxParameterUI* enableODSUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(POVRayRenderer::odsEnabled));
+	QGroupBox* odsGroupBox = enableODSUI->groupBox();
+	mainLayout->addWidget(odsGroupBox);
+
+	layout = new QGridLayout(enableODSUI->childContainer());
+	layout->setContentsMargins(4,4,4,4);
+	layout->setSpacing(2);
+	layout->setColumnStretch(1, 1);
+	layout->addWidget(new QLabel(tr("(Requires POV-Ray 3.7.1 or later)")), 0, 0, 1, 2);
+
+	// Interpupillary distance
+	FloatParameterUI* interpupillaryDistanceUI = new FloatParameterUI(this, PROPERTY_FIELD(POVRayRenderer::interpupillaryDistance));
+	layout->addWidget(interpupillaryDistanceUI->label(), 1, 0);
+	layout->addLayout(interpupillaryDistanceUI->createFieldLayout(), 1, 1);
+
 	// Preferences group
 	QGroupBox* settingsGroupBox = new QGroupBox(tr("Settings"));
 	mainLayout->addWidget(settingsGroupBox);
@@ -228,11 +244,12 @@ void POVRayRendererEditor::createUI(const RolloutInsertionParameters& rolloutPar
 			if(!path.isEmpty()) {
 				UndoableTransaction::handleExceptions(renderer->dataset()->undoStack(), tr("Set executable path"), [renderer, &path]() {
 					renderer->setPovrayExecutable(path);
+					PROPERTY_FIELD(POVRayRenderer::povrayExecutable).memorizeDefaultValue(renderer);
 				});
 			}
 		}
 		catch(const Exception& ex) {
-			ex.showError();
+			ex.reportError();
 		}			
 	});
 	layout->addWidget(selectExecutablePathButton, 1, 1);

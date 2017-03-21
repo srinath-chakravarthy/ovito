@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_APPLICATION_H
-#define __OVITO_APPLICATION_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/Exception.h>
@@ -33,14 +33,11 @@ namespace Ovito {
 class OVITO_CORE_EXPORT Application : public QObject
 {
 	Q_OBJECT
-
+	
 public:
 
 	/// \brief Returns the one and only instance of this class.
-	inline static Application& instance() {
-		OVITO_ASSERT_MSG(_instance != nullptr, "Application::instance()", "Application object has not been created yet.");
-		return *_instance;
-	}
+	inline static Application* instance() { return _instance; }
 
 	/// \brief Constructor.
 	Application();
@@ -49,24 +46,9 @@ public:
 	virtual ~Application();
 
 	/// \brief Initializes the application.
-	/// \param argc The number of command line arguments.
-	/// \param argv The command line arguments.
 	/// \return \c true if the application was initialized successfully;
 	///         \c false if an error occurred and the program should be terminated.
-	///
-	/// This is called on program startup. The method creates all other global objects and the main window.
-	bool initialize(int& argc, char** argv);
-
-	/// \brief Enters the main event loop.
-	/// \return The program exit code.
-	///
-	/// If the application has been started in console mode then this method does nothing.
-	int runApplication();
-
-	/// \brief Releases everything.
-	///
-	/// This is called before the application exits.
-	void shutdown();
+	bool initialize();
 
 	/// \brief Handler method for Qt error messages.
 	///
@@ -94,8 +76,8 @@ public:
 	///         or the global dataset container when running in console mode.
 	DataSetContainer* datasetContainer() const;
 
-	/// \brief Returns the command line options passed to the program.
-	const QCommandLineParser& cmdLineParser() const { return _cmdLineParser; }
+	/// Returns the global FileManager class instance.
+	FileManager* fileManager() const { return _fileManager.get(); }
 
 	/// This registers a functor object to be called after all events in the UI event queue have been processed and
 	/// before control returns to the event loop. For a given target object, only one functor can be registered at a
@@ -127,22 +109,11 @@ public:
 	/// Returns the revision version number of the application.
 	static int applicationVersionRevision();
 
-protected:
-
-	/// Defines the program's command line parameters.
-	virtual void registerCommandLineParameters(QCommandLineParser& parser);
-
-	/// Interprets the command line parameters provided to the application.
-	virtual bool processCommandLineParameters();
-
 	/// Create the global instance of the right QCoreApplication derived class.
 	virtual void createQtApplication(int& argc, char** argv);
 
-	/// Prepares application to start running.
-	virtual bool startupApplication() = 0;
-
-	/// Creates the global FileManager class instance.
-	virtual FileManager* createFileManager();
+	/// Handler function for exceptions.
+	virtual void reportError(const Exception& exception, bool blocking);
 
 private:
 
@@ -152,8 +123,8 @@ private:
 
 protected:
 
-	/// The parser for the command line options passed to the program.
-	QCommandLineParser _cmdLineParser;
+	/// Creates the global FileManager class instance.
+	virtual FileManager* createFileManager();
 
 	/// Indicates that the application is running in console mode.
 	bool _consoleMode;
@@ -176,11 +147,11 @@ protected:
 	/// The number of parallel threads to be used by the application when doing computations.
 	int _idealThreadCount;
 
+	/// The global file manager instance.
+	std::unique_ptr<FileManager> _fileManager;
+
 	/// The default message handler method of Qt.
 	static QtMessageHandler defaultQtMessageHandler;
-
-	/// Handler function for exceptions used in console mode.
-	static void consoleExceptionHandler(const Exception& exception);
 
 	/// The one and only instance of this class.
 	static Application* _instance;
@@ -188,4 +159,4 @@ protected:
 
 }	// End of namespace
 
-#endif // __OVITO_APPLICATION_H
+

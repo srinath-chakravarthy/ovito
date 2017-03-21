@@ -28,7 +28,7 @@
 #include <gui/properties/IntegerRadioButtonParameterUI.h>
 #include <gui/properties/BooleanRadioButtonParameterUI.h>
 #include <gui/widgets/general/ElidedTextLabel.h>
-#include <gui/utilities/concurrent/ProgressDialogAdapter.h>
+#include <gui/utilities/concurrent/ProgressDialog.h>
 #include <core/scene/ObjectNode.h>
 #include "TrajectoryGeneratorObjectEditor.h"
 
@@ -159,18 +159,12 @@ void TrajectoryGeneratorObjectEditor::onRegenerateTrajectory()
 	TrajectoryGeneratorObject* trajObj = static_object_cast<TrajectoryGeneratorObject>(editObject());
 	if(!trajObj) return;
 
-	undoableTransaction(tr("Generate trajectory"), [trajObj]() {
+	undoableTransaction(tr("Generate trajectory"), [this,trajObj]() {
 
 		// Show progress dialog.
-		QProgressDialog progressDialog(MainWindow::fromDataset(trajObj->dataset()));
-		progressDialog.setWindowModality(Qt::WindowModal);
-		progressDialog.setAutoClose(false);
-		progressDialog.setAutoReset(false);
-		progressDialog.setMinimumDuration(0);
-		progressDialog.setValue(0);
-		ProgressDialogAdapter progressDisplay(&progressDialog);
+		ProgressDialog progressDialog(container(), trajObj->dataset()->container()->taskManager(), tr("Generating trajectory lines"));
 
-		trajObj->generateTrajectories(&progressDisplay);
+		trajObj->generateTrajectories(progressDialog.taskManager());
 	});
 }
 

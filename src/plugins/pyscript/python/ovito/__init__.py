@@ -1,5 +1,7 @@
 import os.path
 import sys
+import pkgutil
+import importlib
 try:
     # Python 3.x
     import collections.abc as collections
@@ -7,32 +9,40 @@ except ImportError:
     # Python 2.x
     import collections
 
-# Load the native module with the core bindings
-from PyScript import *
-from PyScriptApp import *
+# Allow OVITO plugins and C++ extension modules to be spread over several installation directories.
+_package_source_path = __path__ # Make a copy of the original path, which will be used below to automatically import all submodules.
+__path__ = pkgutil.extend_path(__path__, __name__)
 
-# Load sub-modules (in the right order because there are dependencies between them)
+# Load the native module with the core bindings
+import ovito.plugins.PyScript
+from .plugins.PyScript import (version, version_string, gui_mode, headless_mode, dataset, task_manager)
+from .plugins.PyScript.App import (DataSet)
+
+# Load sub-modules (in the right order because there are dependencies among them)
 import ovito.anim
 import ovito.data
 import ovito.vis
 import ovito.io
 import ovito.modifiers
 
-from PyScriptScene import ObjectNode
-from PyScriptScene import SceneRoot
-from PyScriptScene import PipelineObject     
-from PyScriptScene import PipelineStatus
+# Load the bindings for the GUI classes when running in gui mode.
+if ovito.gui_mode:
+    import ovito.plugins.PyScriptGui
 
-# Load all OVITO modules packages. This is required
-# to make all Python bindings available.
-import pkgutil
-import importlib
-for _, _name, _ in pkgutil.walk_packages(__path__, __name__ + '.'):
-    if _name == "ovito.linalg": continue  # For backward compatibility with OVITO 2.7.1
+from .plugins.PyScript.Scene import (ObjectNode, SceneRoot, PipelineObject, PipelineStatus)
+
+__all__ = ['version', 'version_string', 'gui_mode', 'headless_mode', 'dataset', 'task_manager',
+    'DataSet', 'ObjectNode']
+
+# Load the whole OVITO package. This is required to make all Python bindings available.
+for _, _name, _ in pkgutil.walk_packages(_package_source_path, __name__ + '.'):
+    if _name.startswith("ovito.linalg"): continue  # For backward compatibility with OVITO 2.7.1. The old 'ovito.linalg' module has been deprecated but may still be present in some existing OVITO installations.
+    if _name.startswith("ovito.plugins"): continue  # Do not load C++ plugin modules at this point, only Python modules
     try:
+        #print("Loading submodule ", _name)
         importlib.import_module(_name)
     except:
-        print("Error while loading submodule %s:" % _name, sys.exc_info()[0])
+        print("Error while loading OVITO submodule %s:" % _name, sys.exc_info()[0])
         raise
 
 def _DataSet_scene_nodes(self):
@@ -147,17 +157,15 @@ def _get_ObjectNode_modifiers(self):
     return ObjectNodeModifierList(self)
 ObjectNode.modifiers = property(_get_ObjectNode_modifiers)
 
-def _ObjectNode_wait(self, signalError = True, msgText = None, time = None):
+def _ObjectNode_wait(self, signalError = True, time = None):
     # Blocks script execution until the node's modification pipeline is ready.
     #
-    #    :param str msgText: An optional text that will be shown to the user while waiting for the operation to finish.
     #    :param signalError: If ``True``, the function raises an exception when the modification pipeline could not be successfully evaluated.
     #                        This may be the case if the input file could not be loaded, or if one of the modifiers reported an error.   
     #    :returns: ``True`` if the pipeline evaluation is complete, ``False`` if the operation has been canceled by the user.
     #
-    if not msgText: msgText = "Data pipeline is being evaluated. Waiting for operation for complete."
     if time is None: time = self.dataset.anim.time 
-    if not self.wait_until_ready(time, msgText, ovito.get_progress_display()):
+    if not self.wait_until_ready(time):
         return False
     if signalError:
         state = self.eval_pipeline(time)
@@ -181,7 +189,7 @@ def _ObjectNode_compute(self, frame = None):
         have been computed and their output fields are up to date.
 
         This function raises a ``RuntimeError`` when the modification pipeline could not be successfully evaluated for some reason.
-        This may happen due to invalid modifier parameters for example.
+        This may happen due to invalid modifier parameters, for example.
 
         :returns: A reference to the node's internal :py:class:`~ovito.data.DataCollection` containing the output of the modification pipeline.
                   It is also accessible via the :py:attr:`.output` attribute after calling :py:meth:`.compute`.
@@ -193,16 +201,22 @@ def _ObjectNode_compute(self, frame = None):
 
     if not self.wait(time = time):
         raise RuntimeError("Operation has been canceled by the user.")
-    
+
     state = self.eval_pipeline(time)
     assert(state.status.type != PipelineStatus.Type.Error)
     assert(state.status.type != PipelineStatus.Type.Pending)
-    
+
     self.__output = ovito.data.DataCollection()
     self.__output.set_data_objects(state)
-        
+
+    # Wait for worker threads to finish.
+    # This is to avoid warning messages 'QThreadStorage: Thread exited after QThreadStorage destroyed'
+    # during Python program exit.
+    import PyQt5.QtCore
+    PyQt5.QtCore.QThreadPool.globalInstance().waitForDone(0)
+
     return self.__output
-   
+
 ObjectNode.compute = _ObjectNode_compute
 
 def _ObjectNode_output(self):

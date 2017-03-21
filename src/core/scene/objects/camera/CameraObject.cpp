@@ -54,9 +54,9 @@ CameraObject::CameraObject(DataSet* dataset) : AbstractCameraObject(dataset), _i
 	INIT_PROPERTY_FIELD(fovController);
 	INIT_PROPERTY_FIELD(zoomController);
 
-	setFovController(ControllerManager::instance().createFloatController(dataset));
+	setFovController(ControllerManager::createFloatController(dataset));
 	fovController()->setFloatValue(0, FLOATTYPE_PI/4);
-	setZoomController(ControllerManager::instance().createFloatController(dataset));
+	setZoomController(ControllerManager::createFloatController(dataset));
 	zoomController()->setFloatValue(0, 200);
 
 	addDisplayObject(new CameraDisplayObject(dataset));

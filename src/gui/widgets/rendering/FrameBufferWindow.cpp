@@ -29,15 +29,8 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 * Constructor.
 ******************************************************************************/
 FrameBufferWindow::FrameBufferWindow(QWidget* parent) :
-#if !defined(Q_OS_MAC) || QT_VERSION >= QT_VERSION_CHECK(5, 3, 1)
 	QMainWindow(parent, (Qt::WindowFlags)(Qt::Tool | Qt::CustomizeWindowHint | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint))
-#else
-	QMainWindow(parent, (Qt::WindowFlags)(Qt::Window | Qt::CustomizeWindowHint | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint))
-#endif
 {
-#if defined(Q_OS_MAC) && QT_VERSION < QT_VERSION_CHECK(5, 3, 1)
-	setWindowModality(Qt::ApplicationModal);
-#endif
 	_frameBufferWidget = new FrameBufferWidget();
 
 	class MyScrollArea : public QScrollArea {
@@ -113,7 +106,7 @@ void FrameBufferWindow::saveImage()
 		QString imageFilename = fileDialog.imageInfo().filename();
 		if(!frameBuffer()->image().save(imageFilename, fileDialog.imageInfo().format())) {
 			Exception ex(tr("Failed to save image to file '%1'.").arg(imageFilename));
-			ex.showError();
+			ex.reportError();
 		}
 	}
 }

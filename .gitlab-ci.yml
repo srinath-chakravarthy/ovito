@@ -28,11 +28,17 @@ before_script:
                          python3-sip
                          python3-pyqt5
                          python3-matplotlib
+                         python-dev
+                         python-sphinx
+                         python-numpy
+                         python-sip
+                         python-pyqt5
+                         python-matplotlib
                          xsltproc
                          docbook-xml
                          povray
 
-build_linux:
+build_linux_python3:
    stage: build
    tags:
       - linux
@@ -42,8 +48,27 @@ build_linux:
       - cmake
            -DCMAKE_BUILD_TYPE=Debug
            -DOVITO_BUILD_DOCUMENTATION=ON
+           -DPYTHON_EXECUTABLE=/usr/bin/python3.5
            -DPYTHON_INCLUDE_DIR=/usr/include/python3.5m
            -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.5m.so
+           -DCMAKE_INSTALL_PREFIX=../install
+           ..
+      - make -j4 install
+      - ctest --output-on-failure
+
+build_linux_python2:
+   stage: build
+   tags:
+      - linux
+   script:
+      - mkdir build
+      - cd build
+      - cmake
+           -DCMAKE_BUILD_TYPE=Debug
+           -DOVITO_BUILD_DOCUMENTATION=ON
+           -DPYTHON_EXECUTABLE=/usr/bin/python2.7
+           -DPYTHON_INCLUDE_DIR=/usr/include/python2.7
+           -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython2.7.so
            -DCMAKE_INSTALL_PREFIX=../install
            ..
       - make -j4 install

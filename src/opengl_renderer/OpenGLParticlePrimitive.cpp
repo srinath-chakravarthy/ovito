@@ -558,6 +558,11 @@ void OpenGLParticlePrimitive::renderPointSprites(OpenGLSceneRenderer* renderer)
 		OVITO_CHECK_OPENGL(renderer->glPointParameterfv(GL_POINT_DISTANCE_ATTENUATION, distanceAttenuation.data()));
 	}
 
+	// Account for possible scaling in the model-view TM.
+	float radius_scalingfactor = (float)pow(renderer->modelViewTM().determinant(), FloatType(1.0/3.0));
+	shader->setUniformValue("radius_scalingfactor", radius_scalingfactor);	
+	param *= radius_scalingfactor;
+
 	shader->setUniformValue("basePointSize", param);
 	shader->setUniformValue("projection_matrix", (QMatrix4x4)renderer->projParams().projectionMatrix);
 	shader->setUniformValue("modelview_matrix", (QMatrix4x4)renderer->modelViewTM());
@@ -664,7 +669,11 @@ void OpenGLParticlePrimitive::renderBoxes(OpenGLSceneRenderer* renderer)
 	}
 
 	if(particleShape() != SphericalShape && !renderer->isPicking()) {
-		shader->setUniformValue("normal_matrix", (QMatrix3x3)(renderer->modelViewTM().linear().inverse().transposed()));
+		Matrix3 normal_matrix = renderer->modelViewTM().linear().inverse().transposed();
+		normal_matrix.column(0).normalize();
+		normal_matrix.column(1).normalize();
+		normal_matrix.column(2).normalize();
+		shader->setUniformValue("normal_matrix", (QMatrix3x3)normal_matrix);
 		if(!_usingGeometryShader) {
 			// The normal vectors for the cube triangle strip.
 			static const QVector3D normals[14] = {
@@ -692,6 +701,7 @@ void OpenGLParticlePrimitive::renderBoxes(OpenGLSceneRenderer* renderer)
 	shader->setUniformValue("modelview_matrix", (QMatrix4x4)renderer->modelViewTM());
 	shader->setUniformValue("modelviewprojection_matrix", (QMatrix4x4)(renderer->projParams().projectionMatrix * renderer->modelViewTM()));
 	shader->setUniformValue("is_perspective", renderer->projParams().isPerspective);
+	shader->setUniformValue("radius_scalingfactor", (float)pow(renderer->modelViewTM().determinant(), FloatType(1.0/3.0)));
 
 	GLint viewportCoords[4];
 	renderer->glGetIntegerv(GL_VIEWPORT, viewportCoords);
@@ -827,6 +837,9 @@ void OpenGLParticlePrimitive::renderImposters(OpenGLSceneRenderer* renderer)
 	shader->setUniformValue("projection_matrix", (QMatrix4x4)renderer->projParams().projectionMatrix);
 	shader->setUniformValue("modelview_matrix", (QMatrix4x4)renderer->modelViewTM());
 	shader->setUniformValue("modelviewprojection_matrix", (QMatrix4x4)(renderer->projParams().projectionMatrix * renderer->modelViewTM()));
+
+	// Account for possible scaling in the model-view TM.
+	shader->setUniformValue("radius_scalingfactor", (float)pow(renderer->modelViewTM().determinant(), FloatType(1.0/3.0)));
 
 	if(!renderer->isPicking() && translucentParticles()) {
 		renderer->glEnable(GL_BLEND);

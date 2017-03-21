@@ -97,7 +97,7 @@ void IntegerParameterUI::updateUI()
 			}
 		}
 		catch(const Exception& ex) {
-			ex.showError();
+			ex.reportError();
 		}
 	}
 }

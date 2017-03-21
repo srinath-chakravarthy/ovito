@@ -2,9 +2,9 @@
 import ovito.io
 
 # Load the native code modules
-import Particles
-from ParticlesImporter import *
-from ParticlesExporter import *
+import ovito.plugins.Particles
+from ovito.plugins.Particles.Importers import *
+from ovito.plugins.Particles.Exporters import *
 
 # Register export formats.
 ovito.io.export_file._formatTable["lammps_dump"] = LAMMPSDumpExporter

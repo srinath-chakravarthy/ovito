@@ -1,4 +1,4 @@
-from ovito import *
+import ovito
 from ovito.io import *
 from ovito.modifiers import *
 from ovito.vis import *
@@ -15,7 +15,7 @@ node = import_file("../../files/CFG/fcc_coherent_twin.0.cfg")
 node.modifiers.append(CoordinationNumberModifier())
 node.modifiers.append(HistogramModifier())
 node.add_to_scene()
-vp = dataset.viewports.active_vp
+vp = ovito.dataset.viewports.active_vp
 
 def render(painter, **args):
 
@@ -64,4 +64,6 @@ overlay.function = render
 vp.overlays.append(overlay)
 if ovito.headless_mode: 
     ovito.dataset.render_settings.renderer = TachyonRenderer(ambient_occlusion = False, antialiasing = False)
+else:
+    ovito.dataset.render_settings.renderer = OpenGLRenderer()
 vp.render()

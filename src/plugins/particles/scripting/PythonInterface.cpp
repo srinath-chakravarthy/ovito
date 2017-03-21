@@ -33,6 +33,7 @@
 #include <plugins/particles/objects/BondsDisplay.h>
 #include <plugins/particles/objects/BondPropertyObject.h>
 #include <plugins/particles/objects/BondTypeProperty.h>
+#include <plugins/particles/objects/FieldQuantityObject.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/particles/objects/TrajectoryObject.h>
 #include <plugins/particles/objects/TrajectoryGeneratorObject.h>
@@ -41,11 +42,16 @@
 #include <plugins/particles/util/NearestNeighborFinder.h>
 #include <core/utilities/io/CompressedTextWriter.h>
 #include <core/animation/AnimationSettings.h>
+#include <core/plugins/PluginManager.h>
 #include "PythonBinding.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 using namespace PyScript;
+
+void defineModifiersSubmodule(py::module parentModule);	// Defined in ModifierBinding.cpp
+void defineImportersSubmodule(py::module parentModule);	// Defined in ImporterBinding.cpp
+void defineExportersSubmodule(py::module parentModule);	// Defined in ExporterBinding.cpp
 
 template<class PropertyClass, bool ReadOnly>
 py::dict PropertyObject__array_interface__(PropertyClass& p)
@@ -64,25 +70,25 @@ py::dict PropertyObject__array_interface__(PropertyClass& p)
 	if(p.dataType() == qMetaTypeId<int>()) {
 		OVITO_STATIC_ASSERT(sizeof(int) == 4);
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-		ai["typestr"] = py::cast("<i4");
+		ai["typestr"] = py::bytes("<i4");
 #else
-		ai["typestr"] = py::cast(">i4");
+		ai["typestr"] = py::bytes(">i4");
 #endif
 	}
 	else if(p.dataType() == qMetaTypeId<FloatType>()) {
 #ifdef FLOATTYPE_FLOAT		
 		OVITO_STATIC_ASSERT(sizeof(FloatType) == 4);
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-		ai["typestr"] = py::cast("<f4");
+		ai["typestr"] = py::bytes("<f4");
 #else
-		ai["typestr"] = py::cast(">f4");
+		ai["typestr"] = py::bytes(">f4");
 #endif
 #else
 		OVITO_STATIC_ASSERT(sizeof(FloatType) == 8);
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-		ai["typestr"] = py::cast("<f8");
+		ai["typestr"] = py::bytes("<f8");
 #else
-		ai["typestr"] = py::cast(">f8");
+		ai["typestr"] = py::bytes(">f8");
 #endif
 #endif
 	}
@@ -103,9 +109,9 @@ py::dict BondsObject__array_interface__(const BondsObject& p)
 	ai["shape"] = py::make_tuple(p.storage()->size(), 2);
 	OVITO_STATIC_ASSERT(sizeof(unsigned int) == 4);
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-	ai["typestr"] = py::cast("<u4");
+	ai["typestr"] = py::bytes("<u4");
 #else
-	ai["typestr"] = py::cast(">u4");
+	ai["typestr"] = py::bytes(">u4");
 #endif
 	const unsigned int* data;
 	if(!p.storage()->empty()) {
@@ -127,9 +133,9 @@ py::dict BondsObject__pbc_vectors(const BondsObject& p)
 	ai["shape"] = py::make_tuple(p.storage()->size(), 3);
 	OVITO_STATIC_ASSERT(sizeof(int8_t) == 1);
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-	ai["typestr"] = py::cast("<i1");
+	ai["typestr"] = py::bytes("<i1");
 #else
-	ai["typestr"] = py::cast(">i1");
+	ai["typestr"] = py::bytes(">i1");
 #endif
 	const int8_t* data;
 	if(!p.storage()->empty()) {
@@ -147,6 +153,9 @@ py::dict BondsObject__pbc_vectors(const BondsObject& p)
 
 PYBIND11_PLUGIN(Particles)
 {
+	// Register the classes of this plugin with the global PluginManager.
+	PluginManager::instance().registerLoadedPluginClasses();
+	
 	py::options options;
 	options.disable_function_signatures();
 
@@ -712,7 +721,8 @@ PYBIND11_PLUGIN(Particles)
 	auto CutoffNeighborFinder_py = py::class_<CutoffNeighborFinder>(m, "CutoffNeighborFinder")
 		.def(py::init<>())
 		.def("prepare", [](CutoffNeighborFinder& finder, FloatType cutoff, ParticlePropertyObject& positions, SimulationCellObject& cell) {
-				finder.prepare(cutoff, positions.storage(), cell.data());
+				SynchronousTask task(ScriptEngine::activeTaskManager());
+				return finder.prepare(cutoff, positions.storage(), cell.data(), nullptr, task.promise());
 			})
 	;
 
@@ -730,7 +740,8 @@ PYBIND11_PLUGIN(Particles)
 	auto NearestNeighborFinder_py = py::class_<NearestNeighborFinder>(m, "NearestNeighborFinder")
 		.def(py::init<size_t>())
 		.def("prepare", [](NearestNeighborFinder& finder, ParticlePropertyObject& positions, SimulationCellObject& cell) {
-			finder.prepare(positions.storage(), cell.data());
+			SynchronousTask task(ScriptEngine::activeTaskManager());
+			return finder.prepare(positions.storage(), cell.data(), nullptr, task.promise());
 		})
 	;
 
@@ -864,6 +875,21 @@ PYBIND11_PLUGIN(Particles)
 				"The display name of this bond type.")
 	;
 
+	ovito_abstract_class<DataObjectWithSharedStorage<FieldQuantity>, DataObject>(m, nullptr, "DataObjectWithSharedFieldQuantityStorage");
+	auto FieldQuantityObject_py = ovito_abstract_class<FieldQuantityObject, DataObjectWithSharedStorage<FieldQuantity>>(m)
+		.def("changed", &FieldQuantityObject::changed,
+				"Informs the object that its stored data has changed. "
+				"This function must be called after each direct modification of the field data "
+				"through the :py:attr:`.marray` attribute.\n\n"
+				"Calling this method on an input field quantity is necessary to invalidate data caches down the data "
+				"pipeline. Forgetting to call this method may result in an incomplete re-evaluation of the data pipeline. "
+				"See :py:attr:`.marray` for more information.")
+		.def_property("name", &FieldQuantityObject::name, &FieldQuantityObject::setName,
+				"The human-readable name of the field quantitz.")
+		.def_property_readonly("components", &FieldQuantityObject::componentCount,
+				"The number of vector components (if this is a vector quantity); otherwise 1 (= scalar quantity).")
+	;
+	
 	ovito_class<TrajectoryObject, DataObject>{m};
 
 	ovito_class<TrajectoryGeneratorObject, TrajectoryObject>(m,
@@ -918,11 +944,11 @@ PYBIND11_PLUGIN(Particles)
 				},
 				"The animation frame interval over which the particle positions are sampled to generate the trajectory lines. "
 				"Set this to a tuple of two integers to specify the first and the last animation frame; or use ``None`` to generate trajectory lines "
-				"over the entire animation interval of the currect :py:class:`~ovito.DataSet`."
+				"over the entire input sequence."
 				"\n\n"
 				":Default: ``None``\n")
 		.def("generate", [](TrajectoryGeneratorObject& obj) {
-				return obj.generateTrajectories(ScriptEngine::activeEngine() ? ScriptEngine::activeEngine()->progressDisplay() : nullptr);
+				return obj.generateTrajectories(ScriptEngine::activeTaskManager());
 			},
 			"Generates the trajectory lines by sampling the positions of the particles in the :py:attr:`.source_node` at regular time intervals. "
 			"The trajectory line data is cached by the :py:class:`!TrajectoryLineGenerator`.")
@@ -953,6 +979,11 @@ PYBIND11_PLUGIN(Particles)
 				"\n\n"
 				":Default: ``False``\n")
 	;
+
+	// Register submodules.
+	defineModifiersSubmodule(m);	// Defined in ModifierBinding.cpp
+	defineImportersSubmodule(m);	// Defined in ImporterBinding.cpp
+	defineExportersSubmodule(m);	// Defined in ExporterBinding.cpp
 
 	return m.ptr();
 }

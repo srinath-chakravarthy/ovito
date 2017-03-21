@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VIEWPORT_CONFIGURATION_H
-#define __OVITO_VIEWPORT_CONFIGURATION_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/viewport/Viewport.h>
@@ -207,4 +207,4 @@ OVITO_END_INLINE_NAMESPACE
 Q_DECLARE_METATYPE(Ovito::ViewportConfiguration::OrbitCenterMode);
 Q_DECLARE_TYPEINFO(Ovito::ViewportConfiguration::OrbitCenterMode, Q_PRIMITIVE_TYPE);
 
-#endif		// __OVITO_VIEWPORT_CONFIGURATION_H
+

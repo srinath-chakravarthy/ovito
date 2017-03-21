@@ -180,7 +180,7 @@ void CreateBondsModifier::invalidateCachedResults()
 ******************************************************************************/
 void CreateBondsModifier::initializeModifier(PipelineObject* pipeline, ModifierApplication* modApp)
 {
-	ParticleModifier::initializeModifier(pipeline, modApp);
+	AsynchronousParticleModifier::initializeModifier(pipeline, modApp);
 
 	// Adopt the upstream BondsDisplay object if there already is one.
 	PipelineFlowState input = getModifierInput(modApp);
@@ -251,14 +251,14 @@ void CreateBondsModifier::BondsEngine::perform()
 
 	// Prepare the neighbor list.
 	CutoffNeighborFinder neighborFinder;
-	if(!neighborFinder.prepare(_maxCutoff, _positions.data(), _simCell, nullptr, this))
+	if(!neighborFinder.prepare(_maxCutoff, _positions.data(), _simCell, nullptr, *this))
 		return;
 
 	FloatType minCutoffSquared = _minCutoff * _minCutoff;
 
 	// Generate (half) bonds.
 	size_t particleCount = _positions->size();
-	setProgressRange(particleCount);
+	setProgressMaximum(particleCount);
 	if(!_particleTypes) {
 		for(size_t particleIndex = 0; particleIndex < particleCount; particleIndex++) {
 			for(CutoffNeighborFinder::Query neighborQuery(neighborFinder, particleIndex); !neighborQuery.atEnd(); neighborQuery.next()) {

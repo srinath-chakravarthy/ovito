@@ -21,6 +21,7 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/utilities/io/FileManager.h>
+#include <core/utilities/io/NumberParsing.h>
 #include <core/utilities/concurrent/Future.h>
 #include <core/dataset/importexport/FileSource.h>
 #include "POSCARImporter.h"
@@ -92,10 +93,10 @@ bool POSCARImporter::shouldScanFileForTimesteps(const QUrl& sourceUrl)
 /******************************************************************************
 * Scans the given input file to find all contained simulation frames.
 ******************************************************************************/
-void POSCARImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
+void POSCARImporter::scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
 {
-	futureInterface.setProgressText(tr("Scanning file %1").arg(stream.filename()));
-	futureInterface.setProgressRange(stream.underlyingSize() / 1000);
+	promise.setProgressText(tr("Scanning file %1").arg(stream.filename()));
+	promise.setProgressMaximum(stream.underlyingSize() / 1000);
 
 	// Regular expression for whitespace characters.
 	QRegularExpression ws_re(QStringLiteral("\\s+"));
@@ -123,7 +124,7 @@ void POSCARImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, 
 	Frame frame;
 	frame.sourceFile = sourceUrl;
 	frame.lastModificationTime = fileInfo.lastModified();
-	while(!stream.eof()) {
+	while(!stream.eof() && !promise.isCanceled()) {
 		frame.byteOffset = stream.byteOffset();
 		frame.lineNumber = stream.lineNumber();
 		frame.label = QString("%1 (Frame %2)").arg(filename).arg(frameNumber++);
@@ -136,8 +137,8 @@ void POSCARImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, 
 			}
 		}
 
-		futureInterface.setProgressValueIntermittent(stream.underlyingByteOffset() / 1000);
-		if(futureInterface.isCanceled())
+		promise.setProgressValueIntermittent(stream.underlyingByteOffset() / 1000);
+		if(promise.isCanceled())
 			return;
 	}
 }
@@ -224,16 +225,17 @@ void POSCARImporter::POSCARImportTask::parseFile(CompressedTextReader& stream)
 		}
 	}
 
-	// Parse optional velocity vectors.
+	// Parse optional atomic velocity vectors or CHGCAR electron density data. 
+	// Do this only for the first frame.
 	if(byteOffset == 0) {
 		if(!stream.eof())
-			stream.readLine();
-		if(!stream.eof() && stream.line()[0] != '\0') {
+			stream.readLineTrimLeft();
+		if(!stream.eof() && stream.line()[0] > ' ') {
 			isCartesian = false;
 			if(stream.line()[0] == 'C' || stream.line()[0] == 'c' || stream.line()[0] == 'K' || stream.line()[0] == 'k')
 				isCartesian = true;
 
-			// Read atom velocities.
+			// Read atomic velocities.
 			ParticleProperty* velocityProperty = new ParticleProperty(totalAtomCount, ParticleProperty::VelocityProperty, 0, false);
 			addParticleProperty(velocityProperty);
 			Vector3* v = velocityProperty->dataVector3();
@@ -247,9 +249,44 @@ void POSCARImporter::POSCARImportTask::parseFile(CompressedTextReader& stream)
 				}
 			}
 		}
+		else if(!stream.eof()) {
+			size_t nx, ny, nz;
+			// Parse charge density grid.
+			if(sscanf(stream.readLine(), "%zu %zu %zu", &nx, &ny, &nz) == 3 && nx > 0 && ny > 0 && nz > 0) {
+				FieldQuantity* electronDensity = new FieldQuantity({nx,ny,nz}, qMetaTypeId<FloatType>(), 1, 0, tr("Charge density"), false);
+				addFieldQuantity(electronDensity);
+				const char* s = stream.readLine();
+				FloatType* data = electronDensity->dataFloat();
+				setProgressMaximum(electronDensity->size());
+				for(size_t i = 0; i < electronDensity->size(); i++, ++data) {
+					const char* token;
+					for(;;) {
+						while(*s == ' ' || *s == '\t')
+							++s;
+						token = s;
+						while(*s > ' ' || *s < 0)
+							++s;
+						if(s != token) break;
+						s = stream.readLine();
+					}
+					if(!parseFloatType(token, s, *data))
+						throw Exception(tr("Invalid value in charge density section (line %1): \"%2\"").arg(stream.lineNumber()).arg(QString::fromLocal8Bit(token, s - token)));
+					if(*s != '\0')
+						s++;
+
+					if(!setProgressValueIntermittent(i)) return;						
+				}
+			}
+		}
 	}
 
-	setStatus(tr("%1 atoms").arg(totalAtomCount));
+	QString statusString = tr("%1 atoms").arg(totalAtomCount);
+	if(!fieldQuantities().empty())
+		statusString += tr("\nCharge density grid: %1 x %2 x %3")
+			.arg(fieldQuantities().front()->shape()[0])
+			.arg(fieldQuantities().front()->shape()[1])
+			.arg(fieldQuantities().front()->shape()[2]);
+	setStatus(statusString);
 }
 
 /******************************************************************************

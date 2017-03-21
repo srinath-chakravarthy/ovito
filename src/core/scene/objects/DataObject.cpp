@@ -43,6 +43,22 @@ DataObject::DataObject(DataSet* dataset) : RefTarget(dataset), _revisionNumber(0
 }
 
 /******************************************************************************
+* Asks the object for the result of the data pipeline.
+******************************************************************************/
+PipelineFlowState DataObject::evaluateImmediately(const PipelineEvalRequest& request) 
+{
+	return PipelineFlowState(this, objectValidity(request.time()));
+}
+
+/******************************************************************************
+* Asks the object for the result of the data pipeline.
+******************************************************************************/
+Future<PipelineFlowState> DataObject::evaluateAsync(const PipelineEvalRequest& request) 
+{
+	return Future<PipelineFlowState>::createImmediate(PipelineFlowState(this, objectValidity(request.time())));
+}
+
+/******************************************************************************
 * Sends an event to all dependents of this RefTarget.
 ******************************************************************************/
 void DataObject::notifyDependents(ReferenceEvent& event)
@@ -133,17 +149,6 @@ QSet<ObjectNode*> DataObject::dependentNodes() const
 		}
 	}
 	return nodeList;
-}
-
-/******************************************************************************
-* This function blocks execution until the object is able ready to
-* provide data via its evaluate() function.
-******************************************************************************/
-bool DataObject::waitUntilReady(TimePoint time, const QString& message, AbstractProgressDisplay* progressDisplay)
-{
-	return dataset()->container()->waitUntil([this, time]() {
-		return evaluate(time).status().type() != PipelineStatus::Pending;
-	}, message, progressDisplay);
 }
 
 OVITO_END_INLINE_NAMESPACE

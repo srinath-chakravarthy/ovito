@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VIEWPORT_SCENE_RENDERER_H
-#define __OVITO_VIEWPORT_SCENE_RENDERER_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <opengl_renderer/OpenGLSceneRenderer.h>
@@ -82,4 +82,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_VIEWPORT_SCENE_RENDERER_H
+

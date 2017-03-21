@@ -24,8 +24,8 @@
  * \brief This high-level header file includes other headers to import the most important linear algebra classes.
  */
 
-#ifndef __OVITO_LINALG_H
-#define __OVITO_LINALG_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -46,4 +46,4 @@
 #include "Plane.h"
 #include "SymmetricTensor.h"
 
-#endif // __OVITO_LINALG_H
+

@@ -34,12 +34,14 @@ This module contains classes related to data visualization and rendering.
 
 import sip
 import PyQt5.QtGui
+import ovito
 
 # Load the native modules.
-from PyScriptRendering import *
-from PyScriptViewport import *
+from ..plugins.PyScript.Rendering import *
+from ..plugins.PyScript.Viewport import *
 
-import ovito
+__all__ = ['RenderSettings', 'Viewport', 'ViewportConfiguration', 'OpenGLRenderer', 'Display',
+        'CoordinateTripodOverlay', 'PythonViewportOverlay', 'TextLabelOverlay']
 
 def _get_RenderSettings_custom_range(self):
     """ 
@@ -117,7 +119,7 @@ def _Viewport_render(self, settings = None):
     else:
         # Create a temporary off-screen frame buffer.
         fb = FrameBuffer(settings.size[0], settings.size[1])
-    if not self.dataset.render_scene(settings, self, fb, ovito.get_progress_display()):
+    if not self.dataset.render_scene(settings, self, fb, ovito.task_manager):
         return None
     return fb.image
 Viewport.render = _Viewport_render

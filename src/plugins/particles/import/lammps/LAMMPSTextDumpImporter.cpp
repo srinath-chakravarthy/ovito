@@ -76,10 +76,10 @@ InputColumnMapping LAMMPSTextDumpImporter::inspectFileHeader(const Frame& frame)
 /******************************************************************************
 * Scans the given input file to find all contained simulation frames.
 ******************************************************************************/
-void LAMMPSTextDumpImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
+void LAMMPSTextDumpImporter::scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
 {
-	futureInterface.setProgressText(tr("Scanning LAMMPS dump file %1").arg(stream.filename()));
-	futureInterface.setProgressRange(stream.underlyingSize() / 1000);
+	promise.setProgressText(tr("Scanning LAMMPS dump file %1").arg(stream.filename()));
+	promise.setProgressMaximum(stream.underlyingSize() / 1000);
 
 	// Regular expression for whitespace characters.
 	QRegularExpression ws_re(QStringLiteral("\\s+"));
@@ -90,7 +90,7 @@ void LAMMPSTextDumpImporter::scanFileForTimesteps(FutureInterfaceBase& futureInt
 	QString filename = fileInfo.fileName();
 	QDateTime lastModified = fileInfo.lastModified();
 
-	while(!stream.eof()) {
+	while(!stream.eof() && !promise.isCanceled()) {
 		qint64 byteOffset = stream.byteOffset();
 
 		// Parse next line.
@@ -122,8 +122,8 @@ void LAMMPSTextDumpImporter::scanFileForTimesteps(FutureInterfaceBase& futureInt
 				for(size_t i = 0; i < numParticles; i++) {
 					stream.readLine();
 					if((i % 4096) == 0)
-						futureInterface.setProgressValue(stream.underlyingByteOffset() / 1000);
-					if(futureInterface.isCanceled())
+						promise.setProgressValue(stream.underlyingByteOffset() / 1000);
+					if(promise.isCanceled())
 						return;
 				}
 				break;
@@ -175,7 +175,7 @@ void LAMMPSTextDumpImporter::LAMMPSTextDumpImportTask::parseFile(CompressedTextR
 				throw Exception(tr("LAMMPS dump file parsing error. Invalid number of atoms in line %1:\n%2").arg(stream.lineNumber()).arg(stream.lineString()));
 
 			numParticles = u;
-			setProgressRange(u);
+			setProgressMaximum(u);
 		}
 		else if(stream.lineStartsWith("ITEM: BOX BOUNDS xy xz yz")) {
 

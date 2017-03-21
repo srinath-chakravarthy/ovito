@@ -96,7 +96,7 @@ void MoveOverlayInputMode::mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* ev
 			// Take the current mouse cursor position to make the input mode
 			// look more responsive. The cursor position recorded when the mouse event was
 			// generates may be too old.
-			_currentPoint = vpwin->widget()->mapFromGlobal(QCursor::pos());
+			_currentPoint = vpwin->mapFromGlobal(QCursor::pos());
 
 			// Reset the overlay's position first before moving it again below.
 			viewport()->dataset()->undoStack().resetCurrentCompoundOperation();
@@ -114,7 +114,7 @@ void MoveOverlayInputMode::mouseMoveEvent(ViewportWindow* vpwin, QMouseEvent* ev
 			}
 			catch(const Exception& ex) {
 				inputManager()->removeInputMode(this);
-				ex.showError();
+				ex.reportError();
 			}
 
 			// Force immediate viewport repaints.

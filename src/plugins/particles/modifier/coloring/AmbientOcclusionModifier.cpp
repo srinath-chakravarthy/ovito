@@ -55,7 +55,7 @@ AmbientOcclusionModifier::AmbientOcclusionModifier(DataSet* dataset) : Asynchron
 ******************************************************************************/
 std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> AmbientOcclusionModifier::createEngine(TimePoint time, TimeInterval validityInterval)
 {
-	if(Application::instance().headlessMode())
+	if(Application::instance()->headlessMode())
 		throwException(tr("Ambient occlusion modifier requires OpenGL support and cannot be used when program is running in headless mode. "
 						  "Please run program on a machine where access to graphics hardware is possible."));
 
@@ -79,20 +79,21 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> AmbientOcclusionMod
 
 	TimeInterval interval;
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
-	return std::make_shared<AmbientOcclusionEngine>(validityInterval, resolution, samplingCount(), posProperty->storage(), boundingBox, inputParticleRadii(time, interval));
+	return std::make_shared<AmbientOcclusionEngine>(validityInterval, resolution, samplingCount(), posProperty->storage(), boundingBox, inputParticleRadii(time, interval), dataset());
 }
 
 /******************************************************************************
 * Compute engine constructor.
 ******************************************************************************/
-AmbientOcclusionModifier::AmbientOcclusionEngine::AmbientOcclusionEngine(const TimeInterval& validityInterval, int resolution, int samplingCount, ParticleProperty* positions, const Box3& boundingBox, std::vector<FloatType>&& particleRadii) :
+AmbientOcclusionModifier::AmbientOcclusionEngine::AmbientOcclusionEngine(const TimeInterval& validityInterval, int resolution, int samplingCount, ParticleProperty* positions, const Box3& boundingBox, std::vector<FloatType>&& particleRadii, DataSet* dataset) :
 	ComputeEngine(validityInterval),
 	_resolution(resolution),
 	_samplingCount(samplingCount),
 	_positions(positions),
 	_boundingBox(boundingBox),
 	_brightness(new ParticleProperty(positions->size(), qMetaTypeId<FloatType>(), 1, 0, tr("Brightness"), true)),
-	_particleRadii(particleRadii)
+	_particleRadii(particleRadii),
+	_dataset(dataset)
 {
 	_offscreenSurface.setFormat(OpenGLSceneRenderer::getDefaultSurfaceFormat());
 	_offscreenSurface.create();
@@ -103,21 +104,20 @@ AmbientOcclusionModifier::AmbientOcclusionEngine::AmbientOcclusionEngine(const T
 ******************************************************************************/
 void AmbientOcclusionModifier::AmbientOcclusionEngine::perform()
 {
+	if(_boundingBox.isEmpty() || positions()->size() == 0)
+		throw Exception(tr("Modifier input is degenerate or contains no particles."));
+
 	setProgressText(tr("Computing ambient occlusion"));
 
-	// Create a temporary dataset, which is needed to host an instance of AmbientOcclusionRenderer.
-	OORef<DataSet> dataset(new DataSet());
 	// Create the AmbientOcclusionRenderer instance.
-	OORef<AmbientOcclusionRenderer> renderer(new AmbientOcclusionRenderer(dataset, QSize(_resolution, _resolution), _offscreenSurface));
+	OORef<AmbientOcclusionRenderer> renderer(new AmbientOcclusionRenderer(_dataset, QSize(_resolution, _resolution), _offscreenSurface));
 
 	renderer->startRender(nullptr, nullptr);
 	try {
-		OVITO_ASSERT(!_boundingBox.isEmpty());
-
 		// The buffered particle geometry used to render the particles.
 		std::shared_ptr<ParticlePrimitive> particleBuffer;
 
-		setProgressRange(_samplingCount);
+		setProgressMaximum(_samplingCount);
 		for(int sample = 0; sample < _samplingCount; sample++) {
 			if(!setProgressValue(sample))
 				break;
@@ -125,7 +125,7 @@ void AmbientOcclusionModifier::AmbientOcclusionEngine::perform()
 			// Generate lighting direction on unit sphere.
 			FloatType y = (FloatType)sample * 2 / _samplingCount - FloatType(1) + FloatType(1) / _samplingCount;
 			FloatType r = sqrt(FloatType(1) - y * y);
-			FloatType phi = (FloatType)sample * FLOATTYPE_PI * (3.0f - sqrt(5.0f));
+			FloatType phi = (FloatType)sample * FLOATTYPE_PI * (FloatType(3) - sqrt(FloatType(5)));
 			Vector3 dir(cos(phi), y, sin(phi));
 
 			// Set up view projection.
@@ -133,7 +133,7 @@ void AmbientOcclusionModifier::AmbientOcclusionEngine::perform()
 			projParams.viewMatrix = AffineTransformation::lookAlong(_boundingBox.center(), dir, Vector3(0,0,1));
 
 			// Transform bounding box to camera space.
-			Box3 bb = _boundingBox.transformed(projParams.viewMatrix).centerScale(1.01f);
+			Box3 bb = _boundingBox.transformed(projParams.viewMatrix).centerScale(FloatType(1.01));
 
 			// Complete projection parameters.
 			projParams.aspectRatio = 1;
@@ -161,10 +161,10 @@ void AmbientOcclusionModifier::AmbientOcclusionEngine::perform()
 				particleBuffer->render(renderer);
 			}
 			catch(...) {
-				renderer->endFrame();
+				renderer->endFrame(false);
 				throw;
 			}
-			renderer->endFrame();
+			renderer->endFrame(true);
 
 			// Extract brightness values from rendered image.
 			const QImage image = renderer->image();
@@ -239,7 +239,7 @@ PipelineStatus AmbientOcclusionModifier::applyComputationResults(TimePoint time,
 	auto c_in = existingColors.cbegin();
 	for(; c != c_end; ++b, ++c, ++c_in) {
 		FloatType factor = FloatType(1) - intens + (*b);
-		if(factor < 1.0f)
+		if(factor < FloatType(1))
 			*c = factor * (*c_in);
 		else
 			*c = *c_in;

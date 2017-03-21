@@ -70,9 +70,9 @@ MACRO(OVITO_STANDARD_PLUGIN target_name)
 		SET_TARGET_PROPERTIES(${target_name} PROPERTIES LINK_FLAGS "-headerpad_max_install_names")
 	ENDIF(APPLE)
 
-    # Enable the use of @rpath on OSX.
+    # Enable the use of @rpath on macOS.
     SET_TARGET_PROPERTIES(${target_name} PROPERTIES MACOSX_RPATH TRUE)
-    SET_TARGET_PROPERTIES(${target_name} PROPERTIES INSTALL_RPATH "@loader_path/;@executable_path/")
+    SET_TARGET_PROPERTIES(${target_name} PROPERTIES INSTALL_RPATH "@loader_path/;@executable_path/;@loader_path/../MacOS/")
     
 	IF(APPLE)
 	    # The build tree target should have rpath of install tree target.
@@ -85,35 +85,10 @@ MACRO(OVITO_STANDARD_PLUGIN target_name)
     SET_TARGET_PROPERTIES(${target_name} PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${OVITO_PLUGINS_DIRECTORY}")
     SET_TARGET_PROPERTIES(${target_name} PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${OVITO_PLUGINS_DIRECTORY}")
 	
-	# Generate plugin manifest.
-	SET(PLUGIN_MANIFEST "${OVITO_PLUGIN_MANIFESTS_DIRECTORY}/${target_name}.json")
-	FILE(WRITE "${PLUGIN_MANIFEST}" "{\n  \"plugin-id\" : \"${target_name}\",\n")
-	FILE(APPEND "${PLUGIN_MANIFEST}" "  \"plugin-version\" : \"${OVITO_VERSION_STRING}\",\n")
-	FILE(APPEND "${PLUGIN_MANIFEST}" "  \"dependencies\" : [ ")
-	UNSET(delimiter)
-	FOREACH(plugin_name ${plugin_dependencies})
-		FILE(APPEND "${PLUGIN_MANIFEST}" "${delimiter}\"${plugin_name}\"")
-		SET(delimiter ", ")
-	ENDFOREACH()
-	FOREACH(plugin_name ${optional_plugin_dependencies})
-		STRING(TOUPPER "${plugin_name}" uppercase_plugin_name)		
-		IF(OVITO_BUILD_PLUGIN_${uppercase_plugin_name})
-			FILE(APPEND "${PLUGIN_MANIFEST}" "${delimiter}\"${plugin_name}\"")
-			SET(delimiter ", ")
-		ENDIF()
-	ENDFOREACH()
-	FILE(APPEND "${PLUGIN_MANIFEST}" " ],\n")
-	IF(NOT APPLE)
-		FILE(APPEND "${PLUGIN_MANIFEST}" "  \"native-library\" : \"${target_name}\"\n}\n")
-	ELSE()
-		FILE(APPEND "${PLUGIN_MANIFEST}" "  \"native-library\" : \"../../PlugIns/${target_name}\"\n}\n")
-	ENDIF()
-	INSTALL(FILES "${PLUGIN_MANIFEST}" DESTINATION "${OVITO_RELATIVE_PLUGIN_MANIFESTS_DIRECTORY}")
-
 	# Install Python wrapper files.
 	IF(python_wrappers)
 		# Install the Python source files that belong to the plugin, which provide the scripting interface.
-		ADD_CUSTOM_COMMAND(TARGET ${target_name} POST_BUILD COMMAND ${CMAKE_COMMAND} "-E" copy_directory "${python_wrappers}" "${OVITO_PLUGIN_PYTHON_DIRECTORY}/")
+		ADD_CUSTOM_COMMAND(TARGET ${target_name} POST_BUILD COMMAND ${CMAKE_COMMAND} "-E" copy_directory "${python_wrappers}" "${OVITO_PYTHON_DIRECTORY}/")
 	ENDIF()
 
 	# This plugin will be part of the installation package.

@@ -23,6 +23,7 @@
 #include <plugins/pyscript/binding/PythonBinding.h>
 #include <plugins/povray/renderer/POVRayRenderer.h>
 #include <plugins/povray/exporter/POVRayExporter.h>
+#include <core/plugins/PluginManager.h>
 
 namespace Ovito { namespace POVRay { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -31,6 +32,9 @@ using namespace PyScript;
 
 PYBIND11_PLUGIN(POVRay)
 {
+	// Register the classes of this plugin with the global PluginManager.
+	PluginManager::instance().registerLoadedPluginClasses();
+
 	py::options options;
 	options.disable_function_signatures();
 
@@ -89,7 +93,17 @@ PYBIND11_PLUGIN(POVRay)
 		.def_property("blur_samples", &POVRayRenderer::dofSampleCount, &POVRayRenderer::setDofSampleCount,
 				"Controls the maximum number of rays to use for each pixel to compute focus blur (depth-of-field)."
 				"\n\n"
-				":Default: 1.0")		
+				":Default: 1.0")
+		.def_property("omni_stereo", &POVRayRenderer::odsEnabled, &POVRayRenderer::setODSEnabled,
+				"This flag enables `omni­directional stereo projection <http://wiki.povray.org/content/HowTo:ODS>`_ for stereoscopic 360-degree VR videos and images. "
+				"Note that this requires POV-Ray 3.7.1 or newer. The eye separation distance is controlled by the :py:attr:`.interpupillary_distance` parameter. "
+				"\n\n"
+				":Default: ``False``")
+		.def_property("interpupillary_distance", &POVRayRenderer::interpupillaryDistance, &POVRayRenderer::setInterpupillaryDistance,
+				"Controls interpupillary distance (eye separation) for stereoscopic rendering. This setting is only used "
+				"if the :py:attr:`.omni_stereo` option has been set. "
+				"\n\n"
+				":Default: 0.5")		
 	;
 
 	ovito_class<POVRayExporter, FileExporter>{m}

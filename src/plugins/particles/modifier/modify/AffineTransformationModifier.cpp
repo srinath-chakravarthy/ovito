@@ -37,13 +37,15 @@ DEFINE_PROPERTY_FIELD(AffineTransformationModifier, applyToSimulationBox, "Apply
 DEFINE_PROPERTY_FIELD(AffineTransformationModifier, targetCell, "DestinationCell");
 DEFINE_PROPERTY_FIELD(AffineTransformationModifier, relativeMode, "RelativeMode");
 DEFINE_PROPERTY_FIELD(AffineTransformationModifier, applyToSurfaceMesh, "ApplyToSurfaceMesh");
+DEFINE_PROPERTY_FIELD(AffineTransformationModifier, applyToVectorProperties, "ApplyToVectorProperties");
 SET_PROPERTY_FIELD_LABEL(AffineTransformationModifier, transformationTM, "Transformation");
-SET_PROPERTY_FIELD_LABEL(AffineTransformationModifier, applyToParticles, "Transform particles");
+SET_PROPERTY_FIELD_LABEL(AffineTransformationModifier, applyToParticles, "Transform particle positions");
 SET_PROPERTY_FIELD_LABEL(AffineTransformationModifier, selectionOnly, "Selected particles only");
 SET_PROPERTY_FIELD_LABEL(AffineTransformationModifier, applyToSimulationBox, "Transform simulation cell");
 SET_PROPERTY_FIELD_LABEL(AffineTransformationModifier, targetCell, "Destination cell geometry");
 SET_PROPERTY_FIELD_LABEL(AffineTransformationModifier, relativeMode, "Relative transformation");
 SET_PROPERTY_FIELD_LABEL(AffineTransformationModifier, applyToSurfaceMesh, "Transform surface mesh");
+SET_PROPERTY_FIELD_LABEL(AffineTransformationModifier, applyToVectorProperties, "Transform vector properties");
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -51,7 +53,7 @@ SET_PROPERTY_FIELD_LABEL(AffineTransformationModifier, applyToSurfaceMesh, "Tran
 AffineTransformationModifier::AffineTransformationModifier(DataSet* dataset) : ParticleModifier(dataset),
 	_applyToParticles(true), _selectionOnly(false), _applyToSimulationBox(false),
 	_transformationTM(AffineTransformation::Identity()), _targetCell(AffineTransformation::Zero()),
-	_relativeMode(true), _applyToSurfaceMesh(true)
+	_relativeMode(true), _applyToSurfaceMesh(true), _applyToVectorProperties(false)
 {
 	INIT_PROPERTY_FIELD(transformationTM);
 	INIT_PROPERTY_FIELD(applyToParticles);
@@ -60,6 +62,7 @@ AffineTransformationModifier::AffineTransformationModifier(DataSet* dataset) : P
 	INIT_PROPERTY_FIELD(targetCell);
 	INIT_PROPERTY_FIELD(relativeMode);
 	INIT_PROPERTY_FIELD(applyToSurfaceMesh);
+	INIT_PROPERTY_FIELD(applyToVectorProperties);
 }
 
 /******************************************************************************
@@ -111,7 +114,7 @@ PipelineStatus AffineTransformationModifier::modifyParticles(TimePoint time, Tim
 				const int* sbegin = selProperty->constDataInt();
 				Point3* pbegin = posProperty->dataPoint3();
 				Point3* pend = pbegin + posProperty->size();
-				QtConcurrent::blockingMap(pbegin, pend, [tm, pbegin, sbegin](Point3& p) {
+				QtConcurrent::blockingMap(pbegin, pend, [&tm, pbegin, sbegin](Point3& p) {
 					if(sbegin[&p - pbegin])
 						p = tm * p;
 				});
@@ -129,11 +132,40 @@ PipelineStatus AffineTransformationModifier::modifyParticles(TimePoint time, Tim
 					*p += translation;
 			}
 			else {
-				QtConcurrent::blockingMap(pbegin, pend, [tm](Point3& p) { p = tm * p; });
+				QtConcurrent::blockingMap(pbegin, pend, [&tm](Point3& p) { p = tm * p; });
 			}
 		}
 
 		posProperty->changed();
+	}
+
+	if(applyToVectorProperties()) {
+		for(DataObject* obj : input().objects()) {
+			if(OORef<ParticlePropertyObject> inputProperty = dynamic_object_cast<ParticlePropertyObject>(obj)) {
+				if( inputProperty->type() == ParticleProperty::VelocityProperty ||
+					inputProperty->type() == ParticleProperty::ForceProperty ||
+					inputProperty->type() == ParticleProperty::DisplacementProperty) {
+
+					PropertyBase* property = outputStandardProperty(inputProperty->type(), true)->modifiableStorage();
+					OVITO_ASSERT(property->dataType() == qMetaTypeId<FloatType>());
+					OVITO_ASSERT(property->componentCount() == 3);
+					Vector3* const pbegin = property->dataVector3();
+					Vector3* const pend = pbegin + property->size();
+					if(!selectionOnly()) {
+						QtConcurrent::blockingMap(pbegin, pend, [&tm](Vector3& v) { v = tm * v; });
+					}
+					else {
+						ParticlePropertyObject* selProperty = inputStandardProperty(ParticleProperty::SelectionProperty);
+						if(selProperty) {
+							QtConcurrent::blockingMap(pbegin, pend, [&tm, pbegin, selProperty](Vector3& v) {
+								if(selProperty->getInt(&v - pbegin))
+									v = tm * v;
+							});
+						}
+					}
+				}
+			}
+		}
 	}
 
 	if(applyToSurfaceMesh()) {

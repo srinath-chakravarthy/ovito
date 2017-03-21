@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_NETCDF_FILE_EXPORTER_H
-#define __OVITO_NETCDF_FILE_EXPORTER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/export/FileColumnParticleExporter.h>
@@ -58,7 +58,7 @@ protected:
 	virtual void closeOutputFile(bool exportCompleted) override;
 
 	/// \brief Writes the particles of one animation frame to the current output file.
-	virtual bool exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) override;
+	virtual bool exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager) override;
 
 private:
 
@@ -94,6 +94,9 @@ private:
 	QMap<QString, int> _attributes_vars;
 
 	struct NCOutputColumn {
+		NCOutputColumn(const ParticlePropertyReference& p, int dt, size_t cc, int ncv) :
+			property(p), dataType(dt), componentCount(cc), ncvar(ncv) {}
+
 		ParticlePropertyReference property;
 		int dataType;
 		size_t componentCount;
@@ -114,4 +117,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_NETCDF_FILE_EXPORTER_H
+

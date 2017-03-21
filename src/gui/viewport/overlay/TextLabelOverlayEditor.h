@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_TEXT_LABEL_OVERLAY_EDITOR_H
-#define __OVITO_TEXT_LABEL_OVERLAY_EDITOR_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <gui/properties/PropertiesEditor.h>
@@ -63,4 +63,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_TEXT_LABEL_OVERLAY_EDITOR_H
+

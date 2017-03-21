@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CRYSTALANALYSIS_H
-#define __OVITO_CRYSTALANALYSIS_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 
@@ -50,5 +50,3 @@ namespace Ovito {
 		}
 	}
 }
-
-#endif

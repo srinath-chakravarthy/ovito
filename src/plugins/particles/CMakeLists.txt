@@ -37,10 +37,12 @@ SET(SourceFiles
 	objects/TrajectoryObject.cpp
 	objects/TrajectoryDisplay.cpp
 	objects/TrajectoryGeneratorObject.cpp
+	objects/FieldQuantityObject.cpp
 	data/ParticleProperty.cpp
 	data/BondProperty.cpp
 	data/PropertyBase.cpp
 	data/BondsStorage.cpp
+	data/FieldQuantity.cpp
 	modifier/ParticleModifier.cpp
 	modifier/AsynchronousParticleModifier.cpp
 	modifier/coloring/AssignColorModifier.cpp
@@ -56,6 +58,7 @@ SET(SourceFiles
 	modifier/modify/CreateBondsModifier.cpp
 	modifier/modify/LoadTrajectoryModifier.cpp
 	modifier/modify/CombineParticleSetsModifier.cpp
+	modifier/modify/CoordinationPolyhedraModifier.cpp
 	modifier/analysis/StructureIdentificationModifier.cpp
 	modifier/analysis/binandreduce/BinAndReduceModifier.cpp
 	modifier/analysis/bondangle/BondAngleAnalysisModifier.cpp
@@ -81,6 +84,8 @@ SET(SourceFiles
 	modifier/properties/ComputePropertyModifier.cpp
 	modifier/properties/FreezePropertyModifier.cpp
 	modifier/properties/ComputeBondLengthsModifier.cpp
+	modifier/fields/CreateIsosurfaceModifier.cpp
+	modifier/fields/MarchingCubes.cpp
 	import/ParticleImporter.cpp
 	import/ParticleFrameLoader.cpp
 	import/InputColumnMapping.cpp

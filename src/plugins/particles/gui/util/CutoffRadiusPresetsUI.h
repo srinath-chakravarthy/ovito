@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CUTOFF_RADIUS_PRESETS_H
-#define __OVITO_CUTOFF_RADIUS_PRESETS_H
+#pragma once
+
 
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <gui/properties/ParameterUI.h>
@@ -91,4 +91,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CUTOFF_RADIUS_PRESETS_H
+

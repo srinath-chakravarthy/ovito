@@ -46,7 +46,7 @@ SlipSurfaceDisplay::SlipSurfaceDisplay(DataSet* dataset) : AsynchronousDisplayOb
 	INIT_PROPERTY_FIELD(smoothShading);
 	INIT_PROPERTY_FIELD(surfaceTransparencyController);
 
-	setSurfaceTransparencyController(ControllerManager::instance().createFloatController(dataset));
+	setSurfaceTransparencyController(ControllerManager::createFloatController(dataset));
 }
 
 /******************************************************************************
@@ -114,7 +114,7 @@ void SlipSurfaceDisplay::PrepareMeshEngine::perform()
 {
 	setProgressText(tr("Preparing slip surface for display"));
 
-	if(!buildMesh(*_inputMesh, _simCell, _cuttingPlanes, _structureNames, _surfaceMesh, _materialColors, this))
+	if(!buildMesh(*_inputMesh, _simCell, _cuttingPlanes, _structureNames, _surfaceMesh, _materialColors, *this))
 		throw Exception(tr("Failed to generate non-periodic version of slip surface for display. Simulation cell might be too small."));
 
 	if(isCanceled())
@@ -199,7 +199,7 @@ void SlipSurfaceDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 /******************************************************************************
 * Generates the final triangle mesh, which will be rendered.
 ******************************************************************************/
-bool SlipSurfaceDisplay::buildMesh(const SlipSurfaceData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, const QStringList& structureNames, TriMesh& output, std::vector<ColorA>& materialColors, FutureInterfaceBase* progress)
+bool SlipSurfaceDisplay::buildMesh(const SlipSurfaceData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, const QStringList& structureNames, TriMesh& output, std::vector<ColorA>& materialColors, PromiseBase& promise)
 {
 	// Convert half-edge mesh to triangle mesh.
 	input.convertToTriMesh(output);
@@ -227,7 +227,7 @@ bool SlipSurfaceDisplay::buildMesh(const SlipSurfaceData& input, const Simulatio
 	OVITO_ASSERT(fout == output.faces().end());
 
 	// Check for early abortion.
-	if(progress && progress->isCanceled())
+	if(promise.isCanceled())
 		return false;
 
 	// Convert vertex positions to reduced coordinates.
@@ -240,7 +240,7 @@ bool SlipSurfaceDisplay::buildMesh(const SlipSurfaceData& input, const Simulatio
 	for(size_t dim = 0; dim < 3; dim++) {
 		if(cell.pbcFlags()[dim] == false) continue;
 
-		if(progress && progress->isCanceled())
+		if(promise.isCanceled())
 			return false;
 
 		// Make sure all vertices are located inside the periodic box.
@@ -266,7 +266,7 @@ bool SlipSurfaceDisplay::buildMesh(const SlipSurfaceData& input, const Simulatio
 	}
 
 	// Check for early abortion.
-	if(progress && progress->isCanceled())
+	if(promise.isCanceled())
 		return false;
 
 	// Convert vertex positions back from reduced coordinates to absolute coordinates.
@@ -276,7 +276,7 @@ bool SlipSurfaceDisplay::buildMesh(const SlipSurfaceData& input, const Simulatio
 
 	// Clip mesh at cutting planes.
 	for(const Plane3& plane : cuttingPlanes) {
-		if(progress && progress->isCanceled())
+		if(promise.isCanceled())
 			return false;
 
 		output.clipAtPlane(plane);
@@ -285,7 +285,7 @@ bool SlipSurfaceDisplay::buildMesh(const SlipSurfaceData& input, const Simulatio
 	output.invalidateVertices();
 	output.invalidateFaces();
 
-	return true;
+	return !promise.isCanceled();
 }
 
 /******************************************************************************

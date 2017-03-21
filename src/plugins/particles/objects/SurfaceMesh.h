@@ -19,14 +19,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SURFACE_MESH_H
-#define __OVITO_SURFACE_MESH_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/SimulationCell.h>
 #include <core/scene/objects/DataObjectWithSharedStorage.h>
 #include <core/utilities/mesh/HalfEdgeMesh.h>
-#include <core/utilities/concurrent/FutureInterface.h>
+#include <core/utilities/concurrent/Promise.h>
 
 namespace Ovito { namespace Particles {
 
@@ -59,13 +59,15 @@ public:
 	}
 
 	/// Fairs the triangle mesh stored in this object.
-	void smoothMesh(const SimulationCell& cell, int numIterations, FutureInterfaceBase* progress = nullptr, FloatType k_PB = 0.1f, FloatType lambda = 0.5f) {
-		smoothMesh(*modifiableStorage(), cell, numIterations, progress, k_PB, lambda);
+	bool smoothMesh(const SimulationCell& cell, int numIterations, PromiseBase& promise, FloatType k_PB = FloatType(0.1), FloatType lambda = FloatType(0.5)) {
+		if(!smoothMesh(*modifiableStorage(), cell, numIterations, promise, k_PB, lambda))
+			return false;
 		changed();
+		return true;
 	}
 
 	/// Fairs a triangle mesh.
-	static void smoothMesh(HalfEdgeMesh<>& mesh, const SimulationCell& cell, int numIterations, FutureInterfaceBase* progress = nullptr, FloatType k_PB = 0.1f, FloatType lambda = 0.5f);
+	static bool smoothMesh(HalfEdgeMesh<>& mesh, const SimulationCell& cell, int numIterations, PromiseBase& promise, FloatType k_PB = FloatType(0.1), FloatType lambda = FloatType(0.5));
 
 protected:
 
@@ -90,4 +92,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_SURFACE_MESH_H
+

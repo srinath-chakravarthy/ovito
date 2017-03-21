@@ -136,7 +136,7 @@ PipelineStatus CalculateDisplacementsModifier::modifyParticles(TimePoint time, T
 			refState = fileSource->requestFrame(referenceFrame);
 		}
 	}
-	else refState = referenceConfiguration()->evaluate(dataset()->animationSettings()->frameToTime(referenceFrame));
+	else refState = referenceConfiguration()->evaluateImmediately(PipelineEvalRequest(dataset()->animationSettings()->frameToTime(referenceFrame), false));
 
 	// Make sure the obtained reference configuration is valid and ready to use.
 	if(refState.status().type() == PipelineStatus::Error)

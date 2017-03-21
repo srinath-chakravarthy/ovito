@@ -21,7 +21,7 @@
 
 #include <plugins/pyscript/PyScript.h>
 #include <core/dataset/DataSetContainer.h>
-#include <gui/utilities/concurrent/ProgressDialogAdapter.h>
+#include <gui/utilities/concurrent/ProgressDialog.h>
 #include <gui/actions/ActionManager.h>
 #include <gui/dialogs/HistoryFileDialog.h>
 #include <gui/mainwin/MainWindow.h>
@@ -52,23 +52,15 @@ void RunScriptAction::registerActions(ActionManager& actionManager)
 		// Keep undo records so that script actions can be undone.
 		dataset->undoStack().beginCompoundOperation(tr("Script actions"));
 		try {
-			ScriptEngine engine(dataset);
-
 			// Show a progress dialog while script is running.
-			QProgressDialog progressDialog(actionManager.mainWindow());
-			progressDialog.setWindowModality(Qt::WindowModal);
-			progressDialog.setAutoClose(false);
-			progressDialog.setAutoReset(false);
-			progressDialog.setMinimumDuration(0);
-			progressDialog.setValue(0);
-			progressDialog.setLabelText(tr("Running script"));
-			ProgressDialogAdapter progressDisplay(&progressDialog);
-			engine.setProgressDisplay(&progressDisplay);
+			ProgressDialog progressDialog(actionManager.mainWindow(), tr("Script execution"));	
+
+			ScriptEngine engine(dataset, progressDialog.taskManager(), true);
 
 			engine.executeFile(scriptFile);
 		}
 		catch(const Exception& ex) {
-			ex.showError();
+			ex.reportError();
 		}
 		dataset->undoStack().endCompoundOperation();
 	});

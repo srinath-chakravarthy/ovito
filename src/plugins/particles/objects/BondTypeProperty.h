@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_BOND_TYPE_PROPERTY_H
-#define __OVITO_BOND_TYPE_PROPERTY_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include "BondPropertyObject.h"
@@ -123,4 +123,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_BOND_TYPE_PROPERTY_H
+

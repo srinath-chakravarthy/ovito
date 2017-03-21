@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_FHI_AIMS_LOG_FILE_IMPORTER_H
-#define __OVITO_FHI_AIMS_LOG_FILE_IMPORTER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include "../ParticleImporter.h"
@@ -61,7 +61,7 @@ public:
 protected:
 
 	/// \brief Scans the given input file to find all contained simulation frames.
-	virtual void scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream) override;
+	virtual void scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream) override;
 
 private:
 
@@ -90,4 +90,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_FHI_AIMS_LOG_FILE_IMPORTER_H
+

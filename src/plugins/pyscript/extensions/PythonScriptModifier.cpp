@@ -40,6 +40,14 @@ PythonScriptModifier::PythonScriptModifier(DataSet* dataset) : Modifier(dataset)
 		_computingInterval(TimeInterval::empty())
 {
 	INIT_PROPERTY_FIELD(script);
+}
+
+/******************************************************************************
+* Loads the default values of this object's parameter fields.
+******************************************************************************/
+void PythonScriptModifier::loadUserDefaults()
+{
+	Modifier::loadUserDefaults();
 
 	// Load example script.
 	setScript("from ovito.data import *\n\n"
@@ -150,7 +158,7 @@ void PythonScriptModifier::runScriptFunction()
 	_scriptExecutionQueued = false;
 
 	do {
-		if(!_generatorObject) {
+		if(!_generatorObject || _generatorObject.is_none()) {
 
 			// Check if an evaluation request is still pending.
 			_computingInterval = _inputCache.stateValidity();
@@ -173,7 +181,7 @@ void PythonScriptModifier::runScriptFunction()
 
 				// Initialize local script engine if there is no active engine to re-use.
 				if(!_scriptEngine) {
-					_scriptEngine.reset(new ScriptEngine(dataset(), nullptr, false));
+					_scriptEngine.reset(new ScriptEngine(dataset(), dataset()->container()->taskManager(), true));
 					connect(_scriptEngine.get(), &ScriptEngine::scriptOutput, this, &PythonScriptModifier::onScriptOutput);
 					connect(_scriptEngine.get(), &ScriptEngine::scriptError, this, &PythonScriptModifier::onScriptOutput);
 					_mainNamespacePrototype = _scriptEngine->mainNamespace();
@@ -192,10 +200,7 @@ void PythonScriptModifier::runScriptFunction()
 				int animationFrame = dataset()->animationSettings()->timeToFrame(_computingInterval.start());
 
 				// Construct progress callback object.
-				_runningTask = std::make_shared<ProgressHelper>();
-				// Register background task so user/system can cancel it.
-				dataset()->container()->taskManager().registerTask(_runningTask);
-				_runningTask->reportStarted();
+				_runningTask.reset(new SynchronousTask(dataset()->container()->taskManager()));
 				_runningTask->setProgressText(tr("Running modifier script"));
 
 				// Make sure the actions of the modify() function are not recorded on the undo stack.
@@ -210,15 +215,12 @@ void PythonScriptModifier::runScriptFunction()
 				OORef<CompoundObject> inputDataCollection = new CompoundObject(dataset());
 				inputDataCollection->setDataObjects(_outputCache);
 
-				ScriptEngine* engine = ScriptEngine::activeEngine();
-				if(!engine) engine = _scriptEngine.get();
-
-				engine->execute([this,animationFrame,&inputDataCollection,engine]() {
+				_scriptEngine->execute([this,animationFrame,&inputDataCollection]() {
 					// Prepare arguments to be passed to the script function.
 					py::tuple arguments = py::make_tuple(animationFrame, inputDataCollection.get(), _dataCollection.get());
 
 					// Execute modify() script function.
-					_generatorObject = engine->callObject(_modifyScriptFunction, arguments);
+					_generatorObject = _scriptEngine->callObject(_modifyScriptFunction, arguments);
 				});
 			}
 			catch(const Exception& ex) {
@@ -245,35 +247,28 @@ void PythonScriptModifier::runScriptFunction()
 			// Perform one computation step by calling the generator object.
 			bool exhausted = false;
 			try {
-				// Make sure the actions of the modify() function are not recorded on the undo stack.
-				UndoSuspender noUndo(dataset());
-
-				// Get script engine to execute the script.
-				ScriptEngine* engine = ScriptEngine::activeEngine();
-				if(!engine) engine = _scriptEngine.get();
-
-				if(_runningTask->isCanceled()) {
-					_outputCache.setStateValidity(TimeInterval::empty());
-					throwException(tr("Modifier script execution has been canceled by the user."));
-				}
-
 				// Measure how long the script is running.
 				QTime time;
 				time.start();
 				do {
 
-					engine->execute([this, &exhausted]() {
-						py::handle item = PyIter_Next(_generatorObject.ptr());
+					_scriptEngine->execute([this, &exhausted]() {
+						py::handle item;
+						{
+							// Make sure the actions of the modify() function are not recorded on the undo stack.
+							UndoSuspender noUndo(dataset());
+							item = PyIter_Next(_generatorObject.ptr());
+						}
 						if(item) {
 							py::object itemObj = py::reinterpret_steal<py::object>(item);
 							if(PyFloat_Check(itemObj.ptr())) {
 								double progressValue = itemObj.cast<double>();
 								if(progressValue >= 0.0 && progressValue <= 1.0) {
-									_runningTask->setProgressRange(100);
+									_runningTask->setProgressMaximum(100);
 									_runningTask->setProgressValue((int)(progressValue * 100.0));
 								}
 								else {
-									_runningTask->setProgressRange(0);
+									_runningTask->setProgressMaximum(0);
 									_runningTask->setProgressValue(0);
 								}
 							}
@@ -295,6 +290,11 @@ void PythonScriptModifier::runScriptFunction()
 					// 30 milliseconds have passed or until it is exhausted.
 				}
 				while(!exhausted && time.elapsed() < 30);
+
+				if(!_runningTask || _runningTask->isCanceled()) {
+					_outputCache.setStateValidity(TimeInterval::empty());
+					throwException(tr("Modifier script execution has been canceled by the user."));
+				}
 
 				if(!exhausted) {
 					// Keep calling this method in GUI mode. Otherwise stay in the outer while loop.
@@ -343,10 +343,7 @@ void PythonScriptModifier::scriptCompleted()
 	setStatus(_outputCache.status());
 
 	// Signal completion of background task.
-	if(_runningTask) {
-		_runningTask->reportFinished();
-		_runningTask.reset();
-	}
+	_runningTask.reset();
 
 	// Notify pipeline system that the evaluation request was satisfied or not satisfied.
 	notifyDependents(ReferenceEvent::PendingStateChanged);
@@ -407,7 +404,6 @@ void PythonScriptModifier::stopRunningScript()
 	_dataCollection.reset();
 	if(_runningTask) {
 		_runningTask->cancel();
-		_runningTask->reportFinished();
 		_runningTask.reset();
 	}
 	// Discard active generator object.

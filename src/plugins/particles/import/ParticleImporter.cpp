@@ -22,6 +22,7 @@
 #include <plugins/particles/Particles.h>
 #include <core/utilities/io/FileManager.h>
 #include <core/utilities/concurrent/Future.h>
+#include <core/app/Application.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/importexport/FileSource.h>
 #include "ParticleImporter.h"
@@ -50,7 +51,7 @@ Future<QVector<FileSourceImporter::Frame>> ParticleImporter::discoverFrames(cons
 /******************************************************************************
 * Scans the input file for simulation timesteps.
 ******************************************************************************/
-QVector<FileSourceImporter::Frame> ParticleImporter::discoverFramesInFile(const QUrl sourceUrl, FutureInterfaceBase& futureInterface)
+QVector<FileSourceImporter::Frame> ParticleImporter::discoverFramesInFile(const QUrl sourceUrl, PromiseBase& promise)
 {
 	QVector<FileSourceImporter::Frame> result;
 
@@ -59,19 +60,19 @@ QVector<FileSourceImporter::Frame> ParticleImporter::discoverFramesInFile(const 
 	QFileInfo fileInfo(sourceUrl.path());
 	if(fileInfo.fileName().contains('*') || fileInfo.fileName().contains('?')) {
 		auto findFilesFuture = FileSourceImporter::findWildcardMatches(sourceUrl, dataset()->container());
-		if(!futureInterface.waitForSubTask(findFilesFuture))
+		if(!promise.waitForSubTask(findFilesFuture))
 			return result;
 		for(auto item : findFilesFuture.result()) {
-			result += discoverFramesInFile(item.sourceFile, futureInterface);
+			result += discoverFramesInFile(item.sourceFile, promise);
 		}
 		return result;
 	}
 
-	futureInterface.setProgressText(tr("Scanning file %1").arg(sourceUrl.toString(QUrl::RemovePassword | QUrl::PreferLocalFile | QUrl::PrettyDecoded)));
+	promise.setProgressText(tr("Scanning file %1").arg(sourceUrl.toString(QUrl::RemovePassword | QUrl::PreferLocalFile | QUrl::PrettyDecoded)));
 
 	// Fetch file.
-	Future<QString> fetchFileFuture = FileManager::instance().fetchUrl(*dataset()->container(), sourceUrl);
-	if(!futureInterface.waitForSubTask(fetchFileFuture))
+	Future<QString> fetchFileFuture = Application::instance()->fileManager()->fetchUrl(*dataset()->container(), sourceUrl);
+	if(!promise.waitForSubTask(fetchFileFuture))
 		return result;
 
 	// Open file.
@@ -80,7 +81,7 @@ QVector<FileSourceImporter::Frame> ParticleImporter::discoverFramesInFile(const 
 
 	// Scan file.
 	try {
-		scanFileForTimesteps(futureInterface, result, sourceUrl, stream);
+		scanFileForTimesteps(promise, result, sourceUrl, stream);
 	}
 	catch(const Exception&) {
 		// Silently ignore parsing and I/O errors if at least two frames have been read.
@@ -97,7 +98,7 @@ QVector<FileSourceImporter::Frame> ParticleImporter::discoverFramesInFile(const 
 /******************************************************************************
 * Scans the given input file to find all contained simulation frames.
 ******************************************************************************/
-void ParticleImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
+void ParticleImporter::scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
 {
 	// By default, register a single frame.
 	QFileInfo fileInfo(stream.filename());

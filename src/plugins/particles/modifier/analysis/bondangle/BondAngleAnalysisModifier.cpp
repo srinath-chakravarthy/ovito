@@ -73,7 +73,7 @@ void BondAngleAnalysisModifier::BondAngleAnalysisEngine::perform()
 
 	// Prepare the neighbor list.
 	NearestNeighborFinder neighborFinder(14);
-	if(!neighborFinder.prepare(positions(), cell(), selection(), this))
+	if(!neighborFinder.prepare(positions(), cell(), selection(), *this))
 		return;
 
 	// Create output storage.

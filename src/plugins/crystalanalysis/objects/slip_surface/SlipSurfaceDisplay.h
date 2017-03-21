@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SLIP_SURFACE_DISPLAY_H
-#define __OVITO_SLIP_SURFACE_DISPLAY_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/scene/objects/AsynchronousDisplayObject.h>
@@ -57,7 +57,7 @@ public:
 	void setSurfaceTransparency(FloatType transparency) { if(surfaceTransparencyController()) surfaceTransparencyController()->setCurrentFloatValue(transparency); }
 
 	/// Generates the final triangle mesh, which will be rendered.
-	static bool buildMesh(const SlipSurfaceData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, const QStringList& structureNames, TriMesh& output, std::vector<ColorA>& materialColors, FutureInterfaceBase* progress = nullptr);
+	static bool buildMesh(const SlipSurfaceData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, const QStringList& structureNames, TriMesh& output, std::vector<ColorA>& materialColors, PromiseBase& promise);
 
 protected:
 
@@ -142,4 +142,4 @@ protected:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_SLIP_SURFACE_DISPLAY_H
+

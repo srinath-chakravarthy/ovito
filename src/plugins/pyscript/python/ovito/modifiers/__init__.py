@@ -32,7 +32,9 @@ Python class name                              User interface name
 :py:class:`ComputePropertyModifier`            :guilabel:`Compute property`
 :py:class:`ConstructSurfaceModifier`           :guilabel:`Construct surface mesh`
 :py:class:`CoordinationNumberModifier`         :guilabel:`Coordination analysis`
+:py:class:`CoordinationPolyhedraModifier`      :guilabel:`Coordination polyhedra`
 :py:class:`CreateBondsModifier`                :guilabel:`Create bonds`
+:py:class:`CreateIsosurfaceModifier`           :guilabel:`Create isosurface`
 :py:class:`DeleteSelectedParticlesModifier`    :guilabel:`Delete selected particles`
 :py:class:`DislocationAnalysisModifier`        :guilabel:`Dislocation analysis (DXA)`
 :py:class:`ElasticStrainModifier`              :guilabel:`Elastic strain calculation`
@@ -60,5 +62,7 @@ Python class name                              User interface name
 """
 
 # Load the native module.
-from PyScriptScene import Modifier
-from PyScriptScene import PythonScriptModifier
+from ..plugins.PyScript.Scene import Modifier
+from ..plugins.PyScript.Scene import PythonScriptModifier
+
+__all__ = ['Modifier', 'PythonScriptModifier']

@@ -54,10 +54,10 @@ bool FHIAimsLogFileImporter::checkFileFormat(QFileDevice& input, const QUrl& sou
 /******************************************************************************
 * Scans the given input file to find all contained simulation frames.
 ******************************************************************************/
-void FHIAimsLogFileImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
+void FHIAimsLogFileImporter::scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
 {
-	futureInterface.setProgressText(tr("Scanning FHI-aims log file %1").arg(stream.filename()));
-	futureInterface.setProgressRange(stream.underlyingSize() / 1000);
+	promise.setProgressText(tr("Scanning FHI-aims log file %1").arg(stream.filename()));
+	promise.setProgressMaximum(stream.underlyingSize() / 1000);
 
 	// Regular expression for whitespace characters.
 	QRegularExpression ws_re(QStringLiteral("\\s+"));
@@ -67,7 +67,7 @@ void FHIAimsLogFileImporter::scanFileForTimesteps(FutureInterfaceBase& futureInt
 	QDateTime lastModified = fileInfo.lastModified();
 	int frameNumber = 0;
 
-	while(!stream.eof()) {
+	while(!stream.eof() && !promise.isCanceled()) {
 		const char* line = stream.readLineTrimLeft();
 		if(boost::algorithm::starts_with(line, "Updated atomic structure:")) {
 			stream.readLine();
@@ -80,8 +80,8 @@ void FHIAimsLogFileImporter::scanFileForTimesteps(FutureInterfaceBase& futureInt
 			frames.push_back(frame);
 		}
 
-		futureInterface.setProgressValueIntermittent(stream.underlyingByteOffset() / 1000);
-		if(futureInterface.isCanceled())
+		promise.setProgressValueIntermittent(stream.underlyingByteOffset() / 1000);
+		if(promise.isCanceled())
 			return;
 	}
 }

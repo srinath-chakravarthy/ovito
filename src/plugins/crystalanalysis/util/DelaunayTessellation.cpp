@@ -34,9 +34,9 @@ namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 /******************************************************************************
 * Generates the tessellation.
 ******************************************************************************/
-bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, const Point3* positions, size_t numPoints, FloatType ghostLayerSize, const int* selectedPoints, FutureInterfaceBase* progress)
+bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, const Point3* positions, size_t numPoints, FloatType ghostLayerSize, const int* selectedPoints, PromiseBase& promise)
 {
-	if(progress) progress->setProgressRange(0);
+	promise.setProgressMaximum(0);
 
 	const double epsilon = 2e-5;
 
@@ -74,7 +74,7 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 		_pointData.push_back((double)wp.z() + displacement(rng));
 		_particleIndices.push_back((int)i);
 
-		if(progress && progress->isCanceled())
+		if(promise.isCanceled())
 			return false;
 	}
 	_primaryVertexCount = _particleIndices.size();
@@ -108,7 +108,7 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 				Vector3 shift = simCell.reducedToAbsolute(Vector3(ix,iy,iz));
 				Vector_3<double> shiftd = (Vector_3<double>)shift;
 				for(size_t vertexIndex = 0; vertexIndex < _primaryVertexCount; vertexIndex++) {
-					if(progress && progress->isCanceled())
+					if(promise.isCanceled())
 						return false;
 
 					double x = _pointData[vertexIndex*3+0] + shiftd.x();
@@ -148,12 +148,9 @@ bool DelaunayTessellation::generateTessellation(const SimulationCell& simCell, c
 	_dt->set_reorder(true);
 
 	// Construct Delaunay tessellation.
-	bool result = _dt->set_vertices(_pointData.size()/3, _pointData.data(), [progress](int value, int maxProgress) {
-		if(progress) {
-			if(maxProgress != progress->progressMaximum()) progress->setProgressRange(maxProgress);
-			return progress->setProgressValueIntermittent(value);
-		}
-		else return true;
+	bool result = _dt->set_vertices(_pointData.size()/3, _pointData.data(), [&promise](int value, int maxProgress) {
+		if(maxProgress != promise.progressMaximum()) promise.setProgressMaximum(maxProgress);
+		return promise.setProgressValueIntermittent(value);
 	});
 	if(!result) return false;
 

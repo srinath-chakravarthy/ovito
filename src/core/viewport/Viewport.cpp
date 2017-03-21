@@ -28,6 +28,7 @@
 #include <core/scene/SelectionSet.h>
 #include <core/scene/SceneRoot.h>
 #include <core/scene/objects/camera/AbstractCameraObject.h>
+#include <core/dataset/DataSetContainer.h>
 
 /// The default field of view in world units used for orthogonal view types when the scene is empty.
 #define DEFAULT_ORTHOGONAL_FIELD_OF_VIEW		FloatType(200)
@@ -220,7 +221,7 @@ ViewProjectionParameters Viewport::projectionParameters(TimePoint time, FloatTyp
 		params.inverseViewMatrix = viewNode()->getWorldTransform(time, params.validityInterval);
 		params.viewMatrix = params.inverseViewMatrix.inverse();
 
-		PipelineFlowState state = viewNode()->evalPipeline(time);
+		PipelineFlowState state = viewNode()->evaluatePipelineImmediately(PipelineEvalRequest(time, true));
 		if(OORef<AbstractCameraObject> camera = state.convertObject<AbstractCameraObject>(time)) {
 
 			// Get remaining parameters from camera object.
@@ -542,8 +543,7 @@ void Viewport::renderInteractive(SceneRenderer* renderer)
 			renderer->setProjParams(projectionParams());
 
 			// Call the viewport renderer to render the scene objects.
-			renderer->renderFrame(nullptr, SceneRenderer::NonStereoscopic, nullptr);
-
+			renderer->renderFrame(nullptr, SceneRenderer::NonStereoscopic, dataset()->container()->taskManager());
 		}
 		else {
 
@@ -568,7 +568,7 @@ void Viewport::renderInteractive(SceneRenderer* renderer)
 			renderer->setProjParams(params);
 
 			// Render image of left eye.
-			renderer->renderFrame(nullptr, SceneRenderer::StereoscopicLeft, nullptr);
+			renderer->renderFrame(nullptr, SceneRenderer::StereoscopicLeft, dataset()->container()->taskManager());
 
 			// Setup project of right eye.
 			left = -c * params.znear / convergence;
@@ -580,7 +580,7 @@ void Viewport::renderInteractive(SceneRenderer* renderer)
 			renderer->setProjParams(params);
 
 			// Render image of right eye.
-			renderer->renderFrame(nullptr, SceneRenderer::StereoscopicRight, nullptr);
+			renderer->renderFrame(nullptr, SceneRenderer::StereoscopicRight, dataset()->container()->taskManager());
 		}
 
 		// Render viewport overlays.
@@ -614,7 +614,7 @@ void Viewport::renderInteractive(SceneRenderer* renderer)
 		}
 
 		// Finish rendering.
-		renderer->endFrame();
+		renderer->endFrame(true);
 		renderer->endRender();
 
 		_isRendering = false;

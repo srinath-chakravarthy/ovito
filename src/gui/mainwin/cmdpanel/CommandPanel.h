@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_COMMAND_PANEL_H
-#define __OVITO_COMMAND_PANEL_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <gui/mainwin/MainWindow.h>
@@ -78,4 +78,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_COMMAND_PANEL_H
+

@@ -19,12 +19,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_FILE_COLUMN_PARTICLE_EXPORTER_EDITOR_H
-#define __OVITO_FILE_COLUMN_PARTICLE_EXPORTER_EDITOR_H
+#pragma once
+
 
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/export/OutputColumnMapping.h>
+#include <plugins/particles/export/FileColumnParticleExporter.h>
 #include <gui/properties/PropertiesEditor.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export)
@@ -57,6 +58,9 @@ private:
 	/// Populates the column mapping list box with an entry.
 	void insertPropertyItem(ParticlePropertyReference propRef, const QString& displayName, const OutputColumnMapping& columnMapping);
 
+	/// This writes the settings made in the UI back to the exporter.
+	void saveChanges(FileColumnParticleExporter* particleExporter);
+
 	QListWidget* _columnMappingWidget;
 
 	Q_OBJECT
@@ -67,4 +71,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_FILE_COLUMN_PARTICLE_EXPORTER_EDITOR_H
+

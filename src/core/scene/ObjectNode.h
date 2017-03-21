@@ -19,13 +19,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_OBJECT_NODE_H
-#define __OVITO_OBJECT_NODE_H
+#pragma once
+
 
 #include <core/Core.h>
+#include <core/utilities/concurrent/Promise.h>
 #include "SceneNode.h"
 #include "objects/DataObject.h"
 #include "objects/DisplayObject.h"
+#include "pipeline/PipelineEvalRequest.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
@@ -50,19 +52,15 @@ public:
 	///        input data entering the pipeline.
 	void setSourceObject(DataObject* sourceObject);
 
-	/// \brief Evaluates the data flow pipeline of this object node at the given animation time.
-	/// \param time The animation time at which the pipeline of the node should be evaluated.
-	/// \return The output of the pipeline.
-	const PipelineFlowState& evalPipeline(TimePoint time);
+	/// \brief Evaluates the data pipeline of this node.
+	///        If the pipeline results are not immediately available, the method can react by returning an incomplete state (pending status).
+	/// \param request An object that describes when and how the pipeline should be evaluated.
+	/// \return The results of the pipeline (may be status pending).
+	const PipelineFlowState& evaluatePipelineImmediately(const PipelineEvalRequest& request);
 
-	/// \brief This function blocks execution until the node's modification
-	///        pipeline has been fully evaluated.
-	/// \param time The animation time at which the modification pipeline should be evaluated.
-	/// \param message The text to be shown to the user while waiting.
-	/// \param progressDisplay The progress display/dialog to be used to show the message.
-	///                       If NULL, the function will show its own progress dialog box.
-	/// \return true on success; false if the operation has been canceled by the user.
-	bool waitUntilReady(TimePoint time, const QString& message, AbstractProgressDisplay* progressDisplay = nullptr);
+	/// \brief Asks the object for the result of the data pipeline.
+	/// \param request An object that describes when and how the pipeline should be evaluated.
+	Future<PipelineFlowState> evaluatePipelineAsync(const PipelineEvalRequest& request);
 
 	/// \brief Applies a modifier by appending it to the end of the node's data pipeline.
 	/// \param mod The modifier to be inserted into the data flow pipeline.
@@ -99,11 +97,14 @@ protected:
 
 private:
 
-	/// The object which generates the data to be displayed by this ObjectNode.
+	/// Checks if the data pipeline evaluation is completed.
+	void serveEvaluationRequests();
+
+	/// The object that generates the data to be displayed by this ObjectNode.
 	DECLARE_MODIFIABLE_REFERENCE_FIELD(DataObject, dataProvider, setDataProvider);
 
 	/// The list of display objects that are responsible for displaying
-	/// the node's data in the viewports.
+	/// the node's data in the viewports. This is for internal caching purposes only.
 	DECLARE_VECTOR_REFERENCE_FIELD(DisplayObject, displayObjects);
 
 	/// The cached results from the last data pipeline evaluation.
@@ -121,6 +122,9 @@ private:
 		invalidateBoundingBox();
 	}
 
+	/// List active asynchronous pipeline evaluation requests.
+	std::vector<std::pair<PipelineEvalRequest, PromisePtr<PipelineFlowState>>> _evaluationRequests;
+
 	Q_OBJECT
 	OVITO_OBJECT
 };
@@ -129,4 +133,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_OBJECT_NODE_H
+

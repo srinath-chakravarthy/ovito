@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_BOND_PROPERTY_COMBO_BOX_H
-#define __OVITO_BOND_PROPERTY_COMBO_BOX_H
+#pragma once
+
 
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/particles/objects/BondPropertyObject.h>
@@ -96,4 +96,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_BOND_PROPERTY_COMBO_BOX_H
+

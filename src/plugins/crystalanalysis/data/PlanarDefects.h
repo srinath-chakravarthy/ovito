@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_PLANAR_DEFECTS_H
-#define __OVITO_CA_PLANAR_DEFECTS_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/utilities/mesh/TriMesh.h>
@@ -57,4 +57,4 @@ private:
 }	// End of namespace
 
 
-#endif // __OVITO_CA_PLANAR_DEFECTS_H
+

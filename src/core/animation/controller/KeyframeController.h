@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_KEYFRAME_CONTROLLER_H
-#define __OVITO_KEYFRAME_CONTROLLER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/dataset/DataSet.h>
@@ -289,4 +289,4 @@ protected:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_KEYFRAME_CONTROLLER_H
+

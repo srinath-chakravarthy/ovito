@@ -27,8 +27,8 @@
  * \brief Defines several macros for debugging purposes.
  */
 
-#ifndef __OVITO_DEBUGGING_H
-#define __OVITO_DEBUGGING_H
+#pragma once
+
 
 namespace Ovito {
 
@@ -64,4 +64,4 @@ namespace Ovito {
 
 }	// End of namespace
 
-#endif // __OVITO_DEBUGGING_H
+

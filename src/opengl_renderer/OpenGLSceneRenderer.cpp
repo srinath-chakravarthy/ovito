@@ -82,7 +82,7 @@ void OpenGLSceneRenderer::determineOpenGLInfo()
 		tempContext.setFormat(getDefaultSurfaceFormat());
 		if(!tempContext.create())
 			throw Exception(tr("Failed to create temporary OpenGL context."));
-		if(Application::instance().headlessMode() == false) {
+		if(Application::instance()->headlessMode() == false) {
 			// Create a hidden, temporary window to make the GL context current.
 			window.reset(new QWindow());
 			window->setSurfaceType(QSurface::OpenGLSurface);
@@ -103,17 +103,10 @@ void OpenGLSceneRenderer::determineOpenGLInfo()
 		OVITO_ASSERT(QOpenGLContext::currentContext() == &tempContext);
 	}
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 3, 0)
-	_openGLVendor = reinterpret_cast<const char*>(::glGetString(GL_VENDOR));
-	_openGLRenderer = reinterpret_cast<const char*>(::glGetString(GL_RENDERER));
-	_openGLVersion = reinterpret_cast<const char*>(::glGetString(GL_VERSION));
-	_openGLSLVersion = reinterpret_cast<const char*>(::glGetString(GL_SHADING_LANGUAGE_VERSION));
-#else
 	_openGLVendor = reinterpret_cast<const char*>(tempContext.functions()->glGetString(GL_VENDOR));
 	_openGLRenderer = reinterpret_cast<const char*>(tempContext.functions()->glGetString(GL_RENDERER));
 	_openGLVersion = reinterpret_cast<const char*>(tempContext.functions()->glGetString(GL_VERSION));
 	_openGLSLVersion = reinterpret_cast<const char*>(tempContext.functions()->glGetString(GL_SHADING_LANGUAGE_VERSION));
-#endif
 	_openglSupportsGeomShaders = QOpenGLShader::hasOpenGLShaders(QOpenGLShader::Geometry);
 	_openglSurfaceFormat = QOpenGLContext::currentContext()->format();
 }
@@ -191,7 +184,7 @@ bool OpenGLSceneRenderer::geometryShadersEnabled(bool forceDefaultSetting)
 		return false;
 #endif
 	
-	if(Application::instance().guiMode())
+	if(Application::instance()->guiMode())
 		return geometryShadersSupported();
 	else if(QOpenGLContext::currentContext())
 		return QOpenGLShader::hasOpenGLShaders(QOpenGLShader::Geometry);
@@ -207,27 +200,10 @@ QSurfaceFormat OpenGLSceneRenderer::getDefaultSurfaceFormat()
 {
 	QSurfaceFormat format;
 	format.setDepthBufferSize(24);
-#if QT_VERSION >= QT_VERSION_CHECK(5, 3, 0)
 	format.setSwapInterval(0);
-#endif
 	format.setMajorVersion(OVITO_OPENGL_REQUESTED_VERSION_MAJOR);
 	format.setMinorVersion(OVITO_OPENGL_REQUESTED_VERSION_MINOR);
-	if(Application::instance().cmdLineParser().isSet(QStringLiteral("glversion"))) {
-		QStringList tokens = Application::instance().cmdLineParser().value(QStringLiteral("glversion")).split(QChar('.'));
-		if(tokens.size() == 2) {
-			int majorVersion = tokens[0].toInt();
-			int minorVersion = tokens[1].toInt();
-			if(majorVersion >= 1) {
-				format.setMajorVersion(majorVersion);
-				format.setMinorVersion(minorVersion);
-			}
-		}
-	}
 	format.setProfile(QSurfaceFormat::CoreProfile);
-	if(Application::instance().cmdLineParser().isSet(QStringLiteral("glcompatprofile"))) {
-		format.setProfile(QSurfaceFormat::CompatibilityProfile);
-		format.setOption(QSurfaceFormat::DeprecatedFunctions);
-	}
 #ifdef Q_OS_WIN
 	// Always request deprecated functions to be included in the context profile on Windows
 	// to work around a compatibility issue between Qt 5.4.1 and the Intel OpenGL driver.
@@ -244,8 +220,9 @@ QSurfaceFormat OpenGLSceneRenderer::getDefaultSurfaceFormat()
 void OpenGLSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParameters& params, Viewport* vp)
 {
 	SceneRenderer::beginFrame(time, params, vp);
+	OVITO_REPORT_OPENGL_ERRORS();
 
-	if(Application::instance().headlessMode())
+	if(Application::instance()->headlessMode())
 		throwException(tr("Cannot use OpenGL renderer in headless mode."));
 
 	_glcontext = QOpenGLContext::currentContext();
@@ -323,19 +300,19 @@ void OpenGLSceneRenderer::beginFrame(TimePoint time, const ViewProjectionParamet
 /******************************************************************************
 * This method is called after renderFrame() has been called.
 ******************************************************************************/
-void OpenGLSceneRenderer::endFrame()
+void OpenGLSceneRenderer::endFrame(bool renderSuccessful)
 {
     OVITO_REPORT_OPENGL_ERRORS();
 	OVITO_CHECK_OPENGL(_vertexArrayObject.reset());
 	_glcontext = nullptr;
 
-	SceneRenderer::endFrame();
+	SceneRenderer::endFrame(renderSuccessful);
 }
 
 /******************************************************************************
 * Renders the current animation frame.
 ******************************************************************************/
-bool OpenGLSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress)
+bool OpenGLSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, TaskManager& taskManager)
 {
 	OVITO_ASSERT(_glcontext == QOpenGLContext::currentContext());
 
@@ -358,12 +335,15 @@ bool OpenGLSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingT
 
 	// Clear background.
 	clearFrameBuffer();
+	OVITO_REPORT_OPENGL_ERRORS();
 
 	// Render the 3D scene objects.
 	renderScene();
+	OVITO_REPORT_OPENGL_ERRORS();
 
 	// Call subclass to render additional content that is only visible in the interactive viewports.
 	renderInteractiveContent();
+	OVITO_REPORT_OPENGL_ERRORS();
 
 	// Render translucent objects in a second pass.
 	_translucentPass = true;
@@ -375,6 +355,7 @@ bool OpenGLSceneRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingT
 
 	// Restore default OpenGL state.
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	OVITO_REPORT_OPENGL_ERRORS();
 
 	return true;
 }
@@ -504,6 +485,8 @@ QOpenGLShaderProgram* OpenGLSceneRenderer::loadShaderProgram(const QString& id, 
 	}
 
 	OVITO_ASSERT(contextGroup->findChild<QOpenGLShaderProgram*>(id) == program.data());
+	OVITO_REPORT_OPENGL_ERRORS();
+
 	return program.take();
 }
 
@@ -583,6 +566,8 @@ void OpenGLSceneRenderer::loadShader(QOpenGLShaderProgram* program, QOpenGLShade
 		ex.appendDetailMessage(shaderSource);
 		throw ex;
 	}
+
+	OVITO_REPORT_OPENGL_ERRORS();
 }
 
 /******************************************************************************
@@ -769,20 +754,6 @@ void OpenGLSceneRenderer::setHighlightMode(int pass)
 		glDisable(GL_STENCIL_TEST);
 	}
 }
-
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 3, 0)
-void OpenGLSceneRenderer::glEnable(GLenum cap) { ::glEnable(cap); }
-void OpenGLSceneRenderer::glDisable(GLenum cap) { ::glDisable(cap); }
-void OpenGLSceneRenderer::glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices) { ::glDrawElements(mode, count, type, indices); }
-void OpenGLSceneRenderer::glGetIntegerv(GLenum pname, GLint * params) { ::glGetIntegerv(pname, params); }
-void OpenGLSceneRenderer::glCullFace(GLenum mode) { ::glCullFace(mode); }
-void OpenGLSceneRenderer::glDrawArrays(GLenum mode, GLint first, GLsizei count) { ::glDrawArrays(mode, first, count); }
-void OpenGLSceneRenderer::glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid * pixels) { ::glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels); }
-void OpenGLSceneRenderer::glTexParameteri(GLenum target, GLenum pname, GLint param) { ::glTexParameteri(target, pname, param); }
-GLboolean OpenGLSceneRenderer::glIsEnabled(GLenum cap) { return ::glIsEnabled(cap); }
-void OpenGLSceneRenderer::glBlendFunc(GLenum sfactor, GLenum dfactor) { ::glBlendFunc(sfactor, dfactor); }
-#endif
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 

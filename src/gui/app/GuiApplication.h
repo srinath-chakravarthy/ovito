@@ -19,21 +19,27 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_GUI_APPLICATION_H
-#define __OVITO_GUI_APPLICATION_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/utilities/Exception.h>
-#include <core/app/Application.h>
+#include <core/app/StandaloneApplication.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)
 
 /**
  * \brief The main application with a graphical user interface.
  */
-class OVITO_GUI_EXPORT GuiApplication : public Application
+class OVITO_GUI_EXPORT GuiApplication : public StandaloneApplication
 {
-	Q_OBJECT
+public:
+
+	/// Create the global instance of the right QCoreApplication derived class.
+	virtual void createQtApplication(int& argc, char** argv) override;
+
+	/// Handler function for exceptions.
+	virtual void reportError(const Exception& exception, bool blocking) override;
 
 protected:
 
@@ -43,27 +49,29 @@ protected:
 	/// Interprets the command line parameters provided to the application.
 	virtual bool processCommandLineParameters() override;
 
-	/// Create the global instance of the right QCoreApplication derived class.
-	virtual void createQtApplication(int& argc, char** argv) override;
-
 	/// Prepares application to start running.
 	virtual bool startupApplication() override;
 
 	/// Creates the global FileManager class instance.
 	virtual FileManager* createFileManager() override;
 
+private Q_SLOTS:
+
+	/// Displays an error message box. This slot is called by reportError().
+	void showErrorMessages();
+
 private:
 
 	/// Initializes the graphical user interface of the application.
 	void initializeGUI();
 
-private:
+	/// List of errors to be displayed by showErrorMessages().
+	std::deque<Exception> _errorList;
 
-	/// Handler function for exceptions used in GUI mode.
-	static void guiExceptionHandler(const Exception& exception);
+	Q_OBJECT
 };
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_GUI_APPLICATION_H
+

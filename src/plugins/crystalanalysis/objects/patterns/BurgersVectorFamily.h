@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_BURGERS_VECTOR_FAMILY_H
-#define __OVITO_CA_BURGERS_VECTOR_FAMILY_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/reference/RefTarget.h>
@@ -67,4 +67,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CA_BURGERS_VECTOR_FAMILY_H
+

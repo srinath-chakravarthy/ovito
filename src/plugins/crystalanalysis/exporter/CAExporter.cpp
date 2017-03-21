@@ -26,7 +26,7 @@
 #include <plugins/crystalanalysis/objects/dislocations/DislocationNetworkObject.h>
 #include <plugins/crystalanalysis/objects/clusters/ClusterGraphObject.h>
 #include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/TaskManager.h>
 #include <core/scene/ObjectNode.h>
 #include <core/scene/SelectionSet.h>
 #include "CAExporter.h"
@@ -79,13 +79,10 @@ void CAExporter::closeOutputFile(bool exportCompleted)
 /******************************************************************************
  * Exports a single animation frame to the current output file.
  *****************************************************************************/
-bool CAExporter::exportFrame(int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay)
+bool CAExporter::exportFrame(int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager)
 {
-	if(!FileExporter::exportFrame(frameNumber, time, filePath, progressDisplay))
+	if(!FileExporter::exportFrame(frameNumber, time, filePath, taskManager))
 		return false;
-
-	if(progressDisplay)
-		progressDisplay->setStatusText(tr("Exporting frame %1 to file '%2'.").arg(frameNumber).arg(filePath));
 
 	// Export the first scene node from the selection set.
 	if(outputData().empty())
@@ -96,7 +93,10 @@ bool CAExporter::exportFrame(int frameNumber, TimePoint time, const QString& fil
 		throwException(tr("The scene node to be exported is not an object node."));
 
 	// Evaluate pipeline of object node.
-	const PipelineFlowState& state = objectNode->evalPipeline(time);
+	auto evalFuture = objectNode->evaluatePipelineAsync(PipelineEvalRequest(time, false));
+	if(!taskManager.waitForTask(evalFuture))
+		return false;
+	const PipelineFlowState& state = evalFuture.result();
 	if(state.isEmpty())
 		throwException(tr("The object to be exported does not contain any data."));
 

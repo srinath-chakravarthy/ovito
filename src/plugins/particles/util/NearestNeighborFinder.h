@@ -19,15 +19,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_NEAREST_NEIGHBOR_FINDER_H
-#define __OVITO_NEAREST_NEIGHBOR_FINDER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/ParticleProperty.h>
 #include <plugins/particles/data/SimulationCell.h>
 #include <core/utilities/BoundedPriorityQueue.h>
 #include <core/utilities/MemoryPool.h>
-#include <core/utilities/concurrent/FutureInterface.h>
+#include <core/utilities/concurrent/Promise.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util)
 
@@ -113,10 +113,11 @@ public:
 	/// \param posProperty The positions of the particles.
 	/// \param cellData The simulation cell data.
 	/// \param selectionProperty Determines which particles are included in the neighbor search (optional).
+	/// \param promis A callback object that will be used to the report progress.
 	/// \return \c false when the operation has been canceled by the user;
 	///         \c true on success.
 	/// \throw Exception on error.
-	bool prepare(ParticleProperty* posProperty, const SimulationCell& cellData, ParticleProperty* selectionProperty = nullptr, FutureInterfaceBase* progress = nullptr);
+	bool prepare(ParticleProperty* posProperty, const SimulationCell& cellData, ParticleProperty* selectionProperty, PromiseBase& promise);
 
 	/// Returns the coordinates of the i-th input particle.
 	const Point3& particlePos(size_t index) const {
@@ -323,4 +324,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_NEAREST_NEIGHBOR_FINDER_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_NATIVE_PROPERTY_FIELD_DESCRIPTOR_H
-#define __OVITO_NATIVE_PROPERTY_FIELD_DESCRIPTOR_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "PropertyFieldDescriptor.h"
@@ -246,4 +246,4 @@ OVITO_END_INLINE_NAMESPACE
 #include "RefMaker.h"
 #include "RefTarget.h"
 
-#endif // __OVITO_NATIVE_PROPERTY_FIELD_DESCRIPTOR_H
+

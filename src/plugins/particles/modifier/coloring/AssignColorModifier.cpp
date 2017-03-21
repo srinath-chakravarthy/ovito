@@ -39,7 +39,7 @@ AssignColorModifier::AssignColorModifier(DataSet* dataset) : ParticleModifier(da
 	INIT_PROPERTY_FIELD(colorController);
 	INIT_PROPERTY_FIELD(keepSelection);
 
-	setColorController(ControllerManager::instance().createColorController(dataset));
+	setColorController(ControllerManager::createColorController(dataset));
 	colorController()->setColorValue(0, Color(0.3f, 0.3f, 1.0f));
 }
 

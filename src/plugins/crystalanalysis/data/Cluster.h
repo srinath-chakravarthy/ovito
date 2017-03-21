@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_CLUSTER_STRUCT_H
-#define __OVITO_CA_CLUSTER_STRUCT_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 
@@ -238,4 +238,4 @@ struct Cluster
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CA_CLUSTER_STRUCT_H
+

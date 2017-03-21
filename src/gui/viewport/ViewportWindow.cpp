@@ -37,10 +37,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-ViewportWindow::ViewportWindow(Viewport* owner, QWidget* parentWidget) :
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
-		QOpenGLWidget(parentWidget),
-#endif
+ViewportWindow::ViewportWindow(Viewport* owner, QWidget* parentWidget) : QOpenGLWidget(parentWidget),
 		_viewport(owner), _updateRequested(false),
 		_mainWindow(MainWindow::fromDataset(owner->dataset())),
 		_renderDebugCounter(0), _cursorInContextMenuArea(false)
@@ -48,40 +45,12 @@ ViewportWindow::ViewportWindow(Viewport* owner, QWidget* parentWidget) :
 	// Associate the viewport with this window.
 	owner->setWindow(this);
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-	_updatePending = false;
-
-	if(OpenGLSceneRenderer::contextSharingEnabled()) {
-		// Get the master OpenGL context, which is managed by the main window.
-		OVITO_CHECK_POINTER(_mainWindow);
-		_context = _mainWindow->getOpenGLContext();
-	}
-	else {
-		// Create a dedicated OpenGL context for this viewport window.
-		// All contexts still share OpenGL resources.
-		_context = new QOpenGLContext(this);
-		_context->setFormat(ViewportSceneRenderer::getDefaultSurfaceFormat());
-		_context->setShareContext(_mainWindow->getOpenGLContext());
-		if(!_context->create())
-			throw Exception(tr("Failed to create OpenGL context."));
-	}
-
-	// Indicate that the window is to be used for OpenGL rendering.
-	setSurfaceType(QWindow::OpenGLSurface);
-	setFormat(_context->format());
-#else
 	setMouseTracking(true);
-#endif
+	setFocusPolicy(Qt::ClickFocus);
 
 	// Determine OpenGL vendor string so other parts of the code can decide
 	// which OpenGL features are save to use.
 	OpenGLSceneRenderer::determineOpenGLInfo();
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-	// Create a QWidget for this QWindow.
-	_widget = QWidget::createWindowContainer(this, parentWidget);
-	_widget->setAttribute(Qt::WA_DeleteOnClose);
-#endif
 
 	// Create the viewport renderer.
 	// It is shared by all viewports of a dataset.
@@ -114,16 +83,7 @@ ViewportWindow::~ViewportWindow()
 void ViewportWindow::renderLater()
 {
 	_updateRequested = true;
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-	// If not already done so, put an update request event on the event loop,
-	// which leads to renderNow() being called once the event gets processed.
-	if(!_updatePending) {
-		_updatePending = true;
-		QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateLater));
-	}
-#else
 	update();
-#endif
 }
 
 /******************************************************************************
@@ -133,13 +93,9 @@ void ViewportWindow::renderLater()
 void ViewportWindow::processViewportUpdate()
 {
 	if(_updateRequested) {
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-		renderNow();
-#else
 		OVITO_ASSERT_MSG(!_viewport->isRendering(), "ViewportWindow::processUpdateRequest()", "Recursive viewport repaint detected.");
 		OVITO_ASSERT_MSG(!_viewport->dataset()->viewportConfig()->isRendering(), "ViewportWindow::processUpdateRequest()", "Recursive viewport repaint detected.");
 		repaint();
-#endif
 	}
 }
 
@@ -148,10 +104,6 @@ void ViewportWindow::processViewportUpdate()
 ******************************************************************************/
 void ViewportWindow::showViewportMenu(const QPoint& pos)
 {
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-	requestActivate();
-#endif
-
 	// Create the context menu for the viewport.
 	ViewportMenu contextMenu(this);
 
@@ -204,9 +156,6 @@ void ViewportWindow::renderViewportTitle()
 ******************************************************************************/
 bool ViewportWindow::setMouseGrabEnabled(bool grab)
 {
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-	return QWindow::setMouseGrabEnabled(grab);
-#else
 	if(grab) {
 		grabMouse();
 		return true;
@@ -215,36 +164,6 @@ bool ViewportWindow::setMouseGrabEnabled(bool grab)
 		releaseMouse();
 		return false;
 	}
-#endif
-}
-
-/******************************************************************************
-* Sets the cursor shape for this viewport window.
-******************************************************************************/
-void ViewportWindow::setCursor(const QCursor& cursor)
-{
-	// Changing the cursor leads to program crash on MacOS and Qt <= 5.2.0.
-#if !defined(Q_OS_MACX) || (QT_VERSION >= QT_VERSION_CHECK(5, 2, 1))
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-	QWindow::setCursor(cursor);
-#else
-	QOpenGLWidget::setCursor(cursor);
-#endif
-#endif
-}
-
-/******************************************************************************
-* Restores the default arrow cursor for this viewport window.
-******************************************************************************/
-void ViewportWindow::unsetCursor()
-{
-#if !defined(Q_OS_MACX) || (QT_VERSION >= QT_VERSION_CHECK(5, 2, 1))
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-	QWindow::unsetCursor();
-#else
-	QOpenGLWidget::unsetCursor();
-#endif
-#endif
 }
 
 /******************************************************************************
@@ -349,7 +268,7 @@ void ViewportWindow::renderRenderFrame()
 ViewportPickResult ViewportWindow::pick(const QPointF& pos)
 {
 	// Cannot perform picking while viewport is not visible or currently rendering or when updates are disabled.
-	if(isExposed() && !viewport()->isRendering() && !viewport()->dataset()->viewportConfig()->isSuspended()) {
+	if(isVisible() && !viewport()->isRendering() && !viewport()->dataset()->viewportConfig()->isSuspended()) {
 		try {
 			if(_pickingRenderer->isRefreshRequired()) {
 				// Let the viewport do the actual rendering work.
@@ -371,46 +290,12 @@ ViewportPickResult ViewportWindow::pick(const QPointF& pos)
 			}
 		}
 		catch(const Exception& ex) {
-			ex.showError();
+			ex.reportError();
 		}
 	}
 	return {};
 }
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-
-/******************************************************************************
-* This internal method receives events to the viewport window.
-******************************************************************************/
-bool ViewportWindow::event(QEvent* event)
-{
-	// Handle update request events posted by renderLater().
-	if(event->type() == QEvent::UpdateLater) {
-		_updatePending = false;
-		processViewportUpdate();
-		return true;
-	}
-	return QWindow::event(event);
-}
-
-/******************************************************************************
-* Handles the expose events.
-******************************************************************************/
-void ViewportWindow::exposeEvent(QExposeEvent*)
-{
-	renderNow();
-}
-
-/******************************************************************************
-* Handles the resize events.
-******************************************************************************/
-void ViewportWindow::resizeEvent(QResizeEvent*)
-{
-	renderNow();
-}
-
-#else
-	
 /******************************************************************************
 * Is called whenever the GL context needs to be initialized.
 ******************************************************************************/
@@ -436,8 +321,6 @@ void ViewportWindow::showEvent(QShowEvent* event)
 	if(!event->spontaneous())
 		update();
 }
-
-#endif
 
 /******************************************************************************
 * Handles double click events.
@@ -506,9 +389,6 @@ void ViewportWindow::mouseMoveEvent(QMouseEvent* event)
 	if(_contextMenuArea.contains(event->pos()) && !_cursorInContextMenuArea) {
 		_cursorInContextMenuArea = true;
 		viewport()->updateViewport();
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-		startTimer(0);
-#endif
 	}
 	else if(!_contextMenuArea.contains(event->pos()) && _cursorInContextMenuArea) {
 		_cursorInContextMenuArea = false;
@@ -544,25 +424,6 @@ void ViewportWindow::wheelEvent(QWheelEvent* event)
 	}
 }
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-
-/******************************************************************************
-* Is called in periodic intervals.
-******************************************************************************/
-void ViewportWindow::timerEvent(QTimerEvent* event)
-{
-	if(_contextMenuArea.contains(mapFromGlobal(QCursor::pos())))
-		return;
-
-	if(_cursorInContextMenuArea) {
-		_cursorInContextMenuArea = false;
-		viewport()->updateViewport();
-	}
-	killTimer(event->timerId());
-}
-
-#else
-
 /******************************************************************************
 * Is called when the mouse cursor leaves the widget.
 ******************************************************************************/
@@ -574,7 +435,22 @@ void ViewportWindow::leaveEvent(QEvent* event)
 	}
 }
 
-#endif
+/******************************************************************************
+* Is called when the widgets looses the input focus.
+******************************************************************************/
+void ViewportWindow::focusOutEvent(QFocusEvent* event)
+{
+	ViewportInputMode* mode = _mainWindow->viewportInputManager()->activeMode();
+	if(mode) {
+		try {
+			mode->focusOutEvent(this, event);
+		}
+		catch(const Exception& ex) {
+			qWarning() << "Uncaught exception in viewport event handler:";
+			ex.logError();
+		}
+	}
+}
 
 /******************************************************************************
 * Renders custom GUI elements in the viewport on top of the scene.
@@ -599,30 +475,11 @@ void ViewportWindow::renderGui()
 ******************************************************************************/
 void ViewportWindow::renderNow()
 {
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-	if(!isExposed())
-		return;
-#endif
-
 	_updateRequested = false;
 
 	// Do not re-enter rendering function of the same viewport.
 	if(!viewport() || viewport()->isRendering())
 		return;
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-	// Before making our GL context current, remember the old context that
-	// is currently active so we can restore it when we are done.
-	// This is necessary, because multiple viewport repaint requests can be
-	// processed simultaneously.
-	QPointer<QOpenGLContext> oldContext = QOpenGLContext::currentContext();
-	QSurface* oldSurface = oldContext ? oldContext->surface() : nullptr;
-
-	if(!_context->makeCurrent(this)) {
-		qWarning() << "ViewportWindow::renderNow(): Failed to make OpenGL context current.";
-		return;
-	}
-#endif
 
 	QSurfaceFormat format = context()->format();
 	// OpenGL in a VirtualBox machine Windows guest reports "2.1 Chromium 1.9" as version string, which is
@@ -657,8 +514,9 @@ void ViewportWindow::renderNow()
 				);
 			QCoreApplication::removePostedEvents(nullptr, 0);
 			if(_mainWindow) _mainWindow->close();
-			ex.showError();
-			QCoreApplication::instance()->quit();
+			ex.reportError(true);
+			QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
+			QCoreApplication::exit();
 		}
 		return;
 	}
@@ -674,6 +532,7 @@ void ViewportWindow::renderNow()
 		catch(Exception& ex) {
 			if(ex.context() == nullptr) ex.setContext(viewport()->dataset());
 			ex.prependGeneralMessage(tr("An unexpected error occurred while rendering the viewport contents. The program will quit."));
+			viewport()->dataset()->viewportConfig()->suspendViewportUpdates();
 
 			QString openGLReport;
 			QTextStream stream(&openGLReport, QIODevice::WriteOnly | QIODevice::Text);
@@ -690,22 +549,18 @@ void ViewportWindow::renderNow()
 			stream << "Context sharing: " << OpenGLSceneRenderer::contextSharingEnabled() << endl;
 			ex.appendDetailMessage(openGLReport);
 
-			viewport()->dataset()->viewportConfig()->suspendViewportUpdates();
 			QCoreApplication::removePostedEvents(nullptr, 0);
-			ex.showError();
-			QCoreApplication::instance()->quit();
+			if(_mainWindow) _mainWindow->close();
+			ex.reportError(true);
+			QMetaObject::invokeMethod(QCoreApplication::instance(), "quit", Qt::QueuedConnection);
+			QCoreApplication::exit();
 		}
 	}
 	else {
 		// When viewport updates are disabled, just clear the frame buffer with the background color.
 		Color backgroundColor = Viewport::viewportColor(ViewportSettings::COLOR_VIEWPORT_BKG);
-#if QT_VERSION >= QT_VERSION_CHECK(5, 3, 0)
 		context()->functions()->glClearColor(backgroundColor.r(), backgroundColor.g(), backgroundColor.b(), 1);
 		context()->functions()->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-#else
-		::glClearColor(backgroundColor.r(), backgroundColor.g(), backgroundColor.b(), 1);
-		::glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-#endif
 		// Make sure viewport is refreshed once updates are enables again.
 		_viewport->dataset()->viewportConfig()->updateViewports();
 	}
@@ -715,21 +570,6 @@ void ViewportWindow::renderNow()
 	if(viewport()->dataset()->viewportConfig()->isSuspended()) {
 		_viewport->dataset()->viewportConfig()->updateViewports();
 	}
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-	context()->swapBuffers(this);
-#endif
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-	// Restore old GL context.
-	if(oldSurface && oldContext) {
-		if(!oldContext->makeCurrent(oldSurface))
-			qWarning() << "ViewportWindow::renderNow(): Failed to restore old OpenGL context.";
-	}
-	else {
-		_context->doneCurrent();
-	}
-#endif
 }
 
 OVITO_END_INLINE_NAMESPACE

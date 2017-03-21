@@ -23,7 +23,7 @@
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/Task.h>
 #include "FHIAimsExporter.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
@@ -33,10 +33,16 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(FHIAimsExporter, ParticleExporter);
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.
 ******************************************************************************/
-bool FHIAimsExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
+bool FHIAimsExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager)
 {
+	// Get particle data to be exported.
+	PipelineFlowState state;
+	if(!getParticleData(sceneNode, time, state, taskManager))
+		return false;
+
+	SynchronousTask exportTask(taskManager);
+
 	// Get particle positions and types.
-	const PipelineFlowState& state = getParticleData(sceneNode, time);
 	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
 	ParticleTypeProperty* particleTypeProperty = dynamic_object_cast<ParticleTypeProperty>(ParticlePropertyObject::findInState(state, ParticleProperty::ParticleTypeProperty));
 
@@ -55,7 +61,7 @@ bool FHIAimsExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePo
 	}
 
 	// Output atoms.
-	if(progress) progress->setMaximum(100);
+	exportTask.setProgressMaximum(100);
 	for(size_t i = 0; i < posProperty->size(); i++) {
 		const Point3& p = posProperty->getPoint3(i);
 		const ParticleType* type = particleTypeProperty->particleType(particleTypeProperty->getInt(i));
@@ -69,14 +75,14 @@ bool FHIAimsExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePo
 			textStream() << ' ' << particleTypeProperty->getInt(i) << '\n';
 		}
 
-		if(progress && (i % 1000) == 0) {
-			progress->setValue((qint64)i * 100 / posProperty->size());
-			if(progress->wasCanceled())
+		if((i % 1000) == 0) {
+			exportTask.setProgressValue((qint64)i * 100 / posProperty->size());
+			if(exportTask.isCanceled())
 				return false;
 		}
 	}
 
-	return true;
+	return !exportTask.isCanceled();
 }
 
 OVITO_END_INLINE_NAMESPACE

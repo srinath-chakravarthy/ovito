@@ -1,2 +1,4 @@
 # Load the native module.
-from PyScriptAnimation import *
+from ..plugins.PyScript.Animation import *
+
+__all__ = ['AnimationSettings']

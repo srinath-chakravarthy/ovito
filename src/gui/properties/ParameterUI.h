@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::ParameterUI class and some derived classes.
  */
 
-#ifndef __OVITO_PARAMETER_UI_H
-#define __OVITO_PARAMETER_UI_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/reference/RefTarget.h>
@@ -231,4 +231,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_PARAMETER_UI_H
+

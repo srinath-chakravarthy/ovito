@@ -1,4 +1,3 @@
-from ovito import *
 from ovito.io import *
 from ovito.vis import *
 from PyQt5 import QtCore
@@ -28,4 +27,3 @@ overlay = TextLabelOverlay(
 
 vp.overlays.append(overlay)
 vp.render(settings)
-

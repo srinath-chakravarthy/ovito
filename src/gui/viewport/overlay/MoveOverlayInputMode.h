@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_MOVE_OVERLAY_INPUT_MODE_H
-#define __OVITO_MOVE_OVERLAY_INPUT_MODE_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/reference/RefTarget.h>
@@ -80,4 +80,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_MOVE_OVERLAY_INPUT_MODE_H
+

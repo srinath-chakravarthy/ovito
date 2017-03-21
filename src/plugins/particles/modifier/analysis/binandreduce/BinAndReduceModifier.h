@@ -20,8 +20,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_BIN_AND_REDUCE_MODIFIER_H
-#define __OVITO_BIN_AND_REDUCE_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/ParticleProperty.h>
@@ -157,4 +157,4 @@ Q_DECLARE_METATYPE(Ovito::Particles::BinAndReduceModifier::BinDirectionType);
 Q_DECLARE_TYPEINFO(Ovito::Particles::BinAndReduceModifier::ReductionOperationType, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::Particles::BinAndReduceModifier::BinDirectionType, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_BIN_AND_REDUCE_MODIFIER_H
+

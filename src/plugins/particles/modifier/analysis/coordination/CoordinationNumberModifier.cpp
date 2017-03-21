@@ -71,16 +71,16 @@ void CoordinationNumberModifier::CoordinationAnalysisEngine::perform()
 
 	// Prepare the neighbor list.
 	CutoffNeighborFinder neighborListBuilder;
-	if(!neighborListBuilder.prepare(_cutoff, positions(), cell(), nullptr, this))
+	if(!neighborListBuilder.prepare(_cutoff, positions(), cell(), nullptr, *this))
 		return;
 
 	size_t particleCount = positions()->size();
 	setProgressValue(0);
-	setProgressRange(particleCount / 1000);
+	setProgressMaximum(particleCount / 1000);
 
 	// Perform analysis on each particle in parallel.
 	std::vector<std::thread> workers;
-	size_t num_threads = Application::instance().idealThreadCount();
+	size_t num_threads = Application::instance()->idealThreadCount();
 	size_t chunkSize = particleCount / num_threads;
 	size_t startIndex = 0;
 	size_t endIndex = chunkSize;

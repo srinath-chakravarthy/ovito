@@ -40,19 +40,19 @@ bool AmbientOcclusionRenderer::startRender(DataSet* dataset, RenderSettings* set
 	_offscreenContext.reset(new QOpenGLContext());
 	_offscreenContext->setFormat(OpenGLSceneRenderer::getDefaultSurfaceFormat());
 	if(!_offscreenContext->create())
-		dataset->throwException(tr("Failed to create OpenGL context."));
+		throwException(tr("Failed to create OpenGL context."));
 
 	// Check offscreen buffer.
 	if(!_offscreenSurface.isValid())
-		dataset->throwException(tr("Failed to create offscreen rendering surface."));
+		throwException(tr("Failed to create offscreen rendering surface."));
 
 	// Make the context current.
 	if(!_offscreenContext->makeCurrent(&_offscreenSurface))
-		dataset->throwException(tr("Failed to make OpenGL context current."));
+		throwException(tr("Failed to make OpenGL context current."));
 
 	// Check OpenGL version.
 	if(_offscreenContext->format().majorVersion() < OVITO_OPENGL_MINIMUM_VERSION_MAJOR || (_offscreenContext->format().majorVersion() == OVITO_OPENGL_MINIMUM_VERSION_MAJOR && _offscreenContext->format().minorVersion() < OVITO_OPENGL_MINIMUM_VERSION_MINOR)) {
-		dataset->throwException(tr(
+		throwException(tr(
 				"The OpenGL implementation available on this system does not support OpenGL version %4.%5 or newer.\n\n"
 				"Ovito requires modern graphics hardware to accelerate 3d rendering. You current system configuration is not compatible with Ovito.\n\n"
 				"To avoid this error message, please install the newest graphics driver, or upgrade your graphics card.\n\n"
@@ -74,11 +74,11 @@ bool AmbientOcclusionRenderer::startRender(DataSet* dataset, RenderSettings* set
 	framebufferFormat.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
 	_framebufferObject.reset(new QOpenGLFramebufferObject(_resolution, framebufferFormat));
 	if(!_framebufferObject->isValid())
-		dataset->throwException(tr("Failed to create OpenGL framebuffer object for offscreen rendering."));
+		throwException(tr("Failed to create OpenGL framebuffer object for offscreen rendering."));
 
 	// Bind OpenGL buffer.
 	if(!_framebufferObject->bind())
-		dataset->throwException(tr("Failed to bind OpenGL framebuffer object for offscreen rendering."));
+		throwException(tr("Failed to bind OpenGL framebuffer object for offscreen rendering."));
 
 	return true;
 }
@@ -90,7 +90,7 @@ void AmbientOcclusionRenderer::beginFrame(TimePoint time, const ViewProjectionPa
 {
 	// Make GL context current.
 	if(!_offscreenContext->makeCurrent(&_offscreenSurface))
-		vp->throwException(tr("Failed to make OpenGL context current."));
+		throwException(tr("Failed to make OpenGL context current."));
 
 	OpenGLSceneRenderer::beginFrame(time, params, vp);
 
@@ -106,23 +106,25 @@ void AmbientOcclusionRenderer::beginFrame(TimePoint time, const ViewProjectionPa
 /******************************************************************************
 * This method is called after renderFrame() has been called.
 ******************************************************************************/
-void AmbientOcclusionRenderer::endFrame()
+void AmbientOcclusionRenderer::endFrame(bool renderSuccessful)
 {
-	// Flush the contents to the FBO before extracting image.
-	_offscreenContext->swapBuffers(&_offscreenSurface);
+	if(renderSuccessful) {
+		// Flush the contents to the FBO before extracting image.
+		_offscreenContext->swapBuffers(&_offscreenSurface);
 
-	// Fetch rendered image from OpenGL framebuffer.
-	QSize size = _framebufferObject->size();
-	if(_image.isNull() || _image.size() != size)
-		_image = QImage(size, QImage::Format_ARGB32);
-	while(glGetError() != GL_NO_ERROR);
-	glReadPixels(0, 0, size.width(), size.height(), GL_BGRA, GL_UNSIGNED_BYTE, _image.bits());
-	if(glGetError() != GL_NO_ERROR) {
-		glReadPixels(0, 0, size.width(), size.height(), GL_RGBA, GL_UNSIGNED_BYTE, _image.bits());
-		_image = _image.rgbSwapped();
+		// Fetch rendered image from OpenGL framebuffer.
+		QSize size = _framebufferObject->size();
+		if(_image.isNull() || _image.size() != size)
+			_image = QImage(size, QImage::Format_ARGB32);
+		while(glGetError() != GL_NO_ERROR);
+		glReadPixels(0, 0, size.width(), size.height(), GL_BGRA, GL_UNSIGNED_BYTE, _image.bits());
+		if(glGetError() != GL_NO_ERROR) {
+			glReadPixels(0, 0, size.width(), size.height(), GL_RGBA, GL_UNSIGNED_BYTE, _image.bits());
+			_image = _image.rgbSwapped();
+		}
 	}
 
-	OpenGLSceneRenderer::endFrame();
+	OpenGLSceneRenderer::endFrame(renderSuccessful);
 }
 
 /******************************************************************************

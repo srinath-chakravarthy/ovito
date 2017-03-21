@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_COMPOUND_OBJECT_H
-#define __OVITO_COMPOUND_OBJECT_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/scene/objects/DataObject.h>
@@ -38,8 +38,8 @@ public:
 	/// Constructs an empty compound data object.
 	Q_INVOKABLE CompoundObject(DataSet* dataset);
 
-	/// Asks the object for the result of the modification pipeline at the given time.
-	virtual PipelineFlowState evaluate(TimePoint time) override;
+	/// Asks the object for the result of the data pipeline.
+	virtual PipelineFlowState evaluateImmediately(const PipelineEvalRequest& request) override;
 
 	/// \brief Inserts a new object into the list of data objects held by this container object.
 	void addDataObject(DataObject* obj) {
@@ -147,4 +147,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_COMPOUND_OBJECT_H
+

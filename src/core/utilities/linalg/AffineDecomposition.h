@@ -27,8 +27,8 @@
  * \brief Contains the definition of the Ovito::AffineDecomposition class.
  */
 
-#ifndef __OVITO_AFFINE_DECOMP_H
-#define __OVITO_AFFINE_DECOMP_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "Vector3.h"
@@ -83,4 +83,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_AFFINE_DECOMP_H
+

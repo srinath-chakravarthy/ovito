@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_INPUT_COLUMN_MAPPING_DIALOG_H
-#define __OVITO_INPUT_COLUMN_MAPPING_DIALOG_H
+#pragma once
+
 
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/particles/import/InputColumnMapping.h>
@@ -82,4 +82,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_INPUT_COLUMN_MAPPING_DIALOG_H
+

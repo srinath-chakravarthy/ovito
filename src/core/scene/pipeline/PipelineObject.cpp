@@ -21,6 +21,7 @@
 
 #include <core/Core.h>
 #include <core/scene/pipeline/PipelineObject.h>
+#include <core/scene/pipeline/PipelineEvalRequest.h>
 #include <core/dataset/UndoStack.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
@@ -41,14 +42,9 @@ PipelineObject::PipelineObject(DataSet* dataset) : DataObject(dataset), _cachedI
 }
 
 /******************************************************************************
-* Asks the object for the result of the geometry pipeline at the given time
-* up to a given point in the modifier stack.
-* If upToHere is NULL then the complete modifier stack will be evaluated.
-* Otherwise only the modifiers in the pipeline before the given point will be
-* applied to the input object. The 'include' parameter specifies whether the
-* last modifier given by 'upToHere' will be applied.
+* Asks the object for the results of the data  pipeline.
 ******************************************************************************/
-PipelineFlowState PipelineObject::evaluatePipeline(TimePoint time, ModifierApplication* upToHere, bool including)
+PipelineFlowState PipelineObject::evaluateImmediately(const PipelineEvalRequest& request)
 {
 	// Prevent the recoding of transient operations while evaluating the pipeline.
 	UndoSuspender undoSuspender(dataset()->undoStack());
@@ -59,15 +55,18 @@ PipelineFlowState PipelineObject::evaluatePipeline(TimePoint time, ModifierAppli
 
 	// Determine the position in the pipeline up to which it should be evaluated.
 	int upToHereIndex;
-	if(upToHere != nullptr) {
-		upToHereIndex = modifierApplications().indexOf(upToHere);
-		OVITO_ASSERT(upToHereIndex != -1);
-		if(including) upToHereIndex++;
+	if(request.upToThisModifier() != nullptr) {
+		upToHereIndex = modifierApplications().indexOf(request.upToThisModifier());
+		if(upToHereIndex == -1)
+		 	upToHereIndex = modifierApplications().size();
+		else if(request.includeLastModifier()) 
+			upToHereIndex++;
 	}
 	else upToHereIndex = modifierApplications().size();
+	OVITO_ASSERT(upToHereIndex >= 0 && upToHereIndex <= modifierApplications().size());
 
 	// Receive the input data from the source object.
-	PipelineFlowState inputState = sourceObject()->evaluate(time);
+	PipelineFlowState inputState = sourceObject()->evaluateImmediately(request);
 
 	// Determine the modifier from which on to evaluate the pipeline.
 	int fromHereIndex = 0;
@@ -76,8 +75,8 @@ PipelineFlowState PipelineObject::evaluatePipeline(TimePoint time, ModifierAppli
 	// Use the cached results if possible.
 	// First check if the cache is filled.
 	if(_cachedIndex >= 0 && _cachedIndex <= upToHereIndex &&
-			_cachedState.stateValidity().contains(time) &&
-			_lastInput.stateValidity().contains(time)) {
+			_cachedState.stateValidity().contains(request.time()) &&
+			_lastInput.stateValidity().contains(request.time())) {
 
 		// Check if there have been any changes in the input data
 		// since the cache has been filled.
@@ -106,7 +105,7 @@ PipelineFlowState PipelineObject::evaluatePipeline(TimePoint time, ModifierAppli
 
 	// Flag that indicates whether the output of the pipeline is considered incomplete.
 	bool isPending = (flowState.status().type() == PipelineStatus::Pending);
-	
+
     // Apply the modifiers one by one.
 	for(int stackIndex = fromHereIndex; stackIndex < upToHereIndex; stackIndex++) {
 
@@ -124,16 +123,16 @@ PipelineFlowState PipelineObject::evaluatePipeline(TimePoint time, ModifierAppli
 		if(mod->isEnabled() == false)
 			continue;
 
-		// Save current flow state in cache at this point of the pipeline
-		// if the next modifier is changing frequently (because it is currently being edited).
-		if(mod->modifierValidity(time).isEmpty()) {
+		// Save the current flow state at this point of the pipeline in the cache
+		// if the next modifier is changing frequently (because of it being currently edited).
+		if(mod->modifierValidity(request.time()).isEmpty()) {
 			_cachedState = flowState;
 			_cachedState.updateRevisionNumbers();
 			_cachedIndex = stackIndex;
 		}
 		
 		// Apply modifier.
-		PipelineStatus modifierStatus = mod->modifyObject(time, app, flowState);
+		PipelineStatus modifierStatus = mod->modifyObject(request.time(), app, flowState);
 		if(modifierStatus.type() == PipelineStatus::Pending)
 			isPending = true;
 		else if(isPending)
@@ -147,7 +146,7 @@ PipelineFlowState PipelineObject::evaluatePipeline(TimePoint time, ModifierAppli
 	// Make sure the revision information in the output is up to date.
 	flowState.updateRevisionNumbers();
 
-	// Cache the pipeline output (if not already cached an intermediate state of the pipeline).
+	// Cache the pipeline output (if not already done for an intermediate state of the pipeline).
 	if(_cachedIndex < 0 && flowState.isEmpty() == false) {
 		_cachedState = flowState;
 		_cachedIndex = upToHereIndex;
@@ -229,7 +228,6 @@ bool PipelineObject::referenceEvent(RefTarget* source, ReferenceEvent* event)
 				modifierChanged(index);
 				// We also consider this a change of the modification pipeline itself.
 				notifyDependents(ReferenceEvent::TargetChanged);
-				notifyDependents(ReferenceEvent::PendingStateChanged);
 			}
 		}
 	}
@@ -254,8 +252,6 @@ void PipelineObject::referenceInserted(const PropertyFieldDescriptor& field, Ref
 
 		// Inform all subsequent modifiers that their input has changed.
 		modifierChanged(listIndex);
-		// A change to the pipeline may potentially result in a change of the pending status.
-		notifyDependents(ReferenceEvent::PendingStateChanged);
 	}
 	DataObject::referenceInserted(field, newTarget, listIndex);
 }
@@ -270,8 +266,6 @@ void PipelineObject::referenceRemoved(const PropertyFieldDescriptor& field, RefT
 		// If a modifier is being removed from the pipeline, then all
 		// modifiers following it need to be informed.
 		modifierChanged(listIndex - 1);
-		// A change to the pipeline may potentially result in a change of the pending status.
-		notifyDependents(ReferenceEvent::PendingStateChanged);
 	}
 	DataObject::referenceRemoved(field, oldTarget, listIndex);
 }
@@ -315,6 +309,20 @@ void PipelineObject::modifierChanged(int changedIndex)
 		if(app && app->modifier())
 			app->modifier()->upstreamPipelineChanged(app);
 	}
+
+	// A change in the pipeline may affect the status of the pipeline results.
+	notifyDependents(ReferenceEvent::PendingStateChanged);
+}
+
+/******************************************************************************
+* Sends an event to all dependents of this RefTarget.
+******************************************************************************/
+void PipelineObject::notifyDependents(ReferenceEvent& event)
+{
+	if(event.type() == ReferenceEvent::PendingStateChanged)
+		_evaluationRequestHelper.serveRequests(this);
+
+	DataObject::notifyDependents(event);
 }
 
 OVITO_END_INLINE_NAMESPACE

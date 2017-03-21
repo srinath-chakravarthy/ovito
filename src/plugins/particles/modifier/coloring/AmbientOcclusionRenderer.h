@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_AMBIENT_OCCLUSION_RENDERER_H
-#define __OVITO_AMBIENT_OCCLUSION_RENDERER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <opengl_renderer/OpenGLSceneRenderer.h>
@@ -49,7 +49,7 @@ public:
 	virtual void beginFrame(TimePoint time, const ViewProjectionParameters& params, Viewport* vp) override;
 
 	/// This method is called after renderFrame() has been called.
-	virtual void endFrame() override;
+	virtual void endFrame(bool renderSuccessful) override;
 
 	/// Is called after rendering has finished.
 	virtual void endRender() override;
@@ -93,4 +93,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_AMBIENT_OCCLUSION_RENDERER_H
+

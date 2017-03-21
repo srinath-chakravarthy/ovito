@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_IMPORT_FILE_DIALOG_H
-#define __OVITO_IMPORT_FILE_DIALOG_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/dataset/importexport/FileImporter.h>
@@ -58,4 +58,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_IMPORT_FILE_DIALOG_H
+

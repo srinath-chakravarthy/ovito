@@ -193,7 +193,7 @@ void CFGImporter::CFGImportTask::parseFile(CompressedTextReader& stream)
 		generateAutomaticColumnMapping(cfgMapping, header.auxiliaryFields);
 	}
 
-	setProgressRange(header.numParticles);
+	setProgressMaximum(header.numParticles);
 
 	// Prepare the mapping between input file columns and particle properties.
 	InputColumnReader columnParser(cfgMapping, *this, header.numParticles);

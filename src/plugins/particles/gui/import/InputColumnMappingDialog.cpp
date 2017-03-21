@@ -128,7 +128,7 @@ void InputColumnMappingDialog::onOk()
 		accept();
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 		return;
 	}
 }
@@ -301,7 +301,7 @@ void InputColumnMappingDialog::onSavePreset()
 		settings.endArray();
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -349,7 +349,7 @@ void InputColumnMappingDialog::onLoadPreset()
 		}
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 

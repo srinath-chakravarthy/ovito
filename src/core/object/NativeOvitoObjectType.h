@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_NATIVE_OVITO_OBJECT_TYPE_H
-#define __OVITO_NATIVE_OVITO_OBJECT_TYPE_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "OvitoObjectType.h"
@@ -108,4 +108,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_NATIVE_OVITO_OBJECT_TYPE_H
+

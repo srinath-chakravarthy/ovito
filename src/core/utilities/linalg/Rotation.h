@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::RotationT class template.
  */
 
-#ifndef __OVITO_ROTATION_H
-#define __OVITO_ROTATION_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/io/SaveStream.h>
@@ -567,4 +567,4 @@ Q_DECLARE_METATYPE(Ovito::Rotation*);
 Q_DECLARE_TYPEINFO(Ovito::Rotation, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::Rotation*, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_ROTATION_H
+

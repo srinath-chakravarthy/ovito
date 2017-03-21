@@ -21,7 +21,7 @@
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/TaskManager.h>
 #include <core/scene/ObjectNode.h>
 #include <core/scene/SelectionSet.h>
 #include "ParticleExporter.h"
@@ -53,14 +53,17 @@ void ParticleExporter::selectStandardOutputData()
 * Evaluates the pipeline of an ObjectNode and makes sure that the data to be
 * exported contains particles and throws an exception if not.
 ******************************************************************************/
-const PipelineFlowState& ParticleExporter::getParticleData(SceneNode* sceneNode, TimePoint time)
+bool ParticleExporter::getParticleData(SceneNode* sceneNode, TimePoint time, PipelineFlowState& state, TaskManager& taskManager)
 {
 	ObjectNode* objectNode = dynamic_object_cast<ObjectNode>(sceneNode);
 	if(!objectNode)
 		throwException(tr("The scene node to be exported is not an object node."));
 
 	// Evaluate pipeline of object node.
-	const PipelineFlowState& state = objectNode->evalPipeline(time);
+	auto evalFuture = objectNode->evaluatePipelineAsync(PipelineEvalRequest(time, false));
+	if(!taskManager.waitForTask(evalFuture))
+		return false;
+	state = evalFuture.result();
 	if(state.isEmpty())
 		throwException(tr("The object to be exported does not contain any data."));
 
@@ -76,7 +79,7 @@ const PipelineFlowState& ParticleExporter::getParticleData(SceneNode* sceneNode,
 		}
 	}
 
-	return state;
+	return true;
 }
 
 /******************************************************************************
@@ -111,17 +114,14 @@ void ParticleExporter::closeOutputFile(bool exportCompleted)
 /******************************************************************************
  * Exports a single animation frame to the current output file.
  *****************************************************************************/
-bool ParticleExporter::exportFrame(int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay)
+bool ParticleExporter::exportFrame(int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager)
 {
-	if(!FileExporter::exportFrame(frameNumber, time, filePath, progressDisplay))
+	if(!FileExporter::exportFrame(frameNumber, time, filePath, taskManager))
 		return false;
-
-	if(progressDisplay)
-		progressDisplay->setStatusText(tr("Exporting frame %1 to file '%2'.").arg(frameNumber).arg(filePath));
 
 	// Export the first scene node from the selection set.
 	if(!outputData().empty())
-		return exportObject(outputData().front(), frameNumber, time, filePath, progressDisplay);
+		return exportObject(outputData().front(), frameNumber, time, filePath, taskManager);
 	else
 		throwException(tr("The selection set to be exported is empty."));
 

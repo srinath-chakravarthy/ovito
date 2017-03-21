@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PICKING_SCENE_RENDERER_H
-#define __OVITO_PICKING_SCENE_RENDERER_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <gui/rendering/ViewportSceneRenderer.h>
@@ -51,10 +51,10 @@ public:
 	virtual void beginFrame(TimePoint time, const ViewProjectionParameters& params, Viewport* vp) override;
 
 	/// Renders the current animation frame.
-	virtual bool renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress) override;
+	virtual bool renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, TaskManager& taskManager) override;
 
 	/// This method is called after renderFrame() has been called.
-	virtual void endFrame() override;
+	virtual void endFrame(bool renderSuccessful) override;
 
 	/// When picking mode is active, this registers an object being rendered.
 	virtual quint32 beginPickObject(ObjectNode* objNode, ObjectPickInfo* pickInfo = nullptr) override;
@@ -117,4 +117,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_PICKING_SCENE_RENDERER_H
+

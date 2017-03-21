@@ -19,9 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_MESH_H
-#define __OVITO_MESH_H
+#pragma once
+
 
 #include <core/Core.h>
 
-#endif

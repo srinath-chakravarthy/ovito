@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_OPENGL_SCENE_RENDERER_H
-#define __OVITO_OPENGL_SCENE_RENDERER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/rendering/SceneRenderer.h>
@@ -58,13 +58,13 @@ public:
 		_glVertexIDBufferSize(-1) {}
 
 	/// Renders the current animation frame.
-	virtual bool renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress) override;
+	virtual bool renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, TaskManager& taskManager) override;
 
 	/// This method is called just before renderFrame() is called.
 	virtual void beginFrame(TimePoint time, const ViewProjectionParameters& params, Viewport* vp) override;
 
 	/// This method is called after renderFrame() has been called.
-	virtual void endFrame() override;
+	virtual void endFrame(bool renderSuccessful) override;
 
 	/// Changes the current local to world transformation matrix.
 	virtual void setWorldTransform(const AffineTransformation& tm) override;
@@ -218,22 +218,6 @@ protected:
 	/// Returns the supersampling level to use.
 	virtual int antialiasingLevelInternal() { return 1; }
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 3, 0)
-
-	// Need this, because Qt5.2 did not yet expose the standard OpenGL functions through the QOpenGLFunctions class.
-	void glEnable(GLenum cap);
-	void glDisable(GLenum cap);
-	void glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices);
-	void glGetIntegerv(GLenum pname, GLint * params);
-	void glCullFace(GLenum mode);
-	void glDrawArrays(GLenum mode, GLint first, GLsizei count);
-	void glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid * pixels);
-	void glTexParameteri(GLenum target, GLenum pname, GLint param);
-	GLboolean glIsEnabled(GLenum cap);
-	void glBlendFunc(GLenum sfactor, GLenum dfactor);
-
-#endif
-
 	/// The OpenGL glPointParameterf() function.
 	void glPointSize(GLfloat size) {
 		if(_glFunctions32) _glFunctions32->glPointSize(size);
@@ -352,5 +336,5 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_OPENGL_SCENE_RENDERER_H
+
 

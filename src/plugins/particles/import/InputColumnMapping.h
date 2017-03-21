@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_INPUT_COLUMN_MAPPING_H
-#define __OVITO_INPUT_COLUMN_MAPPING_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/ParticleProperty.h>
@@ -212,4 +212,4 @@ OVITO_END_INLINE_NAMESPACE
 Q_DECLARE_METATYPE(Ovito::Particles::InputColumnInfo);
 Q_DECLARE_METATYPE(Ovito::Particles::InputColumnMapping);
 
-#endif // __OVITO_INPUT_COLUMN_MAPPING_H
+

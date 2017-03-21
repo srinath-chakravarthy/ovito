@@ -21,6 +21,7 @@
 
 #include <plugins/pyscript/PyScript.h>
 #include <core/app/Application.h>
+#include <core/app/StandaloneApplication.h>
 #include <core/dataset/DataSetContainer.h>
 #include "ScriptAutostarter.h"
 #include "ScriptEngine.h"
@@ -60,22 +61,22 @@ void ScriptAutostarter::registerCommandLineOptions(QCommandLineParser& cmdLinePa
 void ScriptAutostarter::applicationStarted()
 {
 	// Execute the script commands and files passed on the command line.
-	QStringList scriptCommands = Application::instance().cmdLineParser().values("exec");
-	QStringList scriptFiles = Application::instance().cmdLineParser().values("script");
+	QStringList scriptCommands = StandaloneApplication::instance()->cmdLineParser().values("exec");
+	QStringList scriptFiles = StandaloneApplication::instance()->cmdLineParser().values("script");
 
-	if((!scriptCommands.empty() || !scriptFiles.empty()) && Application::instance().datasetContainer()) {
+	if((!scriptCommands.empty() || !scriptFiles.empty()) && Application::instance()->datasetContainer()) {
 
 		// Get the current dataset.
-		DataSet* dataset = Application::instance().datasetContainer()->currentSet();
+		DataSet* dataset = Application::instance()->datasetContainer()->currentSet();
 
 		// Suppress undo recording. Actions performed by startup scripts cannot be undone.
 		UndoSuspender noUndo(dataset);
 
 		// Set up script engine.
-		ScriptEngine engine(dataset);
+		ScriptEngine engine(dataset, Application::instance()->datasetContainer()->taskManager(), false);
 
 		// Pass command line parameters to the script.
-		QStringList scriptArguments = Application::instance().cmdLineParser().values("scriptarg");
+		QStringList scriptArguments = StandaloneApplication::instance()->cmdLineParser().values("scriptarg");
 
 		// Execute script commands.
 		for(int index = scriptCommands.size() - 1; index >= 0; index--) {

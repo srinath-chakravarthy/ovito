@@ -9,7 +9,7 @@
 """
 import sys
 
-from ovito import *
+import ovito
 from ovito.data import *
 from ovito.vis import *
 
@@ -117,8 +117,8 @@ def export_node(node):
         export_simulation_cell(group_name, data.cell)
 
 # Loop over scene nodes.
-for i in range(len(dataset.scene_nodes)):
-    export_node(dataset.scene_nodes[i])
+for i in range(len(ovito.dataset.scene_nodes)):
+    export_node(ovito.dataset.scene_nodes[i])
     
 # Write node resources.
 

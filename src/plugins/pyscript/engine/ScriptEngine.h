@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PYSCRIPT_ENGINE_H
-#define __OVITO_PYSCRIPT_ENGINE_H
+#pragma once
+
 
 #include <plugins/pyscript/PyScript.h>
 #include <core/dataset/DataSet.h>
@@ -39,19 +39,26 @@ public:
 
 	/// \brief Initializes the scripting engine and sets up the environment.
 	/// \param dataset The engine will execute scripts in the context of this dataset.
-	/// \param parent The owner of this QObject.
-	/// \param redirectOutputToConsole Controls whether the Python script output should be forwarded to the terminal.
-	ScriptEngine(DataSet* dataset, QObject* parent = nullptr, bool redirectOutputToConsole = true);
+	/// \param taskManager The engine will execute scripts in the context of this task manager.
+	/// \param privateContext If true, then changes made by the script will not be visible on the global scope.
+	/// \param parent The owner of this engine object.
+	ScriptEngine(DataSet* dataset, TaskManager& taskManager, bool privateContext, QObject* parent = nullptr);
 
 	/// \brief Destructor
 	virtual ~ScriptEngine();
 
-	/// \brief Returns the dataset that provides the context for the script.
+	/// \brief Returns the dataset that provides the context for the script execution.
 	DataSet* dataset() const { return _dataset; }
+
+	/// \brief Returns the task manager that provides the context for the script execution.
+	TaskManager& taskManager() const { OVITO_ASSERT(_taskManager); return *_taskManager; }
 
 	/// \brief Returns the script engine that is currently active (i.e. which is executing a script).
 	/// \return The active script engine or NULL if no script is currently being executed.
 	static ScriptEngine* activeEngine() { return _activeEngine; }
+
+	/// \brief Returns the task manager providing the context for the currently running script.
+	static TaskManager& activeTaskManager();
 
 	/// \brief Executes a Python script consisting of one or more statements.
 	/// \param script The script commands.
@@ -62,9 +69,8 @@ public:
 	int executeCommands(const QString& commands, const QStringList& scriptArguments = QStringList());
 
 	/// \brief Executes a Python script file.
-	/// \param scriptFile The script file path.
+	/// \param file The script file path.
 	/// \param scriptArguments An optional list of command line arguments that will be passed to the script via sys.argv.
-	/// \param progressDisplay An optional progress display, which will be used to show the script execution status.
 	/// \return The exit code returned by the Python script.
 	/// \throw Exception on error.
 	int executeFile(const QString& file, const QStringList& scriptArguments = QStringList());
@@ -83,14 +89,11 @@ public:
 	/// \brief Provides access to the global namespace the script will be executed in by this script engine.
 	py::dict& mainNamespace() { return _mainNamespace; }
 
-	/// Returns the progress display that has been registered with the engine, which
-	/// is responsible for showing the progress of long-running operations
-	/// performed by a script.
-	AbstractProgressDisplay* progressDisplay() const { return _progressDisplay; }
+	/// \brief Returns the dataset that is currently active in the Python interpreter.
+	static DataSet* activeDataset();
 
-	/// Sets the progress display which will be used to show the progress of long-running operations
-	/// performed by a script.
-	void setProgressDisplay(AbstractProgressDisplay* progressDisplay) { _progressDisplay = progressDisplay; }
+	/// \brief Sets the dataset that is currently active in the Python interpreter.
+	static void setActiveDataset(DataSet* dataset);
 
 Q_SIGNALS:
 
@@ -102,15 +105,15 @@ Q_SIGNALS:
 
 private:
 
-	/// Initializes the Python interpreter and sets up the global namespace.
-	void initializeInterpreter();
+	/// Initializes the embedded Python interpreter and sets up the global namespace.
+	void initializeEmbeddedInterpreter();
 
 	/// Handles a call to sys.exit() in the Python interpreter.
 	/// Returns the program exit code.
 	int handleSystemExit();
 
 	/// Handles an exception raised by the Python side.
-	int handlePythonException(py::error_already_set& ex, ScriptEngine* previousEngine, const QString& filename = QString());
+	int handlePythonException(py::error_already_set& ex, const QString& filename = QString());
 
 	/// This helper class redirects Python script write calls to the sys.stdout stream to this script engine.
 	struct InterpreterStdOutputRedirector {
@@ -134,16 +137,27 @@ private:
 		}
 	};
 
+	/// This helper class is used to make a script engine the active one as long as a script execution
+	/// is in progress. Uses RAII pattern to ensure that the old state is restored when the helper object goes out of scope.
+	struct ActiveScriptEngineSetter {
+		ActiveScriptEngineSetter(ScriptEngine* engine) : _previousEngine(ScriptEngine::_activeEngine) {
+			ScriptEngine::_activeEngine = engine;
+		}
+		~ActiveScriptEngineSetter() {
+			ScriptEngine::_activeEngine = _previousEngine;
+		}
+	private:
+		QPointer<ScriptEngine> _previousEngine;
+	};
+
 	/// The dataset that provides the context for the script execution.
 	QPointer<DataSet> _dataset;
 
+	/// The task manager that provides the context for the script execution.
+	TaskManager* _taskManager;
+
 	/// The namespace (scope) the script will be executed in by this script engine.
 	py::dict _mainNamespace;
-
-	/// The progress display that has been registered with the engine, which
-	/// is responsible for showing the progress of long-running operations
-	/// performed by a script.
-	AbstractProgressDisplay* _progressDisplay = nullptr;
 
 	/// The script engine that is currently active (i.e. which is executing a script).
 	static ScriptEngine* _activeEngine;
@@ -151,6 +165,4 @@ private:
 	Q_OBJECT
 };
 
-};	// End of namespace
-
-#endif
+}	// End of namespace

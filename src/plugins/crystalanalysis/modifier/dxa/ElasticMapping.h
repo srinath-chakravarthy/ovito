@@ -19,13 +19,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_ELASTIC_MAPPING_H
-#define __OVITO_CA_ELASTIC_MAPPING_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/crystalanalysis/util/DelaunayTessellation.h>
 #include <core/utilities/MemoryPool.h>
-#include <core/utilities/concurrent/FutureInterface.h>
+#include <core/utilities/concurrent/Promise.h>
 #include <plugins/crystalanalysis/data/Cluster.h>
 #include <plugins/crystalanalysis/data/ClusterGraph.h>
 #include <plugins/particles/data/BondsStorage.h>
@@ -107,17 +107,17 @@ public:
 	ClusterGraph& clusterGraph() { return _clusterGraph; }
 
 	/// Builds the list of edges in the tetrahedral tessellation.
-	bool generateTessellationEdges(FutureInterfaceBase& progress);
+	bool generateTessellationEdges(PromiseBase& promise);
 
 	/// Assigns each tessellation vertex to a cluster.
-	bool assignVerticesToClusters(FutureInterfaceBase& progress);
+	bool assignVerticesToClusters(PromiseBase& promise);
 
 	/// Determines the ideal vector corresponding to each edge of the tessellation.
-	bool assignIdealVectorsToEdges(bool reconstructEdgeVectors, int crystalPathSteps, FutureInterfaceBase& progress);
+	bool assignIdealVectorsToEdges(bool reconstructEdgeVectors, int crystalPathSteps, PromiseBase& promise);
 
 	/// Tries to determine the ideal vectors of tessellation edges, which haven't
-	// been assigned one during the first phase.
-	bool reconstructIdealEdgeVectors(FutureInterfaceBase& progress);
+	/// been assigned one during the first phase.
+	bool reconstructIdealEdgeVectors(PromiseBase& promise);
 
 	/// Determines whether the elastic mapping from the physical configuration
 	/// of the crystal to the imaginary, stress-free configuration is compatible
@@ -193,4 +193,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CA_ELASTIC_MAPPING_H
+

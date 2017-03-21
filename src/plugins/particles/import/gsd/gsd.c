@@ -1,4 +1,4 @@
-// Copyright (c) 2016 The Regents of the University of Michigan
+// Copyright (c) 2016-2017 The Regents of the University of Michigan
 // This file is part of the General Simulation Data (GSD) project, released under the BSD 2-Clause License.
 
 #ifdef _WIN32
@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #include "gsd.h"
 
@@ -97,9 +98,7 @@ static int __gsd_expand_index(struct gsd_handle *handle)
         // in append mode, we don't have the whole index stored in memory. Instead, we need to copy it in chunks
         // from the file's old position to the new position
         const size_t buf_size = 1024*16;
-        char *buf = malloc(buf_size);
-        if (buf == NULL)
-            return -1;
+        char buf[1024*16];
 
         int64_t new_index_location = lseek(handle->fd, 0, SEEK_END);
         int64_t old_index_location = handle->header.index_location;
@@ -135,8 +134,6 @@ static int __gsd_expand_index(struct gsd_handle *handle)
                 return -1;
             total_bytes_written += bytes_written;
             }
-
-        free(buf);
 
         // update to the new index location in the header
         handle->header.index_location = new_index_location;
@@ -271,7 +268,12 @@ int __gsd_read_header(struct gsd_handle* handle)
     lseek(handle->fd, 0, SEEK_SET);
     size_t bytes_read = read(handle->fd, &handle->header, sizeof(struct gsd_header));
     if (bytes_read != sizeof(struct gsd_header))
-        return -1;
+        {
+        if (errno != 0)
+            return -1;
+        else
+            return -2;
+        }
 
     // validate the header
     if (handle->header.magic != 0x65DF65DF65DF65DF)

@@ -119,11 +119,11 @@
           <para>Computing and exporting the size of each cluster (i.e. the number of particles) requires a simple Python script.
           The following example script can be executed using the <menuchoice><guimenu>Scripting</guimenu><guimenuitem>Run Script File</guimenuitem></menuchoice>
           menu function after manually applying the <emphasis>Cluster Analysis</emphasis> modifier:</para>
-    <para><programlisting>from ovito import *
+    <para><programlisting>import ovito
 import numpy
 
 output_filepath = "cluster_sizes.txt"
-output = dataset.selected_node.compute()
+output = ovito.dataset.selected_node.compute()
 cluster_sizes = numpy.bincount(output.particle_properties['Cluster'].array)
 numpy.savetxt(output_filepath, cluster_sizes)
     </programlisting></para>
@@ -135,12 +135,12 @@ numpy.savetxt(output_filepath, cluster_sizes)
     </para>
     <para>
       It is possible to perform the file export for every frame in a simulation sequence by adding a <code>for</code>-loop to the script:</para>
-<para><programlisting>from ovito import *
+<para><programlisting>import ovito
 import numpy
 
-for frame in range(dataset.anim.last_frame + 1):
+for frame in range(ovito.dataset.anim.last_frame + 1):
     output_filepath = "cluster_sizes.%i.txt" % frame
-    output = dataset.selected_node.compute(frame)
+    output = ovito.dataset.selected_node.compute(frame)
     cluster_sizes = numpy.bincount(output.particle_properties['Cluster'].array)
     numpy.savetxt(output_filepath, cluster_sizes)
     </programlisting></para>

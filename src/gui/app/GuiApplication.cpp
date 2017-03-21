@@ -21,9 +21,10 @@
 
 #include <gui/GUI.h>
 #include <gui/mainwin/MainWindow.h>
+#include <gui/actions/ActionManager.h>
 #include <gui/dataset/GuiDataSetContainer.h>
-#include <gui/rendering/ViewportSceneRenderer.h>
 #include <gui/utilities/io/GuiFileManager.h>
+#include <opengl_renderer/OpenGLSceneRenderer.h>
 #include <core/utilities/io/FileManager.h>
 #include "GuiApplication.h"
 
@@ -34,11 +35,9 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)
 ******************************************************************************/
 void GuiApplication::registerCommandLineParameters(QCommandLineParser& parser)
 {
-	Application::registerCommandLineParameters(parser);
+	StandaloneApplication::registerCommandLineParameters(parser);
 
 	parser.addOption(QCommandLineOption(QStringList{{"nogui"}}, tr("Run in console mode without showing the graphical user interface.")));
-	parser.addOption(QCommandLineOption(QStringList{{"glversion"}}, tr("Selects a specific version of the OpenGL standard."), tr("VERSION")));
-	parser.addOption(QCommandLineOption(QStringList{{"glcompatprofile"}}, tr("Request the OpenGL compatibility profile instead of the core profile.")));
 }
 
 /******************************************************************************
@@ -46,7 +45,7 @@ void GuiApplication::registerCommandLineParameters(QCommandLineParser& parser)
 ******************************************************************************/
 bool GuiApplication::processCommandLineParameters()
 {
-	if(!Application::processCommandLineParameters())
+	if(!StandaloneApplication::processCommandLineParameters())
 		return false;
 
 	// Check if program was started in console mode.
@@ -82,7 +81,7 @@ bool GuiApplication::processCommandLineParameters()
 void GuiApplication::createQtApplication(int& argc, char** argv)
 {
 	if(headlessMode()) {
-		Application::createQtApplication(argc, argv);
+		StandaloneApplication::createQtApplication(argc, argv);
 	}
 	else {
 		new QApplication(argc, argv);
@@ -93,15 +92,9 @@ void GuiApplication::createQtApplication(int& argc, char** argv)
 #endif
 	}
 
-	// Install GUI exception handler.
-	if(guiMode())
-		Exception::setExceptionHandler(guiExceptionHandler);
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 4, 0)
 	// Set the global default OpenGL surface format.
 	// This will let Qt use core profile contexts.
-	QSurfaceFormat::setDefaultFormat(ViewportSceneRenderer::getDefaultSurfaceFormat());
-#endif
+	QSurfaceFormat::setDefaultFormat(OpenGLSceneRenderer::getDefaultSurfaceFormat());
 }
 
 /******************************************************************************
@@ -168,7 +161,7 @@ bool GuiApplication::startupApplication()
 	if(cmdLineParser().positionalArguments().empty() == false) {
 		QString importFilename = cmdLineParser().positionalArguments().front();
 		if(!importFilename.endsWith(".ovito", Qt::CaseInsensitive)) {
-			QUrl importURL = FileManager::instance().urlFromUserInput(importFilename);
+			QUrl importURL = Application::instance()->fileManager()->urlFromUserInput(importFilename);
 			container->importFile(importURL);
 			container->currentSet()->undoStack().setClean();
 		}
@@ -180,44 +173,85 @@ bool GuiApplication::startupApplication()
 /******************************************************************************
 * Handler function for exceptions used in GUI mode.
 ******************************************************************************/
-void GuiApplication::guiExceptionHandler(const Exception& exception)
+void GuiApplication::reportError(const Exception& ex, bool blocking)
 {
 	// Always display errors in the terminal window.
-	exception.logError();
+	Application::reportError(ex, blocking);
 
-	// Prepare a message box dialog.
-	QMessageBox msgbox;
-	msgbox.setWindowTitle(tr("Error - %1").arg(QCoreApplication::applicationName()));
-	msgbox.setStandardButtons(QMessageBox::Ok);
-	msgbox.setText(exception.message());
-	msgbox.setIcon(QMessageBox::Critical);
+	if(guiMode()) {
+		if(!blocking) {
+			
+			// Deferred display of the error.
+			if(_errorList.empty())
+				QMetaObject::invokeMethod(this, "showErrorMessages", Qt::QueuedConnection);
 
-	// If the exception has been thrown within the context of a DataSet or a DataSetContainer,
-	// show the message box under the corresponding main window.
-	if(DataSet* dataset = qobject_cast<DataSet*>(exception.context())) {
-		if(MainWindow* window = MainWindow::fromDataset(dataset)) {
-			msgbox.setParent(window);
-			msgbox.setWindowModality(Qt::WindowModal);
+			// Queue error messages.
+			_errorList.push_back(ex);
+		}
+		else {
+			_errorList.push_back(ex);
+			showErrorMessages();
 		}
 	}
-	if(GuiDataSetContainer* datasetContainer = qobject_cast<GuiDataSetContainer*>(exception.context())) {
-		if(MainWindow* window = datasetContainer->mainWindow()) {
-			msgbox.setParent(window);
-			msgbox.setWindowModality(Qt::WindowModal);
+}
+
+/******************************************************************************
+* Displays an error message box. This slot is called by reportError().
+******************************************************************************/
+void GuiApplication::showErrorMessages()
+{
+	while(!_errorList.empty()) {
+
+		// Show next exception from queue.
+		const Exception& exception = _errorList.front();
+		
+		// Prepare a message box dialog.
+		QPointer<QMessageBox> msgbox = new QMessageBox();
+		msgbox->setWindowTitle(tr("Error - %1").arg(QCoreApplication::applicationName()));
+		msgbox->setStandardButtons(QMessageBox::Ok);
+		msgbox->setText(exception.message());
+		msgbox->setIcon(QMessageBox::Critical);
+
+		// If the exception has been thrown within the context of a DataSet or a DataSetContainer,
+		// show the message box under the corresponding main window.
+		MainWindow* window;
+		if(DataSet* dataset = qobject_cast<DataSet*>(exception.context())) {
+			window = MainWindow::fromDataset(dataset);
 		}
-	}
+		else if(GuiDataSetContainer* datasetContainer = qobject_cast<GuiDataSetContainer*>(exception.context())) {
+			window = datasetContainer->mainWindow();
+		}
+		else {
+			window = qobject_cast<MainWindow*>(exception.context());
+		}
 
-	// If the exception is associated with additional message strings,
-	// show them in the Details section of the message box dialog.
-	if(exception.messages().size() > 1) {
-		QString detailText;
-		for(int i = 1; i < exception.messages().size(); i++)
-			detailText += exception.messages()[i] + "\n";
-		msgbox.setDetailedText(detailText);
-	}
+		if(window) {
+			msgbox->setParent(window);
+			msgbox->setWindowModality(Qt::WindowModal);
 
-	// Show message box.
-	msgbox.exec();
+			// Stop animation playback when an error occurred.
+			QAction* playbackAction = window->actionManager()->getAction(ACTION_TOGGLE_ANIMATION_PLAYBACK);
+			if(playbackAction->isChecked())
+				playbackAction->trigger();
+		}
+
+		// If the exception is associated with additional message strings,
+		// show them in the Details section of the message box dialog.
+		if(exception.messages().size() > 1) {
+			QString detailText;
+			for(int i = 1; i < exception.messages().size(); i++)
+				detailText += exception.messages()[i] + "\n";
+			msgbox->setDetailedText(detailText);
+		}
+
+		// Show message box.
+		msgbox->exec();
+		if(!msgbox)
+			return;
+		else
+			delete msgbox;
+		_errorList.pop_front();
+	}
 }
 
 OVITO_END_INLINE_NAMESPACE

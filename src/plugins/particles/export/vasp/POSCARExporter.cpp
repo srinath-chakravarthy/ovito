@@ -23,7 +23,7 @@
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/ParticleTypeProperty.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/Task.h>
 #include "POSCARExporter.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
@@ -33,10 +33,16 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(POSCARExporter, ParticleExporter);
 /******************************************************************************
 * Writes the particles of one animation frame to the current output file.
 ******************************************************************************/
-bool POSCARExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progress)
+bool POSCARExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager)
 {
-	// Get particle positions.
-	const PipelineFlowState& state = getParticleData(sceneNode, time);
+	// Get particle data to be exported.
+	PipelineFlowState state;
+	if(!getParticleData(sceneNode, time, state, taskManager))
+		return false;
+
+	SynchronousTask exportTask(taskManager);
+
+	// Get particle positions and velocities.
 	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
 	ParticlePropertyObject* velocityProperty = ParticlePropertyObject::findInState(state, ParticleProperty::VelocityProperty);
 
@@ -92,7 +98,7 @@ bool POSCARExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoi
 	size_t totalProgressCount = posProperty->size();
 	if(velocityProperty) totalProgressCount += posProperty->size();
 	size_t currentProgress = 0;
-	if(progress) progress->setMaximum(100);
+	exportTask.setProgressMaximum(100);
 
 	// Write atomic positions.
 	textStream() << "Cartesian\n";
@@ -105,9 +111,9 @@ bool POSCARExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoi
 			textStream() << (p->x() - origin.x()) << ' ' << (p->y() - origin.y()) << ' ' << (p->z() - origin.z()) << '\n';
 			currentProgress++;
 
-			if(progress && (currentProgress % 1000) == 0) {
-				progress->setValue(currentProgress * 100 / totalProgressCount);
-				if(progress->wasCanceled())
+			if((currentProgress % 1000) == 0) {
+				exportTask.setProgressValue(currentProgress * 100 / totalProgressCount);
+				if(exportTask.isCanceled())
 					return false;
 			}
 		}
@@ -125,16 +131,16 @@ bool POSCARExporter::exportObject(SceneNode* sceneNode, int frameNumber, TimePoi
 				textStream() << v->x() << ' ' << v->y() << ' ' << v->z() << '\n';
 				currentProgress++;
 
-				if(progress && (currentProgress % 1000) == 0) {
-					progress->setValue(currentProgress * 100 / totalProgressCount);
-					if(progress->wasCanceled())
+				if((currentProgress % 1000) == 0) {
+					exportTask.setProgressValue(currentProgress * 100 / totalProgressCount);
+					if(exportTask.isCanceled())
 						return false;
 				}
 			}
 		}
 	}
 
-	return true;
+	return !exportTask.isCanceled();
 }
 
 OVITO_END_INLINE_NAMESPACE

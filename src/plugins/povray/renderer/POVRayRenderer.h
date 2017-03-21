@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_POVRAY_RENDERER_H
-#define __OVITO_POVRAY_RENDERER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/rendering/noninteractive/NonInteractiveSceneRenderer.h>
@@ -56,10 +56,10 @@ public:
 
 	/// Renders a single animation frame into the given frame buffer.
 	/// Throws an exception on error. Returns false when the operation has been aborted by the user.
-	virtual bool renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress) override;
+	virtual bool renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, TaskManager& taskManager) override;
 
 	/// This method is called after renderFrame() has been called.
-	virtual void endFrame() override;
+	virtual void endFrame(bool renderSuccessful) override;
 
 	///	Finishes the rendering pass. This is called after all animation frames have been rendered
 	/// or when the rendering operation has been aborted.
@@ -137,6 +137,9 @@ private:
 	/// The temporary file for receiving the rendered image from POV-Ray. 
 	std::unique_ptr<QTemporaryFile> _imageFile;
 
+	/// This is used by the POVRayExporter class to make the export process interruptable.
+	SynchronousTask* _exportTask = nullptr;
+
 	/// The POV-Ray quality level to use for rendering (0 <= level <= 11).
 	/// See POV-Ray documentation for details.
 	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, qualityLevel, setQualityLevel);
@@ -186,6 +189,12 @@ private:
 	/// Path to the external POV-Ray executable.
 	DECLARE_MODIFIABLE_PROPERTY_FIELD(QString, povrayExecutable, setPovrayExecutable);
 
+	/// Enables omni­directional stereo projection.
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, odsEnabled, setODSEnabled);
+
+	/// The interpupillary distance for stereo projection.
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, interpupillaryDistance, setInterpupillaryDistance);
+
 	Q_OBJECT
 	OVITO_OBJECT
 
@@ -197,4 +206,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_POVRAY_RENDERER_H
+

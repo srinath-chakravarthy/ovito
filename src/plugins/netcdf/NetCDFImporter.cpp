@@ -137,7 +137,7 @@ InputColumnMapping NetCDFImporter::inspectFileHeader(const Frame& frame)
 /******************************************************************************
 * Scans the input file for simulation timesteps.
 ******************************************************************************/
-void NetCDFImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
+void NetCDFImporter::scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
 {
 	// Only serial access to NetCDF functions allowed because they are not thread-safe.
 	QMutexLocker locker(&netcdfMutex());
@@ -486,7 +486,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 				NCERR( nc_inq_varid(_ncid, columnName.toLocal8Bit().constData(), &varId) );
 				NCERR( nc_inq_var(_ncid, varId, NULL, &type, &nDims, dimIds, NULL) );
 
-				if (nDims > 0 && type == NC_FLOAT) {
+				if(nDims > 0 && type == NC_FLOAT) {
 					// Detect dims
 					int nDimsDetected = -1, componentCount = 1, nativeComponentCount = 1;
 					detectDims(movieFrame, particleCount, nDims, dimIds, nDimsDetected, componentCount, nativeComponentCount, startp, countp);
@@ -571,7 +571,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 							for(int j = 0; j < (int)particleProperties().size(); j++) {
 								const auto& p = particleProperties()[j];
 								if(p->name() == propertyName) {
-									if(property->dataType() == dataType)
+									if(p->dataType() == dataType)
 										property = p.get();
 									else
 										removeParticleProperty(j);
@@ -652,7 +652,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 											size_t totalCount = countp[1];
 											size_t remaining = totalCount;
 											countp[1] = 1000000;
-											setProgressRange(totalCount / countp[1] + 1);
+											setProgressMaximum(totalCount / countp[1] + 1);
 											OVITO_ASSERT(totalCount <= property->size());
 											for(size_t chunk = 0; chunk < totalCount; chunk += countp[1], startp[1] += countp[1]) {
 												countp[1] = std::min(countp[1], remaining);
@@ -684,7 +684,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 								size_t totalCount = countp[1];
 								size_t remaining = totalCount;
 								countp[1] = 1000000;
-								setProgressRange(totalCount / countp[1] + 1);
+								setProgressMaximum(totalCount / countp[1] + 1);
 								for(size_t chunk = 0; chunk < totalCount; chunk += countp[1], startp[1] += countp[1]) {
 									countp[1] = std::min(countp[1], remaining);
 									remaining -= countp[1];
@@ -761,6 +761,7 @@ InputColumnInfo NetCDFImporter::mapVariableToColumn(const QString& name, int dat
 	else if(loweredName == "type" || loweredName == "element" || loweredName == "atom_types" || loweredName == "species") column.mapStandardColumn(ParticleProperty::ParticleTypeProperty);
 	else if(loweredName == "mass") column.mapStandardColumn(ParticleProperty::MassProperty);
 	else if(loweredName == "radius") column.mapStandardColumn(ParticleProperty::RadiusProperty);
+	else if(loweredName == "color") column.mapStandardColumn(ParticleProperty::ColorProperty);
 	else if(loweredName == "c_cna" || loweredName == "pattern") column.mapStandardColumn(ParticleProperty::StructureTypeProperty);
 	else if(loweredName == "c_epot") column.mapStandardColumn(ParticleProperty::PotentialEnergyProperty);
 	else if(loweredName == "c_kpot") column.mapStandardColumn(ParticleProperty::KineticEnergyProperty);

@@ -58,4 +58,3 @@ void main()
 	// Compute sprite size.		
 	gl_PointSize = basePointSize * particle_radius / (eye_position.z * projection_matrix[2][3] + projection_matrix[3][3]);
 }
-

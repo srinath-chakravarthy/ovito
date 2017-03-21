@@ -680,7 +680,7 @@ void ModifyCommandPage::onCreateCustomModifier()
 			settings.endGroup();
 		}
 		catch(const Exception& ex) {
-			ex.showError();
+			ex.reportError();
 		}
 	}
 }

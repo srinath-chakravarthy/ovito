@@ -73,11 +73,12 @@ void ClusterAnalysisModifier::ClusterAnalysisEngine::perform()
 
 	// Prepare the neighbor finder.
 	CutoffNeighborFinder neighborFinder;
-	if(!neighborFinder.prepare(_cutoff, positions(), cell(), selection(), this))
+	if(!neighborFinder.prepare(_cutoff, positions(), cell(), selection(), *this))
 		return;
 
 	size_t particleCount = positions()->size();
-	setProgressRange(particleCount);
+	setProgressValue(0);
+	setProgressMaximum(particleCount);
 
 	// Initialize.
 	std::fill(_particleClusters->dataInt(), _particleClusters->dataInt() + _particleClusters->size(), -1);

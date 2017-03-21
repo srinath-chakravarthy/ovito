@@ -19,11 +19,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_FILE_SOURCE_H
-#define __OVITO_FILE_SOURCE_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/scene/objects/CompoundObject.h>
+#include <core/scene/pipeline/AsyncPipelineEvaluationHelper.h>
+#include <core/utilities/concurrent/Promise.h>
+#include <core/utilities/concurrent/PromiseWatcher.h>
 #include "FileSourceImporter.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO)
@@ -78,11 +81,32 @@ public:
 	/// \brief Requests a frame of the input file sequence.
 	PipelineFlowState requestFrame(int frameIndex);
 
-	/// \brief Asks the object for the result of the geometry pipeline at the given time.
-	virtual PipelineFlowState evaluate(TimePoint time) override;
+	/// \brief Asks the object for the results of the data pipeline.
+	virtual PipelineFlowState evaluateImmediately(const PipelineEvalRequest& request) override;
+
+	/// Asks the object for the complete results of the data pipeline.
+	virtual Future<PipelineFlowState> evaluateAsync(const PipelineEvalRequest& request) override {
+		return _evaluationRequestHelper.createRequest(this, request);
+	}
 
 	/// Returns the title of this object.
 	virtual QString objectTitle() override;
+
+	/// Sends an event to all dependents of this RefTarget.
+	virtual void notifyDependents(ReferenceEvent& event) override;
+
+	/// \brief Sends an event to all dependents of this RefTarget.
+	/// \param eventType The event type passed to the ReferenceEvent constructor.
+	inline void notifyDependents(ReferenceEvent::Type eventType) {
+		DataObject::notifyDependents(eventType);
+	}
+
+	/// This method is called after the reference counter of this object has reached zero
+	/// and before the object is being deleted.
+	virtual void aboutToBeDeleted() override {
+		cancelLoadOperation();
+		CompoundObject::aboutToBeDeleted();
+	}
 
 protected Q_SLOTS:
 
@@ -149,16 +173,19 @@ private:
 	std::shared_ptr<FileSourceImporter::FrameLoader> _activeFrameLoader;
 
 	/// The watcher object that is used to monitor the background operation.
-	FutureWatcher _frameLoaderWatcher;
+	PromiseWatcher _frameLoaderWatcher;
 
 	/// The active Future that provides the discovered input frames.
 	Future<QVector<FileSourceImporter::Frame>> _frameDiscoveryFuture;
 
 	/// The watcher object that is used to monitor the background operation.
-	FutureWatcher _frameDiscoveryWatcher;
+	PromiseWatcher _frameDiscoveryWatcher;
 
 	/// The status returned by the parser during its last call.
 	PipelineStatus _importStatus;
+
+	/// Manages pending asynchronous pipeline requests.
+	AsyncPipelineEvaluationHelper _evaluationRequestHelper;
 
 	Q_OBJECT
 	OVITO_OBJECT
@@ -169,4 +196,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_FILE_SOURCE_H
+

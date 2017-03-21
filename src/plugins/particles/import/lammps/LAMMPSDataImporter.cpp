@@ -123,7 +123,7 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
     		if(sscanf(line.c_str(), "%u", &natoms) != 1)
     			throw Exception(tr("Invalid number of atoms (line %1): %2").arg(stream.lineNumber()).arg(line.c_str()));
 
-			setProgressRange(natoms);
+			setProgressMaximum(natoms);
 		}
     	else if(line.find("atom types") != string::npos) {
     		if(sscanf(line.c_str(), "%u", &natomtypes) != 1)
@@ -235,7 +235,6 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 	    // Skip blank line after keyword.
 		if(stream.eof()) break;
 		stream.readLine();
-		if(stream.eof()) break;
 
 		if(keyword.startsWith("Atoms")) {
 			if(natoms != 0) {
@@ -464,7 +463,7 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 			for(int i = 1; i <= nbondtypes; i++)
 				bondTypeList->addBondTypeId(i);
 
-			setProgressRange(nbonds);
+			setProgressMaximum(nbonds);
 			for(int i = 0; i < nbonds; i++) {
 				if(!setProgressValueIntermittent(i)) return;
 				stream.readLine();

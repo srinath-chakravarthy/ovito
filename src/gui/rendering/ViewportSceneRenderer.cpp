@@ -114,8 +114,8 @@ Box3 ViewportSceneRenderer::boundingBoxInteractive(TimePoint time, Viewport* vie
 				return true;
 		}
 
-		// Evaluate geometry pipeline of object node.
-		const PipelineFlowState& state = node->evalPipeline(time);
+		// Evaluate data pipeline of object node.
+		const PipelineFlowState& state = node->evaluatePipelineImmediately(PipelineEvalRequest(time, true));
 		for(const auto& dataObj : state.objects()) {
 			for(DisplayObject* displayObj : dataObj->displayObjects()) {
 				if(displayObj && displayObj->isEnabled()) {

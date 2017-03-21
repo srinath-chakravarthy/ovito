@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_DEFERRED_METHOD_INVOCATION_H
-#define __OVITO_DEFERRED_METHOD_INVOCATION_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -80,5 +80,5 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_DEFERRED_METHOD_INVOCATION_H
+
 

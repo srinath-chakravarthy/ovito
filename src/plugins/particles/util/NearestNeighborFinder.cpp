@@ -29,8 +29,9 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util)
 /******************************************************************************
 * Prepares the neighbor list builder.
 ******************************************************************************/
-bool NearestNeighborFinder::prepare(ParticleProperty* posProperty, const SimulationCell& cellData, ParticleProperty* selectionProperty, FutureInterfaceBase* progress)
+bool NearestNeighborFinder::prepare(ParticleProperty* posProperty, const SimulationCell& cellData, ParticleProperty* selectionProperty, PromiseBase& promise)
 {
+	promise.setProgressMaximum(0);
 	OVITO_CHECK_POINTER(posProperty);
 
 	simCell = cellData;
@@ -110,7 +111,7 @@ bool NearestNeighborFinder::prepare(ParticleProperty* posProperty, const Simulat
 	const int* sel = selectionProperty ? selectionProperty->constDataInt() : nullptr;
 	atoms.resize(posProperty->size());
 	for(NeighborListAtom& a : atoms) {
-		if(progress && progress->isCanceled())
+		if(promise.isCanceled())
 			return false;
 		a.pos = *p;
 		// Wrap atomic positions back into simulation box.
@@ -131,7 +132,7 @@ bool NearestNeighborFinder::prepare(ParticleProperty* posProperty, const Simulat
 
 	root->convertToAbsoluteCoordinates(simCell);
 
-	return (!progress || !progress->isCanceled());
+	return !promise.isCanceled();
 }
 
 /******************************************************************************

@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::Matrix_3 class template.
  */
  
-#ifndef __OVITO_MATRIX3_H
-#define __OVITO_MATRIX3_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/io/SaveStream.h>
@@ -768,4 +768,4 @@ Q_DECLARE_METATYPE(Ovito::Matrix3*);
 Q_DECLARE_TYPEINFO(Ovito::Matrix3, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::Matrix3*, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_MATRIX3_H
+

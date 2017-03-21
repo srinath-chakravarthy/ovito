@@ -78,14 +78,14 @@ RenderSettings::RenderSettings(DataSet* dataset) : RefTarget(dataset),
 	INIT_PROPERTY_FIELD(fileNumberBase);
 
 	// Setup default background color.
-	setBackgroundColorController(ControllerManager::instance().createColorController(dataset));
+	setBackgroundColorController(ControllerManager::createColorController(dataset));
 	setBackgroundColor(Color(1,1,1));
 
 	// Create an instance of the default renderer class.
-	Plugin* guiPlugin = PluginManager::instance().plugin("Gui");
+	Plugin* glrendererPlugin = PluginManager::instance().plugin("OpenGLRenderer");
 	OvitoObjectType* rendererClass = nullptr;
-	if(guiPlugin)
-		rendererClass = guiPlugin->findClass("StandardSceneRenderer");
+	if(glrendererPlugin)
+		rendererClass = glrendererPlugin->findClass("StandardSceneRenderer");
 	if(rendererClass == nullptr) {
 		QVector<OvitoObjectType*> classList = PluginManager::instance().listClasses(SceneRenderer::OOType);
 		if(classList.isEmpty() == false) rendererClass = classList.front();

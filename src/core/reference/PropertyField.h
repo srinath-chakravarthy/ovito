@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PROPERTY_FIELD_H
-#define __OVITO_PROPERTY_FIELD_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/object/OvitoObject.h>
@@ -501,4 +501,4 @@ OVITO_END_INLINE_NAMESPACE
 
 #include <core/dataset/DataSet.h>
 
-#endif // __OVITO_PROPERTY_FIELD_H
+

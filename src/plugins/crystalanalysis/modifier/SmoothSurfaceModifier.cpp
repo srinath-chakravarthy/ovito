@@ -23,6 +23,8 @@
 #include <plugins/particles/objects/SurfaceMesh.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/crystalanalysis/objects/slip_surface/SlipSurface.h>
+#include <core/utilities/concurrent/Task.h>
+#include <core/dataset/DataSetContainer.h>
 #include "SmoothSurfaceModifier.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
@@ -67,12 +69,14 @@ PipelineStatus SmoothSurfaceModifier::modifyObject(TimePoint time, ModifierAppli
 	for(int index = 0; index < state.objects().size(); index++) {
 		if(SurfaceMesh* inputSurface = dynamic_object_cast<SurfaceMesh>(state.objects()[index])) {
 			OORef<SurfaceMesh> outputSurface = cloneHelper.cloneObject(inputSurface, false);
-			outputSurface->smoothMesh(cell, _smoothingLevel);
+			SynchronousTask smoothingTask(dataset()->container()->taskManager());
+			outputSurface->smoothMesh(cell, _smoothingLevel, smoothingTask.promise());
 			state.replaceObject(inputSurface, outputSurface);
 		}
 		else if(SlipSurface* inputSurface = dynamic_object_cast<SlipSurface>(state.objects()[index])) {
 			OORef<SlipSurface> outputSurface = cloneHelper.cloneObject(inputSurface, false);
-			outputSurface->smoothMesh(cell, _smoothingLevel, nullptr, 0.1f, 0.6f);
+			SynchronousTask smoothingTask(dataset()->container()->taskManager());
+			outputSurface->smoothMesh(cell, _smoothingLevel, smoothingTask.promise(), FloatType(0.1), FloatType(0.6));
 			state.replaceObject(inputSurface, outputSurface);
 		}
 	}

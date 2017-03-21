@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTITION_MESH_DISPLAY_H
-#define __OVITO_PARTITION_MESH_DISPLAY_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/scene/objects/AsynchronousDisplayObject.h>
@@ -63,7 +63,7 @@ public:
 	void setCapTransparency(FloatType transparency) { if(capTransparencyController()) capTransparencyController()->setCurrentFloatValue(transparency); }
 
 	/// Generates the final triangle mesh, which will be rendered.
-	static bool buildMesh(const PartitionMeshData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress = nullptr);
+	static bool buildMesh(const PartitionMeshData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, PromiseBase& promise);
 
 protected:
 
@@ -163,4 +163,4 @@ protected:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTITION_MESH_DISPLAY_H
+

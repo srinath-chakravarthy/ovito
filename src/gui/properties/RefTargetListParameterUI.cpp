@@ -186,7 +186,7 @@ void RefTargetListParameterUI::openSubEditor()
 		}
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 

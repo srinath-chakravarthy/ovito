@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SURFACE_MESH_DISPLAY_H
-#define __OVITO_SURFACE_MESH_DISPLAY_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/AsynchronousDisplayObject.h>
@@ -62,10 +62,10 @@ public:
 	void setCapTransparency(FloatType transparency) { if(capTransparencyController()) capTransparencyController()->setCurrentFloatValue(transparency); }
 
 	/// Generates the final triangle mesh, which will be rendered.
-	static bool buildSurfaceMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool reverseOrientation, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress = nullptr);
+	static bool buildSurfaceMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool reverseOrientation, const QVector<Plane3>& cuttingPlanes, TriMesh& output, PromiseBase* progress = nullptr);
 
 	/// Generates the triangle mesh for the PBC cap.
-	static void buildCapMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool isCompletelySolid, bool reverseOrientation, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress = nullptr);
+	static void buildCapMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool isCompletelySolid, bool reverseOrientation, const QVector<Plane3>& cuttingPlanes, TriMesh& output, PromiseBase* progress = nullptr);
 
 protected:
 
@@ -184,4 +184,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_SURFACE_MESH_DISPLAY_H
+

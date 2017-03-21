@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SCENE_NODE_H
-#define __OVITO_SCENE_NODE_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/Color.h>
@@ -273,4 +273,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_SCENE_NODE_H
+

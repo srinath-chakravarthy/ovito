@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CRYSTALANALYSIS_EXPORTER_H
-#define __OVITO_CRYSTALANALYSIS_EXPORTER_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/dataset/importexport/FileExporter.h>
@@ -56,7 +56,7 @@ public:
 protected:
 
 	/// \brief Exports a single animation frame to the current output file.
-	virtual bool exportFrame(int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) override;
+	virtual bool exportFrame(int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager) override;
 
 	/// \brief This is called once for every output file to be written and before exportData() is called.
 	virtual bool openOutputFile(const QString& filePath, int numberOfFrames) override;
@@ -89,4 +89,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CRYSTALANALYSIS_EXPORTER_H
+

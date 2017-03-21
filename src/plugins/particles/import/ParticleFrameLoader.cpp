@@ -22,6 +22,7 @@
 #include <plugins/particles/Particles.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/utilities/io/FileManager.h>
+#include <core/app/Application.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include <plugins/particles/objects/SimulationCellDisplay.h>
 #include <plugins/particles/objects/BondsObject.h>
@@ -35,6 +36,7 @@
 #include <plugins/particles/objects/BondPropertyObject.h>
 #include <plugins/particles/objects/BondTypeProperty.h>
 #include <plugins/particles/objects/BondType.h>
+#include <plugins/particles/objects/FieldQuantityObject.h>
 #include "ParticleFrameLoader.h"
 #include "ParticleImporter.h"
 
@@ -48,7 +50,7 @@ void ParticleFrameLoader::perform()
 	setProgressText(ParticleImporter::tr("Reading file %1").arg(frame().sourceFile.toString(QUrl::RemovePassword | QUrl::PreferLocalFile | QUrl::PrettyDecoded)));
 
 	// Fetch file.
-	Future<QString> fetchFileFuture = FileManager::instance().fetchUrl(datasetContainer(), frame().sourceFile);
+	Future<QString> fetchFileFuture = Application::instance()->fileManager()->fetchUrl(datasetContainer(), frame().sourceFile);
 	if(!waitForSubTask(fetchFileFuture))
 		return;
 	OVITO_ASSERT(fetchFileFuture.isCanceled() == false);
@@ -223,6 +225,28 @@ void ParticleFrameLoader::handOver(CompoundObject* container)
 
 			activeObjects.insert(propertyObj);
 		}
+	}
+
+	// Transfer field quantities.
+	for(auto& fq : _fieldQuantities) {
+		OORef<FieldQuantityObject> fqObj;
+		for(const auto& dataObj : container->dataObjects()) {
+			FieldQuantityObject* po = dynamic_object_cast<FieldQuantityObject>(dataObj);
+			if(po != nullptr && po->name() == fq->name()) {
+				fqObj = po;
+				break;
+			}
+		}
+
+		if(fqObj) {
+			fqObj->setStorage(QSharedDataPointer<FieldQuantity>(fq.release()));
+		}
+		else {
+			fqObj = FieldQuantityObject::createFromStorage(container->dataset(), QSharedDataPointer<FieldQuantity>(fq.release()));
+			container->addDataObject(fqObj);
+		}
+
+		activeObjects.insert(fqObj);
 	}
 
 	// Pass timestep information and other metadata to modification pipeline.

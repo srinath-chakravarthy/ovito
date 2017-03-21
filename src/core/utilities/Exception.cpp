@@ -20,11 +20,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include <core/Core.h>
+#include <core/app/Application.h>
 #include "Exception.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util)
-
-Exception::ExceptionHandler Exception::exceptionHandler = nullptr;
 
 Exception::Exception(QObject* context) : _context(context)
 {
@@ -54,18 +53,17 @@ Exception& Exception::prependGeneralMessage(const QString& message)
 
 void Exception::logError() const
 {
-	for(int i = 0; i < _messages.size(); i++)
-		qCritical("%s", qPrintable(_messages[i]));
+	for(const QString& msg : _messages)
+		qCritical("%s", qPrintable(msg));
 }
 
-void Exception::showError() const
+void Exception::reportError(bool blocking) const
 {
-	if(exceptionHandler == NULL) {
+	Application* app = Application::instance();
+	if(!app)
 		logError();
-		return;
-	}
-
-	exceptionHandler(*this);
+	else
+		app->reportError(*this, blocking);
 }
 
 OVITO_END_INLINE_NAMESPACE

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_IMPORTER_H
-#define __OVITO_PARTICLE_IMPORTER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/ParticleProperty.h>
@@ -64,12 +64,12 @@ protected:
 	}
 
 	/// \brief Scans the given input file to find all contained simulation frames.
-	virtual void scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream);
+	virtual void scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream);
 
 private:
 
 	/// Retrieves the given file in the background and scans it for simulation timesteps.
-	QVector<FileSourceImporter::Frame> discoverFramesInFile(const QUrl sourceUrl, FutureInterfaceBase& futureInterface);
+	QVector<FileSourceImporter::Frame> discoverFramesInFile(const QUrl sourceUrl, PromiseBase& promise);
 
 	/// Indicates that the input file contains multiple timesteps.
 	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, isMultiTimestepFile, setMultiTimestepFile);
@@ -82,4 +82,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTICLE_IMPORTER_H
+

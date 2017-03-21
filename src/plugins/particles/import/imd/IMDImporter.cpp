@@ -147,7 +147,7 @@ void IMDImporter::IMDImportTask::parseFile(CompressedTextReader& stream)
 			return;
 	}
 
-	setProgressRange(numAtoms);
+	setProgressMaximum(numAtoms);
 
 	// Jump back to beginning of atom list.
 	stream.seek(headerOffset);

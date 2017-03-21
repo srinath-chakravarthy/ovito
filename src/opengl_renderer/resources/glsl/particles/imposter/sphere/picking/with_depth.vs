@@ -22,6 +22,7 @@
 // Inputs from calling program:
 uniform mat4 modelviewprojection_matrix;
 uniform mat4 modelview_matrix;
+uniform float radius_scalingfactor;
 uniform int pickingBaseID;
 
 #if __VERSION__ >= 130
@@ -48,7 +49,7 @@ void main()
 		float((objectID >> 16) & 0xFF) / 255.0, 
 		float((objectID >> 24) & 0xFF) / 255.0);	
 		
-	particle_radius_gs = particle_radius;
+	particle_radius_gs = particle_radius * radius_scalingfactor;
 	particle_ze0_gs = modelview_matrix[0][2] * position.x + modelview_matrix[1][2] * position.y + modelview_matrix[2][2] * position.z + modelview_matrix[3][2];
 	gl_Position = modelviewprojection_matrix * vec4(position, 1.0);
 #endif

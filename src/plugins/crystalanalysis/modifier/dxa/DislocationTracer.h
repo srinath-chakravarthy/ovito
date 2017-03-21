@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_DISLOCATION_TRACER_H
-#define __OVITO_CA_DISLOCATION_TRACER_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/utilities/MemoryPool.h>
@@ -72,7 +72,7 @@ public:
 	/// Performs a dislocation search on the interface mesh by generating
 	/// trial Burgers circuits. Identified dislocation segments are converted to
 	/// a continuous line representation
-	bool traceDislocationSegments(FutureInterfaceBase& progress);
+	bool traceDislocationSegments(PromiseBase& promise);
 
 	/// After dislocation segments have been extracted, this method trims
 	/// dangling lines and finds the optimal cluster to express each segment's
@@ -86,7 +86,7 @@ private:
 
 	BurgersCircuit* allocateCircuit();
 	void discardCircuit(BurgersCircuit* circuit);
-	bool findPrimarySegments(int maxBurgersCircuitSize, FutureInterfaceBase& progress);
+	bool findPrimarySegments(int maxBurgersCircuitSize, PromiseBase& promise);
 	bool createBurgersCircuit(InterfaceMesh::Edge* edge, int maxBurgersCircuitSize);
 	void createAndTraceSegment(const ClusterVector& burgersVector, BurgersCircuit* forwardCircuit, int maxCircuitLength);
 	bool intersectsOtherCircuits(BurgersCircuit* circuit);
@@ -152,4 +152,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CA_DISLOCATION_TRACER_H
+

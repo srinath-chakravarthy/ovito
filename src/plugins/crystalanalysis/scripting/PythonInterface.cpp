@@ -39,6 +39,7 @@
 #include <plugins/crystalanalysis/exporter/CAExporter.h>
 #include <plugins/pyscript/binding/PythonBinding.h>
 #include <plugins/particles/scripting/PythonBinding.h>
+#include <core/plugins/PluginManager.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -46,6 +47,9 @@ using namespace PyScript;
 
 PYBIND11_PLUGIN(CrystalAnalysis)
 {
+	// Register the classes of this plugin with the global PluginManager.
+	PluginManager::instance().registerLoadedPluginClasses();
+	
 	py::options options;
 	options.disable_function_signatures();
 
@@ -199,6 +203,7 @@ PYBIND11_PLUGIN(CrystalAnalysis)
 				"large Burgers circuits are needed to identify dissociated dislocations with a wide core. "
 				"\n\n"
 				":Default: False\n")
+		.def_property("output_interface_mesh", &DislocationAnalysisModifier::outputInterfaceMesh, &DislocationAnalysisModifier::setOutputInterfaceMesh)
 	;
 
 	py::enum_<StructureAnalysis::LatticeStructureType>(DislocationAnalysisModifier_py, "Lattice")

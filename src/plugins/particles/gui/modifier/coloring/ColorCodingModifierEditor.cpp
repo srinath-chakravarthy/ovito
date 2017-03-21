@@ -32,6 +32,7 @@
 #include <gui/properties/CustomParameterUI.h>
 #include <gui/properties/IntegerRadioButtonParameterUI.h>
 #include <gui/dialogs/SaveImageFileDialog.h>
+#include <gui/utilities/concurrent/ProgressDialog.h>
 #include <core/plugins/PluginManager.h>
 #include "ColorCodingModifierEditor.h"
 
@@ -136,9 +137,13 @@ void ColorCodingModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	layout2->addWidget(exportBtn, 1, 0, Qt::AlignCenter);
 
 	layout1->addSpacing(8);
-	QPushButton* adjustBtn = new QPushButton(tr("Adjust range"), rollout);
-	connect(adjustBtn, &QPushButton::clicked, this, &ColorCodingModifierEditor::onAdjustRange);
-	layout1->addWidget(adjustBtn);
+	QPushButton* adjustRangeBtn = new QPushButton(tr("Adjust range"), rollout);
+	connect(adjustRangeBtn, &QPushButton::clicked, this, &ColorCodingModifierEditor::onAdjustRange);
+	layout1->addWidget(adjustRangeBtn);
+	layout1->addSpacing(4);
+	QPushButton* adjustRangeGlobalBtn = new QPushButton(tr("Adjust range (all frames)"), rollout);
+	connect(adjustRangeGlobalBtn, &QPushButton::clicked, this, &ColorCodingModifierEditor::onAdjustRangeGlobal);
+	layout1->addWidget(adjustRangeGlobalBtn);
 	layout1->addSpacing(4);
 	QPushButton* reverseBtn = new QPushButton(tr("Reverse range"), rollout);
 	connect(reverseBtn, &QPushButton::clicked, this, &ColorCodingModifierEditor::onReverseRange);
@@ -266,6 +271,20 @@ void ColorCodingModifierEditor::onAdjustRange()
 }
 
 /******************************************************************************
+* Is called when the user presses the "Adjust range over all frames" button.
+******************************************************************************/
+void ColorCodingModifierEditor::onAdjustRangeGlobal()
+{
+	ColorCodingModifier* mod = static_object_cast<ColorCodingModifier>(editObject());
+	OVITO_CHECK_OBJECT_POINTER(mod);
+
+	undoableTransaction(tr("Adjust range"), [this, mod]() {
+		ProgressDialog progressDialog(container(), mod->dataset()->container()->taskManager(), tr("Determining min/max property values"));
+		mod->adjustRangeGlobal(progressDialog.taskManager());
+	});
+}
+
+/******************************************************************************
 * Is called when the user presses the "Reverse Range" button.
 ******************************************************************************/
 void ColorCodingModifierEditor::onReverseRange()
@@ -306,7 +325,7 @@ void ColorCodingModifierEditor::onExportColorScale()
 		QString imageFilename = fileDialog.imageInfo().filename();
 		if(!image.scaled(legendWidth, legendHeight, Qt::IgnoreAspectRatio, Qt::FastTransformation).save(imageFilename, fileDialog.imageInfo().format())) {
 			Exception ex(tr("Failed to save image to file '%1'.").arg(imageFilename));
-			ex.showError();
+			ex.reportError();
 		}
 	}
 }

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_DISLOCATION_ANALYSIS_MODIFIER_EDITOR_H
-#define __OVITO_DISLOCATION_ANALYSIS_MODIFIER_EDITOR_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/crystalanalysis/modifier/dxa/DislocationAnalysisModifier.h>
@@ -119,4 +119,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_DISLOCATION_ANALYSIS_MODIFIER_EDITOR_H
+

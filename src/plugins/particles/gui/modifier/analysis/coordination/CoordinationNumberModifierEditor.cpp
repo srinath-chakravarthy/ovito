@@ -166,7 +166,7 @@ void CoordinationNumberModifierEditor::onSaveData()
 		}
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 

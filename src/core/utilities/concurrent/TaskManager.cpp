@@ -21,6 +21,12 @@
 
 #include <core/Core.h>
 #include <core/utilities/concurrent/TaskManager.h>
+#include <core/viewport/ViewportConfiguration.h>
+#include <core/dataset/DataSetContainer.h>
+
+#ifdef Q_OS_UNIX
+	#include <signal.h>
+#endif
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
 
@@ -29,21 +35,28 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPAC
 ******************************************************************************/
 TaskManager::TaskManager()
 {
-	qRegisterMetaType<std::shared_ptr<FutureInterfaceBase>>("std::shared_ptr<FutureInterfaceBase>");
+	qRegisterMetaType<PromiseBasePtr>("PromiseBasePtr");
 }
 
 /******************************************************************************
-* Registers a future with the task manager.
+* Registers a promise with the task manager.
 ******************************************************************************/
-void TaskManager::addTaskInternal(std::shared_ptr<FutureInterfaceBase> futureInterface)
+PromiseWatcher* TaskManager::addTaskInternal(PromiseBasePtr promise)
 {
-	// Create a task watcher which will generate start/stop notification signals.
-	FutureWatcher* watcher = new FutureWatcher(this);
-	connect(watcher, &FutureWatcher::started, this, &TaskManager::taskStartedInternal);
-	connect(watcher, &FutureWatcher::finished, this, &TaskManager::taskFinishedInternal);
+	// Check if task is already registered.
+	for(PromiseWatcher* watcher : runningTasks()) {
+		if(watcher->promise() == promise)
+			return watcher;
+	}
+
+	// Create a task watcher, which will generate start/stop notification signals.
+	PromiseWatcher* watcher = new PromiseWatcher(this);
+	connect(watcher, &PromiseWatcher::started, this, &TaskManager::taskStartedInternal);
+	connect(watcher, &PromiseWatcher::finished, this, &TaskManager::taskFinishedInternal);
 	
 	// Activate the watcher.
-	watcher->setFutureInterface(futureInterface);
+	watcher->setPromise(promise);
+	return watcher;
 }
 
 /******************************************************************************
@@ -51,7 +64,7 @@ void TaskManager::addTaskInternal(std::shared_ptr<FutureInterfaceBase> futureInt
 ******************************************************************************/
 void TaskManager::taskStartedInternal()
 {
-	FutureWatcher* watcher = static_cast<FutureWatcher*>(sender());
+	PromiseWatcher* watcher = static_cast<PromiseWatcher*>(sender());
 	_runningTaskStack.push_back(watcher);
 
 	Q_EMIT taskStarted(watcher);
@@ -62,7 +75,7 @@ void TaskManager::taskStartedInternal()
 ******************************************************************************/
 void TaskManager::taskFinishedInternal()
 {
-	FutureWatcher* watcher = static_cast<FutureWatcher*>(sender());
+	PromiseWatcher* watcher = static_cast<PromiseWatcher*>(sender());
 	
 	OVITO_ASSERT(std::find(_runningTaskStack.begin(), _runningTaskStack.end(), watcher) != _runningTaskStack.end());
 	_runningTaskStack.erase(std::find(_runningTaskStack.begin(), _runningTaskStack.end(), watcher));
@@ -77,8 +90,9 @@ void TaskManager::taskFinishedInternal()
 ******************************************************************************/
 void TaskManager::cancelAll()
 {
-	for(FutureWatcher* watcher : _runningTaskStack)
+	for(PromiseWatcher* watcher : runningTasks()) {
 		watcher->cancel();
+	}
 }
 
 /******************************************************************************
@@ -95,7 +109,7 @@ void TaskManager::cancelAllAndWait()
 ******************************************************************************/
 void TaskManager::waitForAll()
 {
-	for(FutureWatcher* watcher : _runningTaskStack) {
+	for(PromiseWatcher* watcher : runningTasks()) {
 		try {
 			watcher->waitForFinished();
 		}
@@ -104,25 +118,88 @@ void TaskManager::waitForAll()
 }
 
 /******************************************************************************
-* Waits for the given task to finish and displays a modal progress dialog
-* to show the task's progress.
+* This should be called whenever a local event handling loop is entered.
 ******************************************************************************/
-bool TaskManager::waitForTask(const std::shared_ptr<FutureInterfaceBase>& futureInterface)
+void TaskManager::startLocalEventHandling() 
 {
-	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "TaskManager::waitForTask", "Function can only be called from the main thread.");
+	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "TaskManager::waitForTask", "Function may only be called from the main thread.");
+	
+	_inLocalEventLoop++;
+	Q_EMIT localEventLoopEntered();
+}
+
+/******************************************************************************
+* This should be called whenever a local event handling loop is left.
+******************************************************************************/
+void TaskManager::stopLocalEventHandling()
+{
+	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "TaskManager::waitForTask", "Function may only be called from the main thread.");
+	OVITO_ASSERT(_inLocalEventLoop > 0);
+
+	_inLocalEventLoop--;
+	Q_EMIT localEventLoopExited();
+}
+
+/******************************************************************************
+* Waits for the given task to finish.
+******************************************************************************/
+bool TaskManager::waitForTask(const PromiseBasePtr& promise)
+{
+	OVITO_ASSERT_MSG(QThread::currentThread() == QCoreApplication::instance()->thread(), "TaskManager::waitForTask", "Function may only be called from the main thread.");
 
 	// Before entering the local event loop, check if task has already finished.
-	if(futureInterface->isFinished())
-		return !futureInterface->isCanceled();
+	if(promise->isFinished()) {
+		return !promise->isCanceled();
+	}
 
-	// Start a local event loop and wait for the task to generate the finished signal.
-	FutureWatcher watcher;
+	// Register the task in cases it hasn't been registered with this TaskManager yet.
+	PromiseWatcher* watcher = addTaskInternal(promise); 
+
+	// Start a local event loop and wait for the task to generate a signal when it finishes.
 	QEventLoop eventLoop;
-	watcher.setFutureInterface(futureInterface);
-	connect(&watcher, &FutureWatcher::finished, &eventLoop, &QEventLoop::quit);
-	eventLoop.exec();
+	connect(watcher, &PromiseWatcher::finished, &eventLoop, &QEventLoop::quit);
 
-	return !futureInterface->isCanceled();
+#ifdef Q_OS_UNIX
+	// Boolean flag which is set by the POSIX signal handler when user
+	// presses Ctrl+C to interrupt the program.
+	static QAtomicInt userInterrupt;
+	userInterrupt.storeRelease(0);
+
+	// Install POSIX signal handler to catch Ctrl+C key signal.
+	static QEventLoop* activeEventLoop = nullptr; 
+	activeEventLoop = &eventLoop;
+	auto oldSignalHandler = ::signal(SIGINT, [](int) {
+		userInterrupt.storeRelease(1);
+		if(activeEventLoop)
+			QMetaObject::invokeMethod(activeEventLoop, "quit");
+	});
+#endif
+	
+	startLocalEventHandling();
+	eventLoop.exec();
+	stopLocalEventHandling();
+
+#ifdef Q_OS_UNIX
+	::signal(SIGINT, oldSignalHandler);
+	activeEventLoop = nullptr;
+	if(userInterrupt.load()) {
+		cancelAll();
+		return false;
+	}
+#endif
+
+	return !promise->isCanceled();
+}
+
+/******************************************************************************
+* Process events from the event queue when the tasks manager has started
+*  a local event loop. Otherwise does nothing and lets the main event loop
+* do the processing. 
+******************************************************************************/
+void TaskManager::processEvents()
+{
+	if(_inLocalEventLoop)
+		QCoreApplication::processEvents();
 }
 
 OVITO_END_INLINE_NAMESPACE

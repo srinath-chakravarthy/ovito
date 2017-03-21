@@ -307,7 +307,7 @@ void ScatterPlotModifierEditor::onSaveData()
 		}
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 

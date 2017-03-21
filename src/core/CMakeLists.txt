@@ -35,10 +35,10 @@ SET(SourceFiles
 	object/OvitoObjectType.cpp
 	object/NativeOvitoObjectType.cpp
 	plugins/Plugin.cpp
-	plugins/NativePlugin.cpp
 	plugins/PluginManager.cpp
 	plugins/autostart/AutoStartObject.cpp
 	app/Application.cpp
+	app/StandaloneApplication.cpp
 	reference/CloneHelper.cpp
 	reference/PropertyFieldDescriptor.cpp
 	reference/PropertyField.cpp
@@ -79,6 +79,7 @@ SET(SourceFiles
 	scene/pipeline/PipelineObject.cpp
 	scene/pipeline/Modifier.cpp
 	scene/pipeline/ModifierApplication.cpp
+	scene/pipeline/AsyncPipelineEvaluationHelper
 	utilities/units/UnitsManager.cpp
 	utilities/io/ObjectSaveStream.cpp
 	utilities/io/ObjectLoadStream.cpp
@@ -86,8 +87,10 @@ SET(SourceFiles
 	utilities/io/SftpJob.cpp
 	utilities/io/CompressedTextReader.cpp
 	utilities/io/CompressedTextWriter.cpp
-	utilities/concurrent/Future.cpp
+	utilities/concurrent/PromiseWatcher.cpp
+	utilities/concurrent/Promise.cpp
 	utilities/concurrent/TaskManager.cpp
+	utilities/concurrent/Task.cpp
 	utilities/mesh/TriMesh.cpp
 	rendering/SceneRenderer.cpp
 	rendering/noninteractive/NonInteractiveSceneRenderer.cpp
@@ -161,9 +164,9 @@ IF(OVITO_BUILD_APPSTORE_VERSION)
 ENDIF()
 
 # Pass version information to source code.
-SET_SOURCE_FILES_PROPERTIES("app/Application.cpp" PROPERTIES COMPILE_DEFINITIONS 
+SET_SOURCE_FILES_PROPERTIES(app/Application.cpp app/StandaloneApplication.cpp PROPERTIES COMPILE_DEFINITIONS 
     "OVITO_VERSION_MAJOR=${OVITO_VERSION_MAJOR};OVITO_VERSION_MINOR=${OVITO_VERSION_MINOR};OVITO_VERSION_REVISION=${OVITO_VERSION_REVISION};OVITO_VERSION_STRING=\"${OVITO_VERSION_STRING}\"")
-SET_SOURCE_FILES_PROPERTIES("utilities/io/SaveStream.cpp" "utilities/io/LoadStream.cpp" PROPERTIES COMPILE_DEFINITIONS 
+SET_SOURCE_FILES_PROPERTIES(utilities/io/SaveStream.cpp utilities/io/LoadStream.cpp PROPERTIES COMPILE_DEFINITIONS 
     "OVITO_FILE_FORMAT_VERSION=${OVITO_FILE_FORMAT_VERSION}")
 
 # Speed up compilation by using precompiled headers.
@@ -201,7 +204,7 @@ IF(LIBAV_FOUND)
 			FOREACH(dll ${lib_dll})
 				OVITO_INSTALL_DLL("${dll}")
 			ENDFOREACH()
-		ELSEIF(UNIX AND NOT APPLE AND OVITO_MONOLITHIC_BUILD)
+		ELSEIF(UNIX AND NOT APPLE AND OVITO_REDISTRIBUTABLE_PACKAGE)
 			FILE(GLOB lib_versions "${lib}*")
 			FOREACH(lib_version ${lib_versions})
 				INSTALL(FILES "${lib_version}" DESTINATION "${OVITO_RELATIVE_LIBRARY_DIRECTORY}/")

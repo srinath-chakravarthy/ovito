@@ -26,7 +26,7 @@
 #include <gui/dialogs/ImportFileDialog.h>
 #include <gui/dialogs/ImportRemoteFileDialog.h>
 #include <gui/dialogs/FileExporterSettingsDialog.h>
-#include <gui/utilities/concurrent/ProgressDialogAdapter.h>
+#include <gui/utilities/concurrent/ProgressDialog.h>
 #include <opengl_renderer/OpenGLSceneRenderer.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/importexport/FileImporter.h>
@@ -157,7 +157,7 @@ void ActionManager::on_FileNewWindow_triggered()
 		mainWin->datasetContainer().fileNew();
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -172,7 +172,7 @@ void ActionManager::on_FileNew_triggered()
 		}
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -207,7 +207,7 @@ void ActionManager::on_FileOpen_triggered()
 		mainWindow()->datasetContainer().fileLoad(filename);
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -224,7 +224,7 @@ void ActionManager::on_FileSave_triggered()
 		mainWindow()->datasetContainer().fileSave();
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -237,7 +237,7 @@ void ActionManager::on_FileSaveAs_triggered()
 		mainWindow()->datasetContainer().fileSaveAs();
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -265,7 +265,7 @@ void ActionManager::on_FileImport_triggered()
 		mainWindow()->datasetContainer().importFile(QUrl::fromLocalFile(dialog.fileToImport()), dialog.selectedFileImporterType());
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -284,7 +284,7 @@ void ActionManager::on_FileRemoteImport_triggered()
 		mainWindow()->datasetContainer().importFile(dialog.fileToImport(), dialog.selectedFileImporterType());
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -304,7 +304,7 @@ void ActionManager::on_FileExport_triggered()
 		catch(...) { filterStrings << QString(); }
 	}
 	if(filterStrings.isEmpty()) {
-		Exception(tr("This function is disabled, because there are no export services available."), _dataset).showError();
+		Exception(tr("This function is disabled, because there are no export services available."), _dataset).reportError();
 		return;
 	}
 
@@ -333,6 +333,7 @@ void ActionManager::on_FileExport_triggered()
 	QStringList files = dialog.selectedFiles();
 	if(files.isEmpty())
 		return;
+	
 	QString exportFile = files.front();
 
 	// Remember directory for the next time...
@@ -355,8 +356,11 @@ void ActionManager::on_FileExport_triggered()
 		exporter->setOutputFilename(exportFile);
 
 		// Wait until the scene is ready.
-		if(!_dataset->waitUntilSceneIsReady(tr("Waiting for running tasks to complete.")))
-			return;
+		{
+			ProgressDialog progressDialog(mainWindow(), tr("File export"));
+			if(!progressDialog.taskManager().waitForTask(_dataset->makeSceneReady(tr("Waiting for running tasks to complete."))))
+				return;
+		}
 
 		// Choose the scene nodes to be exported.
 		exporter->selectStandardOutputData();
@@ -367,19 +371,13 @@ void ActionManager::on_FileExport_triggered()
 			return;
 
 		// Show progress dialog.
-		QProgressDialog progressDialog(mainWindow());
-		progressDialog.setWindowModality(Qt::WindowModal);
-		progressDialog.setAutoClose(false);
-		progressDialog.setAutoReset(false);
-		progressDialog.setMinimumDuration(0);
-		progressDialog.setValue(0);
-		ProgressDialogAdapter progressDisplay(&progressDialog);
+		ProgressDialog progressDialog(mainWindow(), tr("File export"));
 
 		// Let the exporter do its work.
-		exporter->exportNodes(&progressDisplay);
+		exporter->exportNodes(progressDialog.taskManager());
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 

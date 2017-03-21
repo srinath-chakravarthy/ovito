@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_COLOR_LEGEND_OVERLAY_H
-#define __OVITO_COLOR_LEGEND_OVERLAY_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/viewport/overlay/ViewportOverlay.h>
@@ -113,4 +113,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_COLOR_LEGEND_OVERLAY_H
+

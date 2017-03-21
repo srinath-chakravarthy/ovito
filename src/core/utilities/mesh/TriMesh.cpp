@@ -28,7 +28,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPAC
 /******************************************************************************
 * Constructs an empty mesh.
 ******************************************************************************/
-TriMesh::TriMesh() : _hasVertexColors(false), _hasFaceColors(false)
+TriMesh::TriMesh() : _hasVertexColors(false), _hasFaceColors(false), _hasNormals(false)
 {
 }
 
@@ -44,6 +44,7 @@ void TriMesh::clear()
 	_boundingBox.setEmpty();
 	_hasVertexColors = false;
 	_hasFaceColors = false;
+	_hasNormals = false;
 }
 
 /******************************************************************************
@@ -64,6 +65,8 @@ void TriMesh::setFaceCount(int n)
 	_faces.resize(n);
 	if(_hasFaceColors)
 		_faceColors.resize(n);
+	if(_hasNormals)
+		_normals.resize(n * 3);
 }
 
 /******************************************************************************
@@ -72,7 +75,7 @@ void TriMesh::setFaceCount(int n)
 ******************************************************************************/
 TriMeshFace& TriMesh::addFace()
 {
-	setFaceCount(faceCount()+1);
+	setFaceCount(faceCount() + 1);
 	return _faces.back();
 }
 
@@ -81,7 +84,7 @@ TriMeshFace& TriMesh::addFace()
 ******************************************************************************/
 void TriMesh::saveToStream(SaveStream& stream)
 {
-	stream.beginChunk(0x02);
+	stream.beginChunk(0x03);
 
 	// Save vertices.
 	stream << _vertices;
@@ -93,6 +96,10 @@ void TriMesh::saveToStream(SaveStream& stream)
 	// Save face colors.
 	stream << _hasFaceColors;
 	stream << _faceColors;
+
+	// Save face normals.
+	stream << _hasNormals;
+	stream << _normals;
 
 	// Save faces.
 	stream << (int)faceCount();
@@ -113,7 +120,7 @@ void TriMesh::saveToStream(SaveStream& stream)
 ******************************************************************************/
 void TriMesh::loadFromStream(LoadStream& stream)
 {
-	int formatVersion = stream.expectChunkRange(0x00, 0x02);
+	int formatVersion = stream.expectChunkRange(0x00, 0x03);
 
 	// Reset mesh.
 	clear();
@@ -130,6 +137,12 @@ void TriMesh::loadFromStream(LoadStream& stream)
 		// Load face colors.
 		stream >> _hasFaceColors;
 		stream >> _faceColors;
+	}
+
+	if(formatVersion >= 3) {
+		// Load normals.
+		stream >> _hasNormals;
+		stream >> _normals;
 	}
 
 	// Load faces.
@@ -157,6 +170,10 @@ void TriMesh::flipFaces()
 		face.setVertices(face.vertex(2), face.vertex(1), face.vertex(0));
 		face.setEdgeVisibility(face.edgeVisible(2), face.edgeVisible(1), face.edgeVisible(0));
 	}
+	if(_hasNormals) {
+		for(Vector3& n : _normals)
+			n = -n;
+	}
 	invalidateFaces();
 }
 
@@ -183,13 +200,13 @@ bool TriMesh::intersectRay(const Ray3& ray, FloatType& t, Vector3& normal, int& 
 		Vector3 s = ray.base - v0;
 		FloatType u = f * s.dot(h);
 
-		if(u < 0.0f || u > 1.0f)
+		if(u < FloatType(0) || u > FloatType(1))
 			continue;
 
 		Vector3 q = s.cross(e1);
 		FloatType v = f * ray.dir.dot(q);
 
-		if(v < 0.0f || u + v > 1.0f)
+		if(v < FloatType(0) || u + v > FloatType(1))
 			continue;
 
 		FloatType tt = f * e2.dot(q);
@@ -291,7 +308,7 @@ void TriMesh::clipAtPlane(const Plane3& plane)
 				int next_classification;
 				for(int v = v0; v < v0 + 3; v++, current_classification = next_classification) {
 					next_classification = plane.classifyPoint(vertex(face.vertex((v+1)%3)));
-					if(next_classification <= 0 && current_classification <= 0) {
+					if((next_classification <= 0 && current_classification <= 0) || (next_classification == 1 && current_classification == 0)) {
 						OVITO_ASSERT(existingVertexMapping[face.vertex(v%3)] >= 0);
 						OVITO_ASSERT(newface_vcount <= 3);
 						newface[newface_vcount++] = existingVertexMapping[face.vertex(v%3)];

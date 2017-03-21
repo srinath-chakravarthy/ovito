@@ -25,8 +25,8 @@
  *        and the Ovito::ControllerManager class.
  */
 
-#ifndef __OVITO_CONTROLLER_H
-#define __OVITO_CONTROLLER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/reference/RefTarget.h>
@@ -305,56 +305,32 @@ class OVITO_CORE_EXPORT ControllerManager
 {
 public:
 
-	/// \brief Returns the one and only instance of this class.
-	/// \return The predefined instance of the ControllerManager singleton class.
-	inline static ControllerManager& instance() {
-		OVITO_ASSERT_MSG(_instance != nullptr, "ControllerManager::instance", "Singleton object is not initialized yet.");
-		return *_instance;
-	}
-
 	/// \brief Creates a new float controller.
-	OORef<Controller> createFloatController(DataSet* dataset);
+	static OORef<Controller> createFloatController(DataSet* dataset);
 
 	/// \brief Creates a new integer controller.
-	OORef<Controller> createIntController(DataSet* dataset);
+	static OORef<Controller> createIntController(DataSet* dataset);
 
 	/// \brief Creates a new Vector3 controller.
-	OORef<Controller> createVector3Controller(DataSet* dataset);
+	static OORef<Controller> createVector3Controller(DataSet* dataset);
 
 	/// \brief Creates a new Color controller.
-	OORef<Controller> createColorController(DataSet* dataset) { return createVector3Controller(dataset); }
+	static OORef<Controller> createColorController(DataSet* dataset) { return createVector3Controller(dataset); }
 
 	/// \brief Creates a new position controller.
-	OORef<Controller> createPositionController(DataSet* dataset);
+	static OORef<Controller> createPositionController(DataSet* dataset);
 
 	/// \brief Creates a new rotation controller.
-	OORef<Controller> createRotationController(DataSet* dataset);
+	static OORef<Controller> createRotationController(DataSet* dataset);
 
 	/// \brief Creates a new scaling controller.
-	OORef<Controller> createScalingController(DataSet* dataset);
+	static OORef<Controller> createScalingController(DataSet* dataset);
 
 	/// \brief Creates a new transformation controller.
-	OORef<Controller> createTransformationController(DataSet* dataset);
-
-private:
-
-	/// Private constructor.
-	/// This is a singleton class; no public instances are allowed.
-	ControllerManager();
-
-	/// Create the singleton instance of this class.
-	static void initialize() { _instance = new ControllerManager(); }
-
-	/// Deletes the singleton instance of this class.
-	static void shutdown() { delete _instance; _instance = nullptr; }
-
-	/// The singleton instance of this class.
-	static ControllerManager* _instance;
-
-	friend class Application;
+	static OORef<Controller> createTransformationController(DataSet* dataset);
 };
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_CONTROLLER_H
+

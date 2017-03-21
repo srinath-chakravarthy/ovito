@@ -21,6 +21,7 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DataObject.h>
+#include <core/scene/pipeline/PipelineEvalRequest.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/utilities/concurrent/ParallelFor.h>
@@ -137,7 +138,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> AtomicStrainModifie
 			refState = fileSource->requestFrame(referenceFrame);
 		}
 	}
-	else refState = referenceConfiguration()->evaluate(dataset()->animationSettings()->frameToTime(referenceFrame));
+	else refState = referenceConfiguration()->evaluateImmediately(PipelineEvalRequest(dataset()->animationSettings()->frameToTime(referenceFrame), false));
 
 	// Make sure the obtained reference configuration is valid and ready to use.
 	if(refState.status().type() == PipelineStatus::Error)
@@ -282,7 +283,7 @@ void AtomicStrainModifier::AtomicStrainEngine::perform()
 
 	// Prepare the neighbor list for the reference configuration.
 	CutoffNeighborFinder neighborFinder;
-	if(!neighborFinder.prepare(_cutoff, refPositions(), refCell(), nullptr, this))
+	if(!neighborFinder.prepare(_cutoff, refPositions(), refCell(), nullptr, *this))
 		return;
 
 	// Perform individual strain calculation for each particle.

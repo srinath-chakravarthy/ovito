@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_GRAIN_SEGMENTATION_MODIFIER_EDITOR_H
-#define __OVITO_GRAIN_SEGMENTATION_MODIFIER_EDITOR_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/gui/modifier/ParticleModifierEditor.h>
@@ -52,4 +52,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_GRAIN_SEGMENTATION_MODIFIER_EDITOR_H
+

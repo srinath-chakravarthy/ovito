@@ -93,7 +93,7 @@ void TextLabelOverlay::render(Viewport* viewport, QPainter& painter, const ViewP
 
 	// Resolve attributes referenced in text string.
 	if(sourceNode()) {
-		const PipelineFlowState& flowState = sourceNode()->evalPipeline(dataset()->animationSettings()->time());
+		const PipelineFlowState& flowState = sourceNode()->evaluatePipelineImmediately(PipelineEvalRequest(dataset()->animationSettings()->time(), false));
 		for(auto a = flowState.attributes().cbegin(); a != flowState.attributes().cend(); ++a) {
 			textString.replace(QStringLiteral("[") + a.key() + QStringLiteral("]"), a.value().toString());
 		}

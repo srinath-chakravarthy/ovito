@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_ATTRIBUTE_FILE_EXPORTER_H
-#define __OVITO_ATTRIBUTE_FILE_EXPORTER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/dataset/importexport/FileExporter.h>
@@ -52,7 +52,7 @@ public:
 	virtual void selectStandardOutputData() override; 	
 
 	/// \brief Evaluates the pipeline of an ObjectNode and returns the computed attributes.
-	QVariantMap getAttributes(SceneNode* sceneNode, TimePoint time);
+	bool getAttributes(SceneNode* sceneNode, TimePoint time, QVariantMap& attributes, TaskManager& taskManager);
 
 protected:
 
@@ -63,7 +63,7 @@ protected:
 	virtual void closeOutputFile(bool exportCompleted) override;
 
 	/// \brief Exports a single animation frame to the current output file.
-	virtual bool exportFrame(int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) override;
+	virtual bool exportFrame(int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager) override;
 
 	/// Returns the current file this exporter is writing to.
 	QFile& outputFile() { return _outputFile; }
@@ -89,4 +89,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_ATTRIBUTE_FILE_EXPORTER_H
+

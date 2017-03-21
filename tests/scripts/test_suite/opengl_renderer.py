@@ -1,5 +1,4 @@
-# Import OVITO modules.
-from ovito import *
+import ovito
 from ovito.io import *
 from ovito.vis import OpenGLRenderer, RenderSettings
 
@@ -15,4 +14,4 @@ if not ovito.headless_mode:
     renderer.antialiasing_level = 2
 
     settings = RenderSettings(size = (100,100), renderer = renderer)
-    dataset.viewports.active_vp.render(settings)
+    ovito.dataset.viewports.active_vp.render(settings)

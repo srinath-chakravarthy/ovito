@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_DISPLAY_H
-#define __OVITO_PARTICLE_DISPLAY_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DisplayObject.h>
@@ -230,4 +230,4 @@ private:
 Q_DECLARE_METATYPE(Ovito::Particles::ParticleDisplay::ParticleShape);
 Q_DECLARE_TYPEINFO(Ovito::Particles::ParticleDisplay::ParticleShape, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_PARTICLE_DISPLAY_H
+

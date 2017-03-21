@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_REFTARGET_H
-#define __OVITO_REFTARGET_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "RefMaker.h"
@@ -301,4 +301,4 @@ OVITO_END_INLINE_NAMESPACE
 // Also include the CloneHelper header because it is always needed in conjunction with the RefTarget class.
 #include "CloneHelper.h"
 
-#endif // __OVITO_REFTARGET_H
+

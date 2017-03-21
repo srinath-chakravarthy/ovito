@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_DISLOCATION_NETWORK_H
-#define __OVITO_CA_DISLOCATION_NETWORK_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/data/SimulationCell.h>
@@ -296,4 +296,4 @@ private:
 }	// End of namespace
 
 
-#endif // __OVITO_CA_DISLOCATION_NETWORK_H
+
