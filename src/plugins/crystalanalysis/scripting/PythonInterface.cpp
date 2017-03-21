@@ -203,6 +203,7 @@ PYBIND11_PLUGIN(CrystalAnalysis)
 				"large Burgers circuits are needed to identify dissociated dislocations with a wide core. "
 				"\n\n"
 				":Default: False\n")
+		.def_property("output_interface_mesh", &DislocationAnalysisModifier::outputInterfaceMesh, &DislocationAnalysisModifier::setOutputInterfaceMesh)
 	;
 
 	py::enum_<StructureAnalysis::LatticeStructureType>(DislocationAnalysisModifier_py, "Lattice")
