@@ -51,6 +51,7 @@
       (<link linkend="appendix.license.numpy">license</link>).</para></listitem>
       <listitem><para><link xlink:href="http://www.numpy.org/">Matplotlib</link> 
       (<link xlink:href="http://matplotlib.org/users/license.html">license</link>).</para></listitem>
+      <listitem><para><link xlink:href="http://www.fftw.org/">FFTW</link> (GNU General Public License).</para></listitem>
     </itemizedlist>
   </para>
 

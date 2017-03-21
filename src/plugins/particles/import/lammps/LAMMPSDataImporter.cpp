@@ -235,7 +235,6 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 	    // Skip blank line after keyword.
 		if(stream.eof()) break;
 		stream.readLine();
-		if(stream.eof()) break;
 
 		if(keyword.startsWith("Atoms")) {
 			if(natoms != 0) {

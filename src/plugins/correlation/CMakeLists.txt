@@ -1,6 +1,7 @@
 ###############################################################################
 # 
-#  Copyright (2015) Alexander Stukowski
+#  Copyright (2017) Alexander Stukowski
+#  Copyright (2016) Lars Pastewka
 #
 #  This file is part of OVITO (Open Visualization Tool).
 #
@@ -19,48 +20,25 @@
 #
 ###############################################################################
 
-# Create the plugins library and manifest directories.
-FILE(MAKE_DIRECTORY "${OVITO_PLUGINS_DIRECTORY}")
+# Locate the FFTW library.
+FIND_PACKAGE(FFTW3 REQUIRED)
 
-IF(OVITO_BUILD_PLUGIN_PYSCRIPT)
-	ADD_SUBDIRECTORY(pyscript)
-	SET(OVITOS_EXECUTABLE ${OVITOS_EXECUTABLE} PARENT_SCOPE)
-ENDIF()
+SET(SourceFiles
+	CorrelationFunctionModifier.cpp
+)
 
-IF(OVITO_BUILD_PLUGIN_PARTICLES)
-	ADD_SUBDIRECTORY(particles)
-ENDIF()
+OVITO_STANDARD_PLUGIN(
+    CorrelationFunctionPlugin
+    SOURCES ${SourceFiles}
+    PLUGIN_DEPENDENCIES Particles
+    PRIVATE_LIB_DEPENDENCIES ${FFTW3_LIBRARIES}
+)
 
-IF(OVITO_BUILD_PLUGIN_TACHYON)
-	ADD_SUBDIRECTORY(tachyon)
-ENDIF()
+TARGET_INCLUDE_DIRECTORIES(CorrelationFunctionPlugin PRIVATE "${FFTW3_INCLUDE_DIRS}")
 
-IF(OVITO_BUILD_PLUGIN_MESH)
-	ADD_SUBDIRECTORY(mesh)
-ENDIF()
-
-IF(OVITO_BUILD_PLUGIN_CRYSTALANALYSIS)
-	ADD_SUBDIRECTORY(crystalanalysis)
-ENDIF()
-
-IF(OVITO_BUILD_PLUGIN_NETCDFPLUGIN)
-	ADD_SUBDIRECTORY(netcdf)
-ENDIF()
-
-IF(OVITO_BUILD_PLUGIN_POVRAY)
-	ADD_SUBDIRECTORY(povray)
-ENDIF()
-
-IF(OVITO_BUILD_PLUGIN_OPENBABELPLUGIN)
-	ADD_SUBDIRECTORY(openbabel)
-ENDIF()
-
-IF(OVITO_BUILD_PLUGIN_VR)
-	ADD_SUBDIRECTORY(vr)
-ENDIF()
-
-IF(OVITO_BUILD_PLUGIN_CORRELATION)
-	ADD_SUBDIRECTORY(correlation)
+# Build corresponding GUI plugin.
+IF(OVITO_BUILD_GUI)
+	ADD_SUBDIRECTORY(gui)
 ENDIF()
 
 # Propagate list of plugins to parent scope.

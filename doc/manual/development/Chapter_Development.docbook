@@ -65,6 +65,8 @@
 		<entry>Audio and video processing libraries used by OVITO to write movie files.</entry></row>
 		<row><entry><link xlink:href="http://www.unidata.ucar.edu/software/netcdf/">libnetcdf</link></entry><entry>optional</entry>
 		<entry>Required by the <literal>NetCDF</literal> plugin to read NetCDF files</entry></row>
+		<row><entry><link xlink:href="http://www.fftw.org">FFTW</link></entry><entry>optional</entry>
+		<entry>Required to build the <link linkend="particles.modifiers.correlation_function"><literal>Correlation Function</literal></link> plugin. </entry></row>
 		<row><entry><link xlink:href="http://www.riverbankcomputing.com/software/qscintilla/">QScintilla2</link></entry><entry>optional</entry>
 		<entry>Text editing widget required by the <literal>PyScript</literal> plugin.</entry></row>
 		<row><entry><link xlink:href="http://muparser.beltoforion.de/">muparser</link></entry><entry>included</entry>

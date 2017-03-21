@@ -1,5 +1,5 @@
 # Try to find the OpenVR library
-#  OPENVR_FOUND - system has OpenBabel lib
+#  OPENVR_FOUND - system has OpenVR lib
 #  OpenVR_INCLUDE_DIRS - the include directories needed
 #  OpenVR_LIBRARIES - libraries needed
 
