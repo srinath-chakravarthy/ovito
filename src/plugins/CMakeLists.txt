@@ -60,10 +60,7 @@ IF(OVITO_BUILD_PLUGIN_VR)
 ENDIF()
 
 IF(OVITO_BUILD_PLUGIN_CORRELATION)
-        ADD_SUBDIRECTORY(correlation)
-ELSE()
-        FILE(REMOVE ${OVITO_PLUGIN_MANIFESTS_DIRECTORY}/CorrelationFunctionModifierPlugin.json)
-        FILE(REMOVE ${OVITO_PLUGIN_MANIFESTS_DIRECTORY}/CorrelationFunctionModifierPluginGui.json)
+	ADD_SUBDIRECTORY(correlation)
 ENDIF()
 
 # Propagate list of plugins to parent scope.

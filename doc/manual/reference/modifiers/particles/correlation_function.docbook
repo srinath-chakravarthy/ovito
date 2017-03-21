@@ -13,7 +13,7 @@
   <para>
   
     <informalfigure><screenshot><mediaobject><imageobject>
-       <imagedata fileref="images/modifiers/correlation_function_panel.png" format="PNG" />
+       <imagedata fileref="images/modifiers/correlation_function_panel.png" format="PNG" scale="50" />
     </imageobject></mediaobject></screenshot></informalfigure>
   
   This modifier calculates the spatial correlation function between two particle properties.</para>
@@ -79,4 +79,12 @@
       
     </variablelist>
   </simplesect>
+
+  <simplesect>
+    <title>Acknowledgment</title>
+    <para>
+      This modifier has been contributed by Lars Pastewka.
+    </para>
+  </simplesect>
+    
 </section>

@@ -1,6 +1,6 @@
 ###############################################################################
 # 
-#  Copyright (2016) Alexander Stukowski
+#  Copyright (2017) Alexander Stukowski
 #
 #  This file is part of OVITO (Open Visualization Tool).
 #
@@ -19,9 +19,9 @@
 #
 ###############################################################################
 
-OVITO_STANDARD_PLUGIN(CorrelationFunctionModifierPluginGui
+OVITO_STANDARD_PLUGIN(CorrelationFunctionPluginGui
 	SOURCES CorrelationFunctionModifierEditor.cpp
-        PRIVATE_LIB_DEPENDENCIES Qwt
-	PLUGIN_DEPENDENCIES CorrelationFunctionModifierPlugin ParticlesGui
+	PRIVATE_LIB_DEPENDENCIES Qwt
+	PLUGIN_DEPENDENCIES CorrelationFunctionPlugin ParticlesGui
 	GUI_PLUGIN
 )

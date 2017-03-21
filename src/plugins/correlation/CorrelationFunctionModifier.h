@@ -23,12 +23,12 @@
 #ifndef __OVITO_CORRELATION_FUNCTION_MODIFIER_H
 #define __OVITO_CORRELATION_FUNCTION_MODIFIER_H
 
-#include <complex>
-
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/ParticleProperty.h>
 #include <plugins/particles/util/CutoffNeighborFinder.h>
 #include "../particles/modifier/AsynchronousParticleModifier.h"
+
+#include <complex>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 

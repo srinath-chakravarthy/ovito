@@ -1,6 +1,6 @@
 ###############################################################################
 # 
-#  Copyright (2014) Alexander Stukowski
+#  Copyright (2017) Alexander Stukowski
 #  Copyright (2016) Lars Pastewka
 #
 #  This file is part of OVITO (Open Visualization Tool).
@@ -21,31 +21,20 @@
 ###############################################################################
 
 # Locate the FFTW library.
-IF(OVITO_DOUBLE_PRECISION_FP)
-    FIND_LIBRARY(FFTW3_LIBRARIES NAMES fftw3 libfftw3)
-ELSE()
-    FIND_LIBRARY(FFTW3F_LIBRARIES NAMES fftw3f libfftw3f)
-ENDIF()
+FIND_PACKAGE(FFTW3 REQUIRED)
 
 SET(SourceFiles
 	CorrelationFunctionModifier.cpp
 )
 
-IF(OVITO_DOUBLE_PRECISION_FP)
-    OVITO_STANDARD_PLUGIN(
-    	CorrelationFunctionModifierPlugin
-    	SOURCES ${SourceFiles}
-    	PLUGIN_DEPENDENCIES Particles
-    	PRIVATE_LIB_DEPENDENCIES fftw3
-    )
-ELSE()
-    OVITO_STANDARD_PLUGIN(
-        CorrelationFunctionModifierPlugin
-        SOURCES ${SourceFiles}
-        PLUGIN_DEPENDENCIES Particles
-        PRIVATE_LIB_DEPENDENCIES fftw3f
-    )
-ENDIF()
+OVITO_STANDARD_PLUGIN(
+    CorrelationFunctionPlugin
+    SOURCES ${SourceFiles}
+    PLUGIN_DEPENDENCIES Particles
+    PRIVATE_LIB_DEPENDENCIES ${FFTW3_LIBRARIES}
+)
+
+TARGET_INCLUDE_DIRECTORIES(CorrelationFunctionPlugin PRIVATE "${FFTW3_INCLUDE_DIRS}")
 
 # Build corresponding GUI plugin.
 IF(OVITO_BUILD_GUI)
