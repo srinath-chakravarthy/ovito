@@ -35,7 +35,7 @@
                      libavutil-dev libswscale-dev libnetcdf-dev libhdf5-dev libhdf5-serial-dev \
                      libbotan1.10-dev libmuparser-dev libqwt-qt5-dev python3-dev \
                      python3-sphinx python3-numpy python3-matplotlib python3-pyqt5 \
-                     xsltproc docbook-xml
+                     libfftw3-dev xsltproc docbook-xml
 </command></screen>
 </entry>
          </row>
@@ -47,7 +47,8 @@
                      libQt5OpenGL-devel libQt5PrintSupport-devel libQt5Widgets-devel libQt5Xml-devel \
                      libavutil-devel libavresample-devel libavfilter-devel libavcodec-devel libavdevice-devel \
                      netcdf-devel libbotan-devel muparser-devel python3-devel python3-numpy python3-matplotlib \
-                     python3-Sphinx python3-qt5 boost-devel hdf5-devel libswscale-devel libqscintilla-qt5-devel
+                     python3-Sphinx python3-qt5 boost-devel hdf5-devel libswscale-devel libqscintilla-qt5-devel \
+                     fftw3-devel
 </command></screen>
 </entry>
 </row>

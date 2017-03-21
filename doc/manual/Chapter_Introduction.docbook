@@ -17,7 +17,7 @@
   OVITO is a scientific data visualization and analysis software for
   atomistic simulation models in materials science and related disciplines.
   OVITO is freely available for
-  Windows, Linux, and Mac OS X under an open-source license. It is being developed by <link xlink:href="http://scholar.google.com/citations?user=f8Tw3eEAAAAJ">Dr. Alexander
+  Windows, Linux, and macOS under an open-source license. It is being developed by <link xlink:href="http://scholar.google.com/citations?user=f8Tw3eEAAAAJ">Dr. Alexander
   Stukowski</link> at the <link xlink:href="http://www.mawi.tu-darmstadt.de/mm/mm_mm_sw/index.en.jsp">
   Materials Science Department</link> of Darmstadt University of Technology, Germany.
   </para>
@@ -25,7 +25,7 @@
   <para>
   The first version of OVITO was released in December 2009 and its initial feature set was described in 
   a <link xlink:href="http://stacks.iop.org/0965-0393/18/015012">journal article about OVITO</link> in 2010.
-  Today OVITO has more than active 50,000 users from the computational physics, materials science, and chemistry fields.
+  Today OVITO has more than active 100,000 users from the computational physics, materials science, and chemistry fields.
   </para>
   
   <simplesect>
@@ -139,6 +139,10 @@
           <listitem>
             <para><link linkend="particles.modifiers.atomic_strain">Atomic strain tensor calculation</link></para>
           </listitem>
+
+          <listitem>
+            <para><link linkend="particles.modifiers.elastic_strain">Local elastic strain calculation</link></para>
+          </listitem>
           
           <listitem>
             <para><link linkend="particles.modifiers.histogram">Histogram</link> and <link linkend="particles.modifiers.scatter_plot">scatter plot</link> functions</para>
@@ -148,11 +152,11 @@
             <para><link linkend="particles.modifiers.construct_surface_mesh">Reconstruction of geometric surfaces from atomistic models</link></para>
           </listitem>
 
-	      <listitem>
+	        <listitem>
             <para><link linkend="particles.modifiers.voronoi_analysis">Voronoi cell analysis</link></para>
           </listitem>
           
-	      <listitem>
+	        <listitem>
             <para><link linkend="particles.modifiers.wigner_seitz_analysis">Identification of point defects using Wigner-Seitz cell method</link></para>
           </listitem>
           
