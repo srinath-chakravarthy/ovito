@@ -30,12 +30,18 @@
 
 #include <complex>
 
+#ifdef CorrelationFunctionPlugin_EXPORTS		// This is defined by CMake when building the plugin library.
+#  define OVITO_CORRELATION_FUNCTION_EXPORT Q_DECL_EXPORT
+#else
+#  define OVITO_CORRELATION_FUNCTION_EXPORT Q_DECL_IMPORT
+#endif
+
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
 /**
  * \brief This modifier computes the coordination number of each particle (i.e. the number of neighbors within a given cutoff radius).
  */
-class OVITO_PARTICLES_EXPORT CorrelationFunctionModifier : public AsynchronousParticleModifier
+class OVITO_CORRELATION_FUNCTION_EXPORT CorrelationFunctionModifier : public AsynchronousParticleModifier
 {
 public:
 

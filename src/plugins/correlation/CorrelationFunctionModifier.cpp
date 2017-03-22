@@ -223,19 +223,17 @@ void CorrelationFunctionModifier::CorrelationAnalysisEngine::mapToSpatialGrid(Pa
 			const int* v = property->constDataInt() + vecComponent;
 			const int* v_end = v + (property->size() * vecComponentCount);
 			for(; v != v_end; v += vecComponentCount, ++pos) {
-				if(!std::isnan(*v)) {
-					Point3 fractionalPos = reciprocalCellMatrix*(*pos);
-					int binIndexX = int( fractionalPos.x() * nX );
-					int binIndexY = int( fractionalPos.y() * nY );
-					int binIndexZ = int( fractionalPos.z() * nZ );
-					if(pbc[0]) binIndexX = SimulationCell::modulo(binIndexX, nX);
-					if(pbc[1]) binIndexY = SimulationCell::modulo(binIndexY, nY);
-					if(pbc[2]) binIndexZ = SimulationCell::modulo(binIndexZ, nZ);
-					if(binIndexX >= 0 && binIndexX < nX && binIndexY >= 0 && binIndexY < nY && binIndexZ >= 0 && binIndexZ < nZ) {
-						// Store in row-major format.
-						size_t binIndex = binIndexZ+nZ*(binIndexY+nY*binIndexX);
-						gridData[binIndex] += *v;
-					}
+				Point3 fractionalPos = reciprocalCellMatrix*(*pos);
+				int binIndexX = int( fractionalPos.x() * nX );
+				int binIndexY = int( fractionalPos.y() * nY );
+				int binIndexZ = int( fractionalPos.z() * nZ );
+				if(pbc[0]) binIndexX = SimulationCell::modulo(binIndexX, nX);
+				if(pbc[1]) binIndexY = SimulationCell::modulo(binIndexY, nY);
+				if(pbc[2]) binIndexZ = SimulationCell::modulo(binIndexZ, nZ);
+				if(binIndexX >= 0 && binIndexX < nX && binIndexY >= 0 && binIndexY < nY && binIndexZ >= 0 && binIndexZ < nZ) {
+					// Store in row-major format.
+					size_t binIndex = binIndexZ+nZ*(binIndexY+nY*binIndexX);
+					gridData[binIndex] += *v;
 				}
 			}
 		}
