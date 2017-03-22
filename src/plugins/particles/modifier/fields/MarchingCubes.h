@@ -36,7 +36,7 @@ class MarchingCubes
 public:
 
     // Constructor
-    MarchingCubes(int size_x, int size_y, int size_z, const FloatType* fielddata, HalfEdgeMesh<>& outputMesh);
+    MarchingCubes(int size_x, int size_y, int size_z, const FloatType* fielddata, size_t stride, HalfEdgeMesh<>& outputMesh);
 
     /// Returns the field value in a specific cube of the grid.
     /// Takes into account periodic boundary conditions.
@@ -47,7 +47,7 @@ public:
         OVITO_ASSERT(i >= 0 && i < _size_x);
         OVITO_ASSERT(j >= 0 && j < _size_y);
         OVITO_ASSERT(k >= 0 && k < _size_z);
-        return _data[ i + j*_size_x + k*_size_x*_size_y] ; 
+        return _data[(i + j*_size_x + k*_size_x*_size_y) * _dataStride];
     }
   
     bool isCompletelySolid() const { return _isCompletelySolid; }
@@ -123,6 +123,7 @@ protected :
     int _size_y;  ///< depth  of the grid
     int _size_z;  ///< height of the grid
     const FloatType* _data;  ///< implicit function values sampled on the grid
+    size_t _dataStride;
 
     /// Vertices created along cube edges.
     std::vector<HalfEdgeMesh<>::Vertex*> _cubeVerts;
@@ -138,6 +139,12 @@ protected :
 
     /// Flag that indicates whether all cube cells are on one side of the isosurface.
     bool _isCompletelySolid;
+
+#ifdef FLOATTYPE_FLOAT
+    static constexpr FloatType _epsilon = FloatType(1e-12);
+#else
+    static constexpr FloatType _epsilon = FloatType(1e-18);
+#endif
 };
 
 OVITO_END_INLINE_NAMESPACE

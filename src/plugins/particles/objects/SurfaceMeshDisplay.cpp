@@ -205,6 +205,9 @@ void SurfaceMeshDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 ******************************************************************************/
 bool SurfaceMeshDisplay::buildSurfaceMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool reverseOrientation, const QVector<Plane3>& cuttingPlanes, TriMesh& output, PromiseBase* progress)
 {
+	if(cell.is2D())
+		throw Exception(tr("Cannot generate surface triangle mesh when simulation cell is two-dimensional."));
+
 	// Convert half-edge mesh to triangle mesh.
 	input.convertToTriMesh(output);
 
@@ -692,7 +695,14 @@ void SurfaceMeshDisplay::clipContour(std::vector<Point2>& input, std::array<bool
 		auto& firstSegment = contours.front();
 		auto& lastSegment = contours.back();
 		firstSegment.insert(firstSegment.begin(), lastSegment.begin(), lastSegment.end());
-		openContours.insert(openContours.begin(), std::make_move_iterator(contours.begin()), std::make_move_iterator(contours.end() - 1));
+		contours.pop_back();
+		for(auto& contour : contours) {
+			bool isDegenerate = std::all_of(contour.begin(), contour.end(), [&contour](const Point2& p) { 
+				return p.equals(contour.front()); 
+			});
+			if(!isDegenerate)
+				openContours.push_back(std::move(contour));
+		}
 	}
 }
 

@@ -28,12 +28,14 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
-MarchingCubes::MarchingCubes(int size_x, int size_y, int size_z, const FloatType* data, HalfEdgeMesh<>& outputMesh) :
+MarchingCubes::MarchingCubes(int size_x, int size_y, int size_z, const FloatType* data, size_t stride, HalfEdgeMesh<>& outputMesh) :
     _size_x(size_x), _size_y(size_y), _size_z(size_z),
-    _data(data), _outputMesh(outputMesh),
+    _data(data), _dataStride(stride), _outputMesh(outputMesh),
     _cubeVerts(size_x * size_y * size_z * 3, nullptr),
     _isCompletelySolid(false)
-{}
+{
+    OVITO_ASSERT(stride >= 1);
+}
 
 /******************************************************************************
 * Main method that constructs the isosurface mesh.
@@ -51,7 +53,7 @@ bool MarchingCubes::generateIsosurface(FloatType isolevel, PromiseBase& promise)
                 _lut_entry = 0;
                 for(int p = 0; p < 8; ++p) {
                     _cube[p] = getFieldValue(i+((p^(p>>1))&1), j+((p>>1)&1), k+((p>>2)&1)) - isolevel;
-                    if(std::abs(_cube[p]) < FLOATTYPE_EPSILON) _cube[p] = FLOATTYPE_EPSILON;
+                    if(std::abs(_cube[p]) < _epsilon) _cube[p] = _epsilon;
                     if(_cube[p] > 0) _lut_entry += 1 << p;
                 }
                 processCube(i,j,k);
@@ -76,10 +78,10 @@ void MarchingCubes::computeIntersectionPoints(FloatType isolevel, PromiseBase& p
                 cube[3] = getFieldValue(i,   j+1, k  ) - isolevel;
                 cube[4] = getFieldValue(i,   j,   k+1) - isolevel;
 
-                if(std::abs(cube[0]) < FLOATTYPE_EPSILON) cube[0] = FLOATTYPE_EPSILON;
-                if(std::abs(cube[1]) < FLOATTYPE_EPSILON) cube[1] = FLOATTYPE_EPSILON;
-                if(std::abs(cube[3]) < FLOATTYPE_EPSILON) cube[3] = FLOATTYPE_EPSILON;
-                if(std::abs(cube[4]) < FLOATTYPE_EPSILON) cube[4] = FLOATTYPE_EPSILON;
+                if(std::abs(cube[0]) < _epsilon) cube[0] = _epsilon;
+                if(std::abs(cube[1]) < _epsilon) cube[1] = _epsilon;
+                if(std::abs(cube[3]) < _epsilon) cube[3] = _epsilon;
+                if(std::abs(cube[4]) < _epsilon) cube[4] = _epsilon;
 
                 if(cube[0] < 0) _isCompletelySolid = false;
                 if(cube[1]*cube[0] < 0) createEdgeVertexX(i,j,k, cube[0] / (cube[0] - cube[1]));
@@ -109,7 +111,7 @@ bool MarchingCubes::testFace(char face)
     default: OVITO_ASSERT_MSG(false, "Marching cubes", "Invalid face code");
     };
 
-    if(std::abs(A*C - B*D) < FLOATTYPE_EPSILON)
+    if(std::abs(A*C - B*D) < _epsilon)
         return face >= 0;
     return face * A * (A*C - B*D) >= 0;  // face and A invert signs
 }
@@ -257,12 +259,12 @@ bool MarchingCubes::testInterior(char s)
     case  2: return s>0;
     case  3: return s>0;
     case  4: return s>0;
-    case  5: if(At * Ct - Bt * Dt <  FLOATTYPE_EPSILON) return s>0; break;
+    case  5: if(At * Ct - Bt * Dt <  _epsilon) return s>0; break;
     case  6: return s>0;
     case  7: return s<0;
     case  8: return s>0;
     case  9: return s>0;
-    case 10: if(At * Ct - Bt * Dt >= FLOATTYPE_EPSILON) return s>0; break;
+    case 10: if(At * Ct - Bt * Dt >= _epsilon) return s>0; break;
     case 11: return s<0;
     case 12: return s>0;
     case 13: return s<0;

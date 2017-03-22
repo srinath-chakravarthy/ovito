@@ -95,6 +95,12 @@ private:
 		/// Indicates whether the entire simulation cell is part of the solid region.
 		bool isCompletelySolid() const { return _isCompletelySolid; }
 
+		/// Returns the minimum field value that was encountered.
+		FloatType minValue() const { return _minValue; }
+
+		/// Returns the maximum field value that was encountered.
+		FloatType maxValue() const { return _maxValue; }
+
 	private:
 
 		FloatType _isolevel;
@@ -103,6 +109,7 @@ private:
 		QExplicitlySharedDataPointer<HalfEdgeMesh<>> _mesh;
 		SimulationCell _simCell;
 		bool _isCompletelySolid;
+		FloatType _minValue, _maxValue;
 	};
 
 	/// The field quantity that serves input.
@@ -119,6 +126,12 @@ private:
 
 	/// Indicates that the entire simulation cell is part of the solid region.
 	bool _isCompletelySolid;
+
+	/// The minimum field value that was encountered.
+	FloatType _minValue;
+
+	/// The maximum field value that was encountered.
+	FloatType _maxValue;
 
 	Q_OBJECT
 	OVITO_OBJECT

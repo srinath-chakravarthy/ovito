@@ -225,6 +225,8 @@ void POSCARImporter::POSCARImportTask::parseFile(CompressedTextReader& stream)
 		}
 	}
 
+	QString statusString = tr("%1 atoms").arg(totalAtomCount);	
+
 	// Parse optional atomic velocity vectors or CHGCAR electron density data. 
 	// Do this only for the first frame.
 	if(byteOffset == 0) {
@@ -251,43 +253,85 @@ void POSCARImporter::POSCARImportTask::parseFile(CompressedTextReader& stream)
 		}
 		else if(!stream.eof()) {
 			size_t nx, ny, nz;
-			// Parse charge density grid.
+			// Parse charge density volumetric grid.
 			if(sscanf(stream.readLine(), "%zu %zu %zu", &nx, &ny, &nz) == 3 && nx > 0 && ny > 0 && nz > 0) {
-				FieldQuantity* electronDensity = new FieldQuantity({nx,ny,nz}, qMetaTypeId<FloatType>(), 1, 0, tr("Charge density"), false);
-				addFieldQuantity(electronDensity);
-				const char* s = stream.readLine();
-				FloatType* data = electronDensity->dataFloat();
-				setProgressMaximum(electronDensity->size());
-				FloatType cellVolume = simulationCell().volume3D();
-				for(size_t i = 0; i < electronDensity->size(); i++, ++data) {
-					const char* token;
-					for(;;) {
-						while(*s == ' ' || *s == '\t')
-							++s;
-						token = s;
-						while(*s > ' ' || *s < 0)
-							++s;
-						if(s != token) break;
-						s = stream.readLine();
-					}
-					if(!parseFloatType(token, s, *data))
-						throw Exception(tr("Invalid value in charge density section (line %1): \"%2\"").arg(stream.lineNumber()).arg(QString::fromLocal8Bit(token, s - token)));
-					*data /= cellVolume;
-					if(*s != '\0')
-						s++;
+				auto parseFieldData = [this, &stream](size_t nx, size_t ny, size_t nz, const QString& name) -> FieldQuantity* {
+					std::unique_ptr<FieldQuantity> fieldQuantity(new FieldQuantity({nx,ny,nz}, qMetaTypeId<FloatType>(), 1, 0, name, false));
+					const char* s = stream.readLine();
+					FloatType* data = fieldQuantity->dataFloat();
+					setProgressMaximum(fieldQuantity->size());
+					FloatType cellVolume = simulationCell().volume3D();
+					for(size_t i = 0; i < fieldQuantity->size(); i++, ++data) {
+						const char* token;
+						for(;;) {
+							while(*s == ' ' || *s == '\t') ++s;
+							token = s;
+							while(*s > ' ' || *s < 0) ++s;
+							if(s != token) break;
+							s = stream.readLine();
+						}
+						if(!parseFloatType(token, s, *data))
+							throw Exception(tr("Invalid value in charge density section (line %1): \"%2\"").arg(stream.lineNumber()).arg(QString::fromLocal8Bit(token, s - token)));
+						*data /= cellVolume;
+						if(*s != '\0')
+							s++;
 
-					if(!setProgressValueIntermittent(i)) return;						
+						if(!setProgressValueIntermittent(i)) return nullptr;						
+					}
+					return fieldQuantity.release();
+				};
+
+				// Parse spin up + spin down denisty.
+				FieldQuantity* chargeDensity = parseFieldData(nx, ny, nz, tr("Charge density"));
+				if(!chargeDensity) return;
+				addFieldQuantity(chargeDensity);
+				statusString += tr("\nCharge density grid: %1 x %2 x %3").arg(nx).arg(ny).arg(nz);
+
+				// Look for spin up - spin down density.
+				std::unique_ptr<FieldQuantity> magnetizationDensity;
+				while(!stream.eof()) {
+					if(sscanf(stream.readLine(), "%zu %zu %zu", &nx, &ny, &nz) == 3 && nx > 0 && ny > 0 && nz > 0) {
+						magnetizationDensity.reset(parseFieldData(nx, ny, nz, tr("Magnetization density")));
+						if(!magnetizationDensity) return;
+						statusString += tr("\nMagnetization density grid: %1 x %2 x %3").arg(nx).arg(ny).arg(nz);
+						break;
+					}
+				}
+
+				// Look for more vector components in case file contains vector magnetization. 
+				std::unique_ptr<FieldQuantity> magnetizationDensityY;
+				std::unique_ptr<FieldQuantity> magnetizationDensityZ;
+				while(!stream.eof()) {
+					if(sscanf(stream.readLine(), "%zu %zu %zu", &nx, &ny, &nz) == 3 && nx > 0 && ny > 0 && nz > 0) {
+						magnetizationDensityY.reset(parseFieldData(nx, ny, nz, tr("Magnetization density")));
+						if(!magnetizationDensityY) return;
+						break;
+					}
+				}
+				while(!stream.eof()) {
+					if(sscanf(stream.readLine(), "%zu %zu %zu", &nx, &ny, &nz) == 3 && nx > 0 && ny > 0 && nz > 0) {
+						magnetizationDensityZ.reset(parseFieldData(nx, ny, nz, tr("Magnetization density")));
+						if(!magnetizationDensityZ) return;
+						break;
+					}
+				}
+
+				if(magnetizationDensity && magnetizationDensityY && magnetizationDensityZ && 
+					magnetizationDensityY->shape() == magnetizationDensityZ->shape() &&
+					magnetizationDensity->shape() == magnetizationDensityY->shape()) {
+					std::unique_ptr<FieldQuantity> vectorMagnetization(new FieldQuantity({nx,ny,nz}, qMetaTypeId<FloatType>(), 3, 0, tr("Magnetization density"), false));
+					vectorMagnetization->setComponentNames(QStringList() << "X" << "Y" << "Z");
+					for(size_t i = 0; i < vectorMagnetization->size(); i++) 
+						vectorMagnetization->setVector3(i, { magnetizationDensity->getFloat(i), magnetizationDensityY->getFloat(i), magnetizationDensityZ->getFloat(i) });
+					addFieldQuantity(vectorMagnetization.release());
+				}
+				else if(magnetizationDensity) {
+					addFieldQuantity(magnetizationDensity.release());
 				}
 			}
 		}
 	}
 
-	QString statusString = tr("%1 atoms").arg(totalAtomCount);
-	if(!fieldQuantities().empty())
-		statusString += tr("\nCharge density grid: %1 x %2 x %3")
-			.arg(fieldQuantities().front()->shape()[0])
-			.arg(fieldQuantities().front()->shape()[1])
-			.arg(fieldQuantities().front()->shape()[2]);
 	setStatus(statusString);
 }
 

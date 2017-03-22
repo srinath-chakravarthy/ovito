@@ -150,11 +150,11 @@ public:
 		tessellator->mesh.addVertex(p);
 	}
 
-	static void errorData(int errno, void* polygon_data) {
-		if(errno == GLU_TESS_NEED_COMBINE_CALLBACK)
+	static void errorData(int errnum, void* polygon_data) {
+		if(errnum == GLU_TESS_NEED_COMBINE_CALLBACK)
 			qDebug() << "ERROR: Could not tessellate cap polygon. It contains overlapping contours.";
 		else
-			qDebug() << "ERROR: Could not tessellate cap polygon. Error code: " << errno;
+			qDebug() << "ERROR: Could not tessellate cap polygon. Error code: " << errnum;
 	}
 
 private:

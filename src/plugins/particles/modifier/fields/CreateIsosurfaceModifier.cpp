@@ -149,6 +149,8 @@ void CreateIsosurfaceModifier::transferComputationResults(ComputeEngine* engine)
 	ComputeIsosurfaceEngine* eng = static_cast<ComputeIsosurfaceEngine*>(engine);
 	_surfaceMesh = eng->mesh();
 	_isCompletelySolid = eng->isCompletelySolid();
+	_minValue = eng->minValue();
+	_maxValue = eng->maxValue();
 }
 
 /******************************************************************************
@@ -168,7 +170,7 @@ PipelineStatus CreateIsosurfaceModifier::applyComputationResults(TimePoint time,
 	// Insert output object into the pipeline.
 	output().addObject(meshObj);
 
-	return PipelineStatus(PipelineStatus::Success);
+	return PipelineStatus(PipelineStatus::Success, tr("Minimum value: %1\nMaximum value: %2").arg(_minValue).arg(_maxValue));
 }
 
 /******************************************************************************
@@ -186,10 +188,19 @@ void CreateIsosurfaceModifier::ComputeIsosurfaceEngine::perform()
 	const FloatType* fieldData = quantity()->constDataFloat() + std::max(_vectorComponent, 0);
 	const size_t shape[3] = {quantity()->shape()[0], quantity()->shape()[1], quantity()->shape()[2]}; 
 
-	MarchingCubes mc(shape[0], shape[1], shape[2], fieldData, *mesh());
+	MarchingCubes mc(shape[0], shape[1], shape[2], fieldData, quantity()->componentCount(), *mesh());
 	if(!mc.generateIsosurface(_isolevel, *this))
 		return;
 	_isCompletelySolid = mc.isCompletelySolid();
+
+	// Determin min/max field values.
+	const FloatType* fieldDataEnd = fieldData + shape[0]*shape[1]*shape[2]*quantity()->componentCount();
+	_minValue =  FLOATTYPE_MAX;
+	_maxValue = -FLOATTYPE_MAX;
+	for(; fieldData != fieldDataEnd; fieldData += quantity()->componentCount()) {
+		if(*fieldData < _minValue) _minValue = *fieldData;
+		if(*fieldData > _maxValue) _maxValue = *fieldData;
+	}
 
 	// Transform mesh vertices from orthogonal grid space to world space.
 	const AffineTransformation tm = _simCell.matrix() * 

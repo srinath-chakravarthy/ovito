@@ -61,6 +61,10 @@ void CreateIsosurfaceModifierEditor::createUI(const RolloutInsertionParameters& 
 	layout2->addWidget(isolevelPUI->label(), 1, 0);
 	layout2->addLayout(isolevelPUI->createFieldLayout(), 1, 1);
 
+	// Status label.
+	layout1->addSpacing(8);
+	layout1->addWidget(statusLabel());
+
 	// Open a sub-editor for the mesh display object.
 	new SubObjectParameterUI(this, PROPERTY_FIELD(CreateIsosurfaceModifier::surfaceMeshDisplay), rolloutParams.after(rollout));
 }
