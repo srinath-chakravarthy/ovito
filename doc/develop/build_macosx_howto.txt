@@ -3,6 +3,7 @@ Install third-party tools
 **************************************************************************
 export MACOSX_DEPLOYMENT_TARGET=10.8
 sudo port install cmake docbook-xml doxygen libxslt boost yasm povray
+sudo port install -s fftw-3-single
 
 **************************************************************************
 Install Qt libraries, version 5.7
