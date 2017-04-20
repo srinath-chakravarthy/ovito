@@ -53,6 +53,9 @@ public:
 	/// \return An world axis-aligned box that contains the bounding boxes of all child nodes.
 	virtual Box3 localBoundingBox(TimePoint time) override;
 
+	/// \brief Returns whether this is the root scene node.
+	virtual bool isRootNode() const override { return true; }
+
 private:
 
 	Q_OBJECT
