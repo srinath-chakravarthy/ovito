@@ -65,7 +65,7 @@ private:
 		Point3 pos;
 	};
 
-	struct TreeNode {
+	struct OVITO_PARTICLES_EXPORT TreeNode {
 		/// Constructor for a leaf node.
 		TreeNode() : splitDim(-1), atoms(nullptr), numAtoms(0) {}
 

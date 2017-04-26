@@ -187,6 +187,8 @@ cmake -G "NMake Makefiles" ^
    -DOVITO_BUILD_PLUGIN_VR=ON ^
    -DOPENVR_INCLUDE_DIR=%cd:\=/%/../openvr/headers ^
    -DOPENVR_LIBRARY=%cd:\=/%/../openvr/lib/win64/openvr_api.lib ^
+   -DFFTW3_INCLUDE_DIR=%cd:\=/%/../fftw ^
+   -DFFTW3_LIBRARY=%cd:\=/%/../fftw/libfftw3f-3.lib ^
    ../../source
 
 nmake install

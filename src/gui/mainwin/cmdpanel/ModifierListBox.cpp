@@ -160,9 +160,14 @@ ModifierListBox::ModifierListBox(QWidget* parent, ModificationListModel* modific
 	showAllItem->setTextAlignment(Qt::AlignCenter);
 	_model->appendRow(showAllItem);
 
+	// Filler item to workaround bug in Qt which doesnt fully show all items in the drop-down menu. 
+	QStandardItem* fillerItem = new QStandardItem();
+	fillerItem->setFlags(Qt::ItemIsEnabled);
+	_model->appendRow(fillerItem);
+
 	// Expand list when the "Show all modifiers" entry is selected and update MRU list.
     connect(this, (void (QComboBox::*)(int))&QComboBox::activated, this, [this](int index) {
-		if(!showAllModifiers() && index == count() - 1) {
+		if(!showAllModifiers() && index >= count() - 2 && !itemData(index).isValid()) {
 			_showAllModifiers = true;
 			showPopup();
 		}
@@ -204,10 +209,10 @@ bool ModifierListBox::filterAcceptsRow(int source_row, const QModelIndex& source
 		if(source_row == 1)
 			return false;
 		// Don't show the "Show all modifiers" entry if all are already shown.
-		if(source_row == _model->rowCount(source_parent) - 1) 
+		if(source_row >= _model->rowCount(source_parent) - 2) 
 			return false; 
 		// Don't show the "Custom modifier presets" category if there are no custom modifiers.
-		if(_numCustomModifiers == 0 && source_row == _model->rowCount(source_parent) - 2)
+		if(_numCustomModifiers == 0 && source_row == _model->rowCount(source_parent) - 3)
 			return false;
 		return true;
 	}
@@ -220,7 +225,7 @@ bool ModifierListBox::filterAcceptsRow(int source_row, const QModelIndex& source
 		return true; 
 
 	// Show the "Show all modifiers" entry
-	if(source_row == _model->rowCount(source_parent) - 1) 
+	if(source_row >= _model->rowCount(source_parent) - 2) 
 		return true;
 
 	// Don't show modifier categories.
@@ -237,10 +242,12 @@ bool ModifierListBox::filterAcceptsRow(int source_row, const QModelIndex& source
 ******************************************************************************/
 bool ModifierListBox::filterSortLessThan(const QModelIndex& source_left, const QModelIndex& source_right)
 {
-	if(showAllModifiers() || source_left.row() <= 1 || source_right.row() <= 1)
+	if(showAllModifiers() || source_left.row() <= 1 || source_right.row() <= 1 || source_left.row() >= _model->rowCount()-2 || source_right.row() >= _model->rowCount()-2) {
 		return source_left.row() < source_right.row();
-	else
+	}
+	else {
 		return source_left.data().toString().localeAwareCompare(source_right.data().toString()) < 0;
+	}
 }
 
 /******************************************************************************
@@ -336,17 +343,17 @@ void ModifierListBox::updateAvailableModifiers()
 	for(const QString& name : keys) {
 		QStandardItem* modifierItem;
 		if(numCustom < _numCustomModifiers)
-			modifierItem = _model->item(_model->rowCount() - 1 - _numCustomModifiers + numCustom);
+			modifierItem = _model->item(_model->rowCount() - 2 - _numCustomModifiers + numCustom);
 		else {
 			modifierItem = new QStandardItem("   " + name);
-			_model->insertRow(_model->rowCount() - 1, modifierItem);
+			_model->insertRow(_model->rowCount() - 2, modifierItem);
 		}
 		modifierItem->setData(QVariant::fromValue(name), Qt::UserRole);
 		numCustom++;
 	}
 	// Remove unused entries.
 	if(numCustom < _numCustomModifiers)
-		_model->removeRows(_model->rowCount() - 1 - _numCustomModifiers + numCustom, _numCustomModifiers - numCustom);
+		_model->removeRows(_model->rowCount() - 2 - _numCustomModifiers + numCustom, _numCustomModifiers - numCustom);
 	_numCustomModifiers = numCustom;
 }
 

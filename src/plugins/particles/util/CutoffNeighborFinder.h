@@ -89,7 +89,7 @@ public:
 	FloatType cutoffRadiusSquared() const { return _cutoffRadiusSquared; }
 
 	/// \brief An iterator class that returns all neighbors of a central particle.
-	class Query
+	class OVITO_PARTICLES_EXPORT Query
 	{
 	public:
 

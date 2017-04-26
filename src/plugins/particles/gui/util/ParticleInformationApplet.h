@@ -105,7 +105,7 @@ private:
 	ParticleInformationApplet* _applet;
 
 	/// The selected particles whose properties are being displayed.
-	std::deque<PickResult> _pickedParticles;
+	std::vector<PickResult> _pickedParticles;
 
 	friend class ParticleInformationApplet;
 };
