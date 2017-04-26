@@ -57,6 +57,8 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CoordinationNumberM
 
 	// The number of sampling intervals for the radial distribution function.
 	int rdfSampleCount = std::max(numberOfBins(), 4);
+	if(rdfSampleCount > 100000)
+		throwException(tr("Number of histogram bins is too large."));
 
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<CoordinationAnalysisEngine>(validityInterval, posProperty->storage(), inputCell->data(), cutoff(), rdfSampleCount);

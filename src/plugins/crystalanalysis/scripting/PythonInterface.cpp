@@ -276,12 +276,12 @@ PYBIND11_PLUGIN(CrystalAnalysis)
 	;
 
 #if 0
-	ovito_class<GrainSegmentationModifier, StructureIdentificationModifier>()
-		.add_property("input_crystal_structure", &GrainSegmentationModifier::inputCrystalStructure, &GrainSegmentationModifier::setInputCrystalStructure)
-		.add_property("misorientation_threshold", &GrainSegmentationModifier::misorientationThreshold, &GrainSegmentationModifier::setMisorientationThreshold)
-		.add_property("fluctuation_tolerance", &GrainSegmentationModifier::fluctuationTolerance, &GrainSegmentationModifier::setFluctuationTolerance)
-		.add_property("min_atom_count", &GrainSegmentationModifier::minGrainAtomCount, &GrainSegmentationModifier::setMinGrainAtomCount)
-		.add_property("probe_sphere_radius", &GrainSegmentationModifier::probeSphereRadius, &GrainSegmentationModifier::setProbeSphereRadius,
+	ovito_class<GrainSegmentationModifier, StructureIdentificationModifier>(m)
+		.def_property("input_crystal_structure", &GrainSegmentationModifier::inputCrystalStructure, &GrainSegmentationModifier::setInputCrystalStructure)
+		.def_property("misorientation_threshold", &GrainSegmentationModifier::misorientationThreshold, &GrainSegmentationModifier::setMisorientationThreshold)
+		.def_property("fluctuation_tolerance", &GrainSegmentationModifier::fluctuationTolerance, &GrainSegmentationModifier::setFluctuationTolerance)
+		.def_property("min_atom_count", &GrainSegmentationModifier::minGrainAtomCount, &GrainSegmentationModifier::setMinGrainAtomCount)
+		.def_property("probe_sphere_radius", &GrainSegmentationModifier::probeSphereRadius, &GrainSegmentationModifier::setProbeSphereRadius,
 				"The radius of the probe sphere used in the free surface construction algorithm."
 				"\n\n"
 				"A rule of thumb is that the probe sphere radius should be slightly larger than the typical distance between "
@@ -290,17 +290,17 @@ PYBIND11_PLUGIN(CrystalAnalysis)
 				"This parameter is ignored if :py:attr:`.output_mesh` is false."
 				"\n\n"
 				":Default: 4.0\n")
-		.add_property("smoothing_level", &GrainSegmentationModifier::smoothingLevel, &GrainSegmentationModifier::setSmoothingLevel,
+		.def_property("smoothing_level", &GrainSegmentationModifier::smoothingLevel, &GrainSegmentationModifier::setSmoothingLevel,
 				"The number of iterations of the smoothing algorithm applied to the computed grain boundary mesh. "
 				"\n\n"
 				"This parameter is ignored if :py:attr:`.output_mesh` is false."
 				"\n\n"
 				":Default: 8\n")
-		.add_property("only_selected", &GrainSegmentationModifier::onlySelectedParticles, &GrainSegmentationModifier::setOnlySelectedParticles,
+		.def_property("only_selected", &GrainSegmentationModifier::onlySelectedParticles, &GrainSegmentationModifier::setOnlySelectedParticles,
 				"This flag tells the modifier to ignore unselected particles."
 				"\n\n"
 				":Default: ``False``\n")
-		.add_property("output_mesh", &GrainSegmentationModifier::outputPartitionMesh, &GrainSegmentationModifier::setOutputPartitionMesh,
+		.def_property("output_mesh", &GrainSegmentationModifier::outputPartitionMesh, &GrainSegmentationModifier::setOutputPartitionMesh,
 				"This flag controls the generation of the grain boundary mesh. "
 				"If true, the modifier will generate a geometric representation of the grain boundary network "
 				"in addition to assigning each input atom to a grain. "

@@ -140,10 +140,12 @@ void SpinnerWidget::updateTextBox()
 ******************************************************************************/
 void SpinnerWidget::setFloatValue(FloatType newVal, bool emitChangeSignal)
 {
-	// Clamp value.
 	if(newVal == _value) return;
-	newVal = std::max(minValue(), newVal);
-	newVal = std::min(maxValue(), newVal);
+	// Clamp value if it was entered by the user.
+	if(emitChangeSignal) {
+		newVal = std::max(minValue(), newVal);
+		newVal = std::min(maxValue(), newVal);
+	}
 	if(_value != newVal) {
 		_value = newVal;
 		if(emitChangeSignal)
@@ -160,9 +162,11 @@ void SpinnerWidget::setIntValue(int newValInt, bool emitChangeSignal)
 	FloatType newVal = (FloatType)newValInt;
 
 	if(newVal == _value) return;
-	// Clamp value.
-	newVal = std::max((FloatType)ceil(minValue()), newVal);
-	newVal = std::min((FloatType)floor(maxValue()), newVal);
+	// Clamp value if it was entered by the user.
+	if(emitChangeSignal) {		
+		newVal = std::max((FloatType)ceil(minValue()), newVal);
+		newVal = std::min((FloatType)floor(maxValue()), newVal);
+	}
 	if(_value != newVal) {
 		_value = newVal;
 		if(emitChangeSignal)

@@ -132,7 +132,7 @@ void GrainSegmentationEngine::perform()
 
 	// Build grain graph.
 	std::vector<GrainGraphEdge> bulkEdges;
-	setProgressRange(_grains.size());
+	setProgressMaximum(_grains.size());
 	for(int atomA = 0; atomA < _grains.size(); atomA++) {
 		if(!setProgressValueIntermittent(atomA)) return;
 		Grain& grainA = _grains[atomA];
@@ -202,7 +202,7 @@ void GrainSegmentationEngine::perform()
 
 	// Prepare the neighbor list builder.
 	NearestNeighborFinder neighborFinder(12);
-	if(!neighborFinder.prepare(positions(), cell(), nullptr, this))
+	if(!neighborFinder.prepare(positions(), cell(), nullptr, *this))
 		return;
 
 	nextProgressSubStep();
@@ -230,7 +230,7 @@ void GrainSegmentationEngine::perform()
 			}
 			else {
 				NearestNeighborFinder::Query<12> neighQuery(neighborFinder);
-				neighQuery.findNeighbors(neighborFinder.particlePos(atomA));
+				neighQuery.findNeighbors(atomA);
 				for(int i = 0; i < neighQuery.results().size(); i++) {
 					int atomB = neighQuery.results()[i].index;
 
@@ -464,7 +464,7 @@ bool GrainSegmentationEngine::buildPartitionMesh()
 	// Generate Delaunay tessellation.
 	DelaunayTessellation tessellation;
 	if(!tessellation.generateTessellation(cell(), positions()->constDataPoint3(), positions()->size(), ghostLayerSize,
-			selection() ? selection()->constDataInt() : nullptr, this))
+			selection() ? selection()->constDataInt() : nullptr, *this))
 		return false;
 
 	nextProgressSubStep();
@@ -498,7 +498,7 @@ bool GrainSegmentationEngine::buildPartitionMesh()
 	};
 
 	ManifoldConstructionHelper<PartitionMeshData, true, true> manifoldConstructor(tessellation, *_mesh, alpha, positions());
-	if(!manifoldConstructor.construct(tetrahedronRegion, this, prepareMeshFace, linkManifolds))
+	if(!manifoldConstructor.construct(tetrahedronRegion, *this, prepareMeshFace, linkManifolds))
 		return false;
 	_spaceFillingGrain = manifoldConstructor.spaceFillingRegion();
 

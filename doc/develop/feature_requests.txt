@@ -116,4 +116,5 @@ Scripting features:
 
 Documentation:
 
+- Describe reference frame orientations used by Elastic Strain Calculation modifier.
 - Application settings dialog

@@ -15,6 +15,7 @@ ovito.modifiers.ElasticStrainModifier = ovito.plugins.CrystalAnalysis.ElasticStr
 #ovito.modifiers.GrainSegmentationModifier = ovito.plugins.CrystalAnalysis.GrainSegmentationModifier
 ovito.modifiers.__all__ += ['ConstructSurfaceModifier', 'SmoothDislocationsModifier', 'SmoothSurfaceModifier', 'DislocationAnalysisModifier',
             'ElasticStrainModifier']
+#ovito.modifiers.__all__ += ['GrainSegmentationModifier']
 
 # Copy enum list.
 ovito.modifiers.ElasticStrainModifier.Lattice = ovito.modifiers.DislocationAnalysisModifier.Lattice

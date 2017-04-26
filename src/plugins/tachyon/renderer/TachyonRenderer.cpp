@@ -251,7 +251,7 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 	if(frameBuffer->image().format() != QImage::Format_ARGB32)
 		frameBuffer->image() = frameBuffer->image().convertToFormat(QImage::Format_ARGB32);
 
-	int tileSize = scene->numthreads * 8;
+	int tileSize = scene->numthreads * 2;
 	for(int ystart = 0; ystart < scene->vres; ystart += tileSize) {
 		for(int xstart = 0; xstart < scene->hres; xstart += tileSize) {
 			int xstop = std::min(scene->hres, xstart + tileSize);
