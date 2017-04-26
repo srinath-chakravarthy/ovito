@@ -37,7 +37,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Gui, ViewportSceneRenderer, OpenGLSceneRenderer);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ViewportSceneRenderer, OpenGLSceneRenderer);
 
 /******************************************************************************
 * This method is called just before renderFrame() is called.
@@ -114,8 +114,8 @@ Box3 ViewportSceneRenderer::boundingBoxInteractive(TimePoint time, Viewport* vie
 				return true;
 		}
 
-		// Evaluate geometry pipeline of object node.
-		const PipelineFlowState& state = node->evalPipeline(time);
+		// Evaluate data pipeline of object node.
+		const PipelineFlowState& state = node->evaluatePipelineImmediately(PipelineEvalRequest(time, true));
 		for(const auto& dataObj : state.objects()) {
 			for(DisplayObject* displayObj : dataObj->displayObjects()) {
 				if(displayObj && displayObj->isEnabled()) {

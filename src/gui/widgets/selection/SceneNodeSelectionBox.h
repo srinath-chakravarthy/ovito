@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SCENE_NODE_SELECTION_BOX_H
-#define __OVITO_SCENE_NODE_SELECTION_BOX_H
+#pragma once
+
 
 #include <gui/GUI.h>
 
@@ -60,4 +60,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_ANIMATION_FRAMES_TOOL_BUTTON_H
+

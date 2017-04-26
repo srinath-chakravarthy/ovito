@@ -31,7 +31,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysisGui, ElasticStrainModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(ElasticStrainModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(ElasticStrainModifier, ElasticStrainModifierEditor);
 
 /******************************************************************************
@@ -52,7 +52,7 @@ void ElasticStrainModifierEditor::createUI(const RolloutInsertionParameters& rol
 	sublayout1->setContentsMargins(4,4,4,4);
 	sublayout1->setSpacing(4);
 	sublayout1->setColumnStretch(1,1);
-	VariantComboBoxParameterUI* crystalStructureUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(ElasticStrainModifier::_inputCrystalStructure));
+	VariantComboBoxParameterUI* crystalStructureUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(ElasticStrainModifier::inputCrystalStructure));
 
 	crystalStructureUI->comboBox()->addItem(tr("Face-centered cubic (FCC)"), QVariant::fromValue((int)StructureAnalysis::LATTICE_FCC));
 	crystalStructureUI->comboBox()->addItem(tr("Hexagonal close-packed (HCP)"), QVariant::fromValue((int)StructureAnalysis::LATTICE_HCP));
@@ -61,11 +61,11 @@ void ElasticStrainModifierEditor::createUI(const RolloutInsertionParameters& rol
 	crystalStructureUI->comboBox()->addItem(tr("Diamond hexagonal / Wurtzite"), QVariant::fromValue((int)StructureAnalysis::LATTICE_HEX_DIAMOND));
 	sublayout1->addWidget(crystalStructureUI->comboBox(), 0, 0, 1, 2);
 
-	FloatParameterUI* latticeConstantUI = new FloatParameterUI(this, PROPERTY_FIELD(ElasticStrainModifier::_latticeConstant));
+	FloatParameterUI* latticeConstantUI = new FloatParameterUI(this, PROPERTY_FIELD(ElasticStrainModifier::latticeConstant));
 	sublayout1->addWidget(latticeConstantUI->label(), 1, 0);
 	sublayout1->addLayout(latticeConstantUI->createFieldLayout(), 1, 1);
 
-	_caRatioUI = new FloatParameterUI(this, PROPERTY_FIELD(ElasticStrainModifier::_caRatio));
+	_caRatioUI = new FloatParameterUI(this, PROPERTY_FIELD(ElasticStrainModifier::axialRatio));
 	sublayout1->addWidget(_caRatioUI->label(), 2, 0);
 	sublayout1->addLayout(_caRatioUI->createFieldLayout(), 2, 1);
 
@@ -77,10 +77,10 @@ void ElasticStrainModifierEditor::createUI(const RolloutInsertionParameters& rol
 	sublayout2->setColumnStretch(1, 1);
 	sublayout2->setColumnMinimumWidth(0, 12);
 
-	BooleanParameterUI* outputStrainTensorsUI = new BooleanParameterUI(this, PROPERTY_FIELD(ElasticStrainModifier::_calculateStrainTensors));
+	BooleanParameterUI* outputStrainTensorsUI = new BooleanParameterUI(this, PROPERTY_FIELD(ElasticStrainModifier::calculateStrainTensors));
 	sublayout2->addWidget(outputStrainTensorsUI->checkBox(), 0, 0, 1, 2);
 
-	BooleanRadioButtonParameterUI* pushStrainTensorsForwardUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(ElasticStrainModifier::_pushStrainTensorsForward));
+	BooleanRadioButtonParameterUI* pushStrainTensorsForwardUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(ElasticStrainModifier::pushStrainTensorsForward));
 	pushStrainTensorsForwardUI->buttonTrue()->setText(tr("in spatial frame"));
 	pushStrainTensorsForwardUI->buttonFalse()->setText(tr("in lattice frame"));
 	sublayout2->addWidget(pushStrainTensorsForwardUI->buttonTrue(), 1, 1);
@@ -89,7 +89,7 @@ void ElasticStrainModifierEditor::createUI(const RolloutInsertionParameters& rol
 	pushStrainTensorsForwardUI->setEnabled(false);
 	connect(outputStrainTensorsUI->checkBox(), &QCheckBox::toggled, pushStrainTensorsForwardUI, &BooleanRadioButtonParameterUI::setEnabled);
 
-	BooleanParameterUI* outputDeformationGradientsUI = new BooleanParameterUI(this, PROPERTY_FIELD(ElasticStrainModifier::_calculateDeformationGradients));
+	BooleanParameterUI* outputDeformationGradientsUI = new BooleanParameterUI(this, PROPERTY_FIELD(ElasticStrainModifier::calculateDeformationGradients));
 	sublayout2->addWidget(outputDeformationGradientsUI->checkBox(), 3, 0, 1, 2);
 
 	// Status label.

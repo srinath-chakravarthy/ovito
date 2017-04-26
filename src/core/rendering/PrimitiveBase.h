@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PRIMITIVE_BASE_H
-#define __OVITO_PRIMITIVE_BASE_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -46,4 +46,4 @@ public:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_PRIMITIVE_BASE_H
+

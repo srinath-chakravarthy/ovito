@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_DATA_OBJECT_WITH_SHARED_STORAGE_H
-#define __OVITO_DATA_OBJECT_WITH_SHARED_STORAGE_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "DataObject.h"
@@ -89,4 +89,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_DATA_OBJECT_WITH_SHARED_STORAGE_H
+

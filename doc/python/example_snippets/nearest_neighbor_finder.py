@@ -16,3 +16,8 @@ for index in range(data.number_of_particles):
     # Iterate over the neighbors of the current particle, starting with the closest:
     for neigh in finder.find(index):
         print(neigh.index, neigh.distance, neigh.delta)
+
+# Find particles closest to some spatial point (x,y,z):
+coords = (0, 0, 0)
+for neigh in finder.find_at(coords):
+    print(neigh.index, neigh.distance, neigh.delta)

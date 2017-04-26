@@ -30,23 +30,23 @@
 
 namespace Ovito { namespace Particles {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SurfaceMeshDisplay, AsynchronousDisplayObject);
-DEFINE_FLAGS_PROPERTY_FIELD(SurfaceMeshDisplay, _surfaceColor, "SurfaceColor", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(SurfaceMeshDisplay, _capColor, "CapColor", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(SurfaceMeshDisplay, _showCap, "ShowCap", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(SurfaceMeshDisplay, _smoothShading, "SmoothShading");
-DEFINE_PROPERTY_FIELD(SurfaceMeshDisplay, _reverseOrientation, "ReverseOrientation");
-DEFINE_REFERENCE_FIELD(SurfaceMeshDisplay, _surfaceTransparency, "SurfaceTransparency", Controller);
-DEFINE_REFERENCE_FIELD(SurfaceMeshDisplay, _capTransparency, "CapTransparency", Controller);
-SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _surfaceColor, "Surface color");
-SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _capColor, "Cap color");
-SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _showCap, "Show cap polygons");
-SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _smoothShading, "Smooth shading");
-SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _surfaceTransparency, "Surface transparency");
-SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _capTransparency, "Cap transparency");
-SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, _reverseOrientation, "Inside out");
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(SurfaceMeshDisplay, _surfaceTransparency, PercentParameterUnit, 0, 1);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(SurfaceMeshDisplay, _capTransparency, PercentParameterUnit, 0, 1);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SurfaceMeshDisplay, AsynchronousDisplayObject);
+DEFINE_FLAGS_PROPERTY_FIELD(SurfaceMeshDisplay, surfaceColor, "SurfaceColor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(SurfaceMeshDisplay, capColor, "CapColor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(SurfaceMeshDisplay, showCap, "ShowCap", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(SurfaceMeshDisplay, smoothShading, "SmoothShading");
+DEFINE_PROPERTY_FIELD(SurfaceMeshDisplay, reverseOrientation, "ReverseOrientation");
+DEFINE_REFERENCE_FIELD(SurfaceMeshDisplay, surfaceTransparencyController, "SurfaceTransparency", Controller);
+DEFINE_REFERENCE_FIELD(SurfaceMeshDisplay, capTransparencyController, "CapTransparency", Controller);
+SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, surfaceColor, "Surface color");
+SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, capColor, "Cap color");
+SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, showCap, "Show cap polygons");
+SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, smoothShading, "Smooth shading");
+SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, surfaceTransparencyController, "Surface transparency");
+SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, capTransparencyController, "Cap transparency");
+SET_PROPERTY_FIELD_LABEL(SurfaceMeshDisplay, reverseOrientation, "Inside out");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(SurfaceMeshDisplay, surfaceTransparencyController, PercentParameterUnit, 0, 1);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(SurfaceMeshDisplay, capTransparencyController, PercentParameterUnit, 0, 1);
 
 /******************************************************************************
 * Constructor.
@@ -54,16 +54,16 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(SurfaceMeshDisplay, _capTransparency, Percent
 SurfaceMeshDisplay::SurfaceMeshDisplay(DataSet* dataset) : AsynchronousDisplayObject(dataset),
 	_surfaceColor(1, 1, 1), _capColor(0.8, 0.8, 1.0), _showCap(true), _smoothShading(true), _trimeshUpdate(true), _reverseOrientation(false)
 {
-	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_surfaceColor);
-	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_capColor);
-	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_showCap);
-	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_smoothShading);
-	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_surfaceTransparency);
-	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_capTransparency);
-	INIT_PROPERTY_FIELD(SurfaceMeshDisplay::_reverseOrientation);
+	INIT_PROPERTY_FIELD(surfaceColor);
+	INIT_PROPERTY_FIELD(capColor);
+	INIT_PROPERTY_FIELD(showCap);
+	INIT_PROPERTY_FIELD(smoothShading);
+	INIT_PROPERTY_FIELD(surfaceTransparencyController);
+	INIT_PROPERTY_FIELD(capTransparencyController);
+	INIT_PROPERTY_FIELD(reverseOrientation);
 
-	_surfaceTransparency = ControllerManager::instance().createFloatController(dataset);
-	_capTransparency = ControllerManager::instance().createFloatController(dataset);
+	setSurfaceTransparencyController(ControllerManager::createFloatController(dataset));
+	setCapTransparencyController(ControllerManager::createFloatController(dataset));
 }
 
 /******************************************************************************
@@ -155,17 +155,17 @@ void SurfaceMeshDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 	FloatType transp_surface = 0;
 	FloatType transp_cap = 0;
 	TimeInterval iv;
-	if(_surfaceTransparency) transp_surface = _surfaceTransparency->getFloatValue(time, iv);
-	if(_capTransparency) transp_cap = _capTransparency->getFloatValue(time, iv);
-	ColorA color_surface(surfaceColor(), 1.0f - transp_surface);
-	ColorA color_cap(capColor(), 1.0f - transp_cap);
+	if(surfaceTransparencyController()) transp_surface = surfaceTransparencyController()->getFloatValue(time, iv);
+	if(capTransparencyController()) transp_cap = capTransparencyController()->getFloatValue(time, iv);
+	ColorA color_surface(surfaceColor(), FloatType(1) - transp_surface);
+	ColorA color_cap(capColor(), FloatType(1) - transp_cap);
 
 	// Do we have to re-create the render primitives from scratch?
 	bool recreateSurfaceBuffer = !_surfaceBuffer || !_surfaceBuffer->isValid(renderer);
-	bool recreateCapBuffer = _showCap && (!_capBuffer || !_capBuffer->isValid(renderer));
+	bool recreateCapBuffer = showCap() && (!_capBuffer || !_capBuffer->isValid(renderer));
 
 	// Do we have to update the render primitives?
-	bool updateContents = _geometryCacheHelper.updateState(color_surface, color_cap, _smoothShading)
+	bool updateContents = _geometryCacheHelper.updateState(color_surface, color_cap, smoothShading())
 					|| recreateSurfaceBuffer || recreateCapBuffer || _trimeshUpdate;
 
 	// Re-create the render primitives if necessary.
@@ -178,12 +178,12 @@ void SurfaceMeshDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 	if(updateContents) {
 
 		// Assign smoothing group to faces to interpolate normals.
-		const quint32 smoothingGroup = _smoothShading ? 1 : 0;
+		const quint32 smoothingGroup = smoothShading() ? 1 : 0;
 		for(auto& face : _surfaceMesh.faces())
 			face.setSmoothingGroups(smoothingGroup);
 
 		_surfaceBuffer->setMesh(_surfaceMesh, color_surface);
-		if(_showCap)
+		if(showCap())
 			_capBuffer->setMesh(_capPolygonsMesh, color_cap);
 
 		// Reset update flag.
@@ -193,7 +193,7 @@ void SurfaceMeshDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 	// Handle picking of triangles.
 	renderer->beginPickObject(contextNode);
 	_surfaceBuffer->render(renderer);
-	if(_showCap)
+	if(showCap())
 		_capBuffer->render(renderer);
 	else
 		_capBuffer.reset();
@@ -203,8 +203,11 @@ void SurfaceMeshDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 /******************************************************************************
 * Generates the final triangle mesh, which will be rendered.
 ******************************************************************************/
-bool SurfaceMeshDisplay::buildSurfaceMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool reverseOrientation, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress)
+bool SurfaceMeshDisplay::buildSurfaceMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool reverseOrientation, const QVector<Plane3>& cuttingPlanes, TriMesh& output, PromiseBase* progress)
 {
+	if(cell.is2D())
+		throw Exception(tr("Cannot generate surface triangle mesh when simulation cell is two-dimensional."));
+
 	// Convert half-edge mesh to triangle mesh.
 	input.convertToTriMesh(output);
 
@@ -293,14 +296,14 @@ bool SurfaceMeshDisplay::splitFace(TriMesh& output, TriMeshFace& face, int oldVe
 	OVITO_ASSERT(z[2] - z[1] == -(z[1] - z[2]));
 	OVITO_ASSERT(z[0] - z[2] == -(z[2] - z[0]));
 
-	if(std::abs(zd[0]) < 0.5f && std::abs(zd[1]) < 0.5f && std::abs(zd[2]) < 0.5f)
+	if(std::abs(zd[0]) < FloatType(0.5) && std::abs(zd[1]) < FloatType(0.5) && std::abs(zd[2]) < FloatType(0.5))
 		return true;	// Face is not crossing the periodic boundary.
 
 	// Create four new vertices (or use existing ones created during splitting of adjacent faces).
 	int properEdge = -1;
 	int newVertexIndices[3][2];
 	for(int i = 0; i < 3; i++) {
-		if(std::abs(zd[i]) < 0.5f) {
+		if(std::abs(zd[i]) < FloatType(0.5)) {
 			if(properEdge != -1)
 				return false;		// The simulation box may be too small or invalid.
 			properEdge = i;
@@ -309,7 +312,7 @@ bool SurfaceMeshDisplay::splitFace(TriMesh& output, TriMeshFace& face, int oldVe
 		int vi1 = face.vertex(i);
 		int vi2 = face.vertex((i+1)%3);
 		int oi1, oi2;
-		if(zd[i] <= -0.5f) {
+		if(zd[i] <= FloatType(-0.5)) {
 			std::swap(vi1, vi2);
 			oi1 = 1; oi2 = 0;
 		}
@@ -323,7 +326,7 @@ bool SurfaceMeshDisplay::splitFace(TriMesh& output, TriMeshFace& face, int oldVe
 		}
 		else {
 			Vector3 delta = output.vertex(vi2) - output.vertex(vi1);
-			delta[dim] -= 1.0f;
+			delta[dim] -= FloatType(1);
 			for(size_t d = dim + 1; d < 3; d++) {
 				if(cell.pbcFlags()[d])
 					delta[d] -= floor(delta[d] + FloatType(0.5));
@@ -332,14 +335,14 @@ bool SurfaceMeshDisplay::splitFace(TriMesh& output, TriMeshFace& face, int oldVe
 			if(delta[dim] != 0)
 				t = output.vertex(vi1)[dim] / (-delta[dim]);
 			else
-				t = 0.5f;
+				t = FloatType(0.5);
 			OVITO_ASSERT(std::isfinite(t));
 			Point3 p = delta * t + output.vertex(vi1);
 			newVertexIndices[i][oi1] = oldVertexCount + (int)newVertices.size();
 			newVertexIndices[i][oi2] = oldVertexCount + (int)newVertices.size() + 1;
 			newVertexLookupMap.insert(std::make_pair(std::pair<int,int>(vi1, vi2), std::pair<int,int>(newVertexIndices[i][oi1], newVertexIndices[i][oi2])));
 			newVertices.push_back(p);
-			p[dim] += 1.0f;
+			p[dim] += FloatType(1);
 			newVertices.push_back(p);
 		}
 	}
@@ -361,7 +364,7 @@ bool SurfaceMeshDisplay::splitFace(TriMesh& output, TriMeshFace& face, int oldVe
 /******************************************************************************
 * Generates the triangle mesh for the PBC caps.
 ******************************************************************************/
-void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool isCompletelySolid, bool reverseOrientation, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress)
+void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool isCompletelySolid, bool reverseOrientation, const QVector<Plane3>& cuttingPlanes, TriMesh& output, PromiseBase* promise)
 {
 	// Convert vertex positions to reduced coordinates.
 	std::vector<Point3> reducedPos(input.vertexCount());
@@ -375,7 +378,7 @@ void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const Simulat
 	for(size_t dim = 0; dim < 3; dim++) {
 		if(cell.pbcFlags()[dim] == false) continue;
 
-		if(progress && progress->isCanceled())
+		if(promise && promise->isCanceled())
 			return;
 
 		// Make sure all vertices are located inside the periodic box.
@@ -395,6 +398,8 @@ void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const Simulat
 
 		// Find a first edge that crosses the boundary.
 		for(HalfEdgeMesh<>::Vertex* vert : input.vertices()) {
+			if(promise && promise->isCanceled())
+				return;
 			for(HalfEdgeMesh<>::Edge* edge = vert->edges(); edge != nullptr; edge = edge->nextVertexEdge()) {
 				// Skip faces that have already been visited.
 				if(edge->face()->testFlag(1)) continue;
@@ -403,6 +408,7 @@ void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const Simulat
 				const Point3& v2 = reducedPos[edge->vertex2()->index()];
 				if(v2[dim] - v1[dim] >= FloatType(0.5)) {
 					std::vector<Point2> contour = traceContour(edge, reducedPos, cell, dim);
+					if(contour.empty()) throw Exception(tr("Surface mesh is not a proper manifold."));
 					clipContour(contour, std::array<bool,2>{{ cell.pbcFlags()[(dim+1)%3], cell.pbcFlags()[(dim+2)%3] }}, openContours, closedContours);
 				}
 			}
@@ -417,9 +423,12 @@ void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const Simulat
 		CapPolygonTessellator tessellator(output, dim);
 		tessellator.beginPolygon();
 		for(const auto& contour : closedContours) {
+			if(promise && promise->isCanceled())
+				return;
 			tessellator.beginContour();
-			for(const Point2& p : contour)
+			for(const Point2& p : contour) {
 				tessellator.vertex(p);
+			}
 			tessellator.endContour();
 		}
 
@@ -427,20 +436,23 @@ void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const Simulat
 		if(!openContours.empty()) {
 			boost::dynamic_bitset<> visitedContours(openContours.size());
 			for(auto c1 = openContours.begin(); c1 != openContours.end(); ++c1) {
+				if(promise && promise->isCanceled())
+					return;
 				if(!visitedContours.test(c1 - openContours.begin())) {
 					tessellator.beginContour();
 					auto currentContour = c1;
 					do {
-						for(const Point2& p : *currentContour)
+						for(const Point2& p : *currentContour) {
 							tessellator.vertex(p);
+						}
 						visitedContours.set(currentContour - openContours.begin());
 
 						FloatType exitSide = 0;
 						if(currentContour->back().x() == 0) exitSide = currentContour->back().y();
-						else if(currentContour->back().y() == 1) exitSide = currentContour->back().x() + 1.0f;
-						else if(currentContour->back().x() == 1) exitSide = 3.0f - currentContour->back().y();
-						else if(currentContour->back().y() == 0) exitSide = 4.0f - currentContour->back().x();
-						if(exitSide >= 4.0f) exitSide = 0.0f;
+						else if(currentContour->back().y() == 1) exitSide = currentContour->back().x() + FloatType(1);
+						else if(currentContour->back().x() == 1) exitSide = FloatType(3) - currentContour->back().y();
+						else if(currentContour->back().y() == 0) exitSide = FloatType(4) - currentContour->back().x();
+						if(exitSide >= FloatType(4)) exitSide = 0;
 
 						// Find the next contour.
 						FloatType entrySide;
@@ -448,12 +460,12 @@ void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const Simulat
 						for(auto c = openContours.begin(); c != openContours.end(); ++c) {
 							FloatType pos = 0;
 							if(c->front().x() == 0) pos = c->front().y();
-							else if(c->front().y() == 1) pos = c->front().x() + 1.0f;
-							else if(c->front().x() == 1) pos = 3.0f - c->front().y();
-							else if(c->front().y() == 0) pos = 4.0f - c->front().x();
-							if(pos >= 4.0f) pos = 0.0f;
+							else if(c->front().y() == 1) pos = c->front().x() + FloatType(1);
+							else if(c->front().x() == 1) pos = FloatType(3) - c->front().y();
+							else if(c->front().y() == 0) pos = FloatType(4) - c->front().x();
+							if(pos >= FloatType(4)) pos = 0;
 							FloatType dist = exitSide - pos;
-							if(dist < 0.0f) dist += 4.0f;
+							if(dist < 0) dist += FloatType(4);
 							if(dist < closestDist) {
 								closestDist = dist;
 								currentContour = c;
@@ -505,7 +517,7 @@ void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const Simulat
 	}
 
 	// Check for early abortion.
-	if(progress && progress->isCanceled())
+	if(promise && promise->isCanceled())
 		return;
 
 	// Convert vertex positions back from reduced coordinates to absolute coordinates.
@@ -515,9 +527,8 @@ void SurfaceMeshDisplay::buildCapMesh(const HalfEdgeMesh<>& input, const Simulat
 
 	// Clip mesh at cutting planes.
 	for(const Plane3& plane : cuttingPlanes) {
-		if(progress && progress->isCanceled())
+		if(promise && promise->isCanceled())
 			return;
-
 		output.clipAtPlane(plane);
 	}
 }
@@ -532,6 +543,7 @@ std::vector<Point2> SurfaceMeshDisplay::traceContour(HalfEdgeMesh<>::Edge* first
 	std::vector<Point2> contour;
 	HalfEdgeMesh<>::Edge* edge = firstEdge;
 	do {
+		OVITO_ASSERT(edge->face() != nullptr);
 		OVITO_ASSERT(!edge->face()->testFlag(1));
 
 		// Mark face as visited.
@@ -541,9 +553,9 @@ std::vector<Point2> SurfaceMeshDisplay::traceContour(HalfEdgeMesh<>::Edge* first
 		const Point3& v1 = reducedPos[edge->vertex1()->index()];
 		const Point3& v2 = reducedPos[edge->vertex2()->index()];
 		Vector3 delta = v2 - v1;
-		OVITO_ASSERT(delta[dim] >= 0.5f);
+		OVITO_ASSERT(delta[dim] >= FloatType(0.5));
 
-		delta[dim] -= 1.0f;
+		delta[dim] -= FloatType(1);
 		if(cell.pbcFlags()[dim1]) {
 			FloatType& c = delta[dim1];
 			if(FloatType s = floor(c + FloatType(0.5)))
@@ -554,26 +566,43 @@ std::vector<Point2> SurfaceMeshDisplay::traceContour(HalfEdgeMesh<>::Edge* first
 			if(FloatType s = floor(c + FloatType(0.5)))
 				c -= s;
 		}
-		FloatType t;
-		if(std::abs(delta[dim]) > FloatType(1e-9f))
-			t = v1[dim] / delta[dim];
-		else
-			t = FloatType(0.5);
-		FloatType x = v1[dim1] - delta[dim1] * t;
-		FloatType y = v1[dim2] - delta[dim2] * t;
-		OVITO_ASSERT(std::isfinite(x) && std::isfinite(y));
-		contour.push_back({x,y});
+		if(std::abs(delta[dim]) > FloatType(1e-9f)) {
+			FloatType t = v1[dim] / delta[dim];
+			FloatType x = v1[dim1] - delta[dim1] * t;
+			FloatType y = v1[dim2] - delta[dim2] * t;
+			OVITO_ASSERT(std::isfinite(x) && std::isfinite(y));
+			if(contour.empty() || std::abs(x - contour.back().x()) > FLOATTYPE_EPSILON || std::abs(y - contour.back().y()) > FLOATTYPE_EPSILON) {
+				contour.push_back({x,y});
+			}
+		}
+		else {
+			FloatType x1 = v1[dim1];
+			FloatType y1 = v1[dim2];
+			FloatType x2 = v1[dim1] + delta[dim1];
+			FloatType y2 = v1[dim2] + delta[dim2];
+			if(contour.empty() || std::abs(x1 - contour.back().x()) > FLOATTYPE_EPSILON || std::abs(y1 - contour.back().y()) > FLOATTYPE_EPSILON) {
+				contour.push_back({x1,y1});
+			}
+			else if(contour.empty() || std::abs(x2 - contour.back().x()) > FLOATTYPE_EPSILON || std::abs(y2 - contour.back().y()) > FLOATTYPE_EPSILON) {
+				contour.push_back({x2,y2});
+			}
+		}
 
 		// Find the face edge that crosses the boundary in the reverse direction.
 		for(;;) {
 			edge = edge->nextFaceEdge();
 			const Point3& v1 = reducedPos[edge->vertex1()->index()];
 			const Point3& v2 = reducedPos[edge->vertex2()->index()];
-			if(v2[dim] - v1[dim] <= -0.5f)
+			if(v2[dim] - v1[dim] <= FloatType(-0.5))
 				break;
 		}
 
 		edge = edge->oppositeEdge();
+		if(!edge) {
+			// Mesh is not closed (not a proper manifold).
+			contour.clear();
+			break;
+		}
 	}
 	while(edge != firstEdge);
 
@@ -612,43 +641,50 @@ void SurfaceMeshDisplay::clipContour(std::vector<Point2>& input, std::array<bool
 		contours.back().push_back(*v1);
 
 		Vector2 delta = (*v2) - (*v1);
-		if(std::abs(delta.x()) < 0.5f && std::abs(delta.y()) < 0.5f)
+		if(std::abs(delta.x()) < FloatType(0.5) && std::abs(delta.y()) < FloatType(0.5))
 			continue;
 
-		FloatType t[2] = { 1.0f, 1.0f };
+		FloatType t[2] = { 2, 2 };
 		Vector2I crossDir(0, 0);
 		for(size_t dim = 0; dim < 2; dim++) {
 			if(pbcFlags[dim]) {
-				if(delta[dim] >= 0.5f) {
-					delta[dim] -= 1.0f;
+				if(delta[dim] >= FloatType(0.5)) {
+					delta[dim] -= FloatType(1);
 					if(std::abs(delta[dim]) > FLOATTYPE_EPSILON)
 						t[dim] = std::min((*v1)[dim] / -delta[dim], FloatType(1));
 					else
-						t[dim] = 0.5f;
+						t[dim] = FloatType(0.5);
 					crossDir[dim] = -1;
+					OVITO_ASSERT(t[dim] >= 0 && t[dim] <= 1);
 				}
-				else if(delta[dim] <= -0.5f) {
-					delta[dim] += 1.0f;
+				else if(delta[dim] <= FloatType(-0.5)) {
+					delta[dim] += FloatType(1);
 					if(std::abs(delta[dim]) > FLOATTYPE_EPSILON)
-						t[dim] = std::max((1.0f - (*v1)[dim]) / delta[dim], FloatType(0));
+						t[dim] = std::max((FloatType(1) - (*v1)[dim]) / delta[dim], FloatType(0));
 					else
-						t[dim] = 0.5f;
+						t[dim] = FloatType(0.5);
 					crossDir[dim] = +1;
+					OVITO_ASSERT(t[dim] >= 0 && t[dim] <= 1);
 				}
-				OVITO_ASSERT(t[dim] >= 0 && t[dim] <= 1);
 			}
 		}
 
 		Point2 base = *v1;
 		if(t[0] < t[1]) {
+			OVITO_ASSERT(t[0] <= 1);
 			computeContourIntersection(0, t[0], base, delta, crossDir[0], contours);
-			if(crossDir[1] != 0)
+			if(crossDir[1] != 0) {
+				OVITO_ASSERT(t[1] <= 1);
 				computeContourIntersection(1, t[1], base, delta, crossDir[1], contours);
+			}
 		}
 		else if(t[1] < t[0]) {
+			OVITO_ASSERT(t[1] <= 1);
 			computeContourIntersection(1, t[1], base, delta, crossDir[1], contours);
-			if(crossDir[0] != 0)
+			if(crossDir[0] != 0) {
+				OVITO_ASSERT(t[0] <= 1);
 				computeContourIntersection(0, t[0], base, delta, crossDir[0], contours);
+			}
 		}
 	}
 
@@ -659,7 +695,14 @@ void SurfaceMeshDisplay::clipContour(std::vector<Point2>& input, std::array<bool
 		auto& firstSegment = contours.front();
 		auto& lastSegment = contours.back();
 		firstSegment.insert(firstSegment.begin(), lastSegment.begin(), lastSegment.end());
-		openContours.insert(openContours.begin(), std::make_move_iterator(contours.begin()), std::make_move_iterator(contours.end() - 1));
+		contours.pop_back();
+		for(auto& contour : contours) {
+			bool isDegenerate = std::all_of(contour.begin(), contour.end(), [&contour](const Point2& p) { 
+				return p.equals(contour.front()); 
+			});
+			if(!isDegenerate)
+				openContours.push_back(std::move(contour));
+		}
 	}
 }
 
@@ -671,12 +714,12 @@ void SurfaceMeshDisplay::computeContourIntersection(size_t dim, FloatType t, Poi
 {
 	OVITO_ASSERT(std::isfinite(t));
 	Point2 intersection = base + t * delta;
-	intersection[dim] = (crossDir == -1) ? 0.0f : 1.0f;
+	intersection[dim] = (crossDir == -1) ? 0 : 1;
 	contours.back().push_back(intersection);
-	intersection[dim] = (crossDir == +1) ? 0.0f : 1.0f;
+	intersection[dim] = (crossDir == +1) ? 0 : 1;
 	contours.push_back({intersection});
 	base = intersection;
-	delta *= (1.0f - t);
+	delta *= (FloatType(1) - t);
 }
 
 /******************************************************************************
@@ -774,6 +817,7 @@ bool SurfaceMeshDisplay::isCornerInside3DRegion(const HalfEdgeMesh<>& mesh, cons
 	// Check if any edge is closer to the test point than the closest vertex.
 	for(HalfEdgeMesh<>::Vertex* v : mesh.vertices()) {
 		for(HalfEdgeMesh<>::Edge* edge = v->edges(); edge != nullptr; edge = edge->nextVertexEdge()) {
+			OVITO_ASSERT_MSG(edge->oppositeEdge() != nullptr, "SurfaceMeshDisplay::isCornerInside3DRegion", "Surface mesh is not fully closed. This should not happen.");
 			const Point3& p1 = reducedPos[edge->vertex1()->index()];
 			const Point3& p2 = reducedPos[edge->vertex2()->index()];
 			Vector3 edgeDir = p2 - p1;

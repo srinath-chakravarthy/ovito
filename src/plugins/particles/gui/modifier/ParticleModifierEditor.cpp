@@ -25,7 +25,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, ParticleModifierEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(ParticleModifierEditor, PropertiesEditor);
 
 /******************************************************************************
 * This method is called when a reference target changes.

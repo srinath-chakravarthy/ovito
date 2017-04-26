@@ -22,21 +22,23 @@
 #include <plugins/particles/Particles.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/scene/pipeline/PipelineObject.h>
+#include <core/scene/pipeline/PipelineEvalRequest.h>
+#include <core/utilities/concurrent/TaskManager.h>
 #include "FreezePropertyModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Properties)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, FreezePropertyModifier, ParticleModifier);
-DEFINE_PROPERTY_FIELD(FreezePropertyModifier, _sourceProperty, "SourceProperty");
-DEFINE_PROPERTY_FIELD(FreezePropertyModifier, _destinationProperty, "DestinationProperty");
-DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(FreezePropertyModifier, _cachedDisplayObjects, "CachedDisplayObjects", DisplayObject, PROPERTY_FIELD_NEVER_CLONE_TARGET|PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_NO_UNDO|PROPERTY_FIELD_NO_SUB_ANIM);
-SET_PROPERTY_FIELD_LABEL(FreezePropertyModifier, _sourceProperty, "Property");
-SET_PROPERTY_FIELD_LABEL(FreezePropertyModifier, _destinationProperty, "Destination property");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(FreezePropertyModifier, ParticleModifier);
+DEFINE_PROPERTY_FIELD(FreezePropertyModifier, sourceProperty, "SourceProperty");
+DEFINE_PROPERTY_FIELD(FreezePropertyModifier, destinationProperty, "DestinationProperty");
+DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(FreezePropertyModifier, cachedDisplayObjects, "CachedDisplayObjects", DisplayObject, PROPERTY_FIELD_NEVER_CLONE_TARGET|PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_NO_UNDO|PROPERTY_FIELD_NO_SUB_ANIM);
+SET_PROPERTY_FIELD_LABEL(FreezePropertyModifier, sourceProperty, "Property");
+SET_PROPERTY_FIELD_LABEL(FreezePropertyModifier, destinationProperty, "Destination property");
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)
-	IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, SavedParticleProperty, RefTarget);
-	DEFINE_REFERENCE_FIELD(SavedParticleProperty, _property, "Property", ParticlePropertyObject);
-	DEFINE_REFERENCE_FIELD(SavedParticleProperty, _identifiers, "Identifiers", ParticlePropertyObject);
+	IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SavedParticleProperty, RefTarget);
+	DEFINE_REFERENCE_FIELD(SavedParticleProperty, property, "Property", ParticlePropertyObject);
+	DEFINE_REFERENCE_FIELD(SavedParticleProperty, identifiers, "Identifiers", ParticlePropertyObject);
 OVITO_END_INLINE_NAMESPACE
 
 /******************************************************************************
@@ -44,9 +46,9 @@ OVITO_END_INLINE_NAMESPACE
 ******************************************************************************/
 FreezePropertyModifier::FreezePropertyModifier(DataSet* dataset) : ParticleModifier(dataset)
 {
-	INIT_PROPERTY_FIELD(FreezePropertyModifier::_sourceProperty);
-	INIT_PROPERTY_FIELD(FreezePropertyModifier::_destinationProperty);
-	INIT_PROPERTY_FIELD(FreezePropertyModifier::_cachedDisplayObjects);
+	INIT_PROPERTY_FIELD(sourceProperty);
+	INIT_PROPERTY_FIELD(destinationProperty);
+	INIT_PROPERTY_FIELD(cachedDisplayObjects);
 }
 
 /******************************************************************************
@@ -177,7 +179,8 @@ void FreezePropertyModifier::initializeModifier(PipelineObject* pipeline, Modifi
 }
 
 /******************************************************************************
-* Takes a snapshot of the source property for a specific ModifierApplication.
+* Takes a snapshot of the source property for a specific ModifierApplication
+* of this modifier.
 ******************************************************************************/
 void FreezePropertyModifier::takePropertySnapshot(ModifierApplication* modApp, const PipelineFlowState& state)
 {
@@ -196,19 +199,27 @@ void FreezePropertyModifier::takePropertySnapshot(ModifierApplication* modApp, c
 }
 
 /******************************************************************************
-* Takes a snapshot of the source property for all ModifierApplications.
+* Takes a snapshot of the source property for every ModifierApplication of 
+* this modifier.
 ******************************************************************************/
-void FreezePropertyModifier::takePropertySnapshot(TimePoint time, bool waitUntilReady)
+bool FreezePropertyModifier::takePropertySnapshot(TimePoint time, TaskManager& taskManager, bool waitUntilReady)
 {
 	for(ModifierApplication* modApp : modifierApplications()) {
 		if(PipelineObject* pipelineObj = modApp->pipelineObject()) {
+			PipelineFlowState state;
 			if(waitUntilReady) {
-				pipelineObj->waitUntilReady(time, tr("Waiting for pipeline evaluation to complete."));
+				Future<PipelineFlowState> stateFuture = pipelineObj->evaluateAsync(PipelineEvalRequest(time, false, modApp, false));
+				if(!taskManager.waitForTask(stateFuture))
+					return false;
+				state = stateFuture.result();
 			}
-			PipelineFlowState state = pipelineObj->evaluatePipeline(time, modApp, false);
+			else {
+				state = pipelineObj->evaluateImmediately(PipelineEvalRequest(time, false, modApp, false));
+			}
 			takePropertySnapshot(modApp, state);
 		}
 	}
+	return true;
 }
 
 OVITO_BEGIN_INLINE_NAMESPACE(Internal)

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_DATASET_CONTAINER_H
-#define __OVITO_DATASET_CONTAINER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/concurrent/TaskManager.h>
@@ -45,31 +45,12 @@ public:
 		clearAllReferences();
 	}
 
-	/// \brief Returns the current dataset being edited by the user.
-	/// \return The active dataset.
-	DataSet* currentSet() const { return _currentSet; }
-	
-	/// \brief Sets the current dataset being edited by the user.
-	/// \param set The dataset that should be shown in the main window.
-	void setCurrentSet(DataSet* set) { _currentSet = set; }
-
 	/// \brief Returns the manager of background tasks.
 	/// \return Reference to the task manager, which is part of this dataset manager.
 	///
 	/// Use the task manager to start and control background jobs.
 	TaskManager& taskManager() { return _taskManager; }
-
-	/// \brief This function blocks execution until some operation has been completed.
-	///        The function displays a progress dialog to block access to the application main window.
-	///        The dialog allows the user to cancel the operation.
-	/// \param callback This callback function will be polled to check whether the operation has finished.
-	///                 The callback function should return true to indicate that the operation has finished.
-	/// \param message The text to be shown to the user while waiting.
-	/// \param progressDisplay The progress display/dialog to be used for showing the message.
-	///                       If NULL, the function will create and show its own progress dialog box.
-	/// \return true on success; false if the operation has been canceled by the user.
-	virtual bool waitUntil(const std::function<bool()>& callback, const QString& message, AbstractProgressDisplay* progressDisplay = nullptr);
-
+	
 Q_SIGNALS:
 
 	/// Is emitted when a another dataset has become the active dataset.
@@ -138,7 +119,7 @@ protected Q_SLOTS:
 private:
 
 	/// The current dataset being edited by the user.
-    ReferenceField<DataSet> _currentSet;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(DataSet, currentSet, setCurrentSet);
 
 	/// The list of running compute tasks.
 	TaskManager _taskManager;
@@ -156,11 +137,9 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_currentSet);
 };
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_DATASET_CONTAINER_H
+

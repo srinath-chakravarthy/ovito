@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_INFORMATION_APPLET_H
-#define __OVITO_PARTICLE_INFORMATION_APPLET_H
+#pragma once
+
 
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <gui/plugins/utility/UtilityApplet.h>
@@ -105,7 +105,7 @@ private:
 	ParticleInformationApplet* _applet;
 
 	/// The selected particles whose properties are being displayed.
-	std::deque<PickResult> _pickedParticles;
+	std::vector<PickResult> _pickedParticles;
 
 	friend class ParticleInformationApplet;
 };
@@ -115,4 +115,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTICLE_INFORMATION_APPLET_H
+

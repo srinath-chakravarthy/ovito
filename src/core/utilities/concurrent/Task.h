@@ -19,18 +19,17 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_TASK_H
-#define __OVITO_TASK_H
+#pragma once
+
 
 #include <core/Core.h>
-#include "FutureInterface.h"
 #include "Future.h"
 
 #include <QRunnable>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
 
-class AsynchronousTask : public FutureInterface<void>, public QRunnable
+class AsynchronousTask : public Promise<void>, public QRunnable
 {
 public:
 
@@ -51,20 +50,63 @@ private:
 
 	/// Implementation of FutureInterface.
 	virtual void tryToRunImmediately() override {
-		if(!this->reportStarted())
+		if(!this->setStarted())
 			return;
 		try {
 			perform();
 		}
 		catch(...) {
-			this->reportException();
+			this->setException();
 		}
-		this->reportFinished();
+		this->setFinished();
 	}
+};
+
+class OVITO_CORE_EXPORT SynchronousTask
+{
+public:
+
+	/// Constructor.
+	SynchronousTask(TaskManager& taskManager);
+
+	/// Destructor.
+	~SynchronousTask();
+
+	/// Returns whether the operation has been canceled by the user.
+	bool isCanceled() const;
+
+	/// Cancels the operation.
+	void cancel() { _promise->cancel(); }
+
+	/// Sets the status text to be displayed.
+	void setProgressText(const QString& text);
+
+	/// Return the current status text.
+	QString progressText() const { return _promise->progressText(); }
+
+	/// Returns the highest value represented by the progress bar.
+	int progressMaximum() const { return _promise->progressMaximum(); }
+
+	/// Sets the highest value represented by the progress bar.
+	void setProgressMaximum(int max) { _promise->setProgressMaximum(max); }
+
+	/// Returns the value displayed by the progress bar.
+	int progressValue() const { return _promise->progressValue(); }
+
+	/// Sets the value displayed by the progress bar.
+	void setProgressValue(int v);
+
+	/// Returns the internal promise managed by this object.
+	Promise<void>& promise() const { return *_promise.get(); }
+
+private:
+
+	PromisePtr<void> _promise;
+	TaskManager& _taskManager;
 };
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_TASK_H
+

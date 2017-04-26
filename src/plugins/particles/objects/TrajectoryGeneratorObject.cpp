@@ -23,32 +23,34 @@
 #include <core/animation/AnimationSettings.h>
 #include <core/scene/ObjectNode.h>
 #include <core/app/Application.h>
+#include <core/dataset/importexport/FileSource.h>
 #include <core/viewport/ViewportConfiguration.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/Task.h>
+#include <core/utilities/concurrent/TaskManager.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
 #include "TrajectoryGeneratorObject.h"
 
 namespace Ovito { namespace Particles {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, TrajectoryGeneratorObject, TrajectoryObject);
-DEFINE_FLAGS_REFERENCE_FIELD(TrajectoryGeneratorObject, _source, "ParticleSource", ObjectNode, PROPERTY_FIELD_NEVER_CLONE_TARGET | PROPERTY_FIELD_NO_SUB_ANIM);
-DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, _onlySelectedParticles, "OnlySelectedParticles");
-DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, _useCustomInterval, "UseCustomInterval");
-DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, _customIntervalStart, "CustomIntervalStart");
-DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, _customIntervalEnd, "CustomIntervalEnd");
-DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, _everyNthFrame, "EveryNthFrame");
-DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, _unwrapTrajectories, "UnwrapTrajectories");
-SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, _source, "Source");
-SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, _onlySelectedParticles, "Only selected particles");
-SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, _useCustomInterval, "Custom time interval");
-SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, _customIntervalStart, "Custom interval start");
-SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, _customIntervalEnd, "Custom interval end");
-SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, _everyNthFrame, "Every Nth frame");
-SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, _unwrapTrajectories, "Unwrap trajectories");
-SET_PROPERTY_FIELD_UNITS(TrajectoryGeneratorObject, _customIntervalStart, TimeParameterUnit);
-SET_PROPERTY_FIELD_UNITS(TrajectoryGeneratorObject, _customIntervalEnd, TimeParameterUnit);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TrajectoryGeneratorObject, _everyNthFrame, IntegerParameterUnit, 1);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(TrajectoryGeneratorObject, TrajectoryObject);
+DEFINE_FLAGS_REFERENCE_FIELD(TrajectoryGeneratorObject, source, "ParticleSource", ObjectNode, PROPERTY_FIELD_NEVER_CLONE_TARGET | PROPERTY_FIELD_NO_SUB_ANIM);
+DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, onlySelectedParticles, "OnlySelectedParticles");
+DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, useCustomInterval, "UseCustomInterval");
+DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, customIntervalStart, "CustomIntervalStart");
+DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, customIntervalEnd, "CustomIntervalEnd");
+DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, everyNthFrame, "EveryNthFrame");
+DEFINE_PROPERTY_FIELD(TrajectoryGeneratorObject, unwrapTrajectories, "UnwrapTrajectories");
+SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, source, "Source");
+SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, onlySelectedParticles, "Only selected particles");
+SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, useCustomInterval, "Custom time interval");
+SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, customIntervalStart, "Custom interval start");
+SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, customIntervalEnd, "Custom interval end");
+SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, everyNthFrame, "Every Nth frame");
+SET_PROPERTY_FIELD_LABEL(TrajectoryGeneratorObject, unwrapTrajectories, "Unwrap trajectories");
+SET_PROPERTY_FIELD_UNITS(TrajectoryGeneratorObject, customIntervalStart, TimeParameterUnit);
+SET_PROPERTY_FIELD_UNITS(TrajectoryGeneratorObject, customIntervalEnd, TimeParameterUnit);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TrajectoryGeneratorObject, everyNthFrame, IntegerParameterUnit, 1);
 
 /******************************************************************************
 * Default constructor.
@@ -59,33 +61,35 @@ TrajectoryGeneratorObject::TrajectoryGeneratorObject(DataSet* dataset) : Traject
 		_customIntervalEnd(dataset->animationSettings()->animationInterval().end()),
 		_everyNthFrame(1), _unwrapTrajectories(true)
 {
-	INIT_PROPERTY_FIELD(TrajectoryGeneratorObject::_source);
-	INIT_PROPERTY_FIELD(TrajectoryGeneratorObject::_onlySelectedParticles);
-	INIT_PROPERTY_FIELD(TrajectoryGeneratorObject::_useCustomInterval);
-	INIT_PROPERTY_FIELD(TrajectoryGeneratorObject::_customIntervalStart);
-	INIT_PROPERTY_FIELD(TrajectoryGeneratorObject::_customIntervalEnd);
-	INIT_PROPERTY_FIELD(TrajectoryGeneratorObject::_everyNthFrame);
-	INIT_PROPERTY_FIELD(TrajectoryGeneratorObject::_unwrapTrajectories);
+	INIT_PROPERTY_FIELD(source);
+	INIT_PROPERTY_FIELD(onlySelectedParticles);
+	INIT_PROPERTY_FIELD(useCustomInterval);
+	INIT_PROPERTY_FIELD(customIntervalStart);
+	INIT_PROPERTY_FIELD(customIntervalEnd);
+	INIT_PROPERTY_FIELD(everyNthFrame);
+	INIT_PROPERTY_FIELD(unwrapTrajectories);
 }
 
 /******************************************************************************
 * Updates the stored trajectories from the source particle object.
 ******************************************************************************/
-bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* progressDisplay)
+bool TrajectoryGeneratorObject::generateTrajectories(TaskManager& taskManager)
 {
 	// Suspend viewports while loading simulation frames.
 	ViewportSuspender noVPUpdates(this);
+
+	SynchronousTask trajectoryTask(taskManager);
 
 	TimePoint currentTime = dataset()->animationSettings()->time();
 
 	// Get input particles.
 	if(!source())
 		throwException(tr("No input particle data object is selected from which trajectory lines can be generated."));
-
-	if(!source()->waitUntilReady(currentTime, tr("Waiting for input particles to become ready."), progressDisplay))
+	Future<PipelineFlowState> stateFuture = source()->evaluatePipelineAsync(PipelineEvalRequest(currentTime, false));
+	if(!taskManager.waitForTask(stateFuture))
 		return false;
 
-	const PipelineFlowState& state = source()->evalPipeline(currentTime);
+	const PipelineFlowState& state = stateFuture.result();
 	ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
 	ParticlePropertyObject* selectionProperty = ParticlePropertyObject::findInState(state, ParticleProperty::SelectionProperty);
 	ParticlePropertyObject* identifierProperty = ParticlePropertyObject::findInState(state, ParticleProperty::IdentifierProperty);
@@ -126,23 +130,34 @@ bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* pr
 		}
 	}
 
-	// Iterate over the simulation frames.
-	TimeInterval interval = useCustomInterval() ? customInterval() : dataset()->animationSettings()->animationInterval();
+	// Determine time interval over which trajectories should be generated.
+	TimeInterval interval;
+	if(useCustomInterval())
+		interval = customInterval();
+	else if(FileSource* fs = dynamic_object_cast<FileSource>(source()->sourceObject()))
+		interval = TimeInterval(0, dataset()->animationSettings()->frameToTime(fs->numberOfFrames() - 1));
+	else 
+		interval = dataset()->animationSettings()->animationInterval();
+
+	// Generate list of simulation frames at which particle positions should be sampled.
 	QVector<TimePoint> sampleTimes;
 	for(TimePoint time = interval.start(); time <= interval.end(); time += everyNthFrame() * dataset()->animationSettings()->ticksPerFrame()) {
 		sampleTimes.push_back(time);
 	}
-	if(progressDisplay) {
-		progressDisplay->setMaximum(sampleTimes.size());
-		progressDisplay->setValue(0);
-	}
+	trajectoryTask.setProgressMaximum(sampleTimes.size());
+	trajectoryTask.setProgressValue(0);
 
+	// Sample particle positions to generate trajectory points.
 	QVector<Point3> points;
 	points.reserve(particleCount * sampleTimes.size());
 	for(TimePoint time : sampleTimes) {
-		if(!source()->waitUntilReady(time, tr("Loading frame %1.").arg(dataset()->animationSettings()->timeToFrame(time)), progressDisplay))
+		trajectoryTask.setProgressText(tr("Loading frame %1").arg(dataset()->animationSettings()->timeToFrame(time)));
+
+		Future<PipelineFlowState> stateFuture = source()->evaluatePipelineAsync(PipelineEvalRequest(time, false));
+		if(!taskManager.waitForTask(stateFuture))
 			return false;
-		const PipelineFlowState& state = source()->evalPipeline(time);
+	
+		const PipelineFlowState& state = stateFuture.result();
 		ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(state, ParticleProperty::PositionProperty);
 		if(!posProperty)
 			throwException(tr("Input particle set is empty at frame %1.").arg(dataset()->animationSettings()->timeToFrame(time)));
@@ -192,19 +207,18 @@ bool TrajectoryGeneratorObject::generateTrajectories(AbstractProgressDisplay* pr
 			}
 		}
 
-		if(progressDisplay) {
-			progressDisplay->setValue(progressDisplay->value() + 1);
-			if(progressDisplay->wasCanceled()) return false;
-		}
+		trajectoryTask.setProgressValue(trajectoryTask.progressValue() + 1);
+		if(trajectoryTask.isCanceled()) 
+			return false;
 	}
 
+	// Store generated trajectory lines.
 	setTrajectories(particleCount, points, sampleTimes);
 
-	// Jump back to current animation time.
-	if(!source()->waitUntilReady(currentTime, tr("Going back to original frame."), progressDisplay))
-		return false;
+	// Jump back to original animation time.
+	source()->evaluatePipelineImmediately(PipelineEvalRequest(currentTime, true));
 
-	return true;
+	return !trajectoryTask.isCanceled();
 }
 
 }	// End of namespace

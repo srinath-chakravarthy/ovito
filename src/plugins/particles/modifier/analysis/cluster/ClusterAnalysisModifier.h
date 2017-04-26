@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CLUSTER_ANALYSIS_MODIFIER_H
-#define __OVITO_CLUSTER_ANALYSIS_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/ParticleProperty.h>
@@ -38,24 +38,6 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE ClusterAnalysisModifier(DataSet* dataset);
-
-	/// Returns the cutoff radius used to build the neighbor lists for the analysis.
-	FloatType cutoff() const { return _cutoff; }
-
-	/// \brief Sets the cutoff radius used to build the neighbor lists for the analysis.
-	void setCutoff(FloatType newCutoff) { _cutoff = newCutoff; }
-
-	/// Returns whether analysis takes only selected particles into account.
-	bool onlySelectedParticles() const { return _onlySelectedParticles; }
-
-	/// Sets whether analysis only selected particles are taken into account.
-	void setOnlySelectedParticles(bool onlySelected) { _onlySelectedParticles = onlySelected; }
-
-	/// Returns whether cluster IDs are sorted by size.
-	bool sortBySize() const { return _sortBySize; }
-
-	/// Sets whether cluster IDs are sorted by size.
-	void setSortBySize(bool sort) { _sortBySize = sort; }
 
 	/// Returns the number of clusters found during the last successful evaluation of the modifier.
 	size_t clusterCount() const { return _numClusters; }
@@ -130,13 +112,13 @@ private:
 	QExplicitlySharedDataPointer<ParticleProperty> _particleClusters;
 
 	/// Controls the cutoff radius for the neighbor lists.
-	PropertyField<FloatType> _cutoff;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, cutoff, setCutoff);
 
 	/// Controls whether analysis should take into account only selected particles.
-	PropertyField<bool> _onlySelectedParticles;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, onlySelectedParticles, setOnlySelectedParticles);
 
 	/// Controls the sorting of cluster IDs by size.
-	PropertyField<bool> _sortBySize;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, sortBySize, setSortBySize);
 
 	/// The number of clusters identified during the last evaluation of the modifier.
 	size_t _numClusters;
@@ -144,17 +126,11 @@ private:
 	/// The size of the largest cluster.
 	size_t _largestClusterSize;
 
-private:
-
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Cluster analysis");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
-
-	DECLARE_PROPERTY_FIELD(_cutoff);
-	DECLARE_PROPERTY_FIELD(_onlySelectedParticles);
-	DECLARE_PROPERTY_FIELD(_sortBySize);
 };
 
 OVITO_END_INLINE_NAMESPACE
@@ -162,4 +138,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CLUSTER_ANALYSIS_MODIFIER_H
+

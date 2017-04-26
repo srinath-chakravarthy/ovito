@@ -19,13 +19,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PYTHON_VIEWPORT_OVERLAY_EDITOR_H
-#define __OVITO_PYTHON_VIEWPORT_OVERLAY_EDITOR_H
+#pragma once
+
 
 #include <plugins/pyscript/PyScript.h>
 #include <gui/properties/PropertiesEditor.h>
-
-class QsciScintilla;
 
 namespace PyScript { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
@@ -55,13 +53,13 @@ protected Q_SLOTS:
 	/// event or if a new object has been loaded into editor.
 	void onContentsChanged(RefTarget* editObject);
 
-	/// Is called when the user presses the 'Apply' button to commit the Python script.
-	void onApplyChanges();
+	/// Is called when the user presses the 'Edit script' button.
+	void onOpenEditor();
 
 private:
 
-	QsciScintilla* _codeEditor;
-	QsciScintilla* _errorDisplay;
+	QPushButton* _editScriptButton;
+	QTextEdit* _outputDisplay;
 
 	Q_OBJECT
 	OVITO_OBJECT
@@ -70,4 +68,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_PYTHON_VIEWPORT_OVERLAY_EDITOR_H
+

@@ -26,10 +26,10 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, CentroSymmetryModifier, AsynchronousParticleModifier);
-DEFINE_FLAGS_PROPERTY_FIELD(CentroSymmetryModifier, _numNeighbors, "NumNeighbors", PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(CentroSymmetryModifier, _numNeighbors, "Number of neighbors");
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(CentroSymmetryModifier, _numNeighbors, IntegerParameterUnit, 2, CentroSymmetryModifier::MAX_CSP_NEIGHBORS);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CentroSymmetryModifier, AsynchronousParticleModifier);
+DEFINE_FLAGS_PROPERTY_FIELD(CentroSymmetryModifier, numNeighbors, "NumNeighbors", PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(CentroSymmetryModifier, numNeighbors, "Number of neighbors");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(CentroSymmetryModifier, numNeighbors, IntegerParameterUnit, 2, CentroSymmetryModifier::MAX_CSP_NEIGHBORS);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -37,7 +37,7 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(CentroSymmetryModifier, _numNeighbors, Intege
 CentroSymmetryModifier::CentroSymmetryModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
 	_numNeighbors(12)
 {
-	INIT_PROPERTY_FIELD(CentroSymmetryModifier::_numNeighbors);
+	INIT_PROPERTY_FIELD(numNeighbors);
 }
 
 /******************************************************************************
@@ -68,7 +68,7 @@ void CentroSymmetryModifier::CentroSymmetryEngine::perform()
 
 	// Prepare the neighbor list.
 	NearestNeighborFinder neighFinder(_nneighbors);
-	if(!neighFinder.prepare(positions(), cell(), nullptr, this)) {
+	if(!neighFinder.prepare(positions(), cell(), nullptr, *this)) {
 		return;
 	}
 
@@ -88,7 +88,7 @@ FloatType CentroSymmetryModifier::computeCSP(NearestNeighborFinder& neighFinder,
 {
 	// Find k nearest neighbor of current atom.
 	NearestNeighborFinder::Query<MAX_CSP_NEIGHBORS> neighQuery(neighFinder);
-	neighQuery.findNeighbors(neighFinder.particlePos(particleIndex));
+	neighQuery.findNeighbors(particleIndex);
 
 	int numNN = neighQuery.results().size();
 
@@ -140,7 +140,7 @@ void CentroSymmetryModifier::propertyChanged(const PropertyFieldDescriptor& fiel
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Recompute brightness values when the parameters have been changed.
-	if(field == PROPERTY_FIELD(CentroSymmetryModifier::_numNeighbors))
+	if(field == PROPERTY_FIELD(numNeighbors))
 		invalidateCachedResults();
 }
 

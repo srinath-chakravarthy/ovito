@@ -25,7 +25,7 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
 
 // Gives the class run-time type information.
-IMPLEMENT_OVITO_OBJECT(Gui, FilenameParameterUI, PropertyParameterUI);
+IMPLEMENT_OVITO_OBJECT(FilenameParameterUI, PropertyParameterUI);
 
 /******************************************************************************
 * Constructor for a Qt property.

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_IMD_FILE_IMPORTER_H
-#define __OVITO_IMD_FILE_IMPORTER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/import/ParticleImporter.h>
@@ -82,4 +82,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_IMD_FILE_IMPORTER_H
+

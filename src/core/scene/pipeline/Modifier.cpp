@@ -23,23 +23,26 @@
 #include <core/scene/pipeline/Modifier.h>
 #include <core/scene/pipeline/ModifierApplication.h>
 #include <core/scene/pipeline/PipelineObject.h>
+#include <core/scene/pipeline/PipelineEvalRequest.h>
 #include <core/animation/AnimationSettings.h>
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, Modifier, RefTarget);
-DEFINE_PROPERTY_FIELD(Modifier, _isEnabled, "IsEnabled");
-SET_PROPERTY_FIELD_LABEL(Modifier, _isEnabled, "Enabled");
-DEFINE_PROPERTY_FIELD(Modifier, _title, "Name");
-SET_PROPERTY_FIELD_LABEL(Modifier, _title, "Name");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Modifier, RefTarget);
+DEFINE_PROPERTY_FIELD(Modifier, isEnabled, "IsEnabled");
+SET_PROPERTY_FIELD_LABEL(Modifier, isEnabled, "Enabled");
+SET_PROPERTY_FIELD_CHANGE_EVENT(Modifier, isEnabled, ReferenceEvent::TargetEnabledOrDisabled);
+DEFINE_PROPERTY_FIELD(Modifier, title, "Name");
+SET_PROPERTY_FIELD_LABEL(Modifier, title, "Name");
+SET_PROPERTY_FIELD_CHANGE_EVENT(Modifier, title, ReferenceEvent::TitleChanged);
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
 Modifier::Modifier(DataSet* dataset) : RefTarget(dataset), _isEnabled(true)
 {
-	INIT_PROPERTY_FIELD(Modifier::_isEnabled);
-	INIT_PROPERTY_FIELD(Modifier::_title);
+	INIT_PROPERTY_FIELD(isEnabled);
+	INIT_PROPERTY_FIELD(title);
 }
 
 /******************************************************************************
@@ -62,15 +65,14 @@ QVector<ModifierApplication*> Modifier::modifierApplications() const
 * Note: This method might return empty result objects in some cases when the modifier stack
 * cannot be evaluated because of an invalid modifier.
 ******************************************************************************/
-QVector<QPair<ModifierApplication*, PipelineFlowState>> Modifier::getModifierInputs() const
+QVector<QPair<ModifierApplication*, PipelineFlowState>> Modifier::getModifierInputs(TimePoint time) const
 {
-	TimePoint time = dataset()->animationSettings()->time();
 	QVector<QPair<ModifierApplication*, PipelineFlowState>> results;
 	for(RefMaker* dependent : dependents()) {
         ModifierApplication* modApp = dynamic_object_cast<ModifierApplication>(dependent);
 		if(modApp != nullptr && modApp->modifier() == this) {
 			if(PipelineObject* pipelineObj = modApp->pipelineObject())
-				results.push_back(qMakePair(modApp, pipelineObj->evaluatePipeline(time, modApp, false)));
+				results.push_back(qMakePair(modApp, pipelineObj->evaluateImmediately(PipelineEvalRequest(time, false, modApp, false))));
 		}
 	}
 
@@ -84,9 +86,10 @@ QVector<QPair<ModifierApplication*, PipelineFlowState>> Modifier::getModifierInp
 ******************************************************************************/
 PipelineFlowState Modifier::getModifierInput(ModifierApplication* modApp) const
 {
+	TimePoint time = dataset()->animationSettings()->time();
 	if(modApp != nullptr && modApp->modifier() == this) {
 		if(PipelineObject* pipelineObj = modApp->pipelineObject()) {
-			return pipelineObj->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+			return pipelineObj->evaluateImmediately(PipelineEvalRequest(time, false, modApp, false));
 		}
 	}
 	else {
@@ -94,7 +97,7 @@ PipelineFlowState Modifier::getModifierInput(ModifierApplication* modApp) const
 			ModifierApplication* modApp = dynamic_object_cast<ModifierApplication>(dependent);
 			if(modApp != nullptr && modApp->modifier() == this) {
 				if(PipelineObject* pipelineObj = modApp->pipelineObject()) {
-					return pipelineObj->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+					return pipelineObj->evaluateImmediately(PipelineEvalRequest(time, false, modApp, false));
 				}
 			}
 		}

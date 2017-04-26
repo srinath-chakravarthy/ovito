@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_LAMMPS_BINARY_DUMP_IMPORTER_H
-#define __OVITO_LAMMPS_BINARY_DUMP_IMPORTER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/import/InputColumnMapping.h>
@@ -113,7 +113,7 @@ protected:
 	virtual OORef<RefTarget> clone(bool deepCopy, CloneHelper& cloneHelper) override;
 
 	/// \brief Scans the given input file to find all contained simulation frames.
-	virtual void scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream) override;
+	virtual void scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream) override;
 
 private:
 
@@ -130,4 +130,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_LAMMPS_BINARY_DUMP_IMPORTER_H
+

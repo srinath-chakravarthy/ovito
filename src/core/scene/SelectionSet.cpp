@@ -24,16 +24,16 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, SelectionSet, RefTarget);
-DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(SelectionSet, _selection, "SelectedNodes", SceneNode, PROPERTY_FIELD_NEVER_CLONE_TARGET);
-SET_PROPERTY_FIELD_LABEL(SelectionSet, _selection, "Nodes");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SelectionSet, RefTarget);
+DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(SelectionSet, selection, "SelectedNodes", SceneNode, PROPERTY_FIELD_NEVER_CLONE_TARGET);
+SET_PROPERTY_FIELD_LABEL(SelectionSet, selection, "Nodes");
 
 /******************************************************************************
 * Default constructor.
 ******************************************************************************/
 SelectionSet::SelectionSet(DataSet* dataset) : RefTarget(dataset), _selectionChangeInProgress(false)
 {
-	INIT_PROPERTY_FIELD(SelectionSet::_selection);
+	INIT_PROPERTY_FIELD(selection);
 }
 
 /******************************************************************************
@@ -120,7 +120,7 @@ bool SelectionSet::referenceEvent(RefTarget* source, ReferenceEvent* event)
 ******************************************************************************/
 void SelectionSet::referenceInserted(const PropertyFieldDescriptor& field, RefTarget* newTarget, int listIndex)
 {
-	if(field == PROPERTY_FIELD(SelectionSet::_selection)) {
+	if(field == PROPERTY_FIELD(selection)) {
 		Q_EMIT selectionChanged(this);
 		if(!_selectionChangeInProgress) {
 			_selectionChangeInProgress = true;
@@ -135,7 +135,7 @@ void SelectionSet::referenceInserted(const PropertyFieldDescriptor& field, RefTa
 ******************************************************************************/
 void SelectionSet::referenceRemoved(const PropertyFieldDescriptor& field, RefTarget* oldTarget, int listIndex)
 {
-	if(field == PROPERTY_FIELD(SelectionSet::_selection)) {
+	if(field == PROPERTY_FIELD(selection)) {
 		Q_EMIT selectionChanged(this);
 		if(!_selectionChangeInProgress) {
 			_selectionChangeInProgress = true;

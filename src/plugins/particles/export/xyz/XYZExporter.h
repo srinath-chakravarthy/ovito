@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_XYZ_FILE_EXPORTER_H
-#define __OVITO_XYZ_FILE_EXPORTER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include "../FileColumnParticleExporter.h"
@@ -45,7 +45,7 @@ public:
 
 	/// \brief Constructs a new instance of this class.
 	Q_INVOKABLE XYZExporter(DataSet* dataset) : FileColumnParticleExporter(dataset), _subFormat(ExtendedFormat) {
-		INIT_PROPERTY_FIELD(XYZExporter::_subFormat);
+		INIT_PROPERTY_FIELD(subFormat);
 	}
 
 	/// \brief Returns the file filter that specifies the files that can be exported by this service.
@@ -54,26 +54,18 @@ public:
 	/// \brief Returns the filter description that is displayed in the drop-down box of the file dialog.
 	virtual QString fileFilterDescription() override { return tr("XYZ File"); }
 
-	/// Returns the format variant being written by this XYZ file exporter.
-	XYZSubFormat subFormat() const { return _subFormat; }
-
-	/// Sets the kind of XYZ file to write.
-	void setSubFormat(XYZSubFormat subFormat) { _subFormat = subFormat; }
-
 protected:
 
 	/// \brief Writes the particles of one animation frame to the current output file.
-	virtual bool exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) override;
+	virtual bool exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager) override;
 
 private:
 
 	/// Selects the kind of XYZ file to write.
-	PropertyField<XYZSubFormat, int> _subFormat;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(XYZSubFormat, subFormat, setSubFormat);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_subFormat);
 };
 
 OVITO_END_INLINE_NAMESPACE
@@ -84,4 +76,4 @@ OVITO_END_INLINE_NAMESPACE
 Q_DECLARE_METATYPE(Ovito::Particles::XYZExporter::XYZSubFormat);
 Q_DECLARE_TYPEINFO(Ovito::Particles::XYZExporter::XYZSubFormat, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_XYZ_FILE_EXPORTER_H
+

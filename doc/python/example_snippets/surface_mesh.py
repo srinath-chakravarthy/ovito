@@ -1,3 +1,6 @@
+import sys
+if "ovito.modifiers.crystalanalysis" not in sys.modules: sys.exit()
+
 from ovito.io import import_file
 from ovito.modifiers import ConstructSurfaceModifier
 

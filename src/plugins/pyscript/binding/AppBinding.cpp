@@ -30,19 +30,16 @@
 #include <core/animation/AnimationSettings.h>
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/rendering/RenderSettings.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/TaskManager.h>
 #include "PythonBinding.h"
 
 namespace PyScript {
 
 using namespace Ovito;
 
-PYBIND11_PLUGIN(PyScriptApp)
+void defineAppSubmodule(py::module parentModule)
 {
-	py::options options;
-	options.disable_function_signatures();
-
-	py::module m("PyScriptApp");
+	py::module m = parentModule.def_submodule("App");
 
 	py::class_<OvitoObject, OORef<OvitoObject>>(m, "OvitoObject")
 		.def("__str__", [](py::object& pyobj) {
@@ -62,7 +59,7 @@ PYBIND11_PLUGIN(PyScriptApp)
 	;
 
 	ovito_abstract_class<RefMaker, OvitoObject>{m}
-		.def_property_readonly("dataset", &RefMaker::dataset)
+		.def_property_readonly("dataset", py::cpp_function(&RefMaker::dataset, py::return_value_policy::reference))
 	;
 
 	ovito_abstract_class<RefTarget, RefMaker>{m}
@@ -75,7 +72,10 @@ PYBIND11_PLUGIN(PyScriptApp)
 		.def_property_readonly("object_title", &RefTarget::objectTitle)
 	;
 
-	ovito_abstract_class<DataSet, RefTarget>(m,
+	// Note that, for DataSet, we are not using OORef<> as holder type like we normally do for other OvitoObject-derived classes, because
+	// we don't want a ScriptEngine to hold a counted reference to a DataSet that it belongs to.
+	// This would create a cyclic reference and potentially lead to a memory leak.
+	py::class_<DataSet>(m, "DataSet",
 			"A container object holding all data associated with an OVITO program session. "
 			"It provides access to the scene data, the viewports, the current selection, and the animation settings. "
 			"Basically everything that would get saved in an OVITO state file. "
@@ -101,14 +101,14 @@ PYBIND11_PLUGIN(PyScriptApp)
 		.def_property_readonly("selection", &DataSet::selection)
 		// This is needed by Viewport.render():
 		.def("render_scene", &DataSet::renderScene)
-		//.def_property_readonly("container", &DataSet::container)
+		.def_property_readonly("container", &DataSet::container, py::return_value_policy::reference)
 		//.def("clearScene", &DataSet::clearScene)
 		//.def("rescaleTime", &DataSet::rescaleTime)
 		//.def("waitUntilSceneIsReady", &DataSet::waitUntilSceneIsReady)
 		//.def_property("filePath", &DataSet::filePath, &DataSet::setFilePath)
 	;
 
-	ovito_abstract_class<DataSetContainer, RefMaker>{m}
+	py::class_<DataSetContainer>{m, "DataSetContainer"}
 		//.def_property("currentSet", &DataSetContainer::currentSet, &DataSetContainer::setCurrentSet)
 	;
 
@@ -117,21 +117,9 @@ PYBIND11_PLUGIN(PyScriptApp)
 		.def("clone", static_cast<OORef<RefTarget> (CloneHelper::*)(RefTarget*, bool)>(&CloneHelper::cloneObject<RefTarget>))
 	;
 
-	py::class_<AbstractProgressDisplay>(m, "AbstractProgressDisplay")
-		.def_property_readonly("canceled", &AbstractProgressDisplay::wasCanceled)
+	py::class_<TaskManager>(m, "TaskManager")
+		//.def_property_readonly("canceled", &AbstractProgressDisplay::wasCanceled)
 	;
-
-	// Let scripts access the current progress display.
-	m.def("get_progress_display", []() -> AbstractProgressDisplay* {
-		if(ScriptEngine::activeEngine())
-			return ScriptEngine::activeEngine()->progressDisplay();
-		else
-			return nullptr;
-	}, py::return_value_policy::reference);
-
-	return m.ptr();
 }
-
-OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScriptApp);
 
 };

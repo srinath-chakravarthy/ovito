@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::Exception class.
  */
 
-#ifndef __OVITO_EXCEPTION_H
-#define __OVITO_EXCEPTION_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -39,7 +39,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util)
  * \brief The standard exception type used by OVITO.
  *
  * The Exception class carries a message string that describes the error that has occurred.
- * The showError() method displays the error message to the user. A typical usage pattern is:
+ * The reportError() method displays the error message to the user. A typical usage pattern is:
  *
  * \code
  *     try {
@@ -48,7 +48,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util)
  *         ...
  *     }
  *     catch(const Exception& ex) {
- *         ex.showError();
+ *         ex.reportError();
  *     }
  * \endcode
  *
@@ -76,7 +76,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util)
  *     }
  *     catch(Exception& ex) {
  *         ex.prependGeneralMessage("The input file has an invalid format.");
- *         ex.showError();
+ *         ex.reportError();
  *     }
  * \endcode
  *
@@ -124,16 +124,18 @@ public:
 	const QStringList& messages() const { return _messages; }
 
 	/// Logs the error message(s) stored in this Exception object by printing them to the console.
-	///
-	/// Use this method instead of showError() if the error needs to be logged for debugging purposes
-	/// but has no direct relevance for the user.
+	/// No modal dialog box is shown in GUI mode. 
 	void logError() const;
 
 	/// Displays the error message(s) stored in the Exception object to the user.
 	///
-	/// In the graphical program mode, this method displays a message box.
-	/// In console mode, this method prints the error messages(s) to the console.
-	void showError() const;
+	/// In the graphical program mode, this method will display a modal message box.
+	/// In console mode, this method just prints the error messages(s) to the console.
+	///
+	/// Note that, unless 'blocking' is true, the reporting happens asynchronously in GUI mode. 
+	/// The method returns immediately and the error messaeg is displayed to the user at a later time, 
+	/// as soon as control returns to the event loop.
+	void reportError(bool blocking = false) const;
 
 	/// Returns a pointer to an object that provides the context for this exception or error.
 	QObject* context() const { return _context; }
@@ -150,15 +152,6 @@ public:
 	// Creates a copy of this exception object.
 	virtual Exception* clone() const override { return new Exception(*this); }
 
-public:
-
-	// Prototype for a handler function that takes care of displaying a caught exception to the user.
-	typedef void (*ExceptionHandler)(const Exception& exception);
-
-	// Installs a handler for caught exceptions, which is invoked by showError().
-	// \param handler The new handler routine. This handler is responsible for showing the error message to the user.
-	static void setExceptionHandler(ExceptionHandler handler) { exceptionHandler = handler; }
-
 private:
 
 	/// The message strings describing the exception.
@@ -167,12 +160,9 @@ private:
 
 	/// Pointer to an object that provides the context for this exception or error.
 	QPointer<QObject> _context;
-
-	/// The current exception handler for displaying error messages.
-	static ExceptionHandler exceptionHandler;
 };
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_EXCEPTION_H
+

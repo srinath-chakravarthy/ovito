@@ -19,13 +19,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CUTOFF_NEIGHBOR_FINDER_H
-#define __OVITO_CUTOFF_NEIGHBOR_FINDER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/ParticleProperty.h>
 #include <plugins/particles/data/SimulationCell.h>
-#include <core/utilities/concurrent/FutureInterface.h>
+#include <core/utilities/concurrent/Promise.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util)
 
@@ -76,11 +76,11 @@ public:
 	/// \param positions The ParticleProperty containing the particle coordinates.
 	/// \param simCell The input simulation cell geometry and boundary conditions.
 	/// \param selectionProperty Determines which particles are included in the neighbor search (optional).
-	/// \param progress An optional callback object that will be used to the report progress.
+	/// \param promis A callback object that will be used to the report progress.
 	/// \return \c false when the operation has been canceled by the user;s
 	///         \c true on success.
 	/// \throw Exception on error.
-	bool prepare(FloatType cutoffRadius, ParticleProperty* positions, const SimulationCell& simCell, ParticleProperty* selectionProperty = nullptr, FutureInterfaceBase* progress = nullptr);
+	bool prepare(FloatType cutoffRadius, ParticleProperty* positions, const SimulationCell& simCell, ParticleProperty* selectionProperty, PromiseBase& promise);
 
 	/// Returns the cutoff radius set via prepare().
 	FloatType cutoffRadius() const { return _cutoffRadius; }
@@ -89,7 +89,7 @@ public:
 	FloatType cutoffRadiusSquared() const { return _cutoffRadiusSquared; }
 
 	/// \brief An iterator class that returns all neighbors of a central particle.
-	class Query
+	class OVITO_PARTICLES_EXPORT Query
 	{
 	public:
 
@@ -177,4 +177,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CUTOFF_NEIGHBOR_FINDER_H
+

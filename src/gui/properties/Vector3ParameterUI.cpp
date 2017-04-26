@@ -27,7 +27,7 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
 
 // Gives the class run-time type information.
-IMPLEMENT_OVITO_OBJECT(Gui, Vector3ParameterUI, FloatParameterUI);
+IMPLEMENT_OVITO_OBJECT(Vector3ParameterUI, FloatParameterUI);
 
 /******************************************************************************
 * Constructor for a Qt property.
@@ -102,7 +102,7 @@ void Vector3ParameterUI::updatePropertyValue()
 			Q_EMIT valueEntered();
 		}
 		catch(const Exception& ex) {
-			ex.showError();
+			ex.reportError();
 		}
 	}
 }

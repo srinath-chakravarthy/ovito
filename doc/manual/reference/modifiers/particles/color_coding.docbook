@@ -12,25 +12,27 @@
 
   <para>
     <informalfigure><screenshot><mediaobject><imageobject>
-       <imagedata fileref="images/modifiers/color_coding_panel.png" format="PNG" />
+       <imagedata fileref="images/modifiers/color_coding_panel.png" format="PNG" scale="50" />
     </imageobject></mediaobject></screenshot></informalfigure>
   
-    This modifier colors particles, bonds, or vector arrows based on one of their properties. It can be used to visualize
-    per-particle or per-bond scalar quantities.
+    This modifier assigns colors to particles, bonds, or arrows based on one of their properties. 
+    It thus provides a simple method to visualize scalar per-particle or per-bond quantities.
   </para>
   
   <para>
-    The input property values are first mapped and clamped to the unit interval [0,1] according to the
+    The values of the selected input property are first mapped and clamped to the unit interval [0,1] according to the
     <emphasis>Start value</emphasis> and <emphasis>End value</emphasis>
-    parameters of the modifier. The normalized values are then mapped to a corresponding color using the selected 
-    color gradient map and assigned to the particles or bonds.
+    parameters of the modifier. The normalized values are then mapped to a color using the selected 
+    color gradient map and finally assigned to the particles or bonds.
   </para>
 
   <para>
     The <guibutton>Adjust range</guibutton> button resets the <emphasis>Start value</emphasis> and
-    <emphasis>End value</emphasis> parameters to the minimum and maximum values
-    of the selected input property. This ensures that no clamping occurs
-    when values are mapped to a color. The <guibutton>Reverse range</guibutton> button
+    <emphasis>End value</emphasis> parameters to the minimum and maximum value
+    of the selected input property, respectively. This ensures that no clamping occurs when property values are mapped to colors.
+    The <guibutton>Adjust range (all frames)</guibutton> button does the same but considers every frame
+    of the animation sequence when determining the range of values, not just the currently loaded frame.
+    The <guibutton>Reverse range</guibutton> button
     swaps the <emphasis>Start value</emphasis> and <emphasis>End
     value</emphasis> parameters to effectively reverse the color scale.
   </para>
@@ -77,29 +79,29 @@
       <varlistentry>
         <term>Property</term>
         <listitem>
-          <para>The input particle or bond property to be used for color mapping.</para>
+          <para>The input particle property or bond property to be used for color mapping.</para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
         <term>Color gradient</term>
         <listitem>
-          <para>The type of color map to use.</para>
+          <para>Selects the color gradient for mapping scalar values to colors.</para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
         <term>Start &amp; end value</term>
         <listitem>
-          <para>Controls the source range for the linear mapping of property values to the [0,1] unit interval.</para>
+          <para>Controls the value range for the linear mapping of input values to the [0,1] interval.</para>
         </listitem>
       </varlistentry>
       
       <varlistentry>
         <term>Color only selected particles/bonds</term>
         <listitem>
-          <para>This option restricts the assignment of colors to selected particles or bonds. 
-          The existing colors of unselected particles or bonds will be preserved.</para>
+          <para>This option restricts the assignment of colors to currently selected particles or bonds. 
+          The colors of unselected particles or bonds will remain unchanged.</para>
         </listitem>
       </varlistentry>
 
@@ -107,9 +109,9 @@
         <term>Keep selection</term>
         <listitem>
           <para>OVITO uses a red color by default to highlight selected particles in the interactive viewports.
-  Since this highlighting would mask the actual color assigned by this
+  Since this highlighting would mask the actual colors assigned by this
   modifier, the modifier clears the current selection by default. 
-  If you need to preserve the current selection for further use down the pipeline, activate this option.</para>
+  If you want to preserve the selection, because you want to use it further down the data pipeline, activate this option.</para>
         </listitem>
       </varlistentry>
 

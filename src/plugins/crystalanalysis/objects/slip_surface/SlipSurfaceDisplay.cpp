@@ -30,12 +30,12 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, SlipSurfaceDisplay, AsynchronousDisplayObject);
-DEFINE_PROPERTY_FIELD(SlipSurfaceDisplay, _smoothShading, "SmoothShading");
-DEFINE_REFERENCE_FIELD(SlipSurfaceDisplay, _surfaceTransparency, "SurfaceTransparency", Controller);
-SET_PROPERTY_FIELD_LABEL(SlipSurfaceDisplay, _smoothShading, "Smooth shading");
-SET_PROPERTY_FIELD_LABEL(SlipSurfaceDisplay, _surfaceTransparency, "Surface transparency");
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(SlipSurfaceDisplay, _surfaceTransparency, PercentParameterUnit, 0, 1);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SlipSurfaceDisplay, AsynchronousDisplayObject);
+DEFINE_PROPERTY_FIELD(SlipSurfaceDisplay, smoothShading, "SmoothShading");
+DEFINE_REFERENCE_FIELD(SlipSurfaceDisplay, surfaceTransparencyController, "SurfaceTransparency", Controller);
+SET_PROPERTY_FIELD_LABEL(SlipSurfaceDisplay, smoothShading, "Smooth shading");
+SET_PROPERTY_FIELD_LABEL(SlipSurfaceDisplay, surfaceTransparencyController, "Surface transparency");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(SlipSurfaceDisplay, surfaceTransparencyController, PercentParameterUnit, 0, 1);
 
 /******************************************************************************
 * Constructor.
@@ -43,10 +43,10 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(SlipSurfaceDisplay, _surfaceTransparency, Per
 SlipSurfaceDisplay::SlipSurfaceDisplay(DataSet* dataset) : AsynchronousDisplayObject(dataset),
 	_smoothShading(true), _trimeshUpdate(true)
 {
-	INIT_PROPERTY_FIELD(SlipSurfaceDisplay::_smoothShading);
-	INIT_PROPERTY_FIELD(SlipSurfaceDisplay::_surfaceTransparency);
+	INIT_PROPERTY_FIELD(smoothShading);
+	INIT_PROPERTY_FIELD(surfaceTransparencyController);
 
-	_surfaceTransparency = ControllerManager::instance().createFloatController(dataset);
+	setSurfaceTransparencyController(ControllerManager::createFloatController(dataset));
 }
 
 /******************************************************************************
@@ -114,7 +114,7 @@ void SlipSurfaceDisplay::PrepareMeshEngine::perform()
 {
 	setProgressText(tr("Preparing slip surface for display"));
 
-	if(!buildMesh(*_inputMesh, _simCell, _cuttingPlanes, _structureNames, _surfaceMesh, _materialColors, this))
+	if(!buildMesh(*_inputMesh, _simCell, _cuttingPlanes, _structureNames, _surfaceMesh, _materialColors, *this))
 		throw Exception(tr("Failed to generate non-periodic version of slip surface for display. Simulation cell might be too small."));
 
 	if(isCanceled())
@@ -157,7 +157,7 @@ void SlipSurfaceDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 	// Get the rendering colors for the surface.
 	FloatType surface_alpha = 1;
 	TimeInterval iv;
-	if(_surfaceTransparency) surface_alpha = FloatType(1) - _surfaceTransparency->getFloatValue(time, iv);
+	if(surfaceTransparencyController()) surface_alpha = FloatType(1) - surfaceTransparencyController()->getFloatValue(time, iv);
 	ColorA color_surface(1, 1, 1, surface_alpha);
 
 	// Do we have to re-create the render primitives from scratch?
@@ -175,7 +175,7 @@ void SlipSurfaceDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 	if(updateContents) {
 
 		// Assign smoothing group to faces to interpolate normals.
-		const quint32 smoothingGroup = _smoothShading ? 1 : 0;
+		const quint32 smoothingGroup = smoothShading() ? 1 : 0;
 		for(auto& face : _surfaceMesh.faces()) {
 			face.setSmoothingGroups(smoothingGroup);
 		}
@@ -199,7 +199,7 @@ void SlipSurfaceDisplay::render(TimePoint time, DataObject* dataObject, const Pi
 /******************************************************************************
 * Generates the final triangle mesh, which will be rendered.
 ******************************************************************************/
-bool SlipSurfaceDisplay::buildMesh(const SlipSurfaceData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, const QStringList& structureNames, TriMesh& output, std::vector<ColorA>& materialColors, FutureInterfaceBase* progress)
+bool SlipSurfaceDisplay::buildMesh(const SlipSurfaceData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, const QStringList& structureNames, TriMesh& output, std::vector<ColorA>& materialColors, PromiseBase& promise)
 {
 	// Convert half-edge mesh to triangle mesh.
 	input.convertToTriMesh(output);
@@ -227,7 +227,7 @@ bool SlipSurfaceDisplay::buildMesh(const SlipSurfaceData& input, const Simulatio
 	OVITO_ASSERT(fout == output.faces().end());
 
 	// Check for early abortion.
-	if(progress && progress->isCanceled())
+	if(promise.isCanceled())
 		return false;
 
 	// Convert vertex positions to reduced coordinates.
@@ -240,7 +240,7 @@ bool SlipSurfaceDisplay::buildMesh(const SlipSurfaceData& input, const Simulatio
 	for(size_t dim = 0; dim < 3; dim++) {
 		if(cell.pbcFlags()[dim] == false) continue;
 
-		if(progress && progress->isCanceled())
+		if(promise.isCanceled())
 			return false;
 
 		// Make sure all vertices are located inside the periodic box.
@@ -266,7 +266,7 @@ bool SlipSurfaceDisplay::buildMesh(const SlipSurfaceData& input, const Simulatio
 	}
 
 	// Check for early abortion.
-	if(progress && progress->isCanceled())
+	if(promise.isCanceled())
 		return false;
 
 	// Convert vertex positions back from reduced coordinates to absolute coordinates.
@@ -276,7 +276,7 @@ bool SlipSurfaceDisplay::buildMesh(const SlipSurfaceData& input, const Simulatio
 
 	// Clip mesh at cutting planes.
 	for(const Plane3& plane : cuttingPlanes) {
-		if(progress && progress->isCanceled())
+		if(promise.isCanceled())
 			return false;
 
 		output.clipAtPlane(plane);
@@ -285,7 +285,7 @@ bool SlipSurfaceDisplay::buildMesh(const SlipSurfaceData& input, const Simulatio
 	output.invalidateVertices();
 	output.invalidateFaces();
 
-	return true;
+	return !promise.isCanceled();
 }
 
 /******************************************************************************

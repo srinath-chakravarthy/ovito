@@ -72,8 +72,10 @@ void main()
 	
 	vec3 view_intersection_pnt = ray_origin;
 	vec3 surface_normal;
+
+	bool skip = false;
 	
-	if(ln < 1e-7) {	
+	if(ln < 1e-7 * cylinder_length) {
 		// Handle case where view ray is parallel to cylinder axis:
 		
 		float t = dot(RC, ray_dir);
@@ -107,7 +109,7 @@ void main()
 			float t = dot(cross(cylinder_view_axis, RC), n) / ln;
 			float s = abs(sqrt(cylinder_radius_sq_fs - d) / dot(cross(n, cylinder_view_axis),ray_dir) * cylinder_length);
 			float tnear = t - s;
-		
+
 			// Calculate intersection point in view coordinate system.
 			view_intersection_pnt += tnear * ray_dir;
 		
@@ -126,11 +128,11 @@ void main()
 				
 				// Compute intersection with cylinder caps.
 				if(anear < 0 && afar > 0) {
-					view_intersection_pnt += (anear / (anear - afar) * 2.0 * s + 1e-6) * ray_dir;
+					view_intersection_pnt += (anear / (anear - afar) * 2.0 * s + 1e-6 * ln) * ray_dir;
 					surface_normal = -cylinder_view_axis;
 				}
 				else if(anear > 1.0 && afar < 1.0) {
-					view_intersection_pnt += ((anear - 1.0) / (anear - afar) * 2.0 * s + 1e-6) * ray_dir;
+					view_intersection_pnt += ((anear - 1.0) / (anear - afar) * 2.0 * s + 1e-6 * ln) * ray_dir;
 					surface_normal = cylinder_view_axis;
 				}
 				else {
@@ -139,7 +141,7 @@ void main()
 			}
 		}
 	}
-		
+
 	// Output the ray-cylinder intersection point as the fragment depth 
 	// rather than the depth of the bounding box polygons.
 	// The eye coordinate Z value must be transformed to normalized device 

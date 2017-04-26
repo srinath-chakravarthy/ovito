@@ -27,38 +27,40 @@
 #include <core/rendering/SceneRenderer.h>
 #include <core/viewport/Viewport.h>
 #include <core/viewport/ViewportConfiguration.h>
+#include <core/utilities/concurrent/Task.h>
+#include <core/utilities/concurrent/TaskManager.h>
 #include "ColorCodingModifier.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingModifier, ParticleModifier);
-DEFINE_REFERENCE_FIELD(ColorCodingModifier, _startValueCtrl, "StartValue", Controller);
-DEFINE_REFERENCE_FIELD(ColorCodingModifier, _endValueCtrl, "EndValue", Controller);
-DEFINE_REFERENCE_FIELD(ColorCodingModifier, _colorGradient, "ColorGradient", ColorCodingGradient);
-DEFINE_PROPERTY_FIELD(ColorCodingModifier, _colorOnlySelected, "SelectedOnly");
-DEFINE_PROPERTY_FIELD(ColorCodingModifier, _keepSelection, "KeepSelection");
-DEFINE_PROPERTY_FIELD(ColorCodingModifier, _sourceParticleProperty, "SourceProperty");
-DEFINE_PROPERTY_FIELD(ColorCodingModifier, _sourceBondProperty, "SourceBondProperty");
-DEFINE_PROPERTY_FIELD(ColorCodingModifier, _colorApplicationMode, "ColorApplicationMode");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _startValueCtrl, "Start value");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _endValueCtrl, "End value");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _colorGradient, "Color gradient");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _colorOnlySelected, "Color only selected particles/bonds");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _keepSelection, "Keep selection");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _sourceParticleProperty, "Source property");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _sourceBondProperty, "Source property");
-SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, _colorApplicationMode, "Target");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingModifier, ParticleModifier);
+DEFINE_REFERENCE_FIELD(ColorCodingModifier, startValueController, "StartValue", Controller);
+DEFINE_REFERENCE_FIELD(ColorCodingModifier, endValueController, "EndValue", Controller);
+DEFINE_REFERENCE_FIELD(ColorCodingModifier, colorGradient, "ColorGradient", ColorCodingGradient);
+DEFINE_PROPERTY_FIELD(ColorCodingModifier, colorOnlySelected, "SelectedOnly");
+DEFINE_PROPERTY_FIELD(ColorCodingModifier, keepSelection, "KeepSelection");
+DEFINE_PROPERTY_FIELD(ColorCodingModifier, sourceParticleProperty, "SourceProperty");
+DEFINE_PROPERTY_FIELD(ColorCodingModifier, sourceBondProperty, "SourceBondProperty");
+DEFINE_PROPERTY_FIELD(ColorCodingModifier, colorApplicationMode, "ColorApplicationMode");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, startValueController, "Start value");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, endValueController, "End value");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, colorGradient, "Color gradient");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, colorOnlySelected, "Color only selected particles/bonds");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, keepSelection, "Keep selection");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, sourceParticleProperty, "Source property");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, sourceBondProperty, "Source property");
+SET_PROPERTY_FIELD_LABEL(ColorCodingModifier, colorApplicationMode, "Target");
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingGradient, RefTarget);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingHSVGradient, ColorCodingGradient);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingGrayscaleGradient, ColorCodingGradient);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingHotGradient, ColorCodingGradient);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingJetGradient, ColorCodingGradient);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingBlueWhiteRedGradient, ColorCodingGradient);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingViridisGradient, ColorCodingGradient);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingMagmaGradient, ColorCodingGradient);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ColorCodingImageGradient, ColorCodingGradient);
-DEFINE_PROPERTY_FIELD(ColorCodingImageGradient, _image, "Image");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingGradient, RefTarget);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingHSVGradient, ColorCodingGradient);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingGrayscaleGradient, ColorCodingGradient);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingHotGradient, ColorCodingGradient);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingJetGradient, ColorCodingGradient);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingBlueWhiteRedGradient, ColorCodingGradient);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingViridisGradient, ColorCodingGradient);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingMagmaGradient, ColorCodingGradient);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ColorCodingImageGradient, ColorCodingGradient);
+DEFINE_PROPERTY_FIELD(ColorCodingImageGradient, image, "Image");
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -66,18 +68,18 @@ DEFINE_PROPERTY_FIELD(ColorCodingImageGradient, _image, "Image");
 ColorCodingModifier::ColorCodingModifier(DataSet* dataset) : ParticleModifier(dataset),
 	_colorOnlySelected(false), _keepSelection(false), _colorApplicationMode(Particles)
 {
-	INIT_PROPERTY_FIELD(ColorCodingModifier::_startValueCtrl);
-	INIT_PROPERTY_FIELD(ColorCodingModifier::_endValueCtrl);
-	INIT_PROPERTY_FIELD(ColorCodingModifier::_colorGradient);
-	INIT_PROPERTY_FIELD(ColorCodingModifier::_colorOnlySelected);
-	INIT_PROPERTY_FIELD(ColorCodingModifier::_keepSelection);
-	INIT_PROPERTY_FIELD(ColorCodingModifier::_sourceParticleProperty);
-	INIT_PROPERTY_FIELD(ColorCodingModifier::_sourceBondProperty);
-	INIT_PROPERTY_FIELD(ColorCodingModifier::_colorApplicationMode);
+	INIT_PROPERTY_FIELD(startValueController);
+	INIT_PROPERTY_FIELD(endValueController);
+	INIT_PROPERTY_FIELD(colorGradient);
+	INIT_PROPERTY_FIELD(colorOnlySelected);
+	INIT_PROPERTY_FIELD(keepSelection);
+	INIT_PROPERTY_FIELD(sourceParticleProperty);
+	INIT_PROPERTY_FIELD(sourceBondProperty);
+	INIT_PROPERTY_FIELD(colorApplicationMode);
 
-	_colorGradient = new ColorCodingHSVGradient(dataset);
-	_startValueCtrl = ControllerManager::instance().createFloatController(dataset);
-	_endValueCtrl = ControllerManager::instance().createFloatController(dataset);
+	setColorGradient(new ColorCodingHSVGradient(dataset));
+	setStartValueController(ControllerManager::createFloatController(dataset));
+	setEndValueController(ControllerManager::createFloatController(dataset));
 }
 
 /******************************************************************************
@@ -92,7 +94,7 @@ void ColorCodingModifier::loadUserDefaults()
 	QSettings settings;
 	settings.beginGroup(ColorCodingModifier::OOType.plugin()->pluginId());
 	settings.beginGroup(ColorCodingModifier::OOType.name());
-	QString typeString = settings.value(PROPERTY_FIELD(ColorCodingModifier::_colorGradient).identifier()).toString();
+	QString typeString = settings.value(PROPERTY_FIELD(colorGradient).identifier()).toString();
 	if(!typeString.isEmpty()) {
 		try {
 			OvitoObjectType* gradientType = OvitoObjectType::decodeFromString(typeString);
@@ -111,8 +113,8 @@ void ColorCodingModifier::loadUserDefaults()
 TimeInterval ColorCodingModifier::modifierValidity(TimePoint time)
 {
 	TimeInterval interval = ParticleModifier::modifierValidity(time);
-	if(_startValueCtrl) interval.intersect(_startValueCtrl->validityInterval(time));
-	if(_endValueCtrl) interval.intersect(_endValueCtrl->validityInterval(time));
+	if(startValueController()) interval.intersect(startValueController()->validityInterval(time));
+	if(endValueController()) interval.intersect(endValueController()->validityInterval(time));
 	return interval;
 }
 
@@ -178,7 +180,7 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 		if(sourceParticleProperty().vectorComponent() >= (int)property->componentCount())
 			throwException(tr("The vector component is out of range. The particle property '%1' contains only %2 values per particle.").arg(sourceParticleProperty().name()).arg(property->componentCount()));
 		vecComponent = std::max(0, sourceParticleProperty().vectorComponent());
-
+		
 		// Get the particle selection property if enabled by the user.
 		if(colorOnlySelected()) {
 			if(ParticlePropertyObject* selPropertyObj = inputStandardProperty(ParticleProperty::SelectionProperty)) {
@@ -226,8 +228,8 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 
 	// Get modifier's parameter values.
 	FloatType startValue = 0, endValue = 0;
-	if(_startValueCtrl) startValue = _startValueCtrl->getFloatValue(time, validityInterval);
-	if(_endValueCtrl) endValue = _endValueCtrl->getFloatValue(time, validityInterval);
+	if(startValueController()) startValue = startValueController()->getFloatValue(time, validityInterval);
+	if(endValueController()) endValue = endValueController()->getFloatValue(time, validityInterval);
 
 	// Clamp to finite range.
 	if(!std::isfinite(startValue)) startValue = std::numeric_limits<FloatType>::min();
@@ -270,7 +272,10 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 			else t = ((*v) - startValue) / (endValue - startValue);
 
 			// Clamp values.
-			if(t < 0) t = 0;
+			if(std::isnan(t)) t = 0;
+			else if(t == std::numeric_limits<FloatType>::infinity()) t = 1;
+			else if(t == -std::numeric_limits<FloatType>::infinity()) t = 0;
+			else if(t < 0) t = 0;
 			else if(t > 1) t = 1;
 
 			*c = _colorGradient->valueToColor(t);
@@ -321,19 +326,14 @@ PipelineStatus ColorCodingModifier::modifyParticles(TimePoint time, TimeInterval
 }
 
 /******************************************************************************
-* Sets the start and end value to the minimum and maximum value
-* in the selected particle or bond property.
+* Determines the range of values in the input data for the selected property.
 ******************************************************************************/
-bool ColorCodingModifier::adjustRange()
+bool ColorCodingModifier::determinePropertyValueRange(const PipelineFlowState& state, FloatType& min, FloatType& max)
 {
-	// Determine the minimum and maximum values of the selected property.
-
-	// Get the input property.
-	PipelineFlowState inputState = getModifierInput();
 	PropertyBase* property;
 	int vecComponent;
 	if(colorApplicationMode() != ColorCodingModifier::Bonds) {
-		ParticlePropertyObject* propertyObj = sourceParticleProperty().findInState(inputState);
+		ParticlePropertyObject* propertyObj = sourceParticleProperty().findInState(state);
 		if(!propertyObj)
 			return false;
 		property = propertyObj->storage();
@@ -342,7 +342,7 @@ bool ColorCodingModifier::adjustRange()
 		vecComponent = std::max(0, sourceParticleProperty().vectorComponent());
 	}
 	else {
-		BondPropertyObject* propertyObj = sourceBondProperty().findInState(inputState);
+		BondPropertyObject* propertyObj = sourceBondProperty().findInState(state);
 		if(!propertyObj)
 			return false;
 		property = propertyObj->storage();
@@ -379,12 +379,83 @@ bool ColorCodingModifier::adjustRange()
 	if(!std::isfinite(minValue)) minValue = std::numeric_limits<FloatType>::min();
 	if(!std::isfinite(maxValue)) maxValue = std::numeric_limits<FloatType>::max();
 
+	if(minValue < min) min = minValue;
+	if(maxValue > min) max = maxValue;
+
+	return true;
+}
+
+/******************************************************************************
+* Sets the start and end value to the minimum and maximum value
+* in the selected particle or bond property.
+* Returns true if successful.
+******************************************************************************/
+bool ColorCodingModifier::adjustRange()
+{
+	// Get the input data.
+	PipelineFlowState inputState = getModifierInput();
+
+	// Determine the minimum and maximum values of the selected property.
+	FloatType minValue = std::numeric_limits<FloatType>::max();
+	FloatType maxValue = std::numeric_limits<FloatType>::min();
+	if(!determinePropertyValueRange(inputState, minValue, maxValue))
+		return false;
+
+	// Adjust range of color coding.
 	if(startValueController())
 		startValueController()->setCurrentFloatValue(minValue);
 	if(endValueController())
 		endValueController()->setCurrentFloatValue(maxValue);
 
 	return true;
+}
+
+/******************************************************************************
+* Sets the start and end value to the minimum and maximum value of the selected 
+* particle or bond property determined over the entire animation sequence.
+******************************************************************************/
+bool ColorCodingModifier::adjustRangeGlobal(TaskManager& taskManager)
+{
+	ViewportSuspender noVPUpdates(this);
+	SynchronousTask task(taskManager);
+
+	TimeInterval interval = dataset()->animationSettings()->animationInterval();
+	task.setProgressMaximum(interval.duration() / dataset()->animationSettings()->ticksPerFrame() + 1);
+
+	FloatType minValue = std::numeric_limits<FloatType>::max();
+	FloatType maxValue = std::numeric_limits<FloatType>::min();
+
+	TimePoint oldAnimTime = dataset()->animationSettings()->time();
+	for(TimePoint time = interval.start(); time <= interval.end(); time += dataset()->animationSettings()->ticksPerFrame()) {
+		if(task.isCanceled()) break;
+		task.setProgressText(tr("Analyzing frame %1").arg(dataset()->animationSettings()->timeToFrame(time)));
+		dataset()->animationSettings()->setTime(time);
+
+		for(ModifierApplication* modApp : modifierApplications()) {
+
+			PipelineObject* pipelineObj = modApp->pipelineObject();
+			if(!pipelineObj) continue;
+			
+			Future<PipelineFlowState> stateFuture = pipelineObj->evaluateAsync(PipelineEvalRequest(time, false, modApp, false));
+			if(!taskManager.waitForTask(stateFuture))
+				break;
+
+			determinePropertyValueRange(stateFuture.result(), minValue, maxValue);
+		}
+		task.setProgressValue(task.progressValue() + 1);
+	}
+	dataset()->animationSettings()->setTime(oldAnimTime);
+
+	if(!task.isCanceled()) {
+		// Adjust range of color coding.
+		if(startValueController() && minValue != std::numeric_limits<FloatType>::max())
+			startValueController()->setCurrentFloatValue(minValue);
+		if(endValueController() && maxValue != std::numeric_limits<FloatType>::min())
+			endValueController()->setCurrentFloatValue(maxValue);
+
+		return true;
+	}
+	return false;
 }
 
 /******************************************************************************

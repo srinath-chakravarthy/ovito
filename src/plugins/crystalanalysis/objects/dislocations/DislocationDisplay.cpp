@@ -26,26 +26,26 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, DislocationDisplay, DisplayObject);
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysis, DislocationPickInfo, ObjectPickInfo);
-DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, _lineWidth, "LineWidth", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, _shadingMode, "ShadingMode", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, _burgersVectorWidth, "BurgersVectorWidth", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, _burgersVectorScaling, "BurgersVectorScaling", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, _burgersVectorColor, "BurgersVectorColor", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(DislocationDisplay, _showBurgersVectors, "ShowBurgersVectors");
-DEFINE_PROPERTY_FIELD(DislocationDisplay, _showLineDirections, "ShowLineDirections");
-DEFINE_PROPERTY_FIELD(DislocationDisplay, _lineColoringMode, "LineColoringMode");
-SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _lineWidth, "Dislocation line width");
-SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _shadingMode, "Shading mode");
-SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _burgersVectorWidth, "Burgers vector width");
-SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _burgersVectorScaling, "Burgers vector scaling");
-SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _burgersVectorColor, "Burgers vector color");
-SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _showBurgersVectors, "Show Burgers vectors");
-SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _showLineDirections, "Indicate line directions");
-SET_PROPERTY_FIELD_LABEL(DislocationDisplay, _lineColoringMode, "Line coloring");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(DislocationDisplay, _lineWidth, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(DislocationDisplay, _burgersVectorWidth, WorldParameterUnit, 0);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(DislocationDisplay, DisplayObject);
+IMPLEMENT_OVITO_OBJECT(DislocationPickInfo, ObjectPickInfo);
+DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, lineWidth, "LineWidth", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, shadingMode, "ShadingMode", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, burgersVectorWidth, "BurgersVectorWidth", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, burgersVectorScaling, "BurgersVectorScaling", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(DislocationDisplay, burgersVectorColor, "BurgersVectorColor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(DislocationDisplay, showBurgersVectors, "ShowBurgersVectors");
+DEFINE_PROPERTY_FIELD(DislocationDisplay, showLineDirections, "ShowLineDirections");
+DEFINE_PROPERTY_FIELD(DislocationDisplay, lineColoringMode, "LineColoringMode");
+SET_PROPERTY_FIELD_LABEL(DislocationDisplay, lineWidth, "Dislocation line width");
+SET_PROPERTY_FIELD_LABEL(DislocationDisplay, shadingMode, "Shading mode");
+SET_PROPERTY_FIELD_LABEL(DislocationDisplay, burgersVectorWidth, "Burgers vector width");
+SET_PROPERTY_FIELD_LABEL(DislocationDisplay, burgersVectorScaling, "Burgers vector scaling");
+SET_PROPERTY_FIELD_LABEL(DislocationDisplay, burgersVectorColor, "Burgers vector color");
+SET_PROPERTY_FIELD_LABEL(DislocationDisplay, showBurgersVectors, "Show Burgers vectors");
+SET_PROPERTY_FIELD_LABEL(DislocationDisplay, showLineDirections, "Indicate line directions");
+SET_PROPERTY_FIELD_LABEL(DislocationDisplay, lineColoringMode, "Line coloring");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(DislocationDisplay, lineWidth, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(DislocationDisplay, burgersVectorWidth, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.
@@ -56,14 +56,14 @@ DislocationDisplay::DislocationDisplay(DataSet* dataset) : DisplayObject(dataset
 	_burgersVectorColor(0.7, 0.7, 0.7),
 	_showBurgersVectors(false), _showLineDirections(false), _lineColoringMode(ColorByDislocationType)
 {
-	INIT_PROPERTY_FIELD(DislocationDisplay::_lineWidth);
-	INIT_PROPERTY_FIELD(DislocationDisplay::_shadingMode);
-	INIT_PROPERTY_FIELD(DislocationDisplay::_burgersVectorWidth);
-	INIT_PROPERTY_FIELD(DislocationDisplay::_burgersVectorScaling);
-	INIT_PROPERTY_FIELD(DislocationDisplay::_burgersVectorColor);
-	INIT_PROPERTY_FIELD(DislocationDisplay::_showBurgersVectors);
-	INIT_PROPERTY_FIELD(DislocationDisplay::_showLineDirections);
-	INIT_PROPERTY_FIELD(DislocationDisplay::_lineColoringMode);
+	INIT_PROPERTY_FIELD(lineWidth);
+	INIT_PROPERTY_FIELD(shadingMode);
+	INIT_PROPERTY_FIELD(burgersVectorWidth);
+	INIT_PROPERTY_FIELD(burgersVectorScaling);
+	INIT_PROPERTY_FIELD(burgersVectorColor);
+	INIT_PROPERTY_FIELD(showBurgersVectors);
+	INIT_PROPERTY_FIELD(showLineDirections);
+	INIT_PROPERTY_FIELD(lineColoringMode);
 }
 
 /******************************************************************************

@@ -19,14 +19,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PYSCRIPT_BINDING_H
-#define __OVITO_PYSCRIPT_BINDING_H
+#pragma once
+
 
 #include <plugins/pyscript/PyScript.h>
 #include <plugins/pyscript/engine/ScriptEngine.h>
 #include <core/utilities/io/FileManager.h>
+#include <core/app/Application.h>
 
-PYBIND11_DECLARE_HOLDER_TYPE(T, Ovito::OORef<T>);
+PYBIND11_DECLARE_HOLDER_TYPE(T, Ovito::OORef<T>, true);
 
 namespace pybind11 { namespace detail {
 
@@ -40,7 +41,7 @@ namespace pybind11 { namespace detail {
             object temp;
             handle load_src = src;
 			if(PyUnicode_Check(load_src.ptr())) {
-                temp = object(PyUnicode_AsUTF8String(load_src.ptr()), false);
+                temp = reinterpret_steal<object>(PyUnicode_AsUTF8String(load_src.ptr()));
                 if (!temp) { PyErr_Clear(); return false; }  // UnicodeEncodeError
                 load_src = temp;
             }
@@ -72,7 +73,7 @@ namespace pybind11 { namespace detail {
 			if(!src) return false;
 			try {
 				QString str = src.cast<QString>();
-				value = Ovito::FileManager::instance().urlFromUserInput(str);
+				value = Ovito::Application::instance()->fileManager()->urlFromUserInput(str);
 				return true;
 			}
 			catch(const cast_error&) {}
@@ -125,14 +126,11 @@ namespace pybind11 { namespace detail {
 		PYBIND11_TYPE_CASTER(QStringList, _("QStringList"));
 		
         bool load(handle src, bool) {
-			if(!src) return false;
-			sequence seq(src, true);
-			if(seq.check()) {
-            	for(size_t i = 0; i < seq.size(); i++)
-					value.push_back(seq[i].cast<QString>());
-				return true;
-			}
-			return false;
+			if(!isinstance<sequence>(src)) return false;
+			sequence seq = reinterpret_borrow<sequence>(src);
+			for(size_t i = 0; i < seq.size(); i++)
+				value.push_back(seq[i].cast<QString>());
+			return true;
         }
 
         static handle cast(const QStringList& src, return_value_policy /* policy */, handle /* parent */) {
@@ -147,16 +145,13 @@ namespace pybind11 { namespace detail {
     template<typename T> struct type_caster<Ovito::Vector_3<T>> {
     public:
         bool load(handle src, bool) {
-			if(!src) return false;
-			sequence seq(src, true);
-        	if(seq.check()) {
-            	if(seq.size() != value.size())
-                	throw value_error("Expected sequence of length 3.");
-				for(size_t i = 0; i < value.size(); i++)
-					value[i] = seq[i].cast<T>();
-				return true;
-			}
-			return false;
+			if(!isinstance<sequence>(src)) return false;
+			sequence seq = reinterpret_borrow<sequence>(src);
+			if(seq.size() != value.size())
+				throw value_error("Expected sequence of length 3.");
+			for(size_t i = 0; i < value.size(); i++)
+				value[i] = seq[i].cast<T>();
+			return true;
         }
 
         static handle cast(const Ovito::Vector_3<T>& src, return_value_policy /* policy */, handle /* parent */) {
@@ -166,20 +161,37 @@ namespace pybind11 { namespace detail {
 		PYBIND11_TYPE_CASTER(Ovito::Vector_3<T>, _("Vector3<") + make_caster<T>::name() + _(">"));
     };	
 
+	/// Automatic Python <--> Point3 conversion
+    template<typename T> struct type_caster<Ovito::Point_3<T>> {
+    public:
+        bool load(handle src, bool) {
+			if(!isinstance<sequence>(src)) return false;
+			sequence seq = reinterpret_borrow<sequence>(src);
+			if(seq.size() != value.size())
+				throw value_error("Expected sequence of length 3.");
+			for(size_t i = 0; i < value.size(); i++)
+				value[i] = seq[i].cast<T>();
+			return true;
+        }
+
+        static handle cast(const Ovito::Point_3<T>& src, return_value_policy /* policy */, handle /* parent */) {
+			return pybind11::make_tuple(src[0], src[1], src[2]).release();
+        }
+
+		PYBIND11_TYPE_CASTER(Ovito::Point_3<T>, _("Point3<") + make_caster<T>::name() + _(">"));
+    };		
+
 	/// Automatic Python <--> Color conversion
     template<typename T> struct type_caster<Ovito::ColorT<T>> {
     public:
         bool load(handle src, bool) {
-			if(!src) return false;
-			sequence seq(src, true);
-        	if(seq.check()) {
-            	if(seq.size() != value.size())
-                	throw value_error("Expected sequence of length 3.");
-				for(size_t i = 0; i < value.size(); i++)
-					value[i] = seq[i].cast<T>();
-				return true;
-			}
-			return false;
+			if(!isinstance<sequence>(src)) return false;
+			sequence seq = reinterpret_borrow<sequence>(src);
+			if(seq.size() != value.size())
+				throw value_error("Expected sequence of length 3.");
+			for(size_t i = 0; i < value.size(); i++)
+				value[i] = seq[i].cast<T>();
+			return true;
         }
 
         static handle cast(const Ovito::ColorT<T>& src, return_value_policy /* policy */, handle /* parent */) {
@@ -193,16 +205,13 @@ namespace pybind11 { namespace detail {
     template<typename T> struct type_caster<Ovito::ColorAT<T>> {
     public:
         bool load(handle src, bool) {
-			if(!src) return false;
-			sequence seq(src, true);
-        	if(seq.check()) {
-            	if(seq.size() != value.size())
-                	throw value_error("Expected sequence of length 4.");
-				for(size_t i = 0; i < value.size(); i++)
-					value[i] = seq[i].cast<T>();
-				return true;
-			}
-			return false;
+			if(!isinstance<sequence>(src)) return false;
+			sequence seq = reinterpret_borrow<sequence>(src);
+			if(seq.size() != value.size())
+				throw value_error("Expected sequence of length 4.");
+			for(size_t i = 0; i < value.size(); i++)
+				value[i] = seq[i].cast<T>();
+			return true;
         }
 
         static handle cast(const Ovito::ColorT<T>& src, return_value_policy /* policy */, handle /* parent */) {
@@ -216,22 +225,21 @@ namespace pybind11 { namespace detail {
     template<typename T> struct type_caster<Ovito::AffineTransformationT<T>> {
     public:
         bool load(handle src, bool) {
-			if(!src) return false;
-			sequence seq1(src, true);
-        	if(seq1.check()) {
-            	if(seq1.size() != value.row_count())
-                	throw value_error("Expected sequence of length 3.");
-				for(size_t i = 0; i < value.row_count(); i++) {
-					sequence seq2(seq1[i], true);
-					if(!seq2.check() || seq2.size() != value.col_count())
-						throw value_error("Expected nested sequence of length 4.");
-					for(size_t j = 0; j < value.col_count(); j++) {
-						value(i,j) = seq2[j].cast<T>();
-					}
+			if(!isinstance<sequence>(src)) return false;
+			sequence seq1 = reinterpret_borrow<sequence>(src);
+			if(seq1.size() != value.row_count())
+				throw value_error("Expected sequence of length 3.");
+			for(size_t i = 0; i < value.row_count(); i++) {
+				if(!isinstance<sequence>(seq1[i])) 
+					throw value_error("Expected nested sequence of length 4.");
+				sequence seq2 = reinterpret_borrow<sequence>(seq1[i]);
+				if(seq2.size() != value.col_count())
+					throw value_error("Expected nested sequence of length 4.");
+				for(size_t j = 0; j < value.col_count(); j++) {
+					value(i,j) = seq2[j].cast<T>();
 				}
-				return true;
 			}
-			return false;
+			return true;
         }
 
         static handle cast(const Ovito::AffineTransformationT<T>& src, return_value_policy /* policy */, handle /* parent */) {
@@ -247,22 +255,21 @@ namespace pybind11 { namespace detail {
     template<typename T> struct type_caster<Ovito::Matrix_3<T>> {
     public:
         bool load(handle src, bool) {
-			if(!src) return false;
-			sequence seq1(src, true);
-        	if(seq1.check()) {
-            	if(seq1.size() != value.row_count())
-                	throw value_error("Expected sequence of length 3.");
-				for(size_t i = 0; i < value.row_count(); i++) {
-					sequence seq2(seq1[i], true);
-					if(!seq2.check() || seq2.size() != value.col_count())
-						throw value_error("Expected nested sequence of length 3.");
-					for(size_t j = 0; j < value.col_count(); j++) {
-						value(i,j) = seq2[j].cast<T>();
-					}
+			if(!isinstance<sequence>(src)) return false;
+			sequence seq1 = reinterpret_borrow<sequence>(src);
+			if(seq1.size() != value.row_count())
+				throw value_error("Expected sequence of length 3.");
+			for(size_t i = 0; i < value.row_count(); i++) {
+				if(!isinstance<sequence>(seq1[i])) 
+					throw value_error("Expected nested sequence of length 3.");
+				sequence seq2 = reinterpret_borrow<sequence>(seq1[i]);
+				if(seq2.size() != value.col_count())
+					throw value_error("Expected nested sequence of length 3.");
+				for(size_t j = 0; j < value.col_count(); j++) {
+					value(i,j) = seq2[j].cast<T>();
 				}
-				return true;
 			}
-			return false;
+			return true;
         }
 
         static handle cast(const Ovito::Matrix_3<T>& src, return_value_policy /* policy */, handle /* parent */) {
@@ -278,22 +285,21 @@ namespace pybind11 { namespace detail {
     template<typename T> struct type_caster<Ovito::Matrix_4<T>> {
     public:
         bool load(handle src, bool) {
-			if(!src) return false;
-			sequence seq1(src, true);
-        	if(seq1.check()) {
-            	if(seq1.size() != value.row_count())
-                	throw value_error("Expected sequence of length 4.");
-				for(size_t i = 0; i < value.row_count(); i++) {
-					sequence seq2(seq1[i], true);
-					if(!seq2.check() || seq2.size() != value.col_count())
-						throw value_error("Expected nested sequence of length 4.");
-					for(size_t j = 0; j < value.col_count(); j++) {
-						value(i,j) = seq2[j].cast<T>();
-					}
+			if(!isinstance<sequence>(src)) return false;
+			sequence seq1 = reinterpret_borrow<sequence>(src);
+			if(seq1.size() != value.row_count())
+				throw value_error("Expected sequence of length 4.");
+			for(size_t i = 0; i < value.row_count(); i++) {
+				if(!isinstance<sequence>(seq1[i])) 
+					throw value_error("Expected nested sequence of length 4.");
+				sequence seq2 = reinterpret_borrow<sequence>(seq1[i]);
+				if(seq2.size() != value.col_count())
+					throw value_error("Expected nested sequence of length 4.");
+				for(size_t j = 0; j < value.col_count(); j++) {
+					value(i,j) = seq2[j].cast<T>();
 				}
-				return true;
 			}
-			return false;
+			return true;
         }
 
         static handle cast(const Ovito::Matrix_4<T>& src, return_value_policy /* policy */, handle /* parent */) {
@@ -316,8 +322,13 @@ namespace PyScript {
 using namespace Ovito;
 namespace py = pybind11;
 
-/// \brief Adds the initXXX() function of a plugin to an internal list so that the scripting engine can discover and register all internal modules.
+/// Registers the initXXX() function of a plugin so that the scripting engine can discover and load all internal modules.
 /// Use the OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE macro to create an instance of this structure on application startup.
+///
+/// This helper class makes our internal script modules available by registering their initXXX functions with the Python interpreter.
+/// This is required for static builds where all Ovito plugins are linked into the main executable file.
+/// On Windows this is also needed, because OVITO plugins have an .dll extension and the Python interpreter 
+/// only looks for modules that have a .pyd extension.
 struct OVITO_PYSCRIPT_EXPORT PythonPluginRegistration
 {
 #if PY_MAJOR_VERSION >= 3
@@ -327,18 +338,19 @@ struct OVITO_PYSCRIPT_EXPORT PythonPluginRegistration
 #endif
 
 	/// The identifier of the plugin to register.
-	const char* _moduleName;
+	std::string _moduleName;
 	/// The initXXX() function to be registered with the Python interpreter.
 	InitFuncPointer _initFunc;
 	/// Next structure in linked list.
 	PythonPluginRegistration* _next;
 
-	PythonPluginRegistration(const char* moduleName, InitFuncPointer initFunc) : _moduleName(moduleName), _initFunc(initFunc) {
+	PythonPluginRegistration(const char* moduleName, InitFuncPointer initFunc) : _initFunc(initFunc) {
 		_next = linkedlist;
 		linkedlist = this;
+		_moduleName = std::string("ovito.plugins.") + moduleName;
 	}
 
-	/// The initXXX() functions for each of the registered plugins.
+	/// Head of linked list of initXXX() functions.
 	static PythonPluginRegistration* linkedlist;
 };
 
@@ -395,9 +407,7 @@ private:
 
 	/// Constructs the object instance in place and passes the current DataSet to the C++ constructor.
 	static void constructInstance(OvitoObjectClass& instance) {
-		ScriptEngine* engine = ScriptEngine::activeEngine();
-		if(!engine) throw Exception("Invalid interpreter state. There is no active script engine.");
-		DataSet* dataset = engine->dataset();
+		DataSet* dataset = ScriptEngine::activeDataset();
 		if(!dataset) throw Exception("Invalid interpreter state. There is no active dataset.");			
 		new (&instance) OvitoObjectClass(dataset);
 	}
@@ -409,7 +419,7 @@ private:
 				throw Exception("Constructor function accepts only keyword arguments.");
 		}
 		// Set attributes based on keyword arguments.
-		if(kwargs.check())
+		if(kwargs)
 			applyParameters(pyobj, kwargs);
 		// The caller may alternatively provide a dictionary with attributes.
 		if(py::len(args) == 2) {
@@ -478,13 +488,13 @@ pybind11::class_<Vector, holder_type> bind_vector_readonly(pybind11::module &m, 
         [](const Vector &v, pybind11::slice slice) -> Vector * {
             size_t start, stop, step, slicelength;
 
-            if (!slice.compute(v.size(), &start, &stop, &step, &slicelength))
+            if(!slice.compute(v.size(), &start, &stop, &step, &slicelength))
                 throw pybind11::error_already_set();
 
             Vector *seq = new Vector();
             seq->reserve((size_t) slicelength);
 
-            for (size_t i=0; i<slicelength; ++i) {
+            for(size_t i=0; i<slicelength; ++i) {
                 seq->push_back(v[start]);
                 start += step;
             }
@@ -662,9 +672,9 @@ py::class_<detail::SubobjectListWrapper<ParentClass, ElementClass, GetListClass,
 		}, py::keep_alive<0,1>()), 
 		// setter
 		[](ParentClass& parent, py::object& obj) {
-			py::sequence seq(obj);
-			if(!seq.check()) 
+			if(!py::isinstance<py::sequence>(obj))
 				throw py::value_error("Can only assign a sequence.");
+			py::sequence seq(obj);
 			const auto& vec = (parent.*get_list)();
 			// First, clear the existing list.
 			while(vec.size() != 0)
@@ -775,6 +785,4 @@ py::cpp_function MatrixSetter()
 	});
 }
 
-};	// End of namespace
-
-#endif
+}	// End of namespace

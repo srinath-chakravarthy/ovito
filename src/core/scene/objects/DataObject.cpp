@@ -27,19 +27,35 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, DataObject, RefTarget);
-DEFINE_PROPERTY_FIELD(DataObject, _saveWithScene, "SaveWithScene");
-DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(DataObject, _displayObjects, "DisplayObjects", DisplayObject, PROPERTY_FIELD_NEVER_CLONE_TARGET);
-SET_PROPERTY_FIELD_LABEL(DataObject, _saveWithScene, "Save data with scene");
-SET_PROPERTY_FIELD_LABEL(DataObject, _displayObjects, "Display objects");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(DataObject, RefTarget);
+DEFINE_PROPERTY_FIELD(DataObject, saveWithScene, "SaveWithScene");
+DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(DataObject, displayObjects, "DisplayObjects", DisplayObject, PROPERTY_FIELD_NEVER_CLONE_TARGET);
+SET_PROPERTY_FIELD_LABEL(DataObject, saveWithScene, "Save data with scene");
+SET_PROPERTY_FIELD_LABEL(DataObject, displayObjects, "Display objects");
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
 DataObject::DataObject(DataSet* dataset) : RefTarget(dataset), _revisionNumber(0), _saveWithScene(true)
 {
-	INIT_PROPERTY_FIELD(DataObject::_saveWithScene);
-	INIT_PROPERTY_FIELD(DataObject::_displayObjects);
+	INIT_PROPERTY_FIELD(saveWithScene);
+	INIT_PROPERTY_FIELD(displayObjects);
+}
+
+/******************************************************************************
+* Asks the object for the result of the data pipeline.
+******************************************************************************/
+PipelineFlowState DataObject::evaluateImmediately(const PipelineEvalRequest& request) 
+{
+	return PipelineFlowState(this, objectValidity(request.time()));
+}
+
+/******************************************************************************
+* Asks the object for the result of the data pipeline.
+******************************************************************************/
+Future<PipelineFlowState> DataObject::evaluateAsync(const PipelineEvalRequest& request) 
+{
+	return Future<PipelineFlowState>::createImmediate(PipelineFlowState(this, objectValidity(request.time())));
 }
 
 /******************************************************************************
@@ -133,17 +149,6 @@ QSet<ObjectNode*> DataObject::dependentNodes() const
 		}
 	}
 	return nodeList;
-}
-
-/******************************************************************************
-* This function blocks execution until the object is able ready to
-* provide data via its evaluate() function.
-******************************************************************************/
-bool DataObject::waitUntilReady(TimePoint time, const QString& message, AbstractProgressDisplay* progressDisplay)
-{
-	return dataset()->container()->waitUntil([this, time]() {
-		return evaluate(time).status().type() != PipelineStatus::Pending;
-	}, message, progressDisplay);
 }
 
 OVITO_END_INLINE_NAMESPACE

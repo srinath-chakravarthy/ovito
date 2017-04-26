@@ -25,11 +25,11 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, StructureIdentificationModifier, AsynchronousParticleModifier);
-DEFINE_VECTOR_REFERENCE_FIELD(StructureIdentificationModifier, _structureTypes, "StructureTypes", ParticleType);
-DEFINE_PROPERTY_FIELD(StructureIdentificationModifier, _onlySelectedParticles, "OnlySelectedParticles");
-SET_PROPERTY_FIELD_LABEL(StructureIdentificationModifier, _structureTypes, "Structure types");
-SET_PROPERTY_FIELD_LABEL(StructureIdentificationModifier, _onlySelectedParticles, "Use only selected particles");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(StructureIdentificationModifier, AsynchronousParticleModifier);
+DEFINE_VECTOR_REFERENCE_FIELD(StructureIdentificationModifier, structureTypes, "StructureTypes", ParticleType);
+DEFINE_PROPERTY_FIELD(StructureIdentificationModifier, onlySelectedParticles, "OnlySelectedParticles");
+SET_PROPERTY_FIELD_LABEL(StructureIdentificationModifier, structureTypes, "Structure types");
+SET_PROPERTY_FIELD_LABEL(StructureIdentificationModifier, onlySelectedParticles, "Use only selected particles");
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -37,8 +37,8 @@ SET_PROPERTY_FIELD_LABEL(StructureIdentificationModifier, _onlySelectedParticles
 StructureIdentificationModifier::StructureIdentificationModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
 		_onlySelectedParticles(false)
 {
-	INIT_PROPERTY_FIELD(StructureIdentificationModifier::_structureTypes);
-	INIT_PROPERTY_FIELD(StructureIdentificationModifier::_onlySelectedParticles);
+	INIT_PROPERTY_FIELD(structureTypes);
+	INIT_PROPERTY_FIELD(onlySelectedParticles);
 }
 
 /******************************************************************************
@@ -61,7 +61,7 @@ void StructureIdentificationModifier::propertyChanged(const PropertyFieldDescrip
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Recompute results when the parameters have changed.
-	if(field == PROPERTY_FIELD(StructureIdentificationModifier::_onlySelectedParticles))
+	if(field == PROPERTY_FIELD(onlySelectedParticles))
 		invalidateCachedResults();
 }
 
@@ -107,7 +107,7 @@ QVector<bool> StructureIdentificationModifier::getTypesToIdentify(int numTypes) 
 	QVector<bool> typesToIdentify(numTypes, true);
 	for(ParticleType* type : structureTypes()) {
 		if(type->id() >= 0 && type->id() < numTypes)
-			typesToIdentify[type->id()] = type->isEnabled();
+			typesToIdentify[type->id()] = type->enabled();
 	}
 	return typesToIdentify;
 }

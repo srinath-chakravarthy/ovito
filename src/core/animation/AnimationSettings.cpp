@@ -26,26 +26,26 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Anim)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, AnimationSettings, RefTarget);
-DEFINE_FLAGS_PROPERTY_FIELD(AnimationSettings, _time, "Time", PROPERTY_FIELD_NO_UNDO);
-DEFINE_PROPERTY_FIELD(AnimationSettings, _animationInterval, "AnimationInterval");
-DEFINE_PROPERTY_FIELD(AnimationSettings, _ticksPerFrame, "TicksPerFrame");
-DEFINE_PROPERTY_FIELD(AnimationSettings, _playbackSpeed, "PlaybackSpeed");
-DEFINE_PROPERTY_FIELD(AnimationSettings, _loopPlayback, "LoopPlayback");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(AnimationSettings, RefTarget);
+DEFINE_FLAGS_PROPERTY_FIELD(AnimationSettings, time, "Time", PROPERTY_FIELD_NO_UNDO);
+DEFINE_PROPERTY_FIELD(AnimationSettings, animationInterval, "AnimationInterval");
+DEFINE_PROPERTY_FIELD(AnimationSettings, ticksPerFrame, "TicksPerFrame");
+DEFINE_PROPERTY_FIELD(AnimationSettings, playbackSpeed, "PlaybackSpeed");
+DEFINE_PROPERTY_FIELD(AnimationSettings, loopPlayback, "LoopPlayback");
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
 AnimationSettings::AnimationSettings(DataSet* dataset) : RefTarget(dataset),
 		_ticksPerFrame(TICKS_PER_SECOND/10), _playbackSpeed(1),
-		_animationInterval(0, 0), _time(0), _animSuspendCount(0),  _autoKeyMode(false), _timeIsChanging(0),
-		_isPlaybackActive(false), _loopPlayback(true)
+		_animationInterval(0, 0), _time(0),
+		_loopPlayback(true)
 {
-	INIT_PROPERTY_FIELD(AnimationSettings::_time);
-	INIT_PROPERTY_FIELD(AnimationSettings::_animationInterval);
-	INIT_PROPERTY_FIELD(AnimationSettings::_ticksPerFrame);
-	INIT_PROPERTY_FIELD(AnimationSettings::_playbackSpeed);
-	INIT_PROPERTY_FIELD(AnimationSettings::_loopPlayback);
+	INIT_PROPERTY_FIELD(time);
+	INIT_PROPERTY_FIELD(animationInterval);
+	INIT_PROPERTY_FIELD(ticksPerFrame);
+	INIT_PROPERTY_FIELD(playbackSpeed);
+	INIT_PROPERTY_FIELD(loopPlayback);
 
 	// Call our own listener when the current animation time changes.
 	connect(this, &AnimationSettings::timeChanged, this, &AnimationSettings::onTimeChanged);
@@ -56,11 +56,11 @@ AnimationSettings::AnimationSettings(DataSet* dataset) : RefTarget(dataset),
 ******************************************************************************/
 void AnimationSettings::propertyChanged(const PropertyFieldDescriptor& field)
 {
-	if(field == PROPERTY_FIELD(AnimationSettings::_time))
+	if(field == PROPERTY_FIELD(time))
 		Q_EMIT timeChanged(time());
-	else if(field == PROPERTY_FIELD(AnimationSettings::_animationInterval))
+	else if(field == PROPERTY_FIELD(animationInterval))
 		Q_EMIT intervalChanged(animationInterval());
-	else if(field == PROPERTY_FIELD(AnimationSettings::_ticksPerFrame))
+	else if(field == PROPERTY_FIELD(ticksPerFrame))
 		Q_EMIT speedChanged(ticksPerFrame());
 }
 
@@ -105,11 +105,20 @@ OORef<RefTarget> AnimationSettings::clone(bool deepCopy, CloneHelper& cloneHelpe
 ******************************************************************************/
 void AnimationSettings::onTimeChanged(TimePoint newTime)
 {
-	_timeIsChanging++;
-	dataset()->runWhenSceneIsReady([this] () {
-		_timeIsChanging--;
+	if(_isTimeChanging) {
+		dataset()->makeSceneReady();
+		return;
+	}
+	_isTimeChanging = true;
+
+	// Wait until scene is complete, then generate a timeChangeComplete event.
+	PromiseWatcher* watcher = new PromiseWatcher(this);
+	connect(watcher, &PromiseWatcher::finished, this, [this] {
+		_isTimeChanging = false;
 		Q_EMIT timeChangeComplete();
 	});
+	connect(watcher, &PromiseWatcher::finished, watcher, &QObject::deleteLater);	// Self-destruct watcher object when it's no longer needed.
+	watcher->setFuture(dataset()->makeSceneReady());
 }
 
 /******************************************************************************
@@ -193,7 +202,7 @@ void AnimationSettings::jumpToNextFrame()
 ******************************************************************************/
 void AnimationSettings::startAnimationPlayback()
 {
-	if(!_isPlaybackActive) {
+	if(!isPlaybackActive()) {
 		_isPlaybackActive = true;
 		Q_EMIT playbackChanged(_isPlaybackActive);
 
@@ -201,13 +210,25 @@ void AnimationSettings::startAnimationPlayback()
 			scheduleNextAnimationFrame();
 		}
 		else {
-			setTime(animationInterval().start());
-			dataset()->runWhenSceneIsReady([this]() {
-				if(_isPlaybackActive) {
-					scheduleNextAnimationFrame();
-				}
-			});
+			continuePlaybackAtTime(animationInterval().start());
 		}
+	}
+}
+
+/******************************************************************************
+* Jumps to the given animation time, then schedules the next frame as soon as 
+* the scene was completely shown.
+******************************************************************************/
+void AnimationSettings::continuePlaybackAtTime(TimePoint time)
+{
+	setTime(time);
+	
+	if(isPlaybackActive()) {
+		PromiseWatcher* watcher = new PromiseWatcher(this);
+		connect(watcher, &PromiseWatcher::finished, this, &AnimationSettings::scheduleNextAnimationFrame);
+		connect(watcher, &PromiseWatcher::canceled, this, &AnimationSettings::stopAnimationPlayback);
+		connect(watcher, &PromiseWatcher::finished, watcher, &QObject::deleteLater);	// Self-destruct watcher object when it's no longer needed.
+		watcher->setFuture(dataset()->makeSceneReady());
 	}
 }
 
@@ -216,6 +237,8 @@ void AnimationSettings::startAnimationPlayback()
 ******************************************************************************/
 void AnimationSettings::scheduleNextAnimationFrame()
 {
+	if(!isPlaybackActive()) return;
+
 	int timerSpeed = 1000;
 	if(playbackSpeed() > 1) timerSpeed /= playbackSpeed();
 	else if(playbackSpeed() < -1) timerSpeed *= -playbackSpeed();
@@ -227,7 +250,7 @@ void AnimationSettings::scheduleNextAnimationFrame()
 ******************************************************************************/
 void AnimationSettings::stopAnimationPlayback()
 {
-	if(_isPlaybackActive) {
+	if(isPlaybackActive()) {
 		_isPlaybackActive = false;
 		Q_EMIT playbackChanged(_isPlaybackActive);
 	}
@@ -239,7 +262,7 @@ void AnimationSettings::stopAnimationPlayback()
 void AnimationSettings::onPlaybackTimer()
 {
 	// Check if the animation playback has been deactivated in the meantime.
-	if(!_isPlaybackActive)
+	if(!isPlaybackActive())
 		return;
 
 	// Add one frame to current time
@@ -257,17 +280,8 @@ void AnimationSettings::onPlaybackTimer()
 		}
 	}
 
-	// Set new time.
-	setTime(newTime);
-
-	// Wait until the scene is ready. Then jump to the next frame.
-	if(_isPlaybackActive) {
-		dataset()->runWhenSceneIsReady([this]() {
-			if(_isPlaybackActive) {
-				scheduleNextAnimationFrame();
-			}
-		});
-	}
+	// Set new time and continue playing.
+	continuePlaybackAtTime(newTime);
 }
 
 OVITO_END_INLINE_NAMESPACE

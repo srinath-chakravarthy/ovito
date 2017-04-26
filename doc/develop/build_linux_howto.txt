@@ -29,7 +29,8 @@ sudo apt-get install \
    ncurses-dev \
    libssl-dev \
    libreadline-dev \
-   povray
+   povray \
+   libfftw3-dev
 
 **************************************************************************
 Install GNU g++ 5 compiler on Ubuntu 10.04
@@ -260,10 +261,11 @@ $HOME/progs/cmake-3.6.3-Linux-x86_64/bin/cmake \
   -DOVITO_BUILD_DOCUMENTATION=ON \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_PREFIX=../release_install \
-  -DOVITO_MONOLITHIC_BUILD=ON \
+  -DOVITO_REDISTRIBUTABLE_PACKAGE=ON \
   -DBOOST_ROOT=$HOME/progs/boost \
   -DHDF5_DIR=$HOME/progs/hdf5/share/cmake \
   -DnetCDF_DIR=$HOME/progs/netcdf/lib/cmake/netCDF \
+  -DPYTHON_EXECUTABLE=$HOME/progs/python/bin/python3 \
   -DPYTHON_LIBRARY=$HOME/progs/python/lib/libpython3.5m.so.1.0 \
   -DPYTHON_INCLUDE_DIR=$HOME/progs/python/include/python3.5m \
   -DSPHINX_PROCESSOR_PATH=$HOME/progs/python/bin \

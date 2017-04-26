@@ -25,8 +25,8 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
 
 // Gives the class run-time type information.
-IMPLEMENT_OVITO_OBJECT(Gui, RefTargetListParameterUI, ParameterUI);
-DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(RefTargetListParameterUI, _targets, "Targets", RefTarget, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_WEAK_REF | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
+IMPLEMENT_OVITO_OBJECT(RefTargetListParameterUI, ParameterUI);
+DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(RefTargetListParameterUI, targets, "Targets", RefTarget, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_WEAK_REF | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
 
 /******************************************************************************
 * The constructor.
@@ -34,7 +34,7 @@ DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(RefTargetListParameterUI, _targets, "Targets
 RefTargetListParameterUI::RefTargetListParameterUI(QObject* parentEditor, const PropertyFieldDescriptor& refField, const RolloutInsertionParameters& rolloutParams, const OvitoObjectType* defaultEditorClass)
 	: ParameterUI(parentEditor), _refField(refField), _rolloutParams(rolloutParams), _defaultEditorClass(defaultEditorClass)
 {
-	INIT_PROPERTY_FIELD(RefTargetListParameterUI::_targets);
+	INIT_PROPERTY_FIELD(targets);
 	OVITO_ASSERT_MSG(refField.isVector(), "RefTargetListParameterUI constructor", "The reference field bound to this parameter UI must be a vector reference field.");
 	
 	_model = new ListViewModel(this);
@@ -186,7 +186,7 @@ void RefTargetListParameterUI::openSubEditor()
 		}
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -219,10 +219,10 @@ RefTarget* RefTargetListParameterUI::selectedObject() const
 int RefTargetListParameterUI::setSelectedObject(RefTarget* selObj)
 {
 	if(!_viewWidget) return -1;
-	OVITO_ASSERT(_targetToRow.size() == _targets.size());
+	OVITO_ASSERT(_targetToRow.size() == targets().size());
 	if(selObj != nullptr) {
-		for(int i = 0; i<_targets.size(); i++) {
-			if(_targets[i] == selObj) {
+		for(int i = 0; i< targets().size(); i++) {
+			if(targets()[i] == selObj) {
 				int rowIndex = _targetToRow[i];
 				_viewWidget->selectionModel()->select(_model->index(rowIndex, 0), QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
 				return rowIndex;
@@ -251,9 +251,9 @@ bool RefTargetListParameterUI::referenceEvent(RefTarget* source, ReferenceEvent*
 					_model->beginInsert(rowIndex);
 				_targets.insert(refevent->index(), refevent->newTarget());
 				_targetToRow.insert(refevent->index(), rowIndex);
-				for(int i=rowIndex; i<_rowToTarget.size(); i++)
+				for(int i = rowIndex; i < _rowToTarget.size(); i++)
 					_rowToTarget[i]++;
-				if(refevent->newTarget() != NULL) {
+				if(refevent->newTarget() != nullptr) {
 					_rowToTarget.insert(rowIndex, refevent->index());
 					for(int i=refevent->index()+1; i<_targetToRow.size(); i++)
 						_targetToRow[i]++;
@@ -313,8 +313,8 @@ bool RefTargetListParameterUI::referenceEvent(RefTarget* source, ReferenceEvent*
 	} 
 	else if(event->type() == ReferenceEvent::TitleChanged || event->type() == ReferenceEvent::TargetChanged) {
 		OVITO_ASSERT(_targetToRow.size() == _targets.size());
-		for(int i = 0; i < _targets.size(); i++) {
-			if(_targets[i] == source) {
+		for(int i = 0; i < targets().size(); i++) {
+			if(targets()[i] == source) {
 				// Update a single item.
 				_model->updateItem(_targetToRow[i]);
 			}
@@ -337,9 +337,9 @@ QVariant RefTargetListParameterUI::ListViewModel::data(const QModelIndex& index,
 		return QVariant();
 
 	int targetIndex = owner()->_rowToTarget[index.row()];
-	OVITO_ASSERT(targetIndex < owner()->_targets.size());
+	OVITO_ASSERT(targetIndex < owner()->targets().size());
 
-	RefTarget* t = owner()->_targets[targetIndex];
+	RefTarget* t = owner()->targets()[targetIndex];
 	return owner()->getItemData(t, index, role);
 }
 
@@ -356,9 +356,9 @@ QVariant RefTargetListParameterUI::ListViewModel::headerData(int section, Qt::Or
 			return QVariant();
 
 		int targetIndex = owner()->_rowToTarget[section];
-		OVITO_ASSERT(targetIndex < owner()->_targets.size());
+		OVITO_ASSERT(targetIndex < owner()->targets().size());
 
-		RefTarget* t = owner()->_targets[targetIndex];
+		RefTarget* t = owner()->targets()[targetIndex];
 		return owner()->getVerticalHeaderData(t, section, role);
 	}
 	else {
@@ -375,9 +375,9 @@ Qt::ItemFlags RefTargetListParameterUI::ListViewModel::flags(const QModelIndex& 
 		return QAbstractItemModel::flags(index);
 
 	int targetIndex = owner()->_rowToTarget[index.row()];
-	OVITO_ASSERT(targetIndex < owner()->_targets.size());
+	OVITO_ASSERT(targetIndex < owner()->targets().size());
 
-	RefTarget* t = owner()->_targets[targetIndex];
+	RefTarget* t = owner()->targets()[targetIndex];
 	return owner()->getItemFlags(t, index);
 }
 
@@ -390,9 +390,9 @@ bool RefTargetListParameterUI::ListViewModel::setData(const QModelIndex& index, 
 		return QAbstractItemModel::setData(index, value, role);
 
 	int targetIndex = owner()->_rowToTarget[index.row()];
-	OVITO_ASSERT(targetIndex < owner()->_targets.size());
+	OVITO_ASSERT(targetIndex < owner()->targets().size());
 
-	RefTarget* t = owner()->_targets[targetIndex];
+	RefTarget* t = owner()->targets()[targetIndex];
 	return owner()->setItemData(t, index, value, role);
 }
 

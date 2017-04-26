@@ -2,8 +2,8 @@
 import ovito.io.particles
 
 # Load the native code module
-import OpenBabelPlugin
+import ovito.plugins.OpenBabelPlugin
 
 # Inject selected classes into parent module.
-ovito.io.particles.OpenBabelImporter = OpenBabelPlugin.OpenBabelImporter
-ovito.io.particles.CIFImporter = OpenBabelPlugin.CIFImporter
+ovito.io.particles.OpenBabelImporter = ovito.plugins.OpenBabelPlugin.OpenBabelImporter
+ovito.io.particles.CIFImporter = ovito.plugins.OpenBabelPlugin.CIFImporter

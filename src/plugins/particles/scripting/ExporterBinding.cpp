@@ -38,12 +38,9 @@ namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 using namespace PyScript;
 
-PYBIND11_PLUGIN(ParticlesExporter)
+void defineExportersSubmodule(py::module parentModule)
 {
-	py::options options;
-	options.disable_function_signatures();
-
-	py::module m("ParticlesExporter");
+	py::module m = parentModule.def_submodule("Exporters");
 
 	ovito_abstract_class<ParticleExporter, FileExporter>{m}
 	;
@@ -76,11 +73,7 @@ PYBIND11_PLUGIN(ParticlesExporter)
 
 	ovito_class<FHIAimsExporter, ParticleExporter>{m}
 	;
-
-	return m.ptr();
 }
-
-OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(ParticlesExporter);
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

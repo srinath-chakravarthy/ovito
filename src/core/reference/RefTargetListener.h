@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_REFTARGET_LISTENER_H
-#define __OVITO_REFTARGET_LISTENER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "RefTarget.h"
@@ -41,23 +41,13 @@ public:
 
 	/// \brief The default constructor.
 	RefTargetListenerBase() : RefMaker(nullptr) {
-		INIT_PROPERTY_FIELD(RefTargetListenerBase::_target);
+		INIT_PROPERTY_FIELD(target);
 	}
 
 	/// \brief Destructor.
 	virtual ~RefTargetListenerBase() {
 		clearAllReferences();
 	}
-
-	/// \brief Returns the current target this listener is listening to.
-	/// \return The current target object or \c NULL.
-	/// \sa setTarget()
-	RefTarget* target() const { return _target; }
-
-	/// \brief Sets the current target this listener should listen to.
-	/// \param newTarget The new target or \c NULL.
-	/// \sa target()
-	void setTarget(RefTarget* newTarget) { _target = newTarget; }
 
 Q_SIGNALS:
 
@@ -79,13 +69,11 @@ protected:
 
 private:
 
-	/// The RefTarget which is being monitored by this listener.
-	ReferenceField<RefTarget> _target;
-
 	Q_OBJECT
 	OVITO_OBJECT
 
-	DECLARE_REFERENCE_FIELD(_target);
+	/// The RefTarget which is being monitored by this listener.
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(RefTarget, target, setTarget);
 };
 
 /**
@@ -122,23 +110,13 @@ public:
 
 	/// \brief The default constructor.
 	VectorRefTargetListenerBase() : RefMaker(nullptr) {
-		INIT_PROPERTY_FIELD(VectorRefTargetListenerBase::_targets);
+		INIT_PROPERTY_FIELD(targets);
 	}
 
 	/// \brief Destructor.
 	virtual ~VectorRefTargetListenerBase() {
 		clearAllReferences();
 	}
-
-	/// \brief Returns the list of targets this listener is listening to.
-	/// \return The current list of target objects.
-	/// \sa setTargets()
-	const QVector<RefTarget*>& targets() const { return _targets; }
-
-	/// \brief Sets the list of targets this listener should listen to.
-	/// \param newTargets The new list of targets.
-	/// \sa targets()
-	void setTargets(const QVector<RefTarget*>& newTargets) { _targets = newTargets; }
 
 	/// \brief Clears the list of targets.
 	void clear() { _targets.clear();  }
@@ -183,13 +161,11 @@ protected:
 
 private:
 
-	/// The list of RefTargets which are being monitored by this listener.
-	VectorReferenceField<RefTarget> _targets;
-
 	Q_OBJECT
 	OVITO_OBJECT
 
-	DECLARE_VECTOR_REFERENCE_FIELD(_targets);
+	/// The list of RefTargets which are being monitored by this listener.
+	DECLARE_MODIFIABLE_VECTOR_REFERENCE_FIELD(RefTarget, targets, setTargets);
 };
 
 /**
@@ -223,5 +199,5 @@ public:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_REFTARGET_LISTENER_H
+
 

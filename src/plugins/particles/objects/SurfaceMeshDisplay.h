@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SURFACE_MESH_DISPLAY_H
-#define __OVITO_SURFACE_MESH_DISPLAY_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/AsynchronousDisplayObject.h>
@@ -49,53 +49,23 @@ public:
 	/// \brief Computes the bounding box of the object.
 	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
 
-	/// Returns the color of the surface.
-	const Color& surfaceColor() const { return _surfaceColor; }
-
-	/// Sets the color of the surface.
-	void setSurfaceColor(const Color& color) { _surfaceColor = color; }
-
-	/// Returns the color of the cap polygons.
-	const Color& capColor() const { return _capColor; }
-
-	/// Sets the color of the cap polygons.
-	void setCapColor(const Color& color) { _capColor = color; }
-
-	/// Returns whether the cap polygons are rendered.
-	bool showCap() const { return _showCap; }
-
-	/// Sets whether the cap polygons are rendered.
-	void setShowCap(bool show) { _showCap = show; }
-
-	/// Returns whether the surface mesh is rendered using smooth shading.
-	bool smoothShading() const { return _smoothShading; }
-
-	/// Sets whether the surface mesh is rendered using smooth shading.
-	void setSmoothShading(bool smoothShading) { _smoothShading = smoothShading; }
-
 	/// Returns the transparency of the surface mesh.
-	FloatType surfaceTransparency() const { return _surfaceTransparency ? _surfaceTransparency->currentFloatValue() : 0.0f; }
+	FloatType surfaceTransparency() const { return surfaceTransparencyController() ? surfaceTransparencyController()->currentFloatValue() : 0.0f; }
 
 	/// Sets the transparency of the surface mesh.
-	void setSurfaceTransparency(FloatType transparency) { if(_surfaceTransparency) _surfaceTransparency->setCurrentFloatValue(transparency); }
+	void setSurfaceTransparency(FloatType transparency) { if(surfaceTransparencyController()) surfaceTransparencyController()->setCurrentFloatValue(transparency); }
 
 	/// Returns the transparency of the surface cap mesh.
-	FloatType capTransparency() const { return _capTransparency ? _capTransparency->currentFloatValue() : 0.0f; }
+	FloatType capTransparency() const { return capTransparencyController() ? capTransparencyController()->currentFloatValue() : 0.0f; }
 
 	/// Sets the transparency of the surface cap mesh.
-	void setCapTransparency(FloatType transparency) { if(_capTransparency) _capTransparency->setCurrentFloatValue(transparency); }
-
-	/// Returns whether the mesh' orientation is flipped.
-	bool reverseOrientation() const { return _reverseOrientation; }
-
-	/// Sets whether the mesh' orientation is flipped.
-	void setReverseOrientation(bool reverse) { _reverseOrientation = reverse; }
+	void setCapTransparency(FloatType transparency) { if(capTransparencyController()) capTransparencyController()->setCurrentFloatValue(transparency); }
 
 	/// Generates the final triangle mesh, which will be rendered.
-	static bool buildSurfaceMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool reverseOrientation, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress = nullptr);
+	static bool buildSurfaceMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool reverseOrientation, const QVector<Plane3>& cuttingPlanes, TriMesh& output, PromiseBase* progress = nullptr);
 
 	/// Generates the triangle mesh for the PBC cap.
-	static void buildCapMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool isCompletelySolid, bool reverseOrientation, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress = nullptr);
+	static void buildCapMesh(const HalfEdgeMesh<>& input, const SimulationCell& cell, bool isCompletelySolid, bool reverseOrientation, const QVector<Plane3>& cuttingPlanes, TriMesh& output, PromiseBase* progress = nullptr);
 
 protected:
 
@@ -152,25 +122,25 @@ protected:
 	static bool isCornerInside3DRegion(const HalfEdgeMesh<>& mesh, const std::vector<Point3>& reducedPos, const std::array<bool,3> pbcFlags, bool isCompletelySolid);
 
 	/// Controls the display color of the surface mesh.
-	PropertyField<Color, QColor> _surfaceColor;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Color, surfaceColor, setSurfaceColor);
 
 	/// Controls the display color of the cap mesh.
-	PropertyField<Color, QColor> _capColor;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Color, capColor, setCapColor);
 
 	/// Controls whether the cap mesh is rendered.
-	PropertyField<bool> _showCap;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, showCap, setShowCap);
 
 	/// Controls whether the surface mesh is rendered using smooth shading.
-	PropertyField<bool> _smoothShading;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, smoothShading, setSmoothShading);
 
 	/// Controls whether the mesh' orientation is flipped.
-	PropertyField<bool> _reverseOrientation;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, reverseOrientation, setReverseOrientation);
 
 	/// Controls the transparency of the surface mesh.
-	ReferenceField<Controller> _surfaceTransparency;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, surfaceTransparencyController, setSurfaceTransparencyController);
 
 	/// Controls the transparency of the surface cap mesh.
-	ReferenceField<Controller> _capTransparency;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, capTransparencyController, setCapTransparencyController);
 
 	/// The buffered geometry used to render the surface mesh.
 	std::shared_ptr<MeshPrimitive> _surfaceBuffer;
@@ -209,17 +179,9 @@ private:
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Surface mesh");
-
-	DECLARE_PROPERTY_FIELD(_surfaceColor);
-	DECLARE_PROPERTY_FIELD(_capColor);
-	DECLARE_PROPERTY_FIELD(_showCap);
-	DECLARE_PROPERTY_FIELD(_smoothShading);
-	DECLARE_PROPERTY_FIELD(_reverseOrientation);
-	DECLARE_REFERENCE_FIELD(_surfaceTransparency);
-	DECLARE_REFERENCE_FIELD(_capTransparency);
 };
 
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_SURFACE_MESH_DISPLAY_H
+

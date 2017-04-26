@@ -1,4 +1,4 @@
-from ovito import *
+import ovito
 from ovito.io import *
 from ovito.modifiers import *
 import numpy as np
@@ -9,7 +9,7 @@ modifier = WignerSeitzAnalysisModifier()
 node.modifiers.append(modifier)
 modifier.reference.load("../../files/NetCDF/sheared_aSi.nc")
 
-dataset.anim.current_frame = 4
+ovito.dataset.anim.current_frame = 4
 
 print("Parameter defaults:")
 

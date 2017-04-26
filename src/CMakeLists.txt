@@ -45,9 +45,16 @@ ENDIF()
 
 ADD_SUBDIRECTORY(plugins)
 
+# Propagate value of OVITOS_EXECUTABLE variable to parent scope.
+IF(OVITO_BUILD_PLUGIN_PYSCRIPT)
+	SET(OVITOS_EXECUTABLE ${OVITOS_EXECUTABLE} PARENT_SCOPE)
+ENDIF()
+
 ################### Main executable #######################
 
-ADD_SUBDIRECTORY(main)
+IF(OVITO_BUILD_GUI)
+	ADD_SUBDIRECTORY(main)
+ENDIF()
 
 # Propagate list of plugins to parent scope.
 SET(OVITO_PLUGIN_LIST ${OVITO_PLUGIN_LIST} PARENT_SCOPE)

@@ -24,7 +24,7 @@
 #include <core/rendering/RenderSettings.h>
 #include <core/reference/CloneHelper.h>
 #include <core/scene/ObjectNode.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/Task.h>
 #include "TachyonRenderer.h"
 
 extern "C" {
@@ -54,35 +54,35 @@ inline apivector tvec(const Point_3<T>& p) {
 	return rt_vector(p.x(), p.y(), -p.z());
 }
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Tachyon, TachyonRenderer, NonInteractiveSceneRenderer);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _antialiasingEnabled, "EnableAntialiasing", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _directLightSourceEnabled, "EnableDirectLightSource", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _shadowsEnabled, "EnableShadows", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _antialiasingSamples, "AntialiasingSamples", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _defaultLightSourceIntensity, "DefaultLightSourceIntensity", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _ambientOcclusionEnabled, "EnableAmbientOcclusion", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _ambientOcclusionSamples, "AmbientOcclusionSamples", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _ambientOcclusionBrightness, "AmbientOcclusionBrightness", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _depthOfFieldEnabled, "DepthOfFieldEnabled", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _dofFocalLength, "DOFFocalLength", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, _dofAperture, "DOFAperture", PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _antialiasingEnabled, "Enable anti-aliasing");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _antialiasingSamples, "Anti-aliasing samples");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _directLightSourceEnabled, "Direct light");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _shadowsEnabled, "Shadows");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _defaultLightSourceIntensity, "Direct light intensity");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _ambientOcclusionEnabled, "Ambient occlusion");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _ambientOcclusionSamples, "Ambient occlusion samples");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _ambientOcclusionBrightness, "Ambient occlusion brightness");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _depthOfFieldEnabled, "Depth of field");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _dofFocalLength, "Focal length");
-SET_PROPERTY_FIELD_LABEL(TachyonRenderer, _dofAperture, "Aperture");
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, _antialiasingSamples, IntegerParameterUnit, 1, 500);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TachyonRenderer, _defaultLightSourceIntensity, FloatParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TachyonRenderer, _ambientOcclusionBrightness, FloatParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TachyonRenderer, _dofFocalLength, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, _dofAperture, FloatParameterUnit, 0, 1);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, _ambientOcclusionSamples, IntegerParameterUnit, 1, 100);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(TachyonRenderer, NonInteractiveSceneRenderer);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, antialiasingEnabled, "EnableAntialiasing", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, directLightSourceEnabled, "EnableDirectLightSource", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, shadowsEnabled, "EnableShadows", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, antialiasingSamples, "AntialiasingSamples", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, defaultLightSourceIntensity, "DefaultLightSourceIntensity", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, ambientOcclusionEnabled, "EnableAmbientOcclusion", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, ambientOcclusionSamples, "AmbientOcclusionSamples", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, ambientOcclusionBrightness, "AmbientOcclusionBrightness", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, depthOfFieldEnabled, "DepthOfFieldEnabled", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, dofFocalLength, "DOFFocalLength", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(TachyonRenderer, dofAperture, "DOFAperture", PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, antialiasingEnabled, "Enable anti-aliasing");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, antialiasingSamples, "Anti-aliasing samples");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, directLightSourceEnabled, "Direct light");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, shadowsEnabled, "Shadows");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, defaultLightSourceIntensity, "Direct light intensity");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, ambientOcclusionEnabled, "Ambient occlusion");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, ambientOcclusionSamples, "Ambient occlusion samples");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, ambientOcclusionBrightness, "Ambient occlusion brightness");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, depthOfFieldEnabled, "Depth of field");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, dofFocalLength, "Focal length");
+SET_PROPERTY_FIELD_LABEL(TachyonRenderer, dofAperture, "Aperture");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, antialiasingSamples, IntegerParameterUnit, 1, 500);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TachyonRenderer, defaultLightSourceIntensity, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TachyonRenderer, ambientOcclusionBrightness, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(TachyonRenderer, dofFocalLength, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, dofAperture, FloatParameterUnit, 0, 1);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(TachyonRenderer, ambientOcclusionSamples, IntegerParameterUnit, 1, 100);
 
 /******************************************************************************
 * Default constructor.
@@ -93,17 +93,17 @@ TachyonRenderer::TachyonRenderer(DataSet* dataset) : NonInteractiveSceneRenderer
 	  _defaultLightSourceIntensity(0.90f), _ambientOcclusionBrightness(0.80f), _depthOfFieldEnabled(false),
 	  _dofFocalLength(40), _dofAperture(1e-2f)
 {
-	INIT_PROPERTY_FIELD(TachyonRenderer::_antialiasingEnabled);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_antialiasingSamples);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_directLightSourceEnabled);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_shadowsEnabled);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_defaultLightSourceIntensity);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_ambientOcclusionEnabled);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_ambientOcclusionSamples);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_ambientOcclusionBrightness);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_depthOfFieldEnabled);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_dofFocalLength);
-	INIT_PROPERTY_FIELD(TachyonRenderer::_dofAperture);
+	INIT_PROPERTY_FIELD(antialiasingEnabled);
+	INIT_PROPERTY_FIELD(antialiasingSamples);
+	INIT_PROPERTY_FIELD(directLightSourceEnabled);
+	INIT_PROPERTY_FIELD(shadowsEnabled);
+	INIT_PROPERTY_FIELD(defaultLightSourceIntensity);
+	INIT_PROPERTY_FIELD(ambientOcclusionEnabled);
+	INIT_PROPERTY_FIELD(ambientOcclusionSamples);
+	INIT_PROPERTY_FIELD(ambientOcclusionBrightness);
+	INIT_PROPERTY_FIELD(depthOfFieldEnabled);
+	INIT_PROPERTY_FIELD(dofFocalLength);
+	INIT_PROPERTY_FIELD(dofAperture);
 }
 
 /******************************************************************************
@@ -122,16 +122,16 @@ bool TachyonRenderer::startRender(DataSet* dataset, RenderSettings* settings)
 /******************************************************************************
 * Renders a single animation frame into the given frame buffer.
 ******************************************************************************/
-bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress)
+bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, TaskManager& taskManager)
 {
-	if(progress) progress->setStatusText(tr("Preparing scene"));
+	SynchronousTask renderTask(taskManager);
+	renderTask.setProgressText(tr("Handing scene data to Tachyon renderer"));
 
 	// Create new scene and set up parameters.
 	_rtscene = rt_newscene();
 	rt_resolution(_rtscene, renderSettings()->outputImageWidth(), renderSettings()->outputImageHeight());
 	if(antialiasingEnabled())
 		rt_aa_maxsamples(_rtscene, antialiasingSamples());
-	//rt_normal_fixup_mode(_rtscene, 2);
 
 	// Create Tachyon frame buffer.
 	QImage img(renderSettings()->outputImageWidth(), renderSettings()->outputImageHeight(), QImage::Format_RGBA8888);
@@ -183,7 +183,7 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 		p0 = projParams().inverseViewMatrix * p0;
 		direction = (projParams().inverseViewMatrix * direction).normalized();
 		up = (projParams().inverseViewMatrix * up).normalized();
-		p0 += direction * projParams().znear;
+		p0 += direction * (projParams().znear - FloatType(1e-9));
 
 		rt_camera_position(_rtscene, tvec(p0), tvec(direction), tvec(up));
 		rt_camera_zoom(_rtscene, 0.5 / projParams().fieldOfView);
@@ -233,10 +233,8 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 	renderModifiers(true);
 
 	// Render scene.
-	if(progress) {
-		progress->setMaximum(renderSettings()->outputImageWidth() * renderSettings()->outputImageHeight());
-		progress->setStatusText(tr("Rendering scene"));
-	}
+	renderTask.setProgressMaximum(renderSettings()->outputImageWidth() * renderSettings()->outputImageHeight());
+	renderTask.setProgressText(tr("Rendering image"));
 
 	scenedef * scene = (scenedef *)_rtscene;
 
@@ -244,7 +242,7 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 	/* since the last frame rendered, or when rendering the scene the   */
 	/* first time, various setup, initialization and memory allocation  */
 	/* routines need to be run in order to prepare for rendering.       */
-	if (scene->scenecheck)
+	if(scene->scenecheck)
 		rendercheck(scene);
 
 	camera_init(scene);      /* Initialize all aspects of camera system  */
@@ -253,7 +251,7 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 	if(frameBuffer->image().format() != QImage::Format_ARGB32)
 		frameBuffer->image() = frameBuffer->image().convertToFormat(QImage::Format_ARGB32);
 
-	int tileSize = scene->numthreads * 8;
+	int tileSize = scene->numthreads * 2;
 	for(int ystart = 0; ystart < scene->vres; ystart += tileSize) {
 		for(int xstart = 0; xstart < scene->hres; xstart += tileSize) {
 			int xstop = std::min(scene->hres, xstart + tileSize);
@@ -290,14 +288,12 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 			}
 			frameBuffer->update(QRect(xstart, frameBuffer->image().height() - ystop, xstop - xstart, ystop - ystart));
 
-			if(progress) {
-				progress->setValue(progress->value() + (xstop - xstart) * (ystop - ystart));
-				if(progress->wasCanceled())
-					break;
-			}
+			renderTask.setProgressValue(renderTask.progressValue() + (xstop - xstart) * (ystop - ystart));
+			if(renderTask.isCanceled())
+				break;
 		}
 
-		if(progress && progress->wasCanceled())
+		if(renderTask.isCanceled())
 			break;
 	}
 
@@ -320,7 +316,7 @@ bool TachyonRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask 
 	// Clean up.
 	rt_deletescene(_rtscene);
 
-	return (!progress || progress->wasCanceled() == false);
+	return !renderTask.isCanceled();
 }
 
 /******************************************************************************
@@ -571,7 +567,7 @@ void TachyonRenderer::renderMesh(const DefaultMeshPrimitive& meshBuffer)
 		Vector3 d2 = mesh.vertex(face->vertex(2)) - p0;
 		*faceNormal = normalTM * (Vector_3<float>)d2.cross(d1);
 		if(*faceNormal != Vector_3<float>::Zero()) {
-			faceNormal->normalize();
+			//faceNormal->normalize();
 			allMask |= face->smoothingGroups();
 		}
 	}

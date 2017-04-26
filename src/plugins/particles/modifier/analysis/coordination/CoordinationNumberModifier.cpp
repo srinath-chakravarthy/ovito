@@ -26,13 +26,13 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, CoordinationNumberModifier, AsynchronousParticleModifier);
-DEFINE_FLAGS_PROPERTY_FIELD(CoordinationNumberModifier, _cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(CoordinationNumberModifier, _numberOfBins, "NumberOfBins", PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(CoordinationNumberModifier, _cutoff, "Cutoff radius");
-SET_PROPERTY_FIELD_LABEL(CoordinationNumberModifier, _numberOfBins, "Number of histogram bins");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CoordinationNumberModifier, _cutoff, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CoordinationNumberModifier, _numberOfBins, IntegerParameterUnit, 4);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CoordinationNumberModifier, AsynchronousParticleModifier);
+DEFINE_FLAGS_PROPERTY_FIELD(CoordinationNumberModifier, cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(CoordinationNumberModifier, numberOfBins, "NumberOfBins", PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(CoordinationNumberModifier, cutoff, "Cutoff radius");
+SET_PROPERTY_FIELD_LABEL(CoordinationNumberModifier, numberOfBins, "Number of histogram bins");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CoordinationNumberModifier, cutoff, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(CoordinationNumberModifier, numberOfBins, IntegerParameterUnit, 4, 100000);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -40,8 +40,8 @@ SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(CoordinationNumberModifier, _numberOfBins, 
 CoordinationNumberModifier::CoordinationNumberModifier(DataSet* dataset) : AsynchronousParticleModifier(dataset),
 	_cutoff(3.2), _numberOfBins(200)
 {
-	INIT_PROPERTY_FIELD(CoordinationNumberModifier::_cutoff);
-	INIT_PROPERTY_FIELD(CoordinationNumberModifier::_numberOfBins);
+	INIT_PROPERTY_FIELD(cutoff);
+	INIT_PROPERTY_FIELD(numberOfBins);
 }
 
 /******************************************************************************
@@ -57,6 +57,8 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> CoordinationNumberM
 
 	// The number of sampling intervals for the radial distribution function.
 	int rdfSampleCount = std::max(numberOfBins(), 4);
+	if(rdfSampleCount > 100000)
+		throwException(tr("Number of histogram bins is too large."));
 
 	// Create engine object. Pass all relevant modifier parameters to the engine as well as the input data.
 	return std::make_shared<CoordinationAnalysisEngine>(validityInterval, posProperty->storage(), inputCell->data(), cutoff(), rdfSampleCount);
@@ -71,16 +73,16 @@ void CoordinationNumberModifier::CoordinationAnalysisEngine::perform()
 
 	// Prepare the neighbor list.
 	CutoffNeighborFinder neighborListBuilder;
-	if(!neighborListBuilder.prepare(_cutoff, positions(), cell(), nullptr, this))
+	if(!neighborListBuilder.prepare(_cutoff, positions(), cell(), nullptr, *this))
 		return;
 
 	size_t particleCount = positions()->size();
 	setProgressValue(0);
-	setProgressRange(particleCount / 1000);
+	setProgressMaximum(particleCount / 1000);
 
 	// Perform analysis on each particle in parallel.
 	std::vector<std::thread> workers;
-	size_t num_threads = Application::instance().idealThreadCount();
+	size_t num_threads = Application::instance()->idealThreadCount();
 	size_t chunkSize = particleCount / num_threads;
 	size_t startIndex = 0;
 	size_t endIndex = chunkSize;
@@ -182,8 +184,8 @@ void CoordinationNumberModifier::propertyChanged(const PropertyFieldDescriptor& 
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Recompute modifier results when the parameters have been changed.
-	if(field == PROPERTY_FIELD(CoordinationNumberModifier::_cutoff) ||
-			field == PROPERTY_FIELD(CoordinationNumberModifier::_numberOfBins))
+	if(field == PROPERTY_FIELD(cutoff) ||
+			field == PROPERTY_FIELD(numberOfBins))
 		invalidateCachedResults();
 }
 

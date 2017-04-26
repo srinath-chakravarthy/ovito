@@ -19,11 +19,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PYTHON_SCRIPT_MODIFIER_H
-#define __OVITO_PYTHON_SCRIPT_MODIFIER_H
+#pragma once
+
 
 #include <plugins/pyscript/PyScript.h>
-#include <core/utilities/concurrent/FutureInterface.h>
+#include <core/utilities/concurrent/Task.h>
 #include <core/scene/pipeline/Modifier.h>
 #include <core/scene/objects/CompoundObject.h>
 #include <plugins/pyscript/engine/ScriptEngine.h>
@@ -39,21 +39,6 @@ class OVITO_PYSCRIPT_EXPORT PythonScriptModifier : public Modifier
 {
 public:
 
-	// A helper class that provides the progress callback interface for Python scripts.
-	class ProgressHelper : public FutureInterface<void>
-	{
-	public:
-
-		virtual void cancel() override {
-			FutureInterface<void>::cancel();
-			// Since this task runs in the main application thread, canceling it
-			// means immediate termination.
-			reportFinished();
-		}
-	};
-
-public:
-
 	/// \brief Constructor.
 	Q_INVOKABLE PythonScriptModifier(DataSet* dataset);
 
@@ -65,12 +50,6 @@ public:
 
 	/// Sets the status returned by the modifier and generates a ReferenceEvent::ObjectStatusChanged event.
 	void setStatus(const PipelineStatus& status);
-
-	/// Returns the Python script.
-	const QString& script() const { return _script; }
-
-	/// Sets the Python script.
-	void setScript(const QString& script) { _script = script; }
 
 	/// Returns the Python script function executed by the modifier.
 	py::object scriptFunction() {
@@ -97,6 +76,9 @@ public:
 
 	/// Returns whether the modifier can be applied to the given input data.
 	virtual bool isApplicableTo(const PipelineFlowState& input) override { return true; }
+
+	/// Loads the default values of this object's parameter fields.
+	virtual void loadUserDefaults() override;
 
 protected:
 
@@ -127,7 +109,7 @@ private Q_SLOTS:
 private:
 
 	/// The Python script.
-	PropertyField<QString> _script;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QString, script, setScript);
 
 	/// The Python engine.
 	std::unique_ptr<ScriptEngine> _scriptEngine;
@@ -154,7 +136,7 @@ private:
 	bool _scriptExecutionQueued;
 
 	/// The running script task.
-	std::shared_ptr<ProgressHelper> _runningTask;
+	std::unique_ptr<SynchronousTask> _runningTask;
 
 	/// The generator object returned by the script function.
 	py::object _generatorObject;
@@ -170,10 +152,8 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_script);
 };
 
 }	// End of namespace
 
-#endif // __OVITO_PYTHON_SCRIPT_MODIFIER_H
+

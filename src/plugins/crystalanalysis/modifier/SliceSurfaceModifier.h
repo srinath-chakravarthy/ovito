@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SLICE_SURFACE_MODIFIER_H
-#define __OVITO_SLICE_SURFACE_MODIFIER_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/modifier/modify/SliceModifier.h>
@@ -83,4 +83,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_SLICE_SURFACE_MODIFIER_H
+

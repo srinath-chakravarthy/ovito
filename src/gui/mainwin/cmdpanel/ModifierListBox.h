@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_MODIFIER_LIST_BOX_H
-#define __OVITO_MODIFIER_LIST_BOX_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/object/OvitoObjectType.h>
@@ -28,7 +28,6 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 class ModificationListModel;
-class ModificationListItem;
 
 /**
  * A combo-box widget that lets the user insert new modifiers into the modification pipeline.
@@ -43,37 +42,57 @@ public:
 	/// Is called just before the drop-down box is activated.
 	virtual void showPopup() override {
 		updateAvailableModifiers();
+		_filterModel->invalidate();
+		setMaxVisibleItems(_model->rowCount());
+		_showAllModifiers = false;
 		QComboBox::showPopup();
+	}
+
+	/// Indicates whether the complete list of modifiers should be shown.
+	bool showAllModifiers() const {
+		return (_showAllModifiers || _mostRecentlyUsedModifiers.size() < 4);
 	}
 
 private Q_SLOTS:
 
-	/// Updates the list box of modifier classes that can be applied to the current selected
+	/// Updates the list box of modifier classes that can be applied to the currently selected
 	/// item in the modification list.
 	void updateAvailableModifiers();
 
+	/// Updates the MRU list after the user has selected a modifier.
+	void updateMRUList(const QString& selectedModifierName);
+
 private:
 
-	/// A category of modifiers.
-	struct ModifierCategory {
-		QString name;
-		QVector<const OvitoObjectType*> modifierClasses;
-	};
+	/// Filters the full list of modifiers to show only most recently used ones.
+	bool filterAcceptsRow(int source_row, const QModelIndex& source_parent);
 
-	/// List of modifier categories.
-	QVector<ModifierCategory> _modifierCategories;
+	/// Determines the sort order of the modifier list. 
+	bool filterSortLessThan(const QModelIndex& source_left, const QModelIndex& source_right);
 
 	/// The modification list model.
 	ModificationListModel* _modificationList;
 
-	/// The font to be used for category headers.
-	QFont _categoryFont;
+	/// The list items representing modifier types.
+	QVector<QStandardItem*> _modifierItems;
 
-	/// The background brush to be used for category headers.
-	QBrush _categoryBackgroundBrush;
+	/// The item model containing all entries of the combo box.
+	QStandardItemModel* _model;
 
-	/// The foreground brush to be used for category headers.
-	QBrush _categoryForegroundBrush;
+	/// The item model used for filtering/storting the displayed list of modifiers.
+	QSortFilterProxyModel* _filterModel;
+
+	/// This flag asks updateAvailableModifiers() to list all modifiers, not just the most recently used ones.
+	bool _showAllModifiers = false;
+
+	/// The number of custom modifier presets in the list.
+	int _numCustomModifiers = 0;
+
+	/// MRU list of modifiers.
+	QStringList _mostRecentlyUsedModifiers; 
+
+	/// Maximum number of modifiers shown in the MRU list.
+	int _maxMRUSize = 8;
 
 	Q_OBJECT
 };
@@ -82,4 +101,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_MODIFIER_LIST_BOX_H
+

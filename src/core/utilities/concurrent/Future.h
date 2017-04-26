@@ -19,118 +19,205 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_FUTURE_H
-#define __OVITO_FUTURE_H
+#pragma once
+
 
 #include <core/Core.h>
-#include "FutureInterface.h"
+#include "Promise.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Concurrency)
 
-class FutureBase {
+/******************************************************************************
+* Generic base class for futures, which implements the basic state management,
+* progress reporting, and event processing.
+******************************************************************************/
+class FutureBase 
+{
 public:
 
-	bool isCanceled() const { return getinterface()->isCanceled(); }
-	bool isFinished() const { return getinterface()->isFinished(); }
+	/// Returns true if the Promise associated with this Future has been canceled.
+	bool isCanceled() const { return promise()->isCanceled(); }
 
-	void cancel() { getinterface()->cancel(); }
+	/// Returns true if the Promise associated with this Future has been completed.
+	bool isFinished() const { return promise()->isFinished(); }
+
+	/// Cancels the Promise associated with this Future.
+	void cancel() { promise()->cancel(); }
+
+	/// Blocks execution until the Promise associated with this future has been completed.
 	void waitForFinished() const {
-		getinterface()->waitForFinished();
+		promise()->waitForFinished();
 	}
-	bool isValid() const { return (bool)_interface; }
-	void reset() { _interface.reset(); }
 
-    int progressValue() const { return getinterface()->progressValue(); }
-    int progressMaximum() const { return getinterface()->progressMaximum(); }
-    int totalProgressValue() const { return getinterface()->totalProgressValue(); }
-    int totalProgressMaximum() const { return getinterface()->totalProgressMaximum(); }
-    QString progressText() const { return getinterface()->progressText(); }
+	/// Returns true if this Future is associated with a valid Promise.
+	bool isValid() const { return (bool)_promise; }
+
+	/// Dissociates this Future from its Promise.
+	void reset() { _promise.reset(); }
+
+	/// Returns the Promise associated with this Future. 
+	/// Make sure it has a Promise before calling this function.
+	const PromiseBasePtr& promise() const {
+		OVITO_ASSERT(isValid());
+		return _promise;
+	}
 
 protected:
 
+	/// Default constructor, which creates a Future with a Promise.
 	FutureBase() {}
 
-	explicit FutureBase(const std::shared_ptr<FutureInterfaceBase>& p) : _interface(p) {}
+	/// Constructor that creates a Future associated with a Promise.
+	explicit FutureBase(const PromiseBasePtr& p) : _promise(p) {}
 	
-	std::shared_ptr<FutureInterfaceBase>& getinterface() {
-		OVITO_ASSERT(isValid());
-		return _interface;
-	}
-	const std::shared_ptr<FutureInterfaceBase>& getinterface() const {
-		OVITO_ASSERT(isValid());
-		return _interface;
-	}
-	std::shared_ptr<FutureInterfaceBase> _interface;
+	/// The Promise associated with this Future.
+	PromiseBasePtr _promise;
 
 	template<typename R2, typename Function> friend class Task;
-	template<typename R2> friend class FutureInterface;
-	friend class FutureInterfaceBase;
-	friend class FutureWatcher;
+	template<typename R2> friend class Promise;
+	friend class PromiseBase;
+	friend class PromiseWatcher;
 	friend class TaskManager;
 };
 
+/******************************************************************************
+* A future that provides access to the value computed by a Promise.
+******************************************************************************/
 template<typename R>
-class Future : public FutureBase {
+class Future : public FutureBase 
+{
 public:
-	typedef FutureInterface<R> Interface;
+	typedef Promise<R> PromiseType;
+	typedef PromisePtr<R> PromisePtrType;
 
+	/// Default constructor that coonstructs an invalid Future that is not associated with any Promise.
 	Future() {}
 
-	explicit Future(const std::shared_ptr<Interface>& p) : FutureBase(p) {}
+	/// Constructor that constructs a Future that is associated with the given Promise.
+	explicit Future(const PromisePtrType& p) : FutureBase(p) {}
 
-	/// Create a Future with immediate results.
-	static Future createImmediate(const R& result, const QString& text = QString()) {
-		auto iface = std::make_shared<Interface>();
-		iface->reportStarted();
-		if(text.isEmpty() == false)
-			iface->setProgressText(text);
-		iface->setResult(result);
-		iface->reportFinished();
-		return Future(iface);
+	/// Creates a new Future and its associated Promise. The Promise is not started yet.
+	static Future createWithPromise() {
+		return Future(std::make_shared<PromiseType>());
 	}
 
-	/// Create a Future with a thrown exception.
+	/// Creates an already completed Future with a result value that is immediately available.
+	static Future createImmediate(const R& result, const QString& statusText = QString()) {
+		auto promise = std::make_shared<PromiseType>();
+		promise->setStarted();
+		if(statusText.isEmpty() == false)
+			promise->setProgressText(statusText);
+		promise->setResult(result);
+		promise->setFinished();
+		return Future(promise);
+	}
+
+	/// Creates an already completed Future with a result value that is immediately available.
+	static Future createImmediate(R&& result, const QString& statusText = QString()) {
+		auto promise = std::make_shared<PromiseType>();
+		promise->setStarted();
+		if(statusText.isEmpty() == false)
+			promise->setProgressText(statusText);
+		promise->setResult(std::move(result));
+		promise->setFinished();
+		return Future(promise);
+	}
+
+	/// Creates a completed Future that is in the 'exception' state.
 	static Future createFailed(const Exception& ex) {
-		auto iface = std::make_shared<Interface>();
-		iface->reportStarted();
-		iface->reportException(std::make_exception_ptr(ex));
-		iface->reportFinished();
-		return Future(iface);
+		auto promise = std::make_shared<PromiseType>();
+		promise->setStarted();
+		promise->setException(std::make_exception_ptr(ex));
+		promise->setFinished();
+		return Future(promise);
+	}
+
+	/// Creates a Future without results that is in the canceled state.
+	static Future createCanceled() {
+		auto promise = std::make_shared<PromiseType>();
+		promise->setStarted();
+		promise->cancel();
+		promise->setFinished();
+		return Future(promise);
+	}
+
+	/// Returns the results computed by the associated Promise.
+	/// Blocks execution until the results become available.
+	/// Throws an exception if an error occurred while the promise was computing
+	/// the results, or if the promise has been canceled.
+	const R& result() const {
+		promise()->waitForResult();
+		return static_cast<Promise<R>*>(promise().get())->_result;
+	}
+
+	/// Returns the Promise associated with this Future. 
+	/// Make sure it has a Promise before calling this function.
+	PromisePtrType promise() const {
+		return std::static_pointer_cast<PromiseType>(FutureBase::promise());
+	}
+};
+
+/******************************************************************************
+* A future without a result.
+******************************************************************************/
+template<>
+class Future<void> : public FutureBase 
+{
+public:
+	typedef Promise<void> PromiseType;
+	typedef PromisePtr<void> PromisePtrType;
+
+	/// Default constructor that coonstructs an invalid Future that is not associated with any Promise.
+	Future() {}
+
+	/// Constructor that constructs a Future that is associated with the given Promise.
+	explicit Future(const PromisePtrType& p) : FutureBase(p) {}
+
+	/// Creates a new Future and its associated Promise. The Promise is not started yet.
+	static Future createWithPromise() {
+		return Future(std::make_shared<PromiseType>());
+	}
+
+	/// Creates a Future that is already complete.
+	static Future createImmediate(const QString& statusText = QString()) {
+		auto promise = std::make_shared<PromiseType>();
+		promise->setStarted();
+		if(statusText.isEmpty() == false)
+			promise->setProgressText(statusText);
+		promise->setFinished();
+		return Future(promise);
 	}
 
 	/// Create a Future without results that is in the canceled state.
 	static Future createCanceled() {
-		auto iface = std::make_shared<Interface>();
-		iface->reportStarted();
-		iface->cancel();
-		iface->reportFinished();
-		return Future(iface);
+		auto promise = std::make_shared<PromiseType>();
+		promise->setStarted();
+		promise->cancel();
+		promise->setFinished();
+		return Future(promise);
 	}
 
-	const R& result() const {
-		getinterface()->waitForResult();
-		return static_cast<FutureInterface<R>*>(getinterface().get())->_result;
-	}
-};
-
-template<>
-class Future<void> : public FutureBase {
-public:
-	Future() {}
-	explicit Future(const std::shared_ptr<FutureInterface<void>>& p) : FutureBase(p) {}
-
+	/// Blocks execution until the Promise associated with this Future has finished.
+	/// Throws an exception if an error occurred while the promise was running or if the promise has been canceled.
 	void result() const {
-		getinterface()->waitForResult();
+		promise()->waitForResult();
+	}
+
+	/// Returns the Promise associated with this Future. 
+	/// Make sure it has a Promise before calling this function.
+	PromisePtrType promise() const {
+		return std::static_pointer_cast<PromiseType>(FutureBase::promise());
 	}
 };
 
-inline void FutureWatcher::setFuture(const FutureBase& future)
+/// Part of PromiseWatcher implementation.
+inline void PromiseWatcher::setFuture(const FutureBase& future)
 {
-	setFutureInterface(future.getinterface());
+	setPromise(future.promise());
 }
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_BACKGROUND_OPERATION_H
+

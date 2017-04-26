@@ -26,7 +26,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, CombineParticleSetsModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(CombineParticleSetsModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(CombineParticleSetsModifier, CombineParticleSetsModifierEditor);
 
 /******************************************************************************
@@ -47,7 +47,7 @@ void CombineParticleSetsModifierEditor::createUI(const RolloutInsertionParameter
 	layout->addWidget(statusLabel());
 
 	// Open a sub-editor for the source object.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(CombineParticleSetsModifier::_secondarySource), RolloutInsertionParameters().setTitle(tr("Secondary Source")));
+	new SubObjectParameterUI(this, PROPERTY_FIELD(CombineParticleSetsModifier::secondaryDataSource), RolloutInsertionParameters().setTitle(tr("Secondary Source")));
 }
 
 OVITO_END_INLINE_NAMESPACE

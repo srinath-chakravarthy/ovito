@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_MAIN_WINDOW_H
-#define __OVITO_MAIN_WINDOW_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <gui/dataset/GuiDataSetContainer.h>
@@ -167,12 +167,9 @@ private:
 
 	/// The OpenGL context used for rendering the viewports.
 	QPointer<QOpenGLContext> _glcontext;
-
-	/// The global list of all open main windows of the application.
-	static std::vector<MainWindow*> _windowList;
 };
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_MAIN_WINDOW_H
+

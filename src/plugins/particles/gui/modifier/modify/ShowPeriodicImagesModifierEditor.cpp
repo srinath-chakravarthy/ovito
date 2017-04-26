@@ -27,7 +27,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, ShowPeriodicImagesModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(ShowPeriodicImagesModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(ShowPeriodicImagesModifier, ShowPeriodicImagesModifierEditor);
 
 /******************************************************************************
@@ -46,25 +46,25 @@ void ShowPeriodicImagesModifierEditor::createUI(const RolloutInsertionParameters
 #endif
 	layout->setColumnStretch(1, 1);
 
-	BooleanParameterUI* showPeriodicImageXUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_showImageX));
+	BooleanParameterUI* showPeriodicImageXUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::showImageX));
 	layout->addWidget(showPeriodicImageXUI->checkBox(), 0, 0);
-	IntegerParameterUI* numImagesXPUI = new IntegerParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_numImagesX));
+	IntegerParameterUI* numImagesXPUI = new IntegerParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::numImagesX));
 	layout->addLayout(numImagesXPUI->createFieldLayout(), 0, 1);
 
-	BooleanParameterUI* showPeriodicImageYUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_showImageY));
+	BooleanParameterUI* showPeriodicImageYUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::showImageY));
 	layout->addWidget(showPeriodicImageYUI->checkBox(), 1, 0);
-	IntegerParameterUI* numImagesYPUI = new IntegerParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_numImagesY));
+	IntegerParameterUI* numImagesYPUI = new IntegerParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::numImagesY));
 	layout->addLayout(numImagesYPUI->createFieldLayout(), 1, 1);
 
-	BooleanParameterUI* showPeriodicImageZUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_showImageZ));
+	BooleanParameterUI* showPeriodicImageZUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::showImageZ));
 	layout->addWidget(showPeriodicImageZUI->checkBox(), 2, 0);
-	IntegerParameterUI* numImagesZPUI = new IntegerParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_numImagesZ));
+	IntegerParameterUI* numImagesZPUI = new IntegerParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::numImagesZ));
 	layout->addLayout(numImagesZPUI->createFieldLayout(), 2, 1);
 
-	BooleanParameterUI* adjustBoxSizeUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_adjustBoxSize));
+	BooleanParameterUI* adjustBoxSizeUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::adjustBoxSize));
 	layout->addWidget(adjustBoxSizeUI->checkBox(), 3, 0, 1, 2);
 
-	BooleanParameterUI* uniqueIdentifiersUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::_uniqueIdentifiers));
+	BooleanParameterUI* uniqueIdentifiersUI = new BooleanParameterUI(this, PROPERTY_FIELD(ShowPeriodicImagesModifier::uniqueIdentifiers));
 	layout->addWidget(uniqueIdentifiersUI->checkBox(), 4, 0, 1, 2);
 }
 

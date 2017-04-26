@@ -27,35 +27,35 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ScatterPlotModifier, ParticleModifier);
-DEFINE_PROPERTY_FIELD(ScatterPlotModifier, _selectXAxisInRange, "SelectXAxisInRange");
-DEFINE_FLAGS_PROPERTY_FIELD(ScatterPlotModifier, _selectionXAxisRangeStart, "SelectionXAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(ScatterPlotModifier, _selectionXAxisRangeEnd, "SelectionXAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(ScatterPlotModifier, _selectYAxisInRange, "SelectYAxisInRange");
-DEFINE_FLAGS_PROPERTY_FIELD(ScatterPlotModifier, _selectionYAxisRangeStart, "SelectionYAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(ScatterPlotModifier, _selectionYAxisRangeEnd, "SelectionYAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(ScatterPlotModifier, _fixXAxisRange, "FixXAxisRange");
-DEFINE_FLAGS_PROPERTY_FIELD(ScatterPlotModifier, _xAxisRangeStart, "XAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(ScatterPlotModifier, _xAxisRangeEnd, "XAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(ScatterPlotModifier, _fixYAxisRange, "FixYAxisRange");
-DEFINE_FLAGS_PROPERTY_FIELD(ScatterPlotModifier, _yAxisRangeStart, "YAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(ScatterPlotModifier, _yAxisRangeEnd, "YAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(ScatterPlotModifier, _xAxisProperty, "XAxisProperty");
-DEFINE_PROPERTY_FIELD(ScatterPlotModifier, _yAxisProperty, "YAxisProperty");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _selectXAxisInRange, "Select particles in x-range");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _selectionXAxisRangeStart, "Selection x-range start");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _selectionXAxisRangeEnd, "Selection x-range end");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _selectYAxisInRange, "Select particles in y-range");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _selectionYAxisRangeStart, "Selection y-range start");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _selectionYAxisRangeEnd, "Selection y-range end");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _fixXAxisRange, "Fix x-range");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _xAxisRangeStart, "X-range start");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _xAxisRangeEnd, "X-range end");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _fixYAxisRange, "Fix y-range");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _yAxisRangeStart, "Y-range start");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _yAxisRangeEnd, "Y-range end");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _xAxisProperty, "X-axis property");
-SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, _yAxisProperty, "Y-axis property");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ScatterPlotModifier, ParticleModifier);
+DEFINE_PROPERTY_FIELD(ScatterPlotModifier, selectXAxisInRange, "SelectXAxisInRange");
+DEFINE_FLAGS_PROPERTY_FIELD(ScatterPlotModifier, selectionXAxisRangeStart, "SelectionXAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(ScatterPlotModifier, selectionXAxisRangeEnd, "SelectionXAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(ScatterPlotModifier, selectYAxisInRange, "SelectYAxisInRange");
+DEFINE_FLAGS_PROPERTY_FIELD(ScatterPlotModifier, selectionYAxisRangeStart, "SelectionYAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(ScatterPlotModifier, selectionYAxisRangeEnd, "SelectionYAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(ScatterPlotModifier, fixXAxisRange, "FixXAxisRange");
+DEFINE_FLAGS_PROPERTY_FIELD(ScatterPlotModifier, xAxisRangeStart, "XAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(ScatterPlotModifier, xAxisRangeEnd, "XAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(ScatterPlotModifier, fixYAxisRange, "FixYAxisRange");
+DEFINE_FLAGS_PROPERTY_FIELD(ScatterPlotModifier, yAxisRangeStart, "YAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(ScatterPlotModifier, yAxisRangeEnd, "YAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(ScatterPlotModifier, xAxisProperty, "XAxisProperty");
+DEFINE_PROPERTY_FIELD(ScatterPlotModifier, yAxisProperty, "YAxisProperty");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, selectXAxisInRange, "Select particles in x-range");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, selectionXAxisRangeStart, "Selection x-range start");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, selectionXAxisRangeEnd, "Selection x-range end");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, selectYAxisInRange, "Select particles in y-range");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, selectionYAxisRangeStart, "Selection y-range start");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, selectionYAxisRangeEnd, "Selection y-range end");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, fixXAxisRange, "Fix x-range");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, xAxisRangeStart, "X-range start");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, xAxisRangeEnd, "X-range end");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, fixYAxisRange, "Fix y-range");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, yAxisRangeStart, "Y-range start");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, yAxisRangeEnd, "Y-range end");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, xAxisProperty, "X-axis property");
+SET_PROPERTY_FIELD_LABEL(ScatterPlotModifier, yAxisProperty, "Y-axis property");
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -66,20 +66,20 @@ ScatterPlotModifier::ScatterPlotModifier(DataSet* dataset) : ParticleModifier(da
 	_fixXAxisRange(false), _xAxisRangeStart(0),	_xAxisRangeEnd(0), _fixYAxisRange(false),
 	_yAxisRangeStart(0), _yAxisRangeEnd(0)
 {
-	INIT_PROPERTY_FIELD(ScatterPlotModifier::_selectXAxisInRange);
-	INIT_PROPERTY_FIELD(ScatterPlotModifier::_selectionXAxisRangeStart);
-	INIT_PROPERTY_FIELD(ScatterPlotModifier::_selectionXAxisRangeEnd);
-	INIT_PROPERTY_FIELD(ScatterPlotModifier::_selectYAxisInRange);
-	INIT_PROPERTY_FIELD(ScatterPlotModifier::_selectionYAxisRangeStart);
-	INIT_PROPERTY_FIELD(ScatterPlotModifier::_selectionYAxisRangeEnd);
-	INIT_PROPERTY_FIELD(ScatterPlotModifier::_fixXAxisRange);
-	INIT_PROPERTY_FIELD(ScatterPlotModifier::_xAxisRangeStart);
-	INIT_PROPERTY_FIELD(ScatterPlotModifier::_xAxisRangeEnd);
-	INIT_PROPERTY_FIELD(ScatterPlotModifier::_fixYAxisRange);
-	INIT_PROPERTY_FIELD(ScatterPlotModifier::_yAxisRangeStart);
-	INIT_PROPERTY_FIELD(ScatterPlotModifier::_yAxisRangeEnd);
-	INIT_PROPERTY_FIELD(ScatterPlotModifier::_xAxisProperty);
-	INIT_PROPERTY_FIELD(ScatterPlotModifier::_yAxisProperty);
+	INIT_PROPERTY_FIELD(selectXAxisInRange);
+	INIT_PROPERTY_FIELD(selectionXAxisRangeStart);
+	INIT_PROPERTY_FIELD(selectionXAxisRangeEnd);
+	INIT_PROPERTY_FIELD(selectYAxisInRange);
+	INIT_PROPERTY_FIELD(selectionYAxisRangeStart);
+	INIT_PROPERTY_FIELD(selectionYAxisRangeEnd);
+	INIT_PROPERTY_FIELD(fixXAxisRange);
+	INIT_PROPERTY_FIELD(xAxisRangeStart);
+	INIT_PROPERTY_FIELD(xAxisRangeEnd);
+	INIT_PROPERTY_FIELD(fixYAxisRange);
+	INIT_PROPERTY_FIELD(yAxisRangeStart);
+	INIT_PROPERTY_FIELD(yAxisRangeEnd);
+	INIT_PROPERTY_FIELD(xAxisProperty);
+	INIT_PROPERTY_FIELD(yAxisProperty);
 }
 
 /******************************************************************************
@@ -93,7 +93,7 @@ void ScatterPlotModifier::initializeModifier(PipelineObject* pipeline, ModifierA
 	ParticlePropertyReference bestProperty;
 	if(xAxisProperty().isNull() || yAxisProperty().isNull()) {
 		// Select the first available particle property from the input state.
-		PipelineFlowState input = pipeline->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+		PipelineFlowState input = getModifierInput(modApp);
 		for(DataObject* o : input.objects()) {
 			ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(o);
 			if(property && (property->dataType() == qMetaTypeId<int>() || property->dataType() == qMetaTypeId<FloatType>())) {

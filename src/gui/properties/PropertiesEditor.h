@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PROPERTIES_EDITOR_H
-#define __OVITO_PROPERTIES_EDITOR_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/reference/RefTarget.h>
@@ -96,16 +96,6 @@ public:
 	///
 	/// \note The rollout is automatically deleted when the editor is deleted.
 	QWidget* createRollout(const QString& title, const RolloutInsertionParameters& rolloutParams, const char* helpPage = nullptr);
-	
-	/// \brief Returns the object currently being edited in this properties editor.
-	/// \return The RefTarget derived object which is being edited in this editor.
-	///
-	/// \note This can be another object than the one used to create the editor via
-	///       PropertiesEditor::create(). Editors are re-usable and the object being edited
-	///       can be set with setEditObject().
-	///
-	/// \sa setEditObject()
-	RefTarget* editObject() const { return _editObject; }
 
 	/// \brief Executes the passed functor and catches any exceptions thrown during its execution.
 	/// If an exception is thrown by the functor, all changes done by the functor
@@ -161,7 +151,7 @@ private:
 	MainWindow* _mainWindow;
 
 	/// The object being edited in this editor.
-	ReferenceField<RefTarget> _editObject;
+	DECLARE_REFERENCE_FIELD(RefTarget, editObject);
 	
 	/// The list of rollout widgets that have been created by editor.
 	/// The cleanup handler is used to delete them when the editor is being deleted.
@@ -169,8 +159,6 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_editObject);
 };
 
 /// This macro is used to assign a PropertiesEditor-derived class to a RefTarget-derived class.
@@ -181,4 +169,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_PROPERTIES_EDITOR_H
+

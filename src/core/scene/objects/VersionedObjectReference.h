@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VERSIONED_OBJECT_REFERENCE_H
-#define __OVITO_VERSIONED_OBJECT_REFERENCE_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -35,13 +35,13 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem)
  *
  * Each C++ instance of a data container class has an internal revision counter that is incremented each time
  * the object is being modified in some way. This allows to detect changes made to an object without
- * looking at the stored data. In particular, it avoid saving a complete copy of the old data to detect changes.
+ * looking at the stored data. In particular, it avoids saving a complete copy of the old data to detect changes.
  *
  * This VersionedOORef smart pointer class stores an ordinary reference-counted pointer (OORef) to a data object and,
  * in addition, a revision number, which refers to a particular version (or state in time) of that object.
  *
- * Two VersionedOORef instances compare equal only if both the raw C++ pointers match as well as the
- * object revision numbers they refer to.
+ * Two VersionedOORef instances compare equal only if both their object pointers as well as their
+ * object revision numbers match.
  */
 template<class T>
 class VersionedOORef {
@@ -187,4 +187,4 @@ template<class T> QDebug operator<<(QDebug debug, const VersionedOORef<T>& p) {
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_VERSIONED_OBJECT_REFERENCE_H
+

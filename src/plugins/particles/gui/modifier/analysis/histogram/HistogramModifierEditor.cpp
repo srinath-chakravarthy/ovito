@@ -22,20 +22,22 @@
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <plugins/particles/modifier/analysis/histogram/HistogramModifier.h>
 #include <plugins/particles/gui/util/ParticlePropertyParameterUI.h>
+#include <plugins/particles/gui/util/BondPropertyParameterUI.h>
 #include <gui/properties/IntegerParameterUI.h>
+#include <gui/properties/IntegerRadioButtonParameterUI.h>
 #include <gui/properties/FloatParameterUI.h>
 #include <gui/properties/BooleanParameterUI.h>
 #include <gui/mainwin/MainWindow.h>
 #include "HistogramModifierEditor.h"
 
-#include <3rdparty/qwt/qwt_plot.h>
-#include <3rdparty/qwt/qwt_plot_curve.h>
-#include <3rdparty/qwt/qwt_plot_zoneitem.h>
-#include <3rdparty/qwt/qwt_plot_grid.h>
+#include <qwt/qwt_plot.h>
+#include <qwt/qwt_plot_curve.h>
+#include <qwt/qwt_plot_zoneitem.h>
+#include <qwt/qwt_plot_grid.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, HistogramModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(HistogramModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(HistogramModifier, HistogramModifierEditor);
 
 /******************************************************************************
@@ -51,16 +53,42 @@ void HistogramModifierEditor::createUI(const RolloutInsertionParameters& rollout
 	layout->setContentsMargins(4,4,4,4);
 	layout->setSpacing(4);
 
-	ParticlePropertyParameterUI* sourcePropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(HistogramModifier::_sourceProperty));
-	layout->addWidget(new QLabel(tr("Property:"), rollout));
-	layout->addWidget(sourcePropertyUI->comboBox());
+	QHBoxLayout* layout3 = new QHBoxLayout();
+	layout3->setContentsMargins(0,0,0,0);
+	layout3->setSpacing(4);
+	layout3->addWidget(new QLabel(tr("Input:")));
+	IntegerRadioButtonParameterUI* sourceTypeUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(HistogramModifier::dataSourceType));
+	QRadioButton* particlesModeBtn = sourceTypeUI->addRadioButton(HistogramModifier::Particles, tr("particles"));
+	QRadioButton* bondsModeBtn = sourceTypeUI->addRadioButton(HistogramModifier::Bonds, tr("bonds"));
+	layout3->addWidget(particlesModeBtn);
+	layout3->addWidget(bondsModeBtn);
+	layout3->addStretch(1);
+	layout->addLayout(layout3);
+	layout->addSpacing(4);	
+
+	ParticlePropertyParameterUI* sourceParticlePropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(HistogramModifier::sourceParticleProperty));
+	BondPropertyParameterUI* sourceBondPropertyUI = new BondPropertyParameterUI(this, PROPERTY_FIELD(HistogramModifier::sourceBondProperty));
+	QLabel* particlePropertyLabel = new QLabel(tr("Particle property:"));	
+	layout->addWidget(particlePropertyLabel);
+	layout->addWidget(sourceParticlePropertyUI->comboBox());
+	QLabel* bondPropertyLabel = new QLabel(tr("Bond property:"));
+	layout->addWidget(bondPropertyLabel);
+	layout->addWidget(sourceBondPropertyUI->comboBox());
+
+	bondPropertyLabel->hide();
+	sourceBondPropertyUI->comboBox()->hide();
+	particlesModeBtn->setChecked(true);
+	connect(bondsModeBtn, &QRadioButton::toggled, sourceParticlePropertyUI->comboBox(), &QWidget::setHidden);
+	connect(bondsModeBtn, &QRadioButton::toggled, particlePropertyLabel, &QWidget::setHidden);
+	connect(bondsModeBtn, &QRadioButton::toggled, sourceBondPropertyUI->comboBox(), &QWidget::setVisible);
+	connect(bondsModeBtn, &QRadioButton::toggled, bondPropertyLabel, &QWidget::setVisible);
 
 	QGridLayout* gridlayout = new QGridLayout();
 	gridlayout->setContentsMargins(4,4,4,4);
 	gridlayout->setColumnStretch(1, 1);
 
 	// Number of bins parameter.
-	IntegerParameterUI* numBinsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(HistogramModifier::_numberOfBins));
+	IntegerParameterUI* numBinsPUI = new IntegerParameterUI(this, PROPERTY_FIELD(HistogramModifier::numberOfBins));
 	gridlayout->addWidget(numBinsPUI->label(), 0, 0);
 	gridlayout->addLayout(numBinsPUI->createFieldLayout(), 0, 1);
 
@@ -70,7 +98,7 @@ void HistogramModifierEditor::createUI(const RolloutInsertionParameters& rollout
 	_histogramPlot->setMinimumHeight(240);
 	_histogramPlot->setMaximumHeight(240);
 	_histogramPlot->setCanvasBackground(Qt::white);
-	_histogramPlot->setAxisTitle(QwtPlot::yLeft, tr("Particle count"));	
+	_histogramPlot->setAxisTitle(QwtPlot::yLeft, tr("Count"));
 
 	layout->addWidget(new QLabel(tr("Histogram:")));
 	layout->addWidget(_histogramPlot);
@@ -86,7 +114,7 @@ void HistogramModifierEditor::createUI(const RolloutInsertionParameters& rollout
 	sublayout->setContentsMargins(4,4,4,4);
 	layout->addWidget(inputBox);
 
-	BooleanParameterUI* onlySelectedUI = new BooleanParameterUI(this, PROPERTY_FIELD(HistogramModifier::_onlySelected));
+	BooleanParameterUI* onlySelectedUI = new BooleanParameterUI(this, PROPERTY_FIELD(HistogramModifier::onlySelected));
 	sublayout->addWidget(onlySelectedUI->checkBox());
 
 	// Create selection.
@@ -95,13 +123,13 @@ void HistogramModifierEditor::createUI(const RolloutInsertionParameters& rollout
 	sublayout->setContentsMargins(4,4,4,4);
 	layout->addWidget(selectionBox);
 
-	BooleanParameterUI* selectInRangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(HistogramModifier::_selectInRange));
+	BooleanParameterUI* selectInRangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(HistogramModifier::selectInRange));
 	sublayout->addWidget(selectInRangeUI->checkBox());
 
 	QHBoxLayout* hlayout = new QHBoxLayout();
 	sublayout->addLayout(hlayout);
-	FloatParameterUI* selRangeStartPUI = new FloatParameterUI(this, PROPERTY_FIELD(HistogramModifier::_selectionRangeStart));
-	FloatParameterUI* selRangeEndPUI = new FloatParameterUI(this, PROPERTY_FIELD(HistogramModifier::_selectionRangeEnd));
+	FloatParameterUI* selRangeStartPUI = new FloatParameterUI(this, PROPERTY_FIELD(HistogramModifier::selectionRangeStart));
+	FloatParameterUI* selRangeEndPUI = new FloatParameterUI(this, PROPERTY_FIELD(HistogramModifier::selectionRangeEnd));
 	hlayout->addWidget(new QLabel(tr("From:")));
 	hlayout->addLayout(selRangeStartPUI->createFieldLayout());
 	hlayout->addSpacing(12);
@@ -119,13 +147,13 @@ void HistogramModifierEditor::createUI(const RolloutInsertionParameters& rollout
 	layout->addWidget(axesBox);
 	// x-axis.
 	{
-		BooleanParameterUI* rangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(HistogramModifier::_fixXAxisRange));
+		BooleanParameterUI* rangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(HistogramModifier::fixXAxisRange));
 		axesSublayout->addWidget(rangeUI->checkBox());
 
 		QHBoxLayout* hlayout = new QHBoxLayout();
 		axesSublayout->addLayout(hlayout);
-		FloatParameterUI* startPUI = new FloatParameterUI(this, PROPERTY_FIELD(HistogramModifier::_xAxisRangeStart));
-		FloatParameterUI* endPUI = new FloatParameterUI(this, PROPERTY_FIELD(HistogramModifier::_xAxisRangeEnd));
+		FloatParameterUI* startPUI = new FloatParameterUI(this, PROPERTY_FIELD(HistogramModifier::xAxisRangeStart));
+		FloatParameterUI* endPUI = new FloatParameterUI(this, PROPERTY_FIELD(HistogramModifier::xAxisRangeEnd));
 		hlayout->addWidget(new QLabel(tr("From:")));
 		hlayout->addLayout(startPUI->createFieldLayout());
 		hlayout->addSpacing(12);
@@ -138,13 +166,13 @@ void HistogramModifierEditor::createUI(const RolloutInsertionParameters& rollout
 	}
 	// y-axis.
 	{
-		BooleanParameterUI* rangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(HistogramModifier::_fixYAxisRange));
+		BooleanParameterUI* rangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(HistogramModifier::fixYAxisRange));
 		axesSublayout->addWidget(rangeUI->checkBox());
 
 		QHBoxLayout* hlayout = new QHBoxLayout();
 		axesSublayout->addLayout(hlayout);
-		FloatParameterUI* startPUI = new FloatParameterUI(this, PROPERTY_FIELD(HistogramModifier::_yAxisRangeStart));
-		FloatParameterUI* endPUI = new FloatParameterUI(this, PROPERTY_FIELD(HistogramModifier::_yAxisRangeEnd));
+		FloatParameterUI* startPUI = new FloatParameterUI(this, PROPERTY_FIELD(HistogramModifier::yAxisRangeStart));
+		FloatParameterUI* endPUI = new FloatParameterUI(this, PROPERTY_FIELD(HistogramModifier::yAxisRangeEnd));
 		hlayout->addWidget(new QLabel(tr("From:")));
 		hlayout->addLayout(startPUI->createFieldLayout());
 		hlayout->addSpacing(12);
@@ -181,7 +209,10 @@ void HistogramModifierEditor::plotHistogram()
 	if(!modifier)
 		return;
 
-	_histogramPlot->setAxisTitle(QwtPlot::xBottom, modifier->sourceProperty().nameWithComponent());
+	QString axisTitle = modifier->dataSourceType() == HistogramModifier::Particles ?
+		modifier->sourceParticleProperty().nameWithComponent() :
+		modifier->sourceBondProperty().nameWithComponent();
+	_histogramPlot->setAxisTitle(QwtPlot::xBottom, axisTitle);
 
 	if(modifier->histogramData().empty())
 		return;
@@ -259,15 +290,19 @@ void HistogramModifierEditor::onSaveData()
 
 		QTextStream stream(&file);
 
+		QString sourceTitle = modifier->dataSourceType() == HistogramModifier::Particles ?
+			modifier->sourceParticleProperty().nameWithComponent() :
+			modifier->sourceBondProperty().nameWithComponent();
+
 		FloatType binSize = (modifier->xAxisRangeEnd() - modifier->xAxisRangeStart()) / modifier->histogramData().size();
-		stream << "# " << modifier->sourceProperty().nameWithComponent() << " histogram (bin size: " << binSize << ")" << endl;
+		stream << "# " << sourceTitle << " histogram (bin size: " << binSize << ")" << endl;
 		for(int i = 0; i < modifier->histogramData().size(); i++) {
 			stream << (binSize * (FloatType(i) + FloatType(0.5)) + modifier->xAxisRangeStart()) << " " <<
 					modifier->histogramData()[i] << endl;
 		}
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 

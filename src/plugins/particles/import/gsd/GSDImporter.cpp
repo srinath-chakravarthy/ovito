@@ -25,7 +25,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, GSDImporter, ParticleImporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(GSDImporter, ParticleImporter);
 
 /******************************************************************************
 * Checks if the given file has format that can be read by this importer.
@@ -46,7 +46,7 @@ bool GSDImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceLocation
 /******************************************************************************
 * Scans the input file for simulation timesteps.
 ******************************************************************************/
-void GSDImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
+void GSDImporter::scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
 {
 	// First close text stream, we don't need it here.
 	QFileDevice& file = stream.device();
@@ -146,10 +146,6 @@ void GSDImporter::GSDImportTask::parseFile(CompressedTextReader& stream)
 	ParticleProperty* massProperty = readOptionalParticleProperty(gsd, "particles/mass", frameNumber, numParticles, ParticleProperty::MassProperty);
 	readOptionalParticleProperty(gsd, "particles/charge", frameNumber, numParticles, ParticleProperty::ChargeProperty);
 	ParticleProperty* velocityProperty = readOptionalParticleProperty(gsd, "particles/velocity", frameNumber, numParticles, ParticleProperty::VelocityProperty);
-	if(!velocityProperty && nFrames > 1 && gsd.hasChunk("particles/velocity", 1)) {
-		velocityProperty = new ParticleProperty(numParticles, ParticleProperty::VelocityProperty, 0, true);
-		addParticleProperty(velocityProperty);
-	}
 	ParticleProperty* radiusProperty = readOptionalParticleProperty(gsd, "particles/diameter", frameNumber, numParticles, ParticleProperty::RadiusProperty);
 	if(radiusProperty) {
 		// Convert particle diameter to radius by dividing by 2.

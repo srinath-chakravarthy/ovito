@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_DEFAULT_PARTICLE_GEOMETRY_BUFFER_H
-#define __OVITO_DEFAULT_PARTICLE_GEOMETRY_BUFFER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/rendering/ParticlePrimitive.h>
@@ -143,4 +143,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_DEFAULT_PARTICLE_GEOMETRY_BUFFER_H
+

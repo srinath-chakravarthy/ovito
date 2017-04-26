@@ -20,8 +20,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_BIN_AND_REDUCE_MODIFIER_H
-#define __OVITO_BIN_AND_REDUCE_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/ParticleProperty.h>
@@ -46,44 +46,11 @@ public:
 	/// Constructor.
 	Q_INVOKABLE BinAndReduceModifier(DataSet* dataset);
 
-	/// Sets the source particle property for which the average should be computed.
-	void setSourceProperty(const ParticlePropertyReference& prop) { _sourceProperty = prop; }
-
-	/// Returns the source particle property for which the average is computed.
-	const ParticlePropertyReference& sourceProperty() const { return _sourceProperty; }
-
-	/// Returns the reduction operation
-	ReductionOperationType reductionOperation() const { return _reductionOperation; }
-
-	/// Sets the reduction operation
-	void setReductionOperation(ReductionOperationType o) { _reductionOperation = o; }
-
-	/// Returns compute first derivative
-	bool firstDerivative() const { return _firstDerivative; }
-
-	/// Sets compute first derivative
-	void setFirstDerivative(bool d) { _firstDerivative = d; }
-
-	/// Returns the bin direction
-	BinDirectionType binDirection() const { return _binDirection; }
-
-	/// Sets the bin direction
-	void setBinDirection(BinDirectionType o) { _binDirection = o; }
-
-	/// Returns the number of spatial bins of the computed average value.
-	int numberOfBinsX() const { return _numberOfBinsX; }
-
-	/// Sets the number of spatial bins of the computed average value.
-	void setNumberOfBinsX(int n) { _numberOfBinsX = n; }
-
-	/// Returns the number of spatial bins of the computed average value.
-	int numberOfBinsY() const { return _numberOfBinsY; }
-
-	/// Sets the number of spatial bins of the computed average value.
-	void setNumberOfBinsY(int n) { _numberOfBinsY = n; }
-
 	/// Returns the stored average data.
 	const QVector<double>& binData() const { return _binData; }
+
+	/// Set start and end value of the plotting property axis.
+	void setPropertyAxisRange(FloatType start, FloatType end) { _propertyAxisRangeStart = start; _propertyAxisRangeEnd = end; }
 
 	/// Returns the start value of the plotting x-axis.
 	FloatType xAxisRangeStart() const { return _xAxisRangeStart; }
@@ -96,27 +63,6 @@ public:
 
 	/// Returns the end value of the plotting y-axis.
 	FloatType yAxisRangeEnd() const { return _yAxisRangeEnd; }
-
-	/// Set whether the plotting range of the property axis should be fixed.
-	void setFixPropertyAxisRange(bool fix) { _fixPropertyAxisRange = fix; }
-
-	/// Returns whether the plotting range of the property axis should be fixed.
-	bool fixPropertyAxisRange() const { return _fixPropertyAxisRange; }
-
-	/// Set start and end value of the plotting property axis.
-	void setPropertyAxisRange(FloatType start, FloatType end) { _propertyAxisRangeStart = start; _propertyAxisRangeEnd = end; }
-
-	/// Returns the start value of the plotting y-axis.
-	FloatType propertyAxisRangeStart() const { return _propertyAxisRangeStart; }
-
-	/// Returns the end value of the plotting y-axis.
-	FloatType propertyAxisRangeEnd() const { return _propertyAxisRangeEnd; }
-
-	/// Returns whether analysis takes only selected particles into account.
-	bool onlySelected() const { return _onlySelected; }
-
-	/// Sets whether analysis only selected particles are taken into account.
-	void setOnlySelected(bool onlySelected) { _onlySelected = onlySelected; }
 
     /// Returns true if binning in a single direction only.
     bool is1D() {
@@ -149,34 +95,34 @@ protected:
 private:
 
 	/// The particle property that serves as data source to be averaged.
-	PropertyField<ParticlePropertyReference> _sourceProperty;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ParticlePropertyReference, sourceProperty, setSourceProperty);
 
 	/// Type of reduction operation
-	PropertyField<ReductionOperationType, int> _reductionOperation;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ReductionOperationType, reductionOperation, setReductionOperation);
 
 	/// Compute first derivative.
-	PropertyField<bool> _firstDerivative;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, firstDerivative, setFirstDerivative);
 
 	/// Bin alignment
-	PropertyField<BinDirectionType, int> _binDirection;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(BinDirectionType, binDirection, setBinDirection);
 
 	/// Controls the number of spatial bins.
-	PropertyField<int> _numberOfBinsX;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, numberOfBinsX, setNumberOfBinsX);
 
 	/// Controls the number of spatial bins.
-	PropertyField<int> _numberOfBinsY;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, numberOfBinsY, setNumberOfBinsY);
 
 	/// Controls the whether the plotting range along the y-axis should be fixed.
-	PropertyField<bool> _fixPropertyAxisRange;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, fixPropertyAxisRange, setFixPropertyAxisRange);
 
 	/// Controls the start value of the plotting y-axis.
-	PropertyField<FloatType> _propertyAxisRangeStart;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, propertyAxisRangeStart, setPropertyAxisRangeStart);
 
 	/// Controls the end value of the plotting y-axis.
-	PropertyField<FloatType> _propertyAxisRangeEnd;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, propertyAxisRangeEnd, setPropertyAxisRangeEnd);
 
 	/// Controls whether the modifier should take into account only selected particles.
-	PropertyField<bool> _onlySelected;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, onlySelected, setOnlySelected);
 
 	/// Stores the start value of the plotting x-axis.
 	FloatType _xAxisRangeStart;
@@ -199,17 +145,6 @@ private:
 
 	Q_CLASSINFO("DisplayName", "Bin and reduce");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
-
-	DECLARE_PROPERTY_FIELD(_reductionOperation);
-	DECLARE_PROPERTY_FIELD(_firstDerivative);
-	DECLARE_PROPERTY_FIELD(_binDirection);
-	DECLARE_PROPERTY_FIELD(_numberOfBinsX);
-	DECLARE_PROPERTY_FIELD(_numberOfBinsY);
-	DECLARE_PROPERTY_FIELD(_fixPropertyAxisRange);
-	DECLARE_PROPERTY_FIELD(_propertyAxisRangeStart);
-	DECLARE_PROPERTY_FIELD(_propertyAxisRangeEnd);
-	DECLARE_PROPERTY_FIELD(_sourceProperty);
-	DECLARE_PROPERTY_FIELD(_onlySelected);
 };
 
 OVITO_END_INLINE_NAMESPACE
@@ -222,4 +157,4 @@ Q_DECLARE_METATYPE(Ovito::Particles::BinAndReduceModifier::BinDirectionType);
 Q_DECLARE_TYPEINFO(Ovito::Particles::BinAndReduceModifier::ReductionOperationType, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::Particles::BinAndReduceModifier::BinDirectionType, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_BIN_AND_REDUCE_MODIFIER_H
+

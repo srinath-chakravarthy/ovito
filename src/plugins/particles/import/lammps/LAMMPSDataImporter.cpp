@@ -31,9 +31,9 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, LAMMPSDataImporter, ParticleImporter);
-DEFINE_PROPERTY_FIELD(LAMMPSDataImporter, _atomStyle, "AtomStyle");
-SET_PROPERTY_FIELD_LABEL(LAMMPSDataImporter, _atomStyle, "Atom style");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(LAMMPSDataImporter, ParticleImporter);
+DEFINE_PROPERTY_FIELD(LAMMPSDataImporter, atomStyle, "AtomStyle");
+SET_PROPERTY_FIELD_LABEL(LAMMPSDataImporter, atomStyle, "Atom style");
 
 /******************************************************************************
 * Checks if the given file has format that can be read by this importer.
@@ -123,7 +123,7 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
     		if(sscanf(line.c_str(), "%u", &natoms) != 1)
     			throw Exception(tr("Invalid number of atoms (line %1): %2").arg(stream.lineNumber()).arg(line.c_str()));
 
-			setProgressRange(natoms);
+			setProgressMaximum(natoms);
 		}
     	else if(line.find("atom types") != string::npos) {
     		if(sscanf(line.c_str(), "%u", &natomtypes) != 1)
@@ -235,7 +235,6 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 	    // Skip blank line after keyword.
 		if(stream.eof()) break;
 		stream.readLine();
-		if(stream.eof()) break;
 
 		if(keyword.startsWith("Atoms")) {
 			if(natoms != 0) {
@@ -333,6 +332,33 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 						if(*atomType < 1 || *atomType > natomtypes)
 							throw Exception(tr("Atom type out of range in Atoms section of LAMMPS data file at line %1.").arg(stream.lineNumber()));
 						atomIdMap.insert(std::make_pair(*atomId, i));
+					}
+				}
+				else if(_atomStyle == AtomStyle_Sphere) {
+					ParticleProperty* radiusProperty = new ParticleProperty(natoms, ParticleProperty::RadiusProperty, 0, true);
+					addParticleProperty(radiusProperty);
+					FloatType* radius = radiusProperty->dataFloat();
+					ParticleProperty* massProperty = new ParticleProperty(natoms, ParticleProperty::MassProperty, 0, true);
+					addParticleProperty(massProperty);
+					FloatType* mass = massProperty->dataFloat();
+					for(int i = 0; i < natoms; i++, ++pos, ++atomType, ++atomId, ++radius, ++mass) {
+						if(!setProgressValueIntermittent(i)) return;
+						if(i != 0) stream.readLine();
+						bool invalidLine;
+						if(!pbcImage)
+							invalidLine = (sscanf(stream.line(), "%u %u " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING, atomId, atomType, radius, mass, &pos->x(), &pos->y(), &pos->z()) != 7);
+						else {
+							invalidLine = (sscanf(stream.line(), "%u %u " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " " FLOATTYPE_SCANF_STRING " %i %i %i", atomId, atomType, radius, mass, &pos->x(), &pos->y(), &pos->z(), &pbcImage->x(), &pbcImage->y(), &pbcImage->z()) != 7+3);
+							++pbcImage;
+						}
+						if(invalidLine)
+							throw Exception(tr("Invalid data in Atoms section of LAMMPS data file at line %1: %2").arg(stream.lineNumber()).arg(stream.lineString()));
+						if(*atomType < 1 || *atomType > natomtypes)
+							throw Exception(tr("Atom type out of range in Atoms section of LAMMPS data file at line %1.").arg(stream.lineNumber()));
+						atomIdMap.insert(std::make_pair(*atomId, i));
+						
+						*radius /= 2; // Convert diameter to radius.
+						if(*radius != 0) *mass *= pow(*radius, 3) * (FLOATTYPE_PI * FloatType(4) / FloatType(3)); // Convert density to mass.
 					}
 				}
 				else if(_atomStyle == AtomStyle_Unknown) {
@@ -437,7 +463,7 @@ void LAMMPSDataImporter::LAMMPSDataImportTask::parseFile(CompressedTextReader& s
 			for(int i = 1; i <= nbondtypes; i++)
 				bondTypeList->addBondTypeId(i);
 
-			setProgressRange(nbonds);
+			setProgressMaximum(nbonds);
 			for(int i = 0; i < nbonds; i++) {
 				if(!setProgressValueIntermittent(i)) return;
 				stream.readLine();
@@ -531,6 +557,7 @@ bool LAMMPSDataImporter::LAMMPSDataImportTask::detectAtomStyle(const char* first
 		else if(atomTypeHint == QStringLiteral("bond")) _atomStyle = AtomStyle_Bond;
 		else if(atomTypeHint == QStringLiteral("charge")) _atomStyle = AtomStyle_Charge;
 		else if(atomTypeHint == QStringLiteral("molecular")) _atomStyle = AtomStyle_Molecular;
+		else if(atomTypeHint == QStringLiteral("sphere")) _atomStyle = AtomStyle_Sphere;
 	}
 
 	if(_atomStyle == AtomStyle_Unknown) {

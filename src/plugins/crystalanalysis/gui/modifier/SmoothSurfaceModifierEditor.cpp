@@ -26,7 +26,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysisGui, SmoothSurfaceModifierEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(SmoothSurfaceModifierEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(SmoothSurfaceModifier, SmoothSurfaceModifierEditor);
 
 /******************************************************************************
@@ -42,7 +42,7 @@ void SmoothSurfaceModifierEditor::createUI(const RolloutInsertionParameters& rol
 	layout->setSpacing(6);
 	layout->setColumnStretch(1, 1);
 
-	IntegerParameterUI* smoothingLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(SmoothSurfaceModifier::_smoothingLevel));
+	IntegerParameterUI* smoothingLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(SmoothSurfaceModifier::smoothingLevel));
 	layout->addWidget(smoothingLevelUI->label(), 0, 0);
 	layout->addLayout(smoothingLevelUI->createFieldLayout(), 0, 1);
 }

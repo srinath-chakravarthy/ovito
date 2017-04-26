@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section version="5.0"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd"
+         xml:id="particles.modifiers.correlation_function"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:ns="http://docbook.org/ns/docbook">
+  <title>Correlation function</title>
+
+  <para>
+  
+    <informalfigure><screenshot><mediaobject><imageobject>
+       <imagedata fileref="images/modifiers/correlation_function_panel.png" format="PNG" scale="50" />
+    </imageobject></mediaobject></screenshot></informalfigure>
+  
+  This modifier calculates the spatial correlation function between two particle properties.</para>
+
+  <para>OVITO uses the FFT to compute the convolution. It then computes a radial average in reciprocal and real space. This gives the correlation function up to half of the cell size. The modifier can additionally compute the short-ranged part of the correlation function from a direct summation over neighbors.</para>
+
+  <para>For example, when both particle properties are constant and unity, the modifier returns the pair correlation function. The reciprocal space representation is then the structure factor.</para>
+
+  <simplesect>
+    <title>Parameters</title>
+
+    <variablelist>
+      <varlistentry>
+        <term>First property</term>
+        <listitem>
+          <para>First particle property for which to compute the correlation, <inlineequation>P<subscript>1</subscript></inlineequation>.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Second property</term>
+        <listitem>
+          <para>Second particle property for which to compute the correlation, <inlineequation>P<subscript>2</subscript></inlineequation>. If both particle properties are identical, the modifier computes the autocorrelation.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>FFT grid spacing</term>
+        <listitem>
+          <para>This property sets the approximate size of the FFT grid cell. The actual size is determined by the distance of the cell faces which must contain an integer number of grid cells.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Direct summation</term>
+        <listitem>
+          <para>If enabled, the real-space correlation plot will show the result of a direct calculation of the correlation function, obtaining by summing over neighbors. This short-ranged part of the correlation function is displayed as a red line.</para>
+        </listitem>
+      </varlistentry>
+      
+      <varlistentry>
+        <term>Neighbor cutoff radius</term>
+        <listitem>
+          <para>This property determines the cutoff of the direct calculation of the real-space correlation function.</para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>Number of neighbor bins</term>
+        <listitem>
+          <para>This property sets the number of bins for the direct calculation of the real-space correlation function.</para>
+        </listitem>
+      </varlistentry>      
+
+      <varlistentry>
+        <term>Normalize correlation function</term>
+        <listitem>
+          <para>If activated for the real-space correlation, the correlation function is normalized to approach unity at small distances and zero at large distances, i.e. the plot shows <inlineequation><mathphrase>(C(r)-&#x3008;P<subscript>1</subscript>&#x3009;&#x3008;P<subscript>2</subscript>&#x3009;)/(&#x3008;P<subscript>1</subscript>P<subscript>2</subscript>&#x3009;-&#x3008;P<subscript>1</subscript>&#x3009;&#x3008;P<subscript>2</subscript>&#x3009;)</mathphrase></inlineequation> rather than the unnormalized <inlineequation>C(r)</inlineequation>.
+          If activated for the reciprocal-space correlation function, the plot shows <inlineequation>C(q)/&#x3008;P<subscript>1</subscript>P<subscript>2</subscript>&#x3009;</inlineequation> rather than the unnormalized <inlineequation>C(q)</inlineequation>.
+          </para>
+        </listitem>
+      </varlistentry>      
+      
+    </variablelist>
+  </simplesect>
+
+  <simplesect>
+    <title>Acknowledgment</title>
+    <para>
+      This modifier has been contributed by Lars Pastewka.
+    </para>
+  </simplesect>
+    
+</section>

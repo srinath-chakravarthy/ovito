@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SCENEROOT_H
-#define __OVITO_SCENEROOT_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/animation/TimeInterval.h>
@@ -53,6 +53,9 @@ public:
 	/// \return An world axis-aligned box that contains the bounding boxes of all child nodes.
 	virtual Box3 localBoundingBox(TimePoint time) override;
 
+	/// \brief Returns whether this is the root scene node.
+	virtual bool isRootNode() const override { return true; }
+
 private:
 
 	Q_OBJECT
@@ -63,4 +66,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_SCENEROOT_H
+

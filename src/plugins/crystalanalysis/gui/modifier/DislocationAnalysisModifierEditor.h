@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_DISLOCATION_ANALYSIS_MODIFIER_EDITOR_H
-#define __OVITO_DISLOCATION_ANALYSIS_MODIFIER_EDITOR_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/crystalanalysis/modifier/dxa/DislocationAnalysisModifier.h>
@@ -86,12 +86,10 @@ protected Q_SLOTS:
 private:
 
 	/// The modifier whose results are being displayed.
-	ReferenceField<DislocationAnalysisModifier> _modifier;
+	DECLARE_REFERENCE_FIELD(DislocationAnalysisModifier, modifier);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_modifier);
 };
 
 /**
@@ -121,4 +119,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_DISLOCATION_ANALYSIS_MODIFIER_EDITOR_H
+

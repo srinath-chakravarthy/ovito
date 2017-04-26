@@ -174,12 +174,14 @@ public:
 					else if(_ctrlType == Controller::ControllerTypeVector3) {
 						Vector3 vec = static_object_cast<Vector3AnimationKey>(key)->value();
 						vec[index.column()] = value.value<FloatType>();
-						return static_object_cast<Vector3AnimationKey>(key)->setValue(vec);
+						static_object_cast<Vector3AnimationKey>(key)->setValue(vec);
+						return true;
 					}
 					else if(_ctrlType == Controller::ControllerTypePosition) {
 						Vector3 vec = static_object_cast<PositionAnimationKey>(key)->value();
 						vec[index.column()] = value.value<FloatType>();
-						return static_object_cast<PositionAnimationKey>(key)->setValue(vec);
+						static_object_cast<PositionAnimationKey>(key)->setValue(vec);
+						return true;
 					}
 					else if(_ctrlType == Controller::ControllerTypeRotation) {
 						Rotation r = static_object_cast<RotationAnimationKey>(key)->value();
@@ -192,11 +194,12 @@ public:
 						else if(index.column() == 3) {
 							r.setAngle(value.value<FloatType>());
 						}
-						return static_object_cast<RotationAnimationKey>(key)->setValue(r);
+						static_object_cast<RotationAnimationKey>(key)->setValue(r);
+						return true;
 					}
 				}
 				catch(const Exception& ex) {
-					ex.showError();
+					ex.reportError();
 				}
 			}
 		}
@@ -234,7 +237,7 @@ public:
 	void onCtrlEvent(ReferenceEvent* event) {
 		if(event->type() == ReferenceEvent::ReferenceRemoved) {
 			ReferenceFieldEvent* refEvent = static_cast<ReferenceFieldEvent*>(event);
-			if(refEvent->field() == PROPERTY_FIELD(KeyframeController::_keys)) {
+			if(refEvent->field() == PROPERTY_FIELD(KeyframeController::keys)) {
 				int index = keys().indexOf(static_object_cast<AnimationKey>(refEvent->oldTarget()));
 				if(index >= 0) {
 					beginRemoveRows(QModelIndex(), index, index);
@@ -246,7 +249,7 @@ public:
 		}
 		else if(event->type() == ReferenceEvent::ReferenceAdded) {
 			ReferenceFieldEvent* refEvent = static_cast<ReferenceFieldEvent*>(event);
-			if(refEvent->field() == PROPERTY_FIELD(KeyframeController::_keys)) {
+			if(refEvent->field() == PROPERTY_FIELD(KeyframeController::keys)) {
 				OVITO_ASSERT(keys().size() == ctrl()->keys().size() - 1);
 				beginInsertRows(QModelIndex(), refEvent->index(), refEvent->index());
 				_keys.insert(refEvent->index(), static_object_cast<AnimationKey>(refEvent->newTarget()));
@@ -439,7 +442,7 @@ void AnimationKeyEditorDialog::onAddKey()
 			_tableWidget->selectRow(index);
 		}
 		catch(const Exception& ex) {
-			ex.showError();
+			ex.reportError();
 		}
 	}
 }
@@ -459,7 +462,7 @@ void AnimationKeyEditorDialog::onDeleteKey()
 		ctrl()->deleteKeys(keysToDelete);
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 

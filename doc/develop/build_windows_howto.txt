@@ -148,6 +148,19 @@ export INCLUDE="$INCLUDE;C:/Users/stuko/ovito/64bit/zlib_install/include"
 make install
 
 **************************************************************************
+OpenVR
+**************************************************************************
+git clone https://github.com/ValveSoftware/openvr.git
+
+**************************************************************************
+Create an app package signing certificate:
+**************************************************************************
+MakeCert /n "CN=ovito.org, O=ovito.org, L=Darmstadt, C=Germany" /r /h 0 /eku "1.3.6.1.5.5.7.3.3,1.3.6.1.4.1.311.10.3.13" /e 12/31/2017 /sv ovito.pvk ovito.cer
+Pvk2Pfx /pvk ovito.pvk  /spc ovito.cer /pfx ovito.pfx
+# Run as administrator: 
+Certutil -addStore TrustedPeople ovito.cer
+
+**************************************************************************
 OVITO:
 **************************************************************************
 mkdir ovito_release
@@ -155,6 +168,7 @@ cd ovito_release
 cmake -G "NMake Makefiles" ^
    -DCMAKE_BUILD_TYPE=Release ^
    -DCMAKE_INSTALL_PREFIX=../ovito_release_install ^
+   -DOVITO_REDISTRIBUTABLE_PACKAGE=ON ^
    -DZLIB_INCLUDE_DIR=%cd:\=/%/../zlib_install/include ^
    -DZLIB_LIBRARY=%cd:\=/%/../zlib_install/lib/zlib.lib ^
    -Dnetcdf_DIR=%cd:\=/%/../netcdf_install/lib/cmake/netCDF ^
@@ -164,11 +178,17 @@ cmake -G "NMake Makefiles" ^
    -DQSCINTILLA_LIBRARY=%cd:\=/%/../qscintilla/release/qscintilla2.lib ^
    -DPYTHON_LIBRARY=%cd:\=/%/../Python/libs/python34.lib ^
    -DPYTHON_INCLUDE_DIR=%cd:\=/%/../Python/include ^
+   -DPYTHON_EXECUTABLE=%cd:\=/%/../Python/bin/python.exe ^
    -DXSLT_PROCESSOR=../../libxslt-1.1.26.win32/bin/xsltproc.exe ^
    -DSPHINX_PROCESSOR_PATH=%cd:\=/%/../Python/Scripts ^
    -DLIBAV_INCLUDE_DIR=%cd:\=/%/../libav_install/include ^
    -DLIBAV_LIBRARY_DIR=%cd:\=/%/../libav_install/bin ^
    -DOVITO_BUILD_DOCUMENTATION=ON ^
+   -DOVITO_BUILD_PLUGIN_VR=ON ^
+   -DOPENVR_INCLUDE_DIR=%cd:\=/%/../openvr/headers ^
+   -DOPENVR_LIBRARY=%cd:\=/%/../openvr/lib/win64/openvr_api.lib ^
+   -DFFTW3_INCLUDE_DIR=%cd:\=/%/../fftw ^
+   -DFFTW3_LIBRARY=%cd:\=/%/../fftw/libfftw3f-3.lib ^
    ../../source
 
 nmake install

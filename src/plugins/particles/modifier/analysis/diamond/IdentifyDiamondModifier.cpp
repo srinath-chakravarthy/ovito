@@ -27,7 +27,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, IdentifyDiamondModifier, StructureIdentificationModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(IdentifyDiamondModifier, StructureIdentificationModifier);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -74,7 +74,7 @@ void IdentifyDiamondModifier::DiamondIdentificationEngine::perform()
 
 	// Prepare the neighbor list builder.
 	NearestNeighborFinder neighborFinder(4);
-	if(!neighborFinder.prepare(positions(), cell(), selection(), this))
+	if(!neighborFinder.prepare(positions(), cell(), selection(), *this))
 		return;
 
 	// This data structure stores information about a single neighbor.
@@ -91,7 +91,7 @@ void IdentifyDiamondModifier::DiamondIdentificationEngine::perform()
 		if(selection() && selection()->getInt(index) == 0)
 			return;
 		NearestNeighborFinder::Query<4> neighQuery(neighborFinder);
-		neighQuery.findNeighbors(neighborFinder.particlePos(index));
+		neighQuery.findNeighbors(index);
 		for(int i = 0; i < neighQuery.results().size(); i++) {
 			neighLists[index][i].vec = neighQuery.results()[i].delta;
 			neighLists[index][i].index = neighQuery.results()[i].index;

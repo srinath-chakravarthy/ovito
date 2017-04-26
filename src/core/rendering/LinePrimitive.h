@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_LINE_DISPLAY_PRIMITIVE_H
-#define __OVITO_LINE_DISPLAY_PRIMITIVE_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "PrimitiveBase.h"
@@ -53,4 +53,4 @@ public:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_LINE_DISPLAY_PRIMITIVE_H
+

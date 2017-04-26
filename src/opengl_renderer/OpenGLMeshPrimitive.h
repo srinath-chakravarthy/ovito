@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_OPENGL_MESH_PRIMITIVE_H
-#define __OVITO_OPENGL_MESH_PRIMITIVE_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/rendering/MeshPrimitive.h>
@@ -83,4 +83,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_OPENGL_MESH_PRIMITIVE_H
+

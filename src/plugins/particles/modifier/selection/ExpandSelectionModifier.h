@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_EXPAND_SELECTION_MODIFIER_H
-#define __OVITO_EXPAND_SELECTION_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/BondsStorage.h>
@@ -50,30 +50,6 @@ public:
 
 	/// \brief Constructs a new instance of this class.
 	Q_INVOKABLE ExpandSelectionModifier(DataSet* dataset);
-
-	/// Returns the mode of expansion.
-	ExpansionMode mode() const { return _mode; }
-
-	/// Sets the mode of expansion.
-	void setMode(ExpansionMode mode) { _mode = mode; }
-
-	/// Returns the selection expansion range.
-	FloatType cutoffRange() const { return _cutoffRange; }
-
-	/// Sets the selection expansion range.
-	void setCutoffRange(FloatType cutoff) { _cutoffRange = cutoff; }
-
-	/// Returns the number of nearest neighbors to select.
-	int numNearestNeighbors() const { return _numNearestNeighbors; }
-
-	/// Sets the number of nearest neighbors to select.
-	void setNumNearestNeighbors(int n) { _numNearestNeighbors = n; }
-
-	/// Returns the number of expansion steps to perform.
-	int numberOfIterations() const { return _numIterations; }
-
-	/// Sets the number of expansion steps to perform.
-	void setNumberOfIterations(int n) { _numIterations = n; }
 
 protected:
 
@@ -172,16 +148,16 @@ private:
 private:
 
 	/// The expansion mode.
-	PropertyField<ExpansionMode, int> _mode;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(ExpansionMode, mode, setMode);
 
 	/// The selection cutoff range.
-	PropertyField<FloatType> _cutoffRange;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, cutoffRange, setCutoffRange);
 
 	/// The number of nearest neighbors to select.
-	PropertyField<int> _numNearestNeighbors;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, numNearestNeighbors, setNumNearestNeighbors);
 
 	/// The number of expansion steps to perform.
-	PropertyField<int> _numIterations;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, numberOfIterations, setNumberOfIterations);
 
 	/// This stores the cached results of the modifier.
 	QExplicitlySharedDataPointer<ParticleProperty> _outputSelection;
@@ -197,11 +173,6 @@ private:
 
 	Q_CLASSINFO("DisplayName", "Expand selection");
 	Q_CLASSINFO("ModifierCategory", "Selection");
-
-	DECLARE_PROPERTY_FIELD(_mode);
-	DECLARE_PROPERTY_FIELD(_cutoffRange);
-	DECLARE_PROPERTY_FIELD(_numNearestNeighbors);
-	DECLARE_PROPERTY_FIELD(_numIterations);
 };
 
 OVITO_END_INLINE_NAMESPACE
@@ -209,4 +180,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_EXPAND_SELECTION_MODIFIER_H
+

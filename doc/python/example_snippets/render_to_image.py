@@ -1,9 +1,9 @@
-from ovito import *
+import ovito
 from ovito.vis import *
 from PyQt5.QtGui import QPainter
 
 # Let OVITO render an image of the active viewport.
-vp = dataset.viewports.active_vp
+vp = ovito.dataset.viewports.active_vp
 rs = RenderSettings(size = (320,240), renderer = TachyonRenderer())
 image = vp.render(rs)
 

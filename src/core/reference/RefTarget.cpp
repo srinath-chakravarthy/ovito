@@ -27,7 +27,7 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem)
 
 // Gives the class run-time type information.
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, RefTarget, RefMaker);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(RefTarget, RefMaker);
 
 /******************************************************************************
 * This method is called when the reference counter of this OvitoObject
@@ -37,10 +37,9 @@ void RefTarget::aboutToBeDeleted()
 {
 	OVITO_CHECK_OBJECT_POINTER(this);
 	OVITO_ASSERT(this->__isObjectAlive());
-	OVITO_CHECK_OBJECT_POINTER(dataset());
 
 	// Make sure undo recording is not active while deleting the object from memory.
-	UndoSuspender noUndo(dataset()->undoStack());
+	UndoSuspender noUndo(this);
 
 	// This will remove all references to this target object.
 	notifyDependents(ReferenceEvent::TargetDeleted);

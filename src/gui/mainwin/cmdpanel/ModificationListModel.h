@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_MODIFICATION_LIST_MODEL_H
-#define __OVITO_MODIFICATION_LIST_MODEL_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/reference/RefTarget.h>
@@ -183,4 +183,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_MODIFICATION_LIST_MODEL_H
+

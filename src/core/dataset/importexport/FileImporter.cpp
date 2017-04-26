@@ -25,11 +25,12 @@
 #include <core/dataset/DataSet.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/dataset/importexport/FileSourceImporter.h>
+#include <core/app/Application.h>
 #include "FileImporter.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, FileImporter, RefTarget);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(FileImporter, RefTarget);
 
 /******************************************************************************
 * Return the list of available import services.
@@ -49,6 +50,7 @@ OORef<FileImporter> FileImporter::autodetectFileFormat(DataSet* dataset, const Q
 
 	try {
 		DataSetContainer* container = dataset->container();
+		OVITO_ASSERT(container != nullptr);
 
 		// Resolve filename if it contains a wildcard.
 		Future<QVector<FileSourceImporter::Frame>> framesFuture = FileSourceImporter::findWildcardMatches(url, container);
@@ -59,7 +61,7 @@ OORef<FileImporter> FileImporter::autodetectFileFormat(DataSet* dataset, const Q
 			dataset->throwException(tr("There are no files in the directory matching the filename pattern."));
 
 		// Download file so we can determine its format.
-		Future<QString> fetchFileFuture = FileManager::instance().fetchUrl(*container, frames.front().sourceFile);
+		Future<QString> fetchFileFuture = Application::instance()->fileManager()->fetchUrl(*container, frames.front().sourceFile);
 		if(!container->taskManager().waitForTask(fetchFileFuture))
 			dataset->throwException(tr("Operation has been canceled by the user."));
 

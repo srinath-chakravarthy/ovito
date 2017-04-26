@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLES_H
-#define __OVITO_PARTICLES_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -103,5 +103,3 @@ namespace Ovito {
 		OVITO_END_INLINE_NAMESPACE
 	}
 }
-
-#endif

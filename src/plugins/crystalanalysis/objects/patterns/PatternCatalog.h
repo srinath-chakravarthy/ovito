@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_PATTERN_CATALOG_H
-#define __OVITO_CA_PATTERN_CATALOG_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/scene/objects/DataObject.h>
@@ -37,9 +37,6 @@ public:
 
 	/// \brief Constructor.
 	Q_INVOKABLE PatternCatalog(DataSet* dataset);
-
-	/// Returns the list of structure patterns in this catalog.
-	const QVector<StructurePattern*>& patterns() const { return _patterns; }
 
 	/// Adds a new patterns to the catalog.
 	void addPattern(StructurePattern* pattern) { _patterns.push_back(pattern); }
@@ -61,16 +58,14 @@ public:
 private:
 
 	/// List of structure patterns.
-	VectorReferenceField<StructurePattern> _patterns;
+	DECLARE_MODIFIABLE_VECTOR_REFERENCE_FIELD(StructurePattern, patterns, setPatterns);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_VECTOR_REFERENCE_FIELD(_patterns);
 };
 
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CA_PATTERN_CATALOG_H
+

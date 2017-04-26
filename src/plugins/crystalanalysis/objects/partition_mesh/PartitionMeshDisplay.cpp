@@ -29,21 +29,21 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, PartitionMeshDisplay, AsynchronousDisplayObject);
-DEFINE_FLAGS_PROPERTY_FIELD(PartitionMeshDisplay, _surfaceColor, "SurfaceColor", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(PartitionMeshDisplay, _showCap, "ShowCap", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(PartitionMeshDisplay, _smoothShading, "SmoothShading");
-DEFINE_PROPERTY_FIELD(PartitionMeshDisplay, _flipOrientation, "FlipOrientation");
-DEFINE_REFERENCE_FIELD(PartitionMeshDisplay, _surfaceTransparency, "SurfaceTransparency", Controller);
-DEFINE_REFERENCE_FIELD(PartitionMeshDisplay, _capTransparency, "CapTransparency", Controller);
-SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _surfaceColor, "Free surface color");
-SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _showCap, "Show cap polygons");
-SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _smoothShading, "Smooth shading");
-SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _surfaceTransparency, "Surface transparency");
-SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _capTransparency, "Cap transparency");
-SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, _flipOrientation, "Flip surface orientation");
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(PartitionMeshDisplay, _surfaceTransparency, PercentParameterUnit, 0, 1);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(PartitionMeshDisplay, _capTransparency, PercentParameterUnit, 0, 1);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PartitionMeshDisplay, AsynchronousDisplayObject);
+DEFINE_FLAGS_PROPERTY_FIELD(PartitionMeshDisplay, surfaceColor, "SurfaceColor", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(PartitionMeshDisplay, showCap, "ShowCap", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(PartitionMeshDisplay, smoothShading, "SmoothShading");
+DEFINE_PROPERTY_FIELD(PartitionMeshDisplay, flipOrientation, "FlipOrientation");
+DEFINE_REFERENCE_FIELD(PartitionMeshDisplay, surfaceTransparencyController, "SurfaceTransparency", Controller);
+DEFINE_REFERENCE_FIELD(PartitionMeshDisplay, capTransparencyController, "CapTransparency", Controller);
+SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, surfaceColor, "Free surface color");
+SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, showCap, "Show cap polygons");
+SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, smoothShading, "Smooth shading");
+SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, surfaceTransparencyController, "Surface transparency");
+SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, capTransparencyController, "Cap transparency");
+SET_PROPERTY_FIELD_LABEL(PartitionMeshDisplay, flipOrientation, "Flip surface orientation");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(PartitionMeshDisplay, surfaceTransparencyController, PercentParameterUnit, 0, 1);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(PartitionMeshDisplay, capTransparencyController, PercentParameterUnit, 0, 1);
 
 /******************************************************************************
 * Constructor.
@@ -51,15 +51,15 @@ SET_PROPERTY_FIELD_UNITS_AND_RANGE(PartitionMeshDisplay, _capTransparency, Perce
 PartitionMeshDisplay::PartitionMeshDisplay(DataSet* dataset) : AsynchronousDisplayObject(dataset),
 	_surfaceColor(1, 1, 1), _showCap(true), _smoothShading(true), _flipOrientation(false), _trimeshUpdate(true)
 {
-	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_surfaceColor);
-	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_showCap);
-	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_smoothShading);
-	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_surfaceTransparency);
-	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_capTransparency);
-	INIT_PROPERTY_FIELD(PartitionMeshDisplay::_flipOrientation);
+	INIT_PROPERTY_FIELD(surfaceColor);
+	INIT_PROPERTY_FIELD(showCap);
+	INIT_PROPERTY_FIELD(smoothShading);
+	INIT_PROPERTY_FIELD(surfaceTransparencyController);
+	INIT_PROPERTY_FIELD(capTransparencyController);
+	INIT_PROPERTY_FIELD(flipOrientation);
 
-	_surfaceTransparency = ControllerManager::instance().createFloatController(dataset);
-	_capTransparency = ControllerManager::instance().createFloatController(dataset);
+	setSurfaceTransparencyController(ControllerManager::createFloatController(dataset));
+	setCapTransparencyController(ControllerManager::createFloatController(dataset));
 }
 
 /******************************************************************************
@@ -109,7 +109,7 @@ void PartitionMeshDisplay::PrepareMeshEngine::perform()
 {
 	setProgressText(tr("Preparing microstructure mesh for display"));
 
-	if(!buildMesh(*_inputMesh, _simCell, _cuttingPlanes, _surfaceMesh, this))
+	if(!buildMesh(*_inputMesh, _simCell, _cuttingPlanes, _surfaceMesh, *this))
 		throw Exception(tr("Failed to generate non-periodic version of microstructure mesh for display. Simulation cell might be too small."));
 
 	if(_flipOrientation)
@@ -155,13 +155,13 @@ void PartitionMeshDisplay::render(TimePoint time, DataObject* dataObject, const 
 	FloatType transp_surface = 0;
 	FloatType transp_cap = 0;
 	TimeInterval iv;
-	if(_surfaceTransparency) transp_surface = _surfaceTransparency->getFloatValue(time, iv);
-	if(_capTransparency) transp_cap = _capTransparency->getFloatValue(time, iv);
-	ColorA color_surface(surfaceColor(), 1.0f - transp_surface);
+	if(surfaceTransparencyController()) transp_surface = surfaceTransparencyController()->getFloatValue(time, iv);
+	if(capTransparencyController()) transp_cap = capTransparencyController()->getFloatValue(time, iv);
+	ColorA color_surface(surfaceColor(), FloatType(1) - transp_surface);
 
 	// Do we have to re-create the render primitives from scratch?
 	bool recreateSurfaceBuffer = !_surfaceBuffer || !_surfaceBuffer->isValid(renderer);
-	bool recreateCapBuffer = _showCap && (!_capBuffer || !_capBuffer->isValid(renderer));
+	bool recreateCapBuffer = showCap() && (!_capBuffer || !_capBuffer->isValid(renderer));
 
 	// Do we have to update the render primitives?
 	bool updateContents = _geometryCacheHelper.updateState(color_surface, smoothShading(), clusterGraph)
@@ -177,7 +177,7 @@ void PartitionMeshDisplay::render(TimePoint time, DataObject* dataObject, const 
 	if(updateContents) {
 
 		// Assign smoothing group to faces to interpolate normals.
-		const quint32 smoothingGroup = _smoothShading ? 1 : 0;
+		const quint32 smoothingGroup = smoothShading() ? 1 : 0;
 		for(auto& face : _surfaceMesh.faces()) {
 			face.setSmoothingGroups(smoothingGroup);
 		}
@@ -202,7 +202,7 @@ void PartitionMeshDisplay::render(TimePoint time, DataObject* dataObject, const 
 		_surfaceBuffer->setMesh(_surfaceMesh, color_surface);
 		_surfaceBuffer->setCullFaces(true);
 
-		if(_showCap)
+		if(showCap())
 			_capBuffer->setMesh(_capPolygonsMesh, color_surface);
 
 		// Reset update flag.
@@ -212,7 +212,7 @@ void PartitionMeshDisplay::render(TimePoint time, DataObject* dataObject, const 
 	// Handle picking of triangles.
 	renderer->beginPickObject(contextNode);
 	_surfaceBuffer->render(renderer);
-	if(_showCap)
+	if(showCap())
 		_capBuffer->render(renderer);
 	else
 		_capBuffer.reset();
@@ -222,7 +222,7 @@ void PartitionMeshDisplay::render(TimePoint time, DataObject* dataObject, const 
 /******************************************************************************
 * Generates the final triangle mesh, which will be rendered.
 ******************************************************************************/
-bool PartitionMeshDisplay::buildMesh(const PartitionMeshData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress)
+bool PartitionMeshDisplay::buildMesh(const PartitionMeshData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, PromiseBase& promise)
 {
 	// Convert half-edge mesh to triangle mesh.
 	input.convertToTriMesh(output);
@@ -237,8 +237,7 @@ bool PartitionMeshDisplay::buildMesh(const PartitionMeshData& input, const Simul
 	}
 	OVITO_ASSERT(fout == output.faces().end());
 
-	// Check for early abortion.
-	if(progress && progress->isCanceled())
+	if(promise.isCanceled())
 		return false;
 
 	// Convert vertex positions to reduced coordinates.
@@ -251,7 +250,7 @@ bool PartitionMeshDisplay::buildMesh(const PartitionMeshData& input, const Simul
 	for(size_t dim = 0; dim < 3; dim++) {
 		if(cell.pbcFlags()[dim] == false) continue;
 
-		if(progress && progress->isCanceled())
+		if(promise.isCanceled())
 			return false;
 
 		// Make sure all vertices are located inside the periodic box.
@@ -277,7 +276,7 @@ bool PartitionMeshDisplay::buildMesh(const PartitionMeshData& input, const Simul
 	}
 
 	// Check for early abortion.
-	if(progress && progress->isCanceled())
+	if(promise.isCanceled())
 		return false;
 
 	// Convert vertex positions back from reduced coordinates to absolute coordinates.
@@ -287,7 +286,7 @@ bool PartitionMeshDisplay::buildMesh(const PartitionMeshData& input, const Simul
 
 	// Clip mesh at cutting planes.
 	for(const Plane3& plane : cuttingPlanes) {
-		if(progress && progress->isCanceled())
+		if(promise.isCanceled())
 			return false;
 
 		output.clipAtPlane(plane);
@@ -296,7 +295,7 @@ bool PartitionMeshDisplay::buildMesh(const PartitionMeshData& input, const Simul
 	output.invalidateVertices();
 	output.invalidateFaces();
 
-	return true;
+	return !promise.isCanceled();
 }
 
 /******************************************************************************
@@ -319,14 +318,14 @@ bool PartitionMeshDisplay::splitFace(TriMesh& output, int faceIndex, int oldVert
 	OVITO_ASSERT(z[2] - z[1] == -(z[1] - z[2]));
 	OVITO_ASSERT(z[0] - z[2] == -(z[2] - z[0]));
 
-	if(std::abs(zd[0]) < 0.5f && std::abs(zd[1]) < 0.5f && std::abs(zd[2]) < 0.5f)
+	if(std::abs(zd[0]) < FloatType(0.5) && std::abs(zd[1]) < FloatType(0.5) && std::abs(zd[2]) < FloatType(0.5))
 		return true;	// Face is not crossing the periodic boundary.
 
 	// Create four new vertices (or use existing ones created during splitting of adjacent faces).
 	int properEdge = -1;
 	int newVertexIndices[3][2];
 	for(int i = 0; i < 3; i++) {
-		if(std::abs(zd[i]) < 0.5f) {
+		if(std::abs(zd[i]) < FloatType(0.5)) {
 			if(properEdge != -1)
 				return false;		// The simulation box may be too small or invalid.
 			properEdge = i;
@@ -335,7 +334,7 @@ bool PartitionMeshDisplay::splitFace(TriMesh& output, int faceIndex, int oldVert
 		int vi1 = face.vertex(i);
 		int vi2 = face.vertex((i+1)%3);
 		int oi1, oi2;
-		if(zd[i] <= -0.5f) {
+		if(zd[i] <= FloatType(-0.5)) {
 			std::swap(vi1, vi2);
 			oi1 = 1; oi2 = 0;
 		}
@@ -349,7 +348,7 @@ bool PartitionMeshDisplay::splitFace(TriMesh& output, int faceIndex, int oldVert
 		}
 		else {
 			Vector3 delta = output.vertex(vi2) - output.vertex(vi1);
-			delta[dim] -= 1.0f;
+			delta[dim] -= FloatType(1);
 			for(size_t d = dim + 1; d < 3; d++) {
 				if(cell.pbcFlags()[d])
 					delta[d] -= floor(delta[d] + FloatType(0.5));
@@ -358,14 +357,14 @@ bool PartitionMeshDisplay::splitFace(TriMesh& output, int faceIndex, int oldVert
 			if(delta[dim] != 0)
 				t = output.vertex(vi1)[dim] / (-delta[dim]);
 			else
-				t = 0.5f;
+				t = FloatType(0.5);
 			OVITO_ASSERT(std::isfinite(t));
 			Point3 p = delta * t + output.vertex(vi1);
 			newVertexIndices[i][oi1] = oldVertexCount + (int)newVertices.size();
 			newVertexIndices[i][oi2] = oldVertexCount + (int)newVertices.size() + 1;
 			newVertexLookupMap.insert(std::make_pair(std::pair<int,int>(vi1, vi2), std::pair<int,int>(newVertexIndices[i][oi1], newVertexIndices[i][oi2])));
 			newVertices.push_back(p);
-			p[dim] += 1.0f;
+			p[dim] += FloatType(1);
 			newVertices.push_back(p);
 		}
 	}

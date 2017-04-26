@@ -2,4 +2,4 @@
 import ovito.io
 
 # Load the native code module
-from Mesh import *
+from ovito.plugins.Mesh import *

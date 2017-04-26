@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_FILE_SOURCE_IMPORTER_H
-#define __OVITO_FILE_SOURCE_IMPORTER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/dataset/importexport/FileImporter.h>
@@ -189,4 +189,4 @@ OVITO_CORE_EXPORT LoadStream& operator>>(LoadStream& stream, FileSourceImporter:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_FILE_SOURCE_IMPORTER_H
+

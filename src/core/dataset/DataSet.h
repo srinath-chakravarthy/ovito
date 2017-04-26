@@ -19,13 +19,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_DATASET_H
-#define __OVITO_DATASET_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/reference/RefTarget.h>
 #include <core/animation/TimeInterval.h>
 #include <core/utilities/units/UnitsManager.h>
+#include <core/utilities/concurrent/Future.h>
+#include <core/utilities/concurrent/Promise.h>
 #include "UndoStack.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem)
@@ -52,26 +54,6 @@ public:
 
 	/// \brief Destructor.
 	virtual ~DataSet();
-
-	/// \brief Returns a reference to the viewport configuration associated with this dataset.
-	/// \return The internal object managing the viewports.
-	ViewportConfiguration* viewportConfig() const { return _viewportConfig; }
-
-	/// \brief Returns the animation settings.
-	/// \return The internal object storing the animation settings of the scene.
-	AnimationSettings* animationSettings() { return _animSettings; }
-
-	/// \brief Returns this dataset's root scene node.
-	/// \return The root node of the scene tree.
-	SceneRoot* sceneRoot() const { return _sceneRoot; }
-
-	/// \brief Returns the selection set.
-	/// \return The current selection set storing the list of selected scene nodes.
-	SelectionSet* selection() const { return _selection; }
-
-	/// \brief Returns the rendering settings for this scene.
-	/// \return The current rendering settings.
-	RenderSettings* renderSettings() const { return _renderSettings; }
 
 	/// \brief Returns the path where this dataset is stored on disk.
 	/// \return The location where the dataset is stored or will be stored on disk.
@@ -128,27 +110,38 @@ public:
 	///        sequence, the buffer will contain only the last rendered frame when the function returns.
 	/// \return true on success; false if operation has been canceled by the user.
 	/// \throw Exception on error.
-	bool renderScene(RenderSettings* settings, Viewport* viewport, FrameBuffer* frameBuffer, AbstractProgressDisplay* progressDisplay = nullptr);
+	bool renderScene(RenderSettings* settings, Viewport* viewport, FrameBuffer* frameBuffer, TaskManager& taskManager);
 
-	/// \brief Checks all scene nodes if their geometry pipeline is fully evaluated at the given animation time.
-	bool isSceneReady(TimePoint time) const;
-
-	/// \brief Calls the given slot as soon as the geometry pipelines of all scene nodes has been
-	///        completely evaluated.
-	void runWhenSceneIsReady(const std::function<void()>& fn);
-
-	/// \brief This function blocks until the scene has become ready.
-	/// \param message The text to be shown to the user while waiting.
-	/// \param progressDisplay The progress display/dialog to be use to show the message.
-	///                       If NULL, the function will show its own progress dialog box.
-	/// \return true on success; false if the operation has been canceled by the user.
-	bool waitUntilSceneIsReady(const QString& message, AbstractProgressDisplay* progressDisplay = nullptr);
+	/// \brief This function returns a future that is triggered once all data pipelines in the scene become ready.
+	/// \param message An optional messge text to be shown to the user while waiting.
+	Future<void> makeSceneReady(const QString& message = QString());
 
 	/// \brief Saves the dataset to the given file.
 	/// \throw Exception on error.
 	///
 	/// Note that this method does NOT invoke setFilePath().
 	void saveToFile(const QString& filePath);
+
+	/// \brief Appends an object to this dataset's list of global objects.
+	void addGlobalObject(RefTarget* target) {
+		if(!_globalObjects.contains(target))
+			_globalObjects.push_back(target);
+	}
+
+	/// \brief Removes an object from this dataset's list of global objects.
+	void removeGlobalObject(int index) {
+		_globalObjects.remove(index);
+	}
+
+	/// \brief Looks for a global object of the given type.
+	template<class T>
+	T* findGlobalObject() const {
+		for(RefTarget* obj : globalObjects()) {
+			T* castObj = dynamic_object_cast<T>(obj);
+			if(castObj) return castObj;
+		}
+		return nullptr;
+	}	
 
 Q_SIGNALS:
 
@@ -187,30 +180,33 @@ private:
 
 	/// Renders a single frame and saves the output file. This is part of the implementation of the renderScene() method.
 	bool renderFrame(TimePoint renderTime, int frameNumber, RenderSettings* settings, SceneRenderer* renderer,
-			Viewport* viewport, FrameBuffer* frameBuffer, VideoEncoder* videoEncoder, AbstractProgressDisplay* progressDisplay);
+			Viewport* viewport, FrameBuffer* frameBuffer, VideoEncoder* videoEncoder, TaskManager& taskManager);
 
 	/// Returns a viewport configuration that is used as template for new scenes.
 	OORef<ViewportConfiguration> createDefaultViewportConfiguration();
 
-	/// Checks if the scene is ready and calls all registered listeners.
-	void notifySceneReadyListeners();
+	/// \brief Checks if all scene nodes are ready and their data pipelines can provide fully computed results.
+	bool isSceneReady(TimePoint time) const;
 
 private:
 
 	/// The configuration of the viewports.
-	ReferenceField<ViewportConfiguration> _viewportConfig;
+	DECLARE_REFERENCE_FIELD(ViewportConfiguration, viewportConfig);
 
 	/// Current animation settings.
-	ReferenceField<AnimationSettings> _animSettings;
+	DECLARE_REFERENCE_FIELD(AnimationSettings, animationSettings);
 
 	/// Root node of the scene node tree.
-	ReferenceField<SceneRoot> _sceneRoot;
+	DECLARE_REFERENCE_FIELD(SceneRoot, sceneRoot);
 
 	/// The current node selection set.
-	ReferenceField<SelectionSet> _selection;
+	DECLARE_REFERENCE_FIELD(SelectionSet, selection);
 
 	/// The settings used when rendering the scene.
-	ReferenceField<RenderSettings> _renderSettings;
+	DECLARE_REFERENCE_FIELD(RenderSettings, renderSettings);
+
+	/// Global data managed by plugins.
+	DECLARE_MODIFIABLE_VECTOR_REFERENCE_FIELD(RefTarget, globalObjects, setGlobalObjects);
 
 	/// The file path this DataSet has been saved to.
 	QString _filePath;
@@ -221,23 +217,17 @@ private:
 	/// The manager of ParameterUnit objects.
 	UnitsManager _unitsManager;
 
-	/// List of listener objects that want to get notified when the scene is ready.
-	QVector<std::function<void()>> _sceneReadyListeners;
+	/// Active request waiting for the scene to become ready.
+	PromisePtr<void> _sceneReadyRequest;
 
 	/// This signal/slot connection updates the viewports when the animation time changes.
 	QMetaObject::Connection _updateViewportOnTimeChangeConnection;
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_viewportConfig);
-	DECLARE_REFERENCE_FIELD(_animSettings);
-	DECLARE_REFERENCE_FIELD(_sceneRoot);
-	DECLARE_REFERENCE_FIELD(_selection);
-	DECLARE_REFERENCE_FIELD(_renderSettings);
 };
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_DATASET_H
+

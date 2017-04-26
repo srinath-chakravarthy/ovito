@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_DISPLAY_OBJECT_H
-#define __OVITO_DISPLAY_OBJECT_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/reference/RefTarget.h>
@@ -86,39 +86,29 @@ public:
 	/// The default implementation returns \c true.
 	virtual bool showSelectionMarker() { return true; }
 
-	/// \brief Returns whether this display object is currently enabled.
-	bool isEnabled() const { return _isEnabled; }
-
-	/// \brief Enables or disables this display object.
-	/// \undoable
-	void setEnabled(bool enabled) { _isEnabled = enabled; }
-
 	/// \brief Returns a structure that describes the current status of the display object.
 	virtual PipelineStatus status() const { return PipelineStatus(); }
 
 	/// \brief Returns the title of this object.
 	virtual QString objectTitle() override {
-		if(_title.value().isEmpty()) return RefTarget::objectTitle();
-		else return _title;
+		if(title().isEmpty()) return RefTarget::objectTitle();
+		else return title();
 	}
 
 	/// \brief Changes the title of this object.
 	/// \undoable
-	void setObjectTitle(const QString& title) { _title = title; }
+	void setObjectTitle(const QString& title) { setTitle(title); }
 
 private:
 
 	/// Flag that indicates whether the modifier is enabled.
-	PropertyField<bool, bool, ReferenceEvent::TargetEnabledOrDisabled> _isEnabled;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, isEnabled, setEnabled);
 
 	/// The title of this display object.
-	PropertyField<QString, QString, ReferenceEvent::TitleChanged> _title;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QString, title, setTitle);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_isEnabled);
-	DECLARE_PROPERTY_FIELD(_title);
 };
 
 /**
@@ -158,4 +148,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_DISPLAY_OBJECT_H
+

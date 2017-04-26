@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VIEWPORT_INPUT_MODE_H
-#define __OVITO_VIEWPORT_INPUT_MODE_H
+#pragma once
+
 
 #include <gui/GUI.h>
 
@@ -106,6 +106,11 @@ public:
 	/// \param vpwin The viewport window in which the mouse event occurred.
 	/// \param event The mouse event.
 	virtual void mouseDoubleClickEvent(ViewportWindow* vpwin, QMouseEvent* event);
+
+	/// \brief Is called when a viewport looses the input focus.
+	/// \param vpwin The viewport window.
+	/// \param event The focus event.
+	virtual void focusOutEvent(ViewportWindow* vpwin, QFocusEvent* event);
 
 	/// \brief Return the mouse cursor shown in the viewport windows
 	///        while this input handler is active.
@@ -198,4 +203,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_VIEWPORT_INPUT_MODE_H
+

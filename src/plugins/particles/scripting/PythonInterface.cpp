@@ -33,15 +33,25 @@
 #include <plugins/particles/objects/BondsDisplay.h>
 #include <plugins/particles/objects/BondPropertyObject.h>
 #include <plugins/particles/objects/BondTypeProperty.h>
+#include <plugins/particles/objects/FieldQuantityObject.h>
 #include <plugins/particles/objects/SimulationCellObject.h>
+#include <plugins/particles/objects/TrajectoryObject.h>
+#include <plugins/particles/objects/TrajectoryGeneratorObject.h>
+#include <plugins/particles/objects/TrajectoryDisplay.h>
 #include <plugins/particles/util/CutoffNeighborFinder.h>
 #include <plugins/particles/util/NearestNeighborFinder.h>
 #include <core/utilities/io/CompressedTextWriter.h>
+#include <core/animation/AnimationSettings.h>
+#include <core/plugins/PluginManager.h>
 #include "PythonBinding.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 using namespace PyScript;
+
+void defineModifiersSubmodule(py::module parentModule);	// Defined in ModifierBinding.cpp
+void defineImportersSubmodule(py::module parentModule);	// Defined in ImporterBinding.cpp
+void defineExportersSubmodule(py::module parentModule);	// Defined in ExporterBinding.cpp
 
 template<class PropertyClass, bool ReadOnly>
 py::dict PropertyObject__array_interface__(PropertyClass& p)
@@ -60,25 +70,25 @@ py::dict PropertyObject__array_interface__(PropertyClass& p)
 	if(p.dataType() == qMetaTypeId<int>()) {
 		OVITO_STATIC_ASSERT(sizeof(int) == 4);
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-		ai["typestr"] = py::cast("<i4");
+		ai["typestr"] = py::bytes("<i4");
 #else
-		ai["typestr"] = py::cast(">i4");
+		ai["typestr"] = py::bytes(">i4");
 #endif
 	}
 	else if(p.dataType() == qMetaTypeId<FloatType>()) {
 #ifdef FLOATTYPE_FLOAT		
 		OVITO_STATIC_ASSERT(sizeof(FloatType) == 4);
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-		ai["typestr"] = py::cast("<f4");
+		ai["typestr"] = py::bytes("<f4");
 #else
-		ai["typestr"] = py::cast(">f4");
+		ai["typestr"] = py::bytes(">f4");
 #endif
 #else
 		OVITO_STATIC_ASSERT(sizeof(FloatType) == 8);
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-		ai["typestr"] = py::cast("<f8");
+		ai["typestr"] = py::bytes("<f8");
 #else
-		ai["typestr"] = py::cast(">f8");
+		ai["typestr"] = py::bytes(">f8");
 #endif
 #endif
 	}
@@ -99,9 +109,9 @@ py::dict BondsObject__array_interface__(const BondsObject& p)
 	ai["shape"] = py::make_tuple(p.storage()->size(), 2);
 	OVITO_STATIC_ASSERT(sizeof(unsigned int) == 4);
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-	ai["typestr"] = py::cast("<u4");
+	ai["typestr"] = py::bytes("<u4");
 #else
-	ai["typestr"] = py::cast(">u4");
+	ai["typestr"] = py::bytes(">u4");
 #endif
 	const unsigned int* data;
 	if(!p.storage()->empty()) {
@@ -123,9 +133,9 @@ py::dict BondsObject__pbc_vectors(const BondsObject& p)
 	ai["shape"] = py::make_tuple(p.storage()->size(), 3);
 	OVITO_STATIC_ASSERT(sizeof(int8_t) == 1);
 #if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
-	ai["typestr"] = py::cast("<i1");
+	ai["typestr"] = py::bytes("<i1");
 #else
-	ai["typestr"] = py::cast(">i1");
+	ai["typestr"] = py::bytes(">i1");
 #endif
 	const int8_t* data;
 	if(!p.storage()->empty()) {
@@ -143,6 +153,9 @@ py::dict BondsObject__pbc_vectors(const BondsObject& p)
 
 PYBIND11_PLUGIN(Particles)
 {
+	// Register the classes of this plugin with the global PluginManager.
+	PluginManager::instance().registerLoadedPluginClasses();
+	
 	py::options options;
 	options.disable_function_signatures();
 
@@ -373,7 +386,7 @@ PYBIND11_PLUGIN(Particles)
 		.def_property("pbc_x", &SimulationCellObject::pbcX, &SimulationCellObject::setPbcX)
 		.def_property("pbc_y", &SimulationCellObject::pbcY, &SimulationCellObject::setPbcY)
 		.def_property("pbc_z", &SimulationCellObject::pbcZ, &SimulationCellObject::setPbcZ)
-		.def_property("is2D", &SimulationCellObject::is2D, &SimulationCellObject::set2D,
+		.def_property("is2D", &SimulationCellObject::is2D, &SimulationCellObject::setIs2D,
 				"Specifies whether the system is two-dimensional (true) or three-dimensional (false). "
 				"For two-dimensional systems the PBC flag in the third direction (z) and the third cell vector are ignored. "
 				"\n\n"
@@ -382,10 +395,10 @@ PYBIND11_PLUGIN(Particles)
 								MatrixSetter<SimulationCellObject, AffineTransformation, &SimulationCellObject::setCellMatrix>(),
 				"A 3x4 matrix containing the three edge vectors of the cell (matrix columns 0 to 2) "
         		"and the cell origin (matrix column 3).")
-		.def_property("vector1", &SimulationCellObject::edgeVector1, &SimulationCellObject::setEdgeVector1)
-		.def_property("vector2", &SimulationCellObject::edgeVector2, &SimulationCellObject::setEdgeVector2)
-		.def_property("vector3", &SimulationCellObject::edgeVector3, &SimulationCellObject::setEdgeVector3)
-		.def_property("origin", &SimulationCellObject::origin, &SimulationCellObject::setOrigin)
+		.def_property("vector1", &SimulationCellObject::cellVector1, &SimulationCellObject::setCellVector1)
+		.def_property("vector2", &SimulationCellObject::cellVector2, &SimulationCellObject::setCellVector2)
+		.def_property("vector3", &SimulationCellObject::cellVector3, &SimulationCellObject::setCellVector3)
+		.def_property("origin", &SimulationCellObject::cellOrigin, &SimulationCellObject::setCellOrigin)
 		.def_property_readonly("volume", &SimulationCellObject::volume3D,
 				"Returns the volume of the three-dimensional simulation cell.\n"
 				"It is the absolute value of the determinant of the cell matrix.")
@@ -583,16 +596,16 @@ PYBIND11_PLUGIN(Particles)
 			"The following script demonstrates how to change the line width of the simulation cell:"
 			"\n\n"
 			".. literalinclude:: ../example_snippets/simulation_cell_display.py\n")
-		.def_property("line_width", &SimulationCellDisplay::simulationCellLineWidth, &SimulationCellDisplay::setSimulationCellLineWidth,
+		.def_property("line_width", &SimulationCellDisplay::cellLineWidth, &SimulationCellDisplay::setCellLineWidth,
 				"The width of the simulation cell line (in simulation units of length)."
 				"\n\n"
 				":Default: 0.14% of the simulation box diameter\n")
-		.def_property("render_cell", &SimulationCellDisplay::renderSimulationCell, &SimulationCellDisplay::setRenderSimulationCell,
+		.def_property("render_cell", &SimulationCellDisplay::renderCellEnabled, &SimulationCellDisplay::setRenderCellEnabled,
 				"Boolean flag controlling the cell's visibility in rendered images. "
 				"If ``False``, the cell will only be visible in the interactive viewports. "
 				"\n\n"
 				":Default: ``True``\n")
-		.def_property("rendering_color", &SimulationCellDisplay::simulationCellRenderingColor, &SimulationCellDisplay::setSimulationCellRenderingColor,
+		.def_property("rendering_color", &SimulationCellDisplay::cellColor, &SimulationCellDisplay::setCellColor,
 				"The line color used when rendering the cell."
 				"\n\n"
 				":Default: ``(0, 0, 0)``\n")
@@ -669,9 +682,10 @@ PYBIND11_PLUGIN(Particles)
 			"of the :py:class:`~ovito.modifiers.ConstructSurfaceModifier` that created the surface mesh."
 			"\n\n"
 			"Example:\n\n"
-			".. literalinclude:: ../example_snippets/surface_mesh.py"
+			".. literalinclude:: ../example_snippets/surface_mesh.py\n"
+			"   :lines: 4-\n"
 		)
-		.def_property("is_completely_solid", &SurfaceMesh::isCompletelySolid, &SurfaceMesh::setCompletelySolid)
+		.def_property("is_completely_solid", &SurfaceMesh::isCompletelySolid, &SurfaceMesh::setIsCompletelySolid)
 		.def("export_vtk", [](SurfaceMesh& mesh, const QString& filename, SimulationCellObject* simCellObj) {
 				if(!simCellObj)
 					throw Exception("A simulation cell is required to generate non-periodic mesh for export.");
@@ -707,25 +721,27 @@ PYBIND11_PLUGIN(Particles)
 	auto CutoffNeighborFinder_py = py::class_<CutoffNeighborFinder>(m, "CutoffNeighborFinder")
 		.def(py::init<>())
 		.def("prepare", [](CutoffNeighborFinder& finder, FloatType cutoff, ParticlePropertyObject& positions, SimulationCellObject& cell) {
-				finder.prepare(cutoff, positions.storage(), cell.data());
+				SynchronousTask task(ScriptEngine::activeTaskManager());
+				return finder.prepare(cutoff, positions.storage(), cell.data(), nullptr, task.promise());
 			})
 	;
 
 	py::class_<CutoffNeighborFinder::Query>(CutoffNeighborFinder_py, "Query")
 		.def(py::init<const CutoffNeighborFinder&, size_t>())
 		.def("next", &CutoffNeighborFinder::Query::next)
-		.def_property_readonly("atEnd", &CutoffNeighborFinder::Query::atEnd)
+		.def_property_readonly("at_end", &CutoffNeighborFinder::Query::atEnd)
 		.def_property_readonly("index", &CutoffNeighborFinder::Query::current)
 		.def_property_readonly("distance_squared", &CutoffNeighborFinder::Query::distanceSquared)
 		.def_property_readonly("distance", [](const CutoffNeighborFinder::Query& query) -> FloatType { return sqrt(query.distanceSquared()); })
-		.def_property_readonly("delta", [](const CutoffNeighborFinder::Query& query) { return py::make_tuple(query.delta().x(), query.delta().y(), query.delta().z()); })
-		.def_property_readonly("pbc_shift", [](const CutoffNeighborFinder::Query& query) { return py::make_tuple(query.pbcShift().x(), query.pbcShift().y(), query.pbcShift().z()); })
+		.def_property_readonly("delta", &CutoffNeighborFinder::Query::delta)
+		.def_property_readonly("pbc_shift", &CutoffNeighborFinder::Query::pbcShift)
 	;
 
 	auto NearestNeighborFinder_py = py::class_<NearestNeighborFinder>(m, "NearestNeighborFinder")
 		.def(py::init<size_t>())
 		.def("prepare", [](NearestNeighborFinder& finder, ParticlePropertyObject& positions, SimulationCellObject& cell) {
-			finder.prepare(positions.storage(), cell.data());
+			SynchronousTask task(ScriptEngine::activeTaskManager());
+			return finder.prepare(positions.storage(), cell.data(), nullptr, task.promise());
 		})
 	;
 
@@ -735,12 +751,13 @@ PYBIND11_PLUGIN(Particles)
 		.def_readonly("index", &NearestNeighborFinder::Neighbor::index)
 		.def_readonly("distance_squared", &NearestNeighborFinder::Neighbor::distanceSq)
 		.def_property_readonly("distance", [](const NearestNeighborFinder::Neighbor& n) -> FloatType { return sqrt(n.distanceSq); })
-		.def_property_readonly("delta", [](const NearestNeighborFinder::Neighbor& n) { return py::make_tuple(n.delta.x(), n.delta.y(), n.delta.z()); })
+		.def_readonly("delta", &NearestNeighborFinder::Neighbor::delta)
 	;
 
 	py::class_<NearestNeighborQuery>(NearestNeighborFinder_py, "Query")
 		.def(py::init<const NearestNeighborFinder&>())
 		.def("findNeighbors", static_cast<void (NearestNeighborQuery::*)(size_t)>(&NearestNeighborQuery::findNeighbors))
+		.def("findNeighborsAtLocation", static_cast<void (NearestNeighborQuery::*)(const Point3&, bool)>(&NearestNeighborQuery::findNeighbors))
 		.def_property_readonly("count", [](const NearestNeighborQuery& q) -> int { return q.results().size(); })
 		.def("__getitem__", [](const NearestNeighborQuery& q, int index) -> const NearestNeighborFinder::Neighbor& { return q.results()[index]; },
 			py::return_value_policy::reference_internal)
@@ -857,6 +874,116 @@ PYBIND11_PLUGIN(Particles)
 		.def_property("name", &BondType::name, &BondType::setName,
 				"The display name of this bond type.")
 	;
+
+	ovito_abstract_class<DataObjectWithSharedStorage<FieldQuantity>, DataObject>(m, nullptr, "DataObjectWithSharedFieldQuantityStorage");
+	auto FieldQuantityObject_py = ovito_abstract_class<FieldQuantityObject, DataObjectWithSharedStorage<FieldQuantity>>(m)
+		.def("changed", &FieldQuantityObject::changed,
+				"Informs the object that its stored data has changed. "
+				"This function must be called after each direct modification of the field data "
+				"through the :py:attr:`.marray` attribute.\n\n"
+				"Calling this method on an input field quantity is necessary to invalidate data caches down the data "
+				"pipeline. Forgetting to call this method may result in an incomplete re-evaluation of the data pipeline. "
+				"See :py:attr:`.marray` for more information.")
+		.def_property("name", &FieldQuantityObject::name, &FieldQuantityObject::setName,
+				"The human-readable name of the field quantitz.")
+		.def_property_readonly("components", &FieldQuantityObject::componentCount,
+				"The number of vector components (if this is a vector quantity); otherwise 1 (= scalar quantity).")
+	;
+	
+	ovito_class<TrajectoryObject, DataObject>{m};
+
+	ovito_class<TrajectoryGeneratorObject, TrajectoryObject>(m,
+			":Base class: :py:class:`ovito.data.DataObject`\n\n"
+			"Data object that generates and stores the trajectory lines from a set of moving particles. "
+			"\n\n"
+			"The visual appearance of the trajectory lines is controlled by the attached :py:class:`~ovito.vis.TrajectoryLineDisplay` instance, which is "
+			"accessible through the :py:attr:`~DataObject.display` attribute."
+			"\n\n"
+			"**Usage example:**"
+			"\n\n"
+			".. literalinclude:: ../example_snippets/trajectory_lines.py",
+			"TrajectoryLineGenerator")
+		.def_property("source_node", &TrajectoryGeneratorObject::source, &TrajectoryGeneratorObject::setSource,
+				"The :py:class:`~ovito.ObjectNode` that serves as source for particle trajectory data. ") 
+		.def_property("only_selected", &TrajectoryGeneratorObject::onlySelectedParticles, &TrajectoryGeneratorObject::setOnlySelectedParticles,
+				"Controls whether trajectory lines should only by generated for currently selected particles."
+				"\n\n"
+				":Default: ``True``\n")
+		.def_property("unwrap_trajectories", &TrajectoryGeneratorObject::unwrapTrajectories, &TrajectoryGeneratorObject::setUnwrapTrajectories,
+				"Controls whether trajectory lines should be automatically unwrapped at the box boundaries when the particles cross a periodic boundary."
+				"\n\n"
+				":Default: ``True``\n")
+		.def_property("sampling_frequency", &TrajectoryGeneratorObject::everyNthFrame, &TrajectoryGeneratorObject::setEveryNthFrame,
+				"Length of animation frame interval at which the particle positions should be sampled when generating the trajectory lines."
+				"\n\n"
+				":Default: 1\n")
+		.def_property("frame_interval", [](TrajectoryGeneratorObject& tgo) -> py::object {
+					if(tgo.useCustomInterval()) return py::make_tuple(
+						tgo.dataset()->animationSettings()->timeToFrame(tgo.customIntervalStart()),
+						tgo.dataset()->animationSettings()->timeToFrame(tgo.customIntervalEnd()));
+					else
+						return py::none();
+				},
+				[](TrajectoryGeneratorObject& tgo, py::object arg) {
+					if(py::isinstance<py::none>(arg)) {
+						tgo.setUseCustomInterval(false);
+						return;
+					}
+					else if(py::isinstance<py::tuple>(arg)) {
+						py::tuple tup = py::reinterpret_borrow<py::tuple>(arg);
+						if(tup.size() == 2) {
+							int a  = tup[0].cast<int>();
+							int b  = tup[1].cast<int>();
+							tgo.setCustomIntervalStart(tgo.dataset()->animationSettings()->frameToTime(a));
+							tgo.setCustomIntervalEnd(tgo.dataset()->animationSettings()->frameToTime(b));
+							tgo.setUseCustomInterval(true);
+							return;
+						}
+					}
+					throw py::value_error("Tuple of two integers or None expected.");
+				},
+				"The animation frame interval over which the particle positions are sampled to generate the trajectory lines. "
+				"Set this to a tuple of two integers to specify the first and the last animation frame; or use ``None`` to generate trajectory lines "
+				"over the entire input sequence."
+				"\n\n"
+				":Default: ``None``\n")
+		.def("generate", [](TrajectoryGeneratorObject& obj) {
+				return obj.generateTrajectories(ScriptEngine::activeTaskManager());
+			},
+			"Generates the trajectory lines by sampling the positions of the particles in the :py:attr:`.source_node` at regular time intervals. "
+			"The trajectory line data is cached by the :py:class:`!TrajectoryLineGenerator`.")
+	;	
+
+	ovito_class<TrajectoryDisplay, DisplayObject>(m,
+			":Base class: :py:class:`ovito.vis.Display`\n\n"
+			"Controls the visual appearance of particle trajectory lines. An instance of this class is attached to every :py:class:`~ovito.data.TrajectoryLineGenerator` data object.",
+			"TrajectoryLineDisplay")
+		.def_property("width", &TrajectoryDisplay::lineWidth, &TrajectoryDisplay::setLineWidth,
+				"The display width of trajectory lines."
+				"\n\n"
+				":Default: 0.2\n")
+		.def_property("color", &TrajectoryDisplay::lineColor, &TrajectoryDisplay::setLineColor,
+				"The display color of trajectory lines."
+				"\n\n"
+				":Default: ``(0.6, 0.6, 0.6)``\n")
+		.def_property("shading", &TrajectoryDisplay::shadingMode, &TrajectoryDisplay::setShadingMode,
+				"The shading style used for trajectory lines.\n"
+				"Possible values:"
+				"\n\n"
+				"   * ``TrajectoryLineDisplay.Shading.Normal`` \n"
+				"   * ``TrajectoryLineDisplay.Shading.Flat`` (default)\n"
+				"\n")
+		.def_property("upto_current_time", &TrajectoryDisplay::showUpToCurrentTime, &TrajectoryDisplay::setShowUpToCurrentTime,
+				"If ``True``, trajectory lines are only rendered up to the particle positions at the current animation time. "
+				"Otherwise, the complete trajectory lines are displayed."
+				"\n\n"
+				":Default: ``False``\n")
+	;
+
+	// Register submodules.
+	defineModifiersSubmodule(m);	// Defined in ModifierBinding.cpp
+	defineImportersSubmodule(m);	// Defined in ImporterBinding.cpp
+	defineExportersSubmodule(m);	// Defined in ExporterBinding.cpp
 
 	return m.ptr();
 }

@@ -1,4 +1,3 @@
-from ovito import *
 from ovito.io import *
 
 node = import_file("../../files/CFG/shear.void.120.cfg")

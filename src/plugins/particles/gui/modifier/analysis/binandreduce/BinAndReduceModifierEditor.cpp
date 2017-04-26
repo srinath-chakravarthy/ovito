@@ -30,19 +30,19 @@
 #include <plugins/particles/gui/util/ParticlePropertyParameterUI.h>
 #include "BinAndReduceModifierEditor.h"
 
-#include <3rdparty/qwt/qwt_plot.h>
-#include <3rdparty/qwt/qwt_plot_curve.h>
-#include <3rdparty/qwt/qwt_plot_spectrogram.h>
-#include <3rdparty/qwt/qwt_plot_grid.h>
-#include <3rdparty/qwt/qwt_scale_engine.h>
-#include <3rdparty/qwt/qwt_matrix_raster_data.h>
-#include <3rdparty/qwt/qwt_color_map.h>
-#include <3rdparty/qwt/qwt_scale_widget.h>
-#include <3rdparty/qwt/qwt_plot_layout.h>
+#include <qwt/qwt_plot.h>
+#include <qwt/qwt_plot_curve.h>
+#include <qwt/qwt_plot_spectrogram.h>
+#include <qwt/qwt_plot_grid.h>
+#include <qwt/qwt_scale_engine.h>
+#include <qwt/qwt_matrix_raster_data.h>
+#include <qwt/qwt_color_map.h>
+#include <qwt/qwt_scale_widget.h>
+#include <qwt/qwt_plot_layout.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, BinAndReduceModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(BinAndReduceModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(BinAndReduceModifier, BinAndReduceModifierEditor);
 
 /******************************************************************************
@@ -58,13 +58,13 @@ void BinAndReduceModifierEditor::createUI(const RolloutInsertionParameters& roll
 	layout->setContentsMargins(4,4,4,4);
 	layout->setSpacing(4);
 
-	ParticlePropertyParameterUI* sourcePropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::_sourceProperty));
+	ParticlePropertyParameterUI* sourcePropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::sourceProperty));
 	layout->addWidget(new QLabel(tr("Particle property:"), rollout));
 	layout->addWidget(sourcePropertyUI->comboBox());
 
 	QGridLayout* gridlayout = new QGridLayout();
 	gridlayout->addWidget(new QLabel(tr("Reduction operation:"), rollout), 0, 0);
-	VariantComboBoxParameterUI* reductionOperationPUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::_reductionOperation));
+	VariantComboBoxParameterUI* reductionOperationPUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::reductionOperation));
     reductionOperationPUI->comboBox()->addItem(tr("mean"), qVariantFromValue(BinAndReduceModifier::RED_MEAN));
     reductionOperationPUI->comboBox()->addItem(tr("sum"), qVariantFromValue(BinAndReduceModifier::RED_SUM));
     reductionOperationPUI->comboBox()->addItem(tr("sum divided by bin volume"), qVariantFromValue(BinAndReduceModifier::RED_SUM_VOL));
@@ -75,7 +75,7 @@ void BinAndReduceModifierEditor::createUI(const RolloutInsertionParameters& roll
 
 	gridlayout = new QGridLayout();
 	gridlayout->addWidget(new QLabel(tr("Binning direction:"), rollout), 0, 0);
-	VariantComboBoxParameterUI* binDirectionPUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::_binDirection));
+	VariantComboBoxParameterUI* binDirectionPUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::binDirection));
     binDirectionPUI->comboBox()->addItem("cell vector 1", qVariantFromValue(BinAndReduceModifier::CELL_VECTOR_1));
     binDirectionPUI->comboBox()->addItem("cell vector 2", qVariantFromValue(BinAndReduceModifier::CELL_VECTOR_2));
     binDirectionPUI->comboBox()->addItem("cell vector 3", qVariantFromValue(BinAndReduceModifier::CELL_VECTOR_3));
@@ -85,7 +85,7 @@ void BinAndReduceModifierEditor::createUI(const RolloutInsertionParameters& roll
     gridlayout->addWidget(binDirectionPUI->comboBox(), 0, 1);
     layout->addLayout(gridlayout);
 
-	_firstDerivativePUI = new BooleanParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::_firstDerivative));
+	_firstDerivativePUI = new BooleanParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::firstDerivative));
 	_firstDerivativePUI->setEnabled(false);
 	layout->addWidget(_firstDerivativePUI->checkBox());
 
@@ -95,10 +95,10 @@ void BinAndReduceModifierEditor::createUI(const RolloutInsertionParameters& roll
 	gridlayout->setColumnStretch(2, 1);
 
 	// Number of bins parameters.
-	IntegerParameterUI* numBinsXPUI = new IntegerParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::_numberOfBinsX));
+	IntegerParameterUI* numBinsXPUI = new IntegerParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::numberOfBinsX));
 	gridlayout->addWidget(numBinsXPUI->label(), 0, 0);
 	gridlayout->addLayout(numBinsXPUI->createFieldLayout(), 0, 1);
-	_numBinsYPUI = new IntegerParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::_numberOfBinsY));
+	_numBinsYPUI = new IntegerParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::numberOfBinsY));
 	gridlayout->addLayout(_numBinsYPUI->createFieldLayout(), 0, 2);
 	_numBinsYPUI->setEnabled(false);
 
@@ -124,7 +124,7 @@ void BinAndReduceModifierEditor::createUI(const RolloutInsertionParameters& roll
 	sublayout->setContentsMargins(4,4,4,4);
 	layout->addWidget(inputBox);
 
-	BooleanParameterUI* onlySelectedUI = new BooleanParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::_onlySelected));
+	BooleanParameterUI* onlySelectedUI = new BooleanParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::onlySelected));
 	sublayout->addWidget(onlySelectedUI->checkBox());
 
 	// Axes.
@@ -132,13 +132,13 @@ void BinAndReduceModifierEditor::createUI(const RolloutInsertionParameters& roll
 	QVBoxLayout* axesSublayout = new QVBoxLayout(axesBox);
 	axesSublayout->setContentsMargins(4,4,4,4);
 	layout->addWidget(axesBox);
-    BooleanParameterUI* rangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::_fixPropertyAxisRange));
+    BooleanParameterUI* rangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::fixPropertyAxisRange));
     axesSublayout->addWidget(rangeUI->checkBox());
         
     QHBoxLayout* hlayout = new QHBoxLayout();
     axesSublayout->addLayout(hlayout);
-    FloatParameterUI* startPUI = new FloatParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::_propertyAxisRangeStart));
-    FloatParameterUI* endPUI = new FloatParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::_propertyAxisRangeEnd));
+    FloatParameterUI* startPUI = new FloatParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::propertyAxisRangeStart));
+    FloatParameterUI* endPUI = new FloatParameterUI(this, PROPERTY_FIELD(BinAndReduceModifier::propertyAxisRangeEnd));
     hlayout->addWidget(new QLabel(tr("From:")));
     hlayout->addLayout(startPUI->createFieldLayout());
     hlayout->addSpacing(12);
@@ -349,7 +349,7 @@ void BinAndReduceModifierEditor::onSaveData()
         }
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 

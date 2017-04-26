@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_COMPOUND_OBJECT_H
-#define __OVITO_COMPOUND_OBJECT_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/scene/objects/DataObject.h>
@@ -38,11 +38,8 @@ public:
 	/// Constructs an empty compound data object.
 	Q_INVOKABLE CompoundObject(DataSet* dataset);
 
-	/// Asks the object for the result of the modification pipeline at the given time.
-	virtual PipelineFlowState evaluate(TimePoint time) override;
-
-	/// \brief Returns the list of imported data objects.
-	const QVector<DataObject*>& dataObjects() const { return _dataObjects; }
+	/// Asks the object for the result of the data pipeline.
+	virtual PipelineFlowState evaluateImmediately(const PipelineEvalRequest& request) override;
 
 	/// \brief Inserts a new object into the list of data objects held by this container object.
 	void addDataObject(DataObject* obj) {
@@ -132,7 +129,7 @@ protected:
 private:
 
 	/// Stores the data objects in the compound.
-	VectorReferenceField<DataObject> _dataObjects;
+	DECLARE_VECTOR_REFERENCE_FIELD(DataObject, dataObjects);
 
 	/// Attributes set or loaded by the file importer which will be fed into the modification pipeline
 	/// along with the data objects.
@@ -144,12 +141,10 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_VECTOR_REFERENCE_FIELD(_dataObjects);
 };
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_COMPOUND_OBJECT_H
+

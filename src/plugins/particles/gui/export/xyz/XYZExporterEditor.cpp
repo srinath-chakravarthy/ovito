@@ -26,7 +26,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Export) OVITO_BEGIN_INLINE_NAMESPACE(Formats) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, XYZExporterEditor, FileColumnParticleExporterEditor);
+IMPLEMENT_OVITO_OBJECT(XYZExporterEditor, FileColumnParticleExporterEditor);
 SET_OVITO_OBJECT_EDITOR(XYZExporter, XYZExporterEditor);
 
 /******************************************************************************
@@ -44,7 +44,7 @@ void XYZExporterEditor::createUI(const RolloutInsertionParameters& rolloutParams
 	layout->setColumnStretch(1,1);
 	layout->addWidget(new QLabel(tr("Format style:")), 0, 0);
 
-	VariantComboBoxParameterUI* subFormatUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(XYZExporter::_subFormat));
+	VariantComboBoxParameterUI* subFormatUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(XYZExporter::subFormat));
 	subFormatUI->comboBox()->addItem("Extended (default)", QVariant::fromValue(XYZExporter::ExtendedFormat));
 	subFormatUI->comboBox()->addItem("Parcas", QVariant::fromValue(XYZExporter::ParcasFormat));
 	layout->addWidget(subFormatUI->comboBox(), 0, 1);

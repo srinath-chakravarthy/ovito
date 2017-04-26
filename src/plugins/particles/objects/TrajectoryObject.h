@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_TRAJECTORY_OBJECT_H
-#define __OVITO_TRAJECTORY_OBJECT_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DataObject.h>
@@ -81,4 +81,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_TRAJECTORY_OBJECT_H
+

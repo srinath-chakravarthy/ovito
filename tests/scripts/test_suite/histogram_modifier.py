@@ -1,4 +1,3 @@
-from ovito import *
 from ovito.io import *
 from ovito.modifiers import *
 import numpy
@@ -22,8 +21,14 @@ modifier.xrange_start = 0
 print("  xrange_end: {}".format(modifier.xrange_end))
 modifier.xrange_end = 50
 
-print("  property: {}".format(modifier.property))
-modifier.property = "Position.X"
+print("  particle_property: {}".format(modifier.particle_property))
+modifier.particle_property = "Position.X"
+
+print("  bond_property: {}".format(modifier.bond_property))
+modifier.bond_property = "Length"
+
+print("  source_mode: {}".format(modifier.source_mode))
+modifier.source_mode = HistogramModifier.SourceMode.Particles
 
 node.compute()
 
@@ -38,4 +43,3 @@ print("  xrange_start: {}".format(modifier.xrange_start))
 print("  xrange_end: {}".format(modifier.xrange_end))
 
 #numpy.savetxt("histogram.txt", modifier.histogram)
-

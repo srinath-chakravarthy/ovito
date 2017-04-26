@@ -26,7 +26,7 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
 
 // Gives the class run-time type information.
-IMPLEMENT_OVITO_OBJECT(Gui, SubObjectParameterUI, PropertyParameterUI);
+IMPLEMENT_OVITO_OBJECT(SubObjectParameterUI, PropertyParameterUI);
 
 /******************************************************************************
 * The constructor.
@@ -67,7 +67,7 @@ void SubObjectParameterUI::resetUI()
 			subEditor()->setEditObject(parameterObject());
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 

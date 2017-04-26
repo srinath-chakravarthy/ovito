@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CLONE_HELPER_H
-#define __OVITO_CLONE_HELPER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/object/OvitoObjectReference.h>
@@ -146,5 +146,5 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_CLONE_HELPER_H
+
 

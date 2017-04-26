@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_NON_INTERACTIVE_SCENE_RENDERER_H
-#define __OVITO_NON_INTERACTIVE_SCENE_RENDERER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/rendering/SceneRenderer.h>
@@ -128,4 +128,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_NON_INTERACTIVE_SCENE_RENDERER_H
+

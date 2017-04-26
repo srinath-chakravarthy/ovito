@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_EXPORTER_H
-#define __OVITO_PARTICLE_EXPORTER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/ParticleProperty.h>
@@ -39,7 +39,7 @@ public:
 
 	/// \brief Evaluates the pipeline of an ObjectNode and makes sure that the data to be
 	///        exported contains particles and throws an exception if not.
-	const PipelineFlowState& getParticleData(SceneNode* sceneNode, TimePoint time);
+	bool getParticleData(SceneNode* sceneNode, TimePoint time, PipelineFlowState& state, TaskManager& taskManager);
 
 	/// \brief Selects the natural scene nodes to be exported by this exporter under normal circumstances.
 	virtual void selectStandardOutputData() override; 
@@ -49,10 +49,10 @@ protected:
 	/// \brief Constructs a new instance of this class.
 	ParticleExporter(DataSet* dataset);
 
-	/// \brief This is called once for every output file to be written and before exportData() is called.
+	/// \brief This is called once for every output file to be written and before exportFrame() is called.
 	virtual bool openOutputFile(const QString& filePath, int numberOfFrames) override;
 
-	/// \brief This is called once for every output file written after exportData() has been called.
+	/// \brief This is called once for every output file written after exportFrame() has been called.
 	virtual void closeOutputFile(bool exportCompleted) override;
 
 	/// Returns the current file this exporter is writing to.
@@ -62,7 +62,7 @@ protected:
 	CompressedTextWriter& textStream() { return *_outputStream; }
 
 	/// \brief Exports a single animation frame to the current output file.
-	virtual bool exportFrame(int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) override;
+	virtual bool exportFrame(int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager) override;
 
 	/// \brief Writes the data of one object at one animation frame to the current output file.
 	/// \param sceneNode The object to be exported.
@@ -71,7 +71,7 @@ protected:
 	/// \param filePath The path of the output file.
 	/// \throws Exception on error.
 	/// \return \a false when the operation has been canceled by the user; \a true on success.
-	virtual bool exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay) = 0;
+	virtual bool exportObject(SceneNode* sceneNode, int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager) = 0;
 
 private:
 
@@ -81,8 +81,6 @@ private:
 	/// The stream object used to write into the output file.
 	std::unique_ptr<CompressedTextWriter> _outputStream;
 
-private:
-
 	Q_OBJECT
 	OVITO_OBJECT
 };
@@ -91,4 +89,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTICLE_EXPORTER_H
+

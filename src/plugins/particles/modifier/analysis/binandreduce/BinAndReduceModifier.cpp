@@ -27,29 +27,29 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, BinAndReduceModifier, ParticleModifier);
-DEFINE_FLAGS_PROPERTY_FIELD(BinAndReduceModifier, _reductionOperation, "ReductionOperation", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(BinAndReduceModifier, _firstDerivative, "firstDerivative", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(BinAndReduceModifier, _binDirection, "BinDirection", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(BinAndReduceModifier, _numberOfBinsX, "NumberOfBinsX", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(BinAndReduceModifier, _numberOfBinsY, "NumberOfBinsY", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(BinAndReduceModifier, _fixPropertyAxisRange, "FixPropertyAxisRange");
-DEFINE_FLAGS_PROPERTY_FIELD(BinAndReduceModifier, _propertyAxisRangeStart, "PropertyAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(BinAndReduceModifier, _propertyAxisRangeEnd, "PropertyAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(BinAndReduceModifier, _sourceProperty, "SourceProperty");
-DEFINE_PROPERTY_FIELD(BinAndReduceModifier, _onlySelected, "OnlySelected");
-SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _reductionOperation, "Reduction operation");
-SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _firstDerivative, "Compute first derivative");
-SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _binDirection, "Bin direction");
-SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _numberOfBinsX, "Number of spatial bins");
-SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _numberOfBinsY, "Number of spatial bins");
-SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _fixPropertyAxisRange, "Fix property axis range");
-SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _propertyAxisRangeStart, "Property axis range start");
-SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _propertyAxisRangeEnd, "Property axis range end");
-SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _sourceProperty, "Source property");
-SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, _onlySelected, "Use only selected particles");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(BinAndReduceModifier, _numberOfBinsX, IntegerParameterUnit, 1);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(BinAndReduceModifier, _numberOfBinsY, IntegerParameterUnit, 1);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(BinAndReduceModifier, ParticleModifier);
+DEFINE_FLAGS_PROPERTY_FIELD(BinAndReduceModifier, reductionOperation, "ReductionOperation", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(BinAndReduceModifier, firstDerivative, "firstDerivative", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(BinAndReduceModifier, binDirection, "BinDirection", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(BinAndReduceModifier, numberOfBinsX, "NumberOfBinsX", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(BinAndReduceModifier, numberOfBinsY, "NumberOfBinsY", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(BinAndReduceModifier, fixPropertyAxisRange, "FixPropertyAxisRange");
+DEFINE_FLAGS_PROPERTY_FIELD(BinAndReduceModifier, propertyAxisRangeStart, "PropertyAxisRangeStart", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(BinAndReduceModifier, propertyAxisRangeEnd, "PropertyAxisRangeEnd", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(BinAndReduceModifier, sourceProperty, "SourceProperty");
+DEFINE_PROPERTY_FIELD(BinAndReduceModifier, onlySelected, "OnlySelected");
+SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, reductionOperation, "Reduction operation");
+SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, firstDerivative, "Compute first derivative");
+SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, binDirection, "Bin direction");
+SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, numberOfBinsX, "Number of spatial bins");
+SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, numberOfBinsY, "Number of spatial bins");
+SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, fixPropertyAxisRange, "Fix property axis range");
+SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, propertyAxisRangeStart, "Property axis range start");
+SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, propertyAxisRangeEnd, "Property axis range end");
+SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, sourceProperty, "Source property");
+SET_PROPERTY_FIELD_LABEL(BinAndReduceModifier, onlySelected, "Use only selected particles");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(BinAndReduceModifier, numberOfBinsX, IntegerParameterUnit, 1, 100000);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(BinAndReduceModifier, numberOfBinsY, IntegerParameterUnit, 1, 100000);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -62,16 +62,16 @@ BinAndReduceModifier::BinAndReduceModifier(DataSet* dataset) :
 	_yAxisRangeStart(0), _yAxisRangeEnd(0),
 	_onlySelected(false)
 {
-	INIT_PROPERTY_FIELD(BinAndReduceModifier::_reductionOperation);
-	INIT_PROPERTY_FIELD(BinAndReduceModifier::_firstDerivative);
-	INIT_PROPERTY_FIELD(BinAndReduceModifier::_binDirection);
-	INIT_PROPERTY_FIELD(BinAndReduceModifier::_numberOfBinsX);
-	INIT_PROPERTY_FIELD(BinAndReduceModifier::_numberOfBinsY);
-	INIT_PROPERTY_FIELD(BinAndReduceModifier::_fixPropertyAxisRange);
-	INIT_PROPERTY_FIELD(BinAndReduceModifier::_propertyAxisRangeStart);
-	INIT_PROPERTY_FIELD(BinAndReduceModifier::_propertyAxisRangeEnd);
-	INIT_PROPERTY_FIELD(BinAndReduceModifier::_sourceProperty);
-	INIT_PROPERTY_FIELD(BinAndReduceModifier::_onlySelected);
+	INIT_PROPERTY_FIELD(reductionOperation);
+	INIT_PROPERTY_FIELD(firstDerivative);
+	INIT_PROPERTY_FIELD(binDirection);
+	INIT_PROPERTY_FIELD(numberOfBinsX);
+	INIT_PROPERTY_FIELD(numberOfBinsY);
+	INIT_PROPERTY_FIELD(fixPropertyAxisRange);
+	INIT_PROPERTY_FIELD(propertyAxisRangeStart);
+	INIT_PROPERTY_FIELD(propertyAxisRangeEnd);
+	INIT_PROPERTY_FIELD(sourceProperty);
+	INIT_PROPERTY_FIELD(onlySelected);
 }
 
 /******************************************************************************
@@ -84,7 +84,7 @@ void BinAndReduceModifier::initializeModifier(PipelineObject* pipeline, Modifier
 
 	// Use the first available particle property from the input state as data source when the modifier is newly created.
 	if(sourceProperty().isNull()) {
-		PipelineFlowState input = pipeline->evaluatePipeline(dataset()->animationSettings()->time(), modApp, false);
+		PipelineFlowState input = getModifierInput(modApp);
 		ParticlePropertyReference bestProperty;
 		for(DataObject* o : input.objects()) {
 			ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(o);
@@ -111,8 +111,8 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
 	std::fill(_binData.begin(), _binData.end(), 0.0);
 
     // Return coordinate indices (0, 1 or 2).
-    int binDirX = binDirectionX(_binDirection);
-    int binDirY = binDirectionY(_binDirection);
+    int binDirX = binDirectionX(binDirection());
+    int binDirY = binDirectionY(binDirection());
 
     // Number of particles for averaging.
     std::vector<int> numberOfParticlesPerBin(binDataSize, 0);
@@ -145,40 +145,41 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
 
     // Compute the surface normal vector.
     Vector3 normalX, normalY(1, 1, 1);
-    if(_binDirection == CELL_VECTOR_1) {
-        normalX = expectSimulationCell()->edgeVector2().cross(expectSimulationCell()->edgeVector3());
+    if(binDirection() == CELL_VECTOR_1) {
+        normalX = expectSimulationCell()->cellVector2().cross(expectSimulationCell()->cellVector3());
     }
-    else if(_binDirection == CELL_VECTOR_2) {
-        normalX = expectSimulationCell()->edgeVector3().cross(expectSimulationCell()->edgeVector1());
+    else if(binDirection() == CELL_VECTOR_2) {
+        normalX = expectSimulationCell()->cellVector3().cross(expectSimulationCell()->cellVector1());
     }
-    else if(_binDirection == CELL_VECTOR_3) {
-        normalX = expectSimulationCell()->edgeVector1().cross(expectSimulationCell()->edgeVector2());
+    else if(binDirection() == CELL_VECTOR_3) {
+        normalX = expectSimulationCell()->cellVector1().cross(expectSimulationCell()->cellVector2());
     }
-    else if(_binDirection == CELL_VECTORS_1_2) {
-        normalX = expectSimulationCell()->edgeVector2().cross(expectSimulationCell()->edgeVector3());
-        normalY = expectSimulationCell()->edgeVector3().cross(expectSimulationCell()->edgeVector1());
+    else if(binDirection() == CELL_VECTORS_1_2) {
+        normalX = expectSimulationCell()->cellVector2().cross(expectSimulationCell()->cellVector3());
+        normalY = expectSimulationCell()->cellVector3().cross(expectSimulationCell()->cellVector1());
     }
     else if(_binDirection == CELL_VECTORS_2_3) {
-        normalX = expectSimulationCell()->edgeVector3().cross(expectSimulationCell()->edgeVector1());
-        normalY = expectSimulationCell()->edgeVector1().cross(expectSimulationCell()->edgeVector2());
+        normalX = expectSimulationCell()->cellVector3().cross(expectSimulationCell()->cellVector1());
+        normalY = expectSimulationCell()->cellVector1().cross(expectSimulationCell()->cellVector2());
     }
-    else if(_binDirection == CELL_VECTORS_1_3) {
-        normalX = expectSimulationCell()->edgeVector2().cross(expectSimulationCell()->edgeVector3());
-        normalY = expectSimulationCell()->edgeVector1().cross(expectSimulationCell()->edgeVector2());
+    else if(binDirection() == CELL_VECTORS_1_3) {
+        normalX = expectSimulationCell()->cellVector2().cross(expectSimulationCell()->cellVector3());
+        normalY = expectSimulationCell()->cellVector1().cross(expectSimulationCell()->cellVector2());
     }
 	if(normalX == Vector3::Zero() || normalY == Vector3::Zero())
 		throwException(tr("Simulation cell is degenerate."));
 
     // Compute the distance of the two cell faces (normal.length() is area of face).
     FloatType cellVolume = cell.volume3D();
-    _xAxisRangeStart = (expectSimulationCell()->origin() - Point3::Origin()).dot(normalX.normalized());
+    _xAxisRangeStart = (expectSimulationCell()->cellOrigin() - Point3::Origin()).dot(normalX.normalized());
     _xAxisRangeEnd = _xAxisRangeStart + cellVolume / normalX.length();
     if(!is1D()) {
-		_yAxisRangeStart = (expectSimulationCell()->origin() - Point3::Origin()).dot(normalY.normalized());
+        _yAxisRangeStart = (expectSimulationCell()->cellOrigin() - Point3::Origin()).dot(normalY.normalized());
 		_yAxisRangeEnd = _yAxisRangeStart + cellVolume / normalY.length();
     }
     else {
-		_yAxisRangeStart = _yAxisRangeEnd = 0;
+        _yAxisRangeStart = 0;
+        _yAxisRangeEnd = 0;
     }
 
 	// Get the particle positions.
@@ -260,7 +261,7 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
             }
 		}
 
-        if(_reductionOperation == RED_MEAN) {
+        if(reductionOperation() == RED_MEAN) {
             // Normalize.
             auto a = _binData.begin();
             for(auto n : numberOfParticlesPerBin) {
@@ -268,7 +269,7 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
                 ++a;
             }
         }
-        else if(_reductionOperation == RED_SUM_VOL) {
+        else if(reductionOperation() == RED_SUM_VOL) {
             // Divide by bin volume.
             double binVolume = cellVolume / (binDataSizeX*binDataSizeY);
             std::for_each(_binData.begin(), _binData.end(), [binVolume](double &x) { x /= binVolume; });
@@ -276,7 +277,7 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
 	}
 
 	// Compute first derivative using finite differences.
-    if(_firstDerivative) {
+    if(firstDerivative()) {
         FloatType binSpacingX = (_xAxisRangeEnd - _xAxisRangeStart) / binDataSizeX;
         if(binDataSizeX > 1 && _xAxisRangeEnd > _xAxisRangeStart) {
         	QVector<double> derivativeData(binDataSize);
@@ -303,10 +304,10 @@ PipelineStatus BinAndReduceModifier::modifyParticles(TimePoint time, TimeInterva
         else std::fill(_binData.begin(), _binData.end(), 0.0);
     }
 
-	if(!_fixPropertyAxisRange) {
+	if(!fixPropertyAxisRange()) {
 		auto minmax = std::minmax_element(_binData.begin(), _binData.end());
-		_propertyAxisRangeStart = *minmax.first;
-		_propertyAxisRangeEnd = *minmax.second;
+        setPropertyAxisRangeStart(*minmax.first);
+		setPropertyAxisRangeEnd(*minmax.second);
 	}
 
 	// Inform the editor component that the stored data has changed

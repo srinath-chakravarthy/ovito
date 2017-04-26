@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_SMOOTH_DISLOCATIONS_MODIFIER_EDITOR_H
-#define __OVITO_CA_SMOOTH_DISLOCATIONS_MODIFIER_EDITOR_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <gui/properties/PropertiesEditor.h>
@@ -52,4 +52,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CA_SMOOTH_DISLOCATIONS_MODIFIER_EDITOR_H
+

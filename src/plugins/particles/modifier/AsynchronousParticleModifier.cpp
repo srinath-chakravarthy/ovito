@@ -32,7 +32,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, AsynchronousParticleModifier, ParticleModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(AsynchronousParticleModifier, ParticleModifier);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -40,7 +40,7 @@ IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, AsynchronousParticleModifier, Par
 AsynchronousParticleModifier::AsynchronousParticleModifier(DataSet* dataset) : ParticleModifier(dataset),
 		_cacheValidity(TimeInterval::empty())
 {
-	connect(&_engineWatcher, &FutureWatcher::finished, this, &AsynchronousParticleModifier::computeEngineFinished);
+	connect(&_engineWatcher, &PromiseWatcher::finished, this, &AsynchronousParticleModifier::computeEngineFinished);
 }
 
 /******************************************************************************
@@ -72,7 +72,7 @@ void AsynchronousParticleModifier::stopRunningEngine()
 		return;
 
 	try {
-		_engineWatcher.unsetFuture();
+		_engineWatcher.unsetPromise();
 		_runningEngine->cancel();
 		_runningEngine->waitForFinished();
 	} catch(...) {}
@@ -103,7 +103,7 @@ PipelineStatus AsynchronousParticleModifier::modifyParticles(TimePoint time, Tim
 				}
 				// Start compute engine.
 				dataset()->container()->taskManager().runTaskAsync(_runningEngine);
-				_engineWatcher.setFutureInterface(_runningEngine);
+				_engineWatcher.setPromise(_runningEngine);
 			}
 		}
 	}
@@ -163,6 +163,10 @@ void AsynchronousParticleModifier::computeEngineFinished()
 			// Transfer exception message into evaluation status.
 			_computationStatus = PipelineStatus(PipelineStatus::Error, ex.messages().join(QChar('\n')));
 		}
+		catch(const std::bad_alloc&) {
+			// Transfer exception message into evaluation status.
+			_computationStatus = PipelineStatus(PipelineStatus::Error, tr("Not enough memory to execute this modifier."));
+		}
 		_cacheValidity = _runningEngine->validityInterval();
 	}
 	else {
@@ -171,7 +175,7 @@ void AsynchronousParticleModifier::computeEngineFinished()
 	}
 
 	// Reset everything.
-	_engineWatcher.unsetFuture();
+	_engineWatcher.unsetPromise();
 	_runningEngine.reset();
 
 	// Set the new modifier status.
@@ -222,7 +226,7 @@ void AsynchronousParticleModifier::propertyChanged(const PropertyFieldDescriptor
 	ParticleModifier::propertyChanged(field);
 
 	// Stop compute engine when modifier is disbaled.
-	if(field == PROPERTY_FIELD(Modifier::_isEnabled) && !isEnabled())
+	if(field == PROPERTY_FIELD(Modifier::isEnabled) && !isEnabled())
 		stopRunningEngine();
 }
 

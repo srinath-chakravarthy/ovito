@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::IO::LoadStream class.
  */
 
-#ifndef __OVITO_LOADSTREAM_H
-#define __OVITO_LOADSTREAM_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -310,4 +310,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_LOADSTREAM_H
+

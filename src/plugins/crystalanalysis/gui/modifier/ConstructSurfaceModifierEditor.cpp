@@ -29,7 +29,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysisGui, ConstructSurfaceModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(ConstructSurfaceModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(ConstructSurfaceModifier, ConstructSurfaceModifierEditor);
 
 /******************************************************************************
@@ -45,15 +45,15 @@ void ConstructSurfaceModifierEditor::createUI(const RolloutInsertionParameters& 
 	layout->setSpacing(6);
 	layout->setColumnStretch(1, 1);
 
-	FloatParameterUI* radiusUI = new FloatParameterUI(this, PROPERTY_FIELD(ConstructSurfaceModifier::_probeSphereRadius));
+	FloatParameterUI* radiusUI = new FloatParameterUI(this, PROPERTY_FIELD(ConstructSurfaceModifier::probeSphereRadius));
 	layout->addWidget(radiusUI->label(), 0, 0);
 	layout->addLayout(radiusUI->createFieldLayout(), 0, 1);
 
-	IntegerParameterUI* smoothingLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(ConstructSurfaceModifier::_smoothingLevel));
+	IntegerParameterUI* smoothingLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(ConstructSurfaceModifier::smoothingLevel));
 	layout->addWidget(smoothingLevelUI->label(), 1, 0);
 	layout->addLayout(smoothingLevelUI->createFieldLayout(), 1, 1);
 
-	BooleanParameterUI* onlySelectedUI = new BooleanParameterUI(this, PROPERTY_FIELD(ConstructSurfaceModifier::_onlySelectedParticles));
+	BooleanParameterUI* onlySelectedUI = new BooleanParameterUI(this, PROPERTY_FIELD(ConstructSurfaceModifier::onlySelectedParticles));
 	layout->addWidget(onlySelectedUI->checkBox(), 2, 0, 1, 2);
 
 	// Status label.
@@ -62,7 +62,7 @@ void ConstructSurfaceModifierEditor::createUI(const RolloutInsertionParameters& 
 	statusLabel()->setMinimumHeight(100);
 
 	// Open a sub-editor for the mesh display object.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(ConstructSurfaceModifier::_surfaceMeshDisplay), rolloutParams.after(rollout));
+	new SubObjectParameterUI(this, PROPERTY_FIELD(ConstructSurfaceModifier::surfaceMeshDisplay), rolloutParams.after(rollout));
 }
 
 }	// End of namespace

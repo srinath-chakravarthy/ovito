@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_UNDO_STACK_H
-#define __OVITO_UNDO_STACK_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -540,7 +540,7 @@ public:
 			return true;
 		}
 		catch(const Exception& ex) {
-			ex.showError();
+			ex.reportError();
 			return false;
 		}
 	}
@@ -555,4 +555,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_UNDO_STACK_H
+

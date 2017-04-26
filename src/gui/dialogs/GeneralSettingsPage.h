@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_GENERAL_SETTINGS_PAGE_H
-#define __OVITO_GENERAL_SETTINGS_PAGE_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <gui/dialogs/ApplicationSettingsDialog.h>
@@ -47,14 +47,17 @@ public:
 private:
 
 	QCheckBox* _useQtFileDialog;
+	QCheckBox* _enableMRUModifierList;
 	QCheckBox* _overrideGLContextSharing;
 	QComboBox* _contextSharingMode;
 	QCheckBox* _overrideUseOfPointSprites;
 	QComboBox* _pointSpriteMode;
 	QCheckBox* _overrideUseOfGeometryShaders;
 	QComboBox* _geometryShaderMode;
+#if !defined(OVITO_BUILD_APPSTORE_VERSION)
 	QCheckBox* _enableUpdateChecks;
 	QCheckBox* _enableUsageStatistics;
+#endif
 
 	Q_OBJECT
 	OVITO_OBJECT
@@ -64,4 +67,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_GENERAL_SETTINGS_PAGE_H
+

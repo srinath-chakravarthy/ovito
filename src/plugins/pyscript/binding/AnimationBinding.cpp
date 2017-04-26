@@ -35,14 +35,11 @@ namespace PyScript {
 using namespace Ovito;
 namespace py = pybind11;
 
-PYBIND11_PLUGIN(PyScriptAnimation)
+void defineAnimationSubmodule(py::module parentModule)
 {
-	py::options options;
-	options.disable_function_signatures();
+	py::module m = parentModule.def_submodule("Animation");
 
-	py::module m("PyScriptAnimation");
-
-	py::object TimeInterval_py = py::class_<TimeInterval>(m, "TimeInterval")
+	py::class_<TimeInterval>(m, "TimeInterval", py::metaclass())
 		.def(py::init<>())
 		.def(py::init<TimePoint>())
 		.def(py::init<TimePoint, TimePoint>())
@@ -58,13 +55,14 @@ PYBIND11_PLUGIN(PyScriptAnimation)
 		.def("intersect", &TimeInterval::intersect)
 		.def_static("time_to_seconds", &TimeToSeconds)
 		.def_static("seconds_to_time", &TimeFromSeconds)
-		.def_property_readonly_static("infinite", &TimeInterval::infinite)
-		.def_property_readonly_static("empty", &TimeInterval::empty)
+		.def_property_readonly_static("infinite", [](py::object /*self*/) { return TimeInterval::infinite(); })
+		.def_property_readonly_static("empty", [](py::object /*self*/) { return TimeInterval::empty(); })
+		.def_property_readonly_static("TimeNegativeInfinity", [](py::object /*self*/) { return TimeNegativeInfinity(); })
+		.def_property_readonly_static("TimePositiveInfinity", [](py::object /*self*/) { return TimePositiveInfinity(); })
+		.def("__str__", [](TimeInterval& iv) { return py::str("({},{})").format(iv.start(), iv.end()); })
 		.def(py::self == TimeInterval())
 		.def(py::self != TimeInterval())
 	;
-	py::setattr(TimeInterval_py, "TimeNegativeInfinity", py::cast(TimeNegativeInfinity()));
-	py::setattr(TimeInterval_py, "TimePositiveInfinity", py::cast(TimePositiveInfinity()));
 
 	ovito_class<AnimationSettings, RefTarget>(m,
 			"Stores animation-related settings of the current :py:attr:`~ovito.DataSet`. You can access "
@@ -174,10 +172,6 @@ PYBIND11_PLUGIN(PyScriptAnimation)
 
 	ovito_class<LookAtController, Controller>{m}
 	;
-
-	return m.ptr();
 }
-
-OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(PyScriptAnimation);
 
 };

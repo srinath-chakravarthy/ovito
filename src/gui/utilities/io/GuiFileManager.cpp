@@ -31,7 +31,7 @@ namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPAC
 ******************************************************************************/
 bool GuiFileManager::askUserForCredentials(QUrl& url)
 {
-	if(Application::instance().guiMode()) {
+	if(Application::instance()->guiMode()) {
 
 		// Ask for new username/password.
 		RemoteAuthenticationDialog dialog(nullptr, tr("Remote authentication"),

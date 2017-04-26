@@ -21,6 +21,7 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DataObject.h>
+#include <core/scene/pipeline/PipelineEvalRequest.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/animation/AnimationSettings.h>
 #include <plugins/particles/objects/BondsObject.h>
@@ -28,16 +29,16 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, LoadTrajectoryModifier, ParticleModifier);
-DEFINE_FLAGS_REFERENCE_FIELD(LoadTrajectoryModifier, _trajectorySource, "TrajectorySource", DataObject, PROPERTY_FIELD_NO_SUB_ANIM);
-SET_PROPERTY_FIELD_LABEL(LoadTrajectoryModifier, _trajectorySource, "Trajectory source");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(LoadTrajectoryModifier, ParticleModifier);
+DEFINE_FLAGS_REFERENCE_FIELD(LoadTrajectoryModifier, trajectorySource, "TrajectorySource", DataObject, PROPERTY_FIELD_NO_SUB_ANIM);
+SET_PROPERTY_FIELD_LABEL(LoadTrajectoryModifier, trajectorySource, "Trajectory source");
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
 LoadTrajectoryModifier::LoadTrajectoryModifier(DataSet* dataset) : ParticleModifier(dataset)
 {
-	INIT_PROPERTY_FIELD(LoadTrajectoryModifier::_trajectorySource);
+	INIT_PROPERTY_FIELD(trajectorySource);
 
 	// Create the file source object, which will be responsible for loading
 	// and caching the trajectory data.
@@ -59,7 +60,7 @@ PipelineStatus LoadTrajectoryModifier::modifyParticles(TimePoint time, TimeInter
 		throwException(tr("No trajectory data has been provided."));
 
 	// Get the trajectory frame.
-	PipelineFlowState trajState = trajectorySource()->evaluate(time);
+	PipelineFlowState trajState = trajectorySource()->evaluateImmediately(PipelineEvalRequest(time, false));
 
 	// Make sure the obtained configuration is valid and ready to use.
 	if(trajState.status().type() == PipelineStatus::Error) {

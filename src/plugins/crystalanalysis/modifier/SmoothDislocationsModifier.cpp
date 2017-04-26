@@ -26,17 +26,17 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, SmoothDislocationsModifier, Modifier);
-DEFINE_FLAGS_PROPERTY_FIELD(SmoothDislocationsModifier, _smoothingEnabled, "SmoothingEnabled", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(SmoothDislocationsModifier, _smoothingLevel, "SmoothingLevel", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(SmoothDislocationsModifier, _coarseningEnabled, "CoarseningEnabled", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(SmoothDislocationsModifier, _linePointInterval, "LinePointInterval", PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(SmoothDislocationsModifier, _smoothingEnabled, "Enable smoothing");
-SET_PROPERTY_FIELD_LABEL(SmoothDislocationsModifier, _smoothingLevel, "Smoothing level");
-SET_PROPERTY_FIELD_LABEL(SmoothDislocationsModifier, _coarseningEnabled, "Enable coarsening");
-SET_PROPERTY_FIELD_LABEL(SmoothDislocationsModifier, _linePointInterval, "Point separation");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(SmoothDislocationsModifier, _smoothingLevel, IntegerParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(SmoothDislocationsModifier, _linePointInterval, FloatParameterUnit, 0);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SmoothDislocationsModifier, Modifier);
+DEFINE_FLAGS_PROPERTY_FIELD(SmoothDislocationsModifier, smoothingEnabled, "SmoothingEnabled", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(SmoothDislocationsModifier, smoothingLevel, "SmoothingLevel", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(SmoothDislocationsModifier, coarseningEnabled, "CoarseningEnabled", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(SmoothDislocationsModifier, linePointInterval, "LinePointInterval", PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(SmoothDislocationsModifier, smoothingEnabled, "Enable smoothing");
+SET_PROPERTY_FIELD_LABEL(SmoothDislocationsModifier, smoothingLevel, "Smoothing level");
+SET_PROPERTY_FIELD_LABEL(SmoothDislocationsModifier, coarseningEnabled, "Enable coarsening");
+SET_PROPERTY_FIELD_LABEL(SmoothDislocationsModifier, linePointInterval, "Point separation");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(SmoothDislocationsModifier, smoothingLevel, IntegerParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(SmoothDislocationsModifier, linePointInterval, FloatParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -45,10 +45,10 @@ SmoothDislocationsModifier::SmoothDislocationsModifier(DataSet* dataset) : Modif
 	_smoothingEnabled(true), _coarseningEnabled(true),
 	_smoothingLevel(1), _linePointInterval(2.5)
 {
-	INIT_PROPERTY_FIELD(SmoothDislocationsModifier::_smoothingEnabled);
-	INIT_PROPERTY_FIELD(SmoothDislocationsModifier::_smoothingLevel);
-	INIT_PROPERTY_FIELD(SmoothDislocationsModifier::_coarseningEnabled);
-	INIT_PROPERTY_FIELD(SmoothDislocationsModifier::_linePointInterval);
+	INIT_PROPERTY_FIELD(smoothingEnabled);
+	INIT_PROPERTY_FIELD(smoothingLevel);
+	INIT_PROPERTY_FIELD(coarseningEnabled);
+	INIT_PROPERTY_FIELD(linePointInterval);
 }
 
 /******************************************************************************
@@ -197,7 +197,7 @@ void SmoothDislocationsModifier::coarsenDislocationLine(FloatType linePointInter
 			count++;
 			++inputPtr;
 		}
-		while(count*count < (int)(linePointInterval * sum) && count < input.size()/minNumPoints-1 && inputPtr != inputPtrEnd);
+		while(count*count < (int)(linePointInterval * sum) && count+1 < input.size()/minNumPoints && inputPtr != inputPtrEnd);
 		output.push_back(Point3::Origin() + com / count);
 		outputCoreSize.push_back(sum / count);
 	}

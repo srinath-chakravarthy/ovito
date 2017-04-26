@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_AUTOCOMPLETE_TEXT_EDIT_H
-#define __OVITO_AUTOCOMPLETE_TEXT_EDIT_H
+#pragma once
+
 
 #include <gui/GUI.h>
 
@@ -81,4 +81,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_AUTOCOMPLETE_TEXT_EDIT_H
+

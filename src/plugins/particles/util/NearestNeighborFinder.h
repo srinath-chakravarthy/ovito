@@ -19,15 +19,15 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_NEAREST_NEIGHBOR_FINDER_H
-#define __OVITO_NEAREST_NEIGHBOR_FINDER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/ParticleProperty.h>
 #include <plugins/particles/data/SimulationCell.h>
 #include <core/utilities/BoundedPriorityQueue.h>
 #include <core/utilities/MemoryPool.h>
-#include <core/utilities/concurrent/FutureInterface.h>
+#include <core/utilities/concurrent/Promise.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util)
 
@@ -65,7 +65,7 @@ private:
 		Point3 pos;
 	};
 
-	struct TreeNode {
+	struct OVITO_PARTICLES_EXPORT TreeNode {
 		/// Constructor for a leaf node.
 		TreeNode() : splitDim(-1), atoms(nullptr), numAtoms(0) {}
 
@@ -113,10 +113,11 @@ public:
 	/// \param posProperty The positions of the particles.
 	/// \param cellData The simulation cell data.
 	/// \param selectionProperty Determines which particles are included in the neighbor search (optional).
+	/// \param promis A callback object that will be used to the report progress.
 	/// \return \c false when the operation has been canceled by the user;
 	///         \c true on success.
 	/// \throw Exception on error.
-	bool prepare(ParticleProperty* posProperty, const SimulationCell& cellData, ParticleProperty* selectionProperty = nullptr, FutureInterfaceBase* progress = nullptr);
+	bool prepare(ParticleProperty* posProperty, const SimulationCell& cellData, ParticleProperty* selectionProperty, PromiseBase& promise);
 
 	/// Returns the coordinates of the i-th input particle.
 	const Point3& particlePos(size_t index) const {
@@ -161,17 +162,17 @@ public:
 
 		/// Builds the sorted list of neighbors around the given particle.
 		void findNeighbors(size_t particleIndex) {
-			findNeighbors(t.particlePos(particleIndex));
+			findNeighbors(t.particlePos(particleIndex), false);
 		}
 
 		/// Builds the sorted list of neighbors around the given point.
-		void findNeighbors(const Point3& query_point) {
+		void findNeighbors(const Point3& query_point, bool includeSelf) {
 			queue.clear();
 			for(const Vector3& pbcShift : t.pbcImages) {
 				q = query_point - pbcShift;
 				if(!queue.full() || queue.top().distanceSq > t.minimumDistance(t.root, q)) {
 					qr = t.simCell.absoluteToReduced(q);
-					visitNode(t.root);
+					visitNode(t.root, includeSelf);
 				}
 			}
 			queue.sort();
@@ -182,14 +183,14 @@ public:
 
 	private:
 
-		/// Inserts all atoms of the given leaf node into the priority queue.
-		void visitNode(TreeNode* node) {
+		/// Inserts all particles of the given leaf node into the priority queue.
+		void visitNode(TreeNode* node, bool includeSelf) {
 			if(node->isLeaf()) {
 				for(NeighborListAtom* atom = node->atoms; atom != nullptr; atom = atom->nextInBin) {
 					Neighbor n;
 					n.delta = atom->pos - q;
 					n.distanceSq = n.delta.squaredLength();
-					if(n.distanceSq != 0) {
+					if(includeSelf || n.distanceSq != 0) {
 						n.atom = atom;
 						n.index = atom - &t.atoms.front();
 						queue.insert(n);
@@ -207,9 +208,9 @@ public:
 					cnear = node->children[1];
 					cfar  = node->children[0];
 				}
-				visitNode(cnear);
+				visitNode(cnear, includeSelf);
 				if(!queue.full() || queue.top().distanceSq > t.minimumDistance(cfar, q))
-					visitNode(cfar);
+					visitNode(cfar, includeSelf);
 			}
 		}
 
@@ -323,4 +324,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_NEAREST_NEIGHBOR_FINDER_H
+

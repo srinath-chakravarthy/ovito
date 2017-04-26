@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_TYPE_H
-#define __OVITO_PARTICLE_TYPE_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/reference/RefTarget.h>
@@ -39,94 +39,32 @@ public:
 	/// \brief Constructs a new particle type.
 	Q_INVOKABLE ParticleType(DataSet* dataset);
 
-	/// \brief Returns the identifier of the particle type.
-	/// \return The type identifier.
-	int id() const { return _id; }
-
-	/// \brief Sets the identifier of the particle type.
-	/// \param identifier The new identifier.
-	/// \undoable
-	void setId(int identifier) { _id = identifier; }
-
-	/// \brief Gets the types's display name.
-	/// \return The human-readable name of the particle type.
-	/// \sa setName()
-	const QString& name() const { return _name; }
-
-	/// \brief Sets the types's display name.
-	/// \param name The new human-readable name for this particle type.
-	/// \undoable
-	/// \sa name()
-	void setName(const QString& name) { _name = name; }
-
-	/// \brief Returns the display color that is assigned to the particles of this type.
-	/// \return The color used for particles of this type.
-	/// \sa setColor()
-	Color color() const { return _color; }
-
-	/// \brief Sets the display color of this particle type.
-	/// \param color The new color to be used to display particles of this type.
-	/// \undoable
-	void setColor(const Color& color) { _color = color; }
-
-	/// \brief Returns the radius of the particle type.
-	/// \return The radius in world units.
-	FloatType radius() const { return _radius; }
-
-	/// \brief Sets the radius of the particle type.
-	/// \param newRadius The radius in world units to be used to display this kind of particle.
-	/// \undoable
-	void setRadius(FloatType newRadius) { _radius = newRadius; }
-
-	/// \brief Returns whether this type is enabled or disabled.
-	/// This controls, e.g., the search for this structure type by structure identification modifiers.
-	bool isEnabled() const { return _enabled; }
-
-	/// \brief Sets whether this type is enabled or disabled.
-	/// This controls, e.g., the search for this structure type by structure identification modifiers.
-	void setEnabled(bool enabled) { _enabled = enabled; }
-
-	// From RefTarget class:
-
 	/// Returns the title of this object.
 	virtual QString objectTitle() override { return name(); }
 
 protected:
 
-	/// Is called when the value of a property of this object has changed.
-	virtual void propertyChanged(const PropertyFieldDescriptor& field) override;
-
-protected:
-
 	/// Stores the identifier of the particle type.
-	PropertyField<int> _id;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, id, setId);
 
 	/// The name of this particle type.
-	PropertyField<QString, QString, ReferenceEvent::TitleChanged> _name;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QString, name, setName);
 
 	/// Stores the color of the particle type.
-	PropertyField<Color, QColor> _color;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Color, color, setColor);
 
 	/// Stores the radius of the particle type.
-	PropertyField<FloatType> _radius;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, radius, setRadius);
 
 	/// Stores whether this type is enabled or disabled.
 	/// This controls, e.g., the search for this structure type by structure identification modifiers.
-	PropertyField<bool> _enabled;
-
-private:
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, enabled, setEnabled);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_id);
-	DECLARE_PROPERTY_FIELD(_name);
-	DECLARE_PROPERTY_FIELD(_color);
-	DECLARE_PROPERTY_FIELD(_radius);
-	DECLARE_PROPERTY_FIELD(_enabled);
 };
 
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTICLE_TYPE_H
+

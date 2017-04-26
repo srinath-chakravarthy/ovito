@@ -27,9 +27,9 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Gui, ModificationListItem, RefMaker);
-DEFINE_FLAGS_REFERENCE_FIELD(ModificationListItem, _object, "Object", RefTarget, PROPERTY_FIELD_NO_UNDO|PROPERTY_FIELD_WEAK_REF|PROPERTY_FIELD_NO_CHANGE_MESSAGE);
-DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(ModificationListItem, _modApps, "ModifierApplications", ModifierApplication, PROPERTY_FIELD_NO_UNDO|PROPERTY_FIELD_WEAK_REF|PROPERTY_FIELD_NO_CHANGE_MESSAGE);
+IMPLEMENT_OVITO_OBJECT(ModificationListItem, RefMaker);
+DEFINE_FLAGS_REFERENCE_FIELD(ModificationListItem, object, "Object", RefTarget, PROPERTY_FIELD_NO_UNDO|PROPERTY_FIELD_WEAK_REF|PROPERTY_FIELD_NO_CHANGE_MESSAGE);
+DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(ModificationListItem, modifierApplications, "ModifierApplications", ModifierApplication, PROPERTY_FIELD_NO_UNDO|PROPERTY_FIELD_WEAK_REF|PROPERTY_FIELD_NO_CHANGE_MESSAGE);
 
 /******************************************************************************
 * Constructor.
@@ -37,10 +37,10 @@ DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(ModificationListItem, _modApps, "ModifierApp
 ModificationListItem::ModificationListItem(RefTarget* object, ModificationListItem* parent, const QString& title) :
 	_parent(parent), _title(title)
 {
-	INIT_PROPERTY_FIELD(ModificationListItem::_object);
-	INIT_PROPERTY_FIELD(ModificationListItem::_modApps);
+	INIT_PROPERTY_FIELD(object);
+	INIT_PROPERTY_FIELD(modifierApplications);
 
-	this->_object = object;
+	_object = object;
 }
 
 /******************************************************************************

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_TRIMESH_LOADER_H
-#define __OVITO_TRIMESH_LOADER_H
+#pragma once
+
 
 #include <core/dataset/importexport/FileSourceImporter.h>
 #include <core/utilities/io/CompressedTextReader.h>
@@ -68,4 +68,4 @@ private:
 
 };
 
-#endif // __OVITO_TRIMESH_LOADER_H
+

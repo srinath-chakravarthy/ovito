@@ -129,8 +129,7 @@ void ImportRemoteFileDialog::onOk()
 		accept();
 	}
 	catch(const Exception& ex) {
-		ex.showError();
-		return;
+		ex.reportError();
 	}
 }
 

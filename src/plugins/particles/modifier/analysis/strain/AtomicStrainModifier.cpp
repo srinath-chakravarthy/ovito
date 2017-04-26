@@ -21,6 +21,7 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DataObject.h>
+#include <core/scene/pipeline/PipelineEvalRequest.h>
 #include <core/animation/AnimationSettings.h>
 #include <core/dataset/importexport/FileSource.h>
 #include <core/utilities/concurrent/ParallelFor.h>
@@ -29,37 +30,37 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, AtomicStrainModifier, AsynchronousParticleModifier);
-DEFINE_FLAGS_REFERENCE_FIELD(AtomicStrainModifier, _referenceObject, "Reference Configuration", DataObject, PROPERTY_FIELD_NO_SUB_ANIM);
-DEFINE_PROPERTY_FIELD(AtomicStrainModifier, _referenceShown, "ShowReferenceConfiguration");
-DEFINE_FLAGS_PROPERTY_FIELD(AtomicStrainModifier, _eliminateCellDeformation, "EliminateCellDeformation", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(AtomicStrainModifier, _assumeUnwrappedCoordinates, "AssumeUnwrappedCoordinates");
-DEFINE_FLAGS_PROPERTY_FIELD(AtomicStrainModifier, _cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(AtomicStrainModifier, _calculateDeformationGradients, "CalculateDeformationGradients");
-DEFINE_PROPERTY_FIELD(AtomicStrainModifier, _calculateStrainTensors, "CalculateStrainTensors");
-DEFINE_PROPERTY_FIELD(AtomicStrainModifier, _calculateNonaffineSquaredDisplacements, "CalculateNonaffineSquaredDisplacements");
-DEFINE_PROPERTY_FIELD(AtomicStrainModifier, _selectInvalidParticles, "SelectInvalidParticles");
-DEFINE_PROPERTY_FIELD(AtomicStrainModifier, _useReferenceFrameOffset, "UseReferenceFrameOffet");
-DEFINE_PROPERTY_FIELD(AtomicStrainModifier, _referenceFrameNumber, "ReferenceFrameNumber");
-DEFINE_FLAGS_PROPERTY_FIELD(AtomicStrainModifier, _referenceFrameOffset, "ReferenceFrameOffset", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(AtomicStrainModifier, _calculateStretchTensors, "CalculateStretchTensors");
-DEFINE_PROPERTY_FIELD(AtomicStrainModifier, _calculateRotations, "CalculateRotations");
-SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _referenceObject, "Reference Configuration");
-SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _referenceShown, "Show reference configuration");
-SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _eliminateCellDeformation, "Eliminate homogeneous cell deformation");
-SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _assumeUnwrappedCoordinates, "Assume unwrapped coordinates");
-SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _cutoff, "Cutoff radius");
-SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _calculateDeformationGradients, "Output deformation gradient tensors");
-SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _calculateStrainTensors, "Output strain tensors");
-SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _calculateNonaffineSquaredDisplacements, "Output non-affine squared displacements (D^2_min)");
-SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _selectInvalidParticles, "Select invalid particles");
-SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _useReferenceFrameOffset, "Use reference frame offset");
-SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _referenceFrameNumber, "Reference frame number");
-SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _referenceFrameOffset, "Reference frame offset");
-SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _calculateStretchTensors, "Output stretch tensors");
-SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, _calculateRotations, "Output rotations");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(AtomicStrainModifier, _cutoff, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(AtomicStrainModifier, _referenceFrameNumber, IntegerParameterUnit, 1);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(AtomicStrainModifier, AsynchronousParticleModifier);
+DEFINE_FLAGS_REFERENCE_FIELD(AtomicStrainModifier, referenceConfiguration, "Reference Configuration", DataObject, PROPERTY_FIELD_NO_SUB_ANIM);
+DEFINE_PROPERTY_FIELD(AtomicStrainModifier, referenceShown, "ShowReferenceConfiguration");
+DEFINE_FLAGS_PROPERTY_FIELD(AtomicStrainModifier, eliminateCellDeformation, "EliminateCellDeformation", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(AtomicStrainModifier, assumeUnwrappedCoordinates, "AssumeUnwrappedCoordinates");
+DEFINE_FLAGS_PROPERTY_FIELD(AtomicStrainModifier, cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(AtomicStrainModifier, calculateDeformationGradients, "CalculateDeformationGradients");
+DEFINE_PROPERTY_FIELD(AtomicStrainModifier, calculateStrainTensors, "CalculateStrainTensors");
+DEFINE_PROPERTY_FIELD(AtomicStrainModifier, calculateNonaffineSquaredDisplacements, "CalculateNonaffineSquaredDisplacements");
+DEFINE_PROPERTY_FIELD(AtomicStrainModifier, selectInvalidParticles, "SelectInvalidParticles");
+DEFINE_PROPERTY_FIELD(AtomicStrainModifier, useReferenceFrameOffset, "UseReferenceFrameOffet");
+DEFINE_PROPERTY_FIELD(AtomicStrainModifier, referenceFrameNumber, "ReferenceFrameNumber");
+DEFINE_FLAGS_PROPERTY_FIELD(AtomicStrainModifier, referenceFrameOffset, "ReferenceFrameOffset", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(AtomicStrainModifier, calculateStretchTensors, "CalculateStretchTensors");
+DEFINE_PROPERTY_FIELD(AtomicStrainModifier, calculateRotations, "CalculateRotations");
+SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, referenceConfiguration, "Reference Configuration");
+SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, referenceShown, "Show reference configuration");
+SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, eliminateCellDeformation, "Eliminate homogeneous cell deformation");
+SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, assumeUnwrappedCoordinates, "Assume unwrapped coordinates");
+SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, cutoff, "Cutoff radius");
+SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, calculateDeformationGradients, "Output deformation gradient tensors");
+SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, calculateStrainTensors, "Output strain tensors");
+SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, calculateNonaffineSquaredDisplacements, "Output non-affine squared displacements (D^2_min)");
+SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, selectInvalidParticles, "Select invalid particles");
+SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, useReferenceFrameOffset, "Use reference frame offset");
+SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, referenceFrameNumber, "Reference frame number");
+SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, referenceFrameOffset, "Reference frame offset");
+SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, calculateStretchTensors, "Output stretch tensors");
+SET_PROPERTY_FIELD_LABEL(AtomicStrainModifier, calculateRotations, "Output rotations");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(AtomicStrainModifier, cutoff, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(AtomicStrainModifier, referenceFrameNumber, IntegerParameterUnit, 1);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -71,20 +72,20 @@ AtomicStrainModifier::AtomicStrainModifier(DataSet* dataset) : AsynchronousParti
     _selectInvalidParticles(true),
     _useReferenceFrameOffset(false), _referenceFrameNumber(0), _referenceFrameOffset(-1)
 {
-	INIT_PROPERTY_FIELD(AtomicStrainModifier::_referenceObject);
-	INIT_PROPERTY_FIELD(AtomicStrainModifier::_referenceShown);
-	INIT_PROPERTY_FIELD(AtomicStrainModifier::_eliminateCellDeformation);
-	INIT_PROPERTY_FIELD(AtomicStrainModifier::_assumeUnwrappedCoordinates);
-	INIT_PROPERTY_FIELD(AtomicStrainModifier::_cutoff);
-	INIT_PROPERTY_FIELD(AtomicStrainModifier::_calculateDeformationGradients);
-	INIT_PROPERTY_FIELD(AtomicStrainModifier::_calculateStrainTensors);
-	INIT_PROPERTY_FIELD(AtomicStrainModifier::_calculateNonaffineSquaredDisplacements);
-	INIT_PROPERTY_FIELD(AtomicStrainModifier::_selectInvalidParticles);
-	INIT_PROPERTY_FIELD(AtomicStrainModifier::_useReferenceFrameOffset);
-	INIT_PROPERTY_FIELD(AtomicStrainModifier::_referenceFrameNumber);
-	INIT_PROPERTY_FIELD(AtomicStrainModifier::_referenceFrameOffset);
-	INIT_PROPERTY_FIELD(AtomicStrainModifier::_calculateStretchTensors);
-	INIT_PROPERTY_FIELD(AtomicStrainModifier::_calculateRotations);
+	INIT_PROPERTY_FIELD(referenceConfiguration);
+	INIT_PROPERTY_FIELD(referenceShown);
+	INIT_PROPERTY_FIELD(eliminateCellDeformation);
+	INIT_PROPERTY_FIELD(assumeUnwrappedCoordinates);
+	INIT_PROPERTY_FIELD(cutoff);
+	INIT_PROPERTY_FIELD(calculateDeformationGradients);
+	INIT_PROPERTY_FIELD(calculateStrainTensors);
+	INIT_PROPERTY_FIELD(calculateNonaffineSquaredDisplacements);
+	INIT_PROPERTY_FIELD(selectInvalidParticles);
+	INIT_PROPERTY_FIELD(useReferenceFrameOffset);
+	INIT_PROPERTY_FIELD(referenceFrameNumber);
+	INIT_PROPERTY_FIELD(referenceFrameOffset);
+	INIT_PROPERTY_FIELD(calculateStretchTensors);
+	INIT_PROPERTY_FIELD(calculateRotations);
 
 	// Create the file source object, which will be responsible for loading
 	// and storing the reference configuration.
@@ -137,7 +138,7 @@ std::shared_ptr<AsynchronousParticleModifier::ComputeEngine> AtomicStrainModifie
 			refState = fileSource->requestFrame(referenceFrame);
 		}
 	}
-	else refState = referenceConfiguration()->evaluate(dataset()->animationSettings()->frameToTime(referenceFrame));
+	else refState = referenceConfiguration()->evaluateImmediately(PipelineEvalRequest(dataset()->animationSettings()->frameToTime(referenceFrame), false));
 
 	// Make sure the obtained reference configuration is valid and ready to use.
 	if(refState.status().type() == PipelineStatus::Error)
@@ -282,7 +283,7 @@ void AtomicStrainModifier::AtomicStrainEngine::perform()
 
 	// Prepare the neighbor list for the reference configuration.
 	CutoffNeighborFinder neighborFinder;
-	if(!neighborFinder.prepare(_cutoff, refPositions(), refCell(), nullptr, this))
+	if(!neighborFinder.prepare(_cutoff, refPositions(), refCell(), nullptr, *this))
 		return;
 
 	// Perform individual strain calculation for each particle.
@@ -511,17 +512,17 @@ void AtomicStrainModifier::propertyChanged(const PropertyFieldDescriptor& field)
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Recompute results when the parameters change.
-	if(field == PROPERTY_FIELD(AtomicStrainModifier::_eliminateCellDeformation) ||
-			field == PROPERTY_FIELD(AtomicStrainModifier::_assumeUnwrappedCoordinates) ||
-			field == PROPERTY_FIELD(AtomicStrainModifier::_cutoff) ||
-			field == PROPERTY_FIELD(AtomicStrainModifier::_calculateDeformationGradients) ||
-			field == PROPERTY_FIELD(AtomicStrainModifier::_calculateStrainTensors) ||
-			field == PROPERTY_FIELD(AtomicStrainModifier::_calculateNonaffineSquaredDisplacements) ||
-			field == PROPERTY_FIELD(AtomicStrainModifier::_calculateRotations) ||
-			field == PROPERTY_FIELD(AtomicStrainModifier::_calculateStretchTensors) ||
-			field == PROPERTY_FIELD(AtomicStrainModifier::_useReferenceFrameOffset) ||
-			field == PROPERTY_FIELD(AtomicStrainModifier::_referenceFrameNumber) ||
-			field == PROPERTY_FIELD(AtomicStrainModifier::_referenceFrameOffset))
+	if(field == PROPERTY_FIELD(eliminateCellDeformation) ||
+			field == PROPERTY_FIELD(assumeUnwrappedCoordinates) ||
+			field == PROPERTY_FIELD(cutoff) ||
+			field == PROPERTY_FIELD(calculateDeformationGradients) ||
+			field == PROPERTY_FIELD(calculateStrainTensors) ||
+			field == PROPERTY_FIELD(calculateNonaffineSquaredDisplacements) ||
+			field == PROPERTY_FIELD(calculateRotations) ||
+			field == PROPERTY_FIELD(calculateStretchTensors) ||
+			field == PROPERTY_FIELD(useReferenceFrameOffset) ||
+			field == PROPERTY_FIELD(referenceFrameNumber) ||
+			field == PROPERTY_FIELD(referenceFrameOffset))
 		invalidateCachedResults();
 }
 

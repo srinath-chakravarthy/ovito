@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PIPELINE_FLOW_STATE_H
-#define __OVITO_PIPELINE_FLOW_STATE_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/animation/TimeInterval.h>
@@ -172,4 +172,4 @@ OVITO_END_INLINE_NAMESPACE
 
 #include <core/scene/objects/DataObject.h>
 
-#endif // __OVITO_PIPELINE_FLOW_STATE_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_MODIFIER_H
-#define __OVITO_PARTICLE_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/pipeline/Modifier.h>
@@ -62,10 +62,15 @@ public:
 	/// The returned property may be NULL if it does not exist.
 	BondPropertyObject* inputStandardBondProperty(BondProperty::Type which) const;
 
-	/// Returns the given standard property from the input object.
+	/// Returns the given standard particle property from the input object.
 	/// The returned property may not be modified. If the input object does
 	/// not contain the standard property then an exception is thrown.
 	ParticlePropertyObject* expectStandardProperty(ParticleProperty::Type which) const;
+
+	/// Returns the given standard bond property from the input object.
+	/// The returned property may not be modified. If the input object does
+	/// not contain the standard property then an exception is thrown.
+	BondPropertyObject* expectStandardBondProperty(BondProperty::Type which) const;
 
 	/// Returns the property with the given name from the input particles.
 	/// The returned property may not be modified. If the input object does
@@ -213,8 +218,6 @@ protected:
 	/// The status returned by the modifier.
 	PipelineStatus _modifierStatus;
 
-private:
-
 	Q_OBJECT
 	OVITO_OBJECT
 };
@@ -223,4 +226,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTICLE_MODIFIER_H
+

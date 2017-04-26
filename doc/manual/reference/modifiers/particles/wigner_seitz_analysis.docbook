@@ -80,13 +80,22 @@
   </para>
   
   <para>
-    However, if somewhat more detailed information is needed, the modifier provides the 
+    However, if more specific information is needed, the modifier provides the 
     <emphasis>Output per-type occupancies</emphasis> option. If actived, the modifer breaks down the
     occupancy number of each site into per-type counts. Thus, if your displaced configuration contains
     atoms of different types, then this allows you to determine how many atoms of each type occupy each
     site in the ideal reference crystal. The per-type occupancy numbers are output as
     vector components of the <literal>Occupancy</literal> particle property. For example, the
     property component <literal>Occupancy.1</literal> contains the number of atoms of type 1 that occupy a site.
+  </para>
+
+  <para>
+    This allows you to identify specific types of point defects, e.g. vacancies or antisites. 
+    OVITO's particle selection tools, in particular the <link linkend="particles.modifiers.expression_select">
+    Expression Select</link> modifier, can be used to select the sites that meet specific criteria, for example
+    A-sites that are occupied by a B-atom. You can find a detailed example of how to also accomplish this selection using
+    the <link linkend="particles.modifiers.python_script">Python Script modifier</link> in the 
+    <link xlink:href="python/modules/ovito_modifiers.html#ovito.modifiers.WignerSeitzAnalysisModifier">scripting documentation of the Wigner-Seitz modifier</link>.
   </para>
 
   <simplesect>

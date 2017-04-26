@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package
+   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+  <Identity Name="11610ovito.org.Ovito"
+    ProcessorArchitecture="x64"
+    Publisher="CN=9D003073-9E24-4398-93F1-D696ACD17307" 
+    Version="${OVITO_VERSION_MAJOR}.${OVITO_VERSION_MINOR}.${OVITO_VERSION_REVISION}.0" />
+   <!-- 
+    Publisher="CN=ovito.org, O=ovito.org, L=Darmstadt, C=Germany"
+   Publisher="CN=9D003073-9E24-4398-93F1-D696ACD17307" 
+   -->
+  <Properties>
+    <DisplayName>Ovito</DisplayName>
+    <PublisherDisplayName>ovito.org</PublisherDisplayName>
+    <Description>A scientific visualization and analysis software for atomistic simulation data</Description>
+    <Logo>window_icon_150.png</Logo>
+  </Properties>
+  <Resources>
+    <Resource Language="en-us" />
+  </Resources>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.14316.0" MaxVersionTested="10.0.14316.0" />
+	<PackageDependency Name="Microsoft.VCLibs.140.00.UWPDesktop" MinVersion="12.0.40652.5" Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" />
+  </Dependencies>
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust"/>
+  </Capabilities>
+  <Applications>
+    <Application Id="ovito" Executable="ovito.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+       BackgroundColor="#464646"
+       DisplayName="Ovito (The Open Visualization Tool)"
+       Square150x150Logo="window_icon_150.png"
+       Square44x44Logo="window_icon_44.png"
+       Description="A scientific visualization and analysis software for atomistic simulation data" />
+    </Application>
+  </Applications>
+</Package>

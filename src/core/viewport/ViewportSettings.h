@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VIEWPORT_SETTINGS_H
-#define __OVITO_VIEWPORT_SETTINGS_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -145,4 +145,4 @@ Q_DECLARE_METATYPE(Ovito::ViewportSettings::UpDirection);
 Q_DECLARE_TYPEINFO(Ovito::ViewportSettings::ViewportColor, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::ViewportSettings::UpDirection, Q_PRIMITIVE_TYPE);
 
-#endif	// __OVITO_VIEWPORT_SETTINGS_H
+

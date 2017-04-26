@@ -28,37 +28,37 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, ElasticStrainModifier, StructureIdentificationModifier);
-DEFINE_FLAGS_PROPERTY_FIELD(ElasticStrainModifier, _inputCrystalStructure, "CrystalStructure", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(ElasticStrainModifier, _calculateDeformationGradients, "CalculateDeformationGradients", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(ElasticStrainModifier, _calculateStrainTensors, "CalculateStrainTensors", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(ElasticStrainModifier, _latticeConstant, "LatticeConstant", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(ElasticStrainModifier, _caRatio, "CtoARatio", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(ElasticStrainModifier, _pushStrainTensorsForward, "PushStrainTensorsForward", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_REFERENCE_FIELD(ElasticStrainModifier, _patternCatalog, "PatternCatalog", PatternCatalog, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(ElasticStrainModifier, _inputCrystalStructure, "Input crystal structure");
-SET_PROPERTY_FIELD_LABEL(ElasticStrainModifier, _calculateDeformationGradients, "Output deformation gradient tensors");
-SET_PROPERTY_FIELD_LABEL(ElasticStrainModifier, _calculateStrainTensors, "Output strain tensors");
-SET_PROPERTY_FIELD_LABEL(ElasticStrainModifier, _latticeConstant, "Lattice constant");
-SET_PROPERTY_FIELD_LABEL(ElasticStrainModifier, _caRatio, "c/a ratio");
-SET_PROPERTY_FIELD_LABEL(ElasticStrainModifier, _pushStrainTensorsForward, "Strain tensor in spatial frame (push-forward)");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ElasticStrainModifier, _latticeConstant, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ElasticStrainModifier, _caRatio, FloatParameterUnit, 0);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ElasticStrainModifier, StructureIdentificationModifier);
+DEFINE_FLAGS_PROPERTY_FIELD(ElasticStrainModifier, inputCrystalStructure, "CrystalStructure", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(ElasticStrainModifier, calculateDeformationGradients, "CalculateDeformationGradients", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(ElasticStrainModifier, calculateStrainTensors, "CalculateStrainTensors", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(ElasticStrainModifier, latticeConstant, "LatticeConstant", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(ElasticStrainModifier, axialRatio, "CtoARatio", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(ElasticStrainModifier, pushStrainTensorsForward, "PushStrainTensorsForward", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(ElasticStrainModifier, patternCatalog, "PatternCatalog", PatternCatalog, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(ElasticStrainModifier, inputCrystalStructure, "Input crystal structure");
+SET_PROPERTY_FIELD_LABEL(ElasticStrainModifier, calculateDeformationGradients, "Output deformation gradient tensors");
+SET_PROPERTY_FIELD_LABEL(ElasticStrainModifier, calculateStrainTensors, "Output strain tensors");
+SET_PROPERTY_FIELD_LABEL(ElasticStrainModifier, latticeConstant, "Lattice constant");
+SET_PROPERTY_FIELD_LABEL(ElasticStrainModifier, axialRatio, "c/a ratio");
+SET_PROPERTY_FIELD_LABEL(ElasticStrainModifier, pushStrainTensorsForward, "Strain tensor in spatial frame (push-forward)");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ElasticStrainModifier, latticeConstant, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ElasticStrainModifier, axialRatio, FloatParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
 ElasticStrainModifier::ElasticStrainModifier(DataSet* dataset) : StructureIdentificationModifier(dataset),
 		_inputCrystalStructure(StructureAnalysis::LATTICE_FCC), _calculateDeformationGradients(false), _calculateStrainTensors(true),
-		_latticeConstant(1), _caRatio(sqrt(8.0/3.0)), _pushStrainTensorsForward(true)
+		_latticeConstant(1), _axialRatio(sqrt(8.0/3.0)), _pushStrainTensorsForward(true)
 {
-	INIT_PROPERTY_FIELD(ElasticStrainModifier::_inputCrystalStructure);
-	INIT_PROPERTY_FIELD(ElasticStrainModifier::_patternCatalog);
-	INIT_PROPERTY_FIELD(ElasticStrainModifier::_calculateDeformationGradients);
-	INIT_PROPERTY_FIELD(ElasticStrainModifier::_calculateStrainTensors);
-	INIT_PROPERTY_FIELD(ElasticStrainModifier::_latticeConstant);
-	INIT_PROPERTY_FIELD(ElasticStrainModifier::_caRatio);
-	INIT_PROPERTY_FIELD(ElasticStrainModifier::_pushStrainTensorsForward);
+	INIT_PROPERTY_FIELD(inputCrystalStructure);
+	INIT_PROPERTY_FIELD(patternCatalog);
+	INIT_PROPERTY_FIELD(calculateDeformationGradients);
+	INIT_PROPERTY_FIELD(calculateStrainTensors);
+	INIT_PROPERTY_FIELD(latticeConstant);
+	INIT_PROPERTY_FIELD(axialRatio);
+	INIT_PROPERTY_FIELD(pushStrainTensorsForward);
 
 	// Create pattern catalog.
 	_patternCatalog = new PatternCatalog(dataset);
@@ -95,12 +95,12 @@ void ElasticStrainModifier::propertyChanged(const PropertyFieldDescriptor& field
 	StructureIdentificationModifier::propertyChanged(field);
 
 	// Recompute results when the parameters have changed.
-	if(field == PROPERTY_FIELD(ElasticStrainModifier::_inputCrystalStructure) ||
-			field == PROPERTY_FIELD(ElasticStrainModifier::_calculateDeformationGradients) ||
-			field == PROPERTY_FIELD(ElasticStrainModifier::_calculateStrainTensors) ||
-			field == PROPERTY_FIELD(ElasticStrainModifier::_latticeConstant) ||
-			field == PROPERTY_FIELD(ElasticStrainModifier::_caRatio) ||
-			field == PROPERTY_FIELD(ElasticStrainModifier::_pushStrainTensorsForward))
+	if(field == PROPERTY_FIELD(inputCrystalStructure) ||
+			field == PROPERTY_FIELD(calculateDeformationGradients) ||
+			field == PROPERTY_FIELD(calculateStrainTensors) ||
+			field == PROPERTY_FIELD(latticeConstant) ||
+			field == PROPERTY_FIELD(axialRatio) ||
+			field == PROPERTY_FIELD(pushStrainTensorsForward))
 		invalidateCachedResults();
 }
 

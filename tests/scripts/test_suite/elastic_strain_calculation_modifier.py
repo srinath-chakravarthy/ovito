@@ -1,7 +1,9 @@
-from ovito import *
 from ovito.io import *
 from ovito.data import *
 from ovito.modifiers import *
+
+import sys
+if "ovito.plugins.CrystalAnalysis" not in sys.modules: sys.exit()
 
 import numpy
 

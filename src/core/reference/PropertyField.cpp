@@ -107,7 +107,7 @@ void SingleReferenceFieldBase::swapReference(OORef<RefTarget>& inactiveTarget, b
 
 	// Check for cyclic references.
 	if(inactiveTarget && refmaker->isReferencedBy(inactiveTarget.get())) {
-		OVITO_ASSERT(!owner()->isRefTarget() || !owner()->dataset()->undoStack().isUndoingOrRedoing());
+		OVITO_ASSERT(!owner()->isRefTarget() || !owner()->dataset() || !owner()->dataset()->undoStack().isUndoingOrRedoing());
 		throw CyclicReferenceError();
 	}
 
@@ -167,7 +167,7 @@ void SingleReferenceFieldBase::setValue(RefTarget* newTarget)
 			qPrintable(QString("PROPERTY_FIELD_NO_UNDO flag has not been set for reference field '%1' of non-RefTarget derived class '%2'.")
 				.arg(descriptor()->identifier()).arg(descriptor()->definingClass()->name())));
 
-	if(descriptor()->automaticUndo() && owner()->dataset()->undoStack().isRecording()) {
+	if(descriptor()->automaticUndo() && owner()->dataset() && owner()->dataset()->undoStack().isRecording()) {
 		std::unique_ptr<SetReferenceOperation> op(new SetReferenceOperation(newTarget, *this));
 		op->redo();
 		owner()->dataset()->undoStack().push(std::move(op));
@@ -228,7 +228,7 @@ OORef<RefTarget> VectorReferenceFieldBase::removeReference(int index, bool gener
 			generateTargetChangedEvent();
 		}
 		catch(...) {
-			if(!owner()->isRefTarget() || !owner()->dataset()->undoStack().isUndoingOrRedoing())
+			if(!owner()->isRefTarget() || !owner()->dataset() || !owner()->dataset()->undoStack().isUndoingOrRedoing())
 				throw;
 			qDebug() << "Caught exception in VectorReferenceFieldBase::removeReference(). RefMaker is" << owner() << ". RefTarget is" << target;
 		}
@@ -250,7 +250,7 @@ int VectorReferenceFieldBase::addReference(const OORef<RefTarget>& target, int i
 
 	// Check for cyclic references.
 	if(target && refmaker->isReferencedBy(target.get())) {
-		OVITO_ASSERT(!owner()->isRefTarget() || !owner()->dataset()->undoStack().isUndoingOrRedoing());
+		OVITO_ASSERT(!owner()->isRefTarget() || !owner()->dataset() || !owner()->dataset()->undoStack().isUndoingOrRedoing());
 		throw CyclicReferenceError();
 	}
 
@@ -278,7 +278,7 @@ int VectorReferenceFieldBase::addReference(const OORef<RefTarget>& target, int i
 		generateTargetChangedEvent();
 	}
 	catch(...) {
-		if(!owner()->isRefTarget() || !owner()->dataset()->undoStack().isUndoingOrRedoing())
+		if(!owner()->isRefTarget() || !owner()->dataset() || !owner()->dataset()->undoStack().isUndoingOrRedoing())
 			throw;
 		qDebug() << "Caught exception in VectorReferenceFieldBase::addReference(). RefMaker is" << refmaker << ". RefTarget is" << target.get();
 	}
@@ -303,7 +303,7 @@ int VectorReferenceFieldBase::insertInternal(RefTarget* newTarget, int index)
 			qPrintable(QString("PROPERTY_FIELD_NO_UNDO flag has not been set for reference field '%1' of non-RefTarget derived class '%2'.")
 					.arg(descriptor()->identifier()).arg(descriptor()->definingClass()->name())));
 
-	if(descriptor()->automaticUndo() && owner()->dataset()->undoStack().isRecording()) {
+	if(descriptor()->automaticUndo() && owner()->dataset() && owner()->dataset()->undoStack().isRecording()) {
 		std::unique_ptr<InsertReferenceOperation> op(new InsertReferenceOperation(newTarget, *this, index));
 		op->redo();
 		int index = op->insertionIndex();
@@ -328,7 +328,7 @@ void VectorReferenceFieldBase::remove(int i)
 			qPrintable(QString("PROPERTY_FIELD_NO_UNDO flag has not been set for reference field '%1' of non-RefTarget derived class '%2'.")
 					.arg(descriptor()->identifier()).arg(descriptor()->definingClass()->name())));
 
-	if(descriptor()->automaticUndo() && owner()->dataset()->undoStack().isRecording()) {
+	if(descriptor()->automaticUndo() && owner()->dataset() && owner()->dataset()->undoStack().isRecording()) {
 		std::unique_ptr<RemoveReferenceOperation> op(new RemoveReferenceOperation(*this, i));
 		op->redo();
 		owner()->dataset()->undoStack().push(std::move(op));

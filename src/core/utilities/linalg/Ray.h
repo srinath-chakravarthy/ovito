@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::Ray_3 class template.
  */
 
-#ifndef __OVITO_RAY_H
-#define __OVITO_RAY_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/io/SaveStream.h>
@@ -178,4 +178,4 @@ Q_DECLARE_METATYPE(Ovito::Ray3*);
 Q_DECLARE_TYPEINFO(Ovito::Ray3, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::Ray3*, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_RAY_H
+

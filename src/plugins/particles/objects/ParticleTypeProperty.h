@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_TYPE_PROPERTY_H
-#define __OVITO_PARTICLE_TYPE_PROPERTY_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include "ParticlePropertyObject.h"
@@ -76,12 +76,6 @@ public:
 		OVITO_ASSERT(particleTypes().contains(ptype) == false);
 		_particleTypes.insert(index, ptype);
 	}
-
-	/// Returns the list of particle types.
-	const QVector<ParticleType*>& particleTypes() const { return _particleTypes; }
-
-	/// Replaces the list of particle types.
-	void setParticleTypes(const QVector<ParticleType*>& types) { _particleTypes = types; }
 
 	/// Returns the particle type with the given ID, or NULL if no such type exists.
 	ParticleType* particleType(int id) const {
@@ -160,11 +154,6 @@ public:
 	/// Changes the default radius for a named particle type.
 	static void setDefaultParticleRadius(ParticleProperty::Type typeClass, const QString& particleTypeName, FloatType radius);
 
-protected:
-
-	/// Contains the particle types.
-	VectorReferenceField<ParticleType> _particleTypes;
-
 private:
 
 	/// Data structure that holds the name, color, and radius of a particle type.
@@ -176,13 +165,14 @@ private:
 	/// Contains default names, colors, and radii for the predefined structure types.
 	static std::array<PredefinedTypeInfo, NUMBER_OF_PREDEFINED_STRUCTURE_TYPES> _predefinedStructureTypes;
 
+	/// Contains the particle types.
+	DECLARE_MODIFIABLE_VECTOR_REFERENCE_FIELD(ParticleType, particleTypes, setParticleTypes);
+
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_VECTOR_REFERENCE_FIELD(_particleTypes);
 };
 
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTICLE_TYPE_PROPERTY_H
+

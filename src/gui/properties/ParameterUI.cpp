@@ -30,10 +30,10 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Params)
 
 // Gives the class run-time type information.
-IMPLEMENT_OVITO_OBJECT(Gui, ParameterUI, RefMaker);
-IMPLEMENT_OVITO_OBJECT(Gui, PropertyParameterUI, ParameterUI);
-DEFINE_FLAGS_REFERENCE_FIELD(ParameterUI, _editObject, "EditObject", RefTarget, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_WEAK_REF | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
-DEFINE_FLAGS_REFERENCE_FIELD(PropertyParameterUI, _parameterObject, "ParameterObject", RefTarget, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_WEAK_REF | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
+IMPLEMENT_OVITO_OBJECT(ParameterUI, RefMaker);
+IMPLEMENT_OVITO_OBJECT(PropertyParameterUI, ParameterUI);
+DEFINE_FLAGS_REFERENCE_FIELD(ParameterUI, editObject, "EditObject", RefTarget, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_WEAK_REF | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
+DEFINE_FLAGS_REFERENCE_FIELD(PropertyParameterUI, parameterObject, "ParameterObject", RefTarget, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_WEAK_REF | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
 
 ///////////////////////////////////// ParameterUI /////////////////////////////////////////
 
@@ -42,7 +42,7 @@ DEFINE_FLAGS_REFERENCE_FIELD(PropertyParameterUI, _parameterObject, "ParameterOb
 ******************************************************************************/
 ParameterUI::ParameterUI(QObject* parent) : RefMaker(nullptr), _enabled(true)
 {
-	INIT_PROPERTY_FIELD(ParameterUI::_editObject);
+	INIT_PROPERTY_FIELD(editObject);
 	
 	setParent(parent);
 
@@ -66,7 +66,7 @@ PropertyParameterUI::PropertyParameterUI(QObject* parent, const char* propertyNa
 	ParameterUI(parent), _propertyName(propertyName), _propField(nullptr)
 {
 	OVITO_ASSERT(propertyName != NULL);
-	INIT_PROPERTY_FIELD(PropertyParameterUI::_parameterObject);
+	INIT_PROPERTY_FIELD(parameterObject);
 }
 
 /******************************************************************************
@@ -75,7 +75,7 @@ PropertyParameterUI::PropertyParameterUI(QObject* parent, const char* propertyNa
 PropertyParameterUI::PropertyParameterUI(QObject* parent, const PropertyFieldDescriptor& propField) :
 	ParameterUI(parent), _propertyName(nullptr), _propField(&propField)
 {
-	INIT_PROPERTY_FIELD(PropertyParameterUI::_parameterObject);
+	INIT_PROPERTY_FIELD(parameterObject);
 
 	// If requested, save parameter value to application's settings store each time the user changes it.
 	if(propField.flags().testFlag(PROPERTY_FIELD_MEMORIZE))

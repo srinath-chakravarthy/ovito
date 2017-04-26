@@ -49,7 +49,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(NetCDFPluginGui, NetCDFImporterEditor, FileImporterEditor);
+IMPLEMENT_OVITO_OBJECT(NetCDFImporterEditor, FileImporterEditor);
 SET_OVITO_OBJECT_EDITOR(NetCDFImporter, NetCDFImporterEditor);
 
 /******************************************************************************
@@ -98,7 +98,7 @@ void NetCDFImporterEditor::createUI(const RolloutInsertionParameters& rolloutPar
 	sublayout->setContentsMargins(4,4,4,4);
 	layout->addWidget(columnMappingBox);
 
-	BooleanRadioButtonParameterUI* useCustomMappingUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(NetCDFImporter::_useCustomColumnMapping));
+	BooleanRadioButtonParameterUI* useCustomMappingUI = new BooleanRadioButtonParameterUI(this, PROPERTY_FIELD(NetCDFImporter::useCustomColumnMapping));
 	useCustomMappingUI->buttonFalse()->setText(tr("Automatic mapping"));
 	sublayout->addWidget(useCustomMappingUI->buttonFalse());
 	useCustomMappingUI->buttonTrue()->setText(tr("User-defined mapping to particle properties"));

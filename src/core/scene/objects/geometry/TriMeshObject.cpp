@@ -24,7 +24,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene) OVITO_BEGIN_INLINE_NAMESPACE(StdObj)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, TriMeshObject, DataObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(TriMeshObject, DataObject);
 
 /******************************************************************************
 * Default constructor.

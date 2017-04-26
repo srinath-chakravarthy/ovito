@@ -25,7 +25,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(Gui, GeneralSettingsPage, ApplicationSettingsDialogPage);
+IMPLEMENT_OVITO_OBJECT(GeneralSettingsPage, ApplicationSettingsDialogPage);
 
 /******************************************************************************
 * Creates the widget that contains the plugin specific setting controls.
@@ -47,6 +47,12 @@ void GeneralSettingsPage::insertSettingsDialogPage(ApplicationSettingsDialog* se
 			"<p>Use an alternative file selection dialog instead of the native dialog box provided by the operating system.</p>"));
 	layout2->addWidget(_useQtFileDialog, 0, 0);
 	_useQtFileDialog->setChecked(settings.value("file/use_qt_dialog", false).toBool());
+
+	_enableMRUModifierList = new QCheckBox(tr("Show most recently used modifiers"), uiGroupBox);
+	_enableMRUModifierList->setToolTip(tr(
+			"<p>Restricts the modifiers in the <i>Add Modification</i> list box to the most recently used ones.</p>"));
+	layout2->addWidget(_enableMRUModifierList, 1, 0);
+	_enableMRUModifierList->setChecked(settings.value("core/modifier/mru/enable_mru", true).toBool());
 
 	QGroupBox* openglGroupBox = new QGroupBox(tr("Display / OpenGL"), page);
 	layout1->addWidget(openglGroupBox);
@@ -111,6 +117,7 @@ void GeneralSettingsPage::insertSettingsDialogPage(ApplicationSettingsDialog* se
 
 	layout2->addWidget(new QLabel(tr("<p style=\"font-size: small; color: #686868;\">(Restart required for changes to take effect.)</p>")), 3, 0, 1, 2);
 
+#if !defined(OVITO_BUILD_APPSTORE_VERSION)
 	QGroupBox* updateGroupBox = new QGroupBox(tr("Program updates"), page);
 	layout1->addWidget(updateGroupBox);
 	layout2 = new QGridLayout(updateGroupBox);
@@ -132,6 +139,7 @@ void GeneralSettingsPage::insertSettingsDialogPage(ApplicationSettingsDialog* se
 
 	connect(_enableUpdateChecks, &QCheckBox::toggled, _enableUsageStatistics, &QCheckBox::setEnabled);
 	_enableUsageStatistics->setEnabled(_enableUpdateChecks->isChecked());
+#endif
 
 	layout1->addStretch();
 }
@@ -143,8 +151,11 @@ bool GeneralSettingsPage::saveValues(ApplicationSettingsDialog* settingsDialog, 
 {
 	QSettings settings;
 	settings.setValue("file/use_qt_dialog", _useQtFileDialog->isChecked());
+	settings.setValue("core/modifier/mru/enable_mru", _enableMRUModifierList->isChecked());
+#if !defined(OVITO_BUILD_APPSTORE_VERSION)
 	settings.setValue("updates/check_for_updates", _enableUpdateChecks->isChecked());
 	settings.setValue("updates/transmit_id", _enableUsageStatistics->isChecked());
+#endif
 	if(_overrideGLContextSharing->isChecked())
 		settings.setValue("display/share_opengl_context", _contextSharingMode->currentIndex() == 0);
 	else

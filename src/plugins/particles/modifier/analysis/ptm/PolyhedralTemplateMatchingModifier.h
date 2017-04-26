@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PTM_MODIFIER_H
-#define __OVITO_PTM_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/modifier/analysis/StructureIdentificationModifier.h>
@@ -73,47 +73,11 @@ public:
 	/// Constructor.
 	Q_INVOKABLE PolyhedralTemplateMatchingModifier(DataSet* dataset);
 
-	/// \brief Returns the RMSD cutoff.
-	FloatType rmsdCutoff() const { return _rmsdCutoff; }
-
-	/// \brief Sets the RMSD cutoff.
-	void setRmsdCutoff(FloatType cutoff) { _rmsdCutoff = cutoff; }
-
 	/// Returns the computed histogram of RMSD values.
 	const QVector<int>& rmsdHistogramData() const { return _rmsdHistogramData; }
 
 	/// Returns the bin size of the RMSD histogram.
 	FloatType rmsdHistogramBinSize() const { return _rmsdHistogramBinSize; }
-
-	/// Returns whether per-particle RMSD values are output by the modifier.
-	bool outputRmsd() const { return _outputRmsd; }
-
-	/// Sets whether per-particle RMSD values are output by the modifier.
-	void setOutputRmsd(bool enable) { _outputRmsd = enable; }
-
-	/// Returns whether local interatomic distances are output by the modifier.
-	bool outputInteratomicDistance() const { return _outputInteratomicDistance; }
-
-	/// Sets whether local interatomic distances are output by the modifier.
-	void setOutputInteratomicDistance(bool enable) { _outputInteratomicDistance = enable; }
-
-	/// Returns whether local orientations are output by the modifier.
-	bool outputOrientation() const { return _outputOrientation; }
-
-	/// Sets whether local orientations are output by the modifier.
-	void setOutputOrientation(bool enable) { _outputOrientation = enable; }
-
-	/// Returns whether elastic deformation gradients are output by the modifier.
-	bool outputDeformationGradient() const { return _outputDeformationGradient; }
-
-	/// Sets whether elastic deformation gradients are output by the modifier.
-	void setOutputDeformationGradient(bool enable) { _outputDeformationGradient = enable; }
-
-	/// Returns whether alloy types should be identified by the modifier.
-	bool outputAlloyTypes() const { return _outputAlloyTypes; }
-
-	/// Sets whether local alloy types should be identified by the modifier.
-	void setOutputAlloyTypes(bool enable) { _outputAlloyTypes = enable; }
 
 protected:
 
@@ -182,22 +146,22 @@ private:
 	QExplicitlySharedDataPointer<ParticleProperty> _alloyTypes;
 
 	/// The RMSD cutoff.
-	PropertyField<FloatType> _rmsdCutoff;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, rmsdCutoff, setRmsdCutoff);
 
 	/// Controls the output of the per-particle RMSD values.
-	PropertyField<bool> _outputRmsd;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, outputRmsd, setOutputRmsd);
 
 	/// Controls the output of local interatomic distances.
-	PropertyField<bool> _outputInteratomicDistance;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, outputInteratomicDistance, setOutputInteratomicDistance);
 
 	/// Controls the output of local orientations.
-	PropertyField<bool> _outputOrientation;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, outputOrientation, setOutputOrientation);
 
 	/// Controls the output of elastic deformation gradients.
-	PropertyField<bool> _outputDeformationGradient;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, outputDeformationGradient, setOutputDeformationGradient);
 
 	/// Controls the output of alloy structure types.
-	PropertyField<bool> _outputAlloyTypes;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, outputAlloyTypes, setOutputAlloyTypes);
 
 	/// The computed histogram of RMSD values.
 	QVector<int> _rmsdHistogramData;
@@ -210,13 +174,6 @@ private:
 
 	Q_CLASSINFO("DisplayName", "Polyhedral template matching");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
-
-	DECLARE_PROPERTY_FIELD(_rmsdCutoff);
-	DECLARE_PROPERTY_FIELD(_outputRmsd);
-	DECLARE_PROPERTY_FIELD(_outputInteratomicDistance);
-	DECLARE_PROPERTY_FIELD(_outputOrientation);
-	DECLARE_PROPERTY_FIELD(_outputDeformationGradient);
-	DECLARE_PROPERTY_FIELD(_outputAlloyTypes);
 };
 
 OVITO_END_INLINE_NAMESPACE
@@ -224,4 +181,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PTM_MODIFIER_H
+

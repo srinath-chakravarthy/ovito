@@ -5,7 +5,7 @@
     You should run this script from within the graphical user interface
     using the Scripting->Run Script File menu option.
 """
-from ovito import *
+import ovito
 from ovito.data import *
 
 def export_dislocations(disloc_network):
@@ -18,8 +18,8 @@ def export_dislocations(disloc_network):
 # Loop over all objects in the scene and
 # find one that contains dislocation data.
 # Then call export_dislocations().
-for i in range(len(dataset.scene_nodes)):
-    node = dataset.scene_nodes[i]
+for i in range(len(ovito.dataset.scene_nodes)):
+    node = ovito.dataset.scene_nodes[i]
     data = node.compute()    
     if hasattr(data, 'dislocations'): 
         export_dislocations(data.dislocations)

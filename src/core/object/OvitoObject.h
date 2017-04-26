@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_OBJECT_H
-#define __OVITO_OBJECT_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "OvitoObjectReference.h"
@@ -150,7 +150,7 @@ private:
 	size_t _referenceCount;
 
 	/// \brief Increments the reference count by one.
-	void incrementReferenceCount() {
+	void incrementReferenceCount() Q_DECL_NOTHROW {
 		OVITO_CHECK_OBJECT_POINTER(this);
 		++_referenceCount;
 	}
@@ -274,4 +274,4 @@ Q_DECLARE_SMART_POINTER_METATYPE(Ovito::OORef);
 #include <core/utilities/io/ObjectSaveStream.h>
 #include <core/utilities/io/ObjectLoadStream.h>
 
-#endif // __OVITO_OBJECT_H
+

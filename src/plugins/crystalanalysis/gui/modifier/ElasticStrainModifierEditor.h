@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_ELASTIC_STRAIN_MODIFIER_EDITOR_H
-#define __OVITO_ELASTIC_STRAIN_MODIFIER_EDITOR_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/gui/modifier/ParticleModifierEditor.h>
@@ -59,4 +59,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_ELASTIC_STRAIN_MODIFIER_EDITOR_H
+

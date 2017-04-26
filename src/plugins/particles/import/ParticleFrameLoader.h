@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_FRAME_LOADER_H
-#define __OVITO_PARTICLE_FRAME_LOADER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/dataset/importexport/FileSourceImporter.h>
@@ -28,6 +28,7 @@
 #include <plugins/particles/data/ParticleProperty.h>
 #include <plugins/particles/data/BondsStorage.h>
 #include <plugins/particles/data/BondProperty.h>
+#include <plugins/particles/data/FieldQuantity.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/BondPropertyObject.h>
 #include <plugins/particles/data/SimulationCell.h>
@@ -235,6 +236,7 @@ public:
 
 	/// Removes a particle property from the list.
 	void removeParticleProperty(int index) {
+		OVITO_ASSERT(index >= 0 && index < _particleProperties.size());
 		_particleTypeLists.erase(_particleProperties[index].get());
 		_particleProperties.erase(_particleProperties.begin() + index);
 	}
@@ -265,6 +267,7 @@ public:
 
 	/// Removes a bond property from the list.
 	void removeBondProperty(int index) {
+		OVITO_ASSERT(index >= 0 && index < _bondProperties.size());
 		_bondTypeLists.erase(_bondProperties[index].get());
 		_bondProperties.erase(_bondProperties.begin() + index);
 	}
@@ -274,6 +277,20 @@ public:
 		auto typeList = _bondTypeLists.find(property);
 		if(typeList != _bondTypeLists.end()) return typeList->second.get();
 		return nullptr;
+	}
+
+	/// Returns the list of field quantities.
+	const std::vector<std::unique_ptr<FieldQuantity>>& fieldQuantities() const { return _fieldQuantities; }
+
+	/// Adds a new field quantity.
+	void addFieldQuantity(FieldQuantity* quantity) {
+		_fieldQuantities.push_back(std::unique_ptr<FieldQuantity>(quantity));
+	}
+
+	/// Removes a field quantity from the list.
+	void removeFieldQuantity(int index) {
+		OVITO_ASSERT(index >= 0 && index < _fieldQuantities.size());
+		_fieldQuantities.erase(_fieldQuantities.begin() + index);
 	}
 
 	/// Returns the metadata read from the file header.
@@ -316,6 +333,9 @@ private:
 	/// Stores the lists of bond types for type properties.
 	std::map<BondProperty*, std::unique_ptr<BondTypeList>> _bondTypeLists;
 
+	/// Structured field quantities.
+	std::vector<std::unique_ptr<FieldQuantity>> _fieldQuantities;
+
 	/// The metadata read from the file header.
 	QVariantMap _attributes;
 
@@ -330,4 +350,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTICLE_FRAME_LOADER_H
+

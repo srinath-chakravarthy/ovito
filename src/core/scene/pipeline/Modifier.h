@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_MODIFIER_H
-#define __OVITO_MODIFIER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/reference/RefTarget.h>
@@ -101,15 +101,15 @@ public:
 
 	/// \brief Returns the input object of this modifier for each application of the modifier.
 	/// \param time The animation for which the geometry pipelines should be evaluated.
-	/// \return A container that contains for each application of this modifier the
-	///         state of the geometry pipeline evaluation up to the modifier's application.
+	/// \return A list of applications of this modifier and the corresponding
+	///         computed state of the data pipeline up to the modifier's application.
 	///
-	/// This method evaluates the geometry pipeline up this modifier. It can be used to work with
+	/// This method evaluates the data pipeline up this modifier. It can be used to work with
 	/// the input objects outside of a normal call to modifyObject().
 	///
 	/// \note This method might return empty result objects in some cases when the modifier stack
 	///       cannot be evaluated because of an invalid modifier.
-	QVector<QPair<ModifierApplication*, PipelineFlowState>> getModifierInputs() const;
+	QVector<QPair<ModifierApplication*, PipelineFlowState>> getModifierInputs(TimePoint time) const;
 
 	/// \brief Returns the input object of the modifier assuming that it has been applied only in a single geometry pipeline.
 	/// \return The object that comes out of the geometry pipeline when it is evaluated up the application of this modifier.
@@ -121,20 +121,6 @@ public:
 	/// This method can be used to work with the input object outside of a normal call to modifyObject().
 	PipelineFlowState getModifierInput(ModifierApplication* modApp = nullptr) const;
 
-	/// \brief Returns whether this modifier is currently enabled.
-	/// \return \c true if it is currently enabled, i.e. applied.
-	///         \c false if it is disabled and skipped in the geometry pipeline.
-	bool isEnabled() const { return _isEnabled; }
-
-	/// \brief Enables or disables this modifier.
-	/// \param enabled Controls the state of the modifier.
-	///
-	/// A disabled modifier is skipped in the geometry pipeline
-	/// and is not applied to the input object.
-	///
-	/// \undoable
-	void setEnabled(bool enabled) { _isEnabled = enabled; }
-
 	/// \brief Asks the modifier whether it can be applied to the given input data.
 	/// \param input The pipeline state at the point of the pipeline where the modifier is going to be inserted.
 	/// \return true if the modifier can operate on the provided input data; false otherwise.
@@ -144,13 +130,13 @@ public:
 
 	/// \brief Returns the title of this modifier object.
 	virtual QString objectTitle() override {
-		if(_title.value().isEmpty()) return RefTarget::objectTitle();
-		else return _title;
+		if(title().isEmpty()) return RefTarget::objectTitle();
+		else return title();
 	}
 
 	/// \brief Changes the title of this modifier.
 	/// \undoable
-	void setObjectTitle(const QString& title) { _title = title; }
+	void setObjectTitle(const QString& title) { setTitle(title); }
 
 protected:
 
@@ -174,16 +160,13 @@ protected:
 private:
 
 	/// Flag that indicates whether the modifier is enabled.
-	PropertyField<bool, bool, ReferenceEvent::TargetEnabledOrDisabled> _isEnabled;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, isEnabled, setEnabled);
 
 	/// The user-defined title of this modifier.
-	PropertyField<QString, QString, ReferenceEvent::TitleChanged> _title;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QString, title, setTitle);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_isEnabled);
-	DECLARE_PROPERTY_FIELD(_title);
 
 	friend class PipelineObject;
 };
@@ -195,4 +178,4 @@ OVITO_END_INLINE_NAMESPACE
 Q_DECLARE_METATYPE(Ovito::Modifier*);
 Q_DECLARE_TYPEINFO(Ovito::Modifier*, Q_MOVABLE_TYPE);
 
-#endif // __OVITO_MODIFIER_H
+

@@ -46,7 +46,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'OVITO'
-copyright = '2016, Alexander Stukowski'
+copyright = '2017, Alexander Stukowski'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -231,7 +231,7 @@ def process_docstring(app, what, name, obj, options, lines):
 
 def process_signature(app, what, name, obj, options, signature, return_annotation):
     # Look for keyword "SIGNATURE:" in the docstring.
-    # TIt allows the C++ code to specify a custom function signature string for the Python documentation.
+    # This allows the C++ code to specify a custom function signature string for the Python documentation.
     if obj.__doc__:
         for line in obj.__doc__.splitlines():
             if line.strip().startswith("SIGNATURE:"):

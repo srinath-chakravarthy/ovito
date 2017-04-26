@@ -32,7 +32,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ParticleModifier, Modifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ParticleModifier, Modifier);
 
 /******************************************************************************
 * This modifies the input object.
@@ -81,6 +81,10 @@ PipelineStatus ParticleModifier::modifyObject(TimePoint time, ModifierApplicatio
 		status = PipelineStatus(PipelineStatus::Error, ex.messages().join('\n'));
 		state.intersectStateValidity(TimeInterval(time));
 	}
+	catch(const std::bad_alloc&) {
+		status = PipelineStatus(PipelineStatus::Error, tr("Not enough memory to execute this modifier."));
+		state.intersectStateValidity(TimeInterval(time));
+	}
 	catch(const PipelineStatus& thrown_status) {
 		// Transfer exception message to evaluation status.
 		status = thrown_status;
@@ -124,7 +128,7 @@ void ParticleModifier::propertyChanged(const PropertyFieldDescriptor& field)
 	Modifier::propertyChanged(field);
 
 	// Clear status when modifier is disabled.
-	if(field == PROPERTY_FIELD(Modifier::_isEnabled) && !isEnabled())
+	if(field == PROPERTY_FIELD(Modifier::isEnabled) && !isEnabled())
 		setStatus(PipelineStatus(PipelineStatus::Success, tr("Modifier is currently disabled.")));
 }
 
@@ -167,9 +171,9 @@ ParticlePropertyObject* ParticleModifier::expectCustomProperty(const QString& pr
 }
 
 /******************************************************************************
-* Returns the given standard channel from the input object.
-* The returned channel may not be modified. If they input object does
-* not contain the standard channel then an exception is thrown.
+* Returns the given standard particle property from the input object.
+* The returned property may not be modified. If they input object does
+* not contain the standard property then an exception is thrown.
 ******************************************************************************/
 ParticlePropertyObject* ParticleModifier::expectStandardProperty(ParticleProperty::Type which) const
 {
@@ -179,6 +183,23 @@ ParticlePropertyObject* ParticleModifier::expectStandardProperty(ParticlePropert
 			throwException(tr("No particle selection has been defined. Please select some particles first."));
 		else
 			throwException(tr("The modifier cannot be evaluated because the input does not contain the required particle property '%1'.").arg(ParticleProperty::standardPropertyName(which)));
+	}
+	return property;
+}
+
+/******************************************************************************
+* Returns the given standard bond property from the input object.
+* The returned property may not be modified. If they input object does
+* not contain the standard property then an exception is thrown.
+******************************************************************************/
+BondPropertyObject* ParticleModifier::expectStandardBondProperty(BondProperty::Type which) const
+{
+	BondPropertyObject* property = inputStandardBondProperty(which);
+	if(!property) {
+		if(which == BondProperty::SelectionProperty)
+			throwException(tr("No bond selection has been defined. Please select some bonds first."));
+		else
+			throwException(tr("The modifier cannot be evaluated because the input does not contain the required bond property '%1'.").arg(BondProperty::standardPropertyName(which)));
 	}
 	return property;
 }

@@ -27,31 +27,27 @@
 
 namespace Ovito { namespace Particles {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ParticleDisplay, DisplayObject);
-IMPLEMENT_OVITO_OBJECT(Particles, ParticlePickInfo, ObjectPickInfo);
-DEFINE_FLAGS_PROPERTY_FIELD(ParticleDisplay, _defaultParticleRadius, "DefaultParticleRadius", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(ParticleDisplay, _shadingMode, "ShadingMode");
-DEFINE_PROPERTY_FIELD(ParticleDisplay, _renderingQuality, "RenderingQuality");
-DEFINE_PROPERTY_FIELD(ParticleDisplay, _particleShape, "ParticleShape");
-SET_PROPERTY_FIELD_LABEL(ParticleDisplay, _defaultParticleRadius, "Default particle radius");
-SET_PROPERTY_FIELD_LABEL(ParticleDisplay, _shadingMode, "Shading mode");
-SET_PROPERTY_FIELD_LABEL(ParticleDisplay, _renderingQuality, "Rendering quality");
-SET_PROPERTY_FIELD_LABEL(ParticleDisplay, _particleShape, "Shape");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ParticleDisplay, _defaultParticleRadius, WorldParameterUnit, 0);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ParticleDisplay, DisplayObject);
+IMPLEMENT_OVITO_OBJECT(ParticlePickInfo, ObjectPickInfo);
+DEFINE_FLAGS_PROPERTY_FIELD(ParticleDisplay, defaultParticleRadius, "DefaultParticleRadius", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(ParticleDisplay, renderingQuality, "RenderingQuality");
+DEFINE_PROPERTY_FIELD(ParticleDisplay, particleShape, "ParticleShape");
+SET_PROPERTY_FIELD_LABEL(ParticleDisplay, defaultParticleRadius, "Default particle radius");
+SET_PROPERTY_FIELD_LABEL(ParticleDisplay, renderingQuality, "Rendering quality");
+SET_PROPERTY_FIELD_LABEL(ParticleDisplay, particleShape, "Shape");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ParticleDisplay, defaultParticleRadius, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
 ParticleDisplay::ParticleDisplay(DataSet* dataset) : DisplayObject(dataset),
 	_defaultParticleRadius(1.2),
-	_shadingMode(ParticlePrimitive::NormalShading),
 	_renderingQuality(ParticlePrimitive::AutoQuality),
 	_particleShape(Sphere)
 {
-	INIT_PROPERTY_FIELD(ParticleDisplay::_defaultParticleRadius);
-	INIT_PROPERTY_FIELD(ParticleDisplay::_shadingMode);
-	INIT_PROPERTY_FIELD(ParticleDisplay::_renderingQuality);
-	INIT_PROPERTY_FIELD(ParticleDisplay::_particleShape);
+	INIT_PROPERTY_FIELD(defaultParticleRadius);
+	INIT_PROPERTY_FIELD(renderingQuality);
+	INIT_PROPERTY_FIELD(particleShape);
 }
 
 /******************************************************************************
@@ -192,9 +188,11 @@ void ParticleDisplay::particleRadii(std::vector<FloatType>& output, ParticleProp
 	OVITO_ASSERT(radiusProperty == nullptr || radiusProperty->type() == ParticleProperty::RadiusProperty);
 	OVITO_ASSERT(typeProperty == nullptr || typeProperty->type() == ParticleProperty::ParticleTypeProperty);
 
+	FloatType defaultRadius = defaultParticleRadius();
 	if(radiusProperty && radiusProperty->size() == output.size()) {
 		// Take particle radii directly from the radius property.
-		std::copy(radiusProperty->constDataFloat(), radiusProperty->constDataFloat() + output.size(), output.begin());
+		std::transform(radiusProperty->constDataFloat(), radiusProperty->constDataFloat() + output.size(), 
+			output.begin(), [defaultRadius](FloatType r) { return r > 0 ? r : defaultRadius; } );
 	}
 	else if(typeProperty && typeProperty->size() == output.size()) {
 		// Assign radii based on particle types.
@@ -213,12 +211,12 @@ void ParticleDisplay::particleRadii(std::vector<FloatType>& output, ParticleProp
 		}
 		else {
 			// Assign a uniform radius to all particles.
-			std::fill(output.begin(), output.end(), defaultParticleRadius());
+			std::fill(output.begin(), output.end(), defaultRadius);
 		}
 	}
 	else {
 		// Assign a uniform radius to all particles.
-		std::fill(output.begin(), output.end(), defaultParticleRadius());
+		std::fill(output.begin(), output.end(), defaultRadius);
 	}
 }
 
@@ -232,7 +230,8 @@ FloatType ParticleDisplay::particleRadius(size_t particleIndex, ParticleProperty
 
 	if(radiusProperty && radiusProperty->size() > particleIndex) {
 		// Take particle radius directly from the radius property.
-		return radiusProperty->getFloat(particleIndex);
+		FloatType r = radiusProperty->getFloat(particleIndex);
+		if(r > 0) return r;
 	}
 	else if(typeProperty && typeProperty->size() > particleIndex) {
 		// Assign radius based on particle types.
@@ -417,8 +416,12 @@ void ParticleDisplay::render(TimePoint time, DataObject* dataObject, const Pipel
 		// Update radius buffer.
 		if(updateRadii && particleCount) {
 			if(radiusProperty && radiusProperty->size() == particleCount) {
-				// Take particle radii directly from the radius property.
-				_particleBuffer->setParticleRadii(radiusProperty->constDataFloat());
+				// Allocate memory buffer.
+				std::vector<FloatType> particleRadii(particleCount);
+				FloatType defaultRadius = defaultParticleRadius();
+				std::transform(radiusProperty->constDataFloat(), radiusProperty->constDataFloat() + particleCount, 
+					particleRadii.begin(), [defaultRadius](FloatType r) { return r > 0 ? r : defaultRadius; } );
+				_particleBuffer->setParticleRadii(particleRadii.data());
 			}
 			else if(typeProperty && typeProperty->size() == particleCount) {
 				// Assign radii based on particle types.
@@ -788,23 +791,6 @@ Box3 ParticleDisplay::highlightParticleBoundingBox(int particleIndex, const Pipe
 }
 
 /******************************************************************************
-* Loads the data of this class from an input stream.
-******************************************************************************/
-void ParticleDisplay::loadFromStream(ObjectLoadStream& stream)
-{
-	DisplayObject::loadFromStream(stream);
-
-	// This is for backward-compatibility with files written by OVITO 2.5.0.
-	if(_shadingMode == ParticlePrimitive::FlatShading) {
-		_shadingMode = ParticlePrimitive::NormalShading;
-		if(particleShape() == Sphere)
-			setParticleShape(Circle);
-		else if(particleShape() == Box)
-			setParticleShape(Square);
-	}
-}
-
-/******************************************************************************
 * Given an sub-object ID returned by the Viewport::pick() method, looks up the
 * corresponding particle index.
 ******************************************************************************/
@@ -815,7 +801,7 @@ int ParticlePickInfo::particleIndexFromSubObjectID(quint32 subobjID) const
 		return subobjID;
 	}
 	else {
-		if(subobjID < _particleCount)
+		if(subobjID < (quint32)_particleCount)
 			return subobjID;
 		else
 			return (subobjID - _particleCount) / 2;

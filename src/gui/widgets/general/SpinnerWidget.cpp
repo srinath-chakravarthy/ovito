@@ -33,6 +33,7 @@ SpinnerWidget::SpinnerWidget(QWidget* parent, QLineEdit* textBox) : QWidget(pare
 	_upperBtnPressed(false), _lowerBtnPressed(false), _unit(nullptr)
 {
 	setSizePolicy(QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum, QSizePolicy::SpinBox));
+	setFocusPolicy(Qt::ClickFocus);
 	setTextBox(textBox);
 }
 
@@ -139,10 +140,12 @@ void SpinnerWidget::updateTextBox()
 ******************************************************************************/
 void SpinnerWidget::setFloatValue(FloatType newVal, bool emitChangeSignal)
 {
-	// Clamp value.
 	if(newVal == _value) return;
-	newVal = std::max(minValue(), newVal);
-	newVal = std::min(maxValue(), newVal);
+	// Clamp value if it was entered by the user.
+	if(emitChangeSignal) {
+		newVal = std::max(minValue(), newVal);
+		newVal = std::min(maxValue(), newVal);
+	}
 	if(_value != newVal) {
 		_value = newVal;
 		if(emitChangeSignal)
@@ -159,9 +162,11 @@ void SpinnerWidget::setIntValue(int newValInt, bool emitChangeSignal)
 	FloatType newVal = (FloatType)newValInt;
 
 	if(newVal == _value) return;
-	// Clamp value.
-	newVal = std::max((FloatType)ceil(minValue()), newVal);
-	newVal = std::min((FloatType)floor(maxValue()), newVal);
+	// Clamp value if it was entered by the user.
+	if(emitChangeSignal) {		
+		newVal = std::max((FloatType)ceil(minValue()), newVal);
+		newVal = std::min((FloatType)floor(maxValue()), newVal);
+	}
 	if(_value != newVal) {
 		_value = newVal;
 		if(emitChangeSignal)
@@ -238,23 +243,26 @@ void SpinnerWidget::mousePressEvent(QMouseEvent* event)
 			_lowerBtnPressed = true;
 
 		_currentStepSize = unit() ? unit()->stepSize(floatValue(), _upperBtnPressed) : 1;
-		if(textBox()) textBox()->setFocus(Qt::OtherFocusReason);
 		
+		event->accept();
 		grabMouse();
 		repaint();
 	}
 	else if(event->button() == Qt::RightButton) {
 		
-		// restore old value
-		setFloatValue(_oldValue, true);
+		if(_upperBtnPressed || _lowerBtnPressed) {
+			// restore old value
+			setFloatValue(_oldValue, true);
+		}
 
-		if(_upperBtnPressed == _lowerBtnPressed) {
+		if(_upperBtnPressed && _lowerBtnPressed) {
 			Q_EMIT spinnerDragAbort();
 		}
 
 		_upperBtnPressed = false;
 		_lowerBtnPressed = false;
 
+		event->accept();
 		releaseMouse();
 		update();
 	}	
@@ -266,7 +274,7 @@ void SpinnerWidget::mousePressEvent(QMouseEvent* event)
 void SpinnerWidget::mouseReleaseEvent(QMouseEvent* event)
 {
 	if(_upperBtnPressed || _lowerBtnPressed) {
-		if(_upperBtnPressed == _lowerBtnPressed) {
+		if(_upperBtnPressed && _lowerBtnPressed) {
 			Q_EMIT spinnerDragStop();
 		}
 		else {
@@ -275,22 +283,24 @@ void SpinnerWidget::mouseReleaseEvent(QMouseEvent* event)
 				if(unit())
 					newValue = unit()->roundValue(floatValue() + unit()->stepSize(floatValue(), true));
 				else
-					newValue = floatValue() + 1.0f;
+					newValue = floatValue() + FloatType(1);
 			}
 			else {
 				if(unit())
 					newValue = unit()->roundValue(floatValue() - unit()->stepSize(floatValue(), false));
 				else
-					newValue = floatValue() - 1.0f;
+					newValue = floatValue() - FloatType(1);
 			}
 			setFloatValue(newValue, true);
 		}
 
 		_upperBtnPressed = false;
 		_lowerBtnPressed = false;
+		if(textBox()) textBox()->setFocus(Qt::OtherFocusReason);
 
 		// Repaint spinner.
 		update();
+		event->accept();
 	}
 	releaseMouse();
 }
@@ -322,15 +332,15 @@ void SpinnerWidget::mouseMoveEvent(QMouseEvent* event)
 			int screenY = cursorPos.y();
 			if(screenY != _lastMouseY) {
 				int screenHeight = QApplication::desktop()->screenGeometry().height();
-				if(screenY <= 5 && _lastMouseY == screenHeight-1) return;
+				if(screenY <= 5 && _lastMouseY == screenHeight - 1) return;
 				if(screenY >= screenHeight - 5 && _lastMouseY == 0) return;
 				
-				FloatType newVal = _oldValue + _currentStepSize * (FloatType)(_startMouseY - screenY) * 0.1f;
+				FloatType newVal = _oldValue + _currentStepSize * (FloatType)(_startMouseY - screenY) * FloatType(0.1);
 				if(unit())
 					newVal = unit()->roundValue(newVal);
 	
 				if(screenY < _lastMouseY && screenY <= 5) {
-					_lastMouseY = screenHeight-1;
+					_lastMouseY = screenHeight - 1;
 					_startMouseY += _lastMouseY - screenY;
 					QCursor::setPos(cursorPos.x(), _lastMouseY);
 				}
@@ -354,7 +364,23 @@ void SpinnerWidget::mouseMoveEvent(QMouseEvent* event)
 				}
 			}
 		}
+		event->accept();
 	}
+}
+
+/******************************************************************************
+* Is called when the widgets looses the input focus.
+******************************************************************************/
+void SpinnerWidget::focusOutEvent(QFocusEvent* event)
+{
+	if(_upperBtnPressed && _lowerBtnPressed) {
+		Q_EMIT spinnerDragAbort();
+	}
+	_upperBtnPressed = false;
+	_lowerBtnPressed = false;
+	releaseMouse();
+	
+	QWidget::focusOutEvent(event);
 }
 
 OVITO_END_INLINE_NAMESPACE

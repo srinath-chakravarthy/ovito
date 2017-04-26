@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_ELASTIC_STRAIN_MODIFIER_H
-#define __OVITO_ELASTIC_STRAIN_MODIFIER_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <plugins/particles/modifier/analysis/StructureIdentificationModifier.h>
@@ -39,45 +39,6 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE ElasticStrainModifier(DataSet* dataset);
-
-	/// Return the catalog of structure patterns.
-	PatternCatalog* patternCatalog() const { return _patternCatalog; }
-
-	/// Returns the type of crystal to be analyzed.
-	StructureAnalysis::LatticeStructureType inputCrystalStructure() const { return static_cast<StructureAnalysis::LatticeStructureType>(_inputCrystalStructure.value()); }
-
-	/// Sets the type of crystal to be analyzed.
-	void setInputCrystalStructure(StructureAnalysis::LatticeStructureType structureType) { _inputCrystalStructure = structureType; }
-
-	/// Returns whether atomic deformation gradient tensors should be computed and stored.
-	bool calculateDeformationGradients() const { return _calculateDeformationGradients; }
-
-	/// Sets whether atomic deformation gradient tensors should be computed and stored.
-	void setCalculateDeformationGradients(bool enableCalculation) { _calculateDeformationGradients = enableCalculation; }
-
-	/// Returns whether atomic strain tensors should be computed and stored.
-	bool calculateStrainTensors() const { return _calculateStrainTensors; }
-
-	/// Sets whether atomic strain tensors should be computed and stored.
-	void setCalculateStrainTensors(bool enableCalculation) { _calculateStrainTensors = enableCalculation; }
-
-	/// Returns whether the calculated strain tensors are pushed forward to the spatial reference frame.
-	bool pushStrainTensorsForward() const { return _pushStrainTensorsForward; }
-
-	/// Returns whether the calculated strain tensors should be pushed forward to the spatial reference frame.
-	void setPushStrainTensorsForward(bool enable) { _pushStrainTensorsForward = enable; }
-
-	/// Returns the lattice parameter of the ideal crystal.
-	FloatType latticeConstant() const { return _latticeConstant; }
-
-	/// Sets the lattice parameter of the ideal crystal.
-	void setLatticeConstant(FloatType a) { _latticeConstant = a; }
-
-	/// Returns the c/a ratio of the ideal crystal.
-	FloatType axialRatio() const { return _caRatio; }
-
-	/// Sets the c/a ratio of the ideal crystal.
-	void setAxialRatio(FloatType ratio) { _caRatio = ratio; }
 
 	/// Resets the modifier's result cache.
 	virtual void invalidateCachedResults() override;
@@ -99,25 +60,25 @@ protected:
 private:
 
 	/// The type of crystal to be analyzed.
-	PropertyField<int> _inputCrystalStructure;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(StructureAnalysis::LatticeStructureType, inputCrystalStructure, setInputCrystalStructure);
 
 	/// Controls whether atomic deformation gradient tensors should be computed and stored.
-	PropertyField<bool> _calculateDeformationGradients;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, calculateDeformationGradients, setCalculateDeformationGradients);
 
 	/// Controls whether atomic strain tensors should be computed and stored.
-	PropertyField<bool> _calculateStrainTensors;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, calculateStrainTensors, setCalculateStrainTensors);
 
 	/// Controls whether the calculated strain tensors should be pushed forward to the spatial reference frame.
-	PropertyField<bool> _pushStrainTensorsForward;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, pushStrainTensorsForward, setPushStrainTensorsForward);
 
 	/// The lattice parameter of ideal crystal.
-	PropertyField<FloatType> _latticeConstant;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, latticeConstant, setLatticeConstant);
 
 	/// The c/a ratio of the ideal crystal.
-	PropertyField<FloatType> _caRatio;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, axialRatio, setAxialRatio);
 
 	/// The catalog of structure patterns.
-	ReferenceField<PatternCatalog> _patternCatalog;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(PatternCatalog, patternCatalog, setPatternCatalog);
 
 	/// This stores the cached atom-to-cluster assignments computed by the modifier.
 	QExplicitlySharedDataPointer<ParticleProperty> _atomClusters;
@@ -139,18 +100,10 @@ private:
 
 	Q_CLASSINFO("DisplayName", "Elastic strain calculation");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
-
-	DECLARE_PROPERTY_FIELD(_inputCrystalStructure);
-	DECLARE_PROPERTY_FIELD(_calculateDeformationGradients);
-	DECLARE_PROPERTY_FIELD(_calculateStrainTensors);
-	DECLARE_PROPERTY_FIELD(_latticeConstant);
-	DECLARE_PROPERTY_FIELD(_caRatio);
-	DECLARE_PROPERTY_FIELD(_pushStrainTensorsForward);
-	DECLARE_REFERENCE_FIELD(_patternCatalog);
 };
 
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_ELASTIC_STRAIN_MODIFIER_H
+

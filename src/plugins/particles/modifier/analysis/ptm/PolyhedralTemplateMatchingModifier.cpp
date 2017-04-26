@@ -28,20 +28,20 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, PolyhedralTemplateMatchingModifier, StructureIdentificationModifier);
-DEFINE_FLAGS_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _rmsdCutoff, "RMSDCutoff", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputRmsd, "OutputRmsd");
-DEFINE_FLAGS_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputInteratomicDistance, "OutputInteratomicDistance", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputOrientation, "OutputOrientation", PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputDeformationGradient, "OutputDeformationGradient");
-DEFINE_FLAGS_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, _outputAlloyTypes, "OutputAlloyTypes", PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _rmsdCutoff, "RMSD cutoff");
-SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputRmsd, "Output RMSD values");
-SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputInteratomicDistance, "Output interatomic distance");
-SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputOrientation, "Output orientations");
-SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputDeformationGradient, "Output deformation gradients");
-SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, _outputAlloyTypes, "Output alloy types");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(PolyhedralTemplateMatchingModifier, _rmsdCutoff, FloatParameterUnit, 0);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PolyhedralTemplateMatchingModifier, StructureIdentificationModifier);
+DEFINE_FLAGS_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, rmsdCutoff, "RMSDCutoff", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, outputRmsd, "OutputRmsd");
+DEFINE_FLAGS_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, outputInteratomicDistance, "OutputInteratomicDistance", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, outputOrientation, "OutputOrientation", PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, outputDeformationGradient, "OutputDeformationGradient");
+DEFINE_FLAGS_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier, outputAlloyTypes, "OutputAlloyTypes", PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, rmsdCutoff, "RMSD cutoff");
+SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, outputRmsd, "Output RMSD values");
+SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, outputInteratomicDistance, "Output interatomic distance");
+SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, outputOrientation, "Output orientations");
+SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, outputDeformationGradient, "Output deformation gradients");
+SET_PROPERTY_FIELD_LABEL(PolyhedralTemplateMatchingModifier, outputAlloyTypes, "Output alloy types");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(PolyhedralTemplateMatchingModifier, rmsdCutoff, FloatParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -50,12 +50,12 @@ PolyhedralTemplateMatchingModifier::PolyhedralTemplateMatchingModifier(DataSet* 
 		_rmsdCutoff(0), _rmsdHistogramBinSize(0), _outputRmsd(false), _outputInteratomicDistance(false),
 		_outputOrientation(false), _outputDeformationGradient(false), _outputAlloyTypes(false)
 {
-	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_rmsdCutoff);
-	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputRmsd);
-	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputInteratomicDistance);
-	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputOrientation);
-	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputDeformationGradient);
-	INIT_PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputAlloyTypes);
+	INIT_PROPERTY_FIELD(rmsdCutoff);
+	INIT_PROPERTY_FIELD(outputRmsd);
+	INIT_PROPERTY_FIELD(outputInteratomicDistance);
+	INIT_PROPERTY_FIELD(outputOrientation);
+	INIT_PROPERTY_FIELD(outputDeformationGradient);
+	INIT_PROPERTY_FIELD(outputAlloyTypes);
 
 	// Define the structure types.
 	createStructureType(OTHER, ParticleTypeProperty::PredefinedStructureType::OTHER);
@@ -74,11 +74,11 @@ void PolyhedralTemplateMatchingModifier::propertyChanged(const PropertyFieldDesc
 	StructureIdentificationModifier::propertyChanged(field);
 
 	// Re-perform analysis when settings change.
-	if(field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputRmsd) ||
-		field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputInteratomicDistance) ||
-		field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputOrientation) ||
-		field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputDeformationGradient) ||
-		field == PROPERTY_FIELD(PolyhedralTemplateMatchingModifier::_outputAlloyTypes))
+	if(field == PROPERTY_FIELD(outputRmsd) ||
+		field == PROPERTY_FIELD(outputInteratomicDistance) ||
+		field == PROPERTY_FIELD(outputOrientation) ||
+		field == PROPERTY_FIELD(outputDeformationGradient) ||
+		field == PROPERTY_FIELD(outputAlloyTypes))
 		invalidateCachedResults();
 }
 
@@ -121,17 +121,17 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 
 	// Prepare the neighbor list.
 	NearestNeighborFinder neighFinder(MAX_NEIGHBORS);
-	if(!neighFinder.prepare(positions(), cell(), selection(), this))
+	if(!neighFinder.prepare(positions(), cell(), selection(), *this))
 		return;
 
 	// Create output storage.
 	ParticleProperty* output = structures();
 
-	setProgressRange(positions()->size());
 	setProgressValue(0);
+	setProgressMaximum(positions()->size());
 
 	// Perform analysis on each particle.
-	parallelForChunks(positions()->size(), *this, [this, &neighFinder, output](size_t startIndex, size_t count, FutureInterfaceBase& progress) {
+	parallelForChunks(positions()->size(), *this, [this, &neighFinder, output](size_t startIndex, size_t count, PromiseBase& promise) {
 
 		// Initialize thread-local storage for PTM routine.
 		ptm_local_handle_t ptm_local_handle = ptm_initialize_local();
@@ -141,10 +141,10 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 
 			// Update progress indicator.
 			if((index % 256) == 0)
-				progress.incrementProgressValue(256);
+				promise.incrementProgressValue(256);
 
 			// Break out of loop when operation was canceled.
-			if(progress.isCanceled())
+			if(promise.isCanceled())
 				break;
 
 			// Skip particles that are not included in the analysis.
@@ -156,7 +156,7 @@ void PolyhedralTemplateMatchingModifier::PTMEngine::perform()
 
 			// Find nearest neighbors.
 			NearestNeighborFinder::Query<MAX_NEIGHBORS> neighQuery(neighFinder);
-			neighQuery.findNeighbors(neighFinder.particlePos(index));
+			neighQuery.findNeighbors(index);
 			int numNeighbors = neighQuery.results().size();
 			OVITO_ASSERT(numNeighbors <= MAX_NEIGHBORS);
 

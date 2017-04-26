@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_XYZ_IMPORTER_H
-#define __OVITO_XYZ_IMPORTER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/import/InputColumnMapping.h>
@@ -36,7 +36,9 @@ class OVITO_PARTICLES_EXPORT XYZImporter : public ParticleImporter
 public:
 
 	/// \brief Constructs a new instance of this class.
-	Q_INVOKABLE XYZImporter(DataSet* dataset) : ParticleImporter(dataset) {}
+	Q_INVOKABLE XYZImporter(DataSet* dataset) : ParticleImporter(dataset), _autoRescaleCoordinates(true) {
+		INIT_PROPERTY_FIELD(autoRescaleCoordinates);	
+	}
 
 	/// \brief Returns the file filter that specifies the files that can be imported by this service.
 	/// \return A wild-card pattern that specifies the file types that can be handled by this import class.
@@ -65,7 +67,7 @@ public:
 
 	/// Creates an asynchronous loader object that loads the data for the given frame from the external file.
 	virtual std::shared_ptr<FrameLoader> createFrameLoader(const Frame& frame, bool isNewlySelectedFile) override {
-		return std::make_shared<XYZImportTask>(dataset()->container(), frame, isNewlySelectedFile, _columnMapping);
+		return std::make_shared<XYZImportTask>(dataset()->container(), frame, isNewlySelectedFile, columnMapping(), autoRescaleCoordinates());
 	}
 
 	/// Inspects the header of the given file and returns the number of file columns.
@@ -83,8 +85,8 @@ private:
 	public:
 
 		/// Normal constructor.
-		XYZImportTask(DataSetContainer* container, const FileSourceImporter::Frame& frame, bool isNewFile, const InputColumnMapping& columnMapping)
-		  : ParticleFrameLoader(container, frame, isNewFile), _parseFileHeaderOnly(false), _columnMapping(columnMapping) {}
+		XYZImportTask(DataSetContainer* container, const FileSourceImporter::Frame& frame, bool isNewFile, const InputColumnMapping& columnMapping, bool autoRescaleCoordinates)
+		  : ParticleFrameLoader(container, frame, isNewFile), _parseFileHeaderOnly(false), _columnMapping(columnMapping), _autoRescaleCoordinates(autoRescaleCoordinates) {}
 
 		/// Constructor used when reading only the file header information.
 		XYZImportTask(DataSetContainer* container, const FileSourceImporter::Frame& frame)
@@ -101,6 +103,7 @@ private:
 	private:
 
 		bool _parseFileHeaderOnly;
+		bool _autoRescaleCoordinates;
 		InputColumnMapping _columnMapping;
 	};
 
@@ -116,13 +119,16 @@ protected:
 	virtual OORef<RefTarget> clone(bool deepCopy, CloneHelper& cloneHelper) override;
 
 	/// \brief Scans the given input file to find all contained simulation frames.
-	virtual void scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream) override;
+	virtual void scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream) override;
 
 private:
 
 	/// Stores the user-defined mapping between data columns in the input file and
 	/// the internal particle properties.
 	InputColumnMapping _columnMapping;
+
+	/// Controls the automatic detection of reduced atom coordinates in the input file.
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, autoRescaleCoordinates, setAutoRescaleCoordinates);
 
 	Q_OBJECT
 	OVITO_OBJECT
@@ -133,4 +139,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_XYZ_IMPORTER_H
+

@@ -27,67 +27,65 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, RenderSettings, RefTarget);
-DEFINE_FLAGS_REFERENCE_FIELD(RenderSettings, _renderer, "Renderer", SceneRenderer, PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_REFERENCE_FIELD(RenderSettings, _backgroundColor, "BackgroundColor", Controller, PROPERTY_FIELD_MEMORIZE);
-DEFINE_PROPERTY_FIELD(RenderSettings, _outputImageWidth, "OutputImageWidth");
-DEFINE_PROPERTY_FIELD(RenderSettings, _outputImageHeight, "OutputImageHeight");
-DEFINE_PROPERTY_FIELD(RenderSettings, _generateAlphaChannel, "GenerateAlphaChannel");
-DEFINE_PROPERTY_FIELD(RenderSettings, _saveToFile, "SaveToFile");
-DEFINE_PROPERTY_FIELD(RenderSettings, _skipExistingImages, "SkipExistingImages");
-DEFINE_PROPERTY_FIELD(RenderSettings, _renderingRangeType, "RenderingRangeType");
-DEFINE_PROPERTY_FIELD(RenderSettings, _customRangeStart, "CustomRangeStart");
-DEFINE_PROPERTY_FIELD(RenderSettings, _customRangeEnd, "CustomRangeEnd");
-DEFINE_PROPERTY_FIELD(RenderSettings, _everyNthFrame, "EveryNthFrame");
-DEFINE_PROPERTY_FIELD(RenderSettings, _fileNumberBase, "FileNumberBase");
-SET_PROPERTY_FIELD_LABEL(RenderSettings, _renderer, "Renderer");
-SET_PROPERTY_FIELD_LABEL(RenderSettings, _backgroundColor, "Background color");
-SET_PROPERTY_FIELD_LABEL(RenderSettings, _outputImageWidth, "Width");
-SET_PROPERTY_FIELD_LABEL(RenderSettings, _outputImageHeight, "Height");
-SET_PROPERTY_FIELD_LABEL(RenderSettings, _generateAlphaChannel, "Transparent background");
-SET_PROPERTY_FIELD_LABEL(RenderSettings, _saveToFile, "Save to file");
-SET_PROPERTY_FIELD_LABEL(RenderSettings, _skipExistingImages, "Skip existing animation images");
-SET_PROPERTY_FIELD_LABEL(RenderSettings, _renderingRangeType, "Rendering range");
-SET_PROPERTY_FIELD_LABEL(RenderSettings, _customRangeStart, "Range start");
-SET_PROPERTY_FIELD_LABEL(RenderSettings, _customRangeEnd, "Range end");
-SET_PROPERTY_FIELD_LABEL(RenderSettings, _everyNthFrame, "Every Nth frame");
-SET_PROPERTY_FIELD_LABEL(RenderSettings, _fileNumberBase, "File number base");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(RenderSettings, _outputImageWidth, IntegerParameterUnit, 1);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(RenderSettings, _outputImageHeight, IntegerParameterUnit, 1);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(RenderSettings, _everyNthFrame, IntegerParameterUnit, 1);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(RenderSettings, RefTarget);
+DEFINE_FLAGS_REFERENCE_FIELD(RenderSettings, renderer, "Renderer", SceneRenderer, PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_REFERENCE_FIELD(RenderSettings, backgroundColorController, "BackgroundColor", Controller, PROPERTY_FIELD_MEMORIZE);
+DEFINE_PROPERTY_FIELD(RenderSettings, outputImageWidth, "OutputImageWidth");
+DEFINE_PROPERTY_FIELD(RenderSettings, outputImageHeight, "OutputImageHeight");
+DEFINE_PROPERTY_FIELD(RenderSettings, generateAlphaChannel, "GenerateAlphaChannel");
+DEFINE_PROPERTY_FIELD(RenderSettings, saveToFile, "SaveToFile");
+DEFINE_PROPERTY_FIELD(RenderSettings, skipExistingImages, "SkipExistingImages");
+DEFINE_PROPERTY_FIELD(RenderSettings, renderingRangeType, "RenderingRangeType");
+DEFINE_PROPERTY_FIELD(RenderSettings, customRangeStart, "CustomRangeStart");
+DEFINE_PROPERTY_FIELD(RenderSettings, customRangeEnd, "CustomRangeEnd");
+DEFINE_PROPERTY_FIELD(RenderSettings, everyNthFrame, "EveryNthFrame");
+DEFINE_PROPERTY_FIELD(RenderSettings, fileNumberBase, "FileNumberBase");
+SET_PROPERTY_FIELD_LABEL(RenderSettings, renderer, "Renderer");
+SET_PROPERTY_FIELD_LABEL(RenderSettings, backgroundColorController, "Background color");
+SET_PROPERTY_FIELD_LABEL(RenderSettings, outputImageWidth, "Width");
+SET_PROPERTY_FIELD_LABEL(RenderSettings, outputImageHeight, "Height");
+SET_PROPERTY_FIELD_LABEL(RenderSettings, generateAlphaChannel, "Transparent background");
+SET_PROPERTY_FIELD_LABEL(RenderSettings, saveToFile, "Save to file");
+SET_PROPERTY_FIELD_LABEL(RenderSettings, skipExistingImages, "Skip existing animation images");
+SET_PROPERTY_FIELD_LABEL(RenderSettings, renderingRangeType, "Rendering range");
+SET_PROPERTY_FIELD_LABEL(RenderSettings, customRangeStart, "Range start");
+SET_PROPERTY_FIELD_LABEL(RenderSettings, customRangeEnd, "Range end");
+SET_PROPERTY_FIELD_LABEL(RenderSettings, everyNthFrame, "Every Nth frame");
+SET_PROPERTY_FIELD_LABEL(RenderSettings, fileNumberBase, "File number base");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(RenderSettings, outputImageWidth, IntegerParameterUnit, 1);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(RenderSettings, outputImageHeight, IntegerParameterUnit, 1);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(RenderSettings, everyNthFrame, IntegerParameterUnit, 1);
 
 /******************************************************************************
 * Constructor.
-* Creates an instance of the default renderer class which can be 
-* accessed via the renderer() method.
 ******************************************************************************/
 RenderSettings::RenderSettings(DataSet* dataset) : RefTarget(dataset),
 	_outputImageWidth(640), _outputImageHeight(480), _generateAlphaChannel(false),
 	_saveToFile(false), _skipExistingImages(false), _renderingRangeType(CURRENT_FRAME),
 	_customRangeStart(0), _customRangeEnd(100), _everyNthFrame(1), _fileNumberBase(0)
 {
-	INIT_PROPERTY_FIELD(RenderSettings::_renderer);
-	INIT_PROPERTY_FIELD(RenderSettings::_backgroundColor);
-	INIT_PROPERTY_FIELD(RenderSettings::_outputImageWidth);
-	INIT_PROPERTY_FIELD(RenderSettings::_outputImageHeight);
-	INIT_PROPERTY_FIELD(RenderSettings::_generateAlphaChannel);
-	INIT_PROPERTY_FIELD(RenderSettings::_saveToFile);
-	INIT_PROPERTY_FIELD(RenderSettings::_skipExistingImages);
-	INIT_PROPERTY_FIELD(RenderSettings::_renderingRangeType);
-	INIT_PROPERTY_FIELD(RenderSettings::_customRangeStart);
-	INIT_PROPERTY_FIELD(RenderSettings::_customRangeEnd);
-	INIT_PROPERTY_FIELD(RenderSettings::_everyNthFrame);
-	INIT_PROPERTY_FIELD(RenderSettings::_fileNumberBase);
+	INIT_PROPERTY_FIELD(renderer);
+	INIT_PROPERTY_FIELD(backgroundColorController);
+	INIT_PROPERTY_FIELD(outputImageWidth);
+	INIT_PROPERTY_FIELD(outputImageHeight);
+	INIT_PROPERTY_FIELD(generateAlphaChannel);
+	INIT_PROPERTY_FIELD(saveToFile);
+	INIT_PROPERTY_FIELD(skipExistingImages);
+	INIT_PROPERTY_FIELD(renderingRangeType);
+	INIT_PROPERTY_FIELD(customRangeStart);
+	INIT_PROPERTY_FIELD(customRangeEnd);
+	INIT_PROPERTY_FIELD(everyNthFrame);
+	INIT_PROPERTY_FIELD(fileNumberBase);
 
 	// Setup default background color.
-	_backgroundColor = ControllerManager::instance().createColorController(dataset);
+	setBackgroundColorController(ControllerManager::createColorController(dataset));
 	setBackgroundColor(Color(1,1,1));
 
 	// Create an instance of the default renderer class.
-	Plugin* guiPlugin = PluginManager::instance().plugin("Gui");
+	Plugin* glrendererPlugin = PluginManager::instance().plugin("OpenGLRenderer");
 	OvitoObjectType* rendererClass = nullptr;
-	if(guiPlugin)
-		rendererClass = guiPlugin->findClass("StandardSceneRenderer");
+	if(glrendererPlugin)
+		rendererClass = glrendererPlugin->findClass("StandardSceneRenderer");
 	if(rendererClass == nullptr) {
 		QVector<OvitoObjectType*> classList = PluginManager::instance().listClasses(SceneRenderer::OOType);
 		if(classList.isEmpty() == false) rendererClass = classList.front();

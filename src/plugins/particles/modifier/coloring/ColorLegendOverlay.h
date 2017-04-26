@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_COLOR_LEGEND_OVERLAY_H
-#define __OVITO_COLOR_LEGEND_OVERLAY_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/viewport/overlay/ViewportOverlay.h>
@@ -41,48 +41,6 @@ public:
 	/// \brief This method asks the overlay to paint its contents over the given viewport.
 	virtual void render(Viewport* viewport, QPainter& painter, const ViewProjectionParameters& projParams, RenderSettings* renderSettings) override;
 
-	/// Returns the ColorCodingModifier for which to display the legend.
-	ColorCodingModifier* modifier() const { return _modifier; }
-
-	/// Sets the ColorCodingModifier for which to display the legend.
-	void setModifier(ColorCodingModifier* mod) { _modifier = mod; }
-
-	/// Returns the formatting of the value labels in the color legend.
-	const QString& valueFormatString() const { return _valueFormatString; }
-
-	/// Sets the formatting of the value labels in the color legend.
-	void setValueFormatString(const QString& format) { _valueFormatString = format; }
-
-	/// Returns the title text of the color legend.
-	const QString& title() const { return _title; }
-
-	/// Sets the title text of the color legend.
-	void setTitle(const QString& text) { _title = text; }
-
-	/// Returns the user-defined text to be used for the first numeric label.
-	const QString& label1() const { return _label1; }
-
-	/// Returns the user-defined text to be used for the second numeric label.
-	const QString& label2() const { return _label2; }
-
-	/// Returns the display color of the labels.
-	const Color& textColor() const { return _textColor; }
-
-	/// Sets the display color of the labels.
-	void setTextColor(const Color& c) { _textColor = c; }
-
-	/// Returns the outline color of the font.
-	const Color& outlineColor() const { return _outlineColor; }
-
-	/// Sets the outline color of the font.
-	void setOutlineColor(const Color& c) { _outlineColor = c; }
-
-	/// Returns whether a text outline is drawn.
-	bool outlineEnabled() const { return _outlineEnabled; }
-
-	/// Sets whether a text outline is drawn.
-	void setOutlineEnabled(bool enable) { _outlineEnabled = enable; }
-
 	/// Moves the position of the overlay in the viewport by the given amount,
 	/// which is specified as a fraction of the viewport render size.
 	virtual void moveOverlayInViewport(const Vector2& delta) override {
@@ -97,69 +55,52 @@ public:
 private:
 
 	/// The corner of the viewport where the color legend is displayed.
-	PropertyField<int> _alignment;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, alignment, setAlignment);
 
 	/// The orientation (horizontal/vertical) of the color legend.
-	PropertyField<int> _orientation;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, orientation, setOrientation);
 
 	/// Controls the overall size of the color legend.
-	PropertyField<FloatType> _legendSize;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, legendSize, setLegendSize);
 
 	/// Controls the aspect ration of the color bar.
-	PropertyField<FloatType> _aspectRatio;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, aspectRatio, setAspectRatio);
 
 	/// Controls the horizontal offset of legend position.
-	PropertyField<FloatType> _offsetX;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, offsetX, setOffsetX)
 
 	/// Controls the vertical offset of legend position.
-	PropertyField<FloatType> _offsetY;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, offsetY, setOffsetY);
 
 	/// Controls the label font.
-	PropertyField<QFont> _font;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QFont, font, setFont);
 
 	/// Controls the label font size.
-	PropertyField<FloatType> _fontSize;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, fontSize, setFontSize);
 
 	/// The title label.
-	PropertyField<QString> _title;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QString, title, setTitle);
 
 	/// User-defined text for the first numeric label.
-	PropertyField<QString> _label1;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QString, label1, setLabel1);
 
 	/// User-defined text for the second numeric label.
-	PropertyField<QString> _label2;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QString, label2, setLabel2);
 
 	/// The ColorCodingModifier for which to display the legend.
-	ReferenceField<ColorCodingModifier> _modifier;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(ColorCodingModifier, modifier, setModifier);
 
 	/// Controls the formatting of the value labels in the color legend.
-	PropertyField<QString> _valueFormatString;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QString, valueFormatString, setValueFormatString);
 
 	/// Controls the text color.
-	PropertyField<Color, QColor> _textColor;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Color, textColor, setTextColor);
 
 	/// The text outline color.
-	PropertyField<Color, QColor> _outlineColor;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Color, outlineColor, setOutlineColor);
 
 	/// Controls the outlining of the font.
-	PropertyField<bool> _outlineEnabled;
-
-	DECLARE_PROPERTY_FIELD(_alignment);
-	DECLARE_PROPERTY_FIELD(_orientation);
-	DECLARE_PROPERTY_FIELD(_aspectRatio);
-	DECLARE_PROPERTY_FIELD(_font);
-	DECLARE_PROPERTY_FIELD(_fontSize);
-	DECLARE_PROPERTY_FIELD(_legendSize);
-	DECLARE_PROPERTY_FIELD(_offsetX);
-	DECLARE_PROPERTY_FIELD(_offsetY);
-	DECLARE_PROPERTY_FIELD(_title);
-	DECLARE_PROPERTY_FIELD(_label1);
-	DECLARE_PROPERTY_FIELD(_label2);
-	DECLARE_PROPERTY_FIELD(_valueFormatString);
-	DECLARE_PROPERTY_FIELD(_textColor);
-	DECLARE_PROPERTY_FIELD(_outlineColor);
-	DECLARE_PROPERTY_FIELD(_outlineEnabled);
-	DECLARE_REFERENCE_FIELD(_modifier);
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, outlineEnabled, setOutlineEnabled)
 
 	Q_CLASSINFO("DisplayName", "Color legend");
 
@@ -172,4 +113,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_COLOR_LEGEND_OVERLAY_H
+

@@ -67,6 +67,7 @@
 	<file>cursor/editing/cursor_mode_scale.png</file>
 	
 	<file>mainwin/command_panel/about_panel.html</file>
+	<file>mainwin/command_panel/about_panel_no_updates.html</file>
 	
 	<file>mainwin/command_panel/tab_create.png</file>
 	<file>mainwin/command_panel/tab_modify.png</file>

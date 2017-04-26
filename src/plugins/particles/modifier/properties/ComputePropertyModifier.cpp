@@ -28,21 +28,21 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Properties)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ComputePropertyModifier, AsynchronousParticleModifier);
-DEFINE_PROPERTY_FIELD(ComputePropertyModifier, _expressions, "Expressions");
-DEFINE_PROPERTY_FIELD(ComputePropertyModifier, _outputProperty, "OutputProperty");
-DEFINE_PROPERTY_FIELD(ComputePropertyModifier, _onlySelectedParticles, "OnlySelectedParticles");
-DEFINE_PROPERTY_FIELD(ComputePropertyModifier, _neighborModeEnabled, "NeighborModeEnabled");
-DEFINE_PROPERTY_FIELD(ComputePropertyModifier, _neighborExpressions, "NeighborExpressions");
-DEFINE_FLAGS_PROPERTY_FIELD(ComputePropertyModifier, _cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(ComputePropertyModifier, _cachedDisplayObjects, "CachedDisplayObjects", DisplayObject, PROPERTY_FIELD_NEVER_CLONE_TARGET|PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_NO_UNDO|PROPERTY_FIELD_NO_SUB_ANIM);
-SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _expressions, "Expressions");
-SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _outputProperty, "Output property");
-SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _onlySelectedParticles, "Compute only for selected particles");
-SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _neighborModeEnabled, "Include neighbor terms");
-SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _neighborExpressions, "Neighbor expressions");
-SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, _cutoff, "Cutoff radius");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ComputePropertyModifier, _cutoff, WorldParameterUnit, 0);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ComputePropertyModifier, AsynchronousParticleModifier);
+DEFINE_PROPERTY_FIELD(ComputePropertyModifier, expressions, "Expressions");
+DEFINE_PROPERTY_FIELD(ComputePropertyModifier, outputProperty, "OutputProperty");
+DEFINE_PROPERTY_FIELD(ComputePropertyModifier, onlySelectedParticles, "OnlySelectedParticles");
+DEFINE_PROPERTY_FIELD(ComputePropertyModifier, neighborModeEnabled, "NeighborModeEnabled");
+DEFINE_PROPERTY_FIELD(ComputePropertyModifier, neighborExpressions, "NeighborExpressions");
+DEFINE_FLAGS_PROPERTY_FIELD(ComputePropertyModifier, cutoff, "Cutoff", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(ComputePropertyModifier, cachedDisplayObjects, "CachedDisplayObjects", DisplayObject, PROPERTY_FIELD_NEVER_CLONE_TARGET|PROPERTY_FIELD_NO_CHANGE_MESSAGE|PROPERTY_FIELD_NO_UNDO|PROPERTY_FIELD_NO_SUB_ANIM);
+SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, expressions, "Expressions");
+SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, outputProperty, "Output property");
+SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, onlySelectedParticles, "Compute only for selected particles");
+SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, neighborModeEnabled, "Include neighbor terms");
+SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, neighborExpressions, "Neighbor expressions");
+SET_PROPERTY_FIELD_LABEL(ComputePropertyModifier, cutoff, "Cutoff radius");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(ComputePropertyModifier, cutoff, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructs a new instance of this class.
@@ -51,13 +51,13 @@ ComputePropertyModifier::ComputePropertyModifier(DataSet* dataset) : Asynchronou
 	_outputProperty(tr("My property")), _expressions(QStringList("0")), _onlySelectedParticles(false),
 	_neighborExpressions(QStringList("0")), _cutoff(3), _neighborModeEnabled(false)
 {
-	INIT_PROPERTY_FIELD(ComputePropertyModifier::_expressions);
-	INIT_PROPERTY_FIELD(ComputePropertyModifier::_onlySelectedParticles);
-	INIT_PROPERTY_FIELD(ComputePropertyModifier::_outputProperty);
-	INIT_PROPERTY_FIELD(ComputePropertyModifier::_neighborModeEnabled);
-	INIT_PROPERTY_FIELD(ComputePropertyModifier::_cutoff);
-	INIT_PROPERTY_FIELD(ComputePropertyModifier::_neighborExpressions);
-	INIT_PROPERTY_FIELD(ComputePropertyModifier::_cachedDisplayObjects);
+	INIT_PROPERTY_FIELD(expressions);
+	INIT_PROPERTY_FIELD(onlySelectedParticles);
+	INIT_PROPERTY_FIELD(outputProperty);
+	INIT_PROPERTY_FIELD(neighborModeEnabled);
+	INIT_PROPERTY_FIELD(cutoff);
+	INIT_PROPERTY_FIELD(neighborExpressions);
+	INIT_PROPERTY_FIELD(cachedDisplayObjects);
 }
 
 /******************************************************************************
@@ -108,7 +108,7 @@ void ComputePropertyModifier::setPropertyComponentCount(int newComponentCount)
 ******************************************************************************/
 void ComputePropertyModifier::propertyChanged(const PropertyFieldDescriptor& field)
 {
-	if(field == PROPERTY_FIELD(ComputePropertyModifier::_outputProperty)) {
+	if(field == PROPERTY_FIELD(outputProperty)) {
 		if(outputProperty().type() != ParticleProperty::UserProperty)
 			setPropertyComponentCount(ParticleProperty::standardPropertyComponentCount(outputProperty().type()));
 		else
@@ -118,12 +118,12 @@ void ComputePropertyModifier::propertyChanged(const PropertyFieldDescriptor& fie
 	AsynchronousParticleModifier::propertyChanged(field);
 
 	// Throw away cached results if parameters change.
-	if(field == PROPERTY_FIELD(ComputePropertyModifier::_expressions) ||
-			field == PROPERTY_FIELD(ComputePropertyModifier::_neighborExpressions) ||
-			field == PROPERTY_FIELD(ComputePropertyModifier::_onlySelectedParticles) ||
-			field == PROPERTY_FIELD(ComputePropertyModifier::_neighborModeEnabled) ||
-			field == PROPERTY_FIELD(ComputePropertyModifier::_outputProperty) ||
-			field == PROPERTY_FIELD(ComputePropertyModifier::_cutoff))
+	if(field == PROPERTY_FIELD(expressions) ||
+			field == PROPERTY_FIELD(neighborExpressions) ||
+			field == PROPERTY_FIELD(onlySelectedParticles) ||
+			field == PROPERTY_FIELD(neighborModeEnabled) ||
+			field == PROPERTY_FIELD(outputProperty) ||
+			field == PROPERTY_FIELD(cutoff))
 		invalidateCachedResults();
 }
 
@@ -291,14 +291,15 @@ void ComputePropertyModifier::PropertyComputeEngine::perform()
 	CutoffNeighborFinder neighborFinder;
 	if(neighborMode()) {
 		// Prepare the neighbor list.
-		if(!neighborFinder.prepare(_cutoff, positions(), cell(), nullptr, this))
+		if(!neighborFinder.prepare(_cutoff, positions(), cell(), nullptr, *this))
 			return;
 	}
 
-	// Parallelized loop over all particles.
-	setProgressRange(positions()->size());
 	setProgressValue(0);
-	parallelForChunks(positions()->size(), *this, [this, &neighborFinder](size_t startIndex, size_t count, FutureInterfaceBase& futureInterface) {
+	setProgressMaximum(positions()->size());
+
+	// Parallelized loop over all particles.
+	parallelForChunks(positions()->size(), *this, [this, &neighborFinder](size_t startIndex, size_t count, PromiseBase& promise) {
 		ParticleExpressionEvaluator::Worker worker(_evaluator);
 		ParticleExpressionEvaluator::Worker neighborWorker(_neighborEvaluator);
 
@@ -326,10 +327,10 @@ void ComputePropertyModifier::PropertyComputeEngine::perform()
 
 			// Update progress indicator.
 			if((particleIndex % 1024) == 0)
-				futureInterface.incrementProgressValue(1024);
+				promise.incrementProgressValue(1024);
 
 			// Stop loop if canceled.
-			if(futureInterface.isCanceled())
+			if(promise.isCanceled())
 				return;
 
 			// Skip unselected particles if requested.

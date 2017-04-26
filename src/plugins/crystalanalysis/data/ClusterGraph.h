@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_CLUSTER_GRAPH_H
-#define __OVITO_CA_CLUSTER_GRAPH_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/utilities/MemoryPool.h>
@@ -100,4 +100,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CA_CLUSTER_GRAPH_H
+

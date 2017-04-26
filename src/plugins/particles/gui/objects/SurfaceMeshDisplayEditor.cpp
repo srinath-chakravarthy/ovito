@@ -29,7 +29,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, SurfaceMeshDisplayEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(SurfaceMeshDisplayEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(SurfaceMeshDisplay, SurfaceMeshDisplayEditor);
 
 /******************************************************************************
@@ -52,18 +52,18 @@ void SurfaceMeshDisplayEditor::createUI(const RolloutInsertionParameters& rollou
 	sublayout->setColumnStretch(1, 1);
 	layout->addWidget(surfaceGroupBox);
 
-	ColorParameterUI* surfaceColorUI = new ColorParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_surfaceColor));
+	ColorParameterUI* surfaceColorUI = new ColorParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::surfaceColor));
 	sublayout->addWidget(surfaceColorUI->label(), 0, 0);
 	sublayout->addWidget(surfaceColorUI->colorPicker(), 0, 1);
 
-	FloatParameterUI* surfaceTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_surfaceTransparency));
+	FloatParameterUI* surfaceTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::surfaceTransparencyController));
 	sublayout->addWidget(new QLabel(tr("Transparency:")), 1, 0);
 	sublayout->addLayout(surfaceTransparencyUI->createFieldLayout(), 1, 1);
 
-	BooleanParameterUI* smoothShadingUI = new BooleanParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_smoothShading));
+	BooleanParameterUI* smoothShadingUI = new BooleanParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::smoothShading));
 	sublayout->addWidget(smoothShadingUI->checkBox(), 2, 0, 1, 2);
 
-	BooleanGroupBoxParameterUI* capGroupUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_showCap));
+	BooleanGroupBoxParameterUI* capGroupUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::showCap));
 	capGroupUI->groupBox()->setTitle(tr("Cap polygons"));
 	sublayout = new QGridLayout(capGroupUI->childContainer());
 	sublayout->setContentsMargins(4,4,4,4);
@@ -71,15 +71,15 @@ void SurfaceMeshDisplayEditor::createUI(const RolloutInsertionParameters& rollou
 	sublayout->setColumnStretch(1, 1);
 	layout->addWidget(capGroupUI->groupBox());
 
-	ColorParameterUI* capColorUI = new ColorParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_capColor));
+	ColorParameterUI* capColorUI = new ColorParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::capColor));
 	sublayout->addWidget(capColorUI->label(), 0, 0);
 	sublayout->addWidget(capColorUI->colorPicker(), 0, 1);
 
-	FloatParameterUI* capTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_capTransparency));
+	FloatParameterUI* capTransparencyUI = new FloatParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::capTransparencyController));
 	sublayout->addWidget(new QLabel(tr("Transparency:")), 1, 0);
 	sublayout->addLayout(capTransparencyUI->createFieldLayout(), 1, 1);
 
-	BooleanParameterUI* reverseOrientationUI = new BooleanParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::_reverseOrientation));
+	BooleanParameterUI* reverseOrientationUI = new BooleanParameterUI(this, PROPERTY_FIELD(SurfaceMeshDisplay::reverseOrientation));
 	sublayout->addWidget(reverseOrientationUI->checkBox(), 2, 0, 1, 2);
 }
 

@@ -23,6 +23,7 @@
 #include <core/animation/AnimationSettings.h>
 #include <core/viewport/Viewport.h>
 #include <core/viewport/ViewportConfiguration.h>
+#include <core/scene/SelectionSet.h>
 #include <gui/rendering/ViewportSceneRenderer.h>
 #include <gui/actions/ViewportModeAction.h>
 #include <gui/mainwin/MainWindow.h>
@@ -33,7 +34,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Util) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, ParticleInformationApplet, UtilityApplet);
+IMPLEMENT_OVITO_OBJECT(ParticleInformationApplet, UtilityApplet);
 
 /******************************************************************************
 * Shows the UI of the utility in the given RolloutContainer.
@@ -54,7 +55,6 @@ void ParticleInformationApplet::openUtility(MainWindow* mainWindow, RolloutConta
 
 	_inputMode = new ParticleInformationInputMode(this);
 	ViewportModeAction* pickModeAction = new ViewportModeAction(_mainWindow, tr("Selection mode"), this, _inputMode);
-	//layout->addWidget(pickModeAction->createPushButton());
 
 	_infoDisplay = new QTextEdit(_panel);
 	_infoDisplay->setReadOnly(true);
@@ -68,6 +68,7 @@ void ParticleInformationApplet::openUtility(MainWindow* mainWindow, RolloutConta
 
 	connect(&_mainWindow->datasetContainer(), &DataSetContainer::animationSettingsReplaced, this, &ParticleInformationApplet::onAnimationSettingsReplaced);
 	_timeChangeCompleteConnection = connect(_mainWindow->datasetContainer().currentSet()->animationSettings(), &AnimationSettings::timeChangeComplete, this, &ParticleInformationApplet::updateInformationDisplay);
+	connect(&_mainWindow->datasetContainer(), &DataSetContainer::selectionChangeComplete, this, &ParticleInformationApplet::updateInformationDisplay);
 	_mainWindow->viewportInputManager()->pushInputMode(_inputMode);
 }
 
@@ -98,63 +99,78 @@ void ParticleInformationApplet::updateInformationDisplay()
 {
 	DataSet* dataset = _mainWindow->datasetContainer().currentSet();
 	if(!dataset) return;
-
+	
 	QString infoText;
 	QTextStream stream(&infoText, QIODevice::WriteOnly);
-	for(auto& pickedParticle : _inputMode->_pickedParticles) {
-		OVITO_ASSERT(pickedParticle.objNode);
-		const PipelineFlowState& flowState = pickedParticle.objNode->evalPipeline(dataset->animationSettings()->time());
+	for(auto pickedParticle = _inputMode->_pickedParticles.begin(); pickedParticle != _inputMode->_pickedParticles.end(); ) {
+		OVITO_ASSERT(pickedParticle->objNode);
 
-		// If selection is based on particle ID, update the stored particle index in case order has changed.
-		if(pickedParticle.particleId >= 0) {
-			for(DataObject* dataObj : flowState.objects()) {
-				ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(dataObj);
-				if(property && property->type() == ParticleProperty::IdentifierProperty) {
-					const int* begin = property->constDataInt();
-					const int* end = begin + property->size();
-					const int* iter = std::find(begin, end, pickedParticle.particleId);
-					if(iter != end)
-						pickedParticle.particleIndex = (iter - begin);
-				}
-			}
-		}
+		// Check if the scene node to which the selected particle belongs still exists.
+		if(pickedParticle->objNode->isInScene()) {
 
-		stream << QStringLiteral("<b>") << tr("Particle index") << QStringLiteral(" ") << (pickedParticle.particleIndex + 1) << QStringLiteral(":</b>");
-		stream << QStringLiteral("<table border=\"0\">");
+			const PipelineFlowState& flowState = pickedParticle->objNode->evaluatePipelineImmediately(PipelineEvalRequest(dataset->animationSettings()->time(), false));
 
-		for(DataObject* dataObj : flowState.objects()) {
-			ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(dataObj);
-			if(!property || property->size() <= pickedParticle.particleIndex) continue;
-
-			// Update saved particle position in case it has changed.
-			if(property->type() == ParticleProperty::PositionProperty)
-				pickedParticle.localPos = property->getPoint3(pickedParticle.particleIndex);
-
-			if(property->dataType() != qMetaTypeId<int>() && property->dataType() != qMetaTypeId<FloatType>()) continue;
-			for(size_t component = 0; component < property->componentCount(); component++) {
-				QString propertyName = property->name();
-				if(property->componentNames().empty() == false) {
-					propertyName.append(".");
-					propertyName.append(property->componentNames()[component]);
-				}
-				QString valueString;
-				if(property->dataType() == qMetaTypeId<int>()) {
-					valueString = QString::number(property->getIntComponent(pickedParticle.particleIndex, component));
-					ParticleTypeProperty* typeProperty = dynamic_object_cast<ParticleTypeProperty>(property);
-					if(typeProperty && typeProperty->particleTypes().empty() == false) {
-						ParticleType* ptype = typeProperty->particleType(property->getIntComponent(pickedParticle.particleIndex, component));
-						if(ptype) {
-							valueString.append(" (" + ptype->name() + ")");
-						}
+			// If selection is based on particle ID, update the stored particle index in case order has changed.
+			if(pickedParticle->particleId >= 0) {
+				for(DataObject* dataObj : flowState.objects()) {
+					ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(dataObj);
+					if(property && property->type() == ParticleProperty::IdentifierProperty) {
+						const int* begin = property->constDataInt();
+						const int* end = begin + property->size();
+						const int* iter = std::find(begin, end, pickedParticle->particleId);
+						if(iter != end)
+							pickedParticle->particleIndex = (iter - begin);
+						else 
+							pickedParticle->particleIndex = std::numeric_limits<size_t>::max();
 					}
 				}
-				else if(property->dataType() == qMetaTypeId<FloatType>())
-					valueString = QString::number(property->getFloatComponent(pickedParticle.particleIndex, component));
+			}
 
-				stream << QStringLiteral("<tr><td>") << propertyName << QStringLiteral(":</td><td>") << valueString << QStringLiteral("</td></tr>");
+			ParticlePropertyObject* posProperty = ParticlePropertyObject::findInState(flowState, ParticleProperty::PositionProperty);
+			if(posProperty && posProperty->size() > pickedParticle->particleIndex) {
+
+				stream << QStringLiteral("<b>") << tr("Particle index") << QStringLiteral(" ") << (pickedParticle->particleIndex + 1) << QStringLiteral(":</b>");
+				stream << QStringLiteral("<table border=\"0\">");
+
+				for(DataObject* dataObj : flowState.objects()) {
+					ParticlePropertyObject* property = dynamic_object_cast<ParticlePropertyObject>(dataObj);
+					if(!property || property->size() <= pickedParticle->particleIndex) continue;
+
+					// Update saved particle position in case it has changed.
+					if(property->type() == ParticleProperty::PositionProperty)
+						pickedParticle->localPos = property->getPoint3(pickedParticle->particleIndex);
+
+					if(property->dataType() != qMetaTypeId<int>() && property->dataType() != qMetaTypeId<FloatType>()) continue;
+					for(size_t component = 0; component < property->componentCount(); component++) {
+						QString propertyName = property->name();
+						if(property->componentNames().empty() == false) {
+							propertyName.append(".");
+							propertyName.append(property->componentNames()[component]);
+						}
+						QString valueString;
+						if(property->dataType() == qMetaTypeId<int>()) {
+							valueString = QString::number(property->getIntComponent(pickedParticle->particleIndex, component));
+							ParticleTypeProperty* typeProperty = dynamic_object_cast<ParticleTypeProperty>(property);
+							if(typeProperty && typeProperty->particleTypes().empty() == false) {
+								ParticleType* ptype = typeProperty->particleType(property->getIntComponent(pickedParticle->particleIndex, component));
+								if(ptype) {
+									valueString.append(" (" + ptype->name() + ")");
+								}
+							}
+						}
+						else if(property->dataType() == qMetaTypeId<FloatType>())
+							valueString = QString::number(property->getFloatComponent(pickedParticle->particleIndex, component));
+
+						stream << QStringLiteral("<tr><td>") << propertyName << QStringLiteral(":</td><td>") << valueString << QStringLiteral("</td></tr>");
+					}
+				}
+				stream << QStringLiteral("</table><hr>");
+				++pickedParticle;
+				continue;
 			}
 		}
-		stream << QStringLiteral("</table><hr>");
+		// Remove non-existent particle from the list.
+		pickedParticle = _inputMode->_pickedParticles.erase(pickedParticle);
 	}
 	if(_inputMode->_pickedParticles.empty())
 		infoText = tr("No particles selected.");
@@ -213,7 +229,7 @@ void ParticleInformationInputMode::mouseReleaseEvent(ViewportWindow* vpwin, QMou
 		if(!event->modifiers().testFlag(Qt::ControlModifier))
 			_pickedParticles.clear();
 		if(pickResult.objNode) {
-			// Don't select the same particle twice.
+			// Don't select the same particle twice. Instead, toggle selection.
 			bool alreadySelected = false;
 			for(auto p = _pickedParticles.begin(); p != _pickedParticles.end(); ++p) {
 				if(p->objNode == pickResult.objNode && p->particleIndex == pickResult.particleIndex) {

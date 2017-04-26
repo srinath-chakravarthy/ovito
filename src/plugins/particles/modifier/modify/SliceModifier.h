@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SLICE_MODIFIER_H
-#define __OVITO_SLICE_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/animation/controller/Controller.h>
@@ -53,58 +53,22 @@ public:
 	// Property access functions:
 
 	/// Returns the plane's distance from the origin.
-	FloatType distance() const { return _distanceCtrl ? _distanceCtrl->currentFloatValue() : 0.0f; }
+	FloatType distance() const { return distanceController() ? distanceController()->currentFloatValue() : 0.0f; }
 
 	/// Sets the plane's distance from the origin.
-	void setDistance(FloatType newDistance) { if(_distanceCtrl) _distanceCtrl->setCurrentFloatValue(newDistance); }
-
-	/// Returns the controller for the plane distance.
-	Controller* distanceController() const { return _distanceCtrl; }
-
-	/// Sets the controller for the plane distance.
-	void setDistanceController(Controller* ctrl) { _distanceCtrl = ctrl; }
+	void setDistance(FloatType newDistance) { if(distanceController()) distanceController()->setCurrentFloatValue(newDistance); }
 
 	/// Returns the plane's normal vector.
-	Vector3 normal() const { return _normalCtrl ? _normalCtrl->currentVector3Value() : Vector3(0,0,1); }
+	Vector3 normal() const { return normalController() ? normalController()->currentVector3Value() : Vector3(0,0,1); }
 
 	/// Sets the plane's distance from the origin.
-	void setNormal(const Vector3& newNormal) { if(_normalCtrl) _normalCtrl->setCurrentVector3Value(newNormal); }
-
-	/// Returns the controller for the plane normal.
-	Controller* normalController() const { return _normalCtrl; }
-
-	/// Sets the controller for the plane normal.
-	void setNormalController(Controller* ctrl) { _normalCtrl = ctrl; }
+	void setNormal(const Vector3& newNormal) { if(normalController()) normalController()->setCurrentVector3Value(newNormal); }
 
 	/// Returns the slice width.
-	FloatType sliceWidth() const { return _widthCtrl ? _widthCtrl->currentFloatValue() : 0.0f; }
+	FloatType sliceWidth() const { return widthController() ? widthController()->currentFloatValue() : 0.0f; }
 
 	/// Sets the slice width.
-	void setSliceWidth(FloatType newWidth) { if(_widthCtrl) _widthCtrl->setCurrentFloatValue(newWidth); }
-
-	/// Returns the controller for the slice width.
-	Controller* sliceWidthController() const { return _widthCtrl; }
-
-	/// Sets the controller for the slice width.
-	void setSliceWidthController(Controller* ctrl) { _widthCtrl = ctrl; }
-
-	/// Returns whether the plane's orientation should be flipped.
-	bool inverse() const { return _inverse; }
-
-	/// Sets whether the plane's orientation should be flipped.
-	void setInverse(bool inverse) { _inverse = inverse; }
-
-	/// Returns whether the atoms are only selected instead of deleted.
-	bool createSelection() const { return _createSelection; }
-
-	/// Sets whether the atoms are only selected instead of deleted.
-	void setCreateSelection(bool select) { _createSelection = select; }
-
-	/// Returns whether the modifier is only applied to the currently selected atoms.
-	bool applyToSelection() const { return _applyToSelection; }
-
-	/// Sets whether the modifier should only be applied to the currently selected atoms.
-	void setApplyToSelection(bool flag) { _applyToSelection = flag; }
+	void setSliceWidth(FloatType newWidth) { if(widthController()) widthController()->setCurrentFloatValue(newWidth); }
 
 	/// Returns the slicing plane.
 	Plane3 slicingPlane(TimePoint time, TimeInterval& validityInterval);
@@ -127,37 +91,28 @@ protected:
 	void planeQuadIntersection(const Point3 corners[8], const std::array<int,4>& quadVerts, const Plane3& plane, QVector<Point3>& vertices) const;
 
 	/// This controller stores the normal of the slicing plane.
-	ReferenceField<Controller> _normalCtrl;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, normalController, setNormalController);
 
 	/// This controller stores the distance of the slicing plane from the origin.
-	ReferenceField<Controller> _distanceCtrl;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, distanceController, setDistanceController);
 
 	/// Controls the slice width.
-	ReferenceField<Controller> _widthCtrl;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, widthController, setWidthController);
 
 	/// Controls whether the atoms should only be selected instead of deleted.
-	PropertyField<bool> _createSelection;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, createSelection, setCreateSelection);
 
 	/// Controls whether the selection/plane orientation should be inverted.
-	PropertyField<bool> _inverse;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, inverse, setInverse);
 
 	/// Controls whether the modifier should only be applied to the currently selected atoms.
-	PropertyField<bool> _applyToSelection;
-
-private:
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, applyToSelection, setApplyToSelection);
 
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Slice");
 	Q_CLASSINFO("ModifierCategory", "Modification");
-
-	DECLARE_REFERENCE_FIELD(_normalCtrl);
-	DECLARE_REFERENCE_FIELD(_distanceCtrl);
-	DECLARE_REFERENCE_FIELD(_widthCtrl);
-	DECLARE_PROPERTY_FIELD(_createSelection);
-	DECLARE_PROPERTY_FIELD(_inverse);
-	DECLARE_PROPERTY_FIELD(_applyToSelection);
 };
 
 /**
@@ -213,4 +168,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_SLICE_MODIFIER_H
+

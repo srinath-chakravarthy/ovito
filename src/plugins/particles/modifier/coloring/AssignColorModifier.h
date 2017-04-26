@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_ASSIGN_COLOR_MODIFIER_H
-#define __OVITO_ASSIGN_COLOR_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/animation/controller/Controller.h>
@@ -43,24 +43,10 @@ public:
 	virtual TimeInterval modifierValidity(TimePoint time) override;
 
 	/// Returns the color that is assigned to the selected atoms.
-	Color color() const { return _colorCtrl ? _colorCtrl->currentColorValue() : Color(0,0,0); }
+	Color color() const { return colorController() ? colorController()->currentColorValue() : Color(0,0,0); }
 
 	/// Sets the color that is assigned to the selected atoms.
-	void setColor(const Color& color) { if(_colorCtrl) _colorCtrl->setCurrentColorValue(color); }
-
-	/// Returns the controller for the color that is assigned to the selected atoms.
-	Controller* colorController() const { return _colorCtrl; }
-
-	/// Sets the controller for the color that is assigned to the selected atoms.
-	void setColorController(Controller* ctrl) { _colorCtrl = ctrl; }
-
-	/// Returns whether the input particle selection is preserved.
-	/// If false, the selection is cleared by the modifier.
-	bool keepSelection() const { return _keepSelection; }
-
-	/// Sets whether the input particle selection is preserved.
-	/// If false, the selection is cleared by the modifier.
-	void setKeepSelection(bool keep) { _keepSelection = keep; }
+	void setColor(const Color& color) { if(colorController()) colorController()->setCurrentColorValue(color); }
 
 protected:
 
@@ -68,22 +54,17 @@ protected:
 	virtual PipelineStatus modifyParticles(TimePoint time, TimeInterval& validityInterval) override;
 
 	/// This controller stores the constant color to be assigned to all atoms.
-	ReferenceField<Controller> _colorCtrl;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, colorController, setColorController);
 
 	/// Controls whether the input particle selection is preserved.
 	/// If false, the selection is cleared by the modifier.
-	PropertyField<bool> _keepSelection;
-
-private:
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, keepSelection, setKeepSelection);
 
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Assign color");
 	Q_CLASSINFO("ModifierCategory", "Coloring");
-
-	DECLARE_REFERENCE_FIELD(_colorCtrl);
-	DECLARE_PROPERTY_FIELD(_keepSelection);
 };
 
 OVITO_END_INLINE_NAMESPACE
@@ -91,4 +72,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_ASSIGN_COLOR_MODIFIER_H
+

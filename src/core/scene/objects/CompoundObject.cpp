@@ -24,22 +24,22 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, CompoundObject, DataObject);
-DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(CompoundObject, _dataObjects, "SceneObjects", DataObject, PROPERTY_FIELD_ALWAYS_DEEP_COPY);
-SET_PROPERTY_FIELD_LABEL(CompoundObject, _dataObjects, "Objects");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CompoundObject, DataObject);
+DEFINE_FLAGS_VECTOR_REFERENCE_FIELD(CompoundObject, dataObjects, "SceneObjects", DataObject, PROPERTY_FIELD_ALWAYS_DEEP_COPY);
+SET_PROPERTY_FIELD_LABEL(CompoundObject, dataObjects, "Objects");
 
 /******************************************************************************
 * Constructs an empty compound data object.
 ******************************************************************************/
 CompoundObject::CompoundObject(DataSet* dataset) : DataObject(dataset)
 {
-	INIT_PROPERTY_FIELD(CompoundObject::_dataObjects);
+	INIT_PROPERTY_FIELD(dataObjects);
 }
 
 /******************************************************************************
 * Asks the object for the result of the geometry pipeline at the given time.
 ******************************************************************************/
-PipelineFlowState CompoundObject::evaluate(TimePoint time)
+PipelineFlowState CompoundObject::evaluateImmediately(const PipelineEvalRequest& request)
 {
 	return PipelineFlowState(PipelineStatus::Success, dataObjects(), TimeInterval::infinite(), attributes());
 }
@@ -65,7 +65,7 @@ RefTarget* CompoundObject::editableSubObject(int index)
 ******************************************************************************/
 void CompoundObject::referenceInserted(const PropertyFieldDescriptor& field, RefTarget* newTarget, int listIndex)
 {
-	if(field == PROPERTY_FIELD(CompoundObject::_dataObjects))
+	if(field == PROPERTY_FIELD(dataObjects))
 		notifyDependents(ReferenceEvent::SubobjectListChanged);
 
 	DataObject::referenceInserted(field, newTarget, listIndex);
@@ -76,7 +76,7 @@ void CompoundObject::referenceInserted(const PropertyFieldDescriptor& field, Ref
 ******************************************************************************/
 void CompoundObject::referenceRemoved(const PropertyFieldDescriptor& field, RefTarget* newTarget, int listIndex)
 {
-	if(field == PROPERTY_FIELD(CompoundObject::_dataObjects))
+	if(field == PROPERTY_FIELD(dataObjects))
 		notifyDependents(ReferenceEvent::SubobjectListChanged);
 
 	DataObject::referenceRemoved(field, newTarget, listIndex);

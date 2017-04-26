@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_TCB_INTERPOLATION_CONTROLLERS_H
-#define __OVITO_TCB_INTERPOLATION_CONTROLLERS_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "KeyframeController.h"
@@ -56,7 +56,7 @@ public:
 	/// Returns the 'bias' parameter, which controls where the animation curve occurs with respect to the key.
 	FloatType bias() const { return _bias; }
 
-protected:
+public:
 
 	/// Slows the velocity of the animation curve as it approaches the key.
 	PropertyField<FloatType> _easeTo;
@@ -84,11 +84,11 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE FloatTCBAnimationKey(DataSet* dataset, TimePoint time = 0, FloatType value = 0) : TCBAnimationKey<FloatAnimationKey>(dataset, time, value) {
-		INIT_PROPERTY_FIELD(FloatTCBAnimationKey::_easeTo);
-		INIT_PROPERTY_FIELD(FloatTCBAnimationKey::_easeFrom);
-		INIT_PROPERTY_FIELD(FloatTCBAnimationKey::_tension);
-		INIT_PROPERTY_FIELD(FloatTCBAnimationKey::_continuity);
-		INIT_PROPERTY_FIELD(FloatTCBAnimationKey::_bias);
+		INIT_PROPERTY_FIELD(easeTo);
+		INIT_PROPERTY_FIELD(easeFrom);
+		INIT_PROPERTY_FIELD(tension);
+		INIT_PROPERTY_FIELD(continuity);
+		INIT_PROPERTY_FIELD(bias);
 	}
 
 private:
@@ -96,11 +96,11 @@ private:
 	Q_OBJECT
 	OVITO_OBJECT
 
-	DECLARE_PROPERTY_FIELD(_easeTo);
-	DECLARE_PROPERTY_FIELD(_easeFrom);
-	DECLARE_PROPERTY_FIELD(_tension);
-	DECLARE_PROPERTY_FIELD(_continuity);
-	DECLARE_PROPERTY_FIELD(_bias);
+	DECLARE_PROPERTY_FIELD_DESCRIPTOR(easeTo);
+	DECLARE_PROPERTY_FIELD_DESCRIPTOR(easeFrom);
+	DECLARE_PROPERTY_FIELD_DESCRIPTOR(tension);
+	DECLARE_PROPERTY_FIELD_DESCRIPTOR(continuity);
+	DECLARE_PROPERTY_FIELD_DESCRIPTOR(bias);
 };
 
 /**
@@ -112,11 +112,11 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE PositionTCBAnimationKey(DataSet* dataset, TimePoint time = 0, const Vector3& value = Vector3::Zero()) : TCBAnimationKey<PositionAnimationKey>(dataset, time, value) {
-		INIT_PROPERTY_FIELD(PositionTCBAnimationKey::_easeTo);
-		INIT_PROPERTY_FIELD(PositionTCBAnimationKey::_easeFrom);
-		INIT_PROPERTY_FIELD(PositionTCBAnimationKey::_tension);
-		INIT_PROPERTY_FIELD(PositionTCBAnimationKey::_continuity);
-		INIT_PROPERTY_FIELD(PositionTCBAnimationKey::_bias);
+		INIT_PROPERTY_FIELD(easeTo);
+		INIT_PROPERTY_FIELD(easeFrom);
+		INIT_PROPERTY_FIELD(tension);
+		INIT_PROPERTY_FIELD(continuity);
+		INIT_PROPERTY_FIELD(bias);
 	}
 
 private:
@@ -124,11 +124,11 @@ private:
 	Q_OBJECT
 	OVITO_OBJECT
 
-	DECLARE_PROPERTY_FIELD(_easeTo);
-	DECLARE_PROPERTY_FIELD(_easeFrom);
-	DECLARE_PROPERTY_FIELD(_tension);
-	DECLARE_PROPERTY_FIELD(_continuity);
-	DECLARE_PROPERTY_FIELD(_bias);
+	DECLARE_PROPERTY_FIELD_DESCRIPTOR(easeTo);
+	DECLARE_PROPERTY_FIELD_DESCRIPTOR(easeFrom);
+	DECLARE_PROPERTY_FIELD_DESCRIPTOR(tension);
+	DECLARE_PROPERTY_FIELD_DESCRIPTOR(continuity);
+	DECLARE_PROPERTY_FIELD_DESCRIPTOR(bias);
 };
 
 /**
@@ -200,4 +200,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_TCB_INTERPOLATION_CONTROLLERS_H
+

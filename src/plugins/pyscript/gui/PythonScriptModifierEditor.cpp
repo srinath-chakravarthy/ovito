@@ -25,19 +25,11 @@
 #include <gui/properties/StringParameterUI.h>
 #include <plugins/pyscript/extensions/PythonScriptModifier.h>
 #include "PythonScriptModifierEditor.h"
-
-#ifndef signals
-#define signals Q_SIGNALS
-#endif
-#ifndef slots
-#define slots Q_SLOTS
-#endif
-#include <Qsci/qsciscintilla.h>
-#include <Qsci/qscilexerpython.h>
+#include "ObjectScriptEditor.h"
 
 namespace PyScript { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(PyScriptGui, PythonScriptModifierEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(PythonScriptModifierEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(PythonScriptModifier, PythonScriptModifierEditor);
 
 /******************************************************************************
@@ -58,7 +50,7 @@ void PythonScriptModifierEditor::createUI(const RolloutInsertionParameters& roll
 	sublayout->setContentsMargins(0,0,0,0);
 	sublayout->setSpacing(10);
 
-	StringParameterUI* namePUI = new StringParameterUI(this, PROPERTY_FIELD(Modifier::_title));
+	StringParameterUI* namePUI = new StringParameterUI(this, PROPERTY_FIELD(Modifier::title));
 	layout->addWidget(new QLabel(tr("User-defined modifier name:")), row++, 0);
 	static_cast<QLineEdit*>(namePUI->textBox())->setPlaceholderText(PythonScriptModifier::OOType.displayName());
 	sublayout->addWidget(namePUI->textBox(), 1);
@@ -68,36 +60,18 @@ void PythonScriptModifierEditor::createUI(const RolloutInsertionParameters& roll
 	savePresetButton->setDefaultAction(mainWindow()->actionManager()->getAction(ACTION_MODIFIER_CREATE_PRESET));
 	sublayout->addWidget(savePresetButton);
 
-	QFont font = QFontDatabase::systemFont(QFontDatabase::FixedFont);
-
-	layout->addWidget(new QLabel(tr("Python code:")), row++, 0);
-	_codeEditor = new QsciScintilla();
-	_codeEditor->setEnabled(false);
-	_codeEditor->setAutoIndent(true);
-	_codeEditor->setTabWidth(4);
-	_codeEditor->setFont(font);
-	QsciLexerPython* lexer = new QsciLexerPython(_codeEditor);
-	lexer->setDefaultFont(font);
-	_codeEditor->setLexer(lexer);
-	_codeEditor->setMarginWidth(0, QFontMetrics(font).width("0000"));
-	_codeEditor->setMarginWidth(1, 0);
-	_codeEditor->setMarginLineNumbers(0, true);
-	layout->addWidget(_codeEditor, row++, 0);
-
-	QPushButton* applyButton = new QPushButton(tr("Commit script"));
-	layout->addWidget(applyButton, row++, 0);
+	_editScriptButton = new QPushButton(tr("Edit script..."));
+	layout->addWidget(_editScriptButton, row++, 0);
+	connect(_editScriptButton, &QPushButton::clicked, this, &PythonScriptModifierEditor::onOpenEditor);
 
 	layout->addWidget(new QLabel(tr("Script output:")), row++, 0);
-	_errorDisplay = new QsciScintilla();
-	_errorDisplay->setTabWidth(_codeEditor->tabWidth());
-	_errorDisplay->setFont(font);
-	_errorDisplay->setReadOnly(true);
-	_errorDisplay->setMarginWidth(1, 0);
-	_errorDisplay->setPaper(Qt::white);
-	layout->addWidget(_errorDisplay, row++, 0);
+	_outputDisplay = new QTextEdit();
+	_outputDisplay->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+	_outputDisplay->setReadOnly(true);
+	_outputDisplay->setLineWrapMode(QTextEdit::NoWrap);
+	layout->addWidget(_outputDisplay, row++, 0);
 
 	connect(this, &PropertiesEditor::contentsChanged, this, &PythonScriptModifierEditor::onContentsChanged);
-	connect(applyButton, &QPushButton::clicked, this, &PythonScriptModifierEditor::onApplyChanges);
 }
 
 /******************************************************************************
@@ -108,28 +82,54 @@ void PythonScriptModifierEditor::onContentsChanged(RefTarget* editObject)
 {
 	PythonScriptModifier* modifier = static_object_cast<PythonScriptModifier>(editObject);
 	if(modifier) {
-		_codeEditor->setText(modifier->script());
-		_codeEditor->setEnabled(true);
-		_errorDisplay->setText(modifier->scriptLogOutput());
+		_editScriptButton->setEnabled(true);
+		_outputDisplay->setText(modifier->scriptLogOutput());
 	}
 	else {
-		_codeEditor->setEnabled(false);
-		_codeEditor->clear();
-		_errorDisplay->clear();
+		_editScriptButton->setEnabled(false);
+		_outputDisplay->clear();
 	}
 }
 
 /******************************************************************************
 * Is called when the user presses the 'Apply' button to commit the Python script.
 ******************************************************************************/
-void PythonScriptModifierEditor::onApplyChanges()
+void PythonScriptModifierEditor::onOpenEditor()
 {
 	PythonScriptModifier* modifier = static_object_cast<PythonScriptModifier>(editObject());
 	if(!modifier) return;
 
-	undoableTransaction(tr("Change Python script"), [this, modifier]() {
-		modifier->setScript(_codeEditor->text());
-	});
+	class ScriptEditor : public ObjectScriptEditor {
+	public:
+		ScriptEditor(QWidget* parentWidget, RefTarget* scriptableObject) : ObjectScriptEditor(parentWidget, scriptableObject) {}
+	protected:
+		/// Obtains the current script from the owner object.
+		virtual const QString& getObjectScript(RefTarget* obj) const override {
+			return static_object_cast<PythonScriptModifier>(obj)->script();
+		}
+
+		/// Obtains the script output cached by the owner object.
+		virtual const QString& getOutputText(RefTarget* obj) const override {
+			return static_object_cast<PythonScriptModifier>(obj)->scriptLogOutput();
+		}
+
+		/// Sets the current script of the owner object.
+		virtual void setObjectScript(RefTarget* obj, const QString& script) const override {
+			UndoableTransaction::handleExceptions(obj->dataset()->undoStack(), tr("Commit script"), [obj, &script]() {
+				static_object_cast<PythonScriptModifier>(obj)->setScript(script);
+			});
+		}
+	};
+
+	// First check if there is already an open editor.
+	if(ObjectScriptEditor* editor = ObjectScriptEditor::findEditorForObject(modifier)) {
+		editor->show();
+		editor->activateWindow();
+		return;
+	}
+
+	ScriptEditor* editor = new ScriptEditor(mainWindow(), modifier);
+	editor->show();
 }
 
 /******************************************************************************
@@ -138,9 +138,8 @@ void PythonScriptModifierEditor::onApplyChanges()
 bool PythonScriptModifierEditor::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
 	if(source == editObject() && event->type() == ReferenceEvent::ObjectStatusChanged) {
-		PythonScriptModifier* modifier = static_object_cast<PythonScriptModifier>(editObject());
-		if(modifier)
-			_errorDisplay->setText(modifier->scriptLogOutput());
+		if(PythonScriptModifier* modifier = static_object_cast<PythonScriptModifier>(editObject()))
+			_outputDisplay->setText(modifier->scriptLogOutput());
 	}
 	return PropertiesEditor::referenceEvent(source, event);
 }

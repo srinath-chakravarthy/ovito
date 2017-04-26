@@ -21,6 +21,7 @@
 
 #include <plugins/particles/Particles.h>
 #include <core/utilities/io/FileManager.h>
+#include <core/utilities/io/NumberParsing.h>
 #include <core/utilities/concurrent/Future.h>
 #include <core/dataset/importexport/FileSource.h>
 #include "POSCARImporter.h"
@@ -29,7 +30,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, POSCARImporter, ParticleImporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(POSCARImporter, ParticleImporter);
 
 /******************************************************************************
 * Checks if the given file has format that can be read by this importer.
@@ -92,10 +93,10 @@ bool POSCARImporter::shouldScanFileForTimesteps(const QUrl& sourceUrl)
 /******************************************************************************
 * Scans the given input file to find all contained simulation frames.
 ******************************************************************************/
-void POSCARImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
+void POSCARImporter::scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
 {
-	futureInterface.setProgressText(tr("Scanning file %1").arg(stream.filename()));
-	futureInterface.setProgressRange(stream.underlyingSize() / 1000);
+	promise.setProgressText(tr("Scanning file %1").arg(stream.filename()));
+	promise.setProgressMaximum(stream.underlyingSize() / 1000);
 
 	// Regular expression for whitespace characters.
 	QRegularExpression ws_re(QStringLiteral("\\s+"));
@@ -123,7 +124,7 @@ void POSCARImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, 
 	Frame frame;
 	frame.sourceFile = sourceUrl;
 	frame.lastModificationTime = fileInfo.lastModified();
-	while(!stream.eof()) {
+	while(!stream.eof() && !promise.isCanceled()) {
 		frame.byteOffset = stream.byteOffset();
 		frame.lineNumber = stream.lineNumber();
 		frame.label = QString("%1 (Frame %2)").arg(filename).arg(frameNumber++);
@@ -136,8 +137,8 @@ void POSCARImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, 
 			}
 		}
 
-		futureInterface.setProgressValueIntermittent(stream.underlyingByteOffset() / 1000);
-		if(futureInterface.isCanceled())
+		promise.setProgressValueIntermittent(stream.underlyingByteOffset() / 1000);
+		if(promise.isCanceled())
 			return;
 	}
 }
@@ -224,16 +225,19 @@ void POSCARImporter::POSCARImportTask::parseFile(CompressedTextReader& stream)
 		}
 	}
 
-	// Parse optional velocity vectors.
+	QString statusString = tr("%1 atoms").arg(totalAtomCount);	
+
+	// Parse optional atomic velocity vectors or CHGCAR electron density data. 
+	// Do this only for the first frame.
 	if(byteOffset == 0) {
 		if(!stream.eof())
-			stream.readLine();
-		if(!stream.eof() && stream.line()[0] != '\0') {
+			stream.readLineTrimLeft();
+		if(!stream.eof() && stream.line()[0] > ' ') {
 			isCartesian = false;
 			if(stream.line()[0] == 'C' || stream.line()[0] == 'c' || stream.line()[0] == 'K' || stream.line()[0] == 'k')
 				isCartesian = true;
 
-			// Read atom velocities.
+			// Read atomic velocities.
 			ParticleProperty* velocityProperty = new ParticleProperty(totalAtomCount, ParticleProperty::VelocityProperty, 0, false);
 			addParticleProperty(velocityProperty);
 			Vector3* v = velocityProperty->dataVector3();
@@ -247,9 +251,88 @@ void POSCARImporter::POSCARImportTask::parseFile(CompressedTextReader& stream)
 				}
 			}
 		}
+		else if(!stream.eof()) {
+			size_t nx, ny, nz;
+			// Parse charge density volumetric grid.
+			if(sscanf(stream.readLine(), "%zu %zu %zu", &nx, &ny, &nz) == 3 && nx > 0 && ny > 0 && nz > 0) {
+				auto parseFieldData = [this, &stream](size_t nx, size_t ny, size_t nz, const QString& name) -> FieldQuantity* {
+					std::unique_ptr<FieldQuantity> fieldQuantity(new FieldQuantity({nx,ny,nz}, qMetaTypeId<FloatType>(), 1, 0, name, false));
+					const char* s = stream.readLine();
+					FloatType* data = fieldQuantity->dataFloat();
+					setProgressMaximum(fieldQuantity->size());
+					FloatType cellVolume = simulationCell().volume3D();
+					for(size_t i = 0; i < fieldQuantity->size(); i++, ++data) {
+						const char* token;
+						for(;;) {
+							while(*s == ' ' || *s == '\t') ++s;
+							token = s;
+							while(*s > ' ' || *s < 0) ++s;
+							if(s != token) break;
+							s = stream.readLine();
+						}
+						if(!parseFloatType(token, s, *data))
+							throw Exception(tr("Invalid value in charge density section (line %1): \"%2\"").arg(stream.lineNumber()).arg(QString::fromLocal8Bit(token, s - token)));
+						*data /= cellVolume;
+						if(*s != '\0')
+							s++;
+
+						if(!setProgressValueIntermittent(i)) return nullptr;						
+					}
+					return fieldQuantity.release();
+				};
+
+				// Parse spin up + spin down denisty.
+				FieldQuantity* chargeDensity = parseFieldData(nx, ny, nz, tr("Charge density"));
+				if(!chargeDensity) return;
+				addFieldQuantity(chargeDensity);
+				statusString += tr("\nCharge density grid: %1 x %2 x %3").arg(nx).arg(ny).arg(nz);
+
+				// Look for spin up - spin down density.
+				std::unique_ptr<FieldQuantity> magnetizationDensity;
+				while(!stream.eof()) {
+					if(sscanf(stream.readLine(), "%zu %zu %zu", &nx, &ny, &nz) == 3 && nx > 0 && ny > 0 && nz > 0) {
+						magnetizationDensity.reset(parseFieldData(nx, ny, nz, tr("Magnetization density")));
+						if(!magnetizationDensity) return;
+						statusString += tr("\nMagnetization density grid: %1 x %2 x %3").arg(nx).arg(ny).arg(nz);
+						break;
+					}
+				}
+
+				// Look for more vector components in case file contains vector magnetization. 
+				std::unique_ptr<FieldQuantity> magnetizationDensityY;
+				std::unique_ptr<FieldQuantity> magnetizationDensityZ;
+				while(!stream.eof()) {
+					if(sscanf(stream.readLine(), "%zu %zu %zu", &nx, &ny, &nz) == 3 && nx > 0 && ny > 0 && nz > 0) {
+						magnetizationDensityY.reset(parseFieldData(nx, ny, nz, tr("Magnetization density")));
+						if(!magnetizationDensityY) return;
+						break;
+					}
+				}
+				while(!stream.eof()) {
+					if(sscanf(stream.readLine(), "%zu %zu %zu", &nx, &ny, &nz) == 3 && nx > 0 && ny > 0 && nz > 0) {
+						magnetizationDensityZ.reset(parseFieldData(nx, ny, nz, tr("Magnetization density")));
+						if(!magnetizationDensityZ) return;
+						break;
+					}
+				}
+
+				if(magnetizationDensity && magnetizationDensityY && magnetizationDensityZ && 
+					magnetizationDensityY->shape() == magnetizationDensityZ->shape() &&
+					magnetizationDensity->shape() == magnetizationDensityY->shape()) {
+					std::unique_ptr<FieldQuantity> vectorMagnetization(new FieldQuantity({nx,ny,nz}, qMetaTypeId<FloatType>(), 3, 0, tr("Magnetization density"), false));
+					vectorMagnetization->setComponentNames(QStringList() << "X" << "Y" << "Z");
+					for(size_t i = 0; i < vectorMagnetization->size(); i++) 
+						vectorMagnetization->setVector3(i, { magnetizationDensity->getFloat(i), magnetizationDensityY->getFloat(i), magnetizationDensityZ->getFloat(i) });
+					addFieldQuantity(vectorMagnetization.release());
+				}
+				else if(magnetizationDensity) {
+					addFieldQuantity(magnetizationDensity.release());
+				}
+			}
+		}
 	}
 
-	setStatus(tr("%1 atoms").arg(totalAtomCount));
+	setStatus(statusString);
 }
 
 /******************************************************************************

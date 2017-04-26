@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_MODIFIER_APPLICATION_H
-#define __OVITO_MODIFIER_APPLICATION_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "Modifier.h"
@@ -49,11 +49,6 @@ public:
 	/// \param modifier The modifier that is going to be inserted into a modification pipeline.
 	Q_INVOKABLE ModifierApplication(DataSet* dataset, Modifier* modifier = nullptr);
 
-	/// \brief Returns the Modifier, which is connected by this ModifierApplication to a specific
-	///        modification pipeline.
-	/// \return The modifier instance.
-	Modifier* modifier() const { return _modifier; }
-
 	/// \brief Returns the modification pipeline the Modifier managed by this ModifierApplication is part of.
 	/// \return The PipelineObject this ModifierApplication is referenced by.
 	PipelineObject* pipelineObject() const;
@@ -62,16 +57,6 @@ public:
 	/// \return A list of scene nodes, all sharing the same PipelineObject, which references this
 	///         ModifierApplication.
 	QSet<ObjectNode*> objectNodes() const;
-
-	/// \brief Returns the data managed by the modifier, which has been set via setModifierData().
-	/// \return The data object previously set by the modifier.
-	RefTarget* modifierData() const { return _modifierData; }
-
-	/// \brief Sets or replaces the data object used by the modifier.
-	/// \param data A subclass of RefTarget, created and managed by the Modifier.
-	///
-	/// Modifiers can use this method to store pipeline-specific data.
-	void setModifierData(RefTarget* data) { _modifierData = data; }
 
 protected:
 
@@ -86,20 +71,17 @@ protected:
 private:
 
 	/// The modifier that is inserted into the pipeline.
-	ReferenceField<Modifier> _modifier;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Modifier, modifier, setModifier);
 
 	/// Optional data managed by the modifier.
-	ReferenceField<RefTarget> _modifierData;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(RefTarget, modifierData, setModifierData);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_modifier);
-	DECLARE_REFERENCE_FIELD(_modifierData);
 };
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_MODIFIER_APPLICATION_H
+

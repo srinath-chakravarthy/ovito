@@ -2,14 +2,13 @@
 import ovito.vis
 
 # Load the native code modules.
-import Particles
-import ParticlesImporter
-import ParticlesExporter
-import CrystalAnalysis
+import ovito.plugins.Particles
+import ovito.plugins.CrystalAnalysis
 
 # Inject selected classes into parent module.
-ovito.vis.DislocationDisplay = CrystalAnalysis.DislocationDisplay
-ovito.vis.PartitionMeshDisplay = CrystalAnalysis.PartitionMeshDisplay
+ovito.vis.DislocationDisplay = ovito.plugins.CrystalAnalysis.DislocationDisplay
+ovito.vis.PartitionMeshDisplay = ovito.plugins.CrystalAnalysis.PartitionMeshDisplay
+ovito.vis.__all__ += ['DislocationDisplay', 'PartitionMeshDisplay']
 
 # Inject enum types.
 ovito.vis.DislocationDisplay.Shading = ovito.vis.ArrowShadingMode

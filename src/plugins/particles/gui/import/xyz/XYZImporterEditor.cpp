@@ -29,7 +29,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, XYZImporterEditor, FileImporterEditor);
+IMPLEMENT_OVITO_OBJECT(XYZImporterEditor, FileImporterEditor);
 SET_OVITO_OBJECT_EDITOR(XYZImporter, XYZImporterEditor);
 
 /******************************************************************************
@@ -133,7 +133,7 @@ void XYZImporterEditor::createUI(const RolloutInsertionParameters& rolloutParams
 	layout->addWidget(animFramesBox);
 
 	// Multi-timestep file
-	BooleanParameterUI* multitimestepUI = new BooleanParameterUI(this, PROPERTY_FIELD(ParticleImporter::_isMultiTimestepFile));
+	BooleanParameterUI* multitimestepUI = new BooleanParameterUI(this, PROPERTY_FIELD(ParticleImporter::isMultiTimestepFile));
 	sublayout->addWidget(multitimestepUI->checkBox());
 
 	QGroupBox* columnMappingBox = new QGroupBox(tr("File columns"), rollout);
@@ -144,6 +144,15 @@ void XYZImporterEditor::createUI(const RolloutInsertionParameters& rolloutParams
 	QPushButton* editMappingButton = new QPushButton(tr("Edit column mapping..."));
 	sublayout->addWidget(editMappingButton);
 	connect(editMappingButton, &QPushButton::clicked, this, &XYZImporterEditor::onEditColumnMapping);
+
+	QGroupBox* settingsBox = new QGroupBox(tr("Settings"), rollout);
+	sublayout = new QVBoxLayout(settingsBox);
+	sublayout->setContentsMargins(4,4,4,4);
+	layout->addWidget(settingsBox);
+
+	// Auto-rescale reduced coordinates.
+	BooleanParameterUI* rescaleReducedUI = new BooleanParameterUI(this, PROPERTY_FIELD(XYZImporter::autoRescaleCoordinates));
+	sublayout->addWidget(rescaleReducedUI->checkBox());
 }
 
 /******************************************************************************

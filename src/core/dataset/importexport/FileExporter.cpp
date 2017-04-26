@@ -22,7 +22,7 @@
 #include <core/Core.h>
 #include <core/plugins/PluginManager.h>
 #include <core/utilities/io/FileManager.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/Task.h>
 #include <core/dataset/DataSet.h>
 #include <core/dataset/DataSetContainer.h>
 #include <core/scene/ObjectNode.h>
@@ -31,21 +31,21 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, FileExporter, RefTarget);
-DEFINE_PROPERTY_FIELD(FileExporter, _outputFilename, "OutputFile");
-DEFINE_PROPERTY_FIELD(FileExporter, _exportAnimation, "ExportAnimation");
-DEFINE_PROPERTY_FIELD(FileExporter, _useWildcardFilename, "UseWildcardFilename");
-DEFINE_PROPERTY_FIELD(FileExporter, _wildcardFilename, "WildcardFilename");
-DEFINE_PROPERTY_FIELD(FileExporter, _startFrame, "StartFrame");
-DEFINE_PROPERTY_FIELD(FileExporter, _endFrame, "EndFrame");
-DEFINE_PROPERTY_FIELD(FileExporter, _everyNthFrame, "EveryNthFrame");
-SET_PROPERTY_FIELD_LABEL(FileExporter, _outputFilename, "Output filename");
-SET_PROPERTY_FIELD_LABEL(FileExporter, _exportAnimation, "Export animation");
-SET_PROPERTY_FIELD_LABEL(FileExporter, _useWildcardFilename, "Use wildcard filename");
-SET_PROPERTY_FIELD_LABEL(FileExporter, _wildcardFilename, "Wildcard filename");
-SET_PROPERTY_FIELD_LABEL(FileExporter, _startFrame, "Start frame");
-SET_PROPERTY_FIELD_LABEL(FileExporter, _endFrame, "End frame");
-SET_PROPERTY_FIELD_LABEL(FileExporter, _everyNthFrame, "Every Nth frame");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(FileExporter, RefTarget);
+DEFINE_PROPERTY_FIELD(FileExporter, outputFilename, "OutputFile");
+DEFINE_PROPERTY_FIELD(FileExporter, exportAnimation, "ExportAnimation");
+DEFINE_PROPERTY_FIELD(FileExporter, useWildcardFilename, "UseWildcardFilename");
+DEFINE_PROPERTY_FIELD(FileExporter, wildcardFilename, "WildcardFilename");
+DEFINE_PROPERTY_FIELD(FileExporter, startFrame, "StartFrame");
+DEFINE_PROPERTY_FIELD(FileExporter, endFrame, "EndFrame");
+DEFINE_PROPERTY_FIELD(FileExporter, everyNthFrame, "EveryNthFrame");
+SET_PROPERTY_FIELD_LABEL(FileExporter, outputFilename, "Output filename");
+SET_PROPERTY_FIELD_LABEL(FileExporter, exportAnimation, "Export animation");
+SET_PROPERTY_FIELD_LABEL(FileExporter, useWildcardFilename, "Use wildcard filename");
+SET_PROPERTY_FIELD_LABEL(FileExporter, wildcardFilename, "Wildcard filename");
+SET_PROPERTY_FIELD_LABEL(FileExporter, startFrame, "Start frame");
+SET_PROPERTY_FIELD_LABEL(FileExporter, endFrame, "End frame");
+SET_PROPERTY_FIELD_LABEL(FileExporter, everyNthFrame, "Every Nth frame");
 
 /******************************************************************************
 * Constructs a new instance of the class.
@@ -55,13 +55,13 @@ FileExporter::FileExporter(DataSet* dataset) : RefTarget(dataset),
 	_useWildcardFilename(false), _startFrame(0), _endFrame(-1),
 	_everyNthFrame(1)
 {
-	INIT_PROPERTY_FIELD(FileExporter::_outputFilename);
-	INIT_PROPERTY_FIELD(FileExporter::_exportAnimation);
-	INIT_PROPERTY_FIELD(FileExporter::_useWildcardFilename);
-	INIT_PROPERTY_FIELD(FileExporter::_wildcardFilename);
-	INIT_PROPERTY_FIELD(FileExporter::_startFrame);
-	INIT_PROPERTY_FIELD(FileExporter::_endFrame);
-	INIT_PROPERTY_FIELD(FileExporter::_everyNthFrame);
+	INIT_PROPERTY_FIELD(outputFilename);
+	INIT_PROPERTY_FIELD(exportAnimation);
+	INIT_PROPERTY_FIELD(useWildcardFilename);
+	INIT_PROPERTY_FIELD(wildcardFilename);
+	INIT_PROPERTY_FIELD(startFrame);
+	INIT_PROPERTY_FIELD(endFrame);
+	INIT_PROPERTY_FIELD(everyNthFrame);
 
 	// Use the entire animation interval as default export interval.
 	setStartFrame(0);
@@ -104,7 +104,7 @@ void FileExporter::setOutputFilename(const QString& filename)
 /******************************************************************************
  * Exports the data of the scene nodes to one or more output files.
  *****************************************************************************/
-bool FileExporter::exportNodes(AbstractProgressDisplay* progressDisplay)
+bool FileExporter::exportNodes(TaskManager& taskManager)
 {
 	if(outputFilename().isEmpty())
 		throwException(tr("The output filename not been set for the file exporter."));
@@ -139,7 +139,9 @@ bool FileExporter::exportNodes(AbstractProgressDisplay* progressDisplay)
 			throwException(tr("Cannot write animation frames to separate files. The filename must contain the '*' wildcard character, which gets replaced by the frame number."));
 	}
 
-	if(progressDisplay) progressDisplay->setMaximum(numberOfFrames * 100);
+	SynchronousTask exportTask(taskManager);
+	exportTask.setProgressText(tr("Opening output file"));
+
 	QDir dir = QFileInfo(outputFilename()).dir();
 	QString filename = outputFilename();
 
@@ -152,9 +154,9 @@ bool FileExporter::exportNodes(AbstractProgressDisplay* progressDisplay)
 	try {
 
 		// Export animation frames.
+		exportTask.setProgressMaximum(numberOfFrames);			
 		for(int frameIndex = 0; frameIndex < numberOfFrames; frameIndex++) {
-			if(progressDisplay)
-				progressDisplay->setValue(frameIndex * 100);
+			exportTask.setProgressValue(frameIndex);
 
 			int frameNumber = firstFrameNumber + frameIndex * everyNthFrame();
 
@@ -167,13 +169,15 @@ bool FileExporter::exportNodes(AbstractProgressDisplay* progressDisplay)
 					return false;
 			}
 
-			if(!exportFrame(frameNumber, exportTime, filename, progressDisplay) && progressDisplay)
-				progressDisplay->cancel();
+			exportTask.setProgressText(tr("Exporting frame %1 to file '%2'").arg(frameNumber).arg(filename));
+
+			if(!exportFrame(frameNumber, exportTime, filename, taskManager))
+				exportTask.cancel();
 
 			if(exportAnimation() && useWildcardFilename())
-				closeOutputFile(!progressDisplay || !progressDisplay->wasCanceled());
+				closeOutputFile(!exportTask.isCanceled());
 
-			if(progressDisplay && progressDisplay->wasCanceled())
+			if(exportTask.isCanceled())
 				break;
 
 			// Go to next animation frame.
@@ -187,39 +191,21 @@ bool FileExporter::exportNodes(AbstractProgressDisplay* progressDisplay)
 
 	// Close output file.
 	if(!exportAnimation() || !useWildcardFilename()) {
-		closeOutputFile(!progressDisplay || !progressDisplay->wasCanceled());
+		exportTask.setProgressText(tr("Closing output file"));
+		closeOutputFile(!exportTask.isCanceled());
 	}
 
-	return !progressDisplay || !progressDisplay->wasCanceled();
+	return !exportTask.isCanceled();
 }
 
 /******************************************************************************
  * Exports a single animation frame to the current output file.
  *****************************************************************************/
-bool FileExporter::exportFrame(int frameNumber, TimePoint time, const QString& filePath, AbstractProgressDisplay* progressDisplay)
+bool FileExporter::exportFrame(int frameNumber, TimePoint time, const QString& filePath, TaskManager& taskManager)
 {
 	// Jump to animation time.
 	dataset()->animationSettings()->setTime(time);
 
-	// Wait until the scene is ready.
-	if(!dataset()->waitUntilSceneIsReady(tr("Preparing frame %1 for export...").arg(frameNumber), progressDisplay))
-		return false;
-
-	// Also make sure nodes to be exported are ready, in case they are not part of the scene.
-	for(SceneNode* sceneNode : outputData()) {
-		try {
-			if(ObjectNode* objNode = dynamic_object_cast<ObjectNode>(sceneNode)) {
-				if(!objNode->waitUntilReady(time, tr("Preparing frame %1 for export...").arg(frameNumber), progressDisplay))
-					return false;
-			}
-		}
-		catch(Exception& ex) {
-			// Provide a local context for errors that occurred during export.
-			if(ex.context() == nullptr) ex.setContext(dataset());
-			throw;
-		}
-	}
-	
 	return true;
 }
 

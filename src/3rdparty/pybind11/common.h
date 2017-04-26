@@ -52,8 +52,8 @@
 #  define PYBIND11_DEPRECATED(reason) __declspec(deprecated)
 #endif
 
-#define PYBIND11_VERSION_MAJOR 1
-#define PYBIND11_VERSION_MINOR 9
+#define PYBIND11_VERSION_MAJOR 2
+#define PYBIND11_VERSION_MINOR 1
 #define PYBIND11_VERSION_PATCH dev0
 
 /// Include Python header, disable linking to pythonX_d.lib on Windows in debug mode
@@ -111,7 +111,6 @@
 #define PYBIND11_BYTES_FROM_STRING_AND_SIZE PyBytes_FromStringAndSize
 #define PYBIND11_BYTES_AS_STRING_AND_SIZE PyBytes_AsStringAndSize
 #define PYBIND11_BYTES_AS_STRING PyBytes_AsString
-#define PYBIND11_BYTES_CHECK PyBytes_Check
 #define PYBIND11_LONG_CHECK(o) PyLong_Check(o)
 #define PYBIND11_LONG_AS_LONGLONG(o) PyLong_AsLongLong(o)
 #define PYBIND11_LONG_AS_UNSIGNED_LONGLONG(o) PyLong_AsUnsignedLongLong(o)
@@ -130,7 +129,6 @@
 #define PYBIND11_BYTES_FROM_STRING_AND_SIZE PyString_FromStringAndSize
 #define PYBIND11_BYTES_AS_STRING_AND_SIZE PyString_AsStringAndSize
 #define PYBIND11_BYTES_AS_STRING PyString_AsString
-#define PYBIND11_BYTES_CHECK PyString_Check
 #define PYBIND11_LONG_CHECK(o) (PyInt_Check(o) || PyLong_Check(o))
 #define PYBIND11_LONG_AS_LONGLONG(o) (PyInt_Check(o) ? (long long) PyLong_AsLong(o) : PyLong_AsLongLong(o))
 #define PYBIND11_LONG_AS_UNSIGNED_LONGLONG(o) (PyInt_Check(o) ? (unsigned long long) PyLong_AsUnsignedLong(o) : PyLong_AsUnsignedLongLong(o))
@@ -141,7 +139,11 @@
 #define PYBIND11_STR_TYPE ::pybind11::bytes
 #define PYBIND11_OB_TYPE(ht_type) (ht_type).ob_type
 #define PYBIND11_PLUGIN_IMPL(name) \
-    extern "C" PYBIND11_EXPORT PyObject *init##name()
+    static PyObject *pybind11_init_wrapper();               \
+    extern "C" PYBIND11_EXPORT void init##name() {          \
+        (void)pybind11_init_wrapper();                      \
+    }                                                       \
+    PyObject *pybind11_init_wrapper()
 #endif
 
 #if PY_VERSION_HEX >= 0x03050000 && PY_VERSION_HEX < 0x03050200
@@ -180,6 +182,17 @@ extern "C" {
         }                                                                      \
     }                                                                          \
     PyObject *pybind11_init()
+
+// Function return value and argument type deduction support.  When compiling under C++17 these
+// differ as C++17 makes the noexcept specifier part of the function type, while it is not part of
+// the type under earlier standards.
+#ifdef __cpp_noexcept_function_type
+#  define PYBIND11_NOEXCEPT_TPL_ARG , bool NoExceptions
+#  define PYBIND11_NOEXCEPT_SPECIFIER noexcept(NoExceptions)
+#else
+#  define PYBIND11_NOEXCEPT_TPL_ARG
+#  define PYBIND11_NOEXCEPT_SPECIFIER
+#endif
 
 NAMESPACE_BEGIN(pybind11)
 
@@ -347,10 +360,51 @@ struct internals {
 /// Return a reference to the current 'internals' information
 inline internals &get_internals();
 
-/// Index sequence for convenient template metaprogramming involving tuples
+/// from __cpp_future__ import (convenient aliases from C++14/17)
+#ifdef PYBIND11_CPP14
+using std::enable_if_t;
+using std::conditional_t;
+#else
+template <bool B, typename T = void> using enable_if_t = typename std::enable_if<B, T>::type;
+template <bool B, typename T, typename F> using conditional_t = typename std::conditional<B, T, F>::type;
+#endif
+
+/// Index sequences
+#if defined(PYBIND11_CPP14) || defined(_MSC_VER)
+using std::index_sequence;
+using std::make_index_sequence;
+#else
 template<size_t ...> struct index_sequence  { };
-template<size_t N, size_t ...S> struct make_index_sequence : make_index_sequence <N - 1, N - 1, S...> { };
-template<size_t ...S> struct make_index_sequence <0, S...> { typedef index_sequence<S...> type; };
+template<size_t N, size_t ...S> struct make_index_sequence_impl : make_index_sequence_impl <N - 1, N - 1, S...> { };
+template<size_t ...S> struct make_index_sequence_impl <0, S...> { typedef index_sequence<S...> type; };
+template<size_t N> using make_index_sequence = typename make_index_sequence_impl<N>::type;
+#endif
+
+#if defined(PYBIND11_CPP17) || defined(_MSC_VER)
+using std::bool_constant;
+using std::negation;
+#else
+template <bool B> using bool_constant = std::integral_constant<bool, B>;
+template <class T> using negation = bool_constant<!T::value>;
+#endif
+
+/// Compile-time all/any/none of that check the ::value of all template types
+#ifdef PYBIND11_CPP17
+template <class... Ts> using all_of = bool_constant<(Ts::value && ...)>;
+template <class... Ts> using any_of = bool_constant<(Ts::value || ...)>;
+#elif !defined(_MSC_VER)
+template <bool...> struct bools {};
+template <class... Ts> using all_of = std::is_same<
+    bools<Ts::value..., true>,
+    bools<true, Ts::value...>>;
+template <class... Ts> using any_of = negation<all_of<negation<Ts>...>>;
+#else
+// MSVC has trouble with the above, but supports std::conjunction, which we can use instead (albeit
+// at a slight loss of compilation efficiency).
+template <class... Ts> using all_of = std::conjunction<Ts...>;
+template <class... Ts> using any_of = std::disjunction<Ts...>;
+#endif
+template <class... Ts> using none_of = negation<any_of<Ts...>>;
 
 /// Strip the class from a method type
 template <typename T> struct remove_class { };
@@ -370,34 +424,13 @@ template <typename T> using intrinsic_t = typename intrinsic_type<T>::type;
 /// Helper type to replace 'void' in some expressions
 struct void_type { };
 
-/// from __cpp_future__ import (convenient aliases from C++14/17)
-template <bool B> using bool_constant = std::integral_constant<bool, B>;
-template <class T> using negation = bool_constant<!T::value>;
-template <bool B, typename T = void> using enable_if_t = typename std::enable_if<B, T>::type;
-template <bool B, typename T, typename F> using conditional_t = typename std::conditional<B, T, F>::type;
+/// Helper template which holds a list of types
+template <typename...> struct type_list { };
 
 /// Compile-time integer sum
 constexpr size_t constexpr_sum() { return 0; }
 template <typename T, typename... Ts>
 constexpr size_t constexpr_sum(T n, Ts... ns) { return size_t{n} + constexpr_sum(ns...); }
-
-// Counts the number of types in the template parameter pack matching the predicate
-#if !defined(_MSC_VER)
-template <template<typename> class Predicate, typename... Ts>
-using count_t = std::integral_constant<size_t, constexpr_sum(Predicate<Ts>::value...)>;
-#else
-// MSVC workaround (2015 Update 3 has issues with some member type aliases and constexpr)
-template <template<typename> class Predicate, typename... Ts> struct count_t;
-template <template<typename> class Predicate> struct count_t<Predicate> : std::integral_constant<size_t, 0> {};
-template <template<typename> class Predicate, class T, class... Ts>
-struct count_t<Predicate, T, Ts...> : std::integral_constant<size_t, Predicate<T>::value + count_t<Predicate, Ts...>::value> {};
-#endif
-
-/// Return true if all/any Ts satify Predicate<T>
-template <template<typename> class Predicate, typename... Ts>
-using all_of_t = bool_constant<(count_t<Predicate, Ts...>::value == sizeof...(Ts))>;
-template <template<typename> class Predicate, typename... Ts>
-using any_of_t = bool_constant<(count_t<Predicate, Ts...>::value > 0)>;
 
 // Extracts the first type from the template parameter pack matching the predicate, or Default if none match.
 template <template<class> class Predicate, class Default, class... Ts> struct first_of;
@@ -477,7 +510,16 @@ public:
     error_already_set() : std::runtime_error(detail::error_string()) {
         PyErr_Fetch(&type, &value, &trace);
     }
-    ~error_already_set() { Py_XDECREF(type); Py_XDECREF(value); Py_XDECREF(trace); }
+
+    error_already_set(const error_already_set &) = delete;
+
+    error_already_set(error_already_set &&e)
+        : std::runtime_error(e.what()), type(e.type), value(e.value),
+          trace(e.trace) { e.type = e.value = e.trace = nullptr; }
+
+    inline ~error_already_set(); // implementation in pybind11.h
+
+    error_already_set& operator=(const error_already_set &) = delete;
 
     /// Give the error back to Python
     void restore() { PyErr_Restore(type, value, trace); type = value = trace = nullptr; }
@@ -504,7 +546,6 @@ PYBIND11_RUNTIME_EXCEPTION(stop_iteration, PyExc_StopIteration)
 PYBIND11_RUNTIME_EXCEPTION(index_error, PyExc_IndexError)
 PYBIND11_RUNTIME_EXCEPTION(key_error, PyExc_KeyError)
 PYBIND11_RUNTIME_EXCEPTION(value_error, PyExc_ValueError)
-PYBIND11_RUNTIME_EXCEPTION(import_error, PyExc_ImportError)
 PYBIND11_RUNTIME_EXCEPTION(type_error, PyExc_TypeError)
 PYBIND11_RUNTIME_EXCEPTION(cast_error, PyExc_RuntimeError) /// Thrown when pybind11::cast or handle::call fail due to a type casting error
 PYBIND11_RUNTIME_EXCEPTION(reference_cast_error, PyExc_RuntimeError) /// Used internally
@@ -541,5 +582,40 @@ PYBIND11_DECL_FMT(bool, "?");
 
 /// Dummy destructor wrapper that can be used to expose classes with a private destructor
 struct nodelete { template <typename T> void operator()(T*) { } };
+
+// overload_cast requires variable templates: C++14 or MSVC 2015 Update 2
+#if defined(PYBIND11_CPP14) || _MSC_FULL_VER >= 190023918
+#define PYBIND11_OVERLOAD_CAST 1
+
+NAMESPACE_BEGIN(detail)
+template <typename... Args>
+struct overload_cast_impl {
+    template <typename Return /*,*/ PYBIND11_NOEXCEPT_TPL_ARG>
+    constexpr auto operator()(Return (*pf)(Args...) PYBIND11_NOEXCEPT_SPECIFIER) const noexcept
+                              -> decltype(pf) { return pf; }
+
+    template <typename Return, typename Class /*,*/ PYBIND11_NOEXCEPT_TPL_ARG>
+    constexpr auto operator()(Return (Class::*pmf)(Args...) PYBIND11_NOEXCEPT_SPECIFIER, std::false_type = {}) const noexcept
+                              -> decltype(pmf) { return pmf; }
+
+    template <typename Return, typename Class /*,*/ PYBIND11_NOEXCEPT_TPL_ARG>
+    constexpr auto operator()(Return (Class::*pmf)(Args...) const PYBIND11_NOEXCEPT_SPECIFIER, std::true_type) const noexcept
+                              -> decltype(pmf) { return pmf; }
+};
+NAMESPACE_END(detail)
+
+/// Syntax sugar for resolving overloaded function pointers:
+///  - regular: static_cast<Return (Class::*)(Arg0, Arg1, Arg2)>(&Class::func)
+///  - sweet:   overload_cast<Arg0, Arg1, Arg2>(&Class::func)
+template <typename... Args>
+static constexpr detail::overload_cast_impl<Args...> overload_cast = {};
+// MSVC 2015 only accepts this particular initialization syntax for this variable template.
+
+/// Const member function selector for overload_cast
+///  - regular: static_cast<Return (Class::*)(Arg) const>(&Class::func)
+///  - sweet:   overload_cast<Arg>(&Class::func, const_)
+static constexpr auto const_ = std::true_type{};
+
+#endif // overload_cast
 
 NAMESPACE_END(pybind11)

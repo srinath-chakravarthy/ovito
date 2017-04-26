@@ -32,7 +32,7 @@
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem)
 
 // Gives the class run-time type information.
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, RefMaker, OvitoObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(RefMaker, OvitoObject);
 
 /******************************************************************************
 * This method is called when the reference counter of this OvitoObject
@@ -43,7 +43,7 @@ void RefMaker::aboutToBeDeleted()
 	OVITO_CHECK_OBJECT_POINTER(this);
 
 	// Make sure undo recording is not active while deleting a RefTarget.
-	OVITO_ASSERT_MSG(!isRefTarget() || dataset()->undoStack().isRecording() == false, "RefMaker::aboutToBeDeleted()", "Cannot delete object from memory while undo recording is active.");
+	OVITO_ASSERT_MSG(!isRefTarget() || !dataset() || dataset()->undoStack().isRecording() == false, "RefMaker::aboutToBeDeleted()", "Cannot delete object from memory while undo recording is active.");
 
 	// Clear all references this object has to other objects.
 	clearAllReferences();
@@ -155,7 +155,7 @@ bool RefMaker::hasReferenceTo(RefTarget* target) const
 ******************************************************************************/
 void RefMaker::replaceReferencesTo(RefTarget* oldTarget, RefTarget* newTarget)
 {
-	if(oldTarget == NULL) return;
+	if(!oldTarget) return;
 	OVITO_CHECK_OBJECT_POINTER(oldTarget);
 
 	// Check for cyclic references first.
@@ -192,7 +192,7 @@ void RefMaker::replaceReferencesTo(RefTarget* oldTarget, RefTarget* newTarget)
 ******************************************************************************/
 void RefMaker::clearReferencesTo(RefTarget* target) 
 { 
-	if(target == NULL) return;
+	if(!target) return;
 	OVITO_CHECK_OBJECT_POINTER(target);
 
 	// Iterate over all reference fields in the class hierarchy.
@@ -202,7 +202,7 @@ void RefMaker::clearReferencesTo(RefTarget* target)
 			if(field->isVector() == false) {
 				SingleReferenceFieldBase& singleField = field->singleStorageAccessFunc(this);
 				if(singleField == target)
-					singleField.setValue(NULL);
+					singleField.setValue(nullptr);
 			}
 			else {
 				VectorReferenceFieldBase& vectorField = field->vectorStorageAccessFunc(this);

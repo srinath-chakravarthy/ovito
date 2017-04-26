@@ -24,9 +24,9 @@
 
 namespace Ovito { namespace Particles {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ParticleTypeProperty, ParticlePropertyObject);
-DEFINE_VECTOR_REFERENCE_FIELD(ParticleTypeProperty, _particleTypes, "ParticleTypes", ParticleType);
-SET_PROPERTY_FIELD_LABEL(ParticleTypeProperty, _particleTypes, "Particle Types");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ParticleTypeProperty, ParticlePropertyObject);
+DEFINE_VECTOR_REFERENCE_FIELD(ParticleTypeProperty, particleTypes, "ParticleTypes", ParticleType);
+SET_PROPERTY_FIELD_LABEL(ParticleTypeProperty, particleTypes, "Particle Types");
 
 // Define default names, colors, and radii for some predefined particle types.
 std::array<ParticleTypeProperty::PredefinedTypeInfo, ParticleTypeProperty::NUMBER_OF_PREDEFINED_PARTICLE_TYPES> ParticleTypeProperty::_predefinedParticleTypes{{
@@ -84,7 +84,7 @@ std::array<ParticleTypeProperty::PredefinedTypeInfo, ParticleTypeProperty::NUMBE
 ParticleTypeProperty::ParticleTypeProperty(DataSet* dataset, ParticleProperty* storage)
 	: ParticlePropertyObject(dataset, storage)
 {
-	INIT_PROPERTY_FIELD(ParticleTypeProperty::_particleTypes);
+	INIT_PROPERTY_FIELD(particleTypes);
 }
 
 /******************************************************************************

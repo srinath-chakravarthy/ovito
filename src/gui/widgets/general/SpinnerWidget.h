@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SPINNER_WIDGET_H
-#define __OVITO_SPINNER_WIDGET_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/utilities/units/UnitsManager.h>
@@ -200,10 +200,11 @@ protected:
 	virtual void mouseReleaseEvent(QMouseEvent* event) override;
 	virtual void mouseMoveEvent(QMouseEvent* event) override;
 	virtual void changeEvent(QEvent* event) override;
+	virtual void focusOutEvent(QFocusEvent* event) override;
 };
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_SPINNER_WIDGET_H
+

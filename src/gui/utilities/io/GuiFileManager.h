@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_GUI_FILE_MANAGER_H
-#define __OVITO_GUI_FILE_MANAGER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/io/FileManager.h>
@@ -39,17 +39,10 @@ public:
 	/// \brief Shows a dialog which asks the user for the login credentials.
 	/// \return True on success, false if user has canceled the operation.
 	virtual bool askUserForCredentials(QUrl& url) override;
-
-protected:
-    
-	/// This is a singleton class. No public instances allowed.
-	GuiFileManager() : FileManager() {}
-
-	friend class GuiApplication;
 };
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_GUI_FILE_MANAGER_H
+

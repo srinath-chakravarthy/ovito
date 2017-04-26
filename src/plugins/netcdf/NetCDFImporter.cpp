@@ -38,7 +38,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <core/Core.h>
+#include <plugins/particles/Particles.h>
 #include <core/utilities/io/FileManager.h>
 #include <core/utilities/concurrent/Future.h>
 #include <core/dataset/DataSetContainer.h>
@@ -46,10 +46,6 @@
 #include "NetCDFImporter.h"
 
 #include <QtMath>
-
-#ifdef WIN32
-	#define DLL_NETCDF
-#endif
 #include <netcdf.h>
 
 #define NCERR(x)  _ncerr(x, __FILE__, __LINE__)
@@ -57,9 +53,11 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(NetCDFPlugin, NetCDFImporter, ParticleImporter);
-DEFINE_PROPERTY_FIELD(NetCDFImporter, _useCustomColumnMapping, "UseCustomColumnMapping");
-SET_PROPERTY_FIELD_LABEL(NetCDFImporter, _useCustomColumnMapping, "Custom file column mapping");
+QMutex NetCDFImporter::_netcdfMutex;
+
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(NetCDFImporter, ParticleImporter);
+DEFINE_PROPERTY_FIELD(NetCDFImporter, useCustomColumnMapping, "UseCustomColumnMapping");
+SET_PROPERTY_FIELD_LABEL(NetCDFImporter, useCustomColumnMapping, "Custom file column mapping");
 
 // Convert full tensor to Voigt tensor
 template<typename T>
@@ -77,20 +75,20 @@ void fullToVoigt(size_t particleCount, T *full, T *voigt) {
 /******************************************************************************
 * Check for NetCDF error and throw exception
 ******************************************************************************/
-static void _ncerr(int err, const char *file, int line)
+static void _ncerr(int err, const char* file, int line)
 {
-	if (err != NC_NOERR)
-		throw Exception(NetCDFImporter::tr("NetCDF error in line %1 of source file %2: %3").arg(line).arg(file).arg(QString(nc_strerror(err))));
+	if(err != NC_NOERR)
+		throw Exception(NetCDFImporter::tr("NetCDF I/O error: %1 (line %2 of %3)").arg(QString(nc_strerror(err))).arg(line).arg(file));
 }
 
 /******************************************************************************
 * Check for NetCDF error and throw exception (and attach additional information
 * to exception string)
 ******************************************************************************/
-static void _ncerr_with_info(int err, const char *file, int line, const QString &info)
+static void _ncerr_with_info(int err, const char* file, int line, const QString& info)
 {
-	if (err != NC_NOERR)
-		throw Exception(NetCDFImporter::tr("NetCDF error in line %1 of source file %2: %3 %4").arg(line).arg(file).arg(QString(nc_strerror(err))).arg(info));
+	if(err != NC_NOERR)
+		throw Exception(NetCDFImporter::tr("NetCDF I/O error: %1 %2 (line %3 of %4)").arg(QString(nc_strerror(err))).arg(info).arg(line).arg(file));
 }
 
 /******************************************************************************
@@ -109,6 +107,9 @@ void NetCDFImporter::setCustomColumnMapping(const InputColumnMapping& mapping)
 bool NetCDFImporter::checkFileFormat(QFileDevice& input, const QUrl& sourceLocation)
 {
 	QString filename = QDir::toNativeSeparators(input.fileName());
+
+	// Only serial access to NetCDF functions allowed because they are not thread-safe.
+	QMutexLocker locker(&netcdfMutex());
 
 	// Check if we can open the input file for reading.
 	int tmp_ncid;
@@ -136,8 +137,11 @@ InputColumnMapping NetCDFImporter::inspectFileHeader(const Frame& frame)
 /******************************************************************************
 * Scans the input file for simulation timesteps.
 ******************************************************************************/
-void NetCDFImporter::scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
+void NetCDFImporter::scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream)
 {
+	// Only serial access to NetCDF functions allowed because they are not thread-safe.
+	QMutexLocker locker(&netcdfMutex());
+
 	QString filename = QDir::toNativeSeparators(stream.device().fileName());
 
 	// Open the input NetCDF file.
@@ -198,25 +202,6 @@ void NetCDFImporter::NetCDFImportTask::openNetCDF(const QString &filename)
 	conventions_str[len] = '\0';
 	if (strcmp(conventions_str.get(), "AMBER"))
 		throw Exception(tr("NetCDF file %1 follows '%2' conventions, expected 'AMBER'.").arg(filename, conventions_str.get()));
-
-#if 0
-	// Read creator information
-	NCERR( nc_inq_attlen(_ncid, NC_GLOBAL, "program", &len) );
-	char *program_str = new char[len+1];
-	NCERR( nc_get_att_text(_ncid, NC_GLOBAL, "program", program_str) );
-	program_str[len] = 0;
-
-	NCERR( nc_inq_attlen(_ncid, NC_GLOBAL, "programVersion", &len) );
-	char *program_version_str = new char[len+1];
-	NCERR( nc_get_att_text(_ncid, NC_GLOBAL, "programVersion", program_version_str) );
-	program_version_str[len] = 0;
-
-	// Log this
-	VerboseLogger() << "Opened AMBER-style NetCDF file " << filename << ". File written by " << program_str << ", " << program_version_str << "." << endl;
-
-	delete [] program_str;
-	delete [] program_version_str;
-#endif
 
 	// Read optional file title.
 	if(nc_inq_attlen(_ncid, NC_GLOBAL, "title", &len) == NC_NOERR) {
@@ -361,6 +346,8 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 	// Get frame number.
 	size_t movieFrame = frame().lineNumber;
 
+	// Only serial access to NetCDF functions allowed because they are not thread-safe.
+	QMutexLocker locker(&netcdfMutex());
 
 	try {
 		openNetCDF(filename);
@@ -371,7 +358,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 		// Now iterate over all variables and see whether they start with either atom or frame dimensions.
 		int nVars;
 		NCERR( nc_inq_nvars(_ncid, &nVars) );
-		for (int varId = 0; varId < nVars; varId++) {
+		for(int varId = 0; varId < nVars; varId++) {
 			char name[NC_MAX_NAME+1];
 			nc_type type;
 
@@ -381,13 +368,13 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 			OVITO_ASSERT(nDims >= 1);
 
 			// Check if dimensions make sense and we can understand them.
-			if ((dimIds[0] == _atom_dim || dimIds[0] == _sph_dim || dimIds[0] == _dem_dim) ||
+			if((dimIds[0] == _atom_dim || dimIds[0] == _sph_dim || dimIds[0] == _dem_dim) ||
 					( nDims > 1 && dimIds[0] == _frame_dim && (dimIds[1] == _atom_dim || dimIds[1] == _sph_dim || dimIds[1] == _dem_dim))) {
 				// Do we support this data type?
-				if (type == NC_BYTE || type == NC_SHORT || type == NC_INT || type == NC_LONG || type == NC_CHAR) {
+				if(type == NC_BYTE || type == NC_SHORT || type == NC_INT || type == NC_LONG || type == NC_CHAR) {
 					columnMapping.push_back(mapVariableToColumn(name, qMetaTypeId<int>()));
 				}
-				else if (type == NC_FLOAT || type == NC_DOUBLE) {
+				else if(type == NC_FLOAT || type == NC_DOUBLE) {
 					columnMapping.push_back(mapVariableToColumn(name, qMetaTypeId<FloatType>()));
 				}
 				else {
@@ -396,7 +383,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 			}
 
 			// Read in scalar values as attributes.
-			if (nDims == 1 && dimIds[0] == _frame_dim) {
+			if(nDims == 1 && dimIds[0] == _frame_dim) {
 				if (type == NC_SHORT || type == NC_INT || type == NC_LONG) {
 					size_t startp[2] = { movieFrame, 0 };
 					size_t countp[2] = { 1, 1 };
@@ -415,7 +402,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 		}
 
 		// Check if the only thing we need to do is read column information.
-		if (_parseFileHeaderOnly) {
+		if(_parseFileHeaderOnly) {
 			_customColumnMapping = columnMapping;
 			closeNetCDF();
 			return;
@@ -499,7 +486,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 				NCERR( nc_inq_varid(_ncid, columnName.toLocal8Bit().constData(), &varId) );
 				NCERR( nc_inq_var(_ncid, varId, NULL, &type, &nDims, dimIds, NULL) );
 
-				if (nDims > 0 && type == NC_FLOAT) {
+				if(nDims > 0 && type == NC_FLOAT) {
 					// Detect dims
 					int nDimsDetected = -1, componentCount = 1, nativeComponentCount = 1;
 					detectDims(movieFrame, particleCount, nDims, dimIds, nDimsDetected, componentCount, nativeComponentCount, startp, countp);
@@ -584,7 +571,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 							for(int j = 0; j < (int)particleProperties().size(); j++) {
 								const auto& p = particleProperties()[j];
 								if(p->name() == propertyName) {
-									if(property->dataType() == dataType)
+									if(p->dataType() == dataType)
 										property = p.get();
 									else
 										removeParticleProperty(j);
@@ -665,7 +652,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 											size_t totalCount = countp[1];
 											size_t remaining = totalCount;
 											countp[1] = 1000000;
-											setProgressRange(totalCount / countp[1] + 1);
+											setProgressMaximum(totalCount / countp[1] + 1);
 											OVITO_ASSERT(totalCount <= property->size());
 											for(size_t chunk = 0; chunk < totalCount; chunk += countp[1], startp[1] += countp[1]) {
 												countp[1] = std::min(countp[1], remaining);
@@ -697,7 +684,7 @@ void NetCDFImporter::NetCDFImportTask::parseFile(CompressedTextReader& stream)
 								size_t totalCount = countp[1];
 								size_t remaining = totalCount;
 								countp[1] = 1000000;
-								setProgressRange(totalCount / countp[1] + 1);
+								setProgressMaximum(totalCount / countp[1] + 1);
 								for(size_t chunk = 0; chunk < totalCount; chunk += countp[1], startp[1] += countp[1]) {
 									countp[1] = std::min(countp[1], remaining);
 									remaining -= countp[1];
@@ -774,6 +761,7 @@ InputColumnInfo NetCDFImporter::mapVariableToColumn(const QString& name, int dat
 	else if(loweredName == "type" || loweredName == "element" || loweredName == "atom_types" || loweredName == "species") column.mapStandardColumn(ParticleProperty::ParticleTypeProperty);
 	else if(loweredName == "mass") column.mapStandardColumn(ParticleProperty::MassProperty);
 	else if(loweredName == "radius") column.mapStandardColumn(ParticleProperty::RadiusProperty);
+	else if(loweredName == "color") column.mapStandardColumn(ParticleProperty::ColorProperty);
 	else if(loweredName == "c_cna" || loweredName == "pattern") column.mapStandardColumn(ParticleProperty::StructureTypeProperty);
 	else if(loweredName == "c_epot") column.mapStandardColumn(ParticleProperty::PotentialEnergyProperty);
 	else if(loweredName == "c_kpot") column.mapStandardColumn(ParticleProperty::KineticEnergyProperty);

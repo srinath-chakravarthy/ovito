@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::PRSTransformationController class.
  */
 
-#ifndef __OVITO_PRS_TRANSFORMATION_CONTROLLER_H
-#define __OVITO_PRS_TRANSFORMATION_CONTROLLER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "Controller.h"
@@ -106,39 +106,6 @@ public:
 	///        controller's value does not change.
 	virtual TimeInterval validityInterval(TimePoint time) override;
 
-	/// \brief Returns the position sub-controller.
-	/// \return The sub-controller that controls the translational part of the transformation.
-	Controller* positionController() const { return _position; }
-
-	/// \brief Returns the rotation sub-controller.
-	/// \return The sub-controller that controls the rotational part of the transformation.
-	Controller* rotationController() const { return _rotation; }
-
-	/// \brief Returns the scaling sub-controller.
-	/// \return The sub-controller that controls the scaling part of the transformation.
-	Controller* scalingController() const { return _scaling; }
-
-	/// \brief Assigns a new sub-controller for the translational component of the transformation.
-	/// \param position The new controller.
-	void setPositionController(Controller* position) {
-		OVITO_CHECK_OBJECT_POINTER(position);
-		this->_position = position;
-	}
-
-	/// \brief Assigns a new sub-controller for the rotational component of the transformation.
-	/// \param rotation The new controller.
-	void setRotationController(Controller* rotation) {
-		OVITO_CHECK_OBJECT_POINTER(rotation);
-		this->_rotation = rotation;
-	}
-
-	/// \brief Assigns a new sub-controller for the scaling component of the transformation.
-	/// \param scaling The new controller.
-	void setScalingController(Controller* scaling) {
-		OVITO_CHECK_OBJECT_POINTER(scaling);
-		this->_scaling = scaling;
-	}
-
 	/// \brief Adds a translation to the transformation.
 	/// \param time The animation at which the translation should be applied to the transformation.
 	/// \param translation The translation vector to add to the transformation. This is specified in the coordinate system given by \a axisSystem. 
@@ -179,23 +146,19 @@ public:
 private:
 
 	/// The sub-controller for translation.
-	ReferenceField<Controller> _position;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, positionController, setPositionController);
 
 	/// The sub-controller for rotation.
-	ReferenceField<Controller> _rotation;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, rotationController, setRotationController);
 
 	/// The sub-controller for scaling.
-	ReferenceField<Controller> _scaling;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, scalingController, setScalingController);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_position);
-	DECLARE_REFERENCE_FIELD(_rotation);
-	DECLARE_REFERENCE_FIELD(_scaling);
 };
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_PRS_TRANSFORMATION_CONTROLLER_H
+

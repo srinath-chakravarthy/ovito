@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SCENE_NODE_H
-#define __OVITO_SCENE_NODE_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/Color.h>
@@ -45,14 +45,6 @@ protected:
 
 public:
 
-	/// \brief Returns the controller that controls this node's local transformation matrix.
-	/// \return The transformation controller.
-	Controller* transformationController() const { return _transformation; }
-
-	/// \brief Sets the controller that controls this node's local transformation.
-	/// \param ctrl The new transformation controller.
-	void setTransformationController(Controller* ctrl) { _transformation = ctrl; }
-
 	/// \brief Returns this node's world transformation matrix.
 	/// \param[in] time The animation for which the transformation matrix should be computed.
 	/// \param[in,out] validityInterval The validity interval of the returned transformation matrix.
@@ -71,24 +63,6 @@ public:
 	/// The local transformation does not contain the object transform of this node and
 	/// does not contain the transformation of the parent node.
 	AffineTransformation getLocalTransform(TimePoint time, TimeInterval& validityInterval);
-
-	/// \brief Gets the node's display name.
-	/// \return A string given by the user to this node.
-	const QString& name() const { return _nodeName; }
-
-	/// \brief Sets the node's display name.
-	/// \param name The new name to be given to the node.
-	/// \undoable
-	void setName(const QString& name) { _nodeName = name; }
-
-	/// \brief Gets the display color of the node.
-	/// \return This color is used to render the node in viewports.
-	const Color& displayColor() const { return _displayColor; }
-
-	/// \brief Sets the display color of the node.
-	/// \param color The new color to be used to render the node in the viewports.
-	/// \undoable
-	void setDisplayColor(const Color& color) { _displayColor = color; }
 
 	/// \brief Returns the parent node of this node in the scene tree graph.
 	/// \return This node's parent node or \c NULL if this is the root node.
@@ -136,11 +110,6 @@ public:
 	/// \sa children(), insertChildNode(), addChildNode()
 	void removeChildNode(int index);
 
-	/// \brief Returns the array of child nodes.
-	/// \return A vector that contains all children of this scene node.
-	/// \sa addChildNode(), removeChildNode()
-	const QVector<SceneNode*>& children() const { return _children; }
-
 	/// \brief Recursively visits all nodes below this parent node
 	///        and invokes the given visitor function for every node.
 	///
@@ -183,11 +152,6 @@ public:
 		return true;
 	}
 
-	/// \brief Returns the target node this scene node is looking at.
-	/// \return The target this node's rotation controller is bound to or \c NULL if this scene node
-	///         has not been bound to a target via a call to bindToTarget().
-	SceneNode* lookatTargetNode() const { return _lookatTargetNode; }
-
 	/// \brief Binds this scene node to a target node and creates a LookAtController
 	///        that lets this scene node look at the target.
 	/// \param targetNode The target to look at or \c NULL to unbind the node from its old target.
@@ -221,12 +185,23 @@ public:
 	bool isSelected() const;
 
 	/// \brief Returns whether this is the root scene node.
-	/// \return \c true if this is the root node of the scene, i.e. parentNode() returns \c NULL;
-	///         \c false if this a node with a parent.
+	/// \return \c true if this is the root node of the scene.
 	///
 	/// \sa DataSet::sceneRoot()
 	/// \sa parentNode()
-	bool isRootNode() const { return parentNode() == nullptr; }
+	virtual bool isRootNode() const { return false; }
+
+	/// \brief Returns whether this node is part of a scene.
+	/// \return \c true if the node has a root node.
+	bool isInScene() const { 
+		const SceneNode* n = this;
+		do {
+			if(n->isRootNode()) return true;
+			n = n->parentNode();
+		}
+		while(n != nullptr);
+		return false; 
+	}
 
 	/// \brief Returns the title of this object.
 	virtual QString objectTitle() override { return _nodeName; }
@@ -268,7 +243,7 @@ private:
 	SceneNode* _parentNode;
 
 	/// Transformation matrix controller.
-	ReferenceField<Controller> _transformation;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, transformationController, setTransformationController);
 
 	/// This node's cached world transformation matrix.
 	/// It contains the transformation of the parent node.
@@ -279,17 +254,17 @@ private:
 	TimeInterval _worldTransformValidity;
 
 	/// The name of this scene node.
-	PropertyField<QString, QString, ReferenceEvent::TitleChanged> _nodeName;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(QString, nodeName, setNodeName);
 
 	/// The display color of the node.
-	PropertyField<Color, QColor> _displayColor;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Color, displayColor, setDisplayColor);
 
 	/// Stores the target node this scene node is bound to using a look
 	/// at controller or null if this scene node is not bound to a target node.
-	ReferenceField<SceneNode> _lookatTargetNode;
+	DECLARE_REFERENCE_FIELD(SceneNode, lookatTargetNode);
 
 	/// Contains all child nodes.
-	VectorReferenceField<SceneNode> _children;
+	DECLARE_VECTOR_REFERENCE_FIELD(SceneNode, children);
 
 	/// The cached world bounding box of this node.
 	Box3 _worldBB;
@@ -302,12 +277,6 @@ private:
 	Q_OBJECT
 	OVITO_OBJECT
 
-	DECLARE_REFERENCE_FIELD(_transformation);
-	DECLARE_REFERENCE_FIELD(_lookatTargetNode);
-	DECLARE_VECTOR_REFERENCE_FIELD(_children);
-	DECLARE_PROPERTY_FIELD(_nodeName);
-	DECLARE_PROPERTY_FIELD(_displayColor);
-
 	friend class SceneRoot;
 };
 
@@ -315,4 +284,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_SCENE_NODE_H
+

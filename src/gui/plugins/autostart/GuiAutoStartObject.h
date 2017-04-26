@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_GUI_AUTO_START_OBJECT_H
-#define __OVITO_GUI_AUTO_START_OBJECT_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/plugins/autostart/AutoStartObject.h>
@@ -44,6 +44,9 @@ public:
 	/// \brief Is called when a new main window is created.
 	virtual void registerActions(ActionManager& actionManager) {}
 
+	/// \brief Is called when the main menu is created.
+	virtual void addActionsToMenu(ActionManager& actionManager, QMenuBar* menuBar) {}
+
 private:
 
 	Q_OBJECT
@@ -53,4 +56,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_GUI_AUTO_START_OBJECT_H
+

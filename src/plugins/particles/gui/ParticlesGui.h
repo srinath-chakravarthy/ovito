@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLES_GUI_H
-#define __OVITO_PARTICLES_GUI_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <plugins/particles/Particles.h>
@@ -38,5 +38,3 @@ namespace Ovito {
 		OVITO_END_INLINE_NAMESPACE
 	}
 }
-
-#endif

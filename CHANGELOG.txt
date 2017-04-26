@@ -1,3 +1,36 @@
+Release 2.8.2 (22-Jan-17):
+
+- The Histogram modifier can now operate on bond properties too.
+- Modifiers now report out-of-memory conditions. 
+  Before, Ovito simply crashed when a memory allocation failed during modifier evaluation.
+- Added Python script interface for trajectory line visualization.
+- Fixed viewport rendering and other issues for datasets with a very small length scale (~10^-10).
+
+Release 2.8.1 (17-Dec-16):
+
+ - Bug fix: Segmentation fault after applying a Color Coding modifier with Viridis color map to 
+   particle data containing NaN values.
+ - Bug fix: Segmentation fault when closing Scatter Plot editor panel.
+ - Bug fix: Compute Property modifier failed with an error when preceded by a Dislocation Analysis (DXA) modifier, 
+   due to expression variable names containing invalid characters.
+ - Added read/write support for LAMMPS data files with atom_style 'sphere'.
+ - Added the NearestNeighborFinder.find_at() Python method for querying the nearest particle(s) around 
+   an arbitrary spatial position.
+ - Added a detailed usage example to the scripting documentation of the WignerSeitzAnalysisModifier to 
+   demonstrate the identification of specific point defect types, e.g. antisites.
+ - Bug fix: Viewport.render() Python method failed in GUI mode with an error.
+ - Bug fix: FileSource.load() Python method failed when called with keyword arguments.
+ - Bug fix: Serial computations performed by the data pipeline occupy two processor cores instead of one.  
+ - Bug fix: A custom modifier script function, raising an exception and running as part of a data pipeline 
+   within ovitos, produced assertion error.
+ - Bug fix: Cyclic reference between DataSet and ScriptEngine classes led to a potential memory leak when 
+   using Python script modifiers or viewport overlays from a script executed by ovitos.
+ - MacOS version of OVITO is now distributed as a signed application bundle in the form of a 
+   DMG disk image (avoids "unidentified developer" warning message on first start). 
+ - Disabled geometry shaders by default for AMD/ATI hardware on Windows due to compatibility problems 
+   reported by some users.
+ - Python modifier and Python viewport overlay scripts can now be edited in a separate code editor window.
+
 Release 2.8.0 (23-Nov-16):
 
  - Added the POV-Ray rendering backend and the POV-Ray scene file exporter.

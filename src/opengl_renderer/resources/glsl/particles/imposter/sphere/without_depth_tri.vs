@@ -24,6 +24,7 @@ uniform mat4 modelview_matrix;
 uniform mat4 projection_matrix;
 uniform vec2 imposter_texcoords[6];
 uniform vec4 imposter_voffsets[6];
+uniform float radius_scalingfactor;
 
 #if __VERSION__ >= 130
 	// The particle data:
@@ -53,7 +54,7 @@ void main()
 	// Transform and project particle position.
 	vec4 eye_position = modelview_matrix * vec4(position, 1);
 
-	gl_Position = projection_matrix * (eye_position + particle_radius * imposter_voffsets[gl_VertexID % 6]);
+	gl_Position = projection_matrix * (eye_position + (particle_radius * radius_scalingfactor) * imposter_voffsets[gl_VertexID % 6]);
 #else
 	// Pass color to fragment shader.
 	particle_color_fs = gl_Color;
@@ -66,7 +67,7 @@ void main()
 	// Assign texture coordinates. 
 	gl_TexCoord[0].xy = imposter_texcoords[cornerIndex];
 
-	gl_Position = projection_matrix * (eye_position + particle_radius * imposter_voffsets[cornerIndex]);
+	gl_Position = projection_matrix * (eye_position + (particle_radius * radius_scalingfactor) * imposter_voffsets[cornerIndex]);
 #endif
 }
 

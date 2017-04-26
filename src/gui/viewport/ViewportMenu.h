@@ -19,6 +19,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <gui/GUI.h>
 #include <core/viewport/Viewport.h>
 #include "ViewportWindow.h"
 
@@ -49,14 +50,6 @@ private Q_SLOTS:
 	void onAdjustView();
 	void onViewNode(QAction* action);
 	void onCreateCamera();
-
-#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
-	void onWindowFocusChanged() {
-		if(QGuiApplication::focusWindow() && QGuiApplication::focusWindow()->flags().testFlag(Qt::Popup) == false) {
-			hide();
-		}
-	}
-#endif
 	
 private:
     

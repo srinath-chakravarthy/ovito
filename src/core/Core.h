@@ -24,8 +24,8 @@
  * \brief This file includes STL and third-party library headers required by OVITO. It is included by all .cpp files belonging to OVITO's codebase.
  */
 
-#ifndef __OVITO_CORE_H
-#define __OVITO_CORE_H
+#pragma once
+
 
 /******************************************************************************
 * Standard Template Library (STL)
@@ -52,11 +52,6 @@
 #include <numeric>
 
 /******************************************************************************
-* Boost Library
-******************************************************************************/
-#include <boost/dynamic_bitset.hpp>
-
-/******************************************************************************
 * QT Library
 ******************************************************************************/
 #include <QCoreApplication>
@@ -69,6 +64,7 @@
 #include <QResource>
 #include <QDir>
 #include <QtDebug>
+#include <QtGlobal>
 #include <QMetaClassInfo>
 #include <QColor>
 #include <QGenericMatrix>
@@ -84,9 +80,15 @@
 #include <QGuiApplication>
 #include <QFile>
 
-#if QT_VERSION < QT_VERSION_CHECK(5, 2, 0)
-#  error "OVITO requires at least Qt 5.2"
+#if QT_VERSION < QT_VERSION_CHECK(5, 4, 0)
+#  error "OVITO requires Qt 5.4 or newer."
 #endif
+
+/******************************************************************************
+* Boost Library
+******************************************************************************/
+#include <boost/dynamic_bitset.hpp>
+
 
 #ifdef Core_EXPORTS		// This is defined by CMake when building the Core library.
 #  define OVITO_CORE_EXPORT Q_DECL_EXPORT
@@ -155,4 +157,4 @@
 #include <core/utilities/Color.h>
 #include <core/object/OvitoObject.h>
 
-#endif // __OVITO_CORE_H
+

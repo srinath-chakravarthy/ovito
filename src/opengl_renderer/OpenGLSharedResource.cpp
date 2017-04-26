@@ -50,7 +50,7 @@ public:
     }
 
 	/// The OpenGL context wrapped by this object.
-    QOpenGLContext* _context;
+    QPointer<QOpenGLContext> _context;
 
     /// The window surface needed to make the OpenGL context current.
     QPointer<QWindow> _windowSurface;
@@ -171,7 +171,7 @@ void OpenGLSharedResource::destroyOpenGLResources()
 	if(_prev) _prev->_next = _next;
 	else _contextInfo->_resources = _next;
 
-	QOpenGLContext* ownerContext = _contextInfo->_context;
+	QOpenGLContext* ownerContext = _contextInfo->_context;	
 	QSurface* ownerSurface = _contextInfo->_windowSurface.data();
 	if(!ownerSurface) ownerSurface = _contextInfo->_offscreenSurface.data();
     _contextInfo = nullptr;
@@ -180,6 +180,8 @@ void OpenGLSharedResource::destroyOpenGLResources()
     // Switch back to the owning context temporarily and delete the id.
 	QOpenGLContext* currentContext = QOpenGLContext::currentContext();
 
+	if(!ownerContext) return;
+	
 	if(currentContext != ownerContext && (!currentContext || !QOpenGLContext::areSharing(ownerContext, currentContext))) {
 		if(ownerSurface != nullptr) {
 			QSurface* currentSurface = currentContext ? currentContext->surface() : nullptr;

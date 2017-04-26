@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_STRUCTURAL_CLUSTERING_MODIFIER_H
-#define __OVITO_STRUCTURAL_CLUSTERING_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/ParticleProperty.h>
@@ -37,18 +37,6 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE StructuralClusteringModifier(DataSet* dataset);
-
-	/// Returns the threshold for Voronoi faces.
-	FloatType faceThreshold() const { return _faceThreshold; }
-
-	/// Sets the threshold for Voronoi faces.
-	void setFaceThreshold(FloatType t) { _faceThreshold = t; }
-
-	/// Returns how similar two structures need to be.
-	FloatType rmsdThreshold() const { return _rmsdThreshold; }
-
-	/// Sets how similar two structures need to be.
-	void setRmsdThreshold(FloatType threshold) { _rmsdThreshold = threshold; }
 
 protected:
 
@@ -110,10 +98,10 @@ private:
 	};
 
 	/// Controls the threshold for Voronoi faces
-	PropertyField<FloatType> _faceThreshold;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, faceThreshold, setFaceThreshold);
 
 	/// Controls how similar two structures need to be.
-	PropertyField<FloatType> _rmsdThreshold;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType, rmsdThreshold, setRmsdThreshold);
 
 	/// This stores the cached results of the modifier.
 	QExplicitlySharedDataPointer<ParticleProperty> _particleClusters;
@@ -131,10 +119,6 @@ private:
 
 	Q_CLASSINFO("DisplayName", "Structural clustering");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
-
-	DECLARE_PROPERTY_FIELD(_faceThreshold);
-	DECLARE_PROPERTY_FIELD(_numNeighbors);
-	DECLARE_PROPERTY_FIELD(_rmsdThreshold);
 };
 
 OVITO_END_INLINE_NAMESPACE
@@ -142,4 +126,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_STRUCTURAL_CLUSTERING_MODIFIER_H
+

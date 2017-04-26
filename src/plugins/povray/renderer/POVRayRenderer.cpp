@@ -23,7 +23,8 @@
 #include <core/rendering/FrameBuffer.h>
 #include <core/rendering/RenderSettings.h>
 #include <core/scene/ObjectNode.h>
-#include <core/utilities/concurrent/ProgressDisplay.h>
+#include <core/utilities/concurrent/Task.h>
+#include <core/utilities/concurrent/TaskManager.h>
 #include "POVRayRenderer.h"
 
 #include <QTemporaryFile>
@@ -31,75 +32,83 @@
 
 namespace Ovito { namespace POVRay {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(POVRay, POVRayRenderer, NonInteractiveSceneRenderer);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _qualityLevel, "QualityLevel", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _enableAntialiasing, "EnableAntialiasing", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _samplingMethod, "SamplingMethod", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _AAThreshold, "AAThreshold", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _antialiasDepth, "AntialiasDepth", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _enableJitter, "EnableJitter", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _povrayDisplayEnabled, "ShowPOVRayDisplay", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _enableRadiosity, "EnableRadiosity", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _radiosityRayCount, "RadiosityRayCount", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _radiosityRecursionLimit, "RadiosityRecursionLimit", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _radiosityErrorBound, "RadiosityErrorBound", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _povrayExecutable, "ExecutablePath", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _depthOfFieldEnabled, "DepthOfFieldEnabled", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _dofFocalLength, "DOFFocalLength", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _dofAperture, "DOFAperture", PROPERTY_FIELD_MEMORIZE);
-DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, _dofSampleCount, "DOFSampleCount", PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _qualityLevel, "Quality level");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _enableAntialiasing, "Anti-aliasing");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _samplingMethod, "Sampling method");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _AAThreshold, "Anti-aliasing threshold");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _antialiasDepth, "Anti-aliasing depth");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _enableJitter, "Enable jitter");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _povrayDisplayEnabled, "Show POV-Ray window");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _enableRadiosity, "Radiosity");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _radiosityRayCount, "Ray count");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _radiosityRecursionLimit, "Recursion limit");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _radiosityErrorBound, "Error bound");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _povrayExecutable, "POV-Ray executable path");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _depthOfFieldEnabled, "Focal blur");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _dofFocalLength, "Focal length");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _dofAperture, "Aperture");
-SET_PROPERTY_FIELD_LABEL(POVRayRenderer, _dofSampleCount, "Blur samples");
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _qualityLevel, IntegerParameterUnit, 0, 11);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _samplingMethod, IntegerParameterUnit, 1, 2);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _AAThreshold, FloatParameterUnit, 0, 1);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _antialiasDepth, IntegerParameterUnit, 1, 9);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _radiosityRayCount, IntegerParameterUnit, 1, 1600);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _radiosityRecursionLimit, IntegerParameterUnit, 1, 20);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _radiosityErrorBound, FloatParameterUnit, FloatType(1e-5), 100);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(POVRayRenderer, _dofFocalLength, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, _dofAperture, FloatParameterUnit, 0, 1);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(POVRayRenderer, _dofSampleCount, IntegerParameterUnit, 0);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(POVRayRenderer, NonInteractiveSceneRenderer);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, qualityLevel, "QualityLevel", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, antialiasingEnabled, "EnableAntialiasing", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, samplingMethod, "SamplingMethod", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, AAThreshold, "AAThreshold", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, antialiasDepth, "AntialiasDepth", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, jitterEnabled, "EnableJitter", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, povrayDisplayEnabled, "ShowPOVRayDisplay", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, radiosityEnabled, "EnableRadiosity", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, radiosityRayCount, "RadiosityRayCount", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, radiosityRecursionLimit, "RadiosityRecursionLimit", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, radiosityErrorBound, "RadiosityErrorBound", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, povrayExecutable, "ExecutablePath", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, depthOfFieldEnabled, "DepthOfFieldEnabled", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, dofFocalLength, "DOFFocalLength", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, dofAperture, "DOFAperture", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, dofSampleCount, "DOFSampleCount", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, odsEnabled, "ODSEnabled", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(POVRayRenderer, interpupillaryDistance, "InterpupillaryDistance", PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, qualityLevel, "Quality level");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, antialiasingEnabled, "Anti-aliasing");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, samplingMethod, "Sampling method");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, AAThreshold, "Anti-aliasing threshold");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, antialiasDepth, "Anti-aliasing depth");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, jitterEnabled, "Enable jitter");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, povrayDisplayEnabled, "Show POV-Ray window");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, radiosityEnabled, "Radiosity");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, radiosityRayCount, "Ray count");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, radiosityRecursionLimit, "Recursion limit");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, radiosityErrorBound, "Error bound");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, povrayExecutable, "POV-Ray executable path");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, depthOfFieldEnabled, "Focal blur");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, dofFocalLength, "Focal length");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, dofAperture, "Aperture");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, dofSampleCount, "Blur samples");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, odsEnabled, "Omni­directional stereo projection");
+SET_PROPERTY_FIELD_LABEL(POVRayRenderer, interpupillaryDistance, "Interpupillary distance");
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, qualityLevel, IntegerParameterUnit, 0, 11);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, samplingMethod, IntegerParameterUnit, 1, 2);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, AAThreshold, FloatParameterUnit, 0, 1);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, antialiasDepth, IntegerParameterUnit, 1, 9);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, radiosityRayCount, IntegerParameterUnit, 1, 1600);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, radiosityRecursionLimit, IntegerParameterUnit, 1, 20);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, radiosityErrorBound, FloatParameterUnit, FloatType(1e-5), 100);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(POVRayRenderer, dofFocalLength, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(POVRayRenderer, dofAperture, FloatParameterUnit, 0, 1);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(POVRayRenderer, dofSampleCount, IntegerParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(POVRayRenderer, interpupillaryDistance, WorldParameterUnit, 0);
 
 /******************************************************************************
 * Constructor.
 ******************************************************************************/
 POVRayRenderer::POVRayRenderer(DataSet* dataset) : NonInteractiveSceneRenderer(dataset),
-	_qualityLevel(9), _enableAntialiasing(true), _samplingMethod(1), _AAThreshold(0.3f),
-	_antialiasDepth(3), _enableJitter(true), _povrayDisplayEnabled(true), _enableRadiosity(false),
+	_qualityLevel(9), _antialiasingEnabled(true), _samplingMethod(1), _AAThreshold(0.3f),
+	_antialiasDepth(3), _jitterEnabled(true), _povrayDisplayEnabled(true), _radiosityEnabled(false),
 	_radiosityRayCount(50), _radiosityRecursionLimit(2), _radiosityErrorBound(0.8f),
-	_depthOfFieldEnabled(false), _dofFocalLength(40), _dofAperture(1.0f), _dofSampleCount(80)
+	_depthOfFieldEnabled(false), _dofFocalLength(40), _dofAperture(1.0f), _dofSampleCount(80),
+	_odsEnabled(false), _interpupillaryDistance(0.5)
 {
-	INIT_PROPERTY_FIELD(POVRayRenderer::_qualityLevel);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_enableAntialiasing);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_samplingMethod);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_AAThreshold);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_antialiasDepth);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_enableJitter);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_povrayDisplayEnabled);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_enableRadiosity);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_radiosityRayCount);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_radiosityRecursionLimit);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_radiosityErrorBound);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_povrayExecutable);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_depthOfFieldEnabled);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_dofFocalLength);
-	INIT_PROPERTY_FIELD(POVRayRenderer::_dofAperture);	
-	INIT_PROPERTY_FIELD(POVRayRenderer::_dofSampleCount);
+	INIT_PROPERTY_FIELD(qualityLevel);
+	INIT_PROPERTY_FIELD(antialiasingEnabled);
+	INIT_PROPERTY_FIELD(samplingMethod);
+	INIT_PROPERTY_FIELD(AAThreshold);
+	INIT_PROPERTY_FIELD(antialiasDepth);
+	INIT_PROPERTY_FIELD(jitterEnabled);
+	INIT_PROPERTY_FIELD(povrayDisplayEnabled);
+	INIT_PROPERTY_FIELD(radiosityEnabled);
+	INIT_PROPERTY_FIELD(radiosityRayCount);
+	INIT_PROPERTY_FIELD(radiosityRecursionLimit);
+	INIT_PROPERTY_FIELD(radiosityErrorBound);
+	INIT_PROPERTY_FIELD(povrayExecutable);
+	INIT_PROPERTY_FIELD(depthOfFieldEnabled);
+	INIT_PROPERTY_FIELD(dofFocalLength);
+	INIT_PROPERTY_FIELD(dofAperture);	
+	INIT_PROPERTY_FIELD(dofSampleCount);
+	INIT_PROPERTY_FIELD(odsEnabled);
+	INIT_PROPERTY_FIELD(interpupillaryDistance);
 }
 
 /******************************************************************************
@@ -139,13 +148,13 @@ void POVRayRenderer::beginFrame(TimePoint time, const ViewProjectionParameters& 
 	_outputStream << "#version 3.5;\n";
 	_outputStream << "#include \"transforms.inc\"\n";
 
-	if(_enableRadiosity) {
+	if(radiosityEnabled()) {
 		_outputStream << "global_settings {\n";
 		_outputStream << "radiosity {\n";
-		_outputStream << "count " << _radiosityRayCount.value() << "\n";
+		_outputStream << "count " << radiosityRayCount() << "\n";
 		_outputStream << "always_sample on\n";		
-		_outputStream << "recursion_limit " << _radiosityRecursionLimit.value() << "\n";
-		_outputStream << "error_bound " << _radiosityErrorBound.value() << "\n";
+		_outputStream << "recursion_limit " << radiosityRecursionLimit() << "\n";
+		_outputStream << "error_bound " << radiosityErrorBound() << "\n";
 		_outputStream << "}\n";
 		_outputStream << "}\n";
 	}
@@ -156,70 +165,123 @@ void POVRayRenderer::beginFrame(TimePoint time, const ViewProjectionParameters& 
 	renderSettings()->backgroundColorController()->getColorValue(time, backgroundColor, iv);
 	_outputStream << "background { color "; write(backgroundColor); _outputStream << "}\n";
 
+	// Create a white sphere around the scene to be independent of background color.
+	if(radiosityEnabled()) {
+		FloatType skySphereRadius = params.boundingBox.size().length() * 10;
+		_outputStream << "sphere { "; write(params.boundingBox.center()); _outputStream << ", " << skySphereRadius << "\n";
+		_outputStream << "         texture {\n";
+		_outputStream << "             pigment { color rgb 1.0 }\n";
+		_outputStream << "             finish { emission 0.8 }\n";
+		_outputStream << "         }\n";
+		_outputStream << "         no_image\n";
+		_outputStream << "         no_shadow\n";
+		_outputStream << "}\n";
+	}
+
 	// Write camera.
 	_outputStream << "camera {\n";
-	// Write projection transformation
-	if(projParams().isPerspective) {
-		_outputStream << "  perspective\n";
+	if(!odsEnabled()) {
+		// Write projection transformation
+		if(projParams().isPerspective) {
+			_outputStream << "  perspective\n";
 
-		Point3 p0 = projParams().inverseProjectionMatrix * Point3(0,0,0);
-		Point3 px = projParams().inverseProjectionMatrix * Point3(1,0,0);
-		Point3 py = projParams().inverseProjectionMatrix * Point3(0,1,0);
-		Point3 lookat = projParams().inverseProjectionMatrix * Point3(0,0,0);
-		Vector3 direction = (lookat - Point3::Origin()).normalized();
-		Vector3 right = px - p0;
-		Vector3 up = right.cross(direction).normalized();
-		right = direction.cross(up).normalized() * (up.length() / projParams().aspectRatio);
+			Point3 p0 = projParams().inverseProjectionMatrix * Point3(0,0,0);
+			Point3 px = projParams().inverseProjectionMatrix * Point3(1,0,0);
+			Point3 py = projParams().inverseProjectionMatrix * Point3(0,1,0);
+			Point3 lookat = projParams().inverseProjectionMatrix * Point3(0,0,0);
+			Vector3 direction = (lookat - Point3::Origin()).normalized();
+			Vector3 right = px - p0;
+			Vector3 up = right.cross(direction).normalized();
+			right = direction.cross(up).normalized() * (up.length() / projParams().aspectRatio);
 
-		_outputStream << "  location <0, 0, 0>\n";
-		_outputStream << "  direction "; write(direction); _outputStream << "\n";
-		_outputStream << "  right "; write(right); _outputStream << "\n";
-		_outputStream << "  up "; write(up); _outputStream << "\n";
-		_outputStream << "  angle " << (atan(tan(projParams().fieldOfView * 0.5) / projParams().aspectRatio) * 2.0 * 180.0 / FLOATTYPE_PI) << "\n";
+			_outputStream << "  location <0, 0, 0>\n";
+			_outputStream << "  direction "; write(direction); _outputStream << "\n";
+			_outputStream << "  right "; write(right); _outputStream << "\n";
+			_outputStream << "  up "; write(up); _outputStream << "\n";
+			_outputStream << "  angle " << (atan(tan(projParams().fieldOfView * 0.5) / projParams().aspectRatio) * 2.0 * 180.0 / FLOATTYPE_PI) << "\n";
 
-		if(depthOfFieldEnabled()) {
-			_outputStream << "  aperture " << dofAperture() << "\n";
-			_outputStream << "  focal_point "; write(p0 + dofFocalLength() * direction); _outputStream << "\n";
-			_outputStream << "  blur_samples " << dofSampleCount() << "\n";	
-		}		
+			if(depthOfFieldEnabled()) {
+				_outputStream << "  aperture " << dofAperture() << "\n";
+				_outputStream << "  focal_point "; write(p0 + dofFocalLength() * direction); _outputStream << "\n";
+				_outputStream << "  blur_samples " << dofSampleCount() << "\n";	
+			}		
+		}
+		else {
+			_outputStream << "  orthographic\n";
+
+			Point3 px = projParams().inverseProjectionMatrix * Point3(1,0,0);
+			Point3 py = projParams().inverseProjectionMatrix * Point3(0,1,0);
+			Vector3 direction = projParams().inverseProjectionMatrix * Point3(0,0,1) - Point3::Origin();
+			Vector3 up = (py - Point3::Origin()) * 2;
+			Vector3 right = px - Point3::Origin();
+
+			right = direction.cross(up).normalized() * (up.length() / projParams().aspectRatio);
+
+			_outputStream << "  location "; write(-(direction*2)); _outputStream << "\n";
+			_outputStream << "  direction "; write(direction); _outputStream << "\n";
+			_outputStream << "  right "; write(right); _outputStream << "\n";
+			_outputStream << "  up "; write(up); _outputStream << "\n";
+			_outputStream << "  sky "; write(up); _outputStream << "\n";
+			_outputStream << "  look_at "; write(-direction); _outputStream << "\n";
+		}	
+		// Write camera transformation.
+		Rotation rot(projParams().viewMatrix);
+		_outputStream << "  Axis_Rotate_Trans("; write(rot.axis()); _outputStream << ", " << (rot.angle() * 180.0f / FLOATTYPE_PI) << ")\n";
+		_outputStream << "  translate "; write(projParams().inverseViewMatrix.translation()); _outputStream << "\n";
 	}
 	else {
-		_outputStream << "  orthographic\n";
+		if(!projParams().isPerspective)
+			throwException(tr("Omni­directional stereo projection requires a perspective viewport camera."));
+		if(depthOfFieldEnabled())
+			throwException(tr("Depth of field does not work with omni­directional stereo projection."));
 
-		Point3 px = projParams().inverseProjectionMatrix * Point3(1,0,0);
-		Point3 py = projParams().inverseProjectionMatrix * Point3(0,1,0);
-		Vector3 direction = projParams().inverseProjectionMatrix * Point3(0,0,1) - Point3::Origin();
-		Vector3 up = (py - Point3::Origin()) * 2;
-		Vector3 right = px - Point3::Origin();
+		const AffineTransformation& camTM = projParams().inverseViewMatrix * AffineTransformation::rotationY(FLOATTYPE_PI);
 
-		right = direction.cross(up).normalized() * (up.length() / projParams().aspectRatio);
-
-		_outputStream << "  location "; write(-(direction*2)); _outputStream << "\n";
-		_outputStream << "  direction "; write(direction); _outputStream << "\n";
-		_outputStream << "  right "; write(right); _outputStream << "\n";
-		_outputStream << "  up "; write(up); _outputStream << "\n";
-		_outputStream << "  sky "; write(up); _outputStream << "\n";
-		_outputStream << "  look_at "; write(-direction); _outputStream << "\n";
-	}	
-	// Write camera transformation.
-	Rotation rot(projParams().viewMatrix);
-	_outputStream << "  Axis_Rotate_Trans("; write(rot.axis()); _outputStream << ", " << (rot.angle() * 180.0f / FLOATTYPE_PI) << ")\n";
-	_outputStream << "  translate "; write(projParams().inverseViewMatrix.translation()); _outputStream << "\n";
+		_outputStream << "  // ODS Top/Bottom\n";
+		_outputStream << "  #declare odsIPD = " << interpupillaryDistance() << "; // Interpupillary distance\n";
+		_outputStream << "  #declare odsVerticalModulation = 0.2; // Use 0.0001 if you don't care about Zenith & Nadir zones.\n";
+		_outputStream << "  #declare odsHandedness = -1; // -1 for left-handed or 1 for right-handed\n";
+		_outputStream << "  #declare odsAngle = 0; // Rotation, clockwise, in degree.\n";
+		_outputStream << "  #declare odslocx = function(x,y) { cos(((x+0.5+odsAngle/360)) * 2 * pi - pi)*(odsIPD/2*pow(sin(select(y, 1-2*(y+0.5), 1-2*y)*pi), odsVerticalModulation))*select(-y,-1,+1) }\n";
+		_outputStream << "  #declare odslocy = function(x,y) { 0 }\n";
+		_outputStream << "  #declare odslocz = function(x,y) { sin(((x+0.5+odsAngle/360)) * 2 * pi - pi)*(odsIPD/2*pow(sin(select(y, 1-2*(y+0.5), 1-2*y)*pi), odsVerticalModulation))*select(-y,-1,+1) * odsHandedness }\n";
+		_outputStream << "  #declare odsdirx = function(x,y) { sin(((x+0.5+odsAngle/360)) * 2 * pi - pi) * cos(pi / 2 -select(y, 1-2*(y+0.5), 1-2*y) * pi) }\n";
+		_outputStream << "  #declare odsdiry = function(x,y) { sin(pi / 2 - select(y, 1-2*(y+0.5), 1-2*y) * pi) }\n";
+		_outputStream << "  #declare odsdirz = function(x,y) { -cos(((x+0.5+odsAngle/360)) * 2 * pi - pi) * cos(pi / 2 -select(y, 1-2*(y+0.5), 1-2*y) * pi) * odsHandedness }\n";
+		_outputStream << "  user_defined\n";
+		_outputStream << "  location {\n";
+		_outputStream << "  	function { " << camTM(0,0) << "*odslocx(x,y) + " << camTM(0,1) << "*odslocy(x,y) + " << camTM(0,2) << "*odslocz(x,y) + " << camTM(0,3) << " }\n";
+		_outputStream << "  	function { " << camTM(2,0) << "*odslocx(x,y) + " << camTM(2,1) << "*odslocy(x,y) + " << camTM(2,2) << "*odslocz(x,y) + " << camTM(2,3) << " }\n";
+		_outputStream << "  	function { " << camTM(1,0) << "*odslocx(x,y) + " << camTM(1,1) << "*odslocy(x,y) + " << camTM(1,2) << "*odslocz(x,y) + " << camTM(1,3) << " }\n";
+		_outputStream << "  }\n";
+		_outputStream << "  direction {\n";
+		_outputStream << "  	function { " << camTM(0,0) << "*odsdirx(x,y) + " << camTM(0,1) << "*odsdiry(x,y) + " << camTM(0,2) << "*odsdirz(x,y) }\n";
+		_outputStream << "  	function { " << camTM(2,0) << "*odsdirx(x,y) + " << camTM(2,1) << "*odsdiry(x,y) + " << camTM(2,2) << "*odsdirz(x,y) }\n";
+		_outputStream << "  	function { " << camTM(1,0) << "*odsdirx(x,y) + " << camTM(1,1) << "*odsdiry(x,y) + " << camTM(1,2) << "*odsdirz(x,y) }\n";
+		_outputStream << "  }\n";
+	}
 	_outputStream << "}\n";
 	Vector3 viewingDirection = projParams().inverseViewMatrix.column(2);
 	Vector3 screen_x = projParams().inverseViewMatrix.column(0).normalized();
 	Vector3 screen_y = projParams().inverseViewMatrix.column(1).normalized();
 
 	// Write a light source.
-	_outputStream << "light_source {\n";
-	_outputStream << "  <0, 0, 0>\n";
-	if(!_enableRadiosity)
+	_outputStream << "light_source {\n";	
+	if(!odsEnabled()) { // Create parallel light for normal cameras.
+		_outputStream << "  <0, 0, 0>\n";
+	}
+	else { // Create point light for panoramic camera.
+		_outputStream << "  "; write(projParams().inverseViewMatrix.translation() + Vector3(7, 0, 10) * interpupillaryDistance()); _outputStream << "\n";
+	}
+	if(!radiosityEnabled())
 		_outputStream << "  color <1.5, 1.5, 1.5>\n";
 	else
-		_outputStream << "  color <0.5, 0.5, 0.5>\n";
-	_outputStream << "  parallel\n";
+		_outputStream << "  color <0.25, 0.25, 0.25>\n";
 	_outputStream << "  shadowless\n";
-	_outputStream << "  point_at "; write(projParams().inverseViewMatrix * Vector3(0,0,-1)); _outputStream << "\n";
+	if(!odsEnabled()) {
+		_outputStream << "  parallel\n";
+		_outputStream << "  point_at "; write(projParams().inverseViewMatrix * Vector3(0,0,-1)); _outputStream << "\n";
+	}
 	_outputStream << "}\n";
 
 	// Define macro for particle primitives in the POV-Ray file to reduce file size.
@@ -250,14 +312,21 @@ void POVRayRenderer::beginFrame(TimePoint time, const ViewProjectionParameters& 
 	_outputStream << "         texture { pigment { color particleColor } }\n";
 	_outputStream << "}\n";
 	_outputStream << "#end\n";
+
+	_outputStream << "#macro CYL(base, dir, cylRadius, cylColor) // Macro for cylinders\n";
+	_outputStream << "cylinder { base, base + dir, cylRadius\n";
+	_outputStream << "         texture { pigment { color cylColor } }\n";
+	_outputStream << "}\n";
+	_outputStream << "#end\n";
 }
 
 /******************************************************************************
 * Renders a single animation frame into the given frame buffer.
 ******************************************************************************/
-bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress)
+bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, TaskManager& taskManager)
 {
-	if(progress) progress->setStatusText(tr("Writing scene to temporary POV-Ray file."));
+	SynchronousTask renderTask(taskManager);
+	renderTask.setProgressText(tr("Writing scene to temporary POV-Ray file"));
 
 	// Export Ovito data objects to POV-Ray scene.
 	renderScene();
@@ -274,10 +343,9 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 		_imageFile->close();
 
 		// Start POV-Ray sub-process.
-		if(progress) {
-			progress->setStatusText(tr("Starting external POV-Ray program."));
-			if(progress->wasCanceled()) return false;
-		}
+		renderTask.setProgressText(tr("Starting external POV-Ray program."));
+		if(renderTask.isCanceled()) 
+			return false;
 
 		// Specify POV-Ray options:
 		QStringList parameters;
@@ -295,31 +363,33 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 		else
 			parameters << "Output_Alpha=off";		// No alpha channel
 
-		if(_povrayDisplayEnabled)
+		if(povrayDisplayEnabled())
 			parameters << "Display=on";
 		else
 			parameters << "Display=off";
 
+#ifdef Q_OS_WIN
+		// Let the Windows version of POV-Ray exit automatically after rendering is done.
+		parameters << "/EXIT";
+#endif
+
 		// Pass quality settings to POV-Ray.
-		if(_qualityLevel)
-			parameters << QString("+Q%1").arg(_qualityLevel);
-		if(_enableAntialiasing) {
-			if(_enableAntialiasing) {
-				if(_AAThreshold)
-					parameters << QString("+A%1").arg(_AAThreshold);
-				else
-					parameters << "+A";
-			}
-			else {
-				parameters << "-A";
-			}
+		if(qualityLevel())
+			parameters << QString("+Q%1").arg(qualityLevel());
+		if(antialiasingEnabled()) {
+			if(AAThreshold())
+				parameters << QString("+A%1").arg(AAThreshold());
+			else
+				parameters << "+A";
 		}
-		if(_samplingMethod)
-			parameters << QString("+AM%1").arg(_samplingMethod);
-		if(_antialiasDepth)
-			parameters << QString("+R%1").arg(_antialiasDepth);
-		if(_enableJitter)
-			parameters << (_enableJitter ? "+J" : "-J");		
+		else {
+			parameters << "-A";
+		}
+		if(samplingMethod())
+			parameters << QString("+AM%1").arg(samplingMethod());
+		if(antialiasingEnabled() && antialiasDepth())
+			parameters << QString("+R%1").arg(antialiasDepth());
+		parameters << (jitterEnabled() ? "+J" : "-J");		
 
 		QProcess povrayProcess;
 		QString executablePath = povrayExecutable().isEmpty() ? QString("povray") : povrayExecutable();
@@ -335,30 +405,26 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 		}
 
 		// Wait until POV-Ray has finished rendering.
-		if(progress) {
-			progress->setStatusText(tr("Waiting for external POV-Ray program..."));
-			if(progress->wasCanceled()) return false;
-		}
+		renderTask.setProgressText(tr("Waiting for external POV-Ray program..."));
+		if(renderTask.isCanceled()) 
+			return false;
 		while(!povrayProcess.waitForFinished(100)) {
-			if(progress) {
-				QCoreApplication::processEvents();
-				if(progress->wasCanceled())
-					return false;
-			}
+			renderTask.setProgressValue(0);
+			if(renderTask.isCanceled())
+				return false;
 		}
 
 		OVITO_ASSERT(povrayProcess.exitStatus() == QProcess::NormalExit);
-		//qDebug() << "POV-Ray console output:";
-		//std::cout << povrayProcess.readAllStandardError().constData(); 
-		//qDebug() << "POV-Ray program returned with exit code" << povrayProcess.exitCode();
+		qDebug() << "POV-Ray console output:";
+		std::cout << povrayProcess.readAllStandardError().constData(); 
+		qDebug() << "POV-Ray program returned with exit code" << povrayProcess.exitCode();
 		if(povrayProcess.exitCode() != 0)
 			throwException(tr("POV-Ray program returned with error code %1.").arg(povrayProcess.exitCode()));
 
 		// Get rendered image from POV-Ray process.
-		if(progress) {
-			progress->setStatusText(tr("Getting rendered image from POV-Ray."));
-			if(progress->wasCanceled()) return false;
-		}
+		renderTask.setProgressText(tr("Getting rendered image from POV-Ray."));
+		if(renderTask.isCanceled()) 
+			return false;
 
 		QImage povrayImage;
 		if(!povrayImage.load(_imageFile->fileName(), "PNG")) {
@@ -395,21 +461,22 @@ bool POVRayRenderer::renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask s
 			QRectF boundingRect;
 			painter.drawText(pos, std::get<4>(textCall) | Qt::TextSingleLine | Qt::TextDontClip, std::get<0>(textCall), &boundingRect);
 			frameBuffer->update(boundingRect.toAlignedRect());
-		}		
+		}
 	}
 
-	return (!progress || progress->wasCanceled() == false);
+	return !renderTask.isCanceled();
 }
 
 /******************************************************************************
 * This method is called after renderFrame() has been called.
 ******************************************************************************/
-void POVRayRenderer::endFrame()
+void POVRayRenderer::endFrame(bool renderSuccessful)
 {
 	_sceneFile.reset();
 	_imageFile.reset();
 	_outputStream.setDevice(nullptr);
-	NonInteractiveSceneRenderer::endFrame();	
+	_exportTask = nullptr;
+	NonInteractiveSceneRenderer::endFrame(renderSuccessful);	
 }
 
 /******************************************************************************
@@ -453,6 +520,7 @@ void POVRayRenderer::renderParticles(const DefaultParticlePrimitive& particleBuf
 					_outputStream << "SPRTCLE("; write(tm * (*p)); 
 					_outputStream << ", " << (*r) << ", "; write(*c);
 					_outputStream << ")\n";
+					if(_exportTask && _exportTask->isCanceled()) return;
 				}
 			}
 		}
@@ -463,6 +531,7 @@ void POVRayRenderer::renderParticles(const DefaultParticlePrimitive& particleBuf
 					_outputStream << "DPRTCLE("; write(tm * (*p)); 
 					_outputStream << ", " << (*r) << ", "; write(*c);
 					_outputStream << ")\n";
+					if(_exportTask && _exportTask->isCanceled()) return;
 				}
 			}
 		}
@@ -475,6 +544,7 @@ void POVRayRenderer::renderParticles(const DefaultParticlePrimitive& particleBuf
 					_outputStream << "CPRTCLE("; write(tm * (*p)); 
 					_outputStream << ", " << (*r) << ", "; write(*c);
 					_outputStream << ")\n";
+					if(_exportTask && _exportTask->isCanceled()) return;
 				}
 			}
 		}
@@ -485,6 +555,7 @@ void POVRayRenderer::renderParticles(const DefaultParticlePrimitive& particleBuf
 					_outputStream << "SQPRTCLE("; write(tm * (*p)); 
 					_outputStream << ", " << (*r) << ", "; write(*c);
 					_outputStream << ")\n";
+					if(_exportTask && _exportTask->isCanceled()) return;
 				}
 			}
 		}
@@ -532,6 +603,7 @@ void POVRayRenderer::renderParticles(const DefaultParticlePrimitive& particleBuf
 						 0,0,s.z(),0)); _outputStream << "\n";
 				_outputStream << "}\n";
 			}
+			if(_exportTask && _exportTask->isCanceled()) return;
 		}
 	}	
 	else throwException(tr("Particle shape not supported by POV-Ray renderer: %1").arg(particleBuffer.particleShape()));
@@ -545,15 +617,12 @@ void POVRayRenderer::renderArrows(const DefaultArrowPrimitive& arrowBuffer)
 	const AffineTransformation tm = modelTM();
 	if(arrowBuffer.shape() == ArrowPrimitive::CylinderShape) {
 		for(const DefaultArrowPrimitive::ArrowElement& element : arrowBuffer.elements()) {
-			_outputStream << "cylinder { ";
-			write(tm * element.pos);	// base point
-			_outputStream << ", ";
-			write(tm * (element.pos + element.dir));	// cap point
-			_outputStream << ", " << element.width << "\n";
-			_outputStream << "         texture { pigment { color ";
-			write(element.color);
-			_outputStream << " } }\n";
-			_outputStream << "}\n";
+			if(element.dir.isZero() || element.width <= 0) continue;
+			_outputStream << "CYL("; write(tm * element.pos); 
+			_outputStream << ", "; write(tm * element.dir);
+			_outputStream << ", " << element.width << ", "; write(element.color);
+			_outputStream << ")\n";
+			if(_exportTask && _exportTask->isCanceled()) return;
 		}
 	}
 	else if(arrowBuffer.shape() == ArrowPrimitive::ArrowShape) {
@@ -561,7 +630,7 @@ void POVRayRenderer::renderArrows(const DefaultArrowPrimitive& arrowBuffer)
 			FloatType arrowHeadRadius = element.width * FloatType(2.5);
 			FloatType arrowHeadLength = arrowHeadRadius * FloatType(1.8);
 			FloatType length = element.dir.length();
-			if(length == 0)
+			if(length == 0 || element.width <= 0)
 				continue;
 
 			if(length > arrowHeadLength) {
@@ -605,6 +674,7 @@ void POVRayRenderer::renderArrows(const DefaultArrowPrimitive& arrowBuffer)
 				_outputStream << " } }\n";
 				_outputStream << "}\n";
 			}
+			if(_exportTask && _exportTask->isCanceled()) return;
 		}
 	}
 	else throwException(tr("Arrow shape not supported by POV-Ray renderer: %1").arg(arrowBuffer.shape()));
@@ -655,7 +725,7 @@ void POVRayRenderer::renderMesh(const DefaultMeshPrimitive& meshBuffer)
 		Vector3 d2 = mesh.vertex(face->vertex(2)) - p0;
 		*faceNormal = d2.cross(d1);
 		if(*faceNormal != Vector3::Zero()) {
-			faceNormal->normalize();
+			//faceNormal->normalize();
 			allMask |= face->smoothingGroups();
 		}
 	}
@@ -717,6 +787,7 @@ void POVRayRenderer::renderMesh(const DefaultMeshPrimitive& meshBuffer)
 		++rv;
 		write(rv->pos); _outputStream << ", "; write(rv->normal); _outputStream << " }\n";
 		++rv;
+		if(_exportTask && _exportTask->isCanceled()) return;
 	}
 
 	// Write material

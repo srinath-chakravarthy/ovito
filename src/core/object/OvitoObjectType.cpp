@@ -104,6 +104,11 @@ OvitoObjectType* OvitoObjectType::deserializeRTTI(ObjectLoadStream& stream)
 
 	try {
 
+		// This is for backward compatibility with OVITO 2.8.2.
+		// The StandardSceneRenderer class has been moved from the 'Gui' plugin to the 'OpenGLRenderer' plugin.
+		if(className == "StandardSceneRenderer" && pluginId == "Gui")
+			pluginId = "OpenGLRenderer";
+
 		// Lookup class descriptor.
 		Plugin* plugin = PluginManager::instance().plugin(pluginId);
 		if(!plugin)

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<section version="5.0"
+         xsi:schemaLocation="http://docbook.org/ns/docbook http://docbook.org/xml/5.0/xsd/docbook.xsd"
+         xml:id="particles.modifiers.create_isosurface"
+         xmlns="http://docbook.org/ns/docbook"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:xs="http://www.w3.org/2001/XMLSchema"
+         xmlns:xlink="http://www.w3.org/1999/xlink"
+         xmlns:xi="http://www.w3.org/2001/XInclude"
+         xmlns:ns="http://docbook.org/ns/docbook">
+  <title>Create isosurface</title>
+
+  <para>
+  
+    <informalfigure><screenshot><mediaobject><imageobject>
+       <imagedata fileref="images/modifiers/create_isosurface_panel.png" format="PNG" scale="50" />
+    </imageobject></mediaobject></screenshot></informalfigure>
+    
+    <informalfigure>
+      <informaltable frame="none">
+        <tgroup cols="1">
+          <tbody>
+            <row valign="bottom">
+              <entry>Example: Two isosurfaces of charge density:</entry>
+            </row>
+            <row valign="top">
+              <entry>
+		        <mediaobject><imageobject>
+		        <imagedata fileref="images/modifiers/create_isosurface_example.png" format="PNG" />
+		        </imageobject></mediaobject>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </informaltable>
+    </informalfigure>
+
+    This modifier computes an <link xlink:href="https://en.wikipedia.org/wiki/Isosurface">isosurface</link> for a field quantity defined on a structured data grid.
+    Note that the modifier is available only if a field quantity has been loaded. In the current program version,
+    the only file parser that provides such data is the POSCAR reader, which can load charge densities
+    computed by the VASP DFT code from <emphasis>CHGCAR</emphasis> files.
+  </para>
+  <para>
+    Note: The modifier may be applied several times to create multiple surfaces at different iso-levels.
+  </para>
+     
+</section>

@@ -24,6 +24,7 @@
 #include <core/scene/objects/geometry/TriMeshObject.h>
 #include <core/scene/objects/geometry/TriMeshDisplay.h>
 #include <core/utilities/io/FileManager.h>
+#include <core/app/Application.h>
 #include "TriMeshLoader.h"
 
 namespace Mesh {
@@ -36,7 +37,7 @@ void TriMeshLoader::perform()
 	setProgressText(QString("Reading file %1").arg(frame().sourceFile.toString(QUrl::RemovePassword | QUrl::PreferLocalFile | QUrl::PrettyDecoded)));
 
 	// Fetch file.
-	Future<QString> fetchFileFuture = FileManager::instance().fetchUrl(datasetContainer(), frame().sourceFile);
+	Future<QString> fetchFileFuture = Application::instance()->fileManager()->fetchUrl(datasetContainer(), frame().sourceFile);
 	if(!waitForSubTask(fetchFileFuture))
 		return;
 

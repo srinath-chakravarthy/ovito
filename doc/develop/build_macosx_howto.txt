@@ -3,6 +3,7 @@ Install third-party tools
 **************************************************************************
 export MACOSX_DEPLOYMENT_TARGET=10.8
 sudo port install cmake docbook-xml doxygen libxslt boost yasm povray
+sudo port install -s fftw-3-single
 
 **************************************************************************
 Install Qt libraries, version 5.7
@@ -104,21 +105,12 @@ cd ../netcdf/lib
 install_name_tool -id $PWD/libnetcdf.dylib libnetcdf.dylib
 
 **************************************************************************
-Remove unused Python.app bundle from Python framework, because 
-CMake's fixup_bundle() macro cannot fix it.
-**************************************************************************
-sudo mv /Library/Frameworks/Python.framework/Versions/3.5/Resources/Python.app /Library/Frameworks/Python.framework/Versions/
-
-# To undo this change:
-# sudo mv /Library/Frameworks/Python.framework/Versions/Python.app /Library/Frameworks/Python.framework/Versions/3.5/Resources/
-
-
-**************************************************************************
 Build OVITO:
 **************************************************************************
 export MACOSX_DEPLOYMENT_TARGET=10.8
 cmake -DOVITO_BUILD_DOCUMENTATION=ON \
       -DCMAKE_BUILD_TYPE=Release \
+	  -DOVITO_REDISTRIBUTABLE_PACKAGE=ON \
       -DCMAKE_INSTALL_PREFIX=../release_install \
       -DCMAKE_PREFIX_PATH=$HOME/progs/Qt/5.7/clang_64/ \
       -DPYTHON_INCLUDE_DIR=/Library/Frameworks/Python.framework/Versions/3.5/include/python3.5m \

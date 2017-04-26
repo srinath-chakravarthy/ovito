@@ -37,6 +37,7 @@
 #include <plugins/particles/modifier/modify/CreateBondsModifier.h>
 #include <plugins/particles/modifier/modify/LoadTrajectoryModifier.h>
 #include <plugins/particles/modifier/modify/CombineParticleSetsModifier.h>
+#include <plugins/particles/modifier/modify/CoordinationPolyhedraModifier.h>
 #include <plugins/particles/modifier/properties/ComputePropertyModifier.h>
 #include <plugins/particles/modifier/properties/FreezePropertyModifier.h>
 #include <plugins/particles/modifier/properties/ComputeBondLengthsModifier.h>
@@ -61,19 +62,18 @@
 #include <plugins/particles/modifier/analysis/ptm/PolyhedralTemplateMatchingModifier.h>
 #include <plugins/particles/modifier/analysis/voronoi/VoronoiAnalysisModifier.h>
 #include <plugins/particles/modifier/analysis/diamond/IdentifyDiamondModifier.h>
+#include <plugins/particles/modifier/fields/CreateIsosurfaceModifier.h>
 #include <core/scene/pipeline/ModifierApplication.h>
+#include <core/utilities/concurrent/TaskManager.h>
 #include "PythonBinding.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
 using namespace PyScript;
 
-PYBIND11_PLUGIN(ParticlesModify)
+void defineModifiersSubmodule(py::module parentModule)
 {
-	py::options options;
-	options.disable_function_signatures();
-
-	py::module m("ParticlesModify");
+	py::module m = parentModule.def_submodule("Modifiers");
 	
 	ovito_abstract_class<ParticleModifier, Modifier>{m}
 	;
@@ -110,15 +110,15 @@ PYBIND11_PLUGIN(ParticlesModify)
 			"    node.modifiers.append(modifier)\n"
 			"\n"
 			"If, as in the example above, the :py:attr:`.start_value` and :py:attr:`.end_value` parameters are not explicitly set, "
-			"then the modifier automatically adjusts them to the minimum and maximum values of the property when the modifier "
-			"is inserted into the modification pipeline.")
+			"then the modifier automatically adjusts them to the minimum and maximum values of the input property at the time the modifier "
+			"is inserted into the data pipeline.")
 		.def_property("property", &ColorCodingModifier::sourceParticleProperty, &ColorCodingModifier::setSourceParticleProperty)
 		.def_property("particle_property", &ColorCodingModifier::sourceParticleProperty, &ColorCodingModifier::setSourceParticleProperty,
 				"The name of the input particle property that should be used to color particles. "
 				"This can be one of the :ref:`standard particle properties <particle-types-list>` or a custom particle property. "
 				"When using vector properties the component must be included in the name, e.g. ``\"Velocity.X\"``. "
 				"\n\n"
-				"This field is only used if :py:attr:`.bond_mode` is not set to ``Bonds``. ")
+				"This field is only used if :py:attr:`.assign_to` is not set to ``Bonds``. ")
 		.def_property("bond_property", &ColorCodingModifier::sourceBondProperty, &ColorCodingModifier::setSourceBondProperty,
 				"The name of the input bond property that should be used to color bonds. "
 				"This can be one of the :ref:`standard bond properties <bond-types-list>` or a custom bond property. "
@@ -191,7 +191,7 @@ PYBIND11_PLUGIN(ParticlesModify)
 		.def("load_image", &ColorCodingImageGradient::loadImage)
 	;
 	ColorCodingModifier_py.def_static("Custom", [](const QString& filename) {
-	    OORef<ColorCodingImageGradient> gradient(new ColorCodingImageGradient(ScriptEngine::activeEngine()->dataset()));
+	    OORef<ColorCodingImageGradient> gradient(new ColorCodingImageGradient(ScriptEngine::activeDataset()));
     	gradient->loadImage(filename);
     	return gradient;
 	});
@@ -343,7 +343,7 @@ PYBIND11_PLUGIN(ParticlesModify)
 		.def_property("destination_property", &FreezePropertyModifier::destinationProperty, &FreezePropertyModifier::setDestinationProperty,
 				"The name of the output particle property that should be written to by the modifier. "
 				"It can be one of the :ref:`standard particle properties <particle-types-list>` or a custom particle property. ")
-		.def("_take_snapshot", static_cast<void (FreezePropertyModifier::*)(TimePoint,bool)>(&FreezePropertyModifier::takePropertySnapshot))
+		.def("_take_snapshot", static_cast<bool (FreezePropertyModifier::*)(TimePoint,TaskManager&,bool)>(&FreezePropertyModifier::takePropertySnapshot))
 	;
 
 	ovito_class<ClearSelectionModifier, ParticleModifier>(m,
@@ -461,18 +461,15 @@ PYBIND11_PLUGIN(ParticlesModify)
 				"The distance of the slicing plane from the origin (along its normal vector)."
 				"\n\n"
 				":Default: 0.0\n")
-		.def_property("distance_ctrl", &SliceModifier::distanceController, &SliceModifier::setDistanceController)
 		.def_property("normal", &SliceModifier::normal, &SliceModifier::setNormal,
 				"The normal vector of the slicing plane. Does not have to be a unit vector."
 				"\n\n"
 				":Default: ``(1,0,0)``\n")
-		.def_property("normal_ctrl", &SliceModifier::normalController, &SliceModifier::setNormalController)
 		.def_property("slice_width", &SliceModifier::sliceWidth, &SliceModifier::setSliceWidth,
 				"The width of the slab to cut. If zero, the modifier cuts all particles on one "
 				"side of the slicing plane."
 				"\n\n"
 				":Default: 0.0\n")
-		.def_property("slice_width_ctrl", &SliceModifier::sliceWidthController, &SliceModifier::setSliceWidthController)
 		.def_property("inverse", &SliceModifier::inverse, &SliceModifier::setInverse,
 				"Reverses the sense of the slicing plane."
 				"\n\n"
@@ -503,8 +500,8 @@ PYBIND11_PLUGIN(ParticlesModify)
 			"                                [0,       1,0,0],\n"
 			"                                [0,       0,1,0]])\n"
 			"\n")
-		.def_property("transformation", MatrixGetter<AffineTransformationModifier, AffineTransformation, &AffineTransformationModifier::transformation>(), 
-										MatrixSetter<AffineTransformationModifier, AffineTransformation, &AffineTransformationModifier::setTransformation>(),
+		.def_property("transformation", MatrixGetter<AffineTransformationModifier, AffineTransformation, &AffineTransformationModifier::transformationTM>(), 
+										MatrixSetter<AffineTransformationModifier, AffineTransformation, &AffineTransformationModifier::setTransformationTM>(),
 				"The 3x4 transformation matrix being applied to particle positions and/or the simulation cell. "
 				"The first three matrix columns define the linear part of the transformation, while the fourth "
 				"column specifies the translation vector. "
@@ -544,6 +541,12 @@ PYBIND11_PLUGIN(ParticlesModify)
 				"If ``True``, the modifier transforms the surface mesh (if any) that has previously been generated by a :py:class:`ConstructSurfaceModifier`."
 				"\n\n"
 				":Default: ``True``\n")
+		.def_property("transform_vector_properties", &AffineTransformationModifier::applyToVectorProperties, &AffineTransformationModifier::setApplyToVectorProperties,
+				"If ``True``, the modifier applies the transformation to certain standard particle and bond properties that represent vectorial quantities. "
+				"This option is useful if you are using the AffineTransformationModifier to rotate a particle system and want also to rotate vectorial "
+				"properties associated with the individual particles or bonds, like e.g. the velocity vectors. See the user manual of OVITO for the list of standard particle properties that are affected by this option. "
+				"\n\n"
+				":Default: ``False``\n")
 	;
 
 	auto BinAndReduceModifier_py = ovito_class<BinAndReduceModifier, ParticleModifier>(m,
@@ -1034,7 +1037,7 @@ PYBIND11_PLUGIN(ParticlesModify)
 				"\n")
 	;
 
-	ovito_class<HistogramModifier, ParticleModifier>(m,
+	auto HistogramModifier_py = ovito_class<HistogramModifier, ParticleModifier>(m,
 			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
 			"Generates a histogram from the values of a particle property. "
 			"\n\n"
@@ -1045,24 +1048,33 @@ PYBIND11_PLUGIN(ParticlesModify)
 			"Example::"
 			"\n\n"
 			"    from ovito.modifiers import *\n"
-			"    modifier = HistogramModifier(bin_count=100, property=\"Potential Energy\")\n"
+			"    modifier = HistogramModifier(bin_count=100, particle_property=\"Potential Energy\")\n"
 			"    node.modifiers.append(modifier)\n"
 			"    node.compute()\n"
 			"    \n"
 			"    import numpy\n"
 			"    numpy.savetxt(\"histogram.txt\", modifier.histogram)\n"
 			"\n")
-		.def_property("property", &HistogramModifier::sourceProperty, &HistogramModifier::setSourceProperty,
+		.def_property("particle_property", &HistogramModifier::sourceParticleProperty, &HistogramModifier::setSourceParticleProperty,
 				"The name of the input particle property for which to compute the histogram. "
 				"This can be one of the :ref:`standard particle properties <particle-types-list>` or a custom particle property. "
-				"For vector properties a specific component name must be included in the string, e.g. ``\"Velocity.X\"``. ")
+				"When using vector properties the component must be included in the name, e.g. ``\"Velocity.X\"``. "
+				"\n\n"
+				"This field is only used if :py:attr:`.source_mode` is set to ``Particles``. ")
+		// For backward compatibility with OVITO 2.8.1:
+		.def_property("property", &HistogramModifier::sourceParticleProperty, &HistogramModifier::setSourceParticleProperty)
+		.def_property("bond_property", &HistogramModifier::sourceBondProperty, &HistogramModifier::setSourceBondProperty,
+				"The name of the input bond property for which to compute the histogram. "
+				"This can be one of the :ref:`standard bond properties <bond-types-list>` or a custom bond property. "
+				"\n\n"
+				"This field is only used if :py:attr:`.source_mode` is set to ``Bonds``. ")
 		.def_property("bin_count", &HistogramModifier::numberOfBins, &HistogramModifier::setNumberOfBins,
 				"The number of histogram bins."
 				"\n\n"
 				":Default: 200\n")
 		.def_property("fix_xrange", &HistogramModifier::fixXAxisRange, &HistogramModifier::setFixXAxisRange,
 				"Controls how the value range of the histogram is determined. If false, the range is chosen automatically by the modifier to include "
-				"all particle property values. If true, the range is specified manually using the :py:attr:`.xrange_start` and :py:attr:`.xrange_end` attributes."
+				"all input values. If true, the range is specified manually using the :py:attr:`.xrange_start` and :py:attr:`.xrange_end` attributes."
 				"\n\n"
 				":Default: ``False``\n")
 		.def_property("xrange_start", &HistogramModifier::xAxisRangeStart, &HistogramModifier::setXAxisRangeStart,
@@ -1074,10 +1086,20 @@ PYBIND11_PLUGIN(ParticlesModify)
 				"\n\n"
 				":Default: 0.0\n")
 		.def_property("only_selected", &HistogramModifier::onlySelected, &HistogramModifier::setOnlySelected,
-				"If ``True``, the histogram is computed only on the basis of currently selected particles. "
-				"You can use this to restrict histogram calculation to a subset of particles. "
+				"If ``True``, the histogram is computed only on the basis of currently selected particles or bonds. "
+				"You can use this to restrict histogram calculation to a subset of particles/bonds. "
 				"\n\n"
 				":Default: ``False``\n")
+		.def_property("source_mode", &HistogramModifier::dataSourceType, &HistogramModifier::setDataSourceType,
+				"Determines where this modifier takes its input values from. "
+				"This must be one of the following constants:\n"
+				" * ``HistogramModifier.SourceMode.Particles``\n"
+				" * ``HistogramModifier.SourceMode.Bonds``\n"
+				"\n"
+				"If this is set to ``Bonds``, then the histogram is computed from the bond property selected by :py:attr:`.bond_property`. "
+				"Otherwise it is computed from the particle property selected by :py:attr:`.particle_property`. "
+				"\n\n"
+				":Default: ``HistogramModifier.SourceMode.Particles``\n")
 		.def_property_readonly("_histogram_data", py::cpp_function([](HistogramModifier& mod) {
 					py::array_t<int> array((size_t)mod.histogramData().size(), mod.histogramData().data(), py::cast(&mod));
 					// Mark array as read-only.
@@ -1085,6 +1107,12 @@ PYBIND11_PLUGIN(ParticlesModify)
 					return array;
 				}))
 	;
+
+	py::enum_<HistogramModifier::DataSourceType>(HistogramModifier_py, "SourceMode")
+		.value("Particles", HistogramModifier::Particles)
+		.value("Bonds", HistogramModifier::Bonds)
+	;
+	
 
 	ovito_class<ScatterPlotModifier, ParticleModifier>{m}
 	;
@@ -1208,7 +1236,16 @@ PYBIND11_PLUGIN(ParticlesModify)
 			"   The total number of vacant sites (having ``Occupancy`` == 0). \n"
 			" * ``WignerSeitz.interstitial_count`` (:py:attr:`attribute <ovito.data.DataCollection.attributes>`):\n"
 			"   The total number of of interstitial atoms. This is equal to the sum of occupancy numbers of all non-empty sites minus the number of non-empty sites.\n"
-			"\n")
+			"\n\n"
+			"**Usage example:**"
+			"\n\n"
+			"The ``Occupancy`` particle property generated by the Wigner-Seitz algorithm allows to select specific types of point defects, e.g. "
+			"antisites, using OVITO's selection tools. One option is to use the :py:class:`SelectExpressionModifier` to pick "
+			"sites with a certain occupancy. Here we exemplarily demonstrate the alternative use of a custom :py:class:`PythonScriptModifier` to "
+			"select and count A-sites occupied by B-atoms in a binary system with two atom types (A=1 and B=2). "
+			"\n\n"
+			".. literalinclude:: ../example_snippets/wigner_seitz_example.py\n"
+			)
 		.def_property("reference", &WignerSeitzAnalysisModifier::referenceConfiguration, &WignerSeitzAnalysisModifier::setReferenceConfiguration,
 				"A :py:class:`~ovito.io.FileSource` that provides the reference positions of particles. "
 				"You can call its :py:meth:`~ovito.io.FileSource.load` function to load a reference simulation file "
@@ -1468,10 +1505,34 @@ PYBIND11_PLUGIN(ParticlesModify)
 		.value("B2", PolyhedralTemplateMatchingModifier::ALLOY_B2)
 	;
 
-	return m.ptr();
-}
+	ovito_class<CreateIsosurfaceModifier, AsynchronousParticleModifier>(m,
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
+			"Generates an isosurface from a scalar field defined on a structured data grid."
+			"\n\n"
+			"**Modifier outputs:**"
+			"\n\n"
+			" * :py:attr:`DataCollection.surface <ovito.data.DataCollection.surface>` (:py:class:`~ovito.data.SurfaceMesh`):\n"
+			"   The isosurface mesh generted by the modifier.\n"
+			)
+		.def_property("isolevel", &CreateIsosurfaceModifier::isolevel, &CreateIsosurfaceModifier::setIsolevel,
+				"The value at which to create the isosurface."
+				"\n\n"
+				":Default: 0.0\n")
+		.def_property("field_quantity", &CreateIsosurfaceModifier::sourceQuantity, &CreateIsosurfaceModifier::setSourceQuantity,
+				"The name of the field quantity for which the isosurface should be constructed.")
+		.def_property_readonly("mesh_display", &CreateIsosurfaceModifier::surfaceMeshDisplay,
+				"The :py:class:`~ovito.vis.SurfaceMeshDisplay` controlling the visual representation of the generated isosurface.\n")
+	;
 
-OVITO_REGISTER_PLUGIN_PYTHON_INTERFACE(ParticlesModify);
+	ovito_class<CoordinationPolyhedraModifier, AsynchronousParticleModifier>(m,
+			":Base class: :py:class:`ovito.modifiers.Modifier`\n\n"
+			"Constructs coordination polyhedra around currently selected particles. "
+			"A coordination polyhedron is the convex hull spanned by the bonded neighbors of a particle. ")
+		.def_property_readonly("polyhedra_display", &CoordinationPolyhedraModifier::surfaceMeshDisplay,
+				"A :py:class:`~ovito.vis.SurfaceMeshDisplay` instance controlling the visual representation of the generated polyhedra.\n")
+	;
+	
+}
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

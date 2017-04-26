@@ -14,32 +14,36 @@ import ovito
 import ovito.data
 
 # Load the native code module
-import Particles
+import ovito.plugins.Particles
 
 # Inject selected classes into parent module.
-ovito.data.SimulationCell = Particles.SimulationCell
-ovito.data.ParticleProperty = Particles.ParticleProperty
-ovito.data.Bonds = Particles.Bonds
-ovito.data.SurfaceMesh = Particles.SurfaceMesh
-ovito.data.ParticleTypeProperty = Particles.ParticleTypeProperty
-ovito.data.ParticleType = Particles.ParticleType
-ovito.data.BondProperty = Particles.BondProperty
-ovito.data.BondTypeProperty = Particles.BondTypeProperty
-ovito.data.BondType = Particles.BondType
+ovito.data.SimulationCell = ovito.plugins.Particles.SimulationCell
+ovito.data.ParticleProperty = ovito.plugins.Particles.ParticleProperty
+ovito.data.Bonds = ovito.plugins.Particles.Bonds
+ovito.data.SurfaceMesh = ovito.plugins.Particles.SurfaceMesh
+ovito.data.ParticleTypeProperty = ovito.plugins.Particles.ParticleTypeProperty
+ovito.data.ParticleType = ovito.plugins.Particles.ParticleType
+ovito.data.BondProperty = ovito.plugins.Particles.BondProperty
+ovito.data.BondTypeProperty = ovito.plugins.Particles.BondTypeProperty
+ovito.data.BondType = ovito.plugins.Particles.BondType
+ovito.data.TrajectoryLineGenerator = ovito.plugins.Particles.TrajectoryLineGenerator
+ovito.data.__all__ += ['SimulationCell', 'ParticleProperty', 'Bonds', 'SurfaceMesh', 'ParticleTypeProperty', 'ParticleType',
+            'BondProperty', 'BondTypeProperty', 'BondType', 'TrajectoryLineGenerator', 'CutoffNeighborFinder',
+            'NearestNeighborFinder']
 
 # For backward-compatibility with OVITO 2.5.1:
 def _ParticleProperty_data_attribute_name(self):
-    if self.type != Particles.ParticleProperty.Type.User:
+    if self.type != ovito.data.ParticleProperty.Type.User:
         return re.sub('\W|^(?=\d)','_', self.name).lower()
     else:
         return None
-Particles.ParticleProperty._data_attribute_name = property(_ParticleProperty_data_attribute_name)
+ovito.data.ParticleProperty._data_attribute_name = property(_ParticleProperty_data_attribute_name)
 
 # Access particle and bond properties by their name (not display title).
 def _ParticleProperty_data_key(self):
     return self.name
-Particles.ParticleProperty._data_key = property(_ParticleProperty_data_key)
-Particles.BondProperty._data_key = property(_ParticleProperty_data_key)
+ovito.data.ParticleProperty._data_key = property(_ParticleProperty_data_key)
+ovito.data.BondProperty._data_key = property(_ParticleProperty_data_key)
 
 # Implement the 'particle_properties' attribute of the DataCollection class.
 def _DataCollection_particle_properties(self):
@@ -59,8 +63,6 @@ def _DataCollection_particle_properties(self):
             return sum(isinstance(obj, ovito.data.ParticleProperty) for obj in self._objects)
 
         def __getitem__(self, key):
-            if not isinstance(key, str):
-                raise TypeError("Property name key is not a string.")
             for obj in self._objects:
                 if isinstance(obj, ovito.data.ParticleProperty): 
                     if obj.name == key:
@@ -103,8 +105,6 @@ def _DataCollection_bond_properties(self):
             return sum(isinstance(obj, ovito.data.BondProperty) for obj in self._objects)
         
         def __getitem__(self, key):
-            if not isinstance(key, str):
-                raise TypeError("Property name key is not a string.")
             for obj in self._objects:
                 if isinstance(obj, ovito.data.BondProperty): 
                     if obj.name == key:
@@ -182,7 +182,7 @@ def _ParticleProperty_array(self):
     data stored in this particle property, use :py:attr:`.marray` instead.
     """
     return numpy.asarray(self)
-Particles.ParticleProperty.array = property(_ParticleProperty_array)
+ovito.data.ParticleProperty.array = property(_ParticleProperty_array)
 
 # Returns a NumPy array wrapper for a particle property with write access.
 def _ParticleProperty_marray(self):
@@ -225,9 +225,9 @@ def _ParticleProperty_marray_assign(self, other):
     # Assume that the data has been changed in the meantime.
     self.changed()
         
-Particles.ParticleProperty.marray = property(_ParticleProperty_marray, _ParticleProperty_marray_assign)
+ovito.data.ParticleProperty.marray = property(_ParticleProperty_marray, _ParticleProperty_marray_assign)
 # For backward compatibility with OVITO 2.5.1:
-Particles.ParticleProperty.mutable_array = property(lambda self: self.marray)
+ovito.data.ParticleProperty.mutable_array = property(lambda self: self.marray)
 
 # Returns a NumPy array wrapper for a bond property.
 def _BondProperty_array(self):
@@ -243,7 +243,7 @@ def _BondProperty_array(self):
     data stored in this bond property, use :py:attr:`.marray` instead.
     """
     return numpy.asarray(self)
-Particles.BondProperty.array = property(_BondProperty_array)
+ovito.data.BondProperty.array = property(_BondProperty_array)
 
 # Returns a NumPy array wrapper for a bond property with write access.
 def _BondProperty_marray(self):
@@ -271,7 +271,7 @@ def _BondProperty_marray(self):
     o.__base_property = self
     return numpy.asarray(o)
         
-Particles.BondProperty.marray = property(_BondProperty_marray, _ParticleProperty_marray_assign)
+ovito.data.BondProperty.marray = property(_BondProperty_marray, _ParticleProperty_marray_assign)
 
 # Returns a NumPy array wrapper for bonds list.
 def _Bonds_array(self):
@@ -285,7 +285,7 @@ def _Bonds_array(self):
         Note that the returned NumPy array is read-only and provides a view of the internal data. 
     """
     return numpy.asarray(self)
-Particles.Bonds.array = property(_Bonds_array)
+ovito.data.Bonds.array = property(_Bonds_array)
 
 # Returns a NumPy array wrapper for the bond PBC shift vectors.
 def _Bonds_pbc_vectors(self):
@@ -316,7 +316,7 @@ def _Bonds_pbc_vectors(self):
     # Create reference to particle property object to keep it alive.
     o.__base_property = self
     return numpy.asarray(o)
-Particles.Bonds.pbc_vectors = property(_Bonds_pbc_vectors)
+ovito.data.Bonds.pbc_vectors = property(_Bonds_pbc_vectors)
 
 def _Bonds_add(self, p1, p2, pbc_shift = (0,0,0)):
     """ Creates a new half-bond from particle *p1* to particle *p2*. 
@@ -331,7 +331,7 @@ def _Bonds_add(self, p1, p2, pbc_shift = (0,0,0)):
                           See :py:attr:`.pbc_vectors` array.
     """
     self.addBond(p1, p2, pbc_shift)
-Particles.Bonds.add = _Bonds_add
+ovito.data.Bonds.add = _Bonds_add
 
 def _Bonds_add_full(self, p1, p2, pbc_shift = (0,0,0)):
     """ Creates two half-bonds between the particles *p1* and *p2*. This is equivalent to 
@@ -346,7 +346,7 @@ def _Bonds_add_full(self, p1, p2, pbc_shift = (0,0,0)):
     """
     self.addBond(p1, p2, pbc_shift)
     self.addBond(p2, p1, (-pbc_shift[0], -pbc_shift[1], -pbc_shift[2]))
-Particles.Bonds.add_full = _Bonds_add_full
+ovito.data.Bonds.add_full = _Bonds_add_full
 
 # Implement 'pbc' property of SimulationCell class.
 def _get_SimulationCell_pbc(self):
@@ -357,9 +357,9 @@ def _set_SimulationCell_pbc(self, flags):
     self.pbc_x = flags[0]
     self.pbc_y = flags[1]
     self.pbc_z = flags[2]
-Particles.SimulationCell.pbc = property(_get_SimulationCell_pbc, _set_SimulationCell_pbc)
+ovito.data.SimulationCell.pbc = property(_get_SimulationCell_pbc, _set_SimulationCell_pbc)
 
-class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
+class CutoffNeighborFinder(ovito.plugins.Particles.CutoffNeighborFinder):
     """ 
     A utility class that computes particle neighbor lists.
     
@@ -380,13 +380,14 @@ class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
         
     def __init__(self, cutoff, data_collection):
         """ This is the constructor. """
-        super(self.__class__, self).__init__()        
+        super(self.__class__, self).__init__()
         if not hasattr(data_collection, 'position'):
-            raise KeyError("Data collection does not contain particle positions.")
+            raise KeyError("DataCollection does not contain any ")
         if not hasattr(data_collection, 'cell'):
-            raise KeyError("Data collection does not contain simulation cell information.")
+            raise KeyError("DataCollection does not contain simulation cell information.")
         self.particle_count = data_collection.number_of_particles
-        self.prepare(cutoff, data_collection.position, data_collection.cell)
+        if not self.prepare(cutoff, data_collection.position, data_collection.cell):
+            raise RuntimeError("Operation has been canceled by the user.")
         
     def find(self, index):
         """ 
@@ -409,19 +410,19 @@ class CutoffNeighborFinder(Particles.CutoffNeighborFinder):
         if index < 0 or index >= self.particle_count:
             raise IndexError("Particle index is out of range.")
         # Construct the C++ neighbor query. 
-        query = Particles.CutoffNeighborFinder.Query(self, int(index))
+        query = ovito.plugins.Particles.CutoffNeighborFinder.Query(self, int(index))
         # Iterate over neighbors.
-        while not query.atEnd:
+        while not query.at_end:
             yield query
             query.next()
             
 ovito.data.CutoffNeighborFinder = CutoffNeighborFinder
 
-class NearestNeighborFinder(Particles.NearestNeighborFinder):
+class NearestNeighborFinder(ovito.plugins.Particles.NearestNeighborFinder):
     """ 
-    A utility class that finds the *N* nearest neighbors of a particle.
+    A utility class that finds the *N* nearest neighbors of a particle or a spatial location.
     
-    The constructor takes the number of requested nearest neighbors, *N*, and a :py:class:`DataCollection <ovito.data.DataCollection>` 
+    The constructor takes the (maximum) number of requested nearest neighbors, *N*, and a :py:class:`DataCollection <ovito.data.DataCollection>` 
     containing the input particle positions and the cell geometry (including periodic boundary flags).
     *N* must be a positive integer not greater than 30 (which is the built-in maximum supported by this class).
     
@@ -429,8 +430,15 @@ class NearestNeighborFinder(Particles.NearestNeighborFinder):
     iterate over the sorted list of nearest neighbors of a specific particle, for example:
     
     .. literalinclude:: ../example_snippets/nearest_neighbor_finder.py
+       :lines: 1-18
     
-    If you want to iterate over all neighbors within a certain cutoff radius of a central particle,
+    Furthermore, the class provides the :py:meth:`find_at` method, which allows to query the nearest neighbors at an 
+    arbitrary spatial position (doesn't have to be a physical particle):
+
+    .. literalinclude:: ../example_snippets/nearest_neighbor_finder.py    
+       :lines: 19-
+
+    If you want to find all neighbor particles within a certain cutoff radius of a central particle,
     use the :py:class:`CutoffNeighborFinder` class instead.
     """
         
@@ -440,11 +448,12 @@ class NearestNeighborFinder(Particles.NearestNeighborFinder):
         if N<=0 or N>30:
             raise ValueError("The requested number of nearest neighbors is out of range.")
         if not hasattr(data_collection, 'position'):
-            raise KeyError("Data collection does not contain particle positions.")
+            raise KeyError("DataCollection does not contain any particles.")
         if not hasattr(data_collection, 'cell'):
-            raise KeyError("Data collection does not contain simulation cell information.")
+            raise KeyError("DataCollection does not contain simulation cell information.")
         self.particle_count = data_collection.number_of_particles
-        self.prepare(data_collection.position, data_collection.cell)
+        if not self.prepare(data_collection.position, data_collection.cell):
+            raise RuntimeError("Operation has been canceled by the user.")
         
     def find(self, index):
         """ 
@@ -464,13 +473,41 @@ class NearestNeighborFinder(Particles.NearestNeighborFinder):
         However, the computed neighbor vector (``delta``) will be unique for each visited image of a neighboring particle.
         
         The number of neighbors actually visited may be smaller than the requested number, *N*, if the
-        system contains too few particles and no periodic boundary conditions are used.
+        system contains too few particles and has no periodic boundary conditions.
         """
         if index < 0 or index >= self.particle_count:
             raise IndexError("Particle index is out of range.")
         # Construct the C++ neighbor query. 
-        query = Particles.NearestNeighborFinder.Query(self)
+        query = ovito.plugins.Particles.NearestNeighborFinder.Query(self)
         query.findNeighbors(int(index))
+        # Iterate over neighbors.
+        for i in range(query.count):
+            yield query[i]
+
+    def find_at(self, coords):
+        """ 
+        Returns an iterator that visits the *N* nearest particles around a spatial point given by *coords* in order of ascending distance.
+        Unlike the :py:meth:`find` method, which queries the nearest neighbors of a physical particle, the :py:meth:`!find_at` method allows  
+        searching for neareby particles at arbitrary locations in space. 
+         
+        :param coords: A (x,y,z) coordinate triple specifying the spatial location where the *N* nearest particles should be queried.
+        :returns: A Python iterator that visits the *N* nearest neighbors in order of ascending distance. 
+                  For each visited particle the iterator returns an object with the following attributes:
+                  
+                      * **index**: The index of the current particle (starting at 0).
+                      * **distance**: The distance of the current neighbor from the query location.
+                      * **distance_squared**: The squared distance to the query location.
+                      * **delta**: The three-dimensional vector from the query point to the current particle (taking into account periodicity).
+
+        If there exists a particle that is exactly located at the query position given by *coords*, then it will be returned by this function.
+        This is in contrast to the :py:meth:`find` function, which does not visit the central particle itself.
+        
+        The number of neighbors actually visited may be smaller than the requested number, *N*, if the
+        system contains too few particles and has no periodic boundary conditions.
+        """
+        # Construct the C++ neighbor query. 
+        query = ovito.plugins.Particles.NearestNeighborFinder.Query(self)
+        query.findNeighborsAtLocation(coords, True)
         # Iterate over neighbors.
         for i in range(query.count):
             yield query[i]
@@ -864,7 +901,7 @@ def _BondTypeProperty_get_type_by_name(self, name):
     return t
 ovito.data.BondTypeProperty.get_type_by_name = _BondTypeProperty_get_type_by_name
 
-class Enumerator(Particles.Bonds.ParticleBondMap):
+class Enumerator(ovito.plugins.Particles.Bonds.ParticleBondMap):
     """
     Utility class that allows efficiently iterating over the bonds of a particle.
 

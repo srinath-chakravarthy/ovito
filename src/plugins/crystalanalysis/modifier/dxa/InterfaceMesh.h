@@ -19,11 +19,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CA_INTERFACE_MESH_H
-#define __OVITO_CA_INTERFACE_MESH_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
-#include <core/utilities/concurrent/FutureInterface.h>
+#include <core/utilities/concurrent/Promise.h>
 #include <core/utilities/mesh/HalfEdgeMesh.h>
 #include "ElasticMapping.h"
 
@@ -96,7 +96,7 @@ public:
 	const StructureAnalysis& structureAnalysis() const { return elasticMapping().structureAnalysis(); }
 
 	/// Creates the mesh facets separating good and bad tetrahedra.
-	bool createMesh(FloatType maximumNeighborDistance, ParticleProperty* crystalClusters, FutureInterfaceBase& progress);
+	bool createMesh(FloatType maximumNeighborDistance, ParticleProperty* crystalClusters, PromiseBase& progress);
 
 	/// Returns whether all tessellation cells belong to the good region.
 	bool isCompletelyGood() const { return _isCompletelyGood; }
@@ -105,7 +105,7 @@ public:
 	bool isCompletelyBad() const { return _isCompletelyBad; }
 
 	/// Generates the nodes and facets of the defect mesh based on the interface mesh.
-	bool generateDefectMesh(const DislocationTracer& tracer, HalfEdgeMesh<>& defectMesh, FutureInterfaceBase& progress);
+	bool generateDefectMesh(const DislocationTracer& tracer, HalfEdgeMesh<>& defectMesh, PromiseBase& progress);
 
 private:
 
@@ -124,4 +124,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CA_INTERFACE_MESH_H
+

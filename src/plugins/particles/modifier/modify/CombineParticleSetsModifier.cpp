@@ -29,16 +29,16 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Modify)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, CombineParticleSetsModifier, ParticleModifier);
-DEFINE_FLAGS_REFERENCE_FIELD(CombineParticleSetsModifier, _secondarySource, "SecondarySource", DataObject, PROPERTY_FIELD_NO_SUB_ANIM);
-SET_PROPERTY_FIELD_LABEL(CombineParticleSetsModifier, _secondarySource, "Secondary source");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CombineParticleSetsModifier, ParticleModifier);
+DEFINE_FLAGS_REFERENCE_FIELD(CombineParticleSetsModifier, secondaryDataSource, "SecondarySource", DataObject, PROPERTY_FIELD_NO_SUB_ANIM);
+SET_PROPERTY_FIELD_LABEL(CombineParticleSetsModifier, secondaryDataSource, "Secondary source");
 
 /******************************************************************************
 * Constructs the modifier object.
 ******************************************************************************/
 CombineParticleSetsModifier::CombineParticleSetsModifier(DataSet* dataset) : ParticleModifier(dataset)
 {
-	INIT_PROPERTY_FIELD(CombineParticleSetsModifier::_secondarySource);
+	INIT_PROPERTY_FIELD(secondaryDataSource);
 
 	// Create the file source object, which will be responsible for loading
 	// and caching the data to be merged.
@@ -60,7 +60,7 @@ PipelineStatus CombineParticleSetsModifier::modifyParticles(TimePoint time, Time
 		throwException(tr("No particle data to be merged has been provided."));
 
 	// Get the data to be merged into the pipeline.
-	PipelineFlowState secondaryState = secondaryDataSource()->evaluate(time);
+	PipelineFlowState secondaryState = secondaryDataSource()->evaluateImmediately(PipelineEvalRequest(time, false));
 
 	// Make sure the obtained dataset is valid and ready to use.
 	if(secondaryState.status().type() == PipelineStatus::Error) {

@@ -32,7 +32,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(OpenBabelPlugin, OpenBabelImporter, ParticleImporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(OpenBabelImporter, ParticleImporter);
 
 /******************************************************************************
 * Parses the given input file and stores the data in this container object.

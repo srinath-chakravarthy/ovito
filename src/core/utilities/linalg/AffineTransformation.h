@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::AffineTransformationT class template.
  */
 
-#ifndef __OVITO_AFFINE_TRANSFORMATION_H
-#define __OVITO_AFFINE_TRANSFORMATION_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/io/SaveStream.h>
@@ -830,4 +830,4 @@ Q_DECLARE_METATYPE(Ovito::AffineTransformation*);
 Q_DECLARE_TYPEINFO(Ovito::AffineTransformation, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::AffineTransformation*, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_AFFINE_TRANSFORMATION_H
+

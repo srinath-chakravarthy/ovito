@@ -29,15 +29,15 @@
 #include <gui/mainwin/MainWindow.h>
 #include "ScatterPlotModifierEditor.h"
 
-#include <3rdparty/qwt/qwt_plot.h>
-#include <3rdparty/qwt/qwt_plot_spectrocurve.h>
-#include <3rdparty/qwt/qwt_plot_zoneitem.h>
-#include <3rdparty/qwt/qwt_plot_grid.h>
-#include <3rdparty/qwt/qwt_color_map.h>
+#include <qwt/qwt_plot.h>
+#include <qwt/qwt_plot_spectrocurve.h>
+#include <qwt/qwt_plot_zoneitem.h>
+#include <qwt/qwt_plot_grid.h>
+#include <qwt/qwt_color_map.h>
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, ScatterPlotModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(ScatterPlotModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(ScatterPlotModifier, ScatterPlotModifierEditor);
 
 /******************************************************************************
@@ -53,10 +53,10 @@ void ScatterPlotModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	layout->setContentsMargins(4,4,4,4);
 	layout->setSpacing(4);
 
-	ParticlePropertyParameterUI* xPropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::_xAxisProperty));
+	ParticlePropertyParameterUI* xPropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::xAxisProperty));
 	layout->addWidget(new QLabel(tr("X-axis property:"), rollout));
 	layout->addWidget(xPropertyUI->comboBox());
-	ParticlePropertyParameterUI* yPropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::_yAxisProperty));
+	ParticlePropertyParameterUI* yPropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::yAxisProperty));
 	layout->addWidget(new QLabel(tr("Y-axis property:"), rollout));
 	layout->addWidget(yPropertyUI->comboBox());
 
@@ -79,13 +79,13 @@ void ScatterPlotModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	sublayout->setContentsMargins(4,4,4,4);
 	layout->addWidget(selectionBox);
 
-	BooleanParameterUI* selectInRangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::_selectXAxisInRange));
+	BooleanParameterUI* selectInRangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::selectXAxisInRange));
 	sublayout->addWidget(selectInRangeUI->checkBox());
 
 	QHBoxLayout* hlayout = new QHBoxLayout();
 	sublayout->addLayout(hlayout);
-	FloatParameterUI* selRangeStartPUI = new FloatParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::_selectionXAxisRangeStart));
-	FloatParameterUI* selRangeEndPUI = new FloatParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::_selectionXAxisRangeEnd));
+	FloatParameterUI* selRangeStartPUI = new FloatParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::selectionXAxisRangeStart));
+	FloatParameterUI* selRangeEndPUI = new FloatParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::selectionXAxisRangeEnd));
 	hlayout->addWidget(new QLabel(tr("From:")));
 	hlayout->addLayout(selRangeStartPUI->createFieldLayout());
 	hlayout->addSpacing(12);
@@ -96,13 +96,13 @@ void ScatterPlotModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	connect(selectInRangeUI->checkBox(), &QCheckBox::toggled, selRangeStartPUI, &FloatParameterUI::setEnabled);
 	connect(selectInRangeUI->checkBox(), &QCheckBox::toggled, selRangeEndPUI, &FloatParameterUI::setEnabled);
 
-	selectInRangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::_selectYAxisInRange));
+	selectInRangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::selectYAxisInRange));
 	sublayout->addWidget(selectInRangeUI->checkBox());
 
 	hlayout = new QHBoxLayout();
 	sublayout->addLayout(hlayout);
-	selRangeStartPUI = new FloatParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::_selectionYAxisRangeStart));
-	selRangeEndPUI = new FloatParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::_selectionYAxisRangeEnd));
+	selRangeStartPUI = new FloatParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::selectionYAxisRangeStart));
+	selRangeEndPUI = new FloatParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::selectionYAxisRangeEnd));
 	hlayout->addWidget(new QLabel(tr("From:")));
 	hlayout->addLayout(selRangeStartPUI->createFieldLayout());
 	hlayout->addSpacing(12);
@@ -120,13 +120,13 @@ void ScatterPlotModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	layout->addWidget(axesBox);
 	// x-axis.
 	{
-		BooleanParameterUI* rangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::_fixXAxisRange));
+		BooleanParameterUI* rangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::fixXAxisRange));
 		axesSublayout->addWidget(rangeUI->checkBox());
 
 		QHBoxLayout* hlayout = new QHBoxLayout();
 		axesSublayout->addLayout(hlayout);
-		FloatParameterUI* startPUI = new FloatParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::_xAxisRangeStart));
-		FloatParameterUI* endPUI = new FloatParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::_xAxisRangeEnd));
+		FloatParameterUI* startPUI = new FloatParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::xAxisRangeStart));
+		FloatParameterUI* endPUI = new FloatParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::xAxisRangeEnd));
 		hlayout->addWidget(new QLabel(tr("From:")));
 		hlayout->addLayout(startPUI->createFieldLayout());
 		hlayout->addSpacing(12);
@@ -139,13 +139,13 @@ void ScatterPlotModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	}
 	// y-axis.
 	{
-		BooleanParameterUI* rangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::_fixYAxisRange));
+		BooleanParameterUI* rangeUI = new BooleanParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::fixYAxisRange));
 		axesSublayout->addWidget(rangeUI->checkBox());
 
 		QHBoxLayout* hlayout = new QHBoxLayout();
 		axesSublayout->addLayout(hlayout);
-		FloatParameterUI* startPUI = new FloatParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::_yAxisRangeStart));
-		FloatParameterUI* endPUI = new FloatParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::_yAxisRangeEnd));
+		FloatParameterUI* startPUI = new FloatParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::yAxisRangeStart));
+		FloatParameterUI* endPUI = new FloatParameterUI(this, PROPERTY_FIELD(ScatterPlotModifier::yAxisRangeEnd));
 		hlayout->addWidget(new QLabel(tr("From:")));
 		hlayout->addLayout(startPUI->createFieldLayout());
 		hlayout->addSpacing(12);
@@ -307,7 +307,7 @@ void ScatterPlotModifierEditor::onSaveData()
 		}
 	}
 	catch(const Exception& ex) {
-		ex.showError();
+		ex.reportError();
 	}
 }
 

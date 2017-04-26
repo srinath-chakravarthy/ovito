@@ -29,26 +29,26 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, VoronoiAnalysisModifier, AsynchronousParticleModifier);
-DEFINE_PROPERTY_FIELD(VoronoiAnalysisModifier, _onlySelected, "OnlySelected");
-DEFINE_PROPERTY_FIELD(VoronoiAnalysisModifier, _useRadii, "UseRadii");
-DEFINE_PROPERTY_FIELD(VoronoiAnalysisModifier, _computeIndices, "ComputeIndices");
-DEFINE_PROPERTY_FIELD(VoronoiAnalysisModifier, _computeBonds, "ComputeBonds");
-DEFINE_PROPERTY_FIELD(VoronoiAnalysisModifier, _edgeCount, "EdgeCount");
-DEFINE_PROPERTY_FIELD(VoronoiAnalysisModifier, _edgeThreshold, "EdgeThreshold");
-DEFINE_PROPERTY_FIELD(VoronoiAnalysisModifier, _faceThreshold, "FaceThreshold");
-DEFINE_FLAGS_REFERENCE_FIELD(VoronoiAnalysisModifier, _bondsDisplay, "BondsDisplay", BondsDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
-SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _onlySelected, "Use only selected particles");
-SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _useRadii, "Use particle radii");
-SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _computeIndices, "Compute Voronoi indices");
-SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _computeBonds, "Generate neighbor bonds");
-SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _edgeCount, "Maximum edge count");
-SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _edgeThreshold, "Edge length threshold");
-SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _faceThreshold, "Face area threshold");
-SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, _bondsDisplay, "Bonds display");
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(VoronoiAnalysisModifier, _edgeThreshold, WorldParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(VoronoiAnalysisModifier, _faceThreshold, FloatParameterUnit, 0);
-SET_PROPERTY_FIELD_UNITS_AND_RANGE(VoronoiAnalysisModifier, _edgeCount, IntegerParameterUnit, 3, 18);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(VoronoiAnalysisModifier, AsynchronousParticleModifier);
+DEFINE_PROPERTY_FIELD(VoronoiAnalysisModifier, onlySelected, "OnlySelected");
+DEFINE_PROPERTY_FIELD(VoronoiAnalysisModifier, useRadii, "UseRadii");
+DEFINE_PROPERTY_FIELD(VoronoiAnalysisModifier, computeIndices, "ComputeIndices");
+DEFINE_PROPERTY_FIELD(VoronoiAnalysisModifier, computeBonds, "ComputeBonds");
+DEFINE_PROPERTY_FIELD(VoronoiAnalysisModifier, edgeCount, "EdgeCount");
+DEFINE_PROPERTY_FIELD(VoronoiAnalysisModifier, edgeThreshold, "EdgeThreshold");
+DEFINE_PROPERTY_FIELD(VoronoiAnalysisModifier, faceThreshold, "FaceThreshold");
+DEFINE_FLAGS_REFERENCE_FIELD(VoronoiAnalysisModifier, bondsDisplay, "BondsDisplay", BondsDisplay, PROPERTY_FIELD_ALWAYS_DEEP_COPY|PROPERTY_FIELD_MEMORIZE);
+SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, onlySelected, "Use only selected particles");
+SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, useRadii, "Use particle radii");
+SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, computeIndices, "Compute Voronoi indices");
+SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, computeBonds, "Generate neighbor bonds");
+SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, edgeCount, "Maximum edge count");
+SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, edgeThreshold, "Edge length threshold");
+SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, faceThreshold, "Face area threshold");
+SET_PROPERTY_FIELD_LABEL(VoronoiAnalysisModifier, bondsDisplay, "Bonds display");
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(VoronoiAnalysisModifier, edgeThreshold, WorldParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(VoronoiAnalysisModifier, faceThreshold, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_RANGE(VoronoiAnalysisModifier, edgeCount, IntegerParameterUnit, 3, 18);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -58,17 +58,17 @@ VoronoiAnalysisModifier::VoronoiAnalysisModifier(DataSet* dataset) : Asynchronou
 	_useRadii(false), _edgeThreshold(0), _faceThreshold(0),
 	_simulationBoxVolume(0), _voronoiVolumeSum(0), _maxFaceOrder(0), _computeBonds(false)
 {
-	INIT_PROPERTY_FIELD(VoronoiAnalysisModifier::_onlySelected);
-	INIT_PROPERTY_FIELD(VoronoiAnalysisModifier::_useRadii);
-	INIT_PROPERTY_FIELD(VoronoiAnalysisModifier::_computeIndices);
-	INIT_PROPERTY_FIELD(VoronoiAnalysisModifier::_computeBonds);
-	INIT_PROPERTY_FIELD(VoronoiAnalysisModifier::_edgeCount);
-	INIT_PROPERTY_FIELD(VoronoiAnalysisModifier::_edgeThreshold);
-	INIT_PROPERTY_FIELD(VoronoiAnalysisModifier::_faceThreshold);
-	INIT_PROPERTY_FIELD(VoronoiAnalysisModifier::_bondsDisplay);
+	INIT_PROPERTY_FIELD(onlySelected);
+	INIT_PROPERTY_FIELD(useRadii);
+	INIT_PROPERTY_FIELD(computeIndices);
+	INIT_PROPERTY_FIELD(computeBonds);
+	INIT_PROPERTY_FIELD(edgeCount);
+	INIT_PROPERTY_FIELD(edgeThreshold);
+	INIT_PROPERTY_FIELD(faceThreshold);
+	INIT_PROPERTY_FIELD(bondsDisplay);
 
 	// Create the display object for bonds rendering.
-	_bondsDisplay = new BondsDisplay(dataset);
+	setBondsDisplay(new BondsDisplay(dataset));
 }
 
 /******************************************************************************
@@ -127,10 +127,6 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 
 	// Compute the total simulation cell volume.
 	_simulationBoxVolume = _simCell.volume3D();
-
-	qDebug() << _simCell.matrix();
-	qDebug() << _simCell.matrix().determinant();
-	qDebug() << _simCell.inverseMatrix();
 
 	if(_positions->size() == 0 || _simulationBoxVolume == 0)
 		return;	// Nothing to do
@@ -250,8 +246,8 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 			}
 			if(!count) return;
 
-			setProgressRange(count);
 			setProgressValue(0);
+			setProgressMaximum(count);
 #if 1
 			voro::c_loop_all cl(voroContainer);
 			voro::voronoicell_neighbor v;
@@ -315,8 +311,8 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 			}
 
 			if(!count) return;
-			setProgressRange(count);
 			setProgressValue(0);
+			setProgressMaximum(count);
 
 			voro::c_loop_all cl(voroContainer);
 			voro::voronoicell_neighbor v;
@@ -379,7 +375,7 @@ void VoronoiAnalysisModifier::VoronoiAnalysisEngine::perform()
 	else {
 		// Prepare the nearest neighbor list generator.
 		NearestNeighborFinder nearestNeighborFinder;
-		if(!nearestNeighborFinder.prepare(_positions.data(), _simCell, _selection.data(), this))
+		if(!nearestNeighborFinder.prepare(_positions.data(), _simCell, _selection.data(), *this))
 			return;
 
 		// Squared particle radii (input was just radii).
@@ -493,10 +489,10 @@ PipelineStatus VoronoiAnalysisModifier::applyComputationResults(TimePoint time, 
 
 	// Check computed Voronoi cell volume sum.
 	if(std::abs(_voronoiVolumeSum - _simulationBoxVolume) > 1e-8 * inputParticleCount() * _simulationBoxVolume) {
-		qDebug() << _voronoiVolumeSum;
-		qDebug() << _simulationBoxVolume;
-		qDebug() << std::abs(_voronoiVolumeSum - _simulationBoxVolume);
-		qDebug() << (1e-9 * inputParticleCount() * _simulationBoxVolume);
+		//qDebug() << _voronoiVolumeSum;
+		//qDebug() << _simulationBoxVolume;
+		//qDebug() << std::abs(_voronoiVolumeSum - _simulationBoxVolume);
+		//qDebug() << (1e-8 * inputParticleCount() * _simulationBoxVolume);
 		return PipelineStatus(PipelineStatus::Warning,
 				tr("The volume sum of all Voronoi cells does not match the simulation box volume. "
 						"This may be a result of particles being located outside of the simulation box boundaries. "

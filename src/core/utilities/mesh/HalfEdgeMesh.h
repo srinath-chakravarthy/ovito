@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_HALF_EDGE_MESH_H
-#define __OVITO_HALF_EDGE_MESH_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/MemoryPool.h>
@@ -305,6 +305,9 @@ public:
 		_vertexPool.clear();
 		_edgePool.clear();
 		_facePool.clear();
+		_reclaimedFaces.clear();
+		_reclaimedEdges.clear();
+		_reclaimedVertices.clear();
 	}
 
 	/// Returns the list of vertices in the mesh.
@@ -339,7 +342,15 @@ public:
 
 	/// Adds a new vertex to the mesh.
 	Vertex* createVertex(const Point3& pos) {
-		Vertex* vert = _vertexPool.construct(pos, vertexCount());
+		Vertex* vert;
+		if(_reclaimedVertices.empty()) {
+			vert = _vertexPool.construct(pos, vertexCount());
+		}
+		else {
+			vert = _reclaimedVertices.back();
+			_reclaimedVertices.pop_back();
+			vert->setPos(pos);
+		}
 		_vertices.push_back(vert);
 		return vert;
 	}
@@ -361,19 +372,82 @@ public:
 		for(v2 = begin, v1 = v2++; v2 != end; v1 = v2++)
 			createEdge(*v1, *v2, face);
 		createEdge(*v1, *begin, face);
+
+		// First edge of face should start at first supplied vertex.
+		OVITO_ASSERT(face->edges()->vertex1() == *begin);
+
 		return face;
 	}
 
 	/// Creates a new face without edges. This is for internal use only.
 	Face* createFace() {
-		Face* face = _facePool.construct(faceCount());
+		Face* face;
+		if(_reclaimedFaces.empty()) {
+			face = _facePool.construct(faceCount());
+		}
+		else {
+			face = _reclaimedFaces.back();
+			face->_edges = nullptr;
+			face->_flags = 0;
+			_reclaimedFaces.pop_back();
+		}
 		_faces.push_back(face);
 		return face;
 	}
 
+	/// Deletes a halfedge from the mesh.
+	/// This method assumes that the edge is not connected to any part of the mesh.
+	void removeEdge(Edge* edge) {
+		OVITO_ASSERT(edge->oppositeEdge() == nullptr);
+		_reclaimedEdges.push_back(edge);
+	}
+
+	/// Deletes a face from the mesh.
+	/// A hole in the mesh will be left behind.
+	/// The halfedges of the face are also disconnected from their respective opposite halfedges 
+	/// and reclaimed by this method.
+	void removeFace(int faceIndex) {
+		Face* face = this->face(faceIndex);
+		if(Edge* e = face->edges()) {
+			do {
+				OVITO_ASSERT(e->vertex1());
+				e->vertex1()->removeEdge(e);
+				if(e->oppositeEdge() != nullptr)
+					e->unlinkFromOppositeEdge();
+				removeEdge(e);
+				e = e->nextFaceEdge();
+			}
+			while(e != face->edges());
+		}
+		_faces[faceIndex] = _faces.back();
+		_faces.erase(_faces.end() - 1);
+		_reclaimedFaces.push_back(face);
+	}
+
+	/// Deletes a vertex from the mesh. 
+	/// This method assumes that the vertex is not connected to any edges or faces of the mesh.
+	void removeVertex(int vertexIndex) {
+		Vertex* vertex = this->vertex(vertexIndex);
+		OVITO_ASSERT(vertex->edges() == nullptr);
+		OVITO_ASSERT(vertex->numEdges() == 0);
+		_vertices[vertexIndex] = _vertices.back();
+		_vertices.erase(_vertices.end() - 1);
+		_reclaimedVertices.push_back(vertex);
+	}
+
 	/// Create a new half-edge. This is for internal use only.
 	Edge* createEdge(Vertex* vertex1, Vertex* vertex2, Face* face) {
-		Edge* edge = _edgePool.construct(vertex2, face);
+		Edge* edge;
+		if(_reclaimedEdges.empty()) {
+			edge = _edgePool.construct(vertex2, face);
+		}
+		else {
+			edge = _reclaimedEdges.back();
+			_reclaimedEdges.pop_back();
+			edge->_vertex2 = vertex2;
+			edge->_face = face;
+			OVITO_ASSERT(!edge->oppositeEdge());
+		}
 		vertex1->addEdge(edge);
 		if(face->_edges) {
 			edge->_nextFaceEdge = face->_edges;
@@ -492,6 +566,9 @@ public:
 		_vertexPool.swap(other._vertexPool);
 		_edgePool.swap(other._edgePool);
 		_facePool.swap(other._facePool);
+		_reclaimedFaces.swap(other._reclaimedFaces);
+		_reclaimedEdges.swap(other._reclaimedEdges);
+		_reclaimedVertices.swap(other._reclaimedVertices);
 	}
 
 	/// Converts this half-edge mesh to a triangle mesh.
@@ -634,6 +711,15 @@ public:
 		return true;
 	}
 
+	/// Re-assigned indices to faces and vertices of the mesh so that the indices
+	/// form a consecutive sequence starting at zero.
+	void reindexVerticesAndFaces() {
+		int vindex = 0;
+		for(Vertex* vertex : vertices()) vertex->_index = vindex++;
+		int findex = 0;
+		for(Face* face : faces()) face->_index = findex++;
+	}
+
 private:
 
 	/// This derived class is needed to make the protected Vertex constructor accessible.
@@ -666,10 +752,22 @@ private:
 	/// The faces of the mesh.
 	std::vector<Face*> _faces;
 	MemoryPool<InternalFace> _facePool;
+
+	/// A list of faces that have been deleted from the mesh.
+	/// They can be reused when a new face is to be created.
+	std::vector<Face*> _reclaimedFaces;
+
+	/// A list of haldedges that have been deleted from the mesh.
+	/// They can be reused when a new edge is to be created.
+	std::vector<Edge*> _reclaimedEdges;
+
+	/// A list of vertices that have been deleted from the mesh.
+	/// They can be reused when a new vertex is to be created.
+	std::vector<Vertex*> _reclaimedVertices;
 };
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_HALF_EDGE_MESH_H
+

@@ -24,7 +24,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, ParcasFileImporter, ParticleImporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ParcasFileImporter, ParticleImporter);
 
 // Byte-swaps a 32 bit word.
 #define SWAP32(x) (((uint32_t)(x) >> 24) |			\
@@ -259,7 +259,7 @@ void ParcasFileImporter::ParcasFileImportTask::parseFile(CompressedTextReader& t
     if(!file.seek((qint64)atom_off))
     	throw Exception(tr("PARCAS file parsing error: Seek error: %1").arg(file.errorString()));
 
-	setProgressRange(numAtoms);
+	setProgressMaximum(numAtoms);
 
 	// Parse atoms.
 	for(int i = 0; i < numAtoms; i++) {

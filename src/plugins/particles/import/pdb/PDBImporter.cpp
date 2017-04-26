@@ -27,7 +27,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, PDBImporter, ParticleImporter);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(PDBImporter, ParticleImporter);
 
 /******************************************************************************
 * Checks if the given file has format that can be read by this importer.
@@ -110,7 +110,7 @@ void PDBImporter::PDBImportTask::parseFile(CompressedTextReader& stream)
 		}
 	}
 
-	setProgressRange(numAtoms);
+	setProgressMaximum(numAtoms);
 
 	// Jump back to beginning of file.
 	stream.seek(0);

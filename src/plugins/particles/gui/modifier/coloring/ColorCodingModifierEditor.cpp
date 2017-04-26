@@ -32,12 +32,13 @@
 #include <gui/properties/CustomParameterUI.h>
 #include <gui/properties/IntegerRadioButtonParameterUI.h>
 #include <gui/dialogs/SaveImageFileDialog.h>
+#include <gui/utilities/concurrent/ProgressDialog.h>
 #include <core/plugins/PluginManager.h>
 #include "ColorCodingModifierEditor.h"
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, ColorCodingModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(ColorCodingModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(ColorCodingModifier, ColorCodingModifierEditor);
 
 /******************************************************************************
@@ -57,7 +58,7 @@ void ColorCodingModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	layout3->setContentsMargins(0,0,0,0);
 	layout3->setSpacing(4);
 	layout3->addWidget(new QLabel(tr("Operate on:")));
-	IntegerRadioButtonParameterUI* modeUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::_colorApplicationMode));
+	IntegerRadioButtonParameterUI* modeUI = new IntegerRadioButtonParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::colorApplicationMode));
 	QRadioButton* particlesModeBtn = modeUI->addRadioButton(ColorCodingModifier::Particles, tr("particles"));
 	QRadioButton* bondsModeBtn = modeUI->addRadioButton(ColorCodingModifier::Bonds, tr("bonds"));
 	QRadioButton* vectorsModeBtn = modeUI->addRadioButton(ColorCodingModifier::Vectors, tr("vectors"));
@@ -68,8 +69,8 @@ void ColorCodingModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	layout1->addLayout(layout3);
 	layout1->addSpacing(4);
 
-	ParticlePropertyParameterUI* sourceParticlePropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::_sourceParticleProperty));
-	BondPropertyParameterUI* sourceBondPropertyUI = new BondPropertyParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::_sourceBondProperty));
+	ParticlePropertyParameterUI* sourceParticlePropertyUI = new ParticlePropertyParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::sourceParticleProperty));
+	BondPropertyParameterUI* sourceBondPropertyUI = new BondPropertyParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::sourceBondProperty));
 	QLabel* particlePropertyLabel = new QLabel(tr("Particle property:"));
 	layout1->addWidget(particlePropertyLabel);
 	layout1->addWidget(sourceParticlePropertyUI->comboBox());
@@ -112,7 +113,7 @@ void ColorCodingModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	layout1->addLayout(layout2);
 
 	// End value parameter.
-	FloatParameterUI* endValuePUI = new FloatParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::_endValueCtrl));
+	FloatParameterUI* endValuePUI = new FloatParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::endValueController));
 	layout2->addWidget(endValuePUI->label(), 0, 0);
 	layout2->addLayout(endValuePUI->createFieldLayout(), 0, 1);
 
@@ -122,7 +123,7 @@ void ColorCodingModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	layout2->addWidget(colorLegendLabel, 1, 1);
 
 	// Start value parameter.
-	FloatParameterUI* startValuePUI = new FloatParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::_startValueCtrl));
+	FloatParameterUI* startValuePUI = new FloatParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::startValueController));
 	layout2->addWidget(startValuePUI->label(), 2, 0);
 	layout2->addLayout(startValuePUI->createFieldLayout(), 2, 1);
 
@@ -136,9 +137,13 @@ void ColorCodingModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	layout2->addWidget(exportBtn, 1, 0, Qt::AlignCenter);
 
 	layout1->addSpacing(8);
-	QPushButton* adjustBtn = new QPushButton(tr("Adjust range"), rollout);
-	connect(adjustBtn, &QPushButton::clicked, this, &ColorCodingModifierEditor::onAdjustRange);
-	layout1->addWidget(adjustBtn);
+	QPushButton* adjustRangeBtn = new QPushButton(tr("Adjust range"), rollout);
+	connect(adjustRangeBtn, &QPushButton::clicked, this, &ColorCodingModifierEditor::onAdjustRange);
+	layout1->addWidget(adjustRangeBtn);
+	layout1->addSpacing(4);
+	QPushButton* adjustRangeGlobalBtn = new QPushButton(tr("Adjust range (all frames)"), rollout);
+	connect(adjustRangeGlobalBtn, &QPushButton::clicked, this, &ColorCodingModifierEditor::onAdjustRangeGlobal);
+	layout1->addWidget(adjustRangeGlobalBtn);
 	layout1->addSpacing(4);
 	QPushButton* reverseBtn = new QPushButton(tr("Reverse range"), rollout);
 	connect(reverseBtn, &QPushButton::clicked, this, &ColorCodingModifierEditor::onReverseRange);
@@ -147,11 +152,11 @@ void ColorCodingModifierEditor::createUI(const RolloutInsertionParameters& rollo
 	layout1->addSpacing(8);
 
 	// Only selected particles/bonds.
-	BooleanParameterUI* onlySelectedPUI = new BooleanParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::_colorOnlySelected));
+	BooleanParameterUI* onlySelectedPUI = new BooleanParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::colorOnlySelected));
 	layout1->addWidget(onlySelectedPUI->checkBox());
 
 	// Keep selection
-	BooleanParameterUI* keepSelectionPUI = new BooleanParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::_keepSelection));
+	BooleanParameterUI* keepSelectionPUI = new BooleanParameterUI(this, PROPERTY_FIELD(ColorCodingModifier::keepSelection));
 	layout1->addWidget(keepSelectionPUI->checkBox());
 	connect(onlySelectedPUI->checkBox(), &QCheckBox::toggled, keepSelectionPUI, &BooleanParameterUI::setEnabled);
 	keepSelectionPUI->setEnabled(false);
@@ -210,7 +215,7 @@ void ColorCodingModifierEditor::updateColorGradient()
 bool ColorCodingModifierEditor::referenceEvent(RefTarget* source, ReferenceEvent* event)
 {
 	if(source == editObject() && event->type() == ReferenceEvent::ReferenceChanged &&
-			static_cast<ReferenceFieldEvent*>(event)->field() == PROPERTY_FIELD(ColorCodingModifier::_colorGradient)) {
+			static_cast<ReferenceFieldEvent*>(event)->field() == PROPERTY_FIELD(ColorCodingModifier::colorGradient)) {
 		updateColorGradient();
 	}
 	return ParticleModifierEditor::referenceEvent(source, event);
@@ -235,7 +240,7 @@ void ColorCodingModifierEditor::onColorGradientSelected(int index)
 				QSettings settings;
 				settings.beginGroup(ColorCodingModifier::OOType.plugin()->pluginId());
 				settings.beginGroup(ColorCodingModifier::OOType.name());
-				settings.setValue(PROPERTY_FIELD(ColorCodingModifier::_colorGradient).identifier(),
+				settings.setValue(PROPERTY_FIELD(ColorCodingModifier::colorGradient).identifier(),
 						QVariant::fromValue(OvitoObjectType::encodeAsString(descriptor)));
 			}
 		});
@@ -262,6 +267,20 @@ void ColorCodingModifierEditor::onAdjustRange()
 
 	undoableTransaction(tr("Adjust range"), [mod]() {
 		mod->adjustRange();
+	});
+}
+
+/******************************************************************************
+* Is called when the user presses the "Adjust range over all frames" button.
+******************************************************************************/
+void ColorCodingModifierEditor::onAdjustRangeGlobal()
+{
+	ColorCodingModifier* mod = static_object_cast<ColorCodingModifier>(editObject());
+	OVITO_CHECK_OBJECT_POINTER(mod);
+
+	undoableTransaction(tr("Adjust range"), [this, mod]() {
+		ProgressDialog progressDialog(container(), mod->dataset()->container()->taskManager(), tr("Determining min/max property values"));
+		mod->adjustRangeGlobal(progressDialog.taskManager());
 	});
 }
 
@@ -306,7 +325,7 @@ void ColorCodingModifierEditor::onExportColorScale()
 		QString imageFilename = fileDialog.imageInfo().filename();
 		if(!image.scaled(legendWidth, legendHeight, Qt::IgnoreAspectRatio, Qt::FastTransformation).save(imageFilename, fileDialog.imageInfo().format())) {
 			Exception ex(tr("Failed to save image to file '%1'.").arg(imageFilename));
-			ex.showError();
+			ex.reportError();
 		}
 	}
 }

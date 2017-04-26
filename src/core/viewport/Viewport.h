@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VIEWPORT_H
-#define __OVITO_VIEWPORT_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/reference/RefTarget.h>
@@ -129,10 +129,6 @@ public:
 	/// \brief Returns whether the rendering of the viewport's contents is currently in progress.
 	bool isRendering() const { return _isRendering; }
 
-	/// \brief Returns the view type of the viewport.
-	/// \return The type of view used in the viewport.
-	ViewType viewType() const { return _viewType; }
-
 	/// \brief Changes the view type.
 	/// \param type The new view type.
 	/// \param keepViewParams When setting the view type to ViewType::VIEW_ORTHO or ViewType::VIEW_PERSPECTIVE,
@@ -145,30 +141,14 @@ public:
 	///        returns false if it is using an orthogonal projection.
 	bool isPerspectiveProjection() const;
 
-	/// \brief Returns the field of view value of the viewport.
-	/// \return Vertical camera angle in radians if the viewport uses a perspective projection or
-	///         the field of view in the vertical direction in world units if the viewport
-	///         uses an orthogonal projection.
-	FloatType fieldOfView() const { return _fieldOfView; }
-
 	/// \brief Sets the zoom of the viewport.
 	/// \param fov Vertical camera angle in radians if the viewport uses a perspective projection or
 	///            the field of view in the vertical direction in world units if the viewport
 	///            uses an orthogonal projection.
 	void setFieldOfView(FloatType fov) {
 		// Clamp FOV to reasonable interval.
-		if(fov > 1e12f) fov = 1e12f;
-		else if(fov < -1e12f) fov = -1e12f;
-		_fieldOfView = fov;
+		_fieldOfView = qBound(FloatType(-1e12), fov, FloatType(1e12));
 	}
-
-	/// \brief Returns the orientation of the viewport's camera in space.
-	/// \note This is only used when viewNode() == NULL.
-	const AffineTransformation& cameraTransformation() const { return _cameraTM; }
-
-	/// \brief Sets the position and orientation of the viewport's camera in space.
-	/// \note This only has effect when viewNode() == NULL.
-	void setCameraTransformation(const AffineTransformation& tm) { _cameraTM = tm; }
 
 	/// \brief Returns the viewing direction of the camera.
 	Vector3 cameraDirection() const {
@@ -193,34 +173,6 @@ public:
 
 	/// Return the current 3D projection used to render the contents of the viewport.
 	const ViewProjectionParameters& projectionParams() const { return _projParams; }
-
-	/// \brief Returns whether the viewport displays a realtime preview of the rendered image.
-	bool renderPreviewMode() const { return _renderPreviewMode; }
-
-	/// \brief Sets whether the viewport displays a realtime preview of the rendered image.
-	void setRenderPreviewMode(bool show) { _renderPreviewMode = show; }
-
-	/// \brief Returns whether the grid is shown in the viewport.
-	bool isGridVisible() const { return _showGrid; }
-
-	/// \brief Sets whether the grid is shown in the viewport.
-	void setGridVisible(bool showGrid) { _showGrid = showGrid; }
-
-	/// \brief Returns whether stereoscopic rendering is enabled for this viewport.
-	bool stereoscopicMode() const { return _stereoscopicMode; }
-
-	/// \brief Enables or disables stereoscopic rendering for this viewport.
-	void setStereoscopicMode(bool enable) { _stereoscopicMode = enable; }
-
-	/// \brief Gets the scene node used as camera for the viewport.
-	/// \return The scene node or \c NULL if no scene node has been set.
-	ObjectNode* viewNode() const { return _viewNode; }
-
-	/// \brief Sets the scene node used as camera for the viewport.
-	/// \param node The scene node to be used as view point. The scene node must be a camera object and the
-	///             viewport type must have been set to ViewType::VIEW_SCENENODE using setViewType()
-	///             to enable the camera tracking mode for this viewport.
-	void setViewNode(ObjectNode* node) { _viewNode = node; }
 
 	/// \brief Returns the current orbit center for this viewport.
 	Point3 orbitCenter();
@@ -279,25 +231,12 @@ public:
 	/// \brief Zooms to the extents of the given bounding box.
 	Q_INVOKABLE void zoomToBox(const Box3& box);
 
-	/// \brief Returns the transformation matrix that defines the orientation of the viewport grid in world space.
-	const AffineTransformation& gridMatrix() const { return _gridMatrix; }
-
-	/// \brief Sets the orientation of the viewport grid in world space.
-	void setGridMatrix(const AffineTransformation& tm) { _gridMatrix = tm; }
-
-	/// \brief Returns the caption of the viewport.
-	/// \return The title of the viewport.
-	const QString& viewportTitle() const { return _viewportTitle; }
-
 	/// \brief Returns a color value for drawing something in the viewport. The user can configure the color for each element.
 	/// \param which The enum constant that specifies what type of element to draw.
 	/// \return The color that should be used for the given element type.
 	static const Color& viewportColor(ViewportSettings::ViewportColor which) {
 		return ViewportSettings::getSettings().viewportColor(which);
 	}
-
-	/// Returns this viewport's list of overlays.
-	const QVector<ViewportOverlay*>& overlays() const { return _overlays; }
 
 	/// \brief Inserts an overlay into this viewport's list of overlays.
 	/// \param index The position at which to insert the overlay.
@@ -346,9 +285,6 @@ protected:
 	/// Is called when a RefTarget has been removed from a VectorReferenceField.
 	virtual void referenceRemoved(const PropertyFieldDescriptor& field, RefTarget* oldTarget, int listIndex) override;
 
-	/// Loads the class' contents from an input stream.
-	virtual void loadFromStream(ObjectLoadStream& stream) override;
-
 protected:
 
 	/// Updates the title text of the viewport based on the current view type.
@@ -366,39 +302,31 @@ private Q_SLOTS:
 private:
 
 	/// The type of the viewport (top, left, perspective, etc.)
-	PropertyField<ViewType, int> _viewType;
+	DECLARE_PROPERTY_FIELD(ViewType, viewType);
 
 	/// The orientation of the grid.
-	PropertyField<AffineTransformation> _gridMatrix;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(AffineTransformation, gridMatrix, setGridMatrix);
 
 	/// The zoom or field of view.
-	PropertyField<FloatType> _fieldOfView;
-
-	/// The position of the camera in world space.
-	/// Note: This property field is obsolete and no longer used. We only keep it for file compatibility.
-	PropertyField<Point3> _cameraPosition;
-
-	/// The viewing direction of the camera in world space.
-	/// Note: This property field is obsolete and no longer used. We only keep it for file compatibility.
-	PropertyField<Vector3> _cameraDirection;
+	DECLARE_PROPERTY_FIELD(FloatType, fieldOfView);
 
 	/// The orientation of the camera.
-	PropertyField<AffineTransformation> _cameraTM;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(AffineTransformation, cameraTransformation, setCameraTransformation);
 
 	/// Indicates whether the rendering frame is shown.
-	PropertyField<bool> _renderPreviewMode;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, renderPreviewMode, setRenderPreviewMode);
 
 	/// Indicates whether the grid is shown.
-	PropertyField<bool> _showGrid;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, isGridVisible, setGridVisible);
 
 	/// Enables stereoscopic rendering.
-	PropertyField<bool> _stereoscopicMode;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, stereoscopicMode, setStereoscopicMode);
 
 	/// The scene node (camera) that has been selected as the view node.
-	ReferenceField<ObjectNode> _viewNode;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(ObjectNode, viewNode, setViewNode);
 
 	/// The title of the viewport.
-	PropertyField<QString> _viewportTitle;
+	DECLARE_PROPERTY_FIELD(QString, viewportTitle);
 
 	/// This flag is true during the rendering phase.
 	bool _isRendering;
@@ -407,7 +335,7 @@ private:
 	ViewProjectionParameters _projParams;
 
 	/// The list of overlay objects owned by this viewport.
-	VectorReferenceField<ViewportOverlay> _overlays;
+	DECLARE_VECTOR_REFERENCE_FIELD(ViewportOverlay, overlays);
 
 	/// The GUI window associated with this viewport.
 	ViewportWindowInterface* _window;
@@ -416,20 +344,6 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_viewNode);
-	DECLARE_PROPERTY_FIELD(_viewType);
-	DECLARE_PROPERTY_FIELD(_shadingMode);
-	DECLARE_PROPERTY_FIELD(_gridMatrix);
-	DECLARE_PROPERTY_FIELD(_fieldOfView);
-	DECLARE_PROPERTY_FIELD(_cameraPosition);
-	DECLARE_PROPERTY_FIELD(_cameraDirection);
-	DECLARE_PROPERTY_FIELD(_renderPreviewMode);
-	DECLARE_PROPERTY_FIELD(_viewportTitle);
-	DECLARE_PROPERTY_FIELD(_cameraTM);
-	DECLARE_PROPERTY_FIELD(_showGrid);
-	DECLARE_PROPERTY_FIELD(_stereoscopicMode);
-	DECLARE_VECTOR_REFERENCE_FIELD(_overlays);
 };
 
 OVITO_END_INLINE_NAMESPACE
@@ -440,4 +354,4 @@ Q_DECLARE_TYPEINFO(Ovito::Viewport::ViewType, Q_PRIMITIVE_TYPE);
 
 #include <core/rendering/SceneRenderer.h>
 
-#endif // __OVITO_VIEWPORT_H
+

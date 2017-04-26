@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SLIP_SURFACE_DISPLAY_H
-#define __OVITO_SLIP_SURFACE_DISPLAY_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/scene/objects/AsynchronousDisplayObject.h>
@@ -50,20 +50,14 @@ public:
 	/// \brief Computes the bounding box of the object.
 	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
 
-	/// Returns whether the mesh is rendered using smooth shading.
-	bool smoothShading() const { return _smoothShading; }
-
-	/// Sets whether the mesh is rendered using smooth shading.
-	void setSmoothShading(bool smoothShading) { _smoothShading = smoothShading; }
-
 	/// Returns the transparency of the surface mesh.
-	FloatType surfaceTransparency() const { return _surfaceTransparency ? _surfaceTransparency->currentFloatValue() : 0.0f; }
+	FloatType surfaceTransparency() const { return surfaceTransparencyController() ? surfaceTransparencyController()->currentFloatValue() : 0.0f; }
 
 	/// Sets the transparency of the surface mesh.
-	void setSurfaceTransparency(FloatType transparency) { if(_surfaceTransparency) _surfaceTransparency->setCurrentFloatValue(transparency); }
+	void setSurfaceTransparency(FloatType transparency) { if(surfaceTransparencyController()) surfaceTransparencyController()->setCurrentFloatValue(transparency); }
 
 	/// Generates the final triangle mesh, which will be rendered.
-	static bool buildMesh(const SlipSurfaceData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, const QStringList& structureNames, TriMesh& output, std::vector<ColorA>& materialColors, FutureInterfaceBase* progress = nullptr);
+	static bool buildMesh(const SlipSurfaceData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, const QStringList& structureNames, TriMesh& output, std::vector<ColorA>& materialColors, PromiseBase& promise);
 
 protected:
 
@@ -107,10 +101,10 @@ protected:
 	static bool splitFace(TriMesh& output, int faceIndex, int oldVertexCount, std::vector<Point3>& newVertices, std::map<std::pair<int,int>,std::pair<int,int>>& newVertexLookupMap, const SimulationCell& cell, size_t dim);
 
 	/// Controls whether the mesh is rendered using smooth shading.
-	PropertyField<bool> _smoothShading;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, smoothShading, setSmoothShading);
 
 	/// Controls the transparency of the surface mesh.
-	ReferenceField<Controller> _surfaceTransparency;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, surfaceTransparencyController, setSurfaceTransparencyController);
 
 	/// The buffered geometry used to render the surface mesh.
 	std::shared_ptr<MeshPrimitive> _surfaceBuffer;
@@ -138,19 +132,14 @@ protected:
 	/// Indicates that the triangle mesh representation of the surface has recently been updated.
 	bool _trimeshUpdate;
 
-private:
-
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Slip surface");
-
-	DECLARE_PROPERTY_FIELD(_smoothShading);
-	DECLARE_REFERENCE_FIELD(_surfaceTransparency);
 };
 
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_SLIP_SURFACE_DISPLAY_H
+

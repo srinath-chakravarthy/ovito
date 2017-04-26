@@ -27,7 +27,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysisGui, PatternCatalogEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(PatternCatalogEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(PatternCatalog, PatternCatalogEditor);
 
 /******************************************************************************
@@ -87,7 +87,7 @@ void PatternCatalogEditor::createUI(const RolloutInsertionParameters& rolloutPar
 	layout->addWidget(subEditorContainer);
 
 	layout->insertWidget(0, new QLabel(tr("Structure types:")));
-	typesListUI = new CustomRefTargetListParameterUI(this, PROPERTY_FIELD(PatternCatalog::_patterns), RolloutInsertionParameters().insertInto(subEditorContainer));
+	typesListUI = new CustomRefTargetListParameterUI(this, PROPERTY_FIELD(PatternCatalog::patterns), RolloutInsertionParameters().insertInto(subEditorContainer));
 	layout->insertWidget(1, typesListUI->tableWidget(200));
 	typesListUI->tableWidget()->setAutoScroll(false);
 	connect(typesListUI->tableWidget(), &QTableWidget::doubleClicked, this, &PatternCatalogEditor::onDoubleClickPattern);

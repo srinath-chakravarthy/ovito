@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_TRI_MESH_H
-#define __OVITO_TRI_MESH_H
+#pragma once
+
 
 #include <core/Core.h>
 
@@ -159,6 +159,8 @@ public:
 		_vertexColors.swap(other._vertexColors);
 		std::swap(_hasFaceColors, other._hasFaceColors);
 		_faceColors.swap(other._faceColors);
+		std::swap(_hasNormals, other._hasNormals);
+		_normals.swap(other._normals);
 	}
 
 	/// \brief Returns the bounding box of the mesh.
@@ -412,6 +414,70 @@ public:
 		vertexColor(index) = c;
 	}
 
+	/// \brief Returns whether this mesh has normal vectors stored.
+	bool hasNormals() const {
+		return _hasNormals;
+	}
+
+	/// \brief Controls whether this mesh has normal vectors (three per face).
+	void setHasNormals(bool enableNormals) {
+		_hasNormals = enableNormals;
+		_normals.resize(enableNormals ? (_faces.size()*3) : 0);
+	}
+
+	/// \brief Allows direct access to the face vertex normals of the mesh.
+	/// \return A reference to the vector that stores all normal vectors (three per face).
+	/// \note After you have finished changing the normals,
+	/// you have to call invalidateFaces() to let the mesh know that it has to update its internal
+	/// caches based on the new normals.
+	QVector<Vector3>& normals() {
+		OVITO_ASSERT(_hasNormals);
+		OVITO_ASSERT(_normals.size() == _faces.size()*3);
+		return _normals;
+	}
+
+	/// \brief Allows direct read-access to the normal vectors of the mesh.
+	/// \return A constant reference to the vector that stores all normal vectors (three per face).
+	const QVector<Vector3>& normals() const {
+		OVITO_ASSERT(_hasNormals);
+		OVITO_ASSERT(_normals.size() == _faces.size()*3);
+		return _normals;
+	}
+
+	/// \brief Returns the normal vector stored for the given vertex of the given face.
+	/// \param faceIndex The index starting at 0 of the face whose normal should be returned.
+	/// \param vertexIndex The face vertex (0-2) for which the normal should be returned.
+	/// \return The stored normal vector.
+	const Vector3& faceVertexNormal(int faceIndex, int vertexIndex) const {
+		OVITO_ASSERT(faceIndex >= 0 && faceIndex < faceCount());
+		OVITO_ASSERT(vertexIndex >= 0 && vertexIndex < 3);
+		return normals()[faceIndex*3 + vertexIndex];
+	}
+
+	/// \brief Returns a reference to the stored normal vector of the given vertex of the given face.
+	/// \param faceIndex The index starting at 0 of the face whose normal should be returned.
+	/// \param vertexIndex The face vertex (0-2) for which the normal should be returned.
+	/// \return A reference to the normal vector of the given face vertex. The reference can be used to alter the vector..
+	/// \note After you have finished changing the normals,
+	/// you have to call invalidateFaces() to let the mesh know that it has
+	/// to update its internal caches based on the new normals.
+	Vector3& faceVertexNormal(int faceIndex, int vertexIndex) {
+		OVITO_ASSERT(faceIndex >= 0 && faceIndex < faceCount());
+		OVITO_ASSERT(vertexIndex >= 0 && vertexIndex < 3);
+		return normals()[faceIndex*3 + vertexIndex];
+	}
+
+	/// \brief Sets the normal vectors stored for a vertex of a face.
+	/// \param faceIndex The index starting at 0 of the face whose normal should be set.
+	/// \param vertexIndex The face vertex (0-2) for which the normal should be set.
+	/// \param n The new normal vector.
+	/// \note After you have finished changing the normal vectors,
+	/// you have to call invalidateFaces() to let the mesh know that it has
+	/// to update its internal caches based on the new normals.
+	void setFaceVertexNormal(int faceIndex, int vertexIndex, const Vector3& n) {
+		faceVertexNormal(faceIndex, vertexIndex) = n;
+	}
+
 	/************************************* Ray intersection *************************************/
 
 	/// \brief Performs a ray intersection calculation.
@@ -463,6 +529,12 @@ private:
 
 	/// Array of mesh faces.
 	QVector<TriMeshFace> _faces;
+
+	/// Indicates that normal vectors are stored in this mesh.
+	bool _hasNormals;
+
+	/// Array of normals (three per face).
+	QVector<Vector3> _normals;	
 };
 
 OVITO_END_INLINE_NAMESPACE
@@ -471,4 +543,4 @@ OVITO_END_INLINE_NAMESPACE
 
 Q_DECLARE_TYPEINFO(Ovito::TriMeshFace, Q_MOVABLE_TYPE);
 
-#endif // __OVITO_TRI_MESH_H
+

@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_BONDS_OBJECT_H
-#define __OVITO_BONDS_OBJECT_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DataObjectWithSharedStorage.h>
@@ -83,4 +83,4 @@ private:
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_BONDS_OBJECT_H
+

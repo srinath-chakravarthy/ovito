@@ -95,8 +95,6 @@ SET(SourceFiles
 	properties/VariantComboBoxParameterUI.cpp
 	properties/Vector3ParameterUI.cpp
 	rendering/ViewportSceneRenderer.cpp
-	rendering/StandardSceneRenderer.cpp
-	rendering/StandardSceneRendererEditor.cpp
 	rendering/RenderSettingsEditor.cpp
 	viewport/ViewportWindow.cpp
 	viewport/ViewportMenu.cpp
@@ -112,6 +110,7 @@ SET(SourceFiles
 	scene/objects/camera/CameraObjectEditor.cpp
 	scene/objects/geometry/TriMeshDisplayEditor.cpp
 	utilities/io/GuiFileManager.cpp
+	utilities/concurrent/ProgressDialog.cpp
 	animation/controller/TCBInterpolationControllerEditor.cpp
 )
 
@@ -121,6 +120,9 @@ QT5_ADD_RESOURCES(ResourceFiles resources/gui.qrc)
 # Build library
 ADD_LIBRARY(Gui SHARED GUI.cpp ${SourceFiles} ${ResourceFiles})
 
+# Pass name of gui plugin to the code.
+TARGET_COMPILE_DEFINITIONS(Gui PRIVATE "OVITO_PLUGIN_NAME=\"Gui\"")
+
 # Set default include directory.
 TARGET_INCLUDE_DIRECTORIES(Gui PUBLIC "$<BUILD_INTERFACE:${OVITO_SOURCE_BASE_DIR}/src>")
 
@@ -129,10 +131,6 @@ TARGET_LINK_LIBRARIES(Gui PUBLIC Core OpenGLRenderer)
 
 # Link Qt5.
 TARGET_LINK_LIBRARIES(Gui PUBLIC Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Network)
-
-# Pass version information to source code.
-SET_SOURCE_FILES_PROPERTIES("app/Application.cpp" PROPERTIES COMPILE_DEFINITIONS 
-    "OVITO_VERSION_MAJOR=${OVITO_VERSION_MAJOR};OVITO_VERSION_MINOR=${OVITO_VERSION_MINOR};OVITO_VERSION_REVISION=${OVITO_VERSION_REVISION};OVITO_VERSION_STRING=\"${OVITO_VERSION_STRING}\"")
 
 # Speed up compilation by using precompiled headers.
 ADD_PRECOMPILED_HEADER(Gui gui/GUI.h)

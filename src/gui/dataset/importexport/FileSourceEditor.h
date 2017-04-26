@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_FILE_SOURCE_OBJECT_EDITOR_H
-#define __OVITO_FILE_SOURCE_OBJECT_EDITOR_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <gui/properties/PropertiesEditor.h>
@@ -89,11 +89,6 @@ private:
 	StatusWidget* _statusLabel;
 	QComboBox* _framesListBox;
 
-#if 0
-	std::vector<OORef<PropertiesEditor>> _subEditors;
-	RolloutInsertionParameters _subEditorRolloutParams;
-#endif
-
 	Q_OBJECT
 	OVITO_OBJECT
 };
@@ -102,4 +97,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_FILE_SOURCE_OBJECT_EDITOR_H
+

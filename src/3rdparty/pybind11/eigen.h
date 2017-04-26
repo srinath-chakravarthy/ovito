@@ -17,18 +17,17 @@
 #  pragma GCC diagnostic push
 #  pragma GCC diagnostic ignored "-Wconversion"
 #  pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#  if __GNUC__ >= 7
+#    pragma GCC diagnostic ignored "-Wint-in-bool-context"
+#  endif
 #endif
 
 #include <Eigen/Core>
 #include <Eigen/SparseCore>
 
-#if defined(__GNUG__) || defined(__clang__)
-#  pragma GCC diagnostic pop
-#endif
-
 #if defined(_MSC_VER)
-#pragma warning(push)
-#pragma warning(disable: 4127) // warning C4127: Conditional expression is constant
+#  pragma warning(push)
+#  pragma warning(disable: 4127) // warning C4127: Conditional expression is constant
 #endif
 
 NAMESPACE_BEGIN(pybind11)
@@ -42,9 +41,10 @@ template <typename T> using is_eigen_ref = is_template_base_of<Eigen::RefBase, T
 // basically covers anything that can be assigned to a dense matrix but that don't have a typical
 // matrix data layout that can be copied from their .data().  For example, DiagonalMatrix and
 // SelfAdjointView fall into this category.
-template <typename T> using is_eigen_base = bool_constant<
-    is_template_base_of<Eigen::EigenBase, T>::value
-    && !is_eigen_dense<T>::value && !is_eigen_sparse<T>::value
+template <typename T> using is_eigen_base = all_of<
+    is_template_base_of<Eigen::EigenBase, T>,
+    negation<is_eigen_dense<T>>,
+    negation<is_eigen_sparse<T>>
 >;
 
 template<typename Type>
@@ -54,8 +54,8 @@ struct type_caster<Type, enable_if_t<is_eigen_dense<Type>::value && !is_eigen_re
     static constexpr bool isVector = Type::IsVectorAtCompileTime;
 
     bool load(handle src, bool) {
-        array_t<Scalar> buf(src, true);
-        if (!buf.check())
+        auto buf = array_t<Scalar>::ensure(src);
+        if (!buf)
             return false;
 
         if (buf.ndim() == 1) {
@@ -137,7 +137,7 @@ struct type_caster<Eigen::Ref<CVDerived, Options, StrideType>> {
 protected:
     using Type = Eigen::Ref<CVDerived, Options, StrideType>;
     using Derived = typename std::remove_const<CVDerived>::type;
-    using DerivedCaster = type_caster<Derived>;
+    using DerivedCaster = make_caster<Derived>;
     DerivedCaster derived_caster;
     std::unique_ptr<Type> value;
 public:
@@ -158,7 +158,7 @@ template <typename Type>
 struct type_caster<Type, enable_if_t<is_eigen_base<Type>::value && !is_eigen_ref<Type>::value>> {
 protected:
     using Matrix = Eigen::Matrix<typename Type::Scalar, Eigen::Dynamic, Eigen::Dynamic>;
-    using MatrixCaster = type_caster<Matrix>;
+    using MatrixCaster = make_caster<Matrix>;
 public:
     [[noreturn]] bool load(handle, bool) { pybind11_fail("Unable to load() into specialized EigenBase object"); }
     static handle cast(const Type &src, return_value_policy policy, handle parent) { return MatrixCaster::cast(Matrix(src), policy, parent); }
@@ -182,7 +182,7 @@ struct type_caster<Type, enable_if_t<is_eigen_sparse<Type>::value>> {
         if (!src)
             return false;
 
-        object obj(src, true);
+        auto obj = reinterpret_borrow<object>(src);
         object sparse_module = module::import("scipy.sparse");
         object matrix_type = sparse_module.attr(
             rowMajor ? "csr_matrix" : "csc_matrix");
@@ -201,7 +201,7 @@ struct type_caster<Type, enable_if_t<is_eigen_sparse<Type>::value>> {
         auto shape = pybind11::tuple((pybind11::object) obj.attr("shape"));
         auto nnz = obj.attr("nnz").cast<Index>();
 
-        if (!values.check() || !innerIndices.check() || !outerIndices.check())
+        if (!values || !innerIndices || !outerIndices)
             return false;
 
         value = Eigen::MappedSparseMatrix<Scalar, Type::Flags, StorageIndex>(
@@ -234,6 +234,8 @@ struct type_caster<Type, enable_if_t<is_eigen_sparse<Type>::value>> {
 NAMESPACE_END(detail)
 NAMESPACE_END(pybind11)
 
-#if defined(_MSC_VER)
-#pragma warning(pop)
+#if defined(__GNUG__) || defined(__clang__)
+#  pragma GCC diagnostic pop
+#elif defined(_MSC_VER)
+#  pragma warning(pop)
 #endif

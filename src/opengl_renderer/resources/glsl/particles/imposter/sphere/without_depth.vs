@@ -21,6 +21,7 @@
 
 // Inputs from calling program:
 uniform mat4 modelviewprojection_matrix;
+uniform float radius_scalingfactor;
 
 #if __VERSION__ >= 130
 
@@ -39,7 +40,7 @@ void main()
 {
 #if __VERSION__ >= 130
 	particle_color_gs = color;
-	particle_radius_gs = particle_radius;
+	particle_radius_gs = particle_radius * radius_scalingfactor;
 	gl_Position = modelviewprojection_matrix * vec4(position, 1.0);
 #endif
 }

@@ -6,15 +6,14 @@ import ovito.modifiers.particles
 import numpy
 
 # Load the native code modules
-import Particles
-import ParticlesImporter
-import ParticlesExporter
-import CrystalAnalysis
+import ovito.plugins.Particles
+import ovito.plugins.CrystalAnalysis
 
 # Inject selected classes into parent module.
-ovito.data.DislocationNetwork = CrystalAnalysis.DislocationNetwork
-ovito.data.DislocationSegment = CrystalAnalysis.DislocationSegment
-ovito.data.PartitionMesh = CrystalAnalysis.PartitionMesh
+ovito.data.DislocationNetwork = ovito.plugins.CrystalAnalysis.DislocationNetwork
+ovito.data.DislocationSegment = ovito.plugins.CrystalAnalysis.DislocationSegment
+ovito.data.PartitionMesh = ovito.plugins.CrystalAnalysis.PartitionMesh
+ovito.data.__all__ += ['DislocationNetwork', 'DislocationSegment', 'PartitionMesh']
 
 # Implement 'dislocations' attribute of DataCollection class.
 def _DataCollection_dislocations(self):

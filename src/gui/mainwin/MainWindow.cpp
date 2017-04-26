@@ -24,6 +24,7 @@
 #include <core/viewport/ViewportConfiguration.h>
 #include <core/viewport/ViewportWindowInterface.h>
 #include <core/app/Application.h>
+#include <core/app/StandaloneApplication.h>
 #include <gui/actions/ActionManager.h>
 #include <gui/widgets/animation/AnimationTimeSpinner.h>
 #include <gui/widgets/animation/AnimationFramesToolButton.h>
@@ -43,9 +44,6 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Gui)
 
-// The global list of all open main windows of the application.
-std::vector<MainWindow*> MainWindow::_windowList;
-
 /******************************************************************************
 * The constructor of the main window class.
 ******************************************************************************/
@@ -53,9 +51,6 @@ MainWindow::MainWindow() : _datasetContainer(this)
 {
 	setWindowTitle(tr("Ovito (Open Visualization Tool)"));
 	setAttribute(Qt::WA_DeleteOnClose);
-
-	// Register window in global list.
-	_windowList.push_back(this);
 
 	// Setup the layout of docking widgets.
 	setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
@@ -71,7 +66,7 @@ MainWindow::MainWindow() : _datasetContainer(this)
 	_actionManager = new ActionManager(this);
 
 	// Let GUI auto-start objects register their actions.
-	for(const auto& obj : Application::instance().autostartObjects()) {
+	for(const auto& obj : Application::instance()->autostartObjects()) {
 		if(auto gui_obj = dynamic_object_cast<GuiAutoStartObject>(obj))
 			gui_obj->registerActions(*_actionManager);
 	}
@@ -217,8 +212,6 @@ MainWindow::MainWindow() : _datasetContainer(this)
 ******************************************************************************/
 MainWindow::~MainWindow()
 {
-	// Unregister from global list.
-	_windowList.erase(std::find(_windowList.begin(), _windowList.end(), this));
 }
 
 /******************************************************************************
@@ -226,10 +219,8 @@ MainWindow::~MainWindow()
 ******************************************************************************/
 MainWindow* MainWindow::fromDataset(DataSet* dataset)
 {
-	for(MainWindow* win : _windowList) {
-		if(win->datasetContainer().currentSet() == dataset)
-			return win;
-	}
+	if(GuiDataSetContainer* container = qobject_cast<GuiDataSetContainer*>(dataset->container()))
+		return container->mainWindow();
 	return nullptr;
 }
 
@@ -326,6 +317,12 @@ void MainWindow::createMainMenu()
 #endif
 	helpMenu->addAction(actionManager()->getAction(ACTION_HELP_ABOUT));
 
+	// Let GUI auto-start objects add their actions to the main menu.
+	for(const auto& obj : StandaloneApplication::instance()->autostartObjects()) {
+		if(auto gui_obj = dynamic_object_cast<GuiAutoStartObject>(obj))
+			gui_obj->addActionsToMenu(*_actionManager, menuBar);
+	}
+
 	setMenuBar(menuBar);
 }
 
@@ -395,7 +392,7 @@ void MainWindow::closeEvent(QCloseEvent* event)
 	}
 	catch(const Exception& ex) {
 		event->ignore();
-		ex.showError();
+		ex.reportError();
 	}
 }
 
@@ -426,7 +423,7 @@ void MainWindow::openHelpTopic(const QString& page)
 	// Use the web browser to display online help.
 	QString fullPath = helpDir.absoluteFilePath(page.isEmpty() ? QStringLiteral("index.html") : page);
 	if(!QDesktopServices::openUrl(QUrl::fromLocalFile(fullPath))) {
-		Exception(tr("Could not launch web browser to display online manual. The requested file path is %1").arg(fullPath)).showError();
+		Exception(tr("Could not launch web browser to display online manual. The requested file path is %1").arg(fullPath)).reportError();
 	}
 }
 

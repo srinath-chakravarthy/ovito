@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_SELECTION_SET_H
-#define __OVITO_PARTICLE_SELECTION_SET_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/pipeline/PipelineFlowState.h>
@@ -54,7 +54,7 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE ParticleSelectionSet(DataSet* dataset) : RefTarget(dataset), _useIdentifiers(true) {
-		INIT_PROPERTY_FIELD(ParticleSelectionSet::_useIdentifiers);
+		INIT_PROPERTY_FIELD(useIdentifiers);
 	}
 
 	/// Returns the stored selection set as a bit array.
@@ -84,9 +84,6 @@ public:
 	/// Copies the stored selection set into the given output selection particle property.
 	PipelineStatus applySelection(ParticlePropertyObject* outputSelectionProperty, ParticlePropertyObject* identifierProperty);
 
-	/// Returns true if this object tries to store identifiers of selected particle when available.
-	bool useIdentifiers() const { return _useIdentifiers; }
-
 protected:
 
 	/// Saves the class' contents to the given stream.
@@ -110,12 +107,10 @@ private:
 	QSet<int> _selectedIdentifiers;
 
 	/// Controls whether the object should store the identifiers of selected particles (when available).
-	PropertyField<bool> _useIdentifiers;
+	DECLARE_PROPERTY_FIELD(bool, useIdentifiers);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_useIdentifiers);
 
 	friend class ReplaceSelectionOperation;
 };
@@ -124,4 +119,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTICLE_SELECTION_SET_H
+

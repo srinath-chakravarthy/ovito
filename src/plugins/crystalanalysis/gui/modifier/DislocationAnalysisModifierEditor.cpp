@@ -30,11 +30,11 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysisGui, DislocationAnalysisModifierEditor, ParticleModifierEditor);
+IMPLEMENT_OVITO_OBJECT(DislocationAnalysisModifierEditor, ParticleModifierEditor);
 SET_OVITO_OBJECT_EDITOR(DislocationAnalysisModifier, DislocationAnalysisModifierEditor);
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysisGui, DislocationTypeListParameterUI, RefTargetListParameterUI);
-DEFINE_FLAGS_REFERENCE_FIELD(DislocationTypeListParameterUI, _modifier, "Modifier", DislocationAnalysisModifier, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_WEAK_REF | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
+IMPLEMENT_OVITO_OBJECT(DislocationTypeListParameterUI, RefTargetListParameterUI);
+DEFINE_FLAGS_REFERENCE_FIELD(DislocationTypeListParameterUI, modifier, "Modifier", DislocationAnalysisModifier, PROPERTY_FIELD_NO_UNDO | PROPERTY_FIELD_WEAK_REF | PROPERTY_FIELD_NO_CHANGE_MESSAGE);
 
 /******************************************************************************
 * Sets up the UI widgets of the editor.
@@ -52,7 +52,7 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	layout->addWidget(structureBox);
 	QVBoxLayout* sublayout1 = new QVBoxLayout(structureBox);
 	sublayout1->setContentsMargins(4,4,4,4);
-	VariantComboBoxParameterUI* crystalStructureUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_inputCrystalStructure));
+	VariantComboBoxParameterUI* crystalStructureUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::inputCrystalStructure));
 
 	crystalStructureUI->comboBox()->addItem(tr("Face-centered cubic (FCC)"), QVariant::fromValue((int)StructureAnalysis::LATTICE_FCC));
 	crystalStructureUI->comboBox()->addItem(tr("Hexagonal close-packed (HCP)"), QVariant::fromValue((int)StructureAnalysis::LATTICE_HCP));
@@ -68,11 +68,11 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	sublayout->setSpacing(4);
 	sublayout->setColumnStretch(1, 1);
 
-	IntegerParameterUI* maxTrialCircuitSizeUI = new IntegerParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_maxTrialCircuitSize));
+	IntegerParameterUI* maxTrialCircuitSizeUI = new IntegerParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::maxTrialCircuitSize));
 	sublayout->addWidget(maxTrialCircuitSizeUI->label(), 0, 0);
 	sublayout->addLayout(maxTrialCircuitSizeUI->createFieldLayout(), 0, 1);
 
-	IntegerParameterUI* circuitStretchabilityUI = new IntegerParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_circuitStretchability));
+	IntegerParameterUI* circuitStretchabilityUI = new IntegerParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::circuitStretchability));
 	sublayout->addWidget(circuitStretchabilityUI->label(), 1, 0);
 	sublayout->addLayout(circuitStretchabilityUI->createFieldLayout(), 1, 1);
 
@@ -84,17 +84,17 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	sublayout->setColumnStretch(0, 1);
 
 #if 0
-	BooleanParameterUI* reconstructEdgeVectorsUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_reconstructEdgeVectors));
+	BooleanParameterUI* reconstructEdgeVectorsUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::reconstructEdgeVectors));
 	sublayout->addWidget(reconstructEdgeVectorsUI->checkBox(), 0, 0);
 #endif
 
-	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::_onlySelectedParticles));
+	BooleanParameterUI* onlySelectedParticlesUI = new BooleanParameterUI(this, PROPERTY_FIELD(StructureIdentificationModifier::onlySelectedParticles));
 	sublayout->addWidget(onlySelectedParticlesUI->checkBox(), 0, 0);
 
-	BooleanParameterUI* outputInterfaceMeshUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_outputInterfaceMesh));
+	BooleanParameterUI* outputInterfaceMeshUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::outputInterfaceMesh));
 	sublayout->addWidget(outputInterfaceMeshUI->checkBox(), 1, 0);
 
-	BooleanParameterUI* onlyPerfectDislocationsUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_onlyPerfectDislocations));
+	BooleanParameterUI* onlyPerfectDislocationsUI = new BooleanParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::onlyPerfectDislocations));
 	sublayout->addWidget(onlyPerfectDislocationsUI->checkBox(), 2, 0);
 
 	// Status label.
@@ -108,16 +108,16 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 	layout->addWidget(structureTypesPUI->tableWidget());
 
 	// Open a sub-editor for the mesh display object.
-	//new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_defectMeshDisplay), rolloutParams.after(rollout));
+	//new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::defectMeshDisplay), rolloutParams.after(rollout));
 
 	// Open a sub-editor for the internal surface smoothing modifier.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_smoothSurfaceModifier), rolloutParams.after(rollout).setTitle(tr("Post-processing")));
+	new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::smoothSurfaceModifier), rolloutParams.after(rollout).setTitle(tr("Post-processing")));
 
 	// Open a sub-editor for the dislocation display object.
 	//new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_dislocationDisplay), rolloutParams.after(rollout));
 
 	// Open a sub-editor for the internal line smoothing modifier.
-	new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::_smoothDislocationsModifier), rolloutParams.after(rollout).setTitle(tr("Post-processing")));
+	new SubObjectParameterUI(this, PROPERTY_FIELD(DislocationAnalysisModifier::smoothDislocationsModifier), rolloutParams.after(rollout).setTitle(tr("Post-processing")));
 
 	// Burgers vector list.
 	_burgersFamilyListUI.reset(new DislocationTypeListParameterUI());
@@ -133,9 +133,9 @@ void DislocationAnalysisModifierEditor::createUI(const RolloutInsertionParameter
 * Constructor.
 ******************************************************************************/
 DislocationTypeListParameterUI::DislocationTypeListParameterUI(QObject* parent)
-	: RefTargetListParameterUI(parent, PROPERTY_FIELD(StructurePattern::_burgersVectorFamilies))
+	: RefTargetListParameterUI(parent, PROPERTY_FIELD(StructurePattern::burgersVectorFamilies))
 {
-	INIT_PROPERTY_FIELD(DislocationTypeListParameterUI::_modifier);
+	INIT_PROPERTY_FIELD(modifier);
 
 	connect(tableWidget(160), &QTableWidget::doubleClicked, this, &DislocationTypeListParameterUI::onDoubleClickDislocationType);
 	tableWidget()->setAutoScroll(false);

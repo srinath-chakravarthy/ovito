@@ -28,4 +28,8 @@
      a <filename>.pov</filename> file using OVITO's <link linkend="usage.export">file export function</link>. 
      This allows you to render the exported scene through POV-Ray at a later time or on a different machine.
    </para>
+   <para>
+     The omni­directional stereo projection option, which requires POV-Ray 3.7.1 or newer,
+     allows to create <link xlink:href="http://wiki.povray.org/content/HowTo:ODS">stereoscopic 360-degree VR videos</link>.
+   </para>
 </section>

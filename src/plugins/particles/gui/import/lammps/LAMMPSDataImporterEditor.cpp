@@ -25,7 +25,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Import) OVITO_BEGIN_INLINE_NAMESPACE(Formats) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, LAMMPSDataImporterEditor, FileImporterEditor);
+IMPLEMENT_OVITO_OBJECT(LAMMPSDataImporterEditor, FileImporterEditor);
 SET_OVITO_OBJECT_EDITOR(LAMMPSDataImporter, LAMMPSDataImporterEditor);
 
 /******************************************************************************
@@ -52,7 +52,8 @@ bool LAMMPSDataImporterEditor::inspectNewFile(FileImporter* importer, const QUrl
 				{ QStringLiteral("dipole"), LAMMPSDataImporter::AtomStyle_Dipole },
 				{ QStringLiteral("molecular"), LAMMPSDataImporter::AtomStyle_Molecular },
 				{ QStringLiteral("full"), LAMMPSDataImporter::AtomStyle_Full },
-				{ QStringLiteral("angle"), LAMMPSDataImporter::AtomStyle_Angle }
+				{ QStringLiteral("angle"), LAMMPSDataImporter::AtomStyle_Angle },
+				{ QStringLiteral("sphere"), LAMMPSDataImporter::AtomStyle_Sphere }
 		};
 		QStringList itemList = styleList.keys();
 

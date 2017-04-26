@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::SymmetricTensor2T class template.
  */
 
-#ifndef __OVITO_SYMMETRIC_TENSOR_H
-#define __OVITO_SYMMETRIC_TENSOR_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/utilities/io/SaveStream.h>
@@ -330,4 +330,4 @@ Q_DECLARE_METATYPE(Ovito::SymmetricTensor2*);
 Q_DECLARE_TYPEINFO(Ovito::SymmetricTensor2, Q_PRIMITIVE_TYPE);
 Q_DECLARE_TYPEINFO(Ovito::SymmetricTensor2*, Q_PRIMITIVE_TYPE);
 
-#endif // __OVITO_SYMMETRIC_TENSOR_H
+

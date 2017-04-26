@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PLUGIN_MANAGER_H
-#define __OVITO_PLUGIN_MANAGER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include "Plugin.h"
@@ -36,12 +36,24 @@ class OVITO_CORE_EXPORT PluginManager : public QObject
 
 public:
 
+	/// Create the singleton instance of this class.
+	static void initialize() {
+		_instance = new PluginManager();
+		_instance->registerLoadedPluginClasses();
+	}
+
+	/// Deletes the singleton instance of this class.
+	static void shutdown() { delete _instance; _instance = nullptr; }
+
 	/// \brief Returns the one and only instance of this class.
 	/// \return The predefined instance of the PluginManager singleton class.
 	inline static PluginManager& instance() {
 		OVITO_ASSERT_MSG(_instance != nullptr, "PluginManager::instance", "Singleton object is not initialized yet.");
 		return *_instance;
 	}
+
+	/// Searches the plugin directories for installed plugins and loads them.
+	void loadAllPlugins();
 
 	/// \brief Returns the plugin with a given identifier.
 	/// \param pluginId The identifier of the plugin to return.
@@ -65,6 +77,9 @@ public:
 	///       delete it on application shutdown.
 	void registerPlugin(Plugin* plugin);
 
+	/// Registers all classes of already loaded plugins.
+	void registerLoadedPluginClasses();
+
 	/// \brief Returns the list of directories containing the Ovito plugins.
 	QList<QDir> pluginDirs();
 
@@ -78,32 +93,22 @@ private:
 	/// The list of installed plugins.
 	QVector<Plugin*> _plugins;
 
-	/// Searches the plugin directories for installed plugins and loads their XML manifests.
-	void registerPlugins();
-
 	/////////////////////////// Maintenance ////////////////////////////////
 
 	/// Private constructor.
 	/// This is a singleton class; no public instances are allowed.
 	PluginManager();
 
-	/// Create the singleton instance of this class.
-	static void initialize() {
-		_instance = new PluginManager();
-		_instance->registerPlugins();
-	}
-
-	/// Deletes the singleton instance of this class.
-	static void shutdown() { delete _instance; _instance = nullptr; }
+	/// The position in the global linked list of native object types up to which classes have already been registered.
+	NativeOvitoObjectType* _lastRegisteredClass = nullptr;
 
 	/// The singleton instance of this class.
 	static PluginManager* _instance;
 
-	friend class Application;
 	friend class Plugin;
 };
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_PLUGIN_MANAGER_H
+

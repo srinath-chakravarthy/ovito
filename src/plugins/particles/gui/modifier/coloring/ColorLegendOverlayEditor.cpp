@@ -39,7 +39,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Coloring) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, ColorLegendOverlayEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(ColorLegendOverlayEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(ColorLegendOverlay, ColorLegendOverlayEditor);
 
 /******************************************************************************
@@ -133,7 +133,7 @@ void ColorLegendOverlayEditor::createUI(const RolloutInsertionParameters& rollou
 	sublayout->setSpacing(4);
 	sublayout->setColumnStretch(1, 1);
 
-	VariantComboBoxParameterUI* alignmentPUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_alignment));
+	VariantComboBoxParameterUI* alignmentPUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::alignment));
 	sublayout->addWidget(alignmentPUI->comboBox(), 0, 0);
 	alignmentPUI->comboBox()->addItem(tr("Top"), QVariant::fromValue((int)(Qt::AlignTop | Qt::AlignHCenter)));
 	alignmentPUI->comboBox()->addItem(tr("Top left"), QVariant::fromValue((int)(Qt::AlignTop | Qt::AlignLeft)));
@@ -144,16 +144,16 @@ void ColorLegendOverlayEditor::createUI(const RolloutInsertionParameters& rollou
 	alignmentPUI->comboBox()->addItem(tr("Left"), QVariant::fromValue((int)(Qt::AlignVCenter | Qt::AlignLeft)));
 	alignmentPUI->comboBox()->addItem(tr("Right"), QVariant::fromValue((int)(Qt::AlignVCenter | Qt::AlignRight)));
 
-	VariantComboBoxParameterUI* orientationPUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_orientation));
+	VariantComboBoxParameterUI* orientationPUI = new VariantComboBoxParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::orientation));
 	sublayout->addWidget(orientationPUI->comboBox(), 0, 1);
 	orientationPUI->comboBox()->addItem(tr("Vertical"), QVariant::fromValue((int)Qt::Vertical));
 	orientationPUI->comboBox()->addItem(tr("Horizontal"), QVariant::fromValue((int)Qt::Horizontal));
 
-	FloatParameterUI* offsetXPUI = new FloatParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_offsetX));
+	FloatParameterUI* offsetXPUI = new FloatParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::offsetX));
 	sublayout->addWidget(offsetXPUI->label(), 1, 0);
 	sublayout->addLayout(offsetXPUI->createFieldLayout(), 1, 1);
 
-	FloatParameterUI* offsetYPUI = new FloatParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_offsetY));
+	FloatParameterUI* offsetYPUI = new FloatParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::offsetY));
 	sublayout->addWidget(offsetYPUI->label(), 2, 0);
 	sublayout->addLayout(offsetYPUI->createFieldLayout(), 2, 1);
 
@@ -168,11 +168,11 @@ void ColorLegendOverlayEditor::createUI(const RolloutInsertionParameters& rollou
 	sublayout->setSpacing(4);
 	sublayout->setColumnStretch(1, 1);
 
-	FloatParameterUI* sizePUI = new FloatParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_legendSize));
+	FloatParameterUI* sizePUI = new FloatParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::legendSize));
 	sublayout->addWidget(sizePUI->label(), 0, 0);
 	sublayout->addLayout(sizePUI->createFieldLayout(), 0, 1);
 
-	FloatParameterUI* aspectRatioPUI = new FloatParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_aspectRatio));
+	FloatParameterUI* aspectRatioPUI = new FloatParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::aspectRatio));
 	sublayout->addWidget(aspectRatioPUI->label(), 1, 0);
 	sublayout->addLayout(aspectRatioPUI->createFieldLayout(), 1, 1);
 
@@ -184,36 +184,36 @@ void ColorLegendOverlayEditor::createUI(const RolloutInsertionParameters& rollou
 	sublayout->setColumnStretch(1, 3);
 	sublayout->setColumnStretch(2, 1);
 
-	StringParameterUI* titlePUI = new StringParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_title));
+	StringParameterUI* titlePUI = new StringParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::title));
 	sublayout->addWidget(new QLabel(tr("Custom title:")), 0, 0);
 	sublayout->addWidget(titlePUI->textBox(), 0, 1, 1, 2);
 
-	StringParameterUI* label1PUI = new StringParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_label1));
+	StringParameterUI* label1PUI = new StringParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::label1));
 	sublayout->addWidget(new QLabel(tr("Custom label 1:")), 1, 0);
 	sublayout->addWidget(label1PUI->textBox(), 1, 1, 1, 2);
 
-	StringParameterUI* label2PUI = new StringParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_label2));
+	StringParameterUI* label2PUI = new StringParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::label2));
 	sublayout->addWidget(new QLabel(tr("Custom label 2:")), 2, 0);
 	sublayout->addWidget(label2PUI->textBox(), 2, 1, 1, 2);
 
-	StringParameterUI* valueFormatStringPUI = new StringParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_valueFormatString));
+	StringParameterUI* valueFormatStringPUI = new StringParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::valueFormatString));
 	sublayout->addWidget(new QLabel(tr("Format string:")), 3, 0);
 	sublayout->addWidget(valueFormatStringPUI->textBox(), 3, 1, 1, 2);
 
-	FloatParameterUI* fontSizePUI = new FloatParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_fontSize));
+	FloatParameterUI* fontSizePUI = new FloatParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::fontSize));
 	sublayout->addWidget(new QLabel(tr("Text size/color:")), 4, 0);
 	sublayout->addLayout(fontSizePUI->createFieldLayout(), 4, 1);
 
-	ColorParameterUI* textColorPUI = new ColorParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_textColor));
+	ColorParameterUI* textColorPUI = new ColorParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::textColor));
 	sublayout->addWidget(textColorPUI->colorPicker(), 4, 2);
 
-	BooleanParameterUI* outlineEnabledPUI = new BooleanParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_outlineEnabled));
+	BooleanParameterUI* outlineEnabledPUI = new BooleanParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::outlineEnabled));
 	sublayout->addWidget(outlineEnabledPUI->checkBox(), 5, 1);
 
-	ColorParameterUI* outlineColorPUI = new ColorParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_outlineColor));
+	ColorParameterUI* outlineColorPUI = new ColorParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::outlineColor));
 	sublayout->addWidget(outlineColorPUI->colorPicker(), 5, 2);
 
-	FontParameterUI* labelFontPUI = new FontParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::_font));
+	FontParameterUI* labelFontPUI = new FontParameterUI(this, PROPERTY_FIELD(ColorLegendOverlay::font));
 	sublayout->addWidget(labelFontPUI->label(), 6, 0);
 	sublayout->addWidget(labelFontPUI->fontPicker(), 6, 1, 1, 2);
 }

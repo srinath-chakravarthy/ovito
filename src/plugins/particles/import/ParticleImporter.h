@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_IMPORTER_H
-#define __OVITO_PARTICLE_IMPORTER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/ParticleProperty.h>
@@ -39,14 +39,8 @@ public:
 
 	/// \brief Constructs a new instance of this class.
 	ParticleImporter(DataSet* dataset) : FileSourceImporter(dataset), _isMultiTimestepFile(false) {
-		INIT_PROPERTY_FIELD(ParticleImporter::_isMultiTimestepFile);
+		INIT_PROPERTY_FIELD(isMultiTimestepFile);
 	}
-
-	/// \brief Returns true if the input file contains multiple timesteps.
-	bool isMultiTimestepFile() const { return _isMultiTimestepFile; }
-
-	/// \brief Tells the importer that the input file contains multiple timesteps.
-	void setMultiTimestepFile(bool enable) { _isMultiTimestepFile = enable; }
 
 	/// Scans the given external path (which may be a directory and a wild-card pattern,
 	/// or a single file containing multiple frames) to find all available animation frames.
@@ -70,24 +64,22 @@ protected:
 	}
 
 	/// \brief Scans the given input file to find all contained simulation frames.
-	virtual void scanFileForTimesteps(FutureInterfaceBase& futureInterface, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream);
+	virtual void scanFileForTimesteps(PromiseBase& promise, QVector<FileSourceImporter::Frame>& frames, const QUrl& sourceUrl, CompressedTextReader& stream);
 
 private:
 
 	/// Retrieves the given file in the background and scans it for simulation timesteps.
-	QVector<FileSourceImporter::Frame> discoverFramesInFile(const QUrl sourceUrl, FutureInterfaceBase& futureInterface);
+	QVector<FileSourceImporter::Frame> discoverFramesInFile(const QUrl sourceUrl, PromiseBase& promise);
 
 	/// Indicates that the input file contains multiple timesteps.
-	PropertyField<bool> _isMultiTimestepFile;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, isMultiTimestepFile, setMultiTimestepFile);
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_isMultiTimestepFile);
 };
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTICLE_IMPORTER_H
+

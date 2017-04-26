@@ -2,13 +2,13 @@ User interface improvements:
 
 - Default directory for image/movie output should be the path of the current data file.
 - Add file export function to Construct Surface Mesh modifier, which allows to export the mesh to a VTK file (requested by konstantin.avchachov@helsinki.fi).
-- Make initial set of viewports configurable by the user (requested by mathias.hoeld@univie.ac.at).  
+- Make initial set of viewports configurable by the user (requested by mathias.hoeld@univie.ac.at).
 - Add support for keyboard shortcuts (requested by Fossati, Paul C).
 - Add ticks to the color legend.
 - List of most recently accessed files
 - Histogram plot export (SaeeD PourasaD <saeedpourasad@gmail.com>).
-- Find min/max values of a particle property over the entire simulation sequence to adjust the Color Coding modifier (zhumingliang@stu.xjtu.edu.cn). 
 - Spherical and cylindral slices (Enrique Martinez)
+- Warn about NaN/infinite values in the input of modifiers
 
 Work-flow improvements:
 
@@ -16,15 +16,16 @@ Work-flow improvements:
 
 New visualization features:
 
-- Visualize polyhedra (like Vesta).
+- Visualization of coordination polyhedra:  Improve behavior at periodic boundaries
 - Particle text labels (joy5142@psu.edu) and bond text labels (mickaeltrochet@yahoo.fr)
 - More particle representations (e.g. open circles).
 - Test OpenGL rendering support for more than 12 million particles.
-- Text Label overlay: Add more style options like font outline, background color, etc (stefan.parviainen@iki.fi).
 - Thompson Tetrahedra
 - Stereoscopic display (Erik Bitzek)
 - Wireframe mesh rendering (robin.gibaud@simap.grenoble-inp.fr)
 - Double bonds (SP2) (Jejoon Yeon <jyeon3@ucmerced.edu>)
+- Visualization of Voronoi polyhedra.
+- Add modifiers to select and delete bonds.
 
 Unresolved OpenGL problems:
 
@@ -41,6 +42,7 @@ Unresolved OpenGL problems:
     Windows, AMD Radeon HD8490, Core profile 3.2 (ljloverq@163.com)
     Windows, ATI Mobility Radeon HD 5650, 3.2.9756 Core Profile Forward-Compatible Context (biyikli.emre@gmail.com)
     Windows, AMD Radeon(TM) HD8490, 3.2.13399 Core Profile Context 15.200.1062.1003 (zr3@zips.uakron.edu)
+    Windows, AMD Radeon HD 7450 Graphics, 3.2.13408 Core Profile Context 15.201.2201.0 (18234057493@163.com)
     Workaround is to disable the use of geometry shaders.
 - Simulation cell doesn't show up in rendered images:
     Windows, Intel HD graphics, OpenGL 2.1 (Karsten's laptop)
@@ -52,8 +54,12 @@ Unresolved OpenGL problems:
     MacBook Air with the operating system OS X 10.9.5 Maverick (yidong.xia@inl.gov)
 - Texture-mapped point sprites don't work in the perspective viewport on Diego's computer (Linux, Intel Opengl 2.1)
     Workaround is to explicitly turn off the use point sprites.
-- Crash when opnening any simulation file,
+- High-quality particle rendering does not work properly (spheres are cut in half), 
+    Ovito 2.6.1 Linux, Mesa DRI Intel(R) Sandybridge Mobile, 3.3 (Core Profile) Mesa 11.1.2  (morten.nagel@helsinki.fi)
+- Crash when opening any simulation file,
     Ovito 2.6.0 Windows, Intel(R) HD Graphics 4400, 3.2.0 - Build 9.18.10.3186 (ashishvineet07@gmail.com)
+- Main window turns to be black
+    Ovito 2.8.1, Windows 64-bit, Intel(R) HD Graphics Family, 3.0.0 - Build 8.15.10.2342
     
 - Program crashes when setting particle radius to an extremely large value:
    Linux, Intel Graphics, Message: "Matrix4 cannot be inverted: determinant is zero."
@@ -68,14 +74,18 @@ Unresolved OpenGL problems:
 
 Unresolved bugs:
 
-- OVITO crashes under Windows 10 when using the Python script modifier (fsyed2309@mytu.tuskegee.edu). 
 - NearestNeighborFinder doesn't work properly for triclinic cells with small angles.
-- Assertion error at program shut down when Python script references an object or the Dataset
 - Construct surface mesh doesn't work for very small length scales (reported by xin.liu@insa-lyon.fr)
-
-- Include the missing VC 2015 runtime DLLs in the Windows package!
 - Particle trajectory creation doesn't work if new particles are created over time.
-- WebM video export not working on Windows (stefan.parviainen@iki.fi). 
+- WebM video export not working on Windows & Linux (stefan.parviainen@iki.fi). 
+
+- On Windows: Program crash at File->Load File when previous accessed path does not exist anymore.
+  Changing the file selection dialog to the alternative solves the problem.
+  After changing back to the normal file selection dialog, this one also works for me but opening the selection box takes about 10 seconds, 
+  while the programm does not receive any feedback ('Keine Rückmeldung').
+  After changing the preferred file path to a local path in the registry, the selection box opens immediately. 
+  Changing the preferred file path back to the non existing server, I can reproduce the 10 seconds of no response, 
+  but without any crash.
 
 New analysis features:
 
@@ -86,8 +96,7 @@ New analysis features:
 - Glass ring analysis (see ISAACS, RINGS, Sudheer @ FAU) 
 - Crystal orientation map
 - Extend Create Bonds modifier to make it possible to create different bond types depending on atom pair types (Yan CHEN <1358179191@qq.com>).
-
-- Implement a stable assignment of lattice orientations in the DXA for single crystals.
+- Implement coarsening of surface meshes as a postprocessing step to reduce number of triangles.
 
 New I/O functions:
 
@@ -95,7 +104,6 @@ New I/O functions:
 - Single precision floating-point numbers, which are used for custom particle properties, cannot represent large integer numbers exactly (e.g. 100400). Find a solution to make it work.
 - Add support for more file formats using OpenBabel.
 - File exporter for the NetCDF format.
-- Add user option that explicitly turns off the rescaling of reduced coordinates in XYZ files.
 
 Performance improvements:
 
@@ -104,8 +112,9 @@ Performance improvements:
 Scripting features:
 
 - Display script output when running a script via the GUI menu.
-- Distribute Scipy with Ovito?
+- Make "ovito" module usable from normal Python interpreter (n.hamilton@unsw.onmicrosoft.com)
 
 Documentation:
 
+- Describe reference frame orientations used by Elastic Strain Calculation modifier.
 - Application settings dialog

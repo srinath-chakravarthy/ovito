@@ -29,8 +29,8 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, SliceSurfaceFunction, SliceModifierFunction);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(CrystalAnalysis, SliceDislocationsFunction, SliceModifierFunction);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SliceSurfaceFunction, SliceModifierFunction);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(SliceDislocationsFunction, SliceModifierFunction);
 
 /******************************************************************************
 * Performs the actual rejection of particles.

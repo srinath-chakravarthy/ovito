@@ -77,7 +77,7 @@ Box3 ParticlePickingHelper::selectionMarkerBoundingBox(Viewport* vp, const PickR
 	if(!pickRecord.objNode)
 		return Box3();
 
-	const PipelineFlowState& flowState = pickRecord.objNode->evalPipeline(vp->dataset()->animationSettings()->time());
+	const PipelineFlowState& flowState = pickRecord.objNode->evaluatePipelineImmediately(PipelineEvalRequest(vp->dataset()->animationSettings()->time(), true));
 
 	// If particle selection is based on ID, find particle with the given ID.
 	size_t particleIndex = pickRecord.particleIndex;
@@ -123,7 +123,7 @@ void ParticlePickingHelper::renderSelectionMarker(Viewport* vp, ViewportSceneRen
 	if(!renderer->isInteractive() || renderer->isPicking())
 		return;
 
-	const PipelineFlowState& flowState = pickRecord.objNode->evalPipeline(vp->dataset()->animationSettings()->time());
+	const PipelineFlowState& flowState = pickRecord.objNode->evaluatePipelineImmediately(PipelineEvalRequest(vp->dataset()->animationSettings()->time(), true));
 
 	// If particle selection is based on ID, find particle with the given ID.
 	size_t particleIndex = pickRecord.particleIndex;

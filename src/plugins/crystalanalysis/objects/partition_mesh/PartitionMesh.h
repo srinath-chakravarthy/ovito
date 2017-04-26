@@ -19,14 +19,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTITION_MESH_H
-#define __OVITO_PARTITION_MESH_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/scene/objects/DataObjectWithSharedStorage.h>
 #include <core/utilities/mesh/HalfEdgeMesh.h>
 #include <plugins/particles/data/SimulationCell.h>
-#include <core/utilities/concurrent/FutureInterface.h>
+#include <core/utilities/concurrent/Promise.h>
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
@@ -68,12 +68,6 @@ public:
 	/// Return false because this object cannot be edited.
 	virtual bool isSubObjectEditable() const override { return false; }
 
-	/// Indicates whether the entire simulation cell is filled with one region that has no boundaries.
-	int spaceFillingRegion() const { return _spaceFillingRegion; }
-
-	/// Specifies that the entire simulation cell filled with one region that has no boundaries.
-	void setSpaceFillingRegion(int regionId) { _spaceFillingRegion = regionId; }
-
 	/// Returns the planar cuts applied to this mesh.
 	const QVector<Plane3>& cuttingPlanes() const { return _cuttingPlanes; }
 
@@ -84,7 +78,7 @@ public:
 	}
 
 	/// Fairs a triangle mesh.
-	static void smoothMesh(PartitionMeshData& mesh, const SimulationCell& cell, int numIterations, FutureInterfaceBase* progress = nullptr, FloatType k_PB = 0.1f, FloatType lambda = 0.5f);
+	static bool smoothMesh(PartitionMeshData& mesh, const SimulationCell& cell, int numIterations, PromiseBase& promise, FloatType k_PB = FloatType(0.1), FloatType lambda = FloatType(0.5));
 
 protected:
 
@@ -97,19 +91,17 @@ protected:
 private:
 
 	/// Indicates that the entire simulation cell is part of one region without boundaries.
-	PropertyField<int> _spaceFillingRegion;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, spaceFillingRegion, setSpaceFillingRegion);
 
 	/// The planar cuts applied to this mesh.
 	QVector<Plane3> _cuttingPlanes;
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_PROPERTY_FIELD(_spaceFillingRegion);
 };
 
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTITION_MESH_H
+

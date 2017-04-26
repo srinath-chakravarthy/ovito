@@ -26,24 +26,30 @@ SET(SourceFiles
 	PythonViewportOverlayEditor.cpp
 	PythonScriptModifierEditor.cpp
 	RunScriptAction.cpp
+	ObjectScriptEditor.cpp
 )
 
+# Compile resources.
+QT5_ADD_RESOURCES(ResourceFiles resources/pyscript_gui.qrc)
+
 OVITO_STANDARD_PLUGIN(PyScriptGui
-	SOURCES ${SourceFiles}
+	SOURCES ${SourceFiles} ${ResourceFiles}
 	PLUGIN_DEPENDENCIES PyScript
 	PRIVATE_LIB_DEPENDENCIES ${QScintilla_LIBRARIES}
 	GUI_PLUGIN
-	PYTHON_WRAPPERS "${CMAKE_CURRENT_SOURCE_DIR}/python/"
 )
 
 # Add QScintilla include directory.
 TARGET_INCLUDE_DIRECTORIES(PyScriptGui PRIVATE ${QScintilla_INCLUDE_DIRS})
 
+# This define is required when linking against QScintilla on Windows.
+TARGET_COMPILE_DEFINITIONS(PyScriptGui PRIVATE QSCINTILLA_DLL)
+
 # Install required libraries. 
 IF(APPLE)
 	# Nothing to do.
 ELSEIF(UNIX)
-	IF(OVITO_MONOLITHIC_BUILD)
+	IF(OVITO_REDISTRIBUTABLE_PACKAGE)
 		# Install a copy of the QScintilla2 library.
 		CONFIGURE_FILE("${QScintilla_LIBRARIES}" "${OVITO_LIBRARY_DIRECTORY}" COPYONLY)		
 		GET_FILENAME_COMPONENT(real_qscintilla_lib "${QScintilla_LIBRARIES}" REALPATH)

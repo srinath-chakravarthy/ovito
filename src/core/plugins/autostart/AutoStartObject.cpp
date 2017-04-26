@@ -24,7 +24,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(PluginSystem)
 
-IMPLEMENT_OVITO_OBJECT(Core, AutoStartObject, OvitoObject);
+IMPLEMENT_OVITO_OBJECT(AutoStartObject, OvitoObject);
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

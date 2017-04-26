@@ -124,7 +124,7 @@ ChemicalElement ChemicalElements[] = {
 
 const size_t NumberOfChemicalElements = (sizeof(ChemicalElements) / sizeof(ChemicalElements[0]));
 
-IMPLEMENT_OVITO_OBJECT(ParticlesGui, CutoffRadiusPresetsUI, PropertyParameterUI);
+IMPLEMENT_OVITO_OBJECT(CutoffRadiusPresetsUI, PropertyParameterUI);
 
 /******************************************************************************
 * Constructor.

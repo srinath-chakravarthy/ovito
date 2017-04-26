@@ -25,7 +25,7 @@
 
 namespace Ovito { namespace Particles {
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, TrajectoryObject, DataObject);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(TrajectoryObject, DataObject);
 
 /******************************************************************************
 * Default constructor.

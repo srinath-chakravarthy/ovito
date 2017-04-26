@@ -1,7 +1,6 @@
-from ovito import *
+import ovito
 from ovito.io import *
 from ovito.modifiers import *
-import numpy as np
 
 node = import_file("../../files/CFG/shear.void.120.cfg")
 

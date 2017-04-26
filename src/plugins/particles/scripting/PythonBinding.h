@@ -19,12 +19,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLES_PYTHON_BINDING_H
-#define __OVITO_PARTICLES_PYTHON_BINDING_H
+#pragma once
+
 
 #include <plugins/pyscript/PyScript.h>
+#include <plugins/pyscript/binding/PythonBinding.h>
 #include <plugins/particles/objects/ParticlePropertyObject.h>
 #include <plugins/particles/objects/BondPropertyObject.h>
+#include <plugins/particles/objects/FieldQuantityObject.h>
 #include <plugins/particles/import/InputColumnMapping.h>
 #include <plugins/particles/export/OutputColumnMapping.h>
 
@@ -175,6 +177,52 @@ namespace pybind11 { namespace detail {
         }
     };
 
+	/// Automatic Python string <--> FieldQuantityReference conversion
+    template<> struct type_caster<Ovito::Particles::FieldQuantityReference> {
+    public:
+        PYBIND11_TYPE_CASTER(Ovito::Particles::FieldQuantityReference, _("FieldQuantityReference"));
+
+        bool load(handle src, bool) {
+			using namespace Ovito;
+			using namespace Ovito::Particles;
+			
+			QString str;
+			try {
+				str = src.cast<QString>();
+			}
+			catch(const cast_error&) {
+				return false;
+			}
+
+			QStringList parts = str.split(QChar('.'));
+			if(parts.length() > 2)
+				throw Exception("Too many dots in field quantity name string.");
+			else if(parts.length() == 0 || parts[0].isEmpty())
+				throw Exception("Field quantity name string is empty.");
+			QString name = parts[0];
+
+			// Determine vector component.
+			int component = -1;
+			if(parts.length() == 2) {
+				// Try to convert component to integer.
+				bool ok;
+				component = parts[1].toInt(&ok);
+				if(!ok) {
+					// Assume its not a vector quantity.
+					component = -1;
+					name = parts.join(QChar('.'));
+				}
+			}
+			value = FieldQuantityReference(name, component);
+			return true;
+		}
+
+        static handle cast(const Ovito::Particles::FieldQuantityReference& src, return_value_policy /* policy */, handle /* parent */) {			
+        	object s = pybind11::cast(src.nameWithComponent());
+			return s.release();
+        }
+    };
+
 	/// Automatic Python string list <--> InputColumnMapping conversion
     template<> struct type_caster<Ovito::Particles::InputColumnMapping> {
     public:
@@ -182,8 +230,8 @@ namespace pybind11 { namespace detail {
 
         bool load(handle src, bool) {
 			try {
-				pybind11::sequence seq(src, true);
-				if(!seq.check()) return false;
+				if(!isinstance<sequence>(src)) return false;
+				sequence seq = reinterpret_borrow<sequence>(src);
 				value.resize(seq.size());
 				for(size_t i = 0; i < value.size(); i++) {
 					Ovito::Particles::ParticlePropertyReference pref = seq[i].cast<Ovito::Particles::ParticlePropertyReference>();
@@ -203,7 +251,7 @@ namespace pybind11 { namespace detail {
         static handle cast(const Ovito::Particles::InputColumnMapping& src, return_value_policy /* policy */, handle /* parent */) {
         	list ls;
 			for(const auto& col : src)
-				ls.append(pybind11::cast(col));
+				ls.append(pybind11::cast(col.property.nameWithComponent()));
 			return ls.release();
         }
     };	
@@ -215,8 +263,8 @@ namespace pybind11 { namespace detail {
 
         bool load(handle src, bool) {
 			try {
-				pybind11::sequence seq(src, true);
-				if(!seq.check()) return false;
+				if(!isinstance<sequence>(src)) return false;
+				sequence seq = reinterpret_borrow<sequence>(src);
 				value.reserve(seq.size());
 				for(size_t i = 0; i < seq.size(); i++) {
 					value.push_back(seq[i].cast<Ovito::Particles::ParticlePropertyReference>());
@@ -237,4 +285,4 @@ namespace pybind11 { namespace detail {
 
 }} // namespace pybind11::detail
 
-#endif	// __OVITO_PARTICLES_PYTHON_BINDING_H
+

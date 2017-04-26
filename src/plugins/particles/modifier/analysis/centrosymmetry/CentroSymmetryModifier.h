@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_CENTRO_SYMMETRY_MODIFIER_H
-#define __OVITO_CENTRO_SYMMETRY_MODIFIER_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/modifier/AsynchronousParticleModifier.h>
@@ -41,12 +41,6 @@ public:
 
 	/// Constructor.
 	Q_INVOKABLE CentroSymmetryModifier(DataSet* dataset);
-
-	/// Returns the number of nearest neighbors to take into account when computing the CSP.
-	int numNeighbors() const { return _numNeighbors; }
-
-	/// Sets the number of nearest neighbors to take into account when computing the CSP.
-	void setNumNeighbors(int count) { _numNeighbors = count; }
 
 protected:
 
@@ -104,15 +98,13 @@ private:
 	QExplicitlySharedDataPointer<ParticleProperty> _cspValues;
 
 	/// Specifies the number of nearest neighbors to take into account when computing the CSP.
-	PropertyField<int> _numNeighbors;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, numNeighbors, setNumNeighbors);
 
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Centrosymmetry parameter");
 	Q_CLASSINFO("ModifierCategory", "Analysis");
-
-	DECLARE_PROPERTY_FIELD(_numNeighbors);
 };
 
 OVITO_END_INLINE_NAMESPACE
@@ -120,4 +112,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_CENTRO_SYMMETRY_MODIFIER_H
+

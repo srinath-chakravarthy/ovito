@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_TRIMESH_DISPLAY_H
-#define __OVITO_TRIMESH_DISPLAY_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/scene/objects/DisplayObject.h>
@@ -47,25 +47,19 @@ public:
 	/// \brief Computes the bounding box of the object.
 	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
 
-	/// Returns the display color of the mesh.
-	const Color& color() const { return _color; }
-
-	/// Sets the display color of the mesh.
-	void setColor(const Color& color) { _color = color; }
-
 	/// Returns the transparency parameter.
-	FloatType transparency() const { return _transparency->currentFloatValue(); }
+	FloatType transparency() const { return transparencyController()->currentFloatValue(); }
 
 	/// Sets the transparency parameter.
-	void setTransparency(FloatType t) { _transparency->setCurrentFloatValue(t); }
+	void setTransparency(FloatType t) { transparencyController()->setCurrentFloatValue(t); }
 
 protected:
 
 	/// Controls the display color of the mesh.
-	PropertyField<Color, QColor> _color;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Color, color, setColor);
 
 	/// Controls the transparency of the mesh.
-	ReferenceField<Controller> _transparency;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, transparencyController, setTransparencyController);
 
 	/// The buffered geometry used to render the mesh.
 	std::shared_ptr<MeshPrimitive> _buffer;
@@ -92,9 +86,6 @@ private:
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Triangle mesh");
-
-	DECLARE_PROPERTY_FIELD(_color);
-	DECLARE_REFERENCE_FIELD(_transparency);
 };
 
 OVITO_END_INLINE_NAMESPACE
@@ -102,4 +93,4 @@ OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_TRIMESH_DISPLAY_H
+

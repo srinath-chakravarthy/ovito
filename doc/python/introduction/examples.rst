@@ -6,8 +6,9 @@ This page provides a collection of example scripts:
 
    * :ref:`example_compute_voronoi_indices`
    * :ref:`example_compute_cna_bond_indices`
+   * :ref:`example_msd_calculation`
+   * :ref:`example_order_parameter_calculation`
    * :ref:`example_creating_particles_programmatically`
-
 
 .. _example_compute_voronoi_indices:
 
@@ -77,8 +78,65 @@ Python script:
 
 .. literalinclude:: ../../../examples/scripts/cna_bond_analysis.py
 
- 
-  
+
+.. _example_msd_calculation:
+
+--------------------------------------------------------------------------
+Writing a custom modifier for calculating the mean square displacement
+--------------------------------------------------------------------------
+
+OVITO allows you to implement your :ref:`own type of analysis modifier <writing_custom_modifiers>` by writing a Python function that gets called every time
+the data pipeline is evaluated. This user-defined function has access to the positions and other properties of particles 
+and can output information and results as new properties or global attributes.
+
+As a first simple example, we look at the calculation of the mean square displacement (MSD) in a system of moving particles.
+OVITO already provides the built-in `Displacement Vectors <../../particles.modifiers.displacement_vectors.html>`_ modifier, which 
+calculates the displacement of every particle. It stores its results in the ``"Displacement Magnitude"``
+particle property. So all our custom analysis modifier needs to do is to sum up the squared displacement magnitudes and divide by the number of particles:
+
+.. literalinclude:: ../example_snippets/msd_calculation.py
+  :lines: 14-25
+
+When used within the graphical program, the MSD value computed by this custom modifier may be exported to a text file as a function of simulation time using
+OVITO's standard file export feature (Select ``Calculation Results Text File`` as output format).
+
+Alternatively, we can make use of the custom modifier from within a non-interactive batch script, which is executed
+by the ``ovitos`` interpreter. Then we have to insert the :py:class:`~ovito.modifiers.CalculateDisplacementsModifier` programmatically:
+
+.. literalinclude:: ../example_snippets/msd_calculation.py
+
+.. _example_order_parameter_calculation:
+
+--------------------------------------------------
+Implementing an advanced analysis modifier
+--------------------------------------------------
+
+In the paper `[Phys. Rev. Lett. 86, 5530] <https://doi.org/10.1103/PhysRevLett.86.5530>`_ an order parameter is specified as a means
+of labeling an atom in the simulation as belonging to either the liquid or solid fcc crystal phase. In the following we will 
+develop a custom analysis modifier for OVITO, which calculates this per-atom order parameter.
+
+The order parameter is defined as follows (see the paper for details): For any of the 12 nearest neighbors of a given atom one can compute the distance the neighbor 
+makes from the ideal fcc positions of the crystal in the given orientation (denoted by vector :strong:`r`:sub:`fcc`). The sum of the distances over the 12 neighbors, 
+phi = 1/12*sum(\| :strong:`r`:sub:`i` - :strong:`r`:sub:`fcc` \|), acts as an "order parameter" for the central atom.
+
+Calculating this parameter involves finding the 12 nearest neighbors of each atom and, for each of these neighbors, determining the
+closest ideal lattice vector. To find the neighbors, OVITO provides the :py:class:`~ovito.data.NearestNeighborFinder` utility class.
+It directly provides the vectors from the central atom to its nearest neighbors.
+
+Let us start by defining some inputs for the order parameter calculation at the global scope:
+
+.. literalinclude:: ../example_snippets/order_parameter_calculation.py
+  :lines: 7-32
+
+The actual modifier function needs to create an output particle property, which will store the calculated
+order parameter of each atom. Two nested loops run over all input atoms and their 12 nearest neighbors respectively.
+
+.. literalinclude:: ../example_snippets/order_parameter_calculation.py
+  :lines: 34-67
+
+Note that the ``yield`` statements in the modifier function above are only needed to support progress feedback in the
+graphical version of OVITO and to give the pipeline system the possibility to interrupt the long-running calculation when needed. 
+
 .. _example_creating_particles_programmatically:
 
 --------------------------------------------------
@@ -94,3 +152,4 @@ Finally, an :py:class:`~ovito.ObjectNode` is created and the :py:class:`~ovito.d
 its data source.
 
 .. literalinclude:: ../../../tests/scripts/test_suite/create_new_particle_property.py
+

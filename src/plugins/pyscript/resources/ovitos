@@ -7,4 +7,4 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Run actual ovitos executable from sub-bundle and forward all command line parameters.
-${DIR}/Ovito.app/Contents/MacOS/ovitos.exe $@
+${DIR}/Ovito.app/Contents/MacOS/ovitos $@

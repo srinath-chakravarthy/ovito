@@ -5,13 +5,13 @@
     You should run this script from within the graphical user interface
     using the Scripting->Run Script File menu option.
 """
-from ovito import *
+import ovito
 from ovito.data import *
 from ovito.modifiers import *
 
 # Find the WS modifier in the pipeline:
 ws_mod = None
-for modifier in dataset.selected_node.modifiers:
+for modifier in ovito.dataset.selected_node.modifiers:
     if isinstance(modifier, WignerSeitzAnalysisModifier):
         ws_mod = modifier
 if ws_mod is None:
@@ -20,9 +20,8 @@ if ws_mod is None:
 # Open output file for writing:
 fout = open("outputfile.txt", "w")
 
-for frame in range(dataset.anim.first_frame, dataset.anim.last_frame+1):
-    dataset.anim.current_frame = frame
-    dataset.selected_node.compute()
+for frame in range(ovito.dataset.anim.first_frame, ovito.dataset.anim.last_frame+1):
+    ovito.dataset.selected_node.compute(frame)
     num_vacancies = ws_mod.vacancy_count
     num_interstitials = ws_mod.interstitial_count
     print(frame, num_vacancies, num_interstitials, file = fout)

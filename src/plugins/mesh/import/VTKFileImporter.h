@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_VTK_FILE_IMPORTER_H
-#define __OVITO_VTK_FILE_IMPORTER_H
+#pragma once
+
 
 #include <core/dataset/importexport/FileSourceImporter.h>
 #include <plugins/mesh/Mesh.h>
@@ -75,8 +75,7 @@ protected:
 		virtual void parseFile(CompressedTextReader& stream) override;
 	};
 
-protected:
-
+private:
 
 	Q_OBJECT
 	OVITO_OBJECT
@@ -84,4 +83,4 @@ protected:
 
 };
 
-#endif // __OVITO_VTK_FILE_IMPORTER_H
+

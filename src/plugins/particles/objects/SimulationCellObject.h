@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_SIMULATION_CELL_OBJECT_H
-#define __OVITO_SIMULATION_CELL_OBJECT_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <plugins/particles/data/SimulationCell.h>
@@ -89,15 +89,15 @@ public:
 
 	/// \brief Sets the cell geometry to match the given cell data structure.
 	void setData(const SimulationCell& data, bool setBoundaryFlags = true) {
-		_cellVector1 = data.matrix().column(0);
-		_cellVector2 = data.matrix().column(1);
-		_cellVector3 = data.matrix().column(2);
-		_cellOrigin = Point3::Origin() + data.matrix().column(3);
+		setCellVector1(data.matrix().column(0));
+		setCellVector2(data.matrix().column(1));
+		setCellVector3(data.matrix().column(2));
+		setCellOrigin(Point3::Origin() + data.matrix().column(3));
 		if(setBoundaryFlags) {
-			_pbcX = data.pbcFlags()[0];
-			_pbcY = data.pbcFlags()[1];
-			_pbcZ = data.pbcFlags()[2];
-			_is2D = data.is2D();
+			setPbcX(data.pbcFlags()[0]);
+			setPbcY(data.pbcFlags()[1]);
+			setPbcZ(data.pbcFlags()[2]);
+			setIs2D(data.is2D());
 		}
 	}
 
@@ -116,10 +116,10 @@ public:
 	///         the fourth matrix column specifies the translation of the cell origin.
 	AffineTransformation cellMatrix() const {
 		return {
-			_cellVector1.value(),
-			_cellVector2.value(),
-			_cellVector3.value(),
-			_cellOrigin.value() - Point3::Origin()
+			cellVector1(),
+			cellVector2(),
+			cellVector3(),
+			cellOrigin() - Point3::Origin()
 		};
 	}
 
@@ -130,10 +130,10 @@ public:
 	///
 	/// \undoable
 	void setCellMatrix(const AffineTransformation& shape) {
-		_cellVector1 = shape.column(0);
-		_cellVector2 = shape.column(1);
-		_cellVector3 = shape.column(2);
-		_cellOrigin = Point3::Origin() + shape.column(3);
+		setCellVector1(shape.column(0));
+		setCellVector2(shape.column(1));
+		setCellVector3(shape.column(2));
+		setCellOrigin(Point3::Origin() + shape.column(3));
 	}
 
 	/// Returns inverse of the simulation cell matrix.
@@ -142,73 +142,27 @@ public:
 		return cellMatrix().inverse();
 	}
 
-	/// Returns the first cell edge vector.
-	const Vector3& edgeVector1() const { return _cellVector1; }
-
-	/// Returns the second cell edge vector.
-	const Vector3& edgeVector2() const { return _cellVector2; }
-
-	/// Returns the third cell edge vector.
-	const Vector3& edgeVector3() const { return _cellVector3; }
-
-	/// Returns the cell origin.
-	const Point3& origin() const { return _cellOrigin; }
-
-	/// Sets the first cell edge vector.
-	void setEdgeVector1(const Vector3& v) { _cellVector1 = v; }
-
-	/// Sets the second cell edge vector.
-	void setEdgeVector2(const Vector3& v) { _cellVector2 = v; }
-
-	/// Sets the third cell edge vector.
-	void setEdgeVector3(const Vector3& v) { _cellVector3 = v; }
-
-	/// Sets the cell origin.
-	void setOrigin(const Point3& origin) { _cellOrigin = origin; }
-
 	/// Computes the (positive) volume of the three-dimensional cell.
 	FloatType volume3D() const {
-		return std::abs(edgeVector1().dot(edgeVector2().cross(edgeVector3())));
+		return std::abs(cellVector1().dot(cellVector2().cross(cellVector3())));
 	}
 
 	/// Computes the (positive) volume of the two-dimensional cell.
 	FloatType volume2D() const {
-		return edgeVector1().cross(edgeVector2()).length();
+		return cellVector1().cross(cellVector2()).length();
 	}
 
 	/// \brief Enables or disables periodic boundary conditions in the three spatial directions.
 	void setPBCFlags(const std::array<bool,3>& flags) {
-		_pbcX = flags[0]; _pbcY = flags[1]; _pbcZ = flags[2];
+		setPbcX(flags[0]);
+		setPbcY(flags[1]);
+		setPbcZ(flags[2]);
 	}
 
 	/// \brief Returns the periodic boundary flags in all three spatial directions.
 	std::array<bool,3> pbcFlags() const {
 		return {{ pbcX(), pbcY(), pbcZ() }};
 	}
-
-	/// \brief Returns whether periodic boundary conditions are enabled in the X direction.
-	bool pbcX() const { return _pbcX; }
-
-	/// \brief Returns whether periodic boundary conditions are enabled in the X direction.
-	bool pbcY() const { return _pbcY; }
-
-	/// \brief Returns whether periodic boundary conditions are enabled in the X direction.
-	bool pbcZ() const { return _pbcZ; }
-
-	/// \brief Sets periodic boundary flag for the X direction.
-	void setPbcX(bool enable) { _pbcX = enable; }
-
-	/// \brief Sets periodic boundary flag for the Y direction.
-	void setPbcY(bool enable) { _pbcY = enable; }
-
-	/// \brief Sets periodic boundary flag for the Z direction.
-	void setPbcZ(bool enable) { _pbcZ = enable; }
-
-	/// Returns whether this is a 2D system.
-	bool is2D() const { return _is2D; }
-
-	/// Sets whether this is a 2D system.
-	void set2D(bool is2D) { _is2D = is2D; }
 
 	/// \brief Returns the title of this object.
 	virtual QString objectTitle() override { return tr("Simulation cell"); }
@@ -219,23 +173,23 @@ protected:
 	void init(DataSet* dataset);
 
 	/// Stores the first cell edge.
-	PropertyField<Vector3> _cellVector1;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Vector3, cellVector1, setCellVector1);
 	/// Stores the second cell edge.
-	PropertyField<Vector3> _cellVector2;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Vector3, cellVector2, setCellVector2);
 	/// Stores the third cell edge.
-	PropertyField<Vector3> _cellVector3;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Vector3, cellVector3, setCellVector3);
 	/// Stores the cell origin.
-	PropertyField<Point3> _cellOrigin;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Point3, cellOrigin, setCellOrigin);
 
 	/// Specifies periodic boundary condition in the X direction.
-	PropertyField<bool> _pbcX;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, pbcX, setPbcX);
 	/// Specifies periodic boundary condition in the Y direction.
-	PropertyField<bool> _pbcY;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, pbcY, setPbcY);
 	/// Specifies periodic boundary condition in the Z direction.
-	PropertyField<bool> _pbcZ;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, pbcZ, setPbcZ);
 
 	/// Stores the dimensionality of the system.
-	PropertyField<bool> _is2D;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, is2D, setIs2D);
 
 private:
 
@@ -243,18 +197,9 @@ private:
 	OVITO_OBJECT
 
 	Q_CLASSINFO("ClassNameAlias", "SimulationCell");	// This for backward compatibility with files written by Ovito 2.4 and older.
-
-	DECLARE_PROPERTY_FIELD(_cellVector1);
-	DECLARE_PROPERTY_FIELD(_cellVector2);
-	DECLARE_PROPERTY_FIELD(_cellVector3);
-	DECLARE_PROPERTY_FIELD(_cellOrigin);
-	DECLARE_PROPERTY_FIELD(_pbcX);
-	DECLARE_PROPERTY_FIELD(_pbcY);
-	DECLARE_PROPERTY_FIELD(_pbcZ);
-	DECLARE_PROPERTY_FIELD(_is2D);
 };
 
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_SIMULATION_CELL_OBJECT_H
+

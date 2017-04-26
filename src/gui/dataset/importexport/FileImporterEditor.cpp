@@ -24,7 +24,7 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(DataIO)
 
-IMPLEMENT_OVITO_OBJECT(Gui, FileImporterEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(FileImporterEditor, PropertiesEditor);
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

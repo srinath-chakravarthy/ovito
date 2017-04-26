@@ -1,0 +1,15 @@
+# Try to find the Qwt library
+#  QWT_FOUND - system has Qwt lib
+#  Qwt_INCLUDE_DIRS - the include directories needed
+#  Qwt_LIBRARIES - libraries needed
+
+FIND_PATH(QWT_INCLUDE_DIR NAMES qwt/qwt.h)
+FIND_LIBRARY(QWT_LIBRARY NAMES qwt-qt5 qwt)
+
+SET(Qwt_INCLUDE_DIRS ${QWT_INCLUDE_DIR})
+SET(Qwt_LIBRARIES ${QWT_LIBRARY})
+
+INCLUDE(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(Qwt DEFAULT_MSG QWT_LIBRARY QWT_INCLUDE_DIR)
+
+MARK_AS_ADVANCED(QWT_INCLUDE_DIR QWT_LIBRARY)

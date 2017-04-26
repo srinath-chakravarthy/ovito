@@ -16,6 +16,7 @@ This module contains data structures and container classes that are used by OVIT
   * :py:class:`ParticleTypeProperty`
   * :py:class:`SimulationCell`
   * :py:class:`SurfaceMesh`
+  * :py:class:`TrajectoryLineGenerator`
 
 **Auxiliary classes:**
 
@@ -37,9 +38,11 @@ except ImportError:
     import collections
 
 # Load the native module.
-from PyScriptScene import DataCollection
-from PyScriptScene import DataObject
-from PyScriptApp import CloneHelper
+from ..plugins.PyScript.Scene import DataCollection
+from ..plugins.PyScript.Scene import DataObject
+from ..plugins.PyScript.App import CloneHelper
+
+__all__ = ['DataCollection', 'DataObject']
 
 # Give the DataCollection class a dict-like interface.
 DataCollection.__len__ = lambda self: len(self.objects)
@@ -71,12 +74,28 @@ def _DataCollection__getattr__(self, name):
     raise AttributeError("DataCollection does not have an attribute named '%s'." % name)
 DataCollection.__getattr__ = _DataCollection__getattr__
 
+def _DataCollection_get(self, key, default=None):
+    try: return self[key]
+    except KeyError: return default
+DataCollection.get = _DataCollection_get
+
+def _DataCollection_keys(self):
+    return collections.KeysView(self)
+DataCollection.keys = _DataCollection_keys
+
+def _DataCollection_items(self):
+    return collections.ItemsView(self)
+DataCollection.items = _DataCollection_items
+
+def _DataCollection_values(self):
+    return collections.ValuesView(self)
+DataCollection.values = _DataCollection_values
+
 def _DataCollection__str__(self):
     return "DataCollection(" + str(list(self.keys())) + ")"
 DataCollection.__str__ = _DataCollection__str__
 
-# Mix in base class collections.Mapping:
-DataCollection.__bases__ = DataCollection.__bases__ + (collections.Mapping, )
+collections.Mapping.register(DataCollection)
 
 # Implement the 'attributes' property of the DataCollection class.
 def _DataCollection_attributes(self):
@@ -163,21 +182,15 @@ def _DataCollection_attributes(self):
             return len(self._data_collection.attribute_names)
         
         def __getitem__(self, key):
-            if not isinstance(key, str):
-                raise TypeError("Attribute key is not a string.")
             v = self._data_collection.get_attribute(key)
             if v is not None:
                 return v
             raise KeyError("DataCollection contains no attribute named '%s'." % key)
 
         def __setitem__(self, key, value):
-            if not isinstance(key, str):
-                raise TypeError("Attribute key is not a string.")
             self._data_collection.set_attribute(key, value)
 
         def __delitem__(self, key):
-            if not isinstance(key, str):
-                raise TypeError("Attribute key is not a string.")
             v = self._data_collection.get_attribute(key)
             if v is None:
                 raise KeyError("DataCollection contains no attribute named '%s'." % key)

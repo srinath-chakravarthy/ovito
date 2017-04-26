@@ -22,6 +22,7 @@
 #include <plugins/mesh/Mesh.h>
 #include <plugins/mesh/import/VTKFileImporter.h>
 #include <plugins/pyscript/binding/PythonBinding.h>
+#include <core/plugins/PluginManager.h>
 
 namespace Mesh {
 
@@ -30,6 +31,9 @@ using namespace PyScript;
 
 PYBIND11_PLUGIN(Mesh)
 {
+	// Register the classes of this plugin with the global PluginManager.
+	PluginManager::instance().registerLoadedPluginClasses();
+	
 	py::options options;
 	options.disable_function_signatures();
 

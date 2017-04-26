@@ -24,18 +24,18 @@
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Anim)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, ConstFloatController, Controller);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, ConstIntegerController, Controller);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, ConstVectorController, Controller);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, ConstPositionController, Controller);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, ConstRotationController, Controller);
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Core, ConstScalingController, Controller);
-DEFINE_PROPERTY_FIELD(ConstFloatController, _value, "Value");
-DEFINE_PROPERTY_FIELD(ConstIntegerController, _value, "Value");
-DEFINE_PROPERTY_FIELD(ConstVectorController, _value, "Value");
-DEFINE_PROPERTY_FIELD(ConstPositionController, _value, "Value");
-DEFINE_PROPERTY_FIELD(ConstRotationController, _value, "Value");
-DEFINE_PROPERTY_FIELD(ConstScalingController, _value, "Value");
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ConstFloatController, Controller);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ConstIntegerController, Controller);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ConstVectorController, Controller);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ConstPositionController, Controller);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ConstRotationController, Controller);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(ConstScalingController, Controller);
+DEFINE_PROPERTY_FIELD(ConstFloatController, value, "Value");
+DEFINE_PROPERTY_FIELD(ConstIntegerController, value, "Value");
+DEFINE_PROPERTY_FIELD(ConstVectorController, value, "Value");
+DEFINE_PROPERTY_FIELD(ConstPositionController, value, "Value");
+DEFINE_PROPERTY_FIELD(ConstRotationController, value, "Value");
+DEFINE_PROPERTY_FIELD(ConstScalingController, value, "Value");
 
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace

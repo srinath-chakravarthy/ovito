@@ -67,7 +67,7 @@ void main()
 	
 	vec3 view_intersection_pnt = ray_origin;
 	
-	if(ln < 1e-7) {
+	if(ln < 1e-7 * cylinder_length) {
 		float t = dot(RC, ray_dir);
 		float v = dot(RC, RC);
 		if(v-t*t > cylinder_radius_sq_fs) {
@@ -114,10 +114,10 @@ void main()
 				float afar = dot(far_view_intersection_pnt - cylinder_view_base, cylinder_view_axis) / (cylinder_length*cylinder_length);
 				
 				if(anear < 0 && afar >= 0) {
-					view_intersection_pnt += (anear / (anear - afar) * 2.0 * s + 1e-6) * ray_dir;
+					view_intersection_pnt += (anear / (anear - afar) * 2.0 * s + 1e-6 * ln) * ray_dir;
 				}
 				else if(anear > 1.0 && afar < 1.0) {
-					view_intersection_pnt += ((anear - 1.0) / (anear - afar) * 2.0 * s + 1e-6) * ray_dir;
+					view_intersection_pnt += ((anear - 1.0) / (anear - afar) * 2.0 * s + 1e-6 * ln) * ray_dir;
 				}
 				else {
 					discard;

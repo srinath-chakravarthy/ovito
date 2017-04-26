@@ -19,11 +19,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PIPELINE_OBJECT_H
-#define __OVITO_PIPELINE_OBJECT_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/scene/objects/DataObject.h>
+#include <core/scene/pipeline/AsyncPipelineEvaluationHelper.h>
+#include <core/utilities/concurrent/Future.h>
+#include <core/utilities/concurrent/Promise.h>
 #include "ModifierApplication.h"
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(ObjectSystem) OVITO_BEGIN_INLINE_NAMESPACE(Scene)
@@ -38,29 +41,6 @@ public:
 
 	/// \brief Constructor that creates an empty pipeline.
 	Q_INVOKABLE PipelineObject(DataSet* dataset);
-
-	/// \brief Asks the object for the result of the geometry pipeline at the given time
-	///        up to a given point in the modifier stack.
-	/// \param time The animation at which the geometry pipeline should be evaluated.
-	/// \param upToHere If \a upToHere is \c NULL then the complete modifier stack will be evaluated.
-	///                 Otherwise only the modifiers in the pipeline before the given point will be applied to the
-	///                 input object. \a upToHere must be one of the application objects returned by modifierApplications().
-	/// \param including Specifies whether the last modifier given by \a upToHere will also be applied to the input object.
-	/// \return The result object.
-	PipelineFlowState evaluatePipeline(TimePoint time, ModifierApplication* upToHere, bool including);
-
-	/// \brief Returns the object that provides the input data for this pipeline.
-	DataObject* sourceObject() const { return _sourceObject; }
-
-	/// \brief Replaces the object that provides the input data for this pipeline.
-	/// \param sourceObject The new source object.
-	/// \undoable
-	void setSourceObject(DataObject* sourceObject) { _sourceObject = sourceObject; }
-
-	/// \brief Returns the list of modifier applications.
-	/// \return The list of applications of modifiers that make up the data flow pipeline.
-	///         The modifiers in this list are applied to the input object in ascending order.
-	const QVector<ModifierApplication*>& modifierApplications() const { return _modApps; }
 
 	/// \brief Inserts a modifier into the data flow pipeline.
 	/// \param modifier The modifier to be inserted.
@@ -88,9 +68,21 @@ public:
 
 	/////////////////////////////////////// from DataObject /////////////////////////////////////////
 
-	/// Asks the object for the result of the geometry pipeline at the given time.
-	virtual PipelineFlowState evaluate(TimePoint time) override {
-		return evaluatePipeline(time, nullptr, true);
+	/// Asks the object for the result of the data pipeline.
+	virtual PipelineFlowState evaluateImmediately(const PipelineEvalRequest& request) override;
+
+	/// Asks the object for the result of the data pipeline.
+	virtual Future<PipelineFlowState> evaluateAsync(const PipelineEvalRequest& request) override {
+		return _evaluationRequestHelper.createRequest(this, request);
+	}
+
+	/// Sends an event to all dependents of this RefTarget.
+	virtual void notifyDependents(ReferenceEvent& event) override;
+
+	/// \brief Sends an event to all dependents of this RefTarget.
+	/// \param eventType The event type passed to the ReferenceEvent constructor.
+	inline void notifyDependents(ReferenceEvent::Type eventType) {
+		DataObject::notifyDependents(eventType);
 	}
 
 protected:
@@ -113,34 +105,40 @@ private:
 	/// Notifies all modifiers starting at the given index that their input has changed.
 	void modifierChanged(int changedIndex);
 
+	/// Asks the object for the result of the geometry pipeline at the given time
+	/// up to a given point in the modifier stack. The result may be incomplete (i.e. status pending)
+	/// if the results are not immediately available.
+	PipelineFlowState evaluatePipeline(TimePoint time, int upToHereIndex);
+
 private:
 
 	/// The object providing the input data that is processed by the modifiers.
-	ReferenceField<DataObject> _sourceObject;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(DataObject, sourceObject, setSourceObject);
 
 	/// The ordered list of modifiers that are applied to the input object.
 	/// The modifiers are applied to the input object in the reverse order of this list.
-	VectorReferenceField<ModifierApplication> _modApps;
+	DECLARE_VECTOR_REFERENCE_FIELD(ModifierApplication, modifierApplications);
 
 	/// The state of the input object from the last evaluation of the pipeline.
+	/// This is used to detect changes in the input that require recalculation of the pipeline.
 	PipelineFlowState _lastInput;
 
 	/// The cached results from the last pipeline evaluation.
 	PipelineFlowState _cachedState;
 
 	/// Indicates which pipeline stage has been stored in the cache.
-	/// If the cache is empty, then this is -1.
+	/// If the cache is empty, then this is set to -1.
 	int _cachedIndex;
+
+	/// Manages pending asynchronous pipeline requests.
+	AsyncPipelineEvaluationHelper _evaluationRequestHelper;
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_sourceObject);
-	DECLARE_VECTOR_REFERENCE_FIELD(_modApps);
 };
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_PIPELINE_OBJECT_H
+

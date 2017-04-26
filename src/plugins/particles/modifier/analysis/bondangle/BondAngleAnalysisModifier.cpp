@@ -28,7 +28,7 @@
 
 namespace Ovito { namespace Particles { OVITO_BEGIN_INLINE_NAMESPACE(Modifiers) OVITO_BEGIN_INLINE_NAMESPACE(Analysis)
 
-IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(Particles, BondAngleAnalysisModifier, StructureIdentificationModifier);
+IMPLEMENT_SERIALIZABLE_OVITO_OBJECT(BondAngleAnalysisModifier, StructureIdentificationModifier);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -73,7 +73,7 @@ void BondAngleAnalysisModifier::BondAngleAnalysisEngine::perform()
 
 	// Prepare the neighbor list.
 	NearestNeighborFinder neighborFinder(14);
-	if(!neighborFinder.prepare(positions(), cell(), selection(), this))
+	if(!neighborFinder.prepare(positions(), cell(), selection(), *this))
 		return;
 
 	// Create output storage.
@@ -97,7 +97,7 @@ BondAngleAnalysisModifier::StructureType BondAngleAnalysisModifier::determineStr
 {
 	// Find 14 nearest neighbors of current particle.
 	NearestNeighborFinder::Query<14> neighborQuery(neighFinder);
-	neighborQuery.findNeighbors(neighFinder.particlePos(particleIndex));
+	neighborQuery.findNeighbors(particleIndex);
 
 	// Reject under-coordinated particles.
 	if(neighborQuery.results().size() < 6)

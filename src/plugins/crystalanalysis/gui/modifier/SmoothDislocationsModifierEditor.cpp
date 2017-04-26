@@ -28,7 +28,7 @@
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 
-IMPLEMENT_OVITO_OBJECT(CrystalAnalysisGui, SmoothDislocationsModifierEditor, PropertiesEditor);
+IMPLEMENT_OVITO_OBJECT(SmoothDislocationsModifierEditor, PropertiesEditor);
 SET_OVITO_OBJECT_EDITOR(SmoothDislocationsModifier, SmoothDislocationsModifierEditor);
 
 /******************************************************************************
@@ -42,25 +42,25 @@ void SmoothDislocationsModifierEditor::createUI(const RolloutInsertionParameters
     QVBoxLayout* layout = new QVBoxLayout(rollout);
 	layout->setContentsMargins(4,4,4,4);
 
-	BooleanGroupBoxParameterUI* smoothingEnabledUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(SmoothDislocationsModifier::_smoothingEnabled));
+	BooleanGroupBoxParameterUI* smoothingEnabledUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(SmoothDislocationsModifier::smoothingEnabled));
 	smoothingEnabledUI->groupBox()->setTitle(tr("Line smoothing"));
     QGridLayout* sublayout = new QGridLayout(smoothingEnabledUI->childContainer());
 	sublayout->setContentsMargins(4,4,4,4);
 	sublayout->setColumnStretch(1, 1);
 	layout->addWidget(smoothingEnabledUI->groupBox());
 
-	IntegerParameterUI* smoothingLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(SmoothDislocationsModifier::_smoothingLevel));
+	IntegerParameterUI* smoothingLevelUI = new IntegerParameterUI(this, PROPERTY_FIELD(SmoothDislocationsModifier::smoothingLevel));
 	sublayout->addWidget(smoothingLevelUI->label(), 0, 0);
 	sublayout->addLayout(smoothingLevelUI->createFieldLayout(), 0, 1);
 
-	BooleanGroupBoxParameterUI* coarseningEnabledUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(SmoothDislocationsModifier::_coarseningEnabled));
+	BooleanGroupBoxParameterUI* coarseningEnabledUI = new BooleanGroupBoxParameterUI(this, PROPERTY_FIELD(SmoothDislocationsModifier::coarseningEnabled));
 	coarseningEnabledUI->groupBox()->setTitle(tr("Line coarsening"));
     sublayout = new QGridLayout(coarseningEnabledUI->childContainer());
 	sublayout->setContentsMargins(4,4,4,4);
 	sublayout->setColumnStretch(1, 1);
 	layout->addWidget(coarseningEnabledUI->groupBox());
 
-	FloatParameterUI* linePointIntervalUI = new FloatParameterUI(this, PROPERTY_FIELD(SmoothDislocationsModifier::_linePointInterval));
+	FloatParameterUI* linePointIntervalUI = new FloatParameterUI(this, PROPERTY_FIELD(SmoothDislocationsModifier::linePointInterval));
 	sublayout->addWidget(linePointIntervalUI->label(), 0, 0);
 	sublayout->addLayout(linePointIntervalUI->createFieldLayout(), 0, 1);
 }

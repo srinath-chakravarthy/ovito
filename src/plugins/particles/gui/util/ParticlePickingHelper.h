@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_PICKING_HELPER_H
-#define __OVITO_PARTICLE_PICKING_HELPER_H
+#pragma once
+
 
 #include <plugins/particles/gui/ParticlesGui.h>
 #include <core/scene/pipeline/PipelineFlowState.h>
@@ -97,4 +97,4 @@ OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTICLE_PICKING_HELPER_H
+

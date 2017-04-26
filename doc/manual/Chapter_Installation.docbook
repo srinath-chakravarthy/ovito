@@ -18,7 +18,7 @@
 
     <simplesect xml:id="installation.runovito.linux">
       <title>Linux</title>
-      <para>Extract the downloaded <filename>.tar.gz</filename> archive using the <command>tar</command> command, e.g.: <command>tar xzf ovito-2.8.0-x86_64.tar.gz</command>. 
+      <para>Extract the downloaded <filename>.tar.gz</filename> archive using the <command>tar</command> command, e.g.: <command>tar xzf ovito-2.8.1-x86_64.tar.gz</command>. 
       This will create a new subdirectory containing the program package. 
       Change into the new directory and start OVITO by running the executable <command>./bin/ovito</command>.
       </para>
@@ -38,9 +38,6 @@
       <para>Double-click the <filename>.dmg</filename> disk image file to open it, 
       agree to the program license, and drag the <filename>Ovito</filename> application bundle into your <filename>Applications</filename> folder.
       Then start OVITO by double-clicking the application bundle.
-      MacOS might refuse to start OVITO, because it was not downloaded from the official App Store.
-      In this case right-click the application and select <menuchoice><guimenuitem>Open</guimenuitem></menuchoice> from 
-      the context menu (only required the first time you start OVITO).
       </para>
     </simplesect>
 

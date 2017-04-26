@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTICLE_PROPERTY_OBJECT_H
-#define __OVITO_PARTICLE_PROPERTY_OBJECT_H
+#pragma once
+
 
 #include <plugins/particles/Particles.h>
 #include <core/scene/objects/DataObjectWithSharedStorage.h>
@@ -116,7 +116,7 @@ public:
 
 	/// \brief Returns the number of bytes per value.
 	/// \return Number of bytes used to store a single value of the data type
-	///         specified by type().
+	///         specified by dataType().
 	size_t dataTypeSize() const { return storage()->dataTypeSize(); }
 
 	/// \brief Returns the number of bytes used per particle.
@@ -601,4 +601,4 @@ inline LoadStream& operator>>(LoadStream& stream, ParticlePropertyReference& r)
 
 Q_DECLARE_METATYPE(Ovito::Particles::ParticlePropertyReference);
 
-#endif // __OVITO_PARTICLE_PROPERTY_OBJECT_H
+

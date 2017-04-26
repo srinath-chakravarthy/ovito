@@ -65,6 +65,7 @@ SET(SourceFiles
 	modifier/selection/ManualSelectionModifierEditor.cpp
 	modifier/properties/ComputePropertyModifierEditor.cpp
 	modifier/properties/FreezePropertyModifierEditor.cpp
+	modifier/fields/CreateIsosurfaceModifierEditor.cpp
 	util/ParticlePropertyComboBox.cpp
 	util/CutoffRadiusPresetsUI.cpp
 	util/ParticleInformationApplet.cpp
@@ -72,6 +73,8 @@ SET(SourceFiles
 	util/ParticlePropertyParameterUI.cpp
 	util/BondPropertyComboBox.cpp
 	util/BondPropertyParameterUI.cpp
+	util/FieldQuantityComboBox.cpp
+	util/FieldQuantityParameterUI.cpp
 	util/CreateTrajectoryApplet.cpp
 	util/ParticleSettingsPage.cpp
 	import/InputColumnMappingDialog.cpp

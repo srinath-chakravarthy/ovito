@@ -24,8 +24,8 @@
  * \brief Contains the definition of the Ovito::SceneRenderer class.
  */
 
-#ifndef __OVITO_SCENE_RENDERER_H
-#define __OVITO_SCENE_RENDERER_H
+#pragma once
+
 
 #include <core/Core.h>
 #include <core/animation/TimeInterval.h>
@@ -112,7 +112,7 @@ public:
 
 	/// Returns the viewport whose contents are currently being rendered.
 	/// This may be NULL.
-	Viewport* viewport() const { OVITO_CHECK_OBJECT_POINTER(_viewport); return _viewport; }
+	Viewport* viewport() const { return _viewport; }
 
 	/// Returns the final size of the rendered image in pixels.
 	virtual QSize outputSize() const;
@@ -134,10 +134,10 @@ public:
 
 	/// Renders the current animation frame.
 	/// Returns false if the operation has been canceled by the user.
-	virtual bool renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, AbstractProgressDisplay* progress) = 0;
+	virtual bool renderFrame(FrameBuffer* frameBuffer, StereoRenderingTask stereoTask, TaskManager& taskManager) = 0;
 
 	/// This method is called after renderFrame() has been called.
-	virtual void endFrame() {}
+	virtual void endFrame(bool renderSuccessful) {}
 
 	/// Changes the current local-to-world transformation matrix.
 	virtual void setWorldTransform(const AffineTransformation& tm) = 0;
@@ -262,4 +262,4 @@ private:
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_SCENE_RENDERER_H
+

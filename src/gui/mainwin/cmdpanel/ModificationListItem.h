@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_MODIFICATION_LIST_ITEM_H
-#define __OVITO_MODIFICATION_LIST_ITEM_H
+#pragma once
+
 
 #include <gui/GUI.h>
 #include <core/reference/RefMaker.h>
@@ -40,15 +40,6 @@ public:
 
 	/// Constructor.
 	ModificationListItem(RefTarget* object, ModificationListItem* parent = nullptr, const QString& title = QString());
-
-	/// Returns the object represented by this list item.
-	RefTarget* object() const { return _object; }
-
-	/// Returns the list of modifier applications if this is a modifier item.
-	const QVector<ModifierApplication*>& modifierApplications() const { return _modApps; }
-
-	/// Sets the list of modifier applications if this is a modifier item.
-	void setModifierApplications(const QVector<ModifierApplication*>& modApps) { _modApps = modApps; }
 
 	/// Returns true if this is a sub-object entry.
 	bool isSubObject() const { return _parent != nullptr; }
@@ -78,10 +69,10 @@ protected:
 private:
 
 	/// The object represented by this item in the list box.
-	ReferenceField<RefTarget> _object;
+	DECLARE_REFERENCE_FIELD(RefTarget, object);
 
 	/// The list of modifier application if this is a modifier item.
-	VectorReferenceField<ModifierApplication> _modApps;
+	DECLARE_MODIFIABLE_VECTOR_REFERENCE_FIELD(ModifierApplication, modifierApplications, setModifierApplications);
 
 	/// If this is a sub-object entry then this points to the parent.
 	ModificationListItem* _parent;
@@ -91,13 +82,10 @@ private:
 
 	Q_OBJECT
 	OVITO_OBJECT
-
-	DECLARE_REFERENCE_FIELD(_object);
-	DECLARE_VECTOR_REFERENCE_FIELD(_modApps);
 };
 
 OVITO_END_INLINE_NAMESPACE
 OVITO_END_INLINE_NAMESPACE
 }	// End of namespace
 
-#endif // __OVITO_MODIFICATION_LIST_ITEM_H
+

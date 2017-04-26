@@ -12,16 +12,16 @@
 
   <para>
     <informalfigure><screenshot><mediaobject><imageobject>
-       <imagedata fileref="images/modifiers/affine_transformation_panel.png" format="PNG" />
+       <imagedata fileref="images/modifiers/affine_transformation_panel.png" format="PNG" scale="50" />
     </imageobject></mediaobject></screenshot></informalfigure>
-    Applies an affine transformation to the particle positions and/or
-    the simulation cell. The transformation is either specified as a 3x3
-    matrix and an additional translation vector or by prescribing a 
-    target simulation cell to which the particles are mapped.
+    Applies an affine transformation to the dataset. This can be used to translate, scale, rotate, or shear 
+    the particles, the simulation cell, and/or surface meshes. 
+    The transformation can either be specified directly as a 3 x 3
+    matrix plus a translation vector, or by prescribing a target simulation cell to which the old cell and its content are mapped.
   </para>
   
   <para>
-    Given the 3x3 transformation matrix <inlineequation><mathphrase><emphasis>M</emphasis></mathphrase></inlineequation> 
+    Given the 3 x 3 linear transformation matrix <inlineequation><mathphrase><emphasis>M</emphasis></mathphrase></inlineequation> 
     and the translation vector <inlineequation><mathphrase><emphasis>t</emphasis></mathphrase></inlineequation>,
     the new position <inlineequation><mathphrase><emphasis>x'</emphasis></mathphrase></inlineequation> of
     a particle at the old position <inlineequation><mathphrase><emphasis>x</emphasis></mathphrase></inlineequation>
@@ -31,8 +31,8 @@
   </para>
   
   <para>
-    The <guibutton>Enter rotation</guibutton> button opens a utility that lets you enter a rotation
-    axis and an angle. It computes the corresponding transformation matrix for you.
+    The <guibutton>Enter rotation</guibutton> button opens a dialog box that lets you enter an
+    axis and a rotation angle. OVITO computes the corresponding transformation matrix for you.
   </para>
 
   <simplesect>
@@ -43,17 +43,27 @@
         <term>Transform simulation cell</term>
 
         <listitem>
-          <para>Selects whether the transformation is applied to the simulation cell.</para>
+          <para>Controls whether the simulation cell is transformed.</para>
         </listitem>
       </varlistentry>
 
       <varlistentry>
-        <term>Transform particles</term>
+        <term>Transform particle positions</term>
 
         <listitem>
-          <para>Selects whether the transformation is applied to the
-          particle coordinates. You can select which particles are affected by the
-          modifier: All particles or only the selected ones.</para>
+          <para>Controls whether the transformation is applied to the
+          particle coordinates. You can select which particles should be affected by the
+          modifier: All particles or only the currently selected ones.</para>
+        </listitem>
+      </varlistentry>
+      
+      <varlistentry>
+        <term>Transform vector properties</term>
+
+        <listitem>
+          <para>Controls whether certain vectorial properties of particles are transformed too. 
+          If selected, the values of the following vector properties will be transformed by the linear part of the transformation:
+          <emphasis>Velocity</emphasis>, <emphasis>Force</emphasis>, <emphasis>Displacement</emphasis>.</para>
         </listitem>
       </varlistentry>
       
@@ -61,17 +71,16 @@
         <term>Transform surface mesh</term>
 
         <listitem>
-          <para>Selects whether the transformation is applied to the surface mesh (if one exists).
-          Surface meshes are typically created with the <link linkend="particles.modifiers.construct_surface_mesh">Construct surface mesh</link> modifier.</para>
+          <para>Controls whether the transformation is applied to the surface mesh (if one exists).
+          Surface meshes are typically created by the <link linkend="particles.modifiers.construct_surface_mesh">Construct surface mesh</link> modifier.</para>
         </listitem>
       </varlistentry>
-
 
       <varlistentry>
         <term>Transformation matrix - Rotate/Scale/Shear</term>
 
         <listitem>
-          <para>The 3x3 matrix specifying the affine transformation.</para>
+          <para>The 3x3 matrix specifying the linear part of the affine transformation.</para>
         </listitem>
       </varlistentry>
 
@@ -79,7 +88,7 @@
         <term>Transformation matrix - Translation</term>
 
         <listitem>
-          <para>The translation that is added after multiplying a particle position with the matrix.</para>
+          <para>The translation that is added after multiplying positions with the linear transformation matrix.</para>
         </listitem>
       </varlistentry>
 
@@ -87,9 +96,9 @@
         <term>Transform to target box</term>
 
         <listitem>
-          <para>The three vectors that define the target simulation cell. The
-          modifier will automatically calculate the transformation matrix based on this target cell shape and 
-          the input simulation cell.</para>
+          <para>Three vectors defining the target simulation cell. The
+          modifier will dynamically calculate the transformation based on this target cell shape and 
+          the current input simulation cell.</para>
         </listitem>
       </varlistentry>
 
