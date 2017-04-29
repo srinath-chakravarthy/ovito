@@ -19,8 +19,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __OVITO_PARTITION_MESH_DISPLAY_H
-#define __OVITO_PARTITION_MESH_DISPLAY_H
+#pragma once
+
 
 #include <plugins/crystalanalysis/CrystalAnalysis.h>
 #include <core/scene/objects/AsynchronousDisplayObject.h>
@@ -50,52 +50,24 @@ public:
 	/// \brief Computes the bounding box of the object.
 	virtual Box3 boundingBox(TimePoint time, DataObject* dataObject, ObjectNode* contextNode, const PipelineFlowState& flowState) override;
 
-	/// Returns the color of the outer surface.
-	const Color& surfaceColor() const { return _surfaceColor; }
-
-	/// Sets the color of the outer surface.
-	void setSurfaceColor(const Color& color) { _surfaceColor = color; }
-
-	/// Returns whether the cap polygons are rendered.
-	bool showCap() const { return _showCap; }
-
-	/// Sets whether the cap polygons are rendered.
-	void setShowCap(bool show) { _showCap = show; }
-
-	/// Returns whether the mesh is rendered using smooth shading.
-	bool smoothShading() const { return _smoothShading; }
-
-	/// Sets whether the mesh is rendered using smooth shading.
-	void setSmoothShading(bool smoothShading) { _smoothShading = smoothShading; }
-
-	/// Returns whether the orientation of mesh faces is flipped.
-	bool flipOrientation() const { return _flipOrientation; }
-
-	/// Sets whether the orientation of mesh faces is flipped.
-	void setFlipOrientation(bool flipOrientation) { _flipOrientation = flipOrientation; }
-
 	/// Returns the transparency of the surface mesh.
-	FloatType surfaceTransparency() const { return _surfaceTransparency ? _surfaceTransparency->currentFloatValue() : 0.0f; }
+	FloatType surfaceTransparency() const { return surfaceTransparencyController() ? surfaceTransparencyController()->currentFloatValue() : 0.0f; }
 
 	/// Sets the transparency of the surface mesh.
-	void setSurfaceTransparency(FloatType transparency) { if(_surfaceTransparency) _surfaceTransparency->setCurrentFloatValue(transparency); }
+	void setSurfaceTransparency(FloatType transparency) { if(surfaceTransparencyController()) surfaceTransparencyController()->setCurrentFloatValue(transparency); }
 
 	/// Returns the transparency of the cap polygons.
-	FloatType capTransparency() const { return _capTransparency ? _capTransparency->currentFloatValue() : 0.0f; }
+	FloatType capTransparency() const { return capTransparencyController() ? capTransparencyController()->currentFloatValue() : 0.0f; }
 
 	/// Sets the transparency of the cap polygons.
-	void setCapTransparency(FloatType transparency) { if(_capTransparency) _capTransparency->setCurrentFloatValue(transparency); }
+	void setCapTransparency(FloatType transparency) { if(capTransparencyController()) capTransparencyController()->setCurrentFloatValue(transparency); }
 
-        /// Generates the final triangle mesh, which will be rendered.
-        static bool buildMesh(const PartitionMeshData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, FutureInterfaceBase* progress = nullptr);
+	/// Generates the final triangle mesh, which will be rendered.
+	static bool buildMesh(const PartitionMeshData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, PromiseBase& promise);
 
-        /// Splits a triangle face at a periodic boundary.
-        static bool splitFace(TriMesh& output, int faceIndex, int oldVertexCount, std::vector<Point3>& newVertices, std::map<std::pair<int,int>,std::pair<int,int>>& newVertexLookupMap, const SimulationCell& cell, size_t dim);
-
-        
 protected:
 
-        /// Creates a computation engine that will prepare the data to be displayed.
+	/// Creates a computation engine that will prepare the data to be displayed.
 	virtual std::shared_ptr<AsynchronousTask> createEngine(TimePoint time, DataObject* dataObject, const PipelineFlowState& flowState) override;
 
 	/// Unpacks the results of the computation engine and stores them in the display object.
@@ -129,23 +101,26 @@ protected:
 
 protected:
 
-        /// Controls the display color of the outer surface mesh.
-        PropertyField<Color, QColor> _surfaceColor;
+	/// Splits a triangle face at a periodic boundary.
+	static bool splitFace(TriMesh& output, int faceIndex, int oldVertexCount, std::vector<Point3>& newVertices, std::map<std::pair<int,int>,std::pair<int,int>>& newVertexLookupMap, const SimulationCell& cell, size_t dim);
+
+	/// Controls the display color of the outer surface mesh.
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(Color, surfaceColor, setSurfaceColor);
 
 	/// Controls whether the cap polygons are rendered.
-	PropertyField<bool> _showCap;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, showCap, setShowCap);
 
 	/// Controls whether the mesh is rendered using smooth shading.
-	PropertyField<bool> _smoothShading;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, smoothShading, setSmoothShading);
 
 	/// Controls whether the orientation of mesh faces is flipped.
-	PropertyField<bool> _flipOrientation;
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, flipOrientation, setFlipOrientation);
 
 	/// Controls the transparency of the surface mesh.
-	ReferenceField<Controller> _surfaceTransparency;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, surfaceTransparencyController, setSurfaceTransparencyController);
 
 	/// Controls the transparency of the surface cap mesh.
-	ReferenceField<Controller> _capTransparency;
+	DECLARE_MODIFIABLE_REFERENCE_FIELD(Controller, capTransparencyController, setCapTransparencyController);
 
 	/// The buffered geometry used to render the surface mesh.
 	std::shared_ptr<MeshPrimitive> _surfaceBuffer;
@@ -178,23 +153,14 @@ protected:
 	/// Indicates that the triangle mesh representation of the surface has recently been updated.
 	bool _trimeshUpdate;
 
-private:
-
 	Q_OBJECT
 	OVITO_OBJECT
 
 	Q_CLASSINFO("DisplayName", "Microstructure");
-
-	DECLARE_PROPERTY_FIELD(_surfaceColor);
-	DECLARE_PROPERTY_FIELD(_showCap);
-	DECLARE_PROPERTY_FIELD(_smoothShading);
-	DECLARE_PROPERTY_FIELD(_flipOrientation);
-	DECLARE_REFERENCE_FIELD(_surfaceTransparency);
-	DECLARE_REFERENCE_FIELD(_capTransparency);
 };
 
 }	// End of namespace
 }	// End of namespace
 }	// End of namespace
 
-#endif // __OVITO_PARTITION_MESH_DISPLAY_H
+
