@@ -64,6 +64,8 @@ public:
 
 	/// Generates the final triangle mesh, which will be rendered.
 	static bool buildMesh(const PartitionMeshData& input, const SimulationCell& cell, const QVector<Plane3>& cuttingPlanes, TriMesh& output, PromiseBase& promise);
+        
+        static bool splitFace(TriMesh& output, int faceIndex, int oldVertexCount, std::vector<Point3>& newVertices, std::map<std::pair<int,int>,std::pair<int,int>>& newVertexLookupMap, const SimulationCell& cell, size_t dim);
 
 protected:
 
@@ -102,7 +104,7 @@ protected:
 protected:
 
 	/// Splits a triangle face at a periodic boundary.
-	static bool splitFace(TriMesh& output, int faceIndex, int oldVertexCount, std::vector<Point3>& newVertices, std::map<std::pair<int,int>,std::pair<int,int>>& newVertexLookupMap, const SimulationCell& cell, size_t dim);
+	
 
 	/// Controls the display color of the outer surface mesh.
 	DECLARE_MODIFIABLE_PROPERTY_FIELD(Color, surfaceColor, setSurfaceColor);

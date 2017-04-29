@@ -113,7 +113,7 @@ public:
 	/// \param posProperty The positions of the particles.
 	/// \param cellData The simulation cell data.
 	/// \param selectionProperty Determines which particles are included in the neighbor search (optional).
-	/// \param promis A callback object that will be used to the report progress.
+	/// \param promise A callback object that will be used to the report progress.
 	/// \return \c false when the operation has been canceled by the user;
 	///         \c true on success.
 	/// \throw Exception on error.

@@ -135,12 +135,12 @@ void GrainSegmentationEngine::perform()
 	// Create output storage.
 	ParticleProperty* output = structures();
 
-	setProgressRange(positions()->size());
+//	setProgressRange(positions()->size());
 	setProgressValue(0);
 
 	// Perform analysis on each particle.
 	setProgressText(GrainSegmentationModifier::tr("Grain segmentation - structure identification"));
-	parallelForChunks(positions()->size(), *this, [this, &neighFinder, output](size_t startIndex, size_t count, FutureInterfaceBase& progress) {
+	parallelForChunks(positions()->size(), *this, [this, &neighFinder, output](size_t startIndex, size_t count, PromiseBase& progress) {
 
 		// Initialize thread-local storage for PTM routine.
 		ptm_local_handle_t ptm_local_handle = ptm_initialize_local();
@@ -282,7 +282,7 @@ void GrainSegmentationEngine::perform()
 	// Lattice orientation smoothing.
 	if(_numOrientationSmoothingIterations > 0) {
 		setProgressText(GrainSegmentationModifier::tr("Grain segmentation - orientation smoothing"));
-		setProgressRange(_numOrientationSmoothingIterations);
+		//setProgressRange(_numOrientationSmoothingIterations);
 		beginProgressSubSteps(_numOrientationSmoothingIterations);
 		QExplicitlySharedDataPointer<ParticleProperty> newOrientations(new ParticleProperty(positions()->size(), ParticleProperty::OrientationProperty, 0, false));
 		for(int iter = 0; iter < _numOrientationSmoothingIterations; iter++) {
@@ -343,7 +343,7 @@ void GrainSegmentationEngine::perform()
 	// Generate bonds (edges) between neighboring lattice atoms.
 	setProgressText(GrainSegmentationModifier::tr("Grain segmentation - edge generation"));
 	setProgressValue(0);
-	setProgressRange(output->size());
+	//setProgressRange(output->size());
 	size_t numLatticeAtoms = 0;
 	for(size_t index = 0; index < output->size(); index++) {
 		if(!incrementProgressValue()) return;
@@ -412,7 +412,7 @@ void GrainSegmentationEngine::perform()
 
 	setProgressText(GrainSegmentationModifier::tr("Grain segmentation - computing distance transform"));
 	setProgressValue(0);
-	setProgressRange(numLatticeAtoms);
+	//setProgressRange(numLatticeAtoms);
 
 	// This is used in the following for fast lookup of bonds incident on an atom.
 	ParticleBondMap bondMap(*_latticeNeighborBonds);
@@ -447,7 +447,7 @@ void GrainSegmentationEngine::perform()
 	// Smoothing of distance transform.
 	int numDistanceTransformSmoothingIterations = 10;
 	setProgressText(GrainSegmentationModifier::tr("Grain segmentation - smoothing distance transform"));
-	setProgressRange(numDistanceTransformSmoothingIterations);
+	//setProgressRange(numDistanceTransformSmoothingIterations);
 	beginProgressSubSteps(numDistanceTransformSmoothingIterations);
 	for(int iter = 0; iter < numDistanceTransformSmoothingIterations; iter++) {
 		if(iter != 0) nextProgressSubStep();
@@ -481,7 +481,7 @@ void GrainSegmentationEngine::perform()
 
 	setProgressText(GrainSegmentationModifier::tr("Grain segmentation - clustering"));
 	setProgressValue(0);
-	setProgressRange(distanceSortedAtoms.size());
+	//setProgressRange(distanceSortedAtoms.size());
 
 	// Create clusters by gradually filling up the distance transform basins.
 	int numBasins = 0;
@@ -523,7 +523,7 @@ void GrainSegmentationEngine::perform()
 
 	setProgressText(GrainSegmentationModifier::tr("Grain segmentation - average cluster orientation"));
 	setProgressValue(0);
-	setProgressRange(output->size());
+	//setProgressRange(output->size());
 
 	// Calculate average orientation of each cluster.
 	std::vector<Quaternion> clusterOrientations(numBasins, Quaternion(0,0,0,0));
@@ -580,7 +580,7 @@ void GrainSegmentationEngine::perform()
 
 	setProgressText(GrainSegmentationModifier::tr("Grain segmentation - cluster merging"));
 	setProgressValue(0);
-	setProgressRange(output->size());
+	//setProgressRange(output->size());
 
 	// Merge clusters.
 	std::unordered_set<std::pair<int,int>, boost::hash<std::pair<int,int>>> visitedClusterPairs;
@@ -708,7 +708,7 @@ void GrainSegmentationEngine::perform()
         
         setProgressText(GrainSegmentationModifier::tr("Grain segmentation - merging orphan atoms"));
         setProgressValue(0);
-	setProgressRange(orphanAtoms.size());
+	//setProgressRange(orphanAtoms.size());
 
 	// Add orphan atoms to the grains.
 	size_t oldOrphanCount = orphanAtoms.size();
@@ -820,7 +820,7 @@ void GrainSegmentationEngine::perform()
               Cluster *cluster2 = outputClusterGraph()->findCluster(clusterIDb);
               // If there is already a transition just increase number of bonds between them
               ClusterTransition *t;
-              if (t = cluster1->findTransition(cluster2)){
+              if (t = cluster1->findTransition(cluster2){
                 t->area++;
                 t->reverse->area++;
               }
@@ -1003,7 +1003,7 @@ void GrainSegmentationEngine::extractMesh()
               TriMesh output_mesh;
               output_mesh.clear();
               QVector<Plane3> cutting; 
-              FutureInterfaceBase *progress1 = nullptr;
+              PromiseBase *progress1 = nullptr;
 
 	      //PartitionMesh::smoothMesh(*newmesh, cell(), _meshSmoothingLevel*5, progress1);
 	      

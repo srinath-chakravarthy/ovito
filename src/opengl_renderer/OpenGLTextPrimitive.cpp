@@ -22,7 +22,6 @@
 #include <core/Core.h>
 #include "OpenGLTextPrimitive.h"
 #include "OpenGLSceneRenderer.h"
-#include 
 
 namespace Ovito { OVITO_BEGIN_INLINE_NAMESPACE(Rendering) OVITO_BEGIN_INLINE_NAMESPACE(Internal)
 

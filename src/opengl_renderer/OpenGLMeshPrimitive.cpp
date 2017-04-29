@@ -149,10 +149,11 @@ void OpenGLMeshPrimitive::setMesh(const TriMesh& mesh, const ColorA& meshColor)
 			}
 		}
 	}
+#if 0	
 	else {
 		// Use normals stored in the mesh.
 		ColoredVertexWithNormal* rv = renderVertices;
-		const Vector3* faceNormal = mesh.normals().begin();
+		const Vector_3<double>* faceNormal = mesh.normals().begin();
 		ColorAT<float> defaultVertexColor = (ColorAT<float>)meshColor;
 		for(auto face = mesh.faces().constBegin(); face != mesh.faces().constEnd(); ++face) {
 			// Initialize render vertices for this face.
@@ -176,7 +177,7 @@ void OpenGLMeshPrimitive::setMesh(const TriMesh& mesh, const ColorA& meshColor)
 			}
 		}
 	}
-
+#endif
 	_vertexBuffer.unmap();
 
 	// Save a list of coordinates which will be used to sort faces back-to-front.
