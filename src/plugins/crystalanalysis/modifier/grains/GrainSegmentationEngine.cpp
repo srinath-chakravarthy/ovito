@@ -1003,7 +1003,7 @@ void GrainSegmentationEngine::extractMesh()
               TriMesh output_mesh;
               output_mesh.clear();
               QVector<Plane3> cutting; 
-              PromiseBase *progress1 = nullptr;
+              PromiseBase progress1;
 
 	      //PartitionMesh::smoothMesh(*newmesh, cell(), _meshSmoothingLevel*5, progress1);
 	      
