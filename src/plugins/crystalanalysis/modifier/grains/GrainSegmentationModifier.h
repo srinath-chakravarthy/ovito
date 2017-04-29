@@ -56,14 +56,14 @@ public:
 	FloatType rmsdCutoff() const { return _rmsdCutoff; }
 
 	/// \brief Sets the RMSD cutoff.
-	void setRmsdCutoff(FloatType cutoff) { _rmsdCutoff = cutoff; }
+	void setRmsdCutoff(FloatType cutoff) { _rmsdCutoff = cutoff; }*/
 
 	/// Returns the computed histogram of RMSD values.
 	const QVector<int>& rmsdHistogramData() const { return _rmsdHistogramData; }
 
 	/// Returns the bin size of the RMSD histogram.
 	FloatType rmsdHistogramBinSize() const { return _rmsdHistogramBinSize; }
-
+/*
 	/// Returns whether local orientations are output by the modifier.
 	bool outputLocalOrientations() const { return _outputLocalOrientations; }
 
