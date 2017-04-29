@@ -28,6 +28,8 @@
 #include <plugins/particles/util/NearestNeighborFinder.h>
 #include <plugins/crystalanalysis/util/DelaunayTessellation.h>
 #include <plugins/crystalanalysis/util/ManifoldConstructionHelper.h>
+#include <core/utilities/concurrent/Promise.h>
+
 #include "GrainSegmentationEngine.h"
 #include "GrainSegmentationModifier.h"
 
@@ -129,7 +131,7 @@ void GrainSegmentationEngine::perform()
 
 	// Prepare the neighbor list.
 	NearestNeighborFinder neighFinder(MAX_NEIGHBORS);
-	if(!neighFinder.prepare(positions(), cell(), selection(), this))
+	if(!neighFinder.prepare(positions(), cell(), selection(), *this))
 		return;
 
 	// Create output storage.
@@ -165,7 +167,8 @@ void GrainSegmentationEngine::perform()
 
 			// Find nearest neighbors.
 			NearestNeighborFinder::Query<MAX_NEIGHBORS> neighQuery(neighFinder);
-			neighQuery.findNeighbors(neighFinder.particlePos(index));
+                        neighQuery.findNeighbors(index);
+			//neighQuery.findNeighbors(neighFinder.particlePos(index));
 			int numNeighbors = neighQuery.results().size();
 			OVITO_ASSERT(numNeighbors <= MAX_NEIGHBORS);
 
@@ -819,8 +822,8 @@ void GrainSegmentationEngine::perform()
               if (clusterIDb == 0 || clusterIDa == clusterIDb) continue;
               Cluster *cluster2 = outputClusterGraph()->findCluster(clusterIDb);
               // If there is already a transition just increase number of bonds between them
-              ClusterTransition *t;
-              if (t = cluster1->findTransition(cluster2){
+              ;
+              if (ClusterTransition *t = cluster1->findTransition(cluster2)){
                 t->area++;
                 t->reverse->area++;
               }
@@ -1003,11 +1006,11 @@ void GrainSegmentationEngine::extractMesh()
               TriMesh output_mesh;
               output_mesh.clear();
               QVector<Plane3> cutting; 
-              PromiseBase progress1;
+              //PromiseBase progress1;
 
 	      //PartitionMesh::smoothMesh(*newmesh, cell(), _meshSmoothingLevel*5, progress1);
 	      
-	      if (!PartitionMeshDisplay::buildMesh(*newmesh,cell(),cutting, output_mesh, progress1)){
+	      if (!PartitionMeshDisplay::buildMesh(*newmesh,cell(),cutting, output_mesh, *this)){
                 qDebug() << "Error on buildMesh";
               }
 	      
@@ -1124,7 +1127,7 @@ bool GrainSegmentationEngine::buildPartitionMesh()
 	// Generate Delaunay tessellation.
 	DelaunayTessellation tessellation;
 	if(!tessellation.generateTessellation(cell(), positions()->constDataPoint3(), positions()->size(), ghostLayerSize,
-			selection() ? selection()->constDataInt() : nullptr, this))
+			selection() ? selection()->constDataInt() : nullptr, *this))
 		return false;
 
 	nextProgressSubStep();
@@ -1158,7 +1161,7 @@ bool GrainSegmentationEngine::buildPartitionMesh()
 	};
 
 	ManifoldConstructionHelper<PartitionMeshData, true, true> manifoldConstructor(tessellation, *_mesh, alpha, positions());
-	if(!manifoldConstructor.construct(tetrahedronRegion, this, prepareMeshFace, linkManifolds))
+	if(!manifoldConstructor.construct(tetrahedronRegion, *this, prepareMeshFace, linkManifolds))
 		return false;
 	_spaceFillingGrain = manifoldConstructor.spaceFillingRegion();
 
@@ -1294,7 +1297,7 @@ bool GrainSegmentationEngine::buildPartitionMesh()
 
 
         // Smooth the generated triangle mesh.
-        PartitionMesh::smoothMesh(*_mesh, cell(), _meshSmoothingLevel, this);
+        PartitionMesh::smoothMesh(*_mesh, cell(), _meshSmoothingLevel, *this);
 
 	// Make sure every mesh vertex is only part of one surface manifold.
 	_mesh->duplicateSharedVertices();

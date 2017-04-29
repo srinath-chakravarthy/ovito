@@ -481,11 +481,12 @@ PYBIND11_PLUGIN(CrystalAnalysis)
                         "of the :py:class:`~ovito.modifiers.GrainSegmentationModifier` that created the surface mesh."
                         "\n\n"
                 )
-                .def("export_vtk", [](PartitionMesh& mesh, const QString& filename, SimulationCellObject* simCellObj) {
+        
+                /*.def("export_vtk", [](PartitionMesh& mesh, const QString& filename, SimulationCellObject* simCellObj) {
                         if(!simCellObj)
                                 throw Exception("A simulation cell is required to generate non-periodic mesh for export.");
                         TriMesh output;
-                        if(!PartitionMeshDisplay::buildMesh(*mesh.storage(), simCellObj->data(), mesh.cuttingPlanes(), output))
+                        if(!PartitionMeshDisplay::buildMesh(*mesh.storage(), simCellObj->data(), mesh.cuttingPlanes(), output, *this))
                                 throw Exception("Failed to generate non-periodic mesh for export. Simulation cell might be too small.");
                         QFile file(filename);
                         CompressedTextWriter writer(file);
@@ -497,6 +498,7 @@ PYBIND11_PLUGIN(CrystalAnalysis)
                 "The method takes the output filename and a :py:class:`~ovito.data.SimulationCell` object as input. The simulation cell information "
                 "is needed by the method to generate a non-periodic version of the mesh, which is truncated at the periodic boundaries "
                 "of the simulation cell (if it has any).")
+                */
         ;
 
         ovito_class<PartitionMeshDisplay, DisplayObject>(m)

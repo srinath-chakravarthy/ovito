@@ -30,6 +30,8 @@
 #include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
 
 #include <core/utilities/io/CompressedTextWriter.h>
+#include <core/utilities/concurrent/Promise.h>
+
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
 

@@ -28,6 +28,7 @@
 #include <plugins/crystalanalysis/data/ClusterGraph.h>
 #include <plugins/crystalanalysis/objects/partition_mesh/PartitionMesh.h>
 #include <plugins/crystalanalysis/objects/partition_mesh/PartitionMeshDisplay.h>
+#include <plugins/particles/objects/BondsDisplay.h>
 #include "../grains/GrainSegmentationEngine.h"
 
 namespace Ovito { namespace Plugins { namespace CrystalAnalysis {
@@ -142,11 +143,11 @@ private:
 	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, smoothingLevel, setSmoothingLevel);
 	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, onlySelectedParticles, setOnlySelectedParticles);
 	DECLARE_MODIFIABLE_PROPERTY_FIELD(bool, outputLocalOrientations, setOutputLocalOrientations);
-	//DECLARE_MODIFIABLE_PROPERTY_FIELD(int, numOrientationSmoothingIterations, setSmoothingLevel);
-	//DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType,orientationSmoothingWeight,);
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(int, numOrientationSmoothingIterations, setnumOrientationSmoothingIterations);
+	DECLARE_MODIFIABLE_PROPERTY_FIELD(FloatType,orientationSmoothingWeight, setnumOrientationSmoothingWeight);
 	DECLARE_MODIFIABLE_REFERENCE_FIELD(PatternCatalog, patternCatalog, patternCatalog);
 	DECLARE_MODIFIABLE_REFERENCE_FIELD(PartitionMeshDisplay,meshDisplay, setMeshDisplay);
-	DECLARE_MODIFIABLE_REFERENCE_FIELD(BondsDisplay, bondsDisplay, setBondDisplay);
+        DECLARE_MODIFIABLE_REFERENCE_FIELD(BondsDisplay, bondsDisplay, setBondsDisplay);
 
 /*
 	/// The type of crystal to be analyzed.

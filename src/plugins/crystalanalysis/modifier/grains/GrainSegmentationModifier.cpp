@@ -45,8 +45,8 @@ DEFINE_FLAGS_REFERENCE_FIELD(GrainSegmentationModifier, bondsDisplay, "BondsDisp
 
 DEFINE_PROPERTY_FIELD(GrainSegmentationModifier, onlySelectedParticles, "OnlySelectedParticles");
 DEFINE_PROPERTY_FIELD(GrainSegmentationModifier, outputPartitionMesh, "OutputPartitionMesh");
-//DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, numOrientationSmoothingIterations, "NumOrientationSmoothingIterations", PROPERTY_FIELD_MEMORIZE);
-//DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, orientationSmoothingWeight, "OrientationSmoothingWeight", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, numOrientationSmoothingIterations, "NumOrientationSmoothingIterations", PROPERTY_FIELD_MEMORIZE);
+DEFINE_FLAGS_PROPERTY_FIELD(GrainSegmentationModifier, orientationSmoothingWeight, "OrientationSmoothingWeight", PROPERTY_FIELD_MEMORIZE);
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, inputCrystalStructure, "Input crystal structure");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, rmsdCutoff, "RMSD cutoff");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, misorientationThreshold, "Misorientation angle threshold");
@@ -58,15 +58,15 @@ SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, onlySelectedParticles, "Use 
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, outputPartitionMesh, "Generate mesh");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, outputLocalOrientations, "Output local orientations");
 SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, bondsDisplay, "Bonds display");
-//SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, numOrientationSmoothingIterations, "Orientation smoothing iterations");
-//SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, orientationSmoothingWeight, "Orientation smoothing weight");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, numOrientationSmoothingIterations, "Orientation smoothing iterations");
+SET_PROPERTY_FIELD_LABEL(GrainSegmentationModifier, orientationSmoothingWeight, "Orientation smoothing weight");
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, rmsdCutoff, FloatParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, misorientationThreshold, AngleParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, probeSphereRadius, WorldParameterUnit, 0);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, minGrainAtomCount, IntegerParameterUnit, 1);
 SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, smoothingLevel, IntegerParameterUnit, 0);
-//SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, numOrientationSmoothingIterations, IntegerParameterUnit, 0);
-//SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, orientationSmoothingWeight, FloatParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, numOrientationSmoothingIterations, IntegerParameterUnit, 0);
+SET_PROPERTY_FIELD_UNITS_AND_MINIMUM(GrainSegmentationModifier, orientationSmoothingWeight, FloatParameterUnit, 0);
 
 /******************************************************************************
 * Constructs the modifier object.
@@ -81,9 +81,9 @@ GrainSegmentationModifier::GrainSegmentationModifier(DataSet* dataset) : Structu
 		_probeSphereRadius(4),
 		_onlySelectedParticles(false),
 		_outputPartitionMesh(false),
-		_outputLocalOrientations(false)
-//		_numOrientationSmoothingIterations(4),
-		//_orientationSmoothingWeight(0.5)
+		_outputLocalOrientations(false),
+		_numOrientationSmoothingIterations(4),
+		_orientationSmoothingWeight(0.5)
 {
 	INIT_PROPERTY_FIELD(inputCrystalStructure);
 	INIT_PROPERTY_FIELD(rmsdCutoff);
@@ -95,8 +95,8 @@ GrainSegmentationModifier::GrainSegmentationModifier(DataSet* dataset) : Structu
 	INIT_PROPERTY_FIELD(meshDisplay);
 	INIT_PROPERTY_FIELD(onlySelectedParticles);
 	INIT_PROPERTY_FIELD(outputLocalOrientations);
-	//INIT_PROPERTY_FIELD(numOrientationSmoothingIterations);
-	//INIT_PROPERTY_FIELD(orientationSmoothingWeight);
+	INIT_PROPERTY_FIELD(numOrientationSmoothingIterations);
+	INIT_PROPERTY_FIELD(orientationSmoothingWeight);
 	INIT_PROPERTY_FIELD(outputPartitionMesh);
 	INIT_PROPERTY_FIELD(bondsDisplay);
 
@@ -150,8 +150,8 @@ void GrainSegmentationModifier::propertyChanged(const PropertyFieldDescriptor& f
 			field == PROPERTY_FIELD(probeSphereRadius) ||
 			field == PROPERTY_FIELD(onlySelectedParticles) ||
 			field == PROPERTY_FIELD(outputLocalOrientations) ||
-			//field == PROPERTY_FIELD(numOrientationSmoothingIterations) ||
-			//field == PROPERTY_FIELD(orientationSmoothingWeight) ||
+			field == PROPERTY_FIELD(numOrientationSmoothingIterations) ||
+			field == PROPERTY_FIELD(orientationSmoothingWeight) ||
 			field == PROPERTY_FIELD(outputPartitionMesh))
 		invalidateCachedResults();
 }
