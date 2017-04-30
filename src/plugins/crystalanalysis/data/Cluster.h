@@ -88,7 +88,16 @@ struct ClusterTransition
 	
 	/// The symmetry operator for cluster2
 	Quaternion cluster2_symmetry;
-
+        
+        /// Classifies if a boundary is a twin boundary or not 
+        bool twinBoundary;
+        
+        /// Angle between Cluster1 axis and normal
+        double min_angle;
+        
+	/// The  normal vector of the interface between cluster1 and cluster2 rotated to give correct disorientation
+	Vector3 normal_ret = Vector3::Zero(); 
+        
 
 	/// Vector of normal for each element of the transition mesh in sample reference frame
 	std::vector<Vector3> normals;

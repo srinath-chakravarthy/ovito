@@ -939,6 +939,10 @@ void GrainSegmentationEngine::find_axis(const Quaternion &q1, const Quaternion &
  * Extracts partitionmesh between clusters and stores them as vtk files 
  * Also computes average normal vector to each extracted mesh
  * Also computes surface area for each extracted mesh
+ * TBD This should also Calculate the transitions rather than python 
+ * since it is looping through all transistions anyway and all routines for calculations exist 
+ * and have a boolean value do export the mesh
+ * 
 *****************************************************************************/
 void GrainSegmentationEngine::extractMesh()
 {
@@ -1031,11 +1035,11 @@ void GrainSegmentationEngine::extractMesh()
 		      t->normals.push_back(facenormal);
 		      normal_average +=  facenormal;
 		  } else {
-		    t->normals.push_back(Vector3(0.0));
+		    t->normals.push_back(Vector3::Zero());
 		  }
 
 	      }
-	      normal_average.normalize();
+	      normal_average.normalizeSafely();
 	      t->normal = normal_average;
 	      // Find disorientation axis and angle	      
 	      Quaternion q1f1, q2f1, q1f2, q2f2, q1f, q2f;
@@ -1074,12 +1078,52 @@ void GrainSegmentationEngine::extractMesh()
 	      }
 	      t->misorientation_axis = axis;
 	      t->disorientation = disorientation;
-	      t->cluster1_symmetry = q1f;
-	      t->cluster2_symmetry = q2f;
-	      t->cluster1_normal = normal1;
-	      t->cluster2_normal = normal2;
-
-	      
+	      t->cluster1_symmetry = q1f;     // Fundamental zone of cluster 1
+	      t->cluster2_symmetry = q2f;     // Fundamental zone of cluster 2
+	      t->cluster1_normal = normal1;   // Average normal to GB from 1-2 rotated into crystal directions adjoining it
+	      t->cluster2_normal = normal2;   // Average normal to GB from 2-1 rotated into crystal directions adjoining it
+              double angle_symm, asymm1, asymm2, axisdiff111;
+              double max_angle = -1000.0;
+              double min_angle = 1000.0f;
+              asymm1 = normal1.angle_dot(axis);
+              asymm2 = normal2.angle_dot(axis);
+              
+              Vector3 axis111 = Vector3::Zero();
+              axis111.x() = 1.0f;
+              axis111.y() = 1.0f;
+              axis111.z() = 1.0f;
+              axis111.normalize();
+              Vector3 normal_ret = Vector3::Zero();
+              axisdiff111 = (axis.absolute()).angle_dot(axis111);
+//               qDebug() << axisdiff111 << "Twin Boundary check" << axis111 << axis.absolute() << axis;
+              
+              if (axisdiff111 < 0.1f){
+                    t->twinBoundary = true;
+                    if (asymm1 > FLOATTYPE_PI/2.0) asymm1 = FLOATTYPE_PI-asymm1;
+                    if (asymm2 > FLOATTYPE_PI/2.0) asymm2 = FLOATTYPE_PI-asymm2;
+                    
+                    if (asymm1 > asymm2){
+                        max_angle = asymm1;
+                        normal_ret = normal1;
+                        min_angle = max_angle;
+                    } else {
+                        max_angle = asymm2;
+                        normal_ret = normal2;
+                        min_angle = max_angle;
+                    }
+               } else {
+                   t->twinBoundary = false;
+                    min_angle = 1000.0f;
+                    if (asymm1 < asymm2){
+                        min_angle = asymm1;
+                        normal_ret = normal1;
+                    } else {
+                        min_angle = asymm2;
+                        normal_ret = normal2;
+                    }
+               }
+                t->min_angle = min_angle;     // Minimum angle between normal to GB and axis based on averages;
+                t->normal_ret = normal_ret;   // Normal to the GB producing minimum angle to axis
 	      
 	      
               QString filename;

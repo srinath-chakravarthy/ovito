@@ -201,6 +201,10 @@ public:
 
 	/// Computes the inner dot product of this vector with the vector \a b.
 	Q_DECL_CONSTEXPR T dot(const Vector_3& b) const { return x()*b.x() + y()*b.y() + z()*b.z(); }
+	
+	
+	/// Computes the angle between 2 vectors using dot product
+ 	Q_DECL_CONSTEXPR T angle_dot(const Vector_3& b) const{ return acos(x()*b.x() + y()*b.y() + z()*b.z());}
 
 	/// Computes the cross product of this vector with the vector \a b.
 	Q_DECL_CONSTEXPR Vector_3 cross(const Vector_3& b) const {
@@ -208,6 +212,9 @@ public:
 						z() * b.x() - x() * b.z(),
 						x() * b.y() - y() * b.x());
 	}
+	
+	/// Returns the absolute value of each component of the Vector
+	Q_DECL_CONSTEXPR Vector_3 absolute() const {return Vector_3 (std::abs(x()), std::abs(y()), std::abs(z()));}
 
 	/// Computes the squared length of the vector.
 	Q_DECL_CONSTEXPR T squaredLength() const { return x()*x() + y()*y() + z()*z(); }

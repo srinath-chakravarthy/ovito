@@ -468,7 +468,11 @@ PYBIND11_PLUGIN(CrystalAnalysis)
 		.def_readonly("angle", &ClusterTransition::disorientation)
 		.def_readonly("normal1", &ClusterTransition::cluster1_normal)
 		.def_readonly("normal2", &ClusterTransition::cluster2_normal)
-	;	
+		.def_readonly("normal_ret", &ClusterTransition::normal_ret)
+                .def_readonly("min_angle", &ClusterTransition::min_angle)
+                .def_readonly("twinBoundary", &ClusterTransition::twinBoundary)
+                .def_readonly("disorientation", &ClusterTransition::disorientation)
+        ;        
         ovito_class<PartitionMesh, DataObject>(m,
                         ":Base class: :py:class:`ovito.data.DataObject`\n\n"
                         "This data object stores the partitionmesh mesh computed by a :py:class:`GrainSegmentationModifier`. "
