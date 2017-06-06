@@ -671,7 +671,7 @@ void GrainSegmentationEngine::perform()
                 //qDebug() << i << " " << clusterRemapping[i] << " " << clusterSizes[i] << " " << clusterOrientations[i];
         }
 
-#if 1
+#if 0
 	// Randomize cluster IDs for testing purposes (giving more color contrast).
 	std::vector<int> clusterRandomMapping(numClusters);
 	boost::iota(clusterRandomMapping, 1);
@@ -1127,7 +1127,7 @@ void GrainSegmentationEngine::extractMesh()
 	      
 	      
               QString filename;
-              filename = QString("%1%2%3%4").arg("test_new_",  QString::number(regionid),  QString::number(regionId2), ".vtk");
+              filename = QString("%1%2%3%4%5").arg("test_new_",  QString::number(regionid), "_", QString::number(regionId2), ".vtk");
               QFile file(filename);
               CompressedTextWriter writer(file);
               
@@ -1291,7 +1291,16 @@ bool GrainSegmentationEngine::buildPartitionMesh()
                 }
         }
         
-#if 0   
+
+
+
+        // Smooth the generated triangle mesh.
+        PartitionMesh::smoothMesh(*_mesh, cell(), _meshSmoothingLevel, *this);
+
+	// Make sure every mesh vertex is only part of one surface manifold.
+	_mesh->duplicateSharedVertices();
+
+#if 1   
         QString filename;
         filename = "tessellation.vtk";
         QFile file(filename);
@@ -1337,15 +1346,7 @@ bool GrainSegmentationEngine::buildPartitionMesh()
             stream << tessellation.getUserField(cell) << "\n";
         }
 #endif  
-
-
-
-        // Smooth the generated triangle mesh.
-        PartitionMesh::smoothMesh(*_mesh, cell(), _meshSmoothingLevel, *this);
-
-	// Make sure every mesh vertex is only part of one surface manifold.
-	_mesh->duplicateSharedVertices();
-
+        
 	endProgressSubSteps();
 
         return true;
